@@ -299,6 +299,8 @@ class BotMaster(service.Service):
         self.statusClientService = None
         self.watchers = {}
 
+        # self.locks holds the real Lock instances
+        self.locks = {}
 
     # these four are convenience functions for testing
 
@@ -410,6 +412,15 @@ class BotMaster(service.Service):
             b.builder_status.saveYourself()
         return service.Service.stopService(self)
 
+    def getLockByID(self, lockid):
+        """Convert a Lock identifier into an actual Lock instance.
+        @param lockid: a locks.MasterLock or locks.SlaveLock instance
+        @return: a locks.RealMasterLock or locks.RealSlaveLock instance
+        """
+        k = (lockid.__class__, lockid.name)
+        if not k in self.locks:
+            self.locks[k] = lockid.lockClass(lockid.name)
+        return self.locks[k]
 
 ########################################
 

@@ -472,8 +472,11 @@ class BuildStep:
 
         self.remote = remote
         self.deferred = defer.Deferred()
-        # convert all locks into their real form (SlaveLocks get narrowed
-        # down to the slave that this build is being run on)
+        # convert all locks into their real form
+        self.locks = [self.build.builder.botmaster.getLockByID(l)
+                      for l in self.locks]
+        # then narrow SlaveLocks down to the slave that this build is being
+        # run on
         self.locks = [l.getLock(self.build.slavebuilder) for l in self.locks]
         for l in self.locks:
             if l in self.build.locks:

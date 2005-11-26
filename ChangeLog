@@ -1,5 +1,21 @@
 2005-11-25  Brian Warner  <warner@lothar.com>
 
+	* buildbot/locks.py: fix the problem in which loading a master.cfg
+	file that changes some Builders (but not all of them) can result
+	in having multiple copies of the same Lock. Now, the real Locks
+	are kept in a table inside the BotMaster, and the Builders/Steps
+	use "LockIDs", which are still instances of MasterLock and
+	SlaveLock. The real Locks are instances of the new RealMasterLock
+	and RealSlaveLock classes.
+	* buildbot/master.py (BotMaster.getLockByID): new method to
+	convert LockIDs into real Locks.
+	* buildbot/process/base.py (Build.startBuild): convert LockIDs
+	into real Locks before building
+	* buildbot/process/step.py (BuildStep.startStep): same
+	* buildbot/test/test_locks.py (Locks.testLock1a): add a test which
+	exercises the problem
+
+
 	* docs/buildbot.texinfo (Scheduler Types): give a few hints about
 	what Schedulers are available
 

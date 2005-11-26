@@ -267,6 +267,10 @@ class Build:
         self.build_status = build_status
         self.slavebuilder = slavebuilder
         self.slavename = slavebuilder.slave.slavename
+        # convert all locks into their real forms
+        self.locks = [self.builder.botmaster.getLockByID(l)
+                      for l in self.locks]
+        # then narrow SlaveLocks down to the right slave
         self.locks = [l.getLock(self.slavebuilder) for l in self.locks]
         self.remote = slavebuilder.remote
         self.remote.notifyOnDisconnect(self.lostRemote)

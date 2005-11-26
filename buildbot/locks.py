@@ -46,20 +46,18 @@ class BaseLock:
         d,owner = self.waiting.pop(0)
         d.callback(self)
 
-
-class MasterLock(BaseLock, util.ComparableMixin):
-    compare_attrs = ['name']
+class RealMasterLock(BaseLock):
     def __init__(self, name):
         BaseLock.__init__(self, name)
-        self.description = "<MasterLock(%s) %d>" % (name, id(self))
+        self.description = "<MasterLock(%s)>" % (name,)
 
     def getLock(self, slave):
         return self
 
-class SlaveLock(util.ComparableMixin):
-    compare_attrs = ['name']
+class RealSlaveLock(BaseLock):
     def __init__(self, name):
-        self.name = name
+        BaseLock.__init__(self, name)
+        self.description = "<SlaveLock(%s)>" % (name,)
         self.locks = {}
 
     def getLock(self, slavebuilder):
@@ -71,4 +69,21 @@ class SlaveLock(util.ComparableMixin):
                                                             id(lock))
             self.locks[slavename] = lock
         return self.locks[slavename]
+
+
+# master.cfg should only reference the following MasterLock and SlaveLock
+# classes. They are identifiers that will be turned into real Locks later,
+# via the BotMaster.getLockByID method.
+
+class MasterLock(util.ComparableMixin):
+    compare_attrs = ['name']
+    lockClass = RealMasterLock
+    def __init__(self, name):
+        self.name = name
+
+class SlaveLock(util.ComparableMixin):
+    compare_attrs = ['name']
+    lockClass = RealSlaveLock
+    def __init__(self, name):
+        self.name = name
 
