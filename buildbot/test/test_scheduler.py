@@ -1,6 +1,6 @@
 # -*- test-case-name: buildbot.test.test_scheduler -*-
 
-import os
+import os, time
 
 from twisted.trial import unittest
 from twisted.internet import defer, reactor
@@ -45,6 +45,42 @@ class Scheduling(unittest.TestCase):
         self.failUnless(len(self.master.sets) > 1)
         s1 = self.master.sets[0]
         self.failUnlessEqual(s1.builderNames, ["a","b"])
+
+    def testNightly(self):
+        # now == 15-Nov-2005, 00:05:36 AM . By using mktime, this is
+        # converted into the local timezone, which happens to match what
+        # Nightly is going to do anyway.
+        MIN=60; HOUR=60*MIN; DAY=24*3600
+        now = time.mktime((2005, 11, 15, 0, 5, 36, 1, 319, 0))
+
+        s = scheduler.Nightly('nightly', ["a"], hour=3)
+        t = s.calculateNextRunTimeFrom(now)
+        self.failUnlessEqual(int(t-now), 2*HOUR+54*MIN+24)
+
+        s = scheduler.Nightly('nightly', ["a"], minute=[3,8,54])
+        t = s.calculateNextRunTimeFrom(now)
+        self.failUnlessEqual(int(t-now), 2*MIN+24)
+
+        s = scheduler.Nightly('nightly', ["a"],
+                              dayOfMonth=16, hour=1, minute=6)
+        t = s.calculateNextRunTimeFrom(now)
+        self.failUnlessEqual(int(t-now), DAY+HOUR+24)
+
+        s = scheduler.Nightly('nightly', ["a"],
+                              dayOfMonth=16, hour=1, minute=3)
+        t = s.calculateNextRunTimeFrom(now)
+        self.failUnlessEqual(int(t-now), DAY+57*MIN+24)
+
+        s = scheduler.Nightly('nightly', ["a"],
+                              dayOfMonth=15, hour=1, minute=3)
+        t = s.calculateNextRunTimeFrom(now)
+        self.failUnlessEqual(int(t-now), 57*MIN+24)
+
+        s = scheduler.Nightly('nightly', ["a"],
+                              dayOfMonth=15, hour=0, minute=3)
+        t = s.calculateNextRunTimeFrom(now)
+        self.failUnlessEqual(int(t-now), 30*DAY-3*MIN+24)
+
 
     def isImportant(self, change):
         if "important" in change.files:

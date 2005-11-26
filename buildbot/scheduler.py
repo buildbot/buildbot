@@ -339,6 +339,164 @@ class Periodic(BaseUpstreamScheduler):
                                SourceStamp(branch=self.branch))
         self.submit(bs)
 
+
+
+class Nightly(BaseUpstreamScheduler):
+    """Imitate 'cron' scheduling. This can be used to schedule a nightly
+    build, or one which runs are certain times of the day, week, or month.
+
+    Pass some subset of minute, hour, dayOfMonth, month, and dayOfWeek; each
+    may be a single number or a list of valid values. The builds will be
+    triggered whenever the current time matches these values. Wildcards are
+    represented by a '*' string. All fields default to a wildcard except
+    'minute', so with no fields this defaults to a build every hour, on the
+    hour.
+
+    For example, the following master.cfg clause will cause a build to be
+    started every night at 3:00am:
+
+     s = Nightly('nightly', ['builder1', 'builder2'], hour=3, minute=0)
+     c['schedules'].append(s)
+
+    This scheduler will perform a build each monday morning at 6:23am and
+    again at 8:23am:
+
+     s = Nightly('BeforeWork', ['builder1'],
+                 dayOfWeek=0, hour=[6,8], minute=23)
+
+    The following runs a build every two hours:
+
+     s = Nightly('every2hours', ['builder1'], hour=range(0, 24, 2))
+
+    And this one will run only on December 24th:
+
+     s = Nightly('SleighPreflightCheck', ['flying_circuits', 'radar'],
+                 month=12, dayOfMonth=24, hour=12, minute=0)
+
+    For dayOfWeek and dayOfMonth, builds are triggered if the date matches
+    either of them.  Month and day numbers start at 1, not zero.
+    """
+
+    compare_attrs = ('name', 'builderNames',
+                     'minute', 'hour', 'dayOfMonth', 'month',
+                     'dayOfWeek', 'branch')
+
+    def __init__(self, name, builderNames, minute=0, hour='*',
+                 dayOfMonth='*', month='*', dayOfWeek='*',
+                 branch=None):
+        # Setting minute=0 really makes this an 'Hourly' scheduler. This
+        # seemed like a better default than minute='*', which would result in
+        # a build every 60 seconds.
+        BaseUpstreamScheduler.__init__(self, name)
+        self.builderNames = builderNames
+        self.minute = minute
+        self.hour = hour
+        self.dayOfMonth = dayOfMonth
+        self.month = month
+        self.dayOfWeek = dayOfWeek
+        self.branch = branch
+        self.delayedRun = None
+        self.nextRunTime = None
+
+    def addTime(self, timetuple, secs):
+        return time.localtime(time.mktime(timetuple)+secs)
+    def findFirstValueAtLeast(self, values, value, default=None):
+        for v in values:
+            if v >= value: return v
+        return default
+
+    def setTimer(self):
+        self.nextRunTime = self.calculateNextRunTime()
+        self.delayedRun = reactor.callLater(self.nextRunTime - time.time(),
+                                            self.doPeriodicBuild)
+
+    def startService(self):
+        BaseUpstreamScheduler.startService(self)
+        self.setTimer()
+
+    def stopService(self):
+        BaseUpstreamScheduler.stopService(self)
+        self.delayedRun.cancel()
+
+    def isRunTime(self, timetuple):
+        def check(ourvalue, value):
+            if ourvalue == '*': return True
+            if isinstance(ourvalue, int): return value == ourvalue
+            return (value in ourvalue)
+
+        if not check(self.minute, timetuple[4]):
+            #print 'bad minute', timetuple[4], self.minute
+            return False
+
+        if not check(self.hour, timetuple[3]):
+            #print 'bad hour', timetuple[3], self.hour
+            return False
+
+        if not check(self.month, timetuple[1]):
+            #print 'bad month', timetuple[1], self.month
+            return False
+
+        if self.dayOfMonth != '*' and self.dayOfWeek != '*':
+            # They specified both day(s) of month AND day(s) of week.
+            # This means that we only have to match one of the two. If
+            # neither one matches, this time is not the right time.
+            if not (check(self.dayOfMonth, timetuple[2]) or
+                    check(self.dayOfWeek, timetuple[6])):
+                #print 'bad day'
+                return False
+        else:
+            if not check(self.dayOfMonth, timetuple[2]):
+                #print 'bad day of month'
+                return False
+
+            if not check(self.dayOfWeek, timetuple[6]):
+                #print 'bad day of week'
+                return False
+
+        return True
+
+    def calculateNextRunTime(self):
+        return self.calculateNextRunTimeFrom(time.time())
+
+    def calculateNextRunTimeFrom(self, now):
+        dateTime = time.localtime(now)
+
+        # Remove seconds by advancing to at least the next minue
+        dateTime = self.addTime(dateTime, 60-dateTime[5])
+
+        # Now we just keep adding minutes until we find something that matches
+
+        # It not an efficient algorithm, but it'll *work* for now
+        yearLimit = dateTime[0]+2
+        while not self.isRunTime(dateTime):
+            dateTime = self.addTime(dateTime, 60)
+            #print 'Trying', time.asctime(dateTime)
+            assert dateTime[0] < yearLimit, 'Something is wrong with this code'
+        return time.mktime(dateTime)
+
+    def listBuilderNames(self):
+        return self.builderNames
+
+    def getPendingBuildTimes(self):
+        # TODO: figure out when self.timer is going to fire next and report
+        # that
+        if self.nextRunTime is None: return []
+        return [self.nextRunTime]
+
+    def doPeriodicBuild(self):
+        # Schedule the next run
+        self.setTimer()
+
+        # And trigger a build
+        bs = buildset.BuildSet(self.builderNames,
+                               SourceStamp(branch=self.branch))
+        self.submit(bs)
+
+    def addChange(self, change):
+        pass
+
+
+
 class TryBase(service.MultiService, util.ComparableMixin):
     if implements:
         implements(interfaces.IScheduler)

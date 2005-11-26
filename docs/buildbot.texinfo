@@ -110,6 +110,7 @@ Configuration
 
 Listing Change Sources and Schedulers
 
+* Scheduler Types::             
 * Build Dependencies::          
 
 Getting Source Code Changes
@@ -1733,10 +1734,59 @@ could easily wind up a ``daily'' or ``every afternoon'' scheduler
 depending upon when it was first activated).
 
 @menu
+* Scheduler Types::             
 * Build Dependencies::          
 @end menu
 
-@node Build Dependencies,  , Listing Change Sources and Schedulers, Listing Change Sources and Schedulers
+@node Scheduler Types, Build Dependencies, Listing Change Sources and Schedulers, Listing Change Sources and Schedulers
+@subsection Scheduler Types
+
+Here is a brief catalog of the available Scheduler types. All these
+Schedulers are classes in @code{buildbot.scheduler}, and the
+docstrings there are the best source of documentation on the arguments
+taken by each one.
+
+@table @code
+@item Scheduler
+This is the default Scheduler class. It follows exactly one branch,
+and starts a configurable tree-stable-timer after each change on that
+branch. When the timer expires, it starts a build on some set of
+Builders. The Scheduler accepts a @code{fileIsImportant} function
+which can be used to ignore some Changes if they do not affect any
+``important'' files.
+
+@item AnyBranchScheduler
+This scheduler uses a tree-stable-timer like the default one, but
+follows multiple branches at once. Each branch gets a separate timer.
+
+@item Dependent
+This scheduler watches an ``upstream'' Builder. When that Builder
+successfully builds a particular set of Changes, it triggers builds of
+the same code on a configured set of ``downstream'' builders. The next
+section (@pxref{Build Dependencies}) describes this scheduler in more
+detail.
+
+@item Periodic
+This simple scheduler just triggers a build every N seconds.
+
+@item Nightly
+This is highly configurable periodic build scheduler, which triggers a
+build at particular times of day, week, month, or year. The
+configuration syntax is very similar to the well-known @code{crontab}
+format, in which you provide values for minute, hour, day, and month
+(some of which can be wildcards), and a build is triggered whenever
+the current time matches the given constraints. This can run a build
+every night, every morning, every weekend, alternate Thursdays, on
+your boss's birthday, etc.
+
+@item Try_Jobdir / Try_Userpass
+This scheduler allows developers to use the @code{buildbot try}
+command to trigger builds of code they have not yet committed. See
+@ref{try} for complete details.
+
+@end table
+
+@node Build Dependencies,  , Scheduler Types, Listing Change Sources and Schedulers
 @subsection Build Dependencies
 
 @cindex Dependencies

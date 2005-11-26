@@ -1,5 +1,14 @@
 2005-11-25  Brian Warner  <warner@lothar.com>
 
+	* docs/buildbot.texinfo (Scheduler Types): give a few hints about
+	what Schedulers are available
+
+	* buildbot/scheduler.py (Nightly): add new Scheduler based upon
+	work by Dobes Vandermeer and hacked mercilessly by me. This offers
+	'cron'-style build scheduling at certain times of day, week,
+	month, or year.
+	* buildbot/test/test_scheduler.py (Scheduling.testNightly): test it
+
 	* buildbot/scheduler.py (Scheduler): change fileIsImportant
 	handling: treat self.fileIsImportant more as an attribute that
 	contains a callable than as a method. If the attribute is None,
