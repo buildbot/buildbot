@@ -1,0 +1,17 @@
+
+include ChangeLog MANIFEST.in README README.w32 NEWS
+include docs/PyCon-2003/buildbot.html docs/PyCon-2003/stylesheet.css
+include docs/PyCon-2003/overview.png docs/PyCon-2003/slave.png
+include docs/PyCon-2003/waterfall.png
+include docs/examples/*.cfg
+include docs/buildbot.texinfo docs/buildbot.info
+include docs/epyrun docs/gen-reference
+include buildbot/test/mail/* buildbot/test/subdir/*
+include buildbot/scripts/sample.cfg
+include buildbot/status/classic.css
+include buildbot/clients/debug.glade
+include buildbot/buildbot.png
+
+exclude buildbot/test/test_trial.py
+
+include contrib/* contrib/windows/*

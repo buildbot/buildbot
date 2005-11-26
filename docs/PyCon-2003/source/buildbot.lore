@@ -1,0 +1,433 @@
+<?xml version="1.0"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+ <head>
+  <title>BuildBot: build/test automation</title>
+ </head>
+
+<body>
+
+<h1>BuildBot: build/test automation</h1>
+
+<ul>
+  <li>Author: Brian Warner &lt;<code>warner@lothar.com</code>&gt;</li>
+  <li>BuildBot Home Page:
+  <a href="http://buildbot.sourceforge.net">http://buildbot.sourceforge.net</a>
+  </li>
+</ul>
+
+<h2>Abstract</h2>
+
+<p>The BuildBot is a system to automate the compile/test cycle required by
+most software projects to validate code changes. By automatically rebuilding
+and testing the tree each time something has changed, build problems are
+pinpointed quickly, before other developers are inconvenienced by the
+failure. The guilty developer can be identified and harassed without human
+intervention. By running the builds on a variety of platforms, developers
+who do not have the facilities to test their changes everywhere before
+checkin will at least know shortly afterwards whether they have broken the
+build or not. Warning counts, lint checks, image size, compile time, and
+other build parameters can be tracked over time, are more visible, and are
+therefore easier to improve.</p>
+
+<p>The overall goal is to reduce tree breakage and provide a platform to run
+tests or code-quality checks that are too annoying or pedantic for any human
+to waste their time with. Developers get immediate (and potentially public)
+feedback about their changes, encouraging them to be more careful about
+testing before checkin.</p>
+
+
+<h2>Features</h2>
+
+<ul>
+ <li> run builds on a variety of slave platforms</li>
+ <li> arbitrary build process: handles projects using C, Python, whatever</li>
+ <li> minimal host requirements: python and Twisted</li>
+ <li> slaves can be behind a firewall if they can still do checkout</li>
+ <li> status delivery through web page, email, IRC, other protocols</li>
+ <li> track builds in progress, provide estimated completion time</li>
+ <li> flexible configuration by subclassing generic build process classes</li>
+ <li> debug tools to force a new build, submit fake Changes, query slave
+ status</li>
+ <li> released under the GPL</li>
+</ul>
+
+<h2>Overview</h2>
+
+<img src="waterfall.png" alt="waterfall display"
+     width="323" height="457" align="right" />
+
+<p>In general, the buildbot watches a source code repository (CVS or other
+version control system) for <q>interesting</q> changes to occur, then
+triggers builds with various steps (checkout, compile, test, etc). The
+Builds are run on a variety of slave machines, to allow testing on different
+architectures, compilation against different libraries, kernel versions,
+etc. The results of the builds are collected and analyzed: compile succeeded
+/ failed / had warnings, which tests passed or failed, memory footprint of
+generated executables, total tree size, etc. The results are displayed on a
+central web page in a <q>waterfall</q> display: time along the vertical
+axis, build platform along the horizontal, <q>now</q> at the top. The
+overall build status (red for failing, green for successful) is at the very
+top of the page. After developers commit a change, they can check the web
+page to watch the various builds complete. They are on the hook until they
+see green for all builds: after that point they can reasonably assume that
+they did not break anything. If they see red, they can examine the build
+logs to find out what they broke.</p>
+
+<p>The status information can be retrieved by a variety of means. The main
+web page is one path, but the underlying Twisted framework allows other
+protocols to be used: IRC or email, for example. A live status client (using
+Gtk+ or Tkinter) can run on the developers desktop, with a box per builder
+that turns green or red as the builds succeed or fail. Once the build has
+run a few times, the build process knows about how long it ought to take (by
+measuring elapsed time, quantity of text output by the compile process,
+searching for text indicating how many unit tests have been run, etc), so it
+can provide a progress bar and ETA display.</p>
+
+<p>Each build involves a list of <q>Changes</q>: files that were changed
+since the last build. If a build fails where it used to succeed, there is a
+good chance that one of the Changes is to blame, so the developers who
+submitted those Changes are put on the <q>blamelist</q>. The unfortunates on
+this list are responsible for fixing their problems, and can be reminded of
+this responsibility in increasingly hostile ways. They can receive private
+mail, the main web page can put their name up in lights, etc. If the
+developers use IRC to communicate, the buildbot can sit in on the channel
+and tell developers directly about build status or failures.</p>
+
+<p>The build master also provides a place where long-term statistics about
+the build can be tracked. It is occasionally useful to create a graph
+showing how the size of the compiled image or source tree has changed over
+months or years: by collecting such metrics on each build and archiving
+them, the historical data is available for later processing.</p>
+
+
+<h2>Design</h2>
+
+<p>The BuildBot consists of a master and a set of build slaves. The master
+runs on any conveniently-accessible host: it provides the status web server
+and must be reachable by the build slaves, so for public projects it should
+be reachable from the general internet. The slaves connect to the master and
+actually perform the builds: they can be behind a firewall as long as they
+can reach the master and check out source files.</p>
+
+<h3>Build Master</h3>
+
+<img src="overview.png"  alt="overview diagram" width="595" height="383" />
+
+<p>The master receives information about changed source files from various
+sources: it can connect to a CVSToys server, or watch a mailbox that is
+subscribed to a CVS commit list of the type commonly provided for widely
+distributed development projects. New forms of change notification (e.g. for
+other version control systems) can be handled by writing an appropriate
+class: all are responsible for creating Change objects and delivering them
+to the ChangeMaster service inside the master.</p>
+
+<p>The build master is given a working directory where it is allowed to save
+persistent information. It is told which TCP ports to use for slave
+connections, status client connections, the built-in HTTP server, etc. The
+master is also given a list of <q>build slaves</q> that are allowed to
+connect, described below. Each slave gets a name and a password to use. The
+buildbot administrator must give a password to each person who runs a build
+slave.</p>
+
+<p>The build master is the central point of control. All the decisions about
+what gets built are made there, all the file change notices are sent there,
+all the status information is distributed from there. Build slave
+configuration is minimal: everything is controlled on the master side by the
+buildbot administrator. On the other hand, the build master does no actual
+compilation or testing. It does not have to be able to checkout or build the
+tree. The build slaves are responsible for doing any work that actually
+touches the project's source code.</p>
+
+<h3>Builders and BuildProcesses</h3>
+
+<p>Each <q>build process</q> is defined by an instance of a Builder class
+which receives a copy of every Change that goes into the repository. It gets
+to decide which changes are interesting (e.g. a Builder which only compiles
+C code could ignore changes to documentation files). It can decide how long
+to wait until starting the build: a quick build that just updates the files
+that were changed (and will probably finish quickly) could start after 30
+seconds, whereas a full build (remove the old tree, checkout a new tree,
+compile everything, test everything) would want to wait longer. The default
+10 minute delay gives developers a chance to finish checking in a set of
+related files while still providing timely feedback about the consequences
+of those changes.</p>
+
+<p>Once the build is started, the build process controls how it proceeds
+with a series of BuildSteps, which are things like shell commands, CVS
+update or checkout commands, etc. Each BuildStep can invoke SlaveCommands on
+a connected slave. One generic command is ShellCommand, which takes a
+string, hands it to <code>/bin/sh</code>, and returns exit status and
+stdout/stderr text. Other commands are layered on top of ShellCommand:
+CVSCheckout, MakeTarget, CountKLOC, and so on. Some operations are faster or
+easier to do with python code on the slave side, some are easier to do on
+the master side.</p>
+
+<p>The Builder walks through a state machine, starting BuildSteps and
+receiving a callback when they complete. Steps which fail may stop the
+overall build (if the CVS checkout fails, there is little point in
+attempting a compile), or may allow it to continue (unit tests could fail
+but documentation may still be buildable). When the last step finishes, the
+entire build is complete, and a function combines the completion status of
+all the steps to decide how the overall build should be described:
+successful, failing, or somewhere in between.</p>
+
+<p>At each point in the build cycle (waiting to build, starting build,
+starting a BuildStep, finishing the build), status information is delivered
+to a special Status object. This information is used to update the main
+status web page, and can be delivered to real-time status clients that are
+attached at that moment. Intermediate status (stdout from a ShellCommand,
+for example) is also delivered while the Step runs. This status can be used
+to estimate how long the individual Step (or the overall build) has left
+before it is finished, so an ETA can be listed on the web page or in the
+status client.</p>
+
+<p>The build master is persisted to disk when it is stopped with SIGINT,
+preserving the status and historical build statistics.</p>
+
+<p>Builders are set up by the buildbot administrator. Each one gets a name
+and a BuildProcess object (which may be parameterized with things like which
+CVS repository to use, which targets to build, which version or python or
+gcc it should use, etc). Builders are also assigned to a BuildSlave,
+described below. In the current implementation, Builders are defined by
+adding lines to the setup script, but an HTML-based <q>create a builder</q>
+scheme is planned for the future.</p>
+
+<h3>Build Slaves</h3>
+
+<p>BuildSlaves are where the actual compilation and testing gets done. They
+are programs which run on a variety of platforms, and communicate with the
+BuildMaster over TCP connections.</p>
+
+<p>Each build slave is given a name and a working directory. They are also
+given the buildmaster's contact information: hostname, port number, and a
+password. This information must come from the buildbot administrator, who
+has created a corresponding entry in the buildmaster. The password exists to
+make it clear that build slave operators need to coordinate with the
+buildbot administrator.</p>
+
+<p>When the Builders are created, they are given a name (like
+<q>quick-bsd</q> or <q>full-linux</q>), and are tied to a particular slave.
+When that slave comes online, a RemoteBuilder object is created inside it,
+where all the SlaveCommands are run. Each RemoteBuilder gets a separate
+subdirectory inside the slave's working directory. Multiple Builders can
+share the same slave: typically all Builders for a given architecture would
+run inside the same slave.</p>
+
+<img src="slave.png"  alt="overview diagram" width="595" height="354" />
+
+<h3>Build Status</h3>
+
+<p>The waterfall display holds short-term historical build status.
+Developers can easily see what the buildbot is doing right now, how long it
+will be until the current build is finished, and what are the results of
+each step of the build process. Change comments and compile/test logs are
+one click away. The top row shows overall status: green is good, red is bad,
+yellow is a build still in progress.</p>
+
+<p>Also available through the web page is information on the individual
+builders: static information like what purpose the builder serves (specified
+by the admin when configuring the buildmaster), and non-build status
+information like which build slave it wants to use, whether the slave is
+online or not, and how frequently the build has succeeded in the last 10
+attempts. Build slave information is available here too, both data provided
+by the build slave operator (which machine the slave is running on, who to
+thank for the compute cycles being donated) and data extracted from the
+system automatically (CPU type, OS name, versions of various build
+tools).</p>
+
+<p>The live status client shows the results of the last build, but does not
+otherwise show historical information. It provides extensive information
+about the current build: overall ETA, individual step ETA, data about what
+changes are being processed. It will be possible to get at the error logs
+from the last build through this interface.</p>
+
+<p>Eventually, e-mail and IRC notices can be sent when builds have succeeded
+or failed. Mail messages can include the compile/test logs or summaries
+thereof. The buildmaster can sit on the IRC channel and accept queries about
+current build status, such as <q>how long until the current build
+finishes</q>, or <q>what tests are currently failing</q>.</p>
+
+<p>Other status displays are possible. Test and compile errors can be
+tracked by filename or test case name, providing view on how that one file
+has fared over time. Errors can be tracked by username, giving a history of
+how one developer has affected the build over time. </p>
+
+
+<h2>Installation</h2>
+
+<p>The buildbot administrator will find a publically-reachable machine to
+host the buildmaster. They decide upon the BuildProcesses to be run, and
+create the Builders that use them. Creating complex build processes will
+involve writing a new python class to implement the necessary
+decision-making, but it will be possible to create simple ones like
+<q>checkout, make, make test</q> from the command line or through a
+web-based configuration interface. They also decide upon what forms of
+status notification should be used: what TCP port should be used for the web
+server, where mail should be sent, what IRC channels should receive
+success/failure messages.</p>
+
+<p>Next, they need to arrange for change notification. If the repository is
+using <a href="http://purl.net/net/CVSToys">CVSToys</a>, then they simply
+tell the buildmaster the host, port, and login information for the CVSToys
+server. When the buildmaster starts up, it will contact the server and
+subscribe to hear about all CVS changes. If not, a <q>cvs-commits</q>
+mailing list is needed. Most large projects have such a list: every time a
+change is committed, an email is sent to everyone on the list which contains
+details about what was changed and why (the checkin comments). The admin
+should subscribe to this list, and dump the resulting mail into a
+qmail-style <q>maildir</q>. (It doesn't matter who is subscribed, it could
+be the admin themselves or a buildbot-specific account, just as long as the
+mail winds up in the right place). Then they tell the buildmaster to monitor
+that maildir. Each time a message arrives, it will be parsed, and the
+contents used to trigger the buildprocess. All forms of CVS notification
+include a filtering prefix, to tell the buildmaster it should ignore commits
+outside a certain directory. This is useful if the repository is used for
+multiple projects.</p>
+
+<p>Finally, they need to arrange for build slaves. Some projects use
+dedicated machines for this purpose, but many do not have that luxury and
+simply use developer's personal workstations. Projects that would benefit
+from testing on multiple platforms will want to find build slaves on a
+variety of operating systems. Frequently these build slaves are run by
+volunteers or developers involved in the project who have access to the
+right equipment. The admin will give each of these people a name/password
+for their build slave, as well as the location (host/port) of the
+buildmaster. The build slave owners simply start a process on their systems
+with the appropriate parameters and it will connect to the build master.</p>
+
+<p>Both the build master and the build slaves are Twisted
+<code>Application</code> instances. A <code>.tap</code> file holds the
+pickled application state, and a daemon-launching program called
+<code>twistd</code> is used to start the process, detach from the current
+tty, log output to a file, etc. When the program is terminated, it saves its
+state to another <code>.tap</code> file. Next time, <code>twistd</code> is
+told to start from that file and the application will be restarted exactly
+where it left off.</p>
+
+
+<h2>Security</h2>
+
+<p>The master is intended to be publically available, but of course
+limitations can be put on it for private projects. User accounts and
+passwords can be required for live status clients that want to connect, or
+the master can allow arbitrary anonymous access to status information.
+Twisted's <q>Perspective Broker</q> RPC system and careful design provides
+security for the real-time status client port: those clients are read-only,
+and cannot do anything to disrupt the build master or the build processes
+running on the slaves.</p>
+
+<p>Build slaves each have a name and password, and typically the project
+coordinator would provide these to developers or volunteers who wished to
+offer a host machine for builds. The build slaves connect to the master, so
+they can be behind a firewall or NAT box, as long as they can still do a
+checkout and compile. Registering build slaves helps prevent DoS attacks
+where idiots attach fake build slaves that are not actually capable of
+performing the build, displacing the actual slave.</p>
+
+<p>Running a build slave on your machine is equivalent to giving a local
+account to everyone who can commit code to the repository. Any such
+developer could add an <q><code>rm -rf /</code></q> or code to start a
+remotely-accessible shell to a Makefile and then do naughty things with the
+account under which the build slave was launched. If this is a concern, the
+build slave can be run inside a chroot jail or other means (like a
+user-mode-linux sub-kernel), as long as it is still capable of checking out
+a tree and running all commands necessary for the build.</p>
+
+
+<h2>Inspirations and Competition</h2>
+
+<p>Buildbot was originally inspired by Mozilla's Tinderbox project, but is
+intended to conserve resources better (tinderbox uses dedicated build
+machines to continually rebuild the tree, buildbot only rebuilds when
+something has changed, and not even then for some builds) and deliver more
+useful status information. I've seen other projects with similar goals
+[CruiseControl on sourceforge is a java-based one], but I believe this one
+is more flexible.</p>
+
+
+<h2>Current Status</h2>
+
+<p>Buildbot is currently under development. Basic builds, web-based status
+reporting, and a basic Gtk+-based real-time status client are all
+functional. More work is being done to make the build process more flexible
+and easier to configure, add better status reporting, and add new kinds of
+build steps. An instance has been running against the Twisted source tree
+(which includes extensive unit tests) since February 2003.</p>
+
+<h2>Future Directions</h2>
+
+<p>Once the configuration process is streamlined and a release is made, the
+next major feature is the <q>try</q> command. This will be a tool to which
+they developer can submit a series of <em>potential</em> changes, before
+they are actually checked in. <q>try</q> will assemble the changed and/or
+new files and deliver them to the build master, which will then initiate a
+build cycle with the current tree plus the potential changes. This build is
+private, just for the developer who requested it, so failures will not be
+announced publically. It will run all the usual tests from a full build and
+report the results back to the developer. This way, a developer can verify
+their changes, on more platforms then they directly have access to, with a
+single command. By making it easy to thoroughly test their changes before
+checkin, developers will have no excuse for breaking the build.</p>
+
+<p>For projects that have unit tests which can be broken up into individual
+test cases, the BuildProcess will have some steps to track each test case
+separately. Developers will be able to look at the history of individual
+tests, to find out things like <q>test_import passed until foo.c was changed
+on monday, then failed until bar.c was changed last night</q>. This can also
+be used to make breaking a previously-passing test a higher crime than
+failing to fix an already-broken one. It can also help to detect
+intermittent failures, ones that need to be fixed but which can't be blamed
+on the last developer to commit changes. For test cases that represent new
+functionality which has not yet been implemented, the list of failing test
+cases can serve as a convenient TODO list.</p>
+
+<p>If a large number of changes occur at the same time and the build fails
+afterwards, a clever process could try modifying one file (or one
+developer's files) at a time, to find one which is the actual cause of the
+failure. Intermittent test failures could be identified by re-running the
+failing test a number of times, looking for changes in the results.</p>
+
+<p>Project-specific methods can be developed to identify the guilty
+developer more precisely, for example grepping through source files for a
+<q>Maintainer</q> tag, or a static table of module owners. Build failures
+could be reported to the owner of the module as well as the developer who
+made the offending change.</p>
+
+<p>The Builder could update entries in a bug database automatically: a
+change could have comments which claim it <q>fixes #12345</q>, so the bug DB is
+queried to find out that test case ABC should be used to verify the bug. If
+test ABC was failing before and now passes, the bug DB can be told to mark
+#12345 as machine-verified. Such entries could also be used to identify
+which tests to run, for a quick build that wasn't running the entire test
+suite.</p>
+
+<p>The Buildbot could be integrated into the release cycle: once per week,
+any build which passes a full test suite is automatically tagged and release
+tarballs are created.</p>
+
+<p>It should be possible to create and configure the Builders from the main
+status web page, at least for processes that use a generic <q>checkout /
+make / make test</q> sequence. Twisted's <q>Woven</q> framework provides a
+powerful HTML tool that could be used create the necessary controls.</p>
+
+<p>If the master or a slave is interrupted during a build, it is frequently
+possible to re-start the interrupted build. Some steps can simply be
+re-invoked (<q>make</q> or <q>cvs update</q>). Interrupting others may
+require the entire build to be re-started from scratch (<q>cvs export</q>).
+The Buildbot will be extended so that both master and slaves can report to
+the other what happened while they were disconnected, and as much work can
+be salvaged as possible.</p>
+
+<h2>More Information</h2>
+
+<p>The BuildBot home page is at <a
+href="http://buildbot.sourceforge.net">http://buildbot.sourceforge.net</a>,
+and has pointers to publically-visible BuildBot installations. Mailing
+lists, bug reporting, and of course source downloads are reachable from that
+page. </p>
+
+<!-- $Id: buildbot.lore,v 1.1 2003/03/19 01:27:51 warner Exp $ -->
+
+</body> </html>
