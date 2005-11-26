@@ -1,5 +1,7 @@
 2005-11-25  Brian Warner  <warner@lothar.com>
 
+	* NEWS: more updates
+
 	* buildbot/locks.py: fix the problem in which loading a master.cfg
 	file that changes some Builders (but not all of them) can result
 	in having multiple copies of the same Lock. Now, the real Locks
