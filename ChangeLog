@@ -1,3 +1,22 @@
+2005-11-26  Brian Warner  <warner@lothar.com>
+
+	* buildbot/status/builder.py (BuildStepStatus.unsubscribe): make
+	sure that unsubscribe works even if we never sent an ETA update.
+	Also, don't explode on duplicate unsubscribe.
+	(BuildStepStatus.addLog): make the convenience "return self"-added
+	watcher automatically unsubscribe when the Step finishes.
+	(BuildStatus.unsubscribe): same handle-duplicate-unsubscribe
+	(BuildStatus.stepStarted): same auto-unsubscribe
+	(BuilderStatus.buildStarted): same auto-unsubscribe
+
+	* buildbot/interfaces.py (IStatusReceiver.buildStarted): document
+	auto-unsubscribe
+	(IStatusReceiver.stepStarted): same
+	(IStatusReceiver.logStarted): same
+
+	* buildbot/test/test_run.py (Status): move the Status test..
+	* buildbot/test/test_status.py (Subscription): .. to here
+
 2005-11-25  Brian Warner  <warner@lothar.com>
 
 	* NEWS: more updates

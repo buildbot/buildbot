@@ -726,6 +726,8 @@ class IStatusReceiver(Interface):
         'self'). If it does so, stepStarted and stepFinished methods will be
         invoked on the object for the steps of this one build. This is a
         convenient way to subscribe to all build steps without missing any.
+        This receiver will automatically be unsubscribed when the build
+        finishes.
 
         It can also return a tuple of (IStatusReceiver, interval), in which
         case buildETAUpdate messages are sent ever 'interval' seconds, in
@@ -741,7 +743,8 @@ class IStatusReceiver(Interface):
 
         This method may return an IStatusReceiver (it could even return
         'self'). If it does so, logStarted and logFinished methods will be
-        invoked on the object for logs created by this one step.
+        invoked on the object for logs created by this one step. This
+        receiver will be automatically unsubscribed when the step finishes.
 
         Alternatively, the method may return a tuple of an IStatusReceiver
         and an integer named 'updateInterval'. In addition to
@@ -762,7 +765,8 @@ class IStatusReceiver(Interface):
 
         This method may return an IStatusReceiver (such as 'self'), in which
         case the target's logChunk method will be invoked as text is added to
-        the logfile. """
+        the logfile. This receiver will automatically be unsubsribed when the
+        log finishes."""
 
     def logChunk(build, step, log, channel, text):
         """Some text has been added to this log. 'channel' is 0, 1, or 2, as

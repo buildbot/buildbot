@@ -8,10 +8,9 @@ import sys, os, os.path, shutil, time, errno
 
 from buildbot import master, interfaces
 from buildbot.sourcestamp import SourceStamp
-from buildbot.util import now
 from buildbot.slave import bot
 from buildbot.changes import changes
-from buildbot.status import base, builder
+from buildbot.status import builder
 from buildbot.process.base import BuildRequest
 from buildbot.twcompat import maybeWait
 
@@ -73,64 +72,6 @@ c['builders'].append({'name': 'dummy2', 'slavename': 'bot1',
                       'builddir': 'dummy23', 'factory': f2})
 """
 
-class STarget(base.StatusReceiver):
-    debug = False
-
-    def __init__(self, mode):
-        self.mode = mode
-        self.events = []
-    def announce(self):
-        if self.debug:
-            print self.events[-1]
-
-    def builderAdded(self, name, builder):
-        self.events.append(("builderAdded", name, builder))
-        self.announce()
-        if "builder" in self.mode:
-            return self
-    def builderChangedState(self, name, state):
-        self.events.append(("builderChangedState", name, state))
-        self.announce()
-    def buildStarted(self, name, build):
-        self.events.append(("buildStarted", name, build))
-        self.announce()
-        if "eta" in self.mode:
-            self.eta_build = build.getETA()
-        if "build" in self.mode:
-            return self
-    def buildETAUpdate(self, build, ETA):
-        self.events.append(("buildETAUpdate", build, ETA))
-        self.announce()
-    def stepStarted(self, build, step):
-        self.events.append(("stepStarted", build, step))
-        self.announce()
-        if 0 and "eta" in self.mode:
-            print "TIMES", step.getTimes()
-            print "ETA", step.getETA()
-            print "EXP", step.getExpectations()
-        if "step" in self.mode:
-            return self
-    def stepETAUpdate(self, build, step, ETA, expectations):
-        self.events.append(("stepETAUpdate", build, step, ETA, expectations))
-        self.announce()
-    def logStarted(self, build, step, log):
-        self.events.append(("logStarted", build, step, log))
-        self.announce()
-    def logFinished(self, build, step, log):
-        self.events.append(("logFinished", build, step, log))
-        self.announce()
-    def stepFinished(self, build, step, results):
-        self.events.append(("stepFinished", build, step, results))
-        if 0 and "eta" in self.mode:
-            print "post-EXP", step.getExpectations()
-        self.announce()
-    def buildFinished(self, name, build, results):
-        self.events.append(("buildFinished", name, build, results))
-        self.announce()
-    def builderRemoved(self, name):
-        self.events.append(("builderRemoved", name))
-        self.announce()
-
 class Run(unittest.TestCase):
     def rmtree(self, d):
         try:
@@ -174,162 +115,6 @@ class Ping(RunMixin, unittest.TestCase):
 
     def _testPing_2(self, res):
         pass
-
-class Status(RunMixin, unittest.TestCase):
-
-    def testSlave(self):
-        m = self.master
-        s = m.getStatus()
-        self.t1 = t1 = STarget(["builder"])
-        #t1.debug = True; print
-        s.subscribe(t1)
-        self.failUnlessEqual(len(t1.events), 0)
-
-        self.t3 = t3 = STarget(["builder", "build", "step"])
-        s.subscribe(t3)
-
-        m.loadConfig(config_2)
-        m.readConfig = True
-        m.startService()
-
-        self.failUnlessEqual(len(t1.events), 4)
-        self.failUnlessEqual(t1.events[0][0:2], ("builderAdded", "dummy"))
-        self.failUnlessEqual(t1.events[1],
-                             ("builderChangedState", "dummy", "offline"))
-        self.failUnlessEqual(t1.events[2][0:2], ("builderAdded", "testdummy"))
-        self.failUnlessEqual(t1.events[3],
-                             ("builderChangedState", "testdummy", "offline"))
-        t1.events = []
-
-        self.failUnlessEqual(s.getBuilderNames(), ["dummy", "testdummy"])
-        self.failUnlessEqual(s.getBuilderNames(categories=['test']),
-                             ["testdummy"])
-        self.s1 = s1 = s.getBuilder("dummy")
-        self.failUnlessEqual(s1.getName(), "dummy")
-        self.failUnlessEqual(s1.getState(), ("offline", []))
-        self.failUnlessEqual(s1.getCurrentBuilds(), [])
-        self.failUnlessEqual(s1.getLastFinishedBuild(), None)
-        self.failUnlessEqual(s1.getBuild(-1), None)
-        #self.failUnlessEqual(s1.getEvent(-1), foo("created"))
-
-        # status targets should, upon being subscribed, immediately get a
-        # list of all current builders matching their category
-        self.t2 = t2 = STarget([])
-        s.subscribe(t2)
-        self.failUnlessEqual(len(t2.events), 2)
-        self.failUnlessEqual(t2.events[0][0:2], ("builderAdded", "dummy"))
-        self.failUnlessEqual(t2.events[1][0:2], ("builderAdded", "testdummy"))
-
-        d = self.connectSlave(builders=["dummy", "testdummy"])
-        d.addCallback(self._testSlave_1, t1)
-        return maybeWait(d)
-
-    def _testSlave_1(self, res, t1):
-        self.failUnlessEqual(len(t1.events), 2)
-        self.failUnlessEqual(t1.events[0],
-                             ("builderChangedState", "dummy", "idle"))
-        self.failUnlessEqual(t1.events[1],
-                             ("builderChangedState", "testdummy", "idle"))
-        t1.events = []
-
-        c = interfaces.IControl(self.master)
-        req = BuildRequest("forced build for testing", SourceStamp())
-        c.getBuilder("dummy").requestBuild(req)
-        d = req.waitUntilFinished()
-        d2 = self.master.botmaster.waitUntilBuilderIdle("dummy")
-        dl = defer.DeferredList([d, d2])
-        dl.addCallback(self._testSlave_2)
-        return dl
-
-    def _testSlave_2(self, res):
-        # t1 subscribes to builds, but not anything lower-level
-        ev = self.t1.events
-        self.failUnlessEqual(len(ev), 4)
-        self.failUnlessEqual(ev[0][0:3],
-                             ("builderChangedState", "dummy", "building"))
-        self.failUnlessEqual(ev[1][0], "buildStarted")
-        self.failUnlessEqual(ev[2][0:2]+ev[2][3:4],
-                             ("buildFinished", "dummy", builder.SUCCESS))
-        self.failUnlessEqual(ev[3][0:3],
-                             ("builderChangedState", "dummy", "idle"))
-
-        self.failUnlessEqual([ev[0] for ev in self.t3.events],
-                             ["builderAdded",
-                              "builderChangedState", # offline
-                              "builderAdded",
-                              "builderChangedState", # idle
-                              "builderChangedState", # offline
-                              "builderChangedState", # idle
-                              "builderChangedState", # building
-                              "buildStarted",
-                              "stepStarted", "stepETAUpdate", "stepFinished",
-                              "stepStarted", "stepETAUpdate",
-                              "logStarted", "logFinished", "stepFinished",
-                              "buildFinished",
-                              "builderChangedState", # idle
-                              ])
-
-        b = self.s1.getLastFinishedBuild()
-        self.failUnless(b)
-        self.failUnlessEqual(b.getBuilder().getName(), "dummy")
-        self.failUnlessEqual(b.getNumber(), 0)
-        self.failUnlessEqual(b.getSourceStamp(), (None, None, None))
-        self.failUnlessEqual(b.getReason(), "forced build for testing")
-        self.failUnlessEqual(b.getChanges(), [])
-        self.failUnlessEqual(b.getResponsibleUsers(), [])
-        self.failUnless(b.isFinished())
-        self.failUnlessEqual(b.getText(), ['build', 'successful'])
-        self.failUnlessEqual(b.getColor(), "green")
-        self.failUnlessEqual(b.getResults(), builder.SUCCESS)
-
-        steps = b.getSteps()
-        self.failUnlessEqual(len(steps), 2)
-
-        eta = 0
-        st1 = steps[0]
-        self.failUnlessEqual(st1.getName(), "dummy")
-        self.failUnless(st1.isFinished())
-        self.failUnlessEqual(st1.getText(), ["delay", "1 secs"])
-        start,finish = st1.getTimes()
-        self.failUnless(0.5 < (finish-start) < 10)
-        self.failUnlessEqual(st1.getExpectations(), [])
-        self.failUnlessEqual(st1.getLogs(), [])
-        eta += finish-start
-
-        st2 = steps[1]
-        self.failUnlessEqual(st2.getName(), "remote dummy")
-        self.failUnless(st2.isFinished())
-        self.failUnlessEqual(st2.getText(),
-                             ["remote", "delay", "2 secs"])
-        start,finish = st2.getTimes()
-        self.failUnless(1.5 < (finish-start) < 10)
-        eta += finish-start
-        self.failUnlessEqual(st2.getExpectations(), [('output', 38, None)])
-        logs = st2.getLogs()
-        self.failUnlessEqual(len(logs), 1)
-        self.failUnlessEqual(logs[0].getName(), "log")
-        self.failUnlessEqual(logs[0].getText(), "data")
-
-        self.eta = eta
-        # now we run it a second time, and we should have an ETA
-
-        self.t4 = t4 = STarget(["builder", "build", "eta"])
-        self.master.getStatus().subscribe(t4)
-        c = interfaces.IControl(self.master)
-        req = BuildRequest("forced build for testing", SourceStamp())
-        c.getBuilder("dummy").requestBuild(req)
-        d = req.waitUntilFinished()
-        d2 = self.master.botmaster.waitUntilBuilderIdle("dummy")
-        dl = defer.DeferredList([d, d2])
-        dl.addCallback(self._testSlave_3)
-        return dl
-
-    def _testSlave_3(self, res):
-        t4 = self.t4
-        eta = self.eta
-        self.failUnless(eta-1 < t4.eta_build < eta+1, # should be 3 seconds
-                        "t4.eta_build was %g, not in (%g,%g)"
-                        % (t4.eta_build, eta-1, eta+1))
 
 class BuilderNames(unittest.TestCase):
 

@@ -802,9 +802,11 @@ class BuildStepStatus:
                                                        updateInterval)
 
     def unsubscribe(self, receiver):
-        self.watchers.remove(receiver)
-        if self.updates[receiver] is not None:
-            self.updates[receiver].cancel()
+        if receiver in self.watchers:
+            self.watchers.remove(receiver)
+        if receiver in self.updates:
+            if self.updates[receiver] is not None:
+                self.updates[receiver].cancel()
             del self.updates[receiver]
 
 
@@ -830,6 +832,8 @@ class BuildStepStatus:
             receiver = w.logStarted(self.build, self, log)
             if receiver:
                 log.subscribe(receiver, True)
+                d = log.waitUntilFinished()
+                d.addCallback(lambda log: log.unsubscribe(receiver))
         d = log.waitUntilFinished()
         d.addCallback(self.logFinished)
         return log
@@ -1060,9 +1064,11 @@ class BuildStatus(styles.Versioned):
                                                        updateInterval)
 
     def unsubscribe(self, receiver):
-        self.watchers.remove(receiver)
-        if self.updates[receiver] is not None:
-            self.updates[receiver].cancel()
+        if receiver in self.watchers:
+            self.watchers.remove(receiver)
+        if receiver in self.updates:
+            if self.updates[receiver] is not None:
+                self.updates[receiver].cancel()
             del self.updates[receiver]
 
     # methods for the base.Build to invoke
@@ -1138,6 +1144,9 @@ class BuildStatus(styles.Versioned):
                     step.subscribe(receiver[0], receiver[1])
                 else:
                     step.subscribe(receiver)
+                d = step.waitUntilFinished()
+                d.addCallback(lambda step: step.unsubscribe(receiver))
+
         step.waitUntilFinished().addCallback(self._stepFinished)
 
     def _stepFinished(self, step):
@@ -1586,6 +1595,9 @@ class BuilderStatus(styles.Versioned):
                     s.subscribe(receiver[0], receiver[1])
                 else:
                     s.subscribe(receiver)
+                d = s.waitUntilFinished()
+                d.addCallback(lambda s: s.unsubscribe(receiver))
+
 
     def _buildFinished(self, s):
         assert s in self.currentBuilds
