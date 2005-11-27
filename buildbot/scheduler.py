@@ -255,7 +255,10 @@ class AnyBranchScheduler(BaseUpstreamScheduler):
             return
         s = self.schedulers.get(branch)
         if not s:
-            name = self.name + "." + branch
+            if branch:
+                name = self.name + "." + branch
+            else:
+                name = self.name + ".<default>"
             s = self.schedulerFactory(name, branch,
                                       self.treeStableTimer,
                                       self.builderNames,

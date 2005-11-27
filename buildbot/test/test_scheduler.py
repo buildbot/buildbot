@@ -142,25 +142,35 @@ class Scheduling(unittest.TestCase):
         c4 = Change("carol", ["important"], "other branch", branch="branch2")
         s.addChange(c4)
 
+        c5 = Change("carol", ["important"], "default branch", branch=None)
+        s.addChange(c5)
+
         d = defer.Deferred()
         reactor.callLater(2, d.callback, None)
         d.addCallback(self._testAnyBranch_1)
         return maybeWait(d)
     def _testAnyBranch_1(self, res):
-        self.failUnlessEqual(len(self.master.sets), 2)
+        self.failUnlessEqual(len(self.master.sets), 3)
         self.master.sets.sort(lambda a,b: cmp(a.source.branch,
                                               b.source.branch))
+
         s1 = self.master.sets[0].source
-        self.failUnlessEqual(s1.branch, "branch1")
+        self.failUnlessEqual(s1.branch, None)
         self.failUnlessEqual(s1.revision, None)
-        self.failUnlessEqual(len(s1.changes), 3)
+        self.failUnlessEqual(len(s1.changes), 1)
         self.failUnlessEqual(s1.patch, None)
 
         s2 = self.master.sets[1].source
-        self.failUnlessEqual(s2.branch, "branch2")
+        self.failUnlessEqual(s2.branch, "branch1")
         self.failUnlessEqual(s2.revision, None)
-        self.failUnlessEqual(len(s2.changes), 1)
+        self.failUnlessEqual(len(s2.changes), 3)
         self.failUnlessEqual(s2.patch, None)
+
+        s3 = self.master.sets[2].source
+        self.failUnlessEqual(s3.branch, "branch2")
+        self.failUnlessEqual(s3.revision, None)
+        self.failUnlessEqual(len(s3.changes), 1)
+        self.failUnlessEqual(s3.patch, None)
 
     def testAnyBranch2(self):
         # like testAnyBranch but without fileIsImportant
@@ -178,6 +188,7 @@ class Scheduling(unittest.TestCase):
 
         c4 = Change("carol", ["important"], "other branch", branch="branch2")
         s.addChange(c4)
+
         d = defer.Deferred()
         reactor.callLater(2, d.callback, None)
         d.addCallback(self._testAnyBranch2_1)

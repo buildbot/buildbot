@@ -1,5 +1,16 @@
 2005-11-26  Brian Warner  <warner@lothar.com>
 
+	* buildbot/scheduler.py (AnyBranchScheduler.addChange): don't
+	explode when branch==None, thanks to Kevin Turner for the catch
+	* buildbot/test/test_scheduler.py (Scheduling.testAnyBranch): test
+	it
+
+	* buildbot/__init__.py (version): bump to 0.7.1+ while between
+	releases
+	* docs/buildbot.texinfo: same
+
+2005-11-26  Brian Warner  <warner@lothar.com>
+
 	* buildbot/__init__.py (version): Releasing buildbot-0.7.1
 	* docs/buildbot.texinfo: set version number to match
 
