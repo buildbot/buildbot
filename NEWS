@@ -1,8 +1,8 @@
 User visible changes in Buildbot.
 
-* Release ?.?.? (??)
+* Release 0.7.1 (26 Nov 2005)
 
-** New Features
+** new features
 
 *** scheduler.Nightly
 
@@ -32,10 +32,11 @@ trialArgs= argument. This is a list of strings, and defaults to an empty list.
 
 Added the word "[branch]" to the VC step's description (used in the Step's
 box on the Waterfall page, among others) when we're checking out a
-non-default branch. Also add "rNNN" to indicate which revision is being
-checked out. Thanks to Brad Hards and Nathaniel Smith for the suggestion.
+non-default branch. Also add "rNNN" where appropriate to indicate which
+revision is being checked out. Thanks to Brad Hards and Nathaniel Smith for
+the suggestion.
 
-** Bugs
+** bugs fixed
 
 Several patches from Dobes Vandermeer: Escape the URLs in email, in case they
 have spaces and such. Fill otherwise-empty <td> elements, as a workaround for
@@ -65,6 +66,25 @@ reloaded: changing one Builder (but not the others) and reloading master.cfg
 would result in multiple instances of the same Lock object, so the Locks
 would fail to prevent simultaneous execution of Builds or Steps. This has
 been fixed.
+
+** other changes
+
+For a long time, certain StatusReceiver methods (like buildStarted and
+stepStarted) have been able to return another StatusReceiver instance
+(usually 'self') to indicate that they wish to subscribe to events within the
+new object. For example, if the buildStarted() method returns 'self', the
+status receiver will also receive events for the new build, like
+stepStarted() and buildETAUpdate(). Returning a 'self' from buildStarted() is
+equivalent to calling build.subscribe(self).
+
+Starting with buildbot-0.7.1, this auto-subscribe convenience will also
+register to automatically unsubscribe the target when the build or step has
+finished, just as if build.unsubscribe(self) had been called. Also, the
+unsubscribe() method has been changed to not explode if the same receiver is
+unsubscribed multiple times. (note that it will still explode is the same
+receiver is *subscribed* multiple times, so please continue to refrain from
+doing that).
+
 
 * Release 0.7.0 (24 Oct 2005)
 

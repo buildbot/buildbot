@@ -1,5 +1,12 @@
 2005-11-26  Brian Warner  <warner@lothar.com>
 
+	* buildbot/__init__.py (version): Releasing buildbot-0.7.1
+	* docs/buildbot.texinfo: set version number to match
+
+2005-11-26  Brian Warner  <warner@lothar.com>
+
+	* NEWS: update for 0.7.1
+
 	* buildbot/status/builder.py (BuildStepStatus.unsubscribe): make
 	sure that unsubscribe works even if we never sent an ETA update.
 	Also, don't explode on duplicate unsubscribe.
