@@ -33,6 +33,9 @@ class BaseScheduler(service.MultiService, util.ComparableMixin):
     def submit(self, bs):
         self.parent.submitBuildSet(bs)
 
+    def addChange(self, change):
+        pass
+
 class BaseUpstreamScheduler(BaseScheduler):
     if implements:
         implements(interfaces.IUpstreamScheduler)

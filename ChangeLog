@@ -1,3 +1,12 @@
+2005-12-22  Brian Warner  <warner@lothar.com>
+
+	* docs/examples/twisted_master.cfg: merge changes from pyr: add
+	new win32 builders
+
+	* buildbot/scheduler.py (BaseScheduler.addChange): include a dummy
+	addChange in the parent class, although I suspect this should be
+	fixed better in the future.
+
 2005-11-26  Brian Warner  <warner@lothar.com>
 
 	* buildbot/scheduler.py (AnyBranchScheduler.addChange): don't
