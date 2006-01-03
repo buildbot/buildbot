@@ -591,7 +591,6 @@ class BuildMaster(service.MultiService, styles.Versioned):
 
         self.statusTargets = []
 
-        self.schedulers = []
         self.bots = []
         # this ChangeMaster is a dummy, only used by tests. In the real
         # buildmaster, where the BuildMaster instance is activated
@@ -752,8 +751,7 @@ class BuildMaster(service.MultiService, styles.Versioned):
         # Schedulers are service.MultiServices and thus iterable.
         assert type(schedulers) in (list, tuple)
         for s in schedulers:
-            assert (interfaces.IScheduler(s, None)
-                    or interfaces.IUpstreamScheduler(s, None))
+            assert interfaces.IScheduler(s, None)
         assert type(status) in (list, tuple)
         for s in status:
             assert interfaces.IStatusReceiver(s, None)
@@ -907,14 +905,22 @@ class BuildMaster(service.MultiService, styles.Versioned):
         d.addCallback(addNewOnes)
         return d
 
+    def allSchedulers(self):
+        # TODO: when twisted-1.3 compatibility is dropped, switch to the
+        # providedBy form, because it's faster (no actual adapter lookup)
+        return [child for child in self
+                #if interfaces.IScheduler.providedBy(child)]
+                if interfaces.IScheduler(child, None)]
+
+
     def loadConfig_Schedulers(self, newschedulers):
-        old = [s for s in self.schedulers if s not in newschedulers]
-        [self.schedulers.remove(s) for s in old]
-        dl = [defer.maybeDeferred(s.disownServiceParent) for s in old]
+        oldschedulers = self.allSchedulers()
+        removed = [s for s in oldschedulers if s not in newschedulers]
+        added = [s for s in newschedulers if s not in oldschedulers]
+        dl = [defer.maybeDeferred(s.disownServiceParent) for s in removed]
         def addNewOnes(res):
-            [s.setServiceParent(self)
-             for s in newschedulers if s not in self.schedulers]
-            self.schedulers = newschedulers
+            for s in added:
+                s.setServiceParent(self)
         d = defer.DeferredList(dl, fireOnOneErrback=1)
         d.addCallback(addNewOnes)
         return d
@@ -1004,7 +1010,7 @@ class BuildMaster(service.MultiService, styles.Versioned):
 
 
     def addChange(self, change):
-        for s in self.schedulers:
+        for s in self.allSchedulers():
             s.addChange(change)
 
     def submitBuildSet(self, bs):

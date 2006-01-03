@@ -1,3 +1,40 @@
+2006-01-03  Brian Warner  <warner@lothar.com>
+
+	* buildbot/master.py (BuildMaster): remove the .schedulers
+	attribute, replacing it with an allSchedulers() method that looks
+	for all IService children that implement IScheduler. Having only
+	one parent/child relationship means fewer opportunities for bugs.
+	(BuildMaster.allSchedulers): new method
+	(BuildMaster.loadConfig_Schedulers): update to use allSchedulers,
+	also fix ugly bug that caused any config-file reload to
+	half-forget about the earlier Schedulers, causing an exception
+	when a Change arrived and was handed to a half-connected
+	Scheduler. The exception was in scheduler.py line 54ish:
+	  self.parent.submitBuildSet(bs)
+	  exceptions.AttributeError: 'NoneType' object has no attribute
+	  'submitBuildSet'
+	(BuildMaster.addChange): update to use allSchedulers()
+
+	* buildbot/scheduler.py (BaseScheduler.__implements__): fix this
+	to work properly with twisted-1.3.0, where you must explicitly
+	include the __implements__ from parent classes
+	(BaseScheduler.__repr__): make it easier to distinguish distinct
+	instances
+	(BaseUpstreamScheduler.__implements__): same
+
+	* buildbot/status/builder.py (Status.getSchedulers): update to
+	use allSchedulers()
+	* buildbot/test/test_run.py (Run.testMaster): same
+	* buildbot/test/test_dependencies.py (Dependencies.findScheduler): same
+	* buildbot/test/test_config.py (ConfigTest.testSchedulers): same,
+	make sure Scheduler instances are left alone when an identical
+	config file is reloaded
+	(ConfigElements.testSchedulers): make sure Schedulers are properly
+	comparable
+
+	* Makefile (TRIALARGS): my local default Twisted version is now
+	2.1.0, update the trial arguments accordingly
+
 2005-12-22  Brian Warner  <warner@lothar.com>
 
 	* docs/examples/twisted_master.cfg: merge changes from pyr: add

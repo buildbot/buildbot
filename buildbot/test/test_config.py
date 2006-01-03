@@ -16,6 +16,7 @@ except ImportError:
 from buildbot.twcompat import providedBy, maybeWait
 from buildbot.master import BuildMaster
 from buildbot import scheduler
+from buildbot import interfaces as ibb
 from twisted.application import service, internet
 from twisted.spread import pb
 from twisted.web.server import Site
@@ -511,7 +512,7 @@ c['sources'] = [s1]
         master = self.buildmaster
         master.loadChanges()
         master.loadConfig(emptyCfg)
-        self.failUnlessEqual(master.schedulers, [])
+        self.failUnlessEqual(master.allSchedulers(), [])
 
         self.schedulersCfg = \
 """
@@ -565,8 +566,9 @@ c['schedulers'] = [Scheduler('full', None, 60, ['builder-bogus'])]
         d.addCallback(self._testSchedulers_4)
         return d
     def _testSchedulers_4(self, res):
-        self.failUnlessEqual(len(self.buildmaster.schedulers), 1)
-        s = self.buildmaster.schedulers[0]
+        sch = self.buildmaster.allSchedulers()
+        self.failUnlessEqual(len(sch), 1)
+        s = sch[0]
         self.failUnless(isinstance(s, scheduler.Scheduler))
         self.failUnlessEqual(s.name, "full")
         self.failUnlessEqual(s.branch, None)
@@ -579,16 +581,32 @@ s1 = Scheduler('full', None, 60, ['builder1'])
 c['schedulers'] = [s1, Dependent('downstream', s1, ['builder1'])]
 """
         d = self.buildmaster.loadConfig(newcfg)
-        d.addCallback(self._testSchedulers_5)
+        d.addCallback(self._testSchedulers_5, newcfg)
         return d
-    def _testSchedulers_5(self, res):
-        self.failUnlessEqual(len(self.buildmaster.schedulers), 2)
-        s = self.buildmaster.schedulers[0]
+    def _testSchedulers_5(self, res, newcfg):
+        sch = self.buildmaster.allSchedulers()
+        self.failUnlessEqual(len(sch), 2)
+        s = sch[0]
         self.failUnless(isinstance(s, scheduler.Scheduler))
-        s = self.buildmaster.schedulers[1]
+        s = sch[1]
         self.failUnless(isinstance(s, scheduler.Dependent))
         self.failUnlessEqual(s.name, "downstream")
         self.failUnlessEqual(s.builderNames, ['builder1'])
+
+        # reloading the same config file should leave the schedulers in place
+        d = self.buildmaster.loadConfig(newcfg)
+        d.addCallback(self._testschedulers_6, sch)
+        return d
+    def _testschedulers_6(self, res, sch1):
+        sch2 = self.buildmaster.allSchedulers()
+        self.failUnlessEqual(len(sch2), 2)
+        sch1.sort()
+        sch2.sort()
+        self.failUnlessEqual(sch1, sch2)
+        self.failUnlessIdentical(sch1[0], sch2[0])
+        self.failUnlessIdentical(sch1[1], sch2[1])
+        self.failUnlessIdentical(sch1[0].parent, self.buildmaster)
+        self.failUnlessIdentical(sch1[1].parent, self.buildmaster)
 
 
     def testBuilders(self):
@@ -827,6 +845,32 @@ c['schedulers'] = [s1, Dependent('downstream', s1, ['builder1'])]
         # remove the locks entirely
         master.loadConfig(lockCfg2c)
         self.failIfIdentical(b1, master.botmaster.builders["builder1"])
+
+class ConfigElements(unittest.TestCase):
+    # verify that ComparableMixin is working
+    def testSchedulers(self):
+        s1 = scheduler.Scheduler(name='quick', branch=None,
+                                 treeStableTimer=30,
+                                 builderNames=['quick'])
+        s2 = scheduler.Scheduler(name="all", branch=None,
+                                 treeStableTimer=5*60,
+                                 builderNames=["a", "b"])
+        s3 = scheduler.Try_Userpass("try", ["a","b"], port=9989,
+                                    userpass=[("foo","bar")])
+        s1a = scheduler.Scheduler(name='quick', branch=None,
+                                  treeStableTimer=30,
+                                  builderNames=['quick'])
+        s2a = scheduler.Scheduler(name="all", branch=None,
+                                  treeStableTimer=5*60,
+                                  builderNames=["a", "b"])
+        s3a = scheduler.Try_Userpass("try", ["a","b"], port=9989,
+                                     userpass=[("foo","bar")])
+        self.failUnless(s1 == s1)
+        self.failUnless(s1 == s1a)
+        self.failUnless(s1a in [s1, s2, s3])
+        self.failUnless(s2a in [s1, s2, s3])
+        self.failUnless(s3a in [s1, s2, s3])
+
 
 
 class ConfigFileTest(unittest.TestCase):

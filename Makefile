@@ -3,7 +3,7 @@
 # process a little bit. This Makefile is not included in the source tarball.
 
 BBBASE = $(PWD)
-TRIALARGS=-v
+TRIALARGS=
 ifdef SVN
 T=~/stuff/python/twisted/Twisted
 TRIALARGS=--reporter=verbose
@@ -12,6 +12,7 @@ T=
 endif
 ifdef T13
 T=~/stuff/python/twisted/Twisted-1.3.0
+TRIALARGS=-v
 endif
 PP = PYTHONPATH=$(BBBASE):$(T)
 

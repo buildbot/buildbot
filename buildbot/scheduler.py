@@ -21,14 +21,16 @@ class BaseScheduler(service.MultiService, util.ComparableMixin):
     if implements:
         implements(interfaces.IScheduler)
     else:
-        __implements__ = interfaces.IScheduler,
+        __implements__ = (interfaces.IScheduler,
+                          service.MultiService.__implements__)
 
     def __init__(self, name):
         service.MultiService.__init__(self)
         self.name = name
 
     def __repr__(self):
-        return "<Scheduler '%s'>" % self.name
+        # TODO: why can't id() return a positive number? %d is ugly.
+        return "<Scheduler '%s' at %d>" % (self.name, id(self))
 
     def submit(self, bs):
         self.parent.submitBuildSet(bs)
@@ -40,7 +42,8 @@ class BaseUpstreamScheduler(BaseScheduler):
     if implements:
         implements(interfaces.IUpstreamScheduler)
     else:
-        __implements__ = interfaces.IUpstreamScheduler,
+        __implements__ = (interfaces.IUpstreamScheduler,
+                          BaseScheduler.__implements__)
 
     def __init__(self, name):
         BaseScheduler.__init__(self, name)

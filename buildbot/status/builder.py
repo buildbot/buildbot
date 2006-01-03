@@ -1810,7 +1810,7 @@ class Status:
 
 
     def getSchedulers(self):
-        return self.botmaster.parent.schedulers
+        return self.botmaster.parent.allSchedulers()
 
     def getBuilderNames(self, categories=None):
         if categories == None:

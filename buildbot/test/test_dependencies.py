@@ -74,7 +74,7 @@ class Dependencies(RunMixin, unittest.TestCase):
         return maybeWait(d)
 
     def findScheduler(self, name):
-        for s in self.master.schedulers:
+        for s in self.master.allSchedulers():
             if s.name == name:
                 return s
         raise KeyError("No Scheduler named '%s'" % name)

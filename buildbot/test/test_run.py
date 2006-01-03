@@ -92,7 +92,7 @@ class Run(unittest.TestCase):
         c = changes.Change("bob", ["Makefile", "foo/bar.c"], "changed stuff")
         cm.addChange(c)
         # verify that the Scheduler is now waiting
-        s = m.schedulers[0]
+        s = m.allSchedulers()[0]
         self.failUnless(s.timer)
         # halting the service will also stop the timer
         d = defer.maybeDeferred(m.stopService)
