@@ -1,3 +1,26 @@
+2006-01-12  Brian Warner  <warner@lothar.com>
+
+	* buildbot/master.py (Manhole.__init__): let port= be a strports
+	specification string, but handle a regular int for backwards
+	compatibility. This allows "tcp:12345:interface=127.0.0.1" to be
+	used in master.cfg to limit connections to just the local host.
+	(BuildMaster.loadConfig): same for c['slavePortnum']
+	* buildbot/scheduler.py (Try_Userpass.__init__): same
+	* buildbot/status/client.py (PBListener.__init__): same
+	* buildbot/status/html.py (Waterfall.__init__): same, for both
+	http_port and distrib_port. Include backwards-compatibility checks
+	so distrib_port can be a filename string and still mean unix:/foo
+	* docs/buildbot.texinfo (Setting the slaveport): document it
+	(Debug options): same
+	(HTML Waterfall): same
+	(PBListener): same
+	(try): same
+	* buildbot/test/test_config.py (ConfigTest): test it
+
+	* buildbot/master.py (BuildMaster.loadConfig): wait for the
+	slaveport's disownServiceParent deferred to fire before opening
+	the new one. Fixes an annoying bug in the unit tests.
+
 2006-01-03  Brian Warner  <warner@lothar.com>
 
 	* buildbot/master.py (BuildMaster): remove the .schedulers

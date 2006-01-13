@@ -11,7 +11,7 @@ from twisted.web.resource import Resource
 from twisted.web import static, html, server, distrib
 from twisted.web.error import NoResource
 from twisted.web.util import Redirect, DeferredResource
-from twisted.application import internet
+from twisted.application import strports
 from twisted.spread import pb
 
 from buildbot.twcompat import implements, Interface
@@ -1633,24 +1633,37 @@ class Waterfall(base.StatusReceiverMultiService):
                  categories=None, css=buildbot_css, favicon=buildbot_icon):
         """To have the buildbot run its own web server, pass a port number to
         C{http_port}. To have it run a web.distrib server
-        
-        @type  http_port: int
-        @param http_port: the TCP port number on which the buildbot should
-                          run its own web server, with the Waterfall display
-                          as the root page
 
-        @type  distrib_port: string or int
+        @type  http_port: int or L{twisted.application.strports} string
+        @param http_port: a strports specification describing which port the
+                          buildbot should use for its web server, with the
+                          Waterfall display as the root page. For backwards
+                          compatibility this can also be an int. Use
+                          'tcp:8000' to listen on that port, or
+                          'tcp:12345:interface=127.0.0.1' if you only want
+                          local processes to connect to it (perhaps because
+                          you are using an HTTP reverse proxy to make the
+                          buildbot available to the outside world, and do not
+                          want to make the raw port visible).
+
+        @type  distrib_port: int or L{twisted.application.strports} string
         @param distrib_port: Use this if you want to publish the Waterfall
                              page using web.distrib instead. The most common
-                             case is to provide a string that is a pathname
-                             to the unix socket on which the publisher should
-                             listen (C{os.path.expanduser(~/.twistd-web-pb)}
-                             will match the default settings of a standard
+                             case is to provide a string that is an absolute
+                             pathname to the unix socket on which the
+                             publisher should listen
+                             (C{os.path.expanduser(~/.twistd-web-pb)} will
+                             match the default settings of a standard
                              twisted.web 'personal web server'). Another
                              possibility is to pass an integer, which means
                              the publisher should listen on a TCP socket,
                              allowing the web server to be on a different
-                             machine entirely.
+                             machine entirely. Both forms are provided for
+                             backwards compatibility; the preferred form is a
+                             strports specification like
+                             'unix:/home/buildbot/.twistd-web-pb'. Providing
+                             a non-absolute pathname will probably confuse
+                             the strports parser.
 
         @type  allowForce: bool
         @param allowForce: if True, present a 'Force Build' button on the
@@ -1670,7 +1683,14 @@ class Waterfall(base.StatusReceiverMultiService):
         """
         base.StatusReceiverMultiService.__init__(self)
         assert allowForce in (True, False) # TODO: implement others
+        if type(http_port) is int:
+            http_port = "tcp:%d" % http_port
         self.http_port = http_port
+        if distrib_port is not None:
+            if type(distrib_port) is int:
+                distrib_port = "tcp:%d" % distrib_port
+            if distrib_port[0] in "/~.": # pathnames
+                distrib_port = "unix:%s" % distrib_port
         self.distrib_port = distrib_port
         self.allowForce = allowForce
         self.categories = categories
@@ -1705,12 +1725,9 @@ class Waterfall(base.StatusReceiverMultiService):
         self.site = server.Site(sr)
 
         if self.http_port is not None:
-            s = internet.TCPServer(self.http_port, self.site)
+            s = strports.service(self.http_port, self.site)
             s.setServiceParent(self)
         if self.distrib_port is not None:
             f = pb.PBServerFactory(distrib.ResourcePublisher(self.site))
-            if type(self.distrib_port) == int:
-                s = internet.TCPServer(self.distrib_port, f)
-            else:
-                s = internet.UNIXServer(self.distrib_port, f)
+            s = strports.service(self.distrib_port, f)
             s.setServiceParent(self)

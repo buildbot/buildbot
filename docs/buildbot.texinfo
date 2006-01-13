@@ -1855,6 +1855,21 @@ inbound connections to this port.
 c['slavePortnum'] = 10000
 @end example
 
+@code{c['slavePortnum']} is a @emph{strports} specification string,
+defined in the @code{twisted.application.strports} module (try
+@command{pydoc twisted.application.strports} to get documentation on
+the format). This means that you can have the buildmaster listen on a
+localhost-only port by doing:
+
+@example
+c['slavePortnum'] = "tcp:10000:interface=127.0.0.1"
+@end example
+
+This might be useful if you only run buildslaves on the same machine,
+and they are all configured to contact the buildmaster at
+@code{localhost:10000}.
+
+
 @node Buildslave Specifiers, Defining Builders, Setting the slaveport, Configuration
 @section Buildslave Specifiers
 
@@ -2019,10 +2034,20 @@ buildbot developers. It exposes full access to the buildmaster's
 account (including the ability to modify and delete files), so it
 should not be enabled with a weak or easily guessable password.
 
+The @code{Manhole} instance can be configured to listen on a specific
+port. You may wish to have this listening port bind to the loopback
+interface (sometimes known as ``lo0'', ``localhost'', or 127.0.0.1) to
+restrict access to clients which are running on the same host.
+
 @example
 from buildbot.master import Manhole
-c['manhole'] = Manhole(9999, "admin", "password")
+c['manhole'] = Manhole("tcp:9999:interface=127.0.0.1", "admin", "password")
 @end example
+
+To have the @code{Manhole} listen on all interfaces, use
+@code{"tcp:9999"}. This port specification uses
+@code{twisted.application.strports}, so you can make it listen on SSL
+or even UNIX-domain sockets if you want.
 
 
 @node Getting Source Code Changes, Build Process, Configuration, Top
@@ -3548,12 +3573,20 @@ HTML ``waterfall display'', which shows a time-based chart of events.
 This display provides detailed information about all steps of all
 recent builds, and provides hyperlinks to look at individual build
 logs and source changes. If the @code{http_port} argument is provided,
-it represents the TCP port number on which the web server should
-listen. If instead @code{distrib_port} is provided, a twisted.web
-distributed server will be started either on a TCP port (if
-@code{distrib_port} is an int) or more likely on a UNIX socket (if
-@code{distrib_port} is a string). The HTML page can have a favicon and
-custom CSS: see the docstring for details.
+it provides a strports specification for the port that the web server
+should listen on. This can be a simple port number, or a string like
+@code{tcp:8080:interface=127.0.0.1} (to limit connections to the
+loopback interface, and therefore to clients running on the same
+host)@footnote{It may even be possible to provide SSL access by using
+a specification like
+@code{"ssl:12345:privateKey=mykey.pen:certKey=cert.pem"}, but this is
+completely untested}.
+
+If instead (or in addition) you provide the @code{distrib_port}
+argument, a twisted.web distributed server will be started either on a
+TCP port (if @code{distrib_port} is like @code{"tcp:12345"}) or more
+likely on a UNIX socket (if @code{distrib_port} is like
+@code{"unix:/path/to/socket"}).
 
 The @code{distrib_port} option means that, on a host with a
 suitably-configured twisted-web server, you do not need to consume a
@@ -3563,11 +3596,14 @@ server is constructed with @code{mktap web --user}, URLs that point to
 listening on a UNIX socket at @code{~username/.twisted-web-pb}. On
 such a system, it is convenient to create a dedicated @code{buildbot}
 user, then set @code{distrib_port} to
-@code{os.path.expanduser("~/.twistd-web-pb")}. This configuration will
-make the HTML status page available at @code{http://host/~buildbot/} .
-Suitable URL remapping can make it appear at
-@code{http://host/buildbot/}, and the right virtual host setup can
-even place it at @code{http://buildbot.host/} .
+@code{"unix:"+os.path.expanduser("~/.twistd-web-pb")}. This
+configuration will make the HTML status page available at
+@code{http://host/~buildbot/} . Suitable URL remapping can make it
+appear at @code{http://host/buildbot/}, and the right virtual host
+setup can even place it at @code{http://buildbot.host/} .
+
+In addition, the HTML page can have a favicon and custom CSS: see the
+docstring for details.
 
 @node IRC Bot, PBListener, HTML Waterfall, Status Delivery
 @subsection IRC Bot
@@ -3645,7 +3681,8 @@ passwd=str)}
 
 This sets up a PB listener on the given TCP port, to which a PB-based
 status client can connect and retrieve status information.
-@code{buildbot statusgui} is an example of such a status client.
+@code{buildbot statusgui} is an example of such a status client. The
+@code{port} argument can also be a strports specification string.
 
 @node Command-line tool, Resources, Status Delivery, Top
 @chapter Command-line tool
@@ -3899,6 +3936,10 @@ s = Try_Userpass("try2", ["full-linux", "full-netbsd", "full-OSX"],
                  port=8031, userpass=[("alice","pw1"), ("bob", "pw2")] )
 c['schedulers'] = [s]
 @end example
+
+Like most places in the buildbot, the @code{port} argument takes a
+strports specification. See @code{twisted.application.strports} for
+details.
 
 
 @heading locating the master

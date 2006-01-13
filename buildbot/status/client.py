@@ -4,7 +4,7 @@ from twisted.spread import pb
 from twisted.python import log, components
 from twisted.python.failure import Failure
 from twisted.internet import defer, reactor
-from twisted.application import service, internet
+from twisted.application import service, strports
 from twisted.cred import portal, checkers
 
 from buildbot import util, interfaces
@@ -546,6 +546,8 @@ class PBListener(base.StatusReceiverMultiService):
 
     def __init__(self, port, user="statusClient", passwd="clientpw"):
         base.StatusReceiverMultiService.__init__(self)
+        if type(port) is int:
+            port = "tcp:%d" % port
         self.port = port
         self.cred = (user, passwd)
         p = portal.Portal(self)
@@ -553,7 +555,7 @@ class PBListener(base.StatusReceiverMultiService):
         c.addUser(user, passwd)
         p.registerChecker(c)
         f = pb.PBServerFactory(p)
-        s = internet.TCPServer(port, f)
+        s = strports.service(port, f)
         s.setServiceParent(self)
 
     def setServiceParent(self, parent):

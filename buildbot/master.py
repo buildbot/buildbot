@@ -15,7 +15,7 @@ from twisted.python import log, usage, components
 from twisted.internet import defer, reactor
 from twisted.spread import pb
 from twisted.cred import portal, checkers
-from twisted.application import service, internet
+from twisted.application import service, strports
 from twisted.persisted import styles
 from twisted.manhole import telnet
 
@@ -429,17 +429,19 @@ class Manhole(service.MultiService, util.ComparableMixin):
 
     def __init__(self, port, username, password):
         service.MultiService.__init__(self)
+        if type(port) is int:
+            port = "tcp:%d" % port
         self.port = port
         self.username = username
         self.password = password
         self.f = f = telnet.ShellFactory()
         f.username = username
         f.password = password
-        p = internet.TCPServer(port, f)
-        p.setServiceParent(self)
+        s = strports.service(port, f)
+        s.setServiceParent(self)
 
     def startService(self):
-        log.msg("Manhole listening on port %d" % self.port)
+        log.msg("Manhole listening on port %s" % self.port)
         service.MultiService.startService(self)
         master = self.parent
         self.f.namespace['master'] = master
@@ -809,6 +811,10 @@ class BuildMaster(service.MultiService, styles.Versioned):
                     else:
                         locks[l.name] = l
 
+        # slavePortnum supposed to be a strports specification
+        if type(slavePortnum) is int:
+            slavePortnum = "tcp:%d" % slavePortnum
+
         # now we're committed to implementing the new configuration, so do
         # it atomically
         # TODO: actually, this is spread across a couple of Deferreds, so it
@@ -855,17 +861,20 @@ class BuildMaster(service.MultiService, styles.Versioned):
         # self.slavePort
         if self.slavePortnum != slavePortnum:
             if self.slavePort:
-                d.addCallback(lambda res: self.slavePort.disownServiceParent())
-                self.slavePort = None
+                def closeSlavePort(res):
+                    d1 = self.slavePort.disownServiceParent()
+                    self.slavePort = None
+                    return d1
+                d.addCallback(closeSlavePort)
             if slavePortnum is not None:
                 def openSlavePort(res):
-                    self.slavePort = internet.TCPServer(slavePortnum,
-                                                        self.slaveFactory)
+                    self.slavePort = strports.service(slavePortnum,
+                                                      self.slaveFactory)
                     self.slavePort.setServiceParent(self)
                 d.addCallback(openSlavePort)
-                log.msg("BuildMaster listening on port %d" % slavePortnum)
+                log.msg("BuildMaster listening on port %s" % slavePortnum)
             self.slavePortnum = slavePortnum
-        
+
         log.msg("configuration update started")
         d.addCallback(lambda res: log.msg("configuration update complete"))
         self.readConfig = True # TODO: consider not setting this until the

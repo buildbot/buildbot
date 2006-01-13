@@ -3,7 +3,7 @@
 import time, os.path
 
 from twisted.internet import reactor
-from twisted.application import service, internet
+from twisted.application import service, internet, strports
 from twisted.python import log
 from twisted.protocols import basic
 from twisted.cred import portal, checkers
@@ -624,6 +624,8 @@ class Try_Userpass(TryBase):
 
     def __init__(self, name, builderNames, port, userpass):
         TryBase.__init__(self, name, builderNames)
+        if type(port) is int:
+            port = "tcp:%d" % port
         self.port = port
         self.userpass = userpass
         c = checkers.InMemoryUsernamePasswordDatabaseDontUse()
@@ -633,7 +635,7 @@ class Try_Userpass(TryBase):
         p = portal.Portal(self)
         p.registerChecker(c)
         f = pb.PBServerFactory(p)
-        s = internet.TCPServer(port, f)
+        s = strports.service(port, f)
         s.setServiceParent(self)
 
     def getPort(self):

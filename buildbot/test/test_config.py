@@ -112,6 +112,12 @@ from buildbot.status import html
 c['status'] = [html.Waterfall(http_port=9981)]
 """
 
+webCfg3 = emptyCfg + \
+"""
+from buildbot.status import html
+c['status'] = [html.Waterfall(http_port='tcp:9981:interface=127.0.0.1')]
+"""
+
 webNameCfg1 = emptyCfg + \
 """
 from buildbot.status import html
@@ -121,7 +127,7 @@ c['status'] = [html.Waterfall(distrib_port='~/.twistd-web-pb')]
 webNameCfg2 = emptyCfg + \
 """
 from buildbot.status import html
-c['status'] = [html.Waterfall(distrib_port='bar.socket')]
+c['status'] = [html.Waterfall(distrib_port='./bar.socket')]
 """
 
 debugPasswordCfg = emptyCfg + \
@@ -396,7 +402,7 @@ class ConfigTest(unittest.TestCase):
         master.loadConfig(emptyCfg)
         # note: this doesn't actually start listening, because the app
         # hasn't been started running
-        self.failUnlessEqual(master.slavePortnum, 9999)
+        self.failUnlessEqual(master.slavePortnum, "tcp:9999")
         self.checkPorts(master, [(9999, pb.PBServerFactory)])
         self.failUnlessEqual(list(master.change_svc), [])
         self.failUnlessEqual(master.botmaster.builders, {})
@@ -412,19 +418,19 @@ class ConfigTest(unittest.TestCase):
         master.loadChanges()
 
         master.loadConfig(emptyCfg)
-        self.failUnlessEqual(master.slavePortnum, 9999)
+        self.failUnlessEqual(master.slavePortnum, "tcp:9999")
         ports = self.checkPorts(master, [(9999, pb.PBServerFactory)])
         p = ports[0]
 
         master.loadConfig(emptyCfg)
-        self.failUnlessEqual(master.slavePortnum, 9999)
+        self.failUnlessEqual(master.slavePortnum, "tcp:9999")
         ports = self.checkPorts(master, [(9999, pb.PBServerFactory)])
         self.failUnlessIdentical(p, ports[0],
                                  "the slave port was changed even " + \
                                  "though the configuration was not")
 
         master.loadConfig(emptyCfg + "c['slavePortnum'] = 9000\n")
-        self.failUnlessEqual(master.slavePortnum, 9000)
+        self.failUnlessEqual(master.slavePortnum, "tcp:9000")
         ports = self.checkPorts(master, [(9000, pb.PBServerFactory)])
         self.failIf(p is ports[0],
                     "slave port was unchanged but configuration was changed")
@@ -738,8 +744,14 @@ c['schedulers'] = [s1, Dependent('downstream', s1, ['builder1'])]
         ports = self.checkPorts(self.buildmaster, [(9999, pb.PBServerFactory),
                                                    (9981, Site)])
         self.failIf(p is ports[1],
-                    "web port was unchanged but configuration was changed")
-
+                    "configuration was changed but web port was unchanged")
+        d = self.buildmaster.loadConfig(webCfg3) # 9981 on only localhost
+        d.addCallback(self._testWebPortnum_4, ports[1])
+        return d
+    def _testWebPortnum_4(self, res, p):
+        ports = self.checkPorts(self.buildmaster, [(9999, pb.PBServerFactory),
+                                                   (9981, Site)])
+        self.failUnlessEqual(ports[1].kwargs['interface'], "127.0.0.1")
         d = self.buildmaster.loadConfig(emptyCfg)
         d.addCallback(lambda res:
                       self.checkPorts(self.buildmaster,
@@ -780,7 +792,7 @@ c['schedulers'] = [s1, Dependent('downstream', s1, ['builder1'])]
     def _testWebPathname_3(self, res, f):
         self.checkPorts(self.buildmaster,
                         [(9999, pb.PBServerFactory),
-                         ('bar.socket', pb.PBServerFactory)])
+                         ('./bar.socket', pb.PBServerFactory)])
         self.failIf(f is self.UNIXports(self.buildmaster)[0].args[1],
                     "web factory was unchanged but configuration was changed")
 
@@ -883,11 +895,11 @@ class ConfigFileTest(unittest.TestCase):
 
         m = BuildMaster("test_cf")
         m.loadTheConfigFile()
-        self.failUnlessEqual(m.slavePortnum, 9999)
+        self.failUnlessEqual(m.slavePortnum, "tcp:9999")
 
         m = BuildMaster("test_cf", "alternate.cfg")
         m.loadTheConfigFile()
-        self.failUnlessEqual(m.slavePortnum, 9000)
+        self.failUnlessEqual(m.slavePortnum, "tcp:9000")
 
 
 class MyTarget(base.StatusReceiverMultiService):
