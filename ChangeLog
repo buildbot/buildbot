@@ -1,3 +1,12 @@
+2006-01-18  Brian Warner  <warner@lothar.com>
+
+	* docs/examples/twisted_master.cfg: update to match the Twisted
+	buildbot: remove python2.2, switch to exarkun's buildslaves,
+	disable the .deb builder until we figure out how to build twisted
+	.debs from SVN, add some ktrace debugging to the OS-X build
+	process and remove the qt build, remove threadless builders,
+	change freebsd builder to use landonf's buildslave.
+
 2006-01-12  Brian Warner  <warner@lothar.com>
 
 	* buildbot/master.py (Manhole.__init__): let port= be a strports
