@@ -7,7 +7,7 @@ from twisted.persisted import styles
 from twisted.internet import reactor, defer
 from twisted.protocols import basic
 
-import time, os, os.path, shutil, sys, re
+import time, os, os.path, shutil, sys, re, urllib
 try:
     import cPickle as pickle
 except ImportError:
@@ -1762,21 +1762,23 @@ class Status:
             pass
         if providedBy(thing, interfaces.IBuilderStatus):
             builder = thing
-            return prefix + builder.getName()
+            return prefix + urllib.quote(builder.getName(), safe='')
         if providedBy(thing, interfaces.IBuildStatus):
             build = thing
             builder = build.getBuilder()
-            return "%s%s/builds/%d" % (prefix,
-                                       builder.getName(),
-                                       build.getNumber())
+            return "%s%s/builds/%d" % (
+                prefix,
+                urllib.quote(builder.getName(), safe=''),
+                build.getNumber())
         if providedBy(thing, interfaces.IBuildStepStatus):
             step = thing
             build = step.getBuild()
             builder = build.getBuilder()
-            return "%s%s/builds/%d/%s" % (prefix,
-                                          builder.getName(),
-                                          build.getNumber(),
-                                          "step-" + step.getName())
+            return "%s%s/builds/%d/%s" % (
+                prefix,
+                urllib.quote(builder.getName(), safe=''),
+                build.getNumber(),
+                "step-" + urllib.quote(step.getName(), safe=''))
         # IBuildSetStatus
         # IBuildRequestStatus
         # ISlaveStatus
@@ -1802,11 +1804,12 @@ class Status:
                     break
             else:
                 return None
-            return "%s%s/builds/%d/%s/%d" % (prefix,
-                                             builder.getName(),
-                                             build.getNumber(),
-                                             "step-" + step.getName(),
-                                             lognum)
+            return "%s%s/builds/%d/%s/%d" % (
+                prefix,
+                urllib.quote(builder.getName(), safe=''),
+                build.getNumber(),
+                "step-" + urllib.quote(step.getName(), safe=''),
+                lognum)
 
 
     def getSchedulers(self):

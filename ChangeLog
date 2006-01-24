@@ -1,5 +1,12 @@
 2006-01-23  Brian Warner  <warner@lothar.com>
 
+	* buildbot/status/builder.py: urllib.quote() all URLs that include
+	Builder names, so that builders can include characters like '/'
+	and ' ' without completely breaking the resulting HTML. Thanks to
+	Kevin Turner for the patch.
+	* buildbot/status/html.py: same
+	* buildbot/test/test_web.py (GetURL.testBuild): match changes
+
 	* NEWS: update in preparation for upcoming release
 
 2006-01-18  Brian Warner  <warner@lothar.com>

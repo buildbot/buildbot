@@ -342,10 +342,10 @@ class GetURL(RunMixin, unittest.TestCase):
         self.assertURLEqual(build, "b1/builds/0")
         # no page for builder.getEvent(-1)
         step = build.getSteps()[0]
-        self.assertURLEqual(step, "b1/builds/0/step-remote dummy")
+        self.assertURLEqual(step, "b1/builds/0/step-remote%20dummy")
         # maybe page for build.getTestResults?
         self.assertURLEqual(step.getLogs()[0],
-                            "b1/builds/0/step-remote dummy/0")
+                            "b1/builds/0/step-remote%20dummy/0")
 
 
 

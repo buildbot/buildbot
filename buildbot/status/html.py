@@ -220,6 +220,11 @@ class StatusResourceBuildStep(HtmlResource):
                      "<ul>\n")
             for num in range(len(logs)):
                 if logs[num].hasContents():
+                    # FIXME: If the step name has a / in it, this is broken
+                    # either way.  If we quote it but say '/'s are safe,
+                    # it chops up the step name.  If we quote it and '/'s
+                    # are not safe, it escapes the / that separates the
+                    # step name from the log number.
                     data += '<li><a href="%s">%s</a></li>\n' % \
                             (urllib.quote(request.childLink("%d" % num)),
                              html.escape(logs[num].getName()))
@@ -321,7 +326,7 @@ class StatusResourceBuild(HtmlResource):
         data += ("<h1>Build <a href=\"%s\">%s</a>:#%d</h1>\n"
                  "<h2>Reason:</h2>\n%s\n"
                  % (self.status.getURLForThing(b.getBuilder()),
-                    urllib.quote(b.getBuilder().getName()), b.getNumber(),
+                    b.getBuilder().getName(), b.getNumber(),
                     html.escape(b.getReason())))
 
         branch, revision, patch = b.getSourceStamp()
@@ -912,8 +917,8 @@ class BuildBox(components.Adapter):
         b = self.original
         name = b.getBuilder().getName()
         number = b.getNumber()
-        url = "%s/builds/%d" % (name, number)
-        text = '<a href="%s">Build %d</a>' % (urllib.quote(url), number)
+        url = "%s/builds/%d" % (urllib.quote(name, safe=''), number)
+        text = '<a href="%s">Build %d</a>' % (url, number)
         color = "yellow"
         class_ = "start"
         if b.isFinished() and not b.getSteps():
@@ -933,9 +938,10 @@ class StepBox(components.Adapter):
 
     def getBox(self):
         b = self.original.getBuild()
-        urlbase = "%s/builds/%d/step-%s" % (b.getBuilder().getName(),
-                                            b.getNumber(),
-                                            self.original.getName())
+        urlbase = "%s/builds/%d/step-%s" % (
+            urllib.quote(b.getBuilder().getName(), safe=''),
+            b.getNumber(),
+            urllib.quote(self.original.getName(), safe=''))
         text = self.original.getText()
         if text is None:
             log.msg("getText() gave None", urlbase)
@@ -945,7 +951,7 @@ class StepBox(components.Adapter):
         for num in range(len(logs)):
             name = logs[num].getName()
             if logs[num].hasContents():
-                url = urllib.quote("%s/%d" % (urlbase, num))
+                url = "%s/%d" % (urlbase, num)
                 text.append("<a href=\"%s\">%s</a>" % (url, html.escape(name)))
             else:
                 text.append(html.escape(name))
@@ -1122,12 +1128,12 @@ class WaterfallStatusResource(HtmlResource):
         data += td("time (%s)" % TZ, align="center", class_="Time")
         name = changeNames[0]
         data += td(
-                "<a href=\"%s\">%s</a>" % (urllib.quote(name), name),
+                "<a href=\"%s\">%s</a>" % (urllib.quote(name, safe=''), name),
                 align="center", class_="Change")
         for name in builderNames:
             data += td(
                 #"<a href=\"%s\">%s</a>" % (request.childLink(name), name),
-                "<a href=\"%s\">%s</a>" % (urllib.quote(name), name),
+                "<a href=\"%s\">%s</a>" % (urllib.quote(name, safe=''), name),
                 align="center", class_="Builder")
         data += " </tr>\n"
 
