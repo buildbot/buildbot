@@ -1,5 +1,40 @@
 User visible changes in Buildbot.
 
+* Release x.x.x (x)
+
+** new features
+
+*** all TCP port numbers in config file now accept a strports string
+
+Sometimes it is useful to restrict certain TCP ports that the buildmaster
+listens on to use specific network interfaces. In particular, if the
+buildmaster and SVN repository live on the same machine, you may want to
+restrict the PBChangeSource to only listen on the loopback interface,
+insuring that no external entities can inject Changes into the buildbot.
+Likewise, if you are using something like Apache's reverse-proxy feature to
+provide access to the buildmaster's HTML status page, you might want to hide
+the real Waterfall port by having it only bind to the loopback interface.
+
+To accomplish this, use a string like "tcp:12345:interface=127.0.0.1" instead
+of a number like 12345. These strings are called "strports specification
+strings", and are documented in twisted's twisted.application.strports module
+(you can probably type 'pydoc twisted.application.strports' to see this
+documentation). Pretty much everywhere the buildbot takes a port number will
+now accept a strports spec, and any bare numbers are translated into TCP port
+numbers (listening on all network interfaces) for compatibility.
+
+** bug fixes
+
+The 0.7.1 release had a bug whereby reloading the config file could break all
+configured Schedulers, causing them to raise an exception when new changes
+arrived but not actually schedule a new build. This has been fixed.
+
+Fixed a bug which caused the AnyBranchScheduler to explode when branch==None.
+Thanks to Kevin Turner for the catch. I also think I fixed a bug whereby the
+TryScheduler would explode when it was given a Change (which it is supposed
+to simply ignore).
+
+
 * Release 0.7.1 (26 Nov 2005)
 
 ** new features

@@ -1,3 +1,7 @@
+2006-01-23  Brian Warner  <warner@lothar.com>
+
+	* NEWS: update in preparation for upcoming release
+
 2006-01-18  Brian Warner  <warner@lothar.com>
 
 	* docs/examples/twisted_master.cfg: update to match the Twisted
