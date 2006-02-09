@@ -1,3 +1,13 @@
+2006-02-08  Brian Warner  <warner@lothar.com>
+
+	* buildbot/scripts/runner.py (Maker.makeSlaveTAC): remove unused
+	method
+	(SlaveOptions.optParameters): add --umask, to make it possible to
+	make buildslave-generated files (including build products) be
+	world-readable
+	(slaveTAC): same
+	* buildbot/slave/bot.py (BuildSlave.startService): same
+
 2006-01-23  Brian Warner  <warner@lothar.com>
 
 	* buildbot/status/builder.py: urllib.quote() all URLs that include

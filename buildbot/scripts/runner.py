@@ -117,21 +117,6 @@ class Maker:
         if secret:
             os.chmod(tacfile, 0600)
 
-    def makeSlaveTAC(self):
-
-        tacfile = "buildbot.tac"
-        if os.path.exists(tacfile):
-            oldcontents = open(tacfile, "rt").read()
-            if oldcontents == contents:
-                print "buildbot.tac already exists and is correct"
-                return
-            print "not touching existing buildbot.tac"
-            print "creating buildbot.tac.new instead"
-            tacfile = "buildbot.tac.new"
-        f = open(tacfile, "wt")
-        f.write(contents)
-        f.close()
-
     def makefile(self):
         target = "Makefile.sample"
         if os.path.exists(target):
@@ -228,6 +213,8 @@ class SlaveOptions(MakerBase):
          "Interval at which keepalives should be sent (in seconds)"],
         ["usepty", None, 1,
          "(1 or 0) child processes should be run in a pty"],
+        ["umask", None, "None",
+         "controls permissions of generated files. Use --umask=022 to be world-readable"],
         ]
     
     longdesc = """
@@ -272,6 +259,7 @@ slavename = '%(name)s'
 passwd = '%(passwd)s'
 keepalive = %(keepalive)d
 usepty = %(usepty)d
+umask = %(umask)s
 
 application = service.Application('buildslave')
 s = BuildSlave(host, port, slavename, passwd, basedir, keepalive, usepty)

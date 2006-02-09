@@ -67,6 +67,10 @@ Installation
 * Maintenance::                 
 * Troubleshooting::             
 
+Creating a buildslave
+
+* Buildslave Options::          
+
 Troubleshooting
 
 * Starting the buildslave::     
@@ -711,6 +715,67 @@ If you run many buildslaves, you may want to create a single
 with symlinks.
 
 @end enumerate
+
+@menu
+* Buildslave Options::          
+@end menu
+
+@node Buildslave Options,  , Creating a buildslave, Creating a buildslave
+@subsection Buildslave Options
+
+There are a handful of options you might want to use when creating the
+buildslave with the @command{buildbot slave <options> DIR <params>}
+command. You can type @command{buildbot slave --help} for a summary.
+To use these, just include them on the @command{buildbot slave}
+command line, like this:
+
+@example
+buildbot slave --umask=022 ~/buildslave buildmaster.example.org:42012 myslavename mypasswd
+@end example
+
+@table @code
+@item --usepty
+This is a boolean flag that tells the buildslave whether to launch
+child processes in a PTY (the default) or with regular pipes. The
+advantage of using a PTY is that ``grandchild'' processes are more
+likely to be cleaned up if the build is interrupted or times out
+(since it enables the use of a ``process group'' in which all child
+processes will be placed). The disadvantages: some forms of Unix have
+problems with PTYs, some of your unit tests may behave differently
+when run under a PTY (generally those which check to see if they are
+being run interactively), and PTYs will merge the stdout and stderr
+streams into a single output stream (which means the red-vs-black
+coloring in the logfiles will be lost). If you encounter problems, you
+can add @code{--usepty=0} to disable the use of PTYs. Note that
+windows buildslaves never use PTYs.
+
+@item --umask
+This is a string (generally an octal representation of an integer)
+which will cause the buildslave process' ``umask'' value to be set
+shortly after initialization. The ``twistd'' daemonization utility
+forces the umask to 077 at startup (which means that all files created
+by the buildslave or its child processes will be unreadable by any
+user other than the buildslave account). If you want build products to
+be readable by other accounts, you can add @code{--umask=022} to tell
+the buildslave to fix the umask after twistd clobbers it. If you want
+build products to be @emph{writable} by other accounts too, use
+@code{--umask=000}, but this is likely to be a security problem.
+
+@item --keepalive
+This is a number that indicates how frequently ``keepalive'' messages
+should be sent from the buildslave to the buildmaster, expressed in
+seconds. The default (600) causes a message to be sent to the
+buildmaster at least once every 10 minutes. To set this to a lower
+value, use e.g. @code{--keepalive=120}.
+
+If the buildslave is behind a NAT box or stateful firewall, these
+messages may help to keep the connection alive: some NAT boxes tend to
+forget about a connection if it has not been used in a while. When
+this happens, the buildmaster will think that the buildslave has
+disappeared, and builds will time out. Meanwhile the buildslave will
+not realize than anything is wrong.
+
+@end table
 
 
 @node Launching the daemons, Logfiles, Creating a buildslave, Installation

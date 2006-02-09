@@ -457,7 +457,7 @@ class BuildSlave(service.MultiService):
     # exactly once.
 
     def __init__(self, host, port, name, passwd, basedir, keepalive,
-                 usePTY, keepaliveTimeout=30, debugOpts={}):
+                 usePTY, keepaliveTimeout=30, umask=None, debugOpts={}):
         service.MultiService.__init__(self)
         self.debugOpts = debugOpts.copy()
         bot = self.botClass(basedir, usePTY)
@@ -465,6 +465,7 @@ class BuildSlave(service.MultiService):
         self.bot = bot
         if keepalive == 0:
             keepalive = None
+        self.umask = umask
         bf = self.bf = BotFactory(keepalive, keepaliveTimeout)
         bf.startLogin(credentials.UsernamePassword(name, passwd), client=bot)
         self.connection = c = internet.TCPClient(host, port, bf)
@@ -478,6 +479,11 @@ class BuildSlave(service.MultiService):
         d = defer.Deferred()
         self.bf.perspective.notifyOnDisconnect(lambda res: d.callback(None))
         return d
+
+    def startService(self):
+        if self.umask is not None:
+            os.umask(self.umask)
+        service.MultiService.startService(self)
 
     def stopService(self):
         self.bf.continueTrying = 0
