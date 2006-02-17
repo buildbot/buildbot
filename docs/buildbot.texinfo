@@ -1034,10 +1034,10 @@ basic ways to use a VC system:
 @itemize @bullet
 @item
 Retrieve a specific set of source revisions: some tag or key is used
-to index this set, which is fixed and cannot be changed by developers
-committing new changes to the tree. Releases are built from tagged
-revisions like this, so that they can be rebuilt again later (probably
-with controlled modifications).
+to index this set, which is fixed and cannot be changed by subsequent
+developers committing new changes to the tree. Releases are built from
+tagged revisions like this, so that they can be rebuilt again later
+(probably with controlled modifications).
 @item
 Retrieve the latest sources along a specific branch: some tag is used
 to indicate which branch is to be used, but within that constraint we want
@@ -1060,8 +1060,8 @@ tag each build they produce, because there is usually significant
 overhead involved in creating these tags. Recreating the trees used by
 one of these builds can be a challenge. Some VC systems may provide
 implicit tags (like a revision number), while others may allow the use
-of timestamps to mean @emph{the state of the tree at time X} as
-opposed to a tree-state that has been explicitly marked.
+of timestamps to mean ``the state of the tree at time X'' as opposed
+to a tree-state that has been explicitly marked.
 
 The Buildbot is designed to help developers, so it usually works in
 terms of @emph{the latest} sources as opposed to specific tagged
@@ -1088,7 +1088,7 @@ that contain specific Changes, and exclude other Changes that may have
 occurred after the desired ones. We assume that the Changes arrive at
 the buildbot (through one of the mechanisms described in @pxref{Change
 Sources}) in the same order in which they are committed to the
-repository. The Buildbot waits for the tree to become @emph{stable}
+repository. The Buildbot waits for the tree to become ``stable''
 before initiating a build, for two reasons. The first is that
 developers frequently make multiple related commits in quick
 succession, even when the VC system provides ways to make atomic
@@ -1123,13 +1123,11 @@ argument to the Source Step}.
 @node How Different VC Systems Specify Sources, Attributes of Changes, Source Tree Specifications, Version Control Systems
 @subsection How Different VC Systems Specify Sources
 
-@c TODO: update this to include per-build branch= attributes
-
-For CVS, the static specifications are @code{repository}, @code{module},
-and @code{branch tag} (which defaults to HEAD). In addition to those, each
-build uses a timestamp (or omits the timestamp to mean @code{the latest}).
-These parameters collectively specify a set of sources from which a build
-may be performed.
+For CVS, the static specifications are @code{repository} and
+@code{module}. In addition to those, each build uses a timestamp (or
+omits the timestamp to mean @code{the latest}) and @code{branch tag}
+(which defaults to HEAD). These parameters collectively specify a set
+of sources from which a build may be performed.
 
 @uref{http://subversion.tigris.org, Subversion} combines the
 repository, module, and branch into a single @code{Subversion URL}
@@ -1137,7 +1135,12 @@ parameter. Within that scope, source checkouts can be specified by a
 numeric @code{revision number} (a repository-wide
 monotonically-increasing marker, such that each transaction that
 changes the repository is indexed by a different revision number), or
-a revision timestamp.
+a revision timestamp. When branches are used, the repository and
+module form a static @code{baseURL}, while each build has a
+@code{revision number} and a @code{branch} (which defaults to a
+statically-specified @code{defaultBranch}). The @code{baseURL} and
+@code{branch} are simply concatenated together to derive the
+@code{svnurl} to use for the checkout.
 
 @uref{http://wiki.gnuarch.org/, Arch} and
 @uref{http://bazaar.canonical.com/, Bazaar} specify a repository by
@@ -1153,6 +1156,13 @@ retrieve a set of build-config files. Second, one of these files is
 used to figure out which archives/modules should be used to populate
 subdirectories of the initial checkout.
 
+Builders which use Arch and Bazaar therefore have a static archive
+@code{url}, and a default ``branch'' (which is a string that specifies
+a complete category--branch--version triple). Each build can have its
+own branch (the category--branch--version string) to override the
+default, as well as a revision number (which is turned into a
+--patch-NN suffix when performing the checkout).
+
 @uref{http://abridgegame.org/darcs/, Darcs} doesn't really have the
 notion of a single master repository. Nor does it really have
 branches. In Darcs, each working directory is also a repository, and
@@ -1162,6 +1172,19 @@ need to do is specify the URL of a repository that you want to build
 from. The build slave will then pull the latest patches from that
 repository and build them. Multiple branches are implemented by using
 multiple repositories (possibly living on the same server).
+
+Builders which use Darcs therefore have a static @code{repourl} which
+specifies the location of the repository. If branches are being used,
+the source Step is instead configured with a @code{baseURL} and a
+@code{defaultBranch}, and the two strings are simply concatenated
+together to obtain the repository's URL. Each build then has a
+specific branch which replaces @code{defaultBranch}, or just uses the
+default one. Instead of a revision number, each build can have a
+``context'', which is a string that records all the patches that are
+present in a given tree (this is the output of @command{darcs changes
+--context}, and is considerably less concise than, e.g. Subversion's
+revision number, but the patch-reordering flexibility of Darcs makes
+it impossible to provide a shorter useful specification).
 
 @node Attributes of Changes,  , How Different VC Systems Specify Sources, Version Control Systems
 @subsection Attributes of Changes

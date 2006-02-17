@@ -1,3 +1,9 @@
+2006-02-09  Brian Warner  <warner@lothar.com>
+
+	* docs/buildbot.texinfo (How Different VC Systems Specify Sources):
+	add text to explain per-build branch parameters
+	* NEWS: mention --umask
+
 2006-02-08  Brian Warner  <warner@lothar.com>
 
 	* buildbot/scripts/runner.py (Maker.makeSlaveTAC): remove unused
