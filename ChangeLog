@@ -1,3 +1,9 @@
+2006-02-17  Brian Warner  <warner@lothar.com>
+
+	* buildbot/__init__.py (version): Releasing buildbot-0.7.2
+	* docs/buildbot.texinfo: set version number to match
+	* NEWS: update for 0.7.2
+
 2006-02-16  Brian Warner  <warner@lothar.com>
 
 	* docs/buildbot.texinfo (Build Dependencies): add cindex tag
