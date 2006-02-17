@@ -262,7 +262,8 @@ usepty = %(usepty)d
 umask = %(umask)s
 
 application = service.Application('buildslave')
-s = BuildSlave(host, port, slavename, passwd, basedir, keepalive, usepty)
+s = BuildSlave(host, port, slavename, passwd, basedir, keepalive, usepty,
+               umask=umask)
 s.setServiceParent(application)
 
 """
