@@ -1,3 +1,7 @@
+2006-02-16  Brian Warner  <warner@lothar.com>
+
+	* docs/buildbot.texinfo (Build Dependencies): add cindex tag
+
 2006-02-09  Brian Warner  <warner@lothar.com>
 
 	* docs/buildbot.texinfo (How Different VC Systems Specify Sources):

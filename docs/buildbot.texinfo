@@ -1877,6 +1877,7 @@ command to trigger builds of code they have not yet committed. See
 @node Build Dependencies,  , Scheduler Types, Listing Change Sources and Schedulers
 @subsection Build Dependencies
 
+@cindex Dependent
 @cindex Dependencies
 
 It is common to wind up with one kind of build which should only be
