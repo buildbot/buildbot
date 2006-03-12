@@ -347,10 +347,19 @@ def stop(config, signame="TERM", wait=False):
             os.kill(pid, 0)
         except OSError:
             print "buildbot process %d is dead" % pid
-            sys.exit(0)
+            return
         timer += 1
         time.sleep(1)
     print "never saw process go away"
+
+def restart(config):
+    stop(config, wait=True)
+    print "now restarting buildbot process.."
+    start(config)
+    # this next line might not be printed, if start() ended up running twistd
+    # inline
+    print "buildbot process has been restarted"
+
 
 def loadOptions(filename="options", here=None, home=None):
     """Find the .buildbot/FILENAME file. Crawl from the current directory up
@@ -418,6 +427,10 @@ class StartOptions(MakerBase):
 class StopOptions(MakerBase):
     def getSynopsis(self):
         return "Usage:    buildbot stop <basedir>"
+
+class RestartOptions(MakerBase):
+    def getSynopsis(self):
+        return "Usage:    buildbot restart <basedir>"
 
 class DebugClientOptions(usage.Options):
     optFlags = [
@@ -654,6 +667,9 @@ class Options(usage.Options):
          "Create and populate a directory for a new buildslave"],
         ['start', None, StartOptions, "Start a buildmaster or buildslave"],
         ['stop', None, StopOptions, "Stop a buildmaster or buildslave"],
+        ['restart', None, RestartOptions,
+         "Restart a buildmaster or buildslave"],
+
         ['sighup', None, StopOptions,
          "SIGHUP a buildmaster to make it re-read the config file"],
 
@@ -713,6 +729,8 @@ def run():
         start(so)
     elif command == "stop":
         stop(so, wait=True)
+    elif command == "restart":
+        restart(so)
     elif command == "sighup":
         stop(so, "HUP")
     elif command == "sendchange":

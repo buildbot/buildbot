@@ -1,5 +1,9 @@
 2006-03-12  Brian Warner  <warner@lothar.com>
 
+	* buildbot/scripts/runner.py: add 'buildbot restart' command
+	(stop): don't sys.exit() out of here, otherwise restart can't work
+	* docs/buildbot.texinfo (Shutdown): document it
+
 	* buildbot/buildset.py (BuildSet.__init__): clean up docstring
 	* buildbot/status/html.py (Waterfall.__init__): same
 	* buildbot/process/builder.py (Builder.startBuild): same

@@ -870,6 +870,17 @@ config file. The following shortcut is available:
 buildbot sighup @var{BASEDIR}
 @end example
 
+When you update the Buildbot code to a new release, you will need to
+restart the buildmaster and/or buildslave before it can take advantage
+of the new code. You can do a @code{buildbot stop @var{BASEDIR}} and
+@code{buildbot start @var{BASEDIR}} in quick succession, or you can
+use the @code{restart} shortcut, which does both steps for you:
+
+@example
+buildbot restart @var{BASEDIR}
+@end example
+
+
 @node Maintenance, Troubleshooting, Shutdown, Installation
 @section Maintenance
 
