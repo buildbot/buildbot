@@ -362,22 +362,22 @@ class Nightly(BaseUpstreamScheduler):
     hour.
 
     For example, the following master.cfg clause will cause a build to be
-    started every night at 3:00am:
+    started every night at 3:00am::
 
      s = Nightly('nightly', ['builder1', 'builder2'], hour=3, minute=0)
      c['schedules'].append(s)
 
     This scheduler will perform a build each monday morning at 6:23am and
-    again at 8:23am:
+    again at 8:23am::
 
      s = Nightly('BeforeWork', ['builder1'],
                  dayOfWeek=0, hour=[6,8], minute=23)
 
-    The following runs a build every two hours:
+    The following runs a build every two hours::
 
      s = Nightly('every2hours', ['builder1'], hour=range(0, 24, 2))
 
-    And this one will run only on December 24th:
+    And this one will run only on December 24th::
 
      s = Nightly('SleighPreflightCheck', ['flying_circuits', 'radar'],
                  month=12, dayOfMonth=24, hour=12, minute=0)

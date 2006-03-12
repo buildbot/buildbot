@@ -14,7 +14,7 @@ class BuildSet:
 
     def __init__(self, builderNames, source, reason=None, bsid=None):
         """
-        @param source: a L{SourceStamp}
+        @param source: a L{buildbot.sourcestamp.SourceStamp}
         """
         self.builderNames = builderNames
         self.source = source

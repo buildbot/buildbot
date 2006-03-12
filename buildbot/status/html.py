@@ -1682,9 +1682,9 @@ class Waterfall(base.StatusReceiverMultiService):
                         will be used for the 'favicon.ico' resource. Many
                         browsers automatically request this file and use it
                         as an icon in any bookmark generated from this site.
-                        Defaults to the L{buildbot/buildbot.png} image
-                        provided in the distribution. Can be set to None to
-                        avoid using a favicon at all.
+                        Defaults to the buildbot/buildbot.png image provided
+                        in the distribution. Can be set to None to avoid
+                        using a favicon at all.
                         
         """
         base.StatusReceiverMultiService.__init__(self)

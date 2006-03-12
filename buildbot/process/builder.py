@@ -473,12 +473,12 @@ class Builder(pb.Referenceable):
     def startBuild(self, build, sb):
         """Start a build on the given slave.
         @param build: the L{base.Build} to start
-        @param slave: the L{SlaveBuilder} which will host this build
+        @param sb: the L{SlaveBuilder} which will host this build
 
-        @return: a Deferred which fires with a L{base.BuildControl} that can
-        be used to stop the Build, or to access a
-        L{buildbot.status.builder.BuildStatus} which will watch the Build as
-        it runs. """
+        @return: a Deferred which fires with a
+        L{buildbot.interfaces.IBuildControl} that can be used to stop the
+        Build, or to access a L{buildbot.interfaces.IBuildStatus} which will
+        watch the Build as it runs. """
 
         self.building.append(build)
 

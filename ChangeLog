@@ -1,5 +1,12 @@
 2006-03-12  Brian Warner  <warner@lothar.com>
 
+	* buildbot/buildset.py (BuildSet.__init__): clean up docstring
+	* buildbot/status/html.py (Waterfall.__init__): same
+	* buildbot/process/builder.py (Builder.startBuild): same
+	* buildbot/process/base.py (BuildRequest): same
+	* buildbot/sourcestamp.py (SourceStamp): same
+	* buildbot/scheduler.py (Nightly): same
+
 	* buildbot/__init__.py (version): bump to 0.7.2+ while between
 	releases
 	* docs/buildbot.texinfo: same

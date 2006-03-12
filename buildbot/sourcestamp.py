@@ -3,11 +3,11 @@ from buildbot import util, interfaces
 from buildbot.twcompat import implements
 
 class SourceStamp(util.ComparableMixin):
-    """
-    a tuple of (branch, revision, patchspec, changes).
-     C{branch} is always valid, although it may be None to let the Source
-     step use its default branch. There are four possibilities for the
-     remaining elements:
+    """This is a tuple of (branch, revision, patchspec, changes).
+
+    C{branch} is always valid, although it may be None to let the Source
+    step use its default branch. There are four possibilities for the
+    remaining elements:
      - (revision=REV, patchspec=None, changes=None): build REV
      - (revision=REV, patchspec=(LEVEL, DIFF), changes=None): checkout REV,
        then apply a patch to the source, with C{patch -pPATCHLEVEL <DIFF}.

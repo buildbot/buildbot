@@ -34,7 +34,7 @@ class BuildRequest:
     I am paired with a BuildRequestStatus object, to which I feed status
     information.
 
-    @type source: a L{buildbot.buildset.SourceStamp} instance.   
+    @type source: a L{buildbot.sourcestamp.SourceStamp} instance.   
     @ivar source: the source code that this BuildRequest use
 
     @type reason: string
