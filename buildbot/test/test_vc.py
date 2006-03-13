@@ -6,7 +6,6 @@ import sys, os, signal, shutil, time, re
 from email.Utils import mktime_tz, parsedate_tz
 
 from twisted.trial import unittest
-dr = unittest.deferredResult
 from twisted.internet import defer, reactor, utils
 #defer.Deferred.debug = True
 
@@ -45,55 +44,8 @@ from twisted.internet.defer import waitForDeferred, deferredGenerator
 # is running).
 
 
+VCS = {}
 
-class VCSupport:
-    """This holds everything we learn about the availability of VC tools on
-    the test host. A single instance of this is created when the first test
-    case is started, and remains available at the module level for all other
-    test cases."""
-
-    def __init__(self):
-        log.msg("test_vc now looking for VC programs")
-        self.have = {'tla': False, 'baz': False, 'darcs': False,
-                     'svn': False, 'cvs': False,
-                     }
-        for p in os.environ['PATH'].split(os.pathsep):
-            if os.path.exists(os.path.join(p, 'tla')):
-                self.have['tla'] = True
-            if os.path.exists(os.path.join(p, 'baz')):
-                self.have['baz'] = True
-            if os.path.exists(os.path.join(p, 'darcs')):
-                self.have['darcs'] = True
-            if os.path.exists(os.path.join(p, 'svn')):
-                # we need svn to be compiled with the ra_local access module
-                from twisted.internet import utils
-                log.msg("running svn --version..")
-                v = dr(utils.getProcessOutput('svn', ["--version"],
-                                              env=os.environ))
-                if v.find("handles 'file' schem") != -1:
-                    # older versions say 'schema'. 1.2.0 and beyond say
-                    # 'scheme'.
-                    self.have['svn'] = True
-                else:
-                    log.msg(("%s found but it does not support 'file:' " +
-                             "schema, skipping svn tests") %
-                            os.path.join(p, "svn"))
-            if os.path.exists(os.path.join(p, 'cvs')):
-                self.have['cvs'] = True
-
-        if not self.have['svn']:
-            log.msg("could not find usable 'svn', skipping Subversion tests")
-        if not self.have['tla']:
-            log.msg("could not find 'tla' on $PATH, skipping some Arch tests")
-        if not self.have['baz']:
-            log.msg("could not find 'baz' on $PATH, skipping some Arch tests")
-        if not self.have['darcs']:
-            log.msg("could not find 'darcs' on $PATH, skipping Darcs tests")
-        if not self.have['cvs']:
-            log.msg("could not find 'cvs' on $PATH, skipping CVS tests")
-        log.msg("test_vc program scan done")
-
-VCS = None
 
 config_vc = """
 from buildbot.process import factory, step
@@ -278,15 +230,14 @@ class VCBase(SignalMixin):
                    (substring, string))
         self.failUnless(string.find(substring) != -1, msg)
 
-    def setUpClass(self):
-        global VCS
-        if VCS is None:
-            print "doing VCSupport"
-            VCS = VCSupport()
-        SignalMixin.setUpClass(self)
-
     def setUp(self):
-        self.capable()
+        # capable() should (eventually )raise SkipTest if the VC tools it
+        # needs are not available
+        d = defer.maybeDeferred(self.capable)
+        d.addCallback(self._setUp1)
+        return maybeWait(d)
+
+    def _setUp1(self, res):
         if os.path.exists("basedir"):
             shutil.rmtree("basedir")
         os.mkdir("basedir")
@@ -295,6 +246,9 @@ class VCBase(SignalMixin):
         if os.path.exists(self.slavebase):
             shutil.rmtree(self.slavebase)
         os.mkdir("slavebase")
+        # NOTE: self.createdRepository survives from one test method to the
+        # next, and we use this fact to avoid repeating the (expensive)
+        # repository-build step
         if self.createdRepository:
             d = defer.succeed(None)
         else:
@@ -309,7 +263,7 @@ class VCBase(SignalMixin):
             d = self.vc_create()
             d.addCallback(self.postCreate)
         d.addCallback(self.setUp2)
-        return maybeWait(d)
+        return d
 
     def setUp2(self, res):
         pass
@@ -922,7 +876,13 @@ class CVSSupport(VCBase):
     vctype_try = "cvs"
 
     def capable(self):
-        if not VCS.have['cvs']:
+        global VCS
+        if not VCS.has_key("cvs"):
+            VCS["cvs"] = False
+            for p in os.environ['PATH'].split(os.pathsep):
+                if os.path.exists(os.path.join(p, 'cvs')):
+                    VCS["cvs"] = True
+        if not VCS["cvs"]:
             raise unittest.SkipTest("CVS is not installed")
 
     def postCreate(self, res):
@@ -1030,8 +990,33 @@ class SVNSupport(VCBase):
     vctype_try = "svn"
 
     def capable(self):
-        if not VCS.have['svn']:
+        global VCS
+        if not VCS.has_key("svn"):
+            VCS["svn"] = False
+            for p in os.environ['PATH'].split(os.pathsep):
+                if os.path.exists(os.path.join(p, 'svn')):
+                    # we need svn to be compiled with the ra_local access
+                    # module
+                    from twisted.internet import utils
+                    log.msg("running svn --version..")
+                    d = utils.getProcessOutput('svn', ["--version"],
+                                               env=os.environ)
+                    d.addCallback(self._capable)
+                    return d
+        if not VCS["svn"]:
             raise unittest.SkipTest("No usable Subversion was found")
+
+    def _capable(self, v):
+        if v.find("handles 'file' schem") != -1:
+            # older versions say 'schema'. 1.2.0 and beyond say
+            # 'scheme'.
+            VCS['svn'] = True
+        else:
+            log.msg(("%s found but it does not support 'file:' " +
+                     "schema, skipping svn tests") %
+                    os.path.join(p, "svn"))
+            VCS['svn'] = False
+            raise unittest.SkipTest("Found SVN, but it can't use file: schema")
 
     def vc_create(self):
         self.svnrep = os.path.join(self.repbase, "SVN-Repository")
@@ -1147,7 +1132,13 @@ class DarcsSupport(VCBase):
     vctype_try = "darcs"
 
     def capable(self):
-        if not VCS.have['darcs']:
+        global VCS
+        if not VCS.has_key("darcs"):
+            VCS["darcs"] = False
+            for p in os.environ['PATH'].split(os.pathsep):
+                if os.path.exists(os.path.join(p, 'darcs')):
+                    VCS["darcs"] = True
+        if not VCS["darcs"]:
             raise unittest.SkipTest("Darcs is not installed")
 
     def vc_create(self):
@@ -1250,8 +1241,6 @@ class Darcs(DarcsSupport, unittest.TestCase):
         return maybeWait(d)
 
     def testCheckoutHTTP(self):
-        if not VCS.have['darcs']:
-            raise unittest.SkipTest("Darcs is not installed")
         self.serveHTTP()
         repourl = "http://localhost:%d/Darcs-Repository/trunk" % self.httpPort
         self.vcargs =  { 'repourl': repourl }
@@ -1302,7 +1291,21 @@ class TlaSupport(VCBase, ArchCommon):
     archcmd = "tla"
 
     def capable(self):
-        if not VCS.have['tla']:
+        global VCS
+        if not VCS.has_key("tla"):
+            VCS["tla"] = False
+            for p in os.environ['PATH'].split(os.pathsep):
+                if os.path.exists(os.path.join(p, 'tla')):
+                    VCS["tla"] = True
+        # we need to check for bazaar here too, since vc_create needs to know
+        # about the presence of /usr/bin/baz even if we're running the tla
+        # tests.
+        if not VCS.has_key("baz"):
+            VCS["baz"] = False
+            for p in os.environ['PATH'].split(os.pathsep):
+                if os.path.exists(os.path.join(p, 'baz')):
+                    VCS["baz"] = True
+        if not VCS["tla"]:
             raise unittest.SkipTest("Arch (tla) is not installed")
 
     def setUp2(self, res):
@@ -1357,7 +1360,7 @@ class TlaSupport(VCBase, ArchCommon):
                               "Buildbot Test Suite <test@buildbot.sf.net>"])
             yield w; w.getResult()
 
-        if VCS.have['baz']:
+        if VCS['baz']:
             # bazaar keeps a cache of revisions, but this test creates a new
             # archive each time it is run, so the cache causes errors.
             # Disable the cache to avoid these problems. This will be
@@ -1557,7 +1560,13 @@ class BazaarSupport(TlaSupport):
     archcmd = "baz"
 
     def capable(self):
-        if not VCS.have['baz']:
+        global VCS
+        if not VCS.has_key("baz"):
+            VCS["baz"] = False
+            for p in os.environ['PATH'].split(os.pathsep):
+                if os.path.exists(os.path.join(p, 'baz')):
+                    VCS["baz"] = True
+        if not VCS["baz"]:
             raise unittest.SkipTest("Arch (baz) is not installed")
 
     def setUp2(self, res):

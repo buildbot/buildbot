@@ -1,5 +1,7 @@
 2006-03-12  Brian Warner  <warner@lothar.com>
 
+	* buildbot/test/test_vc.py: remove the last use of waitForDeferred
+
 	* buildbot/test/test_maildir.py (MaildirTest): rename the
 	'timeout' method, as it collides with trial's internals
 
