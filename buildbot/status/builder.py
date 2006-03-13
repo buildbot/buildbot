@@ -367,9 +367,13 @@ class LogFile:
         assert channel < 10
         f = self.openfile
         f.seek(0, 2)
-        f.write("%d:%d" % (1 + len(text), channel))
-        f.write(text)
-        f.write(",")
+        offset = 0
+        while offset < len(text):
+            size = min(len(text)-offset, self.chunkSize)
+            f.write("%d:%d" % (1 + size, channel))
+            f.write(text[offset:offset+size])
+            f.write(",")
+            offset += size
         self.runEntries = []
         self.runLength = 0
 

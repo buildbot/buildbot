@@ -1,3 +1,10 @@
+2006-03-13  Brian Warner  <warner@lothar.com>
+
+	* buildbot/status/builder.py (LogFile.merge): don't write chunks
+	larger than chunkSize. Fixes SF#1349253.
+	* buildbot/test/test_status.py (Log.testLargeSummary): test it
+	(Log.testConsumer): update to match new internal chunking behavior
+
 2006-03-12  Brian Warner  <warner@lothar.com>
 
 	* buildbot/test/test_vc.py: remove the last use of waitForDeferred

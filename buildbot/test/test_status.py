@@ -626,10 +626,11 @@ class Log(unittest.TestCase):
         l2.chunkSize = 1000
         l2.addHeader("HEADER\n")
         l2.addStdout(800*"a")
-        l2.addStdout(800*"a") # should now have two chunks on disk
-        l2.addStdout(800*"b") # HEADER,1600*a on disk, 800*a in memory
-        l2.addStdout(800*"b") # HEADER,1600*a,1600*b on disk
-        l2.addStdout(200*"c") # HEADER,1600*a,1600*b on disk,200*c in memory
+        l2.addStdout(800*"a") # should now have two chunks on disk, 1000+600
+        l2.addStdout(800*"b") # HEADER,1000+600*a on disk, 800*a in memory
+        l2.addStdout(800*"b") # HEADER,1000+600*a,1000+600*b on disk
+        l2.addStdout(200*"c") # HEADER,1000+600*a,1000+600*b on disk,
+                              # 200*c in memory
         
         s = MyLogConsumer(limit=1)
         d = l2.subscribeConsumer(s)
@@ -644,31 +645,56 @@ class Log(unittest.TestCase):
         return d
     def _testConsumer_4(self, res, l2, s):
         self.failUnlessEqual(s.chunks, [(builder.HEADER, "HEADER\n"),
-                                        (builder.STDOUT, 1600*"a")])
+                                        (builder.STDOUT, 1000*"a"),
+                                        ])
         s.limit = None
         d = s.producer.resumeProducing()
         d.addCallback(self._testConsumer_5, l2, s)
         return d
     def _testConsumer_5(self, res, l2, s):
         self.failUnlessEqual(s.chunks, [(builder.HEADER, "HEADER\n"),
-                                        (builder.STDOUT, 1600*"a"),
-                                        (builder.STDOUT, 1600*"b"),
+                                        (builder.STDOUT, 1000*"a"),
+                                        (builder.STDOUT, 600*"a"),
+                                        (builder.STDOUT, 1000*"b"),
+                                        (builder.STDOUT, 600*"b"),
                                         (builder.STDOUT, 200*"c")])
         l2.addStdout(1000*"c") # HEADER,1600*a,1600*b,1200*c on disk
         self.failUnlessEqual(s.chunks, [(builder.HEADER, "HEADER\n"),
-                                        (builder.STDOUT, 1600*"a"),
-                                        (builder.STDOUT, 1600*"b"),
+                                        (builder.STDOUT, 1000*"a"),
+                                        (builder.STDOUT, 600*"a"),
+                                        (builder.STDOUT, 1000*"b"),
+                                        (builder.STDOUT, 600*"b"),
                                         (builder.STDOUT, 200*"c"),
                                         (builder.STDOUT, 1000*"c")])
         l2.finish()
         self.failUnlessEqual(s.chunks, [(builder.HEADER, "HEADER\n"),
-                                        (builder.STDOUT, 1600*"a"),
-                                        (builder.STDOUT, 1600*"b"),
+                                        (builder.STDOUT, 1000*"a"),
+                                        (builder.STDOUT, 600*"a"),
+                                        (builder.STDOUT, 1000*"b"),
+                                        (builder.STDOUT, 600*"b"),
                                         (builder.STDOUT, 200*"c"),
                                         (builder.STDOUT, 1000*"c")])
         self.failIf(s.producer)
         self.failUnless(s.finished)
 
+    def testLargeSummary(self):
+        bigtext = "a" * 200000 # exceed the NetstringReceiver 100KB limit
+        l = MyLog(self.basedir, "large", bigtext)
+        s = MyLogConsumer()
+        d = l.subscribeConsumer(s)
+        def _check(res):
+            for ctype,chunk in s.chunks:
+                self.failUnless(len(chunk) < 100000)
+            merged = "".join([c[1] for c in s.chunks])
+            self.failUnless(merged == bigtext)
+        d.addCallback(_check)
+        # when this fails, it fails with a timeout, and there is an exception
+        # sent to log.err(). This AttributeError exception is in
+        # NetstringReceiver.dataReceived where it does
+        # self.transport.loseConnection() because of the NetstringParseError,
+        # however self.transport is None
+        return maybeWait(d, 5)
+    testLargeSummary.timeout = 5
 
 config_base = """
 from buildbot.process import factory, step
