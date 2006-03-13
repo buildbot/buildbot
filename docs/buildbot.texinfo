@@ -3718,12 +3718,16 @@ told to shut up.
 @example
 from twisted.status import words
 irc = words.IRC("irc.example.org", "botnickname", 
-                channels=["channel1", "channel2"])
+                channels=["channel1", "channel2"],
+                password="mysecretpassword")
 c['status'].append(irc)
 @end example
 
 Take a look at the docstring for @code{words.IRC} for more details on
-configuring this service.
+configuring this service. The @code{password} argument, if provided,
+will be sent to Nickserv to claim the nickname: some IRC servers will
+not allow clients to send private messages until they have logged in
+with a password.
 
 To use the service, you address messages at the buildbot, either
 normally (@code{botnickname: status}) or with private messages

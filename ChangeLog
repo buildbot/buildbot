@@ -1,5 +1,12 @@
 2006-03-13  Brian Warner  <warner@lothar.com>
 
+	* buildbot/status/words.py (IRC): add an optional password=
+	argument, which will be sent to Nickserv in an IDENTIFY message at
+	login, to claim the nickname. freenode requires this before the
+	bot can sent (or reply to) private messages. Thanks to Clement
+	Stenac for the patch.
+	* docs/buildbot.texinfo (IRC Bot): document it
+
 	* buildbot/status/builder.py (LogFile.merge): don't write chunks
 	larger than chunkSize. Fixes SF#1349253.
 	* buildbot/test/test_status.py (Log.testLargeSummary): test it

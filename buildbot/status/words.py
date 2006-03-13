@@ -69,10 +69,12 @@ class IrcStatusBot(irc.IRCClient):
         "What you say !!": ["You have no chance to survive make your time.",
                             "HA HA HA HA ...."],
         }
-    def __init__(self, nickname, channels, status, categories):
+    def __init__(self, nickname, password, channels, status, categories):
         """
         @type  nickname: string
         @param nickname: the nickname by which this bot should be known
+        @type  password: string
+        @param password: the password to use for identifying with Nickserv
         @type  channels: list of strings
         @param channels: the bot will maintain a presence in these channels
         @type  status: L{buildbot.status.builder.Status}
@@ -81,12 +83,15 @@ class IrcStatusBot(irc.IRCClient):
         """
         self.nickname = nickname
         self.channels = channels
+        self.password = password
         self.status = status
         self.categories = categories
         self.counter = 0
         self.hasQuit = 0
 
     def signedOn(self):
+        if self.password:
+            self.msg("Nickserv", "IDENTIFY " + self.password)
         for c in self.channels:
             self.join(c)
     def joined(self, channel):
@@ -499,10 +504,11 @@ class IrcStatusFactory(ThrottledClientFactory):
     shuttingDown = False
     p = None
 
-    def __init__(self, nickname, channels, categories):
+    def __init__(self, nickname, password, channels, categories):
         #ThrottledClientFactory.__init__(self) # doesn't exist
         self.status = None
         self.nickname = nickname
+        self.password = password
         self.channels = channels
         self.categories = categories
 
@@ -517,7 +523,8 @@ class IrcStatusFactory(ThrottledClientFactory):
             self.p.quit("buildmaster reconfigured: bot disconnecting")
 
     def buildProtocol(self, address):
-        p = self.protocol(self.nickname, self.channels, self.status,
+        p = self.protocol(self.nickname, self.password,
+                          self.channels, self.status,
                           self.categories)
         p.factory = self
         p.status = self.status
@@ -546,11 +553,12 @@ class IRC(base.StatusReceiverMultiService):
     connect to a single IRC server and am known by a single nickname on that
     server, however I can join multiple channels."""
 
-    compare_attrs = ["host", "port", "nick", "channels", "allowForce",
+    compare_attrs = ["host", "port", "nick", "password",
+                     "channels", "allowForce",
                      "categories"]
 
     def __init__(self, host, nick, channels, port=6667, allowForce=True,
-                 categories=None):
+                 categories=None, password=None):
         base.StatusReceiverMultiService.__init__(self)
 
         assert allowForce in (True, False) # TODO: implement others
@@ -560,11 +568,13 @@ class IRC(base.StatusReceiverMultiService):
         self.port = port
         self.nick = nick
         self.channels = channels
+        self.password = password
         self.allowForce = allowForce
         self.categories = categories
 
         # need to stash the factory so we can give it the status object
-        self.f = IrcStatusFactory(self.nick, self.channels, self.categories)
+        self.f = IrcStatusFactory(self.nick, self.password,
+                                  self.channels, self.categories)
 
         c = internet.TCPClient(host, port, self.f)
         c.setServiceParent(self)
