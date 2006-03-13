@@ -1,5 +1,8 @@
 2006-03-12  Brian Warner  <warner@lothar.com>
 
+	* buildbot/test/test_maildir.py (MaildirTest): rename the
+	'timeout' method, as it collides with trial's internals
+
 	* buildbot/scripts/runner.py: add 'buildbot restart' command
 	(stop): don't sys.exit() out of here, otherwise restart can't work
 	* docs/buildbot.texinfo (Shutdown): document it

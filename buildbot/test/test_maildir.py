@@ -38,7 +38,7 @@ class MaildirTest(unittest.TestCase):
         # to do this right, use safecat
         shutil.copy(msg, newdir)
 
-    def timeout(self):
+    def do_timeout(self):
         self.done = 1
 
     def testMaildir(self):
@@ -55,7 +55,7 @@ class MaildirTest(unittest.TestCase):
             msg = testfiles[i]
             reactor.callLater(2*i, self.deliverMail,
                               os.path.join(testfiles_dir, msg))
-        t = reactor.callLater(2*i + 15, self.timeout)
+        t = reactor.callLater(2*i + 15, self.do_timeout)
         while not (self.done or len(self.changes) == count):
             reactor.iterate(0.1)
         s.stopService()
