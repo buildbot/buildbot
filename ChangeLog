@@ -1,3 +1,12 @@
+2006-03-16  Brian Warner  <warner@lothar.com>
+
+	* buildbot/scripts/sample.cfg: add python-mode declaration for
+	vim. Thanks to John Pye for the patch.
+
+	* docs/buildbot.texinfo (Launching the daemons): fix @reboot job
+	command line, mention the importance of running 'crontab' as the
+	buildmaster/buildslave user. Thanks to John Pye for the catch.
+
 2006-03-13  Brian Warner  <warner@lothar.com>
 
 	* buildbot/status/words.py (IRC): add an optional password=

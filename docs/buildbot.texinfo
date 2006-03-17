@@ -803,11 +803,20 @@ checkouts, compiles, and tests.
 
 Once you get everything running, you will want to arrange for the
 buildbot daemons to be started at boot time. One way is to use
-@code{cron}, by putting them in a @@reboot crontab entry:
+@code{cron}, by putting them in a @@reboot crontab entry@footnote{this
+@@reboot syntax is understood by Vixie cron, which is the flavor
+usually provided with linux systems. Other unices may have a cron that
+doesn't understand @@reboot}:
 
 @example
-@@reboot buildbot @var{BASEDIR}
+@@reboot buildbot start @var{BASEDIR}
 @end example
+
+When you run @command{crontab} to set this up, remember to do it as
+the buildmaster or buildslave account! If you add this to your crontab
+when running as your regular account (or worse yet, root), then the
+daemon will run as the wrong user, quite possibly as one with more
+authority than you intended to provide.
 
 It is important to remember that the environment provided to cron jobs
 and init scripts can be quite different that your normal runtime.
