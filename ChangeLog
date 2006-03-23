@@ -1,3 +1,11 @@
+2006-03-22  Brian Warner  <warner@lothar.com>
+
+	* contrib/svn_buildbot.py: rearrange, add an easy-to-change
+	function to turn a repository-relative pathname into a (branch,
+	branch-relative-filename) tuple. Change this function to handle
+	the branch naming policy used by your Subversion repository.
+	Thanks to AllMyData.com for sponsoring this work.
+
 2006-03-16  Brian Warner  <warner@lothar.com>
 
 	* buildbot/scripts/sample.cfg: add python-mode declaration for

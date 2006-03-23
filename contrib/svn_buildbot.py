@@ -46,7 +46,7 @@ if DEBUG:
     sys.stderr = f
     sys.stdout = f
 
-from twisted.internet import reactor
+from twisted.internet import defer, reactor
 from twisted.python import usage
 from twisted.spread import pb
 from twisted.cred import credentials
@@ -76,6 +76,9 @@ You may provide more than one -F argument to try multiple
 patterns.  Excludes override includes, that is, patterns that match both an
 include and an exclude will be excluded.'''],
         ]
+    optFlags = [
+        ['dryrun', 'n', "Do not actually send changes"],
+        ]
 
     def __init__(self):
         usage.Options.__init__(self)
@@ -99,78 +102,149 @@ include and an exclude will be excluded.'''],
         if self._excludes:
             self['excludes'] = '(%s)' % ('|'.join(self._excludes),)
 
+def split_file_dummy(changed_file):
+    """Split the repository-relative filename into a tuple of (branchname,
+    branch_relative_filename). If you have no branches, this should just
+    return (None, changed_file).
+    """
+    return (None, changed_file)
 
-def main(opts):
-    repo = opts['repository']
-    print "Repo:", repo
-    rev_arg = ''
-    if opts['revision']:
-        rev_arg = '-r %s' % (opts['revision'],)
-    changed = commands.getoutput('svnlook changed %s "%s"' % (rev_arg, repo)
-                                 ).split('\n')
-    changed = [x[1:].strip() for x in changed]
-    message = commands.getoutput('svnlook log %s "%s"' % (rev_arg, repo))
-    who = commands.getoutput('svnlook author %s "%s"' % (rev_arg, repo))
-    revision = opts.get('revision')
-    if revision is not None:
-        revision = int(revision)
+# this version handles repository layouts that look like:
+#  trunk/files..                  -> trunk
+#  branches/branch1/files..       -> branches/branch1
+#  branches/branch2/files..       -> branches/branch2
+#
+def split_file_branches(changed_file):
+    pieces = changed_file.split(os.sep)
+    if pieces[0] == 'branches':
+        return (os.path.join(*pieces[:2]),
+                os.path.join(*pieces[2:]))
+    if pieces[0] == 'trunk':
+        return (pieces[0], os.path.join(*pieces[1:]))
+    ## there are other sibilings of 'trunk' and 'branches'. Pretend they are
+    ## all just funny-named branches, and let the Schedulers ignore them.
+    #return (pieces[0], os.path.join(*pieces[1:]))
 
-    # see if we even need to notify buildbot by looking at filters first
-    changestring = '\n'.join(changed)
-    fltpat = opts['includes']
-    if fltpat:
-        included = sets.Set(re.findall(fltpat, changestring))
-    else:
-        included = sets.Set(changed)
+    raise RuntimeError("cannot determine branch for '%s'" % changed_file)
 
-    expat = opts['excludes']
-    if expat:
-        excluded = sets.Set(re.findall(expat, changestring))
-    else:
-        excluded = sets.Set([])
-    if len(included.difference(excluded)) == 0:
-        print changestring
-        print """\
-Buildbot was not interested, no changes matched any of these filters:\n %s
-or all the changes matched these exclusions:\n %s\
-""" % (fltpat, expat)
-        sys.exit(0)
-
-    pbcf = pb.PBClientFactory()
-    reactor.connectTCP(opts['bbserver'], int(opts['bbport']),
-                       pbcf)
-
-    def gotPersp(persp):
-        print "who", repr(who)
-        print "what", repr(changed)
-        print "why", repr(message)
-        print "new revision", repr(revision)
-        return persp.callRemote('addChange', {'who': who,
-                                              'files': changed,
-                                              'comments': message,
-                                              'revision': revision})
-
-    def quit(*why):
-        print "quitting! because", why
-        reactor.stop()
+split_file = split_file_dummy
 
 
-    pbcf.login(credentials.UsernamePassword('change', 'changepw')
-               ).addCallback(gotPersp
-               ).addCallback(quit, "SUCCESS"
-               ).addErrback(quit, "FAILURE")
+class ChangeSender:
 
-    # timeout of 60 seconds
-    reactor.callLater(60, quit, "TIMEOUT")
+    def getChanges(self, opts):
+        """Generate and stash a list of Change dictionaries, ready to be sent
+        to the buildmaster's PBChangeSource."""
 
-    reactor.run()
+        # first we extract information about the files that were changed
+        repo = opts['repository']
+        print "Repo:", repo
+        rev_arg = ''
+        if opts['revision']:
+            rev_arg = '-r %s' % (opts['revision'],)
+        changed = commands.getoutput('svnlook changed %s "%s"' % (rev_arg,
+                                                                  repo)
+                                     ).split('\n')
+        changed = [x[1:].strip() for x in changed]
+
+        message = commands.getoutput('svnlook log %s "%s"' % (rev_arg, repo))
+        who = commands.getoutput('svnlook author %s "%s"' % (rev_arg, repo))
+        revision = opts.get('revision')
+        if revision is not None:
+            revision = int(revision)
+
+        # see if we even need to notify buildbot by looking at filters first
+        changestring = '\n'.join(changed)
+        fltpat = opts['includes']
+        if fltpat:
+            included = sets.Set(re.findall(fltpat, changestring))
+        else:
+            included = sets.Set(changed)
+
+        expat = opts['excludes']
+        if expat:
+            excluded = sets.Set(re.findall(expat, changestring))
+        else:
+            excluded = sets.Set([])
+        if len(included.difference(excluded)) == 0:
+            print changestring
+            print """\
+    Buildbot was not interested, no changes matched any of these filters:\n %s
+    or all the changes matched these exclusions:\n %s\
+    """ % (fltpat, expat)
+            sys.exit(0)
+
+        # now see which branches are involved
+        files_per_branch = {}
+        for f in changed:
+            branch, filename = split_file(f)
+            if files_per_branch.has_key(branch):
+                files_per_branch[branch].append(filename)
+            else:
+                files_per_branch[branch] = [filename]
+
+        # now create the Change dictionaries
+        changes = []
+        for branch in files_per_branch.keys():
+            d = {'who': who,
+                 'branch': branch,
+                 'files': files_per_branch[branch],
+                 'comments': message,
+                 'revision': revision}
+            changes.append(d)
+
+        return changes
+
+    def sendChanges(self, opts, changes):
+        pbcf = pb.PBClientFactory()
+        reactor.connectTCP(opts['bbserver'], int(opts['bbport']), pbcf)
+        d = pbcf.login(credentials.UsernamePassword('change', 'changepw'))
+        d.addCallback(self.sendAllChanges, changes)
+        return d
+
+    def sendAllChanges(self, remote, changes):
+        dl = [remote.callRemote('addChange', change)
+              for change in changes]
+        return defer.DeferredList(dl)
+
+    def run(self):
+        opts = Options()
+        try:
+            opts.parseOptions()
+        except usage.error, ue:
+            print opts
+            print "%s: %s" % (sys.argv[0], ue)
+            sys.exit()
+
+        changes = self.getChanges(opts)
+        if opts['dryrun']:
+            for i,c in enumerate(changes):
+                print "CHANGE #%d" % (i+1)
+                keys = c.keys()
+                keys.sort()
+                for k in keys:
+                    print "[%10s]: %s" % (k, c[k])
+            print "*NOT* sending any changes"
+            return
+
+        d = self.sendChanges(opts, changes)
+
+        def quit(*why):
+            print "quitting! because", why
+            reactor.stop()
+
+        def failed(f):
+            print "FAILURE"
+            print f
+            reactor.stop()
+
+        d.addCallback(quit, "SUCCESS")
+        d.addErrback(failed)
+        reactor.callLater(60, quit, "TIMEOUT")
+        reactor.run()
 
 if __name__ == '__main__':
-    opts = Options()
-    try:
-        opts.parseOptions()
-    except usage.error, ue:
-        print opts
-        print "%s: %s" % (sys.argv[0], ue)
-        sys.exit()
-    main(opts)
+    s = ChangeSender()
+    s.run()
+
+
