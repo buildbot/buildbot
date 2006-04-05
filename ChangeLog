@@ -1,3 +1,12 @@
+2006-04-03  Brian Warner  <warner@lothar.com>
+
+	* buildbot/test/__init__.py: set $LANG to 'C', to insure that
+	spawned commands emit parseable results in english and not some
+	other language. Patch from Niklaus Giger.
+
+	* README (INSTALLATION): discourage users from running unit tests on
+	a "network drive", patch from Niklaus Giger.
+
 2006-03-22  Brian Warner  <warner@lothar.com>
 
 	* contrib/svn_buildbot.py: rearrange, add an easy-to-change

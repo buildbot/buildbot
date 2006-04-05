@@ -97,6 +97,9 @@ Nothing should fail, a few might be skipped. If any of the tests fail, you
 should stop and investigate the cause before continuing the installation
 process, as it will probably be easier to track down the bug early.
 
+Neither CVS nor SVN support file based repositories on network filesystem
+(or network drives in Windows parlance). Therefore it is recommended to run
+all unit tests on local hard disks.
 
  INSTALLING THE LIBRARIES:
 
