@@ -7,6 +7,7 @@ from email.Utils import mktime_tz, parsedate_tz
 
 from twisted.trial import unittest
 from twisted.internet import defer, reactor, utils
+from twisted.python.procutils import which
 #defer.Deferred.debug = True
 
 from twisted.python import log
@@ -14,6 +15,7 @@ from twisted.python import log
 
 from buildbot import master, interfaces
 from buildbot.slave import bot
+from buildbot.slave.commands import rmdirRecursive
 from buildbot.status.builder import SUCCESS, FAILURE
 from buildbot.process import step, base
 from buildbot.changes import changes
@@ -239,12 +241,12 @@ class VCBase(SignalMixin):
 
     def _setUp1(self, res):
         if os.path.exists("basedir"):
-            shutil.rmtree("basedir")
+            rmdirRecursive("basedir")
         os.mkdir("basedir")
         self.master = master.BuildMaster("basedir")
         self.slavebase = os.path.abspath("slavebase")
         if os.path.exists(self.slavebase):
-            shutil.rmtree(self.slavebase)
+            rmdirRecursive(self.slavebase)
         os.mkdir("slavebase")
         # NOTE: self.createdRepository survives from one test method to the
         # next, and we use this fact to avoid repeating the (expensive)
@@ -336,6 +338,11 @@ class VCBase(SignalMixin):
         d = self.runCommand(basedir, command, failureIsOk=failureIsOk)
         return waitForDeferred(d)
 
+    def dovc(self, basedir, command, failureIsOk=False):
+        """Like do(), but the VC binary will be prepended to COMMAND."""
+        command = self.vcexe + " " + command
+        return self.do(basedir, command, failureIsOk)
+
     def populate(self, basedir):
         os.makedirs(basedir)
         os.makedirs(os.path.join(basedir, "subdir"))
@@ -387,7 +394,7 @@ class VCBase(SignalMixin):
         c = open(os.path.join(d, f), "r").read()
         self.failUnlessIn(contents, c)
 
-    def do_vc(self, testRetry=True):
+    def do_vctest(self, testRetry=True):
         vctype = self.vctype
         args = self.vcargs
         m = self.master
@@ -406,30 +413,30 @@ class VCBase(SignalMixin):
 
         d = self.connectSlave()
         d.addCallback(lambda res: log.msg("testing clobber"))
-        d.addCallback(self._do_vc_clobber)
+        d.addCallback(self._do_vctest_clobber)
         d.addCallback(lambda res: log.msg("doing update"))
         d.addCallback(lambda res: self.loadConfig(config % 'update'))
         d.addCallback(lambda res: log.msg("testing update"))
-        d.addCallback(self._do_vc_update)
+        d.addCallback(self._do_vctest_update)
         if testRetry:
             d.addCallback(lambda res: log.msg("testing update retry"))
-            d.addCallback(self._do_vc_update_retry)
+            d.addCallback(self._do_vctest_update_retry)
         d.addCallback(lambda res: log.msg("doing copy"))
         d.addCallback(lambda res: self.loadConfig(config % 'copy'))
         d.addCallback(lambda res: log.msg("testing copy"))
-        d.addCallback(self._do_vc_copy)
+        d.addCallback(self._do_vctest_copy)
         if self.metadir:
             d.addCallback(lambda res: log.msg("doing export"))
             d.addCallback(lambda res: self.loadConfig(config % 'export'))
             d.addCallback(lambda res: log.msg("testing export"))
-            d.addCallback(self._do_vc_export)
+            d.addCallback(self._do_vctest_export)
         return d
 
-    def _do_vc_clobber(self, res):
+    def _do_vctest_clobber(self, res):
         d = self.doBuild() # initial checkout
-        d.addCallback(self._do_vc_clobber_1)
+        d.addCallback(self._do_vctest_clobber_1)
         return d
-    def _do_vc_clobber_1(self, res):
+    def _do_vctest_clobber_1(self, res):
         self.shouldExist(self.workdir, "main.c")
         self.shouldExist(self.workdir, "version.c")
         self.shouldExist(self.workdir, "subdir", "subdir.c")
@@ -439,18 +446,18 @@ class VCBase(SignalMixin):
         self.touch(self.workdir, "newfile")
         self.shouldExist(self.workdir, "newfile")
         d = self.doBuild() # rebuild clobbers workdir
-        d.addCallback(self._do_vc_clobber_2)
+        d.addCallback(self._do_vctest_clobber_2)
         return d
-    def _do_vc_clobber_2(self, res):
+    def _do_vctest_clobber_2(self, res):
         self.shouldNotExist(self.workdir, "newfile")
 
-    def _do_vc_update(self, res):
-        log.msg("_do_vc_update")
+    def _do_vctest_update(self, res):
+        log.msg("_do_vctest_update")
         d = self.doBuild() # rebuild with update
-        d.addCallback(self._do_vc_update_1)
+        d.addCallback(self._do_vctest_update_1)
         return d
-    def _do_vc_update_1(self, res):
-        log.msg("_do_vc_update_1")
+    def _do_vctest_update_1(self, res):
+        log.msg("_do_vctest_update_1")
         self.shouldExist(self.workdir, "main.c")
         self.shouldExist(self.workdir, "version.c")
         self.shouldContain(self.workdir, "version.c",
@@ -460,20 +467,20 @@ class VCBase(SignalMixin):
 
         self.touch(self.workdir, "newfile")
         d = self.doBuild() # update rebuild leaves new files
-        d.addCallback(self._do_vc_update_2)
+        d.addCallback(self._do_vctest_update_2)
         return d
-    def _do_vc_update_2(self, res):
-        log.msg("_do_vc_update_2")
+    def _do_vctest_update_2(self, res):
+        log.msg("_do_vctest_update_2")
         self.shouldExist(self.workdir, "main.c")
         self.shouldExist(self.workdir, "version.c")
         self.touch(self.workdir, "newfile")
         # now make a change to the repository and make sure we pick it up
         d = self.vc_revise()
         d.addCallback(lambda res: self.doBuild())
-        d.addCallback(self._do_vc_update_3)
+        d.addCallback(self._do_vctest_update_3)
         return d
-    def _do_vc_update_3(self, res):
-        log.msg("_do_vc_update_3")
+    def _do_vctest_update_3(self, res):
+        log.msg("_do_vctest_update_3")
         self.shouldExist(self.workdir, "main.c")
         self.shouldExist(self.workdir, "version.c")
         self.shouldContain(self.workdir, "version.c",
@@ -481,27 +488,27 @@ class VCBase(SignalMixin):
         self.shouldExist(self.workdir, "newfile")
         # now "update" to an older revision
         d = self.doBuild(ss=SourceStamp(revision=self.trunk[-2]))
-        d.addCallback(self._do_vc_update_4)
+        d.addCallback(self._do_vctest_update_4)
         return d
-    def _do_vc_update_4(self, res):
-        log.msg("_do_vc_update_4")
+    def _do_vctest_update_4(self, res):
+        log.msg("_do_vctest_update_4")
         self.shouldExist(self.workdir, "main.c")
         self.shouldExist(self.workdir, "version.c")
         self.shouldContain(self.workdir, "version.c",
                            "version=%d" % (self.version-1))
         # now update to the newer revision
         d = self.doBuild(ss=SourceStamp(revision=self.trunk[-1]))
-        d.addCallback(self._do_vc_update_5)
+        d.addCallback(self._do_vctest_update_5)
         return d
-    def _do_vc_update_5(self, res):
-        log.msg("_do_vc_update_5")
+    def _do_vctest_update_5(self, res):
+        log.msg("_do_vctest_update_5")
         self.shouldExist(self.workdir, "main.c")
         self.shouldExist(self.workdir, "version.c")
         self.shouldContain(self.workdir, "version.c",
                            "version=%d" % self.version)
 
 
-    def _do_vc_update_retry(self, res):
+    def _do_vctest_update_retry(self, res):
         # certain local changes will prevent an update from working. The
         # most common is to replace a file with a directory, or vice
         # versa. The slave code should spot the failure and do a
@@ -512,16 +519,16 @@ class VCBase(SignalMixin):
         self.touch(self.workdir, "newfile")
 
         d = self.doBuild() # update, but must clobber to handle the error
-        d.addCallback(self._do_vc_update_retry_1)
+        d.addCallback(self._do_vctest_update_retry_1)
         return d
-    def _do_vc_update_retry_1(self, res):
+    def _do_vctest_update_retry_1(self, res):
         self.shouldNotExist(self.workdir, "newfile")
 
-    def _do_vc_copy(self, res):
+    def _do_vctest_copy(self, res):
         d = self.doBuild() # copy rebuild clobbers new files
-        d.addCallback(self._do_vc_copy_1)
+        d.addCallback(self._do_vctest_copy_1)
         return d
-    def _do_vc_copy_1(self, res):
+    def _do_vctest_copy_1(self, res):
         if self.metadir:
             self.shouldExist(self.workdir, self.metadir)
         self.shouldNotExist(self.workdir, "newfile")
@@ -529,9 +536,9 @@ class VCBase(SignalMixin):
         self.touch(self.vcdir, "newvcfile")
 
         d = self.doBuild() # copy rebuild clobbers new files
-        d.addCallback(self._do_vc_copy_2)
+        d.addCallback(self._do_vctest_copy_2)
         return d
-    def _do_vc_copy_2(self, res):
+    def _do_vctest_copy_2(self, res):
         if self.metadir:
             self.shouldExist(self.workdir, self.metadir)
         self.shouldNotExist(self.workdir, "newfile")
@@ -539,19 +546,19 @@ class VCBase(SignalMixin):
         self.shouldExist(self.workdir, "newvcfile")
         self.touch(self.workdir, "newfile")
 
-    def _do_vc_export(self, res):
+    def _do_vctest_export(self, res):
         d = self.doBuild() # export rebuild clobbers new files
-        d.addCallback(self._do_vc_export_1)
+        d.addCallback(self._do_vctest_export_1)
         return d
-    def _do_vc_export_1(self, res):
+    def _do_vctest_export_1(self, res):
         self.shouldNotExist(self.workdir, self.metadir)
         self.shouldNotExist(self.workdir, "newfile")
         self.touch(self.workdir, "newfile")
 
         d = self.doBuild() # export rebuild clobbers new files
-        d.addCallback(self._do_vc_export_2)
+        d.addCallback(self._do_vctest_export_2)
         return d
-    def _do_vc_export_2(self, res):
+    def _do_vctest_export_2(self, res):
         self.shouldNotExist(self.workdir, self.metadir)
         self.shouldNotExist(self.workdir, "newfile")
 
@@ -636,7 +643,7 @@ class VCBase(SignalMixin):
         self.failUnlessIn("Hello patched subdir.\\n", data)
 
 
-    def do_vc_once(self, shouldSucceed):
+    def do_vctest_once(self, shouldSucceed):
         m = self.master
         vctype = self.vctype
         args = self.vcargs
@@ -879,9 +886,10 @@ class CVSSupport(VCBase):
         global VCS
         if not VCS.has_key("cvs"):
             VCS["cvs"] = False
-            for p in os.environ['PATH'].split(os.pathsep):
-                if os.path.exists(os.path.join(p, 'cvs')):
-                    VCS["cvs"] = True
+            cvspaths = which('cvs')
+            if cvspaths:
+                VCS["cvs"] = True
+                self.vcexe = cvspaths[0]
         if not VCS["cvs"]:
             raise unittest.SkipTest("CVS is not installed")
 
@@ -895,31 +903,31 @@ class CVSSupport(VCBase):
         self.cvsrep = cvsrep = os.path.join(self.repbase, "CVS-Repository")
         tmp = os.path.join(self.repbase, "cvstmp")
 
-        w = self.do(self.repbase, "cvs -d %s init" % cvsrep)
+        w = self.dovc(self.repbase, "-d %s init" % cvsrep)
         yield w; w.getResult() # we must getResult() to raise any exceptions
 
         self.populate(tmp)
-        cmd = ("cvs -d %s import" % cvsrep +
+        cmd = ("-d %s import" % cvsrep +
                " -m sample_project_files sample vendortag start")
-        w = self.do(tmp, cmd)
+        w = self.dovc(tmp, cmd)
         yield w; w.getResult()
-        shutil.rmtree(tmp)
+        rmdirRecursive(tmp)
         # take a timestamp as the first revision number
         time.sleep(2)
         self.addTrunkRev(self.getdate())
         time.sleep(2)
 
-        w = self.do(self.repbase,
-                    "cvs -d %s checkout -d cvstmp sample" % self.cvsrep)
+        w = self.dovc(self.repbase,
+                      "-d %s checkout -d cvstmp sample" % self.cvsrep)
         yield w; w.getResult()
 
-        w = self.do(tmp, "cvs tag -b %s" % self.branchname)
+        w = self.dovc(tmp, "tag -b %s" % self.branchname)
         yield w; w.getResult()
         self.populate_branch(tmp)
-        w = self.do(tmp,
-                    "cvs commit -m commit_on_branch -r %s" % self.branchname)
+        w = self.dovc(tmp,
+                      "commit -m commit_on_branch -r %s" % self.branchname)
         yield w; w.getResult()
-        shutil.rmtree(tmp)
+        rmdirRecursive(tmp)
         time.sleep(2)
         self.addBranchRev(self.getdate())
         time.sleep(2)
@@ -929,16 +937,16 @@ class CVSSupport(VCBase):
     def vc_revise(self):
         tmp = os.path.join(self.repbase, "cvstmp")
 
-        w = self.do(self.repbase,
-                    "cvs -d %s checkout -d cvstmp sample" % self.cvsrep)
+        w = self.dovc(self.repbase,
+                      "-d %s checkout -d cvstmp sample" % self.cvsrep)
         yield w; w.getResult()
         self.version += 1
         version_c = VERSION_C % self.version
         open(os.path.join(tmp, "version.c"), "w").write(version_c)
-        w = self.do(tmp,
-                    "cvs commit -m revised_to_%d version.c" % self.version)
+        w = self.dovc(tmp,
+                      "commit -m revised_to_%d version.c" % self.version)
         yield w; w.getResult()
-        shutil.rmtree(tmp)
+        rmdirRecursive(tmp)
         time.sleep(2)
         self.addTrunkRev(self.getdate())
         time.sleep(2)
@@ -948,7 +956,11 @@ class CVSSupport(VCBase):
         # 'workdir' is an absolute path
         assert os.path.abspath(workdir) == workdir
 
-        cmd = ["cvs", "-d", self.cvsrep, "checkout",
+        # get rid of timezone info, which might not be parsed # TODO
+        #rev =  re.sub("[^0-9 :-]","",rev)
+        #rev =  re.sub("  ","",rev)
+        #print "res is now <"+rev+">"
+        cmd = [self.vcexe, "-d", self.cvsrep, "checkout",
                "-d", workdir,
                "-D", rev]
         if branch is not None:
@@ -961,12 +973,12 @@ class CVSSupport(VCBase):
     vc_try_checkout = deferredGenerator(vc_try_checkout)
 
     def vc_try_finish(self, workdir):
-        shutil.rmtree(workdir)
+        rmdirRecursive(workdir)
 
 class CVS(CVSSupport, unittest.TestCase):
 
     def testCheckout(self):
-        d = self.do_vc()
+        d = self.do_vctest()
         return maybeWait(d)
 
     def testPatch(self):
@@ -993,23 +1005,24 @@ class SVNSupport(VCBase):
         global VCS
         if not VCS.has_key("svn"):
             VCS["svn"] = False
-            for p in os.environ['PATH'].split(os.pathsep):
-                if os.path.exists(os.path.join(p, 'svn')):
-                    # we need svn to be compiled with the ra_local access
-                    # module
-                    from twisted.internet import utils
-                    log.msg("running svn --version..")
-                    d = utils.getProcessOutput('svn', ["--version"],
-                                               env=os.environ)
-                    d.addCallback(self._capable)
-                    return d
+            svnpaths = which('svn')
+            svnadminpaths = which('svnadmin')
+            if svnpaths and svnadminpaths:
+                self.vcexe = svnpaths[0]
+                self.svnadmin = svnadminpaths[0]
+                # we need svn to be compiled with the ra_local access
+                # module
+                log.msg("running svn --version..")
+                d = utils.getProcessOutput(self.vcexe, ["--version"],
+                                           env=os.environ)
+                d.addCallback(self._capable)
+                return d
         if not VCS["svn"]:
             raise unittest.SkipTest("No usable Subversion was found")
 
     def _capable(self, v):
         if v.find("handles 'file' schem") != -1:
-            # older versions say 'schema'. 1.2.0 and beyond say
-            # 'scheme'.
+            # older versions say 'schema', 1.2.0 and beyond say 'scheme'
             VCS['svn'] = True
         else:
             log.msg(("%s found but it does not support 'file:' " +
@@ -1019,74 +1032,81 @@ class SVNSupport(VCBase):
             raise unittest.SkipTest("Found SVN, but it can't use file: schema")
 
     def vc_create(self):
-        self.svnrep = os.path.join(self.repbase, "SVN-Repository")
+        self.svnrep = os.path.join(self.repbase,
+                                   "SVN-Repository").replace('\\','/')
         tmp = os.path.join(self.repbase, "svntmp")
-        self.svnurl = "file://%s" % self.svnrep
+        if sys.platform == 'win32':
+            # On Windows Paths do not start with a /
+            self.svnurl = "file:///%s" % self.svnrep
+        else:
+            self.svnurl = "file://%s" % self.svnrep
         self.svnurl_trunk = self.svnurl + "/sample/trunk"
         self.svnurl_branch = self.svnurl + "/sample/branch"
 
-        w = self.do(self.repbase, "svnadmin create %s" % self.svnrep)
+        w = self.do(self.repbase, self.svnadmin+" create %s" % self.svnrep)
         yield w; w.getResult()
 
         self.populate(tmp)
-        w = self.do(tmp,
-                    "svn import -m sample_project_files %s" %
-                    self.svnurl_trunk)
+        w = self.dovc(tmp,
+                      "import -m sample_project_files %s" %
+                      self.svnurl_trunk)
         yield w; out = w.getResult()
-        shutil.rmtree(tmp)
+        rmdirRecursive(tmp)
         m = re.search(r'Committed revision (\d+)\.', out)
         assert m.group(1) == "1" # first revision is always "1"
         self.addTrunkRev(int(m.group(1)))
 
-        w = self.do(self.repbase,
-                    "svn checkout %s svntmp" % self.svnurl_trunk)
+        w = self.dovc(self.repbase,
+                      "checkout %s svntmp" % self.svnurl_trunk)
         yield w; w.getResult()
 
-        w = self.do(tmp, "svn cp -m make_branch %s %s" % (self.svnurl_trunk,
-                                                          self.svnurl_branch))
+        w = self.dovc(tmp, "cp -m make_branch %s %s" % (self.svnurl_trunk,
+                                                        self.svnurl_branch))
         yield w; w.getResult()
-        w = self.do(tmp, "svn switch %s" % self.svnurl_branch)
+        w = self.dovc(tmp, "switch %s" % self.svnurl_branch)
         yield w; w.getResult()
         self.populate_branch(tmp)
-        w = self.do(tmp, "svn commit -m commit_on_branch")
+        w = self.dovc(tmp, "commit -m commit_on_branch")
         yield w; out = w.getResult()
-        shutil.rmtree(tmp)
+        rmdirRecursive(tmp)
         m = re.search(r'Committed revision (\d+)\.', out)
         self.addBranchRev(int(m.group(1)))
     vc_create = deferredGenerator(vc_create)
 
     def vc_revise(self):
         tmp = os.path.join(self.repbase, "svntmp")
-        w = self.do(self.repbase,
-                    "svn checkout %s svntmp" % self.svnurl_trunk)
+        rmdirRecursive(tmp)
+        log.msg("vc_revise" +  self.svnurl_trunk)
+        w = self.dovc(self.repbase,
+                      "checkout %s svntmp" % self.svnurl_trunk)
         yield w; w.getResult()
         self.version += 1
         version_c = VERSION_C % self.version
         open(os.path.join(tmp, "version.c"), "w").write(version_c)
-        w = self.do(tmp, "svn commit -m revised_to_%d" % self.version)
+        w = self.dovc(tmp, "commit -m revised_to_%d" % self.version)
         yield w; out = w.getResult()
         m = re.search(r'Committed revision (\d+)\.', out)
         self.addTrunkRev(int(m.group(1)))
-        shutil.rmtree(tmp)
+        rmdirRecursive(tmp)
     vc_revise = deferredGenerator(vc_revise)
 
     def vc_try_checkout(self, workdir, rev, branch=None):
         assert os.path.abspath(workdir) == workdir
         if os.path.exists(workdir):
-            shutil.rmtree(workdir)
+            rmdirRecursive(workdir)
         if not branch:
             svnurl = self.svnurl_trunk
         else:
             # N.B.: this is *not* os.path.join: SVN URLs use slashes
             # regardless of the host operating system's filepath separator
             svnurl = self.svnurl + "/" + branch
-        w = self.do(self.repbase,
-                    "svn checkout %s %s" % (svnurl, workdir))
+        w = self.dovc(self.repbase,
+                      "checkout %s %s" % (svnurl, workdir))
         yield w; w.getResult()
         open(os.path.join(workdir, "subdir", "subdir.c"), "w").write(TRY_C)
     vc_try_checkout = deferredGenerator(vc_try_checkout)
     def vc_try_finish(self, workdir):
-        shutil.rmtree(workdir)
+        rmdirRecursive(workdir)
 
 
 class SVN(SVNSupport, unittest.TestCase):
@@ -1095,7 +1115,7 @@ class SVN(SVNSupport, unittest.TestCase):
         # we verify this one with the svnurl style of vcargs. We test the
         # baseURL/defaultBranch style in testPatch and testBranch.
         self.vcargs = { 'svnurl': self.svnurl_trunk }
-        d = self.do_vc()
+        d = self.do_vctest()
         return maybeWait(d)
 
     def testPatch(self):
@@ -1120,7 +1140,7 @@ class SVN(SVNSupport, unittest.TestCase):
                         }
         d = self.do_getpatch()
         return maybeWait(d)
-        
+
 
 class DarcsSupport(VCBase):
     # Darcs has a metadir="_darcs", but it does not have an 'export'
@@ -1175,7 +1195,7 @@ class DarcsSupport(VCBase):
         w = self.do(tmp, "darcs changes --context")
         yield w; out = w.getResult()
         self.addBranchRev(out)
-        shutil.rmtree(tmp)
+        rmdirRecursive(tmp)
     vc_create = deferredGenerator(vc_create)
 
     def vc_revise(self):
@@ -1196,13 +1216,13 @@ class DarcsSupport(VCBase):
         w = self.do(tmp, "darcs changes --context")
         yield w; out = w.getResult()
         self.addTrunkRev(out)
-        shutil.rmtree(tmp)
+        rmdirRecursive(tmp)
     vc_revise = deferredGenerator(vc_revise)
 
     def vc_try_checkout(self, workdir, rev, branch=None):
         assert os.path.abspath(workdir) == workdir
         if os.path.exists(workdir):
-            shutil.rmtree(workdir)
+            rmdirRecursive(workdir)
         os.makedirs(workdir)
         w = self.do(workdir, "darcs initialize")
         yield w; w.getResult()
@@ -1216,13 +1236,13 @@ class DarcsSupport(VCBase):
     vc_try_checkout = deferredGenerator(vc_try_checkout)
 
     def vc_try_finish(self, workdir):
-        shutil.rmtree(workdir)
+        rmdirRecursive(workdir)
 
 
 class Darcs(DarcsSupport, unittest.TestCase):
     def testCheckout(self):
         self.vcargs = { 'repourl': self.rep_trunk }
-        d = self.do_vc(testRetry=False)
+        d = self.do_vctest(testRetry=False)
 
         # TODO: testRetry has the same problem with Darcs as it does for
         # Arch
@@ -1244,7 +1264,7 @@ class Darcs(DarcsSupport, unittest.TestCase):
         self.serveHTTP()
         repourl = "http://localhost:%d/Darcs-Repository/trunk" % self.httpPort
         self.vcargs =  { 'repourl': repourl }
-        d = self.do_vc(testRetry=False)
+        d = self.do_vctest(testRetry=False)
         return maybeWait(d)
         
     def testTry(self):
@@ -1294,17 +1314,17 @@ class TlaSupport(VCBase, ArchCommon):
         global VCS
         if not VCS.has_key("tla"):
             VCS["tla"] = False
-            for p in os.environ['PATH'].split(os.pathsep):
-                if os.path.exists(os.path.join(p, 'tla')):
-                    VCS["tla"] = True
+	    exe = which('tla')
+            if len(exe) > 0:
+                VCS["tla"] = True
         # we need to check for bazaar here too, since vc_create needs to know
         # about the presence of /usr/bin/baz even if we're running the tla
         # tests.
         if not VCS.has_key("baz"):
             VCS["baz"] = False
-            for p in os.environ['PATH'].split(os.pathsep):
-                if os.path.exists(os.path.join(p, 'baz')):
-                    VCS["baz"] = True
+	    exe = which('baz')
+            if len(exe) > 0:
+                VCS["baz"] = True
         if not VCS["tla"]:
             raise unittest.SkipTest("Arch (tla) is not installed")
 
@@ -1401,7 +1421,7 @@ class TlaSupport(VCBase, ArchCommon):
                     "tla tag -A %s %s %s" % (a, branchstart, branch))
         yield w; w.getResult()
 
-        shutil.rmtree(tmp)
+        rmdirRecursive(tmp)
 
         # check out the branch
         w = self.do(self.repbase,
@@ -1421,7 +1441,7 @@ class TlaSupport(VCBase, ArchCommon):
 
         w = waitForDeferred(self.unregisterRepository())
         yield w; w.getResult()
-        shutil.rmtree(tmp)
+        rmdirRecursive(tmp)
     vc_create = deferredGenerator(vc_create)
 
     def vc_revise(self):
@@ -1437,7 +1457,7 @@ class TlaSupport(VCBase, ArchCommon):
         # replay' in a tree with an archive that is no longer recognized, and
         # baz aborts with a botched invariant exception. This causes
         # mode=update to fall back to clobber+get, which flunks one of the
-        # tests (the 'newfile' check in _do_vc_update_3 fails)
+        # tests (the 'newfile' check in _do_vctest_update_3 fails)
 
         # to avoid this, we take heroic steps here to leave the archive
         # registration in the same state as we found it.
@@ -1490,13 +1510,13 @@ class TlaSupport(VCBase, ArchCommon):
         # now re-register the original coordinates
         w = waitForDeferred(self.registerRepository(coordinates))
         yield w; w.getResult()
-        shutil.rmtree(tmp)
+        rmdirRecursive(tmp)
     vc_revise = deferredGenerator(vc_revise)
 
     def vc_try_checkout(self, workdir, rev, branch=None):
         assert os.path.abspath(workdir) == workdir
         if os.path.exists(workdir):
-            shutil.rmtree(workdir)
+            rmdirRecursive(workdir)
 
         a = self.archname
 
@@ -1520,11 +1540,11 @@ class TlaSupport(VCBase, ArchCommon):
     vc_try_checkout = deferredGenerator(vc_try_checkout)
 
     def vc_try_finish(self, workdir):
-        shutil.rmtree(workdir)
+        rmdirRecursive(workdir)
 
 class Arch(TlaSupport, unittest.TestCase):
     def testCheckout(self):
-        d = self.do_vc(testRetry=False)
+        d = self.do_vctest(testRetry=False)
         # the current testRetry=True logic doesn't have the desired effect:
         # "update" is a no-op because arch knows that the repository hasn't
         # changed. Other VC systems will re-checkout missing files on
@@ -1539,7 +1559,7 @@ class Arch(TlaSupport, unittest.TestCase):
         url = "http://localhost:%d/Tla-Repository" % self.httpPort
         self.vcargs = { 'url': url,
                         'version': "testvc--mainline--1" }
-        d = self.do_vc(testRetry=False)
+        d = self.do_vctest(testRetry=False)
         return maybeWait(d)
 
     def testPatch(self):
@@ -1585,7 +1605,7 @@ class BazaarSupport(TlaSupport):
 
 class Bazaar(BazaarSupport, unittest.TestCase):
     def testCheckout(self):
-        d = self.do_vc(testRetry=False)
+        d = self.do_vctest(testRetry=False)
         # the current testRetry=True logic doesn't have the desired effect:
         # "update" is a no-op because arch knows that the repository hasn't
         # changed. Other VC systems will re-checkout missing files on
@@ -1602,7 +1622,7 @@ class Bazaar(BazaarSupport, unittest.TestCase):
                         'archive': self.archname,
                         'version': self.defaultbranch,
                         }
-        d = self.do_vc(testRetry=False)
+        d = self.do_vctest(testRetry=False)
         return maybeWait(d)
 
     def testPatch(self):
@@ -1647,7 +1667,7 @@ class Bazaar(BazaarSupport, unittest.TestCase):
                         'version': self.defaultbranch,
                         'retry': (5.0, 4),
                         }
-        d = self.do_vc_once(True)
+        d = self.do_vctest_once(True)
         d.addCallback(self._testRetry_1)
         return maybeWait(d)
     def _testRetry_1(self, bs):
@@ -1676,7 +1696,7 @@ class Bazaar(BazaarSupport, unittest.TestCase):
                        'version': self.defaultbranch,
                        'retry': (0.5, 3),
                        }
-        d = self.do_vc_once(False)
+        d = self.do_vctest_once(False)
         d.addCallback(self._testRetryFails_1)
         return maybeWait(d)
     def _testRetryFails_1(self, bs):
