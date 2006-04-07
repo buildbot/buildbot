@@ -4,6 +4,7 @@ from buildbot import util
 from buildbot.process.base import Build
 from buildbot.process import step
 
+# deprecated, use BuildFactory.addStep
 def s(steptype, **kwargs):
     # convenience function for master.cfg files, to create step
     # specification tuples
@@ -15,12 +16,12 @@ class BuildFactory(util.ComparableMixin):
     @type  buildClass: L{buildbot.process.base.Build}
     """
     buildClass = Build
-    steps = []
     useProgress = 1
     compare_attrs = ['buildClass', 'steps', 'useProgress']
 
     def __init__(self, steps=None):
-        if steps is None: steps = []
+        if steps is None:
+            steps = []
         self.steps = steps
 
     def newBuild(self, request):
@@ -31,6 +32,9 @@ class BuildFactory(util.ComparableMixin):
         b.useProgress = self.useProgress
         b.setSteps(self.steps)
         return b
+
+    def addStep(self, steptype, **kwargs):
+        self.steps.append((steptype, kwargs))
 
 
 # BuildFactory subclasses for common build tools
@@ -43,8 +47,7 @@ class GNUAutoconf(BuildFactory):
                  test=["make", "check"]):
         assert type(source) is tuple
         assert issubclass(source[0], step.BuildStep)
-        self.steps = []
-        self.steps.append(source)
+        BuildFactory.__init__(self, [source])
         if configure is not None:
             # we either need to wind up with a string (which will be
             # space-split), or with a list of strings (which will not). The
@@ -58,35 +61,29 @@ class GNUAutoconf(BuildFactory):
             else:
                 assert type(configure) in (list, tuple)
                 command = configure + configureFlags
-            self.steps.append(s(step.Configure,
-                                command=command,
-                                env=configureEnv))
+            self.addStep(step.Configure, command=command, env=configureEnv)
         if compile is not None:
-            self.steps.append(s(step.Compile, command=compile))
+            self.addStep(step.Compile, command=compile)
         if test is not None:
-            self.steps.append(s(step.Test, command=test))
+            self.addStep(step.Test, command=test)
 
 class CPAN(BuildFactory):
     def __init__(self, source, perl="perl"):
         assert type(source) is tuple
         assert issubclass(source[0], step.BuildStep)
-        self.steps = []
-        self.steps.append(source)
-        self.steps.append(s(step.Configure,
-                            command=[perl, "Makefile.PL"]))
-        self.steps.append(s(step.Compile, command=["make"]))
-        self.steps.append(s(step.Test, command=["make", "test"]))
+        BuildFactory.__init__(self, [source])
+        self.addStep(step.Configure, command=[perl, "Makefile.PL"])
+        self.addStep(step.Compile, command=["make"])
+        self.addStep(step.Test, command=["make", "test"])
 
 class Distutils(BuildFactory):
     def __init__(self, source, python="python", test=None):
         assert type(source) is tuple
         assert issubclass(source[0], step.BuildStep)
-        self.steps = []
-        self.steps.append(source)
-        self.steps.append(s(step.Compile,
-                            command=[python, "./setup.py", "build"]))
+        BuildFactory.__init__(self, [source])
+        self.addStep(step.Compile, command=[python, "./setup.py", "build"])
         if test is not None:
-            self.steps.append(s(step.Test, command=test))
+            self.addStep(step.Test, command=test)
 
 class Trial(BuildFactory):
     """Build a python module that uses distutils and trial. Set 'tests' to
@@ -107,6 +104,7 @@ class Trial(BuildFactory):
                  buildpython=["python"], trialpython=[], trial=None,
                  testpath=".", randomly=None, recurse=None,
                  tests=None,  useTestCaseNames=False, env=None):
+        BuildFactory.__init__(self, [source])
         assert type(source) is tuple
         assert issubclass(source[0], step.BuildStep)
         assert tests or useTestCaseNames, "must use one or the other"
@@ -118,18 +116,16 @@ class Trial(BuildFactory):
             self.recurse = recurse
 
         from buildbot.process import step_twisted
-        self.steps = []
-        self.steps.append(source)
         buildcommand = buildpython + ["./setup.py", "build"]
-        self.steps.append(s(step.Compile, command=buildcommand, env=env))
-        self.steps.append(s(step_twisted.Trial,
-                            python=trialpython, trial=self.trial,
-                            testpath=testpath,
-                            tests=tests, testChanges=useTestCaseNames,
-                            randomly=self.randomly,
-                            recurse=self.recurse,
-                            env=env,
-                            ))
+        self.addStep(step.Compile, command=buildcommand, env=env)
+        self.addStep(step_twisted.Trial,
+                     python=trialpython, trial=self.trial,
+                     testpath=testpath,
+                     tests=tests, testChanges=useTestCaseNames,
+                     randomly=self.randomly,
+                     recurse=self.recurse,
+                     env=env,
+                     )
 
 
 # compatibility classes, will go away. Note that these only offer

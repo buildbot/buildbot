@@ -1,11 +1,22 @@
+2006-04-05  Brian Warner  <warner@lothar.com>
+
+	* buildbot/process/factory.py (BuildFactory.addStep): new method
+	to add steps to a BuildFactory. Use it instead of f.steps.append,
+	and you can probably avoid using the s() convenience function.
+	Patch from Neal Norwitz, sf.net #1412605.
+	(other): update all factories to use addStep
+	* buildbot/process/process_twisted.py: update all factories to use
+	addStep.
+
 2006-04-03  Brian Warner  <warner@lothar.com>
 
 	* buildbot/test/test_vc.py: modified find-the-VC-command logic to
-	work under windows too. Adapted from a patch by Niklaus Giger.
+	work under windows too. Adapted from a patch by Niklaus Giger,
+	addresses SF#1463399.
 
 	* buildbot/test/__init__.py: set $LANG to 'C', to insure that
 	spawned commands emit parseable results in english and not some
-	other language. Patch from Niklaus Giger.
+	other language. Patch from Niklaus Giger, SF#1463394.
 
 	* README (INSTALLATION): discourage users from running unit tests on
 	a "network drive", patch from Niklaus Giger.

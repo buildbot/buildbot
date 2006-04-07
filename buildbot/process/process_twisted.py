@@ -3,7 +3,7 @@
 # Build classes specific to the Twisted codebase
 
 from buildbot.process.base import Build
-from buildbot.process.factory import BuildFactory, s
+from buildbot.process.factory import BuildFactory
 from buildbot.process import step
 from buildbot.process.step_twisted import HLint, ProcessDocs, BuildDebs, \
      Trial, RemovePYCs
@@ -32,29 +32,23 @@ class TwistedBaseFactory(BuildFactory):
     # this to add the local tree to PYTHONPATH during tests
     workdir = "Twisted"
 
-    def __init__(self, svnurl, steps):
-        self.steps = []
-        self.steps.append(s(step.SVN, svnurl=svnurl, mode=self.mode))
-        self.steps.extend(steps)
+    def __init__(self, source):
+        BuildFactory.__init__(self, [source])
 
 class QuickTwistedBuildFactory(TwistedBaseFactory):
     treeStableTimer = 30
     useProgress = 0
 
     def __init__(self, source, python="python"):
+        TwistedBuildFactory.__init__(self, source)
         if type(python) is str:
             python = [python]
-        self.steps = []
-        self.steps.append(source)
-        self.steps.append(s(HLint, python=python[0]))
-        self.steps.append(s(RemovePYCs))
+        self.addStep(HLint, python=python[0])
+        self.addStep(RemovePYCs)
         for p in python:
             cmd = [p, "setup.py", "all", "build_ext", "-i"]
-            self.steps.append(s(step.Compile, command=cmd,
-                                flunkOnFailure=True))
-            self.steps.append(s(TwistedTrial,
-                                python=p, # can be a list
-                                testChanges=True))
+            self.addStep(step.Compile, command=cmd, flunkOnFailure=True)
+            self.addStep(TwistedTrial, python=p, testChanges=True)
 
 class FullTwistedBuildFactory(TwistedBaseFactory):
     treeStableTimer = 5*60
@@ -62,10 +56,9 @@ class FullTwistedBuildFactory(TwistedBaseFactory):
     def __init__(self, source, python="python",
                  processDocs=False, runTestsRandomly=False,
                  compileOpts=[], compileOpts2=[]):
-        self.steps = []
-        self.steps.append(source)
+        TwistedBuildFactory.__init__(self, source)
         if processDocs:
-            self.steps.append(s(ProcessDocs))
+            self.addStep(ProcessDocs)
 
         if type(python) == str:
             python = [python]
@@ -74,19 +67,17 @@ class FullTwistedBuildFactory(TwistedBaseFactory):
         cmd = (python + compileOpts + ["setup.py", "all", "build_ext"]
                + compileOpts2 + ["-i"])
 
-        self.steps.append(s(step.Compile, command=cmd, flunkOnFailure=True))
-        self.steps.append(s(RemovePYCs))
-        self.steps.append(s(TwistedTrial, python=python,
-                            randomly=runTestsRandomly))
+        self.addStep(step.Compile, command=cmd, flunkOnFailure=True)
+        self.addStep(RemovePYCs)
+        self.addStep(TwistedTrial, python=python, randomly=runTestsRandomly)
 
 class TwistedDebsBuildFactory(TwistedBaseFactory):
     treeStableTimer = 10*60
 
     def __init__(self, source, python="python"):
-        self.steps = []
-        self.steps.append(source)
-        self.steps.append(s(ProcessDocs, haltOnFailure=True))
-        self.steps.append(s(BuildDebs, warnOnWarnings=True))
+        TwistedBuildFactory.__init__(self, source)
+        self.addStep(ProcessDocs, haltOnFailure=True)
+        self.addStep(BuildDebs, warnOnWarnings=True)
 
 class TwistedReactorsBuildFactory(TwistedBaseFactory):
     treeStableTimer = 5*60
@@ -94,8 +85,7 @@ class TwistedReactorsBuildFactory(TwistedBaseFactory):
     def __init__(self, source,
                  python="python", compileOpts=[], compileOpts2=[],
                  reactors=None):
-        self.steps = []
-        self.steps.append(source)
+        TwistedBuildFactory.__init__(self, source)
 
         if type(python) == str:
             python = [python]
@@ -104,7 +94,7 @@ class TwistedReactorsBuildFactory(TwistedBaseFactory):
         cmd = (python + compileOpts + ["setup.py", "all", "build_ext"]
                + compileOpts2 + ["-i"])
 
-        self.steps.append(s(step.Compile, command=cmd, warnOnFailure=True))
+        self.addStep(step.Compile, command=cmd, warnOnFailure=True)
 
         if reactors == None:
             reactors = [
@@ -123,8 +113,7 @@ class TwistedReactorsBuildFactory(TwistedBaseFactory):
             #    # these are buggy, so tolerate failures for now
             #    flunkOnFailure = 0
             #    warnOnFailure = 1
-            self.steps.append(s(RemovePYCs)) # TODO: why?
-            self.steps.append(s(TwistedTrial, name=reactor,
-                                python=python, reactor=reactor,
-                                flunkOnFailure=flunkOnFailure,
-                                warnOnFailure=warnOnFailure))
+            self.stepaddStep(RemovePYCs) # TODO: why?
+            self.addStep(TwistedTrial, name=reactor, python=python,
+                         reactor=reactor, flunkOnFailure=flunkOnFailure,
+                         warnOnFailure=warnOnFailure)
