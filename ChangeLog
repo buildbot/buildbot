@@ -1,3 +1,12 @@
+2006-04-07  Brian Warner  <warner@lothar.com>
+
+	* buildbot/changes/p4poller.py (P4Source): add new arguments:
+	password, p4 binary, pollinterval, maximum history to check.
+	Patch from an anonymous sf.net contributor, SF#1219384.
+	* buildbot/process/step.py (P4Sync.__init__): add username,
+	password, and client arguments.
+	* buildbot/slave/commands.py (P4Sync): same
+
 2006-04-05  Brian Warner  <warner@lothar.com>
 
 	* buildbot/process/factory.py (BuildFactory.addStep): new method

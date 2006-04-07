@@ -13,7 +13,7 @@ class P4Source(base.ChangeSource, util.ComparableMixin):
     """This source will poll a perforce repository for changes and submit
     them to the change master."""
 
-    compare_attrs = ["p4port", "p4user", "p4client", "p4base",
+    compare_attrs = ["p4port", "p4user", "p4passwd", "p4client", "p4base",
                      "p4bin", "pollinterval", "histmax"]
 
     parent = None # filled in when we're added
@@ -21,13 +21,16 @@ class P4Source(base.ChangeSource, util.ComparableMixin):
     loop = None
     volatile = ['loop']
 
-    def __init__(self, p4port, p4user, p4client, p4base,
-                 p4bin='p4', pollinterval=60 * 10, histmax=100):
+    def __init__(self, p4port, p4user, p4passwd=None, p4client=None,
+                 p4base='//...', p4bin='p4',
+                 pollinterval=60 * 10, histmax=100):
         """
         @type  p4port:       string
         @param p4port:       p4 port definition (host:portno)
         @type  p4user:       string
         @param p4user:       p4 user
+        @type  p4passwd:     string
+        @param p4passwd:     p4 passwd
         @type  p4client:     string
         @param p4client:     name of p4 client to poll
         @type  p4base:       string
@@ -43,6 +46,7 @@ class P4Source(base.ChangeSource, util.ComparableMixin):
 
         self.p4port = p4port
         self.p4user = p4user
+        self.p4passwd = p4passwd
         self.p4client = p4client
         self.p4base = p4base
         self.p4bin = p4bin
@@ -59,7 +63,7 @@ class P4Source(base.ChangeSource, util.ComparableMixin):
         return base.ChangeSource.stopService(self)
 
     def describe(self):
-        return "p4source %s:%s %s" % (self.p4port, self.p4client, self.p4base)
+        return "p4source %s-%s %s" % (self.p4port, self.p4client, self.p4base)
 
     def checkp4(self):
         d = self._get_changes()
@@ -67,10 +71,17 @@ class P4Source(base.ChangeSource, util.ComparableMixin):
         d.addCallback(self._handle_changes)
 
     def _get_changes(self):
-        args = ['changes', '-m', str(self.histmax), self.p4base]
-        env = {'P4PORT' : self.p4port,
-               'P4USER' : self.p4user,
-               'P4CLIENT' : self.p4client}
+        args = []
+        if self.p4port:
+            args.extend(['-p', self.p4port])
+        if self.p4user:
+            args.extend(['-u', self.p4user])
+        if self.p4passwd:
+            args.extend(['-P', self.p4passwd])
+        if self.p4client:
+            args.extend(['-c', self.p4client])
+        args.extend(['changes', '-m', str(self.histmax), self.p4base])
+        env = {}
         return getProcessOutput(self.p4bin, args, env)
 
     def _process_changes(self, result):
@@ -91,9 +102,17 @@ class P4Source(base.ChangeSource, util.ComparableMixin):
         return defer.DeferredList(ds)
 
     def _get_change(self, change):
-        args = ['describe', '-s', change['num']]
-        env = {'P4PORT' : self.p4port,
-               'P4CLIENT' : self.p4client}
+        args = []
+        if self.p4port:
+            args.extend(['-p', self.p4port])
+        if self.p4user:
+            args.extend(['-u', self.p4user])
+        if self.p4passwd:
+            args.extend(['-P', self.p4passwd])
+        if self.p4client:
+            args.extend(['-c', self.p4client])
+        args.extend(['describe', '-s', change['num']])
+        env = {}
         d = getProcessOutput(self.p4bin, args, env)
         d.addCallback(self._process_change, change)
         return d

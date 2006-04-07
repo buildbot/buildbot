@@ -10,7 +10,7 @@ from buildbot.twcompat import implements
 from buildbot.slave.interfaces import ISlaveCommand
 from buildbot.slave.registry import registerSlaveCommand
 
-cvs_ver = '$Revision: 1.40 $'[1+len("Revision: "):-2]
+cvs_ver = '$Revision: 1.41 $'[1+len("Revision: "):-2]
 
 # version history:
 #  >=1.17: commands are interruptable
@@ -1226,7 +1226,10 @@ class P4Sync(SourceBase):
     environment. The only thing which comes from the master is P4PORT.
     'mode' is required to be 'copy'.
 
-    ['p4port'] (required): host:port to put in env['P4PORT']
+    ['p4port'] (required): host:port for server to access
+    ['p4user'] (optional): user to use for access
+    ['p4passwd'] (optional): passwd to try for the user
+    ['p4client'] (optional): client spec to use
     """
 
     header = "p4 sync"
@@ -1234,15 +1237,28 @@ class P4Sync(SourceBase):
     def setup(self, args):
         SourceBase.setup(self, args)
         self.p4port = args['p4port']
+        self.p4user = args['p4user']
+        self.p4passwd = args['p4passwd']
+        self.p4client = args['p4client']
         
     def sourcedirIsUpdateable(self):
         return True
 
     def doVCUpdate(self):
-        # TODO: revision
         d = os.path.join(self.builder.basedir, self.srcdir)
-        command = ['p4', 'sync']
-        env = {'P4PORT': self.p4port}
+        command = ['p4']
+        if self.p4port:
+            command.extend(['-p', self.p4port])
+        if self.p4user:
+            command.extend(['-u', self.p4user])
+        if self.p4passwd:
+            command.extend(['-P', self.p4passwd])
+        if self.p4client:
+            command.extend(['-c', self.p4client])
+        command.extend(['sync'])
+        if self.revision:
+            command.extend(['@' + self.revision])
+        env = {}
         c = ShellCommand(self.builder, command, d, environ=env,
                          sendRC=False, timeout=self.timeout)
         self.command = c

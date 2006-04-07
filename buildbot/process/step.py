@@ -1676,11 +1676,14 @@ class P4Sync(Source):
 
     name = "p4sync"
 
-    def __init__(self, p4port, **kwargs):
+    def __init__(self, p4port, p4user, p4passwd, p4client, **kwargs):
         assert kwargs['mode'] == "copy", "P4Sync can only be used in mode=copy"
         self.branch = None
         Source.__init__(self, **kwargs)
         self.args['p4port'] = p4port
+        self.args['p4user'] = p4user
+        self.args['p4passwd'] = p4passwd
+        self.args['p4client'] = p4client
 
     def computeSourceRevision(self, changes):
         if not changes:
