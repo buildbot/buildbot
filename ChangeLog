@@ -1,5 +1,10 @@
 2006-04-07  Brian Warner  <warner@lothar.com>
 
+	* docs/buildbot.texinfo (Interlocks): fix some typos, mention use
+	of SlaveLocks for performance tests
+
+	* docs/examples/twisted_master.cfg: update to match current usage
+
 	* buildbot/changes/p4poller.py (P4Source): add new arguments:
 	password, p4 binary, pollinterval, maximum history to check.
 	Patch from an anonymous sf.net contributor, SF#1219384.

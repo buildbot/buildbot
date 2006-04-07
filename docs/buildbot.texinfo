@@ -3029,15 +3029,16 @@ easier to set the locks in the builder dictionary.
 
 Note that there are no partial-acquire or partial-release semantics:
 this prevents deadlocks caused by two Steps each waiting for a lock
-held by the other. This also means that waiting to acquire a
-@code{Lock} can take an arbitrarily long time: if the buildmaster is
-very busy, a Step or Build which requires only one @code{Lock} may
-starve another that is waiting for that @code{Lock} plus some others.
-@footnote{Also note that a clever buildmaster admin could still create
-the opportunity for deadlock: Build A obtains Lock 1, inside which
-Step A.two tries to acquire Lock 2 at the Step level. Meanwhile Build
-B obtains Lock 2, and has a Step B.two which wants to acquire Lock 1
-at the Step level. Don't Do That.}
+held by the other@footnote{Also note that a clever buildmaster admin
+could still create the opportunity for deadlock: Build A obtains Lock
+1, inside which Step A.two tries to acquire Lock 2 at the Step level.
+Meanwhile Build B obtains Lock 2, and has a Step B.two which wants to
+acquire Lock 1 at the Step level. Don't Do That.}. This also means
+that waiting to acquire a @code{Lock} can take an arbitrarily long
+time: if the buildmaster is very busy, a Step or Build which requires
+only one @code{Lock} may starve another that is waiting for that
+@code{Lock} plus some others.
+
 
 In the following example, we run the same build on three different
 platforms. The unit-test steps of these builds all use a common
@@ -3055,9 +3056,9 @@ steps = [s(step.SVN, svnurl="http://example.org/svn/Trunk"),
          s(step.ShellCommand, command="make test", locks=[db_lock]),
         ]
 f = factory.BuildFactory(steps)
-b1 = @{'name': 'full1', 'slavename': 'bot-1, builddir='f1', 'factory': f@}
-b2 = @{'name': 'full2', 'slavename': 'bot-2, builddir='f2', 'factory': f@}
-b3 = @{'name': 'full3', 'slavename': 'bot-3, builddir='f3', 'factory': f@}
+b1 = @{'name': 'full1', 'slavename': 'bot-1', builddir='f1', 'factory': f@}
+b2 = @{'name': 'full2', 'slavename': 'bot-2', builddir='f2', 'factory': f@}
+b3 = @{'name': 'full3', 'slavename': 'bot-3', builddir='f3', 'factory': f@}
 c['builders'] = [b1, b2, b3]
 @end example
 
@@ -3079,11 +3080,11 @@ source = s(step.SVN, svnurl="http://example.org/svn/Trunk")
 f22 = factory.Trial(source, trialpython=["python2.2"])
 f23 = factory.Trial(source, trialpython=["python2.3"])
 f24 = factory.Trial(source, trialpython=["python2.4"])
-b1 = @{'name': 'p22', 'slavename': 'bot-1, builddir='p22', 'factory': f22,
+b1 = @{'name': 'p22', 'slavename': 'bot-1', builddir='p22', 'factory': f22,
                      'locks': [slow_lock] @}
-b2 = @{'name': 'p23', 'slavename': 'bot-1, builddir='p23', 'factory': f23,
+b2 = @{'name': 'p23', 'slavename': 'bot-1', builddir='p23', 'factory': f23,
                      'locks': [slow_lock] @}
-b3 = @{'name': 'p24', 'slavename': 'bot-1, builddir='p24', 'factory': f24,
+b3 = @{'name': 'p24', 'slavename': 'bot-1', builddir='p24', 'factory': f24,
                      'locks': [slow_lock] @}
 c['builders'] = [b1, b2, b3]
 @end example
@@ -3116,13 +3117,13 @@ fast_steps = [s(step.SVN, svnurl="http://example.org/svn/Trunk"),
                                    locks=[db_lock]),
              ]
 fast_factory = factory.BuildFactory(fast_steps)
-b1 = @{'name': 'full1', 'slavename': 'bot-slow, builddir='full1',
+b1 = @{'name': 'full1', 'slavename': 'bot-slow', builddir='full1',
                        'factory': slow_factory@}
-b2 = @{'name': 'full2', 'slavename': 'bot-slow, builddir='full2',
+b2 = @{'name': 'full2', 'slavename': 'bot-slow', builddir='full2',
                        'factory': slow_factory@}
-b3 = @{'name': 'full3', 'slavename': 'bot-fast, builddir='full3',
+b3 = @{'name': 'full3', 'slavename': 'bot-fast', builddir='full3',
                        'factory': fast_factory@}
-b4 = @{'name': 'full4', 'slavename': 'bot-fast, builddir='full4',
+b4 = @{'name': 'full4', 'slavename': 'bot-fast', builddir='full4',
                        'factory': fast_factory@}
 c['builders'] = [b1, b2, b3, b4]
 @end example
@@ -3142,6 +3143,10 @@ products in shared directories, or which do things that human
 developers would not (or which might slow down or break in ways that
 require human attention to deal with).
 
+@code{SlaveLocks}s can be used to keep automated performance tests
+from interfering with each other, when there are multiple Builders all
+using the same buildslave. But they can't prevent other users from
+running CPU-intensive jobs on that host while the tests are running.
 
 @node Build Factories,  , Interlocks, Build Process
 @section Build Factories
