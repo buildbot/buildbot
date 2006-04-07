@@ -25,10 +25,10 @@
 
 	* buildbot/test/__init__.py: set $LANG to 'C', to insure that
 	spawned commands emit parseable results in english and not some
-	other language. Patch from Niklaus Giger, SF#1463394.
+	other language. Patch from Niklaus Giger, SF#1463395.
 
 	* README (INSTALLATION): discourage users from running unit tests on
-	a "network drive", patch from Niklaus Giger.
+	a "network drive", patch from Niklaus Giger, SF#1463394.
 
 2006-03-22  Brian Warner  <warner@lothar.com>
 
