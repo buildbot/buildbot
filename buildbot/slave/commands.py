@@ -10,7 +10,7 @@ from buildbot.twcompat import implements
 from buildbot.slave.interfaces import ISlaveCommand
 from buildbot.slave.registry import registerSlaveCommand
 
-cvs_ver = '$Revision: 1.42 $'[1+len("Revision: "):-2]
+cvs_ver = '$Revision: 1.43 $'[1+len("Revision: "):-2]
 
 # version history:
 #  >=1.17: commands are interruptable
@@ -1262,7 +1262,7 @@ class Mercurial(SourceBase):
 
     def _handleEmptyUpdate(self, res):
         if type(res) is int and res == 1:
-            if "no changes found" in self.command.stdout:
+            if self.command.stdout.find("no changes found") != -1:
                 # 'hg pull', when it doesn't have anything to do, exits with
                 # rc=1, and there appears to be no way to shut this off. It
                 # emits a distinctive message to stdout, though. So catch
