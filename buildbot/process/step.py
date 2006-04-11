@@ -239,6 +239,7 @@ class LoggedRemoteCommand(RemoteCommand):
     log = None
     closeWhenFinished = False
     rc = None
+    debug = False
 
     def __repr__(self):
         return "<RemoteCommand '%s' at %d>" % (self.remote_command, id(self))
@@ -262,6 +263,9 @@ class LoggedRemoteCommand(RemoteCommand):
     def addHeader(self, data):
         self.log.addHeader(data)
     def remoteUpdate(self, update):
+        if self.debug:
+            for k,v in update.items():
+                log.msg("Update[%s]: %s" % (k,v))
         if update.has_key('stdout'):
             self.addStdout(update['stdout'])
         if update.has_key('stderr'):
@@ -1634,6 +1638,63 @@ class Bazaar(Arch):
 
         self.cmd = LoggedRemoteCommand("bazaar", self.args)
         ShellCommand.start(self, warnings)
+
+class Mercurial(Source):
+    """Check out a source tree from a mercurial repository 'repourl'."""
+
+    name = "hg"
+
+    def __init__(self, repourl=None, baseURL=None, defaultBranch=None,
+                 **kwargs):
+        """
+        @type  repourl: string
+        @param repourl: the URL which points at the Mercurial repository.
+                        This is used as the default branch. Using C{repourl}
+                        does not enable builds of alternate branches: use
+                        C{baseURL} to enable this. Use either C{repourl} or
+                        C{baseURL}, not both.
+
+        @param baseURL: if branches are enabled, this is the base URL to
+                        which a branch name will be appended. It should
+                        probably end in a slash. Use exactly one of
+                        C{repourl} and C{baseURL}.
+
+        @param defaultBranch: if branches are enabled, this is the branch
+                              to use if the Build does not specify one
+                              explicitly. It will simply be appended to
+                              C{baseURL} and the result handed to the
+                              'hg clone' command.
+        """
+        self.repourl = repourl
+        self.baseURL = baseURL
+        self.branch = defaultBranch
+        Source.__init__(self, **kwargs)
+        if (not repourl and not baseURL) or (repourl and baseURL):
+            raise ValueError("you must provide exactly one of repourl and"
+                             " baseURL")
+
+    def startVC(self, branch, revision, patch):
+        slavever = self.slaveVersion("hg")
+        if not slavever:
+            raise BuildSlaveTooOldError("slave is too old, does not know "
+                                        "about hg")
+
+        if self.repourl:
+            assert not branch # we need baseURL= to use branches
+            self.args['repourl'] = self.repourl
+        else:
+            self.args['repourl'] = self.baseURL + branch
+        self.args['revision'] = revision
+        self.args['patch'] = patch
+
+        revstuff = []
+        if branch is not None and branch != self.branch:
+            revstuff.append("[branch]")
+        self.description.extend(revstuff)
+        self.descriptionDone.extend(revstuff)
+
+        self.cmd = LoggedRemoteCommand("hg", self.args)
+        ShellCommand.start(self)
 
 
 class todo_P4(Source):

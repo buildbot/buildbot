@@ -51,6 +51,8 @@ from buildbot.sourcestamp import SourceStamp
 from buildbot.twcompat import maybeWait
 from buildbot.scripts import tryclient
 
+#step.LoggedRemoteCommand.debug = True
+
 # buildbot.twcompat will patch these into t.i.defer if necessary
 from twisted.internet.defer import waitForDeferred, deferredGenerator
 
@@ -349,7 +351,10 @@ class VCBase(SignalMixin):
         d = utils.getProcessOutputAndValue(command[0], command[1:],
                                            env=os.environ, path=basedir)
         def check((out, err, code)):
+            #print
+            #print "command: %s" % command
             #print "out: %s" % out
+            #print "code: %s" % code
             if code != 0 and not failureIsOk:
                 log.msg("command %s finished with exit code %d" %
                         (command, code))
@@ -415,9 +420,13 @@ class VCBase(SignalMixin):
     def touch(self, d, f):
         open(os.path.join(d,f),"w").close()
     def shouldExist(self, *args):
-        self.failUnless(os.path.exists(os.path.join(*args)))
+        target = os.path.join(*args)
+        self.failUnless(os.path.exists(target),
+                        "expected to find %s but didn't" % target)
     def shouldNotExist(self, *args):
-        self.failIf(os.path.exists(os.path.join(*args)))
+        target = os.path.join(*args)
+        self.failIf(os.path.exists(target),
+                    "expected to NOT find %s, but did" % target)
     def shouldContain(self, d, f, contents):
         c = open(os.path.join(d, f), "r").read()
         self.failUnlessIn(contents, c)
@@ -693,6 +702,7 @@ class VCBase(SignalMixin):
         return d
 
     def do_branch(self):
+        log.msg("do_branch")
         vctype = self.vctype
         args = self.vcargs
         m = self.master
@@ -714,6 +724,7 @@ class VCBase(SignalMixin):
         d.addCallback(self._doBranch_1)
         return d
     def _doBranch_1(self, res):
+        log.msg("_doBranch_1")
         # make sure the checkout was of the trunk
         main_c = os.path.join(self.slavebase, "vc-dir", "build", "main.c")
         data = open(main_c, "r").read()
@@ -726,6 +737,7 @@ class VCBase(SignalMixin):
         d.addCallback(self._doBranch_2)
         return d
     def _doBranch_2(self, res):
+        log.msg("_doBranch_2")
         # make sure it was on the branch
         main_c = os.path.join(self.slavebase, "vc-dir", "build", "main.c")
         data = open(main_c, "r").read()
@@ -739,6 +751,7 @@ class VCBase(SignalMixin):
         d.addCallback(self._doBranch_3)
         return d
     def _doBranch_3(self, res):
+        log.msg("_doBranch_3")
         # make sure it is still on the branch
         main_c = os.path.join(self.slavebase, "vc-dir", "build", "main.c")
         data = open(main_c, "r").read()
@@ -751,6 +764,7 @@ class VCBase(SignalMixin):
         d.addCallback(self._doBranch_4)
         return d
     def _doBranch_4(self, res):
+        log.msg("_doBranch_4")
         # make sure it was on the trunk
         main_c = os.path.join(self.slavebase, "vc-dir", "build", "main.c")
         data = open(main_c, "r").read()
@@ -758,6 +772,7 @@ class VCBase(SignalMixin):
         self.shouldNotExist(self.workdir, "newbranchfile")
 
     def do_getpatch(self, doBranch=True):
+        log.msg("do_getpatch")
         # prepare a buildslave to do checkouts
         vctype = self.vctype
         args = self.vcargs
@@ -785,10 +800,11 @@ class VCBase(SignalMixin):
         d.addCallback(self.do_getpatch_trunkold)
         if doBranch:
             d.addCallback(self.do_getpatch_branch)
-        d.addBoth(self.do_getpatch_finish)
+        d.addCallback(self.do_getpatch_finish)
         return d
 
     def do_getpatch_finish(self, res):
+        log.msg("do_getpatch_finish")
         self.vc_try_finish(self.trydir)
         return res
 
@@ -805,24 +821,29 @@ class VCBase(SignalMixin):
                               devfilename, devfile))
 
     def do_getpatch_trunkhead(self, res):
+        log.msg("do_getpatch_trunkhead")
         d = self.vc_try_checkout(self.trydir, self.trunk[-1])
         d.addCallback(self._do_getpatch_trunkhead_1)
         return d
     def _do_getpatch_trunkhead_1(self, res):
+        log.msg("_do_getpatch_trunkhead_1")
         d = tryclient.getSourceStamp(self.vctype_try, self.trydir, None)
         d.addCallback(self._do_getpatch_trunkhead_2)
         return d
     def _do_getpatch_trunkhead_2(self, ss):
+        log.msg("_do_getpatch_trunkhead_2")
         d = self.doBuild(ss=ss)
         d.addCallback(self._do_getpatch_trunkhead_3)
         return d
     def _do_getpatch_trunkhead_3(self, res):
+        log.msg("_do_getpatch_trunkhead_3")
         # verify that the resulting buildslave tree matches the developer's
         self.try_shouldMatch("main.c")
         self.try_shouldMatch("version.c")
         self.try_shouldMatch(os.path.join("subdir", "subdir.c"))
 
     def do_getpatch_trunkold(self, res):
+        log.msg("do_getpatch_trunkold")
         # now try a tree from an older revision. We need at least two
         # revisions here, so we might have to create one first
         if len(self.trunk) < 2:
@@ -831,38 +852,46 @@ class VCBase(SignalMixin):
             return d
         return self._do_getpatch_trunkold_1()
     def _do_getpatch_trunkold_1(self, res=None):
+        log.msg("_do_getpatch_trunkold_1")
         d = self.vc_try_checkout(self.trydir, self.trunk[-2])
         d.addCallback(self._do_getpatch_trunkold_2)
         return d
     def _do_getpatch_trunkold_2(self, res):
+        log.msg("_do_getpatch_trunkold_2")
         d = tryclient.getSourceStamp(self.vctype_try, self.trydir, None)
         d.addCallback(self._do_getpatch_trunkold_3)
         return d
     def _do_getpatch_trunkold_3(self, ss):
+        log.msg("_do_getpatch_trunkold_3")
         d = self.doBuild(ss=ss)
         d.addCallback(self._do_getpatch_trunkold_4)
         return d
     def _do_getpatch_trunkold_4(self, res):
+        log.msg("_do_getpatch_trunkold_4")
         # verify that the resulting buildslave tree matches the developer's
         self.try_shouldMatch("main.c")
         self.try_shouldMatch("version.c")
         self.try_shouldMatch(os.path.join("subdir", "subdir.c"))
 
     def do_getpatch_branch(self, res):
+        log.msg("do_getpatch_branch")
         # now try a tree from a branch
         d = self.vc_try_checkout(self.trydir, self.branch[-1], self.branchname)
         d.addCallback(self._do_getpatch_branch_1)
         return d
     def _do_getpatch_branch_1(self, res):
+        log.msg("_do_getpatch_branch_1")
         d = tryclient.getSourceStamp(self.vctype_try, self.trydir,
                                      self.try_branchname)
         d.addCallback(self._do_getpatch_branch_2)
         return d
     def _do_getpatch_branch_2(self, ss):
+        log.msg("_do_getpatch_branch_2")
         d = self.doBuild(ss=ss)
         d.addCallback(self._do_getpatch_branch_3)
         return d
     def _do_getpatch_branch_3(self, res):
+        log.msg("_do_getpatch_branch_3")
         # verify that the resulting buildslave tree matches the developer's
         self.try_shouldMatch("main.c")
         self.try_shouldMatch("version.c")
@@ -1133,6 +1162,7 @@ class SVNSupport(VCBase):
         yield w; w.getResult()
         open(os.path.join(workdir, "subdir", "subdir.c"), "w").write(TRY_C)
     vc_try_checkout = deferredGenerator(vc_try_checkout)
+
     def vc_try_finish(self, workdir):
         rmdirRecursive(workdir)
 
@@ -1730,6 +1760,148 @@ class Bazaar(BazaarSupport, unittest.TestCase):
     def _testRetryFails_1(self, bs):
         self.failUnlessEqual(bs.getResults(), FAILURE)
 
+class MercurialSupport(VCBase):
+    # Mercurial has a metadir=".hg", but it does not have an 'export' mode.
+    metadir = None
+    branchname = "branch"
+    try_branchname = "branch"
+    vctype = "step.Mercurial"
+    vctype_try = "hg"
+
+    def capable(self):
+        global VCS
+        if not VCS.has_key("hg"):
+            VCS["hg"] = False
+            hgpaths = which("hg")
+            if hgpaths:
+                VCS["hg"] = True
+                self.vcexe = hgpaths[0]
+        if not VCS["hg"]:
+            raise unittest.SkipTest("Mercurial is not installed")
+
+    def extract_id(self, output):
+        m = re.search(r'^(\w+)', output)
+        return m.group(0)
+
+    def vc_create(self):
+        self.hg_base = os.path.join(self.repbase, "Mercurial-Repository")
+        self.rep_trunk = os.path.join(self.hg_base, "trunk")
+        self.rep_branch = os.path.join(self.hg_base, "branch")
+        tmp = os.path.join(self.hg_base, "hgtmp")
+
+        os.makedirs(self.rep_trunk)
+        w = self.dovc(self.rep_trunk, "init")
+        yield w; w.getResult()
+        os.makedirs(self.rep_branch)
+        w = self.dovc(self.rep_branch, "init")
+        yield w; w.getResult()
+
+        self.populate(tmp)
+        w = self.dovc(tmp, "init")
+        yield w; w.getResult()
+        w = self.dovc(tmp, "addremove")
+        yield w; w.getResult()
+        w = self.dovc(tmp, "commit -m initial_import")
+        yield w; w.getResult()
+        w = self.dovc(tmp, "push %s" % self.rep_trunk)
+        # note that hg-push does not actually update the working directory
+        yield w; w.getResult()
+        w = self.dovc(tmp, "identify")
+        yield w; out = w.getResult()
+        self.addTrunkRev(self.extract_id(out))
+
+        self.populate_branch(tmp)
+        w = self.dovc(tmp, "commit -m commit_on_branch")
+        yield w; w.getResult()
+        w = self.dovc(tmp, "push %s" % self.rep_branch)
+        yield w; w.getResult()
+        w = self.dovc(tmp, "identify")
+        yield w; out = w.getResult()
+        self.addBranchRev(self.extract_id(out))
+        rmdirRecursive(tmp)
+    vc_create = deferredGenerator(vc_create)
+
+    def vc_revise(self):
+        tmp = os.path.join(self.hg_base, "hgtmp2")
+        w = self.dovc(self.hg_base, "clone %s %s" % (self.rep_trunk, tmp))
+        yield w; w.getResult()
+
+        self.version += 1
+        version_c = VERSION_C % self.version
+        version_c_filename = os.path.join(tmp, "version.c")
+        open(version_c_filename, "w").write(version_c)
+        # hg uses timestamps to distinguish files which have changed, so we
+        # force the mtime forward a little bit
+        future = time.time() + 2*self.version
+        os.utime(version_c_filename, (future, future))
+        w = self.dovc(tmp, "commit -m revised_to_%d" % self.version)
+        yield w; w.getResult()
+        w = self.dovc(tmp, "push %s" % self.rep_trunk)
+        yield w; w.getResult()
+        w = self.dovc(tmp, "identify")
+        yield w; out = w.getResult()
+        self.addTrunkRev(self.extract_id(out))
+        rmdirRecursive(tmp)
+    vc_revise = deferredGenerator(vc_revise)
+
+    def vc_try_checkout(self, workdir, rev, branch=None):
+        assert os.path.abspath(workdir) == workdir
+        if os.path.exists(workdir):
+            rmdirRecursive(workdir)
+        if branch:
+            src = self.rep_branch
+        else:
+            src = self.rep_trunk
+        w = self.dovc(self.hg_base, "clone %s %s" % (src, workdir))
+        yield w; w.getResult()
+        try_c_filename = os.path.join(workdir, "subdir", "subdir.c")
+        open(try_c_filename, "w").write(TRY_C)
+        future = time.time() + 2*self.version
+        os.utime(try_c_filename, (future, future))
+    vc_try_checkout = deferredGenerator(vc_try_checkout)
+
+    def vc_try_finish(self, workdir):
+        rmdirRecursive(workdir)
+
+
+class Mercurial(MercurialSupport, unittest.TestCase):
+    def testCheckout(self):
+        self.vcargs = { 'repourl': self.rep_trunk }
+        d = self.do_vctest(testRetry=False)
+
+        # TODO: testRetry has the same problem with Mercurial as it does for
+        # Arch
+        return maybeWait(d)
+
+    def testPatch(self):
+        self.vcargs = { 'baseURL': self.hg_base + "/",
+                        'defaultBranch': "trunk" }
+        d = self.do_patch()
+        return maybeWait(d)
+
+    def testBranch(self):
+        self.vcargs = { 'baseURL': self.hg_base + "/",
+                        'defaultBranch': "trunk" }
+        d = self.do_branch()
+        return maybeWait(d)
+
+    def testCheckoutHTTP(self):
+        self.serveHTTP()
+        repourl = "http://localhost:%d/Mercurial-Repository/trunk/.hg" % self.httpPort
+        self.vcargs =  { 'repourl': repourl }
+        d = self.do_vctest(testRetry=False)
+        return maybeWait(d)
+    # TODO: The easiest way to publish hg over HTTP is by running 'hg serve'
+    # as a child process while the test is running. (you can also use a CGI
+    # script, which sounds difficult, or you can publish the files directly,
+    # which isn't well documented).
+    testCheckoutHTTP.skip = "not yet implemented, use 'hg serve'"
+
+    def testTry(self):
+        self.vcargs = { 'baseURL': self.hg_base + "/",
+                        'defaultBranch': "trunk" }
+        d = self.do_getpatch()
+        return maybeWait(d)
     
 
 class Sources(unittest.TestCase):

@@ -147,6 +147,7 @@ Source Checkout
 * CVS::                         
 * SVN::                         
 * Darcs::                       
+* Mercurial::                   
 * Arch::                        
 * Bazaar::                      
 * P4Sync::                      
@@ -1043,9 +1044,9 @@ used by SVN and P4, or the revision number used by Arch, or a labeled
 tag used in CVS)@footnote{many VC systems provide more complexity than
 this: in particular the local views that P4 and ClearCase can assemble
 out of various source directories are more complex than we're prepared
-to take advantage of here}. The SHA1 revision ID used by Monotone is
-also a kind of revision stamp, in that it specifies a unique copy of
-the source tree, as does a Darcs ``context'' file.
+to take advantage of here}. The SHA1 revision ID used by Monotone and
+Mercurial is also a kind of revision stamp, in that it specifies a
+unique copy of the source tree, as does a Darcs ``context'' file.
 
 When we aren't intending to make any changes to the sources we check out
 (at least not any that need to be committed back upstream), there are two
@@ -1206,6 +1207,13 @@ present in a given tree (this is the output of @command{darcs changes
 revision number, but the patch-reordering flexibility of Darcs makes
 it impossible to provide a shorter useful specification).
 
+@uref{http://selenic.com/mercurial, Mercurial} is like Darcs, in that
+each branch is stored in a separate repository. The @code{repourl},
+@code{baseURL}, and @code{defaultBranch} arguments are all handled the
+same way as with Darcs. The ``revision'', however, is the hash
+identifier returned by @command{hg identify}.
+
+
 @node Attributes of Changes,  , How Different VC Systems Specify Sources, Version Control Systems
 @subsection Attributes of Changes
 
@@ -1257,6 +1265,8 @@ consumed by the @code{computeSourceRevision} method in the appropriate
 @code{revision} is an int, a transation number (r%d)
 @item Darcs
 @code{revision} is a large string, the output of @code{darcs changes --context}
+@item Mercurial
+@code{revision} is a short string (a hash ID), the output of @code{hg identify}
 @item Arch/Bazaar
 @code{revision} is the full revision ID (ending in --patch-%d)
 @item P4
@@ -1276,7 +1286,7 @@ subdirectories of the repository, so the file's ``svnurl'' is a
 combination of some base URL, the branch name, and the filename within
 the branch. (In a sense, the branch name and the filename inhabit the
 same namespace). Darcs branches are subdirectories of a base URL just
-like SVN.
+like SVN. Mercurial branches are the same as Darcs.
 
 @table @samp
 @item CVS
@@ -1284,6 +1294,8 @@ branch='warner-newfeature', files=['src/foo.c']
 @item SVN
 branch='branches/trunk', files=['src/foo.c']
 @item Darcs
+branch='branches/trunk', files=['src/foo.c']
+@item Mercurial
 branch='branches/trunk', files=['src/foo.c']
 @item Arch/Bazaar
 branch='buildbot--usebranches--0', files=['buildbot/master.py']
@@ -2631,6 +2643,7 @@ arguments are described on the following pages.
 * CVS::                         
 * SVN::                         
 * Darcs::                       
+* Mercurial::                   
 * Arch::                        
 * Bazaar::                      
 * P4Sync::                      
@@ -2805,7 +2818,7 @@ concatenates ``svn://svn.example.org/MyProject/'' (the baseURL) with
 will concatenate ``svn://svn.example.org/MyProject/'' with
 ``features/newthing'' to get the svnurl for checkout.
 
-@node Darcs, Arch, SVN, Source Checkout
+@node Darcs, Mercurial, SVN, Source Checkout
 @subsubsection Darcs
 
 @cindex Darcs Checkout
@@ -2847,8 +2860,38 @@ own. This will be appended to @code{baseURL} to create the string that
 will be passed to the @code{darcs get} command.
 @end table
 
+@node Mercurial, Arch, Darcs, Source Checkout
+@subsubsection Mercurial
 
-@node Arch, Bazaar, Darcs, Source Checkout
+@cindex Mercurial Checkout
+
+The @code{Mercurial} build step performs a
+@uref{http://selenic.com/mercurial, Mercurial} (aka ``hg'') checkout
+or update.
+
+Branches are handled just like @xref{Darcs}.
+
+The Mercurial step takes the following arguments:
+
+@table @code
+@item repourl
+(required unless @code{baseURL} is provided): the URL at which the
+Mercurial source repository is available.
+
+@item baseURL
+(required unless @code{repourl} is provided): the base repository URL,
+to which a branch name will be appended. It should probably end in a
+slash.
+
+@item defaultBranch
+(allowed if and only if @code{baseURL} is provided): this specifies
+the name of the branch to use when a Build does not provide one of its
+own. This will be appended to @code{baseURL} to create the string that
+will be passed to the @code{hg clone} command.
+@end table
+
+
+@node Arch, Bazaar, Mercurial, Source Checkout
 @subsubsection Arch
 
 @cindex Arch Checkout
@@ -4128,6 +4171,10 @@ using, with an argument like @option{--vc=cvs} or @option{--vc=tla}.
 This can also be provided as @code{try_vc} in
 @file{.buildbot/options}.
 
+The following names are recognized: @code{cvs} @code{svn} @code{baz}
+@code{tla} @code{hg} @code{darcs}
+
+
 @heading finding the top of the tree
 
 Some VC systems (notably CVS and SVN) track each directory
@@ -4151,12 +4198,14 @@ You can also manually set the top of the tree with
 for each tree you use, so it may be more convenient to use the
 @code{try_topfile} approach instead.
 
+Other VC systems which work on full projects instead of individual
+directories (tla, baz, darcs, monotone, mercurial) do not require
+@command{try} to know the top directory, so the @option{--try-topfile}
+and @option{--try-topdir} arguments will be ignored.
+@c is this true? I think I currently require topdirs all the time.
+
 If the @command{try} command cannot find the top directory, it will
-abort with an error message. Other VC systems which work on full
-projects instead of individual directories (tla, baz, darcs, monotone)
-do not require @command{try} to know the top directory, so the
-@option{--try-topfile} and @option{--try-topdir} arguments will be
-ignored.
+abort with an error message.
 
 @heading determining the branch name
 
@@ -4176,8 +4225,13 @@ revision and computing a patch.
 @table @code
 
 @item CVS
-Wow, good question. We have to assume that you've done an @code{cvs
-update} on the whole tree... [TODO]
+
+@command{try} pretends that the tree is up to date. It converts the
+current time into a @code{-D} time specification, uses it as the base
+revision, and computes the diff between the upstream tree as of that
+point in time versus the current contents. This works, more or less,
+but requires that the local clock be in reasonably good sync with the
+repository.
 
 @item SVN
 @command{try} does a @code{svn status -u} to find the latest
@@ -4204,7 +4258,7 @@ fully-qualified version identifier (ARCHIVE/VERSION), then takes the
 first line of @code{tla logs --reverse} to figure out the base
 revision. Then it does @code{tla changes --diffs} to obtain the patch.
 
-@item darcs
+@item Darcs
 @code{darcs changes --context} emits a text file that contains a list
 of all patches back to and including the last tag was made. This text
 file (plus the location of a repository that contains all these
@@ -4216,8 +4270,15 @@ So @command{try} does a @code{darcs changes --context} to determine
 what your tree's base revision is, and then does a @code{darcs diff
 -u} to compute the patch relative to that revision.
 
+@item Mercurial
+@code{hg identify} emits a short revision ID (basically a truncated
+SHA1 hash of the current revision's contents), which is used as the
+base revision. @code{hg diff} then provides the patch relative to that
+revision. For @command{try} to work, your working directory must only
+have patches that are available from the same remotely-available
+repository that the build process' @code{step.Mercurial} will use.
+
 @c TODO: monotone, git
-@c TODO: new VC systems: mercurial (hg)
 @end table
 
 @heading waiting for results

@@ -129,6 +129,20 @@ class TlaExtractor(SourceStampExtractor):
         d.addCallback(self.readPatch, 1)
         return d
 
+class MercurialExtractor(SourceStampExtractor):
+    patchlevel = 1
+    def getBaseRevision(self):
+        d = self.do(["hg", "identify"])
+        d.addCallback(self.parseStatus)
+        return d
+    def parseStatus(self, output):
+        m = re.search(r'^(\w+)', output)
+        self.baserev = m.group(0)
+    def getPatch(self, res):
+        d = self.do(["hg", "diff"])
+        d.addCallback(self.readPatch, self.patchlevel)
+        return d
+
 class DarcsExtractor(SourceStampExtractor):
     patchlevel = 1
     def getBaseRevision(self):
@@ -151,6 +165,8 @@ def getSourceStamp(vctype, treetop, branch=None):
         e = BazExtractor(treetop, branch)
     elif vctype == "tla":
         e = TlaExtractor(treetop, branch)
+    elif vctype == "hg":
+        e = MercurialExtractor(treetop, branch)
     elif vctype == "darcs":
         e = DarcsExtractor(treetop, branch)
     else:

@@ -10,7 +10,7 @@ from buildbot.twcompat import implements
 from buildbot.slave.interfaces import ISlaveCommand
 from buildbot.slave.registry import registerSlaveCommand
 
-cvs_ver = '$Revision: 1.41 $'[1+len("Revision: "):-2]
+cvs_ver = '$Revision: 1.42 $'[1+len("Revision: "):-2]
 
 # version history:
 #  >=1.17: commands are interruptable
@@ -1217,9 +1217,72 @@ class Bazaar(Arch):
             d.addCallback(self._didGet)
         return d
 
-
-
 registerSlaveCommand("bazaar", Bazaar, cvs_ver)
+
+
+class Mercurial(SourceBase):
+    """Mercurial specific VC operation. In addition to the arguments
+    handled by SourceBase, this command reads the following keys:
+
+    ['repourl'] (required): the Cogito repository string
+    """
+
+    header = "mercurial operation"
+
+    def setup(self, args):
+        SourceBase.setup(self, args)
+        self.repourl = args['repourl']
+        self.sourcedata = "%s\n" % self.repourl
+        self.stdout = ""
+        self.stderr = ""
+
+    def sourcedirIsUpdateable(self):
+        if os.path.exists(os.path.join(self.builder.basedir,
+                                       self.srcdir, ".buildbot-patched")):
+            return False
+        # like Darcs, to check out a specific (old) revision, we have to do a
+        # full checkout. TODO: I think 'hg pull' plus 'hg update' might work
+        if self.revision:
+            return False
+        return os.path.isdir(os.path.join(self.builder.basedir,
+                                          self.srcdir, ".hg"))
+
+    def doVCUpdate(self):
+        d = os.path.join(self.builder.basedir, self.srcdir)
+        command = ['hg', 'pull', '--update', '--verbose']
+        if self.args['revision']:
+            command.extend(['--rev', self.args['revision']])
+        c = ShellCommand(self.builder, command, d,
+                         sendRC=False, timeout=self.timeout,
+                         keepStdout=True)
+        self.command = c
+        d = c.start()
+        d.addCallback(self._handleEmptyUpdate)
+        return d
+
+    def _handleEmptyUpdate(self, res):
+        if type(res) is int and res == 1:
+            if "no changes found" in self.command.stdout:
+                # 'hg pull', when it doesn't have anything to do, exits with
+                # rc=1, and there appears to be no way to shut this off. It
+                # emits a distinctive message to stdout, though. So catch
+                # this and pretend that it completed successfully.
+                return 0
+        return res
+
+    def doVCFull(self):
+        d = os.path.join(self.builder.basedir, self.srcdir)
+        command = ['hg', 'clone']
+        if self.args['revision']:
+            command.extend(['--rev', self.args['revision']])
+        command.extend([self.repourl, d])
+        c = ShellCommand(self.builder, command, self.builder.basedir,
+                         sendRC=False, timeout=self.timeout)
+        self.command = c
+        return c.start()
+
+registerSlaveCommand("hg", Mercurial, cvs_ver)
+
 
 class P4Sync(SourceBase):
     """A partial P4 source-updater. Requires manual setup of a per-slave P4
