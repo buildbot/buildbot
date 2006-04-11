@@ -1,5 +1,9 @@
 2006-04-07  Brian Warner  <warner@lothar.com>
 
+	* buildbot/test/test_vc.py (which): define our own which() in case
+	we can't import twisted.python.procutils, because procutils doesn't
+	exist in Twisted-1.3
+
 	* docs/buildbot.texinfo (Interlocks): fix some typos, mention use
 	of SlaveLocks for performance tests
 
