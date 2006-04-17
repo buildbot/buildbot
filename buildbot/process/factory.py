@@ -45,7 +45,7 @@ class GNUAutoconf(BuildFactory):
                  configureFlags=[],
                  compile=["make", "all"],
                  test=["make", "check"]):
-        assert type(source) is tuple
+        assert isinstance(source, tuple)
         assert issubclass(source[0], step.BuildStep)
         BuildFactory.__init__(self, [source])
         if configure is not None:
@@ -59,7 +59,7 @@ class GNUAutoconf(BuildFactory):
                 else:
                     command = configure
             else:
-                assert type(configure) in (list, tuple)
+                assert isinstance(configure, (list, tuple))
                 command = configure + configureFlags
             self.addStep(step.Configure, command=command, env=configureEnv)
         if compile is not None:
@@ -69,7 +69,7 @@ class GNUAutoconf(BuildFactory):
 
 class CPAN(BuildFactory):
     def __init__(self, source, perl="perl"):
-        assert type(source) is tuple
+        assert isinstance(source, tuple)
         assert issubclass(source[0], step.BuildStep)
         BuildFactory.__init__(self, [source])
         self.addStep(step.Configure, command=[perl, "Makefile.PL"])
@@ -78,7 +78,7 @@ class CPAN(BuildFactory):
 
 class Distutils(BuildFactory):
     def __init__(self, source, python="python", test=None):
-        assert type(source) is tuple
+        assert isinstance(source, tuple)
         assert issubclass(source[0], step.BuildStep)
         BuildFactory.__init__(self, [source])
         self.addStep(step.Compile, command=[python, "./setup.py", "build"])
@@ -105,7 +105,7 @@ class Trial(BuildFactory):
                  testpath=".", randomly=None, recurse=None,
                  tests=None,  useTestCaseNames=False, env=None):
         BuildFactory.__init__(self, [source])
-        assert type(source) is tuple
+        assert isinstance(source, tuple)
         assert issubclass(source[0], step.BuildStep)
         assert tests or useTestCaseNames, "must use one or the other"
         if trial is not None:

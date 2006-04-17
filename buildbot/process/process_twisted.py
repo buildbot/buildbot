@@ -11,9 +11,9 @@ from buildbot.process.step_twisted import HLint, ProcessDocs, BuildDebs, \
 class TwistedBuild(Build):
     workdir = "Twisted" # twisted's bin/trial expects to live in here
     def isFileImportant(self, filename):
-        if filename.find("doc/fun/") == 0:
+        if filename.startswith("doc/fun/") == 0:
             return 0
-        if filename.find("sandbox/") == 0:
+        if filename.startswith("sandbox/") == 0:
             return 0
         return 1
 
@@ -40,7 +40,7 @@ class QuickTwistedBuildFactory(TwistedBaseFactory):
     useProgress = 0
 
     def __init__(self, source, python="python"):
-        TwistedBuildFactory.__init__(self, source)
+        TwistedBaseFactory.__init__(self, source)
         if type(python) is str:
             python = [python]
         self.addStep(HLint, python=python[0])
@@ -56,14 +56,14 @@ class FullTwistedBuildFactory(TwistedBaseFactory):
     def __init__(self, source, python="python",
                  processDocs=False, runTestsRandomly=False,
                  compileOpts=[], compileOpts2=[]):
-        TwistedBuildFactory.__init__(self, source)
+        TwistedBaseFactory.__init__(self, source)
         if processDocs:
             self.addStep(ProcessDocs)
 
         if type(python) == str:
             python = [python]
-        assert type(compileOpts) is list
-        assert type(compileOpts2) is list
+        assert isinstance(compileOpts, list)
+        assert isinstance(compileOpts2, list)
         cmd = (python + compileOpts + ["setup.py", "all", "build_ext"]
                + compileOpts2 + ["-i"])
 
@@ -75,7 +75,7 @@ class TwistedDebsBuildFactory(TwistedBaseFactory):
     treeStableTimer = 10*60
 
     def __init__(self, source, python="python"):
-        TwistedBuildFactory.__init__(self, source)
+        TwistedBaseFactory.__init__(self, source)
         self.addStep(ProcessDocs, haltOnFailure=True)
         self.addStep(BuildDebs, warnOnWarnings=True)
 
@@ -85,12 +85,12 @@ class TwistedReactorsBuildFactory(TwistedBaseFactory):
     def __init__(self, source,
                  python="python", compileOpts=[], compileOpts2=[],
                  reactors=None):
-        TwistedBuildFactory.__init__(self, source)
+        TwistedBaseFactory.__init__(self, source)
 
         if type(python) == str:
             python = [python]
-        assert type(compileOpts) is list
-        assert type(compileOpts2) is list
+        assert isinstance(compileOpts, list)
+        assert isinstance(compileOpts2, list)
         cmd = (python + compileOpts + ["setup.py", "all", "build_ext"]
                + compileOpts2 + ["-i"])
 

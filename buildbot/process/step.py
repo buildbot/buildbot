@@ -1022,7 +1022,7 @@ class Source(ShellCommand):
         assert mode in ("update", "copy", "clobber", "export")
         if retry:
             delay, repeats = retry
-            assert type(repeats) is int
+            assert isinstance(repeats, int)
             assert repeats > 0
         self.args = {'mode': mode,
                      'workdir': workdir,

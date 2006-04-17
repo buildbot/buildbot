@@ -746,15 +746,15 @@ class BuildMaster(service.MultiService, styles.Versioned):
         if config.has_key('interlocks'):
             raise KeyError("c['interlocks'] is no longer accepted")
 
-        assert type(sources) in (list, tuple)
+        assert isinstance(sources, (list, tuple))
         for s in sources:
             assert interfaces.IChangeSource(s, None)
         # this assertion catches c['schedulers'] = Scheduler(), since
         # Schedulers are service.MultiServices and thus iterable.
-        assert type(schedulers) in (list, tuple)
+        assert isinstance(schedulers, (list, tuple))
         for s in schedulers:
             assert interfaces.IScheduler(s, None)
-        assert type(status) in (list, tuple)
+        assert isinstance(status, (list, tuple))
         for s in status:
             assert interfaces.IStatusReceiver(s, None)
 

@@ -539,7 +539,7 @@ class TestResult:
         __implements__ = interfaces.ITestResult,
 
     def __init__(self, name, results, text, logs):
-        assert type(name) is tuple
+        assert isinstance(name, tuple)
         self.name = name
         self.results = results
         self.text = text
@@ -1115,7 +1115,7 @@ class BuildStatus(styles.Versioned):
         self.slavename = slavename
 
     def setText(self, text):
-        assert type(text) in (list, tuple)
+        assert isinstance(text, (list, tuple))
         self.text = text
     def setColor(self, color):
         self.color = color

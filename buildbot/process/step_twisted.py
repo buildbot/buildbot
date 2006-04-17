@@ -323,7 +323,7 @@ class Trial(ShellCommand):
             self.testpath = testpath
         if self.testpath is UNSPECIFIED:
             raise ValueError("You must specify testpath= (it can be None)")
-        assert type(self.testpath) is str or self.testpath is None
+        assert isinstance(self.testpath, str) or self.testpath is None
 
         if reactor is not UNSPECIFIED:
             self.reactor = reactor

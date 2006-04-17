@@ -10,7 +10,7 @@ from buildbot.twcompat import implements
 from buildbot.slave.interfaces import ISlaveCommand
 from buildbot.slave.registry import registerSlaveCommand
 
-cvs_ver = '$Revision: 1.43 $'[1+len("Revision: "):-2]
+cvs_ver = '$Revision: 1.44 $'[1+len("Revision: "):-2]
 
 # version history:
 #  >=1.17: commands are interruptable
@@ -484,7 +484,7 @@ class Command:
         if type(rc) is not int:
             log.msg("weird, _abandonOnFailure was given rc=%s (%s)" % \
                     (rc, type(rc)))
-        assert type(rc) is int
+        assert isinstance(rc, int)
         if rc != 0:
             raise AbandonChain(rc)
         return rc

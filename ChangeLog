@@ -1,5 +1,18 @@
 2006-04-17  Brian Warner  <warner@lothar.com>
 
+	* all: use isinstance() instead of 'type(x) is foo', suggested by
+	Neal Norwitz
+
+	* buildbot/process/process_twisted.py (QuickTwistedBuildFactory):
+	oops, fix a brain-fade from the other week, when making the
+	addStep changes. I changed all the __init__ upcalls to use the
+	wrong superclass name.
+	(FullTwistedBuildFactory.__init__): same
+	(TwistedDebsBuildFactory.__init__): same
+	(TwistedReactorsBuildFactory.__init__): same
+	(TwistedBuild.isFileImportant): use .startswith for clarity,
+	thanks to Neal Norwitz for the suggestions.
+
 	* contrib/viewcvspoll.py: script to poll a viewcvs database for
 	changes, then deliver them over PB to a remote buildmaster.
 

@@ -108,7 +108,7 @@ class Scheduler(BaseUpstreamScheduler):
         BaseUpstreamScheduler.__init__(self, name)
         self.treeStableTimer = treeStableTimer
         for b in builderNames:
-            assert type(b) is str
+            assert isinstance(b, str)
         self.builderNames = builderNames
         self.branch = branch
         if fileIsImportant:
@@ -225,7 +225,7 @@ class AnyBranchScheduler(BaseUpstreamScheduler):
         BaseUpstreamScheduler.__init__(self, name)
         self.treeStableTimer = treeStableTimer
         for b in builderNames:
-            assert type(b) is str
+            assert isinstance(b, str)
         self.builderNames = builderNames
         self.branches = branches
         if self.branches == []:

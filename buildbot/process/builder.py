@@ -61,7 +61,7 @@ class SlaveBuilder(pb.Referenceable):
         return self
 
     def _attachFailure(self, why, where):
-        assert type(where) is str
+        assert isinstance(where, str)
         log.msg(where)
         log.err(why)
         return why

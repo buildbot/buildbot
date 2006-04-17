@@ -140,9 +140,9 @@ class MailNotifier(base.StatusReceiverMultiService):
         """
 
         base.StatusReceiverMultiService.__init__(self)
-        assert type(extraRecipients) in (list, tuple)
+        assert isinstance(extraRecipients, (list, tuple))
         for r in extraRecipients:
-            assert type(r) is str
+            assert isinstance(r, str)
             assert "@" in r # require full email addresses, not User names
         self.extraRecipients = extraRecipients
         self.sendToInterestedUsers = sendToInterestedUsers
