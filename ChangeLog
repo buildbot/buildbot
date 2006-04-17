@@ -1,5 +1,8 @@
 2006-04-17  Brian Warner  <warner@lothar.com>
 
+	* contrib/viewcvspoll.py: script to poll a viewcvs database for
+	changes, then deliver them over PB to a remote buildmaster.
+
 	* contrib/svnpoller.py: added script by John Pye to poll a remote
 	SVN repository (by running 'svn log') from a cronjob, and run
 	'buildbot sendchange' to deliver the changes to a remote

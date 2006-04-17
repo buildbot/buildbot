@@ -29,3 +29,9 @@ svn_watcher.py: adapted from svnpoller.py by Niklaus Giger to add options and
                 internally rather than expecting to run from a cronjob),
                 polls an SVN repository every 10 minutes. It expects the
                 svnurl and buildmaster location as command-line arguments.
+
+viewcvspoll.py: a standalone script which loops every 60 seconds and polls a
+                (local?) MySQL database (presumably maintained by ViewCVS?)
+                for information about new CVS changes, then delivers them
+                over PB to a remote buildmaster's PBChangeSource. Contributed
+                by Stephen Kennedy.
