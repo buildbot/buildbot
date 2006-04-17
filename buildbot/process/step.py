@@ -917,7 +917,7 @@ class TreeSize(ShellCommand):
         return SUCCESS
 
     def getText(self, cmd, results):
-        if kb is not None:
+        if self.kb is not None:
             return ["treesize", "%d kb" % self.kb]
         return ["treesize", "unknown"]
 
@@ -1572,7 +1572,7 @@ class Arch(Source):
                      "buildbot-0.7.0 or newer." % (self.build.slavename,
                                                    self.args['mode']))
                 log.msg(m)
-                raise BuildslaveError(m)
+                raise BuildSlaveTooOldError(m)
 
         return warnings
 

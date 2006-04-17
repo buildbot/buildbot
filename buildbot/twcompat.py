@@ -152,7 +152,7 @@ if not hasattr(defer, 'waitForDeferred'):
             # they yield a Deferred. Perhaps eventually these semantics may
             # change.
             if isinstance(result, defer.Deferred):
-                return fail(TypeError("Yield waitForDeferred(d), not d!"))
+                return defer.fail(TypeError("Yield waitForDeferred(d), not d!"))
 
             if isinstance(result, waitForDeferred):
                 waiting=[True, None]

@@ -1530,18 +1530,7 @@ class WaterfallStatusResource(HtmlResource):
                 # Nones are left empty, rowspan should make it all fit
             data += " </tr>\n"
         return data
-        
 
-    def statusToHTML(self, color, text, files):
-        # UNUSED
-        """Create a <td> element from the status box."""
-        t = "<td>Dummy</td>\n"
-        # for files, need to create a Resource around the file and putChild
-        # it to the waterfall display.
-        # name the child:
-        name = "%s/%d/%s" % (builder.name, builder.buildNumber, step.number)
-        
-        return t
 
 class StatusResource(Resource):
     status = None

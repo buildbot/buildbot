@@ -1,3 +1,19 @@
+2006-04-11  Brian Warner  <warner@lothar.com>
+
+	* all: fix a number of incorrect names and missing imports, thanks
+	to Anthony Baxter for the patch.
+	* buildbot/status/html.py (WaterfallStatusResource.statusToHTML): 
+	remove unused buggy method.
+	* buildbot/status/builder.py (BuildStatus.saveYourself): rmtree
+	comes from shutil, not "shutils"
+	* buildbot/process/step.py (TreeSize.evaluateCommand): fix bad name
+	(Arch.checkSlaveVersion): same
+	* buildbot/process/step_twisted.py (Trial.commandComplete): same, in
+	some disabled code
+	* buildbot/process/step_twisted2.py: add some missing imports
+	* buildbot/twcompat.py (_deferGenerator): fix cut-and-paste error,
+	this code used to live in twisted.internet.defer
+
 2006-04-10  Brian Warner  <warner@lothar.com>
 
 	* buildbot/process/step.py (Mercurial): add Mercurial support

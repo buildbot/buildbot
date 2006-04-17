@@ -1256,7 +1256,7 @@ class BuildStatus(styles.Versioned):
         filename = os.path.join(self.builder.basedir, "%d" % self.number)
         if os.path.isdir(filename):
             # leftover from 0.5.0, which stored builds in directories
-            shutils.rmtree(filename, ignore_errors=True)
+            shutil.rmtree(filename, ignore_errors=True)
         tmpfilename = filename + ".tmp"
         try:
             pickle.dump(self, open(tmpfilename, "wb"), -1)

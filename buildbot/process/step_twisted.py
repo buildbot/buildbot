@@ -483,7 +483,7 @@ class Trial(ShellCommand):
                          counts['expectedFailures'] == 1 and "todo"
                          or "todos"))
             if 0: # TODO
-                results = WARNING
+                results = WARNINGS
                 if not text2:
                     text2 = "todo"
 
@@ -492,7 +492,7 @@ class Trial(ShellCommand):
             # the build WARNING
             if counts['unexpectedSuccesses']:
                 text.append("%d surprises" % counts['unexpectedSuccesses'])
-                results = WARNING
+                results = WARNINGS
                 if not text2:
                     text2 = "tests"
 

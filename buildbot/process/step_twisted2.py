@@ -8,8 +8,10 @@ from buildbot.process.step_twisted import RunUnitTests
 from zope.interface import implements
 from twisted.python import log, failure
 from twisted.spread import jelly
+from twisted.pb.tokens import BananaError
 from twisted.web.util import formatFailure
 from twisted.web.html import PRE
+from twisted.web.error import NoResource
 
 class Null: pass
 ResultTypes = Null()
