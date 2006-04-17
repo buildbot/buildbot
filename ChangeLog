@@ -1,3 +1,15 @@
+2006-04-17  Brian Warner  <warner@lothar.com>
+
+	* contrib/svnpoller.py: added script by John Pye to poll a remote
+	SVN repository (by running 'svn log') from a cronjob, and run
+	'buildbot sendchange' to deliver the changes to a remote
+	buildmaster.
+	* contrib/svn_watcher.py: added script by Niklaus Giger (a
+	modification of svnpoller.py), same purpose, but this one loops
+	internally (rather than expecting to run from a cronjob) and works
+	under windows.
+	* contrib/README.txt: same
+
 2006-04-11  Brian Warner  <warner@lothar.com>
 
 	* all: fix a number of incorrect names and missing imports, thanks
