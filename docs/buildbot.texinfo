@@ -3837,13 +3837,18 @@ before starting the second (hopefully fixed) build.
 
 @cindex PBListener
 
-@code{buildbot.status.client.PBListener(port=int, user=str,
-passwd=str)}
+@example
+import buildbot.status.client
+pbl = buildbot.status.client.PBListener(port=int, user=str,
+                                        passwd=str)
+c['status'].append(pbl)
+@end example
 
 This sets up a PB listener on the given TCP port, to which a PB-based
 status client can connect and retrieve status information.
-@code{buildbot statusgui} is an example of such a status client. The
-@code{port} argument can also be a strports specification string.
+@code{buildbot statusgui} (@pxref{statusgui}) is an example of such a
+status client. The @code{port} argument can also be a strports
+specification string.
 
 @node Command-line tool, Resources, Status Delivery, Top
 @chapter Command-line tool
@@ -3951,6 +3956,12 @@ config directory}).
 
 @node statusgui, try, statuslog, Developer Tools
 @subsection statusgui
+
+@cindex statusgui
+
+If you have set up a PBListener (@pxref{PBListener}), you will be able
+to monitor your Buildbot using a simple Gtk+ application invoked with
+the @code{buildbot statusgui} command:
 
 @example
 buildbot statusgui --master @var{MASTERHOST}:@var{PORT}
