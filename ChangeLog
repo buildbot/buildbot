@@ -1,5 +1,9 @@
 2006-04-17  Brian Warner  <warner@lothar.com>
 
+	* buildbot/twcompat.py (maybeWait): handle SkipTest properly when
+	running under Twisted-1.3.0, otherwise skipped tests are reported
+	as errors.
+
 	* all: use isinstance() instead of 'type(x) is foo', suggested by
 	Neal Norwitz
 
