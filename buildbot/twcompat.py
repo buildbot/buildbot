@@ -23,6 +23,8 @@ providedBy:
     assert providedBy(obj, IFoo)
 """
 
+import os, os.path
+
 from twisted.copyright import version
 from twisted.python import components
 
@@ -249,3 +251,35 @@ if not hasattr(utils, "getProcessOutputAndValue"):
                                          executable, args, env, path,
                                          reactor)
     utils.getProcessOutputAndValue = getProcessOutputAndValue
+
+
+# copied from Twisted circa 2.2.0
+def _which(name, flags=os.X_OK):
+    """Search PATH for executable files with the given name.
+
+    @type name: C{str}
+    @param name: The name for which to search.
+
+    @type flags: C{int}
+    @param flags: Arguments to L{os.access}.
+
+    @rtype: C{list}
+    @param: A list of the full paths to files found, in the
+    order in which they were found.
+    """
+    result = []
+    exts = filter(None, os.environ.get('PATHEXT', '').split(os.pathsep))
+    for p in os.environ['PATH'].split(os.pathsep):
+        p = os.path.join(p, name)
+        if os.access(p, flags):
+            result.append(p)
+        for e in exts:
+            pext = p + e
+            if os.access(pext, flags):
+                result.append(pext)
+    return result
+
+try:
+    from twisted.python.procutils import which
+except ImportError:
+    which = _which

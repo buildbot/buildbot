@@ -10,16 +10,21 @@ from buildbot.sourcestamp import SourceStamp
 from buildbot.scripts import runner
 from buildbot.util import now
 from buildbot.status import builder
+from buildbot.twcompat import which
 
 class SourceStampExtractor:
 
     def __init__(self, treetop, branch):
         self.treetop = treetop
         self.branch = branch
+        self.exe = which(self.vcexe)[0]
 
-    def do(self, cmd):
-        return utils.getProcessOutput(cmd[0], cmd[1:], env=os.environ,
+    def dovc(self, cmd):
+        """This accepts the arguments of a command, without the actual
+        command itself."""
+        return utils.getProcessOutput(self.exe, cmd, env=os.environ,
                                       path=self.treetop)
+
     def get(self):
         """Return a Deferred that fires with a SourceStamp instance."""
         d = self.getBaseRevision()
@@ -35,6 +40,7 @@ class SourceStampExtractor:
 
 class CVSExtractor(SourceStampExtractor):
     patchlevel = 0
+    vcexe = "cvs"
     def getBaseRevision(self):
         # this depends upon our local clock and the repository's clock pretty
         # in reasonable sync with each other
@@ -53,15 +59,17 @@ class CVSExtractor(SourceStampExtractor):
             # find out what those checked-out versions are.
             raise RuntimeError("Sorry, CVS 'try' builds don't work with "
                                "branches")
-        args = ['cvs', '-q', 'diff', '-u', '-D', self.baserev]
-        d = self.do(args)
+        args = ['-q', 'diff', '-u', '-D', self.baserev]
+        d = self.dovc(args)
         d.addCallback(self.readPatch, self.patchlevel)
         return d
 
 class SVNExtractor(SourceStampExtractor):
     patchlevel = 0
+    vcexe = "svn"
+
     def getBaseRevision(self):
-        d = self.do(['svn', "status", "-u"])
+        d = self.dovc(["status", "-u"])
         d.addCallback(self.parseStatus)
         return d
     def parseStatus(self, res):
@@ -90,13 +98,14 @@ class SVNExtractor(SourceStampExtractor):
         raise IndexError("Could not find 'Status against revision' in "
                          "SVN output: %s" % res)
     def getPatch(self, res):
-        d = self.do(["svn", "diff", "-r%d" % self.baserev])
+        d = self.dovc(["diff", "-r%d" % self.baserev])
         d.addCallback(self.readPatch, self.patchlevel)
         return d
 
 class BazExtractor(SourceStampExtractor):
+    vcexe = "baz"
     def getBaseRevision(self):
-        d = self.do(["baz", "tree-id"])
+        d = self.dovc(["tree-id"])
         d.addCallback(self.parseStatus)
         return d
     def parseStatus(self, res):
@@ -106,15 +115,16 @@ class BazExtractor(SourceStampExtractor):
         self.branch = tid[slash+1:dd]
         self.baserev = tid[dd+2:]
     def getPatch(self, res):
-        d = self.do(["baz", "diff"])
+        d = self.dovc(["diff"])
         d.addCallback(self.readPatch, 1)
         return d
 
 class TlaExtractor(SourceStampExtractor):
+    vcexe = "tla"
     def getBaseRevision(self):
         # 'tla logs --full' gives us ARCHIVE/BRANCH--REVISION
         # 'tla logs' gives us REVISION
-        d = self.do(["tla", "logs", "--full", "--reverse"])
+        d = self.dovc(["logs", "--full", "--reverse"])
         d.addCallback(self.parseStatus)
         return d
     def parseStatus(self, res):
@@ -125,34 +135,36 @@ class TlaExtractor(SourceStampExtractor):
         self.baserev = tid[dd+2:]
 
     def getPatch(self, res):
-        d = self.do(["tla", "changes", "--diffs"])
+        d = self.dovc(["changes", "--diffs"])
         d.addCallback(self.readPatch, 1)
         return d
 
 class MercurialExtractor(SourceStampExtractor):
     patchlevel = 1
+    vcexe = "hg"
     def getBaseRevision(self):
-        d = self.do(["hg", "identify"])
+        d = self.dovc(["identify"])
         d.addCallback(self.parseStatus)
         return d
     def parseStatus(self, output):
         m = re.search(r'^(\w+)', output)
         self.baserev = m.group(0)
     def getPatch(self, res):
-        d = self.do(["hg", "diff"])
+        d = self.dovc(["diff"])
         d.addCallback(self.readPatch, self.patchlevel)
         return d
 
 class DarcsExtractor(SourceStampExtractor):
     patchlevel = 1
+    vcexe = "darcs"
     def getBaseRevision(self):
-        d = self.do(["darcs", "changes", "--context"])
+        d = self.dovc(["changes", "--context"])
         d.addCallback(self.parseStatus)
         return d
     def parseStatus(self, res):
         self.baserev = res # the whole context file
     def getPatch(self, res):
-        d = self.do(["darcs", "diff", "-u"])
+        d = self.dovc(["diff", "-u"])
         d.addCallback(self.readPatch, self.patchlevel)
         return d
 

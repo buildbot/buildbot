@@ -1,3 +1,20 @@
+2006-04-24  Brian Warner  <warner@lothar.com>
+
+	* buildbot/test/test_vc.py (*.capable): store the actual VC
+	binary's pathname in VCS[vcname], so it can be retrieved later
+	(CVSSupport.vc_try_checkout): incorporate Niklaus Giger's patch to
+	strip out non-numeric timezone information, specifically the funky
+	German string that his system produced that confuses CVS.
+	(DarcsSupport.vc_create): use dovc() instead of vc(), this should
+	allow Darcs tests to work on windows
+	* buildbot/scripts/tryclient.py (SourceStampExtractor): use
+	procutils.which() everywhere, to allow tryclient to work under
+	windows. Also from Niklaus Giger, SF#1463394.
+
+	* buildbot/twcompat.py (which): move the replacement for a missing
+	twisted.python.procutils.which from test_vc.py to here, so it can
+	be used in other places too (specifically tryclient.py)
+
 2006-04-23  Brian Warner  <warner@lothar.com>
 
 	* buildbot/status/html.py (StatusResourceBuild.body): replace the

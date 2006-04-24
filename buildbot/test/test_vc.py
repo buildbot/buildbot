@@ -7,34 +7,6 @@ from email.Utils import mktime_tz, parsedate_tz
 
 from twisted.trial import unittest
 from twisted.internet import defer, reactor, utils
-try:
-    from twisted.python.procutils import which
-except ImportError:
-    # copied from Twisted circa 2.2.0
-    def which(name, flags=os.X_OK):
-        """Search PATH for executable files with the given name.
-
-        @type name: C{str}
-        @param name: The name for which to search.
-
-        @type flags: C{int}
-        @param flags: Arguments to L{os.access}.
-
-        @rtype: C{list}
-        @param: A list of the full paths to files found, in the
-        order in which they were found.
-        """
-        result = []
-        exts = filter(None, os.environ.get('PATHEXT', '').split(os.pathsep))
-        for p in os.environ['PATH'].split(os.pathsep):
-            p = os.path.join(p, name)
-            if os.access(p, flags):
-                result.append(p)
-            for e in exts:
-                pext = p + e
-                if os.access(pext, flags):
-                    result.append(pext)
-        return result
 
 #defer.Deferred.debug = True
 
@@ -48,7 +20,7 @@ from buildbot.status.builder import SUCCESS, FAILURE
 from buildbot.process import step, base
 from buildbot.changes import changes
 from buildbot.sourcestamp import SourceStamp
-from buildbot.twcompat import maybeWait
+from buildbot.twcompat import maybeWait, which
 from buildbot.scripts import tryclient
 
 #step.LoggedRemoteCommand.debug = True
@@ -76,7 +48,7 @@ from twisted.internet.defer import waitForDeferred, deferredGenerator
 # is running).
 
 
-VCS = {}
+VCS = {} # maps VC name to pathname of the executable
 
 
 config_vc = """
@@ -989,13 +961,13 @@ class CVSSupport(VCBase):
     def capable(self):
         global VCS
         if not VCS.has_key("cvs"):
-            VCS["cvs"] = False
+            VCS["cvs"] = None
             cvspaths = which('cvs')
             if cvspaths:
-                VCS["cvs"] = True
-                self.vcexe = cvspaths[0]
+                VCS["cvs"] = cvspaths[0]
         if not VCS["cvs"]:
             raise unittest.SkipTest("CVS is not installed")
+        self.vcexe = VCS["cvs"]
 
     def postCreate(self, res):
         self.vcargs = { 'cvsroot': self.cvsrep, 'cvsmodule': "sample" }
@@ -1060,10 +1032,14 @@ class CVSSupport(VCBase):
         # 'workdir' is an absolute path
         assert os.path.abspath(workdir) == workdir
 
-        # get rid of timezone info, which might not be parsed # TODO
-        #rev =  re.sub("[^0-9 :-]","",rev)
-        #rev =  re.sub("  ","",rev)
-        #print "res is now <"+rev+">"
+        # get rid of non-numeric timezone info, which might not be parsed.
+        # This is in response to a non-US windows box which reports timezones
+        # in German like "Westeuropeische Normalzeit". We retain any numeric
+        # timezones present. TODO: I'm not convinced this won't result in a
+        # multi-hour offset for such a system. Where does the timezone name
+        # come from anyway?
+        rev =  re.sub(r'[^0-9 :\-+]',"",rev)
+        rev =  re.sub("  ","",rev)
         cmd = [self.vcexe, "-d", self.cvsrep, "checkout",
                "-d", workdir,
                "-D", rev]
@@ -1110,31 +1086,32 @@ class SVNSupport(VCBase):
     def capable(self):
         global VCS
         if not VCS.has_key("svn"):
-            VCS["svn"] = False
+            VCS["svn"] = None
             svnpaths = which('svn')
             svnadminpaths = which('svnadmin')
             if svnpaths and svnadminpaths:
-                self.vcexe = svnpaths[0]
-                self.svnadmin = svnadminpaths[0]
                 # we need svn to be compiled with the ra_local access
                 # module
                 log.msg("running svn --version..")
-                d = utils.getProcessOutput(self.vcexe, ["--version"],
+                d = utils.getProcessOutput(svnpaths[0], ["--version"],
                                            env=os.environ)
-                d.addCallback(self._capable)
+                d.addCallback(self._capable, svnpaths[0], svnadminpaths[0])
                 return d
         if not VCS["svn"]:
             raise unittest.SkipTest("No usable Subversion was found")
+        self.vcexe, self.svnadmin = VCS["svn"]
 
-    def _capable(self, v):
+    def _capable(self, v, vcexe, svnadmin):
         if v.find("handles 'file' schem") != -1:
             # older versions say 'schema', 1.2.0 and beyond say 'scheme'
-            VCS['svn'] = True
+            VCS['svn'] = (vcexe, svnadmin)
+            self.vcexe = vcexe
+            self.svnadmin = svnadmin
         else:
             log.msg(("%s found but it does not support 'file:' " +
                      "schema, skipping svn tests") %
                     os.path.join(p, "svn"))
-            VCS['svn'] = False
+            VCS['svn'] = None
             raise unittest.SkipTest("Found SVN, but it can't use file: schema")
 
     def vc_create(self):
@@ -1262,12 +1239,13 @@ class DarcsSupport(VCBase):
     def capable(self):
         global VCS
         if not VCS.has_key("darcs"):
-            VCS["darcs"] = False
-            for p in os.environ['PATH'].split(os.pathsep):
-                if os.path.exists(os.path.join(p, 'darcs')):
-                    VCS["darcs"] = True
+            VCS["darcs"] = None
+            darcspaths = which('darcs')
+            if darcspaths:
+                VCS["darcs"] = darcspaths[0]
         if not VCS["darcs"]:
             raise unittest.SkipTest("Darcs is not installed")
+        self.vcexe = VCS["darcs"]
 
     def vc_create(self):
         self.darcs_base = os.path.join(self.repbase, "Darcs-Repository")
@@ -1276,31 +1254,31 @@ class DarcsSupport(VCBase):
         tmp = os.path.join(self.repbase, "darcstmp")
 
         os.makedirs(self.rep_trunk)
-        w = self.do(self.rep_trunk, "darcs initialize")
+        w = self.dovc(self.rep_trunk, "initialize")
         yield w; w.getResult()
         os.makedirs(self.rep_branch)
-        w = self.do(self.rep_branch, "darcs initialize")
+        w = self.dovc(self.rep_branch, "initialize")
         yield w; w.getResult()
 
         self.populate(tmp)
-        w = self.do(tmp, "darcs initialize")
+        w = self.dovc(tmp, "initialize")
         yield w; w.getResult()
-        w = self.do(tmp, "darcs add -r .")
+        w = self.dovc(tmp, "add -r .")
         yield w; w.getResult()
-        w = self.do(tmp, "darcs record -a -m initial_import --skip-long-comment -A test@buildbot.sf.net")
+        w = self.dovc(tmp, "record -a -m initial_import --skip-long-comment -A test@buildbot.sf.net")
         yield w; w.getResult()
-        w = self.do(tmp, "darcs push -a %s" % self.rep_trunk)
+        w = self.dovc(tmp, "push -a %s" % self.rep_trunk)
         yield w; w.getResult()
-        w = self.do(tmp, "darcs changes --context")
+        w = self.dovc(tmp, "changes --context")
         yield w; out = w.getResult()
         self.addTrunkRev(out)
 
         self.populate_branch(tmp)
-        w = self.do(tmp, "darcs record -a --ignore-times -m commit_on_branch --skip-long-comment -A test@buildbot.sf.net")
+        w = self.dovc(tmp, "record -a --ignore-times -m commit_on_branch --skip-long-comment -A test@buildbot.sf.net")
         yield w; w.getResult()
-        w = self.do(tmp, "darcs push -a %s" % self.rep_branch)
+        w = self.dovc(tmp, "push -a %s" % self.rep_branch)
         yield w; w.getResult()
-        w = self.do(tmp, "darcs changes --context")
+        w = self.dovc(tmp, "changes --context")
         yield w; out = w.getResult()
         self.addBranchRev(out)
         rmdirRecursive(tmp)
@@ -1309,19 +1287,19 @@ class DarcsSupport(VCBase):
     def vc_revise(self):
         tmp = os.path.join(self.repbase, "darcstmp")
         os.makedirs(tmp)
-        w = self.do(tmp, "darcs initialize")
+        w = self.dovc(tmp, "initialize")
         yield w; w.getResult()
-        w = self.do(tmp, "darcs pull -a %s" % self.rep_trunk)
+        w = self.dovc(tmp, "pull -a %s" % self.rep_trunk)
         yield w; w.getResult()
 
         self.version += 1
         version_c = VERSION_C % self.version
         open(os.path.join(tmp, "version.c"), "w").write(version_c)
-        w = self.do(tmp, "darcs record -a --ignore-times -m revised_to_%d --skip-long-comment -A test@buildbot.sf.net" % self.version)
+        w = self.dovc(tmp, "record -a --ignore-times -m revised_to_%d --skip-long-comment -A test@buildbot.sf.net" % self.version)
         yield w; w.getResult()
-        w = self.do(tmp, "darcs push -a %s" % self.rep_trunk)
+        w = self.dovc(tmp, "push -a %s" % self.rep_trunk)
         yield w; w.getResult()
-        w = self.do(tmp, "darcs changes --context")
+        w = self.dovc(tmp, "changes --context")
         yield w; out = w.getResult()
         self.addTrunkRev(out)
         rmdirRecursive(tmp)
@@ -1332,13 +1310,13 @@ class DarcsSupport(VCBase):
         if os.path.exists(workdir):
             rmdirRecursive(workdir)
         os.makedirs(workdir)
-        w = self.do(workdir, "darcs initialize")
+        w = self.dovc(workdir, "initialize")
         yield w; w.getResult()
         if not branch:
             rep = self.rep_trunk
         else:
             rep = os.path.join(self.darcs_base, branch)
-        w = self.do(workdir, "darcs pull -a %s" % rep)
+        w = self.dovc(workdir, "pull -a %s" % rep)
         yield w; w.getResult()
         open(os.path.join(workdir, "subdir", "subdir.c"), "w").write(TRY_C)
     vc_try_checkout = deferredGenerator(vc_try_checkout)
@@ -1422,20 +1400,21 @@ class TlaSupport(VCBase, ArchCommon):
     def capable(self):
         global VCS
         if not VCS.has_key("tla"):
-            VCS["tla"] = False
-	    exe = which('tla')
-            if len(exe) > 0:
-                VCS["tla"] = True
+            VCS["tla"] = None
+	    tlapaths = which('tla')
+            if tlapaths:
+                VCS["tla"] = tlapaths[0]
         # we need to check for bazaar here too, since vc_create needs to know
         # about the presence of /usr/bin/baz even if we're running the tla
         # tests.
         if not VCS.has_key("baz"):
-            VCS["baz"] = False
-	    exe = which('baz')
-            if len(exe) > 0:
-                VCS["baz"] = True
+            VCS["baz"] = None
+	    bazpaths = which('baz')
+            if bazpaths:
+                VCS["baz"] = bazpaths[0]
         if not VCS["tla"]:
             raise unittest.SkipTest("Arch (tla) is not installed")
+        self.vcexe = VCS["tla"]
 
     def setUp2(self, res):
         # these are the coordinates of the read-write archive used by all the
@@ -1692,12 +1671,13 @@ class BazaarSupport(TlaSupport):
     def capable(self):
         global VCS
         if not VCS.has_key("baz"):
-            VCS["baz"] = False
-            for p in os.environ['PATH'].split(os.pathsep):
-                if os.path.exists(os.path.join(p, 'baz')):
-                    VCS["baz"] = True
+            VCS["baz"] = None
+            bazpaths = which('baz')
+            if bazpaths:
+                VCS["baz"] = bazpaths[0]
         if not VCS["baz"]:
             raise unittest.SkipTest("Arch (baz) is not installed")
+        self.vcexe = VCS["baz"]
 
     def setUp2(self, res):
         self.vcargs = {'url': self.archrep,
@@ -1824,13 +1804,13 @@ class MercurialSupport(VCBase):
     def capable(self):
         global VCS
         if not VCS.has_key("hg"):
-            VCS["hg"] = False
+            VCS["hg"] = None
             hgpaths = which("hg")
             if hgpaths:
-                VCS["hg"] = True
-                self.vcexe = hgpaths[0]
+                VCS["hg"] = hgpaths[0]
         if not VCS["hg"]:
             raise unittest.SkipTest("Mercurial is not installed")
+        self.vcexe = VCS["hg"]
 
     def extract_id(self, output):
         m = re.search(r'^(\w+)', output)
