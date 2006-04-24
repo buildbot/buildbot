@@ -1294,11 +1294,11 @@ like SVN. Mercurial branches are the same as Darcs.
 @item CVS
 branch='warner-newfeature', files=['src/foo.c']
 @item SVN
-branch='branches/trunk', files=['src/foo.c']
+branch='branches/warner-newfeature', files=['src/foo.c']
 @item Darcs
-branch='branches/trunk', files=['src/foo.c']
+branch='warner-newfeature', files=['src/foo.c']
 @item Mercurial
-branch='branches/trunk', files=['src/foo.c']
+branch='warner-newfeature', files=['src/foo.c']
 @item Arch/Bazaar
 branch='buildbot--usebranches--0', files=['buildbot/master.py']
 @end table

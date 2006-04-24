@@ -2,6 +2,8 @@
 
 	* docs/buildbot.texinfo (Installing the code): update trial
 	invocation, SF#1469116 by Niklaus Giger.
+	(Attributes of Changes): updated branch-name examples to be
+	a bit more realistic, SF#1475240 by Stephen Davis.
 
 	* contrib/windows/buildbot2.bat: utility wrapper for windows
 	developers, contributed by Nick Trout (after a year of neglect..
