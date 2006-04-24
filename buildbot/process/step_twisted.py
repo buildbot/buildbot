@@ -367,17 +367,8 @@ class Trial(ShellCommand):
             self.description = ["testing"]
             self.descriptionDone = ["tests"]
 
-    def start(self):
-        # now that self.build.allFiles() is nailed down, finish building the
-        # command
-        if self.testChanges:
-            for f in self.build.allFiles():
-                if f.endswith(".py"):
-                    self.command.append("--testmodule=%s" % f)
-        else:
-            self.command.extend(self.tests)
-        log.msg("RunUnitTests.start: command is", self.command)
-        self.setCommand(self.command)
+    def setupEnvironment(self, cmd):
+        ShellCommand.setupEnvironment(self, cmd)
         if self.testpath != None:
             e = self.cmd.args['env']
             if e is None:
@@ -399,6 +390,17 @@ class Trial(ShellCommand):
             # KeyError if args['env'] doesn't have ['PYTHONPATH']
             # TypeError if args is None
             pass
+
+    def start(self):
+        # now that self.build.allFiles() is nailed down, finish building the
+        # command
+        if self.testChanges:
+            for f in self.build.allFiles():
+                if f.endswith(".py"):
+                    self.command.append("--testmodule=%s" % f)
+        else:
+            self.command.extend(self.tests)
+        log.msg("Trial.start: command is", self.command)
         ShellCommand.start(self)
 
     def _commandComplete(self, cmd):

@@ -1,3 +1,69 @@
+2006-04-23  Brian Warner  <warner@lothar.com>
+
+	* buildbot/test/test_vc.py (VCBase.checkGotRevision): test
+	'got_revision' build property for all VC systems that implement
+	accurate ones: SVN, Darcs, Arch, Bazaar, Mercurial.
+
+	* buildbot/slave/commands.py (SourceBase._handleGotRevision): try
+	to determine which revision we actually obtained
+	(CVS.parseGotRevision): implement this for CVS, which just means
+	to grab a timestamp. Not ideal, and it depends upon the buildslave
+	having a clock that is reasonably well syncronized with the server,
+	but it's better than nothing.
+	(SVN.parseGotRevision): implement it for SVN, which is accurate
+	(Darcs.parseGotRevision): same
+	(Arch.parseGotRevision): same
+	(Bazaar.parseGotRevision): same
+	(Mercurial.parseGotRevision): same
+
+	* buildbot/process/step.py (LoggedRemoteCommand.remoteUpdate):
+	keep a record of all non-stdout/stderr/header/rc status updates,
+	for the benefit of RemoteCommands that send other useful things,
+	like got_revision
+	(Source.commandComplete): put any 'got_revision' status values
+	into a build property of the same name
+
+
+	* buildbot/process/step_twisted.py (Trial): update to deal with
+	new ShellCommand refactoring
+
+	* docs/buildbot.texinfo (Build Properties): document new feature
+	that allows BuildSteps to get/set Build-wide properties like which
+	revision was requested and/or checked out.
+
+	* buildbot/interfaces.py (IBuildStatus.getProperty): new method
+	* buildbot/status/builder.py (BuildStatus.getProperty): implement
+	it. Note that this bumps the persistenceVersion of the saved Build
+	object, so add the necessary upgrade-old-version logic to include
+	an empty properties dict.
+
+	* buildbot/process/base.py (Build.setProperty): implement it
+	(Build.getProperty): same
+	(Build.startBuild): change build startup to set 'branch',
+	'revision', and 'slavename' properties at the right time
+
+	* buildbot/process/step.py (BuildStep.__init__): change setup to
+	require 'build' argument in a better way
+	(LoggingBuildStep): split ShellCommand into two pieces, for better
+	subclassing elsewhere. LoggingBuildStep is a BuildStep which runs
+	a single RemoteCommand that sends stdout/stderr status text. It
+	also provides the usual commandComplete / createSummary /
+	evaluateCommand / getText methods to be overridden...
+	(ShellCommand): .. whereas ShellCommand is specifically for
+	running RemoteShellCommands. Other shell-like BuildSteps (like
+	Source) can inherit from LoggingBuildStep instead of ShellCommand
+	(WithProperties): marker class to do build-property interpolation
+	(Source): inherit from LoggingBuildStep instead of ShellCommand
+	(RemoteDummy): same
+
+	* buildbot/test/test_properties.py: test new functionality
+
+2006-04-21  Brian Warner  <warner@lothar.com>
+
+	* buildbot/test/test_vc.py: rename testBranch to
+	testCheckoutBranch to keep the tests in about the right
+	alphabetical order
+
 2006-04-18  Brian Warner  <warner@lothar.com>
 
 	* docs/buildbot.texinfo (PBListener): improve cross-references

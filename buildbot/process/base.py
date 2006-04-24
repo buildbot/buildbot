@@ -157,6 +157,7 @@ class Build:
     @ivar build_status: the L{buildbot.status.builder.BuildStatus} that
                         collects our status
     """
+
     if implements:
         implements(interfaces.IBuildControl)
     else:
@@ -196,6 +197,16 @@ class Build:
 
     def getSourceStamp(self):
         return self.source
+
+    def setProperty(self, propname, value):
+        """Set a property on this build. This may only be called after the
+        build has started, so that it has a BuildStatus object where the
+        properties can live."""
+        self.build_status.setProperty(propname, value)
+
+    def getProperty(self, propname):
+        return self.build_status.properties[propname]
+
 
     def allChanges(self):
         return self.source.changes
@@ -253,6 +264,16 @@ class Build:
     def getSlaveCommandVersion(self, command, oldversion=None):
         return self.slavebuilder.getSlaveCommandVersion(command, oldversion)
 
+    def setupStatus(self, build_status):
+        self.build_status = build_status
+        self.setProperty("branch", self.source.branch)
+        self.setProperty("revision", self.source.revision)
+
+    def setupSlaveBuilder(self, slavebuilder):
+        self.slavebuilder = slavebuilder
+        self.slavename = slavebuilder.slave.slavename
+        self.setProperty("slavename", self.slavename)
+
     def startBuild(self, build_status, expectations, slavebuilder):
         """This method sets up the build, then starts it by invoking the
         first Step. It returns a Deferred which will fire when the build
@@ -264,9 +285,10 @@ class Build:
         # the Deferred returned by this method.
 
         log.msg("%s.startBuild" % self)
-        self.build_status = build_status
-        self.slavebuilder = slavebuilder
-        self.slavename = slavebuilder.slave.slavename
+        self.setupStatus(build_status)
+        # now that we have a build_status, we can set properties
+        self.setupSlaveBuilder(slavebuilder)
+
         # convert all locks into their real forms
         self.locks = [self.builder.botmaster.getLockByID(l)
                       for l in self.locks]

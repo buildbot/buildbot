@@ -907,7 +907,7 @@ class BuildStatus(styles.Versioned):
         implements(interfaces.IBuildStatus, interfaces.IStatusEvent)
     else:
         __implements__ = interfaces.IBuildStatus, interfaces.IStatusEvent
-    persistenceVersion = 1
+    persistenceVersion = 2
 
     source = None
     reason = None
@@ -943,6 +943,7 @@ class BuildStatus(styles.Versioned):
         self.finishedWatchers = []
         self.steps = []
         self.testResults = {}
+        self.properties = {}
 
     # IBuildStatus
 
@@ -951,6 +952,9 @@ class BuildStatus(styles.Versioned):
         @rtype: L{BuilderStatus}
         """
         return self.builder
+
+    def getProperty(self, propname):
+        return self.properties[propname]
 
     def getNumber(self):
         return self.number
@@ -1087,6 +1091,9 @@ class BuildStatus(styles.Versioned):
         s.setName(step.name)
         step.step_status = s
         self.steps.append(s)
+
+    def setProperty(self, propname, value):
+        self.properties[propname] = value
 
     def addTestResult(self, result):
         self.testResults[result.getName()] = result
@@ -1236,6 +1243,9 @@ class BuildStatus(styles.Versioned):
             self.source = source
             self.changes = source.changes
             del self.sourceStamp
+
+    def upgradeToVersion2(self):
+        self.properties = {}
 
     def upgradeLogfiles(self):
         # upgrade any LogFiles that need it. This must occur after we've been

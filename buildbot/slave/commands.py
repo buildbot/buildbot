@@ -1,6 +1,6 @@
 # -*- test-case-name: buildbot.test.test_slavecommand -*-
 
-import os, os.path, re, signal, shutil, types
+import os, os.path, re, signal, shutil, types, time
 
 from twisted.internet.protocol import ProcessProtocol
 from twisted.internet import reactor, defer
@@ -10,7 +10,7 @@ from buildbot.twcompat import implements
 from buildbot.slave.interfaces import ISlaveCommand
 from buildbot.slave.registry import registerSlaveCommand
 
-cvs_ver = '$Revision: 1.44 $'[1+len("Revision: "):-2]
+cvs_ver = '$Revision: 1.45 $'[1+len("Revision: "):-2]
 
 # version history:
 #  >=1.17: commands are interruptable
@@ -123,6 +123,14 @@ class ShellCommand:
                  workdir, environ=None,
                  sendStdout=True, sendStderr=True, sendRC=True,
                  timeout=None, stdin=None, keepStdout=False):
+        """
+
+        @param keepStdout: if True, we keep a copy of all the stdout text
+                           that we've seen. This copy is available in
+                           self.stdout, which can be read after the command
+                           has finished.
+        """
+
         self.builder = builder
         self.command = command
         self.sendStdout = sendStdout
@@ -680,6 +688,7 @@ class SourceBase(Command):
             d = self.doVCFull()
             d.addBoth(self.maybeDoVCRetry)
         d.addCallback(self._abandonOnFailure)
+        d.addCallback(self._handleGotRevision)
         d.addCallback(self.writeSourcedata)
         return d
 
@@ -691,6 +700,28 @@ class SourceBase(Command):
         except IOError:
             return False
         return True
+
+    def _handleGotRevision(self, res):
+        d = defer.maybeDeferred(self.parseGotRevision)
+        d.addCallback(lambda got_revision:
+                      self.sendStatus({'got_revision': got_revision}))
+        return d
+
+    def parseGotRevision(self):
+        """Override this in a subclass. It should return a string that
+        represents which revision was actually checked out, or a Deferred
+        that will fire with such a string. If, in a future build, you were to
+        pass this 'got_revision' string in as the 'revision' component of a
+        SourceStamp, you should wind up with the same source code as this
+        checkout just obtained.
+
+        It is probably most useful to scan self.command.stdout for a string
+        of some sort. Be sure to set keepStdout=True on the VC command that
+        you run, so that you'll have something available to look at.
+
+        If this information is unavailable, just return None."""
+
+        return None
 
     def writeSourcedata(self, res):
         open(self.sourcedatafile, "w").write(self.sourcedata)
@@ -910,6 +941,13 @@ class CVS(SourceBase):
         self.command = c
         return c.start()
 
+    def parseGotRevision(self):
+        # CVS does not have any kind of revision stamp to speak of. We return
+        # the current timestamp as a best-effort guess, but this depends upon
+        # the local system having a clock that is
+        # reasonably-well-synchronized with the repository.
+        return time.strftime("%Y-%m-%d %H:%M:%S %z", time.gmtime())
+
 registerSlaveCommand("cvs", CVS, cvs_ver)
 
 class SVN(SourceBase):
@@ -939,7 +977,8 @@ class SVN(SourceBase):
         d = os.path.join(self.builder.basedir, self.srcdir)
         command = ['svn', 'update', '--revision', str(revision)]
         c = ShellCommand(self.builder, command, d,
-                         sendRC=False, timeout=self.timeout)
+                         sendRC=False, timeout=self.timeout,
+                         keepStdout=True)
         self.command = c
         return c.start()
 
@@ -954,9 +993,21 @@ class SVN(SourceBase):
             command = ['svn', 'checkout', '--revision', str(revision),
                        self.svnurl, self.srcdir]
         c = ShellCommand(self.builder, command, d,
-                         sendRC=False, timeout=self.timeout)
+                         sendRC=False, timeout=self.timeout,
+                         keepStdout=True)
         self.command = c
         return c.start()
+
+    def parseGotRevision(self):
+        # svn checkout operations finish with 'Checked out revision 16657.'
+        # svn update operations finish the line 'At revision 16654.'
+        lines = self.command.stdout.rstrip().split("\n")
+        lastline = lines[-1]
+        r = re.search(r'revision (\d+)\.', lastline)
+        if r:
+            return int(r.group(1))
+        return None
+
 
 registerSlaveCommand("svn", SVN, cvs_ver)
 
@@ -1022,6 +1073,18 @@ class Darcs(SourceBase):
     def removeContextFile(self, res, n):
         os.unlink(n)
         return res
+
+    def parseGotRevision(self):
+        # we use 'darcs context' to find out what we wound up with
+        command = ["darcs", "changes", "--context"]
+        c = ShellCommand(self.builder, command,
+                         os.path.join(self.builder.basedir, self.srcdir),
+                         sendStdout=False, sendStderr=False, sendRC=False,
+                         keepStdout=True)
+        c.usePTY = False
+        d = c.start()
+        d.addCallback(lambda res: c.stdout)
+        return d
 
 registerSlaveCommand("darcs", Darcs, cvs_ver)
 
@@ -1175,6 +1238,27 @@ class Arch(SourceBase):
         d.addCallback(self._abandonOnFailure)
         return d
 
+    def parseGotRevision(self):
+        # using code from tryclient.TlaExtractor
+        # 'tla logs --full' gives us ARCHIVE/BRANCH--REVISION
+        # 'tla logs' gives us REVISION
+        command = ["tla", "logs", "--full", "--reverse"]
+        c = ShellCommand(self.builder, command,
+                         os.path.join(self.builder.basedir, self.srcdir),
+                         sendStdout=False, sendStderr=False, sendRC=False,
+                         keepStdout=True)
+        c.usePTY = False
+        d = c.start()
+        def _parse(res):
+            tid = c.stdout.split("\n")[0].strip()
+            slash = tid.index("/")
+            dd = tid.rindex("--")
+            #branch = tid[slash+1:dd]
+            baserev = tid[dd+2:]
+            return baserev
+        d.addCallback(_parse)
+        return d
+
 registerSlaveCommand("arch", Arch, cvs_ver)
 
 class Bazaar(Arch):
@@ -1215,6 +1299,25 @@ class Bazaar(Arch):
         d.addCallback(self._abandonOnFailure)
         if self.buildconfig:
             d.addCallback(self._didGet)
+        return d
+
+    def parseGotRevision(self):
+        # using code from tryclient.BazExtractor
+        command = ["baz", "tree-id"]
+        c = ShellCommand(self.builder, command,
+                         os.path.join(self.builder.basedir, self.srcdir),
+                         sendStdout=False, sendStderr=False, sendRC=False,
+                         keepStdout=True)
+        c.usePTY = False
+        d = c.start()
+        def _parse(res):
+            tid = c.stdout.strip()
+            slash = tid.index("/")
+            dd = tid.rindex("--")
+            #branch = tid[slash+1:dd]
+            baserev = tid[dd+2:]
+            return baserev
+        d.addCallback(_parse)
         return d
 
 registerSlaveCommand("bazaar", Bazaar, cvs_ver)
@@ -1280,6 +1383,20 @@ class Mercurial(SourceBase):
                          sendRC=False, timeout=self.timeout)
         self.command = c
         return c.start()
+
+    def parseGotRevision(self):
+        # we use 'hg identify' to find out what we wound up with
+        command = ["hg", "identify"]
+        c = ShellCommand(self.builder, command,
+                         os.path.join(self.builder.basedir, self.srcdir),
+                         sendStdout=False, sendStderr=False, sendRC=False,
+                         keepStdout=True)
+        d = c.start()
+        def _parse(res):
+            m = re.search(r'^(\w+)', c.stdout)
+            return m.group(1)
+        d.addCallback(_parse)
+        return d
 
 registerSlaveCommand("hg", Mercurial, cvs_ver)
 

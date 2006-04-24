@@ -253,6 +253,7 @@ class LoggedRemoteCommand(RemoteCommand):
             # orphan LogFile, cannot be subscribed to
             self.log = builder.LogFile(None)
             self.closeWhenFinished = True
+        self.updates = {}
         log.msg("LoggedRemoteCommand.start", self.log)
         return RemoteCommand.start(self)
 
@@ -276,6 +277,11 @@ class LoggedRemoteCommand(RemoteCommand):
             rc = self.rc = update['rc']
             log.msg("%s rc=%s" % (self, rc))
             self.addHeader("program finished with exit code %d\n" % rc)
+        for k in update:
+            if k not in ('stdout', 'stderr', 'header', 'rc'):
+                if k not in self.updates:
+                    self.updates[k] = []
+                self.updates[k].append(update[k])
 
     def remoteComplete(self, maybeFailure):
         if self.closeWhenFinished:
@@ -408,6 +414,14 @@ class BuildStep:
     flunkOnFailure = False
     warnOnWarnings = False
     warnOnFailure = False
+
+    # 'parms' holds a list of all the parameters we care about, to allow
+    # users to instantiate a subclass of BuildStep with a mixture of
+    # arguments, some of which are for us, some of which are for the subclass
+    # (or a delegate of the subclass, like how ShellCommand delivers many
+    # arguments to the RemoteShellCommand that it creates). Such delegating
+    # subclasses will use this list to figure out which arguments are meant
+    # for us and which should be given to someone else.
     parms = ['build', 'name', 'locks',
              'haltOnFailure',
              'flunkOnWarnings',
@@ -425,8 +439,8 @@ class BuildStep:
     step_status = None
     progress = None
 
-    def __init__(self, **kwargs):
-        self.build = kwargs['build'] # required
+    def __init__(self, build, **kwargs):
+        self.build = build
         for p in self.__class__.parms:
             if kwargs.has_key(p):
                 setattr(self, p, kwargs[p])
@@ -448,6 +462,12 @@ class BuildStep:
             self.step_status.setProgress(sp)
             return sp
         return None
+
+    def getProperty(self, propname):
+        return self.build.getProperty(propname)
+
+    def setProperty(self, propname, value):
+        self.build.setProperty(propname, value)
 
     def startStep(self, remote):
         """Begin the step. This returns a Deferred that will fire when the
@@ -673,107 +693,32 @@ class BuildStep:
         return d
 
 
-class ShellCommand(BuildStep):
-    """I run a single shell command on the buildslave. I return FAILURE if
-    the exit code of that command is non-zero, SUCCESS otherwise. To change
-    this behavior, override my .evaluateCommand method.
 
-    I create a single Log named 'log' which contains the output of the
-    command. To create additional summary Logs, override my .createSummary
-    method.
+class LoggingBuildStep(BuildStep):
+    # This is an abstract base class, suitable for inheritance by all
+    # BuildSteps that invoke RemoteCommands which emit stdout/stderr messages
 
-    The shell command I run (a list of argv strings) can be provided in
-    several ways:
-      - a class-level .command attribute
-      - a command= parameter to my constructor (overrides .command)
-      - set explicitly with my .setCommand() method (overrides both)
-
-    """
-
-    name = "shell"
-    description = None # set this to a list of short strings to override
-    descriptionDone = None # alternate description when the step is complete
-    command = None # set this to a command, or set in kwargs
     progressMetrics = ['output']
 
-    parms = BuildStep.parms + [
-        'description',
-        'descriptionDone',
-        ]
-
-    def __init__(self, **kwargs):
-        # most of our arguments get passed through to the RemoteShellCommand
-        # that we create, but first strip out the ones that we pass to
-        # BuildStep (like haltOnFailure and friends)
-        self.workdir = kwargs['workdir'] # required by RemoteShellCommand
-        buildstep_kwargs = {}
-        for k in kwargs.keys()[:]:
-            if k in self.__class__.parms:
-                buildstep_kwargs[k] = kwargs[k]
-                del kwargs[k]
-        BuildStep.__init__(self, **buildstep_kwargs)
-        kwargs['command'] = kwargs.get('command', self.command)
-        self.cmd = RemoteShellCommand(**kwargs)
-
-    def setCommand(self, command):
-        self.cmd.command = command
-
     def describe(self, done=False):
-        """Return a list of short strings to describe this step, for the
-        status display. This uses the first few words of the shell command.
-        You can replace this by setting .description in your subclass, or by
-        overriding this method to describe the step better.
+        raise NotImplementedError("implement this in a subclass")
 
-        @type  done: boolean
-        @param done: whether the command is complete or not, to improve the
-                     way the command is described. C{done=False} is used
-                     while the command is still running, so a single
-                     imperfect-tense verb is appropriate ('compiling',
-                     'testing', ...) C{done=True} is used when the command
-                     has finished, and the default getText() method adds some
-                     text, so a simple noun is appropriate ('compile',
-                     'tests' ...)
+    def startCommand(self, cmd, errorMessages=[]):
         """
-
-        if done and self.descriptionDone is not None:
-            return self.descriptionDone
-        if self.description is not None:
-            return self.description
-
-        words = self.cmd.command
-        if type(words) in types.StringTypes:
-            words = words.split()
-        if len(words) < 1:
-            return ["???"]
-        if len(words) == 1:
-            return ["'%s'" % words[0]]
-        if len(words) == 2:
-            return ["'%s" % words[0], "%s'" % words[1]]
-        return ["'%s" % words[0], "%s" % words[1], "...'"]
-
-    def start(self, errorMessages=[]):
-        # merge in anything from Build.slaveEnvironment . Earlier steps
-        # (perhaps ones which compile libraries or sub-projects that need to
-        # be referenced by later steps) can add keys to
-        # self.build.slaveEnvironment to affect later steps.
-        slaveEnv = self.build.slaveEnvironment
-        if slaveEnv:
-            if self.cmd.args['env'] is None:
-                self.cmd.args['env'] = {}
-            self.cmd.args['env'].update(slaveEnv)
-            # note that each RemoteShellCommand gets its own copy of the
-            # dictionary, so we shouldn't be affecting anyone but ourselves.
-
+        @param cmd: a suitable RemoteCommand which will be launched, with
+                    all output being put into a LogFile named 'log'
+        """
+        self.cmd = cmd # so we can interrupt it
         self.step_status.setColor("yellow")
         self.step_status.setText(self.describe(False))
         loog = self.addLog("log")
         for em in errorMessages:
             loog.addHeader(em)
         log.msg("ShellCommand.start using log", loog)
-        log.msg(" for cmd", self.cmd)
-        self.cmd.useLog(loog, True)
+        log.msg(" for cmd", cmd)
+        cmd.useLog(loog, True)
         loog.logProgressTo(self.progress, "output")
-        d = self.runCommand(self.cmd)
+        d = self.runCommand(cmd)
         d.addCallbacks(self._commandComplete, self.checkDisconnect)
         d.addErrback(self.failed)
 
@@ -896,8 +841,168 @@ class ShellCommand(BuildStep):
         self.step_status.setText2(self.maybeGetText2(cmd, results))
 
 
+# -*- test-case-name: buildbot.test.test_properties -*-
 
-    
+class _BuildPropertyDictionary:
+    def __init__(self, build):
+        self.build = build
+    def __getitem__(self, name):
+        p = self.build.getProperty(name)
+        if p is None:
+            p = ""
+        return p
+
+class WithProperties:
+    """This is a marker class, used in ShellCommand's command= argument to
+    indicate that we want to interpolate a build property.
+    """
+
+    def __init__(self, fmtstring, *args):
+        self.fmtstring = fmtstring
+        self.args = args
+
+    def render(self, build):
+        if self.args:
+            strings = []
+            for name in self.args:
+                p = build.getProperty(name)
+                if p is None:
+                    p = ""
+                strings.append(p)
+            s = self.fmtstring % tuple(strings)
+        else:
+            s = self.fmtstring % _BuildPropertyDictionary(build)
+        return s
+
+class ShellCommand(LoggingBuildStep):
+    """I run a single shell command on the buildslave. I return FAILURE if
+    the exit code of that command is non-zero, SUCCESS otherwise. To change
+    this behavior, override my .evaluateCommand method.
+
+    I create a single Log named 'log' which contains the output of the
+    command. To create additional summary Logs, override my .createSummary
+    method.
+
+    The shell command I run (a list of argv strings) can be provided in
+    several ways:
+      - a class-level .command attribute
+      - a command= parameter to my constructor (overrides .command)
+      - set explicitly with my .setCommand() method (overrides both)
+
+    @ivar command: a list of argv strings (or WithProperties instances).
+                   This will be used by start() to create a
+                   RemoteShellCommand instance.
+
+    """
+
+    name = "shell"
+    description = None # set this to a list of short strings to override
+    descriptionDone = None # alternate description when the step is complete
+    command = None # set this to a command, or set in kwargs
+
+    def __init__(self, workdir,
+                 description=None, descriptionDone=None,
+                 command=None,
+                 **kwargs):
+        # most of our arguments get passed through to the RemoteShellCommand
+        # that we create, but first strip out the ones that we pass to
+        # BuildStep (like haltOnFailure and friends), and a couple that we
+        # consume ourselves.
+        self.workdir = workdir # required by RemoteShellCommand
+        if description:
+            self.description = description
+        if descriptionDone:
+            self.descriptionDone = descriptionDone
+        if command:
+            self.command = command
+
+        # pull out the ones that BuildStep wants, then upcall
+        buildstep_kwargs = {}
+        for k in kwargs.keys()[:]:
+            if k in self.__class__.parms:
+                buildstep_kwargs[k] = kwargs[k]
+                del kwargs[k]
+        LoggingBuildStep.__init__(self, **buildstep_kwargs)
+
+        # everything left over goes to the RemoteShellCommand
+        kwargs['workdir'] = workdir # including a copy of 'workdir'
+        self.remote_kwargs = kwargs
+
+
+    def setCommand(self, command):
+        self.command = command
+
+    def describe(self, done=False):
+        """Return a list of short strings to describe this step, for the
+        status display. This uses the first few words of the shell command.
+        You can replace this by setting .description in your subclass, or by
+        overriding this method to describe the step better.
+
+        @type  done: boolean
+        @param done: whether the command is complete or not, to improve the
+                     way the command is described. C{done=False} is used
+                     while the command is still running, so a single
+                     imperfect-tense verb is appropriate ('compiling',
+                     'testing', ...) C{done=True} is used when the command
+                     has finished, and the default getText() method adds some
+                     text, so a simple noun is appropriate ('compile',
+                     'tests' ...)
+        """
+
+        if done and self.descriptionDone is not None:
+            return self.descriptionDone
+        if self.description is not None:
+            return self.description
+
+        words = self.command
+        # TODO: handle WithProperties here
+        if isinstance(words, types.StringTypes):
+            words = words.split()
+        if len(words) < 1:
+            return ["???"]
+        if len(words) == 1:
+            return ["'%s'" % words[0]]
+        if len(words) == 2:
+            return ["'%s" % words[0], "%s'" % words[1]]
+        return ["'%s" % words[0], "%s" % words[1], "...'"]
+
+    def _interpolateProperties(self, command):
+        # interpolate any build properties into our command
+        if not isinstance(command, (list, tuple)):
+            return
+        command_argv = []
+        for argv in command:
+            if isinstance(argv, WithProperties):
+                command_argv.append(argv.render(self.build))
+            else:
+                command_argv.append(argv)
+        return command_argv
+
+    def setupEnvironment(self, cmd):
+        # merge in anything from Build.slaveEnvironment . Earlier steps
+        # (perhaps ones which compile libraries or sub-projects that need to
+        # be referenced by later steps) can add keys to
+        # self.build.slaveEnvironment to affect later steps.
+        slaveEnv = self.build.slaveEnvironment
+        if slaveEnv:
+            if cmd.args['env'] is None:
+                cmd.args['env'] = {}
+            cmd.args['env'].update(slaveEnv)
+            # note that each RemoteShellCommand gets its own copy of the
+            # dictionary, so we shouldn't be affecting anyone but ourselves.
+
+    def start(self):
+        command = self._interpolateProperties(self.command)
+        # create the actual RemoteShellCommand instance now
+        kwargs = self.remote_kwargs
+        kwargs['command'] = self.command
+        cmd = RemoteShellCommand(**kwargs)
+        self.setupEnvironment(cmd)
+        self.startCommand(cmd)
+
+
+
+
 class TreeSize(ShellCommand):
     name = "treesize"
     command = ["du", "-s", "."]
@@ -922,7 +1027,7 @@ class TreeSize(ShellCommand):
         return ["treesize", "unknown"]
 
 
-class Source(ShellCommand):
+class Source(LoggingBuildStep):
     """This is a base class to generate a source tree in the buildslave.
     Each version control system has a specialized subclass, and is expected
     to override __init__ and implement computeSourceRevision() and
@@ -1018,7 +1123,8 @@ class Source(ShellCommand):
 
         """
 
-        BuildStep.__init__(self, **kwargs)
+        LoggingBuildStep.__init__(self, **kwargs)
+
         assert mode in ("update", "copy", "clobber", "export")
         if retry:
             delay, repeats = retry
@@ -1042,11 +1148,13 @@ class Source(ShellCommand):
         elif mode == "export":
             description = ["exporting"]
             descriptionDone = ["export"]
-        # Initialize descriptions if not already set:
-        if self.description is None:
-            self.description = description
-        if self.descriptionDone is None:
-            self.descriptionDone = descriptionDone
+        self.description = description
+        self.descriptionDone = descriptionDone
+
+    def describe(self, done=False):
+        if done:
+            return self.descriptionDone
+        return self.description
 
     def computeSourceRevision(self, changes):
         """Each subclass must implement this method to do something more
@@ -1082,6 +1190,13 @@ class Source(ShellCommand):
         patch = s.patch
 
         self.startVC(branch, revision, patch)
+
+    def commandComplete(self, cmd):
+        got_revision = None
+        if cmd.updates.has_key("got_revision"):
+            got_revision = cmd.updates["got_revision"][-1]
+        self.setProperty("got_revision", got_revision)
+
 
 
 class CVS(Source):
@@ -1241,8 +1356,8 @@ class CVS(Source):
             self.args['tag'] = self.args['branch']
             assert not self.args['patch'] # 0.5.0 slave can't do patch
 
-        self.cmd = LoggedRemoteCommand("cvs", self.args)
-        ShellCommand.start(self, warnings)
+        cmd = LoggedRemoteCommand("cvs", self.args)
+        self.startCommand(cmd, warnings)
 
 
 class SVN(Source):
@@ -1363,8 +1478,8 @@ class SVN(Source):
         self.description.extend(revstuff)
         self.descriptionDone.extend(revstuff)
 
-        self.cmd = LoggedRemoteCommand("svn", self.args)
-        ShellCommand.start(self, warnings)
+        cmd = LoggedRemoteCommand("svn", self.args)
+        self.startCommand(cmd, warnings)
 
 
 class Darcs(Source):
@@ -1451,8 +1566,8 @@ class Darcs(Source):
         self.description.extend(revstuff)
         self.descriptionDone.extend(revstuff)
 
-        self.cmd = LoggedRemoteCommand("darcs", self.args)
-        ShellCommand.start(self)
+        cmd = LoggedRemoteCommand("darcs", self.args)
+        self.startCommand(cmd)
 
 
 class Git(Source):
@@ -1477,8 +1592,8 @@ class Git(Source):
         if not slavever:
             raise BuildSlaveTooOldError("slave is too old, does not know "
                                         "about git")
-        self.cmd = LoggedRemoteCommand("git", self.args)
-        ShellCommand.start(self)
+        cmd = LoggedRemoteCommand("git", self.args)
+        self.startCommand(cmd)
 
 
 class Arch(Source):
@@ -1590,8 +1705,8 @@ class Arch(Source):
         self.description.extend(revstuff)
         self.descriptionDone.extend(revstuff)
 
-        self.cmd = LoggedRemoteCommand("arch", self.args)
-        ShellCommand.start(self, warnings)
+        cmd = LoggedRemoteCommand("arch", self.args)
+        self.startCommand(cmd, warnings)
 
 
 class Bazaar(Arch):
@@ -1636,8 +1751,8 @@ class Bazaar(Arch):
         self.description.extend(revstuff)
         self.descriptionDone.extend(revstuff)
 
-        self.cmd = LoggedRemoteCommand("bazaar", self.args)
-        ShellCommand.start(self, warnings)
+        cmd = LoggedRemoteCommand("bazaar", self.args)
+        self.startCommand(cmd, warnings)
 
 class Mercurial(Source):
     """Check out a source tree from a mercurial repository 'repourl'."""
@@ -1693,8 +1808,8 @@ class Mercurial(Source):
         self.description.extend(revstuff)
         self.descriptionDone.extend(revstuff)
 
-        self.cmd = LoggedRemoteCommand("hg", self.args)
-        ShellCommand.start(self)
+        cmd = LoggedRemoteCommand("hg", self.args)
+        self.startCommand(cmd)
 
 
 class todo_P4(Source):
@@ -1714,8 +1829,8 @@ class todo_P4(Source):
                           })
 
     def startVC(self, branch, revision, patch):
-        self.cmd = LoggedRemoteCommand("p4", self.args)
-        ShellCommand.start(self)
+        cmd = LoggedRemoteCommand("p4", self.args)
+        self.startCommand(cmd)
 
 class P4Sync(Source):
     """This is a partial solution for using a P4 source repository. You are
@@ -1755,8 +1870,8 @@ class P4Sync(Source):
     def startVC(self, branch, revision, patch):
         slavever = self.slaveVersion("p4sync")
         assert slavever, "slave is too old, does not know about p4"
-        self.cmd = LoggedRemoteCommand("p4sync", self.args)
-        ShellCommand.start(self)
+        cmd = LoggedRemoteCommand("p4sync", self.args)
+        self.startCommand(cmd)
 
 
 class Dummy(BuildStep):
@@ -1808,8 +1923,7 @@ class FailingDummy(Dummy):
         self.step_status.setColor("red")
         self.finished(FAILURE)
 
-# subclasses from Shell Command to get the output reporting
-class RemoteDummy(ShellCommand):
+class RemoteDummy(LoggingBuildStep):
     """I am a dummy no-op step that runs on the remote side and
     simply waits 5 seconds before completing with success.
     See L{buildbot.slave.commands.DummyCommand}
@@ -1823,10 +1937,17 @@ class RemoteDummy(ShellCommand):
         @type  timeout: int
         @param timeout: the number of seconds to delay
         """
-        BuildStep.__init__(self, **kwargs)
-        args = {'timeout': timeout}
-        self.cmd = LoggedRemoteCommand("dummy", args)
+        LoggingBuildStep.__init__(self, **kwargs)
+        self.timeout = timeout
         self.description = ["remote", "delay", "%s secs" % timeout]
+
+    def describe(self, done=False):
+        return self.description
+
+    def start(self):
+        args = {'timeout': self.timeout}
+        cmd = LoggedRemoteCommand("dummy", args)
+        self.startCommand(cmd)
 
 class Configure(ShellCommand):
 
@@ -1835,7 +1956,7 @@ class Configure(ShellCommand):
     description = ["configuring"]
     descriptionDone = ["configure"]
     command = ["./configure"]
-    
+
 class Compile(ShellCommand):
 
     name = "compile"

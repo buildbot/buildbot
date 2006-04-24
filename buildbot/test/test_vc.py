@@ -253,6 +253,8 @@ class VCBase(SignalMixin):
     httpServer = None
     httpPort = None
     skip = None
+    has_got_revision = False
+    has_got_revision_branches_are_merged = False # for SVN
 
     def failUnlessIn(self, substring, string, msg=None):
         # trial provides a version of this that requires python-2.3 to test
@@ -431,6 +433,16 @@ class VCBase(SignalMixin):
         c = open(os.path.join(d, f), "r").read()
         self.failUnlessIn(contents, c)
 
+    def checkGotRevision(self, bs, expected):
+        if self.has_got_revision:
+            self.failUnlessEqual(bs.getProperty("got_revision"), expected)
+
+    def checkGotRevisionIsLatest(self, bs):
+        expected = self.trunk[-1]
+        if self.has_got_revision_branches_are_merged:
+            expected = self.allrevs[-1]
+        self.checkGotRevision(bs, expected)
+
     def do_vctest(self, testRetry=True):
         vctype = self.vctype
         args = self.vcargs
@@ -473,12 +485,15 @@ class VCBase(SignalMixin):
         d = self.doBuild() # initial checkout
         d.addCallback(self._do_vctest_clobber_1)
         return d
-    def _do_vctest_clobber_1(self, res):
+    def _do_vctest_clobber_1(self, bs):
         self.shouldExist(self.workdir, "main.c")
         self.shouldExist(self.workdir, "version.c")
         self.shouldExist(self.workdir, "subdir", "subdir.c")
         if self.metadir:
             self.shouldExist(self.workdir, self.metadir)
+        self.failUnlessEqual(bs.getProperty("revision"), None)
+        self.failUnlessEqual(bs.getProperty("branch"), None)
+        self.checkGotRevisionIsLatest(bs)
 
         self.touch(self.workdir, "newfile")
         self.shouldExist(self.workdir, "newfile")
@@ -493,7 +508,7 @@ class VCBase(SignalMixin):
         d = self.doBuild() # rebuild with update
         d.addCallback(self._do_vctest_update_1)
         return d
-    def _do_vctest_update_1(self, res):
+    def _do_vctest_update_1(self, bs):
         log.msg("_do_vctest_update_1")
         self.shouldExist(self.workdir, "main.c")
         self.shouldExist(self.workdir, "version.c")
@@ -501,12 +516,14 @@ class VCBase(SignalMixin):
                            "version=%d" % self.version)
         if self.metadir:
             self.shouldExist(self.workdir, self.metadir)
+        self.failUnlessEqual(bs.getProperty("revision"), None)
+        self.checkGotRevisionIsLatest(bs)
 
         self.touch(self.workdir, "newfile")
         d = self.doBuild() # update rebuild leaves new files
         d.addCallback(self._do_vctest_update_2)
         return d
-    def _do_vctest_update_2(self, res):
+    def _do_vctest_update_2(self, bs):
         log.msg("_do_vctest_update_2")
         self.shouldExist(self.workdir, "main.c")
         self.shouldExist(self.workdir, "version.c")
@@ -516,33 +533,41 @@ class VCBase(SignalMixin):
         d.addCallback(lambda res: self.doBuild())
         d.addCallback(self._do_vctest_update_3)
         return d
-    def _do_vctest_update_3(self, res):
+    def _do_vctest_update_3(self, bs):
         log.msg("_do_vctest_update_3")
         self.shouldExist(self.workdir, "main.c")
         self.shouldExist(self.workdir, "version.c")
         self.shouldContain(self.workdir, "version.c",
                            "version=%d" % self.version)
         self.shouldExist(self.workdir, "newfile")
+        self.failUnlessEqual(bs.getProperty("revision"), None)
+        self.checkGotRevisionIsLatest(bs)
+
         # now "update" to an older revision
         d = self.doBuild(ss=SourceStamp(revision=self.trunk[-2]))
         d.addCallback(self._do_vctest_update_4)
         return d
-    def _do_vctest_update_4(self, res):
+    def _do_vctest_update_4(self, bs):
         log.msg("_do_vctest_update_4")
         self.shouldExist(self.workdir, "main.c")
         self.shouldExist(self.workdir, "version.c")
         self.shouldContain(self.workdir, "version.c",
                            "version=%d" % (self.version-1))
+        self.failUnlessEqual(bs.getProperty("revision"), self.trunk[-2])
+        self.checkGotRevision(bs, self.trunk[-2])
+
         # now update to the newer revision
         d = self.doBuild(ss=SourceStamp(revision=self.trunk[-1]))
         d.addCallback(self._do_vctest_update_5)
         return d
-    def _do_vctest_update_5(self, res):
+    def _do_vctest_update_5(self, bs):
         log.msg("_do_vctest_update_5")
         self.shouldExist(self.workdir, "main.c")
         self.shouldExist(self.workdir, "version.c")
         self.shouldContain(self.workdir, "version.c",
                            "version=%d" % self.version)
+        self.failUnlessEqual(bs.getProperty("revision"), self.trunk[-1])
+        self.checkGotRevision(bs, self.trunk[-1])
 
 
     def _do_vctest_update_retry(self, res):
@@ -558,46 +583,54 @@ class VCBase(SignalMixin):
         d = self.doBuild() # update, but must clobber to handle the error
         d.addCallback(self._do_vctest_update_retry_1)
         return d
-    def _do_vctest_update_retry_1(self, res):
+    def _do_vctest_update_retry_1(self, bs):
         self.shouldNotExist(self.workdir, "newfile")
 
     def _do_vctest_copy(self, res):
         d = self.doBuild() # copy rebuild clobbers new files
         d.addCallback(self._do_vctest_copy_1)
         return d
-    def _do_vctest_copy_1(self, res):
+    def _do_vctest_copy_1(self, bs):
         if self.metadir:
             self.shouldExist(self.workdir, self.metadir)
         self.shouldNotExist(self.workdir, "newfile")
         self.touch(self.workdir, "newfile")
         self.touch(self.vcdir, "newvcfile")
+        self.failUnlessEqual(bs.getProperty("revision"), None)
+        self.checkGotRevisionIsLatest(bs)
 
         d = self.doBuild() # copy rebuild clobbers new files
         d.addCallback(self._do_vctest_copy_2)
         return d
-    def _do_vctest_copy_2(self, res):
+    def _do_vctest_copy_2(self, bs):
         if self.metadir:
             self.shouldExist(self.workdir, self.metadir)
         self.shouldNotExist(self.workdir, "newfile")
         self.shouldExist(self.vcdir, "newvcfile")
         self.shouldExist(self.workdir, "newvcfile")
+        self.failUnlessEqual(bs.getProperty("revision"), None)
+        self.checkGotRevisionIsLatest(bs)
         self.touch(self.workdir, "newfile")
 
     def _do_vctest_export(self, res):
         d = self.doBuild() # export rebuild clobbers new files
         d.addCallback(self._do_vctest_export_1)
         return d
-    def _do_vctest_export_1(self, res):
+    def _do_vctest_export_1(self, bs):
         self.shouldNotExist(self.workdir, self.metadir)
         self.shouldNotExist(self.workdir, "newfile")
+        self.failUnlessEqual(bs.getProperty("revision"), None)
+        self.checkGotRevisionIsLatest(bs)
         self.touch(self.workdir, "newfile")
 
         d = self.doBuild() # export rebuild clobbers new files
         d.addCallback(self._do_vctest_export_2)
         return d
-    def _do_vctest_export_2(self, res):
+    def _do_vctest_export_2(self, bs):
         self.shouldNotExist(self.workdir, self.metadir)
         self.shouldNotExist(self.workdir, "newfile")
+        self.failUnlessEqual(bs.getProperty("revision"), None)
+        self.checkGotRevisionIsLatest(bs)
 
     def do_patch(self):
         vctype = self.vctype
@@ -621,7 +654,7 @@ class VCBase(SignalMixin):
         d.addCallback(lambda res: self.doBuild(ss=ss))
         d.addCallback(self._doPatch_1)
         return d
-    def _doPatch_1(self, res):
+    def _doPatch_1(self, bs):
         self.shouldContain(self.workdir, "version.c",
                            "version=%d" % self.version)
         # make sure the file actually got patched
@@ -629,18 +662,22 @@ class VCBase(SignalMixin):
                                 "subdir", "subdir.c")
         data = open(subdir_c, "r").read()
         self.failUnlessIn("Hello patched subdir.\\n", data)
+        self.failUnlessEqual(bs.getProperty("revision"), self.trunk[-1])
+        self.checkGotRevision(bs, self.trunk[-1])
 
         # make sure that a rebuild does not use the leftover patched workdir
         d = self.master.loadConfig(self.config % "update")
         d.addCallback(lambda res: self.doBuild(ss=None))
         d.addCallback(self._doPatch_2)
         return d
-    def _doPatch_2(self, res):
+    def _doPatch_2(self, bs):
         # make sure the file is back to its original
         subdir_c = os.path.join(self.slavebase, "vc-dir", "build",
                                 "subdir", "subdir.c")
         data = open(subdir_c, "r").read()
         self.failUnlessIn("Hello subdir.\\n", data)
+        self.failUnlessEqual(bs.getProperty("revision"), None)
+        self.checkGotRevisionIsLatest(bs)
 
         # now make sure we can patch an older revision. We need at least two
         # revisions here, so we might have to create one first
@@ -655,7 +692,7 @@ class VCBase(SignalMixin):
         d = self.doBuild(ss=ss)
         d.addCallback(self._doPatch_4)
         return d
-    def _doPatch_4(self, res):
+    def _doPatch_4(self, bs):
         self.shouldContain(self.workdir, "version.c",
                            "version=%d" % (self.version-1))
         # and make sure the file actually got patched
@@ -663,6 +700,8 @@ class VCBase(SignalMixin):
                                 "subdir", "subdir.c")
         data = open(subdir_c, "r").read()
         self.failUnlessIn("Hello patched subdir.\\n", data)
+        self.failUnlessEqual(bs.getProperty("revision"), self.trunk[-2])
+        self.checkGotRevision(bs, self.trunk[-2])
 
         # now check that we can patch a branch
         ss = SourceStamp(branch=self.branchname, revision=self.branch[-1],
@@ -670,7 +709,7 @@ class VCBase(SignalMixin):
         d = self.doBuild(ss=ss)
         d.addCallback(self._doPatch_5)
         return d
-    def _doPatch_5(self, res):
+    def _doPatch_5(self, bs):
         self.shouldContain(self.workdir, "version.c",
                            "version=%d" % 1)
         self.shouldContain(self.workdir, "main.c", "Hello branch.")
@@ -678,6 +717,9 @@ class VCBase(SignalMixin):
                                 "subdir", "subdir.c")
         data = open(subdir_c, "r").read()
         self.failUnlessIn("Hello patched subdir.\\n", data)
+        self.failUnlessEqual(bs.getProperty("revision"), self.branch[-1])
+        self.failUnlessEqual(bs.getProperty("branch"), self.branchname)
+        self.checkGotRevision(bs, self.branch[-1])
 
 
     def do_vctest_once(self, shouldSucceed):
@@ -723,7 +765,7 @@ class VCBase(SignalMixin):
         d.addCallback(lambda res: self.doBuild(ss=SourceStamp()))
         d.addCallback(self._doBranch_1)
         return d
-    def _doBranch_1(self, res):
+    def _doBranch_1(self, bs):
         log.msg("_doBranch_1")
         # make sure the checkout was of the trunk
         main_c = os.path.join(self.slavebase, "vc-dir", "build", "main.c")
@@ -736,7 +778,7 @@ class VCBase(SignalMixin):
         d = self.doBuild(ss=SourceStamp(branch=self.branchname))
         d.addCallback(self._doBranch_2)
         return d
-    def _doBranch_2(self, res):
+    def _doBranch_2(self, bs):
         log.msg("_doBranch_2")
         # make sure it was on the branch
         main_c = os.path.join(self.slavebase, "vc-dir", "build", "main.c")
@@ -750,7 +792,7 @@ class VCBase(SignalMixin):
         d = self.doBuild(ss=SourceStamp(branch=self.branchname))
         d.addCallback(self._doBranch_3)
         return d
-    def _doBranch_3(self, res):
+    def _doBranch_3(self, bs):
         log.msg("_doBranch_3")
         # make sure it is still on the branch
         main_c = os.path.join(self.slavebase, "vc-dir", "build", "main.c")
@@ -763,7 +805,7 @@ class VCBase(SignalMixin):
         d = self.doBuild(ss=SourceStamp())
         d.addCallback(self._doBranch_4)
         return d
-    def _doBranch_4(self, res):
+    def _doBranch_4(self, bs):
         log.msg("_doBranch_4")
         # make sure it was on the trunk
         main_c = os.path.join(self.slavebase, "vc-dir", "build", "main.c")
@@ -938,6 +980,11 @@ class CVSSupport(VCBase):
     try_branchname = "branch"
     vctype = "step.CVS"
     vctype_try = "cvs"
+    # CVS gives us got_revision, but it is based entirely upon the local
+    # clock, which means it is unlikely to match the timestamp taken earlier.
+    # This might be enough for common use, but won't be good enough for our
+    # tests to accept, so pretend it doesn't have got_revision at all.
+    has_got_revision = False
 
     def capable(self):
         global VCS
@@ -1042,7 +1089,7 @@ class CVS(CVSSupport, unittest.TestCase):
         d = self.do_patch()
         return maybeWait(d)
 
-    def testBranch(self):
+    def testCheckoutBranch(self):
         d = self.do_branch()
         return maybeWait(d)
         
@@ -1057,6 +1104,8 @@ class SVNSupport(VCBase):
     try_branchname = "sample/branch"
     vctype = "step.SVN"
     vctype_try = "svn"
+    has_got_revision = True
+    has_got_revision_branches_are_merged = True
 
     def capable(self):
         global VCS
@@ -1171,7 +1220,7 @@ class SVN(SVNSupport, unittest.TestCase):
 
     def testCheckout(self):
         # we verify this one with the svnurl style of vcargs. We test the
-        # baseURL/defaultBranch style in testPatch and testBranch.
+        # baseURL/defaultBranch style in testPatch and testCheckoutBranch.
         self.vcargs = { 'svnurl': self.svnurl_trunk }
         d = self.do_vctest()
         return maybeWait(d)
@@ -1183,7 +1232,7 @@ class SVN(SVNSupport, unittest.TestCase):
         d = self.do_patch()
         return maybeWait(d)
 
-    def testBranch(self):
+    def testCheckoutBranch(self):
         self.vcargs = { 'baseURL': self.svnurl + "/",
                         'defaultBranch': "sample/trunk",
                         }
@@ -1208,6 +1257,7 @@ class DarcsSupport(VCBase):
     try_branchname = "branch"
     vctype = "step.Darcs"
     vctype_try = "darcs"
+    has_got_revision = True
 
     def capable(self):
         global VCS
@@ -1312,7 +1362,7 @@ class Darcs(DarcsSupport, unittest.TestCase):
         d = self.do_patch()
         return maybeWait(d)
 
-    def testBranch(self):
+    def testCheckoutBranch(self):
         self.vcargs = { 'baseURL': self.darcs_base + "/",
                         'defaultBranch': "trunk" }
         d = self.do_branch()
@@ -1367,6 +1417,7 @@ class TlaSupport(VCBase, ArchCommon):
     vctype = "step.Arch"
     vctype_try = "tla"
     archcmd = "tla"
+    has_got_revision = True
 
     def capable(self):
         global VCS
@@ -1624,7 +1675,7 @@ class Arch(TlaSupport, unittest.TestCase):
         d = self.do_patch()
         return maybeWait(d)
 
-    def testBranch(self):
+    def testCheckoutBranch(self):
         d = self.do_branch()
         return maybeWait(d)
 
@@ -1636,6 +1687,7 @@ class BazaarSupport(TlaSupport):
     vctype = "step.Bazaar"
     vctype_try = "baz"
     archcmd = "baz"
+    has_got_revision = True
 
     def capable(self):
         global VCS
@@ -1687,7 +1739,7 @@ class Bazaar(BazaarSupport, unittest.TestCase):
         d = self.do_patch()
         return maybeWait(d)
 
-    def testBranch(self):
+    def testCheckoutBranch(self):
         d = self.do_branch()
         return maybeWait(d)
 
@@ -1767,6 +1819,7 @@ class MercurialSupport(VCBase):
     try_branchname = "branch"
     vctype = "step.Mercurial"
     vctype_try = "hg"
+    has_got_revision = True
 
     def capable(self):
         global VCS
@@ -1879,7 +1932,7 @@ class Mercurial(MercurialSupport, unittest.TestCase):
         d = self.do_patch()
         return maybeWait(d)
 
-    def testBranch(self):
+    def testCheckoutBranch(self):
         self.vcargs = { 'baseURL': self.hg_base + "/",
                         'defaultBranch': "trunk" }
         d = self.do_branch()
