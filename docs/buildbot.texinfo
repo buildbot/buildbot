@@ -512,11 +512,11 @@ it convenient to have @code{buildbot} on your PATH.
 If you wish, you can run the buildbot unit test suite like this:
 
 @example
-PYTHONPATH=. trial -v buildbot.test
+PYTHONPATH=. trial buildbot.test
 @end example
 
-This should run up to 175 tests, depending upon what VC tools you have
-installed. On my desktop machine it takes about four minutes to
+This should run up to 192 tests, depending upon what VC tools you have
+installed. On my desktop machine it takes about five minutes to
 complete. Nothing should fail, a few might be skipped. If any of the
 tests fail, you should stop and investigate the cause before
 continuing the installation process, as it will probably be easier to

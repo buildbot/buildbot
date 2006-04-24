@@ -1,5 +1,8 @@
 2006-04-24  Brian Warner  <warner@lothar.com>
 
+	* docs/buildbot.texinfo (Installing the code): update trial
+	invocation, SF#1469116 by Niklaus Giger.
+
 	* contrib/windows/buildbot2.bat: utility wrapper for windows
 	developers, contributed by Nick Trout (after a year of neglect..
 	sorry!). SF#1194231.
