@@ -321,7 +321,8 @@ class StatusResourceBuild(HtmlResource):
         b = self.build
         buildbotURL = self.status.getBuildbotURL()
         projectName = self.status.getProjectName()
-        data = "<a href=\"%s\">%s</a>\n" % (buildbotURL, projectName)
+        data = '<div class="title"><a href="%s">%s</a></div>\n'%(buildbotURL,
+                                                                 projectName)
         # the color in the following line gives python-mode trouble
         data += ("<h1>Build <a href=\"%s\">%s</a>:#%d</h1>\n"
                  "<h2>Reason:</h2>\n%s\n"
@@ -1071,6 +1072,12 @@ class WaterfallStatusResource(HtmlResource):
 
     def body(self, request):
         "This method builds the main waterfall display."
+
+        data = ''
+
+        projectName = self.status.getProjectName()
+        projectURL = self.status.getProjectURL()
+
         phase = request.args.get("phase",["2"])
         phase = int(phase[0])
 
@@ -1097,27 +1104,23 @@ class WaterfallStatusResource(HtmlResource):
             return self.phase0(request, (changeNames + builderNames),
                                timestamps, eventGrid)
         # start the table: top-header material
-        data = "<table class=\"table\" border=\"0\" cellspacing=\"0\">\n"
-        #data = "<table frame=\"rhs\" rules=\"all\" class=\"table\">\n"
+        data += '<table border="0" cellspacing="0">\n'
 
-        data += " <tr>\n"
-        projectName = self.status.getProjectName()
-        projectURL = self.status.getProjectURL()
         if projectName and projectURL:
             # TODO: this is going to look really ugly
             topleft = "<a href=\"%s\">%s</a><br />last build" % \
                       (projectURL, projectName)
         else:
             topleft = "last build"
+        data += ' <tr class="LastBuild">\n'
         data += td(topleft, align="right", colspan=2, class_="Project")
         for b in builders:
             box = ITopBox(b).getBox()
             data += box.td(align="center")
         data += " </tr>\n"
 
-        data += " <tr>\n"
-        data += td("current activity", align="right", colspan=2,
-                   class_="Activity")
+        data += ' <tr class="Activity">\n'
+        data += td('current activity', align='right', colspan=2)
         for b in builders:
             box = ICurrentBox(b).getBox(self.status)
             data += box.td(align="center")
@@ -1173,9 +1176,7 @@ class WaterfallStatusResource(HtmlResource):
                 urllib.quote(request.childLink("waterfall"))
         data += " for the waterfall display</p>\n"
                 
-        #data += "<table border=\"1\">\n"
-        #data += "<table frame=\"rhs\" rules=\"all\" class=\"table\">\n"
-        data += "<table class=\"table\" border=\"0\" cellspacing=\"0\">\n"
+        data += '<table border="0" cellspacing="0">\n'
         names = map(lambda builder: builder.name, builders)
 
         # the top row is two blank spaces, then the top-level status boxes

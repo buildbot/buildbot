@@ -1,5 +1,14 @@
 2006-04-23  Brian Warner  <warner@lothar.com>
 
+	* buildbot/status/html.py (StatusResourceBuild.body): replace the
+	bare buildbotURL/projectName line with a proper DIV, along with a
+	CSS class of "title", from Stefan Seefeld (SF#1461675).
+	(WaterfallStatusResource.body0): remove the redundant 'table'
+	class from the table
+	(WaterfallStatusResource.body): same. Also add class="LastBuild"
+	to the top-row TR, and class="Activity" to the second-row TR,
+	rather than putting them in the individual TD nodes.
+
 	* buildbot/test/test_vc.py (VCBase.checkGotRevision): test
 	'got_revision' build property for all VC systems that implement
 	accurate ones: SVN, Darcs, Arch, Bazaar, Mercurial.
