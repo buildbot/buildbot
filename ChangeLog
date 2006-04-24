@@ -1,5 +1,9 @@
 2006-04-24  Brian Warner  <warner@lothar.com>
 
+	* contrib/windows/buildbot2.bat: utility wrapper for windows
+	developers, contributed by Nick Trout (after a year of neglect..
+	sorry!). SF#1194231.
+
 	* buildbot/test/test_vc.py (*.capable): store the actual VC
 	binary's pathname in VCS[vcname], so it can be retrieved later
 	(CVSSupport.vc_try_checkout): incorporate Niklaus Giger's patch to
