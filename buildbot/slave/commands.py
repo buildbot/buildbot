@@ -10,7 +10,7 @@ from buildbot.twcompat import implements
 from buildbot.slave.interfaces import ISlaveCommand
 from buildbot.slave.registry import registerSlaveCommand
 
-cvs_ver = '$Revision: 1.45 $'[1+len("Revision: "):-2]
+cvs_ver = '$Revision: 1.46 $'[1+len("Revision: "):-2]
 
 # version history:
 #  >=1.17: commands are interruptable
@@ -632,6 +632,12 @@ class SourceBase(Command):
     sourcedata = ""
 
     def setup(self, args):
+        # if we need to parse the output, use this environment. Otherwise
+        # command output will be in whatever the buildslave's native language
+        # has been set to.
+        self.env = os.environ.copy()
+        self.env['LC_ALL'] = "C"
+
         self.workdir = args['workdir']
         self.mode = args.get('mode', "update")
         self.revision = args.get('revision')
@@ -1001,12 +1007,25 @@ class SVN(SourceBase):
     def parseGotRevision(self):
         # svn checkout operations finish with 'Checked out revision 16657.'
         # svn update operations finish the line 'At revision 16654.'
-        lines = self.command.stdout.rstrip().split("\n")
-        lastline = lines[-1]
-        r = re.search(r'revision (\d+)\.', lastline)
-        if r:
-            return int(r.group(1))
-        return None
+        # But we don't use those. Instead, run 'svn info'.
+        if self.mode == "export":
+            # without the .svn metadir, svn info won't work
+            return None
+        command = ["svn", "info"]
+        c = ShellCommand(self.builder, command,
+                         os.path.join(self.builder.basedir, self.srcdir),
+                         environ=self.env,
+                         sendStdout=False, sendStderr=False, sendRC=False,
+                         keepStdout=True)
+        c.usePTY = False
+        d = c.start()
+        def _parse(res):
+            r = re.search(r'^Revision: (\d+)$', c.stdout, re.M)
+            if r:
+                return int(r.group(1))
+            return None
+        d.addCallback(_parse)
+        return d
 
 
 registerSlaveCommand("svn", SVN, cvs_ver)
@@ -1079,6 +1098,7 @@ class Darcs(SourceBase):
         command = ["darcs", "changes", "--context"]
         c = ShellCommand(self.builder, command,
                          os.path.join(self.builder.basedir, self.srcdir),
+                         environ=self.env,
                          sendStdout=False, sendStderr=False, sendRC=False,
                          keepStdout=True)
         c.usePTY = False
@@ -1245,6 +1265,7 @@ class Arch(SourceBase):
         command = ["tla", "logs", "--full", "--reverse"]
         c = ShellCommand(self.builder, command,
                          os.path.join(self.builder.basedir, self.srcdir),
+                         environ=self.env,
                          sendStdout=False, sendStderr=False, sendRC=False,
                          keepStdout=True)
         c.usePTY = False
@@ -1306,6 +1327,7 @@ class Bazaar(Arch):
         command = ["baz", "tree-id"]
         c = ShellCommand(self.builder, command,
                          os.path.join(self.builder.basedir, self.srcdir),
+                         environ=self.env,
                          sendStdout=False, sendStderr=False, sendRC=False,
                          keepStdout=True)
         c.usePTY = False
@@ -1389,6 +1411,7 @@ class Mercurial(SourceBase):
         command = ["hg", "identify"]
         c = ShellCommand(self.builder, command,
                          os.path.join(self.builder.basedir, self.srcdir),
+                         environ=self.env,
                          sendStdout=False, sendStderr=False, sendRC=False,
                          keepStdout=True)
         d = c.start()

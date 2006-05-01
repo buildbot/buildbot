@@ -249,8 +249,11 @@ class Scheduling(unittest.TestCase):
         self.master.d = d = defer.Deferred()
         self.pushJob(jobdir_abs, job1)
         d.addCallback(self._testTryJobdir_1)
+        # N.B.: if we don't have DNotify, we poll every 10 seconds, so don't
+        # set a .timeout here shorter than that. TODO: make it possible to
+        # set the polling interval, so we can make it shorter.
         return maybeWait(d, 5)
-    testTryJobdir.timeout = 5
+
     def _testTryJobdir_1(self, bs):
         self.failUnlessEqual(bs.builderNames, ["a", "b"])
         self.failUnlessEqual(bs.source.branch, "branch1")

@@ -1,3 +1,40 @@
+2006-04-30  Brian Warner  <warner@lothar.com>
+
+	* buildbot/test/test_vc.py (VCBase.runCommand): set $LC_ALL="C" to
+	make sure child commands emit messages in english, so our regexps
+	will match. Thanks to Nikaus Giger for identifying the problems.
+	(VCBase._do_vctest_export_1): mode="export" is not responsible
+	for setting the "got_revision" property, since in many cases it is
+	not convenient to determine.
+	(SVNSupport.capable): when running 'svn --version' to check for
+	ra_local, we want error messages in english
+	* buildbot/test/test_slavecommand.py 
+	(ShellBase.testShellMissingCommand): set $LC_ALL="C" to get bash
+	to emit the error message in english
+
+	* buildbot/slave/commands.py (SourceBase.setup): stash a copy of
+	the environment with $LC_ALL="C" so that Commands which need to
+	parse the output of their child processes can obtain it in
+	english.
+	(SVN.parseGotRevision): call "svn info" afterwards instead of
+	watching the output of the "svn update" or "svn checkout".
+	(Darcs.parseGotRevision): use $LC_ALL="C" when running the command
+	(Arch.parseGotRevision): same
+	(Bazaar.parseGotRevision): same
+	(Mercurial.parseGotRevision): same
+
+	* buildbot/scripts/tryclient.py (SourceStampExtractor.dovc): set
+	$LC_ALL="C" when running commands under 'buildbot try', too
+
+	* buildbot/test/__init__.py: remove the global os.environ()
+	setting, instead we do it just for the tests that run commands and
+	need to parse their output.
+
+	* buildbot/test/test_scheduler.py (Scheduling.testTryJobdir):
+	remove the overly-short .timeout on this test, because non-DNotify
+	platforms must fall back to polling which happens at 10 second
+	intervals, so a 5 second timeout would never succeed.
+
 2006-04-24  Brian Warner  <warner@lothar.com>
 
 	* docs/buildbot.texinfo (Installing the code): update trial

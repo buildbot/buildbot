@@ -156,7 +156,9 @@ class ShellBase(SignalMixin):
 
     def testShellMissingCommand(self):
         args = {'command': "/bin/EndWorldHungerAndMakePigsFly",
-                'workdir': '.', 'timeout': 10}
+                'workdir': '.', 'timeout': 10,
+                'env': {"LC_ALL": "C"},
+                }
         c = SlaveShellCommand(self.builder, None, args)
         d = c.start()
         d.addCallback(self._testShellMissingCommand_1)

@@ -322,8 +322,10 @@ class VCBase(SignalMixin):
         if type(command) not in (list, tuple):
             command = command.split(" ")
         #print "do %s" % command
+        env = os.environ.copy()
+        env['LC_ALL'] = "C"
         d = utils.getProcessOutputAndValue(command[0], command[1:],
-                                           env=os.environ, path=basedir)
+                                           env=env, path=basedir)
         def check((out, err, code)):
             #print
             #print "command: %s" % command
@@ -592,7 +594,8 @@ class VCBase(SignalMixin):
         self.shouldNotExist(self.workdir, self.metadir)
         self.shouldNotExist(self.workdir, "newfile")
         self.failUnlessEqual(bs.getProperty("revision"), None)
-        self.checkGotRevisionIsLatest(bs)
+        #self.checkGotRevisionIsLatest(bs)
+        # VC 'export' is not required to have a got_revision
         self.touch(self.workdir, "newfile")
 
         d = self.doBuild() # export rebuild clobbers new files
@@ -602,7 +605,8 @@ class VCBase(SignalMixin):
         self.shouldNotExist(self.workdir, self.metadir)
         self.shouldNotExist(self.workdir, "newfile")
         self.failUnlessEqual(bs.getProperty("revision"), None)
-        self.checkGotRevisionIsLatest(bs)
+        #self.checkGotRevisionIsLatest(bs)
+        # VC 'export' is not required to have a got_revision
 
     def do_patch(self):
         vctype = self.vctype
@@ -1093,8 +1097,10 @@ class SVNSupport(VCBase):
                 # we need svn to be compiled with the ra_local access
                 # module
                 log.msg("running svn --version..")
+                env = os.environ.copy()
+                env['LC_ALL'] = "C"
                 d = utils.getProcessOutput(svnpaths[0], ["--version"],
-                                           env=os.environ)
+                                           env=env)
                 d.addCallback(self._capable, svnpaths[0], svnadminpaths[0])
                 return d
         if not VCS["svn"]:
@@ -1109,8 +1115,7 @@ class SVNSupport(VCBase):
             self.svnadmin = svnadmin
         else:
             log.msg(("%s found but it does not support 'file:' " +
-                     "schema, skipping svn tests") %
-                    os.path.join(p, "svn"))
+                     "schema, skipping svn tests") % vcexe)
             VCS['svn'] = None
             raise unittest.SkipTest("Found SVN, but it can't use file: schema")
 

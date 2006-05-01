@@ -22,7 +22,9 @@ class SourceStampExtractor:
     def dovc(self, cmd):
         """This accepts the arguments of a command, without the actual
         command itself."""
-        return utils.getProcessOutput(self.exe, cmd, env=os.environ,
+        env = os.environ.copy()
+        env['LC_ALL'] = "C"
+        return utils.getProcessOutput(self.exe, cmd, env=env,
                                       path=self.treetop)
 
     def get(self):
