@@ -113,7 +113,7 @@ class TwistedReactorsBuildFactory(TwistedBaseFactory):
             #    # these are buggy, so tolerate failures for now
             #    flunkOnFailure = 0
             #    warnOnFailure = 1
-            self.stepaddStep(RemovePYCs) # TODO: why?
+            self.addStep(RemovePYCs) # TODO: why?
             self.addStep(TwistedTrial, name=reactor, python=python,
                          reactor=reactor, flunkOnFailure=flunkOnFailure,
                          warnOnFailure=warnOnFailure)

@@ -2,6 +2,7 @@
 
 	* buildbot/process/process_twisted.py (TwistedBuild.isFileImportant):
 	fix stupid braino: either use startwith or find()==0, not both.
+	(TwistedReactorsBuildFactory.__init__): another dumb typo
 
 	* buildbot/test/test_slavecommand.py (ShellBase.testInterrupt1): 
 	mark this test as TODO under windows, since process-killing seems
