@@ -370,9 +370,9 @@ class Trial(ShellCommand):
     def setupEnvironment(self, cmd):
         ShellCommand.setupEnvironment(self, cmd)
         if self.testpath != None:
-            e = self.cmd.args['env']
+            e = cmd.args['env']
             if e is None:
-                self.cmd.args['env'] = {'PYTHONPATH': self.testpath}
+                cmd.args['env'] = {'PYTHONPATH': self.testpath}
             else:
                 # TODO: somehow, each build causes another copy of
                 # self.testpath to get prepended
@@ -381,7 +381,7 @@ class Trial(ShellCommand):
                 else:
                     e['PYTHONPATH'] = self.testpath + ":" + e['PYTHONPATH']
         try:
-            p = self.cmd.args['env']['PYTHONPATH']
+            p = cmd.args['env']['PYTHONPATH']
             if type(p) is not str:
                 log.msg("hey, not a string:", p)
                 assert False

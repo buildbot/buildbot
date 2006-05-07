@@ -1,5 +1,9 @@
 2006-05-06  Brian Warner  <warner@lothar.com>
 
+	* buildbot/process/step_twisted.py (Trial.setupEnvironment): more
+	bugs in twisted-specific code not covered by my unit tests, this
+	time use 'cmd' argument instead of self.cmd
+
 	* buildbot/process/process_twisted.py (TwistedBuild.isFileImportant):
 	fix stupid braino: either use startwith or find()==0, not both.
 	(TwistedReactorsBuildFactory.__init__): another dumb typo
