@@ -1,5 +1,10 @@
 2006-05-06  Brian Warner  <warner@lothar.com>
 
+	* buildbot/test/test_slavecommand.py (ShellBase.testInterrupt1): 
+	mark this test as TODO under windows, since process-killing seems
+	dodgy there. We'll come back to this later and try to fix it
+	properly.
+
 	* buildbot/test/test_vc.py (CVSSupport.getdate): use localtime,
 	and don't include a timezone
 	(CVSSupport.vc_try_checkout): stop trying to strip the timezone.

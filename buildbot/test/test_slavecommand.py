@@ -204,6 +204,8 @@ class ShellBase(SignalMixin):
         self.failUnlessIn("command interrupted", got)
         if runtime.platformType == "posix":
             self.failUnlessIn("process killed by signal", got)
+    if runtime.platformType != 'posix':
+        testInterrupt1.todo = "interrupt doesn't appear to work under windows"
 
 
     # todo: twisted-specific command tests
