@@ -5,6 +5,10 @@
 	(CVSSupport.vc_try_checkout): stop trying to strip the timezone.
 	This should avoid the windows-with-verbose-timezone-name problem
 	altogether.
+	(Patch.testPatch): add a test which runs 'patch' with less
+	overhead than the full VCBase.do_patch sequence, to try to isolate
+	a windows test failure. This one uses slave.commands.ShellCommand
+	and 'patch', but none of the VC code.
 
 	* buildbot/slave/commands.py (getCommand): use which() to find the
 	executables for 'cvs', 'svn', etc. This ought to help under

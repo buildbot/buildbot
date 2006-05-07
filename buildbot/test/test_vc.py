@@ -14,7 +14,7 @@ from twisted.python import log
 #log.startLogging(sys.stderr)
 
 from buildbot import master, interfaces
-from buildbot.slave import bot
+from buildbot.slave import bot, commands
 from buildbot.slave.commands import rmdirRecursive
 from buildbot.status.builder import SUCCESS, FAILURE
 from buildbot.process import step, base
@@ -2036,3 +2036,35 @@ class Sources(unittest.TestCase):
         b = base.Build([r])
         s = step.SVN(svnurl="dummy", workdir=None, build=b)
         self.failUnlessEqual(s.computeSourceRevision(b.allChanges()), 67)
+
+class Patch(VCBase, unittest.TestCase):
+    def setUp(self):
+        pass
+
+    def tearDown(self):
+        pass
+
+    def testPatch(self):
+        # invoke 'patch' all by itself, to see if it works the way we think
+        # it should. This is intended to ferret out some windows test
+        # failures.
+        self.workdir = os.path.join("test_vc", "testPatch")
+        self.populate(self.workdir)
+        patch = which("patch")[0]
+
+        command = [patch, "-p0"]
+        class FakeBuilder:
+            usePTY = False
+            def sendUpdate(self, status):
+                pass
+        c = commands.ShellCommand(FakeBuilder(), command, self.workdir,
+                                  sendRC=False, stdin=p0_diff)
+        d = c.start()
+        d.addCallback(self._testPatch_1)
+        return maybeWait(d)
+
+    def _testPatch_1(self, res):
+        # make sure the file actually got patched
+        subdir_c = os.path.join(self.workdir, "subdir", "subdir.c")
+        data = open(subdir_c, "r").read()
+        self.failUnlessIn("Hello patched subdir.\\n", data)
