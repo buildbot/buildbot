@@ -351,7 +351,12 @@ class Build:
             args = args.copy()
             if not args.has_key("workdir"):
                 args['workdir'] = self.workdir
-            step = factory(build=self, **args)
+            try:
+                step = factory(build=self, **args)
+            except:
+                log.msg("error while creating step, factory=%s, args=%s"
+                        % (factory, args))
+                raise
             name = step.name
             count = 1
             while name in stepnames and count < 100:

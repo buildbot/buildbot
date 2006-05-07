@@ -4,7 +4,7 @@ import time, os.path
 
 from twisted.internet import reactor
 from twisted.application import service, internet, strports
-from twisted.python import log
+from twisted.python import log, runtime
 from twisted.protocols import basic
 from twisted.cred import portal, checkers
 from twisted.spread import pb
@@ -587,10 +587,22 @@ class Try_Jobdir(TryBase):
 
     def messageReceived(self, filename):
         md = os.path.join(self.parent.basedir, self.jobdir)
-        path = os.path.join(md, "new", filename)
-        f = open(path, "r")
-        os.rename(os.path.join(md, "new", filename),
-                  os.path.join(md, "cur", filename))
+        if runtime.platformType == "posix":
+            # open the file before moving it, because I'm afraid that once
+            # it's in cur/, someone might delete it at any moment
+            path = os.path.join(md, "new", filename)
+            f = open(path, "r")
+            os.rename(os.path.join(md, "new", filename),
+                      os.path.join(md, "cur", filename))
+        else:
+            # do this backwards under windows, because you can't move a file
+            # that somebody is holding open. This was causing a Permission
+            # Denied error on bear's win32-twisted1.3 buildslave.
+            os.rename(os.path.join(md, "new", filename),
+                      os.path.join(md, "cur", filename))
+            path = os.path.join(md, "cur", filename)
+            f = open(path, "r")
+
         try:
             builderNames, ss, bsid = self.parseJob(f)
         except BadJobfile:

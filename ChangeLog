@@ -1,3 +1,14 @@
+2006-05-07  Brian Warner  <warner@lothar.com>
+
+	* buildbot/scheduler.py (Try_Jobdir.messageReceived): when
+	operating under windows, move the file before opening it, since
+	you can't rename a file that somebody has open.
+
+	* buildbot/process/base.py (Build.setupBuild): if something goes
+	wrong while creating a Step, log the name and arguments, since the
+	error message when you get the number of arguments wrong is really
+	opaque.
+
 2006-05-06  Brian Warner  <warner@lothar.com>
 
 	* buildbot/process/step_twisted.py (Trial.setupEnvironment): more
