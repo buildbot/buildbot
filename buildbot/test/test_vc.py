@@ -814,6 +814,7 @@ class VCBase(SignalMixin):
         # head of the trunk
         tmpdir = "try_workdir"
         self.trydir = os.path.join(self.repbase, tmpdir)
+        rmdirRecursive(self.trydir)
         d.addCallback(self.do_getpatch_trunkhead)
         d.addCallback(self.do_getpatch_trunkold)
         if doBranch:
@@ -968,16 +969,44 @@ class CVSSupport(VCBase):
             VCS["cvs"] = None
             cvspaths = which('cvs')
             if cvspaths:
-                VCS["cvs"] = cvspaths[0]
+                # cvs-1.10 (as shipped with OS-X 10.3 "Panther") is too old
+                # for this test. There is a situation where we check out a
+                # tree, make a change, then commit it back, and CVS refuses
+                # to believe that we're operating in a CVS tree. I tested
+                # cvs-1.12.9 and it works ok, OS-X 10.4 "Tiger" comes with
+                # cvs-1.11, but I haven't tested that yet. For now, skip the
+                # tests if we've got 1.10 .
+                log.msg("running %s --version.." % (cvspaths[0],))
+                d = utils.getProcessOutput(cvspaths[0], ["--version"],
+                                           env=os.environ)
+                d.addCallback(self._capable, cvspaths[0])
+                return d
         if not VCS["cvs"]:
             raise unittest.SkipTest("CVS is not installed")
         self.vcexe = VCS["cvs"]
+
+    def _capable(self, v, vcexe):
+        m = re.search(r'\(CVS\) ([\d\.]+) ', v)
+        if not m:
+            log.msg("couldn't identify CVS version number in output:")
+            log.msg("'''%s'''" % v)
+            log.msg("skipping tests")
+            VCS["cvs"] = None
+            raise unittest.SkipTest("Found CVS, but can't identify version")
+        ver = m.group(1)
+        log.msg("found CVS version '%s'" % ver)
+        if ver == "1.10":
+            VCS["cvs"] = None
+            raise unittest.SkipTest("Found CVS, but it is too old")
+        VCS["cvs"] = vcexe
+        self.vcexe = VCS["cvs"]
+
 
     def postCreate(self, res):
         self.vcargs = { 'cvsroot': self.cvsrep, 'cvsmodule': "sample" }
 
     def getdate(self):
-        return time.strftime("%Y-%m-%d %H:%M:%S %z", time.gmtime())
+        return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
 
     def vc_create(self):
         self.cvsrep = cvsrep = os.path.join(self.repbase, "CVS-Repository")
@@ -1035,15 +1064,6 @@ class CVSSupport(VCBase):
     def vc_try_checkout(self, workdir, rev, branch=None):
         # 'workdir' is an absolute path
         assert os.path.abspath(workdir) == workdir
-
-        # get rid of non-numeric timezone info, which might not be parsed.
-        # This is in response to a non-US windows box which reports timezones
-        # in German like "Westeuropeische Normalzeit". We retain any numeric
-        # timezones present. TODO: I'm not convinced this won't result in a
-        # multi-hour offset for such a system. Where does the timezone name
-        # come from anyway?
-        rev =  re.sub(r'[^0-9 :\-+]',"",rev)
-        rev =  re.sub("  ","",rev)
         cmd = [self.vcexe, "-d", self.cvsrep, "checkout",
                "-d", workdir,
                "-D", rev]
@@ -1369,24 +1389,21 @@ class ArchCommon:
 
     def registerRepository(self, coordinates):
         a = self.archname
-        w = self.do(self.repbase, "%s archives %s" % (self.archcmd, a))
+        w = self.dovc(self.repbase, "archives %s" % a)
         yield w; out = w.getResult()
         if out:
-            w = self.do(self.repbase,
-                        "%s register-archive -d %s" % (self.archcmd, a))
+            w = self.dovc(self.repbase, "register-archive -d %s" % a)
             yield w; w.getResult()
-        w = self.do(self.repbase,
-                    "%s register-archive %s" % (self.archcmd, coordinates))
+        w = self.dovc(self.repbase, "register-archive %s" % coordinates)
         yield w; w.getResult()
     registerRepository = deferredGenerator(registerRepository)
 
     def unregisterRepository(self):
         a = self.archname
-        w = self.do(self.repbase, "%s archives %s" % (self.archcmd, a))
+        w = self.dovc(self.repbase, "archives %s" % a)
         yield w; out = w.getResult()
         if out:
-            w = self.do(self.repbase,
-                        "%s register-archive -d %s" % (self.archcmd, a))
+            w = self.dovc(self.repbase, "register-archive -d %s" % a)
             yield w; out = w.getResult()
     unregisterRepository = deferredGenerator(unregisterRepository)
 
@@ -1447,6 +1464,18 @@ class TlaSupport(VCBase, ArchCommon):
         d = self.unregisterRepository()
         return d
 
+    def do_get(self, basedir, archive, branch, newdir):
+        # the 'get' syntax is different between tla and baz. baz, while
+        # claiming to honor an --archive argument, in fact ignores it. The
+        # correct invocation is 'baz get archive/revision newdir'.
+        if self.archcmd == "tla":
+            w = self.dovc(basedir,
+                          "get -A %s %s %s" % (archive, branch, newdir))
+        else:
+            w = self.dovc(basedir,
+                          "get %s/%s %s" % (archive, branch, newdir))
+        return w
+
     def vc_create(self):
         # pick a hopefully unique string for the archive name, in the form
         # test-%d@buildbot.sf.net--testvc, since otherwise multiple copies of
@@ -1465,11 +1494,11 @@ class TlaSupport(VCBase, ArchCommon):
 
         self.populate(tmp)
 
-        w = self.do(tmp, "tla my-id", failureIsOk=True)
+        w = self.dovc(tmp, "my-id", failureIsOk=True)
         yield w; res = w.getResult()
         if not res:
             # tla will fail a lot of operations if you have not set an ID
-            w = self.do(tmp, ["tla", "my-id",
+            w = self.do(tmp, [self.vcexe, "my-id",
                               "Buildbot Test Suite <test@buildbot.sf.net>"])
             yield w; w.getResult()
 
@@ -1481,7 +1510,7 @@ class TlaSupport(VCBase, ArchCommon):
             # the same UID as one which uses baz on a regular basis, but
             # bazaar doesn't give us a way to disable the cache just for this
             # one archive.
-            cmd = "baz cache-config --disable"
+            cmd = "%s cache-config --disable" % VCS['baz']
             w = self.do(tmp, cmd)
             yield w; w.getResult()
 
@@ -1489,43 +1518,49 @@ class TlaSupport(VCBase, ArchCommon):
         yield w; w.getResult()
 
         # these commands can be run in any directory
-        w = self.do(tmp, "tla make-archive -l %s %s" % (a, self.archrep))
+        w = self.dovc(tmp, "make-archive -l %s %s" % (a, self.archrep))
         yield w; w.getResult()
-        w = self.do(tmp, "tla archive-setup -A %s %s" % (a, trunk))
-        yield w; w.getResult()
-        w = self.do(tmp, "tla archive-setup -A %s %s" % (a, branch))
-        yield w; w.getResult()
+        if self.archcmd == "tla":
+            w = self.dovc(tmp, "archive-setup -A %s %s" % (a, trunk))
+            yield w; w.getResult()
+            w = self.dovc(tmp, "archive-setup -A %s %s" % (a, branch))
+            yield w; w.getResult()
+        else:
+            # baz does not require an 'archive-setup' step
+            pass
 
         # these commands must be run in the directory that is to be imported
-        w = self.do(tmp, "tla init-tree --nested %s/%s" % (a, trunk))
+        w = self.dovc(tmp, "init-tree --nested %s/%s" % (a, trunk))
         yield w; w.getResult()
         files = " ".join(["main.c", "version.c", "subdir",
                           os.path.join("subdir", "subdir.c")])
-        w = self.do(tmp, "tla add-id %s" % files)
+        w = self.dovc(tmp, "add-id %s" % files)
         yield w; w.getResult()
 
-        w = self.do(tmp, "tla import %s/%s" % (a, trunk))
+        w = self.dovc(tmp, "import %s/%s" % (a, trunk))
         yield w; out = w.getResult()
         self.addTrunkRev("base-0")
 
         # create the branch
-        branchstart = "%s--base-0" % trunk
-        w = self.do(tmp,
-                    "tla tag -A %s %s %s" % (a, branchstart, branch))
-        yield w; w.getResult()
+        if self.archcmd == "tla":
+            branchstart = "%s--base-0" % trunk
+            w = self.dovc(tmp, "tag -A %s %s %s" % (a, branchstart, branch))
+            yield w; w.getResult()
+        else:
+            w = self.dovc(tmp, "branch %s" % branch)
+            yield w; w.getResult()
 
         rmdirRecursive(tmp)
 
         # check out the branch
-        w = self.do(self.repbase,
-                    "tla get -A %s %s archtmp" % (a, branch))
+        w = self.do_get(self.repbase, a, branch, "archtmp")
         yield w; w.getResult()
         # and edit the file
         self.populate_branch(tmp)
         logfile = "++log.%s--%s" % (branch, a)
         logmsg = "Summary: commit on branch\nKeywords:\n\n"
         open(os.path.join(tmp, logfile), "w").write(logmsg)
-        w = self.do(tmp, "tla commit")
+        w = self.dovc(tmp, "commit")
         yield w; out = w.getResult()
         m = re.search(r'committed %s/%s--([\S]+)' % (a, branch),
                       out)
@@ -1558,8 +1593,7 @@ class TlaSupport(VCBase, ArchCommon):
         tmp = os.path.join(self.repbase, "archtmp")
         a = self.archname
 
-        cmd = "%s archives %s" % (self.archcmd, a)
-        w = self.do(self.repbase, cmd)
+        w = self.dovc(self.repbase, "archives %s" % a)
         yield w; out = w.getResult()
         assert out
         lines = out.split("\n")
@@ -1571,15 +1605,7 @@ class TlaSupport(VCBase, ArchCommon):
 
         trunk = self.defaultbranch
 
-        # the 'get' syntax is different between tla and baz. baz, while
-        # claiming to honor an --archive argument, in fact ignores it. The
-        # correct invocation is 'baz get archive/revision newdir'.
-        if self.archcmd == 'tla':
-            cmd = "tla get -A %s %s archtmp" % (a, trunk)
-        else:
-            cmd = "baz get %s/%s archtmp" % (a, trunk)
-        w = self.do(self.repbase, cmd)
-                    
+        w = self.do_get(self.repbase, a, trunk, "archtmp")
         yield w; w.getResult()
 
         # tla appears to use timestamps to determine which files have
@@ -1593,7 +1619,7 @@ class TlaSupport(VCBase, ArchCommon):
         logfile = "++log.%s--%s" % (trunk, a)
         logmsg = "Summary: revised_to_%d\nKeywords:\n\n" % self.version
         open(os.path.join(tmp, logfile), "w").write(logmsg)
-        w = self.do(tmp, "%s commit" % self.archcmd)
+        w = self.dovc(tmp, "commit")
         yield w; out = w.getResult()
         m = re.search(r'committed %s/%s--([\S]+)' % (a, trunk),
                       out)
@@ -1617,14 +1643,7 @@ class TlaSupport(VCBase, ArchCommon):
         w = waitForDeferred(self.registerRepository(self.archrep))
         yield w; w.getResult()
 
-        # the 'get' syntax is different between tla and baz. baz, while
-        # claiming to honor an --archive argument, in fact ignores it. The
-        # correct invocation is 'baz get archive/revision newdir'.
-        if self.archcmd == 'tla':
-            cmd = "tla get -A %s testvc--mainline--1 %s" % (a, workdir)
-        else:
-            cmd = "baz get %s/testvc--mainline--1 %s" % (a, workdir)
-        w = self.do(self.repbase, cmd)
+        w = self.do_get(self.repbase, a, "testvc--mainline--1", workdir)
         yield w; w.getResult()
 
         # timestamps. ick.

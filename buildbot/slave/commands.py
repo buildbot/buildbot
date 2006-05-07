@@ -6,11 +6,11 @@ from twisted.internet.protocol import ProcessProtocol
 from twisted.internet import reactor, defer
 from twisted.python import log, failure, runtime
 
-from buildbot.twcompat import implements
+from buildbot.twcompat import implements, which
 from buildbot.slave.interfaces import ISlaveCommand
 from buildbot.slave.registry import registerSlaveCommand
 
-cvs_ver = '$Revision: 1.46 $'[1+len("Revision: "):-2]
+cvs_ver = '$Revision: 1.47 $'[1+len("Revision: "):-2]
 
 # version history:
 #  >=1.17: commands are interruptable
@@ -33,6 +33,12 @@ class AbandonChain(Exception):
 
     def __repr__(self):
         return "<AbandonChain rc=%s>" % self.args[0]
+
+def getCommand(name):
+    possibles = which(name)
+    if not possibles:
+        raise RuntimeError("Couldn't find executable for '%s'" % name)
+    return possibles[0]
 
 def rmdirRecursive(dir):
     """This is a replacement for shutil.rmtree that works better under
@@ -851,7 +857,7 @@ class SourceBase(Command):
 
     def doPatch(self, res):
         patchlevel, diff = self.patch
-        command = ['patch', '-p%d' % patchlevel]
+        command = [getCommand("patch"), '-p%d' % patchlevel]
         dir = os.path.join(self.builder.basedir, self.workdir)
         # mark the directory so we don't try to update it later
         open(os.path.join(dir, ".buildbot-patched"), "w").write("patched\n")
@@ -880,6 +886,7 @@ class CVS(SourceBase):
 
     def setup(self, args):
         SourceBase.setup(self, args)
+        self.vcexe = getCommand("cvs")
         self.cvsroot = args['cvsroot']
         self.cvsmodule = args['cvsmodule']
         self.global_options = args.get('global_options', [])
@@ -899,7 +906,7 @@ class CVS(SourceBase):
         if self.login is not None:
             # need to do a 'cvs login' command first
             d = self.builder.basedir
-            command = (['cvs', '-d', self.cvsroot] + self.global_options
+            command = ([self.vcexe, '-d', self.cvsroot] + self.global_options
                        + ['login'])
             c = ShellCommand(self.builder, command, d,
                              sendRC=False, timeout=self.timeout,
@@ -918,7 +925,7 @@ class CVS(SourceBase):
 
     def doVCUpdate(self):
         d = os.path.join(self.builder.basedir, self.srcdir)
-        command = ['cvs', '-z3'] + self.global_options + ['update', '-dP']
+        command = [self.vcexe, '-z3'] + self.global_options + ['update', '-dP']
         if self.branch:
             command += ['-r', self.branch]
         if self.revision:
@@ -934,7 +941,7 @@ class CVS(SourceBase):
             verb = "export"
         else:
             verb = "checkout"
-        command = (['cvs', '-d', self.cvsroot, '-z3'] +
+        command = ([self.vcexe, '-d', self.cvsroot, '-z3'] +
                    self.global_options +
                    [verb, '-d', self.srcdir])
         if self.branch:
@@ -967,6 +974,7 @@ class SVN(SourceBase):
 
     def setup(self, args):
         SourceBase.setup(self, args)
+        self.vcexe = getCommand("svn")
         self.svnurl = args['svnurl']
         self.sourcedata = "%s\n" % self.svnurl
 
@@ -981,7 +989,7 @@ class SVN(SourceBase):
         revision = self.args['revision'] or 'HEAD'
         # update: possible for mode in ('copy', 'update')
         d = os.path.join(self.builder.basedir, self.srcdir)
-        command = ['svn', 'update', '--revision', str(revision)]
+        command = [self.vcexe, 'update', '--revision', str(revision)]
         c = ShellCommand(self.builder, command, d,
                          sendRC=False, timeout=self.timeout,
                          keepStdout=True)
@@ -992,11 +1000,11 @@ class SVN(SourceBase):
         revision = self.args['revision'] or 'HEAD'
         d = self.builder.basedir
         if self.mode == "export":
-            command = ['svn', 'export', '--revision', str(revision),
+            command = [self.vcexe, 'export', '--revision', str(revision),
                        self.svnurl, self.srcdir]
         else:
             # mode=='clobber', or copy/update on a broken workspace
-            command = ['svn', 'checkout', '--revision', str(revision),
+            command = [self.vcexe, 'checkout', '--revision', str(revision),
                        self.svnurl, self.srcdir]
         c = ShellCommand(self.builder, command, d,
                          sendRC=False, timeout=self.timeout,
@@ -1011,7 +1019,7 @@ class SVN(SourceBase):
         if self.mode == "export":
             # without the .svn metadir, svn info won't work
             return None
-        command = ["svn", "info"]
+        command = [self.vcexe, "info"]
         c = ShellCommand(self.builder, command,
                          os.path.join(self.builder.basedir, self.srcdir),
                          environ=self.env,
@@ -1041,6 +1049,7 @@ class Darcs(SourceBase):
 
     def setup(self, args):
         SourceBase.setup(self, args)
+        self.vcexe = getCommand("darcs")
         self.repourl = args['repourl']
         self.sourcedata = "%s\n" % self.repourl
         self.revision = self.args.get('revision')
@@ -1059,7 +1068,7 @@ class Darcs(SourceBase):
         assert not self.revision
         # update: possible for mode in ('copy', 'update')
         d = os.path.join(self.builder.basedir, self.srcdir)
-        command = ['darcs', 'pull', '--all', '--verbose']
+        command = [self.vcexe, 'pull', '--all', '--verbose']
         c = ShellCommand(self.builder, command, d,
                          sendRC=False, timeout=self.timeout)
         self.command = c
@@ -1068,7 +1077,7 @@ class Darcs(SourceBase):
     def doVCFull(self):
         # checkout or export
         d = self.builder.basedir
-        command = ['darcs', 'get', '--verbose', '--partial',
+        command = [self.vcexe, 'get', '--verbose', '--partial',
                    '--repo-name', self.srcdir]
         if self.revision:
             # write the context to a file
@@ -1095,7 +1104,7 @@ class Darcs(SourceBase):
 
     def parseGotRevision(self):
         # we use 'darcs context' to find out what we wound up with
-        command = ["darcs", "changes", "--context"]
+        command = [self.vcexe, "changes", "--context"]
         c = ShellCommand(self.builder, command,
                          os.path.join(self.builder.basedir, self.srcdir),
                          environ=self.env,
@@ -1159,12 +1168,12 @@ class Arch(SourceBase):
     ['build-config']: if present, give to 'tla build-config' after checkout
     """
 
-    arch_command = "tla"
     header = "arch operation"
     buildconfig = None
 
     def setup(self, args):
         SourceBase.setup(self, args)
+        self.vcexe = getCommand("tla")
         self.archive = args.get('archive')
         self.url = args['url']
         self.version = args['version']
@@ -1190,7 +1199,7 @@ class Arch(SourceBase):
     def doVCUpdate(self):
         # update: possible for mode in ('copy', 'update')
         d = os.path.join(self.builder.basedir, self.srcdir)
-        command = [self.arch_command, 'replay']
+        command = [self.vcexe, 'replay']
         if self.revision:
             command.append(self.revision)
         c = ShellCommand(self.builder, command, d,
@@ -1204,7 +1213,7 @@ class Arch(SourceBase):
         # figure out the archive name. tla will tell you the archive name
         # when it is done, and all further actions must refer to this name.
 
-        command = [self.arch_command, 'register-archive', '--force', self.url]
+        command = [self.vcexe, 'register-archive', '--force', self.url]
         c = ShellCommand(self.builder, command, self.builder.basedir,
                          sendRC=False, keepStdout=True,
                          timeout=self.timeout)
@@ -1236,7 +1245,7 @@ class Arch(SourceBase):
         ver = self.version
         if self.revision:
             ver += "--%s" % self.revision
-        command = [self.arch_command, 'get', '--archive', self.archive,
+        command = [self.vcexe, 'get', '--archive', self.archive,
                    '--no-pristine',
                    ver, self.srcdir]
         c = ShellCommand(self.builder, command, self.builder.basedir,
@@ -1250,7 +1259,7 @@ class Arch(SourceBase):
 
     def _didGet(self, res):
         d = os.path.join(self.builder.basedir, self.srcdir)
-        command = [self.arch_command, 'build-config', self.buildconfig]
+        command = [self.vcexe, 'build-config', self.buildconfig]
         c = ShellCommand(self.builder, command, d,
                          sendRC=False, timeout=self.timeout)
         self.command = c
@@ -1262,7 +1271,7 @@ class Arch(SourceBase):
         # using code from tryclient.TlaExtractor
         # 'tla logs --full' gives us ARCHIVE/BRANCH--REVISION
         # 'tla logs' gives us REVISION
-        command = ["tla", "logs", "--full", "--reverse"]
+        command = [self.vcexe, "logs", "--full", "--reverse"]
         c = ShellCommand(self.builder, command,
                          os.path.join(self.builder.basedir, self.srcdir),
                          environ=self.env,
@@ -1290,10 +1299,9 @@ class Bazaar(Arch):
     ['archive'] (required): the name of the archive being used
     """
 
-    arch_command = "baz"
-
     def setup(self, args):
         Arch.setup(self, args)
+        self.vcexe = getCommand("baz")
         # baz doesn't emit the repository name after registration (and
         # grepping through the output of 'baz archives' is too hard), so we
         # require that the buildmaster configuration to provide both the
@@ -1311,7 +1319,7 @@ class Bazaar(Arch):
         ver = self.archive + "/" + self.version
         if self.revision:
             ver += "--%s" % self.revision
-        command = [self.arch_command, 'get', '--no-pristine',
+        command = [self.vcexe, 'get', '--no-pristine',
                    ver, self.srcdir]
         c = ShellCommand(self.builder, command, self.builder.basedir,
                          sendRC=False, timeout=self.timeout)
@@ -1324,7 +1332,7 @@ class Bazaar(Arch):
 
     def parseGotRevision(self):
         # using code from tryclient.BazExtractor
-        command = ["baz", "tree-id"]
+        command = [self.vcexe, "tree-id"]
         c = ShellCommand(self.builder, command,
                          os.path.join(self.builder.basedir, self.srcdir),
                          environ=self.env,
@@ -1356,6 +1364,7 @@ class Mercurial(SourceBase):
 
     def setup(self, args):
         SourceBase.setup(self, args)
+        self.vcexe = getCommand("hg")
         self.repourl = args['repourl']
         self.sourcedata = "%s\n" % self.repourl
         self.stdout = ""
@@ -1374,7 +1383,7 @@ class Mercurial(SourceBase):
 
     def doVCUpdate(self):
         d = os.path.join(self.builder.basedir, self.srcdir)
-        command = ['hg', 'pull', '--update', '--verbose']
+        command = [self.vcexe, 'pull', '--update', '--verbose']
         if self.args['revision']:
             command.extend(['--rev', self.args['revision']])
         c = ShellCommand(self.builder, command, d,
@@ -1397,7 +1406,7 @@ class Mercurial(SourceBase):
 
     def doVCFull(self):
         d = os.path.join(self.builder.basedir, self.srcdir)
-        command = ['hg', 'clone']
+        command = [self.vcexe, 'clone']
         if self.args['revision']:
             command.extend(['--rev', self.args['revision']])
         command.extend([self.repourl, d])
@@ -1408,7 +1417,7 @@ class Mercurial(SourceBase):
 
     def parseGotRevision(self):
         # we use 'hg identify' to find out what we wound up with
-        command = ["hg", "identify"]
+        command = [self.vcexe, "identify"]
         c = ShellCommand(self.builder, command,
                          os.path.join(self.builder.basedir, self.srcdir),
                          environ=self.env,
@@ -1439,17 +1448,18 @@ class P4Sync(SourceBase):
 
     def setup(self, args):
         SourceBase.setup(self, args)
+        self.vcexe = getCommand("p4")
         self.p4port = args['p4port']
         self.p4user = args['p4user']
         self.p4passwd = args['p4passwd']
         self.p4client = args['p4client']
-        
+
     def sourcedirIsUpdateable(self):
         return True
 
     def doVCUpdate(self):
         d = os.path.join(self.builder.basedir, self.srcdir)
-        command = ['p4']
+        command = [self.vcexe]
         if self.p4port:
             command.extend(['-p', self.p4port])
         if self.p4user:

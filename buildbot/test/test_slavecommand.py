@@ -165,15 +165,10 @@ class ShellBase(SignalMixin):
         return maybeWait(d)
     def _testShellMissingCommand_1(self, res):
         self.failIfEqual(self.getrc(), 0)
-        got = self.getfile('stdout') + self.getfile('stderr')
-        self.failUnless(re.search(r'no such file', got, re.I) # unix
-                        or re.search(r'cannot find the path specified',
-                                     got, re.I) # win32
-                        or re.search(r'is not recognized as',
-                                     got, re.I), # other win32
-                        "bogus command didn't create the expected error "
-                        "message, got '%s'" % got
-                        )
+        # we used to check the error message to make sure it said something
+        # about a missing command, but there are a variety of shells out
+        # there, and they emit message sin a variety of languages, so we
+        # stopped trying.
 
     def testTimeout(self):
         args = {'command': [sys.executable, "sleep.py", "10"],

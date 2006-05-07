@@ -1,3 +1,37 @@
+2006-05-06  Brian Warner  <warner@lothar.com>
+
+	* buildbot/test/test_vc.py (CVSSupport.getdate): use localtime,
+	and don't include a timezone
+	(CVSSupport.vc_try_checkout): stop trying to strip the timezone.
+	This should avoid the windows-with-verbose-timezone-name problem
+	altogether.
+
+	* buildbot/slave/commands.py (getCommand): use which() to find the
+	executables for 'cvs', 'svn', etc. This ought to help under
+	windows.
+
+	* buildbot/test/test_vc.py (VCBase.do_getpatch): Delete the
+	working directory before starting. If an earlier test failed, the
+	leftover directory would mistakenly flunk a later test.
+	(ArchCommon.registerRepository): fix some tla-vs-baz problems.
+	Make sure that we use the right commandlines if which("tla") picks
+	up "tla.exe" (as it does under windows).
+	(TlaSupport.do_get): factor out this tla-vs-baz difference
+	(TlaSupport.vc_create): more tla-vs-baz differences
+
+	* buildbot/test/test_slavecommand.py
+	(ShellBase.testShellMissingCommand): stop trying to assert
+	anything about the error message: different shells on different
+	OSes with different languages makes it hard, and it really isn't
+	that interesting of a thing to test anyway.
+
+	* buildbot/test/test_vc.py (CVSSupport.capable): skip CVS tests if
+	we detect cvs-1.10 (which is the version shipped with OS-X 10.3
+	"Panther"), because it has a bug which flunks a couple tests in
+	weird ways. I've checked that cvs-1.12.9 (as shipped with debian)
+	is ok. OS-X 10.4 "Tiger" ships with cvs-1.11, but I haven't been
+	able to test that yet.
+
 2006-04-30  Brian Warner  <warner@lothar.com>
 
 	* buildbot/test/test_vc.py (VCBase.runCommand): set $LC_ALL="C" to
