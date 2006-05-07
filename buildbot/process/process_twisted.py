@@ -11,9 +11,9 @@ from buildbot.process.step_twisted import HLint, ProcessDocs, BuildDebs, \
 class TwistedBuild(Build):
     workdir = "Twisted" # twisted's bin/trial expects to live in here
     def isFileImportant(self, filename):
-        if filename.startswith("doc/fun/") == 0:
+        if filename.startswith("doc/fun/"):
             return 0
-        if filename.startswith("sandbox/") == 0:
+        if filename.startswith("sandbox/"):
             return 0
         return 1
 
