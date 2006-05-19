@@ -1,3 +1,9 @@
+2006-05-18  Brian Warner  <warner@lothar.com>
+
+	* buildbot/test/test_vc.py (MercurialSupport.vc_create): 'hg
+	addremove' has been deprecated in recent versions of mercurial, so
+	use 'hg add' instead
+
 2006-05-07  Brian Warner  <warner@lothar.com>
 
 	* buildbot/scheduler.py (Try_Jobdir.messageReceived): when

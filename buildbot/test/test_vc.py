@@ -1856,7 +1856,7 @@ class MercurialSupport(VCBase):
         self.populate(tmp)
         w = self.dovc(tmp, "init")
         yield w; w.getResult()
-        w = self.dovc(tmp, "addremove")
+        w = self.dovc(tmp, "add")
         yield w; w.getResult()
         w = self.dovc(tmp, "commit -m initial_import")
         yield w; w.getResult()
