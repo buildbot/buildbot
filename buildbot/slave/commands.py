@@ -10,7 +10,7 @@ from buildbot.twcompat import implements, which
 from buildbot.slave.interfaces import ISlaveCommand
 from buildbot.slave.registry import registerSlaveCommand
 
-cvs_ver = '$Revision: 1.47 $'[1+len("Revision: "):-2]
+cvs_ver = '$Revision: 1.48 $'[1+len("Revision: "):-2]
 
 # version history:
 #  >=1.17: commands are interruptable
@@ -959,7 +959,7 @@ class CVS(SourceBase):
         # the current timestamp as a best-effort guess, but this depends upon
         # the local system having a clock that is
         # reasonably-well-synchronized with the repository.
-        return time.strftime("%Y-%m-%d %H:%M:%S %z", time.gmtime())
+        return time.strftime("%Y-%m-%d %H:%M:%S +0000", time.gmtime())
 
 registerSlaveCommand("cvs", CVS, cvs_ver)
 

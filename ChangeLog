@@ -1,3 +1,17 @@
+2006-05-19  Brian Warner  <warner@lothar.com>
+
+	* buildbot/scripts/tryclient.py (CVSExtractor.getBaseRevision):
+	use a timezone string of +0000 and gmtime, since this timestamp is
+	sent to a buildmaster and %z is broken.
+
+	* buildbot/test/test_vc.py (CVSHelper.getdate): use no timezone
+	string and localtime, since this timestamp will only be consumed
+	locally, and %z is broken.
+
+	* buildbot/slave/commands.py (CVS.parseGotRevision): use +0000 and
+	gmtime, since this timestamp is returned to the buildmaster, and
+	%z is broken.
+
 2006-05-18  Brian Warner  <warner@lothar.com>
 
 	* NEWS: update in preparation for next release

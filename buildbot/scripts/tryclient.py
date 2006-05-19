@@ -44,9 +44,11 @@ class CVSExtractor(SourceStampExtractor):
     patchlevel = 0
     vcexe = "cvs"
     def getBaseRevision(self):
-        # this depends upon our local clock and the repository's clock pretty
-        # in reasonable sync with each other
-        self.baserev = time.strftime("%Y-%m-%d %H:%M:%S %z",
+        # this depends upon our local clock and the repository's clock being
+        # reasonably synchronized with each other. We express everything in
+        # UTC because the '%z' format specifier for strftime doesn't always
+        # work.
+        self.baserev = time.strftime("%Y-%m-%d %H:%M:%S +0000",
                                      time.gmtime(now()))
         return defer.succeed(None)
 

@@ -1049,6 +1049,13 @@ class CVSHelper(BaseHelper):
         return (True, None)
 
     def getdate(self):
+        # this timestamp is eventually passed to CVS in a -D argument, and
+        # strftime's %z specifier doesn't seem to work reliably (I get +0000
+        # where I should get +0700 under linux sometimes, and windows seems
+        # to want to put a verbose 'Eastern Standard Time' in there), so
+        # leave off the timezone specifier and treat this as localtime. A
+        # valid alternative would be to use a hard-coded +0000 and
+        # time.gmtime().
         return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
 
     def createRepository(self):
