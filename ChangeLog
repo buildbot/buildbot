@@ -1,5 +1,12 @@
 2006-05-18  Brian Warner  <warner@lothar.com>
 
+	* buildbot/test/test_vc.py (VCS_Helper): factor out all the
+	setup-repository and do-we-have-the-vc-tools code into a separate
+	"helper" class, which sticks around in a single module-level
+	object. This seems more likely to continue to work in the future
+	than having it hide in the TestCase and hope that TestCases stick
+	around for a long time.
+
 	* buildbot/test/test_vc.py (MercurialSupport.vc_create): 'hg
 	addremove' has been deprecated in recent versions of mercurial, so
 	use 'hg add' instead

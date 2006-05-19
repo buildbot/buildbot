@@ -48,9 +48,6 @@ from twisted.internet.defer import waitForDeferred, deferredGenerator
 # is running).
 
 
-VCS = {} # maps VC name to pathname of the executable
-
-
 config_vc = """
 from buildbot.process import factory, step
 s = factory.s
@@ -159,6 +156,65 @@ main(int argc, const char *argv[])
 }
 '''
 
+class VCS_Helper:
+    # this is a helper class which keeps track of whether each VC system is
+    # available, and whether the repository for each has been created. There
+    # is one instance of this class, at module level, shared between all test
+    # cases.
+
+    def __init__(self):
+        self._helpers = {}
+        self._isCapable = {}
+        self._excuses = {}
+        self._repoReady = {}
+
+    def registerVC(self, name, helper):
+        self._helpers[name] = helper
+        self._repoReady[name] = False
+
+    def skipIfNotCapable(self, name):
+        """Either return None, or raise SkipTest"""
+        d = self.capable(name)
+        def _maybeSkip(res):
+            if not res[0]:
+                raise unittest.SkipTest(res[1])
+        d.addCallback(_maybeSkip)
+        return d
+
+    def capable(self, name):
+        """Return a Deferred that fires with (True,None) if this host offers
+        the given VC tool, or (False,excuse) if it does not (and therefore
+        the tests should be skipped)."""
+
+        if self._isCapable.has_key(name):
+            if self._isCapable[name]:
+                return defer.succeed((True,None))
+            else:
+                return defer.succeed((False, self._excuses[name]))
+        d = defer.maybeDeferred(self._helpers[name].capable)
+        def _capable(res):
+            if res[0]:
+                self._isCapable[name] = True
+            else:
+                self._excuses[name] = res[1]
+            return res
+        d.addCallback(_capable)
+        return d
+
+    def getHelper(self, name):
+        return self._helpers[name]
+
+    def createRepository(self, name):
+        """Return a Deferred that fires when the repository is set up."""
+        if self._repoReady[name]:
+            return defer.succeed(True)
+        d = self._helpers[name].createRepository()
+        def _ready(res):
+            self._repoReady[name] = True
+        d.addCallback(_ready)
+        return d
+
+VCS = VCS_Helper()
 
 class SignalMixin:
     sigchldHandler = None
@@ -216,63 +272,39 @@ class SignalMixin:
 # necessary (like deleting the Arch archive entry).
 
 
+class BaseHelper:
+    def __init__(self):
+        self.trunk = []
+        self.branch = []
+        self.allrevs = []
 
-class VCBase(SignalMixin):
-    metadir = None
-    createdRepository = False
-    master = None
-    slave = None
-    httpServer = None
-    httpPort = None
-    skip = None
-    has_got_revision = False
-    has_got_revision_branches_are_merged = False # for SVN
+    def capable(self):
+        # this is also responsible for setting self.vcexe
+        raise NotImplementedError
 
-    def failUnlessIn(self, substring, string, msg=None):
-        # trial provides a version of this that requires python-2.3 to test
-        # strings.
-        if msg is None:
-            msg = ("did not see the expected substring '%s' in string '%s'" %
-                   (substring, string))
-        self.failUnless(string.find(substring) != -1, msg)
+    def createBasedir(self):
+        # you must call this from createRepository
+        self.repbase = os.path.abspath(os.path.join("test_vc",
+                                                    "repositories"))
+        if not os.path.isdir(self.repbase):
+            os.makedirs(self.repbase)
 
-    def setUp(self):
-        # capable() should (eventually )raise SkipTest if the VC tools it
-        # needs are not available
-        d = defer.maybeDeferred(self.capable)
-        d.addCallback(self._setUp1)
-        return maybeWait(d)
+    def createRepository(self):
+        # this will only be called once per process
+        raise NotImplementedError
 
-    def _setUp1(self, res):
-        if os.path.exists("basedir"):
-            rmdirRecursive("basedir")
-        os.mkdir("basedir")
-        self.master = master.BuildMaster("basedir")
-        self.slavebase = os.path.abspath("slavebase")
-        if os.path.exists(self.slavebase):
-            rmdirRecursive(self.slavebase)
-        os.mkdir("slavebase")
-        # NOTE: self.createdRepository survives from one test method to the
-        # next, and we use this fact to avoid repeating the (expensive)
-        # repository-build step
-        if self.createdRepository:
-            d = defer.succeed(None)
-        else:
-            self.createdRepository = True
-            self.trunk = []
-            self.branch = []
-            self.allrevs = []
-            self.repbase = os.path.abspath(os.path.join("test_vc",
-                                                        "repositories"))
-            if not os.path.isdir(self.repbase):
-                os.makedirs(self.repbase)
-            d = self.vc_create()
-            d.addCallback(self.postCreate)
-        d.addCallback(self.setUp2)
-        return d
+    def populate(self, basedir):
+        os.makedirs(basedir)
+        os.makedirs(os.path.join(basedir, "subdir"))
+        open(os.path.join(basedir, "main.c"), "w").write(MAIN_C)
+        self.version = 1
+        version_c = VERSION_C % self.version
+        open(os.path.join(basedir, "version.c"), "w").write(version_c)
+        open(os.path.join(basedir, "main.c"), "w").write(MAIN_C)
+        open(os.path.join(basedir, "subdir", "subdir.c"), "w").write(SUBDIR_C)
 
-    def setUp2(self, res):
-        pass
+    def populate_branch(self, basedir):
+        open(os.path.join(basedir, "main.c"), "w").write(BRANCH_C)
 
     def addTrunkRev(self, rev):
         self.trunk.append(rev)
@@ -280,39 +312,6 @@ class VCBase(SignalMixin):
     def addBranchRev(self, rev):
         self.branch.append(rev)
         self.allrevs.append(rev)
-
-    def postCreate(self, res):
-        pass
-
-    def connectSlave(self):
-        port = self.master.slavePort._port.getHost().port
-        slave = bot.BuildSlave("localhost", port, "bot1", "sekrit",
-                               self.slavebase, keepalive=0, usePTY=1)
-        self.slave = slave
-        slave.startService()
-        d = self.master.botmaster.waitUntilBuilderAttached("vc")
-        return d
-
-    def loadConfig(self, config):
-        # reloading the config file causes a new 'listDirs' command to be
-        # sent to the slave. To synchronize on this properly, it is easiest
-        # to stop and restart the slave.
-        d = defer.succeed(None)
-        if self.slave:
-            d = self.master.botmaster.waitUntilBuilderDetached("vc")
-            self.slave.stopService()
-        d.addCallback(lambda res: self.master.loadConfig(config))
-        d.addCallback(lambda res: self.connectSlave())
-        return d
-
-    def serveHTTP(self):
-        # launch an HTTP server to serve the repository files
-        from twisted.web import static, server
-        from twisted.internet import reactor
-        self.root = static.File(self.repbase)
-        self.site = server.Site(self.root)
-        self.httpServer = reactor.listenTCP(0, self.site)
-        self.httpPort = self.httpServer.getHost().port
 
     def runCommand(self, basedir, command, failureIsOk=False):
         # all commands passed to do() should be strings or lists. If they are
@@ -352,18 +351,74 @@ class VCBase(SignalMixin):
         command = self.vcexe + " " + command
         return self.do(basedir, command, failureIsOk)
 
-    def populate(self, basedir):
-        os.makedirs(basedir)
-        os.makedirs(os.path.join(basedir, "subdir"))
-        open(os.path.join(basedir, "main.c"), "w").write(MAIN_C)
-        self.version = 1
-        version_c = VERSION_C % self.version
-        open(os.path.join(basedir, "version.c"), "w").write(version_c)
-        open(os.path.join(basedir, "main.c"), "w").write(MAIN_C)
-        open(os.path.join(basedir, "subdir", "subdir.c"), "w").write(SUBDIR_C)
+class VCBase(SignalMixin):
+    metadir = None
+    createdRepository = False
+    master = None
+    slave = None
+    httpServer = None
+    httpPort = None
+    skip = None
+    has_got_revision = False
+    has_got_revision_branches_are_merged = False # for SVN
 
-    def populate_branch(self, basedir):
-        open(os.path.join(basedir, "main.c"), "w").write(BRANCH_C)
+    def failUnlessIn(self, substring, string, msg=None):
+        # trial provides a version of this that requires python-2.3 to test
+        # strings.
+        if msg is None:
+            msg = ("did not see the expected substring '%s' in string '%s'" %
+                   (substring, string))
+        self.failUnless(string.find(substring) != -1, msg)
+
+    def setUp(self):
+        d = VCS.skipIfNotCapable(self.vc_name)
+        d.addCallback(self._setUp1)
+        return maybeWait(d)
+
+    def _setUp1(self, res):
+        self.helper = VCS.getHelper(self.vc_name)
+
+        if os.path.exists("basedir"):
+            rmdirRecursive("basedir")
+        os.mkdir("basedir")
+        self.master = master.BuildMaster("basedir")
+        self.slavebase = os.path.abspath("slavebase")
+        if os.path.exists(self.slavebase):
+            rmdirRecursive(self.slavebase)
+        os.mkdir("slavebase")
+
+        d = VCS.createRepository(self.vc_name)
+        return d
+
+    def connectSlave(self):
+        port = self.master.slavePort._port.getHost().port
+        slave = bot.BuildSlave("localhost", port, "bot1", "sekrit",
+                               self.slavebase, keepalive=0, usePTY=1)
+        self.slave = slave
+        slave.startService()
+        d = self.master.botmaster.waitUntilBuilderAttached("vc")
+        return d
+
+    def loadConfig(self, config):
+        # reloading the config file causes a new 'listDirs' command to be
+        # sent to the slave. To synchronize on this properly, it is easiest
+        # to stop and restart the slave.
+        d = defer.succeed(None)
+        if self.slave:
+            d = self.master.botmaster.waitUntilBuilderDetached("vc")
+            self.slave.stopService()
+        d.addCallback(lambda res: self.master.loadConfig(config))
+        d.addCallback(lambda res: self.connectSlave())
+        return d
+
+    def serveHTTP(self):
+        # launch an HTTP server to serve the repository files
+        from twisted.web import static, server
+        from twisted.internet import reactor
+        self.root = static.File(self.helper.repbase)
+        self.site = server.Site(self.root)
+        self.httpServer = reactor.listenTCP(0, self.site)
+        self.httpPort = self.httpServer.getHost().port
 
     def doBuild(self, shouldSucceed=True, ss=None):
         c = interfaces.IControl(self.master)
@@ -379,9 +434,10 @@ class VCBase(SignalMixin):
     def _doBuild_1(self, bs, shouldSucceed):
         r = bs.getResults()
         if r != SUCCESS and shouldSucceed:
-            assert bs.isFinished()
             print
             print
+            if not bs.isFinished():
+                print "Hey, build wasn't even finished!"
             print "Build did not succeed:", r, bs.getText()
             for s in bs.getSteps():
                 for l in s.getLogs():
@@ -412,14 +468,14 @@ class VCBase(SignalMixin):
             self.failUnlessEqual(bs.getProperty("got_revision"), expected)
 
     def checkGotRevisionIsLatest(self, bs):
-        expected = self.trunk[-1]
+        expected = self.helper.trunk[-1]
         if self.has_got_revision_branches_are_merged:
-            expected = self.allrevs[-1]
+            expected = self.helper.allrevs[-1]
         self.checkGotRevision(bs, expected)
 
     def do_vctest(self, testRetry=True):
         vctype = self.vctype
-        args = self.vcargs
+        args = self.helper.vcargs
         m = self.master
         self.vcdir = os.path.join(self.slavebase, "vc-dir", "source")
         self.workdir = os.path.join(self.slavebase, "vc-dir", "build")
@@ -487,7 +543,7 @@ class VCBase(SignalMixin):
         self.shouldExist(self.workdir, "main.c")
         self.shouldExist(self.workdir, "version.c")
         self.shouldContain(self.workdir, "version.c",
-                           "version=%d" % self.version)
+                           "version=%d" % self.helper.version)
         if self.metadir:
             self.shouldExist(self.workdir, self.metadir)
         self.failUnlessEqual(bs.getProperty("revision"), None)
@@ -503,7 +559,7 @@ class VCBase(SignalMixin):
         self.shouldExist(self.workdir, "version.c")
         self.touch(self.workdir, "newfile")
         # now make a change to the repository and make sure we pick it up
-        d = self.vc_revise()
+        d = self.helper.vc_revise()
         d.addCallback(lambda res: self.doBuild())
         d.addCallback(self._do_vctest_update_3)
         return d
@@ -512,13 +568,13 @@ class VCBase(SignalMixin):
         self.shouldExist(self.workdir, "main.c")
         self.shouldExist(self.workdir, "version.c")
         self.shouldContain(self.workdir, "version.c",
-                           "version=%d" % self.version)
+                           "version=%d" % self.helper.version)
         self.shouldExist(self.workdir, "newfile")
         self.failUnlessEqual(bs.getProperty("revision"), None)
         self.checkGotRevisionIsLatest(bs)
 
         # now "update" to an older revision
-        d = self.doBuild(ss=SourceStamp(revision=self.trunk[-2]))
+        d = self.doBuild(ss=SourceStamp(revision=self.helper.trunk[-2]))
         d.addCallback(self._do_vctest_update_4)
         return d
     def _do_vctest_update_4(self, bs):
@@ -526,12 +582,13 @@ class VCBase(SignalMixin):
         self.shouldExist(self.workdir, "main.c")
         self.shouldExist(self.workdir, "version.c")
         self.shouldContain(self.workdir, "version.c",
-                           "version=%d" % (self.version-1))
-        self.failUnlessEqual(bs.getProperty("revision"), self.trunk[-2])
-        self.checkGotRevision(bs, self.trunk[-2])
+                           "version=%d" % (self.helper.version-1))
+        self.failUnlessEqual(bs.getProperty("revision"),
+                             self.helper.trunk[-2])
+        self.checkGotRevision(bs, self.helper.trunk[-2])
 
         # now update to the newer revision
-        d = self.doBuild(ss=SourceStamp(revision=self.trunk[-1]))
+        d = self.doBuild(ss=SourceStamp(revision=self.helper.trunk[-1]))
         d.addCallback(self._do_vctest_update_5)
         return d
     def _do_vctest_update_5(self, bs):
@@ -539,9 +596,10 @@ class VCBase(SignalMixin):
         self.shouldExist(self.workdir, "main.c")
         self.shouldExist(self.workdir, "version.c")
         self.shouldContain(self.workdir, "version.c",
-                           "version=%d" % self.version)
-        self.failUnlessEqual(bs.getProperty("revision"), self.trunk[-1])
-        self.checkGotRevision(bs, self.trunk[-1])
+                           "version=%d" % self.helper.version)
+        self.failUnlessEqual(bs.getProperty("revision"),
+                             self.helper.trunk[-1])
+        self.checkGotRevision(bs, self.helper.trunk[-1])
 
 
     def _do_vctest_update_retry(self, res):
@@ -610,7 +668,7 @@ class VCBase(SignalMixin):
 
     def do_patch(self):
         vctype = self.vctype
-        args = self.vcargs
+        args = self.helper.vcargs
         m = self.master
         self.vcdir = os.path.join(self.slavebase, "vc-dir", "source")
         self.workdir = os.path.join(self.slavebase, "vc-dir", "build")
@@ -624,7 +682,7 @@ class VCBase(SignalMixin):
         m.readConfig = True
         m.startService()
 
-        ss = SourceStamp(revision=self.trunk[-1], patch=(0, p0_diff))
+        ss = SourceStamp(revision=self.helper.trunk[-1], patch=(0, p0_diff))
 
         d = self.connectSlave()
         d.addCallback(lambda res: self.doBuild(ss=ss))
@@ -632,14 +690,15 @@ class VCBase(SignalMixin):
         return d
     def _doPatch_1(self, bs):
         self.shouldContain(self.workdir, "version.c",
-                           "version=%d" % self.version)
+                           "version=%d" % self.helper.version)
         # make sure the file actually got patched
         subdir_c = os.path.join(self.slavebase, "vc-dir", "build",
                                 "subdir", "subdir.c")
         data = open(subdir_c, "r").read()
         self.failUnlessIn("Hello patched subdir.\\n", data)
-        self.failUnlessEqual(bs.getProperty("revision"), self.trunk[-1])
-        self.checkGotRevision(bs, self.trunk[-1])
+        self.failUnlessEqual(bs.getProperty("revision"),
+                             self.helper.trunk[-1])
+        self.checkGotRevision(bs, self.helper.trunk[-1])
 
         # make sure that a rebuild does not use the leftover patched workdir
         d = self.master.loadConfig(self.config % "update")
@@ -657,30 +716,32 @@ class VCBase(SignalMixin):
 
         # now make sure we can patch an older revision. We need at least two
         # revisions here, so we might have to create one first
-        if len(self.trunk) < 2:
-            d = self.vc_revise()
+        if len(self.helper.trunk) < 2:
+            d = self.helper.vc_revise()
             d.addCallback(self._doPatch_3)
             return d
         return self._doPatch_3()
 
     def _doPatch_3(self, res=None):
-        ss = SourceStamp(revision=self.trunk[-2], patch=(0, p0_diff))
+        ss = SourceStamp(revision=self.helper.trunk[-2], patch=(0, p0_diff))
         d = self.doBuild(ss=ss)
         d.addCallback(self._doPatch_4)
         return d
     def _doPatch_4(self, bs):
         self.shouldContain(self.workdir, "version.c",
-                           "version=%d" % (self.version-1))
+                           "version=%d" % (self.helper.version-1))
         # and make sure the file actually got patched
         subdir_c = os.path.join(self.slavebase, "vc-dir", "build",
                                 "subdir", "subdir.c")
         data = open(subdir_c, "r").read()
         self.failUnlessIn("Hello patched subdir.\\n", data)
-        self.failUnlessEqual(bs.getProperty("revision"), self.trunk[-2])
-        self.checkGotRevision(bs, self.trunk[-2])
+        self.failUnlessEqual(bs.getProperty("revision"),
+                             self.helper.trunk[-2])
+        self.checkGotRevision(bs, self.helper.trunk[-2])
 
         # now check that we can patch a branch
-        ss = SourceStamp(branch=self.branchname, revision=self.branch[-1],
+        ss = SourceStamp(branch=self.helper.branchname,
+                         revision=self.helper.branch[-1],
                          patch=(0, p0_diff))
         d = self.doBuild(ss=ss)
         d.addCallback(self._doPatch_5)
@@ -693,15 +754,16 @@ class VCBase(SignalMixin):
                                 "subdir", "subdir.c")
         data = open(subdir_c, "r").read()
         self.failUnlessIn("Hello patched subdir.\\n", data)
-        self.failUnlessEqual(bs.getProperty("revision"), self.branch[-1])
-        self.failUnlessEqual(bs.getProperty("branch"), self.branchname)
-        self.checkGotRevision(bs, self.branch[-1])
+        self.failUnlessEqual(bs.getProperty("revision"),
+                             self.helper.branch[-1])
+        self.failUnlessEqual(bs.getProperty("branch"), self.helper.branchname)
+        self.checkGotRevision(bs, self.helper.branch[-1])
 
 
     def do_vctest_once(self, shouldSucceed):
         m = self.master
         vctype = self.vctype
-        args = self.vcargs
+        args = self.helper.vcargs
         vcdir = os.path.join(self.slavebase, "vc-dir", "source")
         workdir = os.path.join(self.slavebase, "vc-dir", "build")
         # woo double-substitution
@@ -722,7 +784,7 @@ class VCBase(SignalMixin):
     def do_branch(self):
         log.msg("do_branch")
         vctype = self.vctype
-        args = self.vcargs
+        args = self.helper.vcargs
         m = self.master
         self.vcdir = os.path.join(self.slavebase, "vc-dir", "source")
         self.workdir = os.path.join(self.slavebase, "vc-dir", "build")
@@ -751,7 +813,7 @@ class VCBase(SignalMixin):
         # now do a checkout on the branch. The change in branch name should
         # trigger a clobber.
         self.touch(self.workdir, "newfile")
-        d = self.doBuild(ss=SourceStamp(branch=self.branchname))
+        d = self.doBuild(ss=SourceStamp(branch=self.helper.branchname))
         d.addCallback(self._doBranch_2)
         return d
     def _doBranch_2(self, bs):
@@ -765,7 +827,7 @@ class VCBase(SignalMixin):
 
         # doing another build on the same branch should not clobber the tree
         self.touch(self.workdir, "newbranchfile")
-        d = self.doBuild(ss=SourceStamp(branch=self.branchname))
+        d = self.doBuild(ss=SourceStamp(branch=self.helper.branchname))
         d.addCallback(self._doBranch_3)
         return d
     def _doBranch_3(self, bs):
@@ -793,7 +855,7 @@ class VCBase(SignalMixin):
         log.msg("do_getpatch")
         # prepare a buildslave to do checkouts
         vctype = self.vctype
-        args = self.vcargs
+        args = self.helper.vcargs
         m = self.master
         self.vcdir = os.path.join(self.slavebase, "vc-dir", "source")
         self.workdir = os.path.join(self.slavebase, "vc-dir", "build")
@@ -813,7 +875,7 @@ class VCBase(SignalMixin):
         # then set up the "developer's tree". first we modify a tree from the
         # head of the trunk
         tmpdir = "try_workdir"
-        self.trydir = os.path.join(self.repbase, tmpdir)
+        self.trydir = os.path.join(self.helper.repbase, tmpdir)
         rmdirRecursive(self.trydir)
         d.addCallback(self.do_getpatch_trunkhead)
         d.addCallback(self.do_getpatch_trunkold)
@@ -824,7 +886,7 @@ class VCBase(SignalMixin):
 
     def do_getpatch_finish(self, res):
         log.msg("do_getpatch_finish")
-        self.vc_try_finish(self.trydir)
+        self.helper.vc_try_finish(self.trydir)
         return res
 
     def try_shouldMatch(self, filename):
@@ -841,7 +903,7 @@ class VCBase(SignalMixin):
 
     def do_getpatch_trunkhead(self, res):
         log.msg("do_getpatch_trunkhead")
-        d = self.vc_try_checkout(self.trydir, self.trunk[-1])
+        d = self.helper.vc_try_checkout(self.trydir, self.helper.trunk[-1])
         d.addCallback(self._do_getpatch_trunkhead_1)
         return d
     def _do_getpatch_trunkhead_1(self, res):
@@ -865,14 +927,14 @@ class VCBase(SignalMixin):
         log.msg("do_getpatch_trunkold")
         # now try a tree from an older revision. We need at least two
         # revisions here, so we might have to create one first
-        if len(self.trunk) < 2:
-            d = self.vc_revise()
+        if len(self.helper.trunk) < 2:
+            d = self.helper.vc_revise()
             d.addCallback(self._do_getpatch_trunkold_1)
             return d
         return self._do_getpatch_trunkold_1()
     def _do_getpatch_trunkold_1(self, res=None):
         log.msg("_do_getpatch_trunkold_1")
-        d = self.vc_try_checkout(self.trydir, self.trunk[-2])
+        d = self.helper.vc_try_checkout(self.trydir, self.helper.trunk[-2])
         d.addCallback(self._do_getpatch_trunkold_2)
         return d
     def _do_getpatch_trunkold_2(self, res):
@@ -895,13 +957,14 @@ class VCBase(SignalMixin):
     def do_getpatch_branch(self, res):
         log.msg("do_getpatch_branch")
         # now try a tree from a branch
-        d = self.vc_try_checkout(self.trydir, self.branch[-1], self.branchname)
+        d = self.helper.vc_try_checkout(self.trydir, self.helper.branch[-1],
+                                        self.helper.branchname)
         d.addCallback(self._do_getpatch_branch_1)
         return d
     def _do_getpatch_branch_1(self, res):
         log.msg("_do_getpatch_branch_1")
         d = tryclient.getSourceStamp(self.vctype_try, self.trydir,
-                                     self.try_branchname)
+                                     self.helper.try_branchname)
         d.addCallback(self._do_getpatch_branch_2)
         return d
     def _do_getpatch_branch_2(self, ss):
@@ -951,39 +1014,25 @@ class VCBase(SignalMixin):
     def tearDown2(self):
         pass
 
-class CVSSupport(VCBase):
-    metadir = "CVS"
+class CVSHelper(BaseHelper):
     branchname = "branch"
     try_branchname = "branch"
-    vctype = "step.CVS"
-    vctype_try = "cvs"
-    # CVS gives us got_revision, but it is based entirely upon the local
-    # clock, which means it is unlikely to match the timestamp taken earlier.
-    # This might be enough for common use, but won't be good enough for our
-    # tests to accept, so pretend it doesn't have got_revision at all.
-    has_got_revision = False
 
     def capable(self):
-        global VCS
-        if not VCS.has_key("cvs"):
-            VCS["cvs"] = None
-            cvspaths = which('cvs')
-            if cvspaths:
-                # cvs-1.10 (as shipped with OS-X 10.3 "Panther") is too old
-                # for this test. There is a situation where we check out a
-                # tree, make a change, then commit it back, and CVS refuses
-                # to believe that we're operating in a CVS tree. I tested
-                # cvs-1.12.9 and it works ok, OS-X 10.4 "Tiger" comes with
-                # cvs-1.11, but I haven't tested that yet. For now, skip the
-                # tests if we've got 1.10 .
-                log.msg("running %s --version.." % (cvspaths[0],))
-                d = utils.getProcessOutput(cvspaths[0], ["--version"],
-                                           env=os.environ)
-                d.addCallback(self._capable, cvspaths[0])
-                return d
-        if not VCS["cvs"]:
-            raise unittest.SkipTest("CVS is not installed")
-        self.vcexe = VCS["cvs"]
+        cvspaths = which('cvs')
+        if not cvspaths:
+            return (False, "CVS is not installed")
+        # cvs-1.10 (as shipped with OS-X 10.3 "Panther") is too old for this
+        # test. There is a situation where we check out a tree, make a
+        # change, then commit it back, and CVS refuses to believe that we're
+        # operating in a CVS tree. I tested cvs-1.12.9 and it works ok, OS-X
+        # 10.4 "Tiger" comes with cvs-1.11, but I haven't tested that yet.
+        # For now, skip the tests if we've got 1.10 .
+        log.msg("running %s --version.." % (cvspaths[0],))
+        d = utils.getProcessOutput(cvspaths[0], ["--version"],
+                                   env=os.environ)
+        d.addCallback(self._capable, cvspaths[0])
+        return d
 
     def _capable(self, v, vcexe):
         m = re.search(r'\(CVS\) ([\d\.]+) ', v)
@@ -991,24 +1040,19 @@ class CVSSupport(VCBase):
             log.msg("couldn't identify CVS version number in output:")
             log.msg("'''%s'''" % v)
             log.msg("skipping tests")
-            VCS["cvs"] = None
-            raise unittest.SkipTest("Found CVS, but can't identify version")
+            return (False, "Found CVS but couldn't identify its version")
         ver = m.group(1)
         log.msg("found CVS version '%s'" % ver)
         if ver == "1.10":
-            VCS["cvs"] = None
-            raise unittest.SkipTest("Found CVS, but it is too old")
-        VCS["cvs"] = vcexe
-        self.vcexe = VCS["cvs"]
-
-
-    def postCreate(self, res):
-        self.vcargs = { 'cvsroot': self.cvsrep, 'cvsmodule': "sample" }
+            return (False, "Found CVS, but it is too old")
+        self.vcexe = vcexe
+        return (True, None)
 
     def getdate(self):
         return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
 
-    def vc_create(self):
+    def createRepository(self):
+        self.createBasedir()
         self.cvsrep = cvsrep = os.path.join(self.repbase, "CVS-Repository")
         tmp = os.path.join(self.repbase, "cvstmp")
 
@@ -1040,7 +1084,8 @@ class CVSSupport(VCBase):
         time.sleep(2)
         self.addBranchRev(self.getdate())
         time.sleep(2)
-    vc_create = deferredGenerator(vc_create)
+        self.vcargs = { 'cvsroot': self.cvsrep, 'cvsmodule': "sample" }
+    createRepository = deferredGenerator(createRepository)
 
 
     def vc_revise(self):
@@ -1079,7 +1124,17 @@ class CVSSupport(VCBase):
     def vc_try_finish(self, workdir):
         rmdirRecursive(workdir)
 
-class CVS(CVSSupport, unittest.TestCase):
+class CVS(VCBase, unittest.TestCase):
+    vc_name = "cvs"
+
+    metadir = "CVS"
+    vctype = "step.CVS"
+    vctype_try = "cvs"
+    # CVS gives us got_revision, but it is based entirely upon the local
+    # clock, which means it is unlikely to match the timestamp taken earlier.
+    # This might be enough for common use, but won't be good enough for our
+    # tests to accept, so pretend it doesn't have got_revision at all.
+    has_got_revision = False
 
     def testCheckout(self):
         d = self.do_vctest()
@@ -1097,49 +1152,43 @@ class CVS(CVSSupport, unittest.TestCase):
         d = self.do_getpatch(doBranch=False)
         return maybeWait(d)
 
+VCS.registerVC(CVS.vc_name, CVSHelper())
 
-class SVNSupport(VCBase):
-    metadir = ".svn"
+
+class SVNHelper(BaseHelper):
     branchname = "sample/branch"
     try_branchname = "sample/branch"
-    vctype = "step.SVN"
-    vctype_try = "svn"
-    has_got_revision = True
-    has_got_revision_branches_are_merged = True
 
     def capable(self):
-        global VCS
-        if not VCS.has_key("svn"):
-            VCS["svn"] = None
-            svnpaths = which('svn')
-            svnadminpaths = which('svnadmin')
-            if svnpaths and svnadminpaths:
-                # we need svn to be compiled with the ra_local access
-                # module
-                log.msg("running svn --version..")
-                env = os.environ.copy()
-                env['LC_ALL'] = "C"
-                d = utils.getProcessOutput(svnpaths[0], ["--version"],
-                                           env=env)
-                d.addCallback(self._capable, svnpaths[0], svnadminpaths[0])
-                return d
-        if not VCS["svn"]:
-            raise unittest.SkipTest("No usable Subversion was found")
-        self.vcexe, self.svnadmin = VCS["svn"]
+        svnpaths = which('svn')
+        svnadminpaths = which('svnadmin')
+        if not svnpaths:
+            return (False, "SVN is not installed")
+        if not svnadminpaths:
+            return (False, "svnadmin is not installed")
+        # we need svn to be compiled with the ra_local access
+        # module
+        log.msg("running svn --version..")
+        env = os.environ.copy()
+        env['LC_ALL'] = "C"
+        d = utils.getProcessOutput(svnpaths[0], ["--version"],
+                                   env=env)
+        d.addCallback(self._capable, svnpaths[0], svnadminpaths[0])
+        return d
 
     def _capable(self, v, vcexe, svnadmin):
         if v.find("handles 'file' schem") != -1:
             # older versions say 'schema', 1.2.0 and beyond say 'scheme'
-            VCS['svn'] = (vcexe, svnadmin)
             self.vcexe = vcexe
             self.svnadmin = svnadmin
-        else:
-            log.msg(("%s found but it does not support 'file:' " +
-                     "schema, skipping svn tests") % vcexe)
-            VCS['svn'] = None
-            raise unittest.SkipTest("Found SVN, but it can't use file: schema")
+            return (True, None)
+        excuse = ("%s found but it does not support 'file:' " +
+                  "schema, skipping svn tests") % vcexe
+        log.msg(excuse)
+        return (False, excuse)
 
-    def vc_create(self):
+    def createRepository(self):
+        self.createBasedir()
         self.svnrep = os.path.join(self.repbase,
                                    "SVN-Repository").replace('\\','/')
         tmp = os.path.join(self.repbase, "svntmp")
@@ -1179,7 +1228,7 @@ class SVNSupport(VCBase):
         rmdirRecursive(tmp)
         m = re.search(r'Committed revision (\d+)\.', out)
         self.addBranchRev(int(m.group(1)))
-    vc_create = deferredGenerator(vc_create)
+    createRepository = deferredGenerator(createRepository)
 
     def vc_revise(self):
         tmp = os.path.join(self.repbase, "svntmp")
@@ -1218,61 +1267,60 @@ class SVNSupport(VCBase):
         rmdirRecursive(workdir)
 
 
-class SVN(SVNSupport, unittest.TestCase):
+class SVN(VCBase, unittest.TestCase):
+    vc_name = "svn"
+
+    metadir = ".svn"
+    vctype = "step.SVN"
+    vctype_try = "svn"
+    has_got_revision = True
+    has_got_revision_branches_are_merged = True
 
     def testCheckout(self):
         # we verify this one with the svnurl style of vcargs. We test the
         # baseURL/defaultBranch style in testPatch and testCheckoutBranch.
-        self.vcargs = { 'svnurl': self.svnurl_trunk }
+        self.helper.vcargs = { 'svnurl': self.helper.svnurl_trunk }
         d = self.do_vctest()
         return maybeWait(d)
 
     def testPatch(self):
-        self.vcargs = { 'baseURL': self.svnurl + "/",
-                        'defaultBranch': "sample/trunk",
-                        }
+        self.helper.vcargs = { 'baseURL': self.helper.svnurl + "/",
+                               'defaultBranch': "sample/trunk",
+                               }
         d = self.do_patch()
         return maybeWait(d)
 
     def testCheckoutBranch(self):
-        self.vcargs = { 'baseURL': self.svnurl + "/",
-                        'defaultBranch': "sample/trunk",
-                        }
+        self.helper.vcargs = { 'baseURL': self.helper.svnurl + "/",
+                               'defaultBranch': "sample/trunk",
+                               }
         d = self.do_branch()
         return maybeWait(d)
 
     def testTry(self):
         # extract the base revision and patch from a modified tree, use it to
         # create the same contents on the buildslave
-        self.vcargs = { 'baseURL': self.svnurl + "/",
-                        'defaultBranch': "sample/trunk",
-                        }
+        self.helper.vcargs = { 'baseURL': self.helper.svnurl + "/",
+                               'defaultBranch': "sample/trunk",
+                               }
         d = self.do_getpatch()
         return maybeWait(d)
 
+VCS.registerVC(SVN.vc_name, SVNHelper())
 
-class DarcsSupport(VCBase):
-    # Darcs has a metadir="_darcs", but it does not have an 'export'
-    # mode
-    metadir = None
+class DarcsHelper(BaseHelper):
     branchname = "branch"
     try_branchname = "branch"
-    vctype = "step.Darcs"
-    vctype_try = "darcs"
-    has_got_revision = True
 
     def capable(self):
-        global VCS
-        if not VCS.has_key("darcs"):
-            VCS["darcs"] = None
-            darcspaths = which('darcs')
-            if darcspaths:
-                VCS["darcs"] = darcspaths[0]
-        if not VCS["darcs"]:
-            raise unittest.SkipTest("Darcs is not installed")
-        self.vcexe = VCS["darcs"]
+        darcspaths = which('darcs')
+        if not darcspaths:
+            return (False, "Darcs is not installed")
+        self.vcexe = darcspaths[0]
+        return (True, None)
 
-    def vc_create(self):
+    def createRepository(self):
+        self.createBasedir()
         self.darcs_base = os.path.join(self.repbase, "Darcs-Repository")
         self.rep_trunk = os.path.join(self.darcs_base, "trunk")
         self.rep_branch = os.path.join(self.darcs_base, "branch")
@@ -1307,7 +1355,7 @@ class DarcsSupport(VCBase):
         yield w; out = w.getResult()
         self.addBranchRev(out)
         rmdirRecursive(tmp)
-    vc_create = deferredGenerator(vc_create)
+    createRepository = deferredGenerator(createRepository)
 
     def vc_revise(self):
         tmp = os.path.join(self.repbase, "darcstmp")
@@ -1350,9 +1398,18 @@ class DarcsSupport(VCBase):
         rmdirRecursive(workdir)
 
 
-class Darcs(DarcsSupport, unittest.TestCase):
+class Darcs(VCBase, unittest.TestCase):
+    vc_name = "darcs"
+
+    # Darcs has a metadir="_darcs", but it does not have an 'export'
+    # mode
+    metadir = None
+    vctype = "step.Darcs"
+    vctype_try = "darcs"
+    has_got_revision = True
+
     def testCheckout(self):
-        self.vcargs = { 'repourl': self.rep_trunk }
+        self.helper.vcargs = { 'repourl': self.helper.rep_trunk }
         d = self.do_vctest(testRetry=False)
 
         # TODO: testRetry has the same problem with Darcs as it does for
@@ -1360,33 +1417,34 @@ class Darcs(DarcsSupport, unittest.TestCase):
         return maybeWait(d)
 
     def testPatch(self):
-        self.vcargs = { 'baseURL': self.darcs_base + "/",
-                        'defaultBranch': "trunk" }
+        self.helper.vcargs = { 'baseURL': self.helper.darcs_base + "/",
+                               'defaultBranch': "trunk" }
         d = self.do_patch()
         return maybeWait(d)
 
     def testCheckoutBranch(self):
-        self.vcargs = { 'baseURL': self.darcs_base + "/",
-                        'defaultBranch': "trunk" }
+        self.helper.vcargs = { 'baseURL': self.helper.darcs_base + "/",
+                               'defaultBranch': "trunk" }
         d = self.do_branch()
         return maybeWait(d)
 
     def testCheckoutHTTP(self):
         self.serveHTTP()
         repourl = "http://localhost:%d/Darcs-Repository/trunk" % self.httpPort
-        self.vcargs =  { 'repourl': repourl }
+        self.helper.vcargs =  { 'repourl': repourl }
         d = self.do_vctest(testRetry=False)
         return maybeWait(d)
         
     def testTry(self):
-        self.vcargs = { 'baseURL': self.darcs_base + "/",
-                        'defaultBranch': "trunk" }
+        self.helper.vcargs = { 'baseURL': self.helper.darcs_base + "/",
+                               'defaultBranch': "trunk" }
         d = self.do_getpatch()
         return maybeWait(d)
 
+VCS.registerVC(Darcs.vc_name, DarcsHelper())
+
 
 class ArchCommon:
-
     def registerRepository(self, coordinates):
         a = self.archname
         w = self.dovc(self.repbase, "archives %s" % a)
@@ -1407,62 +1465,18 @@ class ArchCommon:
             yield w; out = w.getResult()
     unregisterRepository = deferredGenerator(unregisterRepository)
 
-class TlaSupport(VCBase, ArchCommon):
-    metadir = None
-    # Arch has a metadir="{arch}", but it does not have an 'export' mode.
-    fixtimer = None
+class TlaHelper(BaseHelper, ArchCommon):
     defaultbranch = "testvc--mainline--1"
     branchname = "testvc--branch--1"
     try_branchname = None # TlaExtractor can figure it out by itself
-    vctype = "step.Arch"
-    vctype_try = "tla"
     archcmd = "tla"
-    has_got_revision = True
 
     def capable(self):
-        global VCS
-        if not VCS.has_key("tla"):
-            VCS["tla"] = None
-	    tlapaths = which('tla')
-            if tlapaths:
-                VCS["tla"] = tlapaths[0]
-        # we need to check for bazaar here too, since vc_create needs to know
-        # about the presence of /usr/bin/baz even if we're running the tla
-        # tests.
-        if not VCS.has_key("baz"):
-            VCS["baz"] = None
-	    bazpaths = which('baz')
-            if bazpaths:
-                VCS["baz"] = bazpaths[0]
-        if not VCS["tla"]:
-            raise unittest.SkipTest("Arch (tla) is not installed")
-        self.vcexe = VCS["tla"]
-
-    def setUp2(self, res):
-        # these are the coordinates of the read-write archive used by all the
-        # non-HTTP tests. testCheckoutHTTP overrides these.
-        self.vcargs = {'url': self.archrep,
-                       'version': self.defaultbranch }
-        # we unregister the repository each time, because we might have
-        # changed the coordinates (since we switch from a file: URL to an
-        # http: URL for various tests). The buildslave code doesn't forcibly
-        # unregister the archive, so we have to do it here.
-        d = self.unregisterRepository()
-        return d
-
-    def postCreate(self, res):
-        pass
-
-    def tearDown2(self):
-        if self.fixtimer:
-            self.fixtimer.cancel()
-        # tell tla to get rid of the leftover archive this test leaves in the
-        # user's 'tla archives' listing. The name of this archive is provided
-        # by the repository tarball, so the following command must use the
-        # same name. We could use archive= to set it explicitly, but if you
-        # change it from the default, then 'tla update' won't work.
-        d = self.unregisterRepository()
-        return d
+        tlapaths = which('tla')
+        if not tlapaths:
+            return (False, "Arch (tla) is not installed")
+        self.vcexe = tlapaths[0]
+        return (True, None)
 
     def do_get(self, basedir, archive, branch, newdir):
         # the 'get' syntax is different between tla and baz. baz, while
@@ -1476,7 +1490,17 @@ class TlaSupport(VCBase, ArchCommon):
                           "get %s/%s %s" % (archive, branch, newdir))
         return w
 
-    def vc_create(self):
+    def createRepository(self):
+        self.createBasedir()
+        # first check to see if bazaar is around, since we'll need to know
+        # later
+        d = VCS.capable(Bazaar.vc_name)
+        d.addCallback(self._createRepository_1)
+        return d
+
+    def _createRepository_1(self, res):
+        has_baz = res[0]
+
         # pick a hopefully unique string for the archive name, in the form
         # test-%d@buildbot.sf.net--testvc, since otherwise multiple copies of
         # the unit tests run in the same user account will collide (since the
@@ -1502,7 +1526,7 @@ class TlaSupport(VCBase, ArchCommon):
                               "Buildbot Test Suite <test@buildbot.sf.net>"])
             yield w; w.getResult()
 
-        if VCS['baz']:
+        if has_baz:
             # bazaar keeps a cache of revisions, but this test creates a new
             # archive each time it is run, so the cache causes errors.
             # Disable the cache to avoid these problems. This will be
@@ -1510,7 +1534,7 @@ class TlaSupport(VCBase, ArchCommon):
             # the same UID as one which uses baz on a regular basis, but
             # bazaar doesn't give us a way to disable the cache just for this
             # one archive.
-            cmd = "%s cache-config --disable" % VCS['baz']
+            cmd = "%s cache-config --disable" % VCS.getHelper('bazaar').vcexe
             w = self.do(tmp, cmd)
             yield w; w.getResult()
 
@@ -1570,7 +1594,15 @@ class TlaSupport(VCBase, ArchCommon):
         w = waitForDeferred(self.unregisterRepository())
         yield w; w.getResult()
         rmdirRecursive(tmp)
-    vc_create = deferredGenerator(vc_create)
+
+        # we unregister the repository each time, because we might have
+        # changed the coordinates (since we switch from a file: URL to an
+        # http: URL for various tests). The buildslave code doesn't forcibly
+        # unregister the archive, so we have to do it here.
+        w = waitForDeferred(self.unregisterRepository())
+        yield w; w.getResult()
+
+    _createRepository_1 = deferredGenerator(_createRepository_1)
 
     def vc_revise(self):
         # the fix needs to be done in a workspace that is linked to a
@@ -1654,8 +1686,20 @@ class TlaSupport(VCBase, ArchCommon):
     def vc_try_finish(self, workdir):
         rmdirRecursive(workdir)
 
-class Arch(TlaSupport, unittest.TestCase):
+class Arch(VCBase, unittest.TestCase):
+    vc_name = "tla"
+
+    metadir = None
+    # Arch has a metadir="{arch}", but it does not have an 'export' mode.
+    vctype = "step.Arch"
+    vctype_try = "tla"
+    has_got_revision = True
+
     def testCheckout(self):
+        # these are the coordinates of the read-write archive used by all the
+        # non-HTTP tests. testCheckoutHTTP overrides these.
+        self.helper.vcargs = {'url': self.helper.archrep,
+                              'version': self.helper.defaultbranch }
         d = self.do_vctest(testRetry=False)
         # the current testRetry=True logic doesn't have the desired effect:
         # "update" is a no-op because arch knows that the repository hasn't
@@ -1669,46 +1713,43 @@ class Arch(TlaSupport, unittest.TestCase):
     def testCheckoutHTTP(self):
         self.serveHTTP()
         url = "http://localhost:%d/Tla-Repository" % self.httpPort
-        self.vcargs = { 'url': url,
-                        'version': "testvc--mainline--1" }
+        self.helper.vcargs = { 'url': url,
+                               'version': "testvc--mainline--1" }
         d = self.do_vctest(testRetry=False)
         return maybeWait(d)
 
     def testPatch(self):
+        self.helper.vcargs = {'url': self.helper.archrep,
+                              'version': self.helper.defaultbranch }
         d = self.do_patch()
         return maybeWait(d)
 
     def testCheckoutBranch(self):
+        self.helper.vcargs = {'url': self.helper.archrep,
+                              'version': self.helper.defaultbranch }
         d = self.do_branch()
         return maybeWait(d)
 
     def testTry(self):
+        self.helper.vcargs = {'url': self.helper.archrep,
+                              'version': self.helper.defaultbranch }
         d = self.do_getpatch()
         return maybeWait(d)
 
-class BazaarSupport(TlaSupport):
-    vctype = "step.Bazaar"
-    vctype_try = "baz"
+VCS.registerVC(Arch.vc_name, TlaHelper())
+
+
+class BazaarHelper(TlaHelper):
     archcmd = "baz"
-    has_got_revision = True
 
     def capable(self):
-        global VCS
-        if not VCS.has_key("baz"):
-            VCS["baz"] = None
-            bazpaths = which('baz')
-            if bazpaths:
-                VCS["baz"] = bazpaths[0]
-        if not VCS["baz"]:
-            raise unittest.SkipTest("Arch (baz) is not installed")
-        self.vcexe = VCS["baz"]
+        bazpaths = which('baz')
+        if not bazpaths:
+            return (False, "Arch (baz) is not installed")
+        self.vcexe = bazpaths[0]
+        return (True, None)
 
     def setUp2(self, res):
-        self.vcargs = {'url': self.archrep,
-                       # Baz adds the required 'archive' argument
-                       'archive': self.archname,
-                       'version': self.defaultbranch,
-                       }
         # we unregister the repository each time, because we might have
         # changed the coordinates (since we switch from a file: URL to an
         # http: URL for various tests). The buildslave code doesn't forcibly
@@ -1717,8 +1758,21 @@ class BazaarSupport(TlaSupport):
         return d
 
 
-class Bazaar(BazaarSupport, unittest.TestCase):
+class Bazaar(Arch):
+    vc_name = "bazaar"
+
+    vctype = "step.Bazaar"
+    vctype_try = "baz"
+    has_got_revision = True
+
+    fixtimer = None
+
     def testCheckout(self):
+        self.helper.vcargs = {'url': self.helper.archrep,
+                              # Baz adds the required 'archive' argument
+                              'archive': self.helper.archname,
+                              'version': self.helper.defaultbranch,
+                              }
         d = self.do_vctest(testRetry=False)
         # the current testRetry=True logic doesn't have the desired effect:
         # "update" is a no-op because arch knows that the repository hasn't
@@ -1732,22 +1786,37 @@ class Bazaar(BazaarSupport, unittest.TestCase):
     def testCheckoutHTTP(self):
         self.serveHTTP()
         url = "http://localhost:%d/Baz-Repository" % self.httpPort
-        self.vcargs = { 'url': url,
-                        'archive': self.archname,
-                        'version': self.defaultbranch,
-                        }
+        self.helper.vcargs = { 'url': url,
+                               'archive': self.helper.archname,
+                               'version': self.helper.defaultbranch,
+                               }
         d = self.do_vctest(testRetry=False)
         return maybeWait(d)
 
     def testPatch(self):
+        self.helper.vcargs = {'url': self.helper.archrep,
+                              # Baz adds the required 'archive' argument
+                              'archive': self.helper.archname,
+                              'version': self.helper.defaultbranch,
+                              }
         d = self.do_patch()
         return maybeWait(d)
 
     def testCheckoutBranch(self):
+        self.helper.vcargs = {'url': self.helper.archrep,
+                              # Baz adds the required 'archive' argument
+                              'archive': self.helper.archname,
+                              'version': self.helper.defaultbranch,
+                              }
         d = self.do_branch()
         return maybeWait(d)
 
     def testTry(self):
+        self.helper.vcargs = {'url': self.helper.archrep,
+                              # Baz adds the required 'archive' argument
+                              'archive': self.helper.archname,
+                              'version': self.helper.defaultbranch,
+                              }
         d = self.do_getpatch()
         return maybeWait(d)
 
@@ -1776,11 +1845,11 @@ class Bazaar(BazaarSupport, unittest.TestCase):
         self.fixtimer = reactor.callLater(5, self.fixRepository)
         
         url = "http://localhost:%d/Baz-Repository" % self.httpPort
-        self.vcargs = { 'url': url,
-                        'archive': self.archname,
-                        'version': self.defaultbranch,
-                        'retry': (5.0, 4),
-                        }
+        self.helper.vcargs = { 'url': url,
+                               'archive': self.helper.archname,
+                               'version': self.helper.defaultbranch,
+                               'retry': (5.0, 4),
+                               }
         d = self.do_vctest_once(True)
         d.addCallback(self._testRetry_1)
         return maybeWait(d)
@@ -1805,42 +1874,47 @@ class Bazaar(BazaarSupport, unittest.TestCase):
                                          "text/plain")
 
         url = "http://localhost:%d/Baz-Repository" % self.httpPort
-        self.vcargs = {'url': url,
-                       'archive': self.archname,
-                       'version': self.defaultbranch,
-                       'retry': (0.5, 3),
-                       }
+        self.helper.vcargs = {'url': url,
+                              'archive': self.helper.archname,
+                              'version': self.helper.defaultbranch,
+                              'retry': (0.5, 3),
+                              }
         d = self.do_vctest_once(False)
         d.addCallback(self._testRetryFails_1)
         return maybeWait(d)
     def _testRetryFails_1(self, bs):
         self.failUnlessEqual(bs.getResults(), FAILURE)
 
-class MercurialSupport(VCBase):
-    # Mercurial has a metadir=".hg", but it does not have an 'export' mode.
-    metadir = None
+    def tearDown2(self):
+        if self.fixtimer:
+            self.fixtimer.cancel()
+        # tell tla to get rid of the leftover archive this test leaves in the
+        # user's 'tla archives' listing. The name of this archive is provided
+        # by the repository tarball, so the following command must use the
+        # same name. We could use archive= to set it explicitly, but if you
+        # change it from the default, then 'tla update' won't work.
+        d = self.helper.unregisterRepository()
+        return d
+
+VCS.registerVC(Bazaar.vc_name, BazaarHelper())
+
+class MercurialHelper(BaseHelper):
     branchname = "branch"
     try_branchname = "branch"
-    vctype = "step.Mercurial"
-    vctype_try = "hg"
-    has_got_revision = True
 
     def capable(self):
-        global VCS
-        if not VCS.has_key("hg"):
-            VCS["hg"] = None
-            hgpaths = which("hg")
-            if hgpaths:
-                VCS["hg"] = hgpaths[0]
-        if not VCS["hg"]:
-            raise unittest.SkipTest("Mercurial is not installed")
-        self.vcexe = VCS["hg"]
+        hgpaths = which("hg")
+        if not hgpaths:
+            return (False, "Mercurial is not installed")
+        self.vcexe = hgpaths[0]
+        return (True, None)
 
     def extract_id(self, output):
         m = re.search(r'^(\w+)', output)
         return m.group(0)
 
-    def vc_create(self):
+    def createRepository(self):
+        self.createBasedir()
         self.hg_base = os.path.join(self.repbase, "Mercurial-Repository")
         self.rep_trunk = os.path.join(self.hg_base, "trunk")
         self.rep_branch = os.path.join(self.hg_base, "branch")
@@ -1876,7 +1950,7 @@ class MercurialSupport(VCBase):
         yield w; out = w.getResult()
         self.addBranchRev(self.extract_id(out))
         rmdirRecursive(tmp)
-    vc_create = deferredGenerator(vc_create)
+    createRepository = deferredGenerator(createRepository)
 
     def vc_revise(self):
         tmp = os.path.join(self.hg_base, "hgtmp2")
@@ -1921,9 +1995,17 @@ class MercurialSupport(VCBase):
         rmdirRecursive(workdir)
 
 
-class Mercurial(MercurialSupport, unittest.TestCase):
+class Mercurial(VCBase, unittest.TestCase):
+    vc_name = "hg"
+
+    # Mercurial has a metadir=".hg", but it does not have an 'export' mode.
+    metadir = None
+    vctype = "step.Mercurial"
+    vctype_try = "hg"
+    has_got_revision = True
+
     def testCheckout(self):
-        self.vcargs = { 'repourl': self.rep_trunk }
+        self.helper.vcargs = { 'repourl': self.helper.rep_trunk }
         d = self.do_vctest(testRetry=False)
 
         # TODO: testRetry has the same problem with Mercurial as it does for
@@ -1931,21 +2013,21 @@ class Mercurial(MercurialSupport, unittest.TestCase):
         return maybeWait(d)
 
     def testPatch(self):
-        self.vcargs = { 'baseURL': self.hg_base + "/",
-                        'defaultBranch': "trunk" }
+        self.helper.vcargs = { 'baseURL': self.helper.hg_base + "/",
+                               'defaultBranch': "trunk" }
         d = self.do_patch()
         return maybeWait(d)
 
     def testCheckoutBranch(self):
-        self.vcargs = { 'baseURL': self.hg_base + "/",
-                        'defaultBranch': "trunk" }
+        self.helper.vcargs = { 'baseURL': self.helper.hg_base + "/",
+                               'defaultBranch': "trunk" }
         d = self.do_branch()
         return maybeWait(d)
 
     def testCheckoutHTTP(self):
         self.serveHTTP()
         repourl = "http://localhost:%d/Mercurial-Repository/trunk/.hg" % self.httpPort
-        self.vcargs =  { 'repourl': repourl }
+        self.helper.vcargs =  { 'repourl': repourl }
         d = self.do_vctest(testRetry=False)
         return maybeWait(d)
     # TODO: The easiest way to publish hg over HTTP is by running 'hg serve'
@@ -1955,11 +2037,13 @@ class Mercurial(MercurialSupport, unittest.TestCase):
     testCheckoutHTTP.skip = "not yet implemented, use 'hg serve'"
 
     def testTry(self):
-        self.vcargs = { 'baseURL': self.hg_base + "/",
-                        'defaultBranch': "trunk" }
+        self.helper.vcargs = { 'baseURL': self.helper.hg_base + "/",
+                               'defaultBranch': "trunk" }
         d = self.do_getpatch()
         return maybeWait(d)
-    
+
+VCS.registerVC(Mercurial.vc_name, MercurialHelper())
+
 
 class Sources(unittest.TestCase):
     # TODO: this needs serious rethink
@@ -2048,8 +2132,9 @@ class Patch(VCBase, unittest.TestCase):
         # invoke 'patch' all by itself, to see if it works the way we think
         # it should. This is intended to ferret out some windows test
         # failures.
+        helper = BaseHelper()
         self.workdir = os.path.join("test_vc", "testPatch")
-        self.populate(self.workdir)
+        helper.populate(self.workdir)
         patch = which("patch")[0]
 
         command = [patch, "-p0"]
