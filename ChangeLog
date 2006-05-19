@@ -1,5 +1,7 @@
 2006-05-18  Brian Warner  <warner@lothar.com>
 
+	* NEWS: update in preparation for next release
+
 	* buildbot/test/test_vc.py (VCS_Helper): factor out all the
 	setup-repository and do-we-have-the-vc-tools code into a separate
 	"helper" class, which sticks around in a single module-level
