@@ -10,7 +10,7 @@ from buildbot.twcompat import implements, which
 from buildbot.slave.interfaces import ISlaveCommand
 from buildbot.slave.registry import registerSlaveCommand
 
-cvs_ver = '$Revision: 1.48 $'[1+len("Revision: "):-2]
+cvs_ver = '$Revision: 1.49 $'[1+len("Revision: "):-2]
 
 # version history:
 #  >=1.17: commands are interruptable
@@ -1082,7 +1082,7 @@ class Darcs(SourceBase):
         if self.revision:
             # write the context to a file
             n = os.path.join(self.builder.basedir, ".darcs-context")
-            f = open(n, "w") # TODO: should this be 'wt'?
+            f = open(n, "wb")
             f.write(self.revision)
             f.close()
             # tell Darcs to use that context

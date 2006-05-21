@@ -1,3 +1,9 @@
+2006-05-20  Brian Warner  <warner@lothar.com>
+
+	* buildbot/slave/commands.py (Darcs.doVCFull): when writing the
+	.darcs-context file, use binary mode. I think this was causing a
+	Darcs failure under windows.
+
 2006-05-19  Brian Warner  <warner@lothar.com>
 
 	* buildbot/scripts/tryclient.py (CVSExtractor.getBaseRevision):
