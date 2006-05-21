@@ -46,7 +46,7 @@ class QuickTwistedBuildFactory(TwistedBaseFactory):
         self.addStep(HLint, python=python[0])
         self.addStep(RemovePYCs)
         for p in python:
-            cmd = [p, "setup.py", "all", "build_ext", "-i"]
+            cmd = [p, "setup.py", "build_ext", "-i"]
             self.addStep(step.Compile, command=cmd, flunkOnFailure=True)
             self.addStep(TwistedTrial, python=p, testChanges=True)
 
@@ -64,7 +64,7 @@ class FullTwistedBuildFactory(TwistedBaseFactory):
             python = [python]
         assert isinstance(compileOpts, list)
         assert isinstance(compileOpts2, list)
-        cmd = (python + compileOpts + ["setup.py", "all", "build_ext"]
+        cmd = (python + compileOpts + ["setup.py", "build_ext"]
                + compileOpts2 + ["-i"])
 
         self.addStep(step.Compile, command=cmd, flunkOnFailure=True)
@@ -91,7 +91,7 @@ class TwistedReactorsBuildFactory(TwistedBaseFactory):
             python = [python]
         assert isinstance(compileOpts, list)
         assert isinstance(compileOpts2, list)
-        cmd = (python + compileOpts + ["setup.py", "all", "build_ext"]
+        cmd = (python + compileOpts + ["setup.py", "build_ext"]
                + compileOpts2 + ["-i"])
 
         self.addStep(step.Compile, command=cmd, warnOnFailure=True)
