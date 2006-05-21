@@ -1,3 +1,9 @@
+2006-05-21  Brian Warner  <warner@lothar.com>
+
+	* contrib/hg_buildbot.py: wrote a commit script for mercurial, to
+	be placed in the [hooks] section of the central repository (the
+	one that everybody pushes changes to).
+
 2006-05-20  Brian Warner  <warner@lothar.com>
 
 	* buildbot/slave/commands.py (Darcs.doVCFull): when writing the
