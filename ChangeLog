@@ -1,5 +1,10 @@
 2006-05-22  Brian Warner  <warner@lothar.com>
 
+	* buildbot/slave/commands.py (SVN.parseGotRevision._parse): use
+	'svnversion' instead of grepping the output of 'svn info', much
+	simpler and avoids CR/LF problems on windows. Thanks to Olivier
+	Bonnet for the suggestion.
+
 	* buildbot/interfaces.py (IChangeSource): methods in Interfaces
 	aren't supposed to have 'self' in their argument list
 
