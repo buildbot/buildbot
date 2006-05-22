@@ -1537,6 +1537,7 @@ class StatusResource(Resource):
     status = None
     control = None
     favicon = None
+    robots_txt = None
 
     def __init__(self, status, control, changemaster, categories, css):
         """
@@ -1559,6 +1560,8 @@ class StatusResource(Resource):
         request.finish()
 
     def getChild(self, path, request):
+        if path == "robots.txt" and self.robots_txt:
+            return static.File(self.robots_txt)
         if path == "buildbot.css" and self.css:
             return static.File(self.css)
         if path == "changes":
@@ -1623,10 +1626,11 @@ class Waterfall(base.StatusReceiverMultiService):
     """
 
     compare_attrs = ["http_port", "distrib_port", "allowForce",
-                     "categories", "css", "favicon"]
+                     "categories", "css", "favicon", "robots_txt"]
 
     def __init__(self, http_port=None, distrib_port=None, allowForce=True,
-                 categories=None, css=buildbot_css, favicon=buildbot_icon):
+                 categories=None, css=buildbot_css, favicon=buildbot_icon,
+                 robots_txt=None):
         """To have the buildbot run its own web server, pass a port number to
         C{http_port}. To have it run a web.distrib server
 
@@ -1675,8 +1679,17 @@ class Waterfall(base.StatusReceiverMultiService):
                         Defaults to the buildbot/buildbot.png image provided
                         in the distribution. Can be set to None to avoid
                         using a favicon at all.
-                        
+
+        @type  robots_txt: string
+        @param robots_txt: if set, provide the pathname of a robots.txt file.
+                           Many search engines request this file and obey the
+                           rules in it. E.g. to disallow them to crawl the
+                           status page, put the following two lines in
+                           robots.txt:
+                              User-agent: *
+                              Disallow: /
         """
+
         base.StatusReceiverMultiService.__init__(self)
         assert allowForce in (True, False) # TODO: implement others
         if type(http_port) is int:
@@ -1692,6 +1705,7 @@ class Waterfall(base.StatusReceiverMultiService):
         self.categories = categories
         self.css = css
         self.favicon = favicon
+        self.robots_txt = robots_txt
 
     def __repr__(self):
         if self.http_port is None:
@@ -1718,6 +1732,7 @@ class Waterfall(base.StatusReceiverMultiService):
         sr = StatusResource(status, control, change_svc, self.categories,
                             self.css)
         sr.favicon = self.favicon
+        sr.robots_txt = self.robots_txt
         self.site = server.Site(sr)
 
         if self.http_port is not None:

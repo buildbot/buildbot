@@ -3922,8 +3922,41 @@ configuration will make the HTML status page available at
 appear at @code{http://host/buildbot/}, and the right virtual host
 setup can even place it at @code{http://buildbot.host/} .
 
-In addition, the HTML page can have a favicon and custom CSS: see the
-docstring for details.
+Other arguments:
+
+@table @code
+@item allowForce
+If set to True (the default), then the web page will provide a ``Force
+Build'' button that allows visitors to manually trigger builds. This
+is useful for developers to re-run builds that have failed because of
+intermittent problems in the test suite, or because of libraries that
+were not installed at the time of the previous build. You may not wish
+to allow strangers to cause a build to run: in that case, set this to
+False to remove these buttons.
+
+@item favicon
+If set to a string, this will be interpreted as a filename containing
+a ``favicon'': a small image that contains an icon for the web site.
+This is returned to browsers that request the @code{favicon.ico} file,
+and should point to a .png or .ico image file. The default value uses
+the buildbot/buildbot.png image (a small hex nut) contained in the
+buildbot distribution. You can set this to None to avoid using a
+favicon at all.
+
+@item robots_txt
+If set to a string, this will be interpreted as a filename containing
+the contents of ``robots.txt''. Many search engine spiders request
+this file before indexing the site. Setting it to a file which
+contains:
+@example
+User-agent: *
+Disallow: /
+@end example
+will prevent most search engines from trawling the (voluminous)
+generated status pages.
+
+@end table
+
 
 @node IRC Bot, PBListener, HTML Waterfall, Status Delivery
 @subsection IRC Bot

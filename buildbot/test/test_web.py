@@ -187,26 +187,33 @@ class Ports(BaseWeb, unittest.TestCase):
 
 class Waterfall(BaseWeb, unittest.TestCase):
     def test_waterfall(self):
-        # this is the right way to configure the Waterfall status
-        config1 = \
-                (base_config + \
-                 "from buildbot.changes import mail\n" +
-                 "c['sources'] = [mail.SyncmailMaildirSource('my-maildir')]\n"
-                 + "c['status'] = [html.Waterfall(http_port=0)]\n")
         os.mkdir("test_web4")
         os.mkdir("my-maildir"); os.mkdir("my-maildir/new")
+        self.robots_txt_contents = "User-agent: *\nDisallow: /\n"
+        self.robots_txt = os.path.join("test_web4", "robots.txt")
+        f = open(self.robots_txt, "w")
+        f.write(self.robots_txt_contents)
+        f.close()
+        # this is the right way to configure the Waterfall status
+        config1 = base_config + """
+from buildbot.changes import mail
+c['sources'] = [mail.SyncmailMaildirSource('my-maildir')]
+c['status'] = [html.Waterfall(http_port=0, robots_txt='%s')]
+""" % self.robots_txt
+
         self.master = m = ConfiguredMaster("test_web4", config1)
         m.startService()
         # hack to find out what randomly-assigned port it is listening on
         port = list(self.find_waterfall(m)[0])[0]._port.getHost().port
+        self.port = port
         # insert an event
         m.change_svc.addChange(Change("user", ["foo.c"], "comments"))
 
         d = client.getPage("http://localhost:%d/" % port)
-        d.addCallback(self._test_waterfall_1, port)
+        d.addCallback(self._test_waterfall_1)
         return maybeWait(d)
     test_waterfall.timeout = 10
-    def _test_waterfall_1(self, page, port):
+    def _test_waterfall_1(self, page):
         self.failUnless(page)
         self.failUnlessIn("current activity", page)
         self.failUnlessIn("<html", page)
@@ -214,26 +221,32 @@ class Waterfall(BaseWeb, unittest.TestCase):
         self.failUnlessIn("time (%s)" % TZ, page)
 
         # phase=0 is really for debugging the waterfall layout
-        d = client.getPage("http://localhost:%d/?phase=0" % port)
-        d.addCallback(self._test_waterfall_2, port)
+        d = client.getPage("http://localhost:%d/?phase=0" % self.port)
+        d.addCallback(self._test_waterfall_2)
         return d
-    def _test_waterfall_2(self, page, port):
+    def _test_waterfall_2(self, page):
         self.failUnless(page)
         self.failUnlessIn("<html", page)
 
-        d = client.getPage("http://localhost:%d/favicon.ico" % port)
-        d.addCallback(self._test_waterfall_3, port)
+        d = client.getPage("http://localhost:%d/favicon.ico" % self.port)
+        d.addCallback(self._test_waterfall_3)
         return d
-    def _test_waterfall_3(self, icon, port):
+    def _test_waterfall_3(self, icon):
         expected = open(html.buildbot_icon,"rb").read()
         self.failUnless(icon == expected)
 
-        d = client.getPage("http://localhost:%d/changes" % port)
+        d = client.getPage("http://localhost:%d/changes" % self.port)
         d.addCallback(self._test_waterfall_4)
         return d
     def _test_waterfall_4(self, changes):
         self.failUnlessIn("<li>Syncmail mailing list in maildir " +
                           "my-maildir</li>", changes)
+
+        d = client.getPage("http://localhost:%d/robots.txt" % self.port)
+        d.addCallback(self._test_waterfall_5)
+        return d
+    def _test_waterfall_5(self, robotstxt):
+        self.failUnless(robotstxt == self.robots_txt_contents)
 
 
 geturl_config = """
