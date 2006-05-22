@@ -189,8 +189,9 @@ class Waterfall(BaseWeb, unittest.TestCase):
     def test_waterfall(self):
         os.mkdir("test_web4")
         os.mkdir("my-maildir"); os.mkdir("my-maildir/new")
+        self.robots_txt = os.path.abspath(os.path.join("test_web4",
+                                                       "robots.txt"))
         self.robots_txt_contents = "User-agent: *\nDisallow: /\n"
-        self.robots_txt = os.path.join("test_web4", "robots.txt")
         f = open(self.robots_txt, "w")
         f.write(self.robots_txt_contents)
         f.close()
