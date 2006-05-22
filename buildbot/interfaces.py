@@ -24,15 +24,15 @@ class IChangeSource(Interface):
       self.changemaster.addChange(change)
     """
 
-    def start(self):
+    def start():
         """Called when the buildmaster starts. Can be used to establish
         connections to VC daemons or begin polling."""
 
-    def stop(self):
+    def stop():
         """Called when the buildmaster shuts down. Connections should be
         terminated, polling timers should be canceled."""
 
-    def describe(self):
+    def describe():
         """Should return a string which briefly describes this source. This
         string will be displayed in an HTML status page."""
 

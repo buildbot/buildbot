@@ -1,3 +1,8 @@
+2006-05-22  Brian Warner  <warner@lothar.com>
+
+	* buildbot/interfaces.py (IChangeSource): methods in Interfaces
+	aren't supposed to have 'self' in their argument list
+
 2006-05-21  Brian Warner  <warner@lothar.com>
 
 	* buildbot/process/step.py (ShellCommand.start): make
