@@ -4,11 +4,13 @@ import os
 
 from twisted.trial import unittest
 
+from buildbot.twcompat import maybeWait
 from buildbot.sourcestamp import SourceStamp
 from buildbot.process import base
 from buildbot.process.step import ShellCommand, WithProperties
 from buildbot.status import builder
 from buildbot.slave.commands import rmdirRecursive
+from buildbot.test.runutils import RunMixin
 
 class MyBuildStep(ShellCommand):
     def _interpolateProperties(self, command):
@@ -103,6 +105,38 @@ class Interpolate(unittest.TestCase):
         cmd = c._interpolateProperties(c.command)
         self.failUnlessEqual(cmd,
                              ["touch", "bot12-slave"])
+
+
+run_config = """
+from buildbot.process import step, factory
+from buildbot.process.step import ShellCommand, WithProperties
+s = factory.s
+
+BuildmasterConfig = c = {}
+c['bots'] = [('bot1', 'sekrit')]
+c['sources'] = []
+c['schedulers'] = []
+c['slavePortnum'] = 0
+
+f1 = factory.BuildFactory([s(step.ShellCommand,
+                             command=['touch',
+                                      WithProperties('%s-slave', 'slavename'),
+                                      ])])
+
+b1 = {'name': 'full1', 'slavename': 'bot1', 'builddir': 'bd1', 'factory': f1}
+c['builders'] = [b1]
+
+"""
+
+class Run(RunMixin, unittest.TestCase):
+    def testInterpolate(self):
+        # run an actual build with a step that interpolates a build property
+        d = self.master.loadConfig(run_config)
+        d.addCallback(lambda res: self.master.startService())
+        d.addCallback(lambda res: self.connectOneSlave("bot1"))
+        d.addCallback(lambda res: self.requestBuild("full1"))
+        d.addCallback(self.failUnlessBuildSucceeded)
+        return maybeWait(d)
 
 
 # we test got_revision in test_vc

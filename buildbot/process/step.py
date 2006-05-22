@@ -995,7 +995,7 @@ class ShellCommand(LoggingBuildStep):
         command = self._interpolateProperties(self.command)
         # create the actual RemoteShellCommand instance now
         kwargs = self.remote_kwargs
-        kwargs['command'] = self.command
+        kwargs['command'] = command
         cmd = RemoteShellCommand(**kwargs)
         self.setupEnvironment(cmd)
         self.startCommand(cmd)

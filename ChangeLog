@@ -1,5 +1,15 @@
 2006-05-21  Brian Warner  <warner@lothar.com>
 
+	* buildbot/process/step.py (ShellCommand.start): make
+	testInterpolate pass. I was passing the uninterpolated command to
+	the RemoteShellCommand constructor
+
+	* buildbot/test/test_properties.py (Run.testInterpolate): new test
+	to actually try to use build properties in a real build. This test
+	fails.
+	* buildbot/test/runutils.py (RunMixin.requestBuild): utility methods
+	to start and evaluate builds
+
 	* buildbot/test/test__versions.py: add a pseudo-test to record
 	what version of Twisted/Python/Buildbot are running. This should
 	show up at the beginning of _trial_tmp/test.log, and exists to help

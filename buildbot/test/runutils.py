@@ -6,6 +6,9 @@ from twisted.python import log
 from buildbot import master, interfaces
 from buildbot.twcompat import maybeWait
 from buildbot.slave import bot
+from buildbot.process.base import BuildRequest
+from buildbot.sourcestamp import SourceStamp
+from buildbot.status.builder import SUCCESS
 
 class MyBot(bot.Bot):
     def remote_getSlaveInfo(self):
@@ -93,6 +96,18 @@ class RunMixin:
         slave.startService()
         d = self.master.botmaster.waitUntilBuilderAttached("dummy")
         return d
+
+    # things to start builds
+    def requestBuild(self, builder):
+        # returns a Deferred that fires with an IBuildStatus object when the
+        # build is finished
+        req = BuildRequest("forced build", SourceStamp())
+        self.control.getBuilder(builder).requestBuild(req)
+        return req.waitUntilFinished()
+
+    def failUnlessBuildSucceeded(self, bs):
+        self.failUnless(bs.getResults() == SUCCESS)
+        return bs # useful for chaining
 
     def tearDown(self):
         log.msg("doing tearDown")
