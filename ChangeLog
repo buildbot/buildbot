@@ -3,6 +3,9 @@
 	* buildbot/process/step.py (ShellCommand.start): make
 	testInterpolate pass. I was passing the uninterpolated command to
 	the RemoteShellCommand constructor
+	(ShellCommand._interpolateProperties): oops, handle non-list
+	commands (i.e. strings with multiple words separated by spaces in
+	them) properly, instead of forgetting about them.
 
 	* buildbot/test/test_properties.py (Run.testInterpolate): new test
 	to actually try to use build properties in a real build. This test

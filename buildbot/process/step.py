@@ -969,7 +969,7 @@ class ShellCommand(LoggingBuildStep):
     def _interpolateProperties(self, command):
         # interpolate any build properties into our command
         if not isinstance(command, (list, tuple)):
-            return
+            return command
         command_argv = []
         for argv in command:
             if isinstance(argv, WithProperties):
