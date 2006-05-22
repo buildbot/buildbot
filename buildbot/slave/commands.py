@@ -10,7 +10,7 @@ from buildbot.twcompat import implements, which
 from buildbot.slave.interfaces import ISlaveCommand
 from buildbot.slave.registry import registerSlaveCommand
 
-cvs_ver = '$Revision: 1.50 $'[1+len("Revision: "):-2]
+cvs_ver = '$Revision: 1.51 $'[1+len("Revision: "):-2]
 
 # version history:
 #  >=1.17: commands are interruptable
@@ -1017,7 +1017,9 @@ class SVN(SourceBase):
         # svn update operations finish the line 'At revision 16654.'
         # But we don't use those. Instead, run 'svnversion'.
         svnversion_command = getCommand("svnversion")
-        command = [svnversion_command]
+        # older versions of 'svnversion' (1.1.4) require the WC_PATH
+        # argument, newer ones (1.3.1) do not.
+        command = [svnversion_command, "."]
         c = ShellCommand(self.builder, command,
                          os.path.join(self.builder.basedir, self.srcdir),
                          environ=self.env,

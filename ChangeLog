@@ -4,6 +4,8 @@
 	'svnversion' instead of grepping the output of 'svn info', much
 	simpler and avoids CR/LF problems on windows. Thanks to Olivier
 	Bonnet for the suggestion.
+	(SVN.parseGotRevision): oops, older verisons of 'svnversion'
+	require the WC_PATH argument, so run 'svnversion .' instead.
 
 	* buildbot/interfaces.py (IChangeSource): methods in Interfaces
 	aren't supposed to have 'self' in their argument list
