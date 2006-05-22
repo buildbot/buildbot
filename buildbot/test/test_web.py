@@ -199,8 +199,8 @@ class Waterfall(BaseWeb, unittest.TestCase):
         config1 = base_config + """
 from buildbot.changes import mail
 c['sources'] = [mail.SyncmailMaildirSource('my-maildir')]
-c['status'] = [html.Waterfall(http_port=0, robots_txt='%s')]
-""" % self.robots_txt
+c['status'] = [html.Waterfall(http_port=0, robots_txt=%s)]
+""" % repr(self.robots_txt)
 
         self.master = m = ConfiguredMaster("test_web4", config1)
         m.startService()

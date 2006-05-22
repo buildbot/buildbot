@@ -4,6 +4,9 @@
 	a filename to be served as 'robots.txt' to discourage web spiders.
 	Adapted from a patch by Tobi Vollebregt, thanks!
 	* buildbot/test/test_web.py (Waterfall._test_waterfall_5): test it
+	(Waterfall.test_waterfall): tweak the way that filenames are put
+	into the config file, to accomodate windows pathnames better.
+
 	* docs/buildbot.texinfo (HTML Waterfall): document it
 
 	* buildbot/process/process_twisted.py
