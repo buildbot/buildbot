@@ -1,5 +1,10 @@
 2006-05-21  Brian Warner  <warner@lothar.com>
 
+	* buildbot/test/test__versions.py: add a pseudo-test to record
+	what version of Twisted/Python/Buildbot are running. This should
+	show up at the beginning of _trial_tmp/test.log, and exists to help
+	debug other problems.
+
 	* buildbot/status/html.py (Waterfall): add 'robots_txt=' argument,
 	a filename to be served as 'robots.txt' to discourage web spiders.
 	Adapted from a patch by Tobi Vollebregt, thanks!
