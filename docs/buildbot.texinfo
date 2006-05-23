@@ -1,7 +1,7 @@
 \input texinfo @c -*-texinfo-*-
 @c %**start of header
 @setfilename buildbot.info
-@settitle BuildBot Manual 0.7.2+
+@settitle BuildBot Manual 0.7.3
 @c %**end of header
 
 @copying
@@ -3296,16 +3296,22 @@ Note that for some VC systems (Darcs in particular), the revision is a
 large string containing newlines, and is not suitable for
 interpolation into a filename.
 
-@item slavename
+@item buildername
 
-This is a string which identifies which buildslave the build is
-running on.
+This is a string that indicates which Builder the build was a part of.
+The combination of buildername and buildnumber uniquely identify a
+build.
 
 @item buildnumber
 
 Each build gets a number, scoped to the Builder (so the first build
 performed on any given Builder will have a build number of 0). This
 integer property contains the build's number.
+
+@item slavename
+
+This is a string which identifies which buildslave the build is
+running on.
 
 @end table
 

@@ -1,5 +1,9 @@
 2006-05-23  Brian Warner  <warner@lothar.com>
 
+	* buildbot/__init__.py (version): Releasing buildbot-0.7.3
+	* docs/buildbot.texinfo: set version to match
+	* NEWS: update for 0.7.3
+
 	* docs/buildbot.texinfo (Change Sources): mention hg_buildbot.py,
 	give a quick mapping from VC system to possible ChangeSources
 	(Build Properties): add 'buildername'

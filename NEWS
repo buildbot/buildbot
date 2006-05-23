@@ -1,6 +1,6 @@
 User visible changes in Buildbot.
 
-* Release ?? (??)
+* Release 0.7.3 (23 May 2006)
 
 ** compatibility
 
@@ -59,6 +59,12 @@ acquired, which may be useful to know when building from HEAD.
 The Waterfall display has a few new class= tags, which may make it easier to
 write custom CSS to make it look prettier.
 
+*** robots_txt= argument in Waterfall
+
+You can now pass a filename to the robots_txt= argument, which will be served
+as the "robots.txt" file. This can be used to discourage search engine
+spiders from crawling through the numerous build-status pages.
+
 ** bugfixes
 
 *** tests more likely to pass on non-English systems
@@ -70,7 +76,12 @@ systems. This affects certain VC-related subcommands too.
 
 test_vc was assuming that the system time was expressed with a numeric
 timezone, which is not always the case, especially under windows. This
-probably works better now than it did before.
+probably works better now than it did before. This only affects the CVS
+tests.
+
+'buildbot try' (for CVS) now uses UTC instead of the local timezone. The
+'got_revision' property is also expressed in UTC. Both should help deal with
+buggy versions of CVS that don't parse numeric timezones properly.
 
 
 * Release 0.7.2 (17 Feb 2006)
