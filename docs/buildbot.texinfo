@@ -2212,6 +2212,90 @@ typically have only a single ChangeSource active. This section
 provides a description of all available ChangeSource types and
 explains how to set up each of them.
 
+There are a variety of ChangeSources available, some of which are
+meant to be used in conjunction with other tools to deliver Change
+events from the VC repository to the buildmaster.
+
+@itemize @bullet
+
+@item CVSToys
+This ChangeSource opens a TCP connection from the buildmaster to a
+waiting FreshCVS daemon that lives on the repository machine, and
+subscribes to hear about Changes.
+
+@item MaildirSource
+This one watches a local maildir-format inbox for email sent out by
+the repository when a change is made. When a message arrives, it is
+parsed to create the Change object. A variety of parsing functions are
+available to accomodate different email-sending tools.
+
+@item PBChangeSource
+This ChangeSource listens on a local TCP socket for inbound
+connections from a separate tool. Usually, this tool would be run on
+the VC repository machine in a commit hook. It is expected to connect
+to the TCP socket and send a Change message over the network
+connection. The @command{buildbot sendchange} command is one example
+of a tool that knows how to send these messages, so you can write a
+commit script for your VC system that calls it to deliver the Change.
+There are other tools in the contrib/ directory that use the same
+protocol.
+
+@end itemize
+
+As a quick guide, here is a list of VC systems and the ChangeSources
+that might be useful with them. All of these ChangeSources are in the
+@code{buildbot.changes} module.
+
+@table @code
+@item CVS
+
+@itemize @bullet
+@item freshcvs.FreshCVSSource (connected via TCP to the freshcvs daemon)
+@item mail.FCMaildirSource (watching for email sent by a freshcvs daemon)
+@item mail.BonsaiMaildirSource (watching for email sent by Bonsai)
+@item mail.SyncmailMaildirSource (watching for email sent by syncmail)
+@item pb.PBChangeSource (listening for connections from @code{buildbot
+sendchange} run in a loginfo script)
+@item pb.PBChangeSource (listening for connections from a long-running
+@code{contrib/viewcvspoll.py} polling process which examines the ViewCVS
+database directly
+@end itemize
+
+@item SVN
+@itemize @bullet
+@item pb.PBChangeSource (listening for connections from
+@code{contrib/svn_buildbot.py} run in a postcommit script)
+@item pb.PBChangeSource (listening for connections from a long-running
+@code{contrib/svn_watcher.py} or @code{contrib/svnpoller.py} polling
+process
+@end itemize
+
+@item Darcs
+@itemize @bullet
+@item pb.PBChangeSource (listening for connections from @code{buildbot
+sendchange} in a commit script
+@end itemize
+
+@item Mercurial
+@itemize @bullet
+@item pb.PBChangeSource (listening for connections from
+@code{contrib/hg_buildbot.py} run in an 'incoming' hook)
+@end itemize
+
+@item Arch/Bazaar
+@itemize @bullet
+@item pb.PBChangeSource (listening for connections from
+@code{contrib/arch_buildbot.py} run in a commit hook)
+@end itemize
+
+@end table
+
+All VC systems can be driven by a PBChangeSource and the
+@code{buildbot sendchange} tool run from some form of commit script.
+If you write an email parsing function, they can also all be driven by
+a suitable @code{MaildirSource}.
+
+
 @menu
 * Choosing ChangeSources::      
 * CVSToys - PBService::         
@@ -2244,6 +2328,7 @@ pathname which is stripped from the front of all filenames provided to
 that @code{ChangeSource}. Files which are outside this sub-tree are
 ignored by the changesource: it does not generate Changes for those
 files.
+
 
 @node CVSToys - PBService, CVSToys - mail notification, Choosing ChangeSources, Change Sources
 @subsection CVSToys - PBService

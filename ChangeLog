@@ -1,3 +1,8 @@
+2006-05-23  Brian Warner  <warner@lothar.com>
+
+	* docs/buildbot.texinfo (Change Sources): mention hg_buildbot.py,
+	give a quick mapping from VC system to possible ChangeSources
+
 2006-05-22  Brian Warner  <warner@lothar.com>
 
 	* docs/buildbot.texinfo (Build Properties): explain the syntax of
