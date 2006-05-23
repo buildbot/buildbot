@@ -266,6 +266,8 @@ class Build:
 
     def setupStatus(self, build_status):
         self.build_status = build_status
+        self.setProperty("buildername", self.builder.name)
+        self.setProperty("buildnumber", self.build_status.number)
         self.setProperty("branch", self.source.branch)
         self.setProperty("revision", self.source.revision)
 

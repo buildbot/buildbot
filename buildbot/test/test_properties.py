@@ -37,7 +37,7 @@ class Interpolate(unittest.TestCase):
         self.builder = FakeBuilder()
         self.builder_status = builder.BuilderStatus("fakebuilder")
         self.builder_status.basedir = "test_properties"
-        self.builder_status.nextBuildNumber = 0
+        self.builder_status.nextBuildNumber = 5
         rmdirRecursive(self.builder_status.basedir)
         os.mkdir(self.builder_status.basedir)
         self.build_status = self.builder_status.newBuild()
@@ -71,11 +71,11 @@ class Interpolate(unittest.TestCase):
         self.failUnlessEqual(cmd,
                              ["tar", "czf", "build-foo.tar.gz", "source"])
 
-    def testWithPropertiesMissing(self):
-        self.build.setProperty("missing", None)
+    def testWithPropertiesEmpty(self):
+        self.build.setProperty("empty", None)
         c = ShellCommand(workdir=dir, build=self.build,
                          command=["tar", "czf",
-                                  WithProperties("build-%(missing)s.tar.gz"),
+                                  WithProperties("build-%(empty)s.tar.gz"),
                                   "source"])
         cmd = c._interpolateProperties(c.command)
         self.failUnlessEqual(cmd,
@@ -105,6 +105,16 @@ class Interpolate(unittest.TestCase):
         cmd = c._interpolateProperties(c.command)
         self.failUnlessEqual(cmd,
                              ["touch", "bot12-slave"])
+
+    def testBuildNumber(self):
+        c = ShellCommand(workdir=dir, build=self.build,
+                         command=["touch",
+                                  WithProperties("build-%d", "buildnumber"),
+                                  WithProperties("builder-%s", "buildername"),
+                                  ])
+        cmd = c._interpolateProperties(c.command)
+        self.failUnlessEqual(cmd,
+                             ["touch", "build-5", "builder-fakebuilder"])
 
 
 run_config = """

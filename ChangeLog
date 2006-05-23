@@ -2,6 +2,12 @@
 
 	* docs/buildbot.texinfo (Change Sources): mention hg_buildbot.py,
 	give a quick mapping from VC system to possible ChangeSources
+	(Build Properties): add 'buildername'
+
+	* buildbot/process/base.py (Build.setupStatus): oops, set
+	'buildername' and 'buildnumber' properties
+	* buildbot/test/test_properties.py (Interpolate.testBuildNumber):
+	test them
 
 2006-05-22  Brian Warner  <warner@lothar.com>
 
