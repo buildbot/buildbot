@@ -3001,6 +3001,21 @@ stdout.
 @item timeout
 if the command fails to produce any output for this many seconds, it
 is assumed to be locked up and will be killed.
+
+@item description
+This will be used to describe the command (on the Waterfall display)
+while the command is still running. It should be a single
+imperfect-tense verb, like ``compiling'' or ``testing''.
+
+@item descriptionDone
+This will be used to describe the command once it has finished. A
+simple noun like ``compile'' or ``tests'' should be used.
+
+If neither @code{description} nor @code{descriptionDone} are set, the
+actual command arguments will be used to construct the description.
+This may be a bit too wide to fit comfortably on the Waterfall
+display.
+
 @end table
 
 @node Simple ShellCommand Subclasses,  , ShellCommand, Build Steps
@@ -3090,7 +3105,7 @@ for the name of the property, and returns or accepts an
 arbitrary@footnote{Build properties are serialized along with the
 build results, so they must be serializable. For this reason, the
 value of any build property should be simple inert data: strings,
-numbers, lists, tuples, and dictionaries. They should not include
+numbers, lists, tuples, and dictionaries. They should not contain
 class instances.} object. For example:
 
 @example
@@ -3124,9 +3139,15 @@ would create a tarball with a name like @file{build-1234.tar.gz}.
 
 The @code{WithProperties} function does @code{printf}-style string
 interpolation, using strings obtained by calling
-@code{build.getProperty(propname)}. You can also use python
-dictionary-style string interpolation by using the @code{%(propname)s}
-syntax:
+@code{build.getProperty(propname)}. Note that for every @code{%s} (or
+@code{%d}, etc), you must have exactly one additional argument to
+indicate which build property you want to insert.
+
+
+You can also use python dictionary-style string interpolation by using
+the @code{%(propname)s} syntax. In this form, the property name goes
+in the parentheses, and WithProperties takes @emph{no} additional
+arguments:
 
 @example
 s(ShellCommand,
@@ -3135,6 +3156,9 @@ s(ShellCommand,
            "source"],
  )
 @end example
+
+Don't forget the extra ``s'' after the closing parenthesis! This is
+the cause of many confusing errors.
 
 Note that, like python, you can either do positional-argument
 interpolation @emph{or} keyword-argument interpolation, not both. Thus

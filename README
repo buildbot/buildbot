@@ -89,7 +89,7 @@ summary.
 
 If you would like to run the unit test suite, use a command like this:
 
- PYTHONPATH=. trial -v buildbot.test
+ PYTHONPATH=. trial buildbot.test
 
 This should run up to 175 tests, depending upon what VC tools you have
 installed. On my desktop machine it takes about four minutes to complete.

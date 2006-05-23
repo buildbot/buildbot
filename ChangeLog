@@ -1,5 +1,15 @@
 2006-05-22  Brian Warner  <warner@lothar.com>
 
+	* docs/buildbot.texinfo (Build Properties): explain the syntax of
+	property interpolation better
+
+	* README (INSTALLATION): remove old '-v' argument from recommended
+	trial command line
+
+	* docs/buildbot.texinfo (ShellCommand): add docs for description=
+	and descriptionDone= arguments. Thanks to Niklaus Giger for the
+	patch. SF#1475494.
+
 	* buildbot/slave/commands.py (SVN.parseGotRevision._parse): use
 	'svnversion' instead of grepping the output of 'svn info', much
 	simpler and avoids CR/LF problems on windows. Thanks to Olivier
