@@ -82,5 +82,5 @@ change = {
     'files': files,
     }
 
-runner.sendchange(c, True)
+runner.sendchange(change, True)
 
