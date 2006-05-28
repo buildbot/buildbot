@@ -60,11 +60,8 @@ REQUIREMENTS:
 
  Twisted: http://twistedmatrix.com
 
-   Both the buildmaster and the buildslaves require Twisted-1.3.0 or later.
-   It has been mainly developed against Twisted-2.0.1, but has been tested
-   against Twisted-2.1.0 (the most recent as this time), and might even work
-   on versions as old as Twisted-1.1.0, but as always the most recent version
-   is recommended.
+   Both the buildmaster and the buildslaves require Twisted-2.0.x or later.
+   As always, the most recent version is recommended.
 
    When using the split subpackages of Twisted-2.x.x, you'll need at least
    "Twisted" (the core package), and you'll also want TwistedMail,

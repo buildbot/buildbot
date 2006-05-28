@@ -1,5 +1,8 @@
 2006-05-28  Brian Warner  <warner@lothar.com>
 
+	* README (REQUIREMENTS): stop claiming compatibility with
+	Twisted-1.3.0
+
 	* contrib/darcs_buildbot.py: write a darcs-commit-hook change
 	sender
 
