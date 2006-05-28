@@ -2272,8 +2272,8 @@ process
 
 @item Darcs
 @itemize @bullet
-@item pb.PBChangeSource (listening for connections from @code{buildbot
-sendchange} in a commit script
+@item pb.PBChangeSource (listening for connections from
+@code{contrib/darcs_buildbot.py} in a commit script
 @end itemize
 
 @item Mercurial

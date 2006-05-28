@@ -1,5 +1,8 @@
 2006-05-28  Brian Warner  <warner@lothar.com>
 
+	* docs/buildbot.texinfo (Change Sources): mention
+	darcs_buildbot.py
+
 	* .darcs-boring: add a Darcs boringfile
 
 	* README (REQUIREMENTS): stop claiming compatibility with
