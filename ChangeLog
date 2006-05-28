@@ -1,5 +1,7 @@
 2006-05-28  Brian Warner  <warner@lothar.com>
 
+	* .darcs-boring: add a Darcs boringfile
+
 	* README (REQUIREMENTS): stop claiming compatibility with
 	Twisted-1.3.0
 
