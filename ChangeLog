@@ -1,3 +1,8 @@
+2006-05-28  Brian Warner  <warner@lothar.com>
+
+	* contrib/darcs_buildbot.py: write a darcs-commit-hook change
+	sender
+
 2006-05-27  Brian Warner  <warner@lothar.com>
 
 	* buildbot/__init__.py: bump to 0.7.3+ while between releases
