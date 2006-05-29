@@ -1,5 +1,10 @@
 2006-05-28  Brian Warner  <warner@lothar.com>
 
+	* buildbot/process/step_twisted.py (Trial): set the default
+	trialMode to '--reporter=bwverbose', which specifies verbose
+	black-and-white text. Back in twisted-1.3/2.0 days we had to use
+	'-to', but those are completely missing in modern Twisteds.
+
 	* buildbot/scripts/sample.cfg: make the sample Manhole config use
 	a localhost-only port, to encourage better security
 

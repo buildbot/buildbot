@@ -204,7 +204,8 @@ class Trial(ShellCommand):
     flunkOnFailure = True
     python = None
     trial = "trial"
-    trialMode = ["-to"]
+    trialMode = ["--reporter=bwverbose"] # requires Twisted-2.1.0 or newer
+    # for Twisted-2.0.0 or 1.3.0, use ["-o"] instead
     trialArgs = []
     testpath = UNSPECIFIED # required (but can be None)
     testChanges = False # TODO: needs better name
