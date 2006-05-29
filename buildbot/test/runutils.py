@@ -8,7 +8,7 @@ from buildbot.twcompat import maybeWait
 from buildbot.slave import bot
 from buildbot.process.base import BuildRequest
 from buildbot.sourcestamp import SourceStamp
-from buildbot.status.builder import SUCCESS
+from buildbot.status import builder
 
 class MyBot(bot.Bot):
     def remote_getSlaveInfo(self):
@@ -106,8 +106,25 @@ class RunMixin:
         return req.waitUntilFinished()
 
     def failUnlessBuildSucceeded(self, bs):
-        self.failUnless(bs.getResults() == SUCCESS)
+        if bs.getResults() != builder.SUCCESS:
+            log.msg("failUnlessBuildSucceeded noticed that the build failed")
+            self.logBuildResults(bs)
+        self.failUnless(bs.getResults() == builder.SUCCESS)
         return bs # useful for chaining
+
+    def logBuildResults(self, bs):
+        # emit the build status and the contents of all logs to test.log
+        log.msg("logBuildResults starting")
+        log.msg(" bs.getResults() == %s" % builder.Results[bs.getResults()])
+        log.msg(" bs.isFinished() == %s" % bs.isFinished())
+        for s in bs.getSteps():
+            for l in s.getLogs():
+                log.msg("--- START step %s / log %s ---" % (s.getName(),
+                                                            l.getName()))
+                if not l.getName().endswith(".html"):
+                    log.msg(l.getTextWithHeaders())
+                log.msg("--- STOP ---")
+        log.msg("logBuildResults finished")
 
     def tearDown(self):
         log.msg("doing tearDown")

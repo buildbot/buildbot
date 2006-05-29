@@ -128,10 +128,20 @@ c['sources'] = []
 c['schedulers'] = []
 c['slavePortnum'] = 0
 
+# Note: when run against twisted-1.3.0, this locks up about 5% of the time. I
+# suspect that a command with no output that finishes quickly triggers a race
+# condition in 1.3.0's process-reaping code. The 'touch' process becomes a
+# zombie and the step never completes. To keep this from messing up the unit
+# tests too badly, this step runs with a reduced timeout.
+
 f1 = factory.BuildFactory([s(step.ShellCommand,
+                             flunkOnFailure=True,
                              command=['touch',
                                       WithProperties('%s-slave', 'slavename'),
-                                      ])])
+                                      ],
+                             workdir='.',
+                             timeout=10,
+                             )])
 
 b1 = {'name': 'full1', 'slavename': 'bot1', 'builddir': 'bd1', 'factory': f1}
 c['builders'] = [b1]
@@ -146,6 +156,11 @@ class Run(RunMixin, unittest.TestCase):
         d.addCallback(lambda res: self.connectOneSlave("bot1"))
         d.addCallback(lambda res: self.requestBuild("full1"))
         d.addCallback(self.failUnlessBuildSucceeded)
+        def _check_touch(res):
+            f = os.path.join("slavebase-bot1", "bd1", "bot1-slave")
+            self.failUnless(os.path.exists(f))
+            return res
+        d.addCallback(_check_touch)
         return maybeWait(d)
 
 

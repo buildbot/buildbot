@@ -1,5 +1,21 @@
 2006-05-28  Brian Warner  <warner@lothar.com>
 
+	* buildbot/test/test_properties.py (Run.testInterpolate): on the
+	build we use to verify that WithProperties works:
+
+	** set flunkOnFailure=True so that build failures get noticed
+	** set workdir='.' so that the build succeeds, otherwise it is trying
+	    to touch 'build/something', and 'build/' doesn't exist because
+	    usually that's created by a Source step
+	** set timeout=10, because Twisted-1.3.0 has a race condition that
+	    this test somehow triggers, in which the 'touch' process becomes
+	    a zombie and we wait for th etimeout before giving up on it.
+
+	* buildbot/test/runutils.py (RunMixin.logBuildResults): utility method
+	to log the Build results and step logs to the twisted log.
+	(RunMixin.failUnlessBuildSucceeded): use logBuildResults to record
+	what went wrong if a build was expected to succeed but didn't.
+
 	* buildbot/process/step_twisted.py (Trial): set the default
 	trialMode to '--reporter=bwverbose', which specifies verbose
 	black-and-white text. Back in twisted-1.3/2.0 days we had to use
