@@ -1,5 +1,11 @@
 2006-05-30  Brian Warner  <warner@lothar.com>
 
+	* buildbot/clients/gtkPanes.py: add a third row: now it shows
+	last-build/current-build/current-step. Show what step is currently
+	running. Show ETA for both the overall build and the current step.
+	Update GTK calls to modern non-deprecated forms. There's still a
+	lot of dead code and debug noise to remove.
+
 	* buildbot/process/step_twisted.py (Trial): set the step name, so it
 	shows up properly in status displays
 

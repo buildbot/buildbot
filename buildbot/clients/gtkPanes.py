@@ -9,14 +9,14 @@ import sys, time
 
 import pygtk
 pygtk.require("2.0")
-import gtk
+import gobject, gtk
 assert(gtk.Window) # in gtk1 it's gtk.GtkWindow
 
 from twisted.spread import pb
 
 #from buildbot.clients.base import Builder, Client
 from buildbot.clients.base import TextClient
-#from buildbot.util import now
+from buildbot.util import now
 
 '''
 class Pane:
@@ -258,22 +258,67 @@ class CompactBuilder(Builder):
         eta.callRemote("unsubscribe", self)
 '''
 
-class TwoRowBuilder:
-    def __init__(self, ref):
-        self.lastbox = lastbox = gtk.EventBox()
-        self.lastlabel = lastlabel = gtk.Label("?")
-        lastbox.add(lastlabel)
-        lastbox.set_size_request(64,64)
+class Box:
+    def __init__(self, text="?"):
+        self.text = text
+        self.box = gtk.EventBox()
+        self.label = gtk.Label(text)
+        self.box.add(self.label)
+        self.box.set_size_request(64,64)
+        self.timer = None
 
-        self.currentbox = currentbox = gtk.EventBox()
-        self.currentlabel = currentlabel = gtk.Label("?")
-        currentbox.add(currentlabel)
-        currentbox.set_size_request(64,64)
+    def getBox(self):
+        return self.box
+
+    def setText(self, text):
+        self.text = text
+        self.label.set_text(text)
+
+    def setColor(self, color):
+        self.box.modify_bg(gtk.STATE_NORMAL, gtk.gdk.color_parse(color))
+
+    def setETA(self, eta):
+        self.when = now() + eta
+        self.startTimer()
+
+    def startTimer(self):
+        self.stopTimer()
+        self.timer = gobject.timeout_add(1000, self.update)
+        self.update()
+
+    def stopTimer(self):
+        if self.timer:
+            gobject.source_remove(self.timer)
+            self.timer = None
+        self.label.set_text(self.text)
+
+    def update(self):
+        if now() < self.when:
+            next = time.strftime("%H:%M:%S", time.localtime(self.when))
+            secs = "[%d secs]" % (self.when - now())
+            self.label.set_text("%s\n%s\n%s" % (self.text, next, secs))
+            return True # restart timer
+        else:
+            # done
+            self.label.set_text("%s\n[soon]" % (self.text,))
+            self.timer = None
+            return False
+
+
+
+class ThreeRowBuilder:
+    def __init__(self, name, ref):
+        self.name = name
+
+        self.last = Box()
+        self.current = Box()
+        self.step = Box("idle")
+        self.step.setColor("white")
 
         self.ref = ref
 
-    def setColor(self, box, color):
-        box.modify_bg(gtk.STATE_NORMAL, gtk.gdk.color_parse(color))
+    def getBoxes(self):
+        return self.last.getBox(), self.current.getBox(), self.step.getBox()
 
     def getLastBuild(self):
         d = self.ref.callRemote("getLastFinishedBuild")
@@ -284,9 +329,9 @@ class TwoRowBuilder:
             build.callRemote("getColor").addCallback(self.gotLastColor)
 
     def gotLastText(self, text):
-        self.lastlabel.set_text("\n".join(text))
+        self.last.setText("\n".join(text))
     def gotLastColor(self, color):
-        self.setColor(self.lastbox, color)
+        self.last.setColor(color)
 
     def getState(self):
         self.ref.callRemote("getState").addCallback(self.gotState)
@@ -301,18 +346,40 @@ class TwoRowBuilder:
                       "interlocked": "yellow",
                       "building": "yellow",}
         text = state
-        self.setColor(self.currentbox, currentmap[state])
+        self.current.setColor(currentmap[state])
         if ETA is not None:
             text += "\nETA=%s secs" % ETA
-        self.currentlabel.set_text(state)
+        self.current.setText(state)
 
     def buildStarted(self, build):
-        pass
+        print "[%s] buildStarted" % (self.name,)
+        self.current.setColor("yellow")
+
     def buildFinished(self, build, results):
+        print "[%s] buildFinished: %s" % (self.name, results)
         self.gotLastBuild(build)
+        self.current.setColor("white")
+        self.current.stopTimer()
+
+    def buildETAUpdate(self, eta):
+        print "[%s] buildETAUpdate: %s" % (self.name, eta)
+        self.current.setETA(eta)
 
 
-class TwoRowClient(pb.Referenceable):
+    def stepStarted(self, stepname, step):
+        print "[%s] stepStarted: %s" % (self.name, stepname)
+        self.step.setText(stepname)
+        self.step.setColor("yellow")
+    def stepFinished(self, stepname, step, results):
+        print "[%s] stepFinished: %s %s" % (self.name, stepname, results)
+        self.step.setText("idle")
+        self.step.setColor("white")
+        self.step.stopTimer()
+    def stepETAUpdate(self, stepname, eta):
+        self.step.setETA(eta)
+
+
+class ThreeRowClient(pb.Referenceable):
     def __init__(self, window):
         self.window = window
         self.buildernames = []
@@ -322,11 +389,11 @@ class TwoRowClient(pb.Referenceable):
         print "connected"
         self.ref = ref
         self.pane = gtk.VBox(False, 2)
-        self.table = gtk.Table(1+2, 1)
+        self.table = gtk.Table(1+3, 1)
         self.pane.add(self.table)
         self.window.vb.add(self.pane)
         self.pane.show_all()
-        ref.callRemote("subscribe", "builds", 5, self)
+        ref.callRemote("subscribe", "logs", 5, self)
 
     def removeTable(self):
         for child in self.table.get_children():
@@ -340,10 +407,13 @@ class TwoRowClient(pb.Referenceable):
         for i in range(len(self.buildernames)):
             name = self.buildernames[i]
             b = self.builders[name]
+            last,current,step = b.getBoxes()
             self.table.attach(gtk.Label(name), i, i+1, 0, 1)
-            self.table.attach(b.lastbox, i, i+1, 1, 2,
+            self.table.attach(last, i, i+1, 1, 2,
                               xpadding=1, ypadding=1)
-            self.table.attach(b.currentbox, i, i+1, 2, 3,
+            self.table.attach(current, i, i+1, 2, 3,
+                              xpadding=1, ypadding=1)
+            self.table.attach(step, i, i+1, 3, 4,
                               xpadding=1, ypadding=1)
         self.table.show_all()
 
@@ -356,7 +426,7 @@ class TwoRowClient(pb.Referenceable):
         assert buildername not in self.buildernames
         self.buildernames.append(buildername)
 
-        b = TwoRowBuilder(builder)
+        b = ThreeRowBuilder(buildername, builder)
         self.builders[buildername] = b
         self.rebuildTable()
         b.getLastBuild()
@@ -374,9 +444,31 @@ class TwoRowClient(pb.Referenceable):
     def remote_buildFinished(self, name, build, results):
         self.builders[name].buildFinished(build, results)
 
+    def remote_buildETAUpdate(self, name, build, eta):
+        self.builders[name].buildETAUpdate(eta)
+    def remote_stepStarted(self, name, build, stepname, step):
+        self.builders[name].stepStarted(stepname, step)
+    def remote_stepFinished(self, name, build, stepname, step, results):
+        self.builders[name].stepFinished(stepname, step, results)
+
+    def remote_stepETAUpdate(self, name, build, stepname, step,
+                             eta, expectations):
+        # expectations is a list of (metricname, current_value,
+        # expected_value) tuples, so that we could show individual progress
+        # meters for each metric
+        self.builders[name].stepETAUpdate(stepname, eta)
+
+    def remote_logStarted(self, buildername, build, stepname, step,
+                          logname, log):
+        pass
+
+    def remote_logFinished(self, buildername, build, stepname, step,
+                           logname, log):
+        pass
+
 
 class GtkClient(TextClient):
-    ClientClass = TwoRowClient
+    ClientClass = ThreeRowClient
 
     def __init__(self, master):
         self.master = master
