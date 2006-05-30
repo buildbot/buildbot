@@ -1,3 +1,8 @@
+2006-05-30  Brian Warner  <warner@lothar.com>
+
+	* buildbot/process/step_twisted.py (Trial): set the step name, so it
+	shows up properly in status displays
+
 2006-05-28  Brian Warner  <warner@lothar.com>
 
 	* buildbot/test/test_properties.py (Run.testInterpolate): on the

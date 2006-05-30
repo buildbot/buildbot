@@ -201,6 +201,8 @@ class Trial(ShellCommand):
     command line.
     """
 
+    name = "trial"
+
     flunkOnFailure = True
     python = None
     trial = "trial"
