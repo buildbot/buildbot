@@ -275,11 +275,16 @@ class Box:
         self.label.set_text(text)
 
     def setColor(self, color):
+        if not color:
+            return
         self.box.modify_bg(gtk.STATE_NORMAL, gtk.gdk.color_parse(color))
 
     def setETA(self, eta):
-        self.when = now() + eta
-        self.startTimer()
+        if eta:
+            self.when = now() + eta
+            self.startTimer()
+        else:
+            self.stopTimer()
 
     def startTimer(self):
         self.stopTimer()
@@ -300,7 +305,7 @@ class Box:
             return True # restart timer
         else:
             # done
-            self.label.set_text("%s\n[soon]" % (self.text,))
+            self.label.set_text("%s\n[soon]\n[overdue]" % (self.text,))
             self.timer = None
             return False
 
@@ -376,6 +381,7 @@ class ThreeRowBuilder:
         self.step.setColor("white")
         self.step.stopTimer()
     def stepETAUpdate(self, stepname, eta):
+        print "[%s] stepETAUpdate: %s %s" % (self.name, stepname, eta)
         self.step.setETA(eta)
 
 

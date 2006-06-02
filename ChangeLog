@@ -1,5 +1,12 @@
 2006-06-01  Brian Warner  <warner@lothar.com>
 
+	* buildbot/clients/gtkPanes.py (Box.setColor): ignore color=None
+	(Box.setETA): handle ETA=None (by stopping the timer)
+	(Box.update): make the [soon] text less different than the usual
+	text, so the rest of the text doesn't flop around so much. It
+	would be awfully nice to figure out how to center this stuff.
+	(ThreeRowBuilder.stepETAUpdate): more debugging printouts
+
 	* buildbot/process/step.py (ShellCommand): set flunkOnFailure=True
 	by default, so that any ShellCommand which fails marks the overall
 	build as a failure. I should have done this from the beginning.
