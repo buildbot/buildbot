@@ -879,6 +879,9 @@ class ShellCommand(LoggingBuildStep):
     the exit code of that command is non-zero, SUCCESS otherwise. To change
     this behavior, override my .evaluateCommand method.
 
+    By default, a failure of this step will mark the whole build as FAILURE.
+    To override this, give me an argument of flunkOnFailure=False .
+
     I create a single Log named 'log' which contains the output of the
     command. To create additional summary Logs, override my .createSummary
     method.
@@ -899,6 +902,10 @@ class ShellCommand(LoggingBuildStep):
     description = None # set this to a list of short strings to override
     descriptionDone = None # alternate description when the step is complete
     command = None # set this to a command, or set in kwargs
+
+    # override this on a specific ShellCommand if you want to let it fail
+    # without dooming the entire build to a status of FAILURE
+    flunkOnFailure = True
 
     def __init__(self, workdir,
                  description=None, descriptionDone=None,

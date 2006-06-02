@@ -1,3 +1,11 @@
+2006-06-01  Brian Warner  <warner@lothar.com>
+
+	* buildbot/process/step.py (ShellCommand): set flunkOnFailure=True
+	by default, so that any ShellCommand which fails marks the overall
+	build as a failure. I should have done this from the beginning.
+	Add flunkOnFailure=False to the arguments if you want to turn off
+	this behavior.
+
 2006-05-30  Brian Warner  <warner@lothar.com>
 
 	* buildbot/clients/gtkPanes.py: add a third row: now it shows
