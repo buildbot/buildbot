@@ -1,5 +1,11 @@
 2006-06-01  Brian Warner  <warner@lothar.com>
 
+	* buildbot/status/html.py (BuildBox.getBox): set the 'title='
+	attribute of the "Build #NN" link in the yellow start-the-build
+	box to the build's reason. This means that you get a little
+	tooltip explaining why the build was done when you hover over the
+	yellow box. Thanks to Zandr Milewski for the suggestion.
+
 	* buildbot/clients/gtkPanes.py (Box.setColor): ignore color=None
 	(Box.setETA): handle ETA=None (by stopping the timer)
 	(Box.update): make the [soon] text less different than the usual

@@ -919,7 +919,9 @@ class BuildBox(components.Adapter):
         name = b.getBuilder().getName()
         number = b.getNumber()
         url = "%s/builds/%d" % (urllib.quote(name, safe=''), number)
-        text = '<a href="%s">Build %d</a>' % (url, number)
+        reason = b.getReason()
+        text = ('<a title="Reason: %s" href="%s">Build %d</a>'
+                % (html.escape(reason), url, number))
         color = "yellow"
         class_ = "start"
         if b.isFinished() and not b.getSteps():
