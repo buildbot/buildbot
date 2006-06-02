@@ -1,3 +1,10 @@
+2006-06-02  Brian Warner  <warner@lothar.com>
+
+	* contrib/svn_buildbot.py (ChangeSender.getChanges): ignore the
+	first six columns of 'svnlook' output, not just the first column,
+	since property changes appear in the other five. Thanks to Olivier
+	Bonnet for the patch.
+
 2006-06-01  Brian Warner  <warner@lothar.com>
 
 	* buildbot/test/test_web.py (Logfile.setUp): set the .reason on
