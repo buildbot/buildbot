@@ -398,6 +398,7 @@ BuildmasterConfig = {
         bs.addStep(step1)
         bs.buildStarted(build1)
         step1.step_status.stepStarted()
+        bs.setReason("reason")
 
         log1 = step1.addLog("output")
         log1.addStdout("some stdout\n")

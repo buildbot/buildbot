@@ -1,5 +1,8 @@
 2006-06-01  Brian Warner  <warner@lothar.com>
 
+	* buildbot/test/test_web.py (Logfile.setUp): set the .reason on
+	the fake build, so that title= has something to be set to
+
 	* buildbot/status/html.py (BuildBox.getBox): set the 'title='
 	attribute of the "Build #NN" link in the yellow start-the-build
 	box to the build's reason. This means that you get a little
