@@ -1,3 +1,9 @@
+2006-06-03  Brian Warner  <warner@lothar.com>
+
+	* buildbot/status/mail.py (MailNotifier.buildMessage): don't
+	double-escape the build URL. Thanks to Olivier Bonnet for the
+	patch. Fixes SF#1452801.
+
 2006-06-02  Brian Warner  <warner@lothar.com>
 
 	* contrib/svn_buildbot.py (ChangeSender.getChanges): ignore the

@@ -233,8 +233,7 @@ class MailNotifier(base.StatusReceiverMultiService):
             text += "The Buildbot has detected a new failure of %s.\n" % name
         buildurl = self.status.getURLForThing(build)
         if buildurl:
-            text += ("Full details are available at:\n %s\n" %
-                     urllib.quote(buildurl, '/:'))
+            text += "Full details are available at:\n %s\n" % buildurl
         text += "\n"
 
         url = self.status.getBuildbotURL()
