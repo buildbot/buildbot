@@ -3,7 +3,7 @@
 	* contrib/svn_buildbot.py (ChangeSender.getChanges): ignore the
 	first six columns of 'svnlook' output, not just the first column,
 	since property changes appear in the other five. Thanks to Olivier
-	Bonnet for the patch.
+	Bonnet for the patch. Fixes SF#1398174.
 
 2006-06-01  Brian Warner  <warner@lothar.com>
 
