@@ -16,7 +16,7 @@ from twisted.spread import pb
 
 from buildbot.twcompat import implements, Interface
 
-import string, types, time, os.path
+import sys, string, types, time, os.path
 
 from buildbot import interfaces, util
 from buildbot import version
@@ -1582,11 +1582,19 @@ class StatusResource(Resource):
 
         return NoResource("No such Builder '%s'" % path)
 
-# the icon is sibpath(__file__, "../buildbot.png") . This is for portability.
-up = os.path.dirname
-buildbot_icon = os.path.abspath(os.path.join(up(up(__file__)),
-                                             "buildbot.png"))
-buildbot_css = os.path.abspath(os.path.join(up(__file__), "classic.css"))
+if hasattr(sys, "frozen"):
+    # all 'data' files are in the directory of our executable
+    here = os.path.dirname(sys.executable)
+    buildbot_icon = os.path.abspath(os.path.join(here, "buildbot.png"))
+    buildbot_css = os.path.abspath(os.path.join(here, "classic.css"))
+else:
+    # running from source
+    # the icon is sibpath(__file__, "../buildbot.png") . This is for
+    # portability.
+    up = os.path.dirname
+    buildbot_icon = os.path.abspath(os.path.join(up(up(__file__)),
+                                                 "buildbot.png"))
+    buildbot_css = os.path.abspath(os.path.join(up(__file__), "classic.css"))
 
 class Waterfall(base.StatusReceiverMultiService):
     """I implement the primary web-page status interface, called a 'Waterfall

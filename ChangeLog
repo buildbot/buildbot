@@ -1,5 +1,14 @@
 2006-06-03  Brian Warner  <warner@lothar.com>
 
+	* contrib/windows/{setup.py, buildbot_service.py}: add support for
+	running py2exe on windows, contributed by Mark Hammond. Addresses
+	SF#1401121, but I think we still need to include
+	buildbot/scripts/sample.cfg
+	* setup.py: include buildbot_service.py as a script under windows
+	* buildbot/status/html.py: when sys.frozen (i.e. we're running in
+	a py2exe application), get the icon/css datafiles from a different
+	place than usual.
+
 	* buildbot/status/mail.py (MailNotifier.buildMessage): don't
 	double-escape the build URL. Thanks to Olivier Bonnet for the
 	patch. Fixes SF#1452801.

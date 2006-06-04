@@ -35,6 +35,7 @@ improve.
 scripts = ["bin/buildbot"]
 if sys.platform == "win32":
     scripts.append("contrib/windows/buildbot.bat")
+    scripts.append("contrib/windows/buildbot_service.py")
 
 setup(name="buildbot",
       version=version,
