@@ -9,6 +9,7 @@ from twisted.python import log
 from twisted.python.failure import Failure
 from twisted.web.util import formatFailure
 
+from buildbot import util
 from buildbot.interfaces import BuildSlaveTooOldError
 from buildbot.util import now
 from buildbot.status import progress, builder
@@ -852,10 +853,12 @@ class _BuildPropertyDictionary:
             p = ""
         return p
 
-class WithProperties:
+class WithProperties(util.ComparableMixin):
     """This is a marker class, used in ShellCommand's command= argument to
     indicate that we want to interpolate a build property.
     """
+
+    compare_attrs = ('fmtstring', 'args')
 
     def __init__(self, fmtstring, *args):
         self.fmtstring = fmtstring
