@@ -3,6 +3,8 @@
 	* buildbot/process/step.py (WithProperties): make this inherit
 	from ComparableMixin, so that reloading an unchanged config file
 	doesn't cause us to spuriously reload any Builders which use them.
+	* buildbot/test/test_config.py (ConfigTest.testWithProperties):
+	add a test for it
 
 2006-06-03  Brian Warner  <warner@lothar.com>
 

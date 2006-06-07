@@ -81,6 +81,27 @@ c['builders'] = [{ 'name': 'builder1', 'slavename': 'bot1',
                    'builddir': 'workdir2', 'factory': f1 }]
 """
 
+wpCfg1 = buildersCfg + \
+"""
+from buildbot.process import step
+f1 = BasicBuildFactory('cvsroot', 'cvsmodule')
+f1.addStep(step.ShellCommand, command=[step.WithProperties('echo')])
+c['builders'] = [{'name':'builder1', 'slavename':'bot1',
+                  'builddir':'workdir1', 'factory': f1}]
+"""
+
+wpCfg2 = buildersCfg + \
+"""
+from buildbot.process import step
+f1 = BasicBuildFactory('cvsroot', 'cvsmodule')
+f1.addStep(step.ShellCommand,
+           command=[step.WithProperties('echo %s', 'revision')])
+c['builders'] = [{'name':'builder1', 'slavename':'bot1',
+                  'builddir':'workdir1', 'factory': f1}]
+"""
+
+
+
 ircCfg1 = emptyCfg + \
 """
 from buildbot.status import words
@@ -685,6 +706,28 @@ c['schedulers'] = [s1, Dependent('downstream', s1, ['builder1'])]
         self.failUnlessEqual(master.botmaster.builderNames, [])
         self.failUnlessEqual(master.botmaster.builders, {})
         #self.failUnlessEqual(master.client_svc.statusbags, {}) # TODO
+
+    def testWithProperties(self):
+        master = self.buildmaster
+        master.loadConfig(wpCfg1)
+        self.failUnlessEqual(master.botmaster.builderNames, ["builder1"])
+        self.failUnlessEqual(master.botmaster.builders.keys(), ["builder1"])
+        b1 = master.botmaster.builders["builder1"]
+
+        # reloading the same config should leave the builder unchanged
+        master.loadConfig(wpCfg1)
+        b2 = master.botmaster.builders["builder1"]
+        self.failUnlessIdentical(b1, b2)
+
+        # but changing the parameters of the WithProperties should change it
+        master.loadConfig(wpCfg2)
+        b3 = master.botmaster.builders["builder1"]
+        self.failIf(b1 is b3)
+
+        # again, reloading same config should leave the builder unchanged
+        master.loadConfig(wpCfg2)
+        b4 = master.botmaster.builders["builder1"]
+        self.failUnlessIdentical(b3, b4)
 
     def checkIRC(self, m, expected):
         ircs = {}
