@@ -1,3 +1,12 @@
+2006-06-08  Brian Warner  <warner@allmydata.com>
+
+	* buildbot/status/client.py
+	(RemoteBuilder.remote_getCurrentBuilds): oops, I screwed up when
+	changing this from getCurrentBuild() to getCurrentBuilds(). Each
+	build needs to be IRemote'd separately, rather than IRemote'ing
+	the whole list at once. I can't wait until newpb's serialization
+	adapters make this unnecessary.
+
 2006-06-06  Brian Warner  <warner@lothar.com>
 
 	* buildbot/process/step.py (WithProperties): make this inherit

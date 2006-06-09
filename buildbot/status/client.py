@@ -84,7 +84,7 @@ class RemoteBuilder(pb.Referenceable):
         return makeRemote(self.b.getLastFinishedBuild())
 
     def remote_getCurrentBuilds(self):
-        return makeRemote(self.b.getCurrentBuilds())
+        return [IRemote(b) for b in self.b.getCurrentBuilds()]
 
     def remote_getBuild(self, number):
         return makeRemote(self.b.getBuild(number))
