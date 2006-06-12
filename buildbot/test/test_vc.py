@@ -1396,11 +1396,15 @@ class P4Helper(BaseHelper):
                 if data.startswith('Perforce Server starting...'):
                     self.started.callback(None)
                 else:
+                    print "p4d said %r" % data
                     try:
                         raise Exception('p4d said %r' % data)
                     except:
                         self.started.errback(failure.Failure())
                 self.started = None
+
+        def errReceived(self, data):
+            print "p4d stderr: %s" % data
 
         def processEnded(self, status_object):
             if status_object.check(error.ProcessDone):
