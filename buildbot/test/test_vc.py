@@ -1415,7 +1415,10 @@ class P4Helper(BaseHelper):
         return proto.started, proto.ended
 
     def dop4(self, basedir, command, failureIsOk=False, stdin=None):
-        command = "-p " + self.p4port + " " + command
+        # p4 looks at $PWD instead of getcwd(), which causes confusion when
+        # we spawn commands without an intervening shell (sh -c). We can
+        # override this with a -d argument.
+        command = "-p %s -d %s %s" % (self.p4port, basedir, command)
         return self.dovc(basedir, command, failureIsOk, stdin)
 
     def createRepository(self):
@@ -1443,11 +1446,8 @@ class P4Helper(BaseHelper):
         # Create first rev (trunk).
         self.populate(os.path.join(tmp, 'trunk'))
         files = ['main.c', 'version.c', 'subdir/subdir.c']
-        w = self.do(tmp, ['sh', '-c', # TODO: ???
-                          "p4 -p %s -c creator add " % self.p4port
-                          + " ".join(['trunk/%s' % f for f in files])])
-        #self.dop4(tmp, "-c creator add "
-        #          + " ".join(['trunk/%s' % f for f in files]))
+        w = self.dop4(tmp, "-c creator add "
+                      + " ".join(['trunk/%s' % f for f in files]))
         yield w; w.getResult()
         descr = self.base_descr
         for file in files:
@@ -1462,9 +1462,7 @@ class P4Helper(BaseHelper):
         w = self.dop4(tmp, '-c creator integrate '
                       + '//depot/trunk/... //depot/branch/...')
         yield w; w.getResult()
-        w = self.do(tmp, ['sh', '-c', # TODO: again?
-                          "p4 -p %s -c creator edit branch/main.c"
-                          % self.p4port])
+        w = self.dop4(tmp, "-c creator edit branch/main.c")
         yield w; w.getResult()
         self.populate_branch(os.path.join(tmp, 'branch'))
         descr = self.base_descr
@@ -1480,9 +1478,7 @@ class P4Helper(BaseHelper):
         tmp = os.path.join(self.repbase, "p4tmp")
         self.version += 1
         version_c = VERSION_C % self.version
-        w = self.do(tmp, ['sh', '-c', # TODO
-                          'p4 -p %s -c creator edit trunk/version.c'
-                           % self.p4port])
+        w = self.dop4(tmp, '-c creator edit trunk/version.c')
         yield w; w.getResult()
         open(os.path.join(tmp, "trunk/version.c"), "w").write(version_c)
         descr = self.base_descr + '\t//depot/trunk/version.c\n'
