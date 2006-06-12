@@ -363,17 +363,24 @@ class BaseHelper:
         # specify.
         if type(command) not in (list, tuple):
             command = command.split(" ")
-        #print "do %s" % command
+        DEBUG = False
+        if DEBUG:
+            print "do %s" % command
+            print " in basedir %s" % basedir
+            if stdin:
+                print " STDIN:\n", stdin, "\n--STDIN DONE"
         env = os.environ.copy()
         env['LC_ALL'] = "C"
         d = myGetProcessOutputAndValue(command[0], command[1:],
                                        env=env, path=basedir,
                                        stdin=stdin)
         def check((out, err, code)):
-            #print
-            #print "command: %s" % command
-            #print "out: %s" % out
-            #print "code: %s" % code
+            if DEBUG:
+                print
+                print "command was: %s" % command
+                if out: print "out: %s" % out
+                if err: print "err: %s" % err
+                print "code: %s" % code
             if code != 0 and not failureIsOk:
                 log.msg("command %s finished with exit code %d" %
                         (command, code))
