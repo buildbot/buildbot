@@ -1439,6 +1439,128 @@ class Mercurial(SourceBase):
 registerSlaveCommand("hg", Mercurial, cvs_ver)
 
 
+class P4(SourceBase):
+    """A P4 source-updater.
+
+    ['p4port'] (required): host:port for server to access
+    ['p4user'] (optional): user to use for access
+    ['p4passwd'] (optional): passwd to try for the user
+    ['p4client'] (optional): client spec to use
+    ['p4views'] (optional): client views to use
+    """
+
+    header = "p4"
+
+    def setup(self, args):
+        SourceBase.setup(self, args)
+        self.p4port = args['p4port']
+        self.p4client = args['p4client']
+        self.p4user = args['p4user']
+        self.p4passwd = args['p4passwd']
+        self.p4base = args['p4base']
+        self.p4extra_views = args['p4extra_views']
+        self.p4mode = args['mode']
+        self.p4branch = args['branch']
+        self.p4logname = os.environ['LOGNAME']
+
+        self.sourcedata = str([
+            # Perforce server.
+            self.p4port,
+
+            # Client spec.
+            self.p4client,
+
+            # Depot side of view spec.
+            self.p4base,
+            self.p4branch,
+            self.p4extra_views,
+
+            # Local side of view spec (srcdir is made from these).
+            self.builder.basedir,
+            self.mode,
+            self.workdir
+        ])
+
+
+    def sourcedirIsUpdateable(self):
+        if os.path.exists(os.path.join(self.builder.basedir,
+                                       self.srcdir, ".buildbot-patched")):
+            return False
+        # We assume our client spec is still around.
+        # We just say we aren't updateable if the dir doesn't exist so we
+        # don't get ENOENT checking the sourcedata.
+        return os.path.isdir(os.path.join(self.builder.basedir,
+                                          self.srcdir))
+
+    def doVCUpdate(self):
+        return self._doP4Sync(force=False)
+
+    def _doP4Sync(self, force):
+        command = ['p4']
+
+        if self.p4port:
+            command.extend(['-p', self.p4port])
+        if self.p4user:
+            command.extend(['-u', self.p4user])
+        if self.p4passwd:
+            command.extend(['-P', self.p4passwd])
+        if self.p4client:
+            command.extend(['-c', self.p4client])
+        command.extend(['sync'])
+        if force:
+            command.extend(['-f'])
+        if self.revision:
+            command.extend(['@' + str(self.revision)])
+        env = {}
+        c = ShellCommand(self.builder, command, self.builder.basedir,
+                         environ=env, sendRC=False, timeout=self.timeout,
+                         keepStdout=True)
+        self.command = c
+        d = c.start()
+        d.addCallback(self._abandonOnFailure)
+        return d
+
+
+    def doVCFull(self):
+        env = {}
+        command = ['p4']
+        client_spec = ''
+        client_spec += "Client: %s\n\n" % self.p4client
+        client_spec += "Owner: %s\n\n" % self.p4logname
+        client_spec += "Description:\n\tCreated by %s\n\n" % self.p4logname
+        client_spec += "Root:\t%s\n\n" % self.builder.basedir
+        client_spec += "Options:\tallwrite rmdir\n\n"
+        client_spec += "LineEnd:\tlocal\n\n"
+
+        # Setup a view
+        client_spec += "View:\n\t%s" % (self.p4base)
+        if self.p4branch:
+            client_spec += "%s/" % (self.p4branch)
+        client_spec += "... //%s/%s/...\n" % (self.p4client, self.srcdir)
+        if self.p4extra_views:
+            for k, v in self.p4extra_views:
+                client_spec += "\t%s/... //%s/%s%s/...\n" % (k, self.p4client,
+                                                             self.srcdir, v)
+        if self.p4port:
+            command.extend(['-p', self.p4port])
+        if self.p4user:
+            command.extend(['-u', self.p4user])
+        if self.p4passwd:
+            command.extend(['-P', self.p4passwd])
+        command.extend(['client', '-i'])
+        log.msg(client_spec)
+        c = ShellCommand(self.builder, command, self.builder.basedir,
+                         environ=env, sendRC=False, timeout=self.timeout,
+                         stdin=client_spec)
+        self.command = c
+        d = c.start()
+        d.addCallback(self._abandonOnFailure)
+        d.addCallback(lambda _: self._doP4Sync(force=True))
+        return d
+
+registerSlaveCommand("p4", P4, cvs_ver)
+
+
 class P4Sync(SourceBase):
     """A partial P4 source-updater. Requires manual setup of a per-slave P4
     environment. The only thing which comes from the master is P4PORT.
@@ -1463,7 +1585,7 @@ class P4Sync(SourceBase):
     def sourcedirIsUpdateable(self):
         return True
 
-    def doVCUpdate(self):
+    def _doVC(self, force):
         d = os.path.join(self.builder.basedir, self.srcdir)
         command = [self.vcexe]
         if self.p4port:
@@ -1475,6 +1597,8 @@ class P4Sync(SourceBase):
         if self.p4client:
             command.extend(['-c', self.p4client])
         command.extend(['sync'])
+        if force:
+            command.extend(['-f'])
         if self.revision:
             command.extend(['@' + self.revision])
         env = {}
@@ -1483,7 +1607,10 @@ class P4Sync(SourceBase):
         self.command = c
         return c.start()
 
+    def doVCUpdate(self):
+        return self._doVC(force=False)
+
     def doVCFull(self):
-        return self.doVCUpdate()
+        return self._doVC(force=True)
 
 registerSlaveCommand("p4sync", P4Sync, cvs_ver)

@@ -6,7 +6,35 @@ import sys, os, signal, shutil, time, re
 from email.Utils import mktime_tz, parsedate_tz
 
 from twisted.trial import unittest
-from twisted.internet import defer, reactor, utils
+from twisted.internet import defer, reactor, utils, protocol, error
+try:
+    from twisted.python.procutils import which
+except ImportError:
+    # copied from Twisted circa 2.2.0
+    def which(name, flags=os.X_OK):
+        """Search PATH for executable files with the given name.
+
+        @type name: C{str}
+        @param name: The name for which to search.
+
+        @type flags: C{int}
+        @param flags: Arguments to L{os.access}.
+
+        @rtype: C{list}
+        @param: A list of the full paths to files found, in the
+        order in which they were found.
+        """
+        result = []
+        exts = filter(None, os.environ.get('PATHEXT', '').split(os.pathsep))
+        for p in os.environ['PATH'].split(os.pathsep):
+            p = os.path.join(p, name)
+            if os.access(p, flags):
+                result.append(p)
+            for e in exts:
+                pext = p + e
+                if os.access(pext, flags):
+                    result.append(pext)
+        return result
 
 #defer.Deferred.debug = True
 
@@ -47,6 +75,49 @@ from twisted.internet.defer import waitForDeferred, deferredGenerator
 # small web server to provide access to the repository files while the test
 # is running).
 
+# Perforce starts the daemon running on localhost. Unfortunately, it must
+# use a predetermined Internet-domain port number, unless we want to go
+# all-out: bind the listen socket ourselves and pretend to be inetd.
+
+try:
+    import cStringIO as StringIO
+except ImportError:
+    import StringIO
+
+class _PutEverythingGetter(protocol.ProcessProtocol):
+    def __init__(self, deferred, stdin):
+        self.deferred = deferred
+        self.outBuf = StringIO.StringIO()
+        self.errBuf = StringIO.StringIO()
+        self.outReceived = self.outBuf.write
+        self.errReceived = self.errBuf.write
+        self.stdin = stdin
+
+    def connectionMade(self):
+        if self.stdin is not None:
+            self.transport.write(self.stdin)
+            self.transport.closeStdin()
+
+    def processEnded(self, reason):
+        out = self.outBuf.getvalue()
+        err = self.errBuf.getvalue()
+        e = reason.value
+        code = e.exitCode
+        if e.signal:
+            self.deferred.errback((out, err, e.signal))
+        else:
+            self.deferred.callback((out, err, code))
+
+def myGetProcessOutputAndValue(executable, args=(), env={}, path='.',
+                               reactor=None, stdin=None):
+    """Like twisted.internet.utils.getProcessOutputAndValue but takes
+    stdin, too."""
+    if reactor is None:
+        from twisted.internet import reactor
+    d = defer.Deferred()
+    p = _PutEverythingGetter(d, stdin)
+    reactor.spawnProcess(p, executable, (executable,)+tuple(args), env, path)
+    return d
 
 config_vc = """
 from buildbot.process import factory, step
@@ -313,7 +384,7 @@ class BaseHelper:
         self.branch.append(rev)
         self.allrevs.append(rev)
 
-    def runCommand(self, basedir, command, failureIsOk=False):
+    def runCommand(self, basedir, command, failureIsOk=False, stdin=None):
         # all commands passed to do() should be strings or lists. If they are
         # strings, none of the arguments may have spaces. This makes the
         # commands less verbose at the expense of restricting what they can
@@ -323,8 +394,9 @@ class BaseHelper:
         #print "do %s" % command
         env = os.environ.copy()
         env['LC_ALL'] = "C"
-        d = utils.getProcessOutputAndValue(command[0], command[1:],
-                                           env=env, path=basedir)
+        d = myGetProcessOutputAndValue(command[0], command[1:],
+                                       env=env, path=basedir,
+                                       stdin=stdin)
         def check((out, err, code)):
             #print
             #print "command: %s" % command
@@ -342,14 +414,15 @@ class BaseHelper:
         d.addCallback(check)
         return d
 
-    def do(self, basedir, command, failureIsOk=False):
-        d = self.runCommand(basedir, command, failureIsOk=failureIsOk)
+    def do(self, basedir, command, failureIsOk=False, stdin=None):
+        d = self.runCommand(basedir, command, failureIsOk=failureIsOk,
+                            stdin=stdin)
         return waitForDeferred(d)
 
-    def dovc(self, basedir, command, failureIsOk=False):
+    def dovc(self, basedir, command, failureIsOk=False, stdin=None):
         """Like do(), but the VC binary will be prepended to COMMAND."""
         command = self.vcexe + " " + command
-        return self.do(basedir, command, failureIsOk)
+        return self.do(basedir, command, failureIsOk, stdin)
 
 class VCBase(SignalMixin):
     metadir = None
@@ -1314,6 +1387,163 @@ class SVN(VCBase, unittest.TestCase):
         return maybeWait(d)
 
 VCS.registerVC(SVN.vc_name, SVNHelper())
+
+
+class P4Support(VCBase):
+    metadir = None
+    branchname = "branch"
+    vctype = "step.P4"
+    p4port = 'localhost:1666'
+    pid = None
+    base_descr = 'Change: new\nDescription: asdf\nFiles:\n'
+
+    class _P4DProtocol(protocol.ProcessProtocol):
+        def __init__(self):
+            self.started = defer.Deferred()
+            self.ended = defer.Deferred()
+
+        def outReceived(self, data):
+            # When it says starting, it has bound to the socket.
+            if self.started:
+                if data.startswith('Perforce Server starting...'):
+                    self.started.callback(None)
+                else:
+                    try:
+                        raise Exception('p4d said %r' % data)
+                    except:
+                        self.started.errback(failure.Failure())
+                self.started = None
+
+        def processEnded(self, status_object):
+            if status_object.check(error.ProcessDone):
+                self.ended.callback(None)
+            else:
+                self.ended.errback(status_object)
+
+    def _start_p4d(self):
+        proto = self._P4DProtocol()
+        reactor.spawnProcess(proto, self.p4dexe, ['p4d', '-p', self.p4port],
+                             env=os.environ, path=self.p4rep)
+        return proto.started, proto.ended
+
+    def capable(self):
+        global VCS
+        if not VCS.has_key("p4"):
+            VCS["p4"] = False
+            p4paths = which('p4')
+            p4dpaths = which('p4d')
+            if p4paths and p4dpaths:
+                self.vcexe = p4paths[0]
+                self.p4dexe = p4dpaths[0]
+                VCS["p4"] = True
+        if not VCS["p4"]:
+            raise unittest.SkipTest("No usable Perforce was found")
+
+    def vc_create(self):
+        tmp = os.path.join(self.repbase, "p4tmp")
+        self.p4rep = os.path.join(self.repbase, 'P4-Repository')
+        os.mkdir(self.p4rep)
+
+        # Launch p4d.
+        started, self.p4d_shutdown = self._start_p4d()
+        w = waitForDeferred(started)
+        yield w; w.getResult()
+
+        # Create client spec.
+        os.mkdir(tmp)
+        clispec = 'Client: creator\n'
+        clispec += 'Root: %s\n' % tmp
+        clispec += 'View:\n'
+        clispec += '\t//depot/... //creator/...\n'
+        w = self.dovc(tmp, '-p %s client -i' % self.p4port, stdin=clispec)
+        yield w; w.getResult()
+
+        # Create first rev (trunk).
+        self.populate(os.path.join(tmp, 'trunk'))
+        files = ['main.c', 'version.c', 'subdir/subdir.c']
+        w = self.do(tmp, ['sh', '-c',
+                          "p4 -p %s -c creator add " % self.p4port
+                          + " ".join(['trunk/%s' % f for f in files])])
+        yield w; w.getResult()
+        descr = self.base_descr
+        for file in files:
+            descr += '\t//depot/trunk/%s\n' % file
+        w = self.dovc(tmp, "-p %s -c creator submit -i" % self.p4port,
+                      stdin=descr)
+        yield w; out = w.getResult()
+        m = re.search(r'Change (\d+) submitted.', out)
+        assert m.group(1) == '1'
+        self.addTrunkRev(m.group(1))
+
+        # Create second rev (branch).
+        w = self.dovc(tmp, '-p %s -c creator integrate ' % self.p4port
+                      + '//depot/trunk/... //depot/branch/...')
+        yield w; w.getResult()
+        w = self.do(tmp, ['sh', '-c',
+                          "p4 -p %s -c creator edit branch/main.c"
+                          % self.p4port])
+        yield w; w.getResult()
+        self.populate_branch(os.path.join(tmp, 'branch'))
+        descr = self.base_descr
+        for file in files:
+            descr += '\t//depot/branch/%s\n' % file
+        w = self.dovc(tmp, "-p %s -c creator submit -i" % self.p4port,
+                      stdin=descr)
+        yield w; out = w.getResult()
+        m = re.search(r'Change (\d+) submitted.', out)
+        self.addBranchRev(m.group(1))
+    vc_create = deferredGenerator(vc_create)
+
+    def vc_revise(self):
+        tmp = os.path.join(self.repbase, "p4tmp")
+        self.version += 1
+        version_c = VERSION_C % self.version
+        w = self.do(tmp, ['sh', '-c',
+                          'p4 -p %s -c creator edit trunk/version.c'
+                           % self.p4port])
+        yield w; w.getResult()
+        open(os.path.join(tmp, "trunk/version.c"), "w").write(version_c)
+        descr = self.base_descr + '\t//depot/trunk/version.c\n'
+        w = self.dovc(tmp, "-p %s -c creator submit -i" % self.p4port,
+                      stdin=descr)
+        yield w; out = w.getResult()
+        m = re.search(r'Change (\d+) submitted.', out)
+        self.addTrunkRev(m.group(1))
+    vc_revise = deferredGenerator(vc_revise)
+
+    def setUp2(self, res):
+        if self.p4d_shutdown is None:
+            started, self.p4d_shutdown = self._start_p4d()
+            return started
+
+    def tearDown2(self):
+        self.p4d_shutdown = None
+        d = self.runCommand(self.repbase, '%s -p %s admin stop'
+                            % (self.vcexe, self.p4port))
+        return d.addCallback(lambda _: self.p4d_shutdown)
+
+class P4(P4Support, unittest.TestCase):
+
+    def testCheckout(self):
+        self.vcargs = { 'p4port': self.p4port, 'p4base': '//depot/',
+                        'defaultBranch': 'trunk' }
+        d = self.do_vctest(testRetry=False)
+        # TODO: like arch and darcs, sync does nothing when server is not
+        # changed.
+        return maybeWait(d)
+
+    def testPatch(self):
+        self.vcargs = { 'p4port': self.p4port, 'p4base': '//depot/',
+                        'defaultBranch': 'trunk' }
+        d = self.do_patch()
+        return maybeWait(d)
+
+    def testBranch(self):
+        self.vcargs = { 'p4port': self.p4port, 'p4base': '//depot/',
+                        'defaultBranch': 'trunk' }
+        d = self.do_branch()
+        return maybeWait(d)
+
 
 class DarcsHelper(BaseHelper):
     branchname = "branch"

@@ -128,6 +128,7 @@ Change Sources
 * CVSToys - mail notification::  
 * Other mail notification ChangeSources::  
 * PBChangeSource::              
+* P4Source::                    
 
 Build Process
 
@@ -150,7 +151,7 @@ Source Checkout
 * Mercurial::                   
 * Arch::                        
 * Bazaar::                      
-* P4Sync::                      
+* P4::                          
 
 Simple ShellCommand Subclasses
 
@@ -1164,6 +1165,13 @@ module form a static @code{baseURL}, while each build has a
 statically-specified @code{defaultBranch}). The @code{baseURL} and
 @code{branch} are simply concatenated together to derive the
 @code{svnurl} to use for the checkout.
+
+@uref{http://www.perforce.com/, Perforce} is similar. The server
+is specified through a @code{P4PORT} parameter. Module and branch
+are specified in a single depot path, and revisions are
+depot-wide. When branches are used, the @code{p4base} and
+@code{defaultBranch} are concatenated together to produce the depot
+path.
 
 @uref{http://wiki.gnuarch.org/, Arch} and
 @uref{http://bazaar.canonical.com/, Bazaar} specify a repository by
@@ -2302,6 +2310,7 @@ a suitable @code{MaildirSource}.
 * CVSToys - mail notification::  
 * Other mail notification ChangeSources::  
 * PBChangeSource::              
+* P4Source::                    
 @end menu
 
 @node Choosing ChangeSources, CVSToys - PBService, Change Sources, Change Sources
@@ -2447,7 +2456,7 @@ used in mail sent by Syncmail.
 
 @code{BonsaiMaildirSource} parses messages sent out by Bonsai.
 
-@node PBChangeSource,  , Other mail notification ChangeSources, Change Sources
+@node PBChangeSource, P4Source, Other mail notification ChangeSources, Change Sources
 @subsection PBChangeSource
 
 The last kind of ChangeSource actually listens on a TCP port for
@@ -2499,6 +2508,55 @@ the prefix to be found and stripped from filenames delivered over the
 connection.
 @end table
 
+
+@node P4Source, , PBChangeSource, Change Sources
+@subsection P4Source
+
+The @code{P4Source} periodically polls a @uref{http://www.perforce.com/,
+Perforce} depot for changes. It accepts the following arguments:
+
+@table @samp
+@item @code{p4base}
+The base depot path to watch, without the trailing '/...'.
+
+@item @code{p4port}
+The Perforce server to connect to (as host:port).
+
+@item @code{p4user}
+The Perforce user.
+
+@item @code{p4passwd}
+The Perforce password.
+
+@item @code{split_file}
+A function that maps a pathname, without the leading @code{p4base}, to a
+(branch, filename) tuple. The default just returns (None, branchfile),
+which effectively disables branch support. You should supply a function
+which understands your repository structure.
+
+@item @code{pollinterval}
+How often to poll, in seconds. Defaults to 600 (10 minutes).
+
+@item @code{histmax}
+The maximum number of changes to inspect at a time. If more than this
+number occur since the last poll, older changes will be silently
+ignored.
+@end table
+
+@heading Example
+
+This configuration uses the @code{P4PORT}, @code{P4USER}, and @code{P4PASSWD}
+specified in the buildmaster's environment. It watches a project in which the
+branch name is simply the next path component, and the file is all path
+components after.
+
+@example
+import buildbot.changes.p4poller
+c['sources'].append(p4poller.P4Source(
+        p4base='//depot/project/',
+        split_file=lambda branchfile: branchfile.split('/',1)
+))
+@end example
 
 @node Build Process, Status Delivery, Getting Source Code Changes, Top
 @chapter Build Process
@@ -2733,7 +2791,7 @@ arguments are described on the following pages.
 * Mercurial::                   
 * Arch::                        
 * Bazaar::                      
-* P4Sync::                      
+* P4::                          
 @end menu
 
 @node CVS, SVN, Source Checkout, Source Checkout
@@ -3005,7 +3063,7 @@ step, below.
 
 @end table
 
-@node Bazaar, P4Sync, Arch, Source Checkout
+@node Bazaar, P4, Arch, Source Checkout
 @subsubsection Bazaar
 
 @cindex Bazaar Checkout
@@ -3021,22 +3079,42 @@ name when you do @code{baz register-archive}, so we must provide it
 ourselves).
 
 
-@node P4Sync,  , Bazaar, Source Checkout
-@subsubsection P4Sync
+@node P4,  , Bazaar, Source Checkout
+@subsubsection P4
 
 @cindex Perforce Update
 
-The @code{P4Sync} build step performs a
-@uref{http://www.perforce.com/, Perforce} update. It is a temporary
-facility: a more complete P4 checkout step (named @code{P4}) will
-eventually replace it. This step requires significant manual setup on
-each build slave. It takes the following arguments.
+The @code{P4} build step creates a @uref{http://www.perforce.com/,
+Perforce} client specification and performs an update.
 
 @table @code
+@item p4base
+A view into the Perforce depot without branch name or trailing "...".
+Typically "//depot/proj/".
+@item defaultBranch
+A branch name to append on build requests if none is specified.
+Typically "trunk".
 @item p4port
-(required): the host:port string describing how to get to the P4 Depot
-(repository), used as the P4PORT environment variable for all p4
-commands
+(optional): the host:port string describing how to get to the P4 Depot
+(repository), used as the -p argument for all p4 commands.
+@item p4user
+(optional): the Perforce user, used as the -u argument to all p4
+commands.
+@item p4passwd
+(optional): the Perforce password, used as the -p argument to all p4
+commands.
+@item p4extra_views
+(optional): a list of (depotpath, clientpath) tuples containing extra
+views to be mapped into the client specification. Both will have
+"/..." appended automatically. The client name and source directory
+will be prepended to the client path.
+@item p4client
+(optional): The name of the client to use. In mode='copy' and
+mode='update', it's particularly important that a unique name is used
+for each checkout directory to avoid incorrect synchronization. For
+this reason, Python percent substitution will be performed on this value
+to replace %(slave)s with the slave name and %(builder)s with the
+builder name. The default is "buildbot_%(slave)s_%(build)s".
 @end table
 
 @node ShellCommand, Simple ShellCommand Subclasses, Source Checkout, Build Steps

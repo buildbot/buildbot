@@ -1822,24 +1822,69 @@ class Mercurial(Source):
         self.startCommand(cmd)
 
 
-class todo_P4(Source):
+class P4(Source):
+    """ P4 is a class for accessing perforce revision control"""
     name = "p4"
 
-    # to create the working directory for the first time:
-    #  need to create a View. The 'Root' parameter will have to be filled
-    #  in by the buildslave with the abspath of the basedir. Then the
-    #  setup process involves 'p4 client' to set up the view. After
-    #  that, 'p4 sync' does all the necessary updating.
-    #  P4PORT=P4PORT P4CLIENT=name p4 client
+    def __init__(self, p4base, defaultBranch=None, p4port=None, p4user=None,
+                 p4passwd=None, p4extra_views=[],
+                 p4client='buildbot_%(slave)s_%(builder)s', **kwargs):
+        """
+        @type  p4base: string
+        @param p4base: A view into a perforce depot, typically
+                       "//depot/proj/"
 
-    def __init__(self, p4port, view, **kwargs):
+        @type  defaultBranch: string
+        @param defaultBranch: Identify a branch to build by default. Perforce
+                              is a view based branching system. So, the branch
+                              is normally the name after the base. For example,
+                              branch=1.0 is view=//depot/proj/1.0/...
+                              branch=1.1 is view=//depot/proj/1.1/...
+
+        @type  p4port: string
+        @param p4port: Specify the perforce server to connection in the format
+                       <host>:<port>. Example "perforce.example.com:1666"
+
+        @type  p4user: string
+        @param p4user: The perforce user to run the command as.
+
+        @type  p4passwd: string
+        @param p4passwd: The password for the perforce user.
+
+        @type  p4extra_views: list of tuples
+        @param p4extra_views: Extra views to be added to
+                              the client that is being used.
+
+        @type  p4client: string
+        @param p4client: The perforce client to use for this buildslave.
+        """
+
+        self.branch = defaultBranch
         Source.__init__(self, **kwargs)
-        self.args.update({'p4port': p4port,
-                          'view': view,
-                          })
+        self.args['p4port'] = p4port
+        self.args['p4user'] = p4user
+        self.args['p4passwd'] = p4passwd
+        self.args['p4base'] = p4base
+        self.args['p4extra_views'] = p4extra_views
+        self.args['p4client'] = p4client % {
+            'slave': self.build.slavename,
+            'builder': self.build.builder.name,
+        }
+
+    def computeSourceRevision(self, changes):
+        if not changes:
+            return None
+        lastChange = max([int(c.revision) for c in changes])
+        return lastChange
 
     def startVC(self, branch, revision, patch):
-        cmd = LoggedRemoteCommand("p4", self.args)
+        slavever = self.slaveVersion("p4")
+        assert slavever, "slave is too old, does not know about p4"
+        args = dict(self.args)
+        args['branch'] = branch or self.branch
+        args['revision'] = revision
+        args['patch'] = patch
+        cmd = LoggedRemoteCommand("p4", args)
         self.startCommand(cmd)
 
 class P4Sync(Source):
