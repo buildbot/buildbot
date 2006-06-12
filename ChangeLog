@@ -1,5 +1,25 @@
 2006-06-12  Brian Warner  <warner@lothar.com>
 
+	* buildbot/process/step.py (P4): merge in patch SF#1473939, adding
+	proper Perforce (P4) support. Many many thanks to Scott Lamb for
+	contributing such an excellent patch, including docs and unit
+	tests! This makes it *so* much easier to apply. I had to update
+	test_vc.py to handle some recent refactorings, but everything else
+	applied smoothly. The only remaining thing I'd like to fix would
+	be to remove the hard-wired port 1666 used by p4d, and allow it to
+	claim any unused port. This would allow two copies of the test
+	suite to run on the same host at the same time, as well as
+	allowing the test suite to run while a real (production) p4d was
+	running on the same host. Oh, and maybe we should add a warning to
+	step.P4 that gets emitted if the slave is too old to provide the
+	'p4' SlaveCommand. Otherwise it looks great. (closes: SF#1473939).
+	* buildbot/slave/commands.py (P4): same
+	(P4Sync): same, some minor updates
+	* buildbot/changes/p4poller.py: same
+	* docs/buildbot.texinfo: same
+	* buildbot/test/test_p4poller.py: same
+	* buildbot/test/test_vc.py (P4): same
+
 	* setup.py: add Trove classifiers for PyPI
 
 2006-06-08  Brian Warner  <warner@allmydata.com>
