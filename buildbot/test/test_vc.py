@@ -408,6 +408,7 @@ class VCBase(SignalMixin):
     createdRepository = False
     master = None
     slave = None
+    helper = None
     httpServer = None
     httpPort = None
     skip = None
@@ -1503,7 +1504,8 @@ class P4(VCBase, unittest.TestCase):
     vc_name = "p4"
 
     def tearDownClass(self):
-        return maybeWait(self.helper.shutdown_p4d())
+        if self.helper:
+            return maybeWait(self.helper.shutdown_p4d())
 
     def testCheckout(self):
         self.helper.vcargs = { 'p4port': self.helper.p4port,
