@@ -1,3 +1,7 @@
+2006-06-12  Brian Warner  <warner@lothar.com>
+
+	* setup.py: add Trove classifiers for PyPI
+
 2006-06-08  Brian Warner  <warner@allmydata.com>
 
 	* buildbot/status/client.py
