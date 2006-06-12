@@ -7,34 +7,6 @@ from email.Utils import mktime_tz, parsedate_tz
 
 from twisted.trial import unittest
 from twisted.internet import defer, reactor, utils, protocol, error
-try:
-    from twisted.python.procutils import which
-except ImportError:
-    # copied from Twisted circa 2.2.0
-    def which(name, flags=os.X_OK):
-        """Search PATH for executable files with the given name.
-
-        @type name: C{str}
-        @param name: The name for which to search.
-
-        @type flags: C{int}
-        @param flags: Arguments to L{os.access}.
-
-        @rtype: C{list}
-        @param: A list of the full paths to files found, in the
-        order in which they were found.
-        """
-        result = []
-        exts = filter(None, os.environ.get('PATHEXT', '').split(os.pathsep))
-        for p in os.environ['PATH'].split(os.pathsep):
-            p = os.path.join(p, name)
-            if os.access(p, flags):
-                result.append(p)
-            for e in exts:
-                pext = p + e
-                if os.access(pext, flags):
-                    result.append(pext)
-        return result
 
 #defer.Deferred.debug = True
 
@@ -1389,13 +1361,22 @@ class SVN(VCBase, unittest.TestCase):
 VCS.registerVC(SVN.vc_name, SVNHelper())
 
 
-class P4Support(VCBase):
-    metadir = None
+class P4Helper(BaseHelper):
     branchname = "branch"
-    vctype = "step.P4"
     p4port = 'localhost:1666'
     pid = None
     base_descr = 'Change: new\nDescription: asdf\nFiles:\n'
+
+    def capable(self):
+        p4paths = which('p4')
+        p4dpaths = which('p4d')
+        if not p4paths:
+            return (False, "p4 is not installed")
+        if not p4dpaths:
+            return (False, "p4d is not installed")
+        self.vcexe = p4paths[0]
+        self.p4dexe = p4dpaths[0]
+        return (True, None)
 
     class _P4DProtocol(protocol.ProcessProtocol):
         def __init__(self):
@@ -1426,20 +1407,14 @@ class P4Support(VCBase):
                              env=os.environ, path=self.p4rep)
         return proto.started, proto.ended
 
-    def capable(self):
-        global VCS
-        if not VCS.has_key("p4"):
-            VCS["p4"] = False
-            p4paths = which('p4')
-            p4dpaths = which('p4d')
-            if p4paths and p4dpaths:
-                self.vcexe = p4paths[0]
-                self.p4dexe = p4dpaths[0]
-                VCS["p4"] = True
-        if not VCS["p4"]:
-            raise unittest.SkipTest("No usable Perforce was found")
+    def dop4(self, basedir, command, failureIsOk=False, stdin=None):
+        command = "-p " + self.p4port + " " + command
+        return self.dovc(basedir, command, failureIsOk, stdin)
 
-    def vc_create(self):
+    def createRepository(self):
+        # this is only called once per VC system, so start p4d here.
+
+        self.createBasedir()
         tmp = os.path.join(self.repbase, "p4tmp")
         self.p4rep = os.path.join(self.repbase, 'P4-Repository')
         os.mkdir(self.p4rep)
@@ -1455,31 +1430,32 @@ class P4Support(VCBase):
         clispec += 'Root: %s\n' % tmp
         clispec += 'View:\n'
         clispec += '\t//depot/... //creator/...\n'
-        w = self.dovc(tmp, '-p %s client -i' % self.p4port, stdin=clispec)
+        w = self.dop4(tmp, 'client -i', stdin=clispec)
         yield w; w.getResult()
 
         # Create first rev (trunk).
         self.populate(os.path.join(tmp, 'trunk'))
         files = ['main.c', 'version.c', 'subdir/subdir.c']
-        w = self.do(tmp, ['sh', '-c',
+        w = self.do(tmp, ['sh', '-c', # TODO: ???
                           "p4 -p %s -c creator add " % self.p4port
                           + " ".join(['trunk/%s' % f for f in files])])
+        #self.dop4(tmp, "-c creator add "
+        #          + " ".join(['trunk/%s' % f for f in files]))
         yield w; w.getResult()
         descr = self.base_descr
         for file in files:
             descr += '\t//depot/trunk/%s\n' % file
-        w = self.dovc(tmp, "-p %s -c creator submit -i" % self.p4port,
-                      stdin=descr)
+        w = self.dop4(tmp, "-c creator submit -i", stdin=descr)
         yield w; out = w.getResult()
         m = re.search(r'Change (\d+) submitted.', out)
         assert m.group(1) == '1'
         self.addTrunkRev(m.group(1))
 
         # Create second rev (branch).
-        w = self.dovc(tmp, '-p %s -c creator integrate ' % self.p4port
+        w = self.dop4(tmp, '-c creator integrate '
                       + '//depot/trunk/... //depot/branch/...')
         yield w; w.getResult()
-        w = self.do(tmp, ['sh', '-c',
+        w = self.do(tmp, ['sh', '-c', # TODO: again?
                           "p4 -p %s -c creator edit branch/main.c"
                           % self.p4port])
         yield w; w.getResult()
@@ -1487,62 +1463,65 @@ class P4Support(VCBase):
         descr = self.base_descr
         for file in files:
             descr += '\t//depot/branch/%s\n' % file
-        w = self.dovc(tmp, "-p %s -c creator submit -i" % self.p4port,
-                      stdin=descr)
+        w = self.dop4(tmp, "-c creator submit -i", stdin=descr)
         yield w; out = w.getResult()
         m = re.search(r'Change (\d+) submitted.', out)
         self.addBranchRev(m.group(1))
-    vc_create = deferredGenerator(vc_create)
+    createRepository = deferredGenerator(createRepository)
 
     def vc_revise(self):
         tmp = os.path.join(self.repbase, "p4tmp")
         self.version += 1
         version_c = VERSION_C % self.version
-        w = self.do(tmp, ['sh', '-c',
+        w = self.do(tmp, ['sh', '-c', # TODO
                           'p4 -p %s -c creator edit trunk/version.c'
                            % self.p4port])
         yield w; w.getResult()
         open(os.path.join(tmp, "trunk/version.c"), "w").write(version_c)
         descr = self.base_descr + '\t//depot/trunk/version.c\n'
-        w = self.dovc(tmp, "-p %s -c creator submit -i" % self.p4port,
-                      stdin=descr)
+        w = self.dop4(tmp, "-c creator submit -i", stdin=descr)
         yield w; out = w.getResult()
         m = re.search(r'Change (\d+) submitted.', out)
         self.addTrunkRev(m.group(1))
     vc_revise = deferredGenerator(vc_revise)
 
-    def setUp2(self, res):
-        if self.p4d_shutdown is None:
-            started, self.p4d_shutdown = self._start_p4d()
-            return started
-
-    def tearDown2(self):
-        self.p4d_shutdown = None
+    def shutdown_p4d(self):
         d = self.runCommand(self.repbase, '%s -p %s admin stop'
                             % (self.vcexe, self.p4port))
         return d.addCallback(lambda _: self.p4d_shutdown)
 
-class P4(P4Support, unittest.TestCase):
+class P4(VCBase, unittest.TestCase):
+    metadir = None
+    vctype = "step.P4"
+    vc_name = "p4"
+
+    def tearDownClass(self):
+        return maybeWait(self.helper.shutdown_p4d())
 
     def testCheckout(self):
-        self.vcargs = { 'p4port': self.p4port, 'p4base': '//depot/',
-                        'defaultBranch': 'trunk' }
+        self.helper.vcargs = { 'p4port': self.helper.p4port,
+                               'p4base': '//depot/',
+                               'defaultBranch': 'trunk' }
         d = self.do_vctest(testRetry=False)
         # TODO: like arch and darcs, sync does nothing when server is not
         # changed.
         return maybeWait(d)
 
     def testPatch(self):
-        self.vcargs = { 'p4port': self.p4port, 'p4base': '//depot/',
-                        'defaultBranch': 'trunk' }
+        self.helper.vcargs = { 'p4port': self.helper.p4port,
+                               'p4base': '//depot/',
+                               'defaultBranch': 'trunk' }
         d = self.do_patch()
         return maybeWait(d)
 
     def testBranch(self):
-        self.vcargs = { 'p4port': self.p4port, 'p4base': '//depot/',
-                        'defaultBranch': 'trunk' }
+        self.helper.vcargs = { 'p4port': self.helper.p4port,
+                               'p4base': '//depot/',
+                               'defaultBranch': 'trunk' }
         d = self.do_branch()
         return maybeWait(d)
+
+VCS.registerVC(P4.vc_name, P4Helper())
 
 
 class DarcsHelper(BaseHelper):
