@@ -89,6 +89,13 @@ class TestP4Poller(unittest.TestCase):
         self.changes = []
         self.addChange = self.changes.append
 
+    def failUnlessIn(self, substr, string):
+        # this is for compatibility with python2.2
+        if isinstance(string, str):
+            self.failUnless(string.find(substr) != -1)
+        else:
+            self.assertIn(substr, string)
+
     def testCheck(self):
         """successful checks"""
         self.t = MockP4Source(p4changes=[first_p4changes, second_p4changes],
@@ -121,28 +128,33 @@ class TestP4Poller(unittest.TestCase):
                    files=['whatbranch'],
                    comments=change_2_log,
                    revision='2',
-                   when=time.mktime((2006, 4, 13, 21, 46, 23, 3, 103, -1)),
+                   when=self.makeTime("2006/04/13 21:46:23"),
                    branch='trunk').asText())
 
         # These two can happen in either order, since they're from the same
         # Perforce change.
-        self.assertIn(
+        self.failUnlessIn(
             Change(who='bob',
                    files=['branch_b_file',
                           'whatbranch'],
                    comments=change_3_log,
                    revision='3',
-                   when=time.mktime((2006, 4, 13, 21, 51, 39, 3, 103, -1)),
+                   when=self.makeTime("2006/04/13 21:51:39"),
                    branch='branch_b').asText(),
             [c.asText() for c in self.changes])
-        self.assertIn(
+        self.failUnlessIn(
             Change(who='bob',
                    files=['whatbranch'],
                    comments=change_3_log,
                    revision='3',
-                   when=time.mktime((2006, 4, 13, 21, 51, 39, 3, 103, -1)),
+                   when=self.makeTime("2006/04/13 21:51:39"),
                    branch='branch_c').asText(),
             [c.asText() for c in self.changes])
+
+    def makeTime(self, timestring):
+        datefmt = '%Y/%m/%d %H:%M:%S'
+        when = time.mktime(time.strptime(timestring, datefmt))
+        return when
 
     def testFailedChanges(self):
         """'p4 changes' failure is properly reported"""
@@ -156,7 +168,7 @@ class TestP4Poller(unittest.TestCase):
 
     def _testFailedChanges2(self, f):
         self.assert_(isinstance(f, failure.Failure))
-        self.assertIn('Perforce client error', str(f))
+        self.failUnlessIn('Perforce client error', str(f))
         self.assert_(not self.t.working)
 
     def testFailedDescribe(self):
@@ -176,7 +188,7 @@ class TestP4Poller(unittest.TestCase):
 
     def _testFailedDescribe3(self, f):
         self.assert_(isinstance(f, failure.Failure))
-        self.assertIn('Perforce client error', str(f))
+        self.failUnlessIn('Perforce client error', str(f))
         self.assert_(not self.t.working)
         self.assertEquals(self.t.last_change, '2')
 

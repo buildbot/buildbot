@@ -1,3 +1,17 @@
+2006-06-13  Brian Warner  <warner@lothar.com>
+
+	* buildbot/test/test_p4poller.py (TestP4Poller.failUnlessIn): fix
+	compatibility with python2.2, which doesn't have the 'substr in
+	str' feature.
+	(TestP4Poller.makeTime): utility function to construct the
+	timestamp using the same strptime() approach as p4poller does. It
+	turns out that time.mktime() behaves slightly differently under
+	python2.2, probably something to do with the DST flag, and that
+	causes the test to fail under python2.2. (changing the mktime()
+	arguments to have dst=0 instead of -1 caused it to fail under
+	python2.3. Go figure.)
+	(TestP4Poller._testCheck3): use our makeTime() instead of mktime()
+
 2006-06-12  Brian Warner  <warner@lothar.com>
 
 	* buildbot/process/step.py (P4): merge in patch SF#1473939, adding
