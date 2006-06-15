@@ -1,5 +1,10 @@
 2006-06-14  Brian Warner  <warner@lothar.com>
 
+	* buildbot/process/step_twisted.py (HLint.commandComplete): update
+	to new cmd.logs['stdio'] scheme
+	(Trial.commandComplete): same
+	(BuildDebs.commandComplete): same
+
 	* buildbot/process/step.py (LoggedRemoteCommand): use a dict of
 	LogFiles, instead of just a single one. The old single logfile is
 	now called "stdio". LoggedRemoteCommand no longer creates a

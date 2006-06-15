@@ -62,7 +62,7 @@ class HLint(ShellCommand):
         # submitted to hlint) because it is available in the logfile and
         # mostly exists to give the user an idea of how long the step will
         # take anyway).
-        lines = cmd.log.getText().split("\n")
+        lines = cmd.logs['stdio'].getText().split("\n")
         warningLines = filter(lambda line:':' in line, lines)
         if warningLines:
             self.addCompleteLog("warnings", "".join(warningLines))
@@ -436,7 +436,7 @@ class Trial(ShellCommand):
         # figure out all status, then let the various hook functions return
         # different pieces of it
 
-        output = cmd.log.getText()
+        output = cmd.logs['stdio'].getText()
         counts = countFailedTests(output)
 
         total = counts['total']
@@ -704,7 +704,7 @@ class BuildDebs(ShellCommand):
 
     def commandComplete(self, cmd):
         errors, warnings = 0, 0
-        output = cmd.log.getText()
+        output = cmd.logs['stdio'].getText()
         summary = ""
         sio = StringIO.StringIO(output)
         for line in sio.readlines():
