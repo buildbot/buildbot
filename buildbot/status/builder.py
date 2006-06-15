@@ -201,9 +201,9 @@ class LogFile:
     logs."""
 
     if implements:
-        implements(interfaces.IStatusLog)
+        implements(interfaces.IStatusLog, interfaces.ILogFile)
     else:
-        __implements__ = interfaces.IStatusLog,
+        __implements__ = (interfaces.IStatusLog, interfaces.ILogFile)
 
     finished = False
     length = 0

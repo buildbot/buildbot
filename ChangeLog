@@ -1,5 +1,10 @@
 2006-06-14  Brian Warner  <warner@lothar.com>
 
+	* buildbot/interfaces.py (ILogFile): add the Interface used from
+	the BuildStep towards the LogFile
+	(ILogObserver): and the one provided by a LogObserver
+	* buildbot/status/builder.py (LogFile): implement it
+
 	* buildbot/interfaces.py (LOG_CHANNEL_*): move STDOUT / STDERR /
 	HEADER constants here ..
 	* buildbot/status/builder.py (STDOUT): .. from here

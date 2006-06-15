@@ -893,3 +893,33 @@ class IBuildControl(Interface):
     def stopBuild(reason="<no reason given>"):
         """Halt the build. This has no effect if the build has already
         finished."""
+
+class ILogFile(Interface):
+    """This is the internal interface to a LogFile, used by the BuildStep to
+    write data into the log.
+    """
+    def addStdout(data):
+        pass
+    def addStderr(data):
+        pass
+    def addHeader(data):
+        pass
+    def finish():
+        """The process that is feeding the log file has finished, and no
+        further data will be added. This closes the logfile."""
+
+class ILogObserver(Interface):
+    """Objects which provide this interface can be used in a BuildStep to
+    watch the output of a LogFile and parse it incrementally.
+    """
+
+    # internal methods
+    def setStep(step):
+        pass
+    def setLog(log):
+        pass
+
+    # methods called by the LogFile
+    def logChunk(build, step, log, channel, text):
+        pass
+
