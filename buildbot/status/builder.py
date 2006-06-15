@@ -207,7 +207,6 @@ class LogFile:
 
     finished = False
     length = 0
-    progress = None
     chunkSize = 10*1000
     runLength = 0
     runEntries = [] # provided so old pickled builds will getChunks() ok
@@ -353,9 +352,6 @@ class LogFile:
         p.resumeProducing()
 
     # interface used by the build steps to add things to the log
-    def logProgressTo(self, progress, name):
-        self.progress = progress
-        self.progressName = name
 
     def merge(self):
         # merge all .runEntries (which are all of the same type) into a
@@ -391,8 +387,6 @@ class LogFile:
         for w in self.watchers:
             w.logChunk(self.step.build, self.step, self, channel, text)
         self.length += len(text)
-        if self.progress:
-            self.progress.setProgress(self.progressName, self.length)
 
     def addStdout(self, text):
         self.addEntry(STDOUT, text)
@@ -416,10 +410,6 @@ class LogFile:
         self.finishedWatchers = []
         for w in watchers:
             w.callback(self)
-        if self.progress:
-            self.progress.setProgress(self.progressName, self.length)
-            del self.progress
-            del self.progressName
 
     # persistence stuff
     def __getstate__(self):
@@ -430,9 +420,6 @@ class LogFile:
         d['entries'] = [] # let 0.6.4 tolerate the saved log. TODO: really?
         if d.has_key('finished'):
             del d['finished']
-        if d.has_key('progress'):
-            del d['progress']
-            del d['progressName']
         if d.has_key('openfile'):
             del d['openfile']
         return d

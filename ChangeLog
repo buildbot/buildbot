@@ -1,5 +1,36 @@
 2006-06-14  Brian Warner  <warner@lothar.com>
 
+	* buildbot/process/step.py (LoggedRemoteCommand): use a dict of
+	LogFiles, instead of just a single one. The old single logfile is
+	now called "stdio". LoggedRemoteCommand no longer creates a
+	LogFile for you (the code to do that was broken anyway). If you
+	don't create a "stdio" LogFile, then stdout/stderr will be
+	discarded.
+	(LogObserver): implement "LogObservers", which a BuildStep can add
+	to parse the output of a command in real-time. The primary use is
+	to provide more useful information to the Progress code, allowing
+	better ETA estimates.
+	(LogLineObserver): utility subclass which feeds complete lines to
+	the parser instead of bytes.
+	(BuildStep.progressMetrics): this is safer as a tuple
+	(BuildStep.setProgress): utility method, meant to be called by
+	LogObservers
+	(BuildStep.addLogObserver): new method, to be called at any time
+	during the BuildStep (even before any LogFiles have been created),
+	to attach (or schedule for eventual attachment) a LogObserver to a
+	LogFile.
+	(StdioProgressObserver): new LogObserver which replaces the old
+	"output" progress gatherer
+	(LoggingBuildStep.__init__): same
+	(LoggingBuildStep.startCommand): set up the "stdio" LogFile
+	(LoggingBuildStep._commandComplete): must use logs['stdio']
+	instead of the old single ".log" attribute.
+	* buildbot/status/builder.py (LogFile): remove old logProgressTo
+	functionality, now subsumed into StdioProgressObserver
+	* buildbot/test/test_status.py (Subscription._testSlave_2): the
+	log name changed from "output" to "stdio".
+
+
 	* buildbot/interfaces.py (ILogFile): add the Interface used from
 	the BuildStep towards the LogFile
 	(ILogObserver): and the one provided by a LogObserver

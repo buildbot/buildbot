@@ -4,11 +4,14 @@ import time, random, types, re, warnings
 from email.Utils import formatdate
 
 from twisted.internet import reactor, defer, error
+from twisted.protocols import basic
 from twisted.spread import pb
 from twisted.python import log
 from twisted.python.failure import Failure
 from twisted.web.util import formatFailure
 
+from buildbot import interfaces
+from buildbot.twcompat import implements, providedBy
 from buildbot import util
 from buildbot.interfaces import BuildSlaveTooOldError
 from buildbot.util import now
@@ -44,7 +47,7 @@ class RemoteCommand(pb.Referenceable):
     @cvar  commandCounter: provides a unique value for each
                            RemoteCommand executed across all slaves
     @type  active:         boolean
-    @cvar  active:         whether the command is currently running
+    @ivar  active:         whether the command is currently running
     """
     commandCounter = [0] # we use a list as a poor man's singleton
     active = False
@@ -229,41 +232,66 @@ class RemoteCommand(pb.Referenceable):
 
 class LoggedRemoteCommand(RemoteCommand):
     """
-    I am a L{RemoteCommand} which expects the slave to send back
-    stdout/stderr/rc updates. I gather these updates into a
-    L{buildbot.status.builder.LogFile} named C{self.log}. You can give me a
-    LogFile to use by calling useLog(), or I will create my own when the
-    command is started. Unless you tell me otherwise, I will close the log
-    when the command is complete.
+
+    I am a L{RemoteCommand} which gathers output from the remote command into
+    one or more local log files. These L{buildbot.status.builder.Logfile}
+    instances live in C{self.logs}. If the slave sends back
+    stdout/stderr/header updates, these will be put into
+    C{self.logs['stdio']}, if present. If the remote command uses other log
+    channels, they will go into other entries in C{self.logs}.
+
+    If you want to use stdout, you should create a LogFile named 'stdio' and
+    pass it to my useLog() message. Otherwise stdout/stderr will be ignored,
+    which is probably not what you want.
+
+    Unless you tell me otherwise, I will close all logs when the command is
+    complete.
+
+    @ivar logs: maps logname to a LogFile instance
+    @ivar _closeWhenFinished: maps logname to a boolean. If true, this
+                              LogFile will be closed when the RemoteCommand
+                              finishes. LogFiles which are shared between
+                              multiple RemoteCommands should use False here.
+
     """
 
-    log = None
-    closeWhenFinished = False
     rc = None
     debug = False
+
+    def __init__(self, *args, **kwargs):
+        self.logs = {}
+        self._closeWhenFinished = {}
+        RemoteCommand.__init__(self, *args, **kwargs)
 
     def __repr__(self):
         return "<RemoteCommand '%s' at %d>" % (self.remote_command, id(self))
 
     def useLog(self, loog, closeWhenFinished=False):
-        self.log = loog
-        self.closeWhenFinished = closeWhenFinished
+        assert providedBy(loog, interfaces.ILogFile)
+        name = loog.getName()
+        assert name not in self.logs
+        self.logs[name] = loog
+        self._closeWhenFinished[name] = closeWhenFinished
 
     def start(self):
-        if self.log is None:
-            # orphan LogFile, cannot be subscribed to
-            self.log = builder.LogFile(None)
-            self.closeWhenFinished = True
+        log.msg("LoggedRemoteCommand.start")
+        if 'stdio' not in self.logs:
+            log.msg("LoggedRemoteCommand (%s) is running a command, but "
+                    "it isn't being logged to anything. This seems unusual."
+                    % self)
         self.updates = {}
-        log.msg("LoggedRemoteCommand.start", self.log)
         return RemoteCommand.start(self)
 
     def addStdout(self, data):
-        self.log.addStdout(data)
+        if 'stdio' in self.logs:
+            self.logs['stdio'].addStdout(data)
     def addStderr(self, data):
-        self.log.addStderr(data)
+        if 'stdio' in self.logs:
+            self.logs['stdio'].addStderr(data)
     def addHeader(self, data):
-        self.log.addHeader(data)
+        if 'stdio' in self.logs:
+            self.logs['stdio'].addHeader(data)
+
     def remoteUpdate(self, update):
         if self.debug:
             for k,v in update.items():
@@ -278,6 +306,7 @@ class LoggedRemoteCommand(RemoteCommand):
             rc = self.rc = update['rc']
             log.msg("%s rc=%s" % (self, rc))
             self.addHeader("program finished with exit code %d\n" % rc)
+        # TODO: other log channels
         for k in update:
             if k not in ('stdout', 'stderr', 'header', 'rc'):
                 if k not in self.updates:
@@ -285,19 +314,72 @@ class LoggedRemoteCommand(RemoteCommand):
                 self.updates[k].append(update[k])
 
     def remoteComplete(self, maybeFailure):
-        if self.closeWhenFinished:
-            if maybeFailure:
-                self.addHeader("\nremoteFailed: %s" % maybeFailure)
-            else:
-                log.msg("closing log")
-            self.log.finish()
+        for name,loog in self.logs.items():
+            if self._closeWhenFinished[name]:
+                if maybeFailure:
+                    loog.addHeader("\nremoteFailed: %s" % maybeFailure)
+                else:
+                    log.msg("closing log %s" % loog)
+                loog.finish()
         return maybeFailure
+
+
+class LogObserver:
+    if implements:
+        implements(interfaces.ILogObserver)
+    else:
+        __implements__ = interfaces.ILogObserver,
+
+    def setStep(self, step):
+        self.step = step
+
+    def setLog(self, loog):
+        assert providedBy(loog, interfaces.IStatusLog)
+        loog.subscribe(self, True)
+
+    def logChunk(self, build, step, log, channel, text):
+        if channel == interfaces.LOG_CHANNEL_STDOUT:
+            self.outReceived(text)
+        elif channel == interfaces.LOG_CHANNEL_STDERR:
+            self.errReceived(text)
+
+    # TODO: add a logEnded method? er, stepFinished?
+
+class LogLineObserver(LogObserver):
+    def __init__(self):
+        self.stdoutParser = basic.LineOnlyReceiver()
+        self.stdoutParser.delimiter = "\n"
+        self.stdoutParser.lineReceived = self.outLineReceived
+        self.stdoutParser.transport = self # for the .disconnecting attribute
+        self.disconnecting = False
+
+        self.stderrParser = basic.LineOnlyReceiver()
+        self.stderrParser.delimiter = "\n"
+        self.stderrParser.lineReceived = self.errLineReceived
+        self.stderrParser.transport = self
+
+    def outReceived(self, data):
+        self.stdoutParser.dataReceived(data)
+
+    def errReceived(self, data):
+        self.stderrParser.dataReceived(data)
+
+    def outLineReceived(self, line):
+        """This will be called with complete stdout lines (not including the
+        delimiter). Override this in your observer."""
+        pass
+
+    def errLineReceived(self, line):
+        """This will be called with complete lines of stderr (not including
+        the delimiter). Override this in your observer."""
+        pass
+
 
 class RemoteShellCommand(LoggedRemoteCommand):
     """This class helps you run a shell command on the build slave. It will
-    accumulate all the command's output into a Log. When the command is
-    finished, it will fire a Deferred. You can then check the results of the
-    command and parse the output however you like."""
+    accumulate all the command's output into a Log named 'stdio'. When the
+    command is finished, it will fire a Deferred. You can then check the
+    results of the command and parse the output however you like."""
 
     def __init__(self, workdir, command, env=None, 
                  want_stdout=1, want_stderr=1,
@@ -434,7 +516,7 @@ class BuildStep:
 
     name = "generic"
     locks = []
-    progressMetrics = [] # 'time' is implicit
+    progressMetrics = () # 'time' is implicit
     useProgress = True # set to False if step is really unpredictable
     build = None
     step_status = None
@@ -455,6 +537,7 @@ class BuildStep:
             why = "%s.__init__ got unexpected keyword argument(s) %s" \
                   % (self, kwargs.keys())
             raise TypeError(why)
+        self._pendingLogObservers = []
 
     def setupProgress(self):
         if self.useProgress:
@@ -463,6 +546,12 @@ class BuildStep:
             self.step_status.setProgress(sp)
             return sp
         return None
+
+    def setProgress(self, metric, value):
+        """BuildSteps can call self.setProgress() to announce progress along
+        some metric."""
+        if self.progress:
+            self.progress.setProgress(metric, value)
 
     def getProperty(self, propname):
         return self.build.getProperty(propname)
@@ -557,6 +646,12 @@ class BuildStep:
           self.step_status.setColor('red')
           self.step_status.setText(['compile', 'failed'])
           self.step_status.setText2(['4', 'warnings'])
+
+        To have some code parse stdio (or other log stream) in realtime, add
+        a LogObserver subclass. This observer can use self.step.setProgress()
+        to provide better progress notification to the step.::
+
+          self.addLogObserver('stdio', MyLogObserver())
 
         To add a LogFile, use self.addLog. Make sure it gets closed when it
         finishes. When giving a Logfile to a RemoteShellCommand, just ask it
@@ -675,6 +770,7 @@ class BuildStep:
 
     def addLog(self, name):
         loog = self.step_status.addLog(name)
+        self._connectPendingLogObservers()
         return loog
 
     def addCompleteLog(self, name, text):
@@ -684,22 +780,54 @@ class BuildStep:
         for start in range(0, len(text), size):
             loog.addStdout(text[start:start+size])
         loog.finish()
+        self._connectPendingLogObservers()
 
     def addHTMLLog(self, name, html):
         log.msg("addHTMLLog(%s)" % name)
         self.step_status.addHTMLLog(name, html)
+        self._connectPendingLogObservers()
+
+    def addLogObserver(self, logname, observer):
+        assert providedBy(observer, interfaces.ILogObserver)
+        observer.setStep(self)
+        self._pendingLogObservers.append((logname, observer))
+        self._connectPendingLogObservers()
+
+    def _connectPendingLogObservers(self):
+        if not self._pendingLogObservers:
+            return
+        if not self.step_status:
+            return
+        current_logs = {}
+        for loog in self.step_status.getLogs():
+            current_logs[loog.getName()] = loog
+        for logname, observer in self._pendingLogObservers[:]:
+            if logname in current_logs:
+                observer.setLog(current_logs[logname])
+                self._pendingLogObservers.remove((logname, observer))
 
     def runCommand(self, c):
         d = c.run(self, self.remote)
         return d
 
 
+class StdioProgressObserver(LogObserver):
+    length = 0
+
+    def logChunk(self, build, step, log, channel, text):
+        self.length += len(text)
+        self.step.setProgress("output", self.length)
+
 
 class LoggingBuildStep(BuildStep):
     # This is an abstract base class, suitable for inheritance by all
     # BuildSteps that invoke RemoteCommands which emit stdout/stderr messages
 
-    progressMetrics = ['output']
+    progressMetrics = ('output',)
+
+    def __init__(self, *args, **kwargs):
+        BuildStep.__init__(self, *args, **kwargs)
+        self.addLogObserver('stdio', StdioProgressObserver())
 
     def describe(self, done=False):
         raise NotImplementedError("implement this in a subclass")
@@ -707,18 +835,17 @@ class LoggingBuildStep(BuildStep):
     def startCommand(self, cmd, errorMessages=[]):
         """
         @param cmd: a suitable RemoteCommand which will be launched, with
-                    all output being put into a LogFile named 'log'
+                    all output being put into a LogFile named 'stdio'
         """
         self.cmd = cmd # so we can interrupt it
         self.step_status.setColor("yellow")
         self.step_status.setText(self.describe(False))
-        loog = self.addLog("log")
-        for em in errorMessages:
-            loog.addHeader(em)
+        loog = self.addLog("stdio")
         log.msg("ShellCommand.start using log", loog)
         log.msg(" for cmd", cmd)
         cmd.useLog(loog, True)
-        loog.logProgressTo(self.progress, "output")
+        for em in errorMessages:
+            loog.addHeader(em)
         d = self.runCommand(cmd)
         d.addCallbacks(self._commandComplete, self.checkDisconnect)
         d.addErrback(self.failed)
@@ -741,7 +868,7 @@ class LoggingBuildStep(BuildStep):
 
     def _commandComplete(self, cmd):
         self.commandComplete(cmd)
-        self.createSummary(cmd.log)
+        self.createSummary(cmd.logs['stdio'])
         results = self.evaluateCommand(cmd)
         self.setStatus(cmd, results)
         return self.finished(results)
@@ -1220,7 +1347,7 @@ class CVS(Source):
 
     name = "cvs"
 
-    #progressMetrics = ['output']
+    #progressMetrics = ('output',)
     #
     # additional things to track: update gives one stderr line per directory
     # (starting with 'cvs server: Updating ') (and is fairly stable if files
@@ -2020,7 +2147,7 @@ class Compile(ShellCommand):
     descriptionDone = ["compile"]
     command = ["make", "all"]
 
-    OFFprogressMetrics = ['output']
+    OFFprogressMetrics = ('output',)
     # things to track: number of files compiled, number of directories
     # traversed (assuming 'make' is being used)
 

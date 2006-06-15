@@ -915,7 +915,7 @@ class Subscription(RunMixin, unittest.TestCase):
         self.failUnlessEqual(st2.getExpectations(), [('output', 38, None)])
         logs = st2.getLogs()
         self.failUnlessEqual(len(logs), 1)
-        self.failUnlessEqual(logs[0].getName(), "log")
+        self.failUnlessEqual(logs[0].getName(), "stdio")
         self.failUnlessEqual(logs[0].getText(), "data")
 
         self.eta = eta
