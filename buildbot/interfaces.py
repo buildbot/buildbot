@@ -664,6 +664,10 @@ class IStatusLog(Interface):
         0 for stdout, 1 for stderr, 2 for header. (note that stderr is merged
         into stdout if PTYs are in use)."""
 
+LOG_CHANNEL_STDOUT = 0
+LOG_CHANNEL_STDERR = 1
+LOG_CHANNEL_HEADER = 2
+
 class IStatusLogConsumer(Interface):
     """I am an object which can be passed to IStatusLog.subscribeConsumer().
     I represent a target for writing the contents of an IStatusLog. This
@@ -771,7 +775,8 @@ class IStatusReceiver(Interface):
         log finishes."""
 
     def logChunk(build, step, log, channel, text):
-        """Some text has been added to this log. 'channel' is 0, 1, or 2, as
+        """Some text has been added to this log. 'channel' is one of
+        LOG_CHANNEL_STDOUT, LOG_CHANNEL_STDERR, or LOG_CHANNEL_HEADER, as
         defined in IStatusLog.getChunks."""
 
     def logFinished(build, step, log):

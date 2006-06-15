@@ -39,9 +39,9 @@ Results = ["success", "warnings", "failure", "skipped", "exception"]
 #  startBuild
 #  finishBuild
 
-STDOUT = 0
-STDERR = 1
-HEADER = 2
+STDOUT = interfaces.LOG_CHANNEL_STDOUT
+STDERR = interfaces.LOG_CHANNEL_STDERR
+HEADER = interfaces.LOG_CHANNEL_HEADER
 ChunkTypes = ["stdout", "stderr", "header"]
 
 class LogFileScanner(basic.NetstringReceiver):

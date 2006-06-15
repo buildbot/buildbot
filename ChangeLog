@@ -1,3 +1,9 @@
+2006-06-14  Brian Warner  <warner@lothar.com>
+
+	* buildbot/interfaces.py (LOG_CHANNEL_*): move STDOUT / STDERR /
+	HEADER constants here ..
+	* buildbot/status/builder.py (STDOUT): .. from here
+
 2006-06-13  Brian Warner  <warner@lothar.com>
 
 	* buildbot/test/test_p4poller.py (TestP4Poller.failUnlessIn): fix
