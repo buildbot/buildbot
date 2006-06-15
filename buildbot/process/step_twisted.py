@@ -2,6 +2,7 @@
 
 from twisted.python import log, failure
 
+from buildbot import interfaces
 from buildbot.status import tests, builder
 from buildbot.status.builder import SUCCESS, FAILURE, WARNINGS, SKIPPED
 from buildbot.process import step
@@ -130,6 +131,33 @@ def countFailedTests(output):
 
     return res
 
+
+class TrialTestCaseCounter(step.LogLineObserver):
+    _line_re = re.compile(r'^([\w\.]+) \.\.\. \[([^\]]+)\]$')
+    numTests = 0
+    finished = False
+
+    def outLineReceived(self, line):
+        # different versions of Twisted emit different per-test lines with
+        # the bwverbose reporter.
+        #  2.0.0: testSlave (buildbot.test.test_runner.Create) ... [OK]
+        #  2.1.0: buildbot.test.test_runner.Create.testSlave ... [OK]
+        #  2.4.0: buildbot.test.test_runner.Create.testSlave ... [OK]
+        # Let's just handle the most recent version, since it's the easiest.
+
+        if self.finished:
+            return
+        if line.startswith("=" * 40):
+            self.finished = True
+            return
+
+        m = self._line_re.search(line.strip())
+        if m:
+            testname, result = m.groups()
+            self.numTests += 1
+            self.step.setProgress('tests', self.numTests)
+
+
 UNSPECIFIED=() # since None is a valid choice
 
 class Trial(ShellCommand):
@@ -202,6 +230,7 @@ class Trial(ShellCommand):
     """
 
     name = "trial"
+    progressMetrics = ('output', 'tests')
 
     flunkOnFailure = True
     python = None
@@ -370,6 +399,10 @@ class Trial(ShellCommand):
             self.description = ["testing"]
             self.descriptionDone = ["tests"]
 
+        # this counter will feed Progress along the 'test cases' metric
+        counter = TrialTestCaseCounter()
+        self.addLogObserver('stdio', counter)
+
     def setupEnvironment(self, cmd):
         ShellCommand.setupEnvironment(self, cmd)
         if self.testpath != None:
@@ -405,6 +438,7 @@ class Trial(ShellCommand):
             self.command.extend(self.tests)
         log.msg("Trial.start: command is", self.command)
         ShellCommand.start(self)
+
 
     def _commandComplete(self, cmd):
         # before doing the summary, etc, fetch _trial_temp/test.log

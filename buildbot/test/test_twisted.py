@@ -2,6 +2,8 @@
 
 from twisted.trial import unittest
 
+from buildbot import interfaces
+from buildbot.process import step_twisted
 from buildbot.process.step_twisted import countFailedTests, Trial
 from buildbot.status import builder
 
@@ -130,6 +132,39 @@ class Count(unittest.TestCase):
         self.assertEquals(count, self.count(total=None))
         count = countFailedTests(out5)
         self.assertEquals(count, self.count(total=None))
+
+class Counter(unittest.TestCase):
+
+    def setProgress(self, metric, value):
+        self.progress = (metric, value)
+
+    def testCounter(self):
+        self.progress = (None,None)
+        c = step_twisted.TrialTestCaseCounter()
+        c.setStep(self)
+        STDOUT = interfaces.LOG_CHANNEL_STDOUT
+        def add(text):
+            c.logChunk(None, None, None, STDOUT, text)
+        add("\n\n")
+        self.failUnlessEqual(self.progress, (None,None))
+        add("bogus line\n")
+        self.failUnlessEqual(self.progress, (None,None))
+        add("buildbot.test.test_config.ConfigTest.testBots ... [OK]\n")
+        self.failUnlessEqual(self.progress, ("tests", 1))
+        add("buildbot.test.test_config.ConfigTest.tes")
+        self.failUnlessEqual(self.progress, ("tests", 1))
+        add("tBuilders ... [OK]\n")
+        self.failUnlessEqual(self.progress, ("tests", 2))
+        # confirm alternative delimiters work too.. ptys seem to emit
+        # something different
+        add("buildbot.test.test_config.ConfigTest.testIRC ... [OK]\r\n")
+        self.failUnlessEqual(self.progress, ("tests", 3))
+        add("===============================================================================\n")
+        self.failUnlessEqual(self.progress, ("tests", 3))
+        add("buildbot.test.test_config.IOnlyLookLikeA.testLine ... [OK]\n")
+        self.failUnlessEqual(self.progress, ("tests", 3))
+
+
 
 class Parse(unittest.TestCase):
     def failUnlessIn(self, substr, string):

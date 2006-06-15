@@ -1,5 +1,11 @@
 2006-06-14  Brian Warner  <warner@lothar.com>
 
+	* buildbot/process/step_twisted.py (TrialTestCaseCounter):
+	implement a LogObserver that counts how many unit tests have been
+	run so far
+	(Trial.__init__): wire it in
+	* buildbot/test/test_twisted.py (Counter): unit test for it
+
 	* buildbot/process/step_twisted.py (HLint.commandComplete): update
 	to new cmd.logs['stdio'] scheme
 	(Trial.commandComplete): same
