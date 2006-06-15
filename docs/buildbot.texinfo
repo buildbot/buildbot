@@ -142,6 +142,7 @@ Build Steps
 * Source Checkout::             
 * ShellCommand::                
 * Simple ShellCommand Subclasses::  
+* Writing New BuildSteps::      
 
 Source Checkout
 
@@ -158,8 +159,11 @@ Simple ShellCommand Subclasses
 * Configure::                   
 * Compile::                     
 * Test::                        
-* Writing New BuildSteps::      
 * Build Properties::            
+
+Writing New BuildSteps
+
+* Adding LogObservers::         
 
 Build Factories
 
@@ -184,6 +188,7 @@ Status Delivery
 * HTML Waterfall::              
 * IRC Bot::                     
 * PBListener::                  
+* Writing New Status Plugins::  
 
 Command-line tool
 
@@ -2509,7 +2514,7 @@ connection.
 @end table
 
 
-@node P4Source, , PBChangeSource, Change Sources
+@node P4Source,  , PBChangeSource, Change Sources
 @subsection P4Source
 
 The @code{P4Source} periodically polls a @uref{http://www.perforce.com/,
@@ -2623,6 +2628,7 @@ control each.
 * Source Checkout::             
 * ShellCommand::                
 * Simple ShellCommand Subclasses::  
+* Writing New BuildSteps::      
 @end menu
 
 @node Common Parameters, Source Checkout, Build Steps, Build Steps
@@ -3181,7 +3187,7 @@ display.
 
 @end table
 
-@node Simple ShellCommand Subclasses,  , ShellCommand, Build Steps
+@node Simple ShellCommand Subclasses, Writing New BuildSteps, ShellCommand, Build Steps
 @subsection Simple ShellCommand Subclasses
 
 Several subclasses of ShellCommand are provided as starting points for
@@ -3193,7 +3199,6 @@ file less verbose.
 * Configure::                   
 * Compile::                     
 * Test::                        
-* Writing New BuildSteps::      
 * Build Properties::            
 @end menu
 
@@ -3214,7 +3219,7 @@ log file is scanned for GCC error/warning messages and a summary log is
 created with any problems that were seen (TODO: the summary is not yet
 created).
 
-@node Test, Writing New BuildSteps, Compile, Simple ShellCommand Subclasses
+@node Test, Build Properties, Compile, Simple ShellCommand Subclasses
 @subsubsection Test
 
 This is meant to handle unit tests. The default command is @code{make
@@ -3222,28 +3227,7 @@ test}, and the @code{warnOnFailure} flag is set.
 
 
 
-
-
-@node Writing New BuildSteps, Build Properties, Test, Simple ShellCommand Subclasses
-@subsubsection Writing New BuildSteps
-
-While it is a good idea to keep your build process self-contained in
-the source code tree, sometimes it is convenient to put more
-intelligence into your Buildbot configuration. One was to do this is
-to write a custom BuildStep. Once written, this Step can be used in
-the @file{master.cfg} file.
-
-The best reason for writing a custom BuildStep is to better parse the
-results of the command being run. For example, a BuildStep that knows
-about JUnit could look at the logfiles to determine which tests had
-been run, how many passed and how many failed, and then report more
-detailed information than a simple @code{rc==0} -based ``good/bad''
-decision.
-
-TODO: add more description of BuildSteps.
-
-
-@node Build Properties,  , Writing New BuildSteps, Simple ShellCommand Subclasses
+@node Build Properties,  , Test, Simple ShellCommand Subclasses
 @subsubsection Build Properties
 
 @cindex build properties
@@ -3392,6 +3376,126 @@ This is a string which identifies which buildslave the build is
 running on.
 
 @end table
+
+
+@node Writing New BuildSteps,  , Simple ShellCommand Subclasses, Build Steps
+@subsection Writing New BuildSteps
+
+While it is a good idea to keep your build process self-contained in
+the source code tree, sometimes it is convenient to put more
+intelligence into your Buildbot configuration. One was to do this is
+to write a custom BuildStep. Once written, this Step can be used in
+the @file{master.cfg} file.
+
+The best reason for writing a custom BuildStep is to better parse the
+results of the command being run. For example, a BuildStep that knows
+about JUnit could look at the logfiles to determine which tests had
+been run, how many passed and how many failed, and then report more
+detailed information than a simple @code{rc==0} -based ``good/bad''
+decision.
+
+TODO: add more description of BuildSteps.
+
+@menu
+* Adding LogObservers::         
+@end menu
+
+@node Adding LogObservers,  , Writing New BuildSteps, Writing New BuildSteps
+@subsubsection Adding LogObservers
+
+@cindex LogObserver
+@cindex LogLineObserver
+
+Most shell commands emit messages to stdout or stderr as they operate,
+especially if you ask them nicely with a @code{--verbose} flag of some
+sort. They may also write text to a log file while they run. Your
+BuildStep can watch this output as it arrives, to keep track of how
+much progress the command has made. You can get a better measure of
+progress by counting the number of source files compiled or test cases
+run than by merely tracking the number of bytes that have been written
+to stdout. This improves the accuracy and the smoothness of the ETA
+display.
+
+To accomplish this, you will need to attach a @code{LogObserver} to
+one of the log channels, most commonly to the ``stdio'' channel but
+perhaps to another one which tracks a log file. This observer is given
+all text as it is emitted from the command, and has the opportunity to
+parse that output incrementally. Once the observer has decided that
+some event has occurred (like a source file being compiled), it can
+use the @code{setProgress} method to tell the BuildStep about the
+progress that this event represents.
+
+There are a number of pre-built @code{LogObserver} classes that you
+can choose from, and of course you can subclass them to add further
+customization. The @code{LogLineObserver} class handles the grunt work
+of buffering and scanning for end-of-line delimiters, allowing your
+parser to operate on complete stdout/stderr lines.
+
+For example, let's take a look at the @code{TrialTestCaseCounter},
+which is used by the Trial step to count test cases as they are run.
+As Trial executes, it emits lines like the following:
+
+@example
+buildbot.test.test_config.ConfigTest.testDebugPassword ... [OK]
+buildbot.test.test_config.ConfigTest.testEmpty ... [OK]
+buildbot.test.test_config.ConfigTest.testIRC ... [FAIL]
+buildbot.test.test_config.ConfigTest.testLocks ... [OK]
+@end example
+
+When the tests are finished, trial emits a long line of ``======'' and
+then some lines which summarize the tests that failed. We want to
+avoid parsing these trailing lines, because their format is less
+well-defined than the ``[OK]'' lines.
+
+The parser class looks like this:
+
+@example
+class TrialTestCaseCounter(step.LogLineObserver):
+    _line_re = re.compile(r'^([\w\.]+) \.\.\. \[([^\]]+)\]$')
+    numTests = 0
+    finished = False
+
+    def outLineReceived(self, line):
+        if self.finished:
+            return
+        if line.startswith("=" * 40):
+            self.finished = True
+            return
+
+        m = self._line_re.search(line.strip())
+        if m:
+            testname, result = m.groups()
+            self.numTests += 1
+            self.step.setProgress('tests', self.numTests)
+@end example
+
+This parser only pays attention to stdout, since that's where trial
+writes the progress lines. It has a mode flag named @code{finished} to
+ignore everything after the ``===='' marker, and a scary-looking
+regular expression to match each line while hopefully ignoring other
+messages that might get displayed as the test runs.
+
+Each time it identifies a test has been completed, it increments its
+counter and delivers the new progress value to the step with
+@code{self.step.setProgress}. This class is specifically measuring
+progress along the ``tests'' metric, in units of test cases (as
+opposed to other kinds of progress like the ``output'' metric, which
+measures in units of bytes). The Progress-tracking code uses each
+progress metric separately to come up with an overall completion
+percentage and an ETA value.
+
+To connect this parser into the @code{Trial} BuildStep,
+@code{Trial.__init__} ends with the following clause:
+
+@example
+        # this counter will feed Progress along the 'test cases' metric
+        counter = TrialTestCaseCounter()
+        self.addLogObserver('stdio', counter)
+@end example
+
+This creates a TrialTestCaseCounter and tells the step to attach it to
+the ``stdio'' log. The observer is automatically given a reference to
+the step in its @code{.step} attribute.
 
 
 @node Interlocks, Build Factories, Build Steps, Build Process
@@ -4068,10 +4172,11 @@ notifications of builder events, in which case they must define
 * HTML Waterfall::              
 * IRC Bot::                     
 * PBListener::                  
+* Writing New Status Plugins::  
 @end menu
 
 @node HTML Waterfall, IRC Bot, Status Delivery, Status Delivery
-@subsection HTML Waterfall
+@section HTML Waterfall
 
 @cindex Waterfall
 
@@ -4152,7 +4257,7 @@ generated status pages.
 
 
 @node IRC Bot, PBListener, HTML Waterfall, Status Delivery
-@subsection IRC Bot
+@section IRC Bot
 
 @cindex IRC
 
@@ -4221,8 +4326,8 @@ wait for the first build (which is destined to fail) to complete
 before starting the second (hopefully fixed) build.
 @end table
 
-@node PBListener,  , IRC Bot, Status Delivery
-@subsection PBListener
+@node PBListener, Writing New Status Plugins, IRC Bot, Status Delivery
+@section PBListener
 
 @cindex PBListener
 
@@ -4238,6 +4343,34 @@ status client can connect and retrieve status information.
 @code{buildbot statusgui} (@pxref{statusgui}) is an example of such a
 status client. The @code{port} argument can also be a strports
 specification string.
+
+@node Writing New Status Plugins,  , PBListener, Status Delivery
+@section Writing New Status Plugins
+
+TODO: this needs a lot more examples
+
+Each status plugin is an object which provides the
+@code{twisted.application.service.IService} interface, which creates a
+tree of Services with the buildmaster at the top [not strictly true].
+The status plugins are all children of an object which implements
+@code{buildbot.interfaces.IStatus}, the main status object. From this
+object, the plugin can retrieve anything it wants about current and
+past builds. It can also subscribe to hear about new and upcoming
+builds.
+
+Status plugins which only react to human queries (like the Waterfall
+display) never need to subscribe to anything: they are idle until
+someone asks a question, then wake up and extract the information they
+need to answer it, then they go back to sleep. Plugins which need to
+act spontaneously when builds complete (like the Mail plugin) need to
+subscribe to hear about new builds.
+
+If the status plugin needs to run network services (like the HTTP
+server used by the Waterfall plugin), they can be attached as Service
+children of the plugin itself, using the @code{IServiceCollection}
+interface.
+
+
 
 @node Command-line tool, Resources, Status Delivery, Top
 @chapter Command-line tool

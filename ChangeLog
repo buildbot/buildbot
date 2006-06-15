@@ -1,5 +1,10 @@
 2006-06-14  Brian Warner  <warner@lothar.com>
 
+	* docs/buildbot.texinfo (Adding LogObservers): add some limited
+	docs on writing new LogObserver classes
+	(Writing New Status Plugins): brief docs on how Status Plugins fit
+	together
+
 	* buildbot/process/step_twisted.py (TrialTestCaseCounter):
 	implement a LogObserver that counts how many unit tests have been
 	run so far
