@@ -22,6 +22,7 @@ from buildbot.changes import changes
 from buildbot.sourcestamp import SourceStamp
 from buildbot.twcompat import maybeWait, which
 from buildbot.scripts import tryclient
+from buildbot.test.runutils import SignalMixin
 
 #step.LoggedRemoteCommand.debug = True
 
@@ -258,21 +259,6 @@ class VCS_Helper:
         return d
 
 VCS = VCS_Helper()
-
-class SignalMixin:
-    sigchldHandler = None
-    
-    def setUpClass(self):
-        # make sure SIGCHLD handler is installed, as it should be on
-        # reactor.run(). problem is reactor may not have been run when this
-        # test runs.
-        if hasattr(reactor, "_handleSigchld") and hasattr(signal, "SIGCHLD"):
-            self.sigchldHandler = signal.signal(signal.SIGCHLD,
-                                                reactor._handleSigchld)
-    
-    def tearDownClass(self):
-        if self.sigchldHandler:
-            signal.signal(signal.SIGCHLD, self.sigchldHandler)
 
 
 # the overall plan here:

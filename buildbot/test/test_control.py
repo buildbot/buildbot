@@ -12,6 +12,7 @@ from buildbot.slave import bot
 from buildbot.status import builder
 from buildbot.status.builder import SUCCESS
 from buildbot.process import base
+from buildbot.test.runutils import SignalMixin, rmtree
 
 config = """
 from buildbot.process import factory, step
@@ -37,30 +38,11 @@ class FakeBuilder:
     def getSlaveCommandVersion(self, command, oldversion=None):
         return "1.10"
 
-class SignalMixin:
-    sigchldHandler = None
-    
-    def setUpClass(self):
-        # make sure SIGCHLD handler is installed, as it should be on
-        # reactor.run(). problem is reactor may not have been run when this
-        # test runs.
-        if hasattr(reactor, "_handleSigchld") and hasattr(signal, "SIGCHLD"):
-            self.sigchldHandler = signal.signal(signal.SIGCHLD,
-                                                reactor._handleSigchld)
-    
-    def tearDownClass(self):
-        if self.sigchldHandler:
-            signal.signal(signal.SIGCHLD, self.sigchldHandler)
 
 class Force(unittest.TestCase):
 
     def rmtree(self, d):
-        try:
-            shutil.rmtree(d, ignore_errors=1)
-        except OSError, e:
-            # stupid 2.2 appears to ignore ignore_errors
-            if e.errno != errno.ENOENT:
-                raise
+        rmtree(d)
 
     def setUp(self):
         self.master = None
