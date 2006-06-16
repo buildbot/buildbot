@@ -3167,6 +3167,29 @@ like @code{want_stdout} but for stderr. Note that commands run through
 a PTY do not have separate stdout/stderr streams: both are merged into
 stdout.
 
+@item logfiles
+Sometimes commands will log interesting data to a local file, rather
+than emitting everything to stdout or stderr. For example, Twisted's
+``trial'' command (which runs unit tests) only presents summary
+information to stdout, and puts the rest into a file named
+@file{_trial_temp/test.log}. It is often useful to watch these files
+as the command runs, rather than using @command{/bin/cat} to dump
+their contents afterwards.
+
+The @code{logfiles=} argument allows you to collect data from these
+secondary logfiles in real-time, as the step is running. It accepts a
+dictionary which maps from a local Log name (which is how the log data
+is presented in the build results) to a remote filename (interpreted
+relative to the build's working directory). Each named file will be
+polled on a regular basis (every couple of seconds) as the build runs,
+and any new text will be sent over to the buildmaster.
+
+@example
+s(ShellCommand, command=["make", "test"],
+  logfiles=@{"triallog": "_trial_temp/test.log"@})
+@end example
+
+
 @item timeout
 if the command fails to produce any output for this many seconds, it
 is assumed to be locked up and will be killed.

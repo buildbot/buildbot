@@ -1,5 +1,12 @@
 2006-06-16  Brian Warner  <warner@lothar.com>
 
+	* buildbot/test/test_shell.py: new test file to contain everything
+	relating to ShellCommand
+	(SlaveSide.testLogFiles): (todo) test for the upcoming "watch
+	multiple logfiles in realtime" feature, not yet implemented
+	* buildbot/test/emitlogs.py: support file for testLogFiles
+	* docs/buildbot.texinfo (ShellCommand): document the feature
+
 	* buildbot/test/test_steps.py (BuildStep.setUp): rmtree refactoring
 
 	* buildbot/test/runutils.py (SlaveCommandTestBase): utility class
