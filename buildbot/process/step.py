@@ -1077,7 +1077,7 @@ class FileIO(pb.Referenceable):
 
     def __init__(self,fp):
         self.fp = fp
-    
+
     def remote_close(self):
         """
         Called by remote slave to state that no more data will be transfered
@@ -1094,7 +1094,7 @@ class FileWriter(FileIO):
     def __init__(self,fp, maxsize=None):
         FileIO.__init__(self,fp)
 	self.maxsize = maxsize
-    
+
     def remote_write(self,data):
 	"""
 	Called from remote slave to write L{data} to L{fp} within boundaries
@@ -1129,7 +1129,7 @@ class FileReader(FileIO):
 	"""
         if self.fp is None:
             return ''
-        
+
         data = self.fp.read(maxlength)
         return data
 
@@ -1277,7 +1277,7 @@ class FileDownload(BuildStep):
             self.step_status.setColor('green')
             return BuildStep.finished(self,SUCCESS)
         return self.reportFail()
-    
+
     def reportFail(self):
         self.step_status.setColor('red')
         return BuildStep.finished(self,FAILURE)

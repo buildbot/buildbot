@@ -719,7 +719,7 @@ class SlaveFileUploadCommand(Command):
             d = self.writer.callRemote('close')
             d.addCallback(lambda _: self.finished())
             return
-        
+
         length = self.blocksize
         if self.maxsize is not None and length > self.maxsize:
             length = self.maxsize
@@ -821,7 +821,7 @@ class SlaveFileDownloadCommand(Command):
             d = self.reader.callRemote('close')
             d.addCallback(lambda _: self.finished())
             return
-        
+
         length = self.blocksize
         if self.maxsize is not None and length > self.maxsize:
             length = self.maxsize
@@ -836,7 +836,7 @@ class SlaveFileDownloadCommand(Command):
         else:
             d = self.reader.callRemote('read', length)
             d.addCallback(self._writeData)
-    
+
     def _writeData(self,data):
         if self.debug: log.msg('SlaveFileDownloadCommand._readBlock(): '+
                                                         'readlen=%d' % len(data))
