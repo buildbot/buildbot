@@ -10,13 +10,16 @@
 	* buildbot/process/step.py (LogObserver): add outReceived and
 	errReceived base methods, to be overridden
 
-	* buildbot/status/builder.py (BuildStatus.addStep): change API to
-	take a name instead of a step, reducing the coupling somewhat.
-	This returns the BuildStepStatus object so it can be passed to the
-	new Step, instead of jamming it directly into the Step.
+	* buildbot/status/builder.py (BuildStatus.addStepWithName): change
+	API to take a name instead of a step, reducing the coupling
+	somewhat. This returns the BuildStepStatus object so it can be
+	passed to the new Step, instead of jamming it directly into the
+	Step.
 	* buildbot/process/step.py (BuildStep.setStepStatus): add a setter
 	method
 	* buildbot/process/base.py (Build.setupBuild): use both methods
+	* buildbot/test/test_web.py (Logfile.setUp): rearrange the setup
+	process a bit to match
 
 2006-06-14  Brian Warner  <warner@lothar.com>
 

@@ -389,16 +389,16 @@ BuildmasterConfig = {
         self.port = port
         # insert an event
 
-        s = m.status.getBuilder("builder1")
         req = base.BuildRequest("reason", sourcestamp.SourceStamp())
-        bs = s.newBuild()
         build1 = base.Build([req])
-        step1 = step.BuildStep(build=build1)
-        step1.name = "setup"
-        bs.addStep(step1)
-        bs.buildStarted(build1)
-        step1.step_status.stepStarted()
+        bs = m.status.getBuilder("builder1").newBuild()
         bs.setReason("reason")
+        bs.buildStarted(build1)
+
+        step1 = step.BuildStep(build=build1, name="setup")
+        bss = bs.addStepWithName("setup")
+        step1.setStepStatus(bss)
+        bss.stepStarted()
 
         log1 = step1.addLog("output")
         log1.addStdout("some stdout\n")

@@ -1068,7 +1068,7 @@ class BuildStatus(styles.Versioned):
 
     # methods for the base.Build to invoke
 
-    def addStep(self, name):
+    def addStepWithName(self, name):
         """The Build is setting up, and has added a new BuildStep to its
         list. Create a BuildStepStatus object to which it can send status
         updates."""

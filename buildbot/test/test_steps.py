@@ -24,7 +24,7 @@ from buildbot.sourcestamp import SourceStamp
 from buildbot.process import step, base, factory
 from buildbot.process.step import ShellCommand #, ShellCommands
 from buildbot.status import builder
-from buildbot.test.runutils import RunMixin, setupBuildStep
+from buildbot.test.runutils import RunMixin, setupBuildStepStatus
 from buildbot.twcompat import maybeWait
 from buildbot.slave import commands
 
@@ -101,7 +101,7 @@ class BuildStep(unittest.TestCase):
         c = MyShellCommand(workdir=dir, command=cmd, build=self.build,
                            timeout=10)
         self.assertEqual(self.remote.events, expectedEvents)
-        c.step_status = self.build_status.addStep("myshellcommand")
+        c.step_status = self.build_status.addStepWithName("myshellcommand")
         d = c.startStep(self.remote)
         self.failUnless(c.started)
         rc = c.rc
