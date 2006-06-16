@@ -1,5 +1,8 @@
 2006-06-15  Brian Warner  <warner@lothar.com>
 
+	* buildbot/process/step.py (LogObserver): add outReceived and
+	errReceived base methods, to be overridden
+
 	* buildbot/status/builder.py (BuildStatus.addStep): change API to
 	take a name instead of a step, reducing the coupling somewhat.
 	This returns the BuildStepStatus object so it can be passed to the

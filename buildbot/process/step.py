@@ -345,6 +345,17 @@ class LogObserver:
 
     # TODO: add a logEnded method? er, stepFinished?
 
+    def outReceived(self, data):
+        """This will be called with chunks of stdout data. Override this in
+        your observer."""
+        pass
+
+    def errReceived(self, data):
+        """This will be called with chunks of stderr data. Override this in
+        your observer."""
+        pass
+
+
 class LogLineObserver(LogObserver):
     def __init__(self):
         self.stdoutParser = basic.LineOnlyReceiver()
