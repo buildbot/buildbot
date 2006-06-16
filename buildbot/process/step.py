@@ -539,6 +539,9 @@ class BuildStep:
             raise TypeError(why)
         self._pendingLogObservers = []
 
+    def setStepStatus(self, step_status):
+        self.step_status = step_status
+
     def setupProgress(self):
         if self.useProgress:
             sp = progress.StepProgress(self.name, self.progressMetrics)

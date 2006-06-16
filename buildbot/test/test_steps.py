@@ -101,7 +101,7 @@ class BuildStep(unittest.TestCase):
         c = MyShellCommand(workdir=dir, command=cmd, build=self.build,
                            timeout=10)
         self.assertEqual(self.remote.events, expectedEvents)
-        self.build_status.addStep(c)
+        c.step_status = self.build_status.addStep("myshellcommand")
         d = c.startStep(self.remote)
         self.failUnless(c.started)
         rc = c.rc

@@ -1068,16 +1068,15 @@ class BuildStatus(styles.Versioned):
 
     # methods for the base.Build to invoke
 
-    def addStep(self, step):
+    def addStep(self, name):
         """The Build is setting up, and has added a new BuildStep to its
-        list. The BuildStep object is ready for static queries (everything
-        except ETA). Give it a BuildStepStatus object to which it can send
-        status updates."""
+        list. Create a BuildStepStatus object to which it can send status
+        updates."""
 
         s = BuildStepStatus(self)
-        s.setName(step.name)
-        step.step_status = s
+        s.setName(name)
         self.steps.append(s)
+        return s
 
     def setProperty(self, propname, value):
         self.properties[propname] = value

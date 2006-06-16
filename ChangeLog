@@ -1,3 +1,13 @@
+2006-06-15  Brian Warner  <warner@lothar.com>
+
+	* buildbot/status/builder.py (BuildStatus.addStep): change API to
+	take a name instead of a step, reducing the coupling somewhat.
+	This returns the BuildStepStatus object so it can be passed to the
+	new Step, instead of jamming it directly into the Step.
+	* buildbot/process/step.py (BuildStep.setStepStatus): add a setter
+	method
+	* buildbot/process/base.py (Build.setupBuild): use both methods
+
 2006-06-14  Brian Warner  <warner@lothar.com>
 
 	* docs/buildbot.texinfo (Adding LogObservers): add some limited

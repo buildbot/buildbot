@@ -372,7 +372,8 @@ class Build:
 
             # tell the BuildStatus about the step. This will create a
             # BuildStepStatus and bind it to the Step.
-            self.build_status.addStep(step)
+            step_status = self.build_status.addStep(name)
+            step.setStepStatus(step_status)
 
             sp = None
             if self.useProgress:
