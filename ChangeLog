@@ -1,5 +1,9 @@
 2006-06-15  Brian Warner  <warner@lothar.com>
 
+	* buildbot/test/test_vc.py (P4.testCheckoutBranch): rename from
+	'testBranch' to match other VC tests and have the tests run in
+	roughly increasing order of dependency
+
 	* buildbot/test/test_steps.py (LogObserver): new test to verify
 	LogObservers can be created at various times and still get
 	connected up properly

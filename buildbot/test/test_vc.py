@@ -1516,18 +1516,18 @@ class P4(VCBase, unittest.TestCase):
         # changed.
         return maybeWait(d)
 
+    def testCheckoutBranch(self):
+        self.helper.vcargs = { 'p4port': self.helper.p4port,
+                               'p4base': '//depot/',
+                               'defaultBranch': 'trunk' }
+        d = self.do_branch()
+        return maybeWait(d)
+
     def testPatch(self):
         self.helper.vcargs = { 'p4port': self.helper.p4port,
                                'p4base': '//depot/',
                                'defaultBranch': 'trunk' }
         d = self.do_patch()
-        return maybeWait(d)
-
-    def testBranch(self):
-        self.helper.vcargs = { 'p4port': self.helper.p4port,
-                               'p4base': '//depot/',
-                               'defaultBranch': 'trunk' }
-        d = self.do_branch()
         return maybeWait(d)
 
 VCS.registerVC(P4.vc_name, P4Helper())
