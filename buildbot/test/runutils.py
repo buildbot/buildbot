@@ -261,3 +261,28 @@ class FakeSlaveBuilder:
         self.updates.append(data)
 
 
+class SlaveCommandTestBase(SignalMixin):
+    usePTY = False
+    def setUp(self):
+        self.builder = FakeSlaveBuilder(self.usePTY)
+
+    def startCommand(self, cmdclass, args):
+        stepId = 0
+        c = cmdclass(self.builder, stepId, args)
+        c.running = True
+        d = c.start()
+        return d
+
+    def collectUpdates(self, res):
+        logs = {}
+        for u in self.builder.updates:
+            for k in u.keys():
+                if k == "log":
+                    logname,data = u[k]
+                    oldlog = logs.get(("log",logname), "")
+                    logs[("log",logname)] = oldlog + u[k]
+                elif k == "rc":
+                    pass
+                else:
+                    logs[k] = logs.get(k, "") + u[k]
+        return logs

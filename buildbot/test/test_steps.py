@@ -5,7 +5,7 @@
 # the test harness should send statusUpdate() messages in with assorted
 # data, eventually calling remote_complete(). Then we can verify that the
 # Step's rc was correct, and that the status it was supposed to return
-# mathces.
+# matches.
 
 # sometimes, .callRemote should raise an exception because of a stale
 # reference. Sometimes it should errBack with an UnknownCommand failure.
@@ -24,7 +24,7 @@ from buildbot.sourcestamp import SourceStamp
 from buildbot.process import step, base, factory
 from buildbot.process.step import ShellCommand #, ShellCommands
 from buildbot.status import builder
-from buildbot.test.runutils import RunMixin, setupBuildStepStatus
+from buildbot.test.runutils import RunMixin, rmtree, setupBuildStepStatus
 from buildbot.twcompat import maybeWait
 from buildbot.slave import commands
 
@@ -67,7 +67,9 @@ class FakeRemote:
 
 
 class BuildStep(unittest.TestCase):
+
     def setUp(self):
+        rmtree("test_steps")
         self.builder = FakeBuilder()
         self.builder_status = builder.BuilderStatus("fakebuilder")
         self.builder_status.basedir = "test_steps"
@@ -155,6 +157,7 @@ class BuildStep(unittest.TestCase):
             reactor.iterate(0.01)
         self.assertEqual(self.failed, 0)
         self.assertEqual(self.results, 0)
+
 
 class Steps(unittest.TestCase):
     def testMultipleStepInstances(self):
