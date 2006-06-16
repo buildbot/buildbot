@@ -6,6 +6,7 @@
 	other test classes too
 	* buildbot/test/test_vc.py: more SignalMixin refactoring
 	* buildbot/test/test_control.py: same
+	* buildbot/test/test_run.py: and some rmtree refactoring
 
 2006-06-15  Brian Warner  <warner@lothar.com>
 

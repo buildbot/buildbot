@@ -14,7 +14,7 @@ from buildbot.status import builder
 from buildbot.process.base import BuildRequest
 from buildbot.twcompat import maybeWait
 
-from buildbot.test.runutils import RunMixin
+from buildbot.test.runutils import RunMixin, rmtree
 
 config_base = """
 from buildbot.process import factory, step
@@ -74,12 +74,7 @@ c['builders'].append({'name': 'dummy2', 'slavename': 'bot1',
 
 class Run(unittest.TestCase):
     def rmtree(self, d):
-        try:
-            shutil.rmtree(d, ignore_errors=1)
-        except OSError, e:
-            # stupid 2.2 appears to ignore ignore_errors
-            if e.errno != errno.ENOENT:
-                raise
+        rmtree(d)
 
     def testMaster(self):
         self.rmtree("basedir")
