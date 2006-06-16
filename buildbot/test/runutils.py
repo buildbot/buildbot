@@ -208,3 +208,17 @@ class RunMixin:
         # connection, and sees two connections at once.
         raise NotImplementedError
 
+
+def setupBuildStepStatus(basedir):
+    """Return a BuildStep with a suitable BuildStepStatus object, ready to
+    use."""
+    os.mkdir(basedir)
+    botmaster = None
+    s0 = builder.Status(botmaster, basedir)
+    s1 = s0.builderAdded("buildername", "buildername")
+    s2 = builder.BuildStatus(s1, 1)
+    s3 = builder.BuildStepStatus(s2)
+    s3.setName("foostep")
+    s3.started = True
+    s3.stepStarted()
+    return s3

@@ -24,7 +24,7 @@ from buildbot.sourcestamp import SourceStamp
 from buildbot.process import step, base, factory
 from buildbot.process.step import ShellCommand #, ShellCommands
 from buildbot.status import builder
-from buildbot.test.runutils import RunMixin
+from buildbot.test.runutils import RunMixin, setupBuildStep
 from buildbot.twcompat import maybeWait
 from buildbot.slave import commands
 
@@ -233,4 +233,32 @@ class Version(RunMixin, unittest.TestCase):
         self.master._checker = self.checkCompare
         d = self.doBuild("quick")
         return maybeWait(d)
+
+
+class MyObserver(step.LogObserver):
+    out = ""
+    def outReceived(self, data):
+        self.out = self.out + data
+
+class LogObserver(unittest.TestCase):
+    def testAdd(self):
+        bss = setupBuildStepStatus("logobserver")
+        build = None
+        s = step.BuildStep(build)
+        s.setStepStatus(bss)
+        o1,o2,o3 = MyObserver(), MyObserver(), MyObserver()
+
+        # add the log before the observer
+        l1 = s.addLog("one")
+        l1.addStdout("onestuff")
+        s.addLogObserver("one", o1)
+        self.failUnlessEqual(o1.out, "onestuff")
+        l1.addStdout(" morestuff")
+        self.failUnlessEqual(o1.out, "onestuff morestuff")
+
+        # add the observer before the log
+        s.addLogObserver("two", o2)
+        l2 = s.addLog("two")
+        l2.addStdout("twostuff")
+        self.failUnlessEqual(o2.out, "twostuff")
 

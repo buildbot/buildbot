@@ -1,5 +1,12 @@
 2006-06-15  Brian Warner  <warner@lothar.com>
 
+	* buildbot/test/test_steps.py (LogObserver): new test to verify
+	LogObservers can be created at various times and still get
+	connected up properly
+
+	* buildbot/test/runutils.py (setupBuildStepStatus): utility method
+	to create BuildStepStatus instances that actually work.
+
 	* buildbot/process/step.py (LogObserver): add outReceived and
 	errReceived base methods, to be overridden
 
