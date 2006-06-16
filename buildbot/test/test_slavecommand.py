@@ -2,53 +2,19 @@
 
 from twisted.trial import unittest
 from twisted.internet import reactor, interfaces
-from twisted.python import util, runtime, failure
+from twisted.python import runtime, failure
 from buildbot.twcompat import maybeWait
 
-noisy = False
-if noisy:
-    from twisted.python.log import startLogging
-    import sys
-    startLogging(sys.stdout)
-
 import os, re, sys
-import signal
 
 from buildbot.slave import commands
 SlaveShellCommand = commands.SlaveShellCommand
 
+from buildbot.test.runutils import findDir, SignalMixin, FakeSlaveBuilder
+
 # test slavecommand.py by running the various commands with a fake
 # SlaveBuilder object that logs the calls to sendUpdate()
 
-def findDir():
-    # the same directory that holds this script
-    return util.sibpath(__file__, ".")
-        
-class FakeSlaveBuilder:
-    def __init__(self, usePTY):
-        self.updates = []
-        self.basedir = findDir()
-        self.usePTY = usePTY
-
-    def sendUpdate(self, data):
-        if noisy: print "FakeSlaveBuilder.sendUpdate", data
-        self.updates.append(data)
-
-
-class SignalMixin:
-    sigchldHandler = None
-    
-    def setUpClass(self):
-        # make sure SIGCHLD handler is installed, as it should be on
-        # reactor.run(). problem is reactor may not have been run when this
-        # test runs.
-        if hasattr(reactor, "_handleSigchld") and hasattr(signal, "SIGCHLD"):
-            self.sigchldHandler = signal.signal(signal.SIGCHLD,
-                                                reactor._handleSigchld)
-    
-    def tearDownClass(self):
-        if self.sigchldHandler:
-            signal.signal(signal.SIGCHLD, self.sigchldHandler)
 
 
 class ShellBase(SignalMixin):

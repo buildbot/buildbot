@@ -1,7 +1,8 @@
 
+import signal
 import shutil, os, errno
-from twisted.internet import defer
-from twisted.python import log
+from twisted.internet import defer, reactor
+from twisted.python import log, util
 
 from buildbot import master, interfaces
 from buildbot.twcompat import maybeWait
@@ -17,16 +18,19 @@ class MyBot(bot.Bot):
 class MyBuildSlave(bot.BuildSlave):
     botClass = MyBot
 
+def rmtree(d):
+    try:
+        shutil.rmtree(d, ignore_errors=1)
+    except OSError, e:
+        # stupid 2.2 appears to ignore ignore_errors
+        if e.errno != errno.ENOENT:
+            raise
+
 class RunMixin:
     master = None
 
     def rmtree(self, d):
-        try:
-            shutil.rmtree(d, ignore_errors=1)
-        except OSError, e:
-            # stupid 2.2 appears to ignore ignore_errors
-            if e.errno != errno.ENOENT:
-                raise
+        rmtree(d)
 
     def setUp(self):
         self.slaves = {}
@@ -222,3 +226,38 @@ def setupBuildStepStatus(basedir):
     s3.started = True
     s3.stepStarted()
     return s3
+
+def findDir():
+    # the same directory that holds this script
+    return util.sibpath(__file__, ".")
+
+class SignalMixin:
+    sigchldHandler = None
+    
+    def setUpClass(self):
+        # make sure SIGCHLD handler is installed, as it should be on
+        # reactor.run(). problem is reactor may not have been run when this
+        # test runs.
+        if hasattr(reactor, "_handleSigchld") and hasattr(signal, "SIGCHLD"):
+            self.sigchldHandler = signal.signal(signal.SIGCHLD,
+                                                reactor._handleSigchld)
+
+    def tearDownClass(self):
+        if self.sigchldHandler:
+            signal.signal(signal.SIGCHLD, self.sigchldHandler)
+
+# these classes are used to test SlaveCommands in isolation
+
+class FakeSlaveBuilder:
+    debug = False
+    def __init__(self, usePTY):
+        self.updates = []
+        self.basedir = findDir()
+        self.usePTY = usePTY
+
+    def sendUpdate(self, data):
+        if self.debug:
+            print "FakeSlaveBuilder.sendUpdate", data
+        self.updates.append(data)
+
+

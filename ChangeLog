@@ -1,3 +1,10 @@
+2006-06-16  Brian Warner  <warner@lothar.com>
+
+	* buildbot/test/test_slavecommand.py: Move some utilities like
+	SignalMixin and FakeSlaveBuilder from here ..
+	* buildbot/test/runutils.py: .. to here, so they can be used by
+	other test classes too
+
 2006-06-15  Brian Warner  <warner@lothar.com>
 
 	* buildbot/test/test_vc.py (P4.testCheckoutBranch): rename from
