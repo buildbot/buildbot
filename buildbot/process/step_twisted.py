@@ -230,12 +230,12 @@ class Trial(ShellCommand):
     """
 
     name = "trial"
-    progressMetrics = ('output', 'tests')
+    progressMetrics = ('output', 'tests', 'test.log')
     # note: the slash only works on unix buildslaves, of course, but we have
     # no way to know what the buildslave uses as a separator. TODO: figure
     # out something clever.
     logfiles = {"test.log": "_trial_temp/test.log"}
-    # TODO: the text in test.log should feed progressMetrics too
+    # we use test.log to track Progress at the end of __init__()
 
     flunkOnFailure = True
     python = None
@@ -405,8 +405,10 @@ class Trial(ShellCommand):
             self.descriptionDone = ["tests"]
 
         # this counter will feed Progress along the 'test cases' metric
-        counter = TrialTestCaseCounter()
-        self.addLogObserver('stdio', counter)
+        self.addLogObserver('stdio', TrialTestCaseCounter())
+        # this one just measures bytes of output in _trial_temp/test.log
+        self.addLogObserver('test.log',
+                            step.OutputProgressObserver('test.log'))
 
     def setupEnvironment(self, cmd):
         ShellCommand.setupEnvironment(self, cmd)

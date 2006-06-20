@@ -1,5 +1,8 @@
 2006-06-19  Brian Warner  <warner@lothar.com>
 
+	* buildbot/process/step_twisted.py (Trial): track Progress from
+	_trial_temp/test.log too
+
 	* buildbot/process/step.py (OutputProgressObserver): generalize
 	the earlier StdioProgressObserver into an OutputProgressObserver
 	that can track LogFiles other than stdio.
