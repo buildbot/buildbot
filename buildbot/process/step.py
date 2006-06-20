@@ -30,7 +30,7 @@ class RemoteCommand(pb.Referenceable):
     of reliably gathering status updates from the slave (acknowledging each),
     and (eventually, in a future release) recovering from interrupted builds.
     This is the master-side object that is known to the slave-side
-    L{buildbot.slave.bot.SlaveBuilder}, to which status update are sent.
+    L{buildbot.slave.bot.SlaveBuilder}, to which status updates are sent.
 
     My command should be started by calling .run(), which returns a
     Deferred that will fire when the command has finished, or will
@@ -234,18 +234,18 @@ class LoggedRemoteCommand(RemoteCommand):
     """
 
     I am a L{RemoteCommand} which gathers output from the remote command into
-    one or more local log files. These L{buildbot.status.builder.Logfile}
-    instances live in C{self.logs}. If the slave sends back
-    stdout/stderr/header updates, these will be put into
-    C{self.logs['stdio']}, if present. If the remote command uses other log
-    channels, they will go into other entries in C{self.logs}.
+    one or more local log files. My C{self.logs} dictionary contains
+    references to these L{buildbot.status.builder.LogFile} instances. Any
+    stdout/stderr/header updates from the slave will be put into
+    C{self.logs['stdio']}, if it exists. If the remote command uses other log
+    files, they will go into other entries in C{self.logs}.
 
-    If you want to use stdout, you should create a LogFile named 'stdio' and
-    pass it to my useLog() message. Otherwise stdout/stderr will be ignored,
-    which is probably not what you want.
+    If you want to use stdout or stderr, you should create a LogFile named
+    'stdio' and pass it to my useLog() message. Otherwise stdout/stderr will
+    be ignored, which is probably not what you want.
 
-    Unless you tell me otherwise, I will close all logs when the command is
-    complete.
+    Unless you tell me otherwise, when my command completes I will close all
+    the LogFiles that I know about.
 
     @ivar logs: maps logname to a LogFile instance
     @ivar _closeWhenFinished: maps logname to a boolean. If true, this
@@ -292,21 +292,34 @@ class LoggedRemoteCommand(RemoteCommand):
         if 'stdio' in self.logs:
             self.logs['stdio'].addHeader(data)
 
+    def addToLog(self, logname, data):
+        if logname in self.logs:
+            self.logs[logname].addStdout(data)
+        else:
+            log.msg("%s.addToLog: no such log %s" % (self, logname))
+
     def remoteUpdate(self, update):
         if self.debug:
             for k,v in update.items():
                 log.msg("Update[%s]: %s" % (k,v))
         if update.has_key('stdout'):
+            # 'stdout': data
             self.addStdout(update['stdout'])
         if update.has_key('stderr'):
+            # 'stderr': data
             self.addStderr(update['stderr'])
         if update.has_key('header'):
+            # 'header': data
             self.addHeader(update['header'])
+        if update.has_key('log'):
+            # 'log': (logname, data)
+            logname, data = update['log']
+            self.addToLog(logname, data)
         if update.has_key('rc'):
             rc = self.rc = update['rc']
             log.msg("%s rc=%s" % (self, rc))
             self.addHeader("program finished with exit code %d\n" % rc)
-        # TODO: other log channels
+
         for k in update:
             if k not in ('stdout', 'stderr', 'header', 'rc'):
                 if k not in self.updates:
@@ -394,7 +407,7 @@ class RemoteShellCommand(LoggedRemoteCommand):
 
     def __init__(self, workdir, command, env=None, 
                  want_stdout=1, want_stderr=1,
-                 timeout=20*60, **kwargs):
+                 timeout=20*60, logfiles={}, **kwargs):
         """
         @type  workdir: string
         @param workdir: directory where the command ought to run,
@@ -434,6 +447,7 @@ class RemoteShellCommand(LoggedRemoteCommand):
                         the command is hung and should be killed. Use
                         None to disable the timeout.
         """
+
         self.command = command # stash .command, set it later
         if env is not None:
             # avoid mutating the original master.cfg dictionary. Each
@@ -485,7 +499,7 @@ class BuildStep:
     C{self.step_status}. It can also feed progress data (like how much text
     is output by a shell command) to the
     L{buildbot.status.progress.StepProgress} object that lives in
-    C{self.progress}, by calling C{progress.setProgress(metric, value)} as it
+    C{self.progress}, by calling C{self.setProgress(metric, value)} as it
     runs.
 
     @type build: L{buildbot.process.base.Build}
@@ -834,8 +848,9 @@ class StdioProgressObserver(LogObserver):
 
 
 class LoggingBuildStep(BuildStep):
-    # This is an abstract base class, suitable for inheritance by all
-    # BuildSteps that invoke RemoteCommands which emit stdout/stderr messages
+    """This is an abstract base class, suitable for inheritance by all
+    BuildSteps that invoke RemoteCommands which emit stdout/stderr messages.
+    """
 
     progressMetrics = ('output',)
 
@@ -854,12 +869,12 @@ class LoggingBuildStep(BuildStep):
         self.cmd = cmd # so we can interrupt it
         self.step_status.setColor("yellow")
         self.step_status.setText(self.describe(False))
-        loog = self.addLog("stdio")
-        log.msg("ShellCommand.start using log", loog)
+        stdio_log = self.addLog("stdio")
+        log.msg("ShellCommand.start using log", stdio_log)
         log.msg(" for cmd", cmd)
-        cmd.useLog(loog, True)
+        cmd.useLog(stdio_log, True)
         for em in errorMessages:
-            loog.addHeader(em)
+            stdio_log.addHeader(em)
         d = self.runCommand(cmd)
         d.addCallbacks(self._commandComplete, self.checkDisconnect)
         d.addErrback(self.failed)
@@ -1046,6 +1061,7 @@ class ShellCommand(LoggingBuildStep):
     description = None # set this to a list of short strings to override
     descriptionDone = None # alternate description when the step is complete
     command = None # set this to a command, or set in kwargs
+    logfiles = {}
 
     # override this on a specific ShellCommand if you want to let it fail
     # without dooming the entire build to a status of FAILURE
@@ -1053,7 +1069,7 @@ class ShellCommand(LoggingBuildStep):
 
     def __init__(self, workdir,
                  description=None, descriptionDone=None,
-                 command=None,
+                 command=None, logfiles={},
                  **kwargs):
         # most of our arguments get passed through to the RemoteShellCommand
         # that we create, but first strip out the ones that we pass to
@@ -1066,6 +1082,10 @@ class ShellCommand(LoggingBuildStep):
             self.descriptionDone = descriptionDone
         if command:
             self.command = command
+        # merge a class-level 'logfiles' attribute with one passed in as an
+        # argument
+        self.logfiles = self.logfiles.copy()
+        self.logfiles.update(logfiles)
 
         # pull out the ones that BuildStep wants, then upcall
         buildstep_kwargs = {}
@@ -1142,13 +1162,23 @@ class ShellCommand(LoggingBuildStep):
             # note that each RemoteShellCommand gets its own copy of the
             # dictionary, so we shouldn't be affecting anyone but ourselves.
 
+    def setupLogfiles(self, cmd, logfiles):
+        if logfiles:
+            for logname,remotefilename in logfiles.items():
+                # tell the BuildStepStatus to add a LogFile
+                newlog = self.addLog(logname)
+                # and tell the LoggedRemoteCommand to feed it
+                cmd.useLog(newlog, True)
+
     def start(self):
         command = self._interpolateProperties(self.command)
         # create the actual RemoteShellCommand instance now
         kwargs = self.remote_kwargs
         kwargs['command'] = command
+        kwargs['logfiles'] = self.logfiles
         cmd = RemoteShellCommand(**kwargs)
         self.setupEnvironment(cmd)
+        self.setupLogfiles(cmd, self.logfiles)
         self.startCommand(cmd)
 
 

@@ -276,16 +276,28 @@ class SlaveCommandTestBase(SignalMixin):
         d = c.doStart()
         return d
 
-    def collectUpdates(self, res):
+    def collectUpdates(self, res=None):
         logs = {}
         for u in self.builder.updates:
             for k in u.keys():
                 if k == "log":
                     logname,data = u[k]
                     oldlog = logs.get(("log",logname), "")
-                    logs[("log",logname)] = oldlog + u[k]
+                    logs[("log",logname)] = oldlog + data
                 elif k == "rc":
                     pass
                 else:
                     logs[k] = logs.get(k, "") + u[k]
         return logs
+
+    def findRC(self):
+        for u in self.builder.updates:
+            if "rc" in u:
+                return u["rc"]
+        return None
+
+    def printStderr(self):
+        for u in self.builder.updates:
+            if "stderr" in u:
+                print u["stderr"]
+

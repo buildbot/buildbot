@@ -1,9 +1,10 @@
 # -*- test-case-name: buildbot.test.test_slavecommand -*-
 
 import os, os.path, re, signal, shutil, types, time
+from stat import ST_CTIME, ST_MTIME, ST_SIZE
 
 from twisted.internet.protocol import ProcessProtocol
-from twisted.internet import reactor, defer
+from twisted.internet import reactor, defer, task
 from twisted.python import log, failure, runtime
 
 from buildbot.twcompat import implements, which
@@ -69,6 +70,21 @@ class ShellCommandPP(ProcessProtocol):
 
     def __init__(self, command):
         self.command = command
+        self.pending_stdin = ""
+        self.stdin_finished = False
+
+    def writeStdin(self, data):
+        assert not self.stdin_finished
+        if self.connected:
+            self.transport.write(data)
+        else:
+            self.pending_stdin += data
+
+    def closeStdin(self):
+        if self.connected:
+            if self.debug: log.msg(" closing stdin")
+            self.transport.closeStdin()
+        self.stdin_finished = True
 
     def connectionMade(self):
         if self.debug:
@@ -78,10 +94,6 @@ class ShellCommandPP(ProcessProtocol):
                 log.msg(" assigning self.command.process: %s" %
                         (self.transport,))
             self.command.process = self.transport
-
-        if self.command.stdin:
-            if self.debug: log.msg(" writing to stdin")
-            self.transport.write(self.command.stdin)
 
         # TODO: maybe we shouldn't close stdin when using a PTY. I can't test
         # this yet, recent debian glibc has a bug which causes thread-using
@@ -94,8 +106,12 @@ class ShellCommandPP(ProcessProtocol):
         # from being sent.
         #if not self.command.usePTY:
 
-        if self.debug: log.msg(" closing stdin")
-        self.transport.closeStdin()
+        if self.pending_stdin:
+            if self.debug: log.msg(" writing to stdin")
+            self.transport.write(self.pending_stdin)
+        if self.stdin_finished:
+            if self.debug: log.msg(" closing stdin")
+            self.transport.closeStdin()
 
     def outReceived(self, data):
         if self.debug:
@@ -117,6 +133,49 @@ class ShellCommandPP(ProcessProtocol):
         rc = status_object.value.exitCode
         self.command.finished(sig, rc)
 
+class LogFileWatcher:
+    POLL_INTERVAL = 2
+
+    def __init__(self, command, name, logfile):
+        self.command = command
+        self.name = name
+        self.logfile = logfile
+        # we are created before the ShellCommand starts. If the logfile we're
+        # supposed to be watching already exists, record its size and
+        # ctime/mtime so we can tell when it starts to change.
+        self.old_logfile_stats = self.statFile()
+        self.started = False
+
+        # every 2 seconds we check on the file again
+        self.poller = task.LoopingCall(self.poll)
+
+    def start(self):
+        self.poller.start(self.POLL_INTERVAL)
+
+    def stop(self):
+        self.poll()
+        self.poller.stop()
+
+    def statFile(self):
+        if os.path.exists(self.logfile):
+            s = os.stat(self.logfile)
+            return (s[ST_CTIME], s[ST_MTIME], s[ST_SIZE])
+        return None
+
+    def poll(self):
+        if not self.started:
+            s = self.statFile()
+            if s == self.old_logfile_stats:
+                return # not started yet
+            self.f = open(self.logfile, "rb")
+            self.started = True
+        while True:
+            data = self.f.read(10000)
+            if not data:
+                return
+            self.command.addLogfile(self.name, data)
+
+
 class ShellCommand:
     # This is a helper class, used by SlaveCommands to run programs in a
     # child shell.
@@ -128,13 +187,16 @@ class ShellCommand:
     def __init__(self, builder, command,
                  workdir, environ=None,
                  sendStdout=True, sendStderr=True, sendRC=True,
-                 timeout=None, stdin=None, keepStdout=False):
+                 timeout=None, initialStdin=None, keepStdinOpen=False,
+                 keepStdout=False,
+                 logfiles={}):
         """
 
         @param keepStdout: if True, we keep a copy of all the stdout text
                            that we've seen. This copy is available in
                            self.stdout, which can be read after the command
                            has finished.
+
         """
 
         self.builder = builder
@@ -142,6 +204,7 @@ class ShellCommand:
         self.sendStdout = sendStdout
         self.sendStderr = sendStderr
         self.sendRC = sendRC
+        self.logfiles = logfiles
         self.workdir = workdir
         self.environ = os.environ.copy()
         if environ:
@@ -155,7 +218,8 @@ class ShellCommand:
                                          + self.environ['PYTHONPATH'])
                 # this will proceed to replace the old one
             self.environ.update(environ)
-        self.stdin = stdin
+        self.initialStdin = initialStdin
+        self.keepStdinOpen = keepStdinOpen
         self.timeout = timeout
         self.timer = None
         self.keepStdout = keepStdout
@@ -167,9 +231,15 @@ class ShellCommand:
         self.usePTY = self.builder.usePTY
         if runtime.platformType != "posix":
             self.usePTY = False # PTYs are posix-only
-        if stdin is not None:
+        if initialStdin is not None:
             # for .closeStdin to matter, we must use a pipe, not a PTY
             self.usePTY = False
+
+        self.logFileWatchers = []
+        for name,filename in self.logfiles.items():
+            w = LogFileWatcher(self, name,
+                               os.path.join(self.workdir, filename))
+            self.logFileWatchers.append(w)
 
     def __repr__(self):
         return "<slavecommand.ShellCommand '%s'>" % self.command
@@ -243,6 +313,12 @@ class ShellCommand:
         log.msg(" " + msg)
         self.sendStatus({'header': msg+"\n"})
 
+        # this will be buffered until connectionMade is called
+        if self.initialStdin:
+            self.pp.writeStdin(self.initialStdin)
+        if not self.keepStdinOpen:
+            self.pp.closeStdin()
+
         # win32eventreactor's spawnProcess (under twisted <= 2.0.1) returns
         # None, as opposed to all the posixbase-derived reactors (which
         # return the new Process object). This is a nuisance. We can make up
@@ -270,17 +346,34 @@ class ShellCommand:
         if self.timeout:
             self.timer = reactor.callLater(self.timeout, self.doTimeout)
 
+        for w in self.logFileWatchers:
+            w.start()
+
+
     def addStdout(self, data):
-        if self.sendStdout: self.sendStatus({'stdout': data})
-        if self.keepStdout: self.stdout += data
-        if self.timer: self.timer.reset(self.timeout)
+        if self.sendStdout:
+            self.sendStatus({'stdout': data})
+        if self.keepStdout:
+            self.stdout += data
+        if self.timer:
+            self.timer.reset(self.timeout)
 
     def addStderr(self, data):
-        if self.sendStderr: self.sendStatus({'stderr': data})
-        if self.timer: self.timer.reset(self.timeout)
+        if self.sendStderr:
+            self.sendStatus({'stderr': data})
+        if self.timer:
+            self.timer.reset(self.timeout)
+
+    def addLogfile(self, name, data):
+        self.sendStatus({'log': (name, data)})
+        if self.timer:
+            self.timer.reset(self.timeout)
 
     def finished(self, sig, rc):
         log.msg("command finished with signal %s, exit code %s" % (sig,rc))
+        for w in self.logFileWatchers:
+             # this will send the final updates
+            w.stop()
         if sig is not None:
             rc = -1
         if self.sendRC:
@@ -393,6 +486,13 @@ class ShellCommand:
             self.sendStatus({'header': "using fake rc=-1\n"})
             self.sendStatus({'rc': -1})
         self.failed(TimeoutError("SIGKILL failed to kill process"))
+
+
+    def writeStdin(self, data):
+        self.pp.writeStdin(data)
+
+    def closeStdin(self):
+        self.pp.closeStdin()
 
 
 class Command:
@@ -534,37 +634,52 @@ class SlaveShellCommand(Command):
     the following keys:
 
         - ['command'] (required): a shell command to run. If this is a string,
-          it will be run with /bin/sh (['/bin/sh', '-c', command]). If it is a
-          list (preferred), it will be used directly.
-        - ['workdir'] (required): subdirectory in which the command will be run,
-          relative to the builder dir
-        - ['env']: a dict of environment variables to augment/replace os.environ
+                                  it will be run with /bin/sh (['/bin/sh',
+                                  '-c', command]). If it is a list
+                                  (preferred), it will be used directly.
+        - ['workdir'] (required): subdirectory in which the command will be
+                                  run, relative to the builder dir
+        - ['env']: a dict of environment variables to augment/replace
+                   os.environ
+        - ['initial_stdin']: a string which will be written to the command's
+                             stdin as soon as it starts
+        - ['keep_stdin_open']: unless True, the command's stdin will be
+                               closed as soon as initial_stdin has been
+                               written. Set this to True if you plan to write
+                               to stdin after the command has been started.
         - ['want_stdout']: 0 if stdout should be thrown away
         - ['want_stderr']: 0 if stderr should be thrown away
         - ['not_really']: 1 to skip execution and return rc=0
         - ['timeout']: seconds of silence to tolerate before killing command
+        - ['logfiles']: dict mapping LogFile name to the workdir-relative
+                        filename of a local log file. This local file will be
+                        watched just like 'tail -f', and all changes will be
+                        written to 'log' status updates.
 
     ShellCommand creates the following status messages:
         - {'stdout': data} : when stdout data is available
         - {'stderr': data} : when stderr data is available
         - {'header': data} : when headers (command start/stop) are available
+        - {'log': (logfile_name, data)} : when log files have new contents
         - {'rc': rc} : when the process has terminated
     """
 
     def start(self):
         args = self.args
-        sendStdout = args.get('want_stdout', True)
-        sendStderr = args.get('want_stderr', True)
         # args['workdir'] is relative to Builder directory, and is required.
         assert args['workdir'] is not None
         workdir = os.path.join(self.builder.basedir, args['workdir'])
-        timeout = args.get('timeout', None)
 
         c = ShellCommand(self.builder, args['command'],
                          workdir, environ=args.get('env'),
-                         timeout=timeout,
-                         sendStdout=sendStdout, sendStderr=sendStderr,
-                         sendRC=True)
+                         timeout=args.get('timeout', None),
+                         sendStdout=args.get('want_stdout', True),
+                         sendStderr=args.get('want_stderr', True),
+                         sendRC=True,
+                         initialStdin=args.get('initial_stdin'),
+                         keepStdinOpen=args.get('keep_stdin_open'),
+                         logfiles=args.get('logfiles', {}),
+                         )
         self.command = c
         d = self.command.start()
         return d
@@ -573,6 +688,11 @@ class SlaveShellCommand(Command):
         self.interrupted = True
         self.command.kill("command interrupted")
 
+    def writeStdin(self, data):
+        self.command.writeStdin(data)
+
+    def closeStdin(self):
+        self.command.closeStdin()
 
 registerSlaveCommand("shell", SlaveShellCommand, cvs_ver)
 
@@ -879,7 +999,7 @@ class SourceBase(Command):
         # now apply the patch
         c = ShellCommand(self.builder, command, dir,
                          sendRC=False, timeout=self.timeout,
-                         stdin=diff)
+                         initialStdin=diff)
         self.command = c
         d = c.start()
         d.addCallback(self._abandonOnFailure)
@@ -925,7 +1045,7 @@ class CVS(SourceBase):
                        + ['login'])
             c = ShellCommand(self.builder, command, d,
                              sendRC=False, timeout=self.timeout,
-                             stdin=self.login+"\n")
+                             initialStdin=self.login+"\n")
             self.command = c
             d = c.start()
             d.addCallback(self._abandonOnFailure)
@@ -1566,7 +1686,7 @@ class P4(SourceBase):
         log.msg(client_spec)
         c = ShellCommand(self.builder, command, self.builder.basedir,
                          environ=env, sendRC=False, timeout=self.timeout,
-                         stdin=client_spec)
+                         initialStdin=client_spec)
         self.command = c
         d = c.start()
         d.addCallback(self._abandonOnFailure)

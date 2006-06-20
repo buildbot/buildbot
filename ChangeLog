@@ -1,5 +1,45 @@
 2006-06-19  Brian Warner  <warner@lothar.com>
 
+	* buildbot/test/test_shell.py: new test to validate LogFiles
+	* buildbot/test/runutils.py (SlaveCommandTestBase): updates to
+	test LogFiles
+	* buildbot/test/emitlogs.py: enhance to wait for a line on stdin
+	before printing the last batch of lines, to test that the polling
+	logic is working properly
+
+	* buildbot/process/step.py (LoggedRemoteCommand): improve LogFile
+	handling, making it possible to track multiple logs for a single
+	RemoteCommand. The previous single logfile is now known as the
+	'stdio' log.
+	(LoggedRemoteCommand.remoteUpdate): accept key='log' updates
+	(RemoteShellCommand.__init__): accept logfiles=
+	(LoggingBuildStep.startCommand): stdio_log is now one of many
+	(ShellCommand): added logfiles= argument, as well as a class-level
+	.logfiles attribute, which will be merged together to figure out
+	which logfiles should be tracked. The latter maybe be useful for
+	subclasses of ShellCommand which know they will aways produce
+	secondary logfiles in the same location.
+
+	* buildbot/slave/commands.py (ShellCommandPP): add writeStdin()
+	and closeStdin() methods, preparing to make it possible to write
+	to a ShellCommand's stdin at any time, not just at startup. These
+	writes are buffered if the child process hasn't started yet.
+	(LogFileWatcher): new helper class to watch arbitrary logfiles
+	while a ShellCommand runs. This class polls the file every two
+	seconds, and sends back 10k chunks to the buildmaster.
+	(ShellCommand): rename stdin= to initialStdin=, and add
+	keepStdinOpen= and logfiles= to arguments. Set up LogFileWatchers
+	at startup.
+	(ShellCommand.addLogfile): LogFile text is sent in updates with a
+	key of "log" and a value of (logname, data).
+	(SlaveShellCommand): add 'initial_stdin', 'keep_stdin_open', and
+	'logfiles' to the master-visible args dictionary.
+	(SourceBase.doPatch): match s/stdin/initialStdin/ change
+	(CVS.start): same
+	(P4.doVCFull): same
+	* buildbot/test/test_vc.py (Patch.testPatch): same
+
+
 	* buildbot/test/emit.py: write to a logfile in the current
 	directory. We use this to figure out what was used as a basedir
 	rather than looking to see which copy of emit.py gets run, so that

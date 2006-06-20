@@ -2354,7 +2354,7 @@ class Patch(VCBase, unittest.TestCase):
             def sendUpdate(self, status):
                 pass
         c = commands.ShellCommand(FakeBuilder(), command, self.workdir,
-                                  sendRC=False, stdin=p0_diff)
+                                  sendRC=False, initialStdin=p0_diff)
         d = c.start()
         d.addCallback(self._testPatch_1)
         return maybeWait(d)
