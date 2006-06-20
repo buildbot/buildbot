@@ -1,5 +1,20 @@
 2006-06-19  Brian Warner  <warner@lothar.com>
 
+	* buildbot/test/emit.py: write to a logfile in the current
+	directory. We use this to figure out what was used as a basedir
+	rather than looking to see which copy of emit.py gets run, so that
+	we can run the commands from inside _trial_temp rather than inside
+	buildbot/test
+	* buildbot/test/subdir/emit.py: same
+	* buildbot/test/runutils.py (FakeSlaveBuilder): take a 'basedir'
+	argument rather than running from buildbot/test/
+	(SlaveCommandTestBase.setUpBuilder): explicitly set up the Builder
+	rather than using an implicit setUp()
+	* buildbot/test/test_slavecommand.py (ShellBase.setUp): same
+	(ShellBase.testShell1, etc): use explicit path to emit.py instead
+	of assuming that we're running in buildbot/test/ (and that '.' is
+	on our $PATH)
+
 	* buildbot/slave/commands.py (Command.doStart): refactor Command
 	startup/completion a bit: now the SlaveBuilder calls doStart(),
 	which is not meant for overridding by subclasses, and doStart()

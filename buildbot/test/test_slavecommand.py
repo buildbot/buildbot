@@ -2,7 +2,7 @@
 
 from twisted.trial import unittest
 from twisted.internet import reactor, interfaces
-from twisted.python import runtime, failure
+from twisted.python import runtime, failure, util
 from buildbot.twcompat import maybeWait
 
 import os, re, sys
@@ -20,10 +20,21 @@ from buildbot.test.runutils import findDir, SignalMixin, FakeSlaveBuilder
 class ShellBase(SignalMixin):
 
     def setUp(self):
-        self.builder = FakeSlaveBuilder(self.usePTY)
+        self.basedir = "test_slavecommand"
+        if not os.path.isdir(self.basedir):
+            os.mkdir(self.basedir)
+        self.subdir = os.path.join(self.basedir, "subdir")
+        if not os.path.isdir(self.subdir):
+            os.mkdir(self.subdir)
+        self.builder = FakeSlaveBuilder(self.usePTY, self.basedir)
+        self.emitcmd = util.sibpath(__file__, "emit.py")
+        self.subemitcmd = os.path.join(util.sibpath(__file__, "subdir"),
+                                       "emit.py")
+        self.sleepcmd = util.sibpath(__file__, "sleep.py")
 
     def failUnlessIn(self, substring, string):
-        self.failUnless(string.find(substring) != -1)
+        self.failUnless(string.find(substring) != -1,
+                        "'%s' not in '%s'" % (substring, string))
 
     def getfile(self, which):
         got = ""
@@ -64,13 +75,19 @@ class ShellBase(SignalMixin):
         self.assertEquals(got, expected)
         
     def testShell1(self):
-        cmd = sys.executable + " emit.py 0"
+        targetfile = os.path.join(self.basedir, "log1.out")
+        if os.path.exists(targetfile):
+            os.unlink(targetfile)
+        cmd = "%s %s 0" % (sys.executable, self.emitcmd)
         args = {'command': cmd, 'workdir': '.', 'timeout': 60}
         c = SlaveShellCommand(self.builder, None, args)
         d = c.start()
         expected = [('stdout', "this is stdout\n"),
                     ('stderr', "this is stderr\n")]
         d.addCallback(self._checkPass, expected, 0)
+        def _check_targetfile(res):
+            self.failUnless(os.path.exists(targetfile))
+        d.addCallback(_check_targetfile)
         return maybeWait(d)
 
     def _checkPass(self, res, expected, rc):
@@ -78,7 +95,7 @@ class ShellBase(SignalMixin):
         self.checkrc(rc)
 
     def testShell2(self):
-        cmd = [sys.executable, "emit.py", "0"]
+        cmd = [sys.executable, self.emitcmd, "0"]
         args = {'command': cmd, 'workdir': '.', 'timeout': 60}
         c = SlaveShellCommand(self.builder, None, args)
         d = c.start()
@@ -88,7 +105,7 @@ class ShellBase(SignalMixin):
         return maybeWait(d)
 
     def testShellRC(self):
-        cmd = [sys.executable, "emit.py", "1"]
+        cmd = [sys.executable, self.emitcmd, "1"]
         args = {'command': cmd, 'workdir': '.', 'timeout': 60}
         c = SlaveShellCommand(self.builder, None, args)
         d = c.start()
@@ -98,7 +115,7 @@ class ShellBase(SignalMixin):
         return maybeWait(d)
 
     def testShellEnv(self):
-        cmd = sys.executable + " emit.py 0"
+        cmd = "%s %s 0" % (sys.executable, self.emitcmd)
         args = {'command': cmd, 'workdir': '.',
                 'env': {'EMIT_TEST': "envtest"}, 'timeout': 60}
         c = SlaveShellCommand(self.builder, None, args)
@@ -111,13 +128,19 @@ class ShellBase(SignalMixin):
         return maybeWait(d)
 
     def testShellSubdir(self):
-        cmd = sys.executable + " emit.py 0"
+        targetfile = os.path.join(self.basedir, "subdir", "log1.out")
+        if os.path.exists(targetfile):
+            os.unlink(targetfile)
+        cmd = "%s %s 0" % (sys.executable, self.subemitcmd)
         args = {'command': cmd, 'workdir': "subdir", 'timeout': 60}
         c = SlaveShellCommand(self.builder, None, args)
         d = c.start()
         expected = [('stdout', "this is stdout in subdir\n"),
                     ('stderr', "this is stderr\n")]
         d.addCallback(self._checkPass, expected, 0)
+        def _check_targetfile(res):
+            self.failUnless(os.path.exists(targetfile))
+        d.addCallback(_check_targetfile)
         return maybeWait(d)
 
     def testShellMissingCommand(self):
@@ -137,7 +160,7 @@ class ShellBase(SignalMixin):
         # stopped trying.
 
     def testTimeout(self):
-        args = {'command': [sys.executable, "sleep.py", "10"],
+        args = {'command': [sys.executable, self.sleepcmd, "10"],
                 'workdir': '.', 'timeout': 2}
         c = SlaveShellCommand(self.builder, None, args)
         d = c.start()
@@ -157,7 +180,7 @@ class ShellBase(SignalMixin):
         testTimeout.todo = "timeout doesn't appear to work under windows"
 
     def testInterrupt1(self):
-        args = {'command': [sys.executable, "sleep.py", "10"],
+        args = {'command': [sys.executable, self.sleepcmd, "10"],
                 'workdir': '.', 'timeout': 20}
         c = SlaveShellCommand(self.builder, None, args)
         d = c.start()
@@ -183,7 +206,7 @@ class Shell(ShellBase, unittest.TestCase):
         # test the backup timeout. This doesn't work under a PTY, because the
         # transport.loseConnection we do in the timeout handler actually
         # *does* kill the process.
-        args = {'command': [sys.executable, "sleep.py", "5"],
+        args = {'command': [sys.executable, self.sleepcmd, "5"],
                 'workdir': '.', 'timeout': 20}
         c = SlaveShellCommand(self.builder, None, args)
         d = c.start()
@@ -208,7 +231,7 @@ class Shell(ShellBase, unittest.TestCase):
         # make sure that a) the old command's output doesn't interfere with
         # the new one, and b) the old command's actual termination doesn't
         # break anything
-        args = {'command': [sys.executable, "sleep.py", "5"],
+        args = {'command': [sys.executable, self.sleepcmd, "5"],
                 'workdir': '.', 'timeout': 20}
         c = SlaveShellCommand(self.builder, None, args)
         d = c.start()

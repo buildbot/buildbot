@@ -250,9 +250,9 @@ class SignalMixin:
 
 class FakeSlaveBuilder:
     debug = False
-    def __init__(self, usePTY):
+    def __init__(self, usePTY, basedir):
         self.updates = []
-        self.basedir = findDir()
+        self.basedir = basedir
         self.usePTY = usePTY
 
     def sendUpdate(self, data):
@@ -263,12 +263,15 @@ class FakeSlaveBuilder:
 
 class SlaveCommandTestBase(SignalMixin):
     usePTY = False
-    def setUp(self):
-        self.builder = FakeSlaveBuilder(self.usePTY)
+
+    def setUpBuilder(self, basedir):
+        if not os.path.exists(basedir):
+            os.mkdir(basedir)
+        self.builder = FakeSlaveBuilder(self.usePTY, basedir)
 
     def startCommand(self, cmdclass, args):
         stepId = 0
-        c = cmdclass(self.builder, stepId, args)
+        self.cmd = c = cmdclass(self.builder, stepId, args)
         c.running = True
         d = c.doStart()
         return d
