@@ -1,5 +1,14 @@
 2006-06-19  Brian Warner  <warner@lothar.com>
 
+	* buildbot/slave/commands.py (LogFileWatcher.__init__): note the
+	creation of LogFileWatchers
+	(ShellCommand._startCommand): and record the files that were
+	watched in the 'headers' section of the ShellCommand output
+
+	* buildbot/process/step.py (RemoteShellCommand.__init__): duh, you
+	need to actually pass it to the slave if you want it to work.
+	(ShellCommand): document it a bit
+
 	* buildbot/test/test_shell.py: new test to validate LogFiles
 	* buildbot/test/runutils.py (SlaveCommandTestBase): updates to
 	test LogFiles

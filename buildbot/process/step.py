@@ -458,6 +458,7 @@ class RemoteShellCommand(LoggedRemoteCommand):
                 'env': env,
                 'want_stdout': want_stdout,
                 'want_stderr': want_stderr,
+                'logfiles': logfiles,
                 'timeout': timeout,
                 }
         LoggedRemoteCommand.__init__(self, "shell", args)
@@ -1054,6 +1055,11 @@ class ShellCommand(LoggingBuildStep):
     @ivar command: a list of argv strings (or WithProperties instances).
                    This will be used by start() to create a
                    RemoteShellCommand instance.
+
+    @ivar logfiles: a dict mapping log NAMEs to workdir-relative FILENAMEs
+                    of their corresponding logfiles. The contents of the file
+                    named FILENAME will be put into a LogFile named NAME, in
+                    something approximating real-time.
 
     """
 

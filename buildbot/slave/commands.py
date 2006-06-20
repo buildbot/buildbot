@@ -140,6 +140,7 @@ class LogFileWatcher:
         self.command = command
         self.name = name
         self.logfile = logfile
+        log.msg("LogFileWatcher created to watch %s" % logfile)
         # we are created before the ShellCommand starts. If the logfile we're
         # supposed to be watching already exists, record its size and
         # ctime/mtime so we can tell when it starts to change.
@@ -300,6 +301,10 @@ class ShellCommand:
         msg = " in dir %s" % (self.workdir,)
         if self.timeout:
             msg += " (timeout %d secs)" % (self.timeout,)
+        log.msg(" " + msg)
+        self.sendStatus({'header': msg+"\n"})
+
+        msg = " watching logfiles %s" % (self.logfiles,)
         log.msg(" " + msg)
         self.sendStatus({'header': msg+"\n"})
 
