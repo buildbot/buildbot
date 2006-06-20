@@ -840,13 +840,15 @@ class BuildStep:
         return d
 
 
-class StdioProgressObserver(LogObserver):
+class OutputProgressObserver(LogObserver):
     length = 0
+
+    def __init__(self, name):
+        self.name = name
 
     def logChunk(self, build, step, log, channel, text):
         self.length += len(text)
-        self.step.setProgress("output", self.length)
-
+        self.step.setProgress(self.name, self.length)
 
 class LoggingBuildStep(BuildStep):
     """This is an abstract base class, suitable for inheritance by all
@@ -857,7 +859,7 @@ class LoggingBuildStep(BuildStep):
 
     def __init__(self, *args, **kwargs):
         BuildStep.__init__(self, *args, **kwargs)
-        self.addLogObserver('stdio', StdioProgressObserver())
+        self.addLogObserver('stdio', OutputProgressObserver("output"))
 
     def describe(self, done=False):
         raise NotImplementedError("implement this in a subclass")
