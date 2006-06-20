@@ -120,6 +120,7 @@ class BuildStep(unittest.TestCase):
                                  'workdir': "murkle",
                                  'want_stdout': 1,
                                  'want_stderr': 1,
+                                 'logfiles': {},
                                  'timeout': 10,
                                  'env': None}) ] )
         self.assertEqual(self.remote.events, expectedEvents)
