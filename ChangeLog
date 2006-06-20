@@ -1,5 +1,10 @@
 2006-06-19  Brian Warner  <warner@lothar.com>
 
+	* buildbot/process/step_twisted.py (Trial): use logfiles= to track
+	_trial_temp/test.log, not a separate 'cat' command. TODO: this
+	will fail under windows because of os.sep issues. It might have
+	worked before if 'cat' was doing cygwin path conversion.
+
 	* buildbot/slave/commands.py (LogFileWatcher.__init__): note the
 	creation of LogFileWatchers
 	(ShellCommand._startCommand): and record the files that were

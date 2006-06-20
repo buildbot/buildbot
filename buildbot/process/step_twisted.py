@@ -231,6 +231,11 @@ class Trial(ShellCommand):
 
     name = "trial"
     progressMetrics = ('output', 'tests')
+    # note: the slash only works on unix buildslaves, of course, but we have
+    # no way to know what the buildslave uses as a separator. TODO: figure
+    # out something clever.
+    logfiles = {"test.log": "_trial_temp/test.log"}
+    # TODO: the text in test.log should feed progressMetrics too
 
     flunkOnFailure = True
     python = None
@@ -439,25 +444,6 @@ class Trial(ShellCommand):
         log.msg("Trial.start: command is", self.command)
         ShellCommand.start(self)
 
-
-    def _commandComplete(self, cmd):
-        # before doing the summary, etc, fetch _trial_temp/test.log
-        # TODO: refactor ShellCommand so I don't have to override such
-        # an internal method
-        catcmd = ["cat", "_trial_temp/test.log"]
-        c2 = step.RemoteShellCommand(command=catcmd,
-                                     workdir=self.workdir,
-                                     )
-        self.cmd = c2
-        loog = self.addLog("test.log")
-        c2.useLog(loog, True)
-        d = c2.run(self, self.remote)
-        d.addCallback(self._commandComplete2, cmd)
-        return d
-
-    def _commandComplete2(self, c2, cmd):
-        # pass the original RemoteShellCommand to the summarizer
-        return ShellCommand._commandComplete(self, cmd)
 
     def rtext(self, fmt='%s'):
         if self.reactor:
