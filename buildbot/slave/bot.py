@@ -166,8 +166,7 @@ class SlaveBuilder(pb.Referenceable, service.Service):
         log.msg(" startCommand:%s [id %s]" % (command,stepId))
         self.remoteStep = stepref
         self.remoteStep.notifyOnDisconnect(self.lostRemoteStep)
-        self.command.running = True
-        d = defer.maybeDeferred(self.command.start)
+        d = self.command.doStart()
         d.addCallback(lambda res: None)
         d.addBoth(self.commandComplete)
         return None
@@ -181,7 +180,7 @@ class SlaveBuilder(pb.Referenceable, service.Service):
             # command that wasn't actually running
             log.msg(" .. but none was running")
             return
-        self.command.interrupt()
+        self.command.doInterrupt()
 
 
     def stopCommand(self):
@@ -192,8 +191,7 @@ class SlaveBuilder(pb.Referenceable, service.Service):
         if not self.command:
             return
         log.msg("stopCommand: halting current command %s" % self.command)
-        self.command.running = False # shut up!
-        self.command.interrupt() # die!
+        self.command.doInterrupt() # shut up! and die!
         self.command = None # forget you!
 
     # sendUpdate is invoked by the Commands we spawn

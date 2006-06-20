@@ -1,3 +1,19 @@
+2006-06-19  Brian Warner  <warner@lothar.com>
+
+	* buildbot/slave/commands.py (Command.doStart): refactor Command
+	startup/completion a bit: now the SlaveBuilder calls doStart(),
+	which is not meant for overridding by subclasses, and doStart()
+	calls start(), which is. Likewise the SlaveBuilder calls
+	doInterrupt(), and subclasses override interrupt(). This also puts
+	responsibility for maintaining .running in Command rather than in
+	SlaveBuilder.
+	(Command.doInterrupt): same
+	(Command.commandComplete): same, this is called when the deferred
+	returned by start() completes.
+	* buildbot/slave/bot.py (SlaveBuilder.remote_startCommand): same
+	(SlaveBuilder.remote_interruptCommand): same
+	(SlaveBuilder.stopCommand): same
+
 2006-06-16  Brian Warner  <warner@lothar.com>
 
 	* buildbot/test/test_shell.py: new test file to contain everything

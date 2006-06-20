@@ -270,7 +270,7 @@ class SlaveCommandTestBase(SignalMixin):
         stepId = 0
         c = cmdclass(self.builder, stepId, args)
         c.running = True
-        d = c.start()
+        d = c.doStart()
         return d
 
     def collectUpdates(self, res):

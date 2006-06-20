@@ -350,6 +350,7 @@ class ShellCommand:
                     log.msg("os module is missing the 'kill' function")
                 else:
                     log.msg("trying os.kill(-pid, %d)" % (sig,))
+                    # TODO: maybe use os.killpg instead of a negative pid?
                     os.kill(-self.process.pid, sig)
                     log.msg(" signal %s sent successfully" % sig)
                     hit = 1
@@ -468,11 +469,17 @@ class Command:
     def setup(self, args):
         """Override this in a subclass to extract items from the args dict."""
         pass
-        
+
+    def doStart(self):
+        self.running = True
+        d = defer.maybeDeferred(self.start)
+        d.addBoth(self.commandComplete)
+        return d
+
     def start(self):
-        """Start the command. self.running will be set just before this is
-        called. This method should return a Deferred that will fire when the
-        command has completed. The Deferred's argument will be ignored.
+        """Start the command. This method should return a Deferred that will
+        fire when the command has completed. The Deferred's argument will be
+        ignored.
 
         This method should be overridden by subclasses."""
         raise NotImplementedError, "You must implement this in a subclass"
@@ -486,11 +493,19 @@ class Command:
             return
         self.builder.sendUpdate(status)
 
+    def doInterrupt(self):
+        self.running = False
+        self.interrupt()
+
     def interrupt(self):
         """Override this in a subclass to allow commands to be interrupted.
         May be called multiple times, test and set self.interrupted=True if
         this matters."""
         pass
+
+    def commandComplete(self, res):
+        self.running = False
+        return res
 
     # utility methods, mostly used by SlaveShellCommand and the like
 
