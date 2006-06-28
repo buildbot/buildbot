@@ -221,12 +221,11 @@ class SlaveOptions(MakerBase):
     This command creates a buildslave working directory and buildbot.tac
     file. The bot will use the <name> and <passwd> arguments to authenticate
     itself when connecting to the master. All commands are run in a
-    build-specific subdirectory of <basedir>, which defaults to the working
-    directory that mktap was run from. <master> is a string of the form
-    'hostname:port', and specifies where the buildmaster can be reached.
+    build-specific subdirectory of <basedir>. <master> is a string of the
+    form 'hostname:port', and specifies where the buildmaster can be reached.
 
     <name>, <passwd>, and <master> will be provided by the buildmaster
-    administrator for your bot.
+    administrator for your bot. You must choose <basedir> yourself.
     """
 
     def getSynopsis(self):
