@@ -242,6 +242,7 @@ class SlaveBuilder(pb.Referenceable, service.Service):
             log.msg("SlaveBuilder.commandComplete", self.command)
         self.command = None
         if not self.running:
+            log.msg(" but we weren't running, quitting silently")
             return
         if self.remoteStep:
             self.remoteStep.dontNotifyOnDisconnect(self.lostRemoteStep)
