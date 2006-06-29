@@ -1,5 +1,9 @@
 2006-06-28  Brian Warner  <warner@lothar.com>
 
+	* buildbot/slave/commands.py (SVN): add --non-interactive to all
+	svn commands, so it will fail immediately instead of hanging while
+	it waits for a username/password to be typed in.
+
 	* buildbot/slave/bot.py (SlaveBuilder.commandComplete): add minor
 	log message if the step was shut down
 

@@ -1129,7 +1129,8 @@ class SVN(SourceBase):
         revision = self.args['revision'] or 'HEAD'
         # update: possible for mode in ('copy', 'update')
         d = os.path.join(self.builder.basedir, self.srcdir)
-        command = [self.vcexe, 'update', '--revision', str(revision)]
+        command = [self.vcexe, 'update', '--revision', str(revision),
+                   '--non-interactive']
         c = ShellCommand(self.builder, command, d,
                          sendRC=False, timeout=self.timeout,
                          keepStdout=True)
@@ -1141,10 +1142,12 @@ class SVN(SourceBase):
         d = self.builder.basedir
         if self.mode == "export":
             command = [self.vcexe, 'export', '--revision', str(revision),
+                       '--non-interactive',
                        self.svnurl, self.srcdir]
         else:
             # mode=='clobber', or copy/update on a broken workspace
             command = [self.vcexe, 'checkout', '--revision', str(revision),
+                       '--non-interactive',
                        self.svnurl, self.srcdir]
         c = ShellCommand(self.builder, command, d,
                          sendRC=False, timeout=self.timeout,
