@@ -5,7 +5,7 @@
 Define the interfaces that are implemented by various buildbot classes.
 """
 
-from twisted.python.components import Interface
+from buildbot.twcompat import Interface
 
 # exceptions that can be raised while trying to start a build
 class NoSlaveError(Exception):

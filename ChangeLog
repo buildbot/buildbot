@@ -1,3 +1,11 @@
+2006-06-29  Brian Warner  <warner@lothar.com>
+
+	* buildbot/interfaces.py: get Interface from b.twcompat to hush
+	deprecation warnings under newer Twisteds (by using
+	zope.interface.Interface instead of old twisted.python.components
+	stuff)
+	* buildbot/slave/interfaces.py: same
+
 2006-06-28  Brian Warner  <warner@lothar.com>
 
 	* buildbot/slave/commands.py (SVN): add --non-interactive to all

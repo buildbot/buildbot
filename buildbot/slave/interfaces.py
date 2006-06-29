@@ -1,6 +1,6 @@
 #! /usr/bin/python
 
-from twisted.python.components import Interface
+from buildbot.twcompat import Interface
 
 class ISlaveCommand(Interface):
     """This interface is implemented by all of the buildslave's Command
