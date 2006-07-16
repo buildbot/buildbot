@@ -1,3 +1,8 @@
+2006-07-15  Brian Warner  <warner@lothar.com>
+
+	* buildbot/twcompat.py (_which): fix some epydoc issues
+	* buildbot/status/html.py (Waterfall.__init__): same
+
 2006-06-29  Brian Warner  <warner@lothar.com>
 
 	* buildbot/interfaces.py: get Interface from b.twcompat to hush

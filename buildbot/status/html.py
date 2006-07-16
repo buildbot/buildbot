@@ -1695,7 +1695,7 @@ class Waterfall(base.StatusReceiverMultiService):
                            Many search engines request this file and obey the
                            rules in it. E.g. to disallow them to crawl the
                            status page, put the following two lines in
-                           robots.txt:
+                           robots.txt::
                               User-agent: *
                               Disallow: /
         """
