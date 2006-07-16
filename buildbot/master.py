@@ -17,7 +17,6 @@ from twisted.spread import pb
 from twisted.cred import portal, checkers
 from twisted.application import service, strports
 from twisted.persisted import styles
-from twisted.manhole import telnet
 
 # sibling imports
 from buildbot import util
@@ -424,28 +423,7 @@ class BotMaster(service.Service):
 
 ########################################
 
-class Manhole(service.MultiService, util.ComparableMixin):
-    compare_attrs = ["port", "username", "password"]
 
-    def __init__(self, port, username, password):
-        service.MultiService.__init__(self)
-        if type(port) is int:
-            port = "tcp:%d" % port
-        self.port = port
-        self.username = username
-        self.password = password
-        self.f = f = telnet.ShellFactory()
-        f.username = username
-        f.password = password
-        s = strports.service(port, f)
-        s.setServiceParent(self)
-
-    def startService(self):
-        log.msg("Manhole listening on port %s" % self.port)
-        service.MultiService.startService(self)
-        master = self.parent
-        self.f.namespace['master'] = master
-        self.f.namespace['status'] = master.getStatus()
 
 class DebugPerspective(NewCredPerspective):
     def attached(self, mind):
@@ -842,10 +820,15 @@ class BuildMaster(service.MultiService, styles.Versioned):
             if self.manhole:
                 # disownServiceParent may return a Deferred
                 d.addCallback(lambda res: self.manhole.disownServiceParent())
-                self.manhole = None
+                def _remove(res):
+                    self.manhole = None
+                    return res
+                d.addCallback(_remove)
             if manhole:
-                self.manhole = manhole
-                manhole.setServiceParent(self)
+                def _add(res):
+                    self.manhole = manhole
+                    manhole.setServiceParent(self)
+                d.addCallback(_add)
 
         # add/remove self.botmaster.builders to match builders. The
         # botmaster will handle startup/shutdown issues.

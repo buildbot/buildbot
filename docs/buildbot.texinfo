@@ -2162,13 +2162,49 @@ c['debugPassword'] = "debugpassword"
 @end example
 
 @cindex c['manhole']
-If you set @code{c['manhole']} to an instance of the
-@code{buildbot.master.Manhole} class, you can telnet into the
-buildmaster and get an interactive Python shell, which may be useful
-for debugging buildbot internals. It is probably only useful for
-buildbot developers. It exposes full access to the buildmaster's
-account (including the ability to modify and delete files), so it
-should not be enabled with a weak or easily guessable password.
+If you set @code{c['manhole']} to an instance of one of the classes in
+@code{buildbot.manhole}, you can telnet or ssh into the buildmaster
+and get an interactive Python shell, which may be useful for debugging
+buildbot internals. It is probably only useful for buildbot
+developers. It exposes full access to the buildmaster's account
+(including the ability to modify and delete files), so it should not
+be enabled with a weak or easily guessable password.
+
+There are three separate @code{Manhole} classes. Two of them use SSH,
+one uses unencrypted telnet. Two of them use a username+password
+combination to grant access, one of them uses an SSH-style
+@file{authorized_keys} file which contains a list of ssh public keys.
+
+@table @code
+@item manhole.AuthorizedKeysManhole
+You construct this with the name of a file that contains one SSH
+public key per line, just like @file{~/.ssh/authorized_keys}. If you
+provide a non-absolute filename, it will be interpreted relative to
+the buildmaster's base directory.
+
+@item manhole.PasswordManhole
+This one accepts SSH connections but asks for a username and password
+when authenticating. It accepts only one such pair.
+
+
+@item manhole.TelnetManhole
+This accepts regular unencrypted telnet connections, and asks for a
+username/password pair before providing access. Because this
+username/password is transmitted in the clear, and because Manhole
+access to the buildmaster is equivalent to granting full shell
+privileges to both the buildmaster and all the buildslaves (and to all
+accounts which then run code produced by the buildslaves), it is
+highly recommended that you use one of the SSH manholes instead.
+
+@end table
+
+@example
+# some examples:
+from buildbot import manhole
+c['manhole'] = manhole.AuthorizedKeysManhole(1234, "authorized_keys")
+c['manhole'] = manhole.PasswordManhole(1234, "alice", "mysecretpassword")
+c['manhole'] = manhole.TelnetManhole(1234, "bob", "snoop_my_password_please")
+@end example
 
 The @code{Manhole} instance can be configured to listen on a specific
 port. You may wish to have this listening port bind to the loopback
@@ -2176,14 +2212,17 @@ interface (sometimes known as ``lo0'', ``localhost'', or 127.0.0.1) to
 restrict access to clients which are running on the same host.
 
 @example
-from buildbot.master import Manhole
-c['manhole'] = Manhole("tcp:9999:interface=127.0.0.1", "admin", "password")
+from buildbot.manhole import PasswordManhole
+c['manhole'] = PasswordManhole("tcp:9999:interface=127.0.0.1","admin","passwd")
 @end example
 
 To have the @code{Manhole} listen on all interfaces, use
-@code{"tcp:9999"}. This port specification uses
+@code{"tcp:9999"} or simply 9999. This port specification uses
 @code{twisted.application.strports}, so you can make it listen on SSL
 or even UNIX-domain sockets if you want.
+
+Note that using any Manhole requires that the TwistedConch package be
+installed, and that you be using Twisted version 2.0 or later.
 
 
 @node Getting Source Code Changes, Build Process, Configuration, Top

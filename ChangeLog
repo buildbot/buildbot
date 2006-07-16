@@ -1,5 +1,15 @@
 2006-07-15  Brian Warner  <warner@lothar.com>
 
+	* buildbot/manhole.py: move all Manhole-related code out to this
+	module. Implement SSH-based manholes (with TwistedConch), and move
+	to conch's nifty line-editing syntax-coloring REPL shell instead
+	of the boring non-editing monochromatic (and deprecated) old
+	'telnet' protocol.
+	* buildbot/master.py: remove all Manhole-related code
+	(BuildMaster.loadConfig._add): make sure the old manhole is
+	removed before we add the new one
+	* docs/buildbot.texinfo (Debug options): document new Manhole options
+
 	* buildbot/twcompat.py (_which): fix some epydoc issues
 	* buildbot/status/html.py (Waterfall.__init__): same
 
