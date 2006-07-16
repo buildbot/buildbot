@@ -1,5 +1,8 @@
 2006-07-15  Brian Warner  <warner@lothar.com>
 
+	* setup.py: minor comment.. does the classifiers= argument prevent
+	the setup.py script from working on python2.2/2.3?
+
 	* buildbot/scripts/sample.cfg: update manhole example, arrange into
 	major sections
 

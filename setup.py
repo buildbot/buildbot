@@ -45,6 +45,7 @@ setup(name="buildbot",
       author_email="warner-buildbot@lothar.com",
       url="http://buildbot.sourceforge.net/",
       license="GNU GPL",
+      # does this classifiers= mean that this can't be installed on 2.2/2.3?
       classifiers=[
     'Development Status :: 4 - Beta',
     'Environment :: No Input/Output (Daemon)',
