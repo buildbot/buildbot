@@ -1,5 +1,8 @@
 2006-07-15  Brian Warner  <warner@lothar.com>
 
+	* buildbot/scripts/sample.cfg: update manhole example, arrange into
+	major sections
+
 	* buildbot/twcompat.py: fix minor typo in comments
 
 	* buildbot/manhole.py: move all Manhole-related code out to this
