@@ -1,5 +1,7 @@
 2006-07-15  Brian Warner  <warner@lothar.com>
 
+	* Makefile (some-apidocs): new target to build only some epydocs
+
 	* setup.py: minor comment.. does the classifiers= argument prevent
 	the setup.py script from working on python2.2/2.3?
 

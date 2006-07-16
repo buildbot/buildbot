@@ -33,8 +33,11 @@ deb-snapshot:
 .PHONY: docs apidocs paper
 docs:
 	$(MAKE) -C docs buildbot.info
+
 apidocs:
 	PYTHONPATH=.:$(T) python docs/epyrun -o docs/reference
+some-apidocs:
+	PYTHONPATH=.:$(T) python docs/epyrun -o docs/reference --modules $(EPYDOCS)
 paper:
 	$(MAKE) -C docs/PyCon-2003 all
 
