@@ -1,5 +1,7 @@
 2006-07-15  Brian Warner  <warner@lothar.com>
 
+	* buildbot/twcompat.py: fix minor typo in comments
+
 	* buildbot/manhole.py: move all Manhole-related code out to this
 	module. Implement SSH-based manholes (with TwistedConch), and move
 	to conch's nifty line-editing syntax-coloring REPL shell instead

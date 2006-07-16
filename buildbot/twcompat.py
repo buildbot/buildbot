@@ -7,7 +7,7 @@ utilities to be compatible with both Twisted-1.3 and 2.0
 
 implements. Use this like the following.
 
-from buildbot.tcompat import implements
+from buildbot.twcompat import implements
 class Foo:
     if implements:
         implements(IFoo)
