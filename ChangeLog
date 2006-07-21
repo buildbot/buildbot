@@ -1,5 +1,8 @@
 2006-07-20  Brian Warner  <warner@lothar.com>
 
+	* buildbot/scripts/sample.cfg: simplify the sample BuildFactory,
+	which runs the buildbot unit tests
+
 	* docs/buildbot.texinfo (Index of Useful Classes): add a table of
 	classes that are useful in master.cfg
 
