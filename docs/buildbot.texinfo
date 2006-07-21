@@ -44,6 +44,7 @@ provided the copyright notice and this notice are preserved.
 * Command-line tool::           
 * Resources::                   Getting help.
 * Developer's Appendix::        
+* Index of Useful Classes::     
 * Index::                       Complete index.
 
 @detailmenu
@@ -5066,7 +5067,7 @@ For configuration questions and general discussion, please use the
 archives are available at
 @uref{http://lists.sourceforge.net/lists/listinfo/buildbot-devel}
 
-@node Developer's Appendix, Index, Resources, Top
+@node Developer's Appendix, Index of Useful Classes, Resources, Top
 @unnumbered Developer's Appendix
 
 This appendix contains random notes about the implementation of the
@@ -5089,7 +5090,140 @@ The BotMaster has a collection of Builder objects as values of its
 @code{.builders} dictionary.
 
 
-@node Index,  , Developer's Appendix, Top
+@node Index of Useful Classes, Index, Developer's Appendix, Top
+@unnumbered Index of Useful Classes
+
+This is a list of all user-visible classes. There are the ones that
+are useful in @file{master.cfg}, the buildmaster's configuration file.
+Classes that are not listed here are generally internal things that
+admins are unlikely to have much use for.
+
+@heading Change Sources
+
+@table @code
+@item buildbot.changes.freshcvs.FreshCVSSource
+@ref{CVSToys - PBService}
+
+@item buildbot.changes.mail.FCMaildirSource
+@ref{CVSToys - mail notification}
+
+@item buildbot.changes.mail.SyncmailMaildirSource
+@ref{Other mail notification ChangeSources}
+
+@item buildbot.changes.mail.BonsaiMaildirSource
+@ref{Other mail notification ChangeSources}
+
+@item buildbot.changes.p4poller.P4Source
+@ref{P4Source}
+
+@item buildbot.changes.pb.PBChangeSource
+@ref{PBChangeSource}
+
+@end table
+
+
+@heading Schedulers and Locks
+@table @code
+@item buildbot.scheduler.Scheduler
+@ref{Scheduler Types}
+
+@item buildbot.scheduler.AnyBranchScheduler
+@ref{Scheduler Types}
+
+@item buildbot.scheduler.Dependent
+@ref{Build Dependencies}
+
+@item buildbot.scheduler.Periodic
+@ref{Scheduler Types}
+
+@item buildbot.scheduler.Nightly
+@ref{Scheduler Types}
+
+@item buildbot.scheduler.Try_Jobdir
+@ref{try}
+@item buildbot.scheduler.Try_Userpass
+@ref{try}
+
+@item buildbot.locks.MasterLock
+@ref{Interlocks}
+
+@item buildbot.locks.SlaveLock
+@ref{Interlocks}
+
+@end table
+
+@heading Build Factories
+@table @code
+@item buildbot.process.factory.BuildFactory
+@ref{BuildFactory}
+@item buildbot.process.factory.GNUAutoconf
+@ref{GNUAutoconf}
+@item buildbot.process.factory.CPAN
+@ref{CPAN}
+@item buildbot.process.factory.Distutils
+@ref{Python distutils}
+@item buildbot.process.factory.Trial
+@ref{Python/Twisted/trial projects}
+@item buildbot.process.factory.BasicBuildFactory
+@item buildbot.process.factory.QuickBuildFactory
+@item buildbot.process.factory.BasicSVN
+@end table
+
+@heading Build Steps
+@table @code
+@item buildbot.process.step.ShellCommand
+@ref{ShellCommand}
+@item buildbot.process.step.TreeSize
+@item buildbot.process.step.CVS
+@c TODO: this CVS link is broken, it goes to a CVSToys page for some reason
+@ref{CVS}
+@item buildbot.process.step.SVN
+@ref{SVN}
+@item buildbot.process.step.Darcs
+@ref{Darcs}
+@item buildbot.process.step.Git
+@item buildbot.process.step.Arch
+@ref{Arch}
+@item buildbot.process.step.Bazaar
+@ref{Bazaar}
+@item buildbot.process.step.Mercurial
+@ref{Mercurial}
+@item buildbot.process.step.P4
+@c TODO: this P4 like goes to P4Source by mistake
+@ref{P4}
+@item buildbot.process.step.P4Sync
+@item buildbot.process.step.Configure
+@ref{Configure}
+@item buildbot.process.step.Compile
+@ref{Compile}
+@item buildbot.process.step.Test
+@ref{Test}
+@item buildbot.process.step_twisted.HLint
+@item buildbot.process.step_twisted.Trial
+@item buildbot.process.step_twisted.ProcessDocs
+@item buildbot.process.step_twisted.BuildDebs
+@item buildbot.process.step_twisted.RemovePYCs
+@item buildbot.process.maxq.MaxQ
+@end table
+
+
+@heading Status Targets
+@table @code
+
+@item buildbot.status.html.Waterfall
+@ref{HTML Waterfall}
+
+@item buildbot.status.mail.MailNotifier
+
+@item buildbot.status.words.IRC
+@ref{IRC Bot}
+
+@item buildbot.status.client.PBListener
+@ref{PBListener}
+
+@end table
+
+@node Index,  , Index of Useful Classes, Top
 @unnumbered Index
 
 @printindex cp

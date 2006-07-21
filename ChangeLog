@@ -1,3 +1,8 @@
+2006-07-20  Brian Warner  <warner@lothar.com>
+
+	* docs/buildbot.texinfo (Index of Useful Classes): add a table of
+	classes that are useful in master.cfg
+
 2006-07-15  Brian Warner  <warner@lothar.com>
 
 	* Makefile (some-apidocs): new target to build only some epydocs
