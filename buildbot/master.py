@@ -759,10 +759,20 @@ class BuildMaster(service.MultiService, styles.Versioned):
                                  % (b['name'], b['builddir']))
             dirnames.append(b['builddir'])
 
+        schedulernames = []
         for s in schedulers:
             for b in s.listBuilderNames():
                 assert b in buildernames, \
                        "%s uses unknown builder %s" % (s, b)
+            if s.name in schedulernames:
+                # TODO: schedulers share a namespace with other Service
+                # children of the BuildMaster node, like status plugins, the
+                # Manhole, the ChangeMaster, and the BotMaster (although most
+                # of these don't have names)
+                msg = ("Schedulers must have unique names, but "
+                       "'%s' was a duplicate" + s.name)
+                raise ValueError(msg)
+            schedulernames.append(s.name)
 
         # assert that all locks used by the Builds and their Steps are
         # uniquely named.

@@ -622,9 +622,9 @@ c['schedulers'] = [s1, Dependent('downstream', s1, ['builder1'])]
 
         # reloading the same config file should leave the schedulers in place
         d = self.buildmaster.loadConfig(newcfg)
-        d.addCallback(self._testschedulers_6, sch)
+        d.addCallback(self._testSchedulers_6, sch)
         return d
-    def _testschedulers_6(self, res, sch1):
+    def _testSchedulers_6(self, res, sch1):
         sch2 = self.buildmaster.allSchedulers()
         self.failUnlessEqual(len(sch2), 2)
         sch1.sort()
@@ -634,6 +634,17 @@ c['schedulers'] = [s1, Dependent('downstream', s1, ['builder1'])]
         self.failUnlessIdentical(sch1[1], sch2[1])
         self.failUnlessIdentical(sch1[0].parent, self.buildmaster)
         self.failUnlessIdentical(sch1[1].parent, self.buildmaster)
+        badcfg = self.schedulersCfg + \
+"""
+c['schedulers'] = [Scheduler('dup', None, 60, []),
+                   Scheduler('dup', None, 60, [])]
+"""
+        d = defer.maybeDeferred(self.buildmaster.loadConfig, badcfg)
+        d.addBoth(self._testSchedulers_7)
+        return d
+    def _testSchedulers_7(self, res):
+        self.shouldBeFailure(res, ValueError)
+
 
 
     def testBuilders(self):

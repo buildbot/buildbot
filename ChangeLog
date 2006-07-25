@@ -1,3 +1,10 @@
+2006-07-24  Brian Warner  <warner@lothar.com>
+
+	* buildbot/master.py (BuildMaster.loadConfig): check for duplicate
+	Scheduler names, since they cause setServiceParent to explode
+	later.
+	* buildbot/test/test_config.py (ConfigTest._testSchedulers_7): test it
+
 2006-07-20  Brian Warner  <warner@lothar.com>
 
 	* buildbot/scripts/sample.cfg: simplify the sample BuildFactory,
