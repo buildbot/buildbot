@@ -1,0 +1,53 @@
+* {
+	font-family: Verdana, Cursor;
+	font-size: 10px;
+	font-weight: bold;
+}
+
+a:link,a:visited,a:active {
+	color: #666666;
+}
+a:hover {
+	color: #FFFFFF;
+}
+
+.table {
+	border-spacing: 2px;
+}
+
+td.Event, td.Activity, td.Change, td.Time, td.Builder {
+	color: #333333;
+	border: 1px solid #666666;
+	background-color: #CCCCCC;
+}
+
+/* LastBuild, BuildStep states */
+.success {
+	color: #FFFFFF;
+	border: 1px solid #2f8f0f;
+	background-color: #8fdf5f;
+}
+
+.failure {
+	color: #FFFFFF;
+	border: 1px solid #f33636;
+	background-color: #e98080;
+}
+
+.warnings {
+	color: #FFFFFF;
+	border: 1px solid #fc901f;
+	background-color: #ffc343;
+}
+
+.exception, td.offline {
+	color: #FFFFFF;
+	border: 1px solid #8000c0;
+	background-color: #e0b0ff;
+}
+
+.start,.running, td.building {
+	color: #666666;
+	border: 1px solid #ffff00;
+	background-color: #fffc6c;
+}
