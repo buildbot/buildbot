@@ -39,8 +39,11 @@
 ^_trial_temp($|/)
 
 # tree-local stuff
-^docs/buildbot.html$
-^docs/buildbot.info$
+^docs/buildbot\.html$
+^docs/buildbot\.info$
+^docs/buildbot\.ps$
+^docs/images/.*\.png$
+^docs/images/.*\.eps$
 ^dist($|/)
 ^debian($|/)
 

@@ -1,3 +1,15 @@
+2006-07-31  Brian Warner  <warner@lothar.com>
+
+	* docs/buildbot.texinfo (System Architecture): Finally add lots of
+	diagrams to describe how the whole system fits together. The
+	images themselves are kept in SVG files, with ascii-art versions
+	in corresponding .txt files. Texinfo knows how to interpolate the
+	text version into .info files, reference the .png versions from
+	.html files, and include .eps versions in the .ps format.
+	* docs/images/Makefile: tools to create .png and .eps
+	* docs/images/*.svg: created pictures with Inkscape.
+	* .darcs-boring: ignore the generated .eps and .png files
+
 2006-07-24  Brian Warner  <warner@lothar.com>
 
 	* buildbot/master.py (BuildMaster.loadConfig): check for duplicate

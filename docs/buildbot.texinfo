@@ -56,6 +56,12 @@ Introduction
 * System Architecture::         
 * Control Flow::                
 
+System Architecture
+
+* BuildSlave Connections::      
+* Buildmaster Architecture::    
+* Status Delivery Architecture::  
+
 Installation
 
 * Requirements::                
@@ -320,12 +326,12 @@ works, and keeps working.
 
 The Buildbot consists of a single @code{buildmaster} and one or more
 @code{buildslaves}, connected in a star topology. The buildmaster
-makes all decisions about what and when to build. It sends commands to
-be run on the build slaves, which simply execute the commands and
-return the results. (certain steps involve more local decision making,
-where the overhead of sending a lot of commands back and forth would
-be inappropriate, but in general the buildmaster is responsible for
-everything).
+makes all decisions about what, when, and how to build. It sends
+commands to be run on the build slaves, which simply execute the
+commands and return the results. (certain steps involve more local
+decision making, where the overhead of sending a lot of commands back
+and forth would be inappropriate, but in general the buildmaster is
+responsible for everything).
 
 The buildmaster is usually fed @code{Changes} by some sort of version
 control system @xref{Change Sources}, which may cause builds to be
@@ -333,24 +339,139 @@ run. As the builds are performed, various status messages are
 produced, which are then sent to any registered Status Targets
 @xref{Status Delivery}.
 
-@ifinfo
-@smallexample
-@group
- TODO: picture of change sources, master, slaves, status targets
- should look like docs/PyCon-2003/sources/overview.svg
-@end group
-@end smallexample
-@end ifinfo
-@ifnotinfo
-@c @image{images/overview}
-@end ifnotinfo
+@c @image{FILENAME, WIDTH, HEIGHT, ALTTEXT, EXTENSION}
+@image{images/overview,,,Overview Diagram,}
 
 The buildmaster is configured and maintained by the ``buildmaster
 admin'', who is generally the project team member responsible for
 build process issues. Each buildslave is maintained by a ``buildslave
 admin'', who do not need to be quite as involved. Generally slaves are
 run by anyone who has an interest in seeing the project work well on
-their platform.
+their favorite platform.
+
+@menu
+* BuildSlave Connections::      
+* Buildmaster Architecture::    
+* Status Delivery Architecture::  
+@end menu
+
+@node BuildSlave Connections, Buildmaster Architecture, System Architecture, System Architecture
+@subsection BuildSlave Connections
+
+The buildslaves are typically run on a variety of separate machines,
+at least one per platform of interest. These machines connect to the
+buildmaster over a TCP connection to a publically-visible port. As a
+result, the buildslaves can live behind a NAT box or similar
+firewalls, as long as they can get to buildmaster. The TCP connections
+are initiated by the buildslave and accepted by the buildmaster, but
+commands and results travel both ways within this connection. The
+buildmaster is always in charge, so all commands travel exclusively
+from the buildmaster to the buildslave.
+
+To perform builds, the buildslaves must typically obtain source code
+from a CVS/SVN/etc repository. Therefore they must also be able to
+reach the repository. The buildmaster provides instructions for
+performing builds, but does not provide the source code itself.
+
+@image{images/slaves,,,BuildSlave Connections,}
+
+@node Buildmaster Architecture, Status Delivery Architecture, BuildSlave Connections, System Architecture
+@subsection Buildmaster Architecture
+
+The Buildmaster consists of several pieces:
+
+@image{images/master,,,BuildMaster Architecture,}
+
+@itemize @bullet
+
+@item
+Change Sources, which create a Change object each time something is
+modified in the VC repository. Most ChangeSources listen for messages
+from a hook script of some sort. Some sources actively poll the
+repository on a regular basis. All Changes are fed to the Schedulers.
+
+@item
+Schedulers, which decide when builds should be performed. They collect
+Changes into BuildRequests, which are then queued for delivery to
+Builders until a buildslave is available.
+
+@item
+Builders, which control exactly @emph{how} each build is performed
+(with a series of BuildSteps, configured in a BuildFactory). Each
+Build is run on a single buildslave.
+
+@item
+Status plugins, which deliver information about the build results
+through protocols like HTTP, mail, and IRC.
+
+@end itemize
+
+@image{images/slavebuilder,,,SlaveBuilders,}
+
+Each Builder is configured with a list of BuildSlaves that it will use
+for its builds. These buildslaves are expected to behave identically:
+the only reason to use multiple BuildSlaves for a single Builder is to
+provide a measure of load-balancing.
+
+Within a single BuildSlave, each Builder creates its own SlaveBuilder
+instance. These SlaveBuilders operate independently from each other.
+Each gets its own base directory to work in. It is quite common to
+have many Builders sharing the same buildslave. For example, there
+might be two buildslaves: one for i386, and a second for PowerPC.
+There may then be a pair of Builders that do a full compile/test run,
+one for each architecture, and a lone Builder that creates snapshot
+source tarballs if the full builders complete successfully. The full
+builders would each run on a single buildslave, whereas the tarball
+creation step might run on either buildslave (since the platform
+doesn't matter when creating source tarballs). In this case, the
+mapping would look like:
+
+@example
+Builder(full-i386)  ->  BuildSlaves(slave-i386)
+Builder(full-ppc)   ->  BuildSlaves(slave-ppc)
+Builder(source-tarball) -> BuildSlaves(slave-i386, slave-ppc)
+@end example
+
+and each BuildSlave would have two SlaveBuilders inside it, one for a
+full builder, and a second for the source-tarball builder.
+
+Once a SlaveBuilder is available, the Builder pulls one or more
+BuildRequests off its incoming queue. (It may pull more than one if it
+determines that it can merge the requests together; for example, there
+may be multiple requests to build the current HEAD revision). These
+requests are merged into a single Build instance, which includes the
+SourceStamp that describes what exact version of the source code
+should be used for the build. The Build is then assigned to a
+SlaveBuilder and the build begins.
+
+
+@node Status Delivery Architecture,  , Buildmaster Architecture, System Architecture
+@subsection Status Delivery Architecture
+
+The buildmaster maintains a central Status object, to which various
+status plugins are connected. Through this Status object, a full
+hierarchy of build status objects can be obtained.
+
+@image{images/status,,,Status Delivery,}
+
+The configuration file controls which status plugins are active. Each
+status plugin gets a reference to the top-level Status object. From
+there they can request information on each Builder, Build, Step, and
+LogFile. This query-on-demand interface is used by the html.Waterfall
+plugin to create the main status page each time a web browser hits the
+main URL.
+
+The status plugins can also subscribe to hear about new Builds as they
+occur: this is used by the MailNotifier to create new email messages
+for each recently-completed Build.
+
+The Status object records the status of old builds on disk in the
+buildmaster's base directory. This allows it to return information
+about historical builds.
+
+There are also status objects that correspond to Schedulers and
+BuildSlaves. These allow status plugins to report information about
+upcoming builds, and the online/offline status of each buildslave.
 
 
 @node Control Flow,  , System Architecture, Introduction
