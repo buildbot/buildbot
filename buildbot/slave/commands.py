@@ -231,15 +231,24 @@ class ShellCommand:
         self.workdir = workdir
         self.environ = os.environ.copy()
         if environ:
-            if (self.environ.has_key('PYTHONPATH')
-                and environ.has_key('PYTHONPATH')):
-                # special case, prepend the builder's items to the existing
-                # ones. This will break if you send over empty strings, so
-                # don't do that.
-                environ['PYTHONPATH'] = (environ['PYTHONPATH']
-                                         + os.pathsep
-                                         + self.environ['PYTHONPATH'])
-                # this will proceed to replace the old one
+            if environ.has_key('PYTHONPATH'):
+                ppath = environ['PYTHONPATH']
+                # Need to do os.pathsep translation.  We could either do that
+                # by replacing all incoming ':'s with os.pathsep, or by
+                # accepting lists.  I like lists better.
+                if not isinstance(ppath, str):
+                    # If it's not a string, treat it as a sequence to be
+                    # turned in to a string.
+                    ppath = os.pathsep.join(ppath)
+
+                if self.environ.has_key('PYTHONPATH'):
+                    # special case, prepend the builder's items to the
+                    # existing ones. This will break if you send over empty
+                    # strings, so don't do that.
+                    ppath = ppath + os.pathsep + self.environ['PYTHONPATH']
+
+                environ['PYTHONPATH'] = ppath
+
             self.environ.update(environ)
         self.initialStdin = initialStdin
         self.keepStdinOpen = keepStdinOpen
