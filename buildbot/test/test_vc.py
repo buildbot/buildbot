@@ -200,6 +200,9 @@ main(int argc, const char *argv[])
 }
 '''
 
+def wq(s):
+    return s.split()
+
 class VCS_Helper:
     # this is a helper class which keeps track of whether each VC system is
     # available, and whether the repository for each has been created. There
@@ -386,7 +389,11 @@ class BaseHelper:
 
     def dovc(self, basedir, command, failureIsOk=False, stdin=None):
         """Like do(), but the VC binary will be prepended to COMMAND."""
-        command = self.vcexe + " " + command
+        if isinstance(command, (str, unicode)):
+            command = self.vcexe + " " + command
+        else:
+            # command is a list
+            command = [self.vcexe] + command
         return self.do(basedir, command, failureIsOk, stdin)
 
 class VCBase(SignalMixin):
@@ -1538,31 +1545,31 @@ class DarcsHelper(BaseHelper):
         tmp = os.path.join(self.repbase, "darcstmp")
 
         os.makedirs(self.rep_trunk)
-        w = self.dovc(self.rep_trunk, "initialize")
+        w = self.dovc(self.rep_trunk, ["initialize"])
         yield w; w.getResult()
         os.makedirs(self.rep_branch)
-        w = self.dovc(self.rep_branch, "initialize")
+        w = self.dovc(self.rep_branch, ["initialize"])
         yield w; w.getResult()
 
         self.populate(tmp)
-        w = self.dovc(tmp, "initialize")
+        w = self.dovc(tmp, wq("initialize"))
         yield w; w.getResult()
-        w = self.dovc(tmp, "add -r .")
+        w = self.dovc(tmp, wq("add -r ."))
         yield w; w.getResult()
-        w = self.dovc(tmp, "record -a -m initial_import --skip-long-comment -A test@buildbot.sf.net")
+        w = self.dovc(tmp, wq("record -a -m initial_import --skip-long-comment -A test@buildbot.sf.net"))
         yield w; w.getResult()
-        w = self.dovc(tmp, "push -a %s" % self.rep_trunk)
+        w = self.dovc(tmp, ["push", "-a", self.rep_trunk])
         yield w; w.getResult()
-        w = self.dovc(tmp, "changes --context")
+        w = self.dovc(tmp, wq("changes --context"))
         yield w; out = w.getResult()
         self.addTrunkRev(out)
 
         self.populate_branch(tmp)
-        w = self.dovc(tmp, "record -a --ignore-times -m commit_on_branch --skip-long-comment -A test@buildbot.sf.net")
+        w = self.dovc(tmp, wq("record -a --ignore-times -m commit_on_branch --skip-long-comment -A test@buildbot.sf.net"))
         yield w; w.getResult()
-        w = self.dovc(tmp, "push -a %s" % self.rep_branch)
+        w = self.dovc(tmp, ["push", "-a", self.rep_branch])
         yield w; w.getResult()
-        w = self.dovc(tmp, "changes --context")
+        w = self.dovc(tmp, wq("changes --context"))
         yield w; out = w.getResult()
         self.addBranchRev(out)
         rmdirRecursive(tmp)
@@ -1571,19 +1578,19 @@ class DarcsHelper(BaseHelper):
     def vc_revise(self):
         tmp = os.path.join(self.repbase, "darcstmp")
         os.makedirs(tmp)
-        w = self.dovc(tmp, "initialize")
+        w = self.dovc(tmp, wq("initialize"))
         yield w; w.getResult()
-        w = self.dovc(tmp, "pull -a %s" % self.rep_trunk)
+        w = self.dovc(tmp, ["pull", "-a", self.rep_trunk])
         yield w; w.getResult()
 
         self.version += 1
         version_c = VERSION_C % self.version
         open(os.path.join(tmp, "version.c"), "w").write(version_c)
-        w = self.dovc(tmp, "record -a --ignore-times -m revised_to_%d --skip-long-comment -A test@buildbot.sf.net" % self.version)
+        w = self.dovc(tmp, wq("record -a --ignore-times -m revised_to_%d --skip-long-comment -A test@buildbot.sf.net" % self.version))
         yield w; w.getResult()
-        w = self.dovc(tmp, "push -a %s" % self.rep_trunk)
+        w = self.dovc(tmp, ["push", "-a", self.rep_trunk])
         yield w; w.getResult()
-        w = self.dovc(tmp, "changes --context")
+        w = self.dovc(tmp, wq("changes --context"))
         yield w; out = w.getResult()
         self.addTrunkRev(out)
         rmdirRecursive(tmp)
@@ -1594,13 +1601,13 @@ class DarcsHelper(BaseHelper):
         if os.path.exists(workdir):
             rmdirRecursive(workdir)
         os.makedirs(workdir)
-        w = self.dovc(workdir, "initialize")
+        w = self.dovc(workdir, wq("initialize"))
         yield w; w.getResult()
         if not branch:
             rep = self.rep_trunk
         else:
             rep = os.path.join(self.darcs_base, branch)
-        w = self.dovc(workdir, "pull -a %s" % rep)
+        w = self.dovc(workdir, ["pull", "-a", rep])
         yield w; w.getResult()
         open(os.path.join(workdir, "subdir", "subdir.c"), "w").write(TRY_C)
     vc_try_checkout = deferredGenerator(vc_try_checkout)
