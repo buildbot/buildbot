@@ -1,3 +1,12 @@
+2006-08-05  Brian Warner  <warner@lothar.com>
+
+	* buildbot/slave/commands.py (command_version): replace the CVS
+	auto-updated cvs_ver keyword with a manually-updated variable,
+	since CVS is no longer the master repository. Add a description of
+	the remote API change starting in this version (2.1), specifically
+	the fact that SlaveShellCommand now accepts 'initial_stdin',
+	'keep_stdin_open', and 'logfiles'.
+
 2006-07-31  Brian Warner  <warner@lothar.com>
 
 	* docs/buildbot.texinfo (System Architecture): Finally add lots of

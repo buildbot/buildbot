@@ -11,7 +11,10 @@ from buildbot.twcompat import implements, which
 from buildbot.slave.interfaces import ISlaveCommand
 from buildbot.slave.registry import registerSlaveCommand
 
-cvs_ver = '$Revision: 1.51 $'[1+len("Revision: "):-2]
+# this used to be a CVS $-style "Revision" auto-updated keyword, but since I
+# moved to Darcs as the primary repository, this is updated manually each
+# time this file is changed. The last cvs_ver that was here was 1.51 .
+command_version = "2.1"
 
 # version history:
 #  >=1.17: commands are interruptable
@@ -20,6 +23,14 @@ cvs_ver = '$Revision: 1.51 $'[1+len("Revision: "):-2]
 #  >=1.39: Source classes correctly handle changes in branch (except Git)
 #          Darcs accepts 'revision' (now all do but Git) (well, and P4Sync)
 #          Arch/Baz should accept 'build-config'
+#  >=1.51: (release 0.7.3)
+#  >= 2.1: SlaveShellCommand now accepts 'initial_stdin', 'keep_stdin_open',
+#          and 'logfiles'. It now sends 'log' messages in addition to
+#          stdout/stdin/header/rc. It acquired writeStdin/closeStdin methods,
+#          but these are not remotely callable yet.
+#          (not externally visible: ShellCommandPP has writeStdin/closeStdin.
+#          ShellCommand accepts new arguments (logfiles=, initialStdin=,
+#          keepStdinOpen=) and no longer accepts stdin=)
 
 class CommandInterrupted(Exception):
     pass
@@ -699,7 +710,7 @@ class SlaveShellCommand(Command):
     def closeStdin(self):
         self.command.closeStdin()
 
-registerSlaveCommand("shell", SlaveShellCommand, cvs_ver)
+registerSlaveCommand("shell", SlaveShellCommand, command_version)
 
 
 class DummyCommand(Command):
@@ -736,7 +747,7 @@ class DummyCommand(Command):
             self.sendStatus({'rc': 0})
         self.d.callback(0)
 
-registerSlaveCommand("dummy", DummyCommand, cvs_ver)
+registerSlaveCommand("dummy", DummyCommand, command_version)
 
 
 class SourceBase(Command):
@@ -1101,7 +1112,7 @@ class CVS(SourceBase):
         # reasonably-well-synchronized with the repository.
         return time.strftime("%Y-%m-%d %H:%M:%S +0000", time.gmtime())
 
-registerSlaveCommand("cvs", CVS, cvs_ver)
+registerSlaveCommand("cvs", CVS, command_version)
 
 class SVN(SourceBase):
     """Subversion-specific VC operation. In addition to the arguments
@@ -1185,7 +1196,7 @@ class SVN(SourceBase):
         return d
 
 
-registerSlaveCommand("svn", SVN, cvs_ver)
+registerSlaveCommand("svn", SVN, command_version)
 
 class Darcs(SourceBase):
     """Darcs-specific VC operation. In addition to the arguments
@@ -1264,7 +1275,7 @@ class Darcs(SourceBase):
         d.addCallback(lambda res: c.stdout)
         return d
 
-registerSlaveCommand("darcs", Darcs, cvs_ver)
+registerSlaveCommand("darcs", Darcs, command_version)
 
 class Git(SourceBase):
     """Git specific VC operation. In addition to the arguments
@@ -1304,7 +1315,7 @@ class Git(SourceBase):
         self.command = c
         return c.start()
 
-registerSlaveCommand("git", Git, cvs_ver)
+registerSlaveCommand("git", Git, command_version)
 
 class Arch(SourceBase):
     """Arch-specific (tla-specific) VC operation. In addition to the
@@ -1438,7 +1449,7 @@ class Arch(SourceBase):
         d.addCallback(_parse)
         return d
 
-registerSlaveCommand("arch", Arch, cvs_ver)
+registerSlaveCommand("arch", Arch, command_version)
 
 class Bazaar(Arch):
     """Bazaar (/usr/bin/baz) is an alternative client for Arch repositories.
@@ -1499,7 +1510,7 @@ class Bazaar(Arch):
         d.addCallback(_parse)
         return d
 
-registerSlaveCommand("bazaar", Bazaar, cvs_ver)
+registerSlaveCommand("bazaar", Bazaar, command_version)
 
 
 class Mercurial(SourceBase):
@@ -1579,7 +1590,7 @@ class Mercurial(SourceBase):
         d.addCallback(_parse)
         return d
 
-registerSlaveCommand("hg", Mercurial, cvs_ver)
+registerSlaveCommand("hg", Mercurial, command_version)
 
 
 class P4(SourceBase):
@@ -1701,7 +1712,7 @@ class P4(SourceBase):
         d.addCallback(lambda _: self._doP4Sync(force=True))
         return d
 
-registerSlaveCommand("p4", P4, cvs_ver)
+registerSlaveCommand("p4", P4, command_version)
 
 
 class P4Sync(SourceBase):
@@ -1756,4 +1767,4 @@ class P4Sync(SourceBase):
     def doVCFull(self):
         return self._doVC(force=True)
 
-registerSlaveCommand("p4sync", P4Sync, cvs_ver)
+registerSlaveCommand("p4sync", P4Sync, command_version)
