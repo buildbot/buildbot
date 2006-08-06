@@ -1,3 +1,8 @@
+2006-08-06  Brian Warner  <warner@lothar.com>
+
+	* buildbot/test/test_steps.py (Version.checkCompare): oops, update
+	to match the s/cvs_ver/command_version/ change
+
 2006-08-05  Brian Warner  <warner@lothar.com>
 
 	* buildbot/slave/commands.py (command_version): replace the CVS

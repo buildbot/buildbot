@@ -217,9 +217,10 @@ class Version(RunMixin, unittest.TestCase):
 
 
     def checkCompare(self, s):
+        cver = commands.command_version
         v = s.slaveVersion("svn", None)
         # this insures that we are getting the version correctly
-        self.failUnlessEqual(s.slaveVersion("svn", None), commands.cvs_ver)
+        self.failUnlessEqual(s.slaveVersion("svn", None), cver)
         # and that non-existent commands do not provide a version
         self.failUnlessEqual(s.slaveVersion("NOSUCHCOMMAND"), None)
         # TODO: verify that a <=0.5.0 buildslave (which does not implement
@@ -228,10 +229,9 @@ class Version(RunMixin, unittest.TestCase):
         #self.failUnlessEqual(s.slaveVersion("NOSUCHCOMMAND", "old"), "old")
 
         # now check the comparison functions
-        self.failIf(s.slaveVersionIsOlderThan("svn", commands.cvs_ver))
+        self.failIf(s.slaveVersionIsOlderThan("svn", cver))
         self.failIf(s.slaveVersionIsOlderThan("svn", "1.1"))
-        self.failUnless(s.slaveVersionIsOlderThan("svn",
-                                                  commands.cvs_ver + ".1"))
+        self.failUnless(s.slaveVersionIsOlderThan("svn", cver + ".1"))
 
     def testCompare(self):
         self.master._checker = self.checkCompare
