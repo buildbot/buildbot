@@ -263,6 +263,8 @@ class Build:
 
     def getSlaveCommandVersion(self, command, oldversion=None):
         return self.slavebuilder.getSlaveCommandVersion(command, oldversion)
+    def getSlaveName(self):
+        return self.slavebuilder.slave.slavename
 
     def setupStatus(self, build_status):
         self.build_status = build_status

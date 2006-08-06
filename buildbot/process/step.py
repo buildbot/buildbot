@@ -266,12 +266,36 @@ class LoggedRemoteCommand(RemoteCommand):
     def __repr__(self):
         return "<RemoteCommand '%s' at %d>" % (self.remote_command, id(self))
 
-    def useLog(self, loog, closeWhenFinished=False):
+    def useLog(self, loog, closeWhenFinished=False, logfileName=None):
+        """Start routing messages from a remote logfile to a local LogFile
+
+        I take a local ILogFile instance in 'loog', and arrange to route
+        remote log messages for the logfile named 'logfileName' into it. By
+        default this logfileName comes from the ILogFile itself (using the
+        name by which the ILogFile will be displayed), but the 'logfileName'
+        argument can be used to override this. For example, if
+        logfileName='stdio', this logfile will collect text from the stdout
+        and stderr of the command.
+
+        @param loog: an instance which implements ILogFile
+        @param closeWhenFinished: a boolean, set to False if the logfile
+                                  will be shared between multiple
+                                  RemoteCommands. If True, the logfile will
+                                  be closed when this ShellCommand is done
+                                  with it.
+        @param logfileName: a string, which indicates which remote log file
+                            should be routed into this ILogFile. This should
+                            match one of the keys of the logfiles= argument
+                            to ShellCommand.
+
+        """
+
         assert providedBy(loog, interfaces.ILogFile)
-        name = loog.getName()
-        assert name not in self.logs
-        self.logs[name] = loog
-        self._closeWhenFinished[name] = closeWhenFinished
+        if not logfileName:
+            logfileName = loog.getName()
+        assert logfileName not in self.logs
+        self.logs[logfileName] = loog
+        self._closeWhenFinished[logfileName] = closeWhenFinished
 
     def start(self):
         log.msg("LoggedRemoteCommand.start")
@@ -797,10 +821,18 @@ class BuildStep:
             return True
         return False
 
+    def getSlaveName(self):
+        return self.build.getSlaveName()
+
     def addLog(self, name):
         loog = self.step_status.addLog(name)
         self._connectPendingLogObservers()
         return loog
+
+    # TODO: add a getLog() ? At the moment all logs have to be retrieved from
+    # the RemoteCommand that created them, but for status summarizers it
+    # would be more convenient to get them from the BuildStep / BSStatus,
+    # especially if there are multiple RemoteCommands involved.
 
     def addCompleteLog(self, name, text):
         log.msg("addCompleteLog(%s)" % name)

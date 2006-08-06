@@ -1,5 +1,12 @@
 2006-08-06  Brian Warner  <warner@lothar.com>
 
+	* buildbot/process/step.py (LoggedRemoteCommand.useLog): allow
+	callers to provide the slave-side logfile name, rather than
+	forcing it to come from the local name of the LogFile.
+	(BuildStep.getSlaveName): new method
+	* buildbot/process/base.py (Build.getSlaveName): new method, so
+	steps can find out which buildslave they're running on
+
 	* buildbot/test/test_steps.py (Version.checkCompare): oops, update
 	to match the s/cvs_ver/command_version/ change
 
