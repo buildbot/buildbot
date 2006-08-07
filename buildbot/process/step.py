@@ -910,8 +910,15 @@ class LoggingBuildStep(BuildStep):
         cmd.useLog(stdio_log, True)
         for em in errorMessages:
             stdio_log.addHeader(em)
-        d = self.runCommand(cmd)
-        d.addCallbacks(self._commandComplete, self.checkDisconnect)
+        d = self.runCommand(cmd) # might raise ConnectionLost
+        d.addCallback(lambda res: self.commandComplete(cmd))
+        d.addCallback(lambda res: self.createSummary(cmd.logs['stdio']))
+        d.addCallback(lambda res: self.evaluateCommand(cmd)) # returns results
+        def _gotResults(results):
+            self.setStatus(cmd, results)
+            return results
+        d.addCallback(_gotResults) # returns results
+        d.addCallbacks(self.finished, self.checkDisconnect)
         d.addErrback(self.failed)
 
     def interrupt(self, reason):
@@ -929,13 +936,6 @@ class LoggingBuildStep(BuildStep):
                                  ["failed", "slave", "lost"])
         self.step_status.setText2(["failed", "slave", "lost"])
         return self.finished(FAILURE)
-
-    def _commandComplete(self, cmd):
-        self.commandComplete(cmd)
-        self.createSummary(cmd.logs['stdio'])
-        results = self.evaluateCommand(cmd)
-        self.setStatus(cmd, results)
-        return self.finished(results)
 
     # to refine the status output, override one or more of the following
     # methods. Change as little as possible: start with the first ones on
@@ -1203,12 +1203,29 @@ class ShellCommand(LoggingBuildStep):
             # dictionary, so we shouldn't be affecting anyone but ourselves.
 
     def setupLogfiles(self, cmd, logfiles):
-        if logfiles:
+        if not logfiles:
+            return
+        if self.slaveVersionIsOlderThan("shell", "2.1"):
+            # this buildslave is too old and will ignore the 'logfiles'
+            # argument. You'll either have to pull the logfiles manually
+            # (say, by using 'cat' in a separate RemoteShellCommand) or
+            # upgrade the buildslave.
+            msg1 = ("Warning: buildslave %s is too old "
+                    "to understand logfiles=, ignoring it."
+                   % self.getSlaveName())
+            msg2 = "You will have to pull this logfile (%s) manually."
+            log.msg(msg1)
             for logname,remotefilename in logfiles.items():
-                # tell the BuildStepStatus to add a LogFile
                 newlog = self.addLog(logname)
-                # and tell the LoggedRemoteCommand to feed it
-                cmd.useLog(newlog, True)
+                newlog.addHeader(msg1 + "\n")
+                newlog.addHeader(msg2 % remotefilename + "\n")
+                newlog.finish()
+            return
+        for logname,remotefilename in logfiles.items():
+            # tell the BuildStepStatus to add a LogFile
+            newlog = self.addLog(logname)
+            # and tell the LoggedRemoteCommand to feed it
+            cmd.useLog(newlog, True)
 
     def start(self):
         command = self._interpolateProperties(self.command)
