@@ -1,5 +1,13 @@
 2006-08-06  Brian Warner  <warner@lothar.com>
 
+	* buildbot/test/test_vc.py (BaseHelper.dovc): patch from Kevin
+	Turner to prefer lists over strings when creating/running VC
+	commands during unit tests. This is clearly necessary to survive
+	vcexe containing spaces, like "C:\Program Files\darcs.exe". I
+	renamed the wq() function to qw() though, since that's how it's
+	spelled in perl. Eventually I'd prefer all commands to be
+	specified with lists.
+
 	* buildbot/slave/commands.py (LogFileWatcher): handle logfiles
 	which are deleted (or not yet created) correctly. Also add
 	failsafe code to not explode if the file-watching poller doesn't

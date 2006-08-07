@@ -200,7 +200,7 @@ main(int argc, const char *argv[])
 }
 '''
 
-def wq(s):
+def qw(s):
     return s.split()
 
 class VCS_Helper:
@@ -1552,24 +1552,24 @@ class DarcsHelper(BaseHelper):
         yield w; w.getResult()
 
         self.populate(tmp)
-        w = self.dovc(tmp, wq("initialize"))
+        w = self.dovc(tmp, qw("initialize"))
         yield w; w.getResult()
-        w = self.dovc(tmp, wq("add -r ."))
+        w = self.dovc(tmp, qw("add -r ."))
         yield w; w.getResult()
-        w = self.dovc(tmp, wq("record -a -m initial_import --skip-long-comment -A test@buildbot.sf.net"))
+        w = self.dovc(tmp, qw("record -a -m initial_import --skip-long-comment -A test@buildbot.sf.net"))
         yield w; w.getResult()
         w = self.dovc(tmp, ["push", "-a", self.rep_trunk])
         yield w; w.getResult()
-        w = self.dovc(tmp, wq("changes --context"))
+        w = self.dovc(tmp, qw("changes --context"))
         yield w; out = w.getResult()
         self.addTrunkRev(out)
 
         self.populate_branch(tmp)
-        w = self.dovc(tmp, wq("record -a --ignore-times -m commit_on_branch --skip-long-comment -A test@buildbot.sf.net"))
+        w = self.dovc(tmp, qw("record -a --ignore-times -m commit_on_branch --skip-long-comment -A test@buildbot.sf.net"))
         yield w; w.getResult()
         w = self.dovc(tmp, ["push", "-a", self.rep_branch])
         yield w; w.getResult()
-        w = self.dovc(tmp, wq("changes --context"))
+        w = self.dovc(tmp, qw("changes --context"))
         yield w; out = w.getResult()
         self.addBranchRev(out)
         rmdirRecursive(tmp)
@@ -1578,7 +1578,7 @@ class DarcsHelper(BaseHelper):
     def vc_revise(self):
         tmp = os.path.join(self.repbase, "darcstmp")
         os.makedirs(tmp)
-        w = self.dovc(tmp, wq("initialize"))
+        w = self.dovc(tmp, qw("initialize"))
         yield w; w.getResult()
         w = self.dovc(tmp, ["pull", "-a", self.rep_trunk])
         yield w; w.getResult()
@@ -1586,11 +1586,11 @@ class DarcsHelper(BaseHelper):
         self.version += 1
         version_c = VERSION_C % self.version
         open(os.path.join(tmp, "version.c"), "w").write(version_c)
-        w = self.dovc(tmp, wq("record -a --ignore-times -m revised_to_%d --skip-long-comment -A test@buildbot.sf.net" % self.version))
+        w = self.dovc(tmp, qw("record -a --ignore-times -m revised_to_%d --skip-long-comment -A test@buildbot.sf.net" % self.version))
         yield w; w.getResult()
         w = self.dovc(tmp, ["push", "-a", self.rep_trunk])
         yield w; w.getResult()
-        w = self.dovc(tmp, wq("changes --context"))
+        w = self.dovc(tmp, qw("changes --context"))
         yield w; out = w.getResult()
         self.addTrunkRev(out)
         rmdirRecursive(tmp)
@@ -1601,7 +1601,7 @@ class DarcsHelper(BaseHelper):
         if os.path.exists(workdir):
             rmdirRecursive(workdir)
         os.makedirs(workdir)
-        w = self.dovc(workdir, wq("initialize"))
+        w = self.dovc(workdir, qw("initialize"))
         yield w; w.getResult()
         if not branch:
             rep = self.rep_trunk
