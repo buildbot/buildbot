@@ -1,5 +1,14 @@
 2006-08-06  Brian Warner  <warner@lothar.com>
 
+	* buildbot/slave/commands.py (LogFileWatcher): handle logfiles
+	which are deleted (or not yet created) correctly. Also add
+	failsafe code to not explode if the file-watching poller doesn't
+	get started. Thanks to JP Calderone for the catch and the poller
+	patch.
+	* buildbot/test/test_shell.py (SlaveSide._testLogFiles): add test
+	for that case
+	* buildbot/test/emitlogs.py: same
+
 	* NEWS: summarize recent changes
 
 	* docs/buildbot.texinfo (Debug options): suggest an .ssh/options

@@ -162,11 +162,16 @@ class LogFileWatcher:
         self.poller = task.LoopingCall(self.poll)
 
     def start(self):
-        self.poller.start(self.POLL_INTERVAL)
+        self.poller.start(self.POLL_INTERVAL).addErrback(self._cleanupPoll)
+
+    def _cleanupPoll(self, err):
+        log.err(err, msg="Polling error")
+        self.poller = None
 
     def stop(self):
         self.poll()
-        self.poller.stop()
+        if self.poller is not None:
+            self.poller.stop()
 
     def statFile(self):
         if os.path.exists(self.logfile):
@@ -179,6 +184,12 @@ class LogFileWatcher:
             s = self.statFile()
             if s == self.old_logfile_stats:
                 return # not started yet
+            if not s:
+                # the file was there, but now it's deleted. Forget about the
+                # initial state, clearly the process has deleted the logfile
+                # in preparation for creating a new one.
+                self.old_logfile_stats = None
+                return # no file to work with
             self.f = open(self.logfile, "rb")
             self.started = True
         while True:

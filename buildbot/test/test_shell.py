@@ -35,27 +35,50 @@ class SlaveSide(SlaveCommandTestBase, unittest.TestCase):
             lines.append("this is %s %d\n" % (filename, i))
         return "".join(lines)
 
-    def testLogFiles(self):
+    def testLogFiles_0(self):
+        return self._testLogFiles(0)
+
+    def testLogFiles_1(self):
+        return self._testLogFiles(1)
+
+    def testLogFiles_2(self):
+        return self._testLogFiles(2)
+
+    def testLogFiles_3(self):
+        return self._testLogFiles(3)
+
+    def _testLogFiles(self, mode):
         basedir = "test_shell.testLogFiles"
         self.setUpBuilder(basedir)
         # emitlogs.py writes two lines to stdout and two logfiles, one second
         # apart. Then it waits for us to write something to stdin, then it
         # writes one more line.
 
-        # we write something to the log file first, to exercise the logic
-        # that distinguishes between the old file and the one as modified by
-        # the ShellCommand. We set the timestamp back 5 seconds so that
-        # timestamps can be used to distinguish old from new.
-        log2file = os.path.join(basedir, "log2.out")
-        f = open(log2file, "w")
-        f.write("dummy text\n")
-        f.close()
-        earlier = time.time() - 5
-        os.utime(log2file, (earlier, earlier))
+        if mode != 3:
+            # we write something to the log file first, to exercise the logic
+            # that distinguishes between the old file and the one as modified
+            # by the ShellCommand. We set the timestamp back 5 seconds so
+            # that timestamps can be used to distinguish old from new.
+            log2file = os.path.join(basedir, "log2.out")
+            f = open(log2file, "w")
+            f.write("dummy text\n")
+            f.close()
+            earlier = time.time() - 5
+            os.utime(log2file, (earlier, earlier))
 
+        if mode == 3:
+            # mode=3 doesn't create the old logfiles in the first place, but
+            # then behaves like mode=1 (where the command pauses before
+            # creating them).
+            mode = 1
+
+        # mode=1 will cause emitlogs.py to delete the old logfiles first, and
+        # then wait two seconds before creating the new files. mode=0 does
+        # not do this.
         args = {
             'command': [sys.executable,
-                        util.sibpath(__file__, "emitlogs.py")],
+                        util.sibpath(__file__, "emitlogs.py"),
+                        "%s" % mode],
             'workdir': ".",
             'logfiles': {"log2": "log2.out",
                          "log3": "log3.out"},
@@ -74,10 +97,14 @@ class SlaveSide(SlaveCommandTestBase, unittest.TestCase):
         d.addCallback(self.collectUpdates)
         def _check(logs):
             self.failUnlessEqual(logs['stdout'], self._generateText("stdout"))
-            self.failUnlessEqual(logs[('log','log2')],
-                                 self._generateText("log2"))
-            self.failUnlessEqual(logs[('log','log3')],
-                                 self._generateText("log3"))
+            if mode == 2:
+                self.failIf(('log','log2') in logs)
+                self.failIf(('log','log3') in logs)
+            else:
+                self.failUnlessEqual(logs[('log','log2')],
+                                     self._generateText("log2"))
+                self.failUnlessEqual(logs[('log','log3')],
+                                     self._generateText("log3"))
         d.addCallback(_check)
         d.addBoth(self._maybePrintError)
         return maybeWait(d)

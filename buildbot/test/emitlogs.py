@@ -1,9 +1,27 @@
 #! /usr/bin/python
 
-import sys, time
+import sys, time, os.path, StringIO
 
-log2 = open("log2.out", "wt")
-log3 = open("log3.out", "wt")
+mode = 0
+if len(sys.argv) > 1:
+    mode = int(sys.argv[1])
+
+if mode == 0:
+    log2 = open("log2.out", "wt")
+    log3 = open("log3.out", "wt")
+elif mode == 1:
+    # delete the logfiles first, and wait a moment to exercise a failure path
+    if os.path.exists("log2.out"):
+        os.unlink("log2.out")
+    if os.path.exists("log3.out"):
+        os.unlink("log3.out")
+    time.sleep(2)
+    log2 = open("log2.out", "wt")
+    log3 = open("log3.out", "wt")
+elif mode == 2:
+    # don't create the logfiles at all
+    log2 = StringIO.StringIO()
+    log3 = StringIO.StringIO()
 
 def write(i):
     log2.write("this is log2 %d\n" % i)
