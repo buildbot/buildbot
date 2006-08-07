@@ -1,5 +1,12 @@
 2006-08-06  Brian Warner  <warner@lothar.com>
 
+	* buildbot/process/step_twisted.py (Trial.start): if the
+	buildslave is too old to understand logfiles=, fall back to
+	running 'cat _trial_temp/test.log' like before.
+	(Trial.commandComplete): same. this takes advantage of the
+	LoggingBuildStep refactoring to stall commandComplete long enough
+	to run a second RemoteShellCommand.
+
 	* buildbot/process/step.py (LoggingBuildStep.startCommand):
 	refactor command-completion handling, to allow methods like
 	commandComplete/createSummary/evaluateCommand to return Deferreds.

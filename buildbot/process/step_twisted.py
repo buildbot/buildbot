@@ -444,8 +444,34 @@ class Trial(ShellCommand):
         else:
             self.command.extend(self.tests)
         log.msg("Trial.start: command is", self.command)
+
+        # if our slave is too old to understand logfiles=, fetch them
+        # manually. This is a fallback for the Twisted buildbot and some old
+        # buildslaves.
+        self._needToPullTestDotLog = False
+        if self.slaveVersionIsOlderThan("shell", "2.1"):
+            log.msg("Trial: buildslave %s is too old to accept logfiles=" %
+                    self.getSlaveName())
+            log.msg(" falling back to 'cat _trial_temp/test.log' instead")
+            self.logfiles = {}
+            self._needToPullTestDotLog = True
+
         ShellCommand.start(self)
 
+
+    def commandComplete(self, cmd):
+        if not self._needToPullTestDotLog:
+            return self._gotTestDotLog(cmd)
+
+        # if the buildslave was too old, pull test.log now
+        catcmd = ["cat", "_trial_temp/test.log"]
+        c2 = step.RemoteShellCommand(command=catcmd, workdir=self.workdir)
+        loog = self.addLog("test.log")
+        c2.useLog(loog, True, logfileName="stdio")
+        self.cmd = c2 # to allow interrupts
+        d = c2.run(self, self.remote)
+        d.addCallback(lambda res: self._gotTestDotLog(cmd))
+        return d
 
     def rtext(self, fmt='%s'):
         if self.reactor:
@@ -453,11 +479,12 @@ class Trial(ShellCommand):
             return rtext.replace("reactor", "")
         return ""
 
-
-    def commandComplete(self, cmd):
+    def _gotTestDotLog(self, cmd):
         # figure out all status, then let the various hook functions return
         # different pieces of it
 
+        # 'cmd' is the original trial command, so cmd.logs['stdio'] is the
+        # trial output. We don't have access to test.log from here.
         output = cmd.logs['stdio'].getText()
         counts = countFailedTests(output)
 
