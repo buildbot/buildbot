@@ -3334,7 +3334,28 @@ specifies the command to be run
 
 @item env
 a dictionary of environment strings which will be added to the child
-command's environment.
+command's environment. For example, to run tests with a different i18n
+language setting, you might use
+
+@example
+s(ShellCommand, command=["make", "test"],
+  env=@{'LANG': 'fr_FR'@})
+@end example
+
+These variable settings will override any existing ones in the
+buildslave's environment. The exception is PYTHONPATH, which is merged
+with (actually prepended to) any existing $PYTHONPATH setting. The
+value is treated as a list of directories to prepend, and a single
+string is treated like a one-item list. For example, to prepend both
+@file{/usr/local/lib/python2.3} and @file{/home/buildbot/lib/python}
+to any existing $PYTHONPATH setting, you would do something like the
+following:
+
+@example
+s(ShellCommand, command=["make", "test"],
+ env=@{'PYTHONPATH': ["/usr/local/lib/python2.3",
+                     "/home/buildbot/lib/python"] @})
+@end example
 
 @item want_stdout
 if False, stdout from the child process is discarded rather than being

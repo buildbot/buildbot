@@ -1,5 +1,16 @@
 2006-08-06  Brian Warner  <warner@lothar.com>
 
+	* buildbot/slave/commands.py (ShellCommand.__init__): patch from
+	Kevin Turner to prefer the environ= argument be a list rather than
+	a string. If it is a list, it will be joined with a platform-local
+	os.pathsep delimiter, and then prepended to any existing
+	$PYTHONPATH value. This works better in cross-platform (i.e.
+	windows buildslaves) environments when you need to push multiple
+	directories onto the front of the path.
+	(SlaveShellCommand): documented the new magic
+	* docs/buildbot.texinfo (ShellCommand): documented the new magic
+	in a user-visible form
+
 	* buildbot/test/test_vc.py (BaseHelper.dovc): patch from Kevin
 	Turner to prefer lists over strings when creating/running VC
 	commands during unit tests. This is clearly necessary to survive

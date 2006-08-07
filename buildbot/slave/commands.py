@@ -676,7 +676,9 @@ class SlaveShellCommand(Command):
         - ['workdir'] (required): subdirectory in which the command will be
                                   run, relative to the builder dir
         - ['env']: a dict of environment variables to augment/replace
-                   os.environ
+                   os.environ . PYTHONPATH is treated specially, and
+                   should be a list of path components to be prepended to
+                   any existing PYTHONPATH environment variable.
         - ['initial_stdin']: a string which will be written to the command's
                              stdin as soon as it starts
         - ['keep_stdin_open']: unless True, the command's stdin will be
