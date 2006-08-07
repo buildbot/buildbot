@@ -1,5 +1,99 @@
 User visible changes in Buildbot.
 
+* Release ?.?.? (?)
+
+** new features
+
+*** full Perforce support
+
+SF#1473939: large patch from Scott Lamb, with docs and unit tests! This
+includes both the step.P4 source-checkout BuildStep, and the changes.p4poller
+ChangeSource you'll want to feed it. P4 is now supported just as well as all
+the other VC systems. Thanks Scott!
+
+*** SSH-based Manhole
+
+The 'manhole' feature allows buildbot developers to get access to a python
+read/eval/print loop (REPL) inside the buildmaster through a network
+connection. Previously, this ran over unencrypted telnet, using a simple
+username/password for access control. The new release defaults to encrypted
+SSH access, using either username/password or an authorized_keys file (just
+like sshd). There also exists an unencrypted telnet form, but its use is
+discouraged. The syntax for setting up a manhole has changed, so master.cfg
+files that use them must be updated. The "Debug options" section in the
+user's manual provides a complete description.
+
+*** LogObservers
+
+BuildSteps can now attach LogObservers to various logfiles, allowing them to
+get real-time log output. They can use this to watch for progress-indicating
+events (like counting the number of files compiled, or the number of tests
+which have run), and update both ETA/progress-tracking and step text. This
+allows for more accurate ETA information, and more information passed to the
+user about how much of the process has completed.
+
+The 'Trial' buildstep has been updated to use this for progress tracking, by
+counting how many test cases have run.
+
+*** Multiple Logfiles
+
+BuildSteps can watch multiple log files in realtime, not just stdout/stderr.
+This works in a similar fashion to 'tail -f': the file is polled once per
+second, and any new data is sent to the buildmaster.
+
+This requires a buildslave running 0.7.4 or later, and a warning message is
+produced if used against an old buildslave. Use "logfiles={'name':
+'filename'}" to take advantage of this feature from master.cfg, and see the
+"ShellCommand" section of the user's manual for full documentation.
+
+The 'Trial' buildstep has been updated to use this, to display
+_trial_temp/test.log in realtime.
+
+** new documentation
+
+What classes are useful in your master.cfg file? A table of them has been
+added to the user's manual, in a section called "Index of Useful Classes".
+
+A number of pretty diagrams have been added to the "System Architecture"
+portion of the manual, explaining how all the buildbot pieces fit together.
+
+** bugfixes
+
+SF#1398174: ignore SVN property changes better, fixed by Olivier Bonnet
+
+SF#1452801: don't double-escape the build URL, fixed by Olivier Bonnet
+
+SF#1401121: add support for running py2exe on windows, by Mark Hammond
+
+reloading unchanged config files with WithProperties shouldn't change anything.
+
+All svn commands now include --non-interactive so they won't ask for
+passwords. Instead the command fails if it cannot be performed without user
+input.
+
+Deprecation warnings with newer versions of Twisted have been hushed.
+
+** compatibility
+
+I haven't actually removed support for Twisted-1.3.0 yet, but I'd like to.
+
+The step_twisted default value for --reporter matches modern Twisteds,
+though, and won't work under 1.3.0.
+
+ShellCommand.flunkOnFailure now defaults to True, so any shell command which
+fails counts as a build failure. Set this to False if you don't want this
+behavior.
+
+** minor features
+
+contrib/darcs_buildbot.py contains a new script suitable for use in a darcs
+commit-hook.
+
+Hovering a cursor over the yellow "Build #123" box in the Waterfall display
+will pop up an HTML tooltip to show the reason for the build. Thanks to Zandr
+Milewski for the suggestion.
+
+
 * Release 0.7.3 (23 May 2006)
 
 ** compatibility

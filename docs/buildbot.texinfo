@@ -2346,6 +2346,23 @@ or even UNIX-domain sockets if you want.
 Note that using any Manhole requires that the TwistedConch package be
 installed, and that you be using Twisted version 2.0 or later.
 
+The buildmaster's SSH server will use a different host key than the
+normal sshd running on a typical unix host. This will cause the ssh
+client to complain about a ``host key mismatch'', because it does not
+realize there are two separate servers running on the same host. To
+avoid this, use a clause like the following in your @file{.ssh/config}
+file:
+
+@example
+Host remotehost-buildbot
+ HostName remotehost
+ HostKeyAlias remotehost-buildbot
+ Port 9999
+ # use 'user' if you use PasswordManhole and your name is not 'admin'.
+ # if you use AuthorizedKeysManhole, this probably doesn't matter.
+ User admin
+@end example
+
 
 @node Getting Source Code Changes, Build Process, Configuration, Top
 @chapter Getting Source Code Changes

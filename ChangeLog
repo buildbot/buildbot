@@ -1,5 +1,10 @@
 2006-08-06  Brian Warner  <warner@lothar.com>
 
+	* NEWS: summarize recent changes
+
+	* docs/buildbot.texinfo (Debug options): suggest an .ssh/options
+	clause to avoid the "host key mismatch" warning
+
 	* buildbot/process/step_twisted.py (Trial.start): if the
 	buildslave is too old to understand logfiles=, fall back to
 	running 'cat _trial_temp/test.log' like before.
