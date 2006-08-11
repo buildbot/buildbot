@@ -162,7 +162,7 @@ class MasterOptions(MakerBase):
         ["config", "c", "master.cfg", "name of the buildmaster config file"],
         ]
     def getSynopsis(self):
-        return "Usage:    buildbot master [options] <basedir>"
+        return "Usage:    buildbot create-master [options] <basedir>"
 
     longdesc = """
     This command creates a buildmaster working directory and buildbot.tac
@@ -229,7 +229,7 @@ class SlaveOptions(MakerBase):
     """
 
     def getSynopsis(self):
-        return "Usage:    buildbot slave [options] <basedir> <master> <name> <passwd>"
+        return "Usage:    buildbot create-slave [options] <basedir> <master> <name> <passwd>"
 
     def parseArgs(self, *args):
         if len(args) < 4:
@@ -660,9 +660,9 @@ class Options(usage.Options):
 
     subCommands = [
         # the following are all admin commands
-        ['master', None, MasterOptions,
+        ['create-master', None, MasterOptions,
          "Create and populate a directory for a new buildmaster"],
-        ['slave', None, SlaveOptions,
+        ['create-slave', None, SlaveOptions,
          "Create and populate a directory for a new buildslave"],
         ['start', None, StartOptions, "Start a buildmaster or buildslave"],
         ['stop', None, StopOptions, "Stop a buildmaster or buildslave"],
@@ -720,9 +720,9 @@ def run():
     command = config.subCommand
     so = config.subOptions
 
-    if command == "master":
+    if command == "create-master":
         createMaster(so)
-    elif command == "slave":
+    elif command == "create-slave":
         createSlave(so)
     elif command == "start":
         start(so)

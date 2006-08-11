@@ -1,5 +1,11 @@
 2006-08-10  Brian Warner  <warner@lothar.com>
 
+	* buildbot/scripts/runner.py: rename 'buildbot master' to
+	'buildbot create-master', and 'buildbot slave' to 'buildbot
+	create-slave'
+	* docs/buildbot.texinfo: same
+	* README: same
+
 	* docs/buildbot.texinfo: reimplement the "useful classes" index
 	with actual texinfo indices. The .info rendering is a bit
 	weird-looking but it works well, and the HTML rendering is quite

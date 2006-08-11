@@ -130,7 +130,7 @@ will be run inside this directory.
 
 Now run the 'buildbot' command as follows:
 
- buildbot slave WORKDIR MASTERHOST:PORT SLAVENAME PASSWORD
+ buildbot create-slave WORKDIR MASTERHOST:PORT SLAVENAME PASSWORD
 
 This will create a file called "buildbot.tac", which bundles up all the state
 needed by the build slave application. Twisted has a tool called "twistd"
@@ -176,9 +176,9 @@ seconds (10 minutes) is a reasonable value.
  SETTING UP A BUILD MASTER:
 
 Please read the user's manual for instructions. The short form is that you
-use 'buildbot master MASTERDIR' to create the base directory, then you edit
-the 'master.cfg' file to configure the buildmaster. Once this is ready, you
-use 'buildbot START MASTERDIR' to launch it.
+use 'buildbot create-master MASTERDIR' to create the base directory, then you
+edit the 'master.cfg' file to configure the buildmaster. Once this is ready,
+you use 'buildbot START MASTERDIR' to launch it.
 
 A sample configuration file will be created for you in WORKDIR/master.cfg .
 There are more examples in docs/examples/, and plenty of documentation in the

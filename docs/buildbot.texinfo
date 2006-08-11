@@ -346,10 +346,10 @@ and forth would be inappropriate, but in general the buildmaster is
 responsible for everything).
 
 The buildmaster is usually fed @code{Changes} by some sort of version
-control system @xref{Change Sources}, which may cause builds to be
+control system (@pxref{Change Sources}), which may cause builds to be
 run. As the builds are performed, various status messages are
 produced, which are then sent to any registered Status Targets
-@xref{Status Delivery}.
+(@pxref{Status Delivery}).
 
 @c @image{FILENAME, WIDTH, HEIGHT, ALTTEXT, EXTENSION}
 @image{images/overview,,,Overview Diagram,}
@@ -700,13 +700,14 @@ buildmasters in the same account, or if you run both masters and
 slaves, you may want a more distinctive name like
 @file{~/Buildbot/master/gnomovision} or
 @file{~/Buildmasters/fooproject}. If you are using a separate user
-account, this might just be @file{~buildmaster/masters/fooprojects}.
+account, this might just be @file{~buildmaster/masters/fooproject}.
 
-Once you've picked a directory, use the @command{buildbot master}
-command to create the directory and populate it with startup files:
+Once you've picked a directory, use the @command{buildbot
+create-master} command to create the directory and populate it with
+startup files:
 
 @example
-buildbot master @var{basedir}
+buildbot create-master @var{basedir}
 @end example
 
 You will need to create a configuration file (@pxref{Configuration})
@@ -825,7 +826,7 @@ Create the buildslave
 Now run the 'buildbot' command as follows:
 
 @example
-buildbot slave @var{BASEDIR} @var{MASTERHOST}:@var{PORT} @var{SLAVENAME} @var{PASSWORD}
+buildbot create-slave @var{BASEDIR} @var{MASTERHOST}:@var{PORT} @var{SLAVENAME} @var{PASSWORD}
 @end example
 
 This will create the base directory and a collection of files inside,
@@ -867,13 +868,13 @@ with symlinks.
 @subsection Buildslave Options
 
 There are a handful of options you might want to use when creating the
-buildslave with the @command{buildbot slave <options> DIR <params>}
-command. You can type @command{buildbot slave --help} for a summary.
-To use these, just include them on the @command{buildbot slave}
+buildslave with the @command{buildbot create-slave <options> DIR <params>}
+command. You can type @command{buildbot create-slave --help} for a summary.
+To use these, just include them on the @command{buildbot create-slave}
 command line, like this:
 
 @example
-buildbot slave --umask=022 ~/buildslave buildmaster.example.org:42012 myslavename mypasswd
+buildbot create-slave --umask=022 ~/buildslave buildmaster.example.org:42012 myslavename mypasswd
 @end example
 
 @table @code
@@ -1774,11 +1775,11 @@ developer (like ``hey, you broke the build'').
 The buildbot's behavior is defined by the ``config file'', which
 normally lives in the @file{master.cfg} file in the buildmaster's base
 directory (but this can be changed with an option to the
-@code{buildbot master} command). This file completely specifies which
-Builders are to be run, which slaves they should use, how Changes
-should be tracked, and where the status information is to be sent. The
-buildmaster's @file{buildbot.tac} file names the base directory;
-everything else comes from the config file.
+@code{buildbot create-master} command). This file completely specifies
+which Builders are to be run, which slaves they should use, how
+Changes should be tracked, and where the status information is to be
+sent. The buildmaster's @file{buildbot.tac} file names the base
+directory; everything else comes from the config file.
 
 A sample config file was installed for you when you created the
 buildmaster, but you will need to edit it before your buildbot will do
@@ -3351,7 +3352,7 @@ which case the string is given to '/bin/sh -c COMMAND' for parsing.
 All ShellCommands are run by default in the ``workdir'', which
 defaults to the ``@file{build}'' subdirectory of the slave builder's
 base directory. The absolute path of the workdir will thus be the
-slave's basedir (set as an option to @code{buildbot slave},
+slave's basedir (set as an option to @code{buildbot create-slave},
 @pxref{Creating a buildslave}) plus the builder's basedir (set in the
 builder's @code{c['builddir']} key in master.cfg) plus the workdir
 itself (a class-level attribute of the BuildFactory, defaults to
@@ -4675,16 +4676,16 @@ monitoring.
 The following @command{buildbot} sub-commands are intended for
 buildmaster administrators:
 
-@heading master
+@heading create-master
 
 This creates a new directory and populates it with files that allow it
 to be used as a buildmaster's base directory.
 
 @example
-buildbot master BASEDIR
+buildbot create-master BASEDIR
 @end example
 
-@heading slave
+@heading create-slave
 
 This creates a new directory and populates it with files that let it
 be used as a buildslave's base directory. You must provide several
@@ -4692,7 +4693,7 @@ arguments, which are used to create the initial @file{buildbot.tac}
 file.
 
 @example
-buildbot slave @var{BASEDIR} @var{MASTERHOST}:@var{PORT} @var{SLAVENAME} @var{PASSWORD}
+buildbot create-slave @var{BASEDIR} @var{MASTERHOST}:@var{PORT} @var{SLAVENAME} @var{PASSWORD}
 @end example
 
 @heading start
