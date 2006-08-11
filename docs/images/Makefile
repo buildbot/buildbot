@@ -1,5 +1,12 @@
 
-all: overview.png overview.eps slaves.png slaves.eps slavebuilder.png slavebuilder.eps master.png master.eps status.png status.eps
+SOURCES = overview.svg slaves.svg slavebuilder.svg master.svg status.svg
+PNGS = $(patsubst %.svg,%.png,$(SOURCES))
+EPSS = $(patsubst %.svg,%.eps,$(SOURCES))
+
+.PHONY: images-png images-eps
+all: $(PNGS) $(EPSS)
+images-png: $(PNGS)
+images-eps: $(EPSS)
 
 %.png: %.svg
 	inkscape -b white --export-png $@ $<
