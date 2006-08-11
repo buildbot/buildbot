@@ -1,5 +1,8 @@
 2006-08-10  Brian Warner  <warner@lothar.com>
 
+	* docs/buildbot.texinfo (Index of master.cfg keys): add another
+	index, this one of things like c['sources'] and c['schedulers']
+
 	* docs/Makefile (images): make sure images get built when
 	rendering the manual
 	* docs/images/Makefile: same

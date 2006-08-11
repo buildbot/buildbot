@@ -7,6 +7,7 @@
 @defcodeindex bf
 @defcodeindex bs
 @defcodeindex st
+@defcodeindex bc
 @c %**end of header
 
 @c these indices are for classes useful in a master.cfg config file
@@ -15,6 +16,8 @@
 @c @bfindex : Build Factories
 @c @bsindex : Build Steps
 @c @stindex : Status Targets
+
+@c @bcindex : keys that make up BuildmasterConfig
 
 @copying
 This is the BuildBot manual.
@@ -57,6 +60,7 @@ provided the copyright notice and this notice are preserved.
 * Resources::                   Getting help.
 * Developer's Appendix::        
 * Index of Useful Classes::     
+* Index of master.cfg keys::
 * Index::                       Complete index.
 
 @detailmenu
@@ -1898,18 +1902,18 @@ c['projectURL'] = "http://buildbot.sourceforge.net/"
 c['buildbotURL'] = "http://localhost:8010/"
 @end example
 
-@cindex c['projectName']
+@bcindex c['projectName']
 @code{projectName} is a short string will be used to describe the
 project that this buildbot is working on. For example, it is used as
 the title of the waterfall HTML page. 
 
-@cindex c['projectURL']
+@bcindex c['projectURL']
 @code{projectURL} is a string that gives a URL for the project as a
 whole. HTML status displays will show @code{projectName} as a link to
 @code{projectURL}, to provide a link from buildbot HTML pages to your
 project's home page.
 
-@cindex c['buildbotURL']
+@bcindex c['buildbotURL']
 The @code{buildbotURL} string should point to the location where the
 buildbot's internal web server (usually the @code{html.Waterfall}
 page) is visible. This typically uses the port number set when you
@@ -1926,7 +1930,7 @@ more information about this buildbot.
 @node Listing Change Sources and Schedulers, Setting the slaveport, Defining the Project, Configuration
 @section Listing Change Sources and Schedulers
 
-@cindex c['sources']
+@bcindex c['sources']
 The @code{c['sources']} key is a list of ChangeSource
 instances@footnote{To be precise, it is a list of objects which all
 implement the @code{buildbot.interfaces.IChangeSource} Interface}.
@@ -1939,7 +1943,7 @@ import buildbot.changes.pb
 c['sources'] = [buildbot.changes.pb.PBChangeSource()]
 @end example
 
-@cindex c['schedulers']
+@bcindex c['schedulers']
 @code{c['schedulers']} is a list of Scheduler instances, each of which
 causes builds to be started on a particular set of Builders. The two
 basic Scheduler classes you are likely to start with are
@@ -2111,7 +2115,7 @@ to create circular dependencies in the config file.
 @node Setting the slaveport, Buildslave Specifiers, Listing Change Sources and Schedulers, Configuration
 @section Setting the slaveport
 
-@cindex c['slavePortnum']
+@bcindex c['slavePortnum']
 
 The buildmaster will listen on a TCP port of your choosing for
 connections from buildslaves. It can also use this port for
@@ -2148,7 +2152,7 @@ and they are all configured to contact the buildmaster at
 @node Buildslave Specifiers, Defining Builders, Setting the slaveport, Configuration
 @section Buildslave Specifiers
 
-@cindex c['bots']
+@bcindex c['bots']
 
 The @code{c['bots']} key is a list of known buildslaves. Each
 buildslave is defined by a tuple of (slavename, slavepassword). These
@@ -2174,7 +2178,7 @@ describing the problem will be put in the log file (see @ref{Logfiles}).
 @node Defining Builders, Defining Status Targets, Buildslave Specifiers, Configuration
 @section Defining Builders
 
-@cindex c['builders']
+@bcindex c['builders']
 
 The @code{c['builders']} key is a list of dictionaries which specify
 the Builders. The Buildmaster runs a collection of Builders, each of
@@ -2259,7 +2263,7 @@ various users. Each such delivery method is a ``Status Target'' object
 in the configuration's @code{status} list. To add status targets, you
 just append more objects to this list:
 
-@cindex c['status']
+@bcindex c['status']
 
 @example
 c['status'] = []
@@ -2286,7 +2290,7 @@ all the built-in status targets are documented.
 @section Debug options
 
 
-@cindex c['debugPassword']
+@bcindex c['debugPassword']
 If you set @code{c['debugPassword']}, then you can connect to the
 buildmaster with the diagnostic tool launched by @code{buildbot
 debugclient MASTER:PORT}. From this tool, you can reload the config
@@ -2300,7 +2304,7 @@ debug tool uses the same port number as the slaves do:
 c['debugPassword'] = "debugpassword"
 @end example
 
-@cindex c['manhole']
+@bcindex c['manhole']
 If you set @code{c['manhole']} to an instance of one of the classes in
 @code{buildbot.manhole}, you can telnet or ssh into the buildmaster
 and get an interactive Python shell, which may be useful for debugging
@@ -5312,7 +5316,7 @@ The BotMaster has a collection of Builder objects as values of its
 @code{.builders} dictionary.
 
 
-@node Index of Useful Classes, Index, Developer's Appendix, Top
+@node Index of Useful Classes, Index of master.cfg keys, Developer's Appendix, Top
 @unnumbered Index of Useful Classes
 
 This is a list of all user-visible classes. There are the ones that
@@ -5344,11 +5348,30 @@ admins are unlikely to have much use for.
 @c TODO: undocumented targets
 @stindex buildbot.status.mail.MailNotifier
 
+@node Index of master.cfg keys, Index, Index of Useful Classes, Top
+@unnumbered Index of master.cfg keys
 
-@node Index,  , Index of Useful Classes, Top
+This is a list of all of the significant keys in master.cfg . Recall
+that master.cfg is effectively a small python program one
+responsibility: create a dictionary named @code{BuildmasterConfig}.
+The keys of this dictionary are listed here. The beginning of the
+master.cfg file typically starts with something like:
+
+@example
+BuildmasterConfig = c = @{@}
+@end example
+
+Therefore a config key of @code{sources} will usually appear in
+master.cfg as @code{c['sources']}.
+
+@printindex bc
+
+
+@node Index,  , Index of master.cfg keys, Top
 @unnumbered Index
 
 @printindex cp
+
 
 @bye
 
