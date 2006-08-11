@@ -1,3 +1,11 @@
+2006-08-10  Brian Warner  <warner@lothar.com>
+
+	* docs/buildbot.texinfo: reimplement the "useful classes" index
+	with actual texinfo indices. The .info rendering is a bit
+	weird-looking but it works well, and the HTML rendering is quite
+	nice. This also puts the index targets in the regular flow of the
+	text, which is easier to maintain.
+
 2006-08-06  Brian Warner  <warner@lothar.com>
 
 	* buildbot/slave/commands.py (ShellCommand.__init__): patch from
