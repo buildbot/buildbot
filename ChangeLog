@@ -2,6 +2,14 @@
 
 	* docs/buildbot.texinfo (Index of master.cfg keys): add another
 	index, this one of things like c['sources'] and c['schedulers']
+	(indices): it looks like my clever idea of putting the @fooindex
+	commands in between the @node and the @subsection (to make the
+	HREF anchor jump to slightly above the section title, which works
+	much better in html) confused texinfo horribly, so I'm moving the
+	index tags back to be just after the @subsection marker. I also
+	added extra lines between the @node/@section paragraph and the
+	index tags, since I think maybe texinfo wants to see these be
+	separate paragraphs.
 
 	* docs/Makefile (images): make sure images get built when
 	rendering the manual

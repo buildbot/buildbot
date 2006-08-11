@@ -60,7 +60,7 @@ provided the copyright notice and this notice are preserved.
 * Resources::                   Getting help.
 * Developer's Appendix::        
 * Index of Useful Classes::     
-* Index of master.cfg keys::
+* Index of master.cfg keys::    
 * Index::                       Complete index.
 
 @detailmenu
@@ -193,6 +193,11 @@ Build Factories
 * BuildStep Objects::           
 * BuildFactory::                
 * Process-Specific build factories::  
+
+BuildStep Objects
+
+* BuildFactory Attributes::     
+* Quick builds::                
 
 BuildFactory
 
@@ -2013,11 +2018,12 @@ depending upon when it was first activated).
 @end menu
 
 @node Scheduler Types, Build Dependencies, Listing Change Sources and Schedulers, Listing Change Sources and Schedulers
+@subsection Scheduler Types
+
 @slindex buildbot.scheduler.Scheduler
 @slindex buildbot.scheduler.AnyBranchScheduler
 @slindex buildbot.scheduler.Periodic
 @slindex buildbot.scheduler.Nightly
-@subsection Scheduler Types
 
 Here is a brief catalog of the available Scheduler types. All these
 Schedulers are classes in @code{buildbot.scheduler}, and the
@@ -2065,10 +2071,11 @@ command to trigger builds of code they have not yet committed. See
 @end table
 
 @node Build Dependencies,  , Scheduler Types, Listing Change Sources and Schedulers
+@subsection Build Dependencies
+
 @cindex Dependent
 @cindex Dependencies
 @slindex buildbot.scheduler.Dependent
-@subsection Build Dependencies
 
 It is common to wind up with one kind of build which should only be
 performed if the same source code was successfully handled by some
@@ -2544,8 +2551,9 @@ files.
 
 
 @node CVSToys - PBService, CVSToys - mail notification, Choosing ChangeSources, Change Sources
-@csindex buildbot.changes.freshcvs.FreshCVSSource
 @subsection CVSToys - PBService
+
+@csindex buildbot.changes.freshcvs.FreshCVSSource
 
 The @uref{http://purl.net/net/CVSToys, CVSToys} package provides a
 server which runs on the machine that hosts the CVS repository it
@@ -2617,8 +2625,9 @@ it handles.
 
 
 @node CVSToys - mail notification, Other mail notification ChangeSources, CVSToys - PBService, Change Sources
-@csindex buildbot.changes.mail.FCMaildirSource
 @subsection CVSToys - mail notification
+
+@csindex buildbot.changes.mail.FCMaildirSource
 
 CVSToys also provides a @code{MailNotification} action which will send
 email to a list of recipients for each commit. This tends to work
@@ -2652,9 +2661,10 @@ The @code{FCMaildirSource} is created with two parameters: the
 directory name of the maildir root, and the prefix to strip.
 
 @node Other mail notification ChangeSources, PBChangeSource, CVSToys - mail notification, Change Sources
+@subsection Other mail notification ChangeSources
+
 @csindex buildbot.changes.mail.SyncmailMaildirSource
 @csindex buildbot.changes.mail.BonsaiMaildirSource
-@subsection Other mail notification ChangeSources
 
 There are other types of maildir-watching ChangeSources, which only
 differ in the function used to parse the message body.
@@ -2665,8 +2675,9 @@ used in mail sent by Syncmail.
 @code{BonsaiMaildirSource} parses messages sent out by Bonsai.
 
 @node PBChangeSource, P4Source, Other mail notification ChangeSources, Change Sources
-@csindex buildbot.changes.pb.PBChangeSource
 @subsection PBChangeSource
+
+@csindex buildbot.changes.pb.PBChangeSource
 
 The last kind of ChangeSource actually listens on a TCP port for
 clients to connect and push change notices @emph{into} the
@@ -2719,8 +2730,9 @@ connection.
 
 
 @node P4Source,  , PBChangeSource, Change Sources
-@csindex buildbot.changes.p4poller.P4Source
 @subsection P4Source
+
+@csindex buildbot.changes.p4poller.P4Source
 
 The @code{P4Source} periodically polls a @uref{http://www.perforce.com/,
 Perforce} depot for changes. It accepts the following arguments:
@@ -3006,9 +3018,10 @@ arguments are described on the following pages.
 @end menu
 
 @node CVS, SVN, Source Checkout, Source Checkout
+@subsubsection CVS
+
 @cindex CVS Checkout
 @bsindex buildbot.process.step.CVS
-@subsubsection CVS
 
 
 The @code{CVS} build step performs a @uref{http://www.nongnu.org/cvs/,
@@ -3042,9 +3055,10 @@ half of the parent Build's treeStableTimer.
 
 
 @node SVN, Darcs, CVS, Source Checkout
+@subsubsection SVN
+
 @cindex SVN Checkout
 @bsindex buildbot.process.step.SVN
-@subsubsection SVN
 
 
 The @code{SVN} build step performs a
@@ -3177,9 +3191,10 @@ will concatenate ``svn://svn.example.org/MyProject/'' with
 ``features/newthing'' to get the svnurl for checkout.
 
 @node Darcs, Mercurial, SVN, Source Checkout
+@subsubsection Darcs
+
 @cindex Darcs Checkout
 @bsindex buildbot.process.step.Darcs
-@subsubsection Darcs
 
 
 The @code{Darcs} build step performs a
@@ -3220,9 +3235,10 @@ will be passed to the @code{darcs get} command.
 @end table
 
 @node Mercurial, Arch, Darcs, Source Checkout
+@subsubsection Mercurial
+
 @cindex Mercurial Checkout
 @bsindex buildbot.process.step.Mercurial
-@subsubsection Mercurial
 
 
 The @code{Mercurial} build step performs a
@@ -3252,9 +3268,10 @@ will be passed to the @code{hg clone} command.
 
 
 @node Arch, Bazaar, Mercurial, Source Checkout
+@subsubsection Arch
+
 @cindex Arch Checkout
 @bsindex buildbot.process.step.Arch
-@subsubsection Arch
 
 
 The @code{Arch} build step performs an @uref{http://gnuarch.org/,
@@ -3280,9 +3297,10 @@ step, below.
 @end table
 
 @node Bazaar, P4, Arch, Source Checkout
+@subsubsection Bazaar
+
 @cindex Bazaar Checkout
 @bsindex buildbot.process.step.Bazaar
-@subsubsection Bazaar
 
 
 @code{Bazaar} is an alternate implementation of the Arch VC system,
@@ -3297,10 +3315,11 @@ ourselves).
 
 
 @node P4,  , Bazaar, Source Checkout
+@subsubsection P4
+
 @cindex Perforce Update
 @bsindex buildbot.process.step.P4
 @c TODO @bsindex buildbot.process.step.P4Sync
-@subsubsection P4
 
 
 The @code{P4} build step creates a @uref{http://www.perforce.com/,
@@ -3337,9 +3356,10 @@ builder name. The default is "buildbot_%(slave)s_%(build)s".
 @end table
 
 @node ShellCommand, Simple ShellCommand Subclasses, Source Checkout, Build Steps
+@subsection ShellCommand
+
 @bsindex buildbot.process.step.ShellCommand
 @c TODO @bsindex buildbot.process.step.TreeSize
-@subsection ShellCommand
 
 This is a useful base class for just about everything you might want
 to do during a build (except for the initial source checkout). It runs
@@ -3462,8 +3482,9 @@ file less verbose.
 @end menu
 
 @node Configure, Compile, Simple ShellCommand Subclasses, Simple ShellCommand Subclasses
-@bsindex buildbot.process.step.Configure
 @subsubsection Configure
+
+@bsindex buildbot.process.step.Configure
 
 This is intended to handle the @code{./configure} step from
 autoconf-style projects, or the @code{perl Makefile.PL} step from perl
@@ -3471,8 +3492,9 @@ MakeMaker.pm-style modules. The default command is @code{./configure}
 but you can change this by providing a @code{command=} parameter.
 
 @node Compile, Test, Configure, Simple ShellCommand Subclasses
-@bsindex buildbot.process.step.Compile
 @subsubsection Compile
+
+@bsindex buildbot.process.step.Compile
 
 This is meant to handle compiling or building a project written in C. The
 default command is @code{make all}. When the compile is finished, the
@@ -3481,8 +3503,9 @@ created with any problems that were seen (TODO: the summary is not yet
 created).
 
 @node Test, Build Properties, Compile, Simple ShellCommand Subclasses
-@bsindex buildbot.process.step.Test
 @subsubsection Test
+
+@bsindex buildbot.process.step.Test
 
 This is meant to handle unit tests. The default command is @code{make
 test}, and the @code{warnOnFailure} flag is set.
@@ -3761,10 +3784,11 @@ the step in its @code{.step} attribute.
 
 
 @node Interlocks, Build Factories, Build Steps, Build Process
+@section Interlocks
+
 @cindex locks
 @slindex buildbot.locks.MasterLock
 @slindex buildbot.locks.SlaveLock
-@section Interlocks
 
 For various reasons, you may want to prevent certain Steps (or perhaps
 entire Builds) from running simultaneously. Limited CPU speed or
@@ -3973,12 +3997,18 @@ provide it to later build steps, or store it in the factory to provide
 to later builds.
 
 
+@menu
+* BuildFactory Attributes::     
+* Quick builds::                
+@end menu
+
 @node BuildFactory, Process-Specific build factories, BuildStep Objects, Build Factories
+@subsection BuildFactory
+
 @bfindex buildbot.process.factory.BuildFactory
 @bfindex buildbot.process.factory.BasicBuildFactory
 @c TODO: what is BasicSVN anyway?
 @bfindex buildbot.process.factory.BasicSVN
-@subsection BuildFactory
 
 The default @code{BuildFactory}, provided in the
 @code{buildbot.process.factory} module, is constructed with a list of
@@ -4077,8 +4107,9 @@ inhibit progress-tracking.
 
 
 @node Quick builds,  , BuildFactory Attributes, BuildFactory
-@bfindex buildbot.process.factory.QuickBuildFactory
 @subsubsection Quick builds
+
+@bfindex buildbot.process.factory.QuickBuildFactory
 
 The difference between a ``full build'' and a ``quick build'' is that
 quick builds are generally done incrementally, starting with the tree
@@ -4109,8 +4140,9 @@ subclasses which let you build these projects with a minimum of fuss.
 @end menu
 
 @node GNUAutoconf, CPAN, Process-Specific build factories, Process-Specific build factories
-@bfindex buildbot.process.factory.GNUAutoconf
 @subsubsection GNUAutoconf
+
+@bfindex buildbot.process.factory.GNUAutoconf
 
 @uref{http://www.gnu.org/software/autoconf/, GNU Autoconf} is a
 software portability tool, intended to make it possible to write
@@ -4186,8 +4218,9 @@ None, the test step is skipped.
 
 
 @node CPAN, Python distutils, GNUAutoconf, Process-Specific build factories
-@bfindex buildbot.process.factory.CPAN
 @subsubsection CPAN
+
+@bfindex buildbot.process.factory.CPAN
 
 Most Perl modules available from the @uref{http://www.cpan.org/, CPAN}
 archive use the @code{MakeMaker} module to provide configuration,
@@ -4220,8 +4253,9 @@ to just @code{perl}.
 
 
 @node Python distutils, Python/Twisted/trial projects, CPAN, Process-Specific build factories
-@bfindex buildbot.process.factory.Distutils
 @subsubsection Python distutils
+
+@bfindex buildbot.process.factory.Distutils
 
 Most Python modules use the @code{distutils} package to provide
 configuration and build services. The standard build process looks
@@ -4261,6 +4295,8 @@ distutils modules).
 
 
 @node Python/Twisted/trial projects,  , Python distutils, Process-Specific build factories
+@subsubsection Python/Twisted/trial projects
+
 @bfindex buildbot.process.factory.Trial
 @c TODO: document these steps better
 @bsindex buildbot.process.step_twisted.HLint
@@ -4268,7 +4304,6 @@ distutils modules).
 @bsindex buildbot.process.step_twisted.ProcessDocs
 @bsindex buildbot.process.step_twisted.BuildDebs
 @bsindex buildbot.process.step_twisted.RemovePYCs
-@subsubsection Python/Twisted/trial projects
 
 Twisted provides a unit test tool named @code{trial} which provides a
 few improvements over Python's built-in @code{unittest} module. Many
@@ -4459,9 +4494,10 @@ notifications of builder events, in which case they must define
 @c DOCUMENT THIS
 
 @node HTML Waterfall, IRC Bot, Status Delivery, Status Delivery
+@section HTML Waterfall
+
 @cindex Waterfall
 @stindex buildbot.status.html.Waterfall
-@section HTML Waterfall
 
 
 @example
@@ -4541,9 +4577,10 @@ generated status pages.
 
 
 @node IRC Bot, PBListener, HTML Waterfall, Status Delivery
+@section IRC Bot
+
 @cindex IRC
 @stindex buildbot.status.words.IRC
-@section IRC Bot
 
 
 The @code{buildbot.status.words.IRC} status target creates an IRC bot
@@ -4612,9 +4649,10 @@ before starting the second (hopefully fixed) build.
 @end table
 
 @node PBListener, Writing New Status Plugins, IRC Bot, Status Delivery
+@section PBListener
+
 @cindex PBListener
 @stindex buildbot.status.client.PBListener
-@section PBListener
 
 
 @example
