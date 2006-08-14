@@ -1,3 +1,7 @@
+2006-08-13  Brian Warner  <warner@lothar.com>
+
+	* docs/buildbot.texinfo (BuildStep LogFiles): document them
+
 2006-08-10  Brian Warner  <warner@lothar.com>
 
 	* docs/buildbot.texinfo (Index of master.cfg keys): add another

@@ -186,6 +186,7 @@ Simple ShellCommand Subclasses
 
 Writing New BuildSteps
 
+* BuildStep LogFiles::          
 * Adding LogObservers::         
 
 Build Factories
@@ -3682,10 +3683,102 @@ decision.
 TODO: add more description of BuildSteps.
 
 @menu
+* BuildStep LogFiles::          
 * Adding LogObservers::         
 @end menu
 
-@node Adding LogObservers,  , Writing New BuildSteps, Writing New BuildSteps
+@node BuildStep LogFiles, Adding LogObservers, Writing New BuildSteps, Writing New BuildSteps
+@subsubsection BuildStep LogFiles
+
+Each BuildStep has a collection of ``logfiles''. Each one has a short
+name, like ``stdio'' or ``warnings''. Each LogFile contains an
+arbitrary amount of text, usually the contents of some output file
+generated during a build or test step, or a record of everything that
+was printed to stdout/stderr during the execution of some command.
+
+These LogFiles are stored to disk, so they can be retrieved later.
+
+Each can contain multiple ``channels'', generally limited to three
+basic ones: stdout, stderr, and ``headers''. For example, when a
+ShellCommand runs, it writes a few lines to the ``headers'' channel to
+indicate the exact argv strings being run, which directory the command
+is being executed in, and the contents of the current environment
+variables. Then, as the command runs, it adds a lot of ``stdout'' and
+``stderr'' messages. When the command finishes, a final ``header''
+line is added with the exit code of the process.
+
+Status display plugins can format these different channels in
+different ways. For example, the web page shows LogFiles as text/html,
+with header lines in blue text, stdout in black, and stderr in red. A
+different URL is available which provides a text/plain format, in
+which stdout and stderr are collapsed together, and header lines are
+stripped completely. This latter option makes it easy to save the
+results to a file and run @command{grep} or whatever against the
+output.
+
+Each BuildStep contains a mapping (implemented in a python dictionary)
+from LogFile name to the actual LogFile objects. Status plugins can
+get a list of LogFiles to display, for example, a list of HREF links
+that, when clicked, provide the full contents of the LogFile.
+
+@heading Using LogFiles in custom BuildSteps
+
+The most common way for a custom BuildStep to use a LogFile is to
+summarize the results of a ShellCommand (after the command has
+finished running). For example, a compile step with thousands of lines
+of output might want to create a summary of just the warning messages.
+If you were doing this from a shell, you would use something like:
+
+@example
+grep "warning:" output.log >warnings.log
+@end example
+
+In a custom BuildStep, you could instead create a ``warnings'' LogFile
+that contained the same text. To do this, you would add code to your
+@code{createSummary} method that pulls lines from the main output log
+and creates a new LogFile with the results:
+
+@example
+    def createSummary(self, log):
+        warnings = []
+        for line in log.readlines():
+            if "warning:" in line:
+                warnings.append()
+        self.addCompleteLog('warnings', "".join(warnings))
+@end example
+
+This example uses the @code{addCompleteLog} method, which creates a
+new LogFile, puts some text in it, and then ``closes'' it, meaning
+that no further contents will be added. This LogFile will appear in
+the HTML display under an HREF with the name ``warnings'', since that
+is the name of the LogFile.
+
+You can also use @code{addHTMLLog} to create a complete (closed)
+LogFile that contains HTML instead of plain text. The normal LogFile
+will be HTML-escaped if presented through a web page, but the HTML
+LogFile will not. At the moment this is only used to present a pretty
+HTML representation of an otherwise ugly exception traceback when
+something goes badly wrong during the BuildStep.
+
+In contrast, you might want to create a new LogFile at the beginning
+of the step, and add text to it as the command runs. You can create
+the LogFile and attach it to the build by calling @code{addLog}, which
+returns the LogFile object. You then add text to this LogFile by
+calling methods like @code{addStdout} and @code{addHeader}. When you
+are done, you must call the @code{finish} method so the LogFile can be
+closed. It may be useful to create and populate a LogFile like this
+from a LogObserver method @xref{Adding LogObservers}.
+
+The @code{logfiles=} argument to @code{ShellCommand} (see
+@pxref{ShellCommand}) creates new LogFiles and fills them in realtime
+by asking the buildslave to watch a actual file on disk. The
+buildslave will look for additions in the target file and report them
+back to the BuildStep. These additions will be added to the LogFile by
+calling @code{addStdout}. These secondary LogFiles can be used as the
+source of a LogObserver just like the normal ``stdio'' LogFile.
+
+
+@node Adding LogObservers,  , BuildStep LogFiles, Writing New BuildSteps
 @subsubsection Adding LogObservers
 
 @cindex LogObserver
@@ -3778,9 +3871,10 @@ To connect this parser into the @code{Trial} BuildStep,
         self.addLogObserver('stdio', counter)
 @end example
 
-This creates a TrialTestCaseCounter and tells the step to attach it to
-the ``stdio'' log. The observer is automatically given a reference to
-the step in its @code{.step} attribute.
+This creates a TrialTestCaseCounter and tells the step that the
+counter wants to watch the ``stdio'' log. The observer is
+automatically given a reference to the step in its @code{.step}
+attribute.
 
 
 @node Interlocks, Build Factories, Build Steps, Build Process
