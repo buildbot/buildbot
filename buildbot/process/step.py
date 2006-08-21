@@ -1128,8 +1128,12 @@ class ShellCommand(LoggingBuildStep):
         self.workdir = workdir # required by RemoteShellCommand
         if description:
             self.description = description
+        if isinstance(self.description, str):
+            self.description = [self.description]
         if descriptionDone:
             self.descriptionDone = descriptionDone
+        if isinstance(self.descriptionDone, str):
+            self.descriptionDone = [self.descriptionDone]
         if command:
             self.command = command
         # merge a class-level 'logfiles' attribute with one passed in as an

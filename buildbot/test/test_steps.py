@@ -259,6 +259,24 @@ class Steps(unittest.TestCase):
         l2.addStdout("twostuff")
         self.failUnlessEqual(o2.out, "twostuff")
 
+    # test more stuff about ShellCommands
+
+    def test_description(self):
+        s = makeBuildStep("test_steps.Steps.test_description.1",
+                          step_class=ShellCommand,
+                          workdir="dummy",
+                          description=["list", "of", "strings"],
+                          descriptionDone=["another", "list"])
+        self.failUnlessEqual(s.description, ["list", "of", "strings"])
+        self.failUnlessEqual(s.descriptionDone, ["another", "list"])
+
+        s = makeBuildStep("test_steps.Steps.test_description.2",
+                          step_class=ShellCommand,
+                          workdir="dummy",
+                          description="single string",
+                          descriptionDone="another string")
+        self.failUnlessEqual(s.description, ["single string"])
+        self.failUnlessEqual(s.descriptionDone, ["another string"])
 
 class VersionCheckingStep(step.BuildStep):
     def start(self):

@@ -1,5 +1,18 @@
 2006-08-20  Brian Warner  <warner@lothar.com>
 
+	* docs/buildbot.texinfo (ShellCommand.command=): explain why a
+	list of strings is preferred over a single string with embedded
+	spaces
+	(ShellCommand.description=): explain that either single strings or
+	a list of strings is acceptable, and why you might prefer one over
+	the other. Add an example. Fixes SF#1524659, thanks to Paul
+	Winkler for the catch.
+	* buildbot/process/step.py (ShellCommand): accept either a single
+	string or a list of strings in both description= and
+	descriptionDone=
+	* buildbot/test/test_steps.py (Steps.test_description): test it
+	* buildbot/test/runutils.py (makeBuildStep): support for that test
+
 	* contrib/CSS/*.css: add some contributed CSS stylesheets, to make
 	the Waterfall display a bit less ugly. Thanks to John O'Duinn for
 	collecting the files and creating the patch.

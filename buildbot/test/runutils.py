@@ -229,7 +229,7 @@ def setupBuildStepStatus(basedir):
     s3.stepStarted()
     return s3
 
-def makeBuildStep(basedir):
+def makeBuildStep(basedir, step_class=BuildStep, **kwargs):
     bss = setupBuildStepStatus(basedir)
 
     ss = SourceStamp()
@@ -239,7 +239,7 @@ def makeBuildStep(basedir):
     br = BuildRequest("reason", ss)
     b = Build([br])
     b.setBuilder(b0)
-    s = BuildStep(b)
+    s = step_class(build=b, **kwargs)
     s.setStepStatus(bss)
     b.setupStatus(bss.getBuild())
     return s

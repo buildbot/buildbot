@@ -3389,7 +3389,12 @@ itself (a class-level attribute of the BuildFactory, defaults to
 @table @code
 @item command
 a list of strings (preferred) or single string (discouraged) which
-specifies the command to be run
+specifies the command to be run. A list of strings is preferred
+because it can be used directly as an argv array. Using a single
+string (with embedded spaces) requires the buildslave to pass the
+string to /bin/sh for interpretation, which raises all sorts of
+difficult questions about how to escape or interpret shell
+metacharacters.
 
 @item env
 a dictionary of environment strings which will be added to the child
@@ -3455,16 +3460,27 @@ is assumed to be locked up and will be killed.
 @item description
 This will be used to describe the command (on the Waterfall display)
 while the command is still running. It should be a single
-imperfect-tense verb, like ``compiling'' or ``testing''.
+imperfect-tense verb, like ``compiling'' or ``testing''. The preferred
+form is a list of short strings, which allows the HTML Waterfall
+display to create narrower columns by emitting a <br> tag between each
+word. You may also provide a single string.
 
 @item descriptionDone
 This will be used to describe the command once it has finished. A
-simple noun like ``compile'' or ``tests'' should be used.
+simple noun like ``compile'' or ``tests'' should be used. Like
+@code{description}, this may either be a list of short strings or a
+single string.
 
 If neither @code{description} nor @code{descriptionDone} are set, the
 actual command arguments will be used to construct the description.
 This may be a bit too wide to fit comfortably on the Waterfall
 display.
+
+@example
+f.addStep(ShellCommand, command=["make", "test"],
+          description=["testing"],
+          descriptionDone=["tests"])
+@end example
 
 @end table
 
