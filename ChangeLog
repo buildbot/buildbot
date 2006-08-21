@@ -1,5 +1,9 @@
 2006-08-20  Brian Warner  <warner@lothar.com>
 
+	* contrib/CSS/*.css: add some contributed CSS stylesheets, to make
+	the Waterfall display a bit less ugly. Thanks to John O'Duinn for
+	collecting the files and creating the patch.
+
 	* docs/buildbot.texinfo (BuildStep URLs): document new feature:
 	per-step URLs that will be displayed on the waterfall display,
 	for things like the HTML output of code-coverage tools, when

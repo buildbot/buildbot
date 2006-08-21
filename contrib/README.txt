@@ -35,3 +35,7 @@ viewcvspoll.py: a standalone script which loops every 60 seconds and polls a
                 for information about new CVS changes, then delivers them
                 over PB to a remote buildmaster's PBChangeSource. Contributed
                 by Stephen Kennedy.
+
+CSS/*.css: alternative HTML stylesheets to make the Waterfall display look
+           prettier. Copy them somewhere, then pass the filename to the
+           css= argument of the Waterfall() constructor.
