@@ -18,6 +18,9 @@ d2 = {'files': ["OtherProject/bar.c"],
 d3 = {'files': ["Project/baz.c", "OtherProject/bloo.c"],
       'who': "alice",
       'comments': "mixed changes"}
+d4 = {'files': ["trunk/baz.c", "branches/foobranch/foo.c", "trunk/bar.c"],
+      'who': "alice",
+      'comments': "mixed changes"}
 
 class TestChangePerspective(unittest.TestCase):
 
@@ -38,7 +41,7 @@ class TestChangePerspective(unittest.TestCase):
         self.failUnlessEqual(c1.who, "marvin")
 
     def testPrefix(self):
-        p = pb.ChangePerspective(self, "Project")
+        p = pb.ChangePerspective(self, "Project/")
 
         p.perspective_addChange(d1)
         self.failUnlessEqual(len(self.changes), 1)
@@ -57,6 +60,42 @@ class TestChangePerspective(unittest.TestCase):
         self.failUnlessEqual(c3.files, ["baz.c"])
         self.failUnlessEqual(c3.comments, "mixed changes")
         self.failUnlessEqual(c3.who, "alice")
+
+    def testPrefix2(self):
+        p = pb.ChangePerspective(self, "Project/bar/")
+
+        p.perspective_addChange(d1)
+        self.failUnlessEqual(len(self.changes), 1)
+        c1 = self.changes[-1]
+        self.failUnlessEqual(c1.files, ["boo.c"])
+        self.failUnlessEqual(c1.comments, "Some changes in Project")
+        self.failUnlessEqual(c1.who, "marvin")
+
+        p.perspective_addChange(d2) # should be ignored
+        self.failUnlessEqual(len(self.changes), 1)
+
+        p.perspective_addChange(d3) # should ignore this too
+        self.failUnlessEqual(len(self.changes), 1)
+
+    def testPrefix3(self):
+        p = pb.ChangePerspective(self, "trunk/")
+
+        p.perspective_addChange(d4)
+        self.failUnlessEqual(len(self.changes), 1)
+        c1 = self.changes[-1]
+        self.failUnlessEqual(c1.files, ["baz.c", "bar.c"])
+        self.failUnlessEqual(c1.comments, "mixed changes")
+
+    def testPrefix4(self):
+        p = pb.ChangePerspective(self, "branches/foobranch/")
+
+        p.perspective_addChange(d4)
+        self.failUnlessEqual(len(self.changes), 1)
+        c1 = self.changes[-1]
+        self.failUnlessEqual(c1.files, ["foo.c"])
+        self.failUnlessEqual(c1.comments, "mixed changes")
+
+
 
 config_empty = """
 BuildmasterConfig = c = {}

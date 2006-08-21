@@ -2710,8 +2710,8 @@ share the slave port and will always have a @code{user} name of
 be removed in the future.}.
 
 
-The @code{PBChangeSource} is created with the following
-arguments:
+The @code{PBChangeSource} is created with the following arguments. All
+are optional.
 
 @table @samp
 @item @code{port}
@@ -2720,14 +2720,29 @@ shares the port used for buildslave connections. @emph{Not
 Implemented, always set to @code{None}}.
 
 @item @code{user} and @code{passwd}
-the user/passwd account information that the client program must use
+The user/passwd account information that the client program must use
 to connect. Defaults to @code{change} and @code{changepw}. @emph{Not
 Implemented, @code{user} is currently always set to @code{change},
 @code{passwd} is always set to @code{changepw}}.
 
 @item @code{prefix}
-the prefix to be found and stripped from filenames delivered over the
-connection.
+The prefix to be found and stripped from filenames delivered over the
+connection. Any filenames which do not start with this prefix will be
+removed. If all the filenames in a given Change are removed, the that
+whole Change will be dropped. This string should probably end with a
+directory separator.
+
+This is useful for changes coming from version control systems that
+represent branches as parent directories within the repository (like
+SVN and Perforce). Use a prefix of 'trunk/' or
+'project/branches/foobranch/' to only follow one branch and to get
+correct tree-relative filenames. Without a prefix, the PBChangeSource
+will probably deliver Changes with filenames like @file{trunk/foo.c}
+instead of just @file{foo.c}. Of course this also depends upon the
+tool sending the Changes in (like @command{buildbot sendchange}) and
+what filenames it is delivering: that tool may be filtering and
+stripping prefixes at the sending end.
+
 @end table
 
 

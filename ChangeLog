@@ -1,5 +1,23 @@
 2006-08-20  Brian Warner  <warner@lothar.com>
 
+	* buildbot/changes/pb.py (PBChangeSource): fix and simplify
+	meaning of the prefix= argument. It is now just a string which is
+	stripped from the beginning of the filename. If prefix= is set but
+	not found on any given filename, that filename is ignored. If all
+	filenames in a Change are ignored, the Change is dropped. This is
+	much simpler than the previous sep= nonsense, and I should have
+	implemented it this way from the beginning. Effectively resolves
+	SF#1217699 and SF#1381867. Thanks to Gary Granger and Marius
+	Gedminas for the catch and suggested fixes.
+	(ChangePerspective.perspective_addChange): implement the actual
+	prefix comparison
+	* buildbot/test/test_changes.py (TestChangePerspective): test it
+	* docs/buildbot.texinfo (PBChangeSource): document it, explain
+	how to properly use prefix=
+	* docs/examples/twisted_master.cfg (source): update prefix= by
+	adding the trailing slash
+
+
 	* docs/examples/twisted_master.cfg: update to actual practice
 
 	* buildbot/test/test_web.py (WaterfallSteps.test_urls): oops,
