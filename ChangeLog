@@ -13,6 +13,10 @@
 	* buildbot/process/step.py (BuildStep.addURL): method to set these
 	URLs from within a BuildStep
 	* buildbot/status/html.py (StepBox.getBox): emit links to the URLs
+	(StepBox.getBox): give these external links a distinct CSS class
+	named "BuildStep external" so a .css file can display them
+	differently
+
 	* buildbot/test/test_web.py (WaterfallSteps): test that we really
 	do emit those links
 	* buildbot/test/test_steps.py (Steps): test that we can all the
