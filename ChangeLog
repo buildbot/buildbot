@@ -7,6 +7,9 @@
 	a list of strings is acceptable, and why you might prefer one over
 	the other. Add an example. Fixes SF#1524659, thanks to Paul
 	Winkler for the catch.
+	(Build Steps): update to use f.addStep() rather than using s()
+	and the constructor list
+
 	* buildbot/process/step.py (ShellCommand): accept either a single
 	string or a list of strings in both description= and
 	descriptionDone=

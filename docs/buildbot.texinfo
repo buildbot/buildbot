@@ -2821,21 +2821,17 @@ to create the @code{BuildFactory}. These ``step specifications'' are
 not actual steps, but rather a tuple of the @code{BuildStep} subclass
 to be created and a dictionary of arguments. (the actual
 @code{BuildStep} instances are not created until the Build is started,
-so that each Build gets an independent copy of each BuildStep). There
-is a convenience function named ``@code{s}'' in the
-@code{buildbot.process.factory} module for creating these
-specification tuples. It allows you to create a
-@code{BuildFactory}-ready list like this:
+so that each Build gets an independent copy of each BuildStep). The
+preferred way to create these step specifications is with the
+@code{BuildFactory}'s @code{addStep} method:
 
 @example
 from buildbot.process import step, factory
-from buildbot.process.factory import s
 
-steps = [s(step.SVN, svnurl="http://svn.example.org/Trunk/"),
-         s(step.ShellCommand, command=["make", "all"]),
-         s(step.ShellCommand, command=["make", "test"]),
-        ]
-f = factory.BuildFactory(steps)
+f = factory.BuildFactory()
+f.addStep(step.SVN, svnurl="http://svn.example.org/Trunk/")
+f.addStep(step.ShellCommand, command=["make", "all"])
+f.addStep(step.ShellCommand, command=["make", "test"])
 @end example
 
 The rest of this section lists all the standard BuildStep objects
@@ -3163,19 +3159,20 @@ branch, and file.
 from buildbot.changes.pb import PBChangeSource
 from buildbot.scheduler import AnyBranchScheduler
 from buildbot.process import step, factory
-from buildbot.process.factory import s
 
 c['sources'] = [PBChangeSource()]
 s1 = AnyBranchScheduler('main',
                         ['trunk', 'features/newthing', 'features/otherthing'],
                         10*60, ['test-i386', 'test-ppc'])
 c['schedulers'] = [s1]
-source = s(step.SVN, mode='update',
-           baseURL='svn://svn.example.org/MyProject/',
-           defaultBranch='trunk')
-f = factory.BuildFactory([source,
-                          s(step.Compile, command="make all"),
-                          s(step.Test, command="make test")])
+
+f = factory.BuildFactory()
+f.addStep(step.SVN, mode='update',
+          baseURL='svn://svn.example.org/MyProject/',
+          defaultBranch='trunk')
+f.addStep(step.Compile, command="make all")
+f.addStep(step.Test, command="make test")
+
 c['builders'] = [
   @{'name':'test-i386', 'slavename':'bot-i386', 'builddir':'test-i386',
                        'factory':f @},
@@ -3402,8 +3399,8 @@ command's environment. For example, to run tests with a different i18n
 language setting, you might use
 
 @example
-s(ShellCommand, command=["make", "test"],
-  env=@{'LANG': 'fr_FR'@})
+f.addStep(ShellCommand, command=["make", "test"],
+          env=@{'LANG': 'fr_FR'@})
 @end example
 
 These variable settings will override any existing ones in the
@@ -3416,9 +3413,9 @@ to any existing $PYTHONPATH setting, you would do something like the
 following:
 
 @example
-s(ShellCommand, command=["make", "test"],
- env=@{'PYTHONPATH': ["/usr/local/lib/python2.3",
-                     "/home/buildbot/lib/python"] @})
+f.addStep(ShellCommand, command=["make", "test"],
+          env=@{'PYTHONPATH': ["/usr/local/lib/python2.3",
+                              "/home/buildbot/lib/python"] @})
 @end example
 
 @item want_stdout
@@ -3448,8 +3445,8 @@ file will be polled on a regular basis (every couple of seconds) as
 the build runs, and any new text will be sent over to the buildmaster.
 
 @example
-s(ShellCommand, command=["make", "test"],
-  logfiles=@{"triallog": "_trial_temp/test.log"@})
+f.addStep(ShellCommand, command=["make", "test"],
+          logfiles=@{"triallog": "_trial_temp/test.log"@})
 @end example
 
 
@@ -3577,11 +3574,10 @@ generated shell command.
 @example
 from buildbot.process.step import ShellCommand, WithProperties
 
-s(ShellCommand,
-  command=["tar", "czf",
-           WithProperties("build-%s.tar.gz", "revision"),
-           "source"],
- )
+f.addStep(ShellCommand,
+          command=["tar", "czf",
+                   WithProperties("build-%s.tar.gz", "revision"),
+                   "source"])
 @end example
 
 If this BuildStep were used in a tree obtained from Subversion, it
@@ -3600,11 +3596,10 @@ in the parentheses, and WithProperties takes @emph{no} additional
 arguments:
 
 @example
-s(ShellCommand,
-  command=["tar", "czf",
-           WithProperties("build-%(revision)s.tar.gz"),
-           "source"],
- )
+f.addStep(ShellCommand,
+          command=["tar", "czf",
+                   WithProperties("build-%(revision)s.tar.gz"),
+                   "source"])
 @end example
 
 Don't forget the extra ``s'' after the closing parenthesis! This is
@@ -4027,14 +4022,13 @@ from happening at the same time.
 
 @example
 from buildbot import locks
-from buildbot.process import s, step, factory
+from buildbot.process import step, factory
 
 db_lock = locks.MasterLock("database")
-steps = [s(step.SVN, svnurl="http://example.org/svn/Trunk"),
-         s(step.ShellCommand, command="make all"),
-         s(step.ShellCommand, command="make test", locks=[db_lock]),
-        ]
-f = factory.BuildFactory(steps)
+f = factory.BuildFactory()
+f.addStep(step.SVN, svnurl="http://example.org/svn/Trunk")
+f.addStep(step.ShellCommand, command="make all")
+f.addStep(step.ShellCommand, command="make test", locks=[db_lock])
 b1 = @{'name': 'full1', 'slavename': 'bot-1', builddir='f1', 'factory': f@}
 b2 = @{'name': 'full2', 'slavename': 'bot-2', builddir='f2', 'factory': f@}
 b3 = @{'name': 'full3', 'slavename': 'bot-3', builddir='f3', 'factory': f@}
@@ -4078,24 +4072,23 @@ from simultaneous database access.
 
 @example
 from buildbot import locks
-from buildbot.process import s, step, factory
+from buildbot.process import step, factory
 
 db_lock = locks.MasterLock("database")
 cpu_lock = locks.SlaveLock("cpu")
-slow_steps = [s(step.SVN, svnurl="http://example.org/svn/Trunk"),
-              s(step.ShellCommand, command="make all", locks=[cpu_lock]),
-              s(step.ShellCommand, command="make test", locks=[cpu_lock]),
-              s(step.ShellCommand, command="make db-test",
-                                   locks=[db_lock, cpu_lock]),
-             ]
-slow_f = factory.BuildFactory(slow_steps)
-fast_steps = [s(step.SVN, svnurl="http://example.org/svn/Trunk"),
-              s(step.ShellCommand, command="make all", locks=[]),
-              s(step.ShellCommand, command="make test", locks=[]),
-              s(step.ShellCommand, command="make db-test",
-                                   locks=[db_lock]),
-             ]
-fast_factory = factory.BuildFactory(fast_steps)
+slow_f = factory.BuildFactory()
+f.addStep(step.SVN, svnurl="http://example.org/svn/Trunk")
+f.addStep(step.ShellCommand, command="make all", locks=[cpu_lock])
+f.addStep(step.ShellCommand, command="make test", locks=[cpu_lock])
+f.addStep(step.ShellCommand, command="make db-test",
+                             locks=[db_lock, cpu_lock])
+
+fast_factory = factory.BuildFactory()
+f.addStep(step.SVN, svnurl="http://example.org/svn/Trunk")
+f.addStep(step.ShellCommand, command="make all", locks=[])
+f.addStep(step.ShellCommand, command="make test", locks=[])
+f.addStep(step.ShellCommand, command="make db-test", locks=[db_lock])
+
 b1 = @{'name': 'full1', 'slavename': 'bot-slow', builddir='full1',
                        'factory': slow_factory@}
 b2 = @{'name': 'full2', 'slavename': 'bot-slow', builddir='full2',
@@ -4200,14 +4193,28 @@ to later builds.
 @bfindex buildbot.process.factory.BasicSVN
 
 The default @code{BuildFactory}, provided in the
-@code{buildbot.process.factory} module, is constructed with a list of
-``BuildStep specifications'': a list of @code{(step_class, kwargs)}
-tuples for each. When asked to create a Build, it loads the list of
-steps into the new Build object. When the Build is actually started,
-these step specifications are used to create the actual set of
-BuildSteps, which are then executed one at a time. For example, a
-build which consists of a CVS checkout followed by a @code{make build}
-would be constructed as follows:
+@code{buildbot.process.factory} module, contains a list of ``BuildStep
+specifications'': a list of @code{(step_class, kwargs)} tuples for
+each. When asked to create a Build, it loads the list of steps into
+the new Build object. When the Build is actually started, these step
+specifications are used to create the actual set of BuildSteps, which
+are then executed one at a time. For example, a build which consists
+of a CVS checkout followed by a @code{make build} would be constructed
+as follows:
+
+@example
+from buildbot.process import step, factory
+
+f = factory.BuildFactory()
+f.addStep(step.CVS, cvsroot=CVSROOT, cvsmodule="project", mode="update")
+f.addStep(step.Compile, command=["make", "build"])
+@end example
+
+It is also possible to pass a list of step specifications into the
+@code{BuildFactory} when it is created. Using @code{addStep} is
+usually simpler, but there are cases where is is more convenient to
+create the list of steps ahead of time. To make this approach easier,
+a convenience function named @code{s} is available:
 
 @example
 from buildbot.process import step, factory
@@ -4215,11 +4222,12 @@ from buildbot.factory import s
 # s is a convenience function, defined with:
 # def s(steptype, **kwargs): return (steptype, kwargs)
 
-f = factory.BuildFactory([s(step.CVS,
-                            cvsroot=CVSROOT, cvsmodule="project",
-                            mode="update"),
-                          s(step.Compile, command=["make", "build"])])
+all_steps = [s(step.CVS, cvsroot=CVSROOT, cvsmodule="project", mode="update"),
+             s(step.Compile, command=["make", "build"]),
+            ]
+f = factory.BuildFactory(all_steps)
 @end example
+
 
 Each step can affect the build process in the following ways:
 
