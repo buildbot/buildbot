@@ -1,5 +1,10 @@
 2006-08-20  Brian Warner  <warner@lothar.com>
 
+	* buildbot/test/test_web.py (WaterfallSteps.test_urls): oops,
+	update test case to match new link text.. the HREF has both a
+	class= setting and an enclosing [] pair that I didn't match in the
+	test.
+
 	* docs/buildbot.texinfo (ShellCommand.command=): explain why a
 	list of strings is preferred over a single string with embedded
 	spaces

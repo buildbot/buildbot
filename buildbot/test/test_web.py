@@ -270,9 +270,9 @@ class WaterfallSteps(unittest.TestCase):
         s.addURL("icon", "http://coverage.example.org/icon.png")
         box = html.IBox(s).getBox()
         td = box.td()
-        e1 = '<a href="http://coverage.example.org/target">coverage</a>'
+        e1 = '[<a href="http://coverage.example.org/target" class="BuildStep external">coverage</a>]'
         self.failUnlessSubstring(e1, td)
-        e2 = '<a href="http://coverage.example.org/icon.png">icon</a>'
+        e2 = '[<a href="http://coverage.example.org/icon.png" class="BuildStep external">icon</a>]'
         self.failUnlessSubstring(e2, td)
 
 
