@@ -25,6 +25,7 @@ from buildbot.process import step, base, factory
 from buildbot.process.step import ShellCommand #, ShellCommands
 from buildbot.status import builder
 from buildbot.test.runutils import RunMixin, rmtree, setupBuildStepStatus
+from buildbot.test.runutils import makeBuildStep
 from buildbot.twcompat import maybeWait
 from buildbot.slave import commands
 
@@ -160,6 +161,11 @@ class BuildStep(unittest.TestCase):
         self.assertEqual(self.results, 0)
 
 
+class MyObserver(step.LogObserver):
+    out = ""
+    def outReceived(self, data):
+        self.out = self.out + data
+
 class Steps(unittest.TestCase):
     def testMultipleStepInstances(self):
         steps = [
@@ -175,6 +181,84 @@ class Steps(unittest.TestCase):
         req = base.BuildRequest("reason", SourceStamp())
         b = f.newBuild([req])
         #for s in b.steps: print s.name
+
+    # test the various methods available to buildsteps
+
+    def test_getProperty(self):
+        s = makeBuildStep("test_steps.Steps.test_getProperty")
+        bs = s.step_status.getBuild()
+
+        s.setProperty("prop1", "value1")
+        s.setProperty("prop2", "value2")
+        self.failUnlessEqual(s.getProperty("prop1"), "value1")
+        self.failUnlessEqual(bs.getProperty("prop1"), "value1")
+        self.failUnlessEqual(s.getProperty("prop2"), "value2")
+        self.failUnlessEqual(bs.getProperty("prop2"), "value2")
+        s.setProperty("prop1", "value1a")
+        self.failUnlessEqual(s.getProperty("prop1"), "value1a")
+        self.failUnlessEqual(bs.getProperty("prop1"), "value1a")
+
+
+    def test_addURL(self):
+        s = makeBuildStep("test_steps.Steps.test_addURL")
+        s.addURL("coverage", "http://coverage.example.org/target")
+        s.addURL("icon", "http://coverage.example.org/icon.png")
+        bs = s.step_status
+        links = bs.getURLs()
+        expected = {"coverage": "http://coverage.example.org/target",
+                    "icon": "http://coverage.example.org/icon.png",
+                    }
+        self.failUnlessEqual(links, expected)
+
+    def test_addLog(self):
+        s = makeBuildStep("test_steps.Steps.test_addLog")
+        l = s.addLog("newlog")
+        l.addStdout("some stdout here")
+        l.finish()
+        bs = s.step_status
+        logs = bs.getLogs()
+        self.failUnlessEqual(len(logs), 1)
+        l1 = logs[0]
+        self.failUnlessEqual(l1.getText(), "some stdout here")
+
+    def test_addHTMLLog(self):
+        s = makeBuildStep("test_steps.Steps.test_addHTMLLog")
+        l = s.addHTMLLog("newlog", "some html here")
+        bs = s.step_status
+        logs = bs.getLogs()
+        self.failUnlessEqual(len(logs), 1)
+        l1 = logs[0]
+        self.failUnless(isinstance(l1, builder.HTMLLogFile))
+        self.failUnlessEqual(l1.getText(), "some html here")
+
+    def test_addCompleteLog(self):
+        s = makeBuildStep("test_steps.Steps.test_addCompleteLog")
+        l = s.addCompleteLog("newlog", "some stdout here")
+        bs = s.step_status
+        logs = bs.getLogs()
+        self.failUnlessEqual(len(logs), 1)
+        l1 = logs[0]
+        self.failUnlessEqual(l1.getText(), "some stdout here")
+
+    def test_addLogObserver(self):
+        s = makeBuildStep("test_steps.Steps.test_addLogObserver")
+        bss = s.step_status
+        o1,o2,o3 = MyObserver(), MyObserver(), MyObserver()
+
+        # add the log before the observer
+        l1 = s.addLog("one")
+        l1.addStdout("onestuff")
+        s.addLogObserver("one", o1)
+        self.failUnlessEqual(o1.out, "onestuff")
+        l1.addStdout(" morestuff")
+        self.failUnlessEqual(o1.out, "onestuff morestuff")
+
+        # add the observer before the log
+        s.addLogObserver("two", o2)
+        l2 = s.addLog("two")
+        l2.addStdout("twostuff")
+        self.failUnlessEqual(o2.out, "twostuff")
+
 
 class VersionCheckingStep(step.BuildStep):
     def start(self):
@@ -201,7 +285,7 @@ c['builders'] = [{'name':'quick', 'slavename':'bot1',
 c['slavePortnum'] = 0
 """
 
-class Version(RunMixin, unittest.TestCase):
+class SlaveVersion(RunMixin, unittest.TestCase):
     def setUp(self):
         RunMixin.setUp(self)
         self.master.loadConfig(version_config)
@@ -233,36 +317,10 @@ class Version(RunMixin, unittest.TestCase):
         self.failIf(s.slaveVersionIsOlderThan("svn", "1.1"))
         self.failUnless(s.slaveVersionIsOlderThan("svn", cver + ".1"))
 
+        self.failUnlessEqual(s.getSlaveName(), "bot1")
+
     def testCompare(self):
         self.master._checker = self.checkCompare
         d = self.doBuild("quick")
         return maybeWait(d)
-
-
-class MyObserver(step.LogObserver):
-    out = ""
-    def outReceived(self, data):
-        self.out = self.out + data
-
-class LogObserver(unittest.TestCase):
-    def testAdd(self):
-        bss = setupBuildStepStatus("logobserver")
-        build = None
-        s = step.BuildStep(build)
-        s.setStepStatus(bss)
-        o1,o2,o3 = MyObserver(), MyObserver(), MyObserver()
-
-        # add the log before the observer
-        l1 = s.addLog("one")
-        l1.addStdout("onestuff")
-        s.addLogObserver("one", o1)
-        self.failUnlessEqual(o1.out, "onestuff")
-        l1.addStdout(" morestuff")
-        self.failUnlessEqual(o1.out, "onestuff morestuff")
-
-        # add the observer before the log
-        s.addLogObserver("two", o2)
-        l2 = s.addLog("two")
-        l2.addStdout("twostuff")
-        self.failUnlessEqual(o2.out, "twostuff")
 

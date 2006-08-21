@@ -867,6 +867,16 @@ class BuildStep:
                 observer.setLog(current_logs[logname])
                 self._pendingLogObservers.remove((logname, observer))
 
+    def addURL(self, name, url):
+        """Add a BuildStep URL to this step.
+
+        An HREF to this URL will be added to any HTML representations of this
+        step. This allows a step to provide links to external web pages,
+        perhaps to provide detailed HTML code coverage results or other forms
+        of build status.
+        """
+        self.step_status.addURL(name, url)
+
     def runCommand(self, c):
         d = c.run(self, self.remote)
         return d

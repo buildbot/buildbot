@@ -1,3 +1,25 @@
+2006-08-20  Brian Warner  <warner@lothar.com>
+
+	* docs/buildbot.texinfo (BuildStep URLs): document new feature:
+	per-step URLs that will be displayed on the waterfall display,
+	for things like the HTML output of code-coverage tools, when
+	the results are hosted elsewhere.
+	* buildbot/interfaces.py (IBuildStepStatus.getURLs): document the
+	way to retrieve these URLs
+	* buildbot/status/builder.py (BuildStepStatus.getURLs): implement
+	the method to retrieve these URLs. Also provide backwards
+	compatibility for saved BuildStepStatus instances that didn't have
+	the .urls attribute
+	* buildbot/process/step.py (BuildStep.addURL): method to set these
+	URLs from within a BuildStep
+	* buildbot/status/html.py (StepBox.getBox): emit links to the URLs
+	* buildbot/test/test_web.py (WaterfallSteps): test that we really
+	do emit those links
+	* buildbot/test/test_steps.py (Steps): test that we can all the
+	URLs. Also add a bunch of other tests on methods that can be
+	called from within BuildSteps
+	* buildbot/test/runutils.py (makeBuildStep): add utility function
+
 2006-08-13  Brian Warner  <warner@lothar.com>
 
 	* docs/buildbot.texinfo (BuildStep LogFiles): document them

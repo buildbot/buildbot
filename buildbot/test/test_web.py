@@ -16,6 +16,7 @@ from buildbot.twcompat import providedBy, maybeWait
 from buildbot.status import html, builder
 from buildbot.changes.changes import Change
 from buildbot.process import step, base
+from buildbot.test.runutils import setupBuildStepStatus
 
 class ConfiguredMaster(master.BuildMaster):
     """This BuildMaster variant has a static config file, provided as a
@@ -248,6 +249,32 @@ c['status'] = [html.Waterfall(http_port=0, robots_txt=%s)]
         return d
     def _test_waterfall_5(self, robotstxt):
         self.failUnless(robotstxt == self.robots_txt_contents)
+
+class WaterfallSteps(unittest.TestCase):
+
+    # failUnlessSubstring copied from twisted-2.1.0, because this helps us
+    # maintain compatibility with python2.2.
+    def failUnlessSubstring(self, substring, astring, msg=None):
+        """a python2.2 friendly test to assert that substring is found in
+        astring parameters follow the semantics of failUnlessIn
+        """
+        if astring.find(substring) == -1:
+            raise self.failureException(msg or "%r not found in %r"
+                                        % (substring, astring))
+        return substring
+    assertSubstring = failUnlessSubstring
+
+    def test_urls(self):
+        s = setupBuildStepStatus("test_web.test_urls")
+        s.addURL("coverage", "http://coverage.example.org/target")
+        s.addURL("icon", "http://coverage.example.org/icon.png")
+        box = html.IBox(s).getBox()
+        td = box.td()
+        e1 = '<a href="http://coverage.example.org/target">coverage</a>'
+        self.failUnlessSubstring(e1, td)
+        e2 = '<a href="http://coverage.example.org/icon.png">icon</a>'
+        self.failUnlessSubstring(e2, td)
+
 
 
 geturl_config = """

@@ -647,7 +647,7 @@ class BuildRequestStatus:
         self.observers.remove(observer)
 
 
-class BuildStepStatus:
+class BuildStepStatus(styles.Versioned):
     """
     I represent a collection of output status for a
     L{buildbot.process.step.BuildStep}.
@@ -672,6 +672,7 @@ class BuildStepStatus:
         implements(interfaces.IBuildStepStatus, interfaces.IStatusEvent)
     else:
         __implements__ = interfaces.IBuildStepStatus, interfaces.IStatusEvent
+    persistenceVersion = 1
 
     started = None
     finished = None
@@ -688,6 +689,7 @@ class BuildStepStatus:
         assert interfaces.IBuildStatus(parent)
         self.build = parent
         self.logs = []
+        self.urls = {}
         self.watchers = []
         self.updates = {}
         self.finishedWatchers = []
@@ -718,6 +720,8 @@ class BuildStepStatus:
     def getLogs(self):
         return self.logs
 
+    def getURLs(self):
+        return self.urls.copy()
 
     def isFinished(self):
         return (self.finished is not None)
@@ -846,6 +850,9 @@ class BuildStepStatus:
         for w in self.watchers:
             w.logFinished(self.build, self, log)
 
+    def addURL(self, name, url):
+        self.urls[name] = url
+
     def setColor(self, color):
         self.color = color
     def setText(self, text):
@@ -873,7 +880,7 @@ class BuildStepStatus:
     # persistence
 
     def __getstate__(self):
-        d = self.__dict__.copy()
+        d = styles.Versioned.__getstate__(self)
         del d['build'] # filled in when loading
         if d.has_key('progress'):
             del d['progress']
@@ -883,10 +890,14 @@ class BuildStepStatus:
         return d
 
     def __setstate__(self, d):
-        self.__dict__ = d
+        styles.Versioned.__setstate__(self, d)
         # self.build must be filled in by our parent
         for loog in self.logs:
             loog.step = self
+
+    def upgradeToVersion1(self):
+        if not hasattr(self, "urls"):
+            self.urls = {}
 
 
 class BuildStatus(styles.Versioned):

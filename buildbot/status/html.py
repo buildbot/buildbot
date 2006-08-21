@@ -958,6 +958,9 @@ class StepBox(components.Adapter):
                 text.append("<a href=\"%s\">%s</a>" % (url, html.escape(name)))
             else:
                 text.append(html.escape(name))
+        urls = self.original.getURLs()
+        for name, target in urls.items():
+            text.append('[<a href="%s">%s</a>]' % (target, html.escape(name)))
         color = self.original.getColor()
         class_ = "BuildStep " + build_get_class(self.original)
         return Box(text, color, class_=class_)

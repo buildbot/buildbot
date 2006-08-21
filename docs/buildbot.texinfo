@@ -188,6 +188,7 @@ Writing New BuildSteps
 
 * BuildStep LogFiles::          
 * Adding LogObservers::         
+* BuildStep URLs::              
 
 Build Factories
 
@@ -3685,6 +3686,7 @@ TODO: add more description of BuildSteps.
 @menu
 * BuildStep LogFiles::          
 * Adding LogObservers::         
+* BuildStep URLs::              
 @end menu
 
 @node BuildStep LogFiles, Adding LogObservers, Writing New BuildSteps, Writing New BuildSteps
@@ -3778,7 +3780,7 @@ calling @code{addStdout}. These secondary LogFiles can be used as the
 source of a LogObserver just like the normal ``stdio'' LogFile.
 
 
-@node Adding LogObservers,  , BuildStep LogFiles, Writing New BuildSteps
+@node Adding LogObservers, BuildStep URLs, BuildStep LogFiles, Writing New BuildSteps
 @subsubsection Adding LogObservers
 
 @cindex LogObserver
@@ -3875,6 +3877,83 @@ This creates a TrialTestCaseCounter and tells the step that the
 counter wants to watch the ``stdio'' log. The observer is
 automatically given a reference to the step in its @code{.step}
 attribute.
+
+@node BuildStep URLs,  , Adding LogObservers, Writing New BuildSteps
+@subsubsection BuildStep URLs
+
+@cindex links
+@cindex BuildStep URLs
+@cindex addURL
+
+Each BuildStep has a collection of ``links''. Like its collection of
+LogFiles, each link has a name and a target URL. The web status page
+creates HREFs for each link in the same box as it does for LogFiles,
+except that the target of the link is the external URL instead of an
+internal link to a page that shows the contents of the LogFile.
+
+These external links can be used to point at build information hosted
+on other servers. For example, the test process might produce an
+intricate description of which tests passed and failed, or some sort
+of code coverage data in HTML form, or a PNG or GIF image with a graph
+of memory usage over time. The external link can provide an easy way
+for users to navigate from the buildbot's status page to these
+external web sites or file servers. Note that the step itself is
+responsible for insuring that there will be a document available at
+the given URL (perhaps by using @command{scp} to copy the HTML output
+to a @file{~/public_html/} directory on a remote web server). Calling
+@code{addURL} does not magically populate a web server.
+
+To set one of these links, the BuildStep should call the @code{addURL}
+method with the name of the link and the target URL. Multiple URLs can
+be set.
+
+In this example, we assume that the @command{make test} command causes
+a collection of HTML files to be created and put somewhere on the
+coverage.example.org web server, in a filename that incorporates the
+build number.
+
+@example
+class TestWithCodeCoverage(BuildStep):
+    command = ["make", "test",
+               WithProperties("buildnum=%s" % "buildnumber")]
+
+    def createSummary(self, log):
+        buildnumber = self.getProperty("buildnumber")
+        url = "http://coverage.example.org/builds/%s.html" % buildnumber
+        self.addURL("coverage", url)
+@end example
+
+You might also want to extract the URL from some special message
+output by the build process itself:
+
+@example
+class TestWithCodeCoverage(BuildStep):
+    command = ["make", "test",
+               WithProperties("buildnum=%s" % "buildnumber")]
+
+    def createSummary(self, log):
+        output = StringIO(log.getText())
+        for line in output.readlines():
+            if line.startswith("coverage-url:"):
+                url = line[len("coverage-url:"):].strip()
+                self.addURL("coverage", url)
+                return
+@end example
+
+Note that a build process which emits both stdout and stderr might
+cause this line to be split or interleaved between other lines. It
+might be necessary to restrict the getText() call to only stdout with
+something like this:
+
+@example
+        output = StringIO("".join([c[1]
+                                   for c in log.getChunks()
+                                   if c[0] == LOG_CHANNEL_STDOUT]))
+@end example
+
+Of course if the build is run under a PTY, then stdout and stderr will
+be merged before the buildbot ever sees them, so such interleaving
+will be unavoidable.
 
 
 @node Interlocks, Build Factories, Build Steps, Build Process

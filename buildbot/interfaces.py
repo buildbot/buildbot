@@ -472,6 +472,12 @@ class IBuildStepStatus(Interface):
         may or may not equal 'target' (which is merely the expectation based
         upon previous builds)."""
 
+    def getURLs():
+        """Returns a dictionary of URLs. Each key is a link name (a short
+        string, like 'results' or 'coverage'), and each value is a URL. These
+        links will be displayed along with the LogFiles.
+        """
+
     def getLogs():
         """Returns a list of IStatusLog objects. If the step has not yet
         finished, this list may be incomplete (asking again later may give

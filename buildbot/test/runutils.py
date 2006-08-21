@@ -7,7 +7,9 @@ from twisted.python import log, util
 from buildbot import master, interfaces
 from buildbot.twcompat import maybeWait
 from buildbot.slave import bot
-from buildbot.process.base import BuildRequest
+from buildbot.process.builder import Builder
+from buildbot.process.base import BuildRequest, Build
+from buildbot.process.step import BuildStep
 from buildbot.sourcestamp import SourceStamp
 from buildbot.status import builder
 
@@ -226,6 +228,22 @@ def setupBuildStepStatus(basedir):
     s3.started = True
     s3.stepStarted()
     return s3
+
+def makeBuildStep(basedir):
+    bss = setupBuildStepStatus(basedir)
+
+    ss = SourceStamp()
+    setup = {'name': "builder1", "slavename": "bot1",
+             'builddir': "builddir", 'factory': None}
+    b0 = Builder(setup, bss.getBuild().getBuilder())
+    br = BuildRequest("reason", ss)
+    b = Build([br])
+    b.setBuilder(b0)
+    s = BuildStep(b)
+    s.setStepStatus(bss)
+    b.setupStatus(bss.getBuild())
+    return s
+
 
 def findDir():
     # the same directory that holds this script
