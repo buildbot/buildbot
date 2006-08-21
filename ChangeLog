@@ -1,5 +1,7 @@
 2006-08-20  Brian Warner  <warner@lothar.com>
 
+	* docs/examples/twisted_master.cfg: update to actual practice
+
 	* buildbot/test/test_web.py (WaterfallSteps.test_urls): oops,
 	update test case to match new link text.. the HREF has both a
 	class= setting and an enclosing [] pair that I didn't match in the
