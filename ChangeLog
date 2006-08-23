@@ -1,5 +1,11 @@
 2006-08-22  Brian Warner  <warner@lothar.com>
 
+	* MANIFEST.in: stop shipping the old PyCon-2003 paper.. with the
+	new diagrams, the user's manual is more informative than it was.
+	Start shipping the .html user's manual (and generated .png
+	images).
+	* Makefile: update 'release' target to match
+
 	* buildbot/test/test_web.py (GetURL.testBrokenStuff): delete this
 	test.. I think the web-parts effort will render it pointless well
 	before it ever actually starts to work.
