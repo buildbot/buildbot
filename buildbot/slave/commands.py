@@ -31,6 +31,7 @@ command_version = "2.1"
 #          (not externally visible: ShellCommandPP has writeStdin/closeStdin.
 #          ShellCommand accepts new arguments (logfiles=, initialStdin=,
 #          keepStdinOpen=) and no longer accepts stdin=)
+#          (release 0.7.4)
 
 class CommandInterrupted(Exception):
     pass

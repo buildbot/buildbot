@@ -1,3 +1,11 @@
+2006-08-23  Brian Warner  <warner@lothar.com>
+
+	* buildbot/__init__.py (version): Releasing buildbot-0.7.4
+	* docs/buildbot.texinfo: set version to match
+	* NEWS: update for 0.7.4
+	* buildbot/slave/commands.py (command_version): mention that this
+	version (2.1) was released with buildbot-0.7.4
+
 2006-08-22  Brian Warner  <warner@lothar.com>
 
 	* README: update
