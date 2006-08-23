@@ -1,5 +1,10 @@
 2006-08-22  Brian Warner  <warner@lothar.com>
 
+	* README: update
+
+	* CREDITS: new file, list of people who have helped. Thanks!
+	* MANIFEST.in: ship it
+
 	* MANIFEST.in: stop shipping the old PyCon-2003 paper.. with the
 	new diagrams, the user's manual is more informative than it was.
 	Start shipping the .html user's manual (and generated .png

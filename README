@@ -52,21 +52,26 @@ REQUIREMENTS:
  Python: http://www.python.org
 
    Buildbot requires python-2.2 or later, and is primarily developed against
-   python-2.3. The buildmaster uses generators, a feature which is not
-   available in python-2.1, and both master and slave require a version of
-   Twisted which only works with python-2.2 or later. Certain features (like
-   the inclusion of build logs in status emails) require python-2.2.2 or
-   later, while the IRC 'force' command requires python-2.3 .
+   python-2.3. Specifically, it requires generators, and a version of Twisted
+   which only works with python-2.2 or later. Certain features (like the
+   inclusion of build logs in status emails) require python-2.2.2 or later,
+   while the IRC 'force' command requires python-2.3 . It has been tested
+   against python-2.4 .
 
  Twisted: http://twistedmatrix.com
 
    Both the buildmaster and the buildslaves require Twisted-2.0.x or later.
-   As always, the most recent version is recommended.
+   As always, the most recent version is recommended. It has been tested
+   against Twisted-2.4.0 and Twisted SVN as of the date of release.
 
    When using the split subpackages of Twisted-2.x.x, you'll need at least
    "Twisted" (the core package), and you'll also want TwistedMail,
    TwistedWeb, and TwistedWords (for sending email, serving a web status
-   page, and delivering build status via IRC, respectively).
+   page, and delivering build status via IRC, respectively). You might also
+   want TwistedConch (for the encrypted Manhole debug port). Note that recent
+   Twisteds require ZopeInterface to be installed as well.
+
+ACCESSORIES:
 
  CVSToys: http://purl.net/net/CVSToys
 
@@ -78,9 +83,8 @@ REQUIREMENTS:
 
 INSTALLATION:
 
-Please read the User's Manual in docs/buildbot.info (or in HTML form on the
-buildbot web site) for complete instructions. This file only contains a brief
-summary.
+Please read the User's Manual in docs/buildbot.info or docs/buildbot.html for
+complete instructions. This file only contains a brief summary.
 
  RUNNING THE UNIT TESTS
 
@@ -88,11 +92,12 @@ If you would like to run the unit test suite, use a command like this:
 
  PYTHONPATH=. trial buildbot.test
 
-This should run up to 175 tests, depending upon what VC tools you have
-installed. On my desktop machine it takes about four minutes to complete.
-Nothing should fail, a few might be skipped. If any of the tests fail, you
-should stop and investigate the cause before continuing the installation
-process, as it will probably be easier to track down the bug early.
+This should run up to 221 tests, depending upon what VC tools you have
+installed. On my desktop machine it takes about six minutes to complete.
+Nothing should fail (at least under unix), a few might be skipped. If any of
+the tests fail, you should stop and investigate the cause before continuing
+the installation process, as it will probably be easier to track down the bug
+early.
 
 Neither CVS nor SVN support file based repositories on network filesystem
 (or network drives in Windows parlance). Therefore it is recommended to run
@@ -108,11 +113,9 @@ doing something like:
 
 To test this, shift to a different directory (like /tmp), and run:
 
- pydoc buildbot
+ buildbot --version
 
-If it shows you a brief description of the package and its contents, the
-install went ok. If it says "no Python documentation found for 'buildbot'",
-then something went wrong.
+If it announces the versions of Buildbot and Twisted, the install went ok.
 
 
  SETTING UP A BUILD SLAVE:

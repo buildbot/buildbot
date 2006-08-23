@@ -1,5 +1,5 @@
 
-include ChangeLog MANIFEST.in README README.w32 NEWS
+include ChangeLog MANIFEST.in README README.w32 NEWS CREDITS
 include docs/examples/*.cfg
 include docs/buildbot.texinfo
 include docs/buildbot.info
