@@ -1,3 +1,9 @@
+2006-08-22  Brian Warner  <warner@lothar.com>
+
+	* buildbot/test/test_web.py (GetURL.testBrokenStuff): delete this
+	test.. I think the web-parts effort will render it pointless well
+	before it ever actually starts to work.
+
 2006-08-20  Brian Warner  <warner@lothar.com>
 
 	* buildbot/changes/pb.py (PBChangeSource): fix and simplify

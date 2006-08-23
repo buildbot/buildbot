@@ -352,14 +352,6 @@ class GetURL(RunMixin, unittest.TestCase):
         builder = s.getBuilder("b1")
         self.assertURLEqual(builder, "b1")
 
-    def testBrokenStuff(self):
-        s = self.status
-        self.assertURLEqual(s.getSchedulers()[0], "schedulers/0")
-        self.assertURLEqual(s.getSlave("bot1"), "slaves/bot1")
-        # we didn't put a Change into the actual Build before, so this fails
-        #self.assertURLEqual(build.getChanges()[0], "changes/1")
-    testBrokenStuff.todo = "not implemented yet"
-
     def testChange(self):
         s = self.status
         c = Change("user", ["foo.c"], "comments")
