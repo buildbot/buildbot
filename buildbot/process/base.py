@@ -332,7 +332,7 @@ class Build:
         for lock in self.locks:
             if not lock.isAvailable():
                 log.msg("Build %s waiting for lock %s" % (self, lock))
-                d = lock.waitUntilAvailable(self)
+                d = lock.waitUntilMaybeAvailable(self)
                 d.addCallback(self.acquireLocks)
                 return d
         # all locks are available, claim them all

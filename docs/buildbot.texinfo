@@ -3994,14 +3994,27 @@ entire Builds) from running simultaneously. Limited CPU speed or
 network bandwidth to the VC server, problems with simultaneous access
 to a database server used by unit tests, or multiple Builds which
 access shared state may all require some kind of interlock to prevent
-corruption, confusion, or resource overload.
+corruption, confusion, or resource overload. These resources might
+require completely exclusive access, or it might be sufficient to
+establish a limit of two or three simultaneous builds.
 
 @code{Locks} are the mechanism used to express these kinds of
 constraints on when Builds or Steps can be run. There are two kinds of
-@code{Locks}, each with their own scope: @code{SlaveLock}s are scoped
-to a single buildslave, while @code{MasterLock} instances are scoped
-to the buildbot as a whole. Each @code{Lock} is created with a unique
-name.
+@code{Locks}, each with their own scope: @code{MasterLock} instances
+are scoped to the buildbot as a whole, while @code{SlaveLock}s are
+scoped to a single buildslave. This means that each buildslave has a
+separate copy of each @code{SlaveLock}, which could enforce a
+one-Build-at-a-time limit for each machine, but still allow as many
+simultaneous builds as there are machines.
+
+Each @code{Lock} is created with a unique name. Each lock gets a count
+of how many owners it may have: how many processes can claim it at ths
+same time. This limit defaults to one, and is controllable through the
+@code{maxCount} argument. On @code{SlaveLock}s you can set the owner
+count on a per-slave basis by providing a dictionary (that maps from
+slavename to maximum owner count) to its @code{maxCountForSlave}
+argument. Any buildslaves that aren't mentioned in
+@code{maxCountForSlave} get their owner count from @code{maxCount}.
 
 To use a lock, simply include it in the @code{locks=} argument of the
 @code{BuildStep} object that should obtain the lock before it runs.
@@ -4053,27 +4066,31 @@ c['builders'] = [b1, b2, b3]
 In the next example, we have one buildslave hosting three separate
 Builders (each running tests against a different version of Python).
 The machine which hosts this buildslave is not particularly fast, so
-we want to prevent the builds from all happening at the same time. We
-use a @code{SlaveLock} because the builds happening on the slow slave
-do not affect builds running on other slaves, and we use the lock on
-the build as a whole because the slave is so slow that even multiple
-SVN checkouts would be taxing.
+we want to prevent all three builds from all happening at the same
+time. (Assume we've experimentally determined that one build leaves
+unused CPU capacity, three builds causes a lot of disk thrashing, but
+two builds at a time is Just Right). We use a @code{SlaveLock} because
+the builds happening on this one slow slave should not affect builds
+running on other slaves, and we use the lock on the build as a whole
+because the slave is so slow that even multiple simultaneous SVN
+checkouts would be too taxing. We set @code{maxCount=2} to achieve our
+goal of two simultaneous builds per slave.
 
 @example
 from buildbot import locks
 from buildbot.process import s, step, factory
 
-slow_lock = locks.SlaveLock("cpu")
+slow_lock = locks.SlaveLock("cpu", maxCount=2)
 source = s(step.SVN, svnurl="http://example.org/svn/Trunk")
 f22 = factory.Trial(source, trialpython=["python2.2"])
 f23 = factory.Trial(source, trialpython=["python2.3"])
 f24 = factory.Trial(source, trialpython=["python2.4"])
 b1 = @{'name': 'p22', 'slavename': 'bot-1', builddir='p22', 'factory': f22,
-                     'locks': [slow_lock] @}
+      'locks': [slow_lock] @}
 b2 = @{'name': 'p23', 'slavename': 'bot-1', builddir='p23', 'factory': f23,
-                     'locks': [slow_lock] @}
+      'locks': [slow_lock] @}
 b3 = @{'name': 'p24', 'slavename': 'bot-1', builddir='p24', 'factory': f24,
-                     'locks': [slow_lock] @}
+      'locks': [slow_lock] @}
 c['builders'] = [b1, b2, b3]
 @end example
 
@@ -4083,35 +4100,32 @@ that only the tests are computationally intensive, and that they have
 been split into those which use the database and those which do not.
 In addition, two of the Builds run on a fast machine which does not
 need to worry about the cpu lock, but which still must be prevented
-from simultaneous database access.
+from simultaneous database access. We use @code{maxCountForSlave} to
+limit the slow machine to one simultanous build, but allow practically
+unlimited concurrent builds on the fast machine.
 
 @example
 from buildbot import locks
 from buildbot.process import step, factory
 
 db_lock = locks.MasterLock("database")
-cpu_lock = locks.SlaveLock("cpu")
-slow_f = factory.BuildFactory()
+slavecounts = @{"bot-slow": 1, "bot-fast": 100@}
+cpu_lock = locks.SlaveLock("cpu", maxCountForSlave=slavecounts)
+f = factory.BuildFactory()
 f.addStep(step.SVN, svnurl="http://example.org/svn/Trunk")
 f.addStep(step.ShellCommand, command="make all", locks=[cpu_lock])
 f.addStep(step.ShellCommand, command="make test", locks=[cpu_lock])
 f.addStep(step.ShellCommand, command="make db-test",
                              locks=[db_lock, cpu_lock])
 
-fast_factory = factory.BuildFactory()
-f.addStep(step.SVN, svnurl="http://example.org/svn/Trunk")
-f.addStep(step.ShellCommand, command="make all", locks=[])
-f.addStep(step.ShellCommand, command="make test", locks=[])
-f.addStep(step.ShellCommand, command="make db-test", locks=[db_lock])
-
 b1 = @{'name': 'full1', 'slavename': 'bot-slow', builddir='full1',
-                       'factory': slow_factory@}
+      'factory': f@}
 b2 = @{'name': 'full2', 'slavename': 'bot-slow', builddir='full2',
-                       'factory': slow_factory@}
+      'factory': f@}
 b3 = @{'name': 'full3', 'slavename': 'bot-fast', builddir='full3',
-                       'factory': fast_factory@}
+      'factory': f@}
 b4 = @{'name': 'full4', 'slavename': 'bot-fast', builddir='full4',
-                       'factory': fast_factory@}
+      'factory': f@}
 c['builders'] = [b1, b2, b3, b4]
 @end example
 

@@ -1,3 +1,21 @@
+2006-08-24  Brian Warner  <warner@lothar.com>
+
+	* buildbot/locks.py (BaseLock): you can now configure Locks to
+	allow multiple simultaneous owners. They still default to
+	maxCount=1. Fixes SF#1434997. Thanks to James Knight (foom) for
+	the patch.
+	* docs/buildbot.texinfo (Interlocks): document the new options
+	* buildbot/test/test_locks.py: add a bunch of new unit tests
+	* buildbot/process/base.py (Build.acquireLocks): locks now offer
+	waitUntilMaybeAvailable, not waitUntilAvailable
+	* buildbot/process/step.py (BuildStep.acquireLocks): same
+	* buildbot/master.py (BotMaster.getLockByID): real locks now use
+	the whole lockid in their constructor, not just the name. Also,
+	keep track of which real locks we've handed out by the full
+	lockid, not just class+name, otherwise changing just the maxCount=
+	in the master.cfg file would not actually cause a behavioral
+	change
+
 2006-08-23  Brian Warner  <warner@lothar.com>
 
 	* buildbot/__init__.py (version): bump to 0.7.4+ while between

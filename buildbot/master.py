@@ -416,10 +416,13 @@ class BotMaster(service.Service):
         @param lockid: a locks.MasterLock or locks.SlaveLock instance
         @return: a locks.RealMasterLock or locks.RealSlaveLock instance
         """
-        k = (lockid.__class__, lockid.name)
-        if not k in self.locks:
-            self.locks[k] = lockid.lockClass(lockid.name)
-        return self.locks[k]
+        if not lockid in self.locks:
+            self.locks[lockid] = lockid.lockClass(lockid)
+        # if the master.cfg file has changed maxCount= on the lock, the next
+        # time a build is started, they'll get a new RealLock instance. Note
+        # that this requires that MasterLock and SlaveLock (marker) instances
+        # be hashable and that they should compare properly.
+        return self.locks[lockid]
 
 ########################################
 
