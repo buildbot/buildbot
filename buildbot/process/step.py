@@ -898,9 +898,16 @@ class LoggingBuildStep(BuildStep):
     """
 
     progressMetrics = ('output',)
+    logfiles = {}
 
-    def __init__(self, *args, **kwargs):
+    parms = BuildStep.parms + ['logfiles']
+
+    def __init__(self, logfiles={}, *args, **kwargs):
         BuildStep.__init__(self, *args, **kwargs)
+        # merge a class-level 'logfiles' attribute with one passed in as an
+        # argument
+        self.logfiles = self.logfiles.copy()
+        self.logfiles.update(logfiles)
         self.addLogObserver('stdio', OutputProgressObserver("output"))
 
     def describe(self, done=False):
@@ -909,17 +916,25 @@ class LoggingBuildStep(BuildStep):
     def startCommand(self, cmd, errorMessages=[]):
         """
         @param cmd: a suitable RemoteCommand which will be launched, with
-                    all output being put into a LogFile named 'stdio'
+                    all output being put into our self.stdio_log LogFile
         """
+        log.msg("ShellCommand.startCommand(cmd=%s)", (cmd,))
         self.cmd = cmd # so we can interrupt it
         self.step_status.setColor("yellow")
         self.step_status.setText(self.describe(False))
-        stdio_log = self.addLog("stdio")
-        log.msg("ShellCommand.start using log", stdio_log)
-        log.msg(" for cmd", cmd)
+
+        # stdio is the first log
+        self.stdio_log = stdio_log = self.addLog("stdio")
         cmd.useLog(stdio_log, True)
         for em in errorMessages:
             stdio_log.addHeader(em)
+            # TODO: consider setting up self.stdio_log earlier, and have the
+            # code that passes in errorMessages instead call
+            # self.stdio_log.addHeader() directly.
+
+        # there might be other logs
+        self.setupLogfiles(cmd, self.logfiles)
+
         d = self.runCommand(cmd) # might raise ConnectionLost
         d.addCallback(lambda res: self.commandComplete(cmd))
         d.addCallback(lambda res: self.createSummary(cmd.logs['stdio']))
@@ -930,6 +945,15 @@ class LoggingBuildStep(BuildStep):
         d.addCallback(_gotResults) # returns results
         d.addCallbacks(self.finished, self.checkDisconnect)
         d.addErrback(self.failed)
+
+    def setupLogfiles(self, cmd, logfiles):
+        """Set up any additional logfiles= logs.
+        """
+        for logname,remotefilename in logfiles.items():
+            # tell the BuildStepStatus to add a LogFile
+            newlog = self.addLog(logname)
+            # and tell the LoggedRemoteCommand to feed it
+            cmd.useLog(newlog, True)
 
     def interrupt(self, reason):
         # TODO: consider adding an INTERRUPTED or STOPPED status to use
@@ -1102,8 +1126,9 @@ class ShellCommand(LoggingBuildStep):
 
     @ivar logfiles: a dict mapping log NAMEs to workdir-relative FILENAMEs
                     of their corresponding logfiles. The contents of the file
-                    named FILENAME will be put into a LogFile named NAME, in
-                    something approximating real-time.
+                    named FILENAME will be put into a LogFile named NAME, ina
+                    something approximating real-time. (note that logfiles=
+                    is actually handled by our parent class LoggingBuildStep)
 
     """
 
@@ -1111,7 +1136,9 @@ class ShellCommand(LoggingBuildStep):
     description = None # set this to a list of short strings to override
     descriptionDone = None # alternate description when the step is complete
     command = None # set this to a command, or set in kwargs
-    logfiles = {}
+    # logfiles={} # you can also set 'logfiles' to a dictionary, and it
+    #               will be merged with any logfiles= argument passed in
+    #               to __init__
 
     # override this on a specific ShellCommand if you want to let it fail
     # without dooming the entire build to a status of FAILURE
@@ -1119,7 +1146,7 @@ class ShellCommand(LoggingBuildStep):
 
     def __init__(self, workdir,
                  description=None, descriptionDone=None,
-                 command=None, logfiles={},
+                 command=None,
                  **kwargs):
         # most of our arguments get passed through to the RemoteShellCommand
         # that we create, but first strip out the ones that we pass to
@@ -1136,12 +1163,8 @@ class ShellCommand(LoggingBuildStep):
             self.descriptionDone = [self.descriptionDone]
         if command:
             self.command = command
-        # merge a class-level 'logfiles' attribute with one passed in as an
-        # argument
-        self.logfiles = self.logfiles.copy()
-        self.logfiles.update(logfiles)
 
-        # pull out the ones that BuildStep wants, then upcall
+        # pull out the ones that LoggingBuildStep wants, then upcall
         buildstep_kwargs = {}
         for k in kwargs.keys()[:]:
             if k in self.__class__.parms:
@@ -1216,32 +1239,32 @@ class ShellCommand(LoggingBuildStep):
             # note that each RemoteShellCommand gets its own copy of the
             # dictionary, so we shouldn't be affecting anyone but ourselves.
 
-    def setupLogfiles(self, cmd, logfiles):
-        if not logfiles:
-            return
-        if self.slaveVersionIsOlderThan("shell", "2.1"):
-            # this buildslave is too old and will ignore the 'logfiles'
-            # argument. You'll either have to pull the logfiles manually
-            # (say, by using 'cat' in a separate RemoteShellCommand) or
-            # upgrade the buildslave.
-            msg1 = ("Warning: buildslave %s is too old "
-                    "to understand logfiles=, ignoring it."
-                   % self.getSlaveName())
-            msg2 = "You will have to pull this logfile (%s) manually."
-            log.msg(msg1)
-            for logname,remotefilename in logfiles.items():
-                newlog = self.addLog(logname)
-                newlog.addHeader(msg1 + "\n")
-                newlog.addHeader(msg2 % remotefilename + "\n")
-                newlog.finish()
-            return
-        for logname,remotefilename in logfiles.items():
-            # tell the BuildStepStatus to add a LogFile
+    def checkForOldSlaveAndLogfiles(self):
+        if not self.logfiles:
+            return # doesn't matter
+        if not self.slaveVersionIsOlderThan("shell", "2.1"):
+            return # slave is new enough
+        # this buildslave is too old and will ignore the 'logfiles'
+        # argument. You'll either have to pull the logfiles manually
+        # (say, by using 'cat' in a separate RemoteShellCommand) or
+        # upgrade the buildslave.
+        msg1 = ("Warning: buildslave %s is too old "
+                "to understand logfiles=, ignoring it."
+               % self.getSlaveName())
+        msg2 = "You will have to pull this logfile (%s) manually."
+        log.msg(msg1)
+        for logname,remotefilename in self.logfiles.items():
             newlog = self.addLog(logname)
-            # and tell the LoggedRemoteCommand to feed it
-            cmd.useLog(newlog, True)
+            newlog.addHeader(msg1 + "\n")
+            newlog.addHeader(msg2 % remotefilename + "\n")
+            newlog.finish()
+        # now prevent setupLogfiles() from adding them
+        self.logfiles = {}
 
     def start(self):
+        # this block is specific to ShellCommands. subclasses that don't need
+        # to set up an argv array, an environment, or extra logfiles= (like
+        # the Source subclasses) can just skip straight to startCommand()
         command = self._interpolateProperties(self.command)
         # create the actual RemoteShellCommand instance now
         kwargs = self.remote_kwargs
@@ -1249,9 +1272,9 @@ class ShellCommand(LoggingBuildStep):
         kwargs['logfiles'] = self.logfiles
         cmd = RemoteShellCommand(**kwargs)
         self.setupEnvironment(cmd)
-        self.setupLogfiles(cmd, self.logfiles)
-        self.startCommand(cmd)
+        self.checkForOldSlaveAndLogfiles()
 
+        self.startCommand(cmd)
 
 
 

@@ -1,3 +1,23 @@
+2006-08-25  Brian Warner  <warner@lothar.com>
+
+	* buildbot/process/step.py (LoggingBuildStep.startCommand): set up
+	all logfiles= in startCommand(), rather than in start() . This
+	makes it easier to have the 'stdio' log come before any secondary
+	logfiles, which I feel makes the waterfall display more
+	understandable.
+	(LoggingBuildStep.setupLogfiles): move the addLog/cmd.useLog code
+	from ShellCommand up into LoggingBuildStep
+	(LoggingBuildStep.__init__): move the handling of logfiles= from
+	ShellCommand up to LoggingBuildStep, because startCommand is
+	provided by LoggingBuildStep, whereas start() was specific to
+	subclasses like ShellCommand and Source. This removes code
+	duplication in those subclasses.
+	(ShellCommand.__init__): same
+	(ShellCommand.checkForOldSlaveAndLogfiles): split out the check
+	for a slave that's too old to understand logfiles= into a separate
+	method, so it can live in ShellCommand. The rest of
+	setupLogfiles() can live in LoggingBuildStep.
+
 2006-08-24  Brian Warner  <warner@lothar.com>
 
 	* buildbot/locks.py (BaseLock): you can now configure Locks to
