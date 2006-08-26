@@ -47,13 +47,13 @@ class Unit(unittest.TestCase):
         lock = locks.BaseLock("name")
         d = claimHarder(lock, "owner1")
         d.addCallback(lambda lock: lock.release("owner1"))
-        return d
+        return maybeWait(d)
 
     def testCompetition(self):
         lock = locks.BaseLock("name")
         d = claimHarder(lock, "owner1")
         d.addCallback(self._claim1)
-        return d
+        return maybeWait(d)
     def _claim1(self, lock):
         # we should have claimed it by now
         self.failIf(lock.isAvailable())
@@ -85,7 +85,7 @@ class Unit(unittest.TestCase):
             dl.append(d)
         d = defer.DeferredList(dl)
         d.addCallback(self._cleanup, lock)
-        return d
+        return maybeWait(d)
 
 class Multi(unittest.TestCase):
     def testNow(self):
@@ -108,7 +108,7 @@ class Multi(unittest.TestCase):
         d.addCallback(lambda lock: lock.release("owner3"))
         lock.release("owner2")
         lock.release("owner1")
-        return d
+        return maybeWait(d)
 
     def _cleanup(self, res, lock, count):
         dl = []
@@ -140,7 +140,7 @@ class Multi(unittest.TestCase):
             dl.append(d)
         d = defer.DeferredList(dl)
         d.addCallback(self._cleanup, lock, COUNT)
-        return d
+        return maybeWait(d)
 
 class Dummy:
     pass
