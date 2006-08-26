@@ -95,7 +95,7 @@ class MailNotifier(base.StatusReceiverMultiService):
         @type  subject: string
         @param subject: a string to be used as the subject line of the message.
                         %(builder)s will be replaced with the name of the
-                        %builder which provoked the message.
+                        builder which provoked the message.
 
         @type  mode: string (defaults to all)
         @param mode: one of:

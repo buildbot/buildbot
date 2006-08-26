@@ -1,5 +1,7 @@
 2006-08-25  Brian Warner  <warner@lothar.com>
 
+	* buildbot/status/mail.py (MailNotifier.__init__): fix typo in docs
+
 	* buildbot/process/step.py (LoggingBuildStep.startCommand): set up
 	all logfiles= in startCommand(), rather than in start() . This
 	makes it easier to have the 'stdio' log come before any secondary
