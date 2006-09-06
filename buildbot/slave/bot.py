@@ -1,9 +1,9 @@
 #! /usr/bin/python
 
-import time, os, os.path, re, sys
+import os.path
 
 from twisted.spread import pb
-from twisted.python import log, usage, failure
+from twisted.python import log
 from twisted.internet import reactor, defer
 from twisted.application import service, internet
 from twisted.cred import credentials

@@ -3,7 +3,6 @@
 from twisted.trial import unittest
 
 from buildbot import buildset, interfaces, sourcestamp
-from buildbot.twcompat import maybeWait
 from buildbot.process import base
 from buildbot.status import builder
 from buildbot.changes.changes import Change

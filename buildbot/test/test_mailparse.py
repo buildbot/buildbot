@@ -1,6 +1,5 @@
 # -*- test-case-name: buildbot.test.test_mailparse -*-
 
-import os.path
 from twisted.trial import unittest
 from twisted.python import util
 from buildbot.changes.mail import parseFreshCVSMail, parseSyncmail

@@ -1,3 +1,12 @@
+2006-09-05  Brian Warner  <warner@lothar.com>
+
+	* lots: run pyflakes, removed a lot of unused imports, changed the
+	form of some conditional imports to remove false pyflakes
+	warnings. There are still a number of warnings left, mostly from
+	imports that are done for their side-effects.
+	* buildbot/test/test_vc.py: import twisted.python.failure, since it
+	was missing
+
 2006-08-26  Brian Warner  <warner@lothar.com>
 
 	* buildbot/test/test_locks.py (Unit.testLater): make the tests

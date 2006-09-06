@@ -1,18 +1,18 @@
 # -*- test-case-name: buildbot.test.test_twisted -*-
 
-from twisted.python import log, failure
+from twisted.python import log
 
-from buildbot import interfaces
 from buildbot.status import tests, builder
 from buildbot.status.builder import SUCCESS, FAILURE, WARNINGS, SKIPPED
 from buildbot.process import step
-from buildbot.process.step import BuildStep, ShellCommand
+from buildbot.process.step import ShellCommand
 
 try:
-    import cStringIO as StringIO
+    import cStringIO
+    StringIO = cStringIO
 except ImportError:
     import StringIO
-import os, re, types
+import re
 
 # BuildSteps that are specific to the Twisted source tree
 

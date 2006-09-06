@@ -1,6 +1,6 @@
 # -*- test-case-name: buildbot.test.test_steps -*-
 
-import time, random, types, re, warnings
+import types, re, warnings
 from email.Utils import formatdate
 
 from twisted.internet import reactor, defer, error
@@ -14,8 +14,7 @@ from buildbot import interfaces
 from buildbot.twcompat import implements, providedBy
 from buildbot import util
 from buildbot.interfaces import BuildSlaveTooOldError
-from buildbot.util import now
-from buildbot.status import progress, builder
+from buildbot.status import progress
 from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE, SKIPPED, \
      EXCEPTION
 

@@ -16,7 +16,7 @@ try:
     have_dnotify = 1
 except:
     have_dnotify = 0
-import os, os.path
+import os
 
 class Maildir:
     """This is a class which watches a maildir for new messages. Once

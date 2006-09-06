@@ -1,7 +1,6 @@
 # -*- test-case-name: buildbot.test.test_util -*-
 
 from twisted.internet.defer import Deferred
-from twisted.python import log
 from twisted.spread import pb
 import time
 

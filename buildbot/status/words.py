@@ -3,7 +3,7 @@
 # code to deliver build status through twisted.words (instant messaging
 # protocols: irc, etc)
 
-import traceback, StringIO, re, shlex
+import re, shlex
 
 from twisted.internet import protocol, reactor
 try:

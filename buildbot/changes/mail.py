@@ -3,7 +3,7 @@
 """
 Parse various kinds of 'CVS notify' email.
 """
-import os, os.path, re
+import os, re
 from rfc822 import Message
 
 from buildbot import util

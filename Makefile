@@ -51,3 +51,7 @@ release: docs
 	python ./setup.py clean
 	rm -f MANIFEST
 	python ./setup.py sdist
+
+FLAKES=buildbot
+pyflakes:
+	pyflakes $(FLAKES)

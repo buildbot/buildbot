@@ -1,15 +1,12 @@
-import sys
 import time
 
-from twisted.python import log, failure
+from twisted.python import failure
 from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.twcompat import maybeWait
 from buildbot.changes.changes import Change
 from buildbot.changes.p4poller import P4Source, get_simple_split
-
-#log.startLogging(sys.stderr)
 
 first_p4changes = \
 """Change 1 on 2006/04/13 by slamb@testclient 'first rev'

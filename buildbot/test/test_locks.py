@@ -5,7 +5,7 @@ import random
 from twisted.trial import unittest
 from twisted.internet import defer, reactor
 
-from buildbot import interfaces, master
+from buildbot import master
 from buildbot.process import step
 from buildbot.sourcestamp import SourceStamp
 from buildbot.process.base import BuildRequest

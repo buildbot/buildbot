@@ -2,11 +2,12 @@
 
 from __future__ import generators
 
-import sys, os, signal, shutil, time, re
+import sys, os, time, re
 from email.Utils import mktime_tz, parsedate_tz
 
 from twisted.trial import unittest
 from twisted.internet import defer, reactor, utils, protocol, error
+from twisted.python import failure
 
 #defer.Deferred.debug = True
 
@@ -53,7 +54,8 @@ from twisted.internet.defer import waitForDeferred, deferredGenerator
 # all-out: bind the listen socket ourselves and pretend to be inetd.
 
 try:
-    import cStringIO as StringIO
+    import cStringIO
+    StringIO = cStringIO
 except ImportError:
     import StringIO
 

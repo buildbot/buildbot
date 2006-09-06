@@ -1,22 +1,22 @@
 # -*- test-case-name: buildbot.test.test_config -*-
 
 from __future__ import generators
-import os, os.path
+import os
 
 from twisted.trial import unittest
-from twisted.python import components, failure
+from twisted.python import failure
 from twisted.internet import defer
 
+cvstoys = None
 try:
     import cvstoys
     from buildbot.changes.freshcvs import FreshCVSSource
 except ImportError:
-    cvstoys = None
+    pass
 
 from buildbot.twcompat import providedBy, maybeWait
 from buildbot.master import BuildMaster
 from buildbot import scheduler
-from buildbot import interfaces as ibb
 from twisted.application import service, internet
 from twisted.spread import pb
 from twisted.web.server import Site
@@ -24,15 +24,12 @@ from twisted.web.distrib import ResourcePublisher
 from buildbot.process.builder import Builder
 from buildbot.process.factory import BasicBuildFactory
 from buildbot.process import step
-from buildbot.status import html, builder, base
+from buildbot.status import base
+words = None
 try:
     from buildbot.status import words
 except ImportError:
-    words = None
-
-import sys
-from twisted.python import log
-#log.startLogging(sys.stdout)
+    pass
 
 emptyCfg = \
 """

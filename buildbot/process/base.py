@@ -1,16 +1,13 @@
 # -*- test-case-name: buildbot.test.test_step -*-
 
-import types, time
-from StringIO import StringIO
+import types
 
-from twisted.python import log, components
+from twisted.python import log
 from twisted.python.failure import Failure
 from twisted.internet import reactor, defer, error
-from twisted.spread import pb
 
 from buildbot import interfaces
 from buildbot.twcompat import implements
-from buildbot.util import now
 from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE, EXCEPTION
 from buildbot.status.builder import Results, BuildRequestStatus
 from buildbot.status.progress import BuildProgress

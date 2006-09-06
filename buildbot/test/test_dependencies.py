@@ -4,10 +4,6 @@ from twisted.trial import unittest
 
 from twisted.internet import reactor, defer
 
-from buildbot import interfaces
-from buildbot.process import step
-from buildbot.sourcestamp import SourceStamp
-from buildbot.process.base import BuildRequest
 from buildbot.test.runutils import RunMixin
 from buildbot.twcompat import maybeWait
 from buildbot.status import base

@@ -2,12 +2,11 @@
 
 from twisted.spread import pb
 from twisted.python import log, components
-from twisted.python.failure import Failure
-from twisted.internet import defer, reactor
-from twisted.application import service, strports
+from twisted.internet import reactor
+from twisted.application import strports
 from twisted.cred import portal, checkers
 
-from buildbot import util, interfaces
+from buildbot import interfaces
 from buildbot.twcompat import Interface, implements
 from buildbot.status import builder, base
 from buildbot.changes import changes

@@ -6,7 +6,6 @@ import sys, time, os
 from twisted.trial import unittest
 from twisted.internet import reactor, defer
 from twisted.python import util
-from buildbot.process.step import ShellCommand
 from buildbot.slave.commands import SlaveShellCommand
 from buildbot.twcompat import maybeWait
 from buildbot.test.runutils import SlaveCommandTestBase

@@ -23,12 +23,13 @@ providedBy:
     assert providedBy(obj, IFoo)
 """
 
-import os, os.path
+import os
 
 from twisted.copyright import version
 from twisted.python import components
 
 # does our Twisted use zope.interface?
+implements = None
 if hasattr(components, "interface"):
     # yes
     from zope.interface import implements
@@ -37,7 +38,6 @@ if hasattr(components, "interface"):
         return iface.providedBy(obj)
 else:
     # nope
-    implements = None
     from twisted.python.components import Interface
     providedBy = components.implements
 
@@ -216,7 +216,8 @@ if not hasattr(utils, "getProcessOutputAndValue"):
     from twisted.internet import reactor, protocol
     _callProtocolWithDeferred = utils._callProtocolWithDeferred
     try:
-        import cStringIO as StringIO
+        import cStringIO
+        StringIO = cStringIO
     except ImportError:
         import StringIO
 
@@ -279,7 +280,8 @@ def _which(name, flags=os.X_OK):
                 result.append(pext)
     return result
 
+which = _which
 try:
     from twisted.python.procutils import which
 except ImportError:
-    which = _which
+    pass

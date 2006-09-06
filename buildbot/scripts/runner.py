@@ -2,7 +2,7 @@
 
 # N.B.: don't import anything that might pull in a reactor yet. Some of our
 # subcommands want to load modules that need the gtk reactor.
-import os, os.path, sys, shutil, stat, re, time
+import os, sys, stat, re, time
 from twisted.python import usage, util, runtime
 
 # this is mostly just a front-end for mktap, twistd, and kill(1), but in the

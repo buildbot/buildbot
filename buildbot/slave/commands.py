@@ -1,6 +1,6 @@
 # -*- test-case-name: buildbot.test.test_slavecommand -*-
 
-import os, os.path, re, signal, shutil, types, time
+import os, re, signal, shutil, types, time
 from stat import ST_CTIME, ST_MTIME, ST_SIZE
 
 from twisted.internet.protocol import ProcessProtocol

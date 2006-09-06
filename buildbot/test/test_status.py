@@ -10,10 +10,12 @@ from buildbot.sourcestamp import SourceStamp
 from buildbot.process.base import BuildRequest
 from buildbot.twcompat import implements, providedBy, maybeWait
 from buildbot.status import builder, base
+
+mail = None
 try:
     from buildbot.status import mail
 except ImportError:
-    mail = None
+    pass
 from buildbot.status import progress, client # NEEDS COVERAGE
 from buildbot.test.runutils import RunMixin
 

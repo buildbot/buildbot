@@ -7,9 +7,10 @@ from twisted.persisted import styles
 from twisted.internet import reactor, defer
 from twisted.protocols import basic
 
-import time, os, os.path, shutil, sys, re, urllib
+import os, shutil, sys, re, urllib
 try:
-    import cPickle as pickle
+    import cPickle
+    pickle = cPickle
 except ImportError:
     import pickle
 

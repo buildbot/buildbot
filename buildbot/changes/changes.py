@@ -1,17 +1,16 @@
 #! /usr/bin/python
 
 from __future__ import generators
-import string, sys, os, os.path, time, types
+import sys, os, time
 try:
-    import cPickle as pickle
+    import cPickle
+    pickle = cPickle
 except ImportError:
     import pickle
 
-from twisted.python import log, components
+from twisted.python import log
 from twisted.internet import defer
-from twisted.spread import pb
 from twisted.application import service
-from twisted.cred import portal
 from twisted.web import html
 
 from buildbot import interfaces, util

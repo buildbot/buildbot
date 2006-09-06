@@ -1,6 +1,4 @@
 
-from twisted.internet import defer
-
 from buildbot.process import base
 from buildbot.status import builder
 

@@ -1,14 +1,7 @@
 #! /usr/bin/python
 
 from twisted.application import service
-from twisted.python import components
-
-try:
-    from zope.interface import implements
-except ImportError:
-    implements = None
-if not hasattr(components, "interface"):
-    implements = None # nope
+from buildbot.twcompat import implements
 
 from buildbot.interfaces import IStatusReceiver
 from buildbot import util, pbutil

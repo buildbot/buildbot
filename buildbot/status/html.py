@@ -3,7 +3,6 @@
 from __future__ import generators
 
 from twisted.python import log, components
-from twisted.python.util import sibpath
 import urllib, re
 
 from twisted.internet import defer, reactor

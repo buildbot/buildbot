@@ -2,14 +2,13 @@
 
 import warnings
 
-from twisted.python import log, components, failure
+from twisted.python import log, components
 from twisted.spread import pb
 from twisted.internet import reactor, defer
 
 from buildbot import interfaces, sourcestamp
 from buildbot.twcompat import implements
 from buildbot.status.progress import Expectations
-from buildbot.status import builder
 from buildbot.util import now
 from buildbot.process import base
 

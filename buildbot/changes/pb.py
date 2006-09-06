@@ -1,8 +1,5 @@
 # -*- test-case-name: buildbot.test.test_changes -*-
 
-import os, os.path
-
-from twisted.application import service
 from twisted.python import log
 
 from buildbot.pbutil import NewCredPerspective

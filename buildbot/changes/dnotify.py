@@ -71,7 +71,6 @@ class DNotify:
 
 def test_dnotify1():
     d = DNotify(".")
-    import time
     while 1:
         signal.pause()
 
@@ -93,7 +92,6 @@ def test_dnotify2():
     d1.callback = fire1
     def fire2(): print "foo/ changed!"
     d2 = DNotify("foo", fire2)
-    import time
     while 1:
         signal.pause()
         

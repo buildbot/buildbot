@@ -2,8 +2,8 @@
 # this file tests the 'buildbot' command, with its various sub-commands
 
 from twisted.trial import unittest
-from twisted.python import runtime, usage
-import os, os.path, shutil, shlex
+from twisted.python import usage
+import os, shutil, shlex
 
 from buildbot.scripts import runner, tryclient
 

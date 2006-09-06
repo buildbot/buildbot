@@ -1,18 +1,17 @@
 # -*- test-case-name: buildbot.test.test_control -*-
 
-import sys, os, signal, shutil, time, errno
+import os
 
 from twisted.trial import unittest
-from twisted.internet import defer, reactor
+from twisted.internet import defer
 
 from buildbot import master, interfaces
 from buildbot.sourcestamp import SourceStamp
 from buildbot.twcompat import providedBy, maybeWait
 from buildbot.slave import bot
-from buildbot.status import builder
 from buildbot.status.builder import SUCCESS
 from buildbot.process import base
-from buildbot.test.runutils import SignalMixin, rmtree
+from buildbot.test.runutils import rmtree
 
 config = """
 from buildbot.process import factory, step

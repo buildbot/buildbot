@@ -1,8 +1,7 @@
 # -*- test-case-name: buildbot.test.test_web -*-
 
-import sys, os, os.path, time, shutil
-from twisted.python import log, components, util
-#log.startLogging(sys.stderr)
+import os, time, shutil
+from twisted.python import components
 
 from twisted.trial import unittest
 from buildbot.test.runutils import RunMixin
@@ -11,7 +10,7 @@ from twisted.internet import reactor, defer, protocol
 from twisted.internet.interfaces import IReactorUNIX
 from twisted.web import client
 
-from buildbot import master, interfaces, buildset, sourcestamp
+from buildbot import master, interfaces, sourcestamp
 from buildbot.twcompat import providedBy, maybeWait
 from buildbot.status import html, builder
 from buildbot.changes.changes import Change

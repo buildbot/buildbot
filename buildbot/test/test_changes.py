@@ -2,7 +2,6 @@
 
 from twisted.trial import unittest
 from twisted.internet import defer, reactor
-from twisted.python import log
 
 from buildbot import master
 from buildbot.twcompat import maybeWait

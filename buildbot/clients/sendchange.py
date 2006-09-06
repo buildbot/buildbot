@@ -2,7 +2,6 @@
 from twisted.spread import pb
 from twisted.cred import credentials
 from twisted.internet import reactor
-from twisted.python import log
 
 class Sender:
     def __init__(self, master, user):

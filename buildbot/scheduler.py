@@ -10,7 +10,6 @@ from twisted.cred import portal, checkers
 from twisted.spread import pb
 
 from buildbot import interfaces, buildset, util, pbutil
-from buildbot.util import now
 from buildbot.status import builder
 from buildbot.twcompat import implements, providedBy
 from buildbot.sourcestamp import SourceStamp

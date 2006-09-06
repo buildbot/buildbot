@@ -2,13 +2,10 @@
 
 from twisted.trial import unittest
 from twisted.internet import reactor, defer
-from twisted.python import log
-import sys, os, os.path, shutil, time, errno
-#log.startLogging(sys.stderr)
+import os
 
 from buildbot import master, interfaces
 from buildbot.sourcestamp import SourceStamp
-from buildbot.slave import bot
 from buildbot.changes import changes
 from buildbot.status import builder
 from buildbot.process.base import BuildRequest

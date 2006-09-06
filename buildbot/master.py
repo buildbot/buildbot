@@ -1,17 +1,19 @@
 # -*- test-case-name: buildbot.test.test_run -*-
 
 from __future__ import generators
-import string, sys, os, time, warnings
+import string, os
+signal = None
 try:
     import signal
 except ImportError:
-    signal = None
+    pass
 try:
-    import cPickle as pickle
+    import cPickle
+    pickle = cPickle
 except ImportError:
     import pickle
 
-from twisted.python import log, usage, components
+from twisted.python import log, components
 from twisted.internet import defer, reactor
 from twisted.spread import pb
 from twisted.cred import portal, checkers
@@ -19,12 +21,11 @@ from twisted.application import service, strports
 from twisted.persisted import styles
 
 # sibling imports
-from buildbot import util
 from buildbot.twcompat import implements
 from buildbot.util import now
 from buildbot.pbutil import NewCredPerspective
 from buildbot.process.builder import Builder, IDLE
-from buildbot.status.builder import BuilderStatus, SlaveStatus, Status
+from buildbot.status.builder import SlaveStatus, Status
 from buildbot.changes.changes import Change, ChangeMaster
 from buildbot import interfaces
 

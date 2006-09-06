@@ -5,12 +5,12 @@ from twisted.internet import reactor, interfaces
 from twisted.python import runtime, failure, util
 from buildbot.twcompat import maybeWait
 
-import os, re, sys
+import os, sys
 
 from buildbot.slave import commands
 SlaveShellCommand = commands.SlaveShellCommand
 
-from buildbot.test.runutils import findDir, SignalMixin, FakeSlaveBuilder
+from buildbot.test.runutils import SignalMixin, FakeSlaveBuilder
 
 # test slavecommand.py by running the various commands with a fake
 # SlaveBuilder object that logs the calls to sendUpdate()

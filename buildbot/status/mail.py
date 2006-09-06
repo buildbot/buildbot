@@ -13,7 +13,6 @@ except ImportError:
 import urllib
 
 from twisted.internet import defer
-from twisted.application import service
 try:
     from twisted.mail.smtp import sendmail # Twisted-2.0
 except ImportError:

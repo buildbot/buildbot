@@ -14,7 +14,7 @@
 # todo: test batched updates, by invoking remote_update(updates) instead of
 # statusUpdate(update). Also involves interrupted builds.
 
-import os, sys, time
+import os, time
 
 from twisted.trial import unittest
 from twisted.internet import reactor
@@ -24,13 +24,11 @@ from buildbot.sourcestamp import SourceStamp
 from buildbot.process import step, base, factory
 from buildbot.process.step import ShellCommand #, ShellCommands
 from buildbot.status import builder
-from buildbot.test.runutils import RunMixin, rmtree, setupBuildStepStatus
+from buildbot.test.runutils import RunMixin, rmtree
 from buildbot.test.runutils import makeBuildStep
 from buildbot.twcompat import maybeWait
 from buildbot.slave import commands
 
-from twisted.python import log
-#log.startLogging(sys.stdout)
 
 class MyShellCommand(ShellCommand):
     started = False

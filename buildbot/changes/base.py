@@ -1,7 +1,6 @@
 #! /usr/bin/python
 
 from twisted.application import service
-from twisted.python import components
 
 from buildbot.twcompat import implements
 from buildbot.interfaces import IChangeSource
