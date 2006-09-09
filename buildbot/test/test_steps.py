@@ -340,3 +340,26 @@ class SlaveVersion(RunMixin, unittest.TestCase):
         d = self.doBuild("quick")
         return maybeWait(d)
 
+
+class ReorgCompatibility(unittest.TestCase):
+    def testCompat(self):
+        from buildbot.process.step import LogObserver, LogLineObserver
+        from buildbot.process.step import RemoteShellCommand
+        from buildbot.process.step import BuildStep, LoggingBuildStep
+        from buildbot.process.step import ShellCommand, WithProperties
+        from buildbot.process.step import TreeSize
+        from buildbot.process.step import Configure
+        from buildbot.process.step import Compile
+        from buildbot.process.step import Test
+        from buildbot.process.step import CVS
+        from buildbot.process.step import SVN
+        from buildbot.process.step import Darcs
+        from buildbot.process.step import Git
+        from buildbot.process.step import Arch
+        from buildbot.process.step import Bazaar
+        from buildbot.process.step import Mercurial
+        from buildbot.process.step import P4
+        from buildbot.process.step import P4Sync
+        from buildbot.process.step import Dummy
+        from buildbot.process.step import FailingDummy
+        from buildbot.process.step import RemoteDummy

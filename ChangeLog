@@ -1,3 +1,11 @@
+2006-09-08  Brian Warner  <warner@lothar.com>
+
+	* buildbot/process/step.py: split the user-visible BuildSteps into
+	separate files, all under buildbot/steps/
+	* buildbot/steps/source.py: this holds VC-checkout steps like SVN
+	* buildbot/steps/shell.py: this holds ShellCommand and friends
+	* buildbot/steps/dummy.py: this holds the testing steps like Dummy
+
 2006-09-05  Brian Warner  <warner@lothar.com>
 
 	* lots: run pyflakes, removed a lot of unused imports, changed the
