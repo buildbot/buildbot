@@ -3,8 +3,8 @@
 from twisted.trial import unittest
 
 from buildbot import interfaces
-from buildbot.process import step_twisted
-from buildbot.process.step_twisted import countFailedTests, Trial
+from buildbot.steps.python_twisted import countFailedTests
+from buildbot.steps.python_twisted import Trial, TrialTestCaseCounter
 from buildbot.status import builder
 
 noisy = 0
@@ -140,7 +140,7 @@ class Counter(unittest.TestCase):
 
     def testCounter(self):
         self.progress = (None,None)
-        c = step_twisted.TrialTestCaseCounter()
+        c = TrialTestCaseCounter()
         c.setStep(self)
         STDOUT = interfaces.LOG_CHANNEL_STDOUT
         def add(text):

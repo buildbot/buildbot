@@ -1,5 +1,13 @@
 2006-09-08  Brian Warner  <warner@lothar.com>
 
+	* buildbot/process/step_twisted.py: move definition to..
+	* buildbot/steps/python_twisted.py: .. here, unfortunately python's
+	relative-import mechanisms prevent this from being named 'twisted'
+	or 'python/twisted' as I would have preferred.
+
+	* buildbot/process/maxq.py: move definition to..
+	* buildbot/steps/maxq.py: .. here, leave a compatibility import
+
 	* buildbot/process/step.py: split the user-visible BuildSteps into
 	separate files, all under buildbot/steps/
 	* buildbot/steps/source.py: this holds VC-checkout steps like SVN
