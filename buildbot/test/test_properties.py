@@ -7,7 +7,7 @@ from twisted.trial import unittest
 from buildbot.twcompat import maybeWait
 from buildbot.sourcestamp import SourceStamp
 from buildbot.process import base
-from buildbot.process.step import ShellCommand, WithProperties
+from buildbot.steps.shell import ShellCommand, WithProperties
 from buildbot.status import builder
 from buildbot.slave.commands import rmdirRecursive
 from buildbot.test.runutils import RunMixin
@@ -118,8 +118,8 @@ class Interpolate(unittest.TestCase):
 
 
 run_config = """
-from buildbot.process import step, factory
-from buildbot.process.step import ShellCommand, WithProperties
+from buildbot.process import factory
+from buildbot.steps.shell import ShellCommand, WithProperties
 s = factory.s
 
 BuildmasterConfig = c = {}
@@ -134,7 +134,7 @@ c['slavePortnum'] = 0
 # zombie and the step never completes. To keep this from messing up the unit
 # tests too badly, this step runs with a reduced timeout.
 
-f1 = factory.BuildFactory([s(step.ShellCommand,
+f1 = factory.BuildFactory([s(ShellCommand,
                              flunkOnFailure=True,
                              command=['touch',
                                       WithProperties('%s-slave', 'slavename'),

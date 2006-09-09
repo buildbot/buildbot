@@ -6,7 +6,7 @@ from twisted.trial import unittest
 from twisted.internet import defer, reactor
 
 from buildbot import master
-from buildbot.process import step
+from buildbot.steps import dummy
 from buildbot.sourcestamp import SourceStamp
 from buildbot.process.base import BuildRequest
 from buildbot.test.runutils import RunMixin
@@ -271,19 +271,19 @@ class GetLock(unittest.TestCase):
 
 
 
-class LockStep(step.Dummy):
+class LockStep(dummy.Dummy):
     def start(self):
         number = self.build.requests[0].number
         self.build.requests[0].events.append(("start", number))
-        step.Dummy.start(self)
+        dummy.Dummy.start(self)
     def done(self):
         number = self.build.requests[0].number
         self.build.requests[0].events.append(("done", number))
-        step.Dummy.done(self)
+        dummy.Dummy.done(self)
 
 config_1 = """
 from buildbot import locks
-from buildbot.process import step, factory
+from buildbot.process import factory
 s = factory.s
 from buildbot.test.test_locks import LockStep
 

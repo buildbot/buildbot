@@ -1400,7 +1400,7 @@ new build or not, e.g. the function could use
 @code{filename.endswith(".c")} to only run a build if a C file were
 checked in. Certain BuildSteps can also use the list of changed files
 to run a more targeted series of tests, e.g. the
-@code{step_twisted.Trial} step can run just the unit tests that
+@code{python_twisted.Trial} step can run just the unit tests that
 provide coverage for the modified .py files instead of running the
 full test suite.
 
@@ -2841,12 +2841,13 @@ preferred way to create these step specifications is with the
 @code{BuildFactory}'s @code{addStep} method:
 
 @example
-from buildbot.process import step, factory
+from buildbot.steps import source, shell
+from buildbot.process import factory
 
 f = factory.BuildFactory()
-f.addStep(step.SVN, svnurl="http://svn.example.org/Trunk/")
-f.addStep(step.ShellCommand, command=["make", "all"])
-f.addStep(step.ShellCommand, command=["make", "test"])
+f.addStep(source.SVN, svnurl="http://svn.example.org/Trunk/")
+f.addStep(shell.ShellCommand, command=["make", "all"])
+f.addStep(shell.ShellCommand, command=["make", "test"])
 @end example
 
 The rest of this section lists all the standard BuildStep objects
@@ -3034,7 +3035,7 @@ arguments are described on the following pages.
 @subsubsection CVS
 
 @cindex CVS Checkout
-@bsindex buildbot.process.step.CVS
+@bsindex buildbot.steps.source.CVS
 
 
 The @code{CVS} build step performs a @uref{http://www.nongnu.org/cvs/,
@@ -3071,7 +3072,7 @@ half of the parent Build's treeStableTimer.
 @subsubsection SVN
 
 @cindex SVN Checkout
-@bsindex buildbot.process.step.SVN
+@bsindex buildbot.steps.source.SVN
 
 
 The @code{SVN} build step performs a
@@ -3173,7 +3174,8 @@ branch, and file.
 @example
 from buildbot.changes.pb import PBChangeSource
 from buildbot.scheduler import AnyBranchScheduler
-from buildbot.process import step, factory
+from buildbot.process import source, factory
+from buildbot.steps import source, shell
 
 c['sources'] = [PBChangeSource()]
 s1 = AnyBranchScheduler('main',
@@ -3182,11 +3184,11 @@ s1 = AnyBranchScheduler('main',
 c['schedulers'] = [s1]
 
 f = factory.BuildFactory()
-f.addStep(step.SVN, mode='update',
+f.addStep(source.SVN, mode='update',
           baseURL='svn://svn.example.org/MyProject/',
           defaultBranch='trunk')
-f.addStep(step.Compile, command="make all")
-f.addStep(step.Test, command="make test")
+f.addStep(shell.Compile, command="make all")
+f.addStep(shell.Test, command="make test")
 
 c['builders'] = [
   @{'name':'test-i386', 'slavename':'bot-i386', 'builddir':'test-i386',
@@ -3208,7 +3210,7 @@ will concatenate ``svn://svn.example.org/MyProject/'' with
 @subsubsection Darcs
 
 @cindex Darcs Checkout
-@bsindex buildbot.process.step.Darcs
+@bsindex buildbot.steps.source.Darcs
 
 
 The @code{Darcs} build step performs a
@@ -3252,7 +3254,7 @@ will be passed to the @code{darcs get} command.
 @subsubsection Mercurial
 
 @cindex Mercurial Checkout
-@bsindex buildbot.process.step.Mercurial
+@bsindex buildbot.steps.source.Mercurial
 
 
 The @code{Mercurial} build step performs a
@@ -3285,7 +3287,7 @@ will be passed to the @code{hg clone} command.
 @subsubsection Arch
 
 @cindex Arch Checkout
-@bsindex buildbot.process.step.Arch
+@bsindex buildbot.steps.source.Arch
 
 
 The @code{Arch} build step performs an @uref{http://gnuarch.org/,
@@ -3314,7 +3316,7 @@ step, below.
 @subsubsection Bazaar
 
 @cindex Bazaar Checkout
-@bsindex buildbot.process.step.Bazaar
+@bsindex buildbot.steps.source.Bazaar
 
 
 @code{Bazaar} is an alternate implementation of the Arch VC system,
@@ -3332,8 +3334,8 @@ ourselves).
 @subsubsection P4
 
 @cindex Perforce Update
-@bsindex buildbot.process.step.P4
-@c TODO @bsindex buildbot.process.step.P4Sync
+@bsindex buildbot.steps.source.P4
+@c TODO @bsindex buildbot.steps.source.P4Sync
 
 
 The @code{P4} build step creates a @uref{http://www.perforce.com/,
@@ -3372,8 +3374,8 @@ builder name. The default is "buildbot_%(slave)s_%(build)s".
 @node ShellCommand, Simple ShellCommand Subclasses, Source Checkout, Build Steps
 @subsection ShellCommand
 
-@bsindex buildbot.process.step.ShellCommand
-@c TODO @bsindex buildbot.process.step.TreeSize
+@bsindex buildbot.steps.shell.ShellCommand
+@c TODO @bsindex buildbot.steps.shell.TreeSize
 
 This is a useful base class for just about everything you might want
 to do during a build (except for the initial source checkout). It runs
@@ -3514,7 +3516,7 @@ file less verbose.
 @node Configure, Compile, Simple ShellCommand Subclasses, Simple ShellCommand Subclasses
 @subsubsection Configure
 
-@bsindex buildbot.process.step.Configure
+@bsindex buildbot.steps.shell.Configure
 
 This is intended to handle the @code{./configure} step from
 autoconf-style projects, or the @code{perl Makefile.PL} step from perl
@@ -3524,7 +3526,7 @@ but you can change this by providing a @code{command=} parameter.
 @node Compile, Test, Configure, Simple ShellCommand Subclasses
 @subsubsection Compile
 
-@bsindex buildbot.process.step.Compile
+@bsindex buildbot.steps.shell.Compile
 
 This is meant to handle compiling or building a project written in C. The
 default command is @code{make all}. When the compile is finished, the
@@ -3535,7 +3537,7 @@ created).
 @node Test, Build Properties, Compile, Simple ShellCommand Subclasses
 @subsubsection Test
 
-@bsindex buildbot.process.step.Test
+@bsindex buildbot.steps.shell.Test
 
 This is meant to handle unit tests. The default command is @code{make
 test}, and the @code{warnOnFailure} flag is set.
@@ -3571,12 +3573,12 @@ numbers, lists, tuples, and dictionaries. They should not contain
 class instances.} object. For example:
 
 @example
-class MakeTarball(step.ShellCommand):
+class MakeTarball(ShellCommand):
     def start(self):
         self.setCommand(["tar", "czf",
                          "build-%s.tar.gz" % self.getProperty("revision"),
                          "source"])
-        step.ShellCommand.start(self)
+        ShellCommand.start(self)
 @end example
 
 @cindex WithProperties
@@ -3587,7 +3589,7 @@ ShellCommand. This interpolates the named build properties into the
 generated shell command.
 
 @example
-from buildbot.process.step import ShellCommand, WithProperties
+from buildbot.steps.shell import ShellCommand, WithProperties
 
 f.addStep(ShellCommand,
           command=["tar", "czf",
@@ -4050,13 +4052,14 @@ from happening at the same time.
 
 @example
 from buildbot import locks
-from buildbot.process import step, factory
+from buildbot.steps import source, shell
+from buildbot.process import factory
 
 db_lock = locks.MasterLock("database")
 f = factory.BuildFactory()
-f.addStep(step.SVN, svnurl="http://example.org/svn/Trunk")
-f.addStep(step.ShellCommand, command="make all")
-f.addStep(step.ShellCommand, command="make test", locks=[db_lock])
+f.addStep(source.SVN, svnurl="http://example.org/svn/Trunk")
+f.addStep(shell.ShellCommand, command="make all")
+f.addStep(shell.ShellCommand, command="make test", locks=[db_lock])
 b1 = @{'name': 'full1', 'slavename': 'bot-1', builddir='f1', 'factory': f@}
 b2 = @{'name': 'full2', 'slavename': 'bot-2', builddir='f2', 'factory': f@}
 b3 = @{'name': 'full3', 'slavename': 'bot-3', builddir='f3', 'factory': f@}
@@ -4078,10 +4081,11 @@ goal of two simultaneous builds per slave.
 
 @example
 from buildbot import locks
-from buildbot.process import s, step, factory
+from buildbot.steps import source
+from buildbot.process import s, factory
 
 slow_lock = locks.SlaveLock("cpu", maxCount=2)
-source = s(step.SVN, svnurl="http://example.org/svn/Trunk")
+source = s(source.SVN, svnurl="http://example.org/svn/Trunk")
 f22 = factory.Trial(source, trialpython=["python2.2"])
 f23 = factory.Trial(source, trialpython=["python2.3"])
 f24 = factory.Trial(source, trialpython=["python2.4"])
@@ -4106,17 +4110,18 @@ unlimited concurrent builds on the fast machine.
 
 @example
 from buildbot import locks
-from buildbot.process import step, factory
+from buildbot.steps import source, shell
+from buildbot.process import factory
 
 db_lock = locks.MasterLock("database")
 slavecounts = @{"bot-slow": 1, "bot-fast": 100@}
 cpu_lock = locks.SlaveLock("cpu", maxCountForSlave=slavecounts)
 f = factory.BuildFactory()
-f.addStep(step.SVN, svnurl="http://example.org/svn/Trunk")
-f.addStep(step.ShellCommand, command="make all", locks=[cpu_lock])
-f.addStep(step.ShellCommand, command="make test", locks=[cpu_lock])
-f.addStep(step.ShellCommand, command="make db-test",
-                             locks=[db_lock, cpu_lock])
+f.addStep(source.SVN, svnurl="http://example.org/svn/Trunk")
+f.addStep(shell.ShellCommand, command="make all", locks=[cpu_lock])
+f.addStep(shell.ShellCommand, command="make test", locks=[cpu_lock])
+f.addStep(shell.ShellCommand, command="make db-test",
+                              locks=[db_lock, cpu_lock])
 
 b1 = @{'name': 'full1', 'slavename': 'bot-slow', builddir='full1',
       'factory': f@}
@@ -4232,11 +4237,12 @@ of a CVS checkout followed by a @code{make build} would be constructed
 as follows:
 
 @example
-from buildbot.process import step, factory
+from buildbot.steps import source, shell
+from buildbot.process import factory
 
 f = factory.BuildFactory()
-f.addStep(step.CVS, cvsroot=CVSROOT, cvsmodule="project", mode="update")
-f.addStep(step.Compile, command=["make", "build"])
+f.addStep(source.CVS, cvsroot=CVSROOT, cvsmodule="project", mode="update")
+f.addStep(shell.Compile, command=["make", "build"])
 @end example
 
 It is also possible to pass a list of step specifications into the
@@ -4246,13 +4252,15 @@ create the list of steps ahead of time. To make this approach easier,
 a convenience function named @code{s} is available:
 
 @example
-from buildbot.process import step, factory
+from buildbot.steps import source, shell
+from buildbot.process import factory
 from buildbot.factory import s
 # s is a convenience function, defined with:
 # def s(steptype, **kwargs): return (steptype, kwargs)
 
-all_steps = [s(step.CVS, cvsroot=CVSROOT, cvsmodule="project", mode="update"),
-             s(step.Compile, command=["make", "build"]),
+all_steps = [s(source.CVS, cvsroot=CVSROOT, cvsmodule="project",
+               mode="update"),
+             s(shell.Compile, command=["make", "build"]),
             ]
 f = factory.BuildFactory(all_steps)
 @end example
@@ -4525,11 +4533,11 @@ distutils modules).
 
 @bfindex buildbot.process.factory.Trial
 @c TODO: document these steps better
-@bsindex buildbot.process.step_twisted.HLint
-@bsindex buildbot.process.step_twisted.Trial
-@bsindex buildbot.process.step_twisted.ProcessDocs
-@bsindex buildbot.process.step_twisted.BuildDebs
-@bsindex buildbot.process.step_twisted.RemovePYCs
+@bsindex buildbot.steps.python_twisted.HLint
+@bsindex buildbot.steps.python_twisted.Trial
+@bsindex buildbot.steps.python_twisted.ProcessDocs
+@bsindex buildbot.steps.python_twisted.BuildDebs
+@bsindex buildbot.steps.python_twisted.RemovePYCs
 
 Twisted provides a unit test tool named @code{trial} which provides a
 few improvements over Python's built-in @code{unittest} module. Many
@@ -5602,8 +5610,8 @@ admins are unlikely to have much use for.
 @printindex bs
 
 @c undocumented steps
-@bsindex buildbot.process.step.Git
-@bsindex buildbot.process.maxq.MaxQ
+@bsindex buildbot.steps.source.Git
+@bsindex buildbot.steps.maxq.MaxQ
 
 
 @heading Status Targets

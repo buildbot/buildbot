@@ -18,7 +18,8 @@ from buildbot import master, interfaces
 from buildbot.slave import bot, commands
 from buildbot.slave.commands import rmdirRecursive
 from buildbot.status.builder import SUCCESS, FAILURE
-from buildbot.process import step, base
+from buildbot.process import base
+from buildbot.steps import source
 from buildbot.changes import changes
 from buildbot.sourcestamp import SourceStamp
 from buildbot.twcompat import maybeWait, which
@@ -95,7 +96,8 @@ def myGetProcessOutputAndValue(executable, args=(), env={}, path='.',
     return d
 
 config_vc = """
-from buildbot.process import factory, step
+from buildbot.process import factory
+from buildbot.steps import source
 s = factory.s
 
 f1 = factory.BuildFactory([
@@ -1183,7 +1185,7 @@ class CVS(VCBase, unittest.TestCase):
     vc_name = "cvs"
 
     metadir = "CVS"
-    vctype = "step.CVS"
+    vctype = "source.CVS"
     vctype_try = "cvs"
     # CVS gives us got_revision, but it is based entirely upon the local
     # clock, which means it is unlikely to match the timestamp taken earlier.
@@ -1326,7 +1328,7 @@ class SVN(VCBase, unittest.TestCase):
     vc_name = "svn"
 
     metadir = ".svn"
-    vctype = "step.SVN"
+    vctype = "source.SVN"
     vctype_try = "svn"
     has_got_revision = True
     has_got_revision_branches_are_merged = True
@@ -1495,7 +1497,7 @@ class P4Helper(BaseHelper):
 
 class P4(VCBase, unittest.TestCase):
     metadir = None
-    vctype = "step.P4"
+    vctype = "source.P4"
     vc_name = "p4"
 
     def tearDownClass(self):
@@ -1624,7 +1626,7 @@ class Darcs(VCBase, unittest.TestCase):
     # Darcs has a metadir="_darcs", but it does not have an 'export'
     # mode
     metadir = None
-    vctype = "step.Darcs"
+    vctype = "source.Darcs"
     vctype_try = "darcs"
     has_got_revision = True
 
@@ -1832,7 +1834,7 @@ class TlaHelper(BaseHelper, ArchCommon):
         # build will re-register the correct one for whichever test is
         # currently being run.
 
-        # except, that step.Bazaar really doesn't like it when the archive
+        # except, that source.Bazaar really doesn't like it when the archive
         # gets unregistered behind its back. The slave tries to do a 'baz
         # replay' in a tree with an archive that is no longer recognized, and
         # baz aborts with a botched invariant exception. This causes
@@ -1911,7 +1913,7 @@ class Arch(VCBase, unittest.TestCase):
 
     metadir = None
     # Arch has a metadir="{arch}", but it does not have an 'export' mode.
-    vctype = "step.Arch"
+    vctype = "source.Arch"
     vctype_try = "tla"
     has_got_revision = True
 
@@ -1981,7 +1983,7 @@ class BazaarHelper(TlaHelper):
 class Bazaar(Arch):
     vc_name = "bazaar"
 
-    vctype = "step.Bazaar"
+    vctype = "source.Bazaar"
     vctype_try = "baz"
     has_got_revision = True
 
@@ -2045,7 +2047,7 @@ class Bazaar(Arch):
         self.site.resource = self.root
 
     def testRetry(self):
-        # we want to verify that step.Source(retry=) works, and the easiest
+        # we want to verify that source.Source(retry=) works, and the easiest
         # way to make VC updates break (temporarily) is to break the HTTP
         # server that's providing the repository. Anything else pretty much
         # requires mutating the (read-only) BUILDBOT_TEST_VC repository, or
@@ -2220,7 +2222,7 @@ class Mercurial(VCBase, unittest.TestCase):
 
     # Mercurial has a metadir=".hg", but it does not have an 'export' mode.
     metadir = None
-    vctype = "step.Mercurial"
+    vctype = "source.Mercurial"
     vctype_try = "hg"
     has_got_revision = True
 
@@ -2275,7 +2277,7 @@ class Sources(unittest.TestCase):
     def testCVS1(self):
         r = base.BuildRequest("forced build", SourceStamp())
         b = base.Build([r])
-        s = step.CVS(cvsroot=None, cvsmodule=None, workdir=None, build=b)
+        s = source.CVS(cvsroot=None, cvsmodule=None, workdir=None, build=b)
         self.failUnlessEqual(s.computeSourceRevision(b.allChanges()), None)
 
     def testCVS2(self):
@@ -2287,7 +2289,7 @@ class Sources(unittest.TestCase):
         submitted = "Wed, 08 Sep 2004 09:04:00 -0700"
         r.submittedAt = mktime_tz(parsedate_tz(submitted))
         b = base.Build([r])
-        s = step.CVS(cvsroot=None, cvsmodule=None, workdir=None, build=b)
+        s = source.CVS(cvsroot=None, cvsmodule=None, workdir=None, build=b)
         self.failUnlessEqual(s.computeSourceRevision(b.allChanges()),
                              "Wed, 08 Sep 2004 16:03:00 -0000")
 
@@ -2300,8 +2302,8 @@ class Sources(unittest.TestCase):
         submitted = "Wed, 08 Sep 2004 09:04:00 -0700"
         r.submittedAt = mktime_tz(parsedate_tz(submitted))
         b = base.Build([r])
-        s = step.CVS(cvsroot=None, cvsmodule=None, workdir=None, build=b,
-                     checkoutDelay=10)
+        s = source.CVS(cvsroot=None, cvsmodule=None, workdir=None, build=b,
+                       checkoutDelay=10)
         self.failUnlessEqual(s.computeSourceRevision(b.allChanges()),
                              "Wed, 08 Sep 2004 16:02:10 -0000")
 
@@ -2321,14 +2323,14 @@ class Sources(unittest.TestCase):
         r2.submittedAt = mktime_tz(parsedate_tz(submitted))
 
         b = base.Build([r1, r2])
-        s = step.CVS(cvsroot=None, cvsmodule=None, workdir=None, build=b)
+        s = source.CVS(cvsroot=None, cvsmodule=None, workdir=None, build=b)
         self.failUnlessEqual(s.computeSourceRevision(b.allChanges()),
                              "Wed, 08 Sep 2004 16:06:00 -0000")
 
     def testSVN1(self):
         r = base.BuildRequest("forced", SourceStamp())
         b = base.Build([r])
-        s = step.SVN(svnurl="dummy", workdir=None, build=b)
+        s = source.SVN(svnurl="dummy", workdir=None, build=b)
         self.failUnlessEqual(s.computeSourceRevision(b.allChanges()), None)
 
     def testSVN2(self):
@@ -2338,7 +2340,7 @@ class Sources(unittest.TestCase):
         c.append(self.makeChange(revision=67))
         r = base.BuildRequest("forced", SourceStamp(changes=c))
         b = base.Build([r])
-        s = step.SVN(svnurl="dummy", workdir=None, build=b)
+        s = source.SVN(svnurl="dummy", workdir=None, build=b)
         self.failUnlessEqual(s.computeSourceRevision(b.allChanges()), 67)
 
 class Patch(VCBase, unittest.TestCase):

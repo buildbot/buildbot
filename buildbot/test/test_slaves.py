@@ -10,7 +10,8 @@ from buildbot.process.base import BuildRequest
 from buildbot.status.builder import SUCCESS
 
 config_1 = """
-from buildbot.process import step, factory
+from buildbot.process import factory
+from buildbot.steps import dummy
 s = factory.s
 
 BuildmasterConfig = c = {}
@@ -20,7 +21,7 @@ c['schedulers'] = []
 c['slavePortnum'] = 0
 c['schedulers'] = []
 
-f = factory.BuildFactory([s(step.RemoteDummy, timeout=1)])
+f = factory.BuildFactory([s(dummy.RemoteDummy, timeout=1)])
 
 c['builders'] = [
     {'name': 'b1', 'slavenames': ['bot1','bot2','bot3'],

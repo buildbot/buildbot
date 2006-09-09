@@ -22,7 +22,7 @@ from twisted.internet.defer import Deferred
 
 from buildbot.sourcestamp import SourceStamp
 from buildbot.process import step, base, factory
-from buildbot.process.step import ShellCommand #, ShellCommands
+from buildbot.steps import shell, source
 from buildbot.status import builder
 from buildbot.test.runutils import RunMixin, rmtree
 from buildbot.test.runutils import makeBuildStep
@@ -30,12 +30,12 @@ from buildbot.twcompat import maybeWait
 from buildbot.slave import commands
 
 
-class MyShellCommand(ShellCommand):
+class MyShellCommand(shell.ShellCommand):
     started = False
     def runCommand(self, c):
         self.started = True
         self.rc = c
-        return ShellCommand.runCommand(self, c)
+        return shell.ShellCommand.runCommand(self, c)
 
 class FakeBuild:
     pass
@@ -167,13 +167,13 @@ class MyObserver(step.LogObserver):
 class Steps(unittest.TestCase):
     def testMultipleStepInstances(self):
         steps = [
-            (step.CVS, {'cvsroot': "root", 'cvsmodule': "module"}),
-            (step.Configure, {'command': "./configure"}),
-            (step.Compile, {'command': "make"}),
-            (step.Compile, {'command': "make more"}),
-            (step.Compile, {'command': "make evenmore"}),
-            (step.Test, {'command': "make test"}),
-            (step.Test, {'command': "make testharder"}),
+            (source.CVS, {'cvsroot': "root", 'cvsmodule': "module"}),
+            (shell.Configure, {'command': "./configure"}),
+            (shell.Compile, {'command': "make"}),
+            (shell.Compile, {'command': "make more"}),
+            (shell.Compile, {'command': "make evenmore"}),
+            (shell.Test, {'command': "make test"}),
+            (shell.Test, {'command': "make testharder"}),
             ]
         f = factory.ConfigurableBuildFactory(steps)
         req = base.BuildRequest("reason", SourceStamp())
@@ -261,7 +261,7 @@ class Steps(unittest.TestCase):
 
     def test_description(self):
         s = makeBuildStep("test_steps.Steps.test_description.1",
-                          step_class=ShellCommand,
+                          step_class=shell.ShellCommand,
                           workdir="dummy",
                           description=["list", "of", "strings"],
                           descriptionDone=["another", "list"])
@@ -269,7 +269,7 @@ class Steps(unittest.TestCase):
         self.failUnlessEqual(s.descriptionDone, ["another", "list"])
 
         s = makeBuildStep("test_steps.Steps.test_description.2",
-                          step_class=ShellCommand,
+                          step_class=shell.ShellCommand,
                           workdir="dummy",
                           description="single string",
                           descriptionDone="another string")
@@ -287,7 +287,7 @@ class VersionCheckingStep(step.BuildStep):
         self.finished(step.SUCCESS)
 
 version_config = """
-from buildbot.process import factory, step
+from buildbot.process import factory
 from buildbot.test.test_steps import VersionCheckingStep
 BuildmasterConfig = c = {}
 f1 = factory.BuildFactory([

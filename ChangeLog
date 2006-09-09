@@ -1,5 +1,10 @@
 2006-09-08  Brian Warner  <warner@lothar.com>
 
+	* docs/buildbot.texinfo: update to match changes
+	* buildbot/process/factory.py: stop using old definitions
+	* buildbot/process/process_twisted.py: same
+	* buildbot/test/test_*.py: same
+
 	* buildbot/process/step_twisted.py: move definition to..
 	* buildbot/steps/python_twisted.py: .. here, unfortunately python's
 	relative-import mechanisms prevent this from being named 'twisted'

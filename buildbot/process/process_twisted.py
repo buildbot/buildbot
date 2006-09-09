@@ -4,8 +4,8 @@
 
 from buildbot.process.base import Build
 from buildbot.process.factory import BuildFactory
-from buildbot.process import step
-from buildbot.process.step_twisted import HLint, ProcessDocs, BuildDebs, \
+from buildbot.steps import shell
+from buildbot.steps.python_twisted import HLint, ProcessDocs, BuildDebs, \
      Trial, RemovePYCs
 
 class TwistedBuild(Build):
@@ -47,7 +47,7 @@ class QuickTwistedBuildFactory(TwistedBaseFactory):
         self.addStep(RemovePYCs)
         for p in python:
             cmd = [p, "setup.py", "build_ext", "-i"]
-            self.addStep(step.Compile, command=cmd, flunkOnFailure=True)
+            self.addStep(shell.Compile, command=cmd, flunkOnFailure=True)
             self.addStep(TwistedTrial, python=p, testChanges=True)
 
 class FullTwistedBuildFactory(TwistedBaseFactory):
@@ -67,7 +67,7 @@ class FullTwistedBuildFactory(TwistedBaseFactory):
         cmd = (python + compileOpts + ["setup.py", "build_ext"]
                + compileOpts2 + ["-i"])
 
-        self.addStep(step.Compile, command=cmd, flunkOnFailure=True)
+        self.addStep(shell.Compile, command=cmd, flunkOnFailure=True)
         self.addStep(RemovePYCs)
         self.addStep(TwistedTrial, python=python, randomly=runTestsRandomly)
 
@@ -94,7 +94,7 @@ class TwistedReactorsBuildFactory(TwistedBaseFactory):
         cmd = (python + compileOpts + ["setup.py", "build_ext"]
                + compileOpts2 + ["-i"])
 
-        self.addStep(step.Compile, command=cmd, warnOnFailure=True)
+        self.addStep(shell.Compile, command=cmd, warnOnFailure=True)
 
         if reactors == None:
             reactors = [

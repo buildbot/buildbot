@@ -699,14 +699,15 @@ class Log(unittest.TestCase):
     testLargeSummary.timeout = 5
 
 config_base = """
-from buildbot.process import factory, step
+from buildbot.process import factory
+from buildbot.steps import dummy
 s = factory.s
 
 f1 = factory.QuickBuildFactory('fakerep', 'cvsmodule', configure=None)
 
 f2 = factory.BuildFactory([
-    s(step.Dummy, timeout=1),
-    s(step.RemoteDummy, timeout=2),
+    s(dummy.Dummy, timeout=1),
+    s(dummy.RemoteDummy, timeout=2),
     ])
 
 BuildmasterConfig = c = {}

@@ -23,7 +23,8 @@ from twisted.web.server import Site
 from twisted.web.distrib import ResourcePublisher
 from buildbot.process.builder import Builder
 from buildbot.process.factory import BasicBuildFactory
-from buildbot.process import step
+from buildbot.steps.source import CVS
+from buildbot.steps.shell import Compile, Test
 from buildbot.status import base
 words = None
 try:
@@ -80,19 +81,19 @@ c['builders'] = [{ 'name': 'builder1', 'slavename': 'bot1',
 
 wpCfg1 = buildersCfg + \
 """
-from buildbot.process import step
+from buildbot.steps import shell
 f1 = BasicBuildFactory('cvsroot', 'cvsmodule')
-f1.addStep(step.ShellCommand, command=[step.WithProperties('echo')])
+f1.addStep(shell.ShellCommand, command=[shell.WithProperties('echo')])
 c['builders'] = [{'name':'builder1', 'slavename':'bot1',
                   'builddir':'workdir1', 'factory': f1}]
 """
 
 wpCfg2 = buildersCfg + \
 """
-from buildbot.process import step
+from buildbot.steps import shell
 f1 = BasicBuildFactory('cvsroot', 'cvsmodule')
-f1.addStep(step.ShellCommand,
-           command=[step.WithProperties('echo %s', 'revision')])
+f1.addStep(shell.ShellCommand,
+           command=[shell.WithProperties('echo %s', 'revision')])
 c['builders'] = [{'name':'builder1', 'slavename':'bot1',
                   'builddir':'workdir1', 'factory': f1}]
 """
@@ -176,7 +177,7 @@ BuildmasterConfig = c
 
 lockCfgBad1 = \
 """
-from buildbot.process.step import Dummy
+from buildbot.steps.dummy import Dummy
 from buildbot.process.factory import BuildFactory, s
 from buildbot.locks import MasterLock
 c = {}
@@ -198,7 +199,7 @@ BuildmasterConfig = c
 
 lockCfgBad2 = \
 """
-from buildbot.process.step import Dummy
+from buildbot.steps.dummy import Dummy
 from buildbot.process.factory import BuildFactory, s
 from buildbot.locks import MasterLock, SlaveLock
 c = {}
@@ -220,7 +221,7 @@ BuildmasterConfig = c
 
 lockCfgBad3 = \
 """
-from buildbot.process.step import Dummy
+from buildbot.steps.dummy import Dummy
 from buildbot.process.factory import BuildFactory, s
 from buildbot.locks import MasterLock
 c = {}
@@ -286,7 +287,7 @@ BuildmasterConfig = c
 # test out step Locks
 lockCfg2a = \
 """
-from buildbot.process.step import Dummy
+from buildbot.steps.dummy import Dummy
 from buildbot.process.factory import BuildFactory, s
 from buildbot.locks import MasterLock
 c = {}
@@ -310,7 +311,7 @@ BuildmasterConfig = c
 
 lockCfg2b = \
 """
-from buildbot.process.step import Dummy
+from buildbot.steps.dummy import Dummy
 from buildbot.process.factory import BuildFactory, s
 from buildbot.locks import MasterLock
 c = {}
@@ -334,7 +335,7 @@ BuildmasterConfig = c
 
 lockCfg2c = \
 """
-from buildbot.process.step import Dummy
+from buildbot.steps.dummy import Dummy
 from buildbot.process.factory import BuildFactory, s
 from buildbot.locks import MasterLock
 c = {}
@@ -661,13 +662,13 @@ c['schedulers'] = [Scheduler('dup', None, 60, []),
         self.failUnless(isinstance(f1, BasicBuildFactory))
         steps = f1.steps
         self.failUnlessEqual(len(steps), 3)
-        self.failUnlessEqual(steps[0], (step.CVS,
+        self.failUnlessEqual(steps[0], (CVS,
                                         {'cvsroot': 'cvsroot',
                                          'cvsmodule': 'cvsmodule',
                                          'mode': 'clobber'}))
-        self.failUnlessEqual(steps[1], (step.Compile,
+        self.failUnlessEqual(steps[1], (Compile,
                                         {'command': 'make all'}))
-        self.failUnlessEqual(steps[2], (step.Test,
+        self.failUnlessEqual(steps[2], (Test,
                                         {'command': 'make check'}))
 
 

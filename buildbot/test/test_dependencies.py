@@ -10,7 +10,8 @@ from buildbot.status import base
 
 config_1 = """
 from buildbot import scheduler
-from buildbot.process import step, factory
+from buildbot.process import factory
+from buildbot.steps import dummy
 s = factory.s
 from buildbot.test.test_locks import LockStep
 
@@ -33,9 +34,9 @@ s4 = scheduler.Dependent('downstream4', s3, ['b3', 'b4'])
 s5 = scheduler.Dependent('downstream5', s4, ['b5'])
 c['schedulers'] = [s1, s2, s3, s4, s5]
 
-f_fastpass = factory.BuildFactory([s(step.Dummy, timeout=1)])
-f_slowpass = factory.BuildFactory([s(step.Dummy, timeout=2)])
-f_fastfail = factory.BuildFactory([s(step.FailingDummy, timeout=1)])
+f_fastpass = factory.BuildFactory([s(dummy.Dummy, timeout=1)])
+f_slowpass = factory.BuildFactory([s(dummy.Dummy, timeout=2)])
+f_fastfail = factory.BuildFactory([s(dummy.FailingDummy, timeout=1)])
 
 def builder(name, f):
     d = {'name': name, 'slavename': 'bot1', 'builddir': name, 'factory': f}

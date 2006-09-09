@@ -14,7 +14,8 @@ from buildbot import master, interfaces, sourcestamp
 from buildbot.twcompat import providedBy, maybeWait
 from buildbot.status import html, builder
 from buildbot.changes.changes import Change
-from buildbot.process import step, base
+from buildbot.process import base
+from buildbot.process.step import BuildStep
 from buildbot.test.runutils import setupBuildStepStatus
 
 class ConfiguredMaster(master.BuildMaster):
@@ -279,7 +280,8 @@ class WaterfallSteps(unittest.TestCase):
 geturl_config = """
 from buildbot.status import html
 from buildbot.changes import mail
-from buildbot.process import step, factory
+from buildbot.process import factory
+from buildbot.steps import dummy
 from buildbot.scheduler import Scheduler
 from buildbot.changes.base import ChangeSource
 s = factory.s
@@ -297,7 +299,7 @@ c['schedulers'] = [DiscardScheduler('discard', None, 60, ['b1'])]
 c['slavePortnum'] = 0
 c['status'] = [html.Waterfall(http_port=0)]
 
-f = factory.BuildFactory([s(step.RemoteDummy, timeout=1)])
+f = factory.BuildFactory([s(dummy.RemoteDummy, timeout=1)])
 
 c['builders'] = [
     {'name': 'b1', 'slavenames': ['bot1','bot2'],
@@ -413,7 +415,7 @@ BuildmasterConfig = {
         bs.setReason("reason")
         bs.buildStarted(build1)
 
-        step1 = step.BuildStep(build=build1, name="setup")
+        step1 = BuildStep(build=build1, name="setup")
         bss = bs.addStepWithName("setup")
         step1.setStepStatus(bss)
         bss.stepStarted()

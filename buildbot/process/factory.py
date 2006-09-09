@@ -2,7 +2,9 @@
 
 from buildbot import util
 from buildbot.process.base import Build
-from buildbot.process import step
+from buildbot.process.step import BuildStep
+from buildbot.steps.source import CVS, SVN
+from buildbot.steps.shell import Configure, Compile, Test
 
 # deprecated, use BuildFactory.addStep
 def s(steptype, **kwargs):
@@ -46,7 +48,7 @@ class GNUAutoconf(BuildFactory):
                  compile=["make", "all"],
                  test=["make", "check"]):
         assert isinstance(source, tuple)
-        assert issubclass(source[0], step.BuildStep)
+        assert issubclass(source[0], BuildStep)
         BuildFactory.__init__(self, [source])
         if configure is not None:
             # we either need to wind up with a string (which will be
@@ -61,29 +63,29 @@ class GNUAutoconf(BuildFactory):
             else:
                 assert isinstance(configure, (list, tuple))
                 command = configure + configureFlags
-            self.addStep(step.Configure, command=command, env=configureEnv)
+            self.addStep(Configure, command=command, env=configureEnv)
         if compile is not None:
-            self.addStep(step.Compile, command=compile)
+            self.addStep(Compile, command=compile)
         if test is not None:
-            self.addStep(step.Test, command=test)
+            self.addStep(Test, command=test)
 
 class CPAN(BuildFactory):
     def __init__(self, source, perl="perl"):
         assert isinstance(source, tuple)
-        assert issubclass(source[0], step.BuildStep)
+        assert issubclass(source[0], BuildStep)
         BuildFactory.__init__(self, [source])
-        self.addStep(step.Configure, command=[perl, "Makefile.PL"])
-        self.addStep(step.Compile, command=["make"])
-        self.addStep(step.Test, command=["make", "test"])
+        self.addStep(Configure, command=[perl, "Makefile.PL"])
+        self.addStep(Compile, command=["make"])
+        self.addStep(Test, command=["make", "test"])
 
 class Distutils(BuildFactory):
     def __init__(self, source, python="python", test=None):
         assert isinstance(source, tuple)
-        assert issubclass(source[0], step.BuildStep)
+        assert issubclass(source[0], BuildStep)
         BuildFactory.__init__(self, [source])
-        self.addStep(step.Compile, command=[python, "./setup.py", "build"])
+        self.addStep(Compile, command=[python, "./setup.py", "build"])
         if test is not None:
-            self.addStep(step.Test, command=test)
+            self.addStep(Test, command=test)
 
 class Trial(BuildFactory):
     """Build a python module that uses distutils and trial. Set 'tests' to
@@ -106,7 +108,7 @@ class Trial(BuildFactory):
                  tests=None,  useTestCaseNames=False, env=None):
         BuildFactory.__init__(self, [source])
         assert isinstance(source, tuple)
-        assert issubclass(source[0], step.BuildStep)
+        assert issubclass(source[0], BuildStep)
         assert tests or useTestCaseNames, "must use one or the other"
         if trial is not None:
             self.trial = trial
@@ -115,10 +117,10 @@ class Trial(BuildFactory):
         if recurse is not None:
             self.recurse = recurse
 
-        from buildbot.process import step_twisted
+        from buildbot.steps.python_twisted import Trial
         buildcommand = buildpython + ["./setup.py", "build"]
-        self.addStep(step.Compile, command=buildcommand, env=env)
-        self.addStep(step_twisted.Trial,
+        self.addStep(Compile, command=buildcommand, env=env)
+        self.addStep(Trial,
                      python=trialpython, trial=self.trial,
                      testpath=testpath,
                      tests=tests, testChanges=useTestCaseNames,
@@ -144,7 +146,7 @@ class BasicBuildFactory(GNUAutoconf):
         mode = "clobber"
         if cvsCopy:
             mode = "copy"
-        source = s(step.CVS, cvsroot=cvsroot, cvsmodule=cvsmodule, mode=mode)
+        source = s(CVS, cvsroot=cvsroot, cvsmodule=cvsmodule, mode=mode)
         GNUAutoconf.__init__(self, source,
                              configure=configure, configureEnv=configureEnv,
                              compile=compile,
@@ -158,7 +160,7 @@ class QuickBuildFactory(BasicBuildFactory):
                  compile="make all",
                  test="make check", cvsCopy=False):
         mode = "update"
-        source = s(step.CVS, cvsroot=cvsroot, cvsmodule=cvsmodule, mode=mode)
+        source = s(CVS, cvsroot=cvsroot, cvsmodule=cvsmodule, mode=mode)
         GNUAutoconf.__init__(self, source,
                              configure=configure, configureEnv=configureEnv,
                              compile=compile,
@@ -170,7 +172,7 @@ class BasicSVN(GNUAutoconf):
                  configure=None, configureEnv={},
                  compile="make all",
                  test="make check"):
-        source = s(step.SVN, svnurl=svnurl, mode="update")
+        source = s(SVN, svnurl=svnurl, mode="update")
         GNUAutoconf.__init__(self, source,
                              configure=configure, configureEnv=configureEnv,
                              compile=compile,

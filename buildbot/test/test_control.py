@@ -14,13 +14,14 @@ from buildbot.process import base
 from buildbot.test.runutils import rmtree
 
 config = """
-from buildbot.process import factory, step
+from buildbot.process import factory
+from buildbot.steps import dummy
 
 def s(klass, **kwargs):
     return (klass, kwargs)
 
 f1 = factory.BuildFactory([
-    s(step.Dummy, timeout=1),
+    s(dummy.Dummy, timeout=1),
     ])
 c = {}
 c['bots'] = [['bot1', 'sekrit']]
