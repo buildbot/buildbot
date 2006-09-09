@@ -1,8 +1,10 @@
 2006-09-08  Brian Warner  <warner@lothar.com>
 
 	* buildbot/interfaces.py (IStatusLog.readlines): make it easier to
-	walk through StatusLogs one line at a time, mostly for the benefit of
-	ShellCommand.createSummary methods.
+	walk through StatusLogs one line at a time, mostly for the benefit
+	of ShellCommand.createSummary methods. You can either walk through
+	STDOUT or STDERR, but the default is STDOUT.
+
 	* buildbot/status/builder.py (LogFile.readlines): implement it.
 	Note that this is not yet memory-efficient, it just pulls the
 	whole file into RAM and then splits it up with a StringIO.

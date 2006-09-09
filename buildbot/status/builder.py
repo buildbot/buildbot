@@ -338,13 +338,14 @@ class LogFile:
             else:
                 yield leftover
 
-    def readlines(self):
+    def readlines(self, channel=STDOUT):
         """Return an iterator that produces newline-terminated lines,
         excluding header chunks."""
         # TODO: make this memory-efficient, by turning it into a generator
         # that retrieves chunks as necessary, like a pull-driven version of
         # twisted.protocols.basic.LineReceiver
-        io = StringIO(self.getText())
+        alltext = "".join(self.getChunks([channel], onlyText=True))
+        io = StringIO(alltext)
         return io.readlines()
 
     def subscribe(self, receiver, catchup):

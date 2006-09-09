@@ -497,10 +497,13 @@ class Log(unittest.TestCase):
         l.addStdout("Last line\n")
         l.finish()
         alllines = list(l.readlines())
-        self.failUnlessEqual(len(alllines), 5)
+        self.failUnlessEqual(len(alllines), 4)
         self.failUnlessEqual(alllines[0], "Some text\n")
-        self.failUnlessEqual(alllines[3], "Some Stderr\n")
-        self.failUnlessEqual(alllines[4], "Last line\n")
+        self.failUnlessEqual(alllines[2], "And Some More\n")
+        self.failUnlessEqual(alllines[3], "Last line\n")
+        stderr = list(l.readlines(interfaces.LOG_CHANNEL_STDERR))
+        self.failUnlessEqual(len(stderr), 1)
+        self.failUnlessEqual(stderr[0], "Some Stderr\n")
         lines = l.readlines()
         if False: # TODO: l.readlines() is not yet an iterator
             # verify that it really is an iterator

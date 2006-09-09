@@ -557,6 +557,11 @@ class IStatusEvent(Interface):
         """Returns a single string with the color that should be used to
         display this event. 'red' and 'yellow' are the most likely ones."""
 
+
+LOG_CHANNEL_STDOUT = 0
+LOG_CHANNEL_STDERR = 1
+LOG_CHANNEL_HEADER = 2
+
 class IStatusLog(Interface):
     """I represent a single Log, which is a growing list of text items that
     contains some kind of output for a single BuildStep. I might be finished,
@@ -661,9 +666,11 @@ class IStatusLog(Interface):
         """Return one big string with the contents of the Log. This merges
         all non-header chunks together."""
 
-    def readlines():
-        """Return a list (really an iterator) of newline-terminated lines,
-        excluding header chunks."""
+    def readlines(channel=LOG_CHANNEL_STDOUT):
+        """Read lines from one channel of the logfile. This returns an
+        iterator that will provide single lines of text (including the
+        trailing newline).
+        """
 
     def getTextWithHeaders():
         """Return one big string with the contents of the Log. This merges
@@ -673,10 +680,6 @@ class IStatusLog(Interface):
         """Generate a list of (channel, text) tuples. 'channel' is a number,
         0 for stdout, 1 for stderr, 2 for header. (note that stderr is merged
         into stdout if PTYs are in use)."""
-
-LOG_CHANNEL_STDOUT = 0
-LOG_CHANNEL_STDERR = 1
-LOG_CHANNEL_HEADER = 2
 
 class IStatusLogConsumer(Interface):
     """I am an object which can be passed to IStatusLog.subscribeConsumer().
