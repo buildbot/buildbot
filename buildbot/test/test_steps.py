@@ -17,17 +17,17 @@
 import os, time
 
 from twisted.trial import unittest
-from twisted.internet import reactor
-from twisted.internet.defer import Deferred
+from twisted.internet import reactor, defer
 
 from buildbot.sourcestamp import SourceStamp
 from buildbot.process import step, base, factory
 from buildbot.steps import shell, source
 from buildbot.status import builder
+from buildbot.status.builder import SUCCESS
 from buildbot.test.runutils import RunMixin, rmtree
-from buildbot.test.runutils import makeBuildStep
+from buildbot.test.runutils import makeBuildStep, StepTester
 from buildbot.twcompat import maybeWait
-from buildbot.slave import commands
+from buildbot.slave import commands, registry
 
 
 class MyShellCommand(shell.ShellCommand):
@@ -57,7 +57,7 @@ class FakeRemote:
 ##         if self.callRemoteNotifier:
 ##             reactor.callLater(0, self.callRemoteNotifier, event)
         self.remoteCalls += 1
-        self.deferred = Deferred()
+        self.deferred = defer.Deferred()
         return self.deferred
     def notifyOnDisconnect(self, callback):
         pass
@@ -363,3 +363,32 @@ class ReorgCompatibility(unittest.TestCase):
         from buildbot.process.step import Dummy
         from buildbot.process.step import FailingDummy
         from buildbot.process.step import RemoteDummy
+
+
+class _SimpleBuildStep(step.BuildStep):
+    def start(self):
+        args = {"arg1": "value"}
+        cmd = step.RemoteCommand("simple", args)
+        d = self.runCommand(cmd)
+        d.addCallback(lambda res: self.finished(SUCCESS))
+
+class _SimpleCommand(commands.Command):
+    def start(self):
+        self.builder.flag = True
+        self.builder.flag_args = self.args
+        return defer.succeed(None)
+
+class CheckStepTester(StepTester, unittest.TestCase):
+    def testSimple(self):
+        self.slavebase = "testSimple.slave"
+        self.masterbase = "testSimple.master"
+        sb = self.makeSlaveBuilder()
+        sb.flag = False
+        registry.registerSlaveCommand("simple", _SimpleCommand, "1")
+        step = self.makeStep(_SimpleBuildStep)
+        d = self.runStep(step)
+        def _checkSimple(results):
+            self.failUnless(sb.flag)
+            self.failUnlessEqual(sb.flag_args, {"arg1": "value"})
+        d.addCallback(_checkSimple)
+        return maybeWait(d)
