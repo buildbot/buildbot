@@ -320,7 +320,6 @@ class SlaveCommandTestBase(SignalMixin):
                 print u["stderr"]
 
 # ----------------------------------------
-from twisted.spread.util import LocalAsRemote
 
 class LocalWrapper:
     # r = pb.Referenceable()

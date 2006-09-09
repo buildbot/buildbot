@@ -1,5 +1,19 @@
 2006-09-08  Brian Warner  <warner@lothar.com>
 
+	* buildbot/steps/transfer.py (FileUpload,FileDownload): new
+	BuildStep which lets you transfer files from the master to the
+	slave or vice versa. Thanks to Albert Hofkamp for the original
+	patch. Fixes SF#1504631.
+	* buildbot/slave/commands.py (SlaveFileUploadCommand): slave-side
+	support for it
+	(SlaveFileDownloadCommand): same
+	* docs/buildbot.texinfo (Transferring Files): document it
+	* buildbot/test/test_transfer.py: test it
+	* buildbot/test/runutils.py (StepTester): new utility class for
+	testing BuildSteps and RemoteCommands without Builds or Bots or PB
+	* buildbot/test/test_steps.py (CheckStepTester): validate that the
+	utility class works
+
 	* buildbot/interfaces.py (IStatusLog.readlines): make it easier to
 	walk through StatusLogs one line at a time, mostly for the benefit
 	of ShellCommand.createSummary methods. You can either walk through

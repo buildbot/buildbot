@@ -150,6 +150,8 @@ class Download(StepTester, unittest.TestCase):
 #  test relative paths
 #   need to implement expanduser() for slave-side
 #  test error message when master-side file is in a missing directory
+#  test maxsize=
 #  remove workdir= default?
 #  clean up command start/finish code
+#  detect slave-too-old
 

@@ -785,7 +785,7 @@ class SlaveFileDownloadCommand(Command):
 
         - ['workdir']:   directory to use
         - ['slavedest']: name of the file to upload to the buildmaster
-        - ['reader']:    object for remote writing
+        - ['reader']:    object for remote reading
         - ['maxsize']:   max size (in bytes) of file to write
         - ['blocksize']: max size for one data block
 

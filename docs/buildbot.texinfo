@@ -3706,7 +3706,9 @@ buildslave. But occasionally it is useful to do some work on the
 buildmaster side. The most basic way to involve the buildmaster is
 simply to move a file from the slave to the master, or vice versa.
 There are a pair of BuildSteps named @code{FileUpload} and
-@code{FileDownload} to provide this functionality.
+@code{FileDownload} to provide this functionality. @code{FileUpload}
+moves a file @emph{up to} the master, while @code{FileDownload} moves
+a file @emph{down from} the master.
 
 As an example, let's assume that there is a step which produces an
 HTML file within the source tree that contains some sort of generated
@@ -3749,6 +3751,7 @@ f.addStep(FileDownload
 f.addStep(ShellCommand, command=["make", "config"])
 @end example
 
+@c TODO: document other parameters
 
 
 @node Writing New BuildSteps,  , Transferring Files, Build Steps
