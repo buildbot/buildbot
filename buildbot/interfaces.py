@@ -661,6 +661,10 @@ class IStatusLog(Interface):
         """Return one big string with the contents of the Log. This merges
         all non-header chunks together."""
 
+    def readlines():
+        """Return a list (really an iterator) of newline-terminated lines,
+        excluding header chunks."""
+
     def getTextWithHeaders():
         """Return one big string with the contents of the Log. This merges
         all chunks (including headers) together."""

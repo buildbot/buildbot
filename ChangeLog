@@ -1,5 +1,15 @@
 2006-09-08  Brian Warner  <warner@lothar.com>
 
+	* buildbot/interfaces.py (IStatusLog.readlines): make it easier to
+	walk through StatusLogs one line at a time, mostly for the benefit of
+	ShellCommand.createSummary methods.
+	* buildbot/status/builder.py (LogFile.readlines): implement it.
+	Note that this is not yet memory-efficient, it just pulls the
+	whole file into RAM and then splits it up with a StringIO.
+	Eventually this should be a generator that only pulls chunks from
+	disk as necessary.
+	* buildbot/test/test_status.py (Log.testReadlines): test it
+
 	* docs/buildbot.texinfo: update to match changes
 	* buildbot/process/factory.py: stop using old definitions
 	* buildbot/process/process_twisted.py: same

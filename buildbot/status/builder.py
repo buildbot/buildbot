@@ -13,6 +13,10 @@ try:
     pickle = cPickle
 except ImportError:
     import pickle
+try:
+    from cStringIO import StringIO
+except ImportError:
+    from StringIO import StringIO
 
 # sibling imports
 from buildbot import interfaces, util, sourcestamp
@@ -333,6 +337,15 @@ class LogFile:
                 yield leftover[1]
             else:
                 yield leftover
+
+    def readlines(self):
+        """Return an iterator that produces newline-terminated lines,
+        excluding header chunks."""
+        # TODO: make this memory-efficient, by turning it into a generator
+        # that retrieves chunks as necessary, like a pull-driven version of
+        # twisted.protocols.basic.LineReceiver
+        io = StringIO(self.getText())
+        return io.readlines()
 
     def subscribe(self, receiver, catchup):
         if self.finished:

@@ -488,6 +488,29 @@ class Log(unittest.TestCase):
         l.finish()
         self.failUnlessEqual(l.getText(), 160*"a")
 
+    def testReadlines(self):
+        l = MyLog(self.basedir, "chunks")
+        l.addHeader("HEADER\n") # should be ignored
+        l.addStdout("Some text\n")
+        l.addStdout("Some More Text\nAnd Some More\n")
+        l.addStderr("Some Stderr\n")
+        l.addStdout("Last line\n")
+        l.finish()
+        alllines = list(l.readlines())
+        self.failUnlessEqual(len(alllines), 5)
+        self.failUnlessEqual(alllines[0], "Some text\n")
+        self.failUnlessEqual(alllines[3], "Some Stderr\n")
+        self.failUnlessEqual(alllines[4], "Last line\n")
+        lines = l.readlines()
+        if False: # TODO: l.readlines() is not yet an iterator
+            # verify that it really is an iterator
+            line0 = lines.next()
+            self.failUnlessEqual(line0, "Some text\n")
+            line1 = lines.next()
+            line2 = lines.next()
+            self.failUnlessEqual(line2, "And Some More\n")
+
+
     def testChunks(self):
         l = MyLog(self.basedir, "chunks")
         c1 = l.getChunks()
