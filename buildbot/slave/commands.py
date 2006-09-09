@@ -680,6 +680,8 @@ class SlaveFileUploadCommand(Command):
 
     """
 
+    debug = False
+
     def setup(self,args):
         self.workdir = args['workdir']
         self.filename = os.path.basename(args['slavesrc'])
@@ -689,19 +691,23 @@ class SlaveFileUploadCommand(Command):
         self.stderr = None
         self.rc = 0
 
-        self.debug = 0
-	if self.debug: log.msg('SlaveFileUploadCommand started')
+	if self.debug:
+            log.msg('SlaveFileUploadCommand started')
 
         # Open file
-        self.path = os.path.join(self.builder.basedir,self.workdir,self.filename)
+        self.path = os.path.join(self.builder.basedir,
+                                 self.workdir,
+                                 self.filename)
         try:
             self.fp = open(self.path, 'r')
-            if self.debug: log.msg('Opened %r for upload' % self.path)
+            if self.debug:
+                log.msg('Opened %r for upload' % self.path)
         except:
             self.fp = None
             self.stderr = 'Cannot open file %r for upload' % self.path
             self.rc = 1
-            if self.debug: log.msg('Cannot open file %r for upload' % self.path)
+            if self.debug:
+                log.msg('Cannot open file %r for upload' % self.path)
 
 
     def start(self):
@@ -715,7 +721,8 @@ class SlaveFileUploadCommand(Command):
         Write a block of data to the remote writer
         """
         if self.interrupted or self.fp is None:
-            if self.debug: log.msg('SlaveFileUploadCommand._writeBlock(): end')
+            if self.debug:
+                log.msg('SlaveFileUploadCommand._writeBlock(): end')
             d = self.writer.callRemote('close')
             d.addCallback(lambda _: self.finished())
             return
@@ -733,8 +740,9 @@ class SlaveFileUploadCommand(Command):
         else:
             data = self.fp.read(length)
 
-        if self.debug: log.msg('SlaveFileUploadCommand._writeBlock(): '+
-                        'allowed=%d readlen=%d' % (length,len(data)))
+        if self.debug:
+            log.msg('SlaveFileUploadCommand._writeBlock(): '+
+                    'allowed=%d readlen=%d' % (length,len(data)))
         if len(data) == 0:
             d = self.writer.callRemote('close')
             d.addCallback(lambda _: self.finished())
@@ -747,7 +755,8 @@ class SlaveFileUploadCommand(Command):
 
 
     def interrupt(self):
-        if self.debug: log.msg('interrupted')
+        if self.debug:
+            log.msg('interrupted')
         if self.interrupted:
             return
         if self.stderr is None:
@@ -758,7 +767,8 @@ class SlaveFileUploadCommand(Command):
 
 
     def finished(self):
-        if self.debug: log.msg('finished: stderr=%r, rc=%r' % (self.stderr,self.rc))
+        if self.debug:
+            log.msg('finished: stderr=%r, rc=%r' % (self.stderr,self.rc))
         if self.stderr is None:
             self.sendStatus({'rc':self.rc})
         else:
@@ -780,6 +790,7 @@ class SlaveFileDownloadCommand(Command):
         - ['blocksize']: max size for one data block
 
     """
+    debug = False
 
     def setup(self,args):
         self.workdir = args['workdir']
@@ -790,14 +801,17 @@ class SlaveFileDownloadCommand(Command):
         self.stderr = None
         self.rc = 0
 
-        self.debug = 0
-	if self.debug: log.msg('SlaveFileDownloadCommand started')
+	if self.debug:
+            log.msg('SlaveFileDownloadCommand started')
 
         # Open file
-        self.path = os.path.join(self.builder.basedir,self.workdir,self.filename)
+        self.path = os.path.join(self.builder.basedir,
+                                 self.workdir,
+                                 self.filename)
         try:
             self.fp = open(self.path, 'w')
-            if self.debug: log.msg('Opened %r for download' % self.path)
+            if self.debug:
+                log.msg('Opened %r for download' % self.path)
         except:
             self.fp = None
             self.stderr = 'Cannot open file %r for download' % self.path
@@ -817,7 +831,8 @@ class SlaveFileDownloadCommand(Command):
         Read a block of data from the remote reader
         """
         if self.interrupted or self.fp is None:
-            if self.debug: log.msg('SlaveFileDownloadCommand._readBlock(): end')
+            if self.debug:
+                log.msg('SlaveFileDownloadCommand._readBlock(): end')
             d = self.reader.callRemote('close')
             d.addCallback(lambda _: self.finished())
             return
@@ -838,8 +853,9 @@ class SlaveFileDownloadCommand(Command):
             d.addCallback(self._writeData)
 
     def _writeData(self,data):
-        if self.debug: log.msg('SlaveFileDownloadCommand._readBlock(): '+
-                                                        'readlen=%d' % len(data))
+        if self.debug:
+            log.msg('SlaveFileDownloadCommand._readBlock(): '+
+                    'readlen=%d' % len(data))
         if len(data) == 0:
             d = self.reader.callRemote('close')
             d.addCallback(lambda _: self.finished())
@@ -852,7 +868,8 @@ class SlaveFileDownloadCommand(Command):
 
 
     def interrupt(self):
-        if self.debug: log.msg('interrupted')
+        if self.debug:
+            log.msg('interrupted')
         if self.interrupted:
             return
         if self.stderr is None:
@@ -866,8 +883,8 @@ class SlaveFileDownloadCommand(Command):
         if self.fp is not None:
             self.fp.close()
 
-        if self.debug: log.msg('finished: stderr=%r, rc=%r'
-                                                    % (self.stderr,self.rc))
+        if self.debug:
+            log.msg('finished: stderr=%r, rc=%r' % (self.stderr,self.rc))
         if self.stderr is None:
             self.sendStatus({'rc':self.rc})
         else:

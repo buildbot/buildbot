@@ -165,6 +165,7 @@ Build Steps
 * Source Checkout::             
 * ShellCommand::                
 * Simple ShellCommand Subclasses::  
+* Transferring Files::          
 * Writing New BuildSteps::      
 
 Source Checkout
@@ -2859,6 +2860,7 @@ control each.
 * Source Checkout::             
 * ShellCommand::                
 * Simple ShellCommand Subclasses::  
+* Transferring Files::          
 * Writing New BuildSteps::      
 @end menu
 
@@ -3498,7 +3500,7 @@ f.addStep(ShellCommand, command=["make", "test"],
 
 @end table
 
-@node Simple ShellCommand Subclasses, Writing New BuildSteps, ShellCommand, Build Steps
+@node Simple ShellCommand Subclasses, Transferring Files, ShellCommand, Build Steps
 @subsection Simple ShellCommand Subclasses
 
 Several subclasses of ShellCommand are provided as starting points for
@@ -3692,8 +3694,64 @@ running on.
 
 @end table
 
+@node Transferring Files, Writing New BuildSteps, Simple ShellCommand Subclasses, Build Steps
+@subsection Transferring Files
 
-@node Writing New BuildSteps,  , Simple ShellCommand Subclasses, Build Steps
+@cindex File Transfer
+@bsindex buildbot.steps.transfer.FileUpload
+@bsindex buildbot.steps.transfer.FileDownload
+
+Most of the work involved in a build will take place on the
+buildslave. But occasionally it is useful to do some work on the
+buildmaster side. The most basic way to involve the buildmaster is
+simply to move a file from the slave to the master, or vice versa.
+There are a pair of BuildSteps named @code{FileUpload} and
+@code{FileDownload} to provide this functionality.
+
+As an example, let's assume that there is a step which produces an
+HTML file within the source tree that contains some sort of generated
+project documentation. We want to move this file to the buildmaster,
+into a @file{~/public_html} directory, so it can be visible to
+developers. This file will wind up in the slave-side working directory
+under the name @file{docs/reference.html}. We want to put it into the
+master-side @file{~/public_html/ref.html}.
+
+@example
+from buildbot.steps.shell import ShellCommand
+from buildbot.steps.transfer import FileUpload
+
+f.addStep(ShellCommand, command=["make", "docs"])
+f.addStep(FileUpload,
+          slavesrc="docs/reference.html",
+          masterdest="~/public_html/ref.html")
+@end example
+
+The @code{masterdest=} argument will be passed to os.path.expanduser,
+so things like ``~'' will be expanded properly. Non-absolute paths
+will be interpreted relative to the buildmaster's base directory.
+Likewise, the @code{slavesrc=} argument will be expanded and
+interpreted relative to the builder's working directory.
+
+
+To move a file from the master to the slave, use the
+@code{FileDownload} command. For example, let's assume that some step
+requires a configuration file that, for whatever reason, could not be
+recorded in the source code repository or generated on the buildslave
+side:
+
+@example
+from buildbot.steps.shell import ShellCommand
+from buildbot.steps.transfer import FileUpload
+
+f.addStep(FileDownload
+          mastersrc="~/todays_build_config.txt",
+          slavedest="build_config.txt")
+f.addStep(ShellCommand, command=["make", "config"])
+@end example
+
+
+
+@node Writing New BuildSteps,  , Transferring Files, Build Steps
 @subsection Writing New BuildSteps
 
 While it is a good idea to keep your build process self-contained in

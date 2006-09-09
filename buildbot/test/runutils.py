@@ -319,3 +319,94 @@ class SlaveCommandTestBase(SignalMixin):
             if "stderr" in u:
                 print u["stderr"]
 
+# ----------------------------------------
+from twisted.spread.util import LocalAsRemote
+
+class LocalWrapper:
+    # r = pb.Referenceable()
+    # w = LocalWrapper(r)
+    # now you can do things like w.callRemote()
+    def __init__(self, target):
+        self.target = target
+
+    def callRemote(self, name, *args, **kwargs):
+        d = defer.maybeDeferred(self._callRemote, name, *args, **kwargs)
+        return d
+
+    def _callRemote(self, name, *args, **kwargs):
+        method = getattr(self.target, "remote_"+name)
+        return method(*args, **kwargs)
+
+    def notifyOnDisconnect(self, observer):
+        pass
+    def dontNotifyOnDisconnect(self, observer):
+        pass
+
+
+class LocalSlaveBuilder(bot.SlaveBuilder):
+    """I am object that behaves like a pb.RemoteReference, but in fact I
+    invoke methods locally."""
+    _arg_filter = None
+
+    def setArgFilter(self, filter):
+        self._arg_filter = filter
+
+    def remote_startCommand(self, stepref, stepId, command, args):
+        if self._arg_filter:
+            args = self._arg_filter(args)
+        # stepref should be a RemoteReference to the RemoteCommand
+        return bot.SlaveBuilder.remote_startCommand(self,
+                                                    LocalWrapper(stepref),
+                                                    stepId, command, args)
+
+class StepTester:
+    """Utility class to exercise BuildSteps and RemoteCommands, without
+    really using a Build or a Bot. No networks are used.
+
+    Use this as follows::
+
+    class MyTest(StepTester, unittest.TestCase):
+        def testOne(self):
+            self.slavebase = 'testOne.slave'
+            self.masterbase = 'testOne.master'
+            sb = self.makeSlaveBuilder()
+            step = self.makeStep(stepclass, **kwargs)
+            d = self.runStep(step)
+            d.addCallback(_checkResults)
+            return d
+    """
+
+    #slavebase = "slavebase"
+    slavebuilderbase = "slavebuilderbase"
+    #masterbase = "masterbase"
+
+    def makeSlaveBuilder(self):
+        os.mkdir(self.slavebase)
+        os.mkdir(os.path.join(self.slavebase, self.slavebuilderbase))
+        b = bot.Bot(self.slavebase, False)
+        b.startService()
+        sb = LocalSlaveBuilder("slavebuildername", False)
+        sb.setArgFilter(self.filterArgs)
+        sb.usePTY = False
+        sb.setServiceParent(b)
+        sb.setBuilddir(self.slavebuilderbase)
+        self.remote = LocalWrapper(sb)
+        return sb
+
+    workdir = "build"
+    def makeStep(self, factory, **kwargs):
+        if not kwargs.has_key("workdir"):
+            kwargs['workdir'] = self.workdir
+        step = makeBuildStep(self.masterbase, factory, **kwargs)
+        return step
+
+    def runStep(self, step):
+        d = defer.maybeDeferred(step.startStep, self.remote)
+        return d
+
+    def wrap(self, target):
+        return LocalWrapper(target)
+
+    def filterArgs(self, args):
+        # this can be overridden
+        return args

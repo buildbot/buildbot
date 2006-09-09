@@ -1,11 +1,14 @@
+# -*- test-case-name: buildbot.test.test_transfer -*-
 
+import os.path
 from twisted.internet import reactor
 from twisted.spread import pb
+from twisted.python import log
 from buildbot.process.step import RemoteCommand, BuildStep
 from buildbot.process.step import SUCCESS, FAILURE
 
 
-class FileIO(pb.Referenceable):
+class _FileIO(pb.Referenceable):
     """
     Helper base class that acts as remote-accessible file-object
     """
@@ -21,13 +24,13 @@ class FileIO(pb.Referenceable):
             self.fp.close()
             self.fp = None
 
-class FileWriter(FileIO):
+class _FileWriter(_FileIO):
     """
     Helper class that acts as a file-object with write access
     """
 
     def __init__(self,fp, maxsize=None):
-        FileIO.__init__(self,fp)
+        _FileIO.__init__(self,fp)
 	self.maxsize = maxsize
 
     def remote_write(self,data):
@@ -47,7 +50,7 @@ class FileWriter(FileIO):
 	    else:
                 self.fp.write(data)
 
-class FileReader(FileIO):
+class _FileReader(_FileIO):
     """
     Helper class that acts as a file-object with read access
     """
@@ -107,20 +110,27 @@ class FileUpload(BuildStep):
             if k in BuildStep.parms:
                 buildstep_kwargs[k] = kwargs[k]
                 del kwargs[k]
-            BuildStep.__init__(self,build,**buildstep_kwargs)
+            BuildStep.__init__(self, build, **buildstep_kwargs)
 
         self.args = kwargs
         self.fileWriter = None
 
     def start(self):
+        source = self.args['slavesrc']
+        masterdest = self.args['masterdest']
+        # we rely upon the fact that the buildmaster runs chdir'ed into its
+        # basedir to make sure that relative paths in masterdest are expanded
+        # properly. TODO: maybe pass the master's basedir all the way down
+        # into the BuildStep so we can do this better.
+        target = os.path.expanduser(masterdest)
         log.msg("FileUpload started, from slave %r to master %r"
-                            % (self.args['slavesrc'],self.args['masterdest']))
+                % (source, target))
 
         self.step_status.setColor('yellow')
-        self.step_status.setText(['uploading', self.args['slavesrc']])
+        self.step_status.setText(['uploading', source])
 
         fp = open(self.args['masterdest'],'w')
-        self.fileWriter = FileWriter(fp)
+        self.fileWriter = _FileWriter(fp)
 
         # default arguments
         args = {
@@ -143,9 +153,9 @@ class FileUpload(BuildStep):
 
         if self.cmd.rc is None or self.cmd.rc == 0:
             self.step_status.setColor('green')
-            return BuildStep.finished(self,SUCCESS)
+            return BuildStep.finished(self, SUCCESS)
         self.step_status.setColor('red')
-        return BuildStep.finished(self,FAILURE)
+        return BuildStep.finished(self, FAILURE)
 
 class FileDownload(BuildStep):
     """
@@ -169,38 +179,41 @@ class FileDownload(BuildStep):
             if k in BuildStep.parms:
                 buildstep_kwargs[k] = kwargs[k]
                 del kwargs[k]
-            BuildStep.__init__(self,build,**buildstep_kwargs)
+            BuildStep.__init__(self, build, **buildstep_kwargs)
 
         self.args = kwargs
         self.fileReader = None
 
     def start(self):
-        log.msg("FileDownload started, from master %r to slave %r"
-                            % (self.args['mastersrc'],self.args['slavedest']))
+        source = os.path.expanduser(self.args['mastersrc'])
+        slavedest = self.args['slavedest']
+        log.msg("FileDownload started, from master %r to slave %r" %
+                (source, slavedest))
 
         self.step_status.setColor('yellow')
-        self.step_status.setText(['downloading', self.args['slavedest']])
+        self.step_status.setText(['downloading', slavedest])
 
         # If file does not exist, bail out with an error
-        if not os.path.isfile(self.args['mastersrc']):
+        if not os.path.isfile(source):
             self.addCompleteLog('stderr',
-                    'File %r not available at master' % self.args['mastersrc'])
+                                'File %r not available at master' % source)
             reactor.callLater(0, self.reportFail)
             return
 
         # setup structures for reading the file
-        fp = open(self.args['mastersrc'],'r')
-        self.fileReader = FileReader(fp)
+        fp = open(source, 'r')
+        self.fileReader = _FileReader(fp)
 
-        a = self.args.copy()
-        a['reader'] = self.fileReader
+        # default arguments
+        args = {
+            'maxsize': None,
+            'blocksize': 16*1024,
+            'workdir': 'build',
+            }
+        args.update(self.args)
+        args['reader'] = self.fileReader
 
-        # add defaults for optional settings
-        for k,dv in [('maxsize',None),('blocksize',16*1024),('workdir','build')]:
-            if k not in a:
-                a[k] = dv
-
-        self.cmd = StatusRemoteCommand('downloadFile', a)
+        self.cmd = StatusRemoteCommand('downloadFile', args)
         d = self.runCommand(self.cmd)
         d.addCallback(self.finished).addErrback(self.failed)
 
@@ -212,10 +225,10 @@ class FileDownload(BuildStep):
 
         if self.cmd.rc is None or self.cmd.rc == 0:
             self.step_status.setColor('green')
-            return BuildStep.finished(self,SUCCESS)
+            return BuildStep.finished(self, SUCCESS)
         return self.reportFail()
 
     def reportFail(self):
         self.step_status.setColor('red')
-        return BuildStep.finished(self,FAILURE)
+        return BuildStep.finished(self, FAILURE)
 
