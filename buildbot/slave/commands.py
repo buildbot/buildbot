@@ -666,6 +666,219 @@ class Command:
         return None
 
 
+
+class SlaveFileUploadCommand(Command):
+    """
+    Upload a file from slave to build master
+    Arguments:
+
+        - ['workdir']:   directory to use
+        - ['slavesrc']:  name of the file to upload to the buildmaster
+        - ['writer']:    object for remote writing
+        - ['maxsize']:   max size (in bytes) of file to write
+        - ['blocksize']: max size for one data block
+
+    """
+
+    def setup(self,args):
+        self.workdir = args['workdir']
+        self.filename = os.path.basename(args['slavesrc'])
+        self.writer = args['writer']
+        self.maxsize = args['maxsize']
+        self.blocksize = args['blocksize']
+        self.stderr = None
+        self.rc = 0
+
+        self.debug = 0
+	if self.debug: log.msg('SlaveFileUploadCommand started')
+
+        # Open file
+        self.path = os.path.join(self.builder.basedir,self.workdir,self.filename)
+        try:
+            self.fp = open(self.path, 'r')
+            if self.debug: log.msg('Opened %r for upload' % self.path)
+        except:
+            self.fp = None
+            self.stderr = 'Cannot open file %r for upload' % self.path
+            self.rc = 1
+            if self.debug: log.msg('Cannot open file %r for upload' % self.path)
+
+
+    def start(self):
+        self.cmd = defer.Deferred()
+        reactor.callLater(0, self._writeBlock)
+
+        return self.cmd
+
+    def _writeBlock(self):
+        """
+        Write a block of data to the remote writer
+        """
+        if self.interrupted or self.fp is None:
+            if self.debug: log.msg('SlaveFileUploadCommand._writeBlock(): end')
+            d = self.writer.callRemote('close')
+            d.addCallback(lambda _: self.finished())
+            return
+
+        length = self.blocksize
+        if self.maxsize is not None and length > self.maxsize:
+            length = self.maxsize
+
+        if length <= 0:
+            if self.stderr is None:
+                self.stderr = 'Maximum filesize reached, truncating file %r' \
+                                % self.path
+                self.rc = 1
+            data = ''
+        else:
+            data = self.fp.read(length)
+
+        if self.debug: log.msg('SlaveFileUploadCommand._writeBlock(): '+
+                        'allowed=%d readlen=%d' % (length,len(data)))
+        if len(data) == 0:
+            d = self.writer.callRemote('close')
+            d.addCallback(lambda _: self.finished())
+        else:
+            if self.maxsize is not None:
+                self.maxsize = self.maxsize - len(data)
+                assert self.maxsize >= 0
+            d = self.writer.callRemote('write',data)
+            d.addCallback(lambda _: self._writeBlock())
+
+
+    def interrupt(self):
+        if self.debug: log.msg('interrupted')
+        if self.interrupted:
+            return
+        if self.stderr is None:
+            self.stderr = 'Upload of %r interrupted' % self.path
+            self.rc = 1
+        self.interrupted = True
+        self.finished()
+
+
+    def finished(self):
+        if self.debug: log.msg('finished: stderr=%r, rc=%r' % (self.stderr,self.rc))
+        if self.stderr is None:
+            self.sendStatus({'rc':self.rc})
+        else:
+            self.sendStatus({'stderr':self.stderr, 'rc':self.rc})
+        self.cmd.callback(0)
+
+registerSlaveCommand("uploadFile", SlaveFileUploadCommand, command_version)
+
+
+class SlaveFileDownloadCommand(Command):
+    """
+    Download a file from master to slave
+    Arguments:
+
+        - ['workdir']:   directory to use
+        - ['slavedest']: name of the file to upload to the buildmaster
+        - ['reader']:    object for remote writing
+        - ['maxsize']:   max size (in bytes) of file to write
+        - ['blocksize']: max size for one data block
+
+    """
+
+    def setup(self,args):
+        self.workdir = args['workdir']
+        self.filename = os.path.basename(args['slavedest'])
+        self.reader = args['reader']
+        self.maxsize = args['maxsize']
+        self.blocksize = args['blocksize']
+        self.stderr = None
+        self.rc = 0
+
+        self.debug = 0
+	if self.debug: log.msg('SlaveFileDownloadCommand started')
+
+        # Open file
+        self.path = os.path.join(self.builder.basedir,self.workdir,self.filename)
+        try:
+            self.fp = open(self.path, 'w')
+            if self.debug: log.msg('Opened %r for download' % self.path)
+        except:
+            self.fp = None
+            self.stderr = 'Cannot open file %r for download' % self.path
+            self.rc = 1
+            if self.debug:
+                log.msg('Cannot open file %r for download' % self.path)
+
+
+    def start(self):
+        self.cmd = defer.Deferred()
+        reactor.callLater(0, self._readBlock)
+
+        return self.cmd
+
+    def _readBlock(self):
+        """
+        Read a block of data from the remote reader
+        """
+        if self.interrupted or self.fp is None:
+            if self.debug: log.msg('SlaveFileDownloadCommand._readBlock(): end')
+            d = self.reader.callRemote('close')
+            d.addCallback(lambda _: self.finished())
+            return
+
+        length = self.blocksize
+        if self.maxsize is not None and length > self.maxsize:
+            length = self.maxsize
+
+        if length <= 0:
+            if self.stderr is None:
+                self.stderr = 'Maximum filesize reached, truncating file %r' \
+                                % self.path
+                self.rc = 1
+            d = self.reader.callRemote('close')
+            d.addCallback(lambda _: self.finished())
+        else:
+            d = self.reader.callRemote('read', length)
+            d.addCallback(self._writeData)
+
+    def _writeData(self,data):
+        if self.debug: log.msg('SlaveFileDownloadCommand._readBlock(): '+
+                                                        'readlen=%d' % len(data))
+        if len(data) == 0:
+            d = self.reader.callRemote('close')
+            d.addCallback(lambda _: self.finished())
+        else:
+            if self.maxsize is not None:
+                self.maxsize = self.maxsize - len(data)
+                assert self.maxsize >= 0
+            self.fp.write(data)
+            self._readBlock()   # setup call back for next block (or finish)
+
+
+    def interrupt(self):
+        if self.debug: log.msg('interrupted')
+        if self.interrupted:
+            return
+        if self.stderr is None:
+            self.stderr = 'Download of %r interrupted' % self.path
+            self.rc = 1
+        self.interrupted = True
+        self.finished()
+
+
+    def finished(self):
+        if self.fp is not None:
+            self.fp.close()
+
+        if self.debug: log.msg('finished: stderr=%r, rc=%r'
+                                                    % (self.stderr,self.rc))
+        if self.stderr is None:
+            self.sendStatus({'rc':self.rc})
+        else:
+            self.sendStatus({'stderr':self.stderr, 'rc':self.rc})
+        self.cmd.callback(0)
+
+
+registerSlaveCommand("downloadFile", SlaveFileDownloadCommand, command_version)
+
+
+
 class SlaveShellCommand(Command):
     """This is a Command which runs a shell command. The args dict contains
     the following keys:
