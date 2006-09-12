@@ -1,3 +1,9 @@
+2006-09-12  Brian Warner  <warner@lothar.com>
+
+	* buildbot/steps/shell.py: clean up test-case-name line, remove some
+	unnecessary imports
+	* buildbot/steps/dummy.py: same
+
 2006-09-08  Brian Warner  <warner@lothar.com>
 
 	* buildbot/steps/transfer.py (FileUpload,FileDownload): new

@@ -2,7 +2,7 @@
 from twisted.internet import reactor
 from buildbot.process.step import BuildStep, LoggingBuildStep
 from buildbot.process.step import LoggedRemoteCommand
-from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE, SKIPPED
+from buildbot.status.builder import SUCCESS, FAILURE
 
 class Dummy(BuildStep):
     """I am a dummy no-op step, which runs entirely on the master, and simply

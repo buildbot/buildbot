@@ -1,12 +1,10 @@
-# -*- test-case-name: buildbot.test.test_steps -*-
-
-# -*- test-case-name: buildbot.test.test_properties -*-
+# -*- test-case-name: buildbot.test.test_steps,buildbot.test.test_properties -*-
 
 import types, re
 from twisted.python import log
 from buildbot import util
 from buildbot.process.step import LoggingBuildStep, RemoteShellCommand
-from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE, SKIPPED
+from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE
 
 class _BuildPropertyDictionary:
     def __init__(self, build):
