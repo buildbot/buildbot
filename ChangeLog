@@ -3,6 +3,7 @@
 	* buildbot/steps/python.py (BuildEPYDoc, PyFlakes): add new steps. No
 	tests yet, alas.
 	* docs/buildbot.texinfo (Python BuildSteps): document them
+	(sendchange): include a link to PBChangeSource, since you need one
 
 	* buildbot/steps/shell.py: clean up test-case-name line, remove some
 	unnecessary imports

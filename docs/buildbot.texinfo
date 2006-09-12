@@ -5544,7 +5544,10 @@ These tools are generally used by buildmaster administrators.
 
 This command is used to tell the buildmaster about source changes. It
 is intended to be used from within a commit script, installed on the
-VC server.
+VC server. It requires that you have a PBChangeSource
+(@pxref{PBChangeSource}) running in the buildmaster (by being included
+in the @code{c['sources']} list).
+
 
 @example
 buildbot sendchange --master @var{MASTERHOST}:@var{PORT} --username @var{USER} @var{FILENAMES..}
