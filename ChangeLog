@@ -1,5 +1,9 @@
 2006-09-12  Brian Warner  <warner@lothar.com>
 
+	* buildbot/steps/python.py (BuildEPYDoc, PyFlakes): add new steps. No
+	tests yet, alas.
+	* docs/buildbot.texinfo (Python BuildSteps): document them
+
 	* buildbot/steps/shell.py: clean up test-case-name line, remove some
 	unnecessary imports
 	* buildbot/steps/dummy.py: same

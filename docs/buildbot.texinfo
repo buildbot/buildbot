@@ -165,6 +165,7 @@ Build Steps
 * Source Checkout::             
 * ShellCommand::                
 * Simple ShellCommand Subclasses::  
+* Python BuildSteps::           
 * Transferring Files::          
 * Writing New BuildSteps::      
 
@@ -184,6 +185,11 @@ Simple ShellCommand Subclasses
 * Compile::                     
 * Test::                        
 * Build Properties::            
+
+Python BuildSteps
+
+* BuildEPYDoc::                 
+* PyFlakes::                    
 
 Writing New BuildSteps
 
@@ -2860,6 +2866,7 @@ control each.
 * Source Checkout::             
 * ShellCommand::                
 * Simple ShellCommand Subclasses::  
+* Python BuildSteps::           
 * Transferring Files::          
 * Writing New BuildSteps::      
 @end menu
@@ -3500,7 +3507,7 @@ f.addStep(ShellCommand, command=["make", "test"],
 
 @end table
 
-@node Simple ShellCommand Subclasses, Transferring Files, ShellCommand, Build Steps
+@node Simple ShellCommand Subclasses, Python BuildSteps, ShellCommand, Build Steps
 @subsection Simple ShellCommand Subclasses
 
 Several subclasses of ShellCommand are provided as starting points for
@@ -3694,7 +3701,83 @@ running on.
 
 @end table
 
-@node Transferring Files, Writing New BuildSteps, Simple ShellCommand Subclasses, Build Steps
+@node Python BuildSteps, Transferring Files, Simple ShellCommand Subclasses, Build Steps
+@subsection Python BuildSteps
+
+Here are some BuildSteps that are specifcally useful for projects
+implemented in Python.
+
+@menu
+* BuildEPYDoc::                 
+* PyFlakes::                    
+@end menu
+
+@node BuildEPYDoc, PyFlakes, Python BuildSteps, Python BuildSteps
+@subsubsection BuildEPYDoc
+
+@bsindex buildbot.steps.python.BuildEPYDoc
+
+@url{http://epydoc.sourceforge.net/, epydoc} is a tool for generating
+API documentation for Python modules from their docstrings. It reads
+all the .py files from your source tree, processes the docstrings
+therein, and creates a large tree of .html files (or a single .pdf
+file).
+
+The @code{buildbot.steps.python.BuildEPYDoc} step will run
+@command{epydoc} to produce this API documentation, and will count the
+errors and warnings from its output.
+
+You must supply the command line to be used. The default is
+@command{make epydocs}, which assumes that your project has a Makefile
+with an ``epydocs'' target. You might wish to use something like
+@command{epydoc -o apiref source/PKGNAME} instead. You might also want
+to add @command{--pdf} to generate a PDF file instead of a large tree
+of HTML files.
+
+The API docs are generated in-place in the build tree (under the
+workdir, in the subdirectory controlled by the ``-o'' argument). To
+make them useful, you will probably have to copy them to somewhere
+they can be read. A command like @command{rsync -ad apiref/
+dev.example.com:~public_html/current-apiref/} might be useful. You
+might instead want to bundle them into a tarball and publish it in the
+same place where the generated install tarball is placed.
+
+@example
+from buildbot.steps.python import BuildEPYDoc
+
+...
+f.addStep(BuildEPYDoc, command=["epydoc", "-o", "apiref", "source/mypkg"])
+@end example
+
+
+@node PyFlakes,  , BuildEPYDoc, Python BuildSteps
+@subsubsection PyFlakes
+
+@bsindex buildbot.steps.python.PyFlakes
+
+@url{http://divmod.org/trac/wiki/DivmodPyflakes, PyFlakes} is a tool
+to perform basic static analysis of Python code to look for simple
+errors, like missing imports and references of undefined names. It is
+like a fast and simple form of the C ``lint'' program. Other tools
+(like pychecker) provide more detailed results but take longer to run.
+
+The @code{buildbot.steps.python.PyFlakes} step will run pyflakes and
+count the various kinds of errors and warnings it detects.
+
+You must supply the command line to be used. The default is
+@command{make pyflakes}, which assumes you have a top-level Makefile
+with a ``pyflakes'' target. You might want to use something like
+@command{pyflakes .} or @command{pyflakes src}.
+
+@example
+from buildbot.steps.python import PyFlakes
+
+...
+f.addStep(PyFlakes, command=["pyflakes", "src"])
+@end example
+
+
+@node Transferring Files, Writing New BuildSteps, Python BuildSteps, Build Steps
 @subsection Transferring Files
 
 @cindex File Transfer
