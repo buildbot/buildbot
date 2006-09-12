@@ -106,6 +106,7 @@ class Scheduler(BaseUpstreamScheduler):
 
         BaseUpstreamScheduler.__init__(self, name)
         self.treeStableTimer = treeStableTimer
+        assert isinstance(builderNames, (list, tuple))
         for b in builderNames:
             assert isinstance(b, str)
         self.builderNames = builderNames
