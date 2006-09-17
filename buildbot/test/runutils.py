@@ -9,7 +9,7 @@ from buildbot.twcompat import maybeWait
 from buildbot.slave import bot
 from buildbot.process.builder import Builder
 from buildbot.process.base import BuildRequest, Build
-from buildbot.process.step import BuildStep
+from buildbot.process.buildstep import BuildStep
 from buildbot.sourcestamp import SourceStamp
 from buildbot.status import builder
 

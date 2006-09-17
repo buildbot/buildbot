@@ -4,8 +4,8 @@ from twisted.python import log
 
 from buildbot.status import tests, builder
 from buildbot.status.builder import SUCCESS, FAILURE, WARNINGS, SKIPPED
-from buildbot.process.step import LogLineObserver, OutputProgressObserver
-from buildbot.process.step import RemoteShellCommand
+from buildbot.process.buildstep import LogLineObserver, OutputProgressObserver
+from buildbot.process.buildstep import RemoteShellCommand
 from buildbot.steps.shell import ShellCommand
 
 try:

@@ -3,7 +3,7 @@
 import warnings
 from email.Utils import formatdate
 from twisted.python import log
-from buildbot.process.step import LoggingBuildStep, LoggedRemoteCommand
+from buildbot.process.buildstep import LoggingBuildStep, LoggedRemoteCommand
 from buildbot.interfaces import BuildSlaveTooOldError
 from buildbot.status.builder import SKIPPED
 

@@ -3,7 +3,7 @@
 import types, re
 from twisted.python import log
 from buildbot import util
-from buildbot.process.step import LoggingBuildStep, RemoteShellCommand
+from buildbot.process.buildstep import LoggingBuildStep, RemoteShellCommand
 from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE
 
 class _BuildPropertyDictionary:

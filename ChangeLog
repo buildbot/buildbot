@@ -1,3 +1,12 @@
+2006-09-17  Brian Warner  <warner@lothar.com>
+
+	* buildbot/process/buildstep.py: rename step.py to buildstep.py .
+	The idea is that all the base classes (like BuildStep and
+	RemoteCommand and LogObserver) live in b.p.buildstep, and b.p.step
+	will be a leftover backwards-compatibility file that only contains
+	aliases for the steps that were moved out to buildbot.steps.*
+	* lots: change imports to match
+
 2006-09-12  Brian Warner  <warner@lothar.com>
 
 	* buildbot/scheduler.py (Scheduler.__init__): make sure that

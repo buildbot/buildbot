@@ -15,7 +15,7 @@ from buildbot.twcompat import providedBy, maybeWait
 from buildbot.status import html, builder
 from buildbot.changes.changes import Change
 from buildbot.process import base
-from buildbot.process.step import BuildStep
+from buildbot.process.buildstep import BuildStep
 from buildbot.test.runutils import setupBuildStepStatus
 
 class ConfiguredMaster(master.BuildMaster):

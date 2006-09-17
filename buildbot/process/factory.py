@@ -2,7 +2,7 @@
 
 from buildbot import util
 from buildbot.process.base import Build
-from buildbot.process.step import BuildStep
+from buildbot.process.buildstep import BuildStep
 from buildbot.steps.source import CVS, SVN
 from buildbot.steps.shell import Configure, Compile, Test
 

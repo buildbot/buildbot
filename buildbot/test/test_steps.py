@@ -20,7 +20,7 @@ from twisted.trial import unittest
 from twisted.internet import reactor, defer
 
 from buildbot.sourcestamp import SourceStamp
-from buildbot.process import step, base, factory
+from buildbot.process import buildstep, base, factory
 from buildbot.steps import shell, source
 from buildbot.status import builder
 from buildbot.status.builder import SUCCESS
@@ -98,7 +98,7 @@ class BuildStep(unittest.TestCase):
         cmd = "argle bargle"
         dir = "murkle"
         expectedEvents = []
-        step.RemoteCommand.commandCounter[0] = 3
+        buildstep.RemoteCommand.commandCounter[0] = 3
         c = MyShellCommand(workdir=dir, command=cmd, build=self.build,
                            timeout=10)
         self.assertEqual(self.remote.events, expectedEvents)
@@ -159,7 +159,7 @@ class BuildStep(unittest.TestCase):
         self.assertEqual(self.results, 0)
 
 
-class MyObserver(step.LogObserver):
+class MyObserver(buildstep.LogObserver):
     out = ""
     def outReceived(self, data):
         self.out = self.out + data
@@ -276,7 +276,7 @@ class Steps(unittest.TestCase):
         self.failUnlessEqual(s.description, ["single string"])
         self.failUnlessEqual(s.descriptionDone, ["another string"])
 
-class VersionCheckingStep(step.BuildStep):
+class VersionCheckingStep(buildstep.BuildStep):
     def start(self):
         # give our test a chance to run. It is non-trivial for a buildstep to
         # claw its way back out to the test case which is currently running.
@@ -284,7 +284,7 @@ class VersionCheckingStep(step.BuildStep):
         checker = master._checker
         checker(self)
         # then complete
-        self.finished(step.SUCCESS)
+        self.finished(buildstep.SUCCESS)
 
 version_config = """
 from buildbot.process import factory
@@ -365,10 +365,10 @@ class ReorgCompatibility(unittest.TestCase):
         from buildbot.process.step import RemoteDummy
 
 
-class _SimpleBuildStep(step.BuildStep):
+class _SimpleBuildStep(buildstep.BuildStep):
     def start(self):
         args = {"arg1": "value"}
-        cmd = step.RemoteCommand("simple", args)
+        cmd = buildstep.RemoteCommand("simple", args)
         d = self.runCommand(cmd)
         d.addCallback(lambda res: self.finished(SUCCESS))
 

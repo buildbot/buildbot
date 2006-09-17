@@ -4,8 +4,8 @@ import os.path
 from twisted.internet import reactor
 from twisted.spread import pb
 from twisted.python import log
-from buildbot.process.step import RemoteCommand, BuildStep
-from buildbot.process.step import SUCCESS, FAILURE
+from buildbot.process.buildstep import RemoteCommand, BuildStep
+from buildbot.process.buildstep import SUCCESS, FAILURE
 
 
 class _FileIO(pb.Referenceable):

@@ -1,7 +1,7 @@
 
 from twisted.internet import reactor
-from buildbot.process.step import BuildStep, LoggingBuildStep
-from buildbot.process.step import LoggedRemoteCommand
+from buildbot.process.buildstep import BuildStep, LoggingBuildStep
+from buildbot.process.buildstep import LoggedRemoteCommand
 from buildbot.status.builder import SUCCESS, FAILURE
 
 class Dummy(BuildStep):
