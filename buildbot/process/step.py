@@ -13,5 +13,4 @@ from buildbot.steps.dummy import Dummy, FailingDummy, RemoteDummy
 from buildbot.process.buildstep import LogObserver, LogLineObserver
 from buildbot.process.buildstep import RemoteShellCommand
 from buildbot.process.buildstep import BuildStep, LoggingBuildStep
-from buildbot.process.buildstep import ShellCommand, WithProperties
 

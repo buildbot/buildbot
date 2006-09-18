@@ -1,5 +1,7 @@
 2006-09-17  Brian Warner  <warner@lothar.com>
 
+	* buildbot/process/step.py: oops, added extra imports by mistake
+
 	* buildbot/changes/p4poller.py (P4Source._process_describe): do an
 	rstrip() on the first line coming out of the 'p4 describe'
 	process, to remove the stray ^M that Wade Brainerd reports seeing
