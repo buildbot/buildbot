@@ -1,5 +1,10 @@
 2006-09-17  Brian Warner  <warner@lothar.com>
 
+	* buildbot/changes/p4poller.py (P4Source._process_describe): do an
+	rstrip() on the first line coming out of the 'p4 describe'
+	process, to remove the stray ^M that Wade Brainerd reports seeing
+	in the 'when' field. Fixes SF#1555985.
+
 	* buildbot/master.py (BuildMaster.loadConfig): improve the error
 	message logged when c['schedulers'] is not right
 	* buildbot/scheduler.py (Scheduler.__init__): improve error

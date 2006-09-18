@@ -166,6 +166,9 @@ class P4Source(base.ChangeSource, util.ComparableMixin):
 
     def _process_describe(self, result, num):
         lines = result.split('\n')
+        # SF#1555985: Wade Brainerd reports a stray ^M at the end of the date
+        # field. The rstrip() is intended to remove that.
+        lines[0] = lines[0].rstrip()
         m = self.describe_header_re.match(lines[0])
         assert m, "Unexpected 'p4 describe -s' result: %r" % result
         who = m.group('who')
