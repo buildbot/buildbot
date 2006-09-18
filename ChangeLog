@@ -1,5 +1,12 @@
 2006-09-17  Brian Warner  <warner@lothar.com>
 
+	* buildbot/master.py (BuildMaster.loadConfig): improve the error
+	message logged when c['schedulers'] is not right
+	* buildbot/scheduler.py (Scheduler.__init__): improve error
+	message when a Scheduler() is created with the wrong arguments
+	* buildbot/test/test_config.py (ConfigTest.testSchedulerErrors):
+	verify that these error messages are emitted
+
 	* buildbot/process/buildstep.py: rename step.py to buildstep.py .
 	The idea is that all the base classes (like BuildStep and
 	RemoteCommand and LogObserver) live in b.p.buildstep, and b.p.step

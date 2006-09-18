@@ -106,9 +106,12 @@ class Scheduler(BaseUpstreamScheduler):
 
         BaseUpstreamScheduler.__init__(self, name)
         self.treeStableTimer = treeStableTimer
-        assert isinstance(builderNames, (list, tuple))
+        errmsg = ("The builderNames= argument to Scheduler must be a list "
+                  "of Builder description names (i.e. the 'name' key of the "
+                  "Builder specification dictionary)")
+        assert isinstance(builderNames, (list, tuple)), errmsg
         for b in builderNames:
-            assert isinstance(b, str)
+            assert isinstance(b, str), errmsg
         self.builderNames = builderNames
         self.branch = branch
         if fileIsImportant:

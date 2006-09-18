@@ -357,6 +357,25 @@ c['slavePortnum'] = 9999
 BuildmasterConfig = c
 """
 
+schedulersCfg = \
+"""
+from buildbot.scheduler import Scheduler, Dependent
+from buildbot.process.factory import BasicBuildFactory
+c = {}
+c['bots'] = [('bot1', 'pw1')]
+c['sources'] = []
+f1 = BasicBuildFactory('cvsroot', 'cvsmodule')
+b1 = {'name':'builder1', 'slavename':'bot1',
+      'builddir':'workdir', 'factory':f1}
+c['builders'] = [b1]
+c['schedulers'] = [Scheduler('full', None, 60, ['builder1'])]
+c['slavePortnum'] = 9999
+c['projectName'] = 'dummy project'
+c['projectURL'] = 'http://dummy.example.com'
+c['buildbotURL'] = 'http://dummy.example.com/buildbot'
+BuildmasterConfig = c
+"""
+
 class ConfigTest(unittest.TestCase):
     def setUp(self):
         self.buildmaster = BuildMaster(".")
@@ -533,64 +552,96 @@ c['sources'] = [s1]
         res.trap(*expected)
         return None # all is good
 
+    def testSchedulerErrors(self):
+        master = self.buildmaster
+        master.loadChanges()
+        master.loadConfig(emptyCfg)
+        self.failUnlessEqual(master.allSchedulers(), [])
+
+        def _shouldBeFailure(res, hint=None):
+            self.shouldBeFailure(res, AssertionError, ValueError)
+            if hint:
+                self.failUnless(str(res).find(hint) != -1)
+
+        def _loadConfig(res, newcfg):
+            return self.buildmaster.loadConfig(newcfg)
+        d = defer.succeed(None)
+
+        # c['schedulers'] must be a list
+        badcfg = schedulersCfg + \
+"""
+c['schedulers'] = Scheduler('full', None, 60, ['builder1'])
+"""
+        d.addCallback(_loadConfig, badcfg)
+        d.addBoth(_shouldBeFailure,
+                  "c['schedulers'] must be a list of Scheduler instances")
+
+        # c['schedulers'] must be a list of IScheduler objects
+        badcfg = schedulersCfg + \
+"""
+c['schedulers'] = ['oops', 'problem']
+"""
+        d.addCallback(_loadConfig, badcfg)
+        d.addBoth(_shouldBeFailure,
+                  "c['schedulers'] must be a list of Scheduler instances")
+
+        # c['schedulers'] must point at real builders
+        badcfg = schedulersCfg + \
+"""
+c['schedulers'] = [Scheduler('full', None, 60, ['builder-bogus'])]
+"""
+        d.addCallback(_loadConfig, badcfg)
+        d.addBoth(_shouldBeFailure, "uses unknown builder")
+
+        # builderNames= must be a list
+        badcfg = schedulersCfg + \
+"""
+c['schedulers'] = [Scheduler('full', None, 60, 'builder1')]
+"""
+        d.addCallback(_loadConfig, badcfg)
+        d.addBoth(_shouldBeFailure,
+                  "must be a list of Builder description names")
+
+        # builderNames= must be a list of strings, not dicts
+        badcfg = schedulersCfg + \
+"""
+c['schedulers'] = [Scheduler('full', None, 60, [b1])]
+"""
+        d.addCallback(_loadConfig, badcfg)
+        d.addBoth(_shouldBeFailure,
+                  "must be a list of Builder description names")
+
+        # builderNames= must be a list of strings, not a dict
+        badcfg = schedulersCfg + \
+"""
+c['schedulers'] = [Scheduler('full', None, 60, b1)]
+"""
+        d.addCallback(_loadConfig, badcfg)
+        d.addBoth(_shouldBeFailure,
+                  "must be a list of Builder description names")
+
+        # each Scheduler must have a unique name
+        badcfg = schedulersCfg + \
+"""
+c['schedulers'] = [Scheduler('dup', None, 60, []),
+                   Scheduler('dup', None, 60, [])]
+"""
+        d.addCallback(_loadConfig, badcfg)
+        d.addBoth(_shouldBeFailure, "Schedulers must have unique names")
+
+        return maybeWait(d)
+
     def testSchedulers(self):
         master = self.buildmaster
         master.loadChanges()
         master.loadConfig(emptyCfg)
         self.failUnlessEqual(master.allSchedulers(), [])
 
-        self.schedulersCfg = \
-"""
-from buildbot.scheduler import Scheduler, Dependent
-from buildbot.process.factory import BasicBuildFactory
-c = {}
-c['bots'] = [('bot1', 'pw1')]
-c['sources'] = []
-c['schedulers'] = [Scheduler('full', None, 60, ['builder1'])]
-f1 = BasicBuildFactory('cvsroot', 'cvsmodule')
-c['builders'] = [{'name':'builder1', 'slavename':'bot1',
-                  'builddir':'workdir', 'factory':f1}]
-c['slavePortnum'] = 9999
-c['projectName'] = 'dummy project'
-c['projectURL'] = 'http://dummy.example.com'
-c['buildbotURL'] = 'http://dummy.example.com/buildbot'
-BuildmasterConfig = c
-"""
-
-        # c['schedulers'] must be a list
-        badcfg = self.schedulersCfg + \
-"""
-c['schedulers'] = Scheduler('full', None, 60, ['builder1'])
-"""
-        d = defer.maybeDeferred(self.buildmaster.loadConfig, badcfg)
-        d.addBoth(self._testSchedulers_1)
+        d = self.buildmaster.loadConfig(schedulersCfg)
+        d.addCallback(self._testSchedulers_1)
         return maybeWait(d)
+
     def _testSchedulers_1(self, res):
-        self.shouldBeFailure(res, AssertionError)
-        # c['schedulers'] must be a list of IScheduler objects
-        badcfg = self.schedulersCfg + \
-"""
-c['schedulers'] = ['oops', 'problem']
-"""
-        d = defer.maybeDeferred(self.buildmaster.loadConfig, badcfg)
-        d.addBoth(self._testSchedulers_2)
-        return d
-    def _testSchedulers_2(self, res):
-        self.shouldBeFailure(res, AssertionError)
-        # c['schedulers'] must point at real builders
-        badcfg = self.schedulersCfg + \
-"""
-c['schedulers'] = [Scheduler('full', None, 60, ['builder-bogus'])]
-"""
-        d = defer.maybeDeferred(self.buildmaster.loadConfig, badcfg)
-        d.addBoth(self._testSchedulers_3)
-        return d
-    def _testSchedulers_3(self, res):
-        self.shouldBeFailure(res, AssertionError)
-        d = self.buildmaster.loadConfig(self.schedulersCfg)
-        d.addCallback(self._testSchedulers_4)
-        return d
-    def _testSchedulers_4(self, res):
         sch = self.buildmaster.allSchedulers()
         self.failUnlessEqual(len(sch), 1)
         s = sch[0]
@@ -600,15 +651,15 @@ c['schedulers'] = [Scheduler('full', None, 60, ['builder-bogus'])]
         self.failUnlessEqual(s.treeStableTimer, 60)
         self.failUnlessEqual(s.builderNames, ['builder1'])
 
-        newcfg = self.schedulersCfg + \
+        newcfg = schedulersCfg + \
 """
 s1 = Scheduler('full', None, 60, ['builder1'])
 c['schedulers'] = [s1, Dependent('downstream', s1, ['builder1'])]
 """
         d = self.buildmaster.loadConfig(newcfg)
-        d.addCallback(self._testSchedulers_5, newcfg)
+        d.addCallback(self._testSchedulers_2, newcfg)
         return d
-    def _testSchedulers_5(self, res, newcfg):
+    def _testSchedulers_2(self, res, newcfg):
         sch = self.buildmaster.allSchedulers()
         self.failUnlessEqual(len(sch), 2)
         s = sch[0]
@@ -620,9 +671,9 @@ c['schedulers'] = [s1, Dependent('downstream', s1, ['builder1'])]
 
         # reloading the same config file should leave the schedulers in place
         d = self.buildmaster.loadConfig(newcfg)
-        d.addCallback(self._testSchedulers_6, sch)
+        d.addCallback(self._testSchedulers_3, sch)
         return d
-    def _testSchedulers_6(self, res, sch1):
+    def _testSchedulers_3(self, res, sch1):
         sch2 = self.buildmaster.allSchedulers()
         self.failUnlessEqual(len(sch2), 2)
         sch1.sort()
@@ -632,16 +683,6 @@ c['schedulers'] = [s1, Dependent('downstream', s1, ['builder1'])]
         self.failUnlessIdentical(sch1[1], sch2[1])
         self.failUnlessIdentical(sch1[0].parent, self.buildmaster)
         self.failUnlessIdentical(sch1[1].parent, self.buildmaster)
-        badcfg = self.schedulersCfg + \
-"""
-c['schedulers'] = [Scheduler('dup', None, 60, []),
-                   Scheduler('dup', None, 60, [])]
-"""
-        d = defer.maybeDeferred(self.buildmaster.loadConfig, badcfg)
-        d.addBoth(self._testSchedulers_7)
-        return d
-    def _testSchedulers_7(self, res):
-        self.shouldBeFailure(res, ValueError)
 
 
 

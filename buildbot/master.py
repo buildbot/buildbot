@@ -733,9 +733,10 @@ class BuildMaster(service.MultiService, styles.Versioned):
             assert interfaces.IChangeSource(s, None)
         # this assertion catches c['schedulers'] = Scheduler(), since
         # Schedulers are service.MultiServices and thus iterable.
-        assert isinstance(schedulers, (list, tuple))
+        errmsg = "c['schedulers'] must be a list of Scheduler instances"
+        assert isinstance(schedulers, (list, tuple)), errmsg
         for s in schedulers:
-            assert interfaces.IScheduler(s, None)
+            assert interfaces.IScheduler(s, None), errmsg
         assert isinstance(status, (list, tuple))
         for s in status:
             assert interfaces.IStatusReceiver(s, None)
@@ -774,7 +775,7 @@ class BuildMaster(service.MultiService, styles.Versioned):
                 # Manhole, the ChangeMaster, and the BotMaster (although most
                 # of these don't have names)
                 msg = ("Schedulers must have unique names, but "
-                       "'%s' was a duplicate" + s.name)
+                       "'%s' was a duplicate" % (s.name,))
                 raise ValueError(msg)
             schedulernames.append(s.name)
 
