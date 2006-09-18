@@ -6,6 +6,8 @@
 	will be a leftover backwards-compatibility file that only contains
 	aliases for the steps that were moved out to buildbot.steps.*
 	* lots: change imports to match
+	* buildbot/process/step.py: add a DeprecationWarning if it ever
+	gets imported
 
 2006-09-12  Brian Warner  <warner@lothar.com>
 
