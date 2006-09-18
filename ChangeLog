@@ -1,5 +1,13 @@
 2006-09-17  Brian Warner  <warner@lothar.com>
 
+	* buildbot/test/test_vc.py (VCBase._do_vctest_update_retry_1): it
+	turns out that SVN-1.4.0 doesn't fail to update once you've
+	replaced a file with a directory, unlike older versions of SVN and
+	pretty much every other VC tool we support. Since what we really
+	care about is that the update succeeds anyway, stop checking that
+	the tree got clobbered and just assert that the build succeeded.
+	(VCBase.printLogs): add a utility function for debugging
+
 	* buildbot/process/step.py: oops, added extra imports by mistake
 
 	* buildbot/changes/p4poller.py (P4Source._process_describe): do an

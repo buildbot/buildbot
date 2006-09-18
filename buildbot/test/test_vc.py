@@ -499,6 +499,15 @@ class VCBase(SignalMixin):
             self.fail("build did not succeed")
         return bs
 
+    def printLogs(self, bs):
+        for s in bs.getSteps():
+            for l in s.getLogs():
+                print "--- START step %s / log %s ---" % (s.getName(),
+                                                          l.getName())
+                print l.getTextWithHeaders()
+                print "--- STOP ---"
+                print
+
     def touch(self, d, f):
         open(os.path.join(d,f),"w").close()
     def shouldExist(self, *args):
@@ -666,7 +675,12 @@ class VCBase(SignalMixin):
         d.addCallback(self._do_vctest_update_retry_1)
         return d
     def _do_vctest_update_retry_1(self, bs):
-        self.shouldNotExist(self.workdir, "newfile")
+        # SVN-1.4.0 doesn't seem to have any problem with the
+        # file-turned-directory issue (although older versions did). So don't
+        # actually check that the tree was clobbered.. as long as the update
+        # succeeded (checked by doBuild), that should be good enough.
+        #self.shouldNotExist(self.workdir, "newfile")
+        pass
 
     def _do_vctest_copy(self, res):
         d = self.doBuild() # copy rebuild clobbers new files
