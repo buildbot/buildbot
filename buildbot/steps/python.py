@@ -54,53 +54,47 @@ class PyFlakes(ShellCommand):
     description = ["running", "pyflakes"]
     descriptionDone = ["pyflakes"]
     flunkOnFailure = False
+    flunkingIssues = ["undefined"] # any pyflakes lines like this cause FAILURE
+
+    MESSAGES = ("unused", "undefined", "redefs", "import*", "misc")
 
     def createSummary(self, log):
-        unused_imports = 0
-        undefined_names = 0
-        redefinition_of_unused = 0
-        star_import = 0
-        misc = 0
-        total = 0
+        counts = {}
+        summaries = {}
+        for m in self.MESSAGES:
+            counts[m] = 0
+            summaries[m] = []
 
         for line in StringIO(log.getText()).readlines():
             if "imported but unused" in line:
-                unused_imports += 1
+                m = "unused"
+            elif "*' used; unable to detect undefined names" in line:
+                m = "import*"
             elif "undefined name" in line:
-                undefined_names += 1
+                m = "undefined"
             elif "redefinition of unused" in line:
-                redefinition_of_unused += 1
-            elif "*' used; unable to detect undefined names":
-                star_import += 1
+                m = "redefs"
             else:
-                misc += 1
-            total += 1
+                m = "misc"
+            summaries[m].append(line)
+            counts[m] += 1
 
         self.descriptionDone = self.descriptionDone[:]
-        if unused_imports:
-            self.descriptionDone.append("unused=%d" % unused_imports)
-        if undefined_names:
-            self.descriptionDone.append("undefined=%s" % undefined_names)
-        if redefinition_of_unused:
-            self.descriptionDone.append("redefs=%s" % redefinition_of_unused)
-        if star_import:
-            self.descriptionDone.append("import*=%s" % star_import)
-        if misc:
-            self.descriptionDone.append("misc=%s" % misc)
-        self.num_warnings = total
-
-        self.setProperty("pyflakes-unused", unused_imports)
-        self.setProperty("pyflakes-undefined", undefined_names)
-        self.setProperty("pyflakes-redefinitions", redefinition_of_unused)
-        self.setProperty("pyflakes-import*", star_import)
-        self.setProperty("pyflakes-misc", misc)
-        self.setProperty("pyflakes-total", total)
+        for m in self.MESSAGES:
+            if counts[m]:
+                self.descriptionDone.append("%s=%d" % (m, counts[m]))
+                self.addCompleteLog(m, "".join(summaries[m]))
+            self.setProperty("pyflakes-%s" % m, counts[m])
+        self.setProperty("pyflakes-total", sum(counts.values()))
 
 
     def evaluateCommand(self, cmd):
         if cmd.rc != 0:
             return FAILURE
-        if self.num_warnings:
+        for m in self.flunkingIssues:
+            if self.getProperty("pyflakes-%s" % m):
+                return FAILURE
+        if self.getProperty("pyflakes-total"):
             return WARNINGS
         return SUCCESS
 

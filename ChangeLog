@@ -1,3 +1,9 @@
+2006-09-19  Brian Warner  <warner@lothar.com>
+
+	* buildbot/steps/python.py (PyFlakes): refactor, add summary logs
+	* buildbot/test/test_steps.py (Python.testPyFlakes): add a test
+	for at least the output-parsing parts of PyFlakes
+
 2006-09-18  Brian Warner  <warner@lothar.com>
 
 	* buildbot/steps/python.py: oops, fix import of StringIO

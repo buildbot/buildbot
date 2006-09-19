@@ -21,9 +21,9 @@ from twisted.internet import reactor, defer
 
 from buildbot.sourcestamp import SourceStamp
 from buildbot.process import buildstep, base, factory
-from buildbot.steps import shell, source
+from buildbot.steps import shell, source, python
 from buildbot.status import builder
-from buildbot.status.builder import SUCCESS
+from buildbot.status.builder import SUCCESS, FAILURE
 from buildbot.test.runutils import RunMixin, rmtree
 from buildbot.test.runutils import makeBuildStep, StepTester
 from buildbot.twcompat import maybeWait
@@ -392,3 +392,49 @@ class CheckStepTester(StepTester, unittest.TestCase):
             self.failUnlessEqual(sb.flag_args, {"arg1": "value"})
         d.addCallback(_checkSimple)
         return maybeWait(d)
+
+class Python(StepTester, unittest.TestCase):
+    def testPyFlakes(self):
+        self.masterbase = "Python.master"
+        step = self.makeStep(python.PyFlakes)
+        output = \
+"""buildbot/changes/freshcvsmail.py:5: 'FCMaildirSource' imported but unused
+buildbot/clients/debug.py:9: redefinition of unused 'gtk' from line 9
+buildbot/clients/debug.py:9: 'gnome' imported but unused
+buildbot/scripts/runner.py:323: redefinition of unused 'run' from line 321
+buildbot/scripts/runner.py:325: redefinition of unused 'run' from line 323
+buildbot/scripts/imaginary.py:12: undefined name 'size'
+buildbot/scripts/imaginary.py:18: 'from buildbot import *' used; unable to detect undefined names
+"""
+        log = step.addLog("stdio")
+        log.addStdout(output)
+        log.finish()
+        step.createSummary(log)
+        desc = step.descriptionDone
+        self.failUnless("unused=2" in desc)
+        self.failUnless("undefined=1" in desc)
+        self.failUnless("redefs=3" in desc)
+        self.failUnless("import*=1" in desc)
+
+        self.failUnlessEqual(step.getProperty("pyflakes-unused"), 2)
+        self.failUnlessEqual(step.getProperty("pyflakes-undefined"), 1)
+        self.failUnlessEqual(step.getProperty("pyflakes-redefs"), 3)
+        self.failUnlessEqual(step.getProperty("pyflakes-import*"), 1)
+        self.failUnlessEqual(step.getProperty("pyflakes-misc"), 0)
+        self.failUnlessEqual(step.getProperty("pyflakes-total"), 7)
+
+        logs = {}
+        for log in step.step_status.getLogs():
+            logs[log.getName()] = log
+
+        for name in ["unused", "undefined", "redefs", "import*"]:
+            self.failUnless(name in logs)
+        self.failIf("misc" in logs)
+        lines = logs["unused"].readlines()
+        self.failUnlessEqual(len(lines), 2)
+        self.failUnlessEqual(lines[0], "buildbot/changes/freshcvsmail.py:5: 'FCMaildirSource' imported but unused\n")
+
+        cmd = buildstep.RemoteCommand(None, {})
+        cmd.rc = 0
+        results = step.evaluateCommand(cmd)
+        self.failUnlessEqual(results, FAILURE) # because of the 'undefined'
