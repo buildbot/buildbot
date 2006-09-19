@@ -1,3 +1,7 @@
+2006-09-18  Brian Warner  <warner@lothar.com>
+
+	* buildbot/steps/python.py: oops, fix import of StringIO
+
 2006-09-17  Brian Warner  <warner@lothar.com>
 
 	* buildbot/test/test_vc.py (VCBase._do_vctest_update_retry_1): it

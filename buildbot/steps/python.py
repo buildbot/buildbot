@@ -4,9 +4,9 @@ from buildbot.steps.shell import ShellCommand
 
 try:
     import cStringIO
-    StringIO = cStringIO
+    StringIO = cStringIO.StringIO
 except ImportError:
-    import StringIO
+    from StringIO import StringIO
 
 
 class BuildEPYDoc(ShellCommand):
