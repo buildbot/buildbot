@@ -66,13 +66,13 @@ class PyFlakes(ShellCommand):
             summaries[m] = []
 
         for line in StringIO(log.getText()).readlines():
-            if "imported but unused" in line:
+            if line.find("imported but unused") != -1:
                 m = "unused"
-            elif "*' used; unable to detect undefined names" in line:
+            elif line.find("*' used; unable to detect undefined names") != -1:
                 m = "import*"
-            elif "undefined name" in line:
+            elif line.find("undefined name") != -1:
                 m = "undefined"
-            elif "redefinition of unused" in line:
+            elif line.find("redefinition of unused") != -1:
                 m = "redefs"
             else:
                 m = "misc"

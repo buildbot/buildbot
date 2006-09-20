@@ -1,6 +1,8 @@
 2006-09-19  Brian Warner  <warner@lothar.com>
 
 	* buildbot/steps/python.py (PyFlakes): refactor, add summary logs
+	(PyFlakes.createSummary): make it compatible with python-2.2
+
 	* buildbot/test/test_steps.py (Python.testPyFlakes): add a test
 	for at least the output-parsing parts of PyFlakes
 
