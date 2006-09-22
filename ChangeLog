@@ -1,3 +1,11 @@
+2006-09-21  Brian Warner  <warner@lothar.com>
+
+	* buildbot/scripts/sample.cfg: update to use new BuildStep classes
+	from buildbot.steps
+	* docs/examples/glib_master.cfg: same
+	* docs/examples/hello.cfg: same
+	* docs/examples/twisted_master.cfg: same
+
 2006-09-19  Brian Warner  <warner@lothar.com>
 
 	* buildbot/steps/python.py (PyFlakes): refactor, add summary logs
