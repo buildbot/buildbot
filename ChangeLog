@@ -4,7 +4,7 @@
 	from buildbot.steps
 	* docs/examples/glib_master.cfg: same
 	* docs/examples/hello.cfg: same
-	* docs/examples/twisted_master.cfg: same
+	* docs/examples/twisted_master.cfg: same, update to current usage
 
 2006-09-19  Brian Warner  <warner@lothar.com>
 
