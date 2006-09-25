@@ -1,6 +1,6 @@
 #! /usr/bin/python
 
-import sys
+import sys, os
 from distutils.core import setup
 from buildbot import version
 
@@ -37,6 +37,12 @@ if sys.platform == "win32":
     scripts.append("contrib/windows/buildbot.bat")
     scripts.append("contrib/windows/buildbot_service.py")
 
+testmsgs = []
+for f in os.listdir("buildbot/test/mail"):
+    if f.endswith("~"):
+        continue
+    testmsgs.append("buildbot/test/mail/%s" % f)
+
 setup(name="buildbot",
       version=version,
       description="BuildBot build automation system",
@@ -65,11 +71,14 @@ setup(name="buildbot",
                 "buildbot.slave",
                 "buildbot.scripts",
                 "buildbot.test",
+                "buildbot.test.subdir",
                 ],
       data_files=[("buildbot", ["buildbot/buildbot.png"]),
                   ("buildbot/clients", ["buildbot/clients/debug.glade"]),
                   ("buildbot/status", ["buildbot/status/classic.css"]),
-                  ("buildbot/scripts", ["buildbot/scripts/sample.cfg"]),],
+                  ("buildbot/scripts", ["buildbot/scripts/sample.cfg"]),
+                  ("buildbot/test/mail", testmsgs),
+                  ],
       scripts = scripts,
       cmdclass={'install_data': install_data_twisted},
       )
