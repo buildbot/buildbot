@@ -1,5 +1,13 @@
 2006-09-25  Brian Warner  <warner@lothar.com>
 
+	* buildbot/steps/source.py (Monotone): initial Monotone support,
+	contributed by Nathaniel Smith. Still needs docs and tests, but
+	this code has been in use on the Monotone buildbot for a long
+	time now.
+	* buildbot/slave/commands.py (Monotone): slave-side support
+	* buildbot/changes/monotone.py (MonotoneSource): polling change
+	source
+
 	* buildbot/changes/bonsaipoller.py (BonsaiPoller): Ben also
 	contributed a Change Source that polls a Bonsai server (a
 	kind of web-based viewcvs CGI script).
