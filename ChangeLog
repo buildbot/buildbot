@@ -1,5 +1,9 @@
 2006-09-25  Brian Warner  <warner@lothar.com>
 
+	* buildbot/changes/bonsaipoller.py (BonsaiPoller): Ben also
+	contributed a Change Source that polls a Bonsai server (a
+	kind of web-based viewcvs CGI script).
+
 	* buildbot/status/tinderbox.py (TinderboxMailNotifier): Ben
 	Hearsum contributed a status plugin which sends email in the same
 	format that Tinderbox does: this allows a number of tinderbox

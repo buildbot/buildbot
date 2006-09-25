@@ -152,6 +152,7 @@ Change Sources
 * Other mail notification ChangeSources::  
 * PBChangeSource::              
 * P4Source::                    
+* BonsaiPoller::                
 
 Build Process
 
@@ -2531,6 +2532,7 @@ a suitable @code{MaildirSource}.
 * Other mail notification ChangeSources::  
 * PBChangeSource::              
 * P4Source::                    
+* BonsaiPoller::                
 @end menu
 
 @node Choosing ChangeSources, CVSToys - PBService, Change Sources, Change Sources
@@ -2753,7 +2755,7 @@ stripping prefixes at the sending end.
 @end table
 
 
-@node P4Source,  , PBChangeSource, Change Sources
+@node P4Source, BonsaiPoller, PBChangeSource, Change Sources
 @subsection P4Source
 
 @csindex buildbot.changes.p4poller.P4Source
@@ -2803,6 +2805,23 @@ c['sources'].append(p4poller.P4Source(
         split_file=lambda branchfile: branchfile.split('/',1)
 ))
 @end example
+
+@node BonsaiPoller,  , P4Source, Change Sources
+@subsection BonsaiPoller
+
+@csindex buildbot.changes.bonsaipoller.BonsaiPoller
+
+The @code{BonsaiPoller} periodically polls a Bonsai server. This is a
+CGI script accessed through a web server that provides information
+about a CVS tree, for example the Mozilla bonsai server at
+@uref{http://bonsai.mozilla.org}. Bonsai servers are usable by both
+humans and machines. In this case, the buildbot's change source forms
+a query which asks about any files in the specified branch which have
+changed since the last query.
+
+Please take a look at the BonsaiPoller docstring for details about the
+arguments it accepts.
+
 
 @node Build Process, Status Delivery, Getting Source Code Changes, Top
 @chapter Build Process
