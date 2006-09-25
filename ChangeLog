@@ -1,5 +1,11 @@
 2006-09-25  Brian Warner  <warner@lothar.com>
 
+	* contrib/svn_buildbot.py (ChangeSender.getChanges): the first *4*
+	columns of 'svnlook changed' output contain status information, so
+	strip [:4] instead of [:6]. Depending upon what the status flags
+	were, this would sometimes lead to mangled filenames. Thanks to
+	Riccardo Magliocchetti for the patch. Closes SF#1545146.
+
 	* buildbot/steps/source.py (Monotone): initial Monotone support,
 	contributed by Nathaniel Smith. Still needs docs and tests, but
 	this code has been in use on the Monotone buildbot for a long

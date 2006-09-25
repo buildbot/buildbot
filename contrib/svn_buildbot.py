@@ -145,8 +145,8 @@ class ChangeSender:
         changed = commands.getoutput('svnlook changed %s "%s"' % (rev_arg,
                                                                   repo)
                                      ).split('\n')
-        # the first 6 columns can contain status information
-        changed = [x[6:].strip() for x in changed]
+        # the first 4 columns can contain status information
+        changed = [x[4:] for x in changed]
 
         message = commands.getoutput('svnlook log %s "%s"' % (rev_arg, repo))
         who = commands.getoutput('svnlook author %s "%s"' % (rev_arg, repo))
