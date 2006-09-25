@@ -1,3 +1,10 @@
+2006-09-25  Brian Warner  <warner@lothar.com>
+
+	* buildbot/status/tinderbox.py (TinderboxMailNotifier): Ben
+	Hearsum contributed a status plugin which sends email in the same
+	format that Tinderbox does: this allows a number of tinderbox
+	tools to be driven by Buildbot instead. Thanks Ben!
+
 2006-09-24  Brian Warner  <warner@lothar.com>
 
 	* buildbot/changes/mail.py (parseBonsaiMail): fix the parser.
