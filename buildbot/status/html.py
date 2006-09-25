@@ -324,10 +324,10 @@ class StatusResourceBuild(HtmlResource):
                                                                  projectName)
         # the color in the following line gives python-mode trouble
         data += ("<h1>Build <a href=\"%s\">%s</a>:#%d</h1>\n"
-                 "<h2>Reason:</h2>\n%s\n"
                  % (self.status.getURLForThing(b.getBuilder()),
-                    b.getBuilder().getName(), b.getNumber(),
-                    html.escape(b.getReason())))
+                    b.getBuilder().getName(), b.getNumber()))
+        data += "<h2>Buildslave:</h2>\n %s\n" % html.escape(b.getSlavename())
+        data += "<h2>Reason:</h2>\n%s\n" % html.escape(b.getReason())
 
         branch, revision, patch = b.getSourceStamp()
         data += "<h2>SourceStamp:</h2>\n"
@@ -345,7 +345,6 @@ class StatusResourceBuild(HtmlResource):
             data += "  <li>build of most recent revision</li>\n"
         data += " </ul>\n"
         if b.isFinished():
-            data += "<h4>Buildslave: %s</h4>\n" % html.escape(b.getSlavename())
             data += "<h2>Results:</h2>\n"
             data += " ".join(b.getText()) + "\n"
             if b.getTestResults():

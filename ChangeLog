@@ -1,3 +1,15 @@
+2006-09-24  Brian Warner  <warner@lothar.com>
+
+	* buildbot/process/base.py (Build.setupSlaveBuilder): tell our
+	BuildStatus about the buildslave name at the *beginning* of the
+	build, rather than at the end. Thanks to Alexander Lorenz for the
+	patch.
+	* buildbot/status/html.py (StatusResourceBuild.body): always
+	include the slavename in the build page, not just when the build
+	has finished.
+	* buildbot/status/mail.py (MailNotifier.buildMessage): include the
+	slavename in the email message
+
 2006-09-21  Brian Warner  <warner@lothar.com>
 
 	* buildbot/scripts/sample.cfg: update to use new BuildStep classes

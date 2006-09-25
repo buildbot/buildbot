@@ -273,6 +273,7 @@ class Build:
     def setupSlaveBuilder(self, slavebuilder):
         self.slavebuilder = slavebuilder
         self.slavename = slavebuilder.slave.slavename
+        self.build_status.setSlavename(self.slavename)
         self.setProperty("slavename", self.slavename)
 
     def startBuild(self, build_status, expectations, slavebuilder):
@@ -543,7 +544,6 @@ class Build:
         self.results = results
 
         log.msg(" %s: build finished" % self)
-        self.build_status.setSlavename(self.slavename)
         self.build_status.setText(text)
         self.build_status.setColor(color)
         self.build_status.setResults(results)

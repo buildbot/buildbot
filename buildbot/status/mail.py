@@ -239,6 +239,7 @@ class MailNotifier(base.StatusReceiverMultiService):
         if url:
             text += "Buildbot URL: %s\n\n" % urllib.quote(url, '/:')
 
+        text += "Buildslave for this Build: %s\n\n" % build.getSlavename()
         text += "Build Reason: %s\n" % build.getReason()
 
         patch = None
