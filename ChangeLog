@@ -1,5 +1,8 @@
 2006-09-25  Brian Warner  <warner@lothar.com>
 
+	* setup.py: the new buildbot.steps module wasn't being installed.
+	Thanks to Jose Dapena Paz for the catch, fixes SF#1560631.
+
 	* contrib/svn_buildbot.py (ChangeSender.getChanges): the first *4*
 	columns of 'svnlook changed' output contain status information, so
 	strip [:4] instead of [:6]. Depending upon what the status flags
