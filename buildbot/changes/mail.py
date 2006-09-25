@@ -229,7 +229,7 @@ def parseSyncmail(self, fd, prefix=None, sep="/"):
 # actually make a new directory part of the build process. That's my story
 # and I'm sticking to it.
 
-def parseBonsaiMail(self, fd, prefix=None):
+def parseBonsaiMail(self, fd, prefix=None, sep="/"):
     """Parse mail sent by the Bonsai cvs loginfo script."""
 
     msg = Message(fd)
@@ -274,6 +274,8 @@ def parseBonsaiMail(self, fd, prefix=None):
         if module and file:
             path = "%s/%s" % (module, file)
             files.append(path)
+        sticky = items[7]
+        branch = items[8]
 
     # if no files changed, return nothing
     if not files:
@@ -289,7 +291,8 @@ def parseBonsaiMail(self, fd, prefix=None):
     comments = comments.rstrip() + "\n"
 
     # return buildbot Change object
-    return changes.Change(who, files, comments, when=timestamp)
+    return changes.Change(who, files, comments, when=timestamp, branch=branch)
+
 
 
 class MaildirSource(maildirtwisted.MaildirTwisted, base.ChangeSource):

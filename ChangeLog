@@ -1,5 +1,8 @@
 2006-09-24  Brian Warner  <warner@lothar.com>
 
+	* buildbot/changes/mail.py (parseBonsaiMail): fix the parser.
+	Thanks to Robert Helmer for the patch.
+
 	* buildbot/process/base.py (Build.setupSlaveBuilder): tell our
 	BuildStatus about the buildslave name at the *beginning* of the
 	build, rather than at the end. Thanks to Alexander Lorenz for the
