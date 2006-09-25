@@ -1,3 +1,13 @@
+2006-09-25  Brian Warner  <warner@lothar.com>
+
+	* buildbot/steps/source.py (Monotone): initial Monotone support,
+	contributed by Nathaniel Smith. Still needs docs and tests, but
+	this code has been in use on the Monotone buildbot for a long
+	time now.
+	* buildbot/slave/commands.py (Monotone): slave-side support
+	* buildbot/changes/monotone.py (MonotoneSource): polling change
+	source
+
 2006-09-24  Brian Warner  <warner@lothar.com>
 
 	* buildbot/changes/mail.py (parseBonsaiMail): fix the parser.

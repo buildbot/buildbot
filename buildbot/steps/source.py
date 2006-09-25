@@ -899,3 +899,34 @@ class P4Sync(Source):
         cmd = LoggedRemoteCommand("p4sync", self.args)
         self.startCommand(cmd)
 
+class Monotone(Source):
+    """Check out a revision from a monotone server at 'server_addr',
+    branch 'branch'.  'revision' specifies which revision id to check
+    out.
+
+    This step will first create a local database, if necessary, and then pull
+    the contents of the server into the database.  Then it will do the
+    checkout/update from this database."""
+
+    name = "monotone"
+
+    def __init__(self, server_addr, branch, db_path="monotone.db",
+                 monotone="monotone",
+                 **kwargs):
+        Source.__init__(self, **kwargs)
+        self.args.update({"server_addr": server_addr,
+                          "branch": branch,
+                          "db_path": db_path,
+                          "monotone": monotone})
+
+    def computeSourceRevision(self, changes):
+        if not changes:
+            return None
+        return changes[-1].revision
+
+    def startVC(self):
+        slavever = self.slaveVersion("monotone")
+        assert slavever, "slave is too old, does not know about monotone"
+        cmd = LoggedRemoteCommand("monotone", self.args)
+        self.startCommand(cmd)
+
