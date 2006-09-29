@@ -1,3 +1,8 @@
+2006-09-29  Brian Warner  <warner@lothar.com>
+
+	* buildbot/status/tinderbox.py (TinderboxMailNotifier): updates
+	from Robert Helmer
+
 2006-09-25  Brian Warner  <warner@lothar.com>
 
 	* setup.py: the new buildbot.steps module wasn't being installed.

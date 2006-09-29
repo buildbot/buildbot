@@ -102,6 +102,7 @@ class TinderboxMailNotifier(mail.MailNotifier):
 
     def buildMessage(self, name, build, results):
         text = ""
+        res = ""
         # shortform
         t = "tinderbox:"
 
@@ -112,11 +113,16 @@ class TinderboxMailNotifier(mail.MailNotifier):
         text += "%s status: " % t
 
         if results == "building":
-            text += "building\n"
+            res = "building"
+            text += res
         elif results == WARNINGS or results == SUCCESS:
-            text += "success\n"
+            res = "success"
+            text += res
         else:
-            text += "busted\n"
+            res += "busted"
+            text += res
+
+        text += "\n";
 
         text += "%s build: %s\n" % (t, name)
         text += "%s errorparser: unix\n" % t # always use the unix errorparser
@@ -128,26 +134,36 @@ class TinderboxMailNotifier(mail.MailNotifier):
         else:
             text += "%s binaryurl: %s\n" % (t, self.binaryURL)
             text += "%s logcompression: %s\n" % (t, self.logCompression)
-            text += "%s logencoding: base64\n" % t
-            text += "%s END\n\n" % t
 
             # logs will always be appended
+            tinderboxLogs = ""
             for log in build.getLogs():
                 l = ""
+                logEncoding = ""
                 if self.logCompression == "bzip2":
-                    l = bz2.compress(log.getText())
+                    compressedLog = bz2.compress(log.getText())
+                    l = base64.encodestring(compressedLog)
+                    logEncoding = "base64";
                 elif self.logCompression == "gzip":
-                    l = zlib.compress(log.getText())
+                    compressedLog = zlib.compress(log.getText())
+                    l = base64.encodestring(compressedLog)
+                    logEncoding = "base64";
                 else:
                     l = log.getText()
-                text += base64.encodestring(l)
-                text += "\n"
+                tinderboxLogs += l
+
+            text += "%s logencoding: %s\n" % (t, logEncoding)
+            text += "%s END\n\n" % t
+            text += tinderboxLogs
+            text += "\n"
 
         m = Message()
         m.set_payload(text)
 
         m['Date'] = formatdate(localtime=True)
-        m['Subject'] = self.subject
+        m['Subject'] = self.subject % { 'result': res,
+                                        'builder': name,
+                                        }
         m['From'] = self.fromaddr
         # m['To'] is added later
 
