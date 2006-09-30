@@ -1,3 +1,14 @@
+2006-09-30  Brian Warner  <warner@lothar.com>
+
+	* buildbot/slave/commands.py (LogFileWatcher.stop): explicitly
+	close the filehandle when we stop watching the file. Before, the
+	filehandle was only closed when the LogFileWatcher was
+	garbage-collected, which could be quite a while in the future. If
+	it was still open by the time the next build started, windows will
+	refuse to let the new build delete the old build/ directory. Fixes
+	SF#1568415, thanks to <scmikes>, <FireMoth>, and <radix> on
+	#twisted for the catch.
+
 2006-09-29  Brian Warner  <warner@lothar.com>
 
 	* buildbot/status/tinderbox.py (TinderboxMailNotifier): updates

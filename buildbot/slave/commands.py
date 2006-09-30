@@ -174,6 +174,8 @@ class LogFileWatcher:
         self.poll()
         if self.poller is not None:
             self.poller.stop()
+        if self.started:
+            self.f.close()
 
     def statFile(self):
         if os.path.exists(self.logfile):
