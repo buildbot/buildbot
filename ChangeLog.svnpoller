@@ -1,0 +1,8 @@
+Sun Oct  1 10:12:44 2006  Brian Warner  <warner@lothar.com>
+
+	* buildbot/changes/svnpoller.py (SvnSource): added Niklaus Giger's
+	Suvbersion repository polling ChangeSource. I've hacked it up
+	considerably: any bugs are entirely my own fault. Thank you
+	Niklaus!
+	* buildbot/test/test_svnpoller.py: tests for it
+	* docs/buildbot.texinfo (SvnSource): document it

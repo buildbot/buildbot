@@ -153,6 +153,7 @@ Change Sources
 * PBChangeSource::              
 * P4Source::                    
 * BonsaiPoller::                
+* SvnSource::                   
 
 Build Process
 
@@ -2525,6 +2526,7 @@ If you write an email parsing function, they can also all be driven by
 a suitable @code{MaildirSource}.
 
 
+* SvnSource::                    
 @menu
 * Choosing ChangeSources::      
 * CVSToys - PBService::         
@@ -2533,6 +2535,7 @@ a suitable @code{MaildirSource}.
 * PBChangeSource::              
 * P4Source::                    
 * BonsaiPoller::                
+* SvnSource::                   
 @end menu
 
 @node Choosing ChangeSources, CVSToys - PBService, Change Sources, Change Sources
@@ -2754,7 +2757,6 @@ stripping prefixes at the sending end.
 
 @end table
 
-
 @node P4Source, BonsaiPoller, PBChangeSource, Change Sources
 @subsection P4Source
 
@@ -2806,7 +2808,7 @@ c['sources'].append(p4poller.P4Source(
 ))
 @end example
 
-@node BonsaiPoller,  , P4Source, Change Sources
+@node BonsaiPoller, SvnSource, P4Source, Change Sources
 @subsection BonsaiPoller
 
 @csindex buildbot.changes.bonsaipoller.BonsaiPoller
@@ -2821,6 +2823,59 @@ changed since the last query.
 
 Please take a look at the BonsaiPoller docstring for details about the
 arguments it accepts.
+
+
+@node SvnSource,  , BonsaiPoller, Change Sources
+@subsection SvnSource
+
+@csindex buildbot.changes.svnpoller.SvnSource
+
+The @code{SvnSource} periodically polls a
+@uref{http://subversion.tigris.org/, Subversion} depot for changes, by
+running the @code{svn} command in a subshell. It accepts the following
+arguments:
+
+@table @samp
+@item @code{svnurl}
+The base URL path to watch. The repository this references could be
+local or remote, depending upon the URL's prefix.
+
+@item @code{branch}
+The branch to watch. Defaults to '/trunk'.
+
+@item @code{svnuser}
+The Subversion user.
+
+@item @code{svnpasswd}
+The Subversion user's password.
+
+@item @code{pollinterval}
+How often to poll, in seconds. Defaults to 600 (10 minutes).
+
+@item @code{histmax}
+The maximum number of changes to inspect at a time. If more than this
+number occur since the last poll, older changes will be silently
+ignored. Larger values of histmax will cause more time and memory to
+be consumed on each poll attempt. @code{histmax} defaults to 100.
+@end table
+
+@heading Example
+
+This example watches the Subversion SVN tree itself for changes. It
+only pays attention to changes that appear on the trunk, and it labels
+all of its Change objects as being on branch=None (which is the
+convention within the buildbot for trunk changes).
+
+@example
+from buildbot.changes.svnpoller import SvnSource
+ss = SvnSource('http://svn.collab.net/repos/svn/trunk')
+c['sources'].append(ss)
+@end example
+
+This configuration uses the @code{SvnPORT}, @code{SvnUSER}, and
+@code{SvnPASSWD} specified in the buildmaster's environment. It
+watches a project in which the branch name is simply the next path
+component, and the file is all path components after.
 
 
 @node Build Process, Status Delivery, Getting Source Code Changes, Top
