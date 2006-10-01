@@ -40,7 +40,6 @@ class P4Source(base.ChangeSource, util.ComparableMixin):
     parent = None # filled in when we're added
     last_change = None
     loop = None
-    volatile = ['loop']
     working = False
 
     def __init__(self, p4port=None, p4user=None, p4passwd=None,
@@ -75,9 +74,9 @@ class P4Source(base.ChangeSource, util.ComparableMixin):
         self.split_file = split_file
         self.pollinterval = pollinterval
         self.histmax = histmax
+        self.loop = LoopingCall(self.checkp4)
 
     def startService(self):
-        self.loop = LoopingCall(self.checkp4)
         base.ChangeSource.startService(self)
 
         # Don't start the loop just yet because the reactor isn't running.

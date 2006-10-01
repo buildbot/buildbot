@@ -1,5 +1,8 @@
 2006-09-30  Brian Warner  <warner@lothar.com>
 
+	* buildbot/changes/p4poller.py (P4Source): some minor stylistic
+	changes: set self.loop in __init__, remove unused volatile=
+
 	* docs/buildbot.texinfo (.buildbot config directory): add more
 	docs on the .buildbot/options keys used by "buildbot try"
 	* buildbot/scripts/tryclient.py (Try.createJob): remove dead code
