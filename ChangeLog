@@ -1,5 +1,11 @@
 2006-09-30  Brian Warner  <warner@lothar.com>
 
+	* buildbot/scheduler.py (Periodic): submit a reason= to the
+	BuildSet to indicate which Scheduler triggered the build. Thanks
+	to Mateusz Loskot for the suggestion.
+	(Nightly): same
+	* buildbot/test/test_scheduler.py (Scheduling.testPeriodic1): test it
+
 	* buildbot/changes/p4poller.py (P4Source): some minor stylistic
 	changes: set self.loop in __init__, remove unused volatile=
 

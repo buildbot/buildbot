@@ -334,6 +334,8 @@ class Periodic(BaseUpstreamScheduler):
         self.builderNames = builderNames
         self.periodicBuildTimer = periodicBuildTimer
         self.branch = branch
+        self.reason = ("The Periodic scheduler named '%s' triggered this build"
+                       % name)
         self.timer = internet.TimerService(self.periodicBuildTimer,
                                            self.doPeriodicBuild)
         self.timer.setServiceParent(self)
@@ -348,7 +350,8 @@ class Periodic(BaseUpstreamScheduler):
 
     def doPeriodicBuild(self):
         bs = buildset.BuildSet(self.builderNames,
-                               SourceStamp(branch=self.branch))
+                               SourceStamp(branch=self.branch),
+                               self.reason)
         self.submit(bs)
 
 
@@ -409,6 +412,8 @@ class Nightly(BaseUpstreamScheduler):
         self.branch = branch
         self.delayedRun = None
         self.nextRunTime = None
+        self.reason = ("The Nightly scheduler named '%s' triggered this build"
+                       % name)
 
     def addTime(self, timetuple, secs):
         return time.localtime(time.mktime(timetuple)+secs)
@@ -501,7 +506,8 @@ class Nightly(BaseUpstreamScheduler):
 
         # And trigger a build
         bs = buildset.BuildSet(self.builderNames,
-                               SourceStamp(branch=self.branch))
+                               SourceStamp(branch=self.branch),
+                               self.reason)
         self.submit(bs)
 
     def addChange(self, change):

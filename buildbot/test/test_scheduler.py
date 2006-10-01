@@ -45,6 +45,7 @@ class Scheduling(unittest.TestCase):
         self.failUnless(len(self.master.sets) > 1)
         s1 = self.master.sets[0]
         self.failUnlessEqual(s1.builderNames, ["a","b"])
+        self.failUnlessEqual(s1.reason, "The Periodic scheduler named 'quickly' triggered this build")
 
     def testNightly(self):
         # now == 15-Nov-2005, 00:05:36 AM . By using mktime, this is
