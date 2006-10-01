@@ -301,7 +301,6 @@ class Try(pb.Referenceable):
     def createJob(self):
         # returns a Deferred which fires when the job parameters have been
         # created
-        config = self.config
         opts = self.opts
         # generate a random (unique) string. It would make sense to add a
         # hostname and process ID here, but a) I suspect that would cause
@@ -336,7 +335,6 @@ class Try(pb.Referenceable):
 
     def deliverJob(self):
         # returns a Deferred that fires when the job has been delivered
-        config = self.config
         opts = self.opts
 
         if self.connect == "ssh":

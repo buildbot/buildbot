@@ -1,5 +1,10 @@
 2006-09-30  Brian Warner  <warner@lothar.com>
 
+	* docs/buildbot.texinfo (.buildbot config directory): add more
+	docs on the .buildbot/options keys used by "buildbot try"
+	* buildbot/scripts/tryclient.py (Try.createJob): remove dead code
+	(Try.deliverJob): same
+
 	* buildbot/changes/bonsaipoller.py (BonsaiParser): more updates
 	from Robert Helmer
 	(BonsaiPoller): same

@@ -5720,6 +5720,46 @@ Provides a default username for the @command{sendchange} command.
 @end table
 
 
+The following options are used by the @code{buildbot try} command
+(@pxref{try}):
+
+@table @code
+@item try_connect
+This specifies how the ``try'' command should deliver its request to
+the buildmaster. The currently accepted values are ``ssh'' and ``pb''.
+@item try_builders
+Which builders should be used for the ``try'' build.
+@item try_vc
+This specifies the version control system being used.
+@item try_branch
+This indicates that the current tree is on a non-trunk branch.
+@item try_topdir
+@item try_topfile
+Use @code{try_topdir} to explicitly indicate the top of your working
+tree, or @code{try_topfile} to name a file that will only be found in
+that top-most directory.
+
+@item try_host
+@item try_username
+@item try_dir
+When try_connect is ``ssh'', the command will pay attention to
+@code{try_host}, @code{try_username}, and @code{try_dir}.
+
+@item try_username
+@item try_password
+@item try_master
+Instead, when @code{try_connect} is ``pb'', the command will pay
+attention to @code{try_username}, @code{try_password}, and
+@code{try_master}.
+
+@item try_wait
+@item masterstatus
+@code{try_wait} and @code{masterstatus} are used to ask the ``try''
+command to wait for the requested build to complete.
+
+@end table
+
+
 
 @node Resources, Developer's Appendix, Command-line tool, Top
 @chapter Resources
