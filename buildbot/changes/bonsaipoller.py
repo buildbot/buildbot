@@ -130,7 +130,7 @@ class BonsaiParser:
         return str(self.currentFileNode.firstChild.data)
 
     def _getRevision(self):
-        return float(self.currentFileNode.getAttribute("rev"))
+        return str(self.currentFileNode.getAttribute("rev"))
 
 
 
@@ -238,7 +238,7 @@ class BonsaiPoller(base.ChangeSource):
         data = bp.getData()
         for cinode in data.nodes:
             for file in cinode.files:
-                files.append(file)
+                files.append(file.filename+' (revision '+file.revision+')')
             c = changes.Change(who = cinode.who,
                                files = files,
                                comments = cinode.log,

@@ -1,5 +1,9 @@
 2006-09-30  Brian Warner  <warner@lothar.com>
 
+	* buildbot/changes/bonsaipoller.py (BonsaiParser): more updates
+	from Robert Helmer
+	(BonsaiPoller): same
+
 	* buildbot/slave/commands.py (LogFileWatcher.stop): explicitly
 	close the filehandle when we stop watching the file. Before, the
 	filehandle was only closed when the LogFileWatcher was
