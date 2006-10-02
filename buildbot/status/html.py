@@ -144,14 +144,18 @@ class Box:
 class HtmlResource(Resource):
     css = None
     contentType = "text/html; charset=UTF-8"
+    title = "Dummy"
+
     def render(self, request):
         data = self.content(request)
+        if isinstance(data, unicode):
+            data = data.encode("utf-8")
         request.setHeader("content-type", self.contentType)
         if request.method == "HEAD":
             request.setHeader("content-length", len(data))
             return ''
         return data
-    title = "Dummy"
+
     def content(self, request):
         data = ('<!DOCTYPE html PUBLIC'
                 ' "-//W3C//DTD XHTML 1.0 Transitional//EN"\n'
@@ -172,6 +176,7 @@ class HtmlResource(Resource):
         data += self.body(request)
         data += "</body></html>\n"
         return data
+
     def body(self, request):
         return "Dummy\n"
 
