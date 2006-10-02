@@ -2830,52 +2830,274 @@ arguments it accepts.
 
 @csindex buildbot.changes.svnpoller.SvnSource
 
-The @code{SvnSource} periodically polls a
-@uref{http://subversion.tigris.org/, Subversion} depot for changes, by
-running the @code{svn} command in a subshell. It accepts the following
-arguments:
+The @code{buildbot.changes.svnpoller.SvnSource} is a ChangeSource
+which periodically polls a @uref{http://subversion.tigris.org/,
+Subversion} repository for new revisions, by running the @code{svn
+log} command in a subshell. It can watch a single branch or multiple
+branches.
 
-@table @samp
-@item @code{svnurl}
-The base URL path to watch. The repository this references could be
-local or remote, depending upon the URL's prefix.
+@code{SvnSource} accepts the following arguments:
 
-@item @code{branch}
-The branch to watch. Defaults to '/trunk'.
+@table @code
+@item svnurl
+The base URL path to watch, like
+@code{svn://svn.twistedmatrix.com/svn/Twisted/trunk}, or
+@code{http://divmod.org/svn/Divmod/}, or even
+@code{file:///home/svn/Repository/ProjectA/branches/1.5/}. This must
+include the access scheme, the location of the repository (both the
+hostname for remote ones, and any additional directory names necessary
+to get to the repository), and the sub-path within the repository's
+virtual filesystem for the project and branch of interest.
 
-@item @code{svnuser}
-The Subversion user.
+The @code{SvnSource} will only pay attention to files inside the
+subdirectory specified by the complete svnurl.
 
-@item @code{svnpasswd}
-The Subversion user's password.
+@item split_file
+A function to convert pathnames into (branch, relative_pathname)
+tuples. Use this to explain your repository's branch-naming policy to
+@code{SvnSource}. This function must accept a single string and return
+a two-entry tuple. There are a few utility functions in
+@code{buildbot.changes.svnpoller} that can be used as a
+@code{split_file} function, see below for details.
 
-@item @code{pollinterval}
-How often to poll, in seconds. Defaults to 600 (10 minutes).
+The default value always returns (None, path), which indicates that
+all files are on the trunk.
 
-@item @code{histmax}
-The maximum number of changes to inspect at a time. If more than this
-number occur since the last poll, older changes will be silently
-ignored. Larger values of histmax will cause more time and memory to
-be consumed on each poll attempt. @code{histmax} defaults to 100.
+Subclasses of @code{SvnSource} can override the @code{split_file}
+method instead of using the @code{split_file=} argument.
+
+@item svnuser
+An optional string parameter. If set, the @code{--user} argument will
+be added to all @code{svn} commands. Use this if you have to
+authenticate to the svn server before you can do @code{svn info} or
+@code{svn log} commands.
+
+@item svnpasswd
+Like @code{svnuser}, this will cause a @code{--password} argument to
+be passed to all svn commands.
+
+@item pollinterval
+How often to poll, in seconds. Defaults to 600 (checking once every 10
+minutes). Lower this if you want the buildbot to notice changes
+faster, raise it if you want to reduce the network and CPU load on
+your svn server. Please be considerate of public SVN repositories by
+using a large interval when polling them.
+
+@item histmax
+The maximum number of changes to inspect at a time. Every POLLINTERVAL
+seconds, the @code{SvnSource} asks for the last HISTMAX changes and
+looks through them for any ones it does not already know about. If
+more than HISTMAX revisions have been committed since the last poll,
+older changes will be silently ignored. Larger values of histmax will
+cause more time and memory to be consumed on each poll attempt.
+@code{histmax} defaults to 100.
+
+@item svnbin
+This controls the @code{svn} executable to use. If subversion is
+installed in a weird place on your system (outside of the
+buildmaster's @code{$PATH}), use this to tell @code{SvnSource} where
+to find it. The default value of ``svn'' will almost always be
+sufficient.
+
 @end table
 
-@heading Example
+@heading Branches
 
-This example watches the Subversion SVN tree itself for changes. It
-only pays attention to changes that appear on the trunk, and it labels
-all of its Change objects as being on branch=None (which is the
-convention within the buildbot for trunk changes).
+Each source file that is tracked by a Subversion repository has a
+fully-qualified SVN URL in the following form:
+(REPOURL)(PROJECT-plus-BRANCH)(FILEPATH). When you create the
+@code{SvnSource}, you give it a @code{svnurl} value that includes all
+of the REPOURL and possibly some portion of the PROJECT-plus-BRANCH
+string. The @code{SvnSource} is responsible for producing Changes that
+contain a branch name and a FILEPATH (which is relative to the top of
+a checked-out tree). The details of how these strings are split up
+depend upon how your repository names its branches.
+
+@subheading PROJECT/BRANCHNAME/FILEPATH repositories
+
+One common layout is to have all the various projects that share a
+repository get a single top-level directory each. Then under a given
+project's directory, you get two subdirectories, one named ``trunk''
+and another named ``branches''. Under ``branches'' you have a bunch of
+other directories, one per branch, with names like ``1.5.x'' and
+``testing''. It is also common to see directories like ``tags'' and
+``releases'' next to ``branches'' and ``trunk''.
+
+For example, the Twisted project has a subversion server on
+``svn.twistedmatrix.com'' that hosts several sub-projects. The
+repository is available through a SCHEME of ``svn:''. The primary
+sub-project is Twisted, of course, with a repository root of
+``svn://svn.twistedmatrix.com/svn/Twisted''. Another sub-project is
+Informant, with a root of
+``svn://svn.twistedmatrix.com/svn/Informant'', etc. Inside any
+checked-out Twisted tree, there is a file named bin/trial (which is
+used to run unit test suites).
+
+The trunk for Twisted is in
+``svn://svn.twistedmatrix.com/svn/Twisted/trunk'', and the
+fully-qualified SVN URL for the trunk version of @code{trial} would be
+``svn://svn.twistedmatrix.com/svn/Twisted/trunk/bin/trial''. The same
+SVNURL for that file on a branch named ``1.5.x'' would be
+``svn://svn.twistedmatrix.com/svn/Twisted/branches/1.5.x/bin/trial''.
+
+To set up a @code{SvnSource} that watches the Twisted trunk (and
+nothing else), we would use the following:
 
 @example
 from buildbot.changes.svnpoller import SvnSource
-ss = SvnSource('http://svn.collab.net/repos/svn/trunk')
+s = SvnSource("svn://svn.twistedmatrix.com/svn/Twisted/trunk")
 c['sources'].append(ss)
 @end example
 
-This configuration uses the @code{SvnPORT}, @code{SvnUSER}, and
-@code{SvnPASSWD} specified in the buildmaster's environment. It
-watches a project in which the branch name is simply the next path
-component, and the file is all path components after.
+In this case, every Change that our @code{SvnSource} produces will
+have @code{.branch=None}, to indicate that the Change is on the trunk.
+No other sub-projects or branches will be tracked.
+
+If we want our ChangeSource to follow multiple branches, we have to do
+two things. First we have to change our @code{svnurl=} argument to
+watch more than just ``.../Twisted/trunk''. We will set it to
+``.../Twisted'' so that we'll see both the trunk and all the branches.
+Second, we have to tell @code{SvnSource} how to split the
+(PROJECT-plus-BRANCH)(FILEPATH) strings it gets from the repository
+out into (BRANCH) and (FILEPATH) pairs.
+
+We do the latter by providing a ``split_file'' function. This function
+is responsible for splitting something like
+``branches/1.5.x/bin/trial'' into @code{branch}=''branches/1.5.x'' and
+@code{filepath}=''bin/trial''. This function is always given a string
+that names a file relative to the subdirectory pointed to by the
+@code{SvnSource}'s @code{svnurl=} argument. It is expected to return a
+(BRANCHNAME, FILEPATH) tuple (in which FILEPATH is relative to the
+branch indicated), or None to indicate that the file is outside any
+project of interest.
+
+(note that we want to see ``branches/1.5.x'' rather than just
+``1.5.x'' because when we perform the SVN checkout, we will probably
+append the branch name to the baseURL, which requires that we keep the
+``branches'' component in there. Other VC schemes use a different
+approach towards branches and may not require this artifact.)
+
+If your repository uses this same PROJECT/BRANCH/FILEPATH naming
+scheme, the following function will work:
+
+@example
+def split_file_branches(path):
+    pieces = path.split('/')
+    if pieces[0] == 'trunk':
+        return (None, '/'.join(pieces[1:]))
+    elif pieces[0] == 'branches':
+        return ('/'.join(pieces[0:2]),
+                '/'.join(pieces[2:]))
+    else:
+        return None
+@end example
+
+This function is provided as
+@code{buildbot.changes.svnpoller.split_file_branches} for your
+convenience. So to have our Twisted-watching @code{SvnSource} follow
+multiple branches, we would use this:
+
+@example
+from buildbot.changes.svnpoller import SvnSource, split_file_branches
+s = SvnSource("svn://svn.twistedmatrix.com/svn/Twisted",
+              split_file=split_file_branches)
+c['sources'].append(ss)
+@end example
+
+Changes for all sorts of branches (with names like ``branches/1.5.x'',
+and None to indicate the trunk) will be delivered to the Schedulers.
+Each Scheduler is then free to use or ignore each branch as it sees
+fit.
+
+@subheading BRANCHNAME/PROJECT/FILEPATH repositories
+
+Another common way to organize a Subversion repository is to put the
+branch name at the top, and the projects underneath. This is
+especially frequent when there are a number of related sub-projects
+that all get released in a group.
+
+For example, Divmod.org hosts a project named ``Nevow'' as well as one
+named ``Quotient''. In a checked-out Nevow tree there is a directory
+named ``formless'' that contains a python source file named
+``webform.py''. This repository is accessible via webdav (and thus
+uses an ``http:'' scheme) through the divmod.org hostname. There are
+many branches in this repository, and they use a
+(BRANCHNAME)/(PROJECT) naming policy.
+
+The fully-qualified SVN URL for the trunk version of webform.py is
+@code{http://divmod.org/svn/Divmod/trunk/Nevow/formless/webform.py}.
+You can do an @code{svn co} with that URL and get a copy of the latest
+version. The 1.5.x branch version of this file would have a URL of
+@code{http://divmod.org/svn/Divmod/branches/1.5.x/Nevow/formless/webform.py}.
+The whole Nevow trunk would be checked out with
+@code{http://divmod.org/svn/Divmod/trunk/Nevow}, while the Quotient
+trunk would be checked out using
+@code{http://divmod.org/svn/Divmod/trunk/Quotient}.
+
+Now suppose we want to have an @code{SvnSource} that only cares about
+the Nevow trunk. This case looks just like the PROJECT/BRANCH layout
+described earlier:
+
+@example
+from buildbot.changes.svnpoller import SvnSource
+s = SvnSource("http://divmod.org/svn/Divmod/trunk/Nevow")
+c['sources'].append(ss)
+@end example
+
+But what happens when we want to track multiple Nevow branches? We
+have to point our @code{svnurl=} high enough to see all those
+branches, but we also don't want to include Quotient changes (since
+we're only building Nevow). To accomplish this, we must rely upon the
+@code{split_file} function to help us tell the difference between
+files that belong to Nevow and those that belong to Quotient, as well
+as figuring out which branch each one is on.
+
+@example
+from buildbot.changes.svnpoller import SvnSource
+s = SvnSource("http://divmod.org/svn/Divmod",
+              split_file=my_file_splitter)
+c['sources'].append(ss)
+@end example
+
+The @code{my_file_splitter} function will be called with
+repository-relative pathnames like:
+
+@table @code
+@item trunk/Nevow/formless/webform.py
+This is a Nevow file, on the trunk. We want the Change that includes this
+to see a filename of @code{formless/webform.py"}, and a branch of None
+
+@item branches/1.5.x/Nevow/formless/webform.py
+This is a Nevow file, on a branch. We want to get
+branch=''branches/1.5.x'' and filename=''formless/webform.py''.
+
+@item trunk/Quotient/setup.py
+This is a Quotient file, so we want to ignore it by having
+@code{my_file_splitter} return None.
+
+@item branches/1.5.x/Quotient/setup.py
+This is also a Quotient file, which should be ignored.
+@end table
+
+The following definition for @code{my_file_splitter} will do the job:
+
+@example
+def my_file_splitter(path):
+    pieces = path.split('/')
+    if pieces[0] == 'trunk':
+        branch = None
+        pieces.pop(0) # remove 'trunk'
+    elif pieces[0] == 'branches':
+        pieces.pop(0) # remove 'branches'
+        # grab branch name
+        branch = 'branches/' + pieces.pop(0)
+    else:
+        return None # something weird
+    projectname = pieces.pop(0)
+    if projectname != 'Nevow':
+        return None # wrong project
+    return (branch, '/'.join(pieces))
+@end example
 
 
 @node Build Process, Status Delivery, Getting Source Code Changes, Top

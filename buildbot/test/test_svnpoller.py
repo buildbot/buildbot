@@ -1,227 +1,9 @@
-# Here are the tests for the SvnSource
+# -*- test-case-name: buildbot.test.test_svnpoller -*-
 
-import sys
 import time
-
-from twisted.python import log, failure
 from twisted.internet import defer
 from twisted.trial import unittest
-
-from buildbot.twcompat import maybeWait
-from buildbot.changes.changes import Change
-from buildbot.changes.svnpoller import SvnSource, split_file_branches
-
-# was changes 1012 in xenomai.org
-svn_change_1 = """<?xml version="1.0" encoding="utf-8"?>
-<log>
-<logentry
-   revision="101">
-<author>rpm</author>
-<date>2006-05-17T14:58:28.494960Z</date>
-<paths>
-<path
-   action="M">/branch/ksrc/arch/i386/hal.c</path>
-</paths>
-<msg>Remove unused variable</msg>
-</logentry>
-</log>
-"""
-
-svn_change_2 = """<?xml version="1.0" encoding="utf-8"?>
-<log>
-<logentry
-   revision="102">
-<author>rpm</author>
-<date>2006-05-15T12:54:08.891420Z</date>
-<paths>
-<path
-   action="M">/trunk/ChangeLog</path>
-<path
-   action="D">/trunk/ksrc/first_file</path>
-<path
-   action="D">/trunk/ksrc/second_file</path>
-</paths>
-<msg>Initial Adeos support</msg>
-</logentry>
-</log>
-"""
-
-svn_change_3 = """<?xml version="1.0" encoding="utf-8"?>
-<log>
-<logentry
-   revision="102">
-<author>rpm</author>
-<date>2006-05-15T12:54:08.891420Z</date>
-<paths>
-<path
-   action="M">/trunk/ChangeLog</path>
-<path
-   action="D">/trunk/ksrc/first_file</path>
-<path
-   action="D">/trunk/ksrc/second_file</path>
-</paths>
-<msg>Upgrade Adeos support</msg>
-</logentry>
-</log>
-"""
-
-def dbgMsg(myString):
-    log.msg(myString)
-    return 1
-
-class MockSvnSource(SvnSource):
-    """Test SvnSource which doesn't actually invoke svn."""
-    invocation = 0
-
-    def __init__(self, svnchanges, *args, **kwargs):
-        SvnSource.__init__(self, None, *args, **kwargs)
-        self.svnchanges = svnchanges
-
-    def _get_changes(self):
-        assert self.working
-        result = self.svnchanges[self.invocation]
-        self.invocation += 1
-        #log.msg("MockSvnSource._get_changes %s result %s " % (self.invocation-1, result))
-        dbgMsg("MockSvnSource._get_changes %s " % (self.invocation-1))
-        return defer.succeed(result)
-
-    def _get_describe(self, dummy, num):
-        assert self.working
-        dbgMsg("MockSvnSource._get_describe %s " % num)
-        return defer.succeed(self.svnchanges[num])
-
-class TestSvnPoller(unittest.TestCase):
-    def setUp(self):
-        self.changes = []
-        self.addChange = self.changes.append
-
-    def failUnlessIn(self, substr, string):
-        # this is for compatibility with python2.2
-        if isinstance(string, str):
-            self.failUnless(string.find(substr) != -1)
-        else:
-            self.assertIn(substr, string)
-
-    def testCheck(self):
-        """successful checks"""
-        self.t = MockSvnSource(svnchanges=[ svn_change_1, svn_change_2, svn_change_3],
-                              svnuser=None,
-                              svnurl='/trunk/',)
-        self.t.parent = self
-
-        # The first time, it just learns the change to start at
-        self.assert_(self.t.last_change is None)
-        self.assert_(not self.t.working)
-	dbgMsg("zzz")
-        return maybeWait(self.t.checksvn().addCallback(self._testCheck2))
-
-    def _testCheck2(self, res):
-	dbgMsg("zzz1")
-        self.assertEquals(self.changes, [])
-	dbgMsg("zzz2 %s %s" % (self.t.last_change, self.changes))
-        self.assertEquals(self.t.last_change, '101')
-	dbgMsg("zzz3")
-
-        # Subsequent times, it returns Change objects for new changes.
-        return self.t.checksvn().addCallback(self._testCheck3)
-
-    def _testCheck3(self, res):
-        # They're supposed to go oldest to newest, so this one must be first.
-	tstChange1 = Change(who='rpm',
-                   files=['/trunk/ChangeLog',
-		          '/trunk/ksrc/first_file',
-			  '/trunk/ksrc/second_file'],
-                   comments="Initial Adeos support",
-                   revision='2',
-                   when=self.makeTime("2006/05/15 12:54:08"),
-                   branch='trunk').asText()
-	dbgMsg("tstChange" + tstChange1)
-	dbgMsg("changes[0]" + self.changes[0].asText())
-
-	self.assertEquals(self.changes[0].asText(), tstChange1)
-        # Subsequent times, it returns Change objects for new changes.
-        return self.t.checksvn().addCallback(self._testCheck4)
-
-    def _testCheck4(self, res):
-	dbgMsg("zzz5 %s " % len(self.changes))
-        self.assertEquals(len(self.changes), 1)
-	dbgMsg("zzz6 %s %s" % (self.t.last_change, self.changes))
-        self.assertEquals(self.t.last_change, '102')
-	dbgMsg("zzz7")
-        self.assert_(not self.t.working)
-	tstChange2 = Change(who='rpm',
-                   files=['/trunk/ChangeLog',
-		          '/trunk/ksrc/first_file',
-			  '/trunk/ksrc/second_file'],
-                   comments="Initial Adeos support",
-                   revision='2',
-                   when=self.makeTime("2006/05/15 12:54:08"),
-                   branch='trunk').asText()
-	dbgMsg("changes[0]" + self.changes[0].asText())
-	dbgMsg("tstChange2" + tstChange2)
-        self.assertEquals(self.changes[0].asText(), tstChange2)
-	dbgMsg(7777)
-
-    def makeTime(self, timestring):
-        datefmt = '%Y/%m/%d %H:%M:%S'
-        when = time.mktime(time.strptime(timestring, datefmt))
-        return when
-
-    def testFailedChanges(self):
-        """'svn changes' failure is properly reported"""
-        self.t = MockSvnSource(svnchanges=['Subversion client error:\n...'],
-                               svnuser=None,
-                               svnurl="/trunk")
-        self.t.parent = self
-        d = self.t.checksvn()
-        d.addBoth(self._testFailedChanges2)
-        return maybeWait(d)
-
-    def _testFailedChanges2(self, f):
-        self.assert_(isinstance(f, failure.Failure))
-        self.failUnlessIn('Subversion client error', str(f))
-        self.assert_(not self.t.working)
-
-    def testFailedDescribe(self):
-        """'svn describe' failure is properly reported"""
-        self.t = MockSvnSource(svnchanges=[
-	                       svn_change_1,
-			       'Subversion client error:\n...',
-			       svn_change_2,],
-                               svnuser=None)
-        self.t.parent = self
-        d = self.t.checksvn()
-	dbgMsg("xxx")
-        d.addCallback(self._testFailedDescribe2)
-        return maybeWait(d)
-
-    def _testFailedDescribe2(self, res):
-        # first time finds nothing; check again.
-	dbgMsg("yy")
-        res = self.t.checksvn().addBoth(self._testFailedDescribe3)
-        return res
-
-    def _testFailedDescribe3(self, f):
-	dbgMsg("yy1 %s" % f)
-        self.assert_(isinstance(f, failure.Failure))
-	dbgMsg("yy2")
-        self.failUnlessIn('Subversion client error', str(f))
-	dbgMsg("yy3")
-        self.assert_(not self.t.working)
-	dbgMsg("yy4")
-        self.assertEquals(self.t.last_change, '101')
-	dbgMsg("yy5")
-
-    def testAlreadyWorking(self):
-        """don't launch a new poll while old is still going"""
-        self.t = SvnSource()
-        self.t.working = True
-        self.assert_(self.t.last_change is None)
-        d = self.t.checksvn()
-        d.addCallback(self._testAlreadyWorking2)
-
-    def _testAlreadyWorking2(self, res):
-        self.assert_(self.t.last_change is None)
+from buildbot.changes.svnpoller import SvnSource
 
 # this is the output of "svn info --xml
 # svn+ssh://svn.twistedmatrix.com/svn/Twisted/trunk"
@@ -307,7 +89,7 @@ class ComputePrefix(unittest.TestCase):
         base = "svn+ssh://svn.twistedmatrix.com/svn/Twisted/trunk"
         s = SvnSource(base + "/")
         self.failUnlessEqual(s.svnurl, base) # certify slash-stripping
-        prefix = s._determine_prefix_2(prefix_output)
+        prefix = s.determine_prefix(prefix_output)
         self.failUnlessEqual(prefix, "trunk")
         self.failUnlessEqual(s._prefix, prefix)
 
@@ -315,42 +97,59 @@ class ComputePrefix(unittest.TestCase):
         base = "svn+ssh://svn.twistedmatrix.com/svn/Twisted"
         s = SvnSource(base)
         self.failUnlessEqual(s.svnurl, base)
-        prefix = s._determine_prefix_2(prefix_output_2)
+        prefix = s.determine_prefix(prefix_output_2)
         self.failUnlessEqual(prefix, "")
 
     def test3(self):
         base = "file:///home/warner/stuff/Projects/BuildBot/trees/svnpoller/_trial_temp/test_vc/repositories/SVN-Repository"
         s = SvnSource(base)
         self.failUnlessEqual(s.svnurl, base)
-        prefix = s._determine_prefix_2(prefix_output_3)
+        prefix = s.determine_prefix(prefix_output_3)
         self.failUnlessEqual(prefix, "")
 
     def test4(self):
         base = "file:///home/warner/stuff/Projects/BuildBot/trees/svnpoller/_trial_temp/test_vc/repositories/SVN-Repository/sample/trunk"
         s = SvnSource(base)
         self.failUnlessEqual(s.svnurl, base)
-        prefix = s._determine_prefix_2(prefix_output_4)
+        prefix = s.determine_prefix(prefix_output_4)
         self.failUnlessEqual(prefix, "sample/trunk")
 
 # output from svn log on .../SVN-Repository/sample
 # (so it includes trunk and branches)
-changes_output_1 = """\
-<?xml version="1.0"?>
-<log>
+sample_base = "file:///usr/home/warner/stuff/Projects/BuildBot/trees/misc/_trial_temp/test_vc/repositories/SVN-Repository/sample"
+sample_logentries = [None] * 4
+
+sample_logentries[3] = """\
+<logentry
+   revision="4">
+<author>warner</author>
+<date>2006-10-01T19:35:16.165664Z</date>
+<paths>
+<path
+   action="M">/sample/trunk/version.c</path>
+</paths>
+<msg>revised_to_2</msg>
+</logentry>
+"""
+
+sample_logentries[2] = """\
 <logentry
    revision="3">
 <author>warner</author>
-<date>2006-10-01T07:37:04.182499Z</date>
+<date>2006-10-01T19:35:10.215692Z</date>
 <paths>
 <path
    action="M">/sample/branch/main.c</path>
 </paths>
 <msg>commit_on_branch</msg>
 </logentry>
+"""
+
+sample_logentries[1] = """\
 <logentry
    revision="2">
 <author>warner</author>
-<date>2006-10-01T07:37:03.175326Z</date>
+<date>2006-10-01T19:35:09.154973Z</date>
 <paths>
 <path
    copyfrom-path="/sample/trunk"
@@ -359,44 +158,272 @@ changes_output_1 = """\
 </paths>
 <msg>make_branch</msg>
 </logentry>
-</log>
 """
+
+sample_logentries[0] = """\
+<logentry
+   revision="1">
+<author>warner</author>
+<date>2006-10-01T19:35:08.642045Z</date>
+<paths>
+<path
+   action="A">/sample</path>
+<path
+   action="A">/sample/trunk</path>
+<path
+   action="A">/sample/trunk/subdir/subdir.c</path>
+<path
+   action="A">/sample/trunk/main.c</path>
+<path
+   action="A">/sample/trunk/version.c</path>
+<path
+   action="A">/sample/trunk/subdir</path>
+</paths>
+<msg>sample_project_files</msg>
+</logentry>
+"""
+
+sample_info_output = """\
+<?xml version="1.0"?>
+<info>
+<entry
+   kind="dir"
+   path="sample"
+   revision="4">
+<url>file:///usr/home/warner/stuff/Projects/BuildBot/trees/misc/_trial_temp/test_vc/repositories/SVN-Repository/sample</url>
+<repository>
+<root>file:///usr/home/warner/stuff/Projects/BuildBot/trees/misc/_trial_temp/test_vc/repositories/SVN-Repository</root>
+<uuid>4f94adfc-c41e-0410-92d5-fbf86b7c7689</uuid>
+</repository>
+<commit
+   revision="4">
+<author>warner</author>
+<date>2006-10-01T19:35:16.165664Z</date>
+</commit>
+</entry>
+</info>
+"""
+
+
+changes_output_template = """\
+<?xml version="1.0"?>
+<log>
+%s</log>
+"""
+
+def make_changes_output(maxrevision):
+    # return what 'svn log' would have just after the given revision was
+    # committed
+    logs = sample_logentries[0:maxrevision]
+    assert len(logs) == maxrevision
+    logs.reverse()
+    output = changes_output_template % ("".join(logs))
+    return output
+
+def split_file(path):
+    pieces = path.split("/")
+    if pieces[0] == "branch":
+        return "branch", "/".join(pieces[1:])
+    if pieces[0] == "trunk":
+        return None, "/".join(pieces[1:])
+    raise RuntimeError("there shouldn't be any files like %s" % path)
+
+class MySvnSource(SvnSource):
+    def __init__(self, *args, **kwargs):
+        SvnSource.__init__(self, *args, **kwargs)
+        self.pending_commands = []
+        self.finished_changes = []
+
+    def getProcessOutput(self, args):
+        d = defer.Deferred()
+        self.pending_commands.append((args, d))
+        return d
+
+    def submit_changes(self, changes):
+        self.finished_changes.extend(changes)
 
 class ComputeChanges(unittest.TestCase):
     def test1(self):
         base = "file:///home/warner/stuff/Projects/BuildBot/trees/svnpoller/_trial_temp/test_vc/repositories/SVN-Repository/sample"
         s = SvnSource(base)
         s._prefix = "sample"
-        doc = s._parse_logs(changes_output_1)
+        output = make_changes_output(4)
+        doc = s.parse_logs(output)
 
-        newlast, logentries = s._filter_new_logentries(doc, 3)
-        self.failUnlessEqual(newlast, 3)
+        newlast, logentries = s._filter_new_logentries(doc, 4)
+        self.failUnlessEqual(newlast, 4)
         self.failUnlessEqual(len(logentries), 0)
 
-        newlast, logentries = s._filter_new_logentries(doc, 2)
-        self.failUnlessEqual(newlast, 3)
+        newlast, logentries = s._filter_new_logentries(doc, 3)
+        self.failUnlessEqual(newlast, 4)
         self.failUnlessEqual(len(logentries), 1)
 
-        newlast, logentries = s._filter_new_logentries(doc, 0)
-        self.failUnlessEqual(newlast, 3)
-        self.failUnlessEqual(len(logentries), 2)
+        newlast, logentries = s._filter_new_logentries(doc, 1)
+        self.failUnlessEqual(newlast, 4)
+        self.failUnlessEqual(len(logentries), 3)
 
-    def split_file(self, path):
-        pieces = path.split("/")
-        if pieces[0] == "branch":
-            return "branch", "/".join(pieces[1:])
-        if pieces[0] == "trunk":
-            return None, "/".join(pieces[1:])
-        raise RuntimeError("there shouldn't be any files like %s" % path)
+        newlast, logentries = s._filter_new_logentries(doc, None)
+        self.failUnlessEqual(newlast, 4)
+        self.failUnlessEqual(len(logentries), 0)
 
     def testChanges(self):
         base = "file:///home/warner/stuff/Projects/BuildBot/trees/svnpoller/_trial_temp/test_vc/repositories/SVN-Repository/sample"
-        s = SvnSource(base, split_file=self.split_file)
+        s = SvnSource(base, split_file=split_file)
         s._prefix = "sample"
-        doc = s._parse_logs(changes_output_1)
-        newlast, logentries = s._filter_new_logentries(doc, 0)
-        changes = s._create_changes(logentries)
+        doc = s.parse_logs(make_changes_output(3))
+        newlast, logentries = s._filter_new_logentries(doc, 1)
+        # so we see revisions 2 and 3 as being new
+        self.failUnlessEqual(newlast, 3)
+        changes = s.create_changes(logentries)
         self.failUnlessEqual(len(changes), 2)
         self.failUnlessEqual(changes[0].branch, "branch")
+        self.failUnlessEqual(changes[0].revision, 2)
         self.failUnlessEqual(changes[1].branch, "branch")
         self.failUnlessEqual(changes[1].files, ["main.c"])
+        self.failUnlessEqual(changes[1].revision, 3)
+
+        # and now pull in r4
+        doc = s.parse_logs(make_changes_output(4))
+        newlast, logentries = s._filter_new_logentries(doc, newlast)
+        self.failUnlessEqual(newlast, 4)
+        # so we see revision 4 as being new
+        changes = s.create_changes(logentries)
+        self.failUnlessEqual(len(changes), 1)
+        self.failUnlessEqual(changes[0].branch, None)
+        self.failUnlessEqual(changes[0].revision, 4)
+        self.failUnlessEqual(changes[0].files, ["version.c"])
+
+    def testFirstTime(self):
+        base = "file:///home/warner/stuff/Projects/BuildBot/trees/svnpoller/_trial_temp/test_vc/repositories/SVN-Repository/sample"
+        s = SvnSource(base, split_file=split_file)
+        s._prefix = "sample"
+        doc = s.parse_logs(make_changes_output(4))
+        logentries = s.get_new_logentries(doc)
+        # SvnSource ignores all changes that happened before it was started
+        self.failUnlessEqual(len(logentries), 0)
+        self.failUnlessEqual(s.last_change, 4)
+
+class Misc(unittest.TestCase):
+    def testAlreadyWorking(self):
+        base = "file:///home/warner/stuff/Projects/BuildBot/trees/svnpoller/_trial_temp/test_vc/repositories/SVN-Repository/sample"
+        s = MySvnSource(base)
+        d = s.checksvn()
+        # the SvnSource is now waiting for its getProcessOutput to finish
+        self.failUnlessEqual(s.overrun_counter, 0)
+        d2 = s.checksvn()
+        self.failUnlessEqual(s.overrun_counter, 1)
+        self.failUnlessEqual(len(s.pending_commands), 1)
+
+    def testGetRoot(self):
+        base = "svn+ssh://svn.twistedmatrix.com/svn/Twisted/trunk"
+        s = MySvnSource(base)
+        d = s.checksvn()
+        # the SvnSource is now waiting for its getProcessOutput to finish
+        self.failUnlessEqual(len(s.pending_commands), 1)
+        self.failUnlessEqual(s.pending_commands[0][0],
+                             ["info", "--xml", "--non-interactive", base])
+
+def makeTime(timestring):
+    datefmt = '%Y/%m/%d %H:%M:%S'
+    when = time.mktime(time.strptime(timestring, datefmt))
+    return when
+
+
+class Everything(unittest.TestCase):
+    def test1(self):
+        s = MySvnSource(sample_base, split_file=split_file)
+        d = s.checksvn()
+        # the SvnSource is now waiting for its getProcessOutput to finish
+        self.failUnlessEqual(len(s.pending_commands), 1)
+        self.failUnlessEqual(s.pending_commands[0][0],
+                             ["info", "--xml", "--non-interactive",
+                              sample_base])
+        d = s.pending_commands[0][1]
+        s.pending_commands.pop(0)
+        d.callback(sample_info_output)
+        # now it should be waiting for the 'svn log' command
+        self.failUnlessEqual(len(s.pending_commands), 1)
+        self.failUnlessEqual(s.pending_commands[0][0],
+                             ["log", "--xml", "--verbose", "--non-interactive",
+                              "--limit=100", sample_base])
+        d = s.pending_commands[0][1]
+        s.pending_commands.pop(0)
+        d.callback(make_changes_output(1))
+        # the command ignores the first batch of changes
+        self.failUnlessEqual(len(s.finished_changes), 0)
+        self.failUnlessEqual(s.last_change, 1)
+
+        # now fire it again, nothing changing
+        d = s.checksvn()
+        self.failUnlessEqual(s.pending_commands[0][0],
+                             ["log", "--xml", "--verbose", "--non-interactive",
+                              "--limit=100", sample_base])
+        d = s.pending_commands[0][1]
+        s.pending_commands.pop(0)
+        d.callback(make_changes_output(1))
+        # nothing has changed
+        self.failUnlessEqual(len(s.finished_changes), 0)
+        self.failUnlessEqual(s.last_change, 1)
+
+        # and again, with r2 this time
+        d = s.checksvn()
+        self.failUnlessEqual(s.pending_commands[0][0],
+                             ["log", "--xml", "--verbose", "--non-interactive",
+                              "--limit=100", sample_base])
+        d = s.pending_commands[0][1]
+        s.pending_commands.pop(0)
+        d.callback(make_changes_output(2))
+        # r2 should appear
+        self.failUnlessEqual(len(s.finished_changes), 1)
+        self.failUnlessEqual(s.last_change, 2)
+
+        c = s.finished_changes[0]
+        self.failUnlessEqual(c.branch, "branch")
+        self.failUnlessEqual(c.revision, 2)
+        self.failUnlessEqual(c.files, [''])
+        # TODO: this is what creating the branch looks like: a Change with a
+        # zero-length file. We should decide if we want filenames like this
+        # in the Change (and make sure nobody else gets confused by it) or if
+        # we want to strip them out.
+        self.failUnlessEqual(c.comments, "make_branch")
+
+        # and again at r2, so nothing should change
+        d = s.checksvn()
+        self.failUnlessEqual(s.pending_commands[0][0],
+                             ["log", "--xml", "--verbose", "--non-interactive",
+                              "--limit=100", sample_base])
+        d = s.pending_commands[0][1]
+        s.pending_commands.pop(0)
+        d.callback(make_changes_output(2))
+        # nothing has changed
+        self.failUnlessEqual(len(s.finished_changes), 1)
+        self.failUnlessEqual(s.last_change, 2)
+
+        # and again with both r3 and r4 appearing together
+        d = s.checksvn()
+        self.failUnlessEqual(s.pending_commands[0][0],
+                             ["log", "--xml", "--verbose", "--non-interactive",
+                              "--limit=100", sample_base])
+        d = s.pending_commands[0][1]
+        s.pending_commands.pop(0)
+        d.callback(make_changes_output(4))
+        self.failUnlessEqual(len(s.finished_changes), 3)
+        self.failUnlessEqual(s.last_change, 4)
+
+        c3 = s.finished_changes[1]
+        self.failUnlessEqual(c3.branch, "branch")
+        self.failUnlessEqual(c3.revision, 3)
+        self.failUnlessEqual(c3.files, ["main.c"])
+        self.failUnlessEqual(c3.comments, "commit_on_branch")
+
+        c4 = s.finished_changes[2]
+        self.failUnlessEqual(c4.branch, None)
+        self.failUnlessEqual(c4.revision, 4)
+        self.failUnlessEqual(c4.files, ["version.c"])
+        self.failUnlessEqual(c4.comments, "revised_to_2")
+        self.failUnlessEqual(c4.when, makeTime("2006/10/01 19:35:16"))
+
+
+# TODO:
+#  get coverage of split_file returning None
+#  point at a live SVN server for a little while
