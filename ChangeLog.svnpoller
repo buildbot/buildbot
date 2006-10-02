@@ -1,3 +1,18 @@
+Sun Oct  1 16:58:28 2006  Brian Warner  <warner@lothar.com>
+
+	* buildbot/changes/svnpoller.py (SvnSource.create_changes):
+	de-unicodify filenames before creating the Change, because the
+	rest of buildbot is unlikely to handle them well. Leave the 'who'
+	field as a unicode object.. I don't think there's anything that
+	will break very soon, and it will probably nudge us towards
+	accepting unicode everywhere sooner or later. Stop using the
+	"date" field that comes out of SVN, since it is using the
+	repository's clock (and timezone) and what we care about is the
+	buildmaster's (otherwise Changes from the future show up later
+	than the builds they triggered).
+	* buildbot/test/test_svnpoller.py (Everything.test1): match the
+	change to .when
+
 Sun Oct  1 10:12:44 2006  Brian Warner  <warner@lothar.com>
 
 	* buildbot/changes/svnpoller.py (SvnSource): added Niklaus Giger's

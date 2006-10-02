@@ -392,15 +392,27 @@ class SvnSource(base.ChangeSource, util.ComparableMixin):
             # of that string up to b.s.source.SVN methods
             revision = int(el.getAttribute("revision"))
             dbgMsg("Adding change revision %s" % (revision,))
+            # TODO: the rest of buildbot may not be ready for unicode 'who'
+            # values
             author   = self._get_text(el, "author")
             comments = self._get_text(el, "msg")
-            when     = self._get_text(el, "date")
-            when     = time.mktime(time.strptime("%.19s" % when,
-                                                 "%Y-%m-%dT%H:%M:%S"))
+            # there is a "date" field, but it provides localtime in the
+            # repository's timezone, whereas we care about buildmaster's
+            # localtime (since this will get used to position the boxes on
+            # the Waterfall display, etc). So ignore the date field and use
+            # our local clock instead.
+            #when     = self._get_text(el, "date")
+            #when     = time.mktime(time.strptime("%.19s" % when,
+            #                                     "%Y-%m-%dT%H:%M:%S"))
             branches = {}
             pathlist = el.getElementsByTagName("paths")[0]
             for p in pathlist.getElementsByTagName("path"):
                 path = "".join([t.data for t in p.childNodes])
+                # the rest of buildbot is certaily not yet ready to handle
+                # unicode filenames, because they get put in RemoteCommands
+                # which get sent via PB to the buildslave, and PB doesn't
+                # handle unicode.
+                path = path.encode("ascii")
                 if path.startswith("/"):
                     path = path[1:]
                 where = self._transform_path(path)
@@ -417,7 +429,6 @@ class SvnSource(base.ChangeSource, util.ComparableMixin):
                            files=branches[branch],
                            comments=comments,
                            revision=revision,
-                           when=when,
                            branch=branch)
                 changes.append(c)
 

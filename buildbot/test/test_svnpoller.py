@@ -421,7 +421,7 @@ class Everything(unittest.TestCase):
         self.failUnlessEqual(c4.revision, 4)
         self.failUnlessEqual(c4.files, ["version.c"])
         self.failUnlessEqual(c4.comments, "revised_to_2")
-        self.failUnlessEqual(c4.when, makeTime("2006/10/01 19:35:16"))
+        self.failUnless(abs(c4.when - time.time()) < 60)
 
 
 # TODO:
