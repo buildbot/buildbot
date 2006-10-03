@@ -41,7 +41,8 @@ testmsgs = []
 for f in os.listdir("buildbot/test/mail"):
     if f.endswith("~"):
         continue
-    testmsgs.append("buildbot/test/mail/%s" % f)
+    if f.startswith("msg") or f.startswith("syncmail"):
+        testmsgs.append("buildbot/test/mail/%s" % f)
 
 setup(name="buildbot",
       version=version,
@@ -71,13 +72,13 @@ setup(name="buildbot",
                 "buildbot.slave",
                 "buildbot.scripts",
                 "buildbot.test",
-                "buildbot.test.subdir",
                 ],
       data_files=[("buildbot", ["buildbot/buildbot.png"]),
                   ("buildbot/clients", ["buildbot/clients/debug.glade"]),
                   ("buildbot/status", ["buildbot/status/classic.css"]),
                   ("buildbot/scripts", ["buildbot/scripts/sample.cfg"]),
                   ("buildbot/test/mail", testmsgs),
+                  ("buildbot/test/subdir", ["buildbot/test/subdir/emit.py"]),
                   ],
       scripts = scripts,
       cmdclass={'install_data': install_data_twisted},
