@@ -468,3 +468,27 @@ buildbot/scripts/imaginary.py:18: 'from buildbot import *' used; unable to detec
         self.failUnless("import*=1" in desc)
         self.failUnless("misc=2" in desc)
 
+
+    def testPyFlakes3(self):
+        self.masterbase = "Python.testPyFlakes3"
+        step = self.makeStep(python.PyFlakes)
+        output = \
+"""buildbot/changes/freshcvsmail.py:5: 'FCMaildirSource' imported but unused
+buildbot/clients/debug.py:9: redefinition of unused 'gtk' from line 9
+buildbot/clients/debug.py:9: 'gnome' imported but unused
+buildbot/scripts/runner.py:323: redefinition of unused 'run' from line 321
+buildbot/scripts/runner.py:325: redefinition of unused 'run' from line 323
+buildbot/scripts/imaginary.py:12: undefined name 'size'
+buildbot/scripts/imaginary.py:18: 'from buildbot import *' used; unable to detect undefined names
+"""
+        log = step.addLog("stdio")
+        log.addStdout(output)
+        log.finish()
+        step.createSummary(log)
+        desc = step.descriptionDone
+        self.failUnless("unused=2" in desc)
+        self.failUnless("undefined=1" in desc)
+        self.failUnless("redefs=3" in desc)
+        self.failUnless("import*=1" in desc)
+        self.failIf("misc" in desc)
+

@@ -5,6 +5,7 @@
 	command is run under a Makefile, 'make' will echo the command it
 	runs to stdio, and that was getting logged as a "misc" warning.
 	* buildbot/test/test_steps.py (Python.testPyFlakes2): test it
+	* buildbot/test/test_steps.py (testPyFlakes3): another test
 
 2006-10-01  Brian Warner  <warner@lothar.com>
 
