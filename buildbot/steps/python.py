@@ -65,7 +65,19 @@ class PyFlakes(ShellCommand):
             counts[m] = 0
             summaries[m] = []
 
+        first = True
         for line in StringIO(log.getText()).readlines():
+            # the first few lines might contain echoed commands from a 'make
+            # pyflakes' step, so don't count these as warnings. Stop ignoring
+            # the initial lines as soon as we see one with a colon.
+            if first:
+                if line.find(":") != -1:
+                    # there's the colon, this is the first real line
+                    first = False
+                    # fall through and parse the line
+                else:
+                    # skip this line, keep skipping non-colon lines
+                    continue
             if line.find("imported but unused") != -1:
                 m = "unused"
             elif line.find("*' used; unable to detect undefined names") != -1:

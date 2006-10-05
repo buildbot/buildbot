@@ -394,11 +394,12 @@ class CheckStepTester(StepTester, unittest.TestCase):
         return maybeWait(d)
 
 class Python(StepTester, unittest.TestCase):
-    def testPyFlakes(self):
-        self.masterbase = "Python.master"
+    def testPyFlakes1(self):
+        self.masterbase = "Python.testPyFlakes1"
         step = self.makeStep(python.PyFlakes)
         output = \
-"""buildbot/changes/freshcvsmail.py:5: 'FCMaildirSource' imported but unused
+"""pyflakes buildbot
+buildbot/changes/freshcvsmail.py:5: 'FCMaildirSource' imported but unused
 buildbot/clients/debug.py:9: redefinition of unused 'gtk' from line 9
 buildbot/clients/debug.py:9: 'gnome' imported but unused
 buildbot/scripts/runner.py:323: redefinition of unused 'run' from line 321
@@ -415,6 +416,7 @@ buildbot/scripts/imaginary.py:18: 'from buildbot import *' used; unable to detec
         self.failUnless("undefined=1" in desc)
         self.failUnless("redefs=3" in desc)
         self.failUnless("import*=1" in desc)
+        self.failIf("misc=" in desc)
 
         self.failUnlessEqual(step.getProperty("pyflakes-unused"), 2)
         self.failUnlessEqual(step.getProperty("pyflakes-undefined"), 1)
@@ -438,3 +440,31 @@ buildbot/scripts/imaginary.py:18: 'from buildbot import *' used; unable to detec
         cmd.rc = 0
         results = step.evaluateCommand(cmd)
         self.failUnlessEqual(results, FAILURE) # because of the 'undefined'
+
+    def testPyFlakes2(self):
+        self.masterbase = "Python.testPyFlakes2"
+        step = self.makeStep(python.PyFlakes)
+        output = \
+"""pyflakes buildbot
+some more text here that should be ignored
+buildbot/changes/freshcvsmail.py:5: 'FCMaildirSource' imported but unused
+buildbot/clients/debug.py:9: redefinition of unused 'gtk' from line 9
+buildbot/clients/debug.py:9: 'gnome' imported but unused
+buildbot/scripts/runner.py:323: redefinition of unused 'run' from line 321
+buildbot/scripts/runner.py:325: redefinition of unused 'run' from line 323
+buildbot/scripts/imaginary.py:12: undefined name 'size'
+could not compile 'blah/blah.py':3:
+pretend there was an invalid line here
+buildbot/scripts/imaginary.py:18: 'from buildbot import *' used; unable to detect undefined names
+"""
+        log = step.addLog("stdio")
+        log.addStdout(output)
+        log.finish()
+        step.createSummary(log)
+        desc = step.descriptionDone
+        self.failUnless("unused=2" in desc)
+        self.failUnless("undefined=1" in desc)
+        self.failUnless("redefs=3" in desc)
+        self.failUnless("import*=1" in desc)
+        self.failUnless("misc=2" in desc)
+

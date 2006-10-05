@@ -1,3 +1,11 @@
+2006-10-04  Brian Warner  <warner@lothar.com>
+
+	* buildbot/steps/python.py (PyFlakes.createSummary): skip any
+	initial lines that weren't emitted by pyflakes. When the pyflakes
+	command is run under a Makefile, 'make' will echo the command it
+	runs to stdio, and that was getting logged as a "misc" warning.
+	* buildbot/test/test_steps.py (Python.testPyFlakes2): test it
+
 2006-10-01  Brian Warner  <warner@lothar.com>
 
 	* buildbot/status/html.py (HtmlResource.render): if we get a
