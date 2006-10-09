@@ -16,7 +16,7 @@
 
 # 15.03.06 by John Pye
 # 29.03.06 by Niklaus Giger, added support to run under windows, added invocation option
-import commands
+import subprocess
 import xml.dom.minidom
 import sys
 import time
@@ -24,8 +24,13 @@ import os
 if sys.platform == 'win32':
     import win32pipe
 
+def getoutput(cmd):
+    p = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+    return p.stdout.read()
+
 def checkChanges(repo, master, verbose=False, oldRevision=-1):
-    cmd ="svn log --non-interactive --xml --verbose --limit=1 "+repo
+    cmd = ["svn", "log", "--non-interactive", "--xml", "--verbose",
+           "--limit=1", repo]
     if verbose == True:
         print "Getting last revision of repository: " + repo
 
@@ -34,11 +39,11 @@ def checkChanges(repo, master, verbose=False, oldRevision=-1):
         xml1 = ''.join(f.readlines())
         f.close()
     else:
-        xml1 = commands.getoutput(cmd)  
-    
+        xml1 = getoutput(cmd)
+
     if verbose == True:
         print "XML\n-----------\n"+xml1+"\n\n"
-    
+
     doc = xml.dom.minidom.parseString(xml1)
     el = doc.getElementsByTagName("logentry")[0]
     revision = el.getAttribute("revision")
@@ -57,20 +62,23 @@ def checkChanges(repo, master, verbose=False, oldRevision=-1):
         print paths
 
     if  revision != oldRevision:
-        cmd = "buildbot sendchange --master="+master+" --revision=\""+revision+"\" --username=\""+author+"\"--comments=\""+comments+"\" "+" ".join(paths)
-    
+        cmd = ["buildbot", "sendchange", "--master=%s"%master,
+               "--revision=%s"%revision, "--username=%s"%author,
+               "--comments=%s"%comments]
+        cmd += paths
+
         if verbose == True:
             print cmd
-    
+
         if sys.platform == 'win32':
             f = win32pipe.popen(cmd)
             print time.strftime("%H.%M.%S ") + "Revision "+revision+ ": "+ ''.join(f.readlines())
             f.close()
         else:
-            xml1 = commands.getoutput(cmd)  
+            xml1 = getoutput(cmd)
     else:
         print time.strftime("%H.%M.%S ") + "nothing has changed since revision "+revision
-       
+
     return revision
 
 if __name__ == '__main__':

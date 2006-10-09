@@ -1,3 +1,12 @@
+2006-10-08  Brian Warner  <warner@lothar.com>
+
+	* contrib/svn_watcher.py: fix security holes by using proper argv
+	arrays and subprocess.Popen() rather than commands.getoutput().
+	Thanks to Nick Mathewson for the patch. Note that svn_watcher.py
+	is deprecated in favor of buildbot/changes/svnpoller.py, and will
+	probably be removed by the next release.
+	* CREDITS: add Nick
+
 2006-10-04  Brian Warner  <warner@lothar.com>
 
 	* buildbot/steps/python.py (PyFlakes.createSummary): skip any
