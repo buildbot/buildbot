@@ -1,3 +1,12 @@
+2006-10-12  Brian Warner  <warner@lothar.com>
+
+	* buildbot/steps/transfer.py: rework __init__ and args setup
+	* buildbot/slave/commands.py (SlaveFileDownloadCommand): minor
+	docs improvements
+	* buildbot/slave/commands.py (SlaveFileDownloadCommand.setup):
+	when opening the target file, only catch IOError (to report via
+	stderr/rc!=0), let the others be reported as normal exceptions
+
 2006-10-08  Brian Warner  <warner@lothar.com>
 
 	* contrib/svn_watcher.py: fix security holes by using proper argv

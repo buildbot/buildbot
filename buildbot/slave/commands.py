@@ -675,14 +675,12 @@ class SlaveFileUploadCommand(Command):
     Upload a file from slave to build master
     Arguments:
 
-        - ['workdir']:   directory to use
-        - ['slavesrc']:  name of the file to upload to the buildmaster
-        - ['writer']:    object for remote writing
+        - ['workdir']:   base directory to use
+        - ['slavesrc']:  name of the slave-side file to read from
+        - ['writer']:    RemoteReference to a transfer._FileWriter object
         - ['maxsize']:   max size (in bytes) of file to write
-        - ['blocksize']: max size for one data block
-
+        - ['blocksize']: max size for each data block
     """
-
     debug = False
 
     def setup(self,args):
@@ -786,12 +784,11 @@ class SlaveFileDownloadCommand(Command):
     Download a file from master to slave
     Arguments:
 
-        - ['workdir']:   directory to use
-        - ['slavedest']: name of the file to upload to the buildmaster
-        - ['reader']:    object for remote reading
+        - ['workdir']:   base directory to use
+        - ['slavedest']: name of the slave-side file to be created
+        - ['reader']:    RemoteReference to a transfer._FileReader object
         - ['maxsize']:   max size (in bytes) of file to write
-        - ['blocksize']: max size for one data block
-
+        - ['blocksize']: max size for each data block
     """
     debug = False
 
@@ -815,7 +812,7 @@ class SlaveFileDownloadCommand(Command):
             self.fp = open(self.path, 'w')
             if self.debug:
                 log.msg('Opened %r for download' % self.path)
-        except:
+        except IOError:
             self.fp = None
             self.stderr = 'Cannot open file %r for download' % self.path
             self.rc = 1

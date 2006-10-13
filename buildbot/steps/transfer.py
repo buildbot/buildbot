@@ -104,20 +104,20 @@ class FileUpload(BuildStep):
 
     name = 'upload'
 
-    def __init__(self, build, **kwargs):
-        buildstep_kwargs = {}
-        for k in kwargs.keys()[:]:
-            if k in BuildStep.parms:
-                buildstep_kwargs[k] = kwargs[k]
-                del kwargs[k]
-            BuildStep.__init__(self, build, **buildstep_kwargs)
+    def __init__(self, build, slavesrc, masterdest,
+                 workdir="build", maxsize=None, blocksize=16*1024,
+                 **buildstep_kwargs):
+        BuildStep.__init__(self, build, **buildstep_kwargs)
 
-        self.args = kwargs
-        self.fileWriter = None
+        self.slavesrc = slavesrc
+        self.masterdest = masterdest
+        self.workdir = workdir
+        self.maxsize = maxsize
+        self.blocksize = blocksize
 
     def start(self):
-        source = self.args['slavesrc']
-        masterdest = self.args['masterdest']
+        source = self.slavesrc
+        masterdest = self.masterdest
         # we rely upon the fact that the buildmaster runs chdir'ed into its
         # basedir to make sure that relative paths in masterdest are expanded
         # properly. TODO: maybe pass the master's basedir all the way down
@@ -134,12 +134,12 @@ class FileUpload(BuildStep):
 
         # default arguments
         args = {
-            'maxsize': None,
-            'blocksize': 16*1024,
-            'workdir': 'build',
+            'slavesrc': source,
+            'workdir': self.workdir,
+            'writer': self.fileWriter,
+            'maxsize': self.maxsize,
+            'blocksize': self.blocksize
             }
-        args.update(self.args)
-        args['writer'] = self.fileWriter
 
         self.cmd = StatusRemoteCommand('uploadFile', args)
         d = self.runCommand(self.cmd)
@@ -173,20 +173,20 @@ class FileDownload(BuildStep):
 
     name = 'download'
 
-    def __init__(self,build, **kwargs):
-        buildstep_kwargs = {}
-        for k in kwargs.keys()[:]:
-            if k in BuildStep.parms:
-                buildstep_kwargs[k] = kwargs[k]
-                del kwargs[k]
-            BuildStep.__init__(self, build, **buildstep_kwargs)
+    def __init__(self, build, mastersrc, slavedest,
+                 workdir="build", maxsize=None, blocksize=16*1024,
+                 **buildstep_kwargs):
+        BuildStep.__init__(self, build, **buildstep_kwargs)
 
-        self.args = kwargs
-        self.fileReader = None
+        self.mastersrc = mastersrc
+        self.slavedest = slavedest
+        self.workdir = workdir
+        self.maxsize = maxsize
+        self.blocksize = blocksize
 
     def start(self):
-        source = os.path.expanduser(self.args['mastersrc'])
-        slavedest = self.args['slavedest']
+        source = os.path.expanduser(self.mastersrc)
+        slavedest = self.slavedest
         log.msg("FileDownload started, from master %r to slave %r" %
                 (source, slavedest))
 
@@ -206,12 +206,12 @@ class FileDownload(BuildStep):
 
         # default arguments
         args = {
-            'maxsize': None,
-            'blocksize': 16*1024,
-            'workdir': 'build',
+            'slavedest': self.slavedest,
+            'maxsize': self.maxsize,
+            'reader': self.fileReader,
+            'blocksize': self.blocksize,
+            'workdir': self.workdir,
             }
-        args.update(self.args)
-        args['reader'] = self.fileReader
 
         self.cmd = StatusRemoteCommand('downloadFile', args)
         d = self.runCommand(self.cmd)
