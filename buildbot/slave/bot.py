@@ -65,7 +65,7 @@ class SlaveBuilder(pb.Referenceable, service.Service):
         #service.Service.__init__(self) # Service has no __init__ method
         self.setName(name)
         self.not_really = not_really
-        
+
     def __repr__(self):
         return "<SlaveBuilder '%s'>" % self.name
 

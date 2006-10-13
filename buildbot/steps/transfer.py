@@ -129,7 +129,7 @@ class FileUpload(BuildStep):
         self.step_status.setColor('yellow')
         self.step_status.setText(['uploading', source])
 
-        fp = open(self.args['masterdest'],'w')
+        fp = open(self.masterdest, 'w')
         self.fileWriter = _FileWriter(fp)
 
         # default arguments

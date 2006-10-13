@@ -1,3 +1,9 @@
+2006-10-13  Brian Warner  <warner@lothar.com>
+
+	* buildbot/steps/transfer.py (FileUpload.start): Fix stupid error.
+	Maybe I should run my own unit tests before recording a big
+	change. Good thing I've got a buildbot to remind me.
+
 2006-10-12  Brian Warner  <warner@lothar.com>
 
 	* buildbot/steps/transfer.py: rework __init__ and args setup
