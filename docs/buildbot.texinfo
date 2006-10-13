@@ -4274,10 +4274,11 @@ use the @code{setProgress} method to tell the BuildStep about the
 progress that this event represents.
 
 There are a number of pre-built @code{LogObserver} classes that you
-can choose from, and of course you can subclass them to add further
-customization. The @code{LogLineObserver} class handles the grunt work
-of buffering and scanning for end-of-line delimiters, allowing your
-parser to operate on complete stdout/stderr lines.
+can choose from (defined in @code{buildbot.process.buildstep}, and of
+course you can subclass them to add further customization. The
+@code{LogLineObserver} class handles the grunt work of buffering and
+scanning for end-of-line delimiters, allowing your parser to operate
+on complete stdout/stderr lines.
 
 For example, let's take a look at the @code{TrialTestCaseCounter},
 which is used by the Trial step to count test cases as they are run.
@@ -4298,7 +4299,9 @@ well-defined than the ``[OK]'' lines.
 The parser class looks like this:
 
 @example
-class TrialTestCaseCounter(step.LogLineObserver):
+from buildbot.process.buildstep import LogLineObserver
+
+class TrialTestCaseCounter(LogLineObserver):
     _line_re = re.compile(r'^([\w\.]+) \.\.\. \[([^\]]+)\]$')
     numTests = 0
     finished = False

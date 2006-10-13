@@ -1,5 +1,8 @@
 2006-10-13  Brian Warner  <warner@lothar.com>
 
+	* docs/buildbot.texinfo (Adding LogObservers): update sample code
+	to match the great Steps renaming
+
 	* buildbot/steps/transfer.py (FileUpload.start): Fix stupid error.
 	Maybe I should run my own unit tests before recording a big
 	change. Good thing I've got a buildbot to remind me.
