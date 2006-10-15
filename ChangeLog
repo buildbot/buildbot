@@ -1,3 +1,9 @@
+2006-10-15  Brian Warner  <warner@lothar.com>
+
+	* buildbot/interfaces.py (IStatus.getURLForThing): oops, the
+	method name was misspelled in the interface definition. Thanks to
+	Roy Rapoport for the catch.
+
 2006-10-13  Brian Warner  <warner@lothar.com>
 
 	* docs/buildbot.texinfo (Adding LogObservers): update sample code

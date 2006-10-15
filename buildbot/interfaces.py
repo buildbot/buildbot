@@ -98,7 +98,7 @@ class IStatus(Interface):
     def getBuildbotURL():
         """Return the URL of the top-most Buildbot status page, or None if
         this Buildbot does not provide a web status page."""
-    def getURLFor(thing):
+    def getURLForThing(thing):
         """Return the URL of a page which provides information on 'thing',
         which should be an object that implements one of the status
         interfaces defined in L{buildbot.interfaces}. Returns None if no
