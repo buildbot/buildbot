@@ -196,6 +196,7 @@ class LogFileWatcher:
                 return # no file to work with
             self.f = open(self.logfile, "rb")
             self.started = True
+        self.f.seek(self.f.tell(), 0)
         while True:
             data = self.f.read(10000)
             if not data:
