@@ -1,4 +1,3 @@
-
 import time
 from urllib import urlopen
 from xml.dom import minidom, Node
@@ -9,129 +8,170 @@ from twisted.internet.task import LoopingCall
 
 from buildbot.changes import base, changes
 
+class InvalidResultError(Exception):
+    def __init__(self, value="InvalidResultError"):
+        self.value = value
+    def __str__(self):
+        return repr(self.value)
+
+class EmptyResult(Exception):
+    pass
+
+class NoMoreCiNodes(Exception):
+    pass
+
+class NoMoreFileNodes(Exception):
+    pass
 
 class BonsaiResult:
     """I hold a list of CiNodes"""
-    def __init__(self):
-        self.nodes = []
+    def __init__(self, nodes=[]):
+        self.nodes = nodes
+
+    def __cmp__(self, other):
+        if len(self.nodes) != len(other.nodes):
+            return False
+        for i in range(len(self.nodes)):
+            if self.nodes[i].log != other.nodes[i].log \
+              or self.nodes[i].who != other.nodes[i].who \
+              or self.nodes[i].date != other.nodes[i].date \
+              or len(self.nodes[i].files) != len(other.nodes[i].files):
+                return -1
+
+	        for j in range(len(self.nodes[i].files)):
+	            if self.nodes[i].files[j].revision \
+	              != other.nodes[i].files[j].revision \
+	              or self.nodes[i].files[j].filename \
+	              != other.nodes[i].files[j].filename:
+	                return -1
+
+        return 0
 
 class CiNode:
-    """I hold information about one Ci node, including a list of files"""
-    def __init__(self):
-        self.log = ""
-        self.who = ""
-        self.date = ""
-        self.files = []
+    """I hold information baout one <ci> node, including a list of files"""
+    def __init__(self, log="", who="", date=0, files=[]):
+        self.log = log
+        self.who = who
+        self.date = date
+        self.files = files
 
 class FileNode:
-    """I hold information about one file node"""
-    def __init__(self):
-        self.revision = ""
-        self.filename = ""
+    """I hold information about one <f> node"""
+    def __init__(self, revision="", filename=""):
+        self.revision = revision
+        self.filename = filename
 
 class BonsaiParser:
-    """I parse the XML result from a Bonsai cvsquery.
-    Typical usage is as follows::
-
-     bp = BonsaiParser(urlopen(bonsaiURL))
-     data = bp.getData()
-     for cinode in data.nodes:
-         print cinode.who, cinode.log, cinode.date
-         for file in cinode.files:
-             print file.filename, file.revision
-    """
+    """I parse the XML result from a bonsai cvsquery."""
 
     def __init__(self, bonsaiQuery):
         try:
             self.dom = minidom.parse(bonsaiQuery)
         except:
-            self.dom = None
-            return
-        self.currentCiNode = None
-        self.currentFileNode = None
+            raise InvalidResultError("Malformed XML in result")
+
+        self.ciNodes = self.dom.getElementsByTagName("ci")
+        self.currentCiNode = None # filled in by _nextCiNode()
+        self.fileNodes = None # filled in by _nextCiNode()
+        self.currentFileNode = None # filled in by _nextFileNode()
+        self.bonsaiResult = self._parseData()
 
     def getData(self):
-        """I return data from a Bonsai cvsquery"""
-        data = BonsaiResult()
-        while self._nextCiNode():
-            ci = CiNode()
-            ci.log = self._getLog()
-            ci.who = self._getWho()
-            ci.date = self._getDate()
-            while self._nextFileNode():
-                fn = FileNode()
-                fn.revision = self._getRevision()
-                fn.filename = self._getFilename()
-                ci.files.append(fn)
+        return self.bonsaiResult
 
-            data.nodes.append(ci)
+    def _parseData(self):
+        """Returns data from a Bonsai cvsquery in a BonsaiResult object"""
+        nodes = []
+        try:
+            while self._nextCiNode():
+                files = []
+                try:
+                    while self._nextFileNode():
+                        files.append(FileNode(self._getRevision(),
+                                              self._getFilename()))
+                except NoMoreFileNodes:
+                    pass
+                except InvalidResultError:
+                    raise
+                nodes.append(CiNode(self._getLog(), self._getWho(),
+                                    self._getDate(), files))
 
-        return data
+        except NoMoreCiNodes:
+            pass
+        except InvalidResultError, EmptyResult:
+            raise
+
+        return BonsaiResult(nodes)
 
 
     def _nextCiNode(self):
+        """Iterates to the next <ci> node and fills self.fileNodes with
+           child <f> nodes"""
         try:
-            # first <ci> node?
-            if not self.currentCiNode:
-                # every other sibling is a <ci>, so jump 2 ahead
-                self.currentCiNode = self.dom.getElementsByTagName("ci")[0]
-            else:
-                self.currentCiNode = self.currentCiNode.nextSibling.nextSibling
-        except (AttributeError,IndexError):
-            self.currentCiNode = None
+            self.currentCiNode = self.ciNodes.pop(0)
+            if len(self.currentCiNode.getElementsByTagName("files")) > 1:
+                raise InvalidResultError("Multiple <files> for one <ci>")
 
-        if self.currentCiNode:
-            return True
-        else:
-            return False
+            self.fileNodes = self.currentCiNode.getElementsByTagName("f")
+        except IndexError:
+            # if there was zero <ci> nodes in the result
+            if not self.currentCiNode:
+                raise EmptyResult
+            else:
+                raise NoMoreCiNodes
+
+        return True
+
+    def _nextFileNode(self):
+        """Iterates to the next <f> node"""
+        try:
+            self.currentFileNode = self.fileNodes.pop(0)
+        except IndexError:
+            raise NoMoreFileNodes
+
+        return True
 
     def _getLog(self):
-        log = ""
-        for child in self.currentCiNode.childNodes:
-            if child.nodeType == Node.ELEMENT_NODE and child.tagName == "log":
-                log = child.firstChild.data
-        return str(log)
+        """Returns the log of the current <ci> node"""
+        logs = self.currentCiNode.getElementsByTagName("log")
+        if len(logs) < 1:
+            raise InvalidResultError("No log present")
+        elif len(logs) > 1:
+            raise InvalidResultError("Multiple logs present")
 
+        return logs[0].firstChild.data
 
     def _getWho(self):
-        """Returns the e-mail address of the commit'er"""
-        return str(self.currentCiNode.getAttribute("who").replace("%", "@"))
+        """Returns the e-mail address of the commiter"""
+        # convert unicode string to regular string
+        return str(self.currentCiNode.getAttribute("who"))
 
     def _getDate(self):
         """Returns the date (unix time) of the commit"""
-        return int(self.currentCiNode.getAttribute("date"))
-
-
-    def _firstFileNode(self):
-        for child in self.currentCiNode.childNodes:
-            if child.nodeType == Node.ELEMENT_NODE and child.tagName == "files":
-                # child is now the <files> element
-                for c in child.childNodes:
-                    if c.nodeType == Node.ELEMENT_NODE and c.tagName == "f":
-                        return c
-
-    def _nextFileNode(self):
-        # every other sibling is a <f>, so go two past the current one
+        # convert unicode number to regular one
         try:
-            # first <f> node?
-            if not self.currentFileNode:
-                self.currentFileNode = self._firstFileNode()
-            else:
-                self.currentFileNode = self.currentFileNode.nextSibling.nextSibling
-        except AttributeError:
-            self.currentFileNode = None
+            commitDate = int(self.currentCiNode.getAttribute("date"))
+        except ValueError:
+            raise InvalidResultError
 
-        if self.currentFileNode:
-            return True
-        else:
-            return False
+        return commitDate
 
     def _getFilename(self):
-        return str(self.currentFileNode.firstChild.data)
+        """Returns the filename of the current <f> node"""
+        try:
+            filename = self.currentFileNode.firstChild.data
+        except AttributeError:
+            raise InvalidResultError("Missing filename")
+
+        return filename
 
     def _getRevision(self):
-        return str(self.currentFileNode.getAttribute("rev"))
+        """Returns the revision of the current <f> node"""
+        rev = self.currentFileNode.getAttribute("rev")
+        if rev == "":
+            raise InvalidResultError("A revision was missing from a file")
 
+        return rev
 
 
 class BonsaiPoller(base.ChangeSource):
@@ -215,7 +255,7 @@ class BonsaiPoller(base.ChangeSource):
             log.msg("Bonsai poll failed: %s" % res)
         return res
 
-    def _get_changes(self):
+    def _make_url(self):
         args = ["treeid=%s" % self.tree, "module=%s" % self.module,
                 "branch=%s" % self.branch, "branchtype=match",
                 "sortby=Date", "date=explicit",
@@ -226,6 +266,11 @@ class BonsaiPoller(base.ChangeSource):
         url = self.bonsaiURL
         url += "/cvsquery.cgi?"
         url += "&".join(args)
+
+        return url
+
+    def _get_changes(self):
+        url = self._make_url()
         log.msg("Polling Bonsai tree at %s" % url)
 
         self.lastPoll = time.time()
@@ -233,10 +278,17 @@ class BonsaiPoller(base.ChangeSource):
         return defer.maybeDeferred(urlopen, url)
 
     def _process_changes(self, query):
-        bp = BonsaiParser(query)
         files = []
-        data = bp.getData()
-        for cinode in data.nodes:
+        try:
+            bp = BonsaiParser(query)
+            result = bp.getData()
+        except InvalidResultError, e:
+            log.msg("Could not process Bonsai query: " + e.value)
+            return
+        except EmptyResult:
+            return
+
+        for cinode in result.nodes:
             for file in cinode.files:
                 files.append(file.filename+' (revision '+file.revision+')')
             c = changes.Change(who = cinode.who,
@@ -246,4 +298,3 @@ class BonsaiPoller(base.ChangeSource):
                                branch = self.branch)
             self.parent.addChange(c)
             self.lastChange = self.lastPoll
-

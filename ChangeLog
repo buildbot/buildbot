@@ -1,5 +1,9 @@
 2006-11-04  Brian Warner  <warner@lothar.com>
 
+	* buildbot/changes/bonsaipoller.py: apply updates from Ben
+	Hearsum. Closes SF#1590310.
+	* buildbot/test/test_bonsaipoller.py: and tests
+
 	* buildbot/status/tinderbox.py
 	(TinderboxMailNotifier.buildMessage): send out a "testfailed"
 	status when the build results in WARNINGS. Patch from Dave
