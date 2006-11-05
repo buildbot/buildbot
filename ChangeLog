@@ -1,5 +1,10 @@
 2006-11-04  Brian Warner  <warner@lothar.com>
 
+	* buildbot/status/tinderbox.py
+	(TinderboxMailNotifier.buildMessage): send out a "testfailed"
+	status when the build results in WARNINGS. Patch from Dave
+	Liebreich. Closes SF#1587352.
+
 	* buildbot/slave/commands.py (LogFileWatcher.poll): overcome a
 	linux-vs-osx behavior difference w.r.t. reading from files that
 	have reached EOF. This should fix LogFileWatcher on OS-X. Thanks

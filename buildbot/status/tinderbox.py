@@ -115,8 +115,11 @@ class TinderboxMailNotifier(mail.MailNotifier):
         if results == "building":
             res = "building"
             text += res
-        elif results == WARNINGS or results == SUCCESS:
+        elif results == SUCCESS:
             res = "success"
+            text += res
+        elif results == WARNINGS:
+            res = "testfailed"
             text += res
         else:
             res += "busted"
