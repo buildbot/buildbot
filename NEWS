@@ -1,5 +1,96 @@
 User visible changes in Buildbot.
 
+* Release ?.?.? (?)
+
+** Things You Need To Know
+
+*** The Great BuildStep Renaming
+
+All BuildSteps have moved from being classes in buildbot.process.step to
+separate modules in buildbot.steps.* . They have been split out into separate
+categories: for example, the source checkout steps are now
+buildbot.steps.source.CVS, buildbot.steps.source.Darcs, etc. The most
+commonly used one is probably buildbot.steps.shell.ShellCommand . The
+python-specific steps are in buildbot.steps.python, and the Twisted-specific
+steps are in buildbot.steps.python_twisted .
+
+The old names are deprecated and will be removed altogether in the next
+release.
+
+** new features
+
+*** Locks now take maxCount=N to allow multiple simultaneous owners
+
+This allows Locks to be non-exclusive but still limit concurrency. Thanks to
+James Knight for the patch. Closes SF#1434997.
+
+*** filetransfer steps
+
+buildbot.steps.transfer.FileUpload is a buildstep that will move files from
+the slave to the master. Likewise, FileDownload will move files from the
+master down to the buildslave. Many thanks to Albert Hofkamp for contributing
+these classes. Closes SF#1504631.
+
+*** pyflakes step
+
+buildbot.steps.python.PyFlakes will run the simple 'pyflakes' static analysis
+tool and parse the results to tell you about undefined names, unused imports,
+etc.
+
+*** Monotone support
+
+Nathaniel Smith has contributed initial support for the Monotone version
+control system. The code still needs docs and tests, but on the other hand it
+has been in use by the Monotone buildbot for a long time now, so it is
+probably fairly stable.
+
+*** Tinderbox support
+
+Ben Hearsum and the Mozilla crew have contributed some classes to allow
+Buildbot to work with Tinderbox clients. One piece is
+buildbot.changes.bonsaipoller.BonsaiPoller, which is a ChangeSource that
+polls a Bonsai server (which is a kind of web-vased viewcvs CGI script) to
+discover source code changes. The other piece is
+buildbot.status.tinderbox.TinderboxMailNotifier, which is a status plugin
+that sends email in the same format as Tinderbox does, which allows a number
+of Tinderbox tools to be driven by Buildbot instead.
+
+*** SVN Poller
+
+Niklaus Giger contributed a ChangeSource (buildbot.changes.svnpoller) which
+polls a remote SVN repository on a periodic basis. This is useful when, for
+whatever reason, you cannot add a post-commit hook script to the repository.
+This obsoletes the external contrib/svn_watcher.py script.
+
+** bug fixes
+
+*** Update source.SVN to work with the new SVN-1.4.0
+
+The latest subversion changed the behavior in an unusual situation which
+caused the unit tests to fail. This was unlikely to cause a problem in actual
+usage, but the tests have been updated to pass with the new version.
+
+*** update svn_buildbot.py to avoid mangling filenames
+
+Older versions of this script were stripping the wrong number of columns from
+the output of 'svnlook changed', and would sometimes mangle filenames. This
+has been fixed. Closes SF#1545146.
+
+*** logfiles= caused subsequent build failures under Windows
+
+Earlier versions of buildbot didn't explicitly close any logfiles= file
+handles when the build finished. On windows (where you cannot delete a file
+that someone is reading), this could cause the next build to fail as the
+source checkout step was unable to delete the old working directory. This has
+been fixed. Closes SF#1568415.
+
+*** logfiles= didn't work on OS-X
+
+Macintosh OS-X has a different behavior when reading files that have reached
+EOF, the result was that logfiles= sometimes didn't work. Thanks to Mark Rowe
+for the patch.
+
+
 * Release 0.7.4 (23 Aug 2006)
 
 ** Things You Need To Know
