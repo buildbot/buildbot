@@ -1,3 +1,7 @@
+2006-11-19  Brian Warner  <warner@lothar.com>
+
+	* NEWS (IStatusLog.readlines): more news items
+
 2006-11-18  Brian Warner  <warner@lothar.com>
 
 	* NEWS: start collecting items for the next release.

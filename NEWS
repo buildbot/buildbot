@@ -62,6 +62,28 @@ polls a remote SVN repository on a periodic basis. This is useful when, for
 whatever reason, you cannot add a post-commit hook script to the repository.
 This obsoletes the external contrib/svn_watcher.py script.
 
+** notes for plugin developers
+
+*** IStatusLog.readlines()
+
+This new method makes it easier for a status plugin (or a
+BuildStep.createSummary method) to walk through a StatusLog one line at a
+time. For example, if you wanted to create an extra logfile that just
+contained all the GCC warnings from the main log, you could use the
+following:
+
+    def createSummary(self, log):
+        warnings = []
+        for line in log.readlines():
+            if "warning:" in line:
+                warnings.append()
+        self.addCompleteLog('warnings', "".join(warnings))
+
+The "BuildStep LogFiles" section of the user's manual contains more
+information. This method is not particularly memory-efficient yet (it reads
+the whole logfile into memory first, then splits it into lines); this will be
+improved in a future release.
+
 ** bug fixes
 
 *** Update source.SVN to work with the new SVN-1.4.0
