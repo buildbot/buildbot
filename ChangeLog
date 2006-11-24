@@ -7,6 +7,9 @@
 
 2006-11-23  Brian Warner  <warner@lothar.com>
 
+	* buildbot/test/test_bonsaipoller.py: remove the 'import *' that
+	keeps pyflakes from finding undefined names
+
 	* buildbot/master.py (BuildMaster.loadConfig_Builders): changing a
 	Builder no longer induces a disconnect/reconnect cycle. This means
 	that any builds currently in progress will not be interrupted, and

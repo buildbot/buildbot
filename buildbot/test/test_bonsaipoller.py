@@ -1,7 +1,8 @@
 # -*- test-case-name: buildbot.test.test_bonsaipoller -*-
 
 from twisted.trial import unittest
-from buildbot.changes.bonsaipoller import *
+from buildbot.changes.bonsaipoller import FileNode, CiNode, BonsaiResult, \
+     BonsaiParser, BonsaiPoller, InvalidResultError, EmptyResult
 
 from StringIO import StringIO
 from copy import deepcopy
