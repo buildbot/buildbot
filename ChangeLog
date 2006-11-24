@@ -1,5 +1,18 @@
 2006-11-24  Brian Warner  <warner@lothar.com>
 
+	* buildbot/scripts/runner.py (Options.subCommands): rename
+	'buildbot sighup DIR' to 'buildbot reconfig DIR', but keep
+	'sighup' as an alias.
+	* buildbot/scripts/reconfig.py (Reconfigurator): enhance the
+	reconfig command to follow twistd.log and print all of the lines
+	from the start of the config-file reload to its completion. This
+	should make it a lot easier to discover bugs in the config file.
+	Use --quiet to disable this behavior. This addresses half of
+	SF#1517975, the other half will be to add this same utility to
+	'buildbot start' and 'buildbot restart'.
+	* docs/buildbot.texinfo (Loading the Config File): same
+	(Shutdown): same
+
 	* buildbot/interfaces.py (IBuilderControl.forceBuild): remove this
 	method, it has been deprecated for a long time. Use
 	IBuilderControl.requestBuild instead.

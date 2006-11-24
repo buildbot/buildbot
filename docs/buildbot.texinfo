@@ -1040,7 +1040,7 @@ The buildmaster will respond to a @code{SIGHUP} by re-reading its
 config file. The following shortcut is available:
 
 @example
-buildbot sighup @var{BASEDIR}
+buildbot reconfig @var{BASEDIR}
 @end example
 
 When you update the Buildbot code to a new release, you will need to
@@ -1894,8 +1894,12 @@ system hosting the buildmaster, you can send a @code{SIGHUP} signal to
 it: the @command{buildbot} tool has a shortcut for this:
 
 @example
-buildbot sighup @var{BASEDIR}
+buildbot reconfig @var{BASEDIR}
 @end example
+
+This command will show you all of the lines from @file{twistd.log}
+that relate to the reconfiguration. If there are any problems during
+the config-file reload, they will be displayed in these lines.
 
 The debug tool (@code{buildbot debugclient --master HOST:PORT}) has a
 ``Reload .cfg'' button which will also trigger a reload. In the

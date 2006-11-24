@@ -427,6 +427,15 @@ class StopOptions(MakerBase):
     def getSynopsis(self):
         return "Usage:    buildbot stop <basedir>"
 
+class ReconfigOptions(MakerBase):
+    optFlags = [
+        ['quiet', 'q', "Don't display log messages about reconfiguration"],
+        ]
+    def getSynopsis(self):
+        return "Usage:    buildbot reconfig <basedir>"
+
+
+
 class RestartOptions(MakerBase):
     def getSynopsis(self):
         return "Usage:    buildbot restart <basedir>"
@@ -669,7 +678,9 @@ class Options(usage.Options):
         ['restart', None, RestartOptions,
          "Restart a buildmaster or buildslave"],
 
-        ['sighup', None, StopOptions,
+        ['reconfig', None, ReconfigOptions,
+         "SIGHUP a buildmaster to make it re-read the config file"],
+        ['sighup', None, ReconfigOptions,
          "SIGHUP a buildmaster to make it re-read the config file"],
 
         ['sendchange', None, SendChangeOptions,
@@ -731,7 +742,8 @@ def run():
     elif command == "restart":
         restart(so)
     elif command == "sighup":
-        stop(so, "HUP")
+        from buildbot.scripts.reconfig import Reconfigurator
+        Reconfigurator().run(so)
     elif command == "sendchange":
         sendchange(so, True)
     elif command == "debugclient":

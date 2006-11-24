@@ -625,6 +625,8 @@ class BuildMaster(service.MultiService, styles.Versioned):
         except:
             log.msg("error during loadConfig")
             log.err()
+            log.msg("The new config file is unusable, so I'll ignore it.")
+            log.msg("I will keep using the previous config file instead.")
         f.close()
 
     def loadConfig(self, f):
