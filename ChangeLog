@@ -1,3 +1,10 @@
+2006-11-24  Brian Warner  <warner@lothar.com>
+
+	* buildbot/process/builder.py (Builder._attached): delay the call
+	to maybeStartBuild for a reactor turn, to avoid starting a build
+	in the middle of a reconfig (say, if the new Builder uses a new
+	slave which is already connected).
+
 2006-11-23  Brian Warner  <warner@lothar.com>
 
 	* buildbot/master.py (BuildMaster.loadConfig_Builders): changing a

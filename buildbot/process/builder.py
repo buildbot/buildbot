@@ -439,7 +439,7 @@ class Builder(pb.Referenceable):
         self.builder_status.addPointEvent(['connect', sb.slave.slavename])
         self.attaching_slaves.remove(sb)
         self.slaves.append(sb)
-        self.maybeStartBuild()
+        reactor.callLater(0, self.maybeStartBuild)
 
         self.fireTestEvent('attach')
         return self
