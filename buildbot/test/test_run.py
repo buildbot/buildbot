@@ -174,19 +174,16 @@ class Disconnect(RunMixin, unittest.TestCase):
 
         self.failUnlessEqual(bs.getResults(), builder.FAILURE)
 
-
-    def testIdle1(self):
-        # disconnect the slave before the build starts
-        d = self.shutdownAllSlaves() # dies before it gets started
-        d.addCallback(self._testIdle1_1)
+    def submitBuild(self):
+        ss = SourceStamp()
+        br = BuildRequest("forced build", ss, "dummy")
+        self.control.getBuilder("dummy").requestBuild(br)
+        d = defer.Deferred()
+        def _started(bc):
+            br.unsubscribe(_started)
+            d.callback(bc)
+        br.subscribe(_started)
         return d
-    def _testIdle1_1(self, res):
-        # trying to force a build now will cause an error. Regular builds
-        # just wait for the slave to re-appear, but forced builds that
-        # cannot be run right away trigger NoSlaveErrors
-        fb = self.control.getBuilder("dummy").forceBuild
-        self.failUnlessRaises(interfaces.NoSlaveError,
-                              fb, None, "forced build")
 
     def testIdle2(self):
         # now suppose the slave goes missing
@@ -220,7 +217,7 @@ class Disconnect(RunMixin, unittest.TestCase):
         # least 3 seconds to complete, and this batch of commands must
         # complete within that time.
         #
-        d = self.control.getBuilder("dummy").forceBuild(None, "forced build")
+        d = self.submitBuild()
         d.addCallback(self._testBuild1_1)
         return maybeWait(d)
 
@@ -249,7 +246,7 @@ class Disconnect(RunMixin, unittest.TestCase):
 
     def testBuild2(self):
         # this next sequence is timing-dependent
-        d = self.control.getBuilder("dummy").forceBuild(None, "forced build")
+        d = self.submitBuild()
         d.addCallback(self._testBuild1_1)
         return maybeWait(d, 30)
     testBuild2.timeout = 30
@@ -279,7 +276,7 @@ class Disconnect(RunMixin, unittest.TestCase):
 
     def testBuild3(self):
         # this next sequence is timing-dependent
-        d = self.control.getBuilder("dummy").forceBuild(None, "forced build")
+        d = self.submitBuild()
         d.addCallback(self._testBuild3_1)
         return maybeWait(d, 30)
     testBuild3.timeout = 30
@@ -306,7 +303,7 @@ class Disconnect(RunMixin, unittest.TestCase):
 
     def testBuild4(self):
         # this next sequence is timing-dependent
-        d = self.control.getBuilder("dummy").forceBuild(None, "forced build")
+        d = self.submitBuild()
         d.addCallback(self._testBuild4_1)
         return maybeWait(d, 30)
     testBuild4.timeout = 30
@@ -331,7 +328,7 @@ class Disconnect(RunMixin, unittest.TestCase):
 
     def testInterrupt(self):
         # this next sequence is timing-dependent
-        d = self.control.getBuilder("dummy").forceBuild(None, "forced build")
+        d = self.submitBuild()
         d.addCallback(self._testInterrupt_1)
         return maybeWait(d, 30)
     testInterrupt.timeout = 30

@@ -72,37 +72,6 @@ class Force(unittest.TestCase):
             dl.append(defer.maybeDeferred(self.master.stopService))
         return maybeWait(defer.DeferredList(dl))
 
-    def testForce(self):
-        # TODO: since BuilderControl.forceBuild has been deprecated, this
-        # test is scheduled to be removed soon
-        m = self.master
-        m.loadConfig(config)
-        m.startService()
-        d = self.connectSlave()
-        d.addCallback(self._testForce_1)
-        return maybeWait(d)
-
-    def _testForce_1(self, res):
-        c = interfaces.IControl(self.master)
-        builder_control = c.getBuilder("force")
-        d = builder_control.forceBuild("bob", "I was bored")
-        d.addCallback(self._testForce_2)
-        return d
-
-    def _testForce_2(self, build_control):
-        self.failUnless(providedBy(build_control, interfaces.IBuildControl))
-        d = build_control.getStatus().waitUntilFinished()
-        d.addCallback(self._testForce_3)
-        return d
-
-    def _testForce_3(self, bs):
-        self.failUnless(providedBy(bs, interfaces.IBuildStatus))
-        self.failUnless(bs.isFinished())
-        self.failUnlessEqual(bs.getResults(), SUCCESS)
-        #self.failUnlessEqual(bs.getResponsibleUsers(), ["bob"]) # TODO
-        self.failUnlessEqual(bs.getChanges(), [])
-        #self.failUnlessEqual(bs.getReason(), "forced") # TODO
-
     def testRequest(self):
         m = self.master
         m.loadConfig(config)
@@ -117,6 +86,20 @@ class Force(unittest.TestCase):
         d = defer.Deferred()
         req.subscribe(d.callback)
         builder_control.requestBuild(req)
-        d.addCallback(self._testForce_2)
+        d.addCallback(self._testRequest_2)
         # we use the same check-the-results code as testForce
         return d
+
+    def _testRequest_2(self, build_control):
+        self.failUnless(providedBy(build_control, interfaces.IBuildControl))
+        d = build_control.getStatus().waitUntilFinished()
+        d.addCallback(self._testRequest_3)
+        return d
+
+    def _testRequest_3(self, bs):
+        self.failUnless(providedBy(bs, interfaces.IBuildStatus))
+        self.failUnless(bs.isFinished())
+        self.failUnlessEqual(bs.getResults(), SUCCESS)
+        #self.failUnlessEqual(bs.getResponsibleUsers(), ["bob"]) # TODO
+        self.failUnlessEqual(bs.getChanges(), [])
+        #self.failUnlessEqual(bs.getReason(), "forced") # TODO

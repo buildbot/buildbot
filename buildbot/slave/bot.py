@@ -335,10 +335,6 @@ class Bot(pb.Referenceable, service.MultiService):
                 files[f] = open(filename, "r").read()
         return files
 
-    def debug_forceBuild(self, name):
-        d = self.perspective.callRemote("forceBuild", name)
-        d.addCallbacks(log.msg, log.err)
-
 class BotFactory(ReconnectingPBClientFactory):
     # 'keepaliveInterval' serves two purposes. The first is to keep the
     # connection alive: it guarantees that there will be at least some

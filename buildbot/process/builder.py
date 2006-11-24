@@ -643,52 +643,6 @@ class BuilderControl(components.Adapter):
     else:
         __implements__ = interfaces.IBuilderControl,
 
-    def forceBuild(self, who, reason):
-        """This is a shortcut for building the current HEAD.
-
-        (false: You get back a BuildRequest, just as if you'd asked politely.
-        To get control of the resulting build, you'll need use
-        req.subscribe() .)
-
-        (true: You get back a Deferred that fires with an IBuildControl)
-
-        This shortcut peeks into the Builder and raises an exception if there
-        is no slave available, to make backwards-compatibility a little
-        easier.
-        """
-
-        warnings.warn("Please use BuilderControl.requestBuildSoon instead",
-                      category=DeprecationWarning, stacklevel=1)
-
-        # see if there is an idle slave, so we can emit an appropriate error
-        # message
-        for sb in self.original.slaves:
-            if sb.isAvailable():
-                break
-        else:
-            if self.original.building:
-                raise interfaces.BuilderInUseError("All slaves are in use")
-            raise interfaces.NoSlaveError("There are no slaves connected")
-
-        req = base.BuildRequest(reason, sourcestamp.SourceStamp())
-        self.requestBuild(req)
-        # this is a hack that fires the Deferred for the first build and
-        # ignores any others
-        class Watcher:
-            def __init__(self, req):
-                self.req = req
-            def wait(self):
-                self.d = d = defer.Deferred()
-                req.subscribe(self.started)
-                return d
-            def started(self, bs):
-                if self.d:
-                    self.req.unsubscribe(self.started)
-                    self.d.callback(bs)
-                    self.d = None
-        w = Watcher(req)
-        return w.wait()
-
     def requestBuild(self, req):
         """Submit a BuildRequest to this Builder."""
         self.original.submitBuildRequest(req)

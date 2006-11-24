@@ -229,21 +229,6 @@ class BotPerspective(NewCredPerspective):
         d.addCallbacks(_sent, _set_failed)
         return d
 
-    def perspective_forceBuild(self, name, who=None):
-        # slave admins are allowed to force any of their own builds
-        for b in self.builders:
-            if name == b.name:
-                try:
-                    b.forceBuild(who, "slave requested build")
-                    return "ok, starting build"
-                except interfaces.BuilderInUseError:
-                    return "sorry, builder was in use"
-                except interfaces.NoSlaveError:
-                    return "sorry, there is no slave to run the build"
-        else:
-            log.msg("slave requested build for unknown builder '%s'" % name)
-            return "sorry, invalid builder name"
-
     def perspective_keepalive(self):
         pass
 
@@ -1035,6 +1020,6 @@ class Control:
 
 components.registerAdapter(Control, BuildMaster, interfaces.IControl)
 
-# so anybody who can get a handle on the BuildMaster can force a build with:
-#  IControl(master).getBuilder("full-2.3").forceBuild("me", "boredom")
+# so anybody who can get a handle on the BuildMaster can cause a build with:
+#  IControl(master).getBuilder("full-2.3").requestBuild(buildrequest)
 

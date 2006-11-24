@@ -1,5 +1,14 @@
 2006-11-24  Brian Warner  <warner@lothar.com>
 
+	* buildbot/interfaces.py (IBuilderControl.forceBuild): remove this
+	method, it has been deprecated for a long time. Use
+	IBuilderControl.requestBuild instead.
+	* buildbot/process/builder.py (BuilderControl.forceBuild): remove
+	* buildbot/master.py (BotPerspective.perspective_forceBuild): same
+	* buildbot/slave/bot.py (Bot.debug_forceBuild): same
+	* buildbot/test/test_control.py (Force.testForce): same
+	* buildbot/test/test_run.py: use requestBuild instead
+
 	* buildbot/clients/debug.py: replace 'Force Build' button with
 	'Request Build' (which just adds one to the queue), add Ping
 	Builder, add branch/revision fields to Request Build.

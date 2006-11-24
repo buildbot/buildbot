@@ -826,26 +826,6 @@ class IControl(Interface):
         """Retrieve the IBuilderControl object for the given Builder."""
 
 class IBuilderControl(Interface):
-    def forceBuild(who, reason):
-        """DEPRECATED, please use L{requestBuild} instead.
-
-        Start a build of the latest sources. If 'who' is not None, it is
-        string with the name of the user who is responsible for starting the
-        build: they will be added to the 'interested users' list (so they may
-        be notified via email or another Status object when it finishes).
-        'reason' is a string describing why this user requested the build.
-
-        The results of forced builds are always sent to the Interested Users,
-        even if the Status object would normally only send results upon
-        failures.
-
-        forceBuild() may raise L{NoSlaveError} or L{BuilderInUseError} if it
-        cannot start the build.
-
-        forceBuild() returns a Deferred which fires with an L{IBuildControl}
-        object that can be used to further control the new build, or from
-        which an L{IBuildStatus} object can be obtained."""
-
     def requestBuild(request):
         """Queue a L{buildbot.process.base.BuildRequest} object for later
         building."""
