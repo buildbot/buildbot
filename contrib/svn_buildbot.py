@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.3
+#!/usr/bin/python
 
 # this requires python >=2.3 for the 'sets' module.
 

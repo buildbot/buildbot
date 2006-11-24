@@ -1,3 +1,9 @@
+2006-11-23  Brian Warner  <warner@lothar.com>
+
+	* contrib/svn_buildbot.py: use /usr/bin/python, not /usr/bin/env,
+	to allow use of python2.4 or whatever. This tool still requires
+	python2.3 or newer.
+
 2006-11-19  Brian Warner  <warner@lothar.com>
 
 	* NEWS (IStatusLog.readlines): more news items
