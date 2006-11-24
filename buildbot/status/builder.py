@@ -1508,7 +1508,8 @@ class BuilderStatus(styles.Versioned):
 
         # remember the oldest-to-earliest flow here. "next" means earlier.
 
-        # TODO: interleave build steps and self.events by timestamp
+        # TODO: interleave build steps and self.events by timestamp.
+        # TODO: um, I think we're already doing that.
 
         eventIndex = -1
         e = self.getEvent(eventIndex)
