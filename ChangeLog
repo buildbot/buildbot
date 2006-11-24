@@ -7,6 +7,9 @@
 
 2006-11-23  Brian Warner  <warner@lothar.com>
 
+	* buildbot/test/test_transfer.py: appease pyflakes
+	* buildbot/test/test_steps.py: same
+
 	* buildbot/test/test_bonsaipoller.py: remove the 'import *' that
 	keeps pyflakes from finding undefined names
 

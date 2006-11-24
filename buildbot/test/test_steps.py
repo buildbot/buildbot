@@ -364,6 +364,13 @@ class ReorgCompatibility(unittest.TestCase):
         from buildbot.process.step import FailingDummy
         from buildbot.process.step import RemoteDummy
 
+        # now trick pyflakes into thinking we care
+        unused = [LogObserver, LogLineObserver, RemoteShellCommand,
+                  BuildStep, LoggingBuildStep, ShellCommand, WithProperties,
+                  TreeSize, Configure, Compile, Test, CVS, SVN, Darcs,
+                  Git, Arch, Bazaar, Mercurial, P4, P4Sync,
+                  Dummy, FailingDummy, RemoteDummy]
+
 
 class _SimpleBuildStep(buildstep.BuildStep):
     def start(self):

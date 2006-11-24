@@ -2,7 +2,6 @@
 
 import os
 from twisted.trial import unittest
-from twisted.internet import defer
 from buildbot.twcompat import maybeWait
 from buildbot.steps.transfer import FileUpload, FileDownload
 from buildbot.test.runutils import StepTester
