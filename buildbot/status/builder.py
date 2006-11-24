@@ -1739,6 +1739,13 @@ class SlaveStatus:
     def isConnected(self):
         return self.connected
 
+    def setAdmin(self, admin):
+        self.admin = admin
+    def setHost(self, host):
+        self.host = host
+    def setConnected(self, isConnected):
+        self.connected = isConnected
+
 class Status:
     """
     I represent the status of the buildmaster.

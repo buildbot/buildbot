@@ -299,6 +299,10 @@ class Build:
         self.remote = slavebuilder.remote
         self.remote.notifyOnDisconnect(self.lostRemote)
         d = self.deferred = defer.Deferred()
+        def _release_slave(res):
+            self.slavebuilder.buildFinished()
+            return res
+        d.addCallback(_release_slave)
 
         try:
             self.setupBuild(expectations) # create .steps

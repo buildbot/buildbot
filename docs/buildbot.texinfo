@@ -1903,6 +1903,16 @@ future, there will be other ways to accomplish this step (probably a
 password-protected button on the web page, as well as a privileged IRC
 command).
 
+When reloading the config file, the buildmaster will endeavor to
+change as little as possible about the running system. For example,
+although old status targets may be shut down and new ones started up,
+any status targets that were not changed since the last time the
+config file was read will be left running and untouched. Likewise any
+Builders which have not been changed will be left running. If a
+Builder is modified (say, the build process is changed) while a Build
+is currently running, that Build will keep running with the old
+process until it completes. Any previously queued Builds (or Builds
+which get queued after the reconfig) will use the new process.
 
 @node Defining the Project, Listing Change Sources and Schedulers, Loading the Config File, Configuration
 @section Defining the Project

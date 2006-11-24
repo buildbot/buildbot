@@ -970,7 +970,7 @@ registerSlaveCommand("shell", SlaveShellCommand, command_version)
 class DummyCommand(Command):
     """
     I am a dummy no-op command that by default takes 5 seconds to complete.
-    See L{buildbot.process.step.RemoteDummy}
+    See L{buildbot.steps.dummy.RemoteDummy}
     """
     
     def start(self):
@@ -1002,6 +1002,56 @@ class DummyCommand(Command):
         self.d.callback(0)
 
 registerSlaveCommand("dummy", DummyCommand, command_version)
+
+
+# this maps handle names to a callable. When the WaitCommand starts, this
+# callable is invoked with no arguments. It should return a Deferred. When
+# that Deferred fires, our WaitCommand will finish.
+waitCommandRegistry = {}
+
+class WaitCommand(Command):
+    """
+    I am a dummy command used by the buildbot unit test suite. I want for the
+    unit test to tell us to finish. See L{buildbot.steps.dummy.Wait}
+    """
+    
+    def start(self):
+        self.d = defer.Deferred()
+        log.msg("  starting wait command [%s]" % self.stepId)
+        handle = self.args['handle']
+        cb = waitCommandRegistry[handle]
+        del waitCommandRegistry[handle]
+        def _called():
+            log.msg(" wait-%s starting" % (handle,))
+            d = cb()
+            def _done(res):
+                log.msg(" wait-%s finishing: %s" % (handle, res))
+                return res
+            d.addBoth(_done)
+            d.addCallbacks(self.finished, self.failed)
+        reactor.callLater(0, _called)
+        return self.d
+
+    def interrupt(self):
+        log.msg("  wait command interrupted")
+        if self.interrupted:
+            return
+        self.interrupted = True
+        self.finished("interrupted")
+
+    def finished(self, res):
+        log.msg("  wait command finished [%s]" % self.stepId)
+        if self.interrupted:
+            self.sendStatus({'rc': 2})
+        else:
+            self.sendStatus({'rc': 0})
+        self.d.callback(0)
+    def failed(self, why):
+        log.msg("  wait command failed [%s]" % self.stepId)
+        self.sendStatus({'rc': 1})
+        self.d.callback(0)
+
+registerSlaveCommand("dummy.wait", WaitCommand, command_version)
 
 
 class SourceBase(Command):

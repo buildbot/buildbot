@@ -1,5 +1,67 @@
 2006-11-23  Brian Warner  <warner@lothar.com>
 
+	* buildbot/master.py (BuildMaster.loadConfig_Builders): changing a
+	Builder no longer induces a disconnect/reconnect cycle. This means
+	that any builds currently in progress will not be interrupted, and
+	any builds which are queued in the Builder will not be lost. This
+	is implemented by having the new Builder extract the state (i.e.
+	all pending Builds and any desired SlaveBuilders) from the old
+	Builder.
+	(BotPerspective): refactor. The BotPerspective no longer keeps
+	track of all the Builders that want to use this slave; instead, it
+	asks the BotMaster each time it needs this list. This removes
+	addBuilder and removeBuilder. Clean up attached() to acquire all
+	the slave's information in a more atomic fashion. updateSlave() is
+	now the way to make sure the slave is using the right set of
+	Builders: just call it after everything else has been
+	reconfigured.
+	(BotMaster): refactor, removing addBuilder/removeBuilder and
+	replacing them with an all-at-once setBuilders() call.
+
+	* buildbot/test/test_slaves.py (Reconfig): new test case to
+	exercise this functionality
+	* buildbot/steps/dummy.py (Wait): new dummy BuildStep for the test
+	* buildbot/slave/commands.py (WaitCommand): same
+
+	* docs/buildbot.texinfo (Loading the Config File): document the
+	changes
+
+	* buildbot/process/builder.py (SlaveBuilder): refactor. Allow the
+	SlaveBuilder to have its parent Builder changed.
+	(SlaveBuilder.isAvailable): new method to give access to state,
+	which is now a private attribute
+	(SlaveBuilder.buildStarted,buildFinished): new methods to inform
+	the SlaveBuilder about how it is being used. These methods update
+	its internal state. buildFinished() is now the place that invokes
+	maybeStartBuild() on its parent Builder.
+	(Builder.consumeTheSoulOfYourPredecessor): new method to allow a
+	new Builder to take over for an old one, transferring state from
+	the old one.
+	(Buider): refactor the way that SlaveBuilders are used to match,
+	giving them a bit more autonomy.
+	(Builder.buildFinished): this no longer calls maybeStartBuild():
+	instead the SlaveBuilder calls it on whoever its parent Builder is
+	at the time. This way, when an old Builder is replaced by a new
+	one, and there was a build in progress during the transition, when
+	that build finishes, it will be the new Builder that is told about
+	the newly available slave so it can start a new build.
+
+	* buildbot/process/base.py (Build.startBuild._release_slave): when
+	the Build finishes, tell the SlaveBuilder that they've been
+	released.
+
+	* buildbot/status/builder.py (SlaveStatus): add some new setter
+	methods for use by BotPerspective, to keep some attributes more
+	private
+
+	* buildbot/slave/bot.py (Bot.remote_getDirs): this is no longer
+	called by the buildmaster.
+	(Bot.setBuilderList): instead, we locally announce any leftover
+	directories based upon which Builders we were told about. The
+	master doesn't really care; it's the local admin who may or may not
+	wish to delete them.
+
+
 	* contrib/svn_buildbot.py: use /usr/bin/python, not /usr/bin/env,
 	to allow use of python2.4 or whatever. This tool still requires
 	python2.3 or newer.

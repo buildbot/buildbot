@@ -4,6 +4,8 @@ from buildbot.process.buildstep import BuildStep, LoggingBuildStep
 from buildbot.process.buildstep import LoggedRemoteCommand
 from buildbot.status.builder import SUCCESS, FAILURE
 
+# these classes are used internally by buildbot unit tests
+
 class Dummy(BuildStep):
     """I am a dummy no-op step, which runs entirely on the master, and simply
     waits 5 seconds before finishing with SUCCESS
@@ -79,3 +81,20 @@ class RemoteDummy(LoggingBuildStep):
         cmd = LoggedRemoteCommand("dummy", args)
         self.startCommand(cmd)
 
+class Wait(LoggingBuildStep):
+    """I start a command on the slave that waits for the unit test to
+    tell it when to finish.
+    """
+
+    name = "wait"
+    def __init__(self, handle, **kwargs):
+        LoggingBuildStep.__init__(self, **kwargs)
+        self.handle = handle
+
+    def describe(self, done=False):
+        return ["wait: %s" % self.handle]
+
+    def start(self):
+        args = {'handle': (self.handle, self.build.reason)}
+        cmd = LoggedRemoteCommand("dummy.wait", args)
+        self.startCommand(cmd)

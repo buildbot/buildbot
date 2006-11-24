@@ -24,13 +24,14 @@ class SlaveBuilder(pb.Referenceable):
     buildbot. When a remote builder connects, I query it for command versions
     and then make it available to any Builds that are ready to run. """
 
-    state = ATTACHING
-    remote = None
-    build = None
-
-    def __init__(self, builder):
-        self.builder = builder
+    def __init__(self):
         self.ping_watchers = []
+        self.state = ATTACHING
+        self.remote = None
+
+    def setBuilder(self, b):
+        self.builder = b
+        self.builder_name = b.name
 
     def getSlaveCommandVersion(self, command, oldversion=None):
         if self.remoteCommands is None:
@@ -38,12 +39,17 @@ class SlaveBuilder(pb.Referenceable):
             return oldversion
         return self.remoteCommands.get(command)
 
+    def isAvailable(self):
+        if self.state == IDLE:
+            return True
+        return False
+
     def attached(self, slave, remote, commands):
         self.slave = slave
         self.remote = remote
         self.remoteCommands = commands # maps command name to version
         log.msg("Buildslave %s attached to %s" % (slave.slavename,
-                                                  self.builder.name))
+                                                  self.builder_name))
         d = self.remote.callRemote("setMaster", self)
         d.addErrback(self._attachFailure, "Builder.setMaster")
         d.addCallback(self._attached2)
@@ -57,6 +63,7 @@ class SlaveBuilder(pb.Referenceable):
 
     def _attached3(self, res):
         # now we say they're really attached
+        self.state = IDLE
         return self
 
     def _attachFailure(self, why, where):
@@ -67,17 +74,17 @@ class SlaveBuilder(pb.Referenceable):
 
     def detached(self):
         log.msg("Buildslave %s detached from %s" % (self.slave.slavename,
-                                                    self.builder.name))
+                                                    self.builder_name))
         self.slave = None
         self.remote = None
         self.remoteCommands = None
 
-    def startBuild(self, build):
-        self.build = build
+    def buildStarted(self):
+        self.state = BUILDING
 
-    def finishBuild(self):
-        self.build = None
-
+    def buildFinished(self):
+        self.state = IDLE
+        reactor.callLater(0, self.builder.maybeStartBuild)
 
     def ping(self, timeout, status=None):
         """Ping the slave to make sure it is still there. Returns a Deferred
@@ -87,6 +94,7 @@ class SlaveBuilder(pb.Referenceable):
                        event will be pushed.
         """
 
+        self.state = PINGING
         newping = not self.ping_watchers
         d = defer.Deferred()
         self.ping_watchers.append(d)
@@ -287,7 +295,7 @@ class Builder(pb.Referenceable):
         return diffs
 
     def __repr__(self):
-        return "<Builder '%s'>" % self.name
+        return "<Builder '%s' at %d>" % (self.name, id(self))
 
 
     def submitBuildRequest(self, req):
@@ -315,6 +323,64 @@ class Builder(pb.Referenceable):
         self.__dict__ = d
         self.building = []
         self.slaves = []
+
+    def consumeTheSoulOfYourPredecessor(self, old):
+        """Suck the brain out of an old Builder.
+
+        This takes all the runtime state from an existing Builder and moves
+        it into ourselves. This is used when a Builder is changed in the
+        master.cfg file: the new Builder has a different factory, but we want
+        all the builds that were queued for the old one to get processed by
+        the new one. Any builds which are already running will keep running.
+        The new Builder will get as many of the old SlaveBuilder objects as
+        it wants."""
+
+        log.msg("consumeTheSoulOfYourPredecessor: %s feeding upon %s" %
+                (self, old))
+        # we claim all the pending builds, removing them from the old
+        # Builder's queue. This insures that the old Builder will not start
+        # any new work.
+        log.msg(" stealing %s buildrequests" % len(old.buildable))
+        self.buildable.extend(old.buildable)
+        old.buildable = []
+
+        # old.building is not migrated: it keeps track of builds which were
+        # in progress in the old Builder. When those builds finish, the old
+        # Builder will be notified, not us. However, since the old
+        # SlaveBuilder will point to us, it is our maybeStartBuild() that
+        # will be triggered.
+        if old.building:
+            self.builder_status.setBigState("building")
+
+        # Our set of slavenames may be different. Steal any of the old
+        # buildslaves that we want to keep using.
+        for sb in old.slaves[:]:
+            if sb.slave.slavename in self.slavenames:
+                log.msg(" stealing buildslave %s" % sb)
+                self.slaves.append(sb)
+                old.slaves.remove(sb)
+                sb.setBuilder(self)
+
+        # old.attaching_slaves:
+        #  these SlaveBuilders are waiting on a sequence of calls:
+        #  remote.setMaster and remote.print . When these two complete,
+        #  old._attached will be fired, which will add a 'connect' event to
+        #  the builder_status and try to start a build. However, we've pulled
+        #  everything out of the old builder's queue, so it will have no work
+        #  to do. The outstanding remote.setMaster/print call will be holding
+        #  the last reference to the old builder, so it will disappear just
+        #  after that response comes back.
+        #
+        #  The BotMaster will ask the slave to re-set their list of Builders
+        #  shortly after this function returns, which will cause our
+        #  attached() method to be fired with a bunch of references to remote
+        #  SlaveBuilders, some of which we already have (by stealing them
+        #  from the old Builder), some of which will be new. The new ones
+        #  will be re-attached.
+
+        #  Therefore, we don't need to do anything about old.attaching_slaves
+
+        return # all done
 
     def fireTestEvent(self, name, with=None):
         if with is None:
@@ -360,7 +426,8 @@ class Builder(pb.Referenceable):
                 # re-vivifies sb
                 return defer.succeed(self)
 
-        sb = SlaveBuilder(self)
+        sb = SlaveBuilder()
+        sb.setBuilder(self)
         self.attaching_slaves.append(sb)
         d = sb.attached(slave, remote, commands)
         d.addCallback(self._attached)
@@ -370,7 +437,6 @@ class Builder(pb.Referenceable):
     def _attached(self, sb):
         # TODO: make this .addSlaveEvent(slave.slavename, ['connect']) ?
         self.builder_status.addPointEvent(['connect', sb.slave.slavename])
-        sb.state = IDLE
         self.attaching_slaves.remove(sb)
         self.slaves.append(sb)
         self.maybeStartBuild()
@@ -433,13 +499,14 @@ class Builder(pb.Referenceable):
             self.fireTestEvent('idle')
 
     def maybeStartBuild(self):
-        log.msg("maybeStartBuild: %s %s" % (self.buildable, self.slaves))
+        log.msg("maybeStartBuild %s: %s %s" %
+                (self, self.buildable, self.slaves))
         if not self.buildable:
             self.updateBigStatus()
             return # nothing to do
         # find the first idle slave
         for sb in self.slaves:
-            if sb.state == IDLE:
+            if sb.isAvailable():
                 break
         else:
             log.msg("%s: want to start build, but we don't have a remote"
@@ -480,12 +547,6 @@ class Builder(pb.Referenceable):
         watch the Build as it runs. """
 
         self.building.append(build)
-
-        # claim the slave. TODO: consider moving changes to sb.state inside
-        # SlaveBuilder.. that would be cleaner.
-        sb.state = PINGING
-        sb.startBuild(build)
-
         self.updateBigStatus()
 
         log.msg("starting build %s.. pinging the slave" % build)
@@ -501,8 +562,10 @@ class Builder(pb.Referenceable):
     def _startBuild_1(self, res, build, sb):
         if not res:
             return self._startBuildFailed("slave ping failed", build, sb)
-        # The buildslave is ready to go.
-        sb.state = BUILDING
+        # The buildslave is ready to go. sb.buildStarted() sets its state to
+        # BUILDING (so we won't try to use it for any other builds). This
+        # gets set back to IDLE by the Build itself when it finishes.
+        sb.buildStarted()
         d = sb.remote.callRemote("startBuild")
         d.addCallbacks(self._startBuild_2, self._startBuildFailed,
                        callbackArgs=(build,sb), errbackArgs=(build,sb))
@@ -528,38 +591,30 @@ class Builder(pb.Referenceable):
         # put the build back on the buildable list
         log.msg("I tried to tell the slave that the build %s started, but "
                 "remote_startBuild failed: %s" % (build, why))
-        # release the slave
-        sb.finishBuild()
-        sb.state = IDLE
+        # release the slave. This will queue a call to maybeStartBuild, which
+        # will fire after other notifyOnDisconnect handlers have marked the
+        # slave as disconnected (so we don't try to use it again).
+        sb.buildFinished()
 
         log.msg("re-queueing the BuildRequest")
         self.building.remove(build)
         for req in build.requests:
-            self.buildable.insert(0, req) # they get first priority
+            self.buildable.insert(0, req) # the interrupted build gets first
+                                          # priority
             self.builder_status.addBuildRequest(req.status)
 
-        # other notifyOnDisconnect calls will mark the slave as disconnected.
-        # Re-try after they have fired, maybe there's another slave
-        # available. TODO: I don't like these un-synchronizable callLaters..
-        # a better solution is to mark the SlaveBuilder as disconnected
-        # ourselves, but we'll need to make sure that they can tolerate
-        # multiple disconnects first.
-        reactor.callLater(0, self.maybeStartBuild)
 
     def buildFinished(self, build, sb):
         """This is called when the Build has finished (either success or
         failure). Any exceptions during the build are reported with
         results=FAILURE, not with an errback."""
 
-        # release the slave
-        sb.finishBuild()
-        sb.state = IDLE
-        # otherwise the slave probably got removed in detach()
+        # by the time we get here, the Build has already released the slave
+        # (which queues a call to maybeStartBuild)
 
         self.building.remove(build)
         for req in build.requests:
             req.finished(build.build_status)
-        self.maybeStartBuild()
 
     def setExpectations(self, progress):
         """Mark the build as successful and update expectations for the next
@@ -608,7 +663,7 @@ class BuilderControl(components.Adapter):
         # see if there is an idle slave, so we can emit an appropriate error
         # message
         for sb in self.original.slaves:
-            if sb.state == IDLE:
+            if sb.isAvailable():
                 break
         else:
             if self.original.building:

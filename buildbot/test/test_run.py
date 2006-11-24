@@ -497,10 +497,10 @@ class Basedir(RunMixin, unittest.TestCase):
 
     def _testChangeBuilddir_2(self, res):
         bot = self.bot
-        # this causes the builder to be replaced
-        self.failIfIdentical(self.builder, bot.builders.get("dummy"))
+        # this does NOT cause the builder to be replaced
         builder = bot.builders.get("dummy")
         self.failUnless(builder)
+        self.failUnlessIdentical(self.builder, builder)
         # the basedir should be updated
         self.failUnlessEqual(builder.builddir, "dummy2")
         self.failUnlessEqual(builder.basedir,

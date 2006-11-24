@@ -67,7 +67,7 @@ class SlaveBuilder(pb.Referenceable, service.Service):
         self.not_really = not_really
 
     def __repr__(self):
-        return "<SlaveBuilder '%s'>" % self.name
+        return "<SlaveBuilder '%s' at %d>" % (self.name, id(self))
 
     def setServiceParent(self, parent):
         service.Service.setServiceParent(self, parent)
@@ -284,7 +284,9 @@ class Bot(pb.Referenceable, service.MultiService):
 
     def remote_setBuilderList(self, wanted):
         retval = {}
+        wanted_dirs = []
         for (name, builddir) in wanted:
+            wanted_dirs.append(builddir)
             b = self.builders.get(name, None)
             if b:
                 if b.builddir != builddir:
@@ -303,8 +305,15 @@ class Bot(pb.Referenceable, service.MultiService):
                 log.msg("removing old builder %s" % name)
                 self.builders[name].disownServiceParent()
                 del(self.builders[name])
+
+        for d in os.listdir(self.basedir):
+            if os.path.isdir(d):
+                if d not in wanted_dirs:
+                    log.msg("I have a leftover directory '%s' that is not "
+                            "being used by the buildmaster: you can delete "
+                            "it now" % d)
         return retval
-    
+
     def remote_print(self, message):
         log.msg("message from master:", message)
 

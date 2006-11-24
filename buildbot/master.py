@@ -1,6 +1,5 @@
 # -*- test-case-name: buildbot.test.test_run -*-
 
-from __future__ import generators
 import string, os
 signal = None
 try:
@@ -41,36 +40,19 @@ class BotPerspective(NewCredPerspective):
     reference to this instance. The BotMaster object is stashed as the
     .service attribute."""
 
-    slave_commands = None
-
-    def __init__(self, name):
+    def __init__(self, name, botmaster):
         self.slavename = name
+        self.botmaster = botmaster
         self.slave_status = SlaveStatus(name)
-        self.builders = [] # list of b.p.builder.Builder instances
         self.slave = None # a RemoteReference to the Bot, when connected
+        self.slave_commands = None
 
-    def addBuilder(self, builder):
-        """Called to add a builder after the slave has connected.
+    def updateSlave(self):
+        """Called to add or remove builders after the slave has connected.
 
         @return: a Deferred that indicates when an attached slave has
-        accepted the new builder."""
-
-        self.builders.append(builder)
+        accepted the new builders and/or released the old ones."""
         if self.slave:
-            return self.sendBuilderList()
-        return defer.succeed(None)
-
-    def removeBuilder(self, builder):
-        """Tell the slave that the given builder has been removed, allowing
-        it to discard the associated L{buildbot.slave.bot.SlaveBuilder}
-        object.
-
-        @return: a Deferred that fires when the slave has finished removing
-                 the SlaveBuilder
-        """
-        self.builders.remove(builder)
-        if self.slave:
-            builder.detached(self)
             return self.sendBuilderList()
         return defer.succeed(None)
 
@@ -79,7 +61,7 @@ class BotPerspective(NewCredPerspective):
                (self.slavename,
                 string.join(map(lambda b: b.name, self.builders), ','))
 
-    def attached(self, mind):
+    def attached(self, bot):
         """This is called when the slave connects.
 
         @return: a Deferred that fires with a suitable pb.IPerspective to
@@ -98,14 +80,91 @@ class BotPerspective(NewCredPerspective):
             # squabble
             tport = self.slave.broker.transport
             log.msg("old slave was connected from", tport.getPeer())
-            log.msg("new slave is from", mind.broker.transport.getPeer())
+            log.msg("new slave is from", bot.broker.transport.getPeer())
             d = self.disconnect()
-            d.addCallback(lambda res: self._attached(mind))
-            return d
+        else:
+            d = defer.succeed(None)
+        # now we go through a sequence of calls, gathering information, then
+        # tell the Botmaster that it can finally give this slave to all the
+        # Builders that care about it.
 
-        return self._attached(mind)
+        # we accumulate slave information in this 'state' dictionary, then
+        # set it atomically if we make it far enough through the process
+        state = {}
+
+        def _log_attachment_on_slave(res):
+            d1 = bot.callRemote("print", "attached")
+            d1.addErrback(lambda why: None)
+            return d1
+        d.addCallback(_log_attachment_on_slave)
+
+        def _get_info(res):
+            d1 = bot.callRemote("getSlaveInfo")
+            def _got_info(info):
+                log.msg("Got slaveinfo from '%s'" % self.slavename)
+                # TODO: info{} might have other keys
+                state["admin"] = info.get("admin")
+                state["host"] = info.get("host")
+            def _info_unavailable(why):
+                # maybe an old slave, doesn't implement remote_getSlaveInfo
+                log.msg("BotPerspective.info_unavailable")
+                log.err(why)
+            d1.addCallbacks(_got_info, _info_unavailable)
+            return d1
+        d.addCallback(_get_info)
+
+        def _get_commands(res):
+            d1 = bot.callRemote("getCommands")
+            def _got_commands(commands):
+                state["slave_commands"] = commands
+            def _commands_unavailable(why):
+                # probably an old slave
+                log.msg("BotPerspective._commands_unavailable")
+                if why.check(AttributeError):
+                    return
+                log.err(why)
+            d1.addCallbacks(_got_commands, _commands_unavailable)
+            return d1
+        d.addCallback(_get_commands)
+
+        def _accept_slave(res):
+            self.slave_status.setAdmin(state.get("admin"))
+            self.slave_status.setHost(state.get("host"))
+            self.slave_status.setConnected(True)
+            self.slave_commands = state.get("slave_commands")
+            self.slave = bot
+            log.msg("bot attached")
+            return self.updateSlave()
+        d.addCallback(_accept_slave)
+
+        # Finally, the slave gets a reference to this BotPerspective. They
+        # receive this later, after we've started using them.
+        d.addCallback(lambda res: self)
+        return d
+
+    def detached(self, mind):
+        self.slave = None
+        self.slave_status.setConnected(False)
+        self.botmaster.slaveLost(self)
+        log.msg("BotPerspective.detached(%s)" % self.slavename)
+
 
     def disconnect(self):
+        """Forcibly disconnect the slave.
+
+        This severs the TCP connection and returns a Deferred that will fire
+        (with None) when the connection is probably gone.
+
+        If the slave is still alive, they will probably try to reconnect
+        again in a moment.
+
+        This is called in two circumstances. The first is when a slave is
+        removed from the config file. In this case, when they try to
+        reconnect, they will be rejected as an unknown slave. The second is
+        when we wind up with two connections for the same slave, in which
+        case we disconnect the older connection.
+        """
+
         if not self.slave:
             return defer.succeed(None)
         log.msg("disconnecting old slave %s now" % self.slavename)
@@ -118,8 +177,11 @@ class BotPerspective(NewCredPerspective):
         # notifyOnDisconnect handlers have had a chance to run.
         d = defer.Deferred()
 
-        self.slave.notifyOnDisconnect(lambda res: # TODO: d=d ?
-                                      reactor.callLater(0, d.callback, None))
+        # notifyOnDisconnect runs the callback with one argument, the
+        # RemoteReference being disconnected.
+        def _disconnected(rref):
+            reactor.callLater(0, d.callback, None)
+        self.slave.notifyOnDisconnect(_disconnected)
         tport = self.slave.broker.transport
         # this is the polite way to request that a socket be closed
         tport.loseConnection()
@@ -144,108 +206,26 @@ class BotPerspective(NewCredPerspective):
         # When this Deferred fires, we'll be ready to accept the new slave
         return d
 
-    def _attached(self, mind):
-        """We go through a sequence of calls, gathering information, then
-        tell our Builders that they have a slave to work with.
-
-        @return: a Deferred that fires (with 'self') when our Builders are
-                 prepared to deal with the slave.
-        """
-        self.slave = mind
-        d = self.slave.callRemote("print", "attached")
-        d.addErrback(lambda why: 0)
-        self.slave_status.connected = True
-        log.msg("bot attached")
-
-        # TODO: there is a window here (while we're retrieving slaveinfo)
-        # during which a disconnect or a duplicate-slave will be confusing
-        d.addCallback(lambda res: self.slave.callRemote("getSlaveInfo"))
-        d.addCallbacks(self.got_info, self.infoUnavailable)
-        d.addCallback(self._attached2)
-        d.addCallback(lambda res: self)
-        return d
-
-    def got_info(self, info):
-        log.msg("Got slaveinfo from '%s'" % self.slavename)
-        # TODO: info{} might have other keys
-        self.slave_status.admin = info.get("admin")
-        self.slave_status.host = info.get("host")
-
-    def infoUnavailable(self, why):
-        # maybe an old slave, doesn't implement remote_getSlaveInfo
-        log.msg("BotPerspective.infoUnavailable")
-        log.err(why)
-
-    def _attached2(self, res):
-        d = self.slave.callRemote("getCommands")
-        d.addCallback(self.got_commands)
-        d.addErrback(self._commandsUnavailable)
-        d.addCallback(self._attached3)
-        return d
-
-    def got_commands(self, commands):
-        self.slave_commands = commands
-
-    def _commandsUnavailable(self, why):
-        # probably an old slave
-        log.msg("BotPerspective._commandsUnavailable")
-        if why.check(AttributeError):
-            return
-        log.err(why)
-    
-    def _attached3(self, res):
-        d = self.slave.callRemote("getDirs")
-        d.addCallback(self.got_dirs)
-        d.addErrback(self._dirsFailed)
-        d.addCallback(self._attached4)
-        return d
-
-    def got_dirs(self, dirs):
-        wanted = map(lambda b: b.builddir, self.builders)
-        unwanted = []
-        for d in dirs:
-            if d not in wanted and d != "info":
-                unwanted.append(d)
-        if unwanted:
-            log.msg("slave %s has leftover directories (%s): " % \
-                    (self.slavename, string.join(unwanted, ',')) + \
-                    "you can delete them now")
-
-    def _dirsFailed(self, why):
-        log.msg("BotPerspective._dirsFailed")
-        log.err(why)
-
-    def _attached4(self, res):
-        return self.sendBuilderList()
-
     def sendBuilderList(self):
-        # now make sure their list of Builders matches ours
-        blist = []
-        for b in self.builders:
-            blist.append((b.name, b.builddir))
+        our_builders = self.botmaster.getBuildersForSlave(self.slavename)
+        blist = [(b.name, b.builddir) for b in our_builders]
         d = self.slave.callRemote("setBuilderList", blist)
-        d.addCallback(self.list_done)
-        d.addErrback(self._listFailed)
+        def _sent(slist):
+            dl = []
+            for name, remote in slist.items():
+                # use get() since we might have changed our mind since then
+                b = self.botmaster.builders.get(name)
+                if b:
+                    d1 = b.attached(self, remote, self.slave_commands)
+                    dl.append(d1)
+            return defer.DeferredList(dl)
+        def _set_failed(why):
+            log.msg("BotPerspective.sendBuilderList (%s) failed" % self)
+            log.err(why)
+            # TODO: hang up on them?, without setBuilderList we can't use
+            # them
+        d.addCallbacks(_sent, _set_failed)
         return d
-
-    def list_done(self, blist):
-        # this could come back at weird times. be prepared to handle oddness
-        dl = []
-        for name, remote in blist.items():
-            for b in self.builders:
-                if b.name == name:
-                    # if we sent the builders list because of a config
-                    # change, the Builder might already be attached.
-                    # Builder.attached will ignore us if this happens.
-                    d = b.attached(self, remote, self.slave_commands)
-                    dl.append(d)
-                    continue
-        return defer.DeferredList(dl)
-
-    def _listFailed(self, why):
-        log.msg("BotPerspective._listFailed")
-        log.err(why)
-        # TODO: hang up on them, without setBuilderList we can't use them
 
     def perspective_forceBuild(self, name, who=None):
         # slave admins are allowed to force any of their own builds
@@ -264,13 +244,6 @@ class BotPerspective(NewCredPerspective):
 
     def perspective_keepalive(self):
         pass
-
-    def detached(self, mind):
-        self.slave = None
-        self.slave_status.connected = False
-        for b in self.builders:
-            b.detached(self)
-        log.msg("Botmaster.detached(%s)" % self.slavename)
 
     
 class BotMaster(service.Service):
@@ -341,7 +314,7 @@ class BotMaster(service.Service):
 
 
     def addSlave(self, slavename):
-        slave = BotPerspective(slavename)
+        slave = BotPerspective(slavename, self)
         self.slaves[slavename] = slave
 
     def removeSlave(self, slavename):
@@ -349,54 +322,44 @@ class BotMaster(service.Service):
         del self.slaves[slavename]
         return d
 
+    def slaveLost(self, bot):
+        for name, b in self.builders.items():
+            if bot.slavename in b.slavenames:
+                b.detached(bot)
+
+    def getBuildersForSlave(self, slavename):
+        return [b
+                for b in self.builders.values()
+                if slavename in b.slavenames]
+
     def getBuildernames(self):
         return self.builderNames
 
-    def addBuilder(self, builder):
-        """This is called by the setup code to define what builds should be
-        performed. Each Builder object has a build slave that should host
-        that build: the builds cannot be done until the right slave
-        connects.
+    def getBuilders(self):
+        allBuilders = [self.builders[name] for name in self.builderNames]
+        return allBuilders
 
-        @return: a Deferred that fires when an attached slave has accepted
-                 the new builder.
-        """
+    def setBuilders(self, builders):
+        self.builders = {}
+        self.builderNames = []
+        for b in builders:
+            for slavename in b.slavenames:
+                # this is actually validated earlier
+                assert slavename in self.slaves
+            self.builders[b.name] = b
+            self.builderNames.append(b.name)
+            b.setBotmaster(self)
+        d = self._updateAllSlaves()
+        return d
 
-        if self.debug: print "addBuilder", builder
-        log.msg("Botmaster.addBuilder(%s)" % builder.name)
-
-        if builder.name in self.builderNames:
-            raise KeyError("muliply defined builder '%s'" % builder.name)
-        for slavename in builder.slavenames:
-            if not self.slaves.has_key(slavename):
-                raise KeyError("builder %s uses undefined slave %s" % \
-                               (builder.name, slavename))
-
-        self.builders[builder.name] = builder
-        self.builderNames.append(builder.name)
-        builder.setBotmaster(self)
-
-        dl = [self.slaves[slavename].addBuilder(builder)
-              for slavename in builder.slavenames]
+    def _updateAllSlaves(self):
+        """Notify all buildslaves about changes in their Builders."""
+        dl = [s.updateSlave() for s in self.slaves.values()]
         return defer.DeferredList(dl)
 
-    def removeBuilder(self, builder):
-        """Stop using a Builder.
-        This removes the Builder from the list of active Builders.
-
-        @return: a Deferred that fires when an attached slave has finished
-                 removing the SlaveBuilder
-        """
-        if self.debug: print "removeBuilder", builder
-        log.msg("Botmaster.removeBuilder(%s)" % builder.name)
-        b = self.builders[builder.name]
-        del self.builders[builder.name]
-        self.builderNames.remove(builder.name)
-        for slavename in builder.slavenames:
-            slave = self.slaves.get(slavename)
-            if slave:
-                return slave.removeBuilder(builder)
-        return defer.succeed(None)
+    def maybeStartAllBuilds(self):
+        for b in self.builders.values():
+            b.maybeStartBuild()
 
     def getPerspective(self, slavename):
         return self.slaves[slavename]
@@ -874,9 +837,11 @@ class BuildMaster(service.MultiService, styles.Versioned):
             self.slavePortnum = slavePortnum
 
         log.msg("configuration update started")
-        d.addCallback(lambda res: log.msg("configuration update complete"))
-        self.readConfig = True # TODO: consider not setting this until the
-                               # Deferred fires.
+        def _done(res):
+            self.readConfig = True
+            log.msg("configuration update complete")
+        d.addCallback(_done)
+        d.addCallback(lambda res: self.botmaster.maybeStartAllBuilds())
         return d
 
     def loadConfig_Slaves(self, bots):
@@ -932,29 +897,28 @@ class BuildMaster(service.MultiService, styles.Versioned):
         d.addCallback(addNewOnes)
         return d
 
-    def loadConfig_Builders(self, newBuilders):
-        dl = []
-        old = self.botmaster.getBuildernames()
-        newNames = []
+    def loadConfig_Builders(self, newBuilderData):
+        somethingChanged = False
         newList = {}
-        for data in newBuilders:
+        newBuilderNames = []
+        allBuilders = self.botmaster.builders.copy()
+        for data in newBuilderData:
             name = data['name']
             newList[name] = data
-            newNames.append(name)
+            newBuilderNames.append(name)
 
         # identify all that were removed
-        for old in self.botmaster.builders.values()[:]:
-            if old.name not in newList.keys():
-                log.msg("removing old builder %s" % old.name)
-                d = self.botmaster.removeBuilder(old)
-                dl.append(d)
+        for oldname in self.botmaster.getBuildernames():
+            if oldname not in newList:
+                log.msg("removing old builder %s" % oldname)
+                del allBuilders[oldname]
+                somethingChanged = True
                 # announce the change
-                self.status.builderRemoved(old.name)
+                self.status.builderRemoved(oldname)
 
         # everything in newList is either unchanged, changed, or new
-        for newName, data in newList.items():
-            old = self.botmaster.builders.get(newName)
-            name = data['name']
+        for name, data in newList.items():
+            old = self.botmaster.builders.get(name)
             basedir = data['builddir'] # used on both master and slave
             #name, slave, builddir, factory = data
             if not old: # new
@@ -964,35 +928,38 @@ class BuildMaster(service.MultiService, styles.Versioned):
                         (name, category))
                 statusbag = self.status.builderAdded(name, basedir, category)
                 builder = Builder(data, statusbag)
-                d = self.botmaster.addBuilder(builder)
-                dl.append(d)
-            else:
+                allBuilders[name] = builder
+                somethingChanged = True
+            elif old.compareToSetup(data):
+                # changed: try to minimize the disruption and only modify the
+                # pieces that really changed
                 diffs = old.compareToSetup(data)
-                if not diffs: # unchanged: leave it alone
-                    log.msg("builder %s is unchanged" % name)
-                    pass
-                else:
-                    # changed: remove and re-add. Don't touch the statusbag
-                    # object: the clients won't see a remove/add cycle
-                    log.msg("updating builder %s: %s" % (name,
-                                                         "\n".join(diffs)))
-                    # TODO: if the basedir was changed, we probably need to
-                    # make a new statusbag
-                    # TODO: if a slave is connected and we're re-using the
-                    # same slave, try to avoid a disconnect/reconnect cycle.
-                    statusbag = old.builder_status
-                    statusbag.saveYourself() # seems like a good idea
-                    d = self.botmaster.removeBuilder(old)
-                    dl.append(d)
-                    builder = Builder(data, statusbag)
-                    # point out that the builder was updated
-                    statusbag.addPointEvent(["config", "updated"])
-                    d = self.botmaster.addBuilder(builder)
-                    dl.append(d)
-        # now that everything is up-to-date, make sure the names are in the
-        # desired order
-        self.botmaster.builderNames = newNames
-        return defer.DeferredList(dl, fireOnOneErrback=1, consumeErrors=0)
+                log.msg("updating builder %s: %s" % (name, "\n".join(diffs)))
+
+                statusbag = old.builder_status
+                statusbag.saveYourself() # seems like a good idea
+                # TODO: if the basedir was changed, we probably need to make
+                # a new statusbag
+                new_builder = Builder(data, statusbag)
+                new_builder.consumeTheSoulOfYourPredecessor(old)
+                # that migrates any retained slavebuilders too
+
+                # point out that the builder was updated. On the Waterfall,
+                # this will appear just after any currently-running builds.
+                statusbag.addPointEvent(["config", "updated"])
+
+                allBuilders[name] = new_builder
+                somethingChanged = True
+            else:
+                # unchanged: leave it alone
+                log.msg("builder %s is unchanged" % name)
+                pass
+
+        if somethingChanged:
+            sortedAllBuilders = [allBuilders[name] for name in newBuilderNames]
+            d = self.botmaster.setBuilders(sortedAllBuilders)
+            return d
+        return None
 
     def loadConfig_status(self, status):
         dl = []
