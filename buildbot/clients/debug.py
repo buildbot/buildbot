@@ -37,6 +37,7 @@ class DebugWidget:
         c('do_rebuild', self.do_rebuild)
         c('do_poke_irc', self.do_poke_irc)
         c('do_build', self.do_build)
+        c('do_ping', self.do_ping)
         c('do_commit', self.do_commit)
         c('on_usebranch_toggled', self.usebranch_toggled)
         self.usebranch_toggled(g('usebranch'))
@@ -93,7 +94,26 @@ class DebugWidget:
         if not self.remote:
             return
         name = self.buildname.get_text()
-        d = self.remote.callRemote("forceBuild", name)
+        branch = None
+        if self.xml.get_widget("usebranch").get_active():
+            branch = self.xml.get_widget('branch').get_text()
+            if branch == '':
+                branch = None
+        revision = None
+        if self.xml.get_widget("userevision").get_active():
+            revision = self.xml.get_widget('revision').get_text()
+            if revision == '':
+                revision = None
+        reason = "debugclient 'Request Build' button pushed"
+        d = self.remote.callRemote("requestBuild",
+                                   name, reason, branch, revision)
+        d.addErrback(self.err)
+
+    def do_ping(self, widget):
+        if not self.remote:
+            return
+        name = self.buildname.get_text()
+        d = self.remote.callRemote("pingBuilder", name)
         d.addErrback(self.err)
 
     def usebranch_toggled(self, widget):

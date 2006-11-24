@@ -24,8 +24,10 @@ from buildbot.twcompat import implements
 from buildbot.util import now
 from buildbot.pbutil import NewCredPerspective
 from buildbot.process.builder import Builder, IDLE
+from buildbot.process.base import BuildRequest
 from buildbot.status.builder import SlaveStatus, Status
 from buildbot.changes.changes import Change, ChangeMaster
+from buildbot.sourcestamp import SourceStamp
 from buildbot import interfaces
 
 ########################################
@@ -398,10 +400,17 @@ class DebugPerspective(NewCredPerspective):
     def detached(self, mind):
         pass
 
-    def perspective_forceBuild(self, buildername, who=None):
+    def perspective_requestBuild(self, buildername, reason, branch, revision):
         c = interfaces.IControl(self.master)
         bc = c.getBuilder(buildername)
-        bc.forceBuild(who, "debug tool 'Force Build' button pushed")
+        ss = SourceStamp(branch, revision)
+        br = BuildRequest(reason, ss, buildername)
+        bc.requestBuild(br)
+
+    def perspective_pingBuilder(self, buildername):
+        c = interfaces.IControl(self.master)
+        bc = c.getBuilder(buildername)
+        bc.ping()
 
     def perspective_fakeChange(self, file, revision=None, who="fakeUser",
                                branch=None):
