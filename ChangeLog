@@ -1,3 +1,20 @@
+2006-11-25  Brian Warner  <warner@lothar.com>
+
+	* buildbot/scripts/runner.py: enhance 'start' and 'restart' to
+	follow twistd.log and print lines until the process has started
+	started properly. For the buildmaster, this means until the config
+	file has been parsed and accepted. For the buildslave, this means
+	until we've connected to the master. We give up after 5 seconds in
+	any case. Helpful error messages and troubleshooting suggestions
+	are printed when we don't see a successful startup. This closes the
+	remainder of SF#1517975.
+	* buildbot/scripts/startup.py: moved app startup code to here
+	* buildbot/scripts/logwatcher.py: utility class to follow log
+	* buildbot/scripts/reconfig.py: rewrite to use LogWatcher
+	* buildbot/slave/bot.py: announce our BuildSlaveness to the log
+	so the LogWatcher can tell the difference between a buildmaster
+	and a buildslave
+
 2006-11-24  Brian Warner  <warner@lothar.com>
 
 	* docs/examples/twisted_master.cfg: update to match the version

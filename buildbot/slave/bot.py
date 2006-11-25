@@ -462,6 +462,7 @@ class BuildSlave(service.MultiService):
 
     def __init__(self, host, port, name, passwd, basedir, keepalive,
                  usePTY, keepaliveTimeout=30, umask=None, debugOpts={}):
+        log.msg("Creating BuildSlave")
         service.MultiService.__init__(self)
         self.debugOpts = debugOpts.copy()
         bot = self.botClass(basedir, usePTY)

@@ -290,41 +290,6 @@ def createSlave(config):
     if not m.quiet: print "buildslave configured in %s" % m.basedir
 
 
-def start(config):
-    basedir = config['basedir']
-    quiet = config['quiet']
-    os.chdir(basedir)
-    sys.path.insert(0, os.path.abspath(os.getcwd()))
-    if os.path.exists("/usr/bin/make") and os.path.exists("Makefile.buildbot"):
-        # Preferring the Makefile lets slave admins do useful things like set
-        # up environment variables for the buildslave.
-        cmd = "make -f Makefile.buildbot start"
-        if not quiet: print cmd
-        os.system(cmd)
-    else:
-        # see if we can launch the application without actually having to
-        # spawn twistd, since spawning processes correctly is a real hassle
-        # on windows.
-        from twisted.python.runtime import platformType
-        argv = ["twistd",
-                "--no_save",
-                "--logfile=twistd.log", # windows doesn't use the same default
-                "--python=buildbot.tac"]
-        if platformType == "win32":
-            argv.append("--reactor=win32")
-        sys.argv = argv
-
-        # this is copied from bin/twistd. twisted-1.3.0 uses twistw, while
-        # twisted-2.0.0 uses _twistw.
-        if platformType == "win32":
-            try:
-                from twisted.scripts._twistw import run
-            except ImportError:
-                from twisted.scripts.twistw import run
-        else:
-            from twisted.scripts.twistd import run
-        run()
-
 
 def stop(config, signame="TERM", wait=False):
     import signal
@@ -337,7 +302,8 @@ def stop(config, signame="TERM", wait=False):
     timer = 0
     os.kill(pid, signum)
     if not wait:
-        print "sent SIG%s to process" % signame
+        if not quiet:
+            print "sent SIG%s to process" % signame
         return
     time.sleep(0.1)
     while timer < 5:
@@ -345,19 +311,25 @@ def stop(config, signame="TERM", wait=False):
         try:
             os.kill(pid, 0)
         except OSError:
-            print "buildbot process %d is dead" % pid
+            if not quiet:
+                print "buildbot process %d is dead" % pid
             return
         timer += 1
         time.sleep(1)
-    print "never saw process go away"
+    if not quiet:
+        print "never saw process go away"
 
 def restart(config):
+    quiet = config['quiet']
+    from buildbot.scripts.startup import start
     stop(config, wait=True)
-    print "now restarting buildbot process.."
+    if not quiet:
+        print "now restarting buildbot process.."
     start(config)
-    # this next line might not be printed, if start() ended up running twistd
-    # inline
-    print "buildbot process has been restarted"
+    if not quiet:
+        # this next line might not be printed, if start() ended up running
+        # twistd inline
+        print "buildbot process has been restarted"
 
 
 def loadOptions(filename="options", here=None, home=None):
@@ -420,6 +392,9 @@ def loadOptions(filename="options", here=None, home=None):
     return localDict
 
 class StartOptions(MakerBase):
+    optFlags = [
+        ['quiet', 'q', "Don't display startup log messages"],
+        ]
     def getSynopsis(self):
         return "Usage:    buildbot start <basedir>"
 
@@ -437,6 +412,9 @@ class ReconfigOptions(MakerBase):
 
 
 class RestartOptions(MakerBase):
+    optFlags = [
+        ['quiet', 'q', "Don't display startup log messages"],
+        ]
     def getSynopsis(self):
         return "Usage:    buildbot restart <basedir>"
 
@@ -736,6 +714,7 @@ def run():
     elif command == "create-slave":
         createSlave(so)
     elif command == "start":
+        from buildbot.scripts.startup import start
         start(so)
     elif command == "stop":
         stop(so, wait=True)

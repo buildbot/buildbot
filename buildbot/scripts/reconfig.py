@@ -1,52 +1,9 @@
 
 import os, signal
-from twisted.internet import reactor, task
-from twisted.protocols.basic import LineOnlyReceiver
+from twisted.internet import reactor
 
-class FakeTransport:
-    disconnecting = False
-
-class LogWatcher(LineOnlyReceiver):
-    POLL_INTERVAL = 0.1
-    delimiter = "\n"
-
-    def __init__(self, finished):
-        self.poller = task.LoopingCall(self.poll)
-        self.in_reconfig = False
-        self.finished_cb = finished
-        self.transport = FakeTransport()
-        
-
-    def start(self, logfile):
-        try:
-            self.f = open(logfile, "rb")
-            self.f.seek(0, 2)
-            self.poller.start(self.POLL_INTERVAL)
-        except IOError:
-            print "Unable to follow %s" % logfile
-            return False
-        return True
-
-    def finished(self, success):
-        self.in_reconfig = False
-        self.finished_cb(success)
-
-    def lineReceived(self, line):
-        if "loading configuration from" in line:
-            self.in_reconfig = True
-        if self.in_reconfig:
-            print line
-        if "I will keep using the previous config file" in line:
-            self.finished(False)
-        if "configuration update complete" in line:
-            self.finished(True)
-
-    def poll(self):
-        while True:
-            data = self.f.read(1000)
-            if not data:
-                return
-            self.dataReceived(data)
+from buildbot.scripts.logwatcher import LogWatcher, BuildmasterTimeoutError, \
+     ReconfigError
 
 class Reconfigurator:
     def run(self, config):
@@ -55,36 +12,49 @@ class Reconfigurator:
         quiet = config['quiet']
         os.chdir(basedir)
         f = open("twistd.pid", "rt")
-        pid = int(f.read().strip())
+        self.pid = int(f.read().strip())
         if quiet:
-            os.kill(pid, signal.SIGHUP)
+            os.kill(self.pid, signal.SIGHUP)
             return
+
         # keep reading twistd.log. Display all messages between "loading
         # configuration from ..." and "configuration update complete" or
         # "I will keep using the previous config file instead.", or until
         # 5 seconds have elapsed.
-        reactor.callLater(5, self.timeout)
-        self.lw = lw = LogWatcher(self.finished)
-        if lw.start("twistd.log"):
-            # we're watching
-            # give the LogWatcher a chance to start reading
-            print "sending SIGHUP to process %d" % pid
-            reactor.callLater(0.2, os.kill, pid, signal.SIGHUP)
-            reactor.run()
-        else:
-            # we couldn't watch the file.. just SIGHUP it
-            os.kill(pid, signal.SIGHUP)
-            print "sent SIGHUP to process %d" % pid
 
-    def finished(self, success):
-        if success:
-            print "Reconfiguration is complete."
-        else:
-            print "Reconfiguration failed."
+        self.sent_signal = False
+        lw = LogWatcher("twistd.log")
+        d = lw.start()
+        d.addCallbacks(self.success, self.failure)
+        reactor.callLater(0.2, self.sighup)
+        reactor.run()
+
+    def sighup(self):
+        if self.sent_signal:
+            return
+        print "sending SIGHUP to process %d" % self.pid
+        self.sent_signal = True
+        os.kill(self.pid, signal.SIGHUP)
+
+    def success(self, res):
+        print """
+Reconfiguration appears to have completed successfully.
+"""
         reactor.stop()
 
-    def timeout(self):
-        print "Never saw reconfiguration finish."
+    def failure(self, why):
+        if why.check(BuildmasterTimeoutError):
+            print "Never saw reconfiguration finish."
+        elif why.check(ReconfigError):
+            print """
+Reconfiguration failed. Please inspect the master.cfg file for errors,
+correct them, then try 'buildbot reconfig' again.
+"""
+        elif why.check(IOError):
+            # we were probably unable to open the file in the first place
+            self.sighup()
+        else:
+            print "Error while following twistd.log: %s" % why
         reactor.stop()
 
 def reconfig(config):
