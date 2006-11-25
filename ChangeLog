@@ -2,6 +2,9 @@
 
 	* docs/examples/twisted_master.cfg: update to match the version
 	in use on twistedmatrix.com
+	(IRC): re-enable IRC bot. The 'irc.us.freenode.net' hostname I
+	was using before stopped working, but 'irc.freenode.net' works
+	just fine.
 
 	* buildbot/scripts/runner.py (run): oops, forgot to enable the new
 	'reconfig' command
