@@ -741,7 +741,7 @@ def run():
         stop(so, wait=True)
     elif command == "restart":
         restart(so)
-    elif command == "sighup":
+    elif command == "reconfig" or command == "sighup":
         from buildbot.scripts.reconfig import Reconfigurator
         Reconfigurator().run(so)
     elif command == "sendchange":
