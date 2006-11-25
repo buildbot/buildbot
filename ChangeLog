@@ -1,5 +1,8 @@
 2006-11-24  Brian Warner  <warner@lothar.com>
 
+	* docs/examples/twisted_master.cfg: update to match the version
+	in use on twistedmatrix.com
+
 	* buildbot/scripts/runner.py (run): oops, forgot to enable the new
 	'reconfig' command
 
