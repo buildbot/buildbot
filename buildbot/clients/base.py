@@ -3,7 +3,7 @@
 import sys, re
 
 from twisted.spread import pb
-from twisted.cred import credentials
+from twisted.cred import credentials, error
 from twisted.internet import reactor
 
 class StatusClient(pb.Referenceable):
@@ -93,15 +93,30 @@ class TextClient:
         creds = credentials.UsernamePassword("statusClient", "clientpw")
         d = cf.login(creds)
         reactor.connectTCP(host, port, cf)
-        d.addCallback(self.connected)
+        d.addCallbacks(self.connected, self.not_connected)
         return d
     def connected(self, ref):
         ref.notifyOnDisconnect(self.disconnected)
         self.listener.connected(ref)
-
+    def not_connected(self, why):
+        if why.check(error.UnauthorizedLogin):
+            print """
+Unable to login.. are you sure we are connecting to a
+buildbot.status.client.PBListener port and not to the slaveport?
+"""
+        reactor.stop()
+        return why
     def disconnected(self, ref):
         print "lost connection"
-        reactor.stop()
+        # we can get here in one of two ways: the buildmaster has
+        # disconnected us (probably because it shut itself down), or because
+        # we've been SIGINT'ed. In the latter case, our reactor is already
+        # shut down, but we have no easy way of detecting that. So protect
+        # our attempt to shut down the reactor.
+        try:
+            reactor.stop()
+        except RuntimeError:
+            pass
 
 if __name__ == '__main__':
     master = "localhost:8007"

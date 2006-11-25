@@ -5480,12 +5480,15 @@ This command starts a simple text-based status client, one which just
 prints out a new line each time an event occurs on the buildmaster.
 
 The @option{--master} option provides the location of the
-@code{client.PBListener} status port, used to deliver build
-information to realtime status clients. The option is always in the
-form of a string, with hostname and port number separated by a colon
-(@code{HOSTNAME:PORTNUM}). Note that this port is @emph{not} the same
-as the slaveport (although a future version may allow the same port
-number to be used for both purposes).
+@code{buildbot.status.client.PBListener} status port, used to deliver
+build information to realtime status clients. The option is always in
+the form of a string, with hostname and port number separated by a
+colon (@code{HOSTNAME:PORTNUM}). Note that this port is @emph{not} the
+same as the slaveport (although a future version may allow the same
+port number to be used for both purposes). If you get an error message
+to the effect of ``Failure: twisted.cred.error.UnauthorizedLogin:'',
+this may indicate that you are connecting to the slaveport rather than
+a @code{PBListener} port.
 
 The @option{--master} option can also be provided by the
 @code{masterstatus} name in @file{.buildbot/options} (@pxref{.buildbot

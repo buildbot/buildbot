@@ -1,5 +1,11 @@
 2006-11-24  Brian Warner  <warner@lothar.com>
 
+	* buildbot/clients/base.py (TextClient.not_connected): upon
+	UnauthorizedLogin failures, remind the user to connect to the
+	PBListener port instead of the slaveport.
+	(TextClient.disconnected): shut down more quietly
+	* docs/buildbot.texinfo (statuslog): add another reminder
+
 	* buildbot/scripts/runner.py (Options.subCommands): rename
 	'buildbot sighup DIR' to 'buildbot reconfig DIR', but keep
 	'sighup' as an alias.
