@@ -1,3 +1,9 @@
+2006-11-26  Brian Warner  <warner@lothar.com>
+
+	* buildbot/scripts/runner.py (restart): remove the old message
+	that got printed after the buildbot was restarted.. it most cases
+	it didn't get printed at the right time anyways
+
 2006-11-25  Brian Warner  <warner@lothar.com>
 
 	* buildbot/scripts/runner.py: enhance 'start' and 'restart' to

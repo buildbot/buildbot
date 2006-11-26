@@ -326,10 +326,6 @@ def restart(config):
     if not quiet:
         print "now restarting buildbot process.."
     start(config)
-    if not quiet:
-        # this next line might not be printed, if start() ended up running
-        # twistd inline
-        print "buildbot process has been restarted"
 
 
 def loadOptions(filename="options", here=None, home=None):
