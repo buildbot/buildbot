@@ -203,6 +203,7 @@ class ShellCommand(LoggingBuildStep):
         # to set up an argv array, an environment, or extra logfiles= (like
         # the Source subclasses) can just skip straight to startCommand()
         command = self._interpolateProperties(self.command)
+        assert isinstance(command, (list, tuple, str))
         # create the actual RemoteShellCommand instance now
         kwargs = self.remote_kwargs
         kwargs['command'] = command

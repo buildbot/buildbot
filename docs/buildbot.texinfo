@@ -3939,7 +3939,12 @@ f.addStep(ShellCommand,
 @end example
 
 Don't forget the extra ``s'' after the closing parenthesis! This is
-the cause of many confusing errors.
+the cause of many confusing errors. Also note that you can only use
+WithProperties in the list form of the command= definition. You cannot
+currently use it in the (discouraged) @code{command="stuff"}
+single-string form. However, you can use something like
+@code{command=["/bin/sh", "-c", "stuff", WithProperties(stuff)]} to
+use both shell expansion and WithProperties interpolation.
 
 Note that, like python, you can either do positional-argument
 interpolation @emph{or} keyword-argument interpolation, not both. Thus

@@ -1,5 +1,11 @@
 2006-11-26  Brian Warner  <warner@lothar.com>
 
+	* docs/buildbot.texinfo (Build Properties): remind users that
+	WithProperties must appear in a command= list, not as a top-level
+	instance.
+	* buildbot/steps/shell.py (ShellCommand.start): and assert that
+	we're sending a list or a single string to the RemoteShellCommand
+
 	* buildbot/scheduler.py (Nightly): Improve docs slightly.
 
 	* buildbot/scripts/startup.py (start): skip the whole
