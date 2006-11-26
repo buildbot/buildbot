@@ -67,6 +67,11 @@ def start(config):
     if config['quiet']:
         return launch(config)
 
+    # we probably can't do this os.fork under windows
+    from twisted.python.runtime import platformType
+    if platformType == "win32":
+        return launch(config)
+
     # fork a child to launch the daemon, while the parent process tails the
     # logfile
     if os.fork():
