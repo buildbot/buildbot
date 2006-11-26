@@ -389,7 +389,9 @@ class Nightly(BaseUpstreamScheduler):
                  month=12, dayOfMonth=24, hour=12, minute=0)
 
     For dayOfWeek and dayOfMonth, builds are triggered if the date matches
-    either of them.  Month and day numbers start at 1, not zero.
+    either of them. All time values are compared against the tuple returned
+    by time.localtime(), so month and dayOfMonth numbers start at 1, not
+    zero. dayOfWeek=0 is Monday, dayOfWeek=6 is Sunday.
     """
 
     compare_attrs = ('name', 'builderNames',

@@ -1,5 +1,7 @@
 2006-11-26  Brian Warner  <warner@lothar.com>
 
+	* buildbot/scheduler.py (Nightly): Improve docs slightly.
+
 	* buildbot/scripts/startup.py (start): skip the whole
 	watch-the-logfile thing under windows, since it needs os.fork()
 
