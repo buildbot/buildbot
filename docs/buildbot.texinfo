@@ -4417,10 +4417,8 @@ definition itself will look something like this:
 
 @example
 # START
-from buildbot.process.steps import ShellCommand, LogLineObserver
-# note that in the upcoming 0.7.5 release, this should be:
-#from buildbot.steps.shell import ShellCommand
-#from buildbot.process.buildstep import LogLineObserver
+from buildbot.steps.shell import ShellCommand
+from buildbot.process.buildstep import LogLineObserver
 
 class FNURRRGHCounter(LogLineObserver):
     numTests = 0

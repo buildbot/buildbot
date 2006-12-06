@@ -4,6 +4,7 @@
 	whimsical example pulled from a punch-drunk email I sent out late
 	one night.
 	(Transferring Files): document some of the other parameters
+	(Adding LogObservers): update to 0.7.5 buildbot.steps.*
 	(SVNPoller): rename svnpoller.SvnSource to SVNPoller
 	* buildbot/test/test_svnpoller.py: same
 	* buildbot/changes/svnpoller.py (SVNPoller): same
