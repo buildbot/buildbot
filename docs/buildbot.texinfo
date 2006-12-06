@@ -4149,7 +4149,26 @@ f.addStep(FileDownload
 f.addStep(ShellCommand, command=["make", "config"])
 @end example
 
-@c TODO: document other parameters
+Like @code{FileUpload}, the @code{mastersrc=} argument is interpreted
+relative to the buildmaster's base directory, and the
+@code{slavedest=} argument is relative to the builder's working
+directory. If the buildslave is running in @file{~buildslave}, and the
+builder's ``builddir'' is something like @file{tests-i386}, then the
+workdir is going to be @file{~buildslave/tests-i386/build}, and a
+@code{slavedest=} of @file{foo/bar.html} will get put in
+@file{~buildslave/tests-i386/build/foo/bar.html}. Remember that
+neither of these commands will create missing directories for you.
+
+
+@subheading Other Parameters
+
+The @code{maxsize=} argument lets you set a maximum size for the file
+to be transferred. This may help to avoid surprises: transferring a
+100MB coredump when you were expecting to move a 10kB status file
+might take an awfully long time. The @code{blocksize=} argument
+controls how the file is sent over the network: larger blocksizes are
+slightly more efficient but also consume more memory on each end, and
+there is a hard-coded limit of about 640kB.
 
 
 @node Writing New BuildSteps,  , Transferring Files, Build Steps

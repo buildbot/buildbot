@@ -3,6 +3,7 @@
 	* docs/buildbot.texinfo (Adding LogObservers): add a somewhat
 	whimsical example pulled from a punch-drunk email I sent out late
 	one night.
+	(Transferring Files): document some of the other parameters
 
 2006-11-26  Brian Warner  <warner@lothar.com>
 
