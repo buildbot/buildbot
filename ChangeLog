@@ -1,3 +1,9 @@
+2006-12-06  Brian Warner  <warner@lothar.com>
+
+	* docs/buildbot.texinfo (Adding LogObservers): add a somewhat
+	whimsical example pulled from a punch-drunk email I sent out late
+	one night.
+
 2006-11-26  Brian Warner  <warner@lothar.com>
 
 	* docs/buildbot.texinfo (Build Properties): remind users that

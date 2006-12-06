@@ -4368,6 +4368,208 @@ counter wants to watch the ``stdio'' log. The observer is
 automatically given a reference to the step in its @code{.step}
 attribute.
 
+@subheading A Somewhat Whimsical Example
+
+Let's say that we've got some snazzy new unit-test framework called
+Framboozle. It's the hottest thing since sliced bread. It slices, it
+dices, it runs unit tests like there's no tomorrow. Plus if your unit
+tests fail, you can use its name for a Web 2.1 startup company, make
+millions of dollars, and hire engineers to fix the bugs for you, while
+you spend your afternoons lazily hang-gliding along a scenic pacific
+beach, blissfully unconcerned about the state of your
+tests.@footnote{framboozle.com is still available. Remember, I get 10%
+:).}
+
+To run a Framboozle-enabled test suite, you just run the 'framboozler'
+command from the top of your source code tree. The 'framboozler'
+command emits a bunch of stuff to stdout, but the most interesting bit
+is that it emits the line "FNURRRGH!" every time it finishes running a
+test case@footnote{Framboozle gets very excited about running unit
+tests.}. You'd like to have a test-case counting LogObserver that
+watches for these lines and counts them, because counting them will
+help the buildbot more accurately calculate how long the build will
+take, and this will let you know exactly how long you can sneak out of
+the office for your hang-gliding lessons without anyone noticing that
+you're gone.
+
+This will involve writing a new BuildStep (probably named
+"Framboozle") which inherits from ShellCommand. The BuildStep class
+definition itself will look something like this:
+
+@example
+# START
+from buildbot.process.steps import ShellCommand, LogLineObserver
+# note that in the upcoming 0.7.5 release, this should be:
+#from buildbot.steps.shell import ShellCommand
+#from buildbot.process.buildstep import LogLineObserver
+
+class FNURRRGHCounter(LogLineObserver):
+    numTests = 0
+    def outLineReceived(self, line):
+        if "FNURRRGH!" in line:
+            self.numTests += 1
+            self.step.setProgress('tests', self.numTests)
+
+class Framboozle(ShellCommand):
+    command = ["framboozler"]
+
+    def __init__(self, **kwargs):
+        ShellCommand.__init__(self, **kwargs)   # always upcall!
+        counter = FNURRRGHCounter())
+        self.addLogObserver(counter)
+# FINISH
+@end example
+
+So that's the code that we want to wind up using. How do we actually
+deploy it?
+
+You have a couple of different options.
+
+Option 1: The simplest technique is to simply put this text
+(everything from START to FINISH) in your master.cfg file, somewhere
+before the BuildFactory definition where you actually use it in a
+clause like:
+
+@example
+f = BuildFactory()
+f.addStep(SVN, svnurl="stuff")
+f.addStep(Framboozle)
+@end example
+
+Remember that master.cfg is secretly just a python program with one
+job: populating the BuildmasterConfig dictionary. And python programs
+are allowed to define as many classes as they like. So you can define
+classes and use them in the same file, just as long as the class is
+defined before some other code tries to use it.
+
+This is easy, and it keeps the point of definition very close to the
+point of use, and whoever replaces you after that unfortunate
+hang-gliding accident will appreciate being able to easily figure out
+what the heck this stupid "Framboozle" step is doing anyways. The
+downside is that every time you reload the config file, the Framboozle
+class will get redefined, which means that the buildmaster will think
+that you've reconfigured all the Builders that use it, even though
+nothing changed. Bleh.
+
+Option 2: Instead, we can put this code in a separate file, and import
+it into the master.cfg file just like we would the normal buildsteps
+like ShellCommand and SVN.
+
+Create a directory named ~/lib/python, put everything from START to
+FINISH in ~/lib/python/framboozle.py, and run your buildmaster using:
+
+@example
+ PYTHONPATH=~/lib/python buildbot start MASTERDIR
+@end example
+
+or use the @file{Makefile.buildbot} to control the way
+@command{buildbot start} works. Or add something like this to
+something like your ~/.bashrc or ~/.bash_profile or ~/.cshrc:
+
+@example
+ export PYTHONPATH=~/lib/python
+@end example
+
+Once we've done this, our master.cfg can look like:
+
+@example
+from framboozle import Framboozle
+f = BuildFactory()
+f.addStep(SVN, svnurl="stuff")
+f.addStep(Framboozle)
+@end example
+
+or:
+
+@example
+import framboozle
+f = BuildFactory()
+f.addStep(SVN, svnurl="stuff")
+f.addStep(framboozle.Framboozle)
+@end example
+
+(check out the python docs for details about how "import" and "from A
+import B" work).
+
+What we've done here is to tell python that every time it handles an
+"import" statement for some named module, it should look in our
+~/lib/python/ for that module before it looks anywhere else. After our
+directories, it will try in a bunch of standard directories too
+(including the one where buildbot is installed). By setting the
+PYTHONPATH environment variable, you can add directories to the front
+of this search list.
+
+Python knows that once it "import"s a file, it doesn't need to
+re-import it again. This means that reconfiguring the buildmaster
+(with "buildbot reconfig", for example) won't make it think the
+Framboozle class has changed every time, so the Builders that use it
+will not be spuriously restarted. On the other hand, you either have
+to start your buildmaster in a slightly weird way, or you have to
+modify your environment to set the PYTHONPATH variable.
+
+
+Option 3: Install this code into a standard python library directory
+
+Find out what your python's standard include path is by asking it:
+
+@example
+80:warner@@luther% python
+Python 2.4.4c0 (#2, Oct  2 2006, 00:57:46) 
+[GCC 4.1.2 20060928 (prerelease) (Debian 4.1.1-15)] on linux2
+Type "help", "copyright", "credits" or "license" for more information.
+>>> import sys
+>>> print sys.path
+['', '/usr/lib/python24.zip', '/usr/lib/python2.4', '/usr/lib/python2.4/plat-linux2', '/usr/lib/python2.4/lib-tk', '/usr/lib/python2.4/lib-dynload', '/usr/local/lib/python2.4/site-packages', '/usr/lib/python2.4/site-packages', '/usr/lib/python2.4/site-packages/Numeric', '/var/lib/python-support/python2.4', '/usr/lib/site-python']
+>>> 
+@end example
+
+In this case, putting the code into
+/usr/local/lib/python2.4/site-packages/framboozle.py would work just
+fine. We can use the same master.cfg "import framboozle" statement as
+in Option 2. By putting it in a standard include directory (instead of
+the decidedly non-standard ~/lib/python), we don't even have to set
+PYTHONPATH to anything special. The downside is that you probably have
+to be root to write to one of those standard include directories.
+
+
+Option 4: Submit the code for inclusion in the Buildbot distribution
+
+Contribute the code in an Enhancement Request on SourceForge, via
+http://buildbot.sf.net . Lobby, convince, coerce, bribe, badger,
+harass, threaten, or otherwise encourage the author to accept the
+patch. This lets you do something like:
+
+@example
+from buildbot.steps import framboozle
+f = BuildFactory()
+f.addStep(SVN, svnurl="stuff")
+f.addStep(framboozle.Framboozle)
+@end example
+
+And then you don't even have to install framboozle.py anywhere on your
+system, since it will ship with Buildbot. You don't have to be root,
+you don't have to set PYTHONPATH. But you do have to make a good case
+for Framboozle being worth going into the main distribution, you'll
+probably have to provide docs and some unit test cases, you'll need to
+figure out what kind of beer the author likes, and then you'll have to
+wait until the next release. But in some environments, all this is
+easier than getting root on your buildmaster box, so the tradeoffs may
+actually be worth it.
+
+
+
+Putting the code in master.cfg (1) makes it available to that
+buildmaster instance. Putting it in a file in a personal library
+directory (2) makes it available for any buildmasters you might be
+running. Putting it in a file in a system-wide shared library
+directory (3) makes it available for any buildmasters that anyone on
+that system might be running. Getting it into the buildbot's upstream
+repository (4) makes it available for any buildmasters that anyone in
+the world might be running. It's all a matter of how widely you want
+to deploy that new class.
+
+
+
 @node BuildStep URLs,  , Adding LogObservers, Writing New BuildSteps
 @subsubsection BuildStep URLs
 
