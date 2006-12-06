@@ -153,7 +153,7 @@ Change Sources
 * PBChangeSource::              
 * P4Source::                    
 * BonsaiPoller::                
-* SvnSource::                   
+* SVNPoller::                   
 
 Build Process
 
@@ -2512,6 +2512,7 @@ database directly
 @item pb.PBChangeSource (listening for connections from a long-running
 @code{contrib/svn_watcher.py} or @code{contrib/svnpoller.py} polling
 process
+@item svnpoller.SVNPoller (polling the SVN repository)
 @end itemize
 
 @item Darcs
@@ -2540,7 +2541,6 @@ If you write an email parsing function, they can also all be driven by
 a suitable @code{MaildirSource}.
 
 
-* SvnSource::                    
 @menu
 * Choosing ChangeSources::      
 * CVSToys - PBService::         
@@ -2549,7 +2549,7 @@ a suitable @code{MaildirSource}.
 * PBChangeSource::              
 * P4Source::                    
 * BonsaiPoller::                
-* SvnSource::                   
+* SVNPoller::                   
 @end menu
 
 @node Choosing ChangeSources, CVSToys - PBService, Change Sources, Change Sources
@@ -2822,7 +2822,7 @@ c['sources'].append(p4poller.P4Source(
 ))
 @end example
 
-@node BonsaiPoller, SvnSource, P4Source, Change Sources
+@node BonsaiPoller, SVNPoller, P4Source, Change Sources
 @subsection BonsaiPoller
 
 @csindex buildbot.changes.bonsaipoller.BonsaiPoller
@@ -2839,18 +2839,18 @@ Please take a look at the BonsaiPoller docstring for details about the
 arguments it accepts.
 
 
-@node SvnSource,  , BonsaiPoller, Change Sources
-@subsection SvnSource
+@node SVNPoller,  , BonsaiPoller, Change Sources
+@subsection SVNPoller
 
-@csindex buildbot.changes.svnpoller.SvnSource
+@csindex buildbot.changes.svnpoller.SVNPoller
 
-The @code{buildbot.changes.svnpoller.SvnSource} is a ChangeSource
+The @code{buildbot.changes.svnpoller.SVNPoller} is a ChangeSource
 which periodically polls a @uref{http://subversion.tigris.org/,
 Subversion} repository for new revisions, by running the @code{svn
 log} command in a subshell. It can watch a single branch or multiple
 branches.
 
-@code{SvnSource} accepts the following arguments:
+@code{SVNPoller} accepts the following arguments:
 
 @table @code
 @item svnurl
@@ -2863,13 +2863,13 @@ hostname for remote ones, and any additional directory names necessary
 to get to the repository), and the sub-path within the repository's
 virtual filesystem for the project and branch of interest.
 
-The @code{SvnSource} will only pay attention to files inside the
+The @code{SVNPoller} will only pay attention to files inside the
 subdirectory specified by the complete svnurl.
 
 @item split_file
 A function to convert pathnames into (branch, relative_pathname)
 tuples. Use this to explain your repository's branch-naming policy to
-@code{SvnSource}. This function must accept a single string and return
+@code{SVNPoller}. This function must accept a single string and return
 a two-entry tuple. There are a few utility functions in
 @code{buildbot.changes.svnpoller} that can be used as a
 @code{split_file} function, see below for details.
@@ -2877,7 +2877,7 @@ a two-entry tuple. There are a few utility functions in
 The default value always returns (None, path), which indicates that
 all files are on the trunk.
 
-Subclasses of @code{SvnSource} can override the @code{split_file}
+Subclasses of @code{SVNPoller} can override the @code{split_file}
 method instead of using the @code{split_file=} argument.
 
 @item svnuser
@@ -2899,7 +2899,7 @@ using a large interval when polling them.
 
 @item histmax
 The maximum number of changes to inspect at a time. Every POLLINTERVAL
-seconds, the @code{SvnSource} asks for the last HISTMAX changes and
+seconds, the @code{SVNPoller} asks for the last HISTMAX changes and
 looks through them for any ones it does not already know about. If
 more than HISTMAX revisions have been committed since the last poll,
 older changes will be silently ignored. Larger values of histmax will
@@ -2909,7 +2909,7 @@ cause more time and memory to be consumed on each poll attempt.
 @item svnbin
 This controls the @code{svn} executable to use. If subversion is
 installed in a weird place on your system (outside of the
-buildmaster's @code{$PATH}), use this to tell @code{SvnSource} where
+buildmaster's @code{$PATH}), use this to tell @code{SVNPoller} where
 to find it. The default value of ``svn'' will almost always be
 sufficient.
 
@@ -2920,9 +2920,9 @@ sufficient.
 Each source file that is tracked by a Subversion repository has a
 fully-qualified SVN URL in the following form:
 (REPOURL)(PROJECT-plus-BRANCH)(FILEPATH). When you create the
-@code{SvnSource}, you give it a @code{svnurl} value that includes all
+@code{SVNPoller}, you give it a @code{svnurl} value that includes all
 of the REPOURL and possibly some portion of the PROJECT-plus-BRANCH
-string. The @code{SvnSource} is responsible for producing Changes that
+string. The @code{SVNPoller} is responsible for producing Changes that
 contain a branch name and a FILEPATH (which is relative to the top of
 a checked-out tree). The details of how these strings are split up
 depend upon how your repository names its branches.
@@ -2954,16 +2954,16 @@ fully-qualified SVN URL for the trunk version of @code{trial} would be
 SVNURL for that file on a branch named ``1.5.x'' would be
 ``svn://svn.twistedmatrix.com/svn/Twisted/branches/1.5.x/bin/trial''.
 
-To set up a @code{SvnSource} that watches the Twisted trunk (and
+To set up a @code{SVNPoller} that watches the Twisted trunk (and
 nothing else), we would use the following:
 
 @example
-from buildbot.changes.svnpoller import SvnSource
-s = SvnSource("svn://svn.twistedmatrix.com/svn/Twisted/trunk")
+from buildbot.changes.svnpoller import SVNPoller
+s = SVNPoller("svn://svn.twistedmatrix.com/svn/Twisted/trunk")
 c['sources'].append(ss)
 @end example
 
-In this case, every Change that our @code{SvnSource} produces will
+In this case, every Change that our @code{SVNPoller} produces will
 have @code{.branch=None}, to indicate that the Change is on the trunk.
 No other sub-projects or branches will be tracked.
 
@@ -2971,7 +2971,7 @@ If we want our ChangeSource to follow multiple branches, we have to do
 two things. First we have to change our @code{svnurl=} argument to
 watch more than just ``.../Twisted/trunk''. We will set it to
 ``.../Twisted'' so that we'll see both the trunk and all the branches.
-Second, we have to tell @code{SvnSource} how to split the
+Second, we have to tell @code{SVNPoller} how to split the
 (PROJECT-plus-BRANCH)(FILEPATH) strings it gets from the repository
 out into (BRANCH) and (FILEPATH) pairs.
 
@@ -2980,7 +2980,7 @@ is responsible for splitting something like
 ``branches/1.5.x/bin/trial'' into @code{branch}=''branches/1.5.x'' and
 @code{filepath}=''bin/trial''. This function is always given a string
 that names a file relative to the subdirectory pointed to by the
-@code{SvnSource}'s @code{svnurl=} argument. It is expected to return a
+@code{SVNPoller}'s @code{svnurl=} argument. It is expected to return a
 (BRANCHNAME, FILEPATH) tuple (in which FILEPATH is relative to the
 branch indicated), or None to indicate that the file is outside any
 project of interest.
@@ -3008,12 +3008,12 @@ def split_file_branches(path):
 
 This function is provided as
 @code{buildbot.changes.svnpoller.split_file_branches} for your
-convenience. So to have our Twisted-watching @code{SvnSource} follow
+convenience. So to have our Twisted-watching @code{SVNPoller} follow
 multiple branches, we would use this:
 
 @example
-from buildbot.changes.svnpoller import SvnSource, split_file_branches
-s = SvnSource("svn://svn.twistedmatrix.com/svn/Twisted",
+from buildbot.changes.svnpoller import SVNPoller, split_file_branches
+s = SVNPoller("svn://svn.twistedmatrix.com/svn/Twisted",
               split_file=split_file_branches)
 c['sources'].append(ss)
 @end example
@@ -3048,13 +3048,13 @@ The whole Nevow trunk would be checked out with
 trunk would be checked out using
 @code{http://divmod.org/svn/Divmod/trunk/Quotient}.
 
-Now suppose we want to have an @code{SvnSource} that only cares about
+Now suppose we want to have an @code{SVNPoller} that only cares about
 the Nevow trunk. This case looks just like the PROJECT/BRANCH layout
 described earlier:
 
 @example
-from buildbot.changes.svnpoller import SvnSource
-s = SvnSource("http://divmod.org/svn/Divmod/trunk/Nevow")
+from buildbot.changes.svnpoller import SVNPoller
+s = SVNPoller("http://divmod.org/svn/Divmod/trunk/Nevow")
 c['sources'].append(ss)
 @end example
 
@@ -3067,8 +3067,8 @@ files that belong to Nevow and those that belong to Quotient, as well
 as figuring out which branch each one is on.
 
 @example
-from buildbot.changes.svnpoller import SvnSource
-s = SvnSource("http://divmod.org/svn/Divmod",
+from buildbot.changes.svnpoller import SVNPoller
+s = SVNPoller("http://divmod.org/svn/Divmod",
               split_file=my_file_splitter)
 c['sources'].append(ss)
 @end example

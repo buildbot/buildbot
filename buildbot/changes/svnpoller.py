@@ -42,7 +42,7 @@ def split_file_branches(path):
         return None
 
 
-class SvnSource(base.ChangeSource, util.ComparableMixin):
+class SVNPoller(base.ChangeSource, util.ComparableMixin):
     """This source will poll a Subversion repository for changes and submit
     them to the change master."""
 
@@ -188,7 +188,7 @@ class SvnSource(base.ChangeSource, util.ComparableMixin):
         return f(path)
 
     def startService(self):
-        log.msg("SvnSource(%s) starting" % self.svnurl)
+        log.msg("SVNPoller(%s) starting" % self.svnurl)
         base.ChangeSource.startService(self)
         # Don't start the loop just yet because the reactor isn't running.
         # Give it a chance to go and install our SIGCHLD handler before
@@ -196,12 +196,12 @@ class SvnSource(base.ChangeSource, util.ComparableMixin):
         reactor.callLater(0, self.loop.start, self.pollinterval)
 
     def stopService(self):
-        log.msg("SvnSource(%s) shutting down" % self.svnurl)
+        log.msg("SVNPoller(%s) shutting down" % self.svnurl)
         self.loop.stop()
         return base.ChangeSource.stopService(self)
 
     def describe(self):
-        return "SvnSource watching %s" % self.svnurl
+        return "SVNPoller watching %s" % self.svnurl
 
     def checksvn(self):
         # Our return value is only used for unit testing.
@@ -236,13 +236,13 @@ class SvnSource(base.ChangeSource, util.ComparableMixin):
         # whew.
 
         if self.working:
-            log.msg("SvnSource(%s) overrun: timer fired but the previous "
+            log.msg("SVNPoller(%s) overrun: timer fired but the previous "
                     "poll had not yet finished.")
             self.overrun_counter += 1
             return defer.succeed(None)
         self.working = True
 
-        log.msg("SvnSource polling")
+        log.msg("SVNPoller polling")
         if not self._prefix:
             # this sets self._prefix when it finishes. It fires with
             # self._prefix as well, because that makes the unit tests easier
@@ -279,7 +279,7 @@ class SvnSource(base.ChangeSource, util.ComparableMixin):
             doc = xml.dom.minidom.parseString(output)
         except xml.parsers.expat.ExpatError:
             dbgMsg("_process_changes: ExpatError in %s" % output)
-            log.msg("SvnSource._determine_prefix_2: ExpatError in '%s'"
+            log.msg("SVNPoller._determine_prefix_2: ExpatError in '%s'"
                     % output)
             raise
         rootnodes = doc.getElementsByTagName("root")
@@ -297,7 +297,7 @@ class SvnSource(base.ChangeSource, util.ComparableMixin):
         self._prefix = self.svnurl[len(root):]
         if self._prefix.startswith("/"):
             self._prefix = self._prefix[1:]
-        log.msg("SvnSource: svnurl=%s, root=%s, so prefix=%s" %
+        log.msg("SVNPoller: svnurl=%s, root=%s, so prefix=%s" %
                 (self.svnurl, root, self._prefix))
         return self._prefix
 
@@ -318,7 +318,7 @@ class SvnSource(base.ChangeSource, util.ComparableMixin):
             doc = xml.dom.minidom.parseString(output)
         except xml.parsers.expat.ExpatError:
             dbgMsg("_process_changes: ExpatError in %s" % output)
-            log.msg("SvnSource._parse_changes: ExpatError in '%s'" % output)
+            log.msg("SVNPoller._parse_changes: ExpatError in '%s'" % output)
             raise
         logentries = doc.getElementsByTagName("logentry")
         return logentries
@@ -439,7 +439,7 @@ class SvnSource(base.ChangeSource, util.ComparableMixin):
             self.parent.addChange(c)
 
     def finished(self, res):
-        log.msg("SvnSource finished polling")
+        log.msg("SVNPoller finished polling")
         dbgMsg('_finished : %s' % res)
         assert self.working
         self.working = False

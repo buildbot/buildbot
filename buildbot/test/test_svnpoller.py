@@ -3,7 +3,7 @@
 import time
 from twisted.internet import defer
 from twisted.trial import unittest
-from buildbot.changes.svnpoller import SvnSource
+from buildbot.changes.svnpoller import SVNPoller
 
 # this is the output of "svn info --xml
 # svn+ssh://svn.twistedmatrix.com/svn/Twisted/trunk"
@@ -87,7 +87,7 @@ prefix_output_4 = """\
 class ComputePrefix(unittest.TestCase):
     def test1(self):
         base = "svn+ssh://svn.twistedmatrix.com/svn/Twisted/trunk"
-        s = SvnSource(base + "/")
+        s = SVNPoller(base + "/")
         self.failUnlessEqual(s.svnurl, base) # certify slash-stripping
         prefix = s.determine_prefix(prefix_output)
         self.failUnlessEqual(prefix, "trunk")
@@ -95,21 +95,21 @@ class ComputePrefix(unittest.TestCase):
 
     def test2(self):
         base = "svn+ssh://svn.twistedmatrix.com/svn/Twisted"
-        s = SvnSource(base)
+        s = SVNPoller(base)
         self.failUnlessEqual(s.svnurl, base)
         prefix = s.determine_prefix(prefix_output_2)
         self.failUnlessEqual(prefix, "")
 
     def test3(self):
         base = "file:///home/warner/stuff/Projects/BuildBot/trees/svnpoller/_trial_temp/test_vc/repositories/SVN-Repository"
-        s = SvnSource(base)
+        s = SVNPoller(base)
         self.failUnlessEqual(s.svnurl, base)
         prefix = s.determine_prefix(prefix_output_3)
         self.failUnlessEqual(prefix, "")
 
     def test4(self):
         base = "file:///home/warner/stuff/Projects/BuildBot/trees/svnpoller/_trial_temp/test_vc/repositories/SVN-Repository/sample/trunk"
-        s = SvnSource(base)
+        s = SVNPoller(base)
         self.failUnlessEqual(s.svnurl, base)
         prefix = s.determine_prefix(prefix_output_4)
         self.failUnlessEqual(prefix, "sample/trunk")
@@ -228,9 +228,9 @@ def split_file(path):
         return None, "/".join(pieces[1:])
     raise RuntimeError("there shouldn't be any files like %s" % path)
 
-class MySvnSource(SvnSource):
+class MySVNPoller(SVNPoller):
     def __init__(self, *args, **kwargs):
-        SvnSource.__init__(self, *args, **kwargs)
+        SVNPoller.__init__(self, *args, **kwargs)
         self.pending_commands = []
         self.finished_changes = []
 
@@ -245,7 +245,7 @@ class MySvnSource(SvnSource):
 class ComputeChanges(unittest.TestCase):
     def test1(self):
         base = "file:///home/warner/stuff/Projects/BuildBot/trees/svnpoller/_trial_temp/test_vc/repositories/SVN-Repository/sample"
-        s = SvnSource(base)
+        s = SVNPoller(base)
         s._prefix = "sample"
         output = make_changes_output(4)
         doc = s.parse_logs(output)
@@ -268,7 +268,7 @@ class ComputeChanges(unittest.TestCase):
 
     def testChanges(self):
         base = "file:///home/warner/stuff/Projects/BuildBot/trees/svnpoller/_trial_temp/test_vc/repositories/SVN-Repository/sample"
-        s = SvnSource(base, split_file=split_file)
+        s = SVNPoller(base, split_file=split_file)
         s._prefix = "sample"
         doc = s.parse_logs(make_changes_output(3))
         newlast, logentries = s._filter_new_logentries(doc, 1)
@@ -295,20 +295,20 @@ class ComputeChanges(unittest.TestCase):
 
     def testFirstTime(self):
         base = "file:///home/warner/stuff/Projects/BuildBot/trees/svnpoller/_trial_temp/test_vc/repositories/SVN-Repository/sample"
-        s = SvnSource(base, split_file=split_file)
+        s = SVNPoller(base, split_file=split_file)
         s._prefix = "sample"
         doc = s.parse_logs(make_changes_output(4))
         logentries = s.get_new_logentries(doc)
-        # SvnSource ignores all changes that happened before it was started
+        # SVNPoller ignores all changes that happened before it was started
         self.failUnlessEqual(len(logentries), 0)
         self.failUnlessEqual(s.last_change, 4)
 
 class Misc(unittest.TestCase):
     def testAlreadyWorking(self):
         base = "file:///home/warner/stuff/Projects/BuildBot/trees/svnpoller/_trial_temp/test_vc/repositories/SVN-Repository/sample"
-        s = MySvnSource(base)
+        s = MySVNPoller(base)
         d = s.checksvn()
-        # the SvnSource is now waiting for its getProcessOutput to finish
+        # the SVNPoller is now waiting for its getProcessOutput to finish
         self.failUnlessEqual(s.overrun_counter, 0)
         d2 = s.checksvn()
         self.failUnlessEqual(s.overrun_counter, 1)
@@ -316,9 +316,9 @@ class Misc(unittest.TestCase):
 
     def testGetRoot(self):
         base = "svn+ssh://svn.twistedmatrix.com/svn/Twisted/trunk"
-        s = MySvnSource(base)
+        s = MySVNPoller(base)
         d = s.checksvn()
-        # the SvnSource is now waiting for its getProcessOutput to finish
+        # the SVNPoller is now waiting for its getProcessOutput to finish
         self.failUnlessEqual(len(s.pending_commands), 1)
         self.failUnlessEqual(s.pending_commands[0][0],
                              ["info", "--xml", "--non-interactive", base])
@@ -331,9 +331,9 @@ def makeTime(timestring):
 
 class Everything(unittest.TestCase):
     def test1(self):
-        s = MySvnSource(sample_base, split_file=split_file)
+        s = MySVNPoller(sample_base, split_file=split_file)
         d = s.checksvn()
-        # the SvnSource is now waiting for its getProcessOutput to finish
+        # the SVNPoller is now waiting for its getProcessOutput to finish
         self.failUnlessEqual(len(s.pending_commands), 1)
         self.failUnlessEqual(s.pending_commands[0][0],
                              ["info", "--xml", "--non-interactive",
