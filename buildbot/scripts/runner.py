@@ -546,7 +546,7 @@ def sendchange(config, runReactor=False):
     d = s.send(branch, revision, comments, files)
     if runReactor:
         d.addCallbacks(s.printSuccess, s.printFailure)
-        d.addCallback(s.stop)
+        d.addBoth(s.stop)
         s.run()
     return d
 
