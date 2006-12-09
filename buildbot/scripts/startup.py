@@ -22,7 +22,7 @@ class Follower:
     def _failure(self, why):
         from twisted.internet import reactor
         from buildbot.scripts.logwatcher import BuildmasterTimeoutError, \
-             ReconfigError, BuildslaveTimeoutError
+             ReconfigError, BuildslaveTimeoutError, BuildSlaveDetectedError
         if why.check(BuildmasterTimeoutError):
             print """
 The buildmaster took more than 5 seconds to start, so we were unable to
