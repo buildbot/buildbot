@@ -229,6 +229,10 @@ def setupBuildStepStatus(basedir):
     s3.stepStarted()
     return s3
 
+def fake_slaveVersion(command, oldversion=None):
+    from buildbot.slave.registry import commandRegistry
+    return commandRegistry[command]
+
 def makeBuildStep(basedir, step_class=BuildStep, **kwargs):
     bss = setupBuildStepStatus(basedir)
 
@@ -242,6 +246,7 @@ def makeBuildStep(basedir, step_class=BuildStep, **kwargs):
     s = step_class(build=b, **kwargs)
     s.setStepStatus(bss)
     b.setupStatus(bss.getBuild())
+    s.slaveVersion = fake_slaveVersion
     return s
 
 

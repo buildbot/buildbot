@@ -1,3 +1,13 @@
+2006-12-09  Brian Warner  <warner@lothar.com>
+
+	* buildbot/steps/transfer.py (FileUpload): cleanup
+	(FileDownload): same. Add tests for slave version, add mode=.
+	* buildbot/slave/commands.py (SlaveFileUploadCommand): same
+	(SlaveFileDownloadCommand): same
+	* buildbot/test/test_transfer.py: enhance tests
+	* buildbot/test/runutils.py (makeBuildStep): create a fake form of
+	step.slaveVersion
+
 2006-12-08  Brian Warner  <warner@lothar.com>
 
 	* buildbot/scripts/runner.py (sendchange): halt the reactor on
