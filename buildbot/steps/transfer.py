@@ -47,8 +47,9 @@ class _FileWriter(pb.Referenceable):
     def __del__(self):
         # unclean shutdown, the file is probably truncated, so delete it
         # altogether rather than deliver a corrupted file
-        if self.fp is not None:
-            self.fp.close()
+        fp = getattr(self, "fp", None)
+        if fp:
+            fp.close()
             os.unlink(self.destfile)
 
 

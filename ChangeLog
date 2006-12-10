@@ -1,5 +1,8 @@
 2006-12-09  Brian Warner  <warner@lothar.com>
 
+	* buildbot/steps/transfer.py (_FileWriter.__del__): handle errors
+	better when we can't open the masterdst file
+
 	* buildbot/scripts/startup.py (Follower._failure): add missing
 	import statement for BuildSlaveDetectedError
 
