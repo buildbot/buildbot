@@ -43,20 +43,17 @@ DOCUMENTATION:
 The PyCon paper has a good description of the overall architecture. It is
 available in HTML form in docs/PyCon-2003/buildbot.html, or on the web page.
 
-docs/buildbot.info contains the beginnings of the User's Manual, and the
-Installation chapter is the best guide to use for setup instructions. The
-.texinfo source can also be turned into printed documentation.
+The User's Manual is in docs/buildbot.info, and the Installation chapter is
+the best guide to use for setup instructions. The .texinfo source can also be
+turned into printed documentation. An HTML representation is available on the
+Buildbot home page.
 
 REQUIREMENTS:
 
  Python: http://www.python.org
 
-   Buildbot requires python-2.2 or later, and is primarily developed against
-   python-2.3. Specifically, it requires generators, and a version of Twisted
-   which only works with python-2.2 or later. Certain features (like the
-   inclusion of build logs in status emails) require python-2.2.2 or later,
-   while the IRC 'force' command requires python-2.3 . It has been tested
-   against python-2.4 .
+   Buildbot requires python-2.3 or later, and is primarily developed against
+   python-2.4 . It has *not* yet been tested against python-2.5 .
 
  Twisted: http://twistedmatrix.com
 
@@ -64,12 +61,12 @@ REQUIREMENTS:
    As always, the most recent version is recommended. It has been tested
    against Twisted-2.4.0 and Twisted SVN as of the date of release.
 
-   When using the split subpackages of Twisted-2.x.x, you'll need at least
+   Twisted is delivered as a collection of subpackages. You'll need at least
    "Twisted" (the core package), and you'll also want TwistedMail,
    TwistedWeb, and TwistedWords (for sending email, serving a web status
    page, and delivering build status via IRC, respectively). You might also
-   want TwistedConch (for the encrypted Manhole debug port). Note that recent
-   Twisteds require ZopeInterface to be installed as well.
+   want TwistedConch (for the encrypted Manhole debug port). Note that
+   Twisted requires ZopeInterface to be installed as well.
 
 ACCESSORIES:
 
@@ -97,7 +94,8 @@ installed. On my desktop machine it takes about six minutes to complete.
 Nothing should fail (at least under unix), a few might be skipped. If any of
 the tests fail, you should stop and investigate the cause before continuing
 the installation process, as it will probably be easier to track down the bug
-early.
+early. There are a few known failures under windows and OS-X, but please
+report these to the mailing list so we can isolate and resolve them.
 
 Neither CVS nor SVN support file based repositories on network filesystem
 (or network drives in Windows parlance). Therefore it is recommended to run

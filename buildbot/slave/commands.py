@@ -32,7 +32,7 @@ command_version = "2.2"
 #          ShellCommand accepts new arguments (logfiles=, initialStdin=,
 #          keepStdinOpen=) and no longer accepts stdin=)
 #          (release 0.7.4)
-#  >= 2.2: added monotone, uploadFile, and downloadFile
+#  >= 2.2: added monotone, uploadFile, and downloadFile (release 0.7.5)
 
 class CommandInterrupted(Exception):
     pass

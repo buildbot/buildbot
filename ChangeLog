@@ -1,5 +1,10 @@
 2006-12-10  Brian Warner  <warner@lothar.com>
 
+	* README (REQUIREMENTS): update for release
+	* NEWS: update for release
+	* buildbot/slave/commands.py (command_version): mention that this
+	version (2.2) was released with buildbot-0.7.5
+
 	* buildbot/test/test_config.py (StartService.testStartService):
 	inhibit the usual read-config-on-startup behavior, since otherwise
 	the log.err that gets recorded causes the test to fail

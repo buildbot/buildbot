@@ -1,21 +1,32 @@
-User visible changes in Buildbot.
+User visible changes in Buildbot.             -*- outline -*-
 
-* Release ?.?.? (?)
+* Release 0.7.5 (10 Dec 2006)
 
 ** Things You Need To Know
 
 *** The Great BuildStep Renaming
 
-All BuildSteps have moved from being classes in buildbot.process.step to
-separate modules in buildbot.steps.* . They have been split out into separate
-categories: for example, the source checkout steps are now
-buildbot.steps.source.CVS, buildbot.steps.source.Darcs, etc. The most
+All BuildSteps have moved! They used to be classes in buildbot.process.step,
+but now they all have separate modules in buildbot.steps.* . They have been
+split out into separate categories: for example, the source checkout steps
+are now buildbot.steps.source.CVS, buildbot.steps.source.Darcs, etc. The most
 commonly used one is probably buildbot.steps.shell.ShellCommand . The
 python-specific steps are in buildbot.steps.python, and the Twisted-specific
 steps are in buildbot.steps.python_twisted .
 
-The old names are deprecated and will be removed altogether in the next
-release.
+You will need to update your master.cfg files to use the new names. The old
+names are deprecated and will be removed altogether in the next release.
+
+*** Compatibility
+
+Buildbot now requires python-2.3 or later. Buildbot now requires
+Twisted-2.0.0 or later. Support for earlier versions of both has finally been
+removed. If you discover it works with unsupported versions, please return
+your Buildbot to the factory for repairs :-).
+
+Buildbot has *not* yet been tested against the recent python-2.5 release. It
+has been tested against the latest SVN version of Twisted, but only in
+conjunction with python-2.4 .
 
 ** new features
 
@@ -39,13 +50,13 @@ another shell to 'tail -f' it. This also makes it clear which config file is
 being used. This functionality is not available under windows.
 
 In addition, if any problems are detected during 'start' or 'restart' (but
-not reconfig), the 'buildbot *' command will terminate with a non-zero exit
+not reconfig), the buildbot command will terminate with a non-zero exit
 status, making it easier to use in scripts. Closes SF#1517975.
 
 *** Locks now take maxCount=N to allow multiple simultaneous owners
 
-This allows Locks to be non-exclusive but still limit concurrency. Thanks to
-James Knight for the patch. Closes SF#1434997.
+This allows Locks to be non-exclusive but still limit maximum concurrency.
+Thanks to James Knight for the patch. Closes SF#1434997.
 
 *** filetransfer steps
 
