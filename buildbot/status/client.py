@@ -7,8 +7,7 @@ from twisted.application import strports
 from twisted.cred import portal, checkers
 
 from buildbot import interfaces
-from zope.interface import Interface
-from buildbot.twcompat import implements
+from zope.interface import Interface, implements
 from buildbot.status import builder, base
 from buildbot.changes import changes
 
@@ -538,11 +537,7 @@ class PBListener(base.StatusReceiverMultiService):
     """I am a listener for PB-based status clients."""
 
     compare_attrs = ["port", "cred"]
-    if implements:
-        implements(portal.IRealm)
-    else:
-        __implements__ = (portal.IRealm,
-                          base.StatusReceiverMultiService.__implements__)
+    implements(portal.IRealm)
 
     def __init__(self, port, user="statusClient", passwd="clientpw"):
         base.StatusReceiverMultiService.__init__(self)

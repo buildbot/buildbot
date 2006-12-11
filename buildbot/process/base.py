@@ -2,12 +2,12 @@
 
 import types
 
+from zope.interface import implements
 from twisted.python import log
 from twisted.python.failure import Failure
 from twisted.internet import reactor, defer, error
 
 from buildbot import interfaces
-from buildbot.twcompat import implements
 from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE, EXCEPTION
 from buildbot.status.builder import Results, BuildRequestStatus
 from buildbot.status.progress import BuildProgress
@@ -50,10 +50,7 @@ class BuildRequest:
     builder = None
     startCount = 0 # how many times we have tried to start this build
 
-    if implements:
-        implements(interfaces.IBuildRequestControl)
-    else:
-        __implements__ = interfaces.IBuildRequestControl,
+    implements(interfaces.IBuildRequestControl)
 
     def __init__(self, reason, source, builderName=None):
         # TODO: remove the =None on builderName, it is there so I don't have
@@ -155,10 +152,7 @@ class Build:
                         collects our status
     """
 
-    if implements:
-        implements(interfaces.IBuildControl)
-    else:
-        __implements__ = interfaces.IBuildControl,
+    implements(interfaces.IBuildControl)
 
     workdir = "build"
     build_status = None

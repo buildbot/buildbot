@@ -2,6 +2,7 @@
 
 from __future__ import generators
 
+from zope.interface import implements
 from twisted.python import log
 from twisted.persisted import styles
 from twisted.internet import reactor, defer
@@ -20,7 +21,6 @@ except ImportError:
 
 # sibling imports
 from buildbot import interfaces, util, sourcestamp
-from buildbot.twcompat import implements
 
 SUCCESS, WARNINGS, FAILURE, SKIPPED, EXCEPTION = range(5)
 Results = ["success", "warnings", "failure", "skipped", "exception"]
@@ -205,10 +205,7 @@ class LogFile:
     so users who go from 0.6.5 back to 0.6.4 don't have to lose their
     logs."""
 
-    if implements:
-        implements(interfaces.IStatusLog, interfaces.ILogFile)
-    else:
-        __implements__ = (interfaces.IStatusLog, interfaces.ILogFile)
+    implements(interfaces.IStatusLog, interfaces.ILogFile)
 
     finished = False
     length = 0
@@ -462,10 +459,7 @@ class LogFile:
 
 
 class HTMLLogFile:
-    if implements:
-        implements(interfaces.IStatusLog)
-    else:
-        __implements__ = interfaces.IStatusLog,
+    implements(interfaces.IStatusLog)
 
     filename = None
 
@@ -512,10 +506,7 @@ class HTMLLogFile:
 
 
 class Event:
-    if implements:
-        implements(interfaces.IStatusEvent)
-    else:
-        __implements__ = interfaces.IStatusEvent,
+    implements(interfaces.IStatusEvent)
 
     started = None
     finished = None
@@ -536,10 +527,7 @@ class Event:
         self.finished = util.now()
 
 class TestResult:
-    if implements:
-        implements(interfaces.ITestResult)
-    else:
-        __implements__ = interfaces.ITestResult,
+    implements(interfaces.ITestResult)
 
     def __init__(self, name, results, text, logs):
         assert isinstance(name, tuple)
@@ -562,10 +550,7 @@ class TestResult:
 
 
 class BuildSetStatus:
-    if implements:
-        implements(interfaces.IBuildSetStatus)
-    else:
-        __implements__ = interfaces.IBuildSetStatus,
+    implements(interfaces.IBuildSetStatus)
 
     def __init__(self, source, reason, builderNames, bsid=None):
         self.source = source
@@ -631,10 +616,7 @@ class BuildSetStatus:
         return d
 
 class BuildRequestStatus:
-    if implements:
-        implements(interfaces.IBuildRequestStatus)
-    else:
-        __implements__ = interfaces.IBuildRequestStatus,
+    implements(interfaces.IBuildRequestStatus)
 
     def __init__(self, source, builderName):
         self.source = source
@@ -684,10 +666,7 @@ class BuildStepStatus(styles.Versioned):
     """
     # note that these are created when the Build is set up, before each
     # corresponding BuildStep has started.
-    if implements:
-        implements(interfaces.IBuildStepStatus, interfaces.IStatusEvent)
-    else:
-        __implements__ = interfaces.IBuildStepStatus, interfaces.IStatusEvent
+    implements(interfaces.IBuildStepStatus, interfaces.IStatusEvent)
     persistenceVersion = 1
 
     started = None
@@ -917,10 +896,7 @@ class BuildStepStatus(styles.Versioned):
 
 
 class BuildStatus(styles.Versioned):
-    if implements:
-        implements(interfaces.IBuildStatus, interfaces.IStatusEvent)
-    else:
-        __implements__ = interfaces.IBuildStatus, interfaces.IStatusEvent
+    implements(interfaces.IBuildStatus, interfaces.IStatusEvent)
     persistenceVersion = 2
 
     source = None
@@ -1317,10 +1293,7 @@ class BuilderStatus(styles.Versioned):
                      used to filter on in status clients
     """
 
-    if implements:
-        implements(interfaces.IBuilderStatus)
-    else:
-        __implements__ = interfaces.IBuilderStatus,
+    implements(interfaces.IBuilderStatus)
     persistenceVersion = 1
 
     # these limit the amount of memory we consume, as well as the size of the
@@ -1720,10 +1693,7 @@ class BuilderStatus(styles.Versioned):
             self.subscribers.remove(client)
 
 class SlaveStatus:
-    if implements:
-        implements(interfaces.ISlaveStatus)
-    else:
-        __implements__ = interfaces.ISlaveStatus,
+    implements(interfaces.ISlaveStatus)
 
     admin = None
     host = None
@@ -1752,10 +1722,7 @@ class Status:
     """
     I represent the status of the buildmaster.
     """
-    if implements:
-        implements(interfaces.IStatus)
-    else:
-        __implements__ = interfaces.IStatus,
+    implements(interfaces.IStatus)
 
     def __init__(self, botmaster, basedir):
         """

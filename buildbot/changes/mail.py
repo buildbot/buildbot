@@ -7,7 +7,6 @@ import os, re
 from rfc822 import Message
 
 from buildbot import util
-from buildbot.twcompat import implements
 from buildbot.changes import base, changes, maildirtwisted
 
 def parseFreshCVSMail(self, fd, prefix=None, sep="/"):
@@ -299,12 +298,6 @@ class MaildirSource(maildirtwisted.MaildirTwisted, base.ChangeSource):
     """This source will watch a maildir that is subscribed to a FreshCVS
     change-announcement mailing list.
     """
-    # we need our own implements() here, at least for twisted-1.3, because
-    # the double-inheritance of Service shadows __implements__ from
-    # ChangeSource.
-    if not implements:
-        __implements__ = base.ChangeSource.__implements__
-
     compare_attrs = ["basedir", "newdir", "pollinterval", "parser"]
     parser = None
     name = None

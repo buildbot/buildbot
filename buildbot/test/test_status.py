@@ -2,13 +2,13 @@
 
 import email, os
 
+from zope.interface import implements
 from twisted.internet import defer, reactor
 from twisted.trial import unittest
 
 from buildbot import interfaces
 from buildbot.sourcestamp import SourceStamp
 from buildbot.process.base import BuildRequest
-from buildbot.twcompat import implements
 from buildbot.status import builder, base
 
 mail = None
@@ -109,10 +109,7 @@ class MyBuild(builder.BuildStatus):
         return self.testlogs
 
 class MyLookup:
-    if implements:
-        implements(interfaces.IEmailLookup)
-    else:
-        __implements__ = interfaces.IEmailLookup,
+    implements(interfaces.IEmailLookup)
 
     def getAddress(self, user):
         d = defer.Deferred()

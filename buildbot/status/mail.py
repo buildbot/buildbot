@@ -12,21 +12,18 @@ except ImportError:
     canDoAttachments = False
 import urllib
 
+from zope.interface import implements
 from twisted.internet import defer
 from twisted.mail.smtp import sendmail
 from twisted.python import log
 
 from buildbot import interfaces, util
-from buildbot.twcompat import implements
 from buildbot.status import base
 from buildbot.status.builder import FAILURE, SUCCESS, WARNINGS
 
 
 class Domain(util.ComparableMixin):
-    if implements:
-        implements(interfaces.IEmailLookup)
-    else:
-        __implements__ = interfaces.IEmailLookup
+    implements(interfaces.IEmailLookup)
     compare_attrs = ["domain"]
 
     def __init__(self, domain):
@@ -56,11 +53,7 @@ class MailNotifier(base.StatusReceiverMultiService):
     MailNotifiers.
     """
 
-    if implements:
-        implements(interfaces.IEmailSender)
-    else:
-        __implements__ = (interfaces.IEmailSender,
-                          base.StatusReceiverMultiService.__implements__)
+    implements(interfaces.IEmailSender)
 
     compare_attrs = ["extraRecipients", "lookup", "fromaddr", "mode",
                      "categories", "builders", "addLogs", "relayhost",

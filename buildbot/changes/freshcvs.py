@@ -2,6 +2,7 @@
 
 import os.path
 
+from zope.interface import implements
 from twisted.cred import credentials
 from twisted.spread import pb
 from twisted.application.internet import TCPClient
@@ -9,7 +10,6 @@ from twisted.python import log
 
 import cvstoys.common # to make sure VersionedPatch gets registered
 
-from buildbot.twcompat import implements
 from buildbot.interfaces import IChangeSource
 from buildbot.pbutil import ReconnectingPBClientFactory
 from buildbot.changes.changes import Change
@@ -61,10 +61,7 @@ class FreshCVSSourceNewcred(TCPClient, util.ComparableMixin):
     does not, later versions might.
     """
 
-    if implements:
-        implements(IChangeSource)
-    else:
-        __implements__ = IChangeSource, TCPClient.__implements__
+    implements(IChangeSource)
     compare_attrs = ["host", "port", "username", "password", "prefix"]
 
     changemaster = None # filled in when we're added

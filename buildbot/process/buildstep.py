@@ -1,5 +1,6 @@
 # -*- test-case-name: buildbot.test.test_steps -*-
 
+from zope.interface import implements
 from twisted.internet import reactor, defer, error
 from twisted.protocols import basic
 from twisted.spread import pb
@@ -8,7 +9,6 @@ from twisted.python.failure import Failure
 from twisted.web.util import formatFailure
 
 from buildbot import interfaces
-from buildbot.twcompat import implements
 from buildbot import util
 from buildbot.status import progress
 from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE, SKIPPED, \
@@ -357,10 +357,7 @@ class LoggedRemoteCommand(RemoteCommand):
 
 
 class LogObserver:
-    if implements:
-        implements(interfaces.ILogObserver)
-    else:
-        __implements__ = interfaces.ILogObserver,
+    implements(interfaces.ILogObserver)
 
     def setStep(self, step):
         self.step = step

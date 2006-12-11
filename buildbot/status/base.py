@@ -1,16 +1,13 @@
 #! /usr/bin/python
 
+from zope.interface import implements
 from twisted.application import service
-from buildbot.twcompat import implements
 
 from buildbot.interfaces import IStatusReceiver
 from buildbot import util, pbutil
 
 class StatusReceiver:
-    if implements:
-        implements(IStatusReceiver)
-    else:
-        __implements__ = IStatusReceiver,
+    implements(IStatusReceiver)
 
     def buildsetSubmitted(self, buildset):
         pass
@@ -53,18 +50,12 @@ class StatusReceiver:
 
 class StatusReceiverMultiService(StatusReceiver, service.MultiService,
                                  util.ComparableMixin):
-    if implements:
-        implements(IStatusReceiver)
-    else:
-        __implements__ = IStatusReceiver, service.MultiService.__implements__
+    implements(IStatusReceiver)
 
     def __init__(self):
         service.MultiService.__init__(self)
 
 
 class StatusReceiverPerspective(StatusReceiver, pbutil.NewCredPerspective):
-    if implements:
-        implements(IStatusReceiver)
-    else:
-        __implements__ = (IStatusReceiver,
-                          pbutil.NewCredPerspective.__implements__)
+    implements(IStatusReceiver)
+

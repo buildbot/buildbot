@@ -8,13 +8,13 @@ try:
 except ImportError:
     import pickle
 
+from zope.interface import implements
 from twisted.python import log
 from twisted.internet import defer
 from twisted.application import service
 from twisted.web import html
 
 from buildbot import interfaces, util
-from buildbot.twcompat import implements
 
 html_tmpl = """
 <p>Changed by: <b>%(who)s</b><br />
@@ -51,10 +51,7 @@ class Change:
     chronologically increasing order. Out-of-order changes will probably
     cause the html.Waterfall display to be corrupted."""
 
-    if implements:
-        implements(interfaces.IStatusEvent)
-    else:
-        __implements__ = interfaces.IStatusEvent,
+    implements(interfaces.IStatusEvent)
 
     number = None
 

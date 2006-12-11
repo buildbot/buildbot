@@ -12,6 +12,7 @@ try:
 except ImportError:
     import pickle
 
+from zope.interface import implements
 from twisted.python import log, components
 from twisted.internet import defer, reactor
 from twisted.spread import pb
@@ -20,7 +21,6 @@ from twisted.application import service, strports
 from twisted.persisted import styles
 
 # sibling imports
-from buildbot.twcompat import implements
 from buildbot.util import now
 from buildbot.pbutil import NewCredPerspective
 from buildbot.process.builder import Builder, IDLE
@@ -432,10 +432,7 @@ class DebugPerspective(NewCredPerspective):
         print "debug", msg
 
 class Dispatcher(styles.Versioned):
-    if implements:
-        implements(portal.IRealm)
-    else:
-        __implements__ = portal.IRealm,
+    implements(portal.IRealm)
     persistenceVersion = 2
 
     def __init__(self):
@@ -999,10 +996,7 @@ class BuildMaster(service.MultiService, styles.Versioned):
 
 
 class Control:
-    if implements:
-        implements(interfaces.IControl)
-    else:
-        __implements__ = interfaces.IControl,
+    implements(interfaces.IControl)
 
     def __init__(self, master):
         self.master = master

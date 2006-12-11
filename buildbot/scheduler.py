@@ -2,6 +2,7 @@
 
 import time, os.path
 
+from zope.interface import implements
 from twisted.internet import reactor
 from twisted.application import service, internet, strports
 from twisted.python import log, runtime
@@ -11,17 +12,12 @@ from twisted.spread import pb
 
 from buildbot import interfaces, buildset, util, pbutil
 from buildbot.status import builder
-from buildbot.twcompat import implements
 from buildbot.sourcestamp import SourceStamp
 from buildbot.changes import maildirtwisted
 
 
 class BaseScheduler(service.MultiService, util.ComparableMixin):
-    if implements:
-        implements(interfaces.IScheduler)
-    else:
-        __implements__ = (interfaces.IScheduler,
-                          service.MultiService.__implements__)
+    implements(interfaces.IScheduler)
 
     def __init__(self, name):
         service.MultiService.__init__(self)
@@ -38,11 +34,7 @@ class BaseScheduler(service.MultiService, util.ComparableMixin):
         pass
 
 class BaseUpstreamScheduler(BaseScheduler):
-    if implements:
-        implements(interfaces.IUpstreamScheduler)
-    else:
-        __implements__ = (interfaces.IUpstreamScheduler,
-                          BaseScheduler.__implements__)
+    implements(interfaces.IUpstreamScheduler)
 
     def __init__(self, name):
         BaseScheduler.__init__(self, name)
@@ -518,11 +510,7 @@ class Nightly(BaseUpstreamScheduler):
 
 
 class TryBase(service.MultiService, util.ComparableMixin):
-    if implements:
-        implements(interfaces.IScheduler)
-    else:
-        __implements__ = (interfaces.IScheduler,
-                          service.MultiService.__implements__)
+    implements(interfaces.IScheduler)
 
     def __init__(self, name, builderNames):
         service.MultiService.__init__(self)
@@ -638,12 +626,7 @@ class Try_Jobdir(TryBase):
 
 class Try_Userpass(TryBase):
     compare_attrs = ["name", "builderNames", "port", "userpass"]
-
-    if implements:
-        implements(portal.IRealm)
-    else:
-        __implements__ = (portal.IRealm,
-                          TryBase.__implements__)
+    implements(portal.IRealm)
 
     def __init__(self, name, builderNames, port, userpass):
         TryBase.__init__(self, name, builderNames)

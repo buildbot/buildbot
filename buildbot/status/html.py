@@ -12,8 +12,7 @@ from twisted.web.error import NoResource
 from twisted.web.util import Redirect, DeferredResource
 from twisted.application import strports
 from twisted.spread import pb
-from zope.interface import Interface
-from buildbot.twcompat import implements
+from zope.interface import Interface, implements
 
 import sys, string, types, time, os.path
 
@@ -691,10 +690,7 @@ textlog_stylesheet = """
 """
 
 class ChunkConsumer:
-    if implements:
-        implements(interfaces.IStatusLogConsumer)
-    else:
-        __implements__ = interfaces.IStatusLogConsumer,
+    implements(interfaces.IStatusLogConsumer)
 
     def __init__(self, original, textlog):
         self.original = original
@@ -716,10 +712,7 @@ class ChunkConsumer:
 class TextLog(Resource):
     # a new instance of this Resource is created for each client who views
     # it, so we can afford to track the request in the Resource.
-    if implements:
-        implements(IHTMLLog)
-    else:
-        __implements__ = IHTMLLog,
+    implements(IHTMLLog)
 
     asText = False
     subscribed = False
@@ -803,11 +796,7 @@ components.registerAdapter(TextLog, interfaces.IStatusLog, IHTMLLog)
 
 
 class HTMLLog(Resource):
-    if implements:
-        implements(IHTMLLog)
-    else:
-        __implements__ = IHTMLLog,
-
+    implements(IHTMLLog)
 
     def __init__(self, original):
         Resource.__init__(self)
@@ -822,10 +811,7 @@ components.registerAdapter(HTMLLog, builder.HTMLLogFile, IHTMLLog)
 
 class CurrentBox(components.Adapter):
     # this provides the "current activity" box, just above the builder name
-    if implements:
-        implements(ICurrentBox)
-    else:
-        __implements__ = ICurrentBox,
+    implements(ICurrentBox)
 
     def formatETA(self, eta):
         if eta is None:
@@ -899,10 +885,7 @@ class CurrentBox(components.Adapter):
 components.registerAdapter(CurrentBox, builder.BuilderStatus, ICurrentBox)
 
 class ChangeBox(components.Adapter):
-    if implements:
-        implements(IBox)
-    else:
-        __implements__ = IBox,
+    implements(IBox)
 
     def getBox(self):
         url = "changes/%d" % self.original.number
@@ -912,10 +895,7 @@ components.registerAdapter(ChangeBox, changes.Change, IBox)
 
 class BuildBox(components.Adapter):
     # this provides the yellow "starting line" box for each build
-    if implements:
-        implements(IBox)
-    else:
-        __implements__ = IBox,
+    implements(IBox)
 
     def getBox(self):
         b = self.original
@@ -937,10 +917,7 @@ class BuildBox(components.Adapter):
 components.registerAdapter(BuildBox, builder.BuildStatus, IBox)
 
 class StepBox(components.Adapter):
-    if implements:
-        implements(IBox)
-    else:
-        __implements__ = IBox,
+    implements(IBox)
 
     def getBox(self):
         b = self.original.getBuild()
@@ -972,10 +949,7 @@ class StepBox(components.Adapter):
 components.registerAdapter(StepBox, builder.BuildStepStatus, IBox)
 
 class EventBox(components.Adapter):
-    if implements:
-        implements(IBox)
-    else:
-        __implements__ = IBox,
+    implements(IBox)
 
     def getBox(self):
         text = self.original.getText()
@@ -990,10 +964,7 @@ components.registerAdapter(EventBox, builder.Event, IBox)
 class BuildTopBox(components.Adapter):
     # this provides a per-builder box at the very top of the display,
     # showing the results of the most recent build
-    if implements:
-        implements(IBox)
-    else:
-        __implements__ = IBox,
+    implements(IBox)
 
     def getBox(self):
         assert interfaces.IBuilderStatus(self.original)
@@ -1017,10 +988,7 @@ class Spacer(builder.Event):
         self.finished = finish
 
 class SpacerBox(components.Adapter):
-    if implements:
-        implements(IBox)
-    else:
-        __implements__ = IBox,
+    implements(IBox)
 
     def getBox(self):
         #b = Box(["spacer"], "white")

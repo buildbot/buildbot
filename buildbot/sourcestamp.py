@@ -1,6 +1,6 @@
 
+from zope.interface import implements
 from buildbot import util, interfaces
-from buildbot.twcompat import implements
 
 class SourceStamp(util.ComparableMixin):
     """This is a tuple of (branch, revision, patchspec, changes).
@@ -27,10 +27,7 @@ class SourceStamp(util.ComparableMixin):
 
     compare_attrs = ('branch', 'revision', 'patch', 'changes')
 
-    if implements:
-        implements(interfaces.ISourceStamp)
-    else:
-        __implements__ = interfaces.ISourceStamp,
+    implements(interfaces.ISourceStamp)
 
     def __init__(self, branch=None, revision=None, patch=None,
                  changes=None):

@@ -5,33 +5,11 @@ if 0:
 """
 utilities to be compatible with both Twisted-1.3 and 2.0
 
-implements. Use this like the following.
-
-from buildbot.twcompat import implements
-class Foo:
-    if implements:
-        implements(IFoo)
-    else:
-        __implements__ = IFoo,
-        
-Interface:
-    from buildbot.tcompat import Interface
-    class IFoo(Interface)
 """
 
 import os
 
 from twisted.copyright import version
-from twisted.python import components
-
-# does our Twisted use zope.interface?
-implements = None
-if hasattr(components, "interface"):
-    # yes
-    from zope.interface import implements
-else:
-    # nope
-    pass
 
 # waitForDeferred and getProcessOutputAndValue are twisted-2.0 things. If
 # we're running under 1.3, patch them into place. These versions are copied

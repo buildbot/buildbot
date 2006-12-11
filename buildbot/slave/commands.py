@@ -3,11 +3,12 @@
 import os, re, signal, shutil, types, time
 from stat import ST_CTIME, ST_MTIME, ST_SIZE
 
+from zope.interface import implements
 from twisted.internet.protocol import ProcessProtocol
 from twisted.internet import reactor, defer, task
 from twisted.python import log, failure, runtime
 
-from buildbot.twcompat import implements, which
+from buildbot.twcompat import which
 from buildbot.slave.interfaces import ISlaveCommand
 from buildbot.slave.registry import registerSlaveCommand
 
@@ -537,10 +538,7 @@ class ShellCommand:
 
 
 class Command:
-    if implements:
-        implements(ISlaveCommand)
-    else:
-        __implements__ = ISlaveCommand
+    implements(ISlaveCommand)
 
     """This class defines one command that can be invoked by the build master.
     The command is executed on the slave side, and always sends back a

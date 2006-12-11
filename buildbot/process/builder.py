@@ -2,12 +2,12 @@
 
 import warnings
 
+from zope.interface import implements
 from twisted.python import log, components
 from twisted.spread import pb
 from twisted.internet import reactor, defer
 
 from buildbot import interfaces, sourcestamp
-from buildbot.twcompat import implements
 from buildbot.status.progress import Expectations
 from buildbot.util import now
 from buildbot.process import base
@@ -638,10 +638,7 @@ class Builder(pb.Referenceable):
 
 
 class BuilderControl(components.Adapter):
-    if implements:
-        implements(interfaces.IBuilderControl)
-    else:
-        __implements__ = interfaces.IBuilderControl,
+    implements(interfaces.IBuilderControl)
 
     def requestBuild(self, req):
         """Submit a BuildRequest to this Builder."""
