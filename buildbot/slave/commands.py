@@ -7,8 +7,8 @@ from zope.interface import implements
 from twisted.internet.protocol import ProcessProtocol
 from twisted.internet import reactor, defer, task
 from twisted.python import log, failure, runtime
+from twisted.python.procutils import which
 
-from buildbot.twcompat import which
 from buildbot.slave.interfaces import ISlaveCommand
 from buildbot.slave.registry import registerSlaveCommand
 

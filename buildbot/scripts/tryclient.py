@@ -5,12 +5,12 @@ from twisted.internet import utils, protocol, defer, reactor, task
 from twisted.spread import pb
 from twisted.cred import credentials
 from twisted.python import log
+from twisted.python.procutils import which
 
 from buildbot.sourcestamp import SourceStamp
 from buildbot.scripts import runner
 from buildbot.util import now
 from buildbot.status import builder
-from buildbot.twcompat import which
 
 class SourceStampExtractor:
 

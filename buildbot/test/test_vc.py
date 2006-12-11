@@ -8,6 +8,7 @@ from email.Utils import mktime_tz, parsedate_tz
 from twisted.trial import unittest
 from twisted.internet import defer, reactor, utils, protocol, error
 from twisted.python import failure
+from twisted.python.procutils import which
 
 #defer.Deferred.debug = True
 
@@ -22,13 +23,11 @@ from buildbot.process import base
 from buildbot.steps import source
 from buildbot.changes import changes
 from buildbot.sourcestamp import SourceStamp
-from buildbot.twcompat import which
 from buildbot.scripts import tryclient
 from buildbot.test.runutils import SignalMixin
 
 #step.LoggedRemoteCommand.debug = True
 
-# buildbot.twcompat will patch these into t.i.defer if necessary
 from twisted.internet.defer import waitForDeferred, deferredGenerator
 
 # Most of these tests (all but SourceStamp) depend upon having a set of
