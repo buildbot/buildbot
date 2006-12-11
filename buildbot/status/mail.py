@@ -13,10 +13,7 @@ except ImportError:
 import urllib
 
 from twisted.internet import defer
-try:
-    from twisted.mail.smtp import sendmail # Twisted-2.0
-except ImportError:
-    from twisted.protocols.smtp import sendmail # Twisted-1.3
+from twisted.mail.smtp import sendmail
 from twisted.python import log
 
 from buildbot import interfaces, util
