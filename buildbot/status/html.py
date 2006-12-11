@@ -12,8 +12,8 @@ from twisted.web.error import NoResource
 from twisted.web.util import Redirect, DeferredResource
 from twisted.application import strports
 from twisted.spread import pb
-
-from buildbot.twcompat import implements, Interface
+from zope.interface import Interface
+from buildbot.twcompat import implements
 
 import sys, string, types, time, os.path
 

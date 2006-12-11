@@ -5,7 +5,7 @@
 Define the interfaces that are implemented by various buildbot classes.
 """
 
-from buildbot.twcompat import Interface
+from zope.interface import Interface
 
 # exceptions that can be raised while trying to start a build
 class NoSlaveError(Exception):

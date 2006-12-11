@@ -29,10 +29,9 @@ implements = None
 if hasattr(components, "interface"):
     # yes
     from zope.interface import implements
-    from zope.interface import Interface
 else:
     # nope
-    from twisted.python.components import Interface
+    pass
 
 # waitForDeferred and getProcessOutputAndValue are twisted-2.0 things. If
 # we're running under 1.3, patch them into place. These versions are copied

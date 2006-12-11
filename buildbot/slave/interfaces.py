@@ -1,6 +1,6 @@
 #! /usr/bin/python
 
-from buildbot.twcompat import Interface
+from zope.interface import Interface
 
 class ISlaveCommand(Interface):
     """This interface is implemented by all of the buildslave's Command

@@ -7,7 +7,8 @@ from twisted.application import strports
 from twisted.cred import portal, checkers
 
 from buildbot import interfaces
-from buildbot.twcompat import Interface, implements
+from zope.interface import Interface
+from buildbot.twcompat import implements
 from buildbot.status import builder, base
 from buildbot.changes import changes
 
