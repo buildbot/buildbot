@@ -1,5 +1,7 @@
 2006-12-11  Brian Warner  <warner@lothar.com>
 
+	* buildbot/twcompat.py: remove the empty file, yay it is gone
+
 	* buildbot/twcompat.py (waitForDeferred): remove the monkeypatch,
 	tw-2.0.0 and newer have the method we need.
 	(getProcessOutputAndValue): same
