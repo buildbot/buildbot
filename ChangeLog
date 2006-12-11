@@ -1,5 +1,10 @@
 2006-12-10  Brian Warner  <warner@lothar.com>
 
+	* buildbot/status/builder.py (LogFile.finish): forget about all
+	subscribers once the log has finished, since after that point
+	we're never going to use them again. This might help free up some
+	memory somewhere.
+
 	* buildbot/clients/debug.py: update to use gtk.main_quit() rather
 	than the old/deprecated gtk.mainquit()
 

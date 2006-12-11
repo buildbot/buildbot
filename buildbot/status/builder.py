@@ -425,6 +425,7 @@ class LogFile:
         self.finishedWatchers = []
         for w in watchers:
             w.callback(self)
+        self.watchers = []
 
     # persistence stuff
     def __getstate__(self):
