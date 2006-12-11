@@ -1,5 +1,9 @@
 2006-12-10  Brian Warner  <warner@lothar.com>
 
+	* buildbot/test/test_config.py (StartService.testStartService):
+	inhibit the usual read-config-on-startup behavior, since otherwise
+	the log.err that gets recorded causes the test to fail
+
 	* buildbot/status/builder.py (LogFile.finish): forget about all
 	subscribers once the log has finished, since after that point
 	we're never going to use them again. This might help free up some

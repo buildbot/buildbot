@@ -1051,6 +1051,8 @@ class StartService(unittest.TestCase):
     def testStartService(self):
         os.mkdir("test_ss")
         self.master = m = BuildMaster("test_ss")
+        # inhibit the usual read-config-on-startup behavior
+        m.readConfig = True
         m.startService()
         d = m.loadConfig(startableEmptyCfg % 0)
         d.addCallback(self._testStartService_0)
