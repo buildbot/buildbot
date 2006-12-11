@@ -1,3 +1,9 @@
+2006-12-11  Brian Warner  <warner@lothar.com>
+
+	* buildbot/__init__.py (version): bump to 0.7.5+ while between
+	releases
+	* docs/buildbot.texinfo: same
+
 2006-12-10  Brian Warner  <warner@lothar.com>
 
 	* buildbot/__init__.py (version): Releasing buildbot-0.7.5
