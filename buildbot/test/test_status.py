@@ -8,7 +8,7 @@ from twisted.trial import unittest
 from buildbot import interfaces
 from buildbot.sourcestamp import SourceStamp
 from buildbot.process.base import BuildRequest
-from buildbot.twcompat import implements, providedBy, maybeWait
+from buildbot.twcompat import implements, providedBy
 from buildbot.status import builder, base
 
 mail = None
@@ -360,7 +360,7 @@ class Mail(unittest.TestCase):
         # otherwise a malicious SMTP server could make us consume lots of
         # memory.
         d.addCallback(self.stall, 0.1)
-        return maybeWait(d)
+        return d
 
 if not mail:
     Mail.skip = "the Twisted Mail package is not installed"
@@ -629,7 +629,8 @@ class Log(unittest.TestCase):
         s = MyLogConsumer()
         d = l1.subscribeConsumer(s)
         d.addCallback(self._testConsumer_1, s)
-        return maybeWait(d, 5)
+        return d
+    testConsumer.timeout = 5
     def _testConsumer_1(self, res, s):
         self.failIf(s.chunks)
         self.failUnless(s.finished)
@@ -721,7 +722,7 @@ class Log(unittest.TestCase):
         # NetstringReceiver.dataReceived where it does
         # self.transport.loseConnection() because of the NetstringParseError,
         # however self.transport is None
-        return maybeWait(d, 5)
+        return d
     testLargeSummary.timeout = 5
 
 config_base = """
@@ -859,7 +860,7 @@ class Subscription(RunMixin, unittest.TestCase):
 
         d = self.connectSlave(builders=["dummy", "testdummy"])
         d.addCallback(self._testSlave_1, t1)
-        return maybeWait(d)
+        return d
 
     def _testSlave_1(self, res, t1):
         self.failUnlessEqual(len(t1.events), 2)

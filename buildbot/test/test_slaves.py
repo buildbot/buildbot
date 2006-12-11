@@ -1,7 +1,6 @@
 # -*- test-case-name: buildbot.test.test_slaves -*-
 
 from twisted.trial import unittest
-from buildbot.twcompat import maybeWait
 from twisted.internet import defer, reactor
 from twisted.python import log
 
@@ -49,7 +48,7 @@ class Slave(RunMixin, unittest.TestCase):
         self.master.startService()
         d = self.connectSlave(["b1"])
         d.addCallback(lambda res: self.connectSlave(["b1"], "bot2"))
-        return maybeWait(d)
+        return d
 
     def doBuild(self, buildername):
         br = BuildRequest("forced", SourceStamp())
@@ -72,7 +71,7 @@ class Slave(RunMixin, unittest.TestCase):
 
         d = self.doBuild("b1")
         d.addCallback(self._testSequence_1)
-        return maybeWait(d)
+        return d
     def _testSequence_1(self, res):
         self.failUnlessEqual(res.getResults(), SUCCESS)
         self.failUnlessEqual(res.getSlavename(), "bot1")
@@ -89,7 +88,7 @@ class Slave(RunMixin, unittest.TestCase):
         d1 = self.doBuild("b1")
         d2 = self.doBuild("b1")
         d1.addCallback(self._testSimultaneous_1, d2)
-        return maybeWait(d1)
+        return d1
     def _testSimultaneous_1(self, res, d2):
         self.failUnlessEqual(res.getResults(), SUCCESS)
         self.failUnlessEqual(res.getSlavename(), "bot1")
@@ -104,7 +103,7 @@ class Slave(RunMixin, unittest.TestCase):
         # slave instead
         d = self.shutdownSlave("bot1", "b1")
         d.addCallback(self._testFallback1_1)
-        return maybeWait(d)
+        return d
     def _testFallback1_1(self, res):
         attached_slaves = [c for c in self.master.botmaster.slaves.values()
                            if c.slave]
@@ -129,7 +128,7 @@ class Slave(RunMixin, unittest.TestCase):
         self.disappearSlave("bot1", "b1")
         d = self.doBuild("b1")
         d.addCallback(self._testFallback2_1)
-        return maybeWait(d)
+        return d
     def _testFallback2_1(self, res):
         self.failUnlessEqual(res.getResults(), SUCCESS)
         self.failUnlessEqual(res.getSlavename(), "bot2")
@@ -159,7 +158,7 @@ class Slave(RunMixin, unittest.TestCase):
         d2 = defer.Deferred()
         d2.addCallback(self._testDontClaimPingingSlave_1, d1, s1, timers)
         reactor.callLater(1, d2.callback, None)
-        return maybeWait(d2)
+        return d2
     def _testDontClaimPingingSlave_1(self, res, d1, s1, timers):
         # now the first build is running (waiting on the ping), so start the
         # second build. This should claim the second slave, not the first,
@@ -224,7 +223,7 @@ class Reconfig(RunMixin, unittest.TestCase):
         self.master.loadConfig(config_3)
         self.master.startService()
         d = self.connectSlave(["b1"])
-        return maybeWait(d)
+        return d
 
     def _one_started(self):
         log.msg("testReconfig._one_started")
@@ -413,7 +412,7 @@ class Slave2(RunMixin, unittest.TestCase):
         # build has already started.
         d = self.connectSlave(["b1"], opts={"failPingOnce": True})
         d.addCallback(self._testFirstComeFirstServed_1, d1, d2)
-        return maybeWait(d)
+        return d
     def _testFirstComeFirstServed_1(self, res, d1, d2):
         # the master has send the slaveping. When this is received, it will
         # fail, causing the master to hang up on the slave. When it

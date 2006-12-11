@@ -26,7 +26,6 @@ from buildbot.status import builder
 from buildbot.status.builder import SUCCESS, FAILURE
 from buildbot.test.runutils import RunMixin, rmtree
 from buildbot.test.runutils import makeBuildStep, StepTester
-from buildbot.twcompat import maybeWait
 from buildbot.slave import commands, registry
 
 
@@ -307,7 +306,7 @@ class SlaveVersion(RunMixin, unittest.TestCase):
         self.master.loadConfig(version_config)
         self.master.startService()
         d = self.connectSlave(["quick"])
-        return maybeWait(d)
+        return d
 
     def doBuild(self, buildername):
         br = base.BuildRequest("forced", SourceStamp())
@@ -338,7 +337,7 @@ class SlaveVersion(RunMixin, unittest.TestCase):
     def testCompare(self):
         self.master._checker = self.checkCompare
         d = self.doBuild("quick")
-        return maybeWait(d)
+        return d
 
 
 class ReorgCompatibility(unittest.TestCase):
@@ -398,7 +397,7 @@ class CheckStepTester(StepTester, unittest.TestCase):
             self.failUnless(sb.flag)
             self.failUnlessEqual(sb.flag_args, {"arg1": "value"})
         d.addCallback(_checkSimple)
-        return maybeWait(d)
+        return d
 
 class Python(StepTester, unittest.TestCase):
     def testPyFlakes1(self):

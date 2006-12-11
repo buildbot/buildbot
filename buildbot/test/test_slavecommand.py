@@ -3,7 +3,6 @@
 from twisted.trial import unittest
 from twisted.internet import reactor, interfaces
 from twisted.python import runtime, failure, util
-from buildbot.twcompat import maybeWait
 
 import os, sys
 
@@ -88,7 +87,7 @@ class ShellBase(SignalMixin):
         def _check_targetfile(res):
             self.failUnless(os.path.exists(targetfile))
         d.addCallback(_check_targetfile)
-        return maybeWait(d)
+        return d
 
     def _checkPass(self, res, expected, rc):
         self.checkOutput(expected)
@@ -102,7 +101,7 @@ class ShellBase(SignalMixin):
         expected = [('stdout', "this is stdout\n"),
                     ('stderr', "this is stderr\n")]
         d.addCallback(self._checkPass, expected, 0)
-        return maybeWait(d)
+        return d
 
     def testShellRC(self):
         cmd = [sys.executable, self.emitcmd, "1"]
@@ -112,7 +111,7 @@ class ShellBase(SignalMixin):
         expected = [('stdout', "this is stdout\n"),
                     ('stderr', "this is stderr\n")]
         d.addCallback(self._checkPass, expected, 1)
-        return maybeWait(d)
+        return d
 
     def testShellEnv(self):
         cmd = "%s %s 0" % (sys.executable, self.emitcmd)
@@ -125,7 +124,7 @@ class ShellBase(SignalMixin):
                     ('stdout', "EMIT_TEST: envtest\n"),
                     ]
         d.addCallback(self._checkPass, expected, 0)
-        return maybeWait(d)
+        return d
 
     def testShellSubdir(self):
         targetfile = os.path.join(self.basedir, "subdir", "log1.out")
@@ -141,7 +140,7 @@ class ShellBase(SignalMixin):
         def _check_targetfile(res):
             self.failUnless(os.path.exists(targetfile))
         d.addCallback(_check_targetfile)
-        return maybeWait(d)
+        return d
 
     def testShellMissingCommand(self):
         args = {'command': "/bin/EndWorldHungerAndMakePigsFly",
@@ -151,7 +150,7 @@ class ShellBase(SignalMixin):
         c = SlaveShellCommand(self.builder, None, args)
         d = c.start()
         d.addCallback(self._testShellMissingCommand_1)
-        return maybeWait(d)
+        return d
     def _testShellMissingCommand_1(self, res):
         self.failIfEqual(self.getrc(), 0)
         # we used to check the error message to make sure it said something
@@ -165,7 +164,7 @@ class ShellBase(SignalMixin):
         c = SlaveShellCommand(self.builder, None, args)
         d = c.start()
         d.addCallback(self._testTimeout_1)
-        return maybeWait(d)
+        return d
     def _testTimeout_1(self, res):
         self.failIfEqual(self.getrc(), 0)
         got = self.getfile('header')
@@ -186,7 +185,7 @@ class ShellBase(SignalMixin):
         d = c.start()
         reactor.callLater(1, c.interrupt)
         d.addCallback(self._testInterrupt1_1)
-        return maybeWait(d)
+        return d
     def _testInterrupt1_1(self, res):
         self.failIfEqual(self.getrc(), 0)
         got = self.getfile('header')
@@ -216,7 +215,7 @@ class Shell(ShellBase, unittest.TestCase):
         c.command.KILL = None
         reactor.callLater(1, c.interrupt)
         d.addBoth(self._testInterrupt2_1)
-        return maybeWait(d)
+        return d
     def _testInterrupt2_1(self, res):
         # the slave should raise a TimeoutError exception. In a normal build
         # process (i.e. one that uses step.RemoteShellCommand), this

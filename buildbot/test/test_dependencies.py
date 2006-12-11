@@ -5,7 +5,6 @@ from twisted.trial import unittest
 from twisted.internet import reactor, defer
 
 from buildbot.test.runutils import RunMixin
-from buildbot.twcompat import maybeWait
 from buildbot.status import base
 
 config_1 = """
@@ -68,7 +67,7 @@ class Dependencies(RunMixin, unittest.TestCase):
         self.master.startService()
         d = self.connectSlave(["slowpass", "fastfail", "fastpass",
                                "b3", "b4", "b5"])
-        return maybeWait(d)
+        return d
 
     def findScheduler(self, name):
         for s in self.master.allSchedulers():
@@ -96,7 +95,7 @@ class Dependencies(RunMixin, unittest.TestCase):
         d = defer.Deferred()
         d.addCallback(self._testRun_Fail_1)
         reactor.callLater(5, d.callback, None)
-        return maybeWait(d)
+        return d
 
     def _testRun_Fail_1(self, res):
         # 'slowpass' and 'fastfail' should have run one build each
@@ -138,7 +137,7 @@ class Dependencies(RunMixin, unittest.TestCase):
         d = defer.Deferred()
         d.addCallback(self._testRun_Pass_1)
         reactor.callLater(5, d.callback, None)
-        return maybeWait(d)
+        return d
 
     def _testRun_Pass_1(self, res):
         # 'fastpass' and 'slowpass' should have run one build each

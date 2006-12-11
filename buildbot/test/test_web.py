@@ -11,7 +11,7 @@ from twisted.internet.interfaces import IReactorUNIX
 from twisted.web import client
 
 from buildbot import master, interfaces, sourcestamp
-from buildbot.twcompat import providedBy, maybeWait
+from buildbot.twcompat import providedBy
 from buildbot.status import html, builder
 from buildbot.changes.changes import Change
 from buildbot.process import base
@@ -119,7 +119,7 @@ class BaseWeb:
         stopHTTPLog()
         if self.master:
             d = self.master.stopService()
-            return maybeWait(d)
+            return d
 
     def find_waterfall(self, master):
         return filter(lambda child: isinstance(child, html.Waterfall),
@@ -138,7 +138,7 @@ class Ports(BaseWeb, unittest.TestCase):
 
         d = client.getPage("http://localhost:%d/" % port)
         d.addCallback(self._test_webPortnum_1)
-        return maybeWait(d)
+        return d
     test_webPortnum.timeout = 10
     def _test_webPortnum_1(self, page):
         #print page
@@ -158,7 +158,7 @@ class Ports(BaseWeb, unittest.TestCase):
 
         d = client.getPage("http://localhost:%d/remote/" % p.portnum)
         d.addCallback(self._test_webPathname_1, p)
-        return maybeWait(d)
+        return d
     test_webPathname.timeout = 10
     def _test_webPathname_1(self, page, p):
         #print page
@@ -179,7 +179,7 @@ class Ports(BaseWeb, unittest.TestCase):
 
         d = client.getPage("http://localhost:%d/remote/" % p.portnum)
         d.addCallback(self._test_webPathname_port_1, p)
-        return maybeWait(d)
+        return d
     test_webPathname_port.timeout = 10
     def _test_webPathname_port_1(self, page, p):
         self.failUnlessIn("BuildBot", page)
@@ -213,7 +213,7 @@ c['status'] = [html.Waterfall(http_port=0, robots_txt=%s)]
 
         d = client.getPage("http://localhost:%d/" % port)
         d.addCallback(self._test_waterfall_1)
-        return maybeWait(d)
+        return d
     test_waterfall.timeout = 10
     def _test_waterfall_1(self, page):
         self.failUnless(page)
@@ -316,7 +316,7 @@ class GetURL(RunMixin, unittest.TestCase):
         self.master.loadConfig(geturl_config)
         self.master.startService()
         d = self.connectSlave(["b1"])
-        return maybeWait(d)
+        return d
 
     def tearDown(self):
         stopHTTPLog()
@@ -340,7 +340,7 @@ class GetURL(RunMixin, unittest.TestCase):
         noweb_config1 = geturl_config + "del c['buildbotURL']\n"
         d = self.master.loadConfig(noweb_config1)
         d.addCallback(self._testMissingBase_1)
-        return maybeWait(d)
+        return d
     def _testMissingBase_1(self, res):
         s = self.status
         self.assertNoURL(s)
@@ -367,7 +367,7 @@ class GetURL(RunMixin, unittest.TestCase):
         d = self.doBuild("b1")
         # maybe check IBuildSetStatus here?
         d.addCallback(self._testBuild_1)
-        return maybeWait(d)
+        return d
 
     def _testBuild_1(self, res):
         s = self.status
@@ -447,7 +447,7 @@ BuildmasterConfig = {
     def test_logfile1(self):
         d = client.getPage("http://localhost:%d/" % self.port)
         d.addCallback(self._test_logfile1_1)
-        return maybeWait(d)
+        return d
     test_logfile1.timeout = 20
     def _test_logfile1_1(self, page):
         self.failUnless(page)
@@ -456,7 +456,7 @@ BuildmasterConfig = {
         logurl = self.getLogURL("setup", 0)
         d = client.getPage(logurl)
         d.addCallback(self._test_logfile2_1)
-        return maybeWait(d)
+        return d
     def _test_logfile2_1(self, logbody):
         self.failUnless(logbody)
 
@@ -464,7 +464,7 @@ BuildmasterConfig = {
         logurl = self.getLogURL("setup", 0)
         d = client.getPage(logurl + "/text")
         d.addCallback(self._test_logfile3_1)
-        return maybeWait(d)
+        return d
     def _test_logfile3_1(self, logtext):
         self.failUnlessEqual(logtext, "some stdout\n")
 
@@ -472,7 +472,7 @@ BuildmasterConfig = {
         logurl = self.getLogURL("setup", 1)
         d = client.getPage(logurl)
         d.addCallback(self._test_logfile4_1)
-        return maybeWait(d)
+        return d
     def _test_logfile4_1(self, logbody):
         self.failUnlessEqual(logbody, "<html>ouch</html>")
 
@@ -487,7 +487,7 @@ BuildmasterConfig = {
         c = reactor.connectTCP("localhost", self.port, f)
         d = p.d
         d.addCallback(self._test_logfile5_1, p)
-        return maybeWait(d, 10)
+        return d
     test_logfile5.timeout = 10
     def _test_logfile5_1(self, res, p):
         self.failUnlessIn("big log", p.data)
@@ -504,7 +504,7 @@ BuildmasterConfig = {
         c = reactor.connectTCP("localhost", self.port, f)
         d = p.d
         d.addCallback(self._test_logfile6_1, p)
-        return maybeWait(d, 10)
+        return d
     test_logfile6.timeout = 10
     def _test_logfile6_1(self, res, p):
         self.failUnlessIn("big2 log", p.data)

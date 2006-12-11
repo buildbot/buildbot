@@ -10,7 +10,6 @@ from buildbot.steps import dummy
 from buildbot.sourcestamp import SourceStamp
 from buildbot.process.base import BuildRequest
 from buildbot.test.runutils import RunMixin
-from buildbot.twcompat import maybeWait
 from buildbot import locks
 
 def claimHarder(lock, owner):
@@ -47,13 +46,13 @@ class Unit(unittest.TestCase):
         lock = locks.BaseLock("name")
         d = claimHarder(lock, "owner1")
         d.addCallback(lambda lock: lock.release("owner1"))
-        return maybeWait(d)
+        return d
 
     def testCompetition(self):
         lock = locks.BaseLock("name")
         d = claimHarder(lock, "owner1")
         d.addCallback(self._claim1)
-        return maybeWait(d)
+        return d
     def _claim1(self, lock):
         # we should have claimed it by now
         self.failIf(lock.isAvailable())
@@ -85,7 +84,7 @@ class Unit(unittest.TestCase):
             dl.append(d)
         d = defer.DeferredList(dl)
         d.addCallback(self._cleanup, lock)
-        return maybeWait(d)
+        return d
 
 class Multi(unittest.TestCase):
     def testNow(self):
@@ -108,7 +107,7 @@ class Multi(unittest.TestCase):
         d.addCallback(lambda lock: lock.release("owner3"))
         lock.release("owner2")
         lock.release("owner1")
-        return maybeWait(d)
+        return d
 
     def _cleanup(self, res, lock, count):
         dl = []
@@ -140,7 +139,7 @@ class Multi(unittest.TestCase):
             dl.append(d)
         d = defer.DeferredList(dl)
         d.addCallback(self._cleanup, lock, COUNT)
-        return maybeWait(d)
+        return d
 
 class Dummy:
     pass
@@ -333,7 +332,7 @@ class Locks(RunMixin, unittest.TestCase):
                                                      ["full1a", "full1b",
                                                       "full1c", "full1d",
                                                       "full2a", "full2b"]))
-        return maybeWait(d)
+        return d
 
     def testLock1(self):
         self.control.getBuilder("full1a").requestBuild(self.req1)
@@ -341,7 +340,7 @@ class Locks(RunMixin, unittest.TestCase):
         d = defer.DeferredList([self.req1.waitUntilFinished(),
                                 self.req2.waitUntilFinished()])
         d.addCallback(self._testLock1_1)
-        return maybeWait(d)
+        return d
 
     def _testLock1_1(self, res):
         # full1a should complete its step before full1b starts it
@@ -355,7 +354,7 @@ class Locks(RunMixin, unittest.TestCase):
         # in which full1a and full1b wind up with distinct Lock instances.
         d = self.master.loadConfig(config_1a)
         d.addCallback(self._testLock1a_1)
-        return maybeWait(d)
+        return d
     def _testLock1a_1(self, res):
         self.control.getBuilder("full1a").requestBuild(self.req1)
         self.control.getBuilder("full1b").requestBuild(self.req2)
@@ -378,7 +377,7 @@ class Locks(RunMixin, unittest.TestCase):
         d = defer.DeferredList([self.req1.waitUntilFinished(),
                                 self.req2.waitUntilFinished()])
         d.addCallback(self._testLock2_1)
-        return maybeWait(d)
+        return d
 
     def _testLock2_1(self, res):
         # full2a should start its step before full1a finishes it. They run on
@@ -394,7 +393,7 @@ class Locks(RunMixin, unittest.TestCase):
         d = defer.DeferredList([self.req1.waitUntilFinished(),
                                 self.req2.waitUntilFinished()])
         d.addCallback(self._testLock3_1)
-        return maybeWait(d)
+        return d
 
     def _testLock3_1(self, res):
         # full2b should not start until after full1c finishes. The builds run
@@ -414,7 +413,7 @@ class Locks(RunMixin, unittest.TestCase):
                                 self.req2.waitUntilFinished(),
                                 self.req3.waitUntilFinished()])
         d.addCallback(self._testLock4_1)
-        return maybeWait(d)
+        return d
 
     def _testLock4_1(self, res):
         # full1a starts, then full1d starts (because they do not interfere).

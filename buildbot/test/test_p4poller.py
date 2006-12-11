@@ -4,7 +4,6 @@ from twisted.python import failure
 from twisted.internet import defer
 from twisted.trial import unittest
 
-from buildbot.twcompat import maybeWait
 from buildbot.changes.changes import Change
 from buildbot.changes.p4poller import P4Source, get_simple_split
 
@@ -105,7 +104,7 @@ class TestP4Poller(unittest.TestCase):
         # The first time, it just learns the change to start at.
         self.assert_(self.t.last_change is None)
         self.assert_(not self.t.working)
-        return maybeWait(self.t.checkp4().addCallback(self._testCheck2))
+        return self.t.checkp4().addCallback(self._testCheck2)
 
     def _testCheck2(self, res):
         self.assertEquals(self.changes, [])
@@ -161,7 +160,7 @@ class TestP4Poller(unittest.TestCase):
         self.t.parent = self
         d = self.t.checkp4()
         d.addBoth(self._testFailedChanges2)
-        return maybeWait(d)
+        return d
 
     def _testFailedChanges2(self, f):
         self.assert_(isinstance(f, failure.Failure))
@@ -177,7 +176,7 @@ class TestP4Poller(unittest.TestCase):
         self.t.parent = self
         d = self.t.checkp4()
         d.addCallback(self._testFailedDescribe2)
-        return maybeWait(d)
+        return d
 
     def _testFailedDescribe2(self, res):
         # first time finds nothing; check again.

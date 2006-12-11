@@ -4,7 +4,6 @@ import os
 
 from twisted.trial import unittest
 
-from buildbot.twcompat import maybeWait
 from buildbot.sourcestamp import SourceStamp
 from buildbot.process import base
 from buildbot.steps.shell import ShellCommand, WithProperties
@@ -161,7 +160,7 @@ class Run(RunMixin, unittest.TestCase):
             self.failUnless(os.path.exists(f))
             return res
         d.addCallback(_check_touch)
-        return maybeWait(d)
+        return d
 
 
 # we test got_revision in test_vc

@@ -9,7 +9,6 @@ from buildbot.sourcestamp import SourceStamp
 from buildbot.changes import changes
 from buildbot.status import builder
 from buildbot.process.base import BuildRequest
-from buildbot.twcompat import maybeWait
 
 from buildbot.test.runutils import RunMixin, rmtree
 
@@ -89,7 +88,7 @@ class Run(unittest.TestCase):
         self.failUnless(s.timer)
         # halting the service will also stop the timer
         d = defer.maybeDeferred(m.stopService)
-        return maybeWait(d)
+        return d
 
 class Ping(RunMixin, unittest.TestCase):
     def testPing(self):
@@ -99,7 +98,7 @@ class Ping(RunMixin, unittest.TestCase):
 
         d = self.connectSlave()
         d.addCallback(self._testPing_1)
-        return maybeWait(d)
+        return d
 
     def _testPing_1(self, res):
         d = interfaces.IControl(self.master).getBuilder("dummy").ping(1)
@@ -149,7 +148,7 @@ class Disconnect(RunMixin, unittest.TestCase):
 
         d = self.connectSlave()
         d.addCallback(self._disconnectSetup_1)
-        return maybeWait(d)
+        return d
 
     def _disconnectSetup_1(self, res):
         self.failUnlessEqual(self.s1.getState(), ("idle", []))
@@ -203,7 +202,7 @@ class Disconnect(RunMixin, unittest.TestCase):
         d = defer.Deferred()
         d.addCallback(self._testIdle2_1, req)
         reactor.callLater(3, d.callback, None)
-        return maybeWait(d, 5)
+        return d
     testIdle2.timeout = 5
 
     def _testIdle2_1(self, res, req):
@@ -219,7 +218,7 @@ class Disconnect(RunMixin, unittest.TestCase):
         #
         d = self.submitBuild()
         d.addCallback(self._testBuild1_1)
-        return maybeWait(d)
+        return d
 
     def _testBuild1_1(self, bc):
         bs = bc.getStatus()
@@ -248,7 +247,7 @@ class Disconnect(RunMixin, unittest.TestCase):
         # this next sequence is timing-dependent
         d = self.submitBuild()
         d.addCallback(self._testBuild1_1)
-        return maybeWait(d, 30)
+        return d
     testBuild2.timeout = 30
 
     def _testBuild1_1(self, bc):
@@ -278,7 +277,7 @@ class Disconnect(RunMixin, unittest.TestCase):
         # this next sequence is timing-dependent
         d = self.submitBuild()
         d.addCallback(self._testBuild3_1)
-        return maybeWait(d, 30)
+        return d
     testBuild3.timeout = 30
 
     def _testBuild3_1(self, bc):
@@ -305,7 +304,7 @@ class Disconnect(RunMixin, unittest.TestCase):
         # this next sequence is timing-dependent
         d = self.submitBuild()
         d.addCallback(self._testBuild4_1)
-        return maybeWait(d, 30)
+        return d
     testBuild4.timeout = 30
 
     def _testBuild4_1(self, bc):
@@ -330,7 +329,7 @@ class Disconnect(RunMixin, unittest.TestCase):
         # this next sequence is timing-dependent
         d = self.submitBuild()
         d.addCallback(self._testInterrupt_1)
-        return maybeWait(d, 30)
+        return d
     testInterrupt.timeout = 30
 
     def _testInterrupt_1(self, bc):
@@ -351,7 +350,7 @@ class Disconnect(RunMixin, unittest.TestCase):
         # ping should succeed
         d = bc.ping(1)
         d.addCallback(self._testDisappear_1, bc)
-        return maybeWait(d)
+        return d
 
     def _testDisappear_1(self, res, bc):
         self.failUnlessEqual(res, True)
@@ -383,7 +382,7 @@ class Disconnect(RunMixin, unittest.TestCase):
         # now let the new slave take over
         self.connectSlave2()
         d.addCallback(self._testDuplicate_1, ss)
-        return maybeWait(d, 2)
+        return d
     testDuplicate.timeout = 5
 
     def _testDuplicate_1(self, res, ss):
@@ -420,7 +419,7 @@ class Disconnect2(RunMixin, unittest.TestCase):
 
         d = self.connectSlaveFastTimeout()
         d.addCallback(self._setup_disconnect2_1)
-        return maybeWait(d)
+        return d
 
     def _setup_disconnect2_1(self, res):
         self.failUnlessEqual(self.s1.getState(), ("idle", []))
@@ -438,7 +437,7 @@ class Disconnect2(RunMixin, unittest.TestCase):
         d = defer.Deferred()
         reactor.callLater(5, d.callback, None)
         d.addCallback(self._testSlaveTimeout_1)
-        return maybeWait(d, 20)
+        return d
     testSlaveTimeout.timeout = 20
 
     def _testSlaveTimeout_1(self, res):
@@ -478,7 +477,7 @@ class Basedir(RunMixin, unittest.TestCase):
         
         d = self.connectSlave()
         d.addCallback(self._testChangeBuilddir_1)
-        return maybeWait(d)
+        return d
 
     def _testChangeBuilddir_1(self, res):
         self.bot = bot = self.slaves['bot1'].bot

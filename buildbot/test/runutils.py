@@ -5,7 +5,6 @@ from twisted.internet import defer, reactor
 from twisted.python import log, util
 
 from buildbot import master, interfaces
-from buildbot.twcompat import maybeWait
 from buildbot.slave import bot
 from buildbot.process.builder import Builder
 from buildbot.process.base import BuildRequest, Build
@@ -137,7 +136,7 @@ class RunMixin:
         d = self.shutdownAllSlaves()
         d.addCallback(self._tearDown_1)
         d.addCallback(self._tearDown_2)
-        return maybeWait(d)
+        return d
     def _tearDown_1(self, res):
         if self.master:
             return defer.maybeDeferred(self.master.stopService)

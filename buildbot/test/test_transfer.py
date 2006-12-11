@@ -3,7 +3,6 @@
 import os
 from stat import ST_MODE
 from twisted.trial import unittest
-from buildbot.twcompat import maybeWait
 from buildbot.steps.transfer import FileUpload, FileDownload
 from buildbot.test.runutils import StepTester
 from buildbot.status.builder import SUCCESS, FAILURE
@@ -56,7 +55,7 @@ class Upload(StepTester, unittest.TestCase):
             masterdest_contents = open(masterdest, "r").read()
             self.failUnlessEqual(masterdest_contents, contents)
         d.addCallback(_checkUpload)
-        return maybeWait(d)
+        return d
 
     def testMaxsize(self):
         self.slavebase = "Upload.testMaxsize.slave"
@@ -92,7 +91,7 @@ class Upload(StepTester, unittest.TestCase):
             self.failUnlessEqual(len(masterdest_contents), 12345)
             self.failUnlessEqual(masterdest_contents, contents[:12345])
         d.addCallback(_checkUpload)
-        return maybeWait(d)
+        return d
 
     def testMode(self):
         self.slavebase = "Upload.testMode.slave"
@@ -132,7 +131,7 @@ class Upload(StepTester, unittest.TestCase):
                                  "target mode was %o, we wanted %o" %
                                  (dest_mode, 0755))
         d.addCallback(_checkUpload)
-        return maybeWait(d)
+        return d
 
     def testMissingFile(self):
         self.slavebase = "Upload.testMissingFile.slave"
@@ -153,7 +152,7 @@ class Upload(StepTester, unittest.TestCase):
             self.failUnless(logtext.startswith("Cannot open file"))
             self.failUnless(logtext.endswith("for upload"))
         d.addCallback(_checkUpload)
-        return maybeWait(d)
+        return d
 
     
 
@@ -192,7 +191,7 @@ class Download(StepTester, unittest.TestCase):
             slavedest_contents = open(slavedest, "r").read()
             self.failUnlessEqual(slavedest_contents, contents)
         d.addCallback(_checkDownload)
-        return maybeWait(d)
+        return d
 
     def testMaxsize(self):
         self.slavebase = "Download.testMaxsize.slave"
@@ -225,7 +224,7 @@ class Download(StepTester, unittest.TestCase):
             self.failUnlessEqual(len(slavedest_contents), 12345)
             self.failUnlessEqual(slavedest_contents, contents[:12345])
         d.addCallback(_checkDownload)
-        return maybeWait(d)
+        return d
 
     def testMode(self):
         self.slavebase = "Download.testMode.slave"
@@ -261,7 +260,7 @@ class Download(StepTester, unittest.TestCase):
                                  "target mode was %o, we wanted %o" %
                                  (dest_mode, 0755))
         d.addCallback(_checkDownload)
-        return maybeWait(d)
+        return d
 
     def testMissingFile(self):
         self.slavebase = "Download.testMissingFile.slave"
@@ -288,7 +287,7 @@ class Download(StepTester, unittest.TestCase):
             self.failUnless(logtext.endswith(" not available at master"))
         d.addCallbacks(_checkDownload)
 
-        return maybeWait(d)
+        return d
 
 
 # TODO:

@@ -22,7 +22,7 @@ from buildbot.process import base
 from buildbot.steps import source
 from buildbot.changes import changes
 from buildbot.sourcestamp import SourceStamp
-from buildbot.twcompat import maybeWait, which
+from buildbot.twcompat import which
 from buildbot.scripts import tryclient
 from buildbot.test.runutils import SignalMixin
 
@@ -423,7 +423,7 @@ class VCBase(SignalMixin):
     def setUp(self):
         d = VCS.skipIfNotCapable(self.vc_name)
         d.addCallback(self._setUp1)
-        return maybeWait(d)
+        return d
 
     def _setUp1(self, res):
         self.helper = VCS.getHelper(self.vc_name)
@@ -1073,7 +1073,7 @@ class VCBase(SignalMixin):
                 http._logDateTimeStop() # shut down the internal timer. DUMB!
             d.addCallback(lambda res: stopHTTPTimer())
         d.addCallback(lambda res: self.tearDown2())
-        return maybeWait(d)
+        return d
 
     def tearDown2(self):
         pass
@@ -1209,19 +1209,19 @@ class CVS(VCBase, unittest.TestCase):
 
     def testCheckout(self):
         d = self.do_vctest()
-        return maybeWait(d)
+        return d
 
     def testPatch(self):
         d = self.do_patch()
-        return maybeWait(d)
+        return d
 
     def testCheckoutBranch(self):
         d = self.do_branch()
-        return maybeWait(d)
+        return d
         
     def testTry(self):
         d = self.do_getpatch(doBranch=False)
-        return maybeWait(d)
+        return d
 
 VCS.registerVC(CVS.vc_name, CVSHelper())
 
@@ -1352,21 +1352,21 @@ class SVN(VCBase, unittest.TestCase):
         # baseURL/defaultBranch style in testPatch and testCheckoutBranch.
         self.helper.vcargs = { 'svnurl': self.helper.svnurl_trunk }
         d = self.do_vctest()
-        return maybeWait(d)
+        return d
 
     def testPatch(self):
         self.helper.vcargs = { 'baseURL': self.helper.svnurl + "/",
                                'defaultBranch': "sample/trunk",
                                }
         d = self.do_patch()
-        return maybeWait(d)
+        return d
 
     def testCheckoutBranch(self):
         self.helper.vcargs = { 'baseURL': self.helper.svnurl + "/",
                                'defaultBranch': "sample/trunk",
                                }
         d = self.do_branch()
-        return maybeWait(d)
+        return d
 
     def testTry(self):
         # extract the base revision and patch from a modified tree, use it to
@@ -1375,7 +1375,7 @@ class SVN(VCBase, unittest.TestCase):
                                'defaultBranch': "sample/trunk",
                                }
         d = self.do_getpatch()
-        return maybeWait(d)
+        return d
 
 VCS.registerVC(SVN.vc_name, SVNHelper())
 
@@ -1516,7 +1516,7 @@ class P4(VCBase, unittest.TestCase):
 
     def tearDownClass(self):
         if self.helper:
-            return maybeWait(self.helper.shutdown_p4d())
+            return self.helper.shutdown_p4d()
 
     def testCheckout(self):
         self.helper.vcargs = { 'p4port': self.helper.p4port,
@@ -1525,21 +1525,21 @@ class P4(VCBase, unittest.TestCase):
         d = self.do_vctest(testRetry=False)
         # TODO: like arch and darcs, sync does nothing when server is not
         # changed.
-        return maybeWait(d)
+        return d
 
     def testCheckoutBranch(self):
         self.helper.vcargs = { 'p4port': self.helper.p4port,
                                'p4base': '//depot/',
                                'defaultBranch': 'trunk' }
         d = self.do_branch()
-        return maybeWait(d)
+        return d
 
     def testPatch(self):
         self.helper.vcargs = { 'p4port': self.helper.p4port,
                                'p4base': '//depot/',
                                'defaultBranch': 'trunk' }
         d = self.do_patch()
-        return maybeWait(d)
+        return d
 
 VCS.registerVC(P4.vc_name, P4Helper())
 
@@ -1650,32 +1650,32 @@ class Darcs(VCBase, unittest.TestCase):
 
         # TODO: testRetry has the same problem with Darcs as it does for
         # Arch
-        return maybeWait(d)
+        return d
 
     def testPatch(self):
         self.helper.vcargs = { 'baseURL': self.helper.darcs_base + "/",
                                'defaultBranch': "trunk" }
         d = self.do_patch()
-        return maybeWait(d)
+        return d
 
     def testCheckoutBranch(self):
         self.helper.vcargs = { 'baseURL': self.helper.darcs_base + "/",
                                'defaultBranch': "trunk" }
         d = self.do_branch()
-        return maybeWait(d)
+        return d
 
     def testCheckoutHTTP(self):
         self.serveHTTP()
         repourl = "http://localhost:%d/Darcs-Repository/trunk" % self.httpPort
         self.helper.vcargs =  { 'repourl': repourl }
         d = self.do_vctest(testRetry=False)
-        return maybeWait(d)
+        return d
         
     def testTry(self):
         self.helper.vcargs = { 'baseURL': self.helper.darcs_base + "/",
                                'defaultBranch': "trunk" }
         d = self.do_getpatch()
-        return maybeWait(d)
+        return d
 
 VCS.registerVC(Darcs.vc_name, DarcsHelper())
 
@@ -1944,7 +1944,7 @@ class Arch(VCBase, unittest.TestCase):
         # some better test logic, probably involving a copy of the
         # repository that has a few changes checked in.
 
-        return maybeWait(d)
+        return d
 
     def testCheckoutHTTP(self):
         self.serveHTTP()
@@ -1952,25 +1952,25 @@ class Arch(VCBase, unittest.TestCase):
         self.helper.vcargs = { 'url': url,
                                'version': "testvc--mainline--1" }
         d = self.do_vctest(testRetry=False)
-        return maybeWait(d)
+        return d
 
     def testPatch(self):
         self.helper.vcargs = {'url': self.helper.archrep,
                               'version': self.helper.defaultbranch }
         d = self.do_patch()
-        return maybeWait(d)
+        return d
 
     def testCheckoutBranch(self):
         self.helper.vcargs = {'url': self.helper.archrep,
                               'version': self.helper.defaultbranch }
         d = self.do_branch()
-        return maybeWait(d)
+        return d
 
     def testTry(self):
         self.helper.vcargs = {'url': self.helper.archrep,
                               'version': self.helper.defaultbranch }
         d = self.do_getpatch()
-        return maybeWait(d)
+        return d
 
 VCS.registerVC(Arch.vc_name, TlaHelper())
 
@@ -2017,7 +2017,7 @@ class Bazaar(Arch):
         # some better test logic, probably involving a copy of the
         # repository that has a few changes checked in.
 
-        return maybeWait(d)
+        return d
 
     def testCheckoutHTTP(self):
         self.serveHTTP()
@@ -2027,7 +2027,7 @@ class Bazaar(Arch):
                                'version': self.helper.defaultbranch,
                                }
         d = self.do_vctest(testRetry=False)
-        return maybeWait(d)
+        return d
 
     def testPatch(self):
         self.helper.vcargs = {'url': self.helper.archrep,
@@ -2036,7 +2036,7 @@ class Bazaar(Arch):
                               'version': self.helper.defaultbranch,
                               }
         d = self.do_patch()
-        return maybeWait(d)
+        return d
 
     def testCheckoutBranch(self):
         self.helper.vcargs = {'url': self.helper.archrep,
@@ -2045,7 +2045,7 @@ class Bazaar(Arch):
                               'version': self.helper.defaultbranch,
                               }
         d = self.do_branch()
-        return maybeWait(d)
+        return d
 
     def testTry(self):
         self.helper.vcargs = {'url': self.helper.archrep,
@@ -2054,7 +2054,7 @@ class Bazaar(Arch):
                               'version': self.helper.defaultbranch,
                               }
         d = self.do_getpatch()
-        return maybeWait(d)
+        return d
 
     def fixRepository(self):
         self.fixtimer = None
@@ -2088,7 +2088,7 @@ class Bazaar(Arch):
                                }
         d = self.do_vctest_once(True)
         d.addCallback(self._testRetry_1)
-        return maybeWait(d)
+        return d
     def _testRetry_1(self, bs):
         # make sure there was mention of the retry attempt in the logs
         l = bs.getLogs()[0]
@@ -2117,7 +2117,7 @@ class Bazaar(Arch):
                               }
         d = self.do_vctest_once(False)
         d.addCallback(self._testRetryFails_1)
-        return maybeWait(d)
+        return d
     def _testRetryFails_1(self, bs):
         self.failUnlessEqual(bs.getResults(), FAILURE)
 
@@ -2246,26 +2246,26 @@ class Mercurial(VCBase, unittest.TestCase):
 
         # TODO: testRetry has the same problem with Mercurial as it does for
         # Arch
-        return maybeWait(d)
+        return d
 
     def testPatch(self):
         self.helper.vcargs = { 'baseURL': self.helper.hg_base + "/",
                                'defaultBranch': "trunk" }
         d = self.do_patch()
-        return maybeWait(d)
+        return d
 
     def testCheckoutBranch(self):
         self.helper.vcargs = { 'baseURL': self.helper.hg_base + "/",
                                'defaultBranch': "trunk" }
         d = self.do_branch()
-        return maybeWait(d)
+        return d
 
     def testCheckoutHTTP(self):
         self.serveHTTP()
         repourl = "http://localhost:%d/Mercurial-Repository/trunk/.hg" % self.httpPort
         self.helper.vcargs =  { 'repourl': repourl }
         d = self.do_vctest(testRetry=False)
-        return maybeWait(d)
+        return d
     # TODO: The easiest way to publish hg over HTTP is by running 'hg serve'
     # as a child process while the test is running. (you can also use a CGI
     # script, which sounds difficult, or you can publish the files directly,
@@ -2276,7 +2276,7 @@ class Mercurial(VCBase, unittest.TestCase):
         self.helper.vcargs = { 'baseURL': self.helper.hg_base + "/",
                                'defaultBranch': "trunk" }
         d = self.do_getpatch()
-        return maybeWait(d)
+        return d
 
 VCS.registerVC(Mercurial.vc_name, MercurialHelper())
 
@@ -2382,7 +2382,7 @@ class Patch(VCBase, unittest.TestCase):
                                   sendRC=False, initialStdin=p0_diff)
         d = c.start()
         d.addCallback(self._testPatch_1)
-        return maybeWait(d)
+        return d
 
     def _testPatch_1(self, res):
         # make sure the file actually got patched

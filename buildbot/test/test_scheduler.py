@@ -8,7 +8,6 @@ from twisted.application import service
 from twisted.spread import pb
 
 from buildbot import scheduler, sourcestamp, buildset, status
-from buildbot.twcompat import maybeWait
 from buildbot.changes.changes import Change
 from buildbot.scripts import tryclient
 
@@ -30,7 +29,7 @@ class Scheduling(unittest.TestCase):
 
     def tearDown(self):
         d = self.master.stopService()
-        return maybeWait(d)
+        return d
 
     def addScheduler(self, s):
         s.setServiceParent(self.master)
@@ -40,7 +39,7 @@ class Scheduling(unittest.TestCase):
         d = defer.Deferred()
         reactor.callLater(5, d.callback, None)
         d.addCallback(self._testPeriodic1_1)
-        return maybeWait(d)
+        return d
     def _testPeriodic1_1(self, res):
         self.failUnless(len(self.master.sets) > 1)
         s1 = self.master.sets[0]
@@ -115,7 +114,7 @@ class Scheduling(unittest.TestCase):
         d = defer.Deferred()
         reactor.callLater(4, d.callback, None)
         d.addCallback(self._testBranch_1)
-        return maybeWait(d)
+        return d
     def _testBranch_1(self, res):
         self.failUnlessEqual(len(self.master.sets), 1)
         s = self.master.sets[0].source
@@ -149,7 +148,7 @@ class Scheduling(unittest.TestCase):
         d = defer.Deferred()
         reactor.callLater(2, d.callback, None)
         d.addCallback(self._testAnyBranch_1)
-        return maybeWait(d)
+        return d
     def _testAnyBranch_1(self, res):
         self.failUnlessEqual(len(self.master.sets), 3)
         self.master.sets.sort(lambda a,b: cmp(a.source.branch,
@@ -193,7 +192,7 @@ class Scheduling(unittest.TestCase):
         d = defer.Deferred()
         reactor.callLater(2, d.callback, None)
         d.addCallback(self._testAnyBranch2_1)
-        return maybeWait(d)
+        return d
     def _testAnyBranch2_1(self, res):
         self.failUnlessEqual(len(self.master.sets), 2)
         self.master.sets.sort(lambda a,b: cmp(a.source.branch,
@@ -253,7 +252,7 @@ class Scheduling(unittest.TestCase):
         # N.B.: if we don't have DNotify, we poll every 10 seconds, so don't
         # set a .timeout here shorter than that. TODO: make it possible to
         # set the polling interval, so we can make it shorter.
-        return maybeWait(d, 5)
+        return d
 
     def _testTryJobdir_1(self, bs):
         self.failUnlessEqual(bs.builderNames, ["a", "b"])
@@ -279,7 +278,7 @@ class Scheduling(unittest.TestCase):
         d2 = self.master.d = defer.Deferred()
         d = t.deliverJob()
         d.addCallback(self._testTryUserpass_1, t, d2)
-        return maybeWait(d, 5)
+        return d
     testTryUserpass.timeout = 5
     def _testTryUserpass_1(self, res, t, d2):
         # at this point, the Try object should have a RemoteReference to the

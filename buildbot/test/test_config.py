@@ -14,7 +14,7 @@ try:
 except ImportError:
     pass
 
-from buildbot.twcompat import providedBy, maybeWait
+from buildbot.twcompat import providedBy
 from buildbot.master import BuildMaster
 from buildbot import scheduler
 from twisted.application import service, internet
@@ -515,7 +515,7 @@ c['sources'] = [s1]
 
         d = master.loadConfig(self.sourcesCfg)
         d.addCallback(self._testSources_1)
-        return maybeWait(d)
+        return d
 
     def _testSources_1(self, res):
         self.failUnlessEqual(len(list(self.buildmaster.change_svc)), 1)
@@ -629,7 +629,7 @@ c['schedulers'] = [Scheduler('dup', None, 60, []),
         d.addCallback(_loadConfig, badcfg)
         d.addBoth(_shouldBeFailure, "Schedulers must have unique names")
 
-        return maybeWait(d)
+        return d
 
     def testSchedulers(self):
         master = self.buildmaster
@@ -639,7 +639,7 @@ c['schedulers'] = [Scheduler('dup', None, 60, []),
 
         d = self.buildmaster.loadConfig(schedulersCfg)
         d.addCallback(self._testSchedulers_1)
-        return maybeWait(d)
+        return d
 
     def _testSchedulers_1(self, res):
         sch = self.buildmaster.allSchedulers()
@@ -806,7 +806,7 @@ c['schedulers'] = [s1, Dependent('downstream', s1, ['builder1'])]
         d.addCallback(lambda res: master.loadConfig(ircCfg1))
         e5 = {'irc.us.freenode.net': ('buildbot', ['twisted'])}
         d.addCallback(lambda res: self.checkIRC(master, e5))
-        return maybeWait(d)
+        return d
 
     def testWebPortnum(self):
         master = self.buildmaster
@@ -814,7 +814,7 @@ c['schedulers'] = [s1, Dependent('downstream', s1, ['builder1'])]
 
         d = master.loadConfig(webCfg1)
         d.addCallback(self._testWebPortnum_1)
-        return maybeWait(d)
+        return d
     def _testWebPortnum_1(self, res):
         ports = self.checkPorts(self.buildmaster, [(9999, pb.PBServerFactory),
                                                    (9980, Site)])
@@ -857,7 +857,7 @@ c['schedulers'] = [s1, Dependent('downstream', s1, ['builder1'])]
 
         d = master.loadConfig(webNameCfg1)
         d.addCallback(self._testWebPathname_1)
-        return maybeWait(d)
+        return d
     def _testWebPathname_1(self, res):
         self.checkPorts(self.buildmaster,
                         [(9999, pb.PBServerFactory),
@@ -1056,7 +1056,7 @@ class StartService(unittest.TestCase):
         m.startService()
         d = m.loadConfig(startableEmptyCfg % 0)
         d.addCallback(self._testStartService_0)
-        return maybeWait(d)
+        return d
 
     def _testStartService_0(self, res):
         m = self.master

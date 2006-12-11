@@ -7,7 +7,6 @@ from twisted.trial import unittest
 from twisted.internet import reactor, defer
 from twisted.python import util
 from buildbot.slave.commands import SlaveShellCommand
-from buildbot.twcompat import maybeWait
 from buildbot.test.runutils import SlaveCommandTestBase
 
 class SlaveSide(SlaveCommandTestBase, unittest.TestCase):
@@ -24,7 +23,7 @@ class SlaveSide(SlaveCommandTestBase, unittest.TestCase):
             self.failUnlessEqual(logs['stdout'], "this is stdout\n")
             self.failUnlessEqual(logs['stderr'], "this is stderr\n")
         d.addCallback(_check)
-        return maybeWait(d)
+        return d
 
     # TODO: move test_slavecommand.Shell and .ShellPTY over here
 
@@ -106,7 +105,7 @@ class SlaveSide(SlaveCommandTestBase, unittest.TestCase):
                                      self._generateText("log3"))
         d.addCallback(_check)
         d.addBoth(self._maybePrintError)
-        return maybeWait(d)
+        return d
 
     def _check_and_wait(self, res=None):
         self._check_timeout -= 1

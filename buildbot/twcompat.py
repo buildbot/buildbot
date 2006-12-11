@@ -41,30 +41,6 @@ else:
     from twisted.python.components import Interface
     providedBy = components.implements
 
-# are we using a version of Trial that allows setUp/testFoo/tearDown to
-# return Deferreds?
-oldtrial = version.startswith("1.3")
-
-# use this at the end of setUp/testFoo/tearDown methods
-def maybeWait(d, timeout="none"):
-    from twisted.python import failure
-    from twisted.trial import unittest
-    if oldtrial:
-        # this is required for oldtrial (twisted-1.3.0) compatibility. When we
-        # move to retrial (twisted-2.0.0), replace these with a simple 'return
-        # d'.
-        try:
-            if timeout == "none":
-                unittest.deferredResult(d)
-            else:
-                unittest.deferredResult(d, timeout)
-        except failure.Failure, f:
-            if f.check(unittest.SkipTest):
-                raise f.value
-            raise
-        return None
-    return d
-
 # waitForDeferred and getProcessOutputAndValue are twisted-2.0 things. If
 # we're running under 1.3, patch them into place. These versions are copied
 # from twisted somewhat after 2.0.1 .
