@@ -2,6 +2,7 @@
 
 	* buildbot/twcompat.py (waitForDeferred): remove the monkeypatch,
 	tw-2.0.0 and newer have the method we need.
+	(getProcessOutputAndValue): same
 
 	* buildbot/twcompat.py (implements): remove this method
 	* buildbot/*: import implements() from zope.interface directly
