@@ -28,7 +28,7 @@ class DebugWidget:
         self.filename = g('filename')
         self.connectbutton = g('connectbutton')
         self.connectlabel = g('connectlabel')
-        g('window1').connect('destroy', lambda win: gtk.mainquit())
+        g('window1').connect('destroy', lambda win: gtk.main_quit())
         # put the master info in the window's titlebar
         g('window1').set_title("Buildbot Debug Tool: %s" % master)
         c = xml.signal_connect
