@@ -8,7 +8,7 @@ from twisted.python.failure import Failure
 from twisted.web.util import formatFailure
 
 from buildbot import interfaces
-from buildbot.twcompat import implements, providedBy
+from buildbot.twcompat import implements
 from buildbot import util
 from buildbot.status import progress
 from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE, SKIPPED, \
@@ -285,7 +285,7 @@ class LoggedRemoteCommand(RemoteCommand):
 
         """
 
-        assert providedBy(loog, interfaces.ILogFile)
+        assert interfaces.ILogFile.providedBy(loog)
         if not logfileName:
             logfileName = loog.getName()
         assert logfileName not in self.logs
@@ -366,7 +366,7 @@ class LogObserver:
         self.step = step
 
     def setLog(self, loog):
-        assert providedBy(loog, interfaces.IStatusLog)
+        assert interfaces.IStatusLog.providedBy(loog)
         loog.subscribe(self, True)
 
     def logChunk(self, build, step, log, channel, text):
@@ -844,7 +844,7 @@ class BuildStep:
         self._connectPendingLogObservers()
 
     def addLogObserver(self, logname, observer):
-        assert providedBy(observer, interfaces.ILogObserver)
+        assert interfaces.ILogObserver.providedBy(observer)
         observer.setStep(self)
         self._pendingLogObservers.append((logname, observer))
         self._connectPendingLogObservers()

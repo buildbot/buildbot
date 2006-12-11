@@ -8,7 +8,7 @@ from twisted.trial import unittest
 from buildbot import interfaces
 from buildbot.sourcestamp import SourceStamp
 from buildbot.process.base import BuildRequest
-from buildbot.twcompat import implements, providedBy
+from buildbot.twcompat import implements
 from buildbot.status import builder, base
 
 mail = None
@@ -394,7 +394,7 @@ class Results(unittest.TestCase):
         res = b.getTestResults()
         self.failUnlessEqual(res.keys(), [testname])
         t = res[testname]
-        self.failUnless(providedBy(t, interfaces.ITestResult))
+        self.failUnless(interfaces.ITestResult.providedBy(t))
         self.failUnlessEqual(t.getName(), testname)
         self.failUnlessEqual(t.getResults(), builder.SUCCESS)
         self.failUnlessEqual(t.getText(), ["passed"])

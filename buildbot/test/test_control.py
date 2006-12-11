@@ -7,7 +7,6 @@ from twisted.internet import defer
 
 from buildbot import master, interfaces
 from buildbot.sourcestamp import SourceStamp
-from buildbot.twcompat import providedBy
 from buildbot.slave import bot
 from buildbot.status.builder import SUCCESS
 from buildbot.process import base
@@ -91,13 +90,13 @@ class Force(unittest.TestCase):
         return d
 
     def _testRequest_2(self, build_control):
-        self.failUnless(providedBy(build_control, interfaces.IBuildControl))
+        self.failUnless(interfaces.IBuildControl.providedBy(build_control))
         d = build_control.getStatus().waitUntilFinished()
         d.addCallback(self._testRequest_3)
         return d
 
     def _testRequest_3(self, bs):
-        self.failUnless(providedBy(bs, interfaces.IBuildStatus))
+        self.failUnless(interfaces.IBuildStatus.providedBy(bs))
         self.failUnless(bs.isFinished())
         self.failUnlessEqual(bs.getResults(), SUCCESS)
         #self.failUnlessEqual(bs.getResponsibleUsers(), ["bob"]) # TODO

@@ -14,7 +14,6 @@ try:
 except ImportError:
     pass
 
-from buildbot.twcompat import providedBy
 from buildbot.master import BuildMaster
 from buildbot import scheduler
 from twisted.application import service, internet
@@ -392,7 +391,7 @@ class ConfigTest(unittest.TestCase):
         # twisted.application.internet.TCPServer, then extract their .args
         # values to find the TCP ports they want to listen on
         for child in s:
-            if providedBy(child, service.IServiceCollection):
+            if service.IServiceCollection.providedBy(child):
                 for gc in self.servers(child, types):
                     yield gc
             if isinstance(child, types):

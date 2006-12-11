@@ -874,11 +874,8 @@ class BuildMaster(service.MultiService, styles.Versioned):
         return d
 
     def allSchedulers(self):
-        # TODO: when twisted-1.3 compatibility is dropped, switch to the
-        # providedBy form, because it's faster (no actual adapter lookup)
         return [child for child in self
-                #if interfaces.IScheduler.providedBy(child)]
-                if interfaces.IScheduler(child, None)]
+                if interfaces.IScheduler.providedBy(child)]
 
 
     def loadConfig_Schedulers(self, newschedulers):

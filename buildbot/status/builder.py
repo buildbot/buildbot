@@ -20,7 +20,7 @@ except ImportError:
 
 # sibling imports
 from buildbot import interfaces, util, sourcestamp
-from buildbot.twcompat import implements, providedBy
+from buildbot.twcompat import implements
 
 SUCCESS, WARNINGS, FAILURE, SKIPPED, EXCEPTION = range(5)
 Results = ["success", "warnings", "failure", "skipped", "exception"]
@@ -1791,21 +1791,21 @@ class Status:
         prefix = self.getBuildbotURL()
         if not prefix:
             return None
-        if providedBy(thing, interfaces.IStatus):
+        if interfaces.IStatus.providedBy(thing):
             return prefix
-        if providedBy(thing, interfaces.ISchedulerStatus):
+        if interfaces.ISchedulerStatus.providedBy(thing):
             pass
-        if providedBy(thing, interfaces.IBuilderStatus):
+        if interfaces.IBuilderStatus.providedBy(thing):
             builder = thing
             return prefix + urllib.quote(builder.getName(), safe='')
-        if providedBy(thing, interfaces.IBuildStatus):
+        if interfaces.IBuildStatus.providedBy(thing):
             build = thing
             builder = build.getBuilder()
             return "%s%s/builds/%d" % (
                 prefix,
                 urllib.quote(builder.getName(), safe=''),
                 build.getNumber())
-        if providedBy(thing, interfaces.IBuildStepStatus):
+        if interfaces.IBuildStepStatus.providedBy(thing):
             step = thing
             build = step.getBuild()
             builder = build.getBuilder()
@@ -1819,14 +1819,14 @@ class Status:
         # ISlaveStatus
 
         # IStatusEvent
-        if providedBy(thing, interfaces.IStatusEvent):
+        if interfaces.IStatusEvent.providedBy(thing):
             from buildbot.changes import changes
             # TODO: this is goofy, create IChange or something
             if isinstance(thing, changes.Change):
                 change = thing
                 return "%schanges/%d" % (prefix, change.number)
 
-        if providedBy(thing, interfaces.IStatusLog):
+        if interfaces.IStatusLog.providedBy(thing):
             log = thing
             step = log.getStep()
             build = step.getBuild()

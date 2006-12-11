@@ -11,7 +11,6 @@ from twisted.internet.interfaces import IReactorUNIX
 from twisted.web import client
 
 from buildbot import master, interfaces, sourcestamp
-from buildbot.twcompat import providedBy
 from buildbot.status import html, builder
 from buildbot.changes.changes import Change
 from buildbot.process import base
@@ -146,7 +145,7 @@ class Ports(BaseWeb, unittest.TestCase):
 
     def test_webPathname(self):
         # running a t.web.distrib server over a UNIX socket
-        if not providedBy(reactor, IReactorUNIX):
+        if not IReactorUNIX.providedBy(reactor):
             raise unittest.SkipTest("UNIX sockets not supported here")
         config = (base_config +
                   "c['status'] = [html.Waterfall(distrib_port='.web-pb')]\n")

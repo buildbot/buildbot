@@ -20,7 +20,7 @@ except ImportError:
 from twisted.python import log
 
 from buildbot import interfaces, util
-from buildbot.twcompat import implements, providedBy
+from buildbot.twcompat import implements
 from buildbot.status import base
 from buildbot.status.builder import FAILURE, SUCCESS, WARNINGS
 
@@ -155,7 +155,7 @@ class MailNotifier(base.StatusReceiverMultiService):
         if lookup is not None:
             if type(lookup) is str:
                 lookup = Domain(lookup)
-            assert providedBy(lookup, interfaces.IEmailLookup)
+            assert interfaces.IEmailLookup.providedBy(lookup)
         self.lookup = lookup
         self.watched = []
         self.status = None

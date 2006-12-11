@@ -14,7 +14,7 @@ from twisted.application import service
 from twisted.web import html
 
 from buildbot import interfaces, util
-from buildbot.twcompat import implements, providedBy
+from buildbot.twcompat import implements
 
 html_tmpl = """
 <p>Changed by: <b>%(who)s</b><br />
@@ -180,8 +180,8 @@ class ChangeMaster(service.MultiService):
         self.nextNumber = 1
 
     def addSource(self, source):
-        assert providedBy(source, interfaces.IChangeSource)
-        assert providedBy(source, service.IService)
+        assert interfaces.IChangeSource.providedBy(source)
+        assert service.IService.providedBy(source)
         if self.debug:
             print "ChangeMaster.addSource", source
         source.setServiceParent(self)

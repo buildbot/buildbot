@@ -11,7 +11,7 @@ from twisted.spread import pb
 
 from buildbot import interfaces, buildset, util, pbutil
 from buildbot.status import builder
-from buildbot.twcompat import implements, providedBy
+from buildbot.twcompat import implements
 from buildbot.sourcestamp import SourceStamp
 from buildbot.changes import maildirtwisted
 
@@ -290,7 +290,7 @@ class Dependent(BaseUpstreamScheduler):
     compare_attrs = ('name', 'upstream', 'builders')
 
     def __init__(self, name, upstream, builderNames):
-        assert providedBy(upstream, interfaces.IUpstreamScheduler)
+        assert interfaces.IUpstreamScheduler.providedBy(upstream)
         BaseUpstreamScheduler.__init__(self, name)
         self.upstream = upstream
         self.builderNames = builderNames
