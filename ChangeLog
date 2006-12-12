@@ -1,5 +1,8 @@
 2006-12-11  Brian Warner  <warner@lothar.com>
 
+	* buildbot/process/maxq.py: remove this, the functionality now
+	lives in buildbot.steps.maxq
+
 	* buildbot/clients/debug.py: remove an unnecessary gnome.ui import
 	* buildbot/clients/gtkPanes.py: remove unused import
 
