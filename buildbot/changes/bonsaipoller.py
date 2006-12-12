@@ -1,6 +1,6 @@
 import time
 from urllib import urlopen
-from xml.dom import minidom, Node
+from xml.dom import minidom
 
 from twisted.python import log, failure
 from twisted.internet import defer, reactor

@@ -6,7 +6,7 @@ from zope.interface import implements
 from twisted.internet import defer
 
 from buildbot import interfaces
-from buildbot.status import base, mail
+from buildbot.status import mail
 from buildbot.status.builder import SUCCESS, WARNINGS
 
 import zlib, bz2, base64

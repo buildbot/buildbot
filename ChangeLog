@@ -1,5 +1,14 @@
 2006-12-11  Brian Warner  <warner@lothar.com>
 
+	* buildbot/changes/bonsaipoller.py: remove unused imports
+	* buildbot/changes/svnpoller.py: same
+	* buildbot/process/builder.py: same
+	* buildbot/process/buildstep.py: same
+	* buildbot/slave/bot.py: hush pyflakes warning
+	* buildbot/status/tests.py: remove unused imports
+	* buildbot/status/tinderbox.py: same
+	* buildbot/steps/python_twisted.py: same
+
 	* buildbot/process/step.py: remove this file, these names were
 	deprecated in 0.7.5 and are now being removed.
 	* buildbot/process/step_twisted.py: same

@@ -9,7 +9,6 @@ from twisted.python.failure import Failure
 from twisted.web.util import formatFailure
 
 from buildbot import interfaces
-from buildbot import util
 from buildbot.status import progress
 from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE, SKIPPED, \
      EXCEPTION

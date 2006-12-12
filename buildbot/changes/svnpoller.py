@@ -4,8 +4,6 @@
 # Changed to svn (using xml.dom.minidom) by Niklaus Giger
 # Hacked beyond recognition by Brian Warner
 
-import time
-
 from twisted.python import log
 from twisted.internet import defer, reactor, utils
 from twisted.internet.task import LoopingCall

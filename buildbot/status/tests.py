@@ -2,7 +2,6 @@
 
 from twisted.web import resource
 from twisted.web.error import NoResource
-from twisted.web.html import PRE
 
 # these are our test result types. Steps are responsible for mapping results
 # into these values.

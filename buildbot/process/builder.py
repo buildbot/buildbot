@@ -1,7 +1,5 @@
 #! /usr/bin/python
 
-import warnings
-
 from zope.interface import implements
 from twisted.python import log, components
 from twisted.spread import pb

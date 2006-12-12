@@ -11,8 +11,11 @@ from twisted.cred import credentials
 from buildbot.util import now
 from buildbot.pbutil import ReconnectingPBClientFactory
 from buildbot.slave import registry
-# make sure the standard commands get registered
+# make sure the standard commands get registered. This import is performed
+# for its side-effects.
 from buildbot.slave import commands
+# and make pyflakes think we aren't being stupid
+commands = commands
 
 class NoCommandRunning(pb.Error):
     pass
