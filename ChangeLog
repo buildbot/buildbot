@@ -1,5 +1,10 @@
 2006-12-11  Brian Warner  <warner@lothar.com>
 
+	* buildbot/slave/trial.py: remove an unused/incomplete/buggy file,
+	that was meant to provide a special Reporter to run inside trial
+	and give the buildslave lots of machine-readable status. We never
+	finished this project.
+
 	* buildbot/changes/bonsaipoller.py: remove unused imports
 	* buildbot/changes/svnpoller.py: same
 	* buildbot/process/builder.py: same
