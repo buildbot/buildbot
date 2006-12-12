@@ -1,5 +1,10 @@
 2006-12-11  Brian Warner  <warner@lothar.com>
 
+	* buildbot/changes/freshcvsmail.py: mark this file as deprecated,
+	scheduled for removal in 0.7.7 . The FCMaildirSource was moved to
+	buildbot.changes.mail a long time ago, but I forgot to add the
+	DeprecationWarning until now.
+
 	* buildbot/process/maxq.py: remove this, the functionality now
 	lives in buildbot.steps.maxq
 
