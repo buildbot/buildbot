@@ -1,0 +1,12 @@
+2007-01-10  Brian Warner  <warner@lothar.com>
+
+	* buildbot/steps/source.py (Bzr): add Bazaar-ng support
+	* buildbot/slave/commands.py (Bzr): same
+	* buildbot/scripts/tryclient.py (BzrExtractor): same
+	(SourceStampExtractor.dovc): modify this to allow non-zero exit
+	status, since 'bzr diff' does that
+	* buildbot/test/test_vc.py (Bzr): same
+	* docs/buildbot.texinfo (How Different VC Systems Specify Sources):
+	add notes on bzr
+	(Bzr): document it
+

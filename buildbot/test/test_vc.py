@@ -329,7 +329,8 @@ class BaseHelper:
         raise NotImplementedError
 
     def populate(self, basedir):
-        os.makedirs(basedir)
+        if not os.path.exists(basedir):
+            os.makedirs(basedir)
         os.makedirs(os.path.join(basedir, "subdir"))
         open(os.path.join(basedir, "main.c"), "w").write(MAIN_C)
         self.version = 1
@@ -2132,6 +2133,202 @@ class Bazaar(Arch):
         return d
 
 VCS.registerVC(Bazaar.vc_name, BazaarHelper())
+
+class BzrHelper(BaseHelper):
+    branchname = "branch"
+    try_branchname = "branch"
+
+    def capable(self):
+        bzrpaths = which('bzr')
+        if not bzrpaths:
+            return (False, "bzr is not installed")
+        self.vcexe = bzrpaths[0]
+        return (True, None)
+
+    def get_revision_number(self, out):
+        for line in out.split("\n"):
+            colon = line.index(":")
+            key, value = line[:colon], line[colon+2:]
+            if key == "revno":
+                return int(value)
+        raise RuntimeError("unable to find revno: in bzr output: '%s'" % out)
+
+    def createRepository(self):
+        self.createBasedir()
+        self.bzr_base = os.path.join(self.repbase, "Bzr-Repository")
+        self.rep_trunk = os.path.join(self.bzr_base, "trunk")
+        self.rep_branch = os.path.join(self.bzr_base, "branch")
+        tmp = os.path.join(self.repbase, "bzrtmp")
+        btmp = os.path.join(self.repbase, "bzrtmp-branch")
+
+        os.makedirs(self.rep_trunk)
+        w = self.dovc(self.rep_trunk, ["init"])
+        yield w; w.getResult()
+        w = self.dovc(self.bzr_base,
+                      ["branch", self.rep_trunk, self.rep_branch])
+        yield w; w.getResult()
+
+        w = self.dovc(self.repbase, ["checkout", self.rep_trunk, tmp])
+        yield w; w.getResult()
+        self.populate(tmp)
+        w = self.dovc(tmp, qw("add"))
+        yield w; w.getResult()
+        w = self.dovc(tmp, qw("commit -m initial_import"))
+        yield w; w.getResult()
+        w = self.dovc(tmp, qw("version-info"))
+        yield w; out = w.getResult()
+        self.addTrunkRev(self.get_revision_number(out))
+        rmdirRecursive(tmp)
+
+        # pull all trunk revisions to the branch
+        w = self.dovc(self.rep_branch, qw("pull"))
+        yield w; w.getResult()
+        # obtain a branch tree
+        w = self.dovc(self.repbase, ["checkout", self.rep_branch, btmp])
+        yield w; w.getResult()
+        # modify it
+        self.populate_branch(btmp)
+        w = self.dovc(btmp, qw("add"))
+        yield w; w.getResult()
+        w = self.dovc(btmp, qw("commit -m commit_on_branch"))
+        yield w; w.getResult()
+        w = self.dovc(btmp, qw("version-info"))
+        yield w; out = w.getResult()
+        self.addBranchRev(self.get_revision_number(out))
+        rmdirRecursive(btmp)
+    createRepository = deferredGenerator(createRepository)
+
+    def vc_revise(self):
+        tmp = os.path.join(self.repbase, "bzrtmp")
+        w = self.dovc(self.repbase, ["checkout", self.rep_trunk, tmp])
+        yield w; w.getResult()
+
+        self.version += 1
+        version_c = VERSION_C % self.version
+        open(os.path.join(tmp, "version.c"), "w").write(version_c)
+        w = self.dovc(tmp, qw("commit -m revised_to_%d" % self.version))
+        yield w; w.getResult()
+        w = self.dovc(tmp, qw("version-info"))
+        yield w; out = w.getResult()
+        self.addTrunkRev(self.get_revision_number(out))
+        rmdirRecursive(tmp)
+    vc_revise = deferredGenerator(vc_revise)
+
+    def vc_try_checkout(self, workdir, rev, branch=None):
+        assert os.path.abspath(workdir) == workdir
+        if os.path.exists(workdir):
+            rmdirRecursive(workdir)
+        #os.makedirs(workdir)
+        if not branch:
+            rep = self.rep_trunk
+        else:
+            rep = os.path.join(self.bzr_base, branch)
+        w = self.dovc(self.bzr_base, ["checkout", rep, workdir])
+        yield w; w.getResult()
+        open(os.path.join(workdir, "subdir", "subdir.c"), "w").write(TRY_C)
+    vc_try_checkout = deferredGenerator(vc_try_checkout)
+
+    def vc_try_finish(self, workdir):
+        rmdirRecursive(workdir)
+
+class Bzr(VCBase, unittest.TestCase):
+    vc_name = "bzr"
+
+    metadir = ".bzr"
+    vctype = "source.Bzr"
+    vctype_try = "bzr"
+    has_got_revision = True
+
+    def testCheckout(self):
+        self.helper.vcargs = { 'repourl': self.helper.rep_trunk }
+        d = self.do_vctest(testRetry=False)
+
+        # TODO: testRetry has the same problem with Bzr as it does for
+        # Arch
+        return d
+
+    def testPatch(self):
+        self.helper.vcargs = { 'baseURL': self.helper.bzr_base + "/",
+                               'defaultBranch': "trunk" }
+        d = self.do_patch()
+        return d
+
+    def testCheckoutBranch(self):
+        self.helper.vcargs = { 'baseURL': self.helper.bzr_base + "/",
+                               'defaultBranch': "trunk" }
+        d = self.do_branch()
+        return d
+
+    def testCheckoutHTTP(self):
+        self.serveHTTP()
+        repourl = "http://localhost:%d/Bzr-Repository/trunk" % self.httpPort
+        self.helper.vcargs =  { 'repourl': repourl }
+        d = self.do_vctest(testRetry=False)
+        return d
+
+
+    def fixRepository(self):
+        self.fixtimer = None
+        self.site.resource = self.root
+
+    def testRetry(self):
+        # this test takes a while to run
+        self.serveHTTP()
+
+        # break the repository server
+        from twisted.web import static
+        self.site.resource = static.Data("Sorry, repository is offline",
+                                         "text/plain")
+        # and arrange to fix it again in 5 seconds, while the test is
+        # running.
+        self.fixtimer = reactor.callLater(5, self.fixRepository)
+
+        repourl = "http://localhost:%d/Bzr-Repository/trunk" % self.httpPort
+        self.helper.vcargs =  { 'repourl': repourl,
+                                'retry': (5.0, 4),
+                                }
+        d = self.do_vctest_once(True)
+        d.addCallback(self._testRetry_1)
+        return d
+    def _testRetry_1(self, bs):
+        # make sure there was mention of the retry attempt in the logs
+        l = bs.getLogs()[0]
+        self.failUnlessIn("ERROR: Not a branch: ", l.getText(),
+                          "funny, VC operation didn't fail at least once")
+        self.failUnlessIn("update failed, trying 4 more times after 5 seconds",
+                          l.getTextWithHeaders(),
+                          "funny, VC operation wasn't reattempted")
+
+    def testRetryFails(self):
+        # make sure that the build eventually gives up on a repository which
+        # is completely unavailable
+
+        self.serveHTTP()
+
+        # break the repository server, and leave it broken
+        from twisted.web import static
+        self.site.resource = static.Data("Sorry, repository is offline",
+                                         "text/plain")
+
+        repourl = "http://localhost:%d/Bzr-Repository/trunk" % self.httpPort
+        self.helper.vcargs =  { 'repourl': repourl,
+                                'retry': (0.5, 3),
+                                }
+        d = self.do_vctest_once(False)
+        d.addCallback(self._testRetryFails_1)
+        return d
+    def _testRetryFails_1(self, bs):
+        self.failUnlessEqual(bs.getResults(), FAILURE)
+
+
+    def testTry(self):
+        self.helper.vcargs = { 'baseURL': self.helper.bzr_base + "/",
+                               'defaultBranch': "trunk" }
+        d = self.do_getpatch()
+        return d
+
+VCS.registerVC(Bzr.vc_name, BzrHelper())
+
 
 class MercurialHelper(BaseHelper):
     branchname = "branch"

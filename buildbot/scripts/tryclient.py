@@ -24,8 +24,15 @@ class SourceStampExtractor:
         command itself."""
         env = os.environ.copy()
         env['LC_ALL'] = "C"
-        return utils.getProcessOutput(self.exe, cmd, env=env,
-                                      path=self.treetop)
+        d = utils.getProcessOutputAndValue(self.exe, cmd, env=env,
+                                           path=self.treetop)
+        d.addCallback(self._didvc, cmd)
+        return d
+    def _didvc(self, res, cmd):
+        (stdout, stderr, code) = res
+        # 'bzr diff' sets rc=1 if there were any differences. tla, baz, and
+        # cvs do something similar, so don't bother requring rc=0.
+        return stdout
 
     def get(self):
         """Return a Deferred that fires with a SourceStamp instance."""
@@ -107,6 +114,7 @@ class SVNExtractor(SourceStampExtractor):
         return d
 
 class BazExtractor(SourceStampExtractor):
+    patchlevel = 1
     vcexe = "baz"
     def getBaseRevision(self):
         d = self.dovc(["tree-id"])
@@ -120,10 +128,11 @@ class BazExtractor(SourceStampExtractor):
         self.baserev = tid[dd+2:]
     def getPatch(self, res):
         d = self.dovc(["diff"])
-        d.addCallback(self.readPatch, 1)
+        d.addCallback(self.readPatch, self.patchlevel)
         return d
 
 class TlaExtractor(SourceStampExtractor):
+    patchlevel = 1
     vcexe = "tla"
     def getBaseRevision(self):
         # 'tla logs --full' gives us ARCHIVE/BRANCH--REVISION
@@ -140,7 +149,29 @@ class TlaExtractor(SourceStampExtractor):
 
     def getPatch(self, res):
         d = self.dovc(["changes", "--diffs"])
-        d.addCallback(self.readPatch, 1)
+        d.addCallback(self.readPatch, self.patchlevel)
+        return d
+
+class BzrExtractor(SourceStampExtractor):
+    patchlevel = 0
+    vcexe = "bzr"
+    def getBaseRevision(self):
+        d = self.dovc(["version-info"])
+        d.addCallback(self.get_revision_number)
+        return d
+    def get_revision_number(self, out):
+        for line in out.split("\n"):
+            colon = line.find(":")
+            if colon != -1:
+                key, value = line[:colon], line[colon+2:]
+                if key == "revno":
+                    self.baserev = int(value)
+                    return
+        raise ValueError("unable to find revno: in bzr output: '%s'" % out)
+
+    def getPatch(self, res):
+        d = self.dovc(["diff"])
+        d.addCallback(self.readPatch, self.patchlevel)
         return d
 
 class MercurialExtractor(SourceStampExtractor):
@@ -179,6 +210,8 @@ def getSourceStamp(vctype, treetop, branch=None):
         e = SVNExtractor(treetop, branch)
     elif vctype == "baz":
         e = BazExtractor(treetop, branch)
+    elif vctype == "bzr":
+        e = BzrExtractor(treetop, branch)
     elif vctype == "tla":
         e = TlaExtractor(treetop, branch)
     elif vctype == "hg":

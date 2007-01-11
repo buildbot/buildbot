@@ -179,6 +179,7 @@ Source Checkout
 * Mercurial::                   
 * Arch::                        
 * Bazaar::                      
+* Bzr::                         
 * P4::                          
 
 Simple ShellCommand Subclasses
@@ -1195,21 +1196,24 @@ For the purposes of the Buildbot, we will try to generalize all VC
 systems as having repositories that each provide sources for a variety
 of projects. Each project is defined as a directory tree with source
 files. The individual files may each have revisions, but we ignore
-that and treat the project as a whole as having a set of revisions.
-Each time someone commits a change to the project, a new revision
-becomes available. These revisions can be described by a tuple with
-two items: the first is a branch tag, and the second is some kind of
-timestamp or revision stamp. Complex projects may have multiple branch
-tags, but there is always a default branch. The timestamp may be an
-actual timestamp (such as the -D option to CVS), or it may be a
-monotonically-increasing transaction number (such as the change number
-used by SVN and P4, or the revision number used by Arch, or a labeled
-tag used in CVS)@footnote{many VC systems provide more complexity than
-this: in particular the local views that P4 and ClearCase can assemble
-out of various source directories are more complex than we're prepared
-to take advantage of here}. The SHA1 revision ID used by Monotone and
-Mercurial is also a kind of revision stamp, in that it specifies a
-unique copy of the source tree, as does a Darcs ``context'' file.
+that and treat the project as a whole as having a set of revisions
+(CVS is really the only VC system still in widespread use that has
+per-file revisions.. everything modern has moved to atomic tree-wide
+changesets). Each time someone commits a change to the project, a new
+revision becomes available. These revisions can be described by a
+tuple with two items: the first is a branch tag, and the second is
+some kind of revision stamp or timestamp. Complex projects may have
+multiple branch tags, but there is always a default branch. The
+timestamp may be an actual timestamp (such as the -D option to CVS),
+or it may be a monotonically-increasing transaction number (such as
+the change number used by SVN and P4, or the revision number used by
+Arch/Baz/Bazaar, or a labeled tag used in CVS)@footnote{many VC
+systems provide more complexity than this: in particular the local
+views that P4 and ClearCase can assemble out of various source
+directories are more complex than we're prepared to take advantage of
+here}. The SHA1 revision ID used by Monotone and Mercurial is also a
+kind of revision stamp, in that it specifies a unique copy of the
+source tree, as does a Darcs ``context'' file.
 
 When we aren't intending to make any changes to the sources we check out
 (at least not any that need to be committed back upstream), there are two
@@ -1353,6 +1357,30 @@ a complete category--branch--version triple). Each build can have its
 own branch (the category--branch--version string) to override the
 default, as well as a revision number (which is turned into a
 --patch-NN suffix when performing the checkout).
+
+
+@uref{http://bazaar-vcs.org, Bzr} (which is a descendant of
+Arch/Bazaar, and is frequently referred to as ``Bazaar'') has the same
+sort of repository-vs-workspace model as Arch, but the repository data
+can either be stored inside the working directory or kept elsewhere
+(either on the same machine or on an entirely different machine). For
+the purposes of Buildbot (which never commits changes), the repository
+is specified with a URL and a revision number.
+
+The most common way to obtain read-only access to a bzr tree is via
+HTTP, simply by making the repository visible through a web server
+like Apache. Bzr can also use FTP and SFTP servers, if the buildslave
+process has sufficient privileges to access them. Higher performance
+can be obtained by running a special Bazaar-specific server. None of
+these matter to the buildbot: the repository URL just has to match the
+kind of server being used. The @code{repoURL} argument provides the
+location of the repository.
+
+Branches are expressed as subdirectories of the main central
+repository, which means that if branches are being used, the BZR step
+is given a @code{baseURL} and @code{defaultBranch} instead of getting
+the @code{repoURL} argument.
+
 
 @uref{http://abridgegame.org/darcs/, Darcs} doesn't really have the
 notion of a single master repository. Nor does it really have
@@ -3347,6 +3375,7 @@ arguments are described on the following pages.
 * Mercurial::                   
 * Arch::                        
 * Bazaar::                      
+* Bzr::                         
 * P4::                          
 @end menu
 
@@ -3631,7 +3660,7 @@ step, below.
 
 @end table
 
-@node Bazaar, P4, Arch, Source Checkout
+@node Bazaar, Bzr, Arch, Source Checkout
 @subsubsection Bazaar
 
 @cindex Bazaar Checkout
@@ -3649,7 +3678,40 @@ name when you do @code{baz register-archive}, so we must provide it
 ourselves).
 
 
-@node P4,  , Bazaar, Source Checkout
+@node Bzr, P4, Bazaar, Source Checkout
+@subsubsection Bzr
+
+@cindex Bzr Checkout
+@bsindex buildbot.steps.source.Bzr
+
+@code{bzr} is a descendant of Arch/Baz, and is frequently referred to
+as simply ``Bazaar''. The repository-vs-workspace model is similar to
+Darcs, but it uses a strictly linear sequence of revisions (one
+history per branch) like Arch. Branches are put in subdirectories.
+This makes it look very much like Mercurial, so it takes the same
+arguments:
+
+@table @code
+
+@item repourl
+(required unless @code{baseURL} is provided): the URL at which the
+Bzr source repository is available.
+
+@item baseURL
+(required unless @code{repourl} is provided): the base repository URL,
+to which a branch name will be appended. It should probably end in a
+slash.
+
+@item defaultBranch
+(allowed if and only if @code{baseURL} is provided): this specifies
+the name of the branch to use when a Build does not provide one of its
+own. This will be appended to @code{baseURL} to create the string that
+will be passed to the @code{bzr checkout} command.
+@end table
+
+
+
+@node P4,  , Bzr, Source Checkout
 @subsubsection P4
 
 @cindex Perforce Update

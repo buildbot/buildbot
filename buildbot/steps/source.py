@@ -735,6 +735,72 @@ class Bazaar(Arch):
         cmd = LoggedRemoteCommand("bazaar", self.args)
         self.startCommand(cmd, warnings)
 
+class Bzr(Source):
+    """Check out a source tree from a bzr (Bazaar) repository at 'repourl'.
+
+    """
+
+    name = "bzr"
+
+    def __init__(self, repourl=None, baseURL=None, defaultBranch=None,
+                 **kwargs):
+        """
+        @type  repourl: string
+        @param repourl: the URL which points at the bzr repository. This
+                        is used as the default branch. Using C{repourl} does
+                        not enable builds of alternate branches: use
+                        C{baseURL} to enable this. Use either C{repourl} or
+                        C{baseURL}, not both.
+
+        @param baseURL: if branches are enabled, this is the base URL to
+                        which a branch name will be appended. It should
+                        probably end in a slash. Use exactly one of
+                        C{repourl} and C{baseURL}.
+                         
+        @param defaultBranch: if branches are enabled, this is the branch
+                              to use if the Build does not specify one
+                              explicitly. It will simply be appended to
+                              C{baseURL} and the result handed to the
+                              'bzr checkout pull' command.
+        """
+        self.repourl = repourl
+        self.baseURL = baseURL
+        self.branch = defaultBranch
+        Source.__init__(self, **kwargs)
+        if (not repourl and not baseURL) or (repourl and baseURL):
+            raise ValueError("you must provide exactly one of repourl and"
+                             " baseURL")
+
+    def computeSourceRevision(self, changes):
+        if not changes:
+            return None
+        lastChange = max([int(c.revision) for c in changes])
+        return lastChange
+
+    def startVC(self, branch, revision, patch):
+        slavever = self.slaveVersion("bzr")
+        if not slavever:
+            m = "slave is too old, does not know about bzr"
+            raise BuildSlaveTooOldError(m)
+
+        if self.repourl:
+            assert not branch # we need baseURL= to use branches
+            self.args['repourl'] = self.repourl
+        else:
+            self.args['repourl'] = self.baseURL + branch
+        self.args['revision'] = revision
+        self.args['patch'] = patch
+
+        revstuff = []
+        if branch is not None and branch != self.branch:
+            revstuff.append("[branch]")
+        self.description.extend(revstuff)
+        self.descriptionDone.extend(revstuff)
+
+        cmd = LoggedRemoteCommand("bzr", self.args)
+        self.startCommand(cmd)
+
+
 class Mercurial(Source):
     """Check out a source tree from a mercurial repository 'repourl'."""
 
