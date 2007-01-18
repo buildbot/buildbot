@@ -4,14 +4,18 @@ from twisted.cred import credentials
 from twisted.internet import reactor
 
 class Sender:
-    def __init__(self, master, user):
+    def __init__(self, master, user=None):
         self.user = user
         self.host, self.port = master.split(":")
         self.port = int(self.port)
+        self.num_changes = 0
 
-    def send(self, branch, revision, comments, files):
-        change = {'who': self.user, 'files': files, 'comments': comments,
+    def send(self, branch, revision, comments, files, user=None):
+        if user is None:
+            user = self.user
+        change = {'who': user, 'files': files, 'comments': comments,
                   'branch': branch, 'revision': revision}
+        self.num_changes += 1
 
         f = pb.PBClientFactory()
         d = f.login(credentials.UsernamePassword("change", "changepw"))
@@ -25,9 +29,15 @@ class Sender:
         return d
 
     def printSuccess(self, res):
-        print "change sent successfully"
+        if self.num_changes > 1:
+            print "%d changes sent successfully" % self.num_changes
+        elif self.num_changes == 1:
+            print "change sent successfully"
+        else:
+            print "no changes to send"
+
     def printFailure(self, why):
-        print "change NOT sent"
+        print "change(s) NOT sent, something went wrong:"
         print why
 
     def stop(self, res):
