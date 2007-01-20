@@ -121,15 +121,25 @@ def findNewChanges():
 
 changes = findNewChanges()
 s = sendchange.Sender(MASTER, None)
+
 d = defer.Deferred()
 reactor.callLater(0, d.callback, None)
+
+if not changes:
+    print "darcs_buildbot.py: weird, no changes to send"
+elif len(changes) == 1:
+    print "sending 1 change to buildmaster:"
+else:
+    print "sending %d changes to buildmaster:" % len(changes)
+
 def _send(res, c):
     branch = None
-    print "sending", c['revision'], "to buildbot"
+    print " %s" % c['revision']
     return s.send(branch, c['revision'], c['comments'], c['files'],
                   c['username'])
 for c in changes:
     d.addCallback(_send, c)
+
 d.addCallbacks(s.printSuccess, s.printFailure)
 d.addBoth(s.stop)
 s.run()

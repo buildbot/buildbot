@@ -1,3 +1,7 @@
+2007-01-20  Brian Warner  <warner@lothar.com>
+
+	* contrib/darcs_buildbot.py: tidy up the progress messages
+
 2007-01-17  Brian Warner  <warner@lothar.com>
 
 	* contrib/darcs_buildbot.py: enhance to handle multiple patches
