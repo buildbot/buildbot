@@ -1,9 +1,0 @@
-still to do:
-
- repourl vs repoURL, make it consistent in docs and code
- it would be nice to name this Bazaar, instead of Bzr. Need a transition
-  plan for the old baz step.
-  old: Arch (tla), Bazaar (baz)
-  new?: Arch (tla), Baz (baz), Bazaar (bzr)
- use of 'bzr version-info' vs 'bzr revno', maybe a bzr bug
-
