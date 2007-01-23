@@ -1,5 +1,11 @@
 2007-01-22  Brian Warner  <warner@lothar.com>
 
+	* contrib/bb_applet.py: add a simple gnome-panel applet, to
+	display a terse summary of buildbot status.
+	* docs/hexnut32.png, docs/hexnut48.png, docs/hexnut64.png: add
+	some icons, small versions of the Blender object that lives in
+	docs/images/icon.blend
+
 	* buildbot/steps/source.py (Bzr): add Bazaar-ng support
 	* buildbot/slave/commands.py (Bzr): same
 	* buildbot/scripts/tryclient.py (BzrExtractor): same
