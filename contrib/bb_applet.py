@@ -67,7 +67,7 @@ class Box:
 
     def create(self):
         self.vbox = gtk.VBox(False)
-        l = gtk.Label("")
+        l = gtk.Label(".")
         self.current_box = box = gtk.EventBox()
         # these size requests are somewhat non-deterministic. I think it
         # depends upon how large label is, or how much space was already
@@ -78,13 +78,13 @@ class Box:
         self.current_box.modify_bg(gtk.STATE_NORMAL,
                                    gtk.gdk.color_parse("gray50"))
 
-        l2 = gtk.Label("")
+        l2 = gtk.Label(".")
         self.last_box = gtk.EventBox()
         self.current_box.set_size_request(self.hslice, self.size * 0.25)
         self.last_box.add(l2)
         self.vbox.pack_end(self.last_box, True, True)
         self.vbox.show_all()
-        self.hbox.pack_end(self.vbox, True, True)
+        self.hbox.pack_start(self.vbox, True, True)
 
     def remove(self):
         self.hbox.remove(self.box)
