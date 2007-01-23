@@ -1,5 +1,8 @@
 2007-01-22  Brian Warner  <warner@lothar.com>
 
+	* buildbot/process/builder.py (Builder.fireTestEvent): don't use
+	'with', it will become a reserved work in python2.6 .
+
 	* contrib/bb_applet.py: add a simple gnome-panel applet, to
 	display a terse summary of buildbot status.
 	* docs/hexnut32.png, docs/hexnut48.png, docs/hexnut64.png: add

@@ -380,13 +380,13 @@ class Builder(pb.Referenceable):
 
         return # all done
 
-    def fireTestEvent(self, name, with=None):
-        if with is None:
-            with = self
+    def fireTestEvent(self, name, fire_with=None):
+        if fire_with is None:
+            fire_with = self
         watchers = self.watchers[name]
         self.watchers[name] = []
         for w in watchers:
-            reactor.callLater(0, w.callback, with)
+            reactor.callLater(0, w.callback, fire_with)
 
     def attached(self, slave, remote, commands):
         """This is invoked by the BotPerspective when the self.slavename bot
