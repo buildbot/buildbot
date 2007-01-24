@@ -8,3 +8,5 @@ warnings.warn("buildbot.changes.freshcvsmail is deprecated as of 0.7.6 . Please 
               DeprecationWarning)
 
 from buildbot.changes.mail import FCMaildirSource
+
+hush_pyflakes = FCMaildirSource

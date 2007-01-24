@@ -1,5 +1,8 @@
 2007-01-23  Brian Warner  <warner@lothar.com>
 
+	* buildbot/changes/freshcvsmail.py: hush a pyflakes warning
+	* buildbot/changes/monotone.py: same
+
 	* buildbot/changes/maildir.py: combine several files into one,
 	clean up maildir.py to use Services properly.
 	* buildbot/changes/maildirtwisted.py: remove

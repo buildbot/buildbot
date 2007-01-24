@@ -1,7 +1,6 @@
 
 import tempfile
 import os
-import os.path
 from cStringIO import StringIO
 
 from twisted.python import log
