@@ -1,5 +1,14 @@
 2007-01-23  Brian Warner  <warner@lothar.com>
 
+	* buildbot/changes/maildir.py: combine several files into one,
+	clean up maildir.py to use Services properly.
+	* buildbot/changes/maildirtwisted.py: remove
+	* buildbot/changes/maildirgtk.py: remove, it wasn't used by
+	buildbot anyways.
+	* buildbot/changes/mail.py: match the change
+	* buildbot/scheduler.py: same, since Try_Jobdir uses a maildir
+	* buildbot/test/test_maildir.py: remove use of reactor.iterate()
+
 	* buildbot/slave/commands.py (command_version): bump to "2.3" to
 	indicate that the buildslave knows about the 'bzr' command
 

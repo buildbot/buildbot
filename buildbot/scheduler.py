@@ -13,7 +13,7 @@ from twisted.spread import pb
 from buildbot import interfaces, buildset, util, pbutil
 from buildbot.status import builder
 from buildbot.sourcestamp import SourceStamp
-from buildbot.changes import maildirtwisted
+from buildbot.changes.maildir import MaildirService
 
 
 class BaseScheduler(service.MultiService, util.ComparableMixin):
@@ -550,7 +550,7 @@ class Try_Jobdir(TryBase):
     def __init__(self, name, builderNames, jobdir):
         TryBase.__init__(self, name, builderNames)
         self.jobdir = jobdir
-        self.watcher = maildirtwisted.MaildirService()
+        self.watcher = MaildirService()
         self.watcher.setServiceParent(self)
 
     def setServiceParent(self, parent):

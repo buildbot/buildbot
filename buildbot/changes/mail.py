@@ -6,8 +6,11 @@ Parse various kinds of 'CVS notify' email.
 import os, re
 from rfc822 import Message
 
+from zope.interface import implements
 from buildbot import util
-from buildbot.changes import base, changes, maildirtwisted
+from buildbot.interfaces import IChangeSource
+from buildbot.changes import changes
+from buildbot.changes.maildir import MaildirService
 
 def parseFreshCVSMail(self, fd, prefix=None, sep="/"):
     """Parse mail sent by FreshCVS"""
@@ -294,16 +297,18 @@ def parseBonsaiMail(self, fd, prefix=None, sep="/"):
 
 
 
-class MaildirSource(maildirtwisted.MaildirTwisted, base.ChangeSource):
+class MaildirSource(MaildirService, util.ComparableMixin):
     """This source will watch a maildir that is subscribed to a FreshCVS
     change-announcement mailing list.
     """
-    compare_attrs = ["basedir", "newdir", "pollinterval", "parser"]
+    implements(IChangeSource)
+
+    compare_attrs = ["basedir", "pollinterval", "parser"]
     parser = None
     name = None
 
     def __init__(self, maildir, prefix=None, sep="/"):
-        maildirtwisted.MaildirTwisted.__init__(self, maildir)
+        MaildirService.__init__(self, maildir)
         self.prefix = prefix
         self.sep = sep
 
