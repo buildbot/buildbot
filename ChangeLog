@@ -1,3 +1,8 @@
+2007-01-23  Brian Warner  <warner@lothar.com>
+
+	* buildbot/slave/commands.py (command_version): bump to "2.3" to
+	indicate that the buildslave knows about the 'bzr' command
+
 2007-01-22  Brian Warner  <warner@lothar.com>
 
 	* buildbot/process/builder.py (Builder.fireTestEvent): don't use

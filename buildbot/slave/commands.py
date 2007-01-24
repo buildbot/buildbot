@@ -15,7 +15,7 @@ from buildbot.slave.registry import registerSlaveCommand
 # this used to be a CVS $-style "Revision" auto-updated keyword, but since I
 # moved to Darcs as the primary repository, this is updated manually each
 # time this file is changed. The last cvs_ver that was here was 1.51 .
-command_version = "2.2"
+command_version = "2.3"
 
 # version history:
 #  >=1.17: commands are interruptable
@@ -34,6 +34,7 @@ command_version = "2.2"
 #          keepStdinOpen=) and no longer accepts stdin=)
 #          (release 0.7.4)
 #  >= 2.2: added monotone, uploadFile, and downloadFile (release 0.7.5)
+#  >= 2.3: added bzr
 
 class CommandInterrupted(Exception):
     pass
