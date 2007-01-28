@@ -1,3 +1,8 @@
+2007-01-27  Brian Warner  <warner@lothar.com>
+
+	* Makefile (release): produce both .tar.gz and .zip source bundles.
+	Closes SF#1222216.
+
 2007-01-23  Brian Warner  <warner@lothar.com>
 
 	* buildbot/changes/freshcvsmail.py: hush a pyflakes warning

@@ -50,7 +50,7 @@ release: docs
 	rm -rf _trial_temp
 	python ./setup.py clean
 	rm -f MANIFEST
-	python ./setup.py sdist
+	python ./setup.py sdist --formats gztar,zip
 
 FLAKES=buildbot
 pyflakes:
