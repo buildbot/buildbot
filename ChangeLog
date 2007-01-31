@@ -1,3 +1,9 @@
+2007-01-30  Brian Warner  <warner@lothar.com>
+
+	* buildbot/changes/bonsaipoller.py (BonsaiParser.__init__): Ben
+	Hearsum contributed a patch to let BonsaiPoller work with results
+	that contain non-ascii characters. Closes SF#1632641.
+
 2007-01-27  Brian Warner  <warner@lothar.com>
 
 	* Makefile (release): produce both .tar.gz and .zip source bundles.
