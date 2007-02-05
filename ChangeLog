@@ -1,3 +1,9 @@
+2007-02-05  Brian Warner  <warner@lothar.com>
+
+	* buildbot/status/mail.py (MailNotifier.__init__): assert that 'mode'
+	is one of the three known values, otherwise we emit some confusing
+	messages later on. Thanks to Grig Gheorghiu for the catch.
+
 2007-01-30  Brian Warner  <warner@lothar.com>
 
 	* buildbot/changes/bonsaipoller.py (BonsaiParser.__init__): Ben
