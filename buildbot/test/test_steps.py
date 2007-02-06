@@ -96,22 +96,33 @@ class BuildStep(unittest.TestCase):
     def testShellCommand1(self):
         cmd = "argle bargle"
         dir = "murkle"
-        expectedEvents = []
+        self.expectedEvents = []
         buildstep.RemoteCommand.commandCounter[0] = 3
         c = MyShellCommand(workdir=dir, command=cmd, build=self.build,
                            timeout=10)
-        self.assertEqual(self.remote.events, expectedEvents)
+        self.assertEqual(self.remote.events, self.expectedEvents)
         c.step_status = self.build_status.addStepWithName("myshellcommand")
         d = c.startStep(self.remote)
         self.failUnless(c.started)
-        rc = c.rc
         d.addCallbacks(self.callback, self.errback)
-        timeout = time.time() + 10
-        while self.remote.remoteCalls == 0:
-            if time.time() > timeout:
-                self.fail("timeout")
-            reactor.iterate(0.01)
-        expectedEvents.append(["callRemote", "startCommand",
+        d2 = self.poll()
+        d2.addCallback(self._testShellCommand1_2, c)
+        return d2
+    testShellCommand1.timeout = 10
+
+    def poll(self, ignored=None):
+        # TODO: This is gross, but at least it's no longer using
+        # reactor.iterate() . Still, get rid of this some day soon.
+        if self.remote.remoteCalls == 0:
+            d = defer.Deferred()
+            d.addCallback(self.poll)
+            reactor.callLater(0.1, d.callback, None)
+            return d
+        return defer.succeed(None)
+
+    def _testShellCommand1_2(self, res, c):
+        rc = c.rc
+        self.expectedEvents.append(["callRemote", "startCommand",
                                (rc, "3",
                                "shell",
                                 {'command': "argle bargle",
@@ -121,7 +132,7 @@ class BuildStep(unittest.TestCase):
                                  'logfiles': {},
                                  'timeout': 10,
                                  'env': None}) ] )
-        self.assertEqual(self.remote.events, expectedEvents)
+        self.assertEqual(self.remote.events, self.expectedEvents)
 
         # we could do self.remote.deferred.errback(UnknownCommand) here. We
         # could also do .callback(), but generally the master end silently
@@ -149,11 +160,19 @@ class BuildStep(unittest.TestCase):
         
         rc.remote_complete()
         # that should fire the Deferred
-        timeout = time.time() + 10
-        while not self.finished:
-            if time.time() > timeout:
-                self.fail("timeout")
-            reactor.iterate(0.01)
+        d = self.poll2()
+        d.addCallback(self._testShellCommand1_3)
+        return d
+
+    def poll2(self, ignored=None):
+        if not self.finished:
+            d = defer.Deferred()
+            d.addCallback(self.poll2)
+            reactor.callLater(0.1, d.callback, None)
+            return d
+        return defer.succeed(None)
+
+    def _testShellCommand1_3(self, res):
         self.assertEqual(self.failed, 0)
         self.assertEqual(self.results, 0)
 
