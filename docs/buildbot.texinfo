@@ -596,29 +596,24 @@ and a buildslave):
 @item
 Python: http://www.python.org
 
-Buildbot requires python-2.2 or later, and is primarily developed
-against python-2.3. The buildmaster uses generators, a feature which
-is not available in python-2.1, and both master and slave require a
-version of Twisted which only works with python-2.2 or later. Certain
-features (like the inclusion of build logs in status emails) require
-python-2.2.2 or later. The IRC ``force build'' command requires
-python-2.3 (for the shlex.split function).
+Buildbot requires python-2.3 or later, and is primarily developed
+against python-2.4. It is also tested against python-2.5 .
 
 @item
 Twisted: http://twistedmatrix.com
 
-Both the buildmaster and the buildslaves require Twisted-1.3.0 or
-later. It has been mainly developed against Twisted-2.0.1, but has
-been tested against Twisted-2.1.0 (the most recent as of this
-writing), and might even work on versions as old as Twisted-1.1.0, but
-as always the most recent version is recommended.
+Both the buildmaster and the buildslaves require Twisted-2.0.x or
+later. It has been tested against all releases of Twisted up to
+Twisted-2.5.0 (the most recent as of this writing). As always, the
+most recent version is recommended.
 
-Twisted-1.3.0 and earlier were released as a single monolithic
-package. When you run Buildbot against Twisted-2.0.0 or later (which
-are split into a number of smaller subpackages), you'll need at least
-"Twisted" (the core package), and you'll also want TwistedMail,
+Twisted is delivered as a collection of subpackages. You'll need at
+least "Twisted" (the core package), and you'll also want TwistedMail,
 TwistedWeb, and TwistedWords (for sending email, serving a web status
-page, and delivering build status via IRC, respectively).
+page, and delivering build status via IRC, respectively). You might
+also want TwistedConch (for the encrypted Manhole debug port). Note
+that Twisted requires ZopeInterface to be installed as well.
+
 @end itemize
 
 Certain other packages may be useful on the system running the

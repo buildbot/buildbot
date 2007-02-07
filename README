@@ -53,13 +53,13 @@ REQUIREMENTS:
  Python: http://www.python.org
 
    Buildbot requires python-2.3 or later, and is primarily developed against
-   python-2.4 . It has *not* yet been tested against python-2.5 .
+   python-2.4 . It is also tested against python-2.5 .
 
  Twisted: http://twistedmatrix.com
 
    Both the buildmaster and the buildslaves require Twisted-2.0.x or later.
    As always, the most recent version is recommended. It has been tested
-   against Twisted-2.4.0 and Twisted SVN as of the date of release.
+   against Twisted-2.5.0 and Twisted SVN as of the date of release.
 
    Twisted is delivered as a collection of subpackages. You'll need at least
    "Twisted" (the core package), and you'll also want TwistedMail,

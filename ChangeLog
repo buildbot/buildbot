@@ -1,5 +1,10 @@
 2007-02-06  Brian Warner  <warner@lothar.com>
 
+	* docs/buildbot.texinfo (Requirements): update requirements to
+	stop claiming compatibility with python-2.2 or twisted-1.3.x .
+	Closes #13.
+	* README: mention python-2.5 and twisted-2.5 compatibility
+
 	* buildbot/clients/debug.py: hush pyflakes warnings by removing a
 	redundant import
 	* buildbot/scripts/startup.py: same, by removing twisted-1.3.0
