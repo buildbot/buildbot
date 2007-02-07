@@ -1,5 +1,8 @@
 2007-02-06  Brian Warner  <warner@lothar.com>
 
+	* buildbot/master.py (BuildMaster.loadConfig): warn the user if we
+	see any Builders that don't have Schedulers to drive them
+
 	* buildbot/master.py (BotPerspective.__repr__): fit bitrot, the
 	attributes this uses went away
 

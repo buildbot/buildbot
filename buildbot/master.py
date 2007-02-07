@@ -721,11 +721,15 @@ class BuildMaster(service.MultiService, styles.Versioned):
                                  % (b['name'], b['builddir']))
             dirnames.append(b['builddir'])
 
+        unscheduled_buildernames = buildernames[:]
         schedulernames = []
         for s in schedulers:
             for b in s.listBuilderNames():
                 assert b in buildernames, \
                        "%s uses unknown builder %s" % (s, b)
+                if b in unscheduled_buildernames:
+                    unscheduled_buildernames.remove(b)
+
             if s.name in schedulernames:
                 # TODO: schedulers share a namespace with other Service
                 # children of the BuildMaster node, like status plugins, the
@@ -735,6 +739,10 @@ class BuildMaster(service.MultiService, styles.Versioned):
                        "'%s' was a duplicate" % (s.name,))
                 raise ValueError(msg)
             schedulernames.append(s.name)
+
+        if unscheduled_buildernames:
+            log.msg("Warning: some Builders have no Schedulers to drive them:"
+                    " %s" % (unscheduled_buildernames,))
 
         # assert that all locks used by the Builds and their Steps are
         # uniquely named.
