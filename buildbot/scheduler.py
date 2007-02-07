@@ -563,7 +563,7 @@ class Try_Jobdir(TryBase):
         #  "1", the version number of this format
         #  buildsetID, arbitrary string, used to find the buildSet later
         #  branch name, "" for default-branch
-        #  base revision
+        #  base revision, "" for HEAD
         #  patchlevel, usually "1"
         #  patch
         #  builderNames...
@@ -579,6 +579,8 @@ class Try_Jobdir(TryBase):
         builderNames = s[5:]
         if branch == "":
             branch = None
+        if baserev == "":
+            baserev = None
         patchlevel = int(patchlevel)
         patch = (patchlevel, diff)
         ss = SourceStamp(branch, baserev, patch)

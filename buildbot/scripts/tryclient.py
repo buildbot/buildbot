@@ -341,28 +341,43 @@ class Try(pb.Referenceable):
         self.bsid = "%d-%s" % (time.time(), random.randint(0, 1000000))
 
         # common options
-        vc = self.getopt("vc", "try_vc")
         branch = self.getopt("branch", "try_branch")
 
-        if vc in ("cvs", "svn"):
-            # we need to find the tree-top
-            topdir = self.getopt("try_topdir", "try_topdir")
-            if topdir:
-                treedir = os.path.expanduser(topdir)
+        difffile = self.config.get("diff")
+        if difffile:
+            baserev = self.config.get("baserev")
+            if difffile == "-":
+                diff = sys.stdin.read()
             else:
-                topfile = self.getopt("try-topfile", "try_topfile")
-                treedir = getTopdir(topfile)
+                diff = open(difffile,"r").read()
+            patch = (self.config['patchlevel'], diff)
+            ss = SourceStamp(branch, baserev, patch)
+            d = defer.succeed(ss)
         else:
-            treedir = os.getcwd()
-        d = getSourceStamp(vc, treedir, branch)
+            vc = self.getopt("vc", "try_vc")
+            if vc in ("cvs", "svn"):
+                # we need to find the tree-top
+                topdir = self.getopt("try_topdir", "try_topdir")
+                if topdir:
+                    treedir = os.path.expanduser(topdir)
+                else:
+                    topfile = self.getopt("try-topfile", "try_topfile")
+                    treedir = getTopdir(topfile)
+            else:
+                treedir = os.getcwd()
+            d = getSourceStamp(vc, treedir, branch)
         d.addCallback(self._createJob_1)
         return d
+
     def _createJob_1(self, ss):
         self.sourcestamp = ss
         if self.connect == "ssh":
             patchlevel, diff = ss.patch
+            revspec = ss.revision
+            if revspec is None:
+                revspec = ""
             self.jobfile = createJobfile(self.bsid,
-                                         ss.branch or "", ss.revision,
+                                         ss.branch or "", revspec,
                                          patchlevel, diff,
                                          self.builderNames)
 

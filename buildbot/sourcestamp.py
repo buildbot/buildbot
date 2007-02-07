@@ -6,17 +6,17 @@ class SourceStamp(util.ComparableMixin):
     """This is a tuple of (branch, revision, patchspec, changes).
 
     C{branch} is always valid, although it may be None to let the Source
-    step use its default branch. There are four possibilities for the
+    step use its default branch. There are three possibilities for the
     remaining elements:
-     - (revision=REV, patchspec=None, changes=None): build REV
+     - (revision=REV, patchspec=None, changes=None): build REV. If REV is
+       None, build the HEAD revision from the given branch.
      - (revision=REV, patchspec=(LEVEL, DIFF), changes=None): checkout REV,
        then apply a patch to the source, with C{patch -pPATCHLEVEL <DIFF}.
+       If REV is None, checkout HEAD and patch it.
      - (revision=None, patchspec=None, changes=[CHANGES]): let the Source
        step check out the latest revision indicated by the given Changes.
        CHANGES is a list of L{buildbot.changes.changes.Change} instances,
        and all must be on the same branch.
-     - (revision=None, patchspec=None, changes=None): build the latest code
-       from the given branch.
     """
 
     # all four of these are publically visible attributes

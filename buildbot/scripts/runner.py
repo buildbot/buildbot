@@ -585,7 +585,15 @@ class TryOptions(usage.Options):
         ["master", "m", None,
          "Location of the buildmaster's PBListener (host:port)"],
         ["passwd", None, None, "password for PB authentication"],
-        
+
+        ["diff", None, None,
+         "Filename of a patch to use instead of scanning a local tree. Use '-' for stdin."],
+        ["patchlevel", "p", 0,
+         "Number of slashes to remove from patch pathnames, like the -p option to 'patch'"],
+
+        ["baserev", None, None,
+         "Base revision to use instead of scanning a local tree."],
+
         ["vc", None, None,
          "The VC system in use, one of: cvs,svn,tla,baz,darcs"],
         ["branch", None, None,
@@ -606,6 +614,9 @@ class TryOptions(usage.Options):
 
     def opt_builder(self, option):
         self['builders'].append(option)
+
+    def opt_patchlevel(self, option):
+        self['patchlevel'] = int(option)
 
     def getSynopsis(self):
         return "Usage:    buildbot try [options]"
