@@ -14,6 +14,7 @@
 	as None, meaning HEAD.
 	* buildbot/sourcestamp.py (SourceStamp): update docstring to
 	indicate that baserev=None means HEAD
+	* docs/buildbot.texinfo (try --diff): document it
 
 	* buildbot/test/test_steps.py (BuildStep): remove use of
 	reactor.iterate(), although the technique I replaced it with is a

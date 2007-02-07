@@ -243,6 +243,10 @@ Developer Tools
 * statusgui::                   
 * try::                         
 
+waiting for results
+
+* try --diff::                  
+
 Other Tools
 
 * sendchange::                  
@@ -5827,6 +5831,10 @@ SourceStamp. If you want, the tool will emit status messages as the
 builds run, and will not terminate until the first failure has been
 detected (or the last success).
 
+There is an alternate form which accepts a pre-made patch file
+(typically the output of a command like 'svn diff'). This ``--diff''
+form does not require a local tree to run from. See @xref{try --diff}.
+
 For this command to work, several pieces must be in place:
 
 
@@ -6139,6 +6147,48 @@ wait until your changes have either been proven good or bad before
 exiting. Unless you use the @option{--quiet} option (or
 @code{try_quiet=True}), it will emit a progress message every 60
 seconds until the builds have completed.
+
+@menu
+* try --diff::                  
+@end menu
+
+@node try --diff,  , try, try
+@subsubsection try --diff
+
+Sometimes you might have a patch from someone else that you want to
+submit to the buildbot. For example, a user may have created a patch
+to fix some specific bug and sent it to you by email. You've inspected
+the patch and suspect that it might do the job (and have at least
+confirmed that it doesn't do anything evil). Now you want to test it
+out.
+
+One approach would be to check out a new local tree, apply the patch,
+run your local tests, then use ``buildbot try'' to run the tests on
+other platforms. An alternate approach is to use the @command{buildbot
+try --diff} form to have the buildbot test the patch without using a
+local tree.
+
+This form takes a @option{--diff} argument which points to a file that
+contains the patch you want to apply. By default this patch will be
+applied to the TRUNK revision, but if you give the optional
+@option{--baserev} argument, a tree of the given revision will be used
+as a starting point instead of TRUNK.
+
+You can also use @command{buildbot try --diff=-} to read the patch
+from stdin.
+
+Each patch has a ``patchlevel'' associated with it. This indicates the
+number of slashes (and preceding pathnames) that should be stripped
+before applying the diff. This exactly corresponds to the @option{-p}
+or @option{--strip} argument to the @command{patch} utility. By
+default @command{buildbot try --diff} uses a patchlevel of 0, but you
+can override this with the @option{-p} argument.
+
+When you use @option{--diff}, you do not need to use any of the other
+options that relate to a local tree, specifically @option{--vc},
+@option{--try-topfile}, or @option{--try-topdir}. These options will
+be ignored. Of course you must still specify how to get to the
+buildmaster (with @option{--connect}, @option{--tryhost}, etc).
 
 
 @node Other Tools, .buildbot config directory, Developer Tools, Command-line tool
