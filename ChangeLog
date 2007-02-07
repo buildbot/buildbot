@@ -1,5 +1,20 @@
 2007-02-06  Brian Warner  <warner@lothar.com>
 
+	* buildbot/steps/source.py (Source.start): if we're using a patch,
+	add it as a LogFile to the checkout/update step. This will turn
+	into a link on the waterfall page.
+
+	* buildbot/scripts/tryclient.py (Try.createJob): implement --diff
+	option, to take the patch from a pre-made file rather than
+	generating it from the local tree. Thanks to Robert Helmer for the
+	idea.
+	* buildbot/scripts/runner.py (TryOptions): add --diff,
+	--patchlevel, and --baserev options
+	* buildbot/scheduler.py (Try_Jobdir.parseJob): treat a baserev of ""
+	as None, meaning HEAD.
+	* buildbot/sourcestamp.py (SourceStamp): update docstring to
+	indicate that baserev=None means HEAD
+
 	* buildbot/test/test_steps.py (BuildStep): remove use of
 	reactor.iterate(), although the technique I replaced it with is a
 	gross polling hack that must be cleaned up properly some day. This
