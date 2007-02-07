@@ -1,5 +1,9 @@
 2007-02-06  Brian Warner  <warner@allmydata.com>
 
+	* buildbot/steps/source.py (Source.start): if we're using a patch,
+	add it as a LogFile to the checkout/update step. This will turn
+	into a link on the waterfall page.
+
 	* buildbot/scripts/tryclient.py (Try.createJob): implement --diff
 	option, to take the patch from a pre-made file rather than
 	generating it from the local tree.

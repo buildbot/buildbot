@@ -169,6 +169,8 @@ class Source(LoggingBuildStep):
 
         # 'patch' is None or a tuple of (patchlevel, diff)
         patch = s.patch
+        if patch:
+            self.addCompleteLog("patch", patch[1])
 
         self.startVC(branch, revision, patch)
 
