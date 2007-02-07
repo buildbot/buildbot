@@ -7,7 +7,7 @@
 	* buildbot/scripts/tryclient.py (Try.createJob): implement --diff
 	option, to take the patch from a pre-made file rather than
 	generating it from the local tree. Thanks to Robert Helmer for the
-	idea.
+	idea. Closes #15 (the Trac ticket on the new http://buildbot.net/).
 	* buildbot/scripts/runner.py (TryOptions): add --diff,
 	--patchlevel, and --baserev options
 	* buildbot/scheduler.py (Try_Jobdir.parseJob): treat a baserev of ""
