@@ -394,6 +394,7 @@ class StatusResourceBuild(HtmlResource):
             data += make_row("Reason for re-running build:",
                              "<input type='text' name='comments' />")
             data += '<input type="submit" value="Rebuild" />\n'
+            data += '</form>\n'
 
         data += "<h2>Steps and Logfiles:</h2>\n"
         if b.getLogs():

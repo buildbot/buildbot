@@ -1,5 +1,8 @@
 2007-02-06  Brian Warner  <warner@lothar.com>
 
+	* buildbot/status/html.py (StatusResourceBuild.body): oops, close
+	the FORM tag
+
 	* buildbot/master.py (BuildMaster.loadConfig): warn the user if we
 	see any Builders that don't have Schedulers to drive them
 
