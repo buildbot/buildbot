@@ -102,10 +102,7 @@ class CFactory(protocol.ClientFactory):
 
 def stopHTTPLog():
     # grr.
-    try:
-        from twisted.web import http # Twisted-2.0
-    except ImportError:
-        from twisted.protocols import http # Twisted-1.3
+    from twisted.web import http
     http._logDateTimeStop()
 
 class BaseWeb:

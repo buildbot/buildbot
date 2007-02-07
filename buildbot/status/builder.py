@@ -14,10 +14,7 @@ try:
     pickle = cPickle
 except ImportError:
     import pickle
-try:
-    from cStringIO import StringIO
-except ImportError:
-    from StringIO import StringIO
+from cStringIO import StringIO
 
 # sibling imports
 from buildbot import interfaces, util, sourcestamp

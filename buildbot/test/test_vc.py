@@ -1066,10 +1066,7 @@ class VCBase(SignalMixin):
         if self.httpServer:
             d.addCallback(lambda res: self.httpServer.stopListening())
             def stopHTTPTimer():
-                try:
-                    from twisted.web import http # Twisted-2.0
-                except ImportError:
-                    from twisted.protocols import http # Twisted-1.3
+                from twisted.web import http
                 http._logDateTimeStop() # shut down the internal timer. DUMB!
             d.addCallback(lambda res: stopHTTPTimer())
         d.addCallback(lambda res: self.tearDown2())

@@ -14,7 +14,7 @@
 # todo: test batched updates, by invoking remote_update(updates) instead of
 # statusUpdate(update). Also involves interrupted builds.
 
-import os, time
+import os
 
 from twisted.trial import unittest
 from twisted.internet import reactor, defer

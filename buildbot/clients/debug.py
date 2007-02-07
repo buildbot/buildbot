@@ -6,7 +6,7 @@ from twisted.internet import reactor
 from twisted.python import util
 from twisted.spread import pb
 from twisted.cred import credentials
-import gtk, gtk.glade
+import gtk.glade
 import sys, re
 
 class DebugWidget:

@@ -6,12 +6,7 @@
 import re, shlex
 
 from twisted.internet import protocol, reactor
-try:
-    # Twisted-2.0
-    from twisted.words.protocols import irc
-except ImportError:
-    # Twisted-1.3
-    from twisted.protocols import irc
+from twisted.words.protocols import irc
 from twisted.python import log, failure
 from twisted.application import internet
 
