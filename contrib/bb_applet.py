@@ -41,8 +41,12 @@ import gnomeapplet
 # preferences are not yet implemented
 MENU = """
 <popup name="button3">
- <menuitem name="Prefs" verb="Props" label="_Preferences..." pixtype="stock"
-           pixname="gtk-properties"/>
+ <menuitem name="Connect" verb="Connect" label="Connect"
+           pixtype="stock" pixname="gtk-refresh"/>
+ <menuitem name="Disconnect" verb="Disconnect" label="Disconnect"
+           pixtype="stock" pixname="gtk-stop"/>
+ <menuitem name="Prefs" verb="Props" label="_Preferences..."
+           pixtype="stock" pixname="gtk-properties"/>
 </popup>
 """
 
@@ -145,6 +149,8 @@ class MyApplet(pb.Referenceable):
         container.set_size_request(self.size, self.size)
         self.fill_nut()
         verbs = [ ("Props", self.menu_preferences),
+                  ("Connect", self.menu_connect),
+                  ("Disconnect", self.menu_disconnect),
                   ]
         container.setup_menu(MENU, verbs)
         self.boxes = {}
@@ -184,7 +190,10 @@ class MyApplet(pb.Referenceable):
         self.tips = gtk.Tooltips()
         self.tips.enable()
 
-    def disconnected(self):
+    def disconnect(self):
+        self.remote.broker.transport.loseConnection()
+
+    def disconnected(self, *args):
         print "disconnected"
         self.fill_nut()
 
@@ -238,9 +247,50 @@ class MyApplet(pb.Referenceable):
     def remote_stepFinished(self, buildername, build, stepname, step, results):
         pass
 
-
     def menu_preferences(self, event, data=None):
         print "prefs!"
+        p = Prefs(self)
+        p.create()
+
+    def set_buildmaster(self, buildmaster):
+        host, port = buildmaster.split(":")
+        self.buildmaster = host, int(port)
+        self.disconnect()
+        reactor.callLater(0.5, self.connect)
+
+    def menu_connect(self, event, data=None):
+        self.connect()
+
+    def menu_disconnect(self, event, data=None):
+        self.disconnect()
+
+
+class Prefs:
+    def __init__(self, parent):
+        self.parent = parent
+
+    def create(self):
+        self.w = w = gtk.Window()
+        v = gtk.VBox()
+        h = gtk.HBox()
+        h.pack_start(gtk.Label("buildmaster (host:port) : "))
+        self.buildmaster_entry = b = gtk.Entry()
+        if self.parent.buildmaster:
+            host, port = self.parent.buildmaster
+            b.set_text("%s:%d" % (host, port))
+        h.pack_start(b)
+        v.add(h)
+
+        b = gtk.Button("Ok")
+        b.connect("clicked", self.done)
+        v.add(b)
+
+        w.add(v)
+        w.show_all()
+    def done(self, widget):
+        buildmaster = self.buildmaster_entry.get_text()
+        self.parent.set_buildmaster(buildmaster)
+        self.w.unmap()
 
         
               
