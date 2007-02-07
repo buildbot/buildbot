@@ -59,9 +59,10 @@ class BotPerspective(NewCredPerspective):
         return defer.succeed(None)
 
     def __repr__(self):
-        return "<BotPerspective '%s', builders: %s>" % \
+        builders = self.botmaster.getBuildersForSlave(self.slavename)
+        return "<BotPerspective '%s', current builders: %s>" % \
                (self.slavename,
-                string.join(map(lambda b: b.name, self.builders), ','))
+                string.join(map(lambda b: b.name, builders), ','))
 
     def attached(self, bot):
         """This is called when the slave connects.
