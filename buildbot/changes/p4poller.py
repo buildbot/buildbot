@@ -28,7 +28,7 @@ class P4Source(base.ChangeSource, util.ComparableMixin):
     them to the change master."""
 
     compare_attrs = ["p4port", "p4user", "p4passwd", "p4base",
-                     "p4bin", "pollinterval", "histmax"]
+                     "p4bin", "pollinterval"]
 
     changes_line_re = re.compile(
             r"Change (?P<num>\d+) on \S+ by \S+@\S+ '.+'$")
@@ -45,7 +45,7 @@ class P4Source(base.ChangeSource, util.ComparableMixin):
     def __init__(self, p4port=None, p4user=None, p4passwd=None,
                  p4base='//', p4bin='p4',
                  split_file=lambda branchfile: (None, branchfile),
-                 pollinterval=60 * 10, histmax=100):
+                 pollinterval=60 * 10, histmax=None):
         """
         @type  p4port:       string
         @param p4port:       p4 port definition (host:portno)
@@ -63,7 +63,8 @@ class P4Source(base.ChangeSource, util.ComparableMixin):
         @type  pollinterval: int
         @param pollinterval: interval in seconds between polls
         @type  histmax:      int
-        @param histmax:      maximum number of changes to look back through
+        @param histmax:      (obsolete) maximum number of changes to look back through.
+                             ignored; accepted for backwards compatibility.
         """
 
         self.p4port = p4port
@@ -73,7 +74,6 @@ class P4Source(base.ChangeSource, util.ComparableMixin):
         self.p4bin = p4bin
         self.split_file = split_file
         self.pollinterval = pollinterval
-        self.histmax = histmax
         self.loop = LoopingCall(self.checkp4)
 
     def startService(self):
@@ -121,7 +121,11 @@ class P4Source(base.ChangeSource, util.ComparableMixin):
             args.extend(['-u', self.p4user])
         if self.p4passwd:
             args.extend(['-P', self.p4passwd])
-        args.extend(['changes', '-m', str(self.histmax), self.p4base + '...'])
+        args.extend(['changes'])
+        if self.last_change is not None:
+            args.extend(['%s...@%d,now' % (self.p4base, self.last_change+1)])
+        else:
+            args.extend(['-m', '1', '%s...' % (self.p4base,)])
         env = {}
         return getProcessOutput(self.p4bin, args, env)
 
@@ -133,13 +137,11 @@ class P4Source(base.ChangeSource, util.ComparableMixin):
             if not line: continue
             m = self.changes_line_re.match(line)
             assert m, "Unexpected 'p4 changes' output: %r" % result
-            num = m.group('num')
+            num = int(m.group('num'))
             if last_change is None:
-                log.msg('P4Poller: starting at change %s' % num)
+                log.msg('P4Poller: starting at change %d' % num)
                 self.last_change = num
                 return []
-            if last_change == num:
-                break
             changelists.append(num)
         changelists.reverse() # oldest first
 
@@ -158,7 +160,7 @@ class P4Source(base.ChangeSource, util.ComparableMixin):
             args.extend(['-u', self.p4user])
         if self.p4passwd:
             args.extend(['-P', self.p4passwd])
-        args.extend(['describe', '-s', num])
+        args.extend(['describe', '-s', str(num)])
         env = {}
         d = getProcessOutput(self.p4bin, args, env)
         return d
