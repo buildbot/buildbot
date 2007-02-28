@@ -1569,7 +1569,7 @@ else:
     # the icon is sibpath(__file__, "../buildbot.png") . This is for
     # portability.
     up = os.path.dirname
-    buildbot_icon = os.path.abspath(os.path.join(up(up(__file__)),
+    buildbot_icon = os.path.abspath(os.path.join(up(up(up(__file__))),
                                                  "buildbot.png"))
     buildbot_css = os.path.abspath(os.path.join(up(__file__), "classic.css"))
 

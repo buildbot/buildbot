@@ -12,6 +12,7 @@ from twisted.web import client
 
 from buildbot import master, interfaces, sourcestamp
 from buildbot.status import html, builder
+from buildbot.status.web import waterfall
 from buildbot.changes.changes import Change
 from buildbot.process import base
 from buildbot.process.buildstep import BuildStep
@@ -230,7 +231,7 @@ c['status'] = [html.Waterfall(http_port=0, robots_txt=%s)]
         d.addCallback(self._test_waterfall_3)
         return d
     def _test_waterfall_3(self, icon):
-        expected = open(html.buildbot_icon,"rb").read()
+        expected = open(waterfall.buildbot_icon,"rb").read()
         self.failUnless(icon == expected)
 
         d = client.getPage("http://localhost:%d/changes" % self.port)
@@ -264,7 +265,7 @@ class WaterfallSteps(unittest.TestCase):
         s = setupBuildStepStatus("test_web.test_urls")
         s.addURL("coverage", "http://coverage.example.org/target")
         s.addURL("icon", "http://coverage.example.org/icon.png")
-        box = html.IBox(s).getBox()
+        box = waterfall.IBox(s).getBox()
         td = box.td()
         e1 = '[<a href="http://coverage.example.org/target" class="BuildStep external">coverage</a>]'
         self.failUnlessSubstring(e1, td)
