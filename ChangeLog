@@ -1,3 +1,11 @@
+2007-02-28  Brian Warner  <warner@lothar.com>
+
+	* buildbot/changes/p4poller.py (P4Source): apply change from Scott
+	Lamb to use a more optimal form of 'p4 changes', to reduce server
+	load. He reports that this optimization was added to p4d release
+	2005.2, but it should work in all versions. Closes #27.
+	* buildbot/test/test_p4poller.py: match it
+
 2007-02-27  Brian Warner  <warner@lothar.com>
 
 	* buildbot/status/web/*.py: move all web status stuff into a
