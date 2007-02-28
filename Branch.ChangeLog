@@ -1,0 +1,6 @@
+Tue Feb 27 14:30:48 2007  Brian Warner  <warner@lothar.com>
+
+	* buildbot/status/web/*.py: move all web status stuff into a
+	separate directory, in anticipation of splitting it into smaller
+	pieces and adding more files. html.py was getting way too big.
+
