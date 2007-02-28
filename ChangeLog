@@ -1,3 +1,13 @@
+2007-02-27  Brian Warner  <warner@lothar.com>
+
+	* buildbot/status/web/*.py: move all web status stuff into a
+	separate directory, in anticipation of splitting it into smaller
+	pieces and adding more files. html.py was getting way too big.
+	* buildbot/status/classic.css: move it too
+	* setup.py: add the new sub-package
+	* buildbot/test/test_web.py: match the changes
+	* MANIFEST.in: handle the move of classic.css
+
 2007-02-07  Brian Warner  <warner@lothar.com>
 
 	* contrib/OS-X/*: add some launchd .plist files for automatically
