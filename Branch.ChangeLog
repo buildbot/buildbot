@@ -6,3 +6,4 @@ Tue Feb 27 14:30:48 2007  Brian Warner  <warner@lothar.com>
 	* buildbot/status/classic.css: move it too
 	* setup.py: add the new sub-package
 	* buildbot/test/test_web.py: match the changes
+	* MANIFEST.in: handle the move of classic.css

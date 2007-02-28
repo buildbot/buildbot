@@ -7,7 +7,7 @@ include docs/buildbot.html docs/images/*.png
 include docs/epyrun docs/gen-reference
 include buildbot/test/mail/* buildbot/test/subdir/*
 include buildbot/scripts/sample.cfg
-include buildbot/status/classic.css
+include buildbot/status/web/classic.css
 include buildbot/clients/debug.glade
 include buildbot/buildbot.png
 
