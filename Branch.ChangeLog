@@ -1,3 +1,14 @@
+Thu Mar  1 02:58:33 2007  Brian Warner  <warner@lothar.com>
+
+	* buildbot/status/web/baseweb.py: first pass at the web-parts
+	WebStatus target. This serves static files from
+	$MASTERDIR/public_html/ and uses internal resources for all URLs
+	under /_buildbot . A couple of one-line-per-build text pages have
+	been written so far.
+	* docs/buildbot.texinfo (WebStatus): document the new status
+	target, including a number of pages that haven't been implemented
+	yet.
+
 Thu Mar  1 02:21:01 2007  Brian Warner  <warner@lothar.com>
 
 	* buildbot/scripts/runner.py (Maker.public_html): when using
