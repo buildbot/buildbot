@@ -1,3 +1,7 @@
+2007-03-01  Brian Warner  <warner@lothar.com>
+
+	* buildbot/interfaces.py (IStatus.getBuilder): mention exceptions
+
 2007-02-28  Brian Warner  <warner@lothar.com>
 
 	* buildbot/changes/p4poller.py (P4Source): apply change from Scott

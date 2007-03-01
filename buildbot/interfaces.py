@@ -111,7 +111,8 @@ class IStatus(Interface):
     def getBuilderNames(categories=None):
         """Return a list of the names of all current Builders."""
     def getBuilder(name):
-        """Return the IBuilderStatus object for a given named Builder."""
+        """Return the IBuilderStatus object for a given named Builder. Raises
+        KeyError if there is no Builder by that name."""
     def getSlave(name):
         """Return the ISlaveStatus object for a given named buildslave."""
 
