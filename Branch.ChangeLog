@@ -1,0 +1,11 @@
+Thu Mar  1 02:21:01 2007  Brian Warner  <warner@lothar.com>
+
+	* buildbot/scripts/runner.py (Maker.public_html): when using
+	'buildbot create-master' to create the buildmaster, also create
+	a public_html/ directory. This will be used as the root of the
+	WebStatus server, where users can put index.html, robots.txt,
+	buildbot.css, and any other desired files. We populate it with
+	some sample files from buildbot/status/web/
+	* buildbot/status/web/index.html: new file, still needs to
+	get some links to the various _buildbot/ pages.
+

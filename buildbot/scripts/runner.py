@@ -153,6 +153,25 @@ class Maker:
         f.close()
         os.chmod(target, 0600)
 
+    def public_html(self, index_html, buildbot_css):
+        if os.path.exists("public_html"):
+            if not self.quiet:
+                print "public_html/ already exists: not replacing"
+                return
+        if not self.quiet:
+            print "populating public_html/"
+        os.mkdir("public_html")
+        target = os.path.join("public_html", "index.html")
+        f = open(target, "wt")
+        f.write(open(index_html, "rt").read())
+        f.close()
+
+        target = os.path.join("public_html", "buildbot.css")
+        f = open(target, "wt")
+        f.write(open(buildbot_css, "rt").read())
+        f.close()
+
+
 class MasterOptions(MakerBase):
     optFlags = [
         ["force", "f",
@@ -194,6 +213,9 @@ def createMaster(config):
     contents = masterTAC % config
     m.makeTAC(contents)
     m.sampleconfig(util.sibpath(__file__, "sample.cfg"))
+    m.public_html(util.sibpath(__file__, "../status/web/index.html"),
+                  util.sibpath(__file__, "../status/web/classic.css"),
+                  )
     m.makefile()
 
     if not m.quiet: print "buildmaster configured in %s" % m.basedir
