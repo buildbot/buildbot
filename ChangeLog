@@ -1,3 +1,8 @@
+2007-03-03  Brian Warner  <warner@lothar.com>
+
+	* buildbot/status/html.py (_hush_pyflakes): hush a pyflakes
+	warning about the use of Waterfall here
+
 2007-03-01  Brian Warner  <warner@lothar.com>
 
 	* buildbot/interfaces.py (IStatus.getBuilder): mention exceptions

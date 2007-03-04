@@ -4,3 +4,4 @@
 # to import from.
 
 from buildbot.status.web.waterfall import Waterfall
+_hush_pyflakes = [Waterfall]
