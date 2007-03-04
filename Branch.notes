@@ -1,0 +1,16 @@
+
+next steps:
+
+ rewrite the old Waterfall to use request.site.status like the new WebStatus
+
+ then make WaterfallStatusResource available in WebStatus at _buildbot/timeline
+
+ figure out how to make Waterfall be a subset of subclass of WebStatus
+
+ figure out a basic templating system so that all pages can get common
+ headers and footers. I'm not gung-ho about creating something as large or as
+ flexible as Trac, but it would be nice if all pages could have a common
+ style and if it were possible to make them less ugly than the existing
+ Waterfall.
+
+then start implementing the RSS and machine-parseable interfaces
