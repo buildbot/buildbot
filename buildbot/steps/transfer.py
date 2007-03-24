@@ -16,7 +16,7 @@ class _FileWriter(pb.Referenceable):
 
     def __init__(self, destfile, maxsize, mode):
         self.destfile = destfile
-        self.fp = open(destfile, "w")
+        self.fp = open(destfile, "wb")
         if mode is not None:
             os.chmod(destfile, mode)
 	self.remaining = maxsize
@@ -240,7 +240,7 @@ class FileDownload(BuildStep):
 
         # setup structures for reading the file
         try:
-            fp = open(source, 'r')
+            fp = open(source, 'rb')
         except IOError:
             # if file does not exist, bail out with an error
             self.addCompleteLog('stderr',

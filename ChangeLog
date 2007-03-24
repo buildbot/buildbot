@@ -1,3 +1,9 @@
+2007-03-24  Brian Warner  <warner@lothar.com>
+
+	* buildbot/steps/transfer.py: open all files in 'b' binary mode to
+	avoid text-conversion problems between DOS/windows and unix.
+	Thanks to Phil Thompson for the patch. Fixes SF#1674927.
+
 2007-03-03  Brian Warner  <warner@lothar.com>
 
 	* buildbot/status/html.py (_hush_pyflakes): hush a pyflakes

@@ -701,7 +701,7 @@ class SlaveFileUploadCommand(Command):
                                  self.workdir,
                                  os.path.expanduser(self.filename))
         try:
-            self.fp = open(self.path, 'r')
+            self.fp = open(self.path, 'rb')
             if self.debug:
                 log.msg('Opened %r for upload' % self.path)
         except:
@@ -813,7 +813,7 @@ class SlaveFileDownloadCommand(Command):
                                  self.workdir,
                                  os.path.expanduser(self.filename))
         try:
-            self.fp = open(self.path, 'w')
+            self.fp = open(self.path, 'wb')
             if self.debug:
                 log.msg('Opened %r for download' % self.path)
             if self.mode is not None:
