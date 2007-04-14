@@ -1,3 +1,11 @@
+2007-04-13  Brian Warner  <warner@lothar.com>
+
+	* buildbot/status/mail.py (MailNotifier): add the project name to
+	the subject line and message body, to make it easier to
+	distinguish email coming from different buildmasters. Thanks to
+	Benoit Sigoure for the patch.
+	* buildbot/test/test_status.py (Mail): update to match
+
 2007-03-24  Brian Warner  <warner@lothar.com>
 
 	* buildbot/steps/transfer.py: open all files in 'b' binary mode to

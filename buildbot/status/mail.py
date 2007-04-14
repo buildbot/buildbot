@@ -61,7 +61,7 @@ class MailNotifier(base.StatusReceiverMultiService):
 
     def __init__(self, fromaddr, mode="all", categories=None, builders=None,
                  addLogs=False, relayhost="localhost",
-                 subject="buildbot %(result)s in %(builder)s",
+                 subject="buildbot %(result)s in %(projectName)s on %(builder)s",
                  lookup=None, extraRecipients=[],
                  sendToInterestedUsers=True):
         """
@@ -214,13 +214,15 @@ class MailNotifier(base.StatusReceiverMultiService):
         return self.buildMessage(name, build, results)
 
     def buildMessage(self, name, build, results):
+        projectName = self.status.getProjectName()
         text = ""
         if self.mode == "all":
-            text += "The Buildbot has finished a build of %s.\n" % name
+            text += "The Buildbot has finished a build"
         elif self.mode == "failing":
-            text += "The Buildbot has detected a failed build of %s.\n" % name
+            text += "The Buildbot has detected a failed build"
         else:
-            text += "The Buildbot has detected a new failure of %s.\n" % name
+            text += "The Buildbot has detected a new failure"
+        text += " of %s on %s.\n" % (name, projectName)
         buildurl = self.status.getURLForThing(build)
         if buildurl:
             text += "Full details are available at:\n %s\n" % buildurl
@@ -304,6 +306,7 @@ class MailNotifier(base.StatusReceiverMultiService):
 
         m['Date'] = formatdate(localtime=True)
         m['Subject'] = self.subject % { 'result': res,
+                                        'projectName': projectName,
                                         'builder': name,
                                         }
         m['From'] = self.fromaddr

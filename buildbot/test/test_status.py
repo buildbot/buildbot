@@ -135,7 +135,11 @@ class Mail(unittest.TestCase):
         return MyBuild(self.builder, number, results)
 
     def failUnlessIn(self, substring, string):
-        self.failUnless(string.find(substring) != -1)
+        self.failUnless(string.find(substring) != -1,
+                        "didn't see '%s' in '%s'" % (substring, string))
+
+    def getProjectName(self):
+        return "PROJECT"
 
     def getBuildbotURL(self):
         return "BUILDBOT_URL"
@@ -162,7 +166,7 @@ class Mail(unittest.TestCase):
         self.failUnlessIn("To: bob@dev.com, recip2@example.com, "
                           "recip@example.com\n", t)
         self.failUnlessIn("From: buildbot@example.com\n", t)
-        self.failUnlessIn("Subject: buildbot success in builder1\n", t)
+        self.failUnlessIn("Subject: buildbot success in PROJECT on builder1\n", t)
         self.failUnlessIn("Date: ", t)
         self.failUnlessIn("Build succeeded!\n", t)
         self.failUnlessIn("Buildbot URL: BUILDBOT_URL\n", t)
@@ -187,7 +191,7 @@ class Mail(unittest.TestCase):
         self.failUnlessIn("To: recip2@example.com, "
                           "recip@example.com\n", t)
         self.failUnlessIn("From: buildbot@example.com\n", t)
-        self.failUnlessIn("Subject: buildbot success in builder1\n", t)
+        self.failUnlessIn("Subject: buildbot success in PROJECT on builder1\n", t)
         self.failUnlessIn("Build succeeded!\n", t)
         self.failUnlessIn("Buildbot URL: BUILDBOT_URL\n", t)
 
@@ -288,7 +292,7 @@ class Mail(unittest.TestCase):
         self.failUnlessIn("To: dev3@dev.com, dev4@dev.com, "
                           "recip2@example.com, recip@example.com\n", t)
         self.failUnlessIn("From: buildbot@example.com\n", t)
-        self.failUnlessIn("Subject: buildbot failure in builder1\n", t)
+        self.failUnlessIn("Subject: buildbot failure in PROJECT on builder1\n", t)
         self.failUnlessIn("The Buildbot has detected a new failure", t)
         self.failUnlessIn("BUILD FAILED: snarkleack polarization failed\n", t)
         self.failUnlessEqual(r, ["dev3@dev.com", "dev4@dev.com",
@@ -314,7 +318,7 @@ class Mail(unittest.TestCase):
         self.failUnless(len(self.messages) == 1)
         m,r = self.messages.pop()
         t = m.as_string()
-        self.failUnlessIn("Subject: buildbot warnings in builder1\n", t)
+        self.failUnlessIn("Subject: buildbot warnings in PROJECT on builder1\n", t)
         m2 = email.message_from_string(t)
         p = m2.get_payload()
         self.failUnlessEqual(len(p), 3)
