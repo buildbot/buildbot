@@ -1,3 +1,7 @@
+2007-04-16  Brian Warner  <warner@lothar.com>
+
+	* CREDITS: update list of contributors. Thank you all!
+
 2007-04-13  Brian Warner  <warner@lothar.com>
 
 	* buildbot/status/mail.py (MailNotifier): add the project name to
