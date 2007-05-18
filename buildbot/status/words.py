@@ -65,9 +65,8 @@ class Contact:
     'broadcast contact' (chat rooms, IRC channels as a whole).
     """
 
-    def __init__(self, channel, username):
+    def __init__(self, channel):
         self.channel = channel
-        self.username = username
 
     silly = {
         "What happen ?": "Somebody set up us the bomb.",
@@ -102,7 +101,7 @@ class Contact:
         """
         @rtype: list of L{buildbot.process.builder.Builder}
         """
-        names = self.channel.status.getBuilderNames(categories=self.categories)
+        names = self.channel.status.getBuilderNames(categories=self.channel.categories)
         names.sort()
         builders = [self.channel.status.getBuilder(n) for n in names]
         return builders
@@ -127,13 +126,13 @@ class Contact:
             reactor.callLater(when, self.send, r)
             when += 2.5
 
-    def command_HELLO(self, args):
+    def command_HELLO(self, args, who):
         self.send("yes?")
 
-    def command_VERSION(self, args):
+    def command_VERSION(self, args, who):
         self.send("buildbot-%s at your service" % version)
 
-    def command_LIST(self, args):
+    def command_LIST(self, args, who):
         args = args.split()
         if len(args) == 0:
             raise UsageError, "try 'list builders'"
@@ -151,7 +150,7 @@ class Contact:
             return
     command_LIST.usage = "list builders - List configured builders"
 
-    def command_STATUS(self, args):
+    def command_STATUS(self, args, who):
         args = args.split()
         if len(args) == 0:
             which = "all"
@@ -167,7 +166,7 @@ class Contact:
         self.emit_status(which)
     command_STATUS.usage = "status [<which>] - List status of a builder (or all builders)"
 
-    def command_WATCH(self, args):
+    def command_WATCH(self, args, who):
         args = args.split()
         if len(args) != 1:
             raise UsageError("try 'watch <builder>'")
@@ -201,8 +200,8 @@ class Contact:
         builder = b.getBuilder()
         log.msg('builder %r in category %s finished' % (builder,
                                                         builder.category))
-        if (self.categories != None and
-            builder.category not in self.categories):
+        if (self.channel.categories != None and
+            builder.category not in self.channel.categories):
             return
 
         r = "Hey! build %s #%d is complete: %s" % \
@@ -215,9 +214,12 @@ class Contact:
         if buildurl:
             self.send("Build details are at %s" % buildurl)
 
-    def command_FORCE(self, args):
+    def command_FORCE(self, args, who):
         args = shlex.split(args) # TODO: this requires python2.3 or newer
-        if args.pop(0) != "build":
+        if not args:
+            raise UsageError("try 'force build WHICH <REASON>'")
+        what = args.pop(0)
+        if what != "build":
             raise UsageError("try 'force build WHICH <REASON>'")
         opts = ForceOptions()
         opts.parseOptions(args)
@@ -226,6 +228,10 @@ class Contact:
         branch = opts['branch']
         revision = opts['revision']
         reason = opts['reason']
+
+        if which is None:
+            raise UsageError("you must provide a Builder, "
+                             "try 'force build WHICH <REASON>'")
 
         # keep weird stuff out of the branch and revision strings. TODO:
         # centralize this somewhere.
@@ -240,11 +246,7 @@ class Contact:
 
         bc = self.getControl(which)
 
-        who = None # TODO: if we can authenticate that a particular User
-                   # asked for this, use User Name instead of None so they'll
-                   # be informed of the results.
-        # TODO: or, monitor this build and announce the results
-        r = "forced: by IRC user <%s>: %s" % (self.username, reason)
+        r = "forced: by %s: %s" % (self.describeUser(who), reason)
         # TODO: maybe give certain users the ability to request builds of
         # certain branches
         s = SourceStamp(branch=branch, revision=revision)
@@ -260,7 +262,7 @@ class Contact:
 
     command_FORCE.usage = "force build <which> <reason> - Force a build"
 
-    def command_STOP(self, args):
+    def command_STOP(self, args, who):
         args = args.split(None, 2)
         if len(args) < 3 or args[0] != 'build':
             raise UsageError, "try 'stop build WHICH <REASON>'"
@@ -269,8 +271,7 @@ class Contact:
 
         buildercontrol = self.getControl(which)
 
-        who = None
-        r = "stopped: by IRC user <%s>: %s" % (self.username, reason)
+        r = "stopped: by %s: %s" % (self.describeUser(who), reason)
 
         # find an in-progress build
         builderstatus = self.getBuilder(which)
@@ -324,7 +325,7 @@ class Contact:
             str += " ".join(last.getText())
         self.send("last build [%s]: %s" % (which, str))
 
-    def command_LAST(self, args):
+    def command_LAST(self, args, who):
         args = args.split()
         if len(args) == 0:
             which = "all"
@@ -342,13 +343,13 @@ class Contact:
 
     def build_commands(self):
         commands = []
-        for k in self.__class__.__dict__.keys():
+        for k in dir(self):
             if k.startswith('command_'):
                 commands.append(k[8:].lower())
         commands.sort()
         return commands
 
-    def command_HELP(self, args):
+    def command_HELP(self, args, who):
         args = args.split()
         if len(args) == 0:
             self.send("Get help on what? (try 'help <foo>', or 'commands' for a command list)")
@@ -364,25 +365,25 @@ class Contact:
             self.send("No usage info for '%s'" % command)
     command_HELP.usage = "help <command> - Give help for <command>"
 
-    def command_SOURCE(self, args):
-        banner = "My source can be found at http://buildbot.sourceforge.net/"
+    def command_SOURCE(self, args, who):
+        banner = "My source can be found at http://buildbot.net/"
         self.send(banner)
 
-    def command_COMMANDS(self, args):
+    def command_COMMANDS(self, args, who):
         commands = self.build_commands()
         str = "buildbot commands: " + ", ".join(commands)
         self.send(str)
     command_COMMANDS.usage = "commands - List available commands"
 
-    def command_DESTROY(self, args):
+    def command_DESTROY(self, args, who):
         self.act("readies phasers")
 
-    def command_DANCE(self, args):
+    def command_DANCE(self, args, who):
         reactor.callLater(1.0, self.send, "0-<")
         reactor.callLater(3.0, self.send, "0-/")
         reactor.callLater(3.5, self.send, "0-\\")
 
-    def command_EXCITED(self, args):
+    def command_EXCITED(self, args, who):
         # like 'buildbot: destroy the sun!'
         self.send("What you say!")
 
@@ -408,7 +409,16 @@ class IRCContact(Contact):
 
     def __init__(self, channel, dest):
         Contact.__init__(self, channel)
+        # when people send us public messages ("buildbot: command"),
+        # self.dest is the name of the channel ("#twisted"). When they send
+        # us private messages (/msg buildbot command), self.dest is their
+        # username.
         self.dest = dest
+
+    def describeUser(self, user):
+        if self.dest[0] == "#":
+            return "IRC user <%s> on channel %s" % (user, self.dest)
+        return "IRC user <%s> (privmsg)" % user
 
     # userJoined(self, user, channel)
 
@@ -418,7 +428,14 @@ class IRCContact(Contact):
         self.channel.me(self.dest, action)
 
 
-    def handleMessage(self, message):
+    def handleMessage(self, message, who):
+        # a message has arrived from 'who'. For broadcast contacts (i.e. when
+        # people do an irc 'buildbot: command'), this will be a string
+        # describing the sender of the message in some useful-to-log way, and
+        # a single Contact may see messages from a variety of users. For
+        # unicast contacts (i.e. when people do an irc '/msg buildbot
+        # command'), a single Contact will only ever see messages from a
+        # single user.
         message = message.lstrip()
         if self.silly.has_key(message):
             return self.doSilly(message)
@@ -436,7 +453,7 @@ class IRCContact(Contact):
         error = None
         try:
             if meth:
-                meth(args.strip())
+                meth(args.strip(), who)
         except UsageError, e:
             self.send(str(e))
         except:
@@ -517,14 +534,14 @@ class IrcStatusBot(irc.IRCClient):
         if channel == self.nickname:
             # private message
             contact = self.getContact(user)
-            contact.handleMessage(message)
+            contact.handleMessage(message, user)
             return
         # else it's a broadcast message, maybe for us, maybe not. 'channel'
         # is '#twisted' or the like.
         contact = self.getContact(channel)
         if message.startswith("%s:" % self.nickname):
             message = message[len("%s:" % self.nickname):]
-            contact.handleMessage(message)
+            contact.handleMessage(message, user)
         # to track users comings and goings, add code here
 
     def action(self, user, channel, data):
