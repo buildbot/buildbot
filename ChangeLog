@@ -1,3 +1,11 @@
+2007-06-16  Brian Warner  <warner@lothar.com>
+
+	* buildbot/changes/svnpoller.py: when the poll fails, don't kill
+	the LoopingCall, just eat the failure so that we'll poll again
+	next time. This should allow us to tolerate (e.g.) sf.net SVN
+	failures more gracefully. Many thanks to Dustin Mitchell for the
+	patch. Closes #34.
+
 2007-05-17  Brian Warner  <warner@lothar.com>
 
 	* buildbot/status/words.py: refactor the IRC status bot into

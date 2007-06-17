@@ -255,7 +255,7 @@ class SVNPoller(base.ChangeSource, util.ComparableMixin):
         d.addCallback(self.get_new_logentries)
         d.addCallback(self.create_changes)
         d.addCallback(self.submit_changes)
-        d.addBoth(self.finished)
+        d.addCallbacks(self.finished_ok, self.finished_failure)
         return d
 
     def getProcessOutput(self, args):
@@ -436,9 +436,16 @@ class SVNPoller(base.ChangeSource, util.ComparableMixin):
         for c in changes:
             self.parent.addChange(c)
 
-    def finished(self, res):
+    def finished_ok(self, res):
         log.msg("SVNPoller finished polling")
         dbgMsg('_finished : %s' % res)
         assert self.working
         self.working = False
         return res
+
+    def finished_failure(self, f):
+        log.msg("SVNPoller failed")
+        dbgMsg('_finished : %s' % f)
+        assert self.working
+        self.working = False
+        return None # eat the failure
