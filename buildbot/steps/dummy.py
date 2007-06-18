@@ -20,6 +20,7 @@ class Dummy(BuildStep):
         @param timeout: the number of seconds to delay before completing
         """
         BuildStep.__init__(self, **kwargs)
+        self.addFactoryArguments(timeout=timeout)
         self.timeout = timeout
         self.timer = None
 
@@ -70,6 +71,7 @@ class RemoteDummy(LoggingBuildStep):
         @param timeout: the number of seconds to delay
         """
         LoggingBuildStep.__init__(self, **kwargs)
+        self.addFactoryArguments(timeout=timeout)
         self.timeout = timeout
         self.description = ["remote", "delay", "%s secs" % timeout]
 
@@ -89,6 +91,7 @@ class Wait(LoggingBuildStep):
     name = "wait"
     def __init__(self, handle, **kwargs):
         LoggingBuildStep.__init__(self, **kwargs)
+        self.addFactoryArguments(handle=handle)
         self.handle = handle
 
     def describe(self, done=False):

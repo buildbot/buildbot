@@ -237,16 +237,14 @@ class Build:
         # consider sorting these by number
         return changetext
 
-    def setSteps(self, steps):
-        """Set a list of StepFactories, which are generally just class
-        objects which derive from step.BuildStep . These are used to create
-        the Steps themselves when the Build starts (as opposed to when it is
-        first created). By creating the steps later, their __init__ method
-        will have access to things like build.allFiles() ."""
-        self.stepFactories = steps # tuples of (factory, kwargs)
-        for s in steps:
-            pass
-
+    def setStepFactories(self, step_factories):
+        """Set a list of 'step factories', which are tuples of (class,
+        kwargs), where 'class' is generally a subclass of step.BuildStep .
+        These are used to create the Steps themselves when the Build starts
+        (as opposed to when it is first created). By creating the steps
+        later, their __init__ method will have access to things like
+        build.allFiles() ."""
+        self.stepFactories = list(step_factories)
 
 
 
@@ -349,14 +347,14 @@ class Build:
 
         for factory, args in self.stepFactories:
             args = args.copy()
-            if not args.has_key("workdir"):
-                args['workdir'] = self.workdir
             try:
-                step = factory(build=self, **args)
+                step = factory(**args)
             except:
                 log.msg("error while creating step, factory=%s, args=%s"
                         % (factory, args))
                 raise
+            step.setBuild(self)
+            step.setDefaultWorkdir(self.workdir)
             name = step.name
             count = 1
             while name in stepnames and count < 100:

@@ -1,3 +1,51 @@
+2007-06-17  Brian Warner  <warner@lothar.com>
+
+	* buildbot/process/factory.py (BuildFactory.addStep): To simplify
+	the config file, we're moving to using actual instances instead of
+	the (class, kwargs) 'step specification' tuples. BuildFactory
+	still keeps a list of tuples internally, but when real instances
+	are passed in to addStep(), they are asked for their class and
+	kwargs using the new BuildStep.getStepFactory method. BuildFactory
+	accepts both instances and the tuple form, and converts instances
+	to the tuple form, but the instance form is preferred because it
+	gives the Steps a chance to do argument validation. Closes: #11.
+
+	* buildbot/process/buildstep.py (BuildStep.__init__): record the
+	factory information necessary to implement getStepFactory. The
+	addFactoryArguments() method can be used to include arguments that
+	aren't passed to the BuildStep base class constructor.
+	(BuildStep.setBuild):
+	(BuildStep.setDefaultWorkdir): new methods to take parameters that
+	are needed for live BuildSteps but not to construct the specification
+	tuples that are stashed in the factory.
+
+	* buildbot/process/base.py (Build.setupBuild): pass 'build' and
+	'workdir' into new BuildSteps by using methods instead of
+	arguments. This makes the constructor for BuildSteps a lot
+	simpler.
+
+	* buildbot/steps/*.py: update to match this change. Basically this
+	means adding calls to addFactoryArguments() in the __init__
+	methods to capture the arguments that aren't passed through to the
+	base class.
+	* buildbot/steps/shell.py (ShellCommand.setDefaultWorkdir): copy
+	the new workdir (if any) into the RemoteShellCommands arguments.
+	* buildbot/steps/source.py: allow workdir= to be optional,
+	implement setDefaultWorkdir() since we don't inherit from
+	(CVS): finally remove old clobber=/export=/copydir= arguments,
+	in favor of the mode= argument that's been around forever now.
+	* buildbot/steps/transfer.py: remove build= argument
+
+	* buildbot/test/*.py: update to match, generally by turning all
+	build= arguments into subsequent calls to s.setBuild()
+	* buildbot/test/test_config.py (Factories): verify that we can
+	use either BuildStep instances or class/kwarg tuples in both
+	BuildFactory.addStep and BuildFactory.__init__
+
+	* docs/buildbot.texinfo (Build Steps): document the new approach,
+	mention compatibility with the old approach, update all examples
+	to use the new style.
+
 2007-06-16  Brian Warner  <warner@lothar.com>
 
 	* buildbot/changes/svnpoller.py: when the poll fails, don't kill

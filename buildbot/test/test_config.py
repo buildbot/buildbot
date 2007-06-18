@@ -22,8 +22,8 @@ from twisted.web.server import Site
 from twisted.web.distrib import ResourcePublisher
 from buildbot.process.builder import Builder
 from buildbot.process.factory import BasicBuildFactory
-from buildbot.steps.source import CVS
-from buildbot.steps.shell import Compile, Test
+from buildbot.steps.source import CVS, Darcs
+from buildbot.steps.shell import Compile, Test, ShellCommand
 from buildbot.status import base
 words = None
 try:
@@ -1099,3 +1099,81 @@ class StartService(unittest.TestCase):
     def _testStartService_4(self, res):
         self.failUnlessEqual(self.master.targetevents,
                              [('stop', 'b'), ('start', 'a')])
+
+cfg1 = \
+"""
+from buildbot.process.factory import BuildFactory, s
+from buildbot.steps.shell import ShellCommand
+from buildbot.steps.source import Darcs
+BuildmasterConfig = c = {}
+c['bots'] = [('bot1', 'pw1')]
+c['sources'] = []
+c['schedulers'] = []
+c['slavePortnum'] = 9999
+f1 = BuildFactory([ShellCommand(command='echo yes'),
+                   s(ShellCommand, command='old-style'),
+                   ])
+f1.addStep(Darcs(repourl='http://buildbot.net/repos/trunk'))
+f1.addStep(ShellCommand, command='echo old-style')
+c['builders'] = [{'name':'builder1', 'slavename':'bot1',
+                  'builddir':'workdir', 'factory':f1}]
+"""
+
+class Factories(unittest.TestCase):
+
+    def failUnlessExpectedShell(self, factory, defaults=True, **kwargs):
+        shell_args = {}
+        if defaults:
+            shell_args.update({'descriptionDone': None,
+                               'description': None,
+                               'workdir': None,
+                               'logfiles': {},
+                               })
+        shell_args.update(kwargs)
+        self.failUnlessIdentical(factory[0], ShellCommand)
+        if factory[1] != shell_args:
+            print
+            print "factory had:"
+            for k in sorted(factory[1].keys()):
+                print k
+            print "but we were expecting:"
+            for k in sorted(shell_args.keys()):
+                print k
+        self.failUnlessEqual(factory[1], shell_args)
+
+    def failUnlessExpectedDarcs(self, factory, **kwargs):
+        darcs_args = {'workdir': None,
+                      'alwaysUseLatest': False,
+                      'mode': 'update',
+                      'timeout': 1200,
+                      'retry': None,
+                      'baseURL': None,
+                      'defaultBranch': None,
+                      'logfiles': {},
+                      }
+        darcs_args.update(kwargs)
+        self.failUnlessIdentical(factory[0], Darcs)
+        if factory[1] != darcs_args:
+            print
+            print "factory had:"
+            for k in sorted(factory[1].keys()):
+                print k
+            print "but we were expecting:"
+            for k in sorted(darcs_args.keys()):
+                print k
+        self.failUnlessEqual(factory[1], darcs_args)
+
+    def testSteps(self):
+        m = BuildMaster(".")
+        m.loadConfig(cfg1)
+        b = m.botmaster.builders["builder1"]
+        steps = b.buildFactory.steps
+        self.failUnlessEqual(len(steps), 4)
+
+        self.failUnlessExpectedShell(steps[0], command="echo yes")
+        self.failUnlessExpectedShell(steps[1], defaults=False,
+                                     command="old-style")
+        self.failUnlessExpectedDarcs(steps[2],
+                                     repourl="http://buildbot.net/repos/trunk")
+        self.failUnlessExpectedShell(steps[3], defaults=False,
+                                     command="echo old-style")

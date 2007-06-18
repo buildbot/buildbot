@@ -24,7 +24,12 @@ class BuildFactory(util.ComparableMixin):
     def __init__(self, steps=None):
         if steps is None:
             steps = []
-        self.steps = steps
+        self.steps = [self._makeStepFactory(s) for s in steps]
+
+    def _makeStepFactory(self, step_or_factory):
+        if isinstance(step_or_factory, BuildStep):
+            return step_or_factory.getStepFactory()
+        return step_or_factory
 
     def newBuild(self, request):
         """Create a new Build instance.
@@ -32,11 +37,15 @@ class BuildFactory(util.ComparableMixin):
         """
         b = self.buildClass(request)
         b.useProgress = self.useProgress
-        b.setSteps(self.steps)
+        b.setStepFactories(self.steps)
         return b
 
-    def addStep(self, steptype, **kwargs):
-        self.steps.append((steptype, kwargs))
+    def addStep(self, step_or_factory, **kwargs):
+        if isinstance(step_or_factory, BuildStep):
+            s = step_or_factory.getStepFactory()
+        else:
+            s = (step_or_factory, dict(kwargs))
+        self.steps.append(s)
 
 
 # BuildFactory subclasses for common build tools

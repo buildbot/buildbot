@@ -412,7 +412,8 @@ BuildmasterConfig = {
         bs.setReason("reason")
         bs.buildStarted(build1)
 
-        step1 = BuildStep(build=build1, name="setup")
+        step1 = BuildStep(name="setup")
+        step1.setBuild(build1)
         bss = bs.addStepWithName("setup")
         step1.setStepStatus(bss)
         bss.stepStarted()

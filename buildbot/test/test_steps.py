@@ -98,8 +98,8 @@ class BuildStep(unittest.TestCase):
         dir = "murkle"
         self.expectedEvents = []
         buildstep.RemoteCommand.commandCounter[0] = 3
-        c = MyShellCommand(workdir=dir, command=cmd, build=self.build,
-                           timeout=10)
+        c = MyShellCommand(workdir=dir, command=cmd, timeout=10)
+        c.setBuild(self.build)
         self.assertEqual(self.remote.events, self.expectedEvents)
         c.step_status = self.build_status.addStepWithName("myshellcommand")
         d = c.startStep(self.remote)

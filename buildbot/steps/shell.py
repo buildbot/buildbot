@@ -81,7 +81,7 @@ class ShellCommand(LoggingBuildStep):
     # without dooming the entire build to a status of FAILURE
     flunkOnFailure = True
 
-    def __init__(self, workdir,
+    def __init__(self, workdir=None,
                  description=None, descriptionDone=None,
                  command=None,
                  **kwargs):
@@ -89,7 +89,7 @@ class ShellCommand(LoggingBuildStep):
         # that we create, but first strip out the ones that we pass to
         # BuildStep (like haltOnFailure and friends), and a couple that we
         # consume ourselves.
-        self.workdir = workdir # required by RemoteShellCommand
+
         if description:
             self.description = description
         if isinstance(self.description, str):
@@ -108,11 +108,18 @@ class ShellCommand(LoggingBuildStep):
                 buildstep_kwargs[k] = kwargs[k]
                 del kwargs[k]
         LoggingBuildStep.__init__(self, **buildstep_kwargs)
+        self.addFactoryArguments(workdir=workdir,
+                                 description=description,
+                                 descriptionDone=descriptionDone,
+                                 command=command)
 
         # everything left over goes to the RemoteShellCommand
         kwargs['workdir'] = workdir # including a copy of 'workdir'
         self.remote_kwargs = kwargs
 
+    def setDefaultWorkdir(self, workdir):
+        rkw = self.remote_kwargs
+        rkw['workdir'] = rkw['workdir'] or workdir
 
     def setCommand(self, command):
         self.command = command

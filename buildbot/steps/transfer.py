@@ -88,10 +88,17 @@ class FileUpload(BuildStep):
 
     name = 'upload'
 
-    def __init__(self, build, slavesrc, masterdest,
+    def __init__(self, slavesrc, masterdest,
                  workdir="build", maxsize=None, blocksize=16*1024, mode=None,
                  **buildstep_kwargs):
-        BuildStep.__init__(self, build, **buildstep_kwargs)
+        BuildStep.__init__(self, **buildstep_kwargs)
+        self.addFactoryArguments(slavesrc=slavesrc,
+                                 masterdest=masterdest,
+                                 workdir=workdir,
+                                 maxsize=maxsize,
+                                 blocksize=blocksize,
+                                 mode=mode,
+                                 )
 
         self.slavesrc = slavesrc
         self.masterdest = masterdest
@@ -208,10 +215,17 @@ class FileDownload(BuildStep):
 
     name = 'download'
 
-    def __init__(self, build, mastersrc, slavedest,
+    def __init__(self, mastersrc, slavedest,
                  workdir="build", maxsize=None, blocksize=16*1024, mode=None,
                  **buildstep_kwargs):
-        BuildStep.__init__(self, build, **buildstep_kwargs)
+        BuildStep.__init__(self, **buildstep_kwargs)
+        self.addFactoryArguments(mastersrc=mastersrc,
+                                 slavedest=slavedest,
+                                 workdir=workdir,
+                                 maxsize=maxsize,
+                                 blocksize=blocksize,
+                                 mode=mode,
+                                 )
 
         self.mastersrc = mastersrc
         self.slavedest = slavedest

@@ -22,7 +22,7 @@ class Source(LoggingBuildStep):
 
     branch = None # the default branch, should be set in __init__
 
-    def __init__(self, workdir, mode='update', alwaysUseLatest=False,
+    def __init__(self, workdir=None, mode='update', alwaysUseLatest=False,
                  timeout=20*60, retry=None, **kwargs):
         """
         @type  workdir: string
@@ -105,6 +105,12 @@ class Source(LoggingBuildStep):
         """
 
         LoggingBuildStep.__init__(self, **kwargs)
+        self.addFactoryArguments(workdir=workdir,
+                                 mode=mode,
+                                 alwaysUseLatest=alwaysUseLatest,
+                                 timeout=timeout,
+                                 retry=retry,
+                                 )
 
         assert mode in ("update", "copy", "clobber", "export")
         if retry:
@@ -131,6 +137,9 @@ class Source(LoggingBuildStep):
             descriptionDone = ["export"]
         self.description = description
         self.descriptionDone = descriptionDone
+
+    def setDefaultWorkdir(self, workdir):
+        self.args['workdir'] = self.args['workdir'] or workdir
 
     def describe(self, done=False):
         if done:
@@ -206,7 +215,6 @@ class CVS(Source):
     def __init__(self, cvsroot, cvsmodule, 
                  global_options=[], branch=None, checkoutDelay=None,
                  login=None,
-                 clobber=0, export=0, copydir=None,
                  **kwargs):
 
         """
@@ -263,20 +271,14 @@ class CVS(Source):
         self.checkoutDelay = checkoutDelay
         self.branch = branch
 
-        if not kwargs.has_key('mode') and (clobber or export or copydir):
-            # deal with old configs
-            warnings.warn("Please use mode=, not clobber/export/copydir",
-                          DeprecationWarning)
-            if export:
-                kwargs['mode'] = "export"
-            elif clobber:
-                kwargs['mode'] = "clobber"
-            elif copydir:
-                kwargs['mode'] = "copy"
-            else:
-                kwargs['mode'] = "update"
-
         Source.__init__(self, **kwargs)
+        self.addFactoryArguments(cvsroot=cvsroot,
+                                 cvsmodule=cvsmodule,
+                                 global_options=global_options,
+                                 branch=branch,
+                                 checkoutDelay=checkoutDelay,
+                                 login=login,
+                                 )
 
         self.args.update({'cvsroot': cvsroot,
                           'cvsmodule': cvsmodule,
@@ -383,6 +385,11 @@ class SVN(Source):
         self.branch = defaultBranch
 
         Source.__init__(self, **kwargs)
+        self.addFactoryArguments(svnurl=svnurl,
+                                 baseURL=baseURL,
+                                 defaultBranch=defaultBranch,
+                                 directory=directory,
+                                 )
 
         if not svnurl and not baseURL:
             raise ValueError("you must use exactly one of svnurl and baseURL")
@@ -502,7 +509,11 @@ class Darcs(Source):
         self.baseURL = baseURL
         self.branch = defaultBranch
         Source.__init__(self, **kwargs)
-        assert kwargs['mode'] != "export", \
+        self.addFactoryArguments(repourl=repourl,
+                                 baseURL=baseURL,
+                                 defaultBranch=defaultBranch,
+                                 )
+        assert self.args['mode'] != "export", \
                "Darcs does not have an 'export' mode"
         if (not repourl and not baseURL) or (repourl and baseURL):
             raise ValueError("you must provide exactly one of repourl and"
@@ -565,6 +576,7 @@ class Git(Source):
         """
         self.branch = None # TODO
         Source.__init__(self, **kwargs)
+        self.addFactoryArguments(repourl=repourl)
         self.args['repourl'] = repourl
 
     def startVC(self, branch, revision, patch):
@@ -609,6 +621,10 @@ class Arch(Source):
         """
         self.branch = version
         Source.__init__(self, **kwargs)
+        self.addFactoryArguments(url=url,
+                                 version=version,
+                                 archive=archive,
+                                 )
         self.args.update({'url': url,
                           'archive': archive,
                           })
@@ -716,6 +732,10 @@ class Bazaar(Arch):
         """
         self.branch = version
         Source.__init__(self, **kwargs)
+        self.addFactoryArguments(url=url,
+                                 version=version,
+                                 archive=archive,
+                                 )
         self.args.update({'url': url,
                           'archive': archive,
                           })
@@ -769,6 +789,10 @@ class Bzr(Source):
         self.baseURL = baseURL
         self.branch = defaultBranch
         Source.__init__(self, **kwargs)
+        self.addFactoryArguments(repourl=repourl,
+                                 baseURL=baseURL,
+                                 defaultBranch=defaultBranch,
+                                 )
         if (not repourl and not baseURL) or (repourl and baseURL):
             raise ValueError("you must provide exactly one of repourl and"
                              " baseURL")
@@ -833,6 +857,10 @@ class Mercurial(Source):
         self.baseURL = baseURL
         self.branch = defaultBranch
         Source.__init__(self, **kwargs)
+        self.addFactoryArguments(repourl=repourl,
+                                 baseURL=baseURL,
+                                 defaultBranch=defaultBranch,
+                                 )
         if (not repourl and not baseURL) or (repourl and baseURL):
             raise ValueError("you must provide exactly one of repourl and"
                              " baseURL")
@@ -900,14 +928,26 @@ class P4(Source):
 
         self.branch = defaultBranch
         Source.__init__(self, **kwargs)
+        self.addFactoryArguments(p4base=p4base,
+                                 defaultBranch=defaultBranch,
+                                 p4port=p4port,
+                                 p4user=p4user,
+                                 p4passwd=p4passwd,
+                                 p4extra_views=p4extra_views,
+                                 p4client=p4client,
+                                 )
         self.args['p4port'] = p4port
         self.args['p4user'] = p4user
         self.args['p4passwd'] = p4passwd
         self.args['p4base'] = p4base
         self.args['p4extra_views'] = p4extra_views
-        self.args['p4client'] = p4client % {
-            'slave': self.build.slavename,
-            'builder': self.build.builder.name,
+        self.p4client = p4client
+
+    def setBuild(self, build):
+        Source.setBuild(self, build)
+        self.args['p4client'] = self.p4client % {
+            'slave': build.slavename,
+            'builder': build.builder.name,
         }
 
     def computeSourceRevision(self, changes):
@@ -950,6 +990,11 @@ class P4Sync(Source):
         assert kwargs['mode'] == "copy", "P4Sync can only be used in mode=copy"
         self.branch = None
         Source.__init__(self, **kwargs)
+        self.addFactoryArguments(p4port=p4port,
+                                 p4user=p4user,
+                                 p4passwd=p4passwd,
+                                 p4client=p4client,
+                                )
         self.args['p4port'] = p4port
         self.args['p4user'] = p4user
         self.args['p4passwd'] = p4passwd
@@ -982,6 +1027,11 @@ class Monotone(Source):
                  monotone="monotone",
                  **kwargs):
         Source.__init__(self, **kwargs)
+        self.addFactoryArguments(server_addr=server_addr,
+                                 branch=branch,
+                                 db_path=db_path,
+                                 monotone=monotone,
+                                 )
         self.args.update({"server_addr": server_addr,
                           "branch": branch,
                           "db_path": db_path,

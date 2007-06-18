@@ -34,6 +34,7 @@ class HLint(ShellCommand):
 
     def __init__(self, python=None, **kwargs):
         ShellCommand.__init__(self, **kwargs)
+        self.addFactoryArguments(python=python)
         self.python = python
 
     def start(self):
@@ -332,6 +333,17 @@ class Trial(ShellCommand):
                        timeout.
         """
         ShellCommand.__init__(self, **kwargs)
+        self.addFactoryArguments(reactor=reactor,
+                                 python=python,
+                                 trial=trial,
+                                 testpath=testpath,
+                                 tests=tests,
+                                 testChanges=testChanges,
+                                 recurse=recurse,
+                                 randomly=randomly,
+                                 trialMode=trialMode,
+                                 trialArgs=trialArgs,
+                                 )
 
         if python:
             self.python = python

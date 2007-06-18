@@ -242,7 +242,8 @@ def makeBuildStep(basedir, step_class=BuildStep, **kwargs):
     br = BuildRequest("reason", ss)
     b = Build([br])
     b.setBuilder(b0)
-    s = step_class(build=b, **kwargs)
+    s = step_class(**kwargs)
+    s.setBuild(b)
     s.setStepStatus(bss)
     b.setupStatus(bss.getBuild())
     s.slaveVersion = fake_slaveVersion
@@ -398,9 +399,8 @@ class StepTester:
 
     workdir = "build"
     def makeStep(self, factory, **kwargs):
-        if not kwargs.has_key("workdir"):
-            kwargs['workdir'] = self.workdir
         step = makeBuildStep(self.masterbase, factory, **kwargs)
+        step.setDefaultWorkdir(self.workdir)
         return step
 
     def runStep(self, step):

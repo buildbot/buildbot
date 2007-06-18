@@ -2484,7 +2484,8 @@ class Sources(unittest.TestCase):
     def testCVS1(self):
         r = base.BuildRequest("forced build", SourceStamp())
         b = base.Build([r])
-        s = source.CVS(cvsroot=None, cvsmodule=None, workdir=None, build=b)
+        s = source.CVS(cvsroot=None, cvsmodule=None)
+        s.setBuild(b)
         self.failUnlessEqual(s.computeSourceRevision(b.allChanges()), None)
 
     def testCVS2(self):
@@ -2496,7 +2497,8 @@ class Sources(unittest.TestCase):
         submitted = "Wed, 08 Sep 2004 09:04:00 -0700"
         r.submittedAt = mktime_tz(parsedate_tz(submitted))
         b = base.Build([r])
-        s = source.CVS(cvsroot=None, cvsmodule=None, workdir=None, build=b)
+        s = source.CVS(cvsroot=None, cvsmodule=None)
+        s.setBuild(b)
         self.failUnlessEqual(s.computeSourceRevision(b.allChanges()),
                              "Wed, 08 Sep 2004 16:03:00 -0000")
 
@@ -2509,8 +2511,8 @@ class Sources(unittest.TestCase):
         submitted = "Wed, 08 Sep 2004 09:04:00 -0700"
         r.submittedAt = mktime_tz(parsedate_tz(submitted))
         b = base.Build([r])
-        s = source.CVS(cvsroot=None, cvsmodule=None, workdir=None, build=b,
-                       checkoutDelay=10)
+        s = source.CVS(cvsroot=None, cvsmodule=None, checkoutDelay=10)
+        s.setBuild(b)
         self.failUnlessEqual(s.computeSourceRevision(b.allChanges()),
                              "Wed, 08 Sep 2004 16:02:10 -0000")
 
@@ -2530,14 +2532,16 @@ class Sources(unittest.TestCase):
         r2.submittedAt = mktime_tz(parsedate_tz(submitted))
 
         b = base.Build([r1, r2])
-        s = source.CVS(cvsroot=None, cvsmodule=None, workdir=None, build=b)
+        s = source.CVS(cvsroot=None, cvsmodule=None)
+        s.setBuild(b)
         self.failUnlessEqual(s.computeSourceRevision(b.allChanges()),
                              "Wed, 08 Sep 2004 16:06:00 -0000")
 
     def testSVN1(self):
         r = base.BuildRequest("forced", SourceStamp())
         b = base.Build([r])
-        s = source.SVN(svnurl="dummy", workdir=None, build=b)
+        s = source.SVN(svnurl="dummy")
+        s.setBuild(b)
         self.failUnlessEqual(s.computeSourceRevision(b.allChanges()), None)
 
     def testSVN2(self):
@@ -2547,7 +2551,8 @@ class Sources(unittest.TestCase):
         c.append(self.makeChange(revision=67))
         r = base.BuildRequest("forced", SourceStamp(changes=c))
         b = base.Build([r])
-        s = source.SVN(svnurl="dummy", workdir=None, build=b)
+        s = source.SVN(svnurl="dummy")
+        s.setBuild(b)
         self.failUnlessEqual(s.computeSourceRevision(b.allChanges()), 67)
 
 class Patch(VCBase, unittest.TestCase):

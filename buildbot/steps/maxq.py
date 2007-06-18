@@ -10,6 +10,7 @@ class MaxQ(ShellCommand):
             raise TypeError("please pass testdir")
         command = 'run_maxq.py %s' % (testdir,)
         ShellCommand.__init__(self, command=command, **kwargs)
+        self.addFactoryArguments(testdir=testdir)
 
     def startStatus(self):
         evt = event.Event("yellow", ['running', 'maxq', 'tests'],

@@ -546,7 +546,7 @@ class BuildStep:
     # arguments to the RemoteShellCommand that it creates). Such delegating
     # subclasses will use this list to figure out which arguments are meant
     # for us and which should be given to someone else.
-    parms = ['build', 'name', 'locks',
+    parms = ['name', 'locks',
              'haltOnFailure',
              'flunkOnWarnings',
              'flunkOnFailure',
@@ -563,22 +563,39 @@ class BuildStep:
     step_status = None
     progress = None
 
-    def __init__(self, build, **kwargs):
-        self.build = build
+    def __init__(self, **kwargs):
+        self.factory = (self.__class__, dict(kwargs))
         for p in self.__class__.parms:
             if kwargs.has_key(p):
                 setattr(self, p, kwargs[p])
                 del kwargs[p]
-        # we want to encourage all steps to get a workdir, so tolerate its
-        # presence here. It really only matters for non-ShellCommand steps
-        # like Dummy
-        if kwargs.has_key('workdir'):
-            del kwargs['workdir']
         if kwargs:
             why = "%s.__init__ got unexpected keyword argument(s) %s" \
                   % (self, kwargs.keys())
             raise TypeError(why)
         self._pendingLogObservers = []
+
+    def setBuild(self, build):
+        # subclasses which wish to base their behavior upon qualities of the
+        # Build (e.g. use the list of changed files to run unit tests only on
+        # code which has been modified) should do so here. The Build is not
+        # available during __init__, but setBuild() will be called just
+        # afterwards.
+        self.build = build
+
+    def setDefaultWorkdir(self, workdir):
+        # the Build calls this just after __init__ and setDefaultWorkdir.
+        # ShellCommand and variants use a slave-side workdir, but some other
+        # steps do not. Subclasses which use a workdir should use the value
+        # set by this method unless they were constructed with something more
+        # specific.
+        pass
+
+    def addFactoryArguments(self, **kwargs):
+        self.factory[1].update(kwargs)
+
+    def getStepFactory(self):
+        return self.factory
 
     def setStepStatus(self, step_status):
         self.step_status = step_status
@@ -895,6 +912,7 @@ class LoggingBuildStep(BuildStep):
 
     def __init__(self, logfiles={}, *args, **kwargs):
         BuildStep.__init__(self, *args, **kwargs)
+        self.addFactoryArguments(logfiles=logfiles)
         # merge a class-level 'logfiles' attribute with one passed in as an
         # argument
         self.logfiles = self.logfiles.copy()

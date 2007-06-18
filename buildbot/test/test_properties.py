@@ -50,11 +50,12 @@ class Interpolate(unittest.TestCase):
     def testWithProperties(self):
         self.build.setProperty("revision", 47)
         self.failUnlessEqual(self.build_status.getProperty("revision"), 47)
-        c = ShellCommand(workdir=dir, build=self.build,
+        c = ShellCommand(workdir=dir,
                          command=["tar", "czf",
                                   WithProperties("build-%s.tar.gz",
                                                  "revision"),
                                   "source"])
+        c.setBuild(self.build)
         cmd = c._interpolateProperties(c.command)
         self.failUnlessEqual(cmd,
                              ["tar", "czf", "build-47.tar.gz", "source"])
@@ -62,55 +63,61 @@ class Interpolate(unittest.TestCase):
     def testWithPropertiesDict(self):
         self.build.setProperty("other", "foo")
         self.build.setProperty("missing", None)
-        c = ShellCommand(workdir=dir, build=self.build,
+        c = ShellCommand(workdir=dir,
                          command=["tar", "czf",
                                   WithProperties("build-%(other)s.tar.gz"),
                                   "source"])
+        c.setBuild(self.build)
         cmd = c._interpolateProperties(c.command)
         self.failUnlessEqual(cmd,
                              ["tar", "czf", "build-foo.tar.gz", "source"])
 
     def testWithPropertiesEmpty(self):
         self.build.setProperty("empty", None)
-        c = ShellCommand(workdir=dir, build=self.build,
+        c = ShellCommand(workdir=dir,
                          command=["tar", "czf",
                                   WithProperties("build-%(empty)s.tar.gz"),
                                   "source"])
+        c.setBuild(self.build)
         cmd = c._interpolateProperties(c.command)
         self.failUnlessEqual(cmd,
                              ["tar", "czf", "build-.tar.gz", "source"])
 
     def testCustomBuildStep(self):
-        c = MyBuildStep(workdir=dir, build=self.build)
+        c = MyBuildStep(workdir=dir)
+        c.setBuild(self.build)
         cmd = c._interpolateProperties(c.command)
         self.failUnlessEqual(cmd,
                              ["tar", "czf", "build-1234.tar.gz", "source"])
 
     def testSourceStamp(self):
-        c = ShellCommand(workdir=dir, build=self.build,
+        c = ShellCommand(workdir=dir,
                          command=["touch",
                                   WithProperties("%s-dir", "branch"),
                                   WithProperties("%s-rev", "revision"),
                                   ])
+        c.setBuild(self.build)
         cmd = c._interpolateProperties(c.command)
         self.failUnlessEqual(cmd,
                              ["touch", "branch2-dir", "1234-rev"])
 
     def testSlaveName(self):
-        c = ShellCommand(workdir=dir, build=self.build,
+        c = ShellCommand(workdir=dir,
                          command=["touch",
                                   WithProperties("%s-slave", "slavename"),
                                   ])
+        c.setBuild(self.build)
         cmd = c._interpolateProperties(c.command)
         self.failUnlessEqual(cmd,
                              ["touch", "bot12-slave"])
 
     def testBuildNumber(self):
-        c = ShellCommand(workdir=dir, build=self.build,
+        c = ShellCommand(workdir=dir,
                          command=["touch",
                                   WithProperties("build-%d", "buildnumber"),
                                   WithProperties("builder-%s", "buildername"),
                                   ])
+        c.setBuild(self.build)
         cmd = c._interpolateProperties(c.command)
         self.failUnlessEqual(cmd,
                              ["touch", "build-5", "builder-fakebuilder"])
