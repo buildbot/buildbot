@@ -8,8 +8,8 @@ class MaxQ(ShellCommand):
     def __init__(self, testdir=None, **kwargs):
         if not testdir:
             raise TypeError("please pass testdir")
-        command = 'run_maxq.py %s' % (testdir,)
-        ShellCommand.__init__(self, command=command, **kwargs)
+        kwargs['command'] = 'run_maxq.py %s' % (testdir,)
+        ShellCommand.__init__(self, **kwargs)
         self.addFactoryArguments(testdir=testdir)
 
     def startStatus(self):

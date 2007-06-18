@@ -1,5 +1,10 @@
 2007-06-17  Brian Warner  <warner@lothar.com>
 
+	* buildbot/test/test_config.py (Factories.testAllSteps): make sure
+	we can round-trip all of our current step classes by calling
+	getStepFactory() and using the results to make a clone of the
+	original step.
+
 	* buildbot/steps/maxq.py: fix import errors. Guess this hasn't been
 	used in a while..
 

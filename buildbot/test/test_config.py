@@ -25,6 +25,8 @@ from buildbot.process.factory import BasicBuildFactory
 from buildbot.steps.source import CVS, Darcs
 from buildbot.steps.shell import Compile, Test, ShellCommand
 from buildbot.status import base
+from buildbot.steps import dummy, maxq, python, python_twisted, shell, \
+     source, transfer
 words = None
 try:
     from buildbot.status import words
@@ -1177,3 +1179,41 @@ class Factories(unittest.TestCase):
                                      repourl="http://buildbot.net/repos/trunk")
         self.failUnlessExpectedShell(steps[3], defaults=False,
                                      command="echo old-style")
+
+    def _loop(self, orig):
+        step_class, kwargs = orig.getStepFactory()
+        newstep = step_class(**kwargs)
+        return newstep
+
+    def testAllSteps(self):
+        # make sure that steps can be created from the factories that they
+        # return
+        for s in ( dummy.Dummy(), dummy.FailingDummy(), dummy.RemoteDummy(),
+                   maxq.MaxQ("testdir"),
+                   python.BuildEPYDoc(), python.PyFlakes(),
+                   python_twisted.HLint(),
+                   python_twisted.Trial(testpath=None, tests="tests"),
+                   python_twisted.ProcessDocs(), python_twisted.BuildDebs(),
+                   python_twisted.RemovePYCs(),
+                   shell.ShellCommand(), shell.TreeSize(),
+                   shell.Configure(), shell.Compile(), shell.Test(),
+                   source.CVS("cvsroot", "module"),
+                   source.SVN("svnurl"), source.Darcs("repourl"),
+                   source.Git("repourl"),
+                   source.Arch("url", "version"),
+                   source.Bazaar("url", "version", "archive"),
+                   source.Bzr("repourl"),
+                   source.Mercurial("repourl"),
+                   source.P4("p4base"),
+                   source.P4Sync(1234, "p4user", "passwd", "client",
+                                 mode="copy"),
+                   source.Monotone("server", "branch"),
+                   transfer.FileUpload("src", "dest"),
+                   transfer.FileDownload("src", "dest"),
+                   ):
+            try:
+                self._loop(s)
+            except:
+                print "error checking %s" % s
+                raise
+
