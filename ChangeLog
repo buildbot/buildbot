@@ -1,5 +1,8 @@
 2007-06-17  Brian Warner  <warner@lothar.com>
 
+	* buildbot/steps/maxq.py: fix import errors. Guess this hasn't been
+	used in a while..
+
 	* buildbot/process/factory.py (BuildFactory.addStep): To simplify
 	the config file, we're moving to using actual instances instead of
 	the (class, kwargs) 'step specification' tuples. BuildFactory
