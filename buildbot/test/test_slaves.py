@@ -68,6 +68,7 @@ class Slave(RunMixin, unittest.TestCase):
         # rotate or attempt any sort of load-balancing, two builds in
         # sequence should both use the first slave. This may change later if
         # we move to a more sophisticated scheme.
+        b.CHOOSE_SLAVES_RANDOMLY = False
 
         d = self.doBuild("b1")
         d.addCallback(self._testSequence_1)
@@ -91,12 +92,16 @@ class Slave(RunMixin, unittest.TestCase):
         return d1
     def _testSimultaneous_1(self, res, d2):
         self.failUnlessEqual(res.getResults(), SUCCESS)
-        self.failUnlessEqual(res.getSlavename(), "bot1")
-        d2.addCallback(self._testSimultaneous_2)
+        b1_slavename = res.getSlavename()
+        d2.addCallback(self._testSimultaneous_2, b1_slavename)
         return d2
-    def _testSimultaneous_2(self, res):
+    def _testSimultaneous_2(self, res, b1_slavename):
         self.failUnlessEqual(res.getResults(), SUCCESS)
-        self.failUnlessEqual(res.getSlavename(), "bot2")
+        b2_slavename = res.getSlavename()
+        # make sure the two builds were run by different slaves
+        slavenames = [b1_slavename, b2_slavename]
+        slavenames.sort()
+        self.failUnlessEqual(slavenames, ["bot1", "bot2"])
 
     def testFallback1(self):
         # detach the first slave, verify that a build is run using the second
@@ -125,6 +130,8 @@ class Slave(RunMixin, unittest.TestCase):
 
         # reduce the ping time so we'll failover faster
         self.master.botmaster.builders["b1"].START_BUILD_TIMEOUT = 1
+        assert self.master.botmaster.builders["b1"].CHOOSE_SLAVES_RANDOMLY
+        self.master.botmaster.builders["b1"].CHOOSE_SLAVES_RANDOMLY = False
         self.disappearSlave("bot1", "b1")
         d = self.doBuild("b1")
         d.addCallback(self._testFallback2_1)
@@ -133,7 +140,9 @@ class Slave(RunMixin, unittest.TestCase):
         self.failUnlessEqual(res.getResults(), SUCCESS)
         self.failUnlessEqual(res.getSlavename(), "bot2")
         b1slaves = self.master.botmaster.builders["b1"].slaves
-        self.failUnlessEqual(len(b1slaves), 1)
+        # TODO: this check fails sometimes, sometimes len(b1slaves)==2,
+        # sometimes it is empty
+        self.failUnlessEqual(len(b1slaves), 1, b1slaves)
         self.failUnlessEqual(b1slaves[0].slave.slavename, "bot2")
 
 
@@ -152,6 +161,7 @@ class Slave(RunMixin, unittest.TestCase):
         self.slaves['bot1'].debugOpts["stallPings"] = (10, timers)
         br = BuildRequest("forced", SourceStamp())
         d1 = br.waitUntilFinished()
+        self.master.botmaster.builders["b1"].CHOOSE_SLAVES_RANDOMLY = False
         self.control.getBuilder("b1").requestBuild(br)
         s1 = br.status # this is a BuildRequestStatus
         # give it a chance to start pinging

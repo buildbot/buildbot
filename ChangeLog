@@ -1,5 +1,14 @@
 2007-07-02  Brian Warner  <warner@lothar.com>
 
+	* buildbot/process/builder.py (Builder.maybeStartBuild): choose
+	the slave randomly rather than always taking the first one. Thanks
+	to Pike for the patch. Closes #36.
+	* buildbot/test/test_slaves.py: match the change. to avoid huge
+	changes to the tests, I added a CHOOSE_SLAVES_RANDOMLY flag which
+	enables/disables the round-robin-ness (enabled by default), and
+	some unit tests disable it.
+	* docs/buildbot.texinfo (Buildmaster Architecture): document it
+
 	* buildbot/slave/bot.py (BuildSlave.__init__): rename the 'host'
 	argument to 'buildmaster_host', to make it more obvious that this
 	points to the buildmaster. Thanks to Bob Proulx for the

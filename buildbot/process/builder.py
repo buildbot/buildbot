@@ -1,5 +1,5 @@
-#! /usr/bin/python
 
+import random
 from zope.interface import implements
 from twisted.python import log, components
 from twisted.spread import pb
@@ -224,6 +224,7 @@ class Builder(pb.Referenceable):
 
     expectations = None # this is created the first time we get a good build
     START_BUILD_TIMEOUT = 10
+    CHOOSE_SLAVES_RANDOMLY = True # disabled for determinism during tests
 
     def __init__(self, setup, builder_status):
         """
@@ -502,15 +503,18 @@ class Builder(pb.Referenceable):
         if not self.buildable:
             self.updateBigStatus()
             return # nothing to do
-        # find the first idle slave
-        for sb in self.slaves:
-            if sb.isAvailable():
-                break
-        else:
+
+        # pick an idle slave
+        available_slaves = [sb for sb in self.slaves if sb.isAvailable()]
+        if not available_slaves:
             log.msg("%s: want to start build, but we don't have a remote"
                     % self)
             self.updateBigStatus()
             return
+        if self.CHOOSE_SLAVES_RANDOMLY:
+            sb = random.choice(available_slaves)
+        else:
+            sb = available_slaves[0]
 
         # there is something to build, and there is a slave on which to build
         # it. Grab the oldest request, see if we can merge it with anything

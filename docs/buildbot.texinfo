@@ -478,8 +478,8 @@ determines that it can merge the requests together; for example, there
 may be multiple requests to build the current HEAD revision). These
 requests are merged into a single Build instance, which includes the
 SourceStamp that describes what exact version of the source code
-should be used for the build. The Build is then assigned to a
-SlaveBuilder and the build begins.
+should be used for the build. The Build is then randomly assigned to a
+free SlaveBuilder and the build begins.
 
 
 @node Status Delivery Architecture,  , Buildmaster Architecture, System Architecture
