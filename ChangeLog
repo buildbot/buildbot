@@ -1,5 +1,12 @@
 2007-07-02  Brian Warner  <warner@lothar.com>
 
+	* buildbot/slave/bot.py (BuildSlave.__init__): rename the 'host'
+	argument to 'buildmaster_host', to make it more obvious that this
+	points to the buildmaster. Thanks to Bob Proulx for the
+	suggestion.
+	* buildbot/scripts/runner.py (slaveTAC): same
+	* buildbot/test/test_runner.py (Create.testSlave): match the change
+
 	* contrib/hg_buildbot.py: patch from Frederic Leroy to make this
 	work better.
 

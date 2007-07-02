@@ -463,8 +463,9 @@ class BuildSlave(service.MultiService):
     # debugOpts['failPingOnce'] can be set to True to make the slaveping fail
     # exactly once.
 
-    def __init__(self, host, port, name, passwd, basedir, keepalive,
-                 usePTY, keepaliveTimeout=30, umask=None, debugOpts={}):
+    def __init__(self, buildmaster_host, port, name, passwd, basedir,
+                 keepalive, usePTY, keepaliveTimeout=30, umask=None,
+                 debugOpts={}):
         log.msg("Creating BuildSlave")
         service.MultiService.__init__(self)
         self.debugOpts = debugOpts.copy()
@@ -476,7 +477,7 @@ class BuildSlave(service.MultiService):
         self.umask = umask
         bf = self.bf = BotFactory(keepalive, keepaliveTimeout)
         bf.startLogin(credentials.UsernamePassword(name, passwd), client=bot)
-        self.connection = c = internet.TCPClient(host, port, bf)
+        self.connection = c = internet.TCPClient(buildmaster_host, port, bf)
         c.setServiceParent(self)
 
     def waitUntilDisconnected(self):

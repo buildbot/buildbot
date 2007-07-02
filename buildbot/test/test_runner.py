@@ -163,12 +163,13 @@ class Create(unittest.TestCase):
         self.failUnless(os.path.exists(tac))
         tacfile = open(tac,"rt").read()
         self.failUnlessIn("basedir", tacfile)
-        self.failUnlessIn("host = 'buildmaster'", tacfile)
+        self.failUnlessIn("buildmaster_host = 'buildmaster'", tacfile)
         self.failUnlessIn("port = 1234", tacfile)
         self.failUnlessIn("slavename = 'botname'", tacfile)
         self.failUnlessIn("passwd = 'passwd'", tacfile)
         self.failUnlessIn("keepalive = 600", tacfile)
-        self.failUnlessIn("BuildSlave(host, port, slavename", tacfile)
+        self.failUnlessIn("BuildSlave(buildmaster_host, port, slavename",
+                          tacfile)
 
         makefile = os.path.join(basedir, "Makefile.sample")
         self.failUnlessExists(makefile)
@@ -211,12 +212,13 @@ class Create(unittest.TestCase):
         self.failUnlessExists(os.path.join(basedir, "buildbot.tac.new"))
         tacfile = open(os.path.join(basedir, "buildbot.tac.new"),"rt").read()
         self.failUnlessIn("basedir", tacfile)
-        self.failUnlessIn("host = 'buildmaster'", tacfile)
+        self.failUnlessIn("buildmaster_host = 'buildmaster'", tacfile)
         self.failUnlessIn("port = 9999", tacfile)
         self.failUnlessIn("slavename = 'newbotname'", tacfile)
         self.failUnlessIn("passwd = 'passwd'", tacfile)
         self.failUnlessIn("keepalive = 30", tacfile)
-        self.failUnlessIn("BuildSlave(host, port, slavename", tacfile)
+        self.failUnlessIn("BuildSlave(buildmaster_host, port, slavename",
+                          tacfile)
 
         make = open(os.path.join(basedir, "Makefile.sample"), "rt").read()
         self.failUnlessEqual(make, oldmake, "*should* rewrite Makefile.sample")
