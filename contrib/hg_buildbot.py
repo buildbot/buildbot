@@ -22,25 +22,14 @@ CHANGESET_ID = os.environ["HG_NODE"]
 
 # TODO: consider doing 'import mercurial.hg' and extract this information
 # using the native python
-out = commands.getoutput("hg -v log -r %s" % CHANGESET_ID)
-# TODO: or maybe use --template instead of trying hard to parse everything
-#out = commands.getoutput("hg --template SOMETHING log -r %s" % CHANGESET_ID)
+out = commands.getoutput("hg log -r %s --template '{author}\n{files}\n{desc}'" % CHANGESET_ID)
 
 s = StringIO(out)
-while True:
-    line = s.readline()
-    if not line:
-        break
-    if line.startswith("user:"):
-        user = line[line.find(":")+1:].strip()
-    elif line.startswith("files:"):
-        files = line[line.find(":")+1:].strip().split()
-    elif line.startswith("description:"):
-        comments = "".join(s.readlines())
-        if comments[-1] == "\n":
-            # this removes the additional newline that hg emits
-            comments = comments[:-1]
-        break
+user = s.readline().strip()
+# NOTE: this fail when filenames contain spaces. I cannot find a way to get
+# hg to use some other filename separator.
+files = s.readline().strip().split()
+comments = "".join(s.readlines())
 
 change = {
     'master': MASTER,
@@ -53,5 +42,5 @@ change = {
     'files': files,
     }
 
-runner.sendchange(c, True)
+runner.sendchange(change, True)
 
