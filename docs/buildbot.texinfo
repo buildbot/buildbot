@@ -2096,11 +2096,10 @@ This scheduler uses a tree-stable-timer like the default one, but
 follows multiple branches at once. Each branch gets a separate timer.
 
 @item Dependent
-This scheduler watches an ``upstream'' Builder. When that Builder
-successfully builds a particular set of Changes, it triggers builds of
-the same code on a configured set of ``downstream'' builders. The next
-section (@pxref{Build Dependencies}) describes this scheduler in more
-detail.
+This scheduler watches an ``upstream'' Scheduler. When all the
+Builders launched by that Scheduler successfully finish, the Dependent
+scheduler is triggered. The next section (@pxref{Build Dependencies})
+describes this scheduler in more detail.
 
 @item Periodic
 This simple scheduler just triggers a build every N seconds.

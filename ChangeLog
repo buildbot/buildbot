@@ -1,5 +1,8 @@
 2007-07-03  Brian Warner  <warner@lothar.com>
 
+	* docs/buildbot.texinfo (Scheduler Types): correct the description
+	of Dependent schedulers. Thanks to Greg Ward for the patch.
+
 	* buildbot/steps/source.py (SVN.startVC): when applying a patch,
 	add "[patch]" to the step's display. Thanks to Dustin Mitchell for
 	the patch. Closes #49.
