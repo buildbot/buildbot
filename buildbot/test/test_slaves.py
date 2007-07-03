@@ -128,10 +128,11 @@ class Slave(RunMixin, unittest.TestCase):
         # claimed for the build, and that the failing one is removed from the
         # list.
 
+        b1 = self.master.botmaster.builders["b1"]
         # reduce the ping time so we'll failover faster
-        self.master.botmaster.builders["b1"].START_BUILD_TIMEOUT = 1
-        assert self.master.botmaster.builders["b1"].CHOOSE_SLAVES_RANDOMLY
-        self.master.botmaster.builders["b1"].CHOOSE_SLAVES_RANDOMLY = False
+        b1.START_BUILD_TIMEOUT = 1
+        assert b1.CHOOSE_SLAVES_RANDOMLY
+        b1.CHOOSE_SLAVES_RANDOMLY = False
         self.disappearSlave("bot1", "b1")
         d = self.doBuild("b1")
         d.addCallback(self._testFallback2_1)
@@ -140,9 +141,7 @@ class Slave(RunMixin, unittest.TestCase):
         self.failUnlessEqual(res.getResults(), SUCCESS)
         self.failUnlessEqual(res.getSlavename(), "bot2")
         b1slaves = self.master.botmaster.builders["b1"].slaves
-        # TODO: this check fails sometimes, sometimes len(b1slaves)==2,
-        # sometimes it is empty
-        self.failUnlessEqual(len(b1slaves), 1, b1slaves)
+        self.failUnlessEqual(len(b1slaves), 1, "whoops: %s" % (b1slaves,))
         self.failUnlessEqual(b1slaves[0].slave.slavename, "bot2")
 
 

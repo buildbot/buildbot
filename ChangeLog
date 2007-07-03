@@ -1,5 +1,16 @@
 2007-07-02  Brian Warner  <warner@lothar.com>
 
+	* buildbot/test/runutils.py (RunMixin.disappearSlave): once a
+	slave has been disappeared, don't let it reconnect. This was
+	causing an intermittent failure in test_slaves.py, when the slave
+	that was supposed to be gone managed to come back by the end of
+	the test and affect the count.
+	* buildbot/test/test_slaves.py (Slave.testFallback2): minor
+	refactorings
+	* buildbot/process/builder.py (SlaveBuilder.__repr__): added some
+	diagnostic messages to track down this problem
+	(Builder.startBuild): same
+
 	* buildbot/process/builder.py (Builder.maybeStartBuild): choose
 	the slave randomly rather than always taking the first one. Thanks
 	to Pike for the patch. Closes #36.

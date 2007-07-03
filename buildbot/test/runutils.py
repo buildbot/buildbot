@@ -206,6 +206,9 @@ class RunMixin:
         broker = bot.builders[buildername].remote.broker
         broker.dataReceived = discard # seal its ears
         broker.transport.write = discard # and take away its voice
+        # also discourage it from reconnecting once the connection goes away
+        assert self.slaves[slavename].bf.continueTrying
+        self.slaves[slavename].bf.continueTrying = False
 
     def ghostSlave(self):
         # the slave thinks it has lost the connection, and initiated a

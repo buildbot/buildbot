@@ -26,6 +26,17 @@ class SlaveBuilder(pb.Referenceable):
         self.ping_watchers = []
         self.state = ATTACHING
         self.remote = None
+        self.slave = None
+        self.builder_name = None
+
+    def __repr__(self):
+        r = "<SlaveBuilder"
+        if self.builder_name:
+            r += " builder=%s" % self.builder_name
+        if self.slave:
+            r += " slave=%s" % self.slave.slavename
+        r += ">"
+        return r
 
     def setBuilder(self, b):
         self.builder = b
@@ -551,7 +562,7 @@ class Builder(pb.Referenceable):
         self.building.append(build)
         self.updateBigStatus()
 
-        log.msg("starting build %s.. pinging the slave" % build)
+        log.msg("starting build %s.. pinging the slave %s" % (build, sb))
         # ping the slave to make sure they're still there. If they're fallen
         # off the map (due to a NAT timeout or something), this will fail in
         # a couple of minutes, depending upon the TCP timeout. TODO: consider
