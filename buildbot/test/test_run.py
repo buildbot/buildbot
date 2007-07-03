@@ -186,8 +186,7 @@ class Disconnect(RunMixin, unittest.TestCase):
 
     def testIdle2(self):
         # now suppose the slave goes missing
-        self.slaves['bot1'].bf.continueTrying = 0
-        self.disappearSlave()
+        self.disappearSlave(allowReconnect=False)
 
         # forcing a build will work: the build detect that the slave is no
         # longer available and will be re-queued. Wait 5 seconds, then check
@@ -356,8 +355,7 @@ class Disconnect(RunMixin, unittest.TestCase):
         self.failUnlessEqual(res, True)
 
         # now, before any build is run, make the slave disappear
-        self.slaves['bot1'].bf.continueTrying = 0
-        self.disappearSlave()
+        self.disappearSlave(allowReconnect=False)
 
         # at this point, a ping to the slave should timeout
         d = bc.ping(1)
@@ -375,8 +373,7 @@ class Disconnect(RunMixin, unittest.TestCase):
         self.failUnlessEqual(ss.getAdmin(), "one")
 
         # now, before any build is run, make the first slave disappear
-        self.slaves['bot1'].bf.continueTrying = 0
-        self.disappearSlave()
+        self.disappearSlave(allowReconnect=False)
 
         d = self.master.botmaster.waitUntilBuilderDetached("dummy")
         # now let the new slave take over
@@ -447,7 +444,7 @@ class Disconnect2(RunMixin, unittest.TestCase):
 
         d = self.master.botmaster.waitUntilBuilderDetached("dummy")
         # whoops! how careless of me.
-        self.disappearSlave()
+        self.disappearSlave(allowReconnect=True)
         # the slave will realize the connection is lost within 2 seconds, and
         # reconnect.
         d.addCallback(self._testSlaveTimeout_2)

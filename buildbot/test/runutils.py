@@ -193,7 +193,8 @@ class RunMixin:
         broker.transport.loseConnection()
         del self.slaves['bot1']
 
-    def disappearSlave(self, slavename="bot1", buildername="dummy"):
+    def disappearSlave(self, slavename="bot1", buildername="dummy",
+                       allowReconnect=False):
         # the slave's host has vanished off the net, leaving the connection
         # dangling. This will be detected quickly by app-level keepalives or
         # a ping, or slowly by TCP timeouts.
@@ -206,9 +207,10 @@ class RunMixin:
         broker = bot.builders[buildername].remote.broker
         broker.dataReceived = discard # seal its ears
         broker.transport.write = discard # and take away its voice
-        # also discourage it from reconnecting once the connection goes away
-        assert self.slaves[slavename].bf.continueTrying
-        self.slaves[slavename].bf.continueTrying = False
+        if not allowReconnect:
+            # also discourage it from reconnecting once the connection goes away
+            assert self.slaves[slavename].bf.continueTrying
+            self.slaves[slavename].bf.continueTrying = False
 
     def ghostSlave(self):
         # the slave thinks it has lost the connection, and initiated a

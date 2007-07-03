@@ -133,7 +133,7 @@ class Slave(RunMixin, unittest.TestCase):
         b1.START_BUILD_TIMEOUT = 1
         assert b1.CHOOSE_SLAVES_RANDOMLY
         b1.CHOOSE_SLAVES_RANDOMLY = False
-        self.disappearSlave("bot1", "b1")
+        self.disappearSlave("bot1", "b1", allowReconnect=False)
         d = self.doBuild("b1")
         d.addCallback(self._testFallback2_1)
         return d
