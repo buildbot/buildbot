@@ -465,6 +465,8 @@ class SVN(Source):
             revstuff.append("[branch]")
         if revision is not None:
             revstuff.append("r%s" % revision)
+        if patch is not None:
+            revstuff.append("[patch]")
         self.description.extend(revstuff)
         self.descriptionDone.extend(revstuff)
 

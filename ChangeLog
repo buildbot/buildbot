@@ -1,5 +1,9 @@
 2007-07-03  Brian Warner  <warner@lothar.com>
 
+	* buildbot/steps/source.py (SVN.startVC): when applying a patch,
+	add "[patch]" to the step's display. Thanks to Dustin Mitchell for
+	the patch. Closes #49.
+
 	* buildbot/slave/commands.py (rmdirRecursive): chmod everything to
 	0700 before removing it, to deal with situations where a build will
 	leave files around without write permissions and the 'copy' or
