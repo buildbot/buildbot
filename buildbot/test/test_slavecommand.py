@@ -14,6 +14,42 @@ from buildbot.test.runutils import SignalMixin, FakeSlaveBuilder
 # test slavecommand.py by running the various commands with a fake
 # SlaveBuilder object that logs the calls to sendUpdate()
 
+class Utilities(unittest.TestCase):
+    def mkdir(self, basedir, path, mode=None):
+        fn = os.path.join(basedir, path)
+        os.makedirs(fn)
+        if mode is not None:
+            os.chmod(fn, mode)
+
+    def touch(self, basedir, path, mode=None):
+        fn = os.path.join(basedir, path)
+        f = open(fn, "w")
+        f.write("touch\n")
+        f.close()
+        if mode is not None:
+            os.chmod(fn, mode)
+
+    def test_rmdirRecursive(self):
+        basedir = "slavecommand/Utilities/test_rmdirRecursive"
+        os.makedirs(basedir)
+        d = os.path.join(basedir, "doomed")
+        self.mkdir(d, "a/b")
+        self.touch(d, "a/b/1.txt")
+        self.touch(d, "a/b/2.txt", 0444)
+        self.touch(d, "a/b/3.txt", 0)
+        self.mkdir(d, "a/c")
+        self.touch(d, "a/c/1.txt")
+        self.touch(d, "a/c/2.txt", 0444)
+        self.touch(d, "a/c/3.txt", 0)
+        os.chmod(os.path.join(d, "a/c"), 0444)
+        self.mkdir(d, "a/d")
+        self.touch(d, "a/d/1.txt")
+        self.touch(d, "a/d/2.txt", 0444)
+        self.touch(d, "a/d/3.txt", 0)
+        os.chmod(os.path.join(d, "a/d"), 0)
+
+        commands.rmdirRecursive(d)
+        self.failIf(os.path.exists(d))
 
 
 class ShellBase(SignalMixin):

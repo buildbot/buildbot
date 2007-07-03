@@ -1,5 +1,14 @@
 2007-07-03  Brian Warner  <warner@lothar.com>
 
+	* buildbot/slave/commands.py (rmdirRecursive): chmod everything to
+	0700 before removing it, to deal with situations where a build will
+	leave files around without write permissions and the 'copy' or
+	'clobber' VC checkout modes need to blow away the tree first.
+	Thanks to Steve Milner for the suggestion and the patch (which I
+	mangled horribly). Closes #29.
+	* buildbot/test/test_slavecommand.py (Utilities.test_rmdirRecursive):
+	test for it
+
 	* buildbot/test/runutils.py (RunMixin.disappearSlave): oops, add
 	an allowReconnect= argument to let callers control whether they
 	want this don't-let-it-reconnect behavior, since some tests care.
