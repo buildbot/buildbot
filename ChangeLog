@@ -1,5 +1,11 @@
 2007-07-03  Brian Warner  <warner@lothar.com>
 
+	* buildbot/steps/shell.py (ShellCommand): allow workdir= to be a
+	WithProperties instance. Thanks to Axel Hecht for the patch.
+	Closes #43.
+	* buildbot/test/test_properties.py (Interpolate.testWorkdir): test it
+	* docs/buildbot.texinfo (Build Properties): document it
+
 	* docs/buildbot.texinfo (Scheduler Types): correct the description
 	of Dependent schedulers. Thanks to Greg Ward for the patch.
 

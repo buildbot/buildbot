@@ -3970,7 +3970,10 @@ class MakeTarball(ShellCommand):
 You can use build properties in ShellCommands by using the
 @code{WithProperties} wrapper when setting the arguments of the
 ShellCommand. This interpolates the named build properties into the
-generated shell command.
+generated shell command. You can also use a @code{WithProperties} as
+the @code{workdir=} argument: this allows the working directory for a
+command to be varied for each build, depending upon various build
+properties.
 
 @example
 from buildbot.steps.shell import ShellCommand, WithProperties

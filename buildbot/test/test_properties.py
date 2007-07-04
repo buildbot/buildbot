@@ -60,6 +60,15 @@ class Interpolate(unittest.TestCase):
         self.failUnlessEqual(cmd,
                              ["tar", "czf", "build-47.tar.gz", "source"])
 
+    def testWorkdir(self):
+        self.build.setProperty("revision", 47)
+        self.failUnlessEqual(self.build_status.getProperty("revision"), 47)
+        c = ShellCommand(command=["tar", "czf", "foo.tar.gz", "source"])
+        c.setBuild(self.build)
+        workdir = WithProperties("workdir-%d", "revision")
+        workdir = c._interpolateWorkdir(workdir)
+        self.failUnlessEqual(workdir, "workdir-47")
+
     def testWithPropertiesDict(self):
         self.build.setProperty("other", "foo")
         self.build.setProperty("missing", None)

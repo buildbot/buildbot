@@ -170,6 +170,11 @@ class ShellCommand(LoggingBuildStep):
                 command_argv.append(argv)
         return command_argv
 
+    def _interpolateWorkdir(self, workdir):
+        if isinstance(workdir, WithProperties):
+            return workdir.render(self.build)
+        return workdir
+
     def setupEnvironment(self, cmd):
         # merge in anything from Build.slaveEnvironment . Earlier steps
         # (perhaps ones which compile libraries or sub-projects that need to
@@ -213,6 +218,7 @@ class ShellCommand(LoggingBuildStep):
         assert isinstance(command, (list, tuple, str))
         # create the actual RemoteShellCommand instance now
         kwargs = self.remote_kwargs
+        kwargs['workdir'] = self._interpolateWorkdir(kwargs['workdir'])
         kwargs['command'] = command
         kwargs['logfiles'] = self.logfiles
         cmd = RemoteShellCommand(**kwargs)
