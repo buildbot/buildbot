@@ -362,9 +362,13 @@ class ShellCommand:
         self.sendStatus({'header': msg+"\n"})
 
         # then the environment, since it sometimes causes problems
-        msg = " environment: %s" % (self.environ,)
-        log.msg(" " + msg)
-        self.sendStatus({'header': msg+"\n"})
+        msg = " environment:\n"
+        env_names = self.environ.keys()
+        env_names.sort()
+        for name in env_names:
+            msg += "  %s=%s\n" % (name, self.environ[name])
+        log.msg(" environment: %s" % (self.environ,))
+        self.sendStatus({'header': msg})
 
         # this will be buffered until connectionMade is called
         if self.initialStdin:

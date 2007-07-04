@@ -1,5 +1,12 @@
 2007-07-03  Brian Warner  <warner@lothar.com>
 
+	* buildbot/slave/commands.py (ShellCommand._startCommand): when
+	logging the environment variables, put one variable on each line,
+	rather than having one really long line with all of them. This
+	should make them a bit more readable and not trigger the
+	horizontal scrollbar (when viewing it in a web browser) quite so
+	much. Thanks to Albert Hofkamp for the patch.
+
 	* buildbot/steps/shell.py (ShellCommand): allow workdir= to be a
 	WithProperties instance. Thanks to Axel Hecht for the patch.
 	Closes #43.
