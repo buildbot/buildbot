@@ -5,6 +5,8 @@
 	Closes #43.
 	* buildbot/test/test_properties.py (Interpolate.testWorkdir): test it
 	* docs/buildbot.texinfo (Build Properties): document it
+	* buildbot/slave/commands.py (ShellCommand._startCommand): create the
+	workdir if it didn't already exist.
 
 	* docs/buildbot.texinfo (Scheduler Types): correct the description
 	of Dependent schedulers. Thanks to Greg Ward for the patch.

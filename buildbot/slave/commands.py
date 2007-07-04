@@ -309,6 +309,9 @@ class ShellCommand:
         return self.deferred
 
     def _startCommand(self):
+        # ensure workdir exists
+        if not os.path.isdir(self.workdir):
+            os.makedirs(self.workdir)
         log.msg("ShellCommand._startCommand")
         if self.notreally:
             self.sendStatus({'header': "command '%s' in dir %s" % \
