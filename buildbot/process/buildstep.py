@@ -837,10 +837,11 @@ class BuildStep:
         self._connectPendingLogObservers()
         return loog
 
-    # TODO: add a getLog() ? At the moment all logs have to be retrieved from
-    # the RemoteCommand that created them, but for status summarizers it
-    # would be more convenient to get them from the BuildStep / BSStatus,
-    # especially if there are multiple RemoteCommands involved.
+    def getLog(self, name):
+        for l in self.step_status.getLogs():
+            if l.getName() == name:
+                return l
+        raise KeyError("no log named '%s'" % (name,))
 
     def addCompleteLog(self, name, text):
         log.msg("addCompleteLog(%s)" % name)

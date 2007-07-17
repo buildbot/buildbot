@@ -236,6 +236,8 @@ class Steps(unittest.TestCase):
         self.failUnlessEqual(len(logs), 1)
         l1 = logs[0]
         self.failUnlessEqual(l1.getText(), "some stdout here")
+        l1a = s.getLog("newlog")
+        self.failUnlessEqual(l1a.getText(), "some stdout here")
 
     def test_addHTMLLog(self):
         s = makeBuildStep("test_steps.Steps.test_addHTMLLog")
@@ -255,6 +257,8 @@ class Steps(unittest.TestCase):
         self.failUnlessEqual(len(logs), 1)
         l1 = logs[0]
         self.failUnlessEqual(l1.getText(), "some stdout here")
+        l1a = s.getLog("newlog")
+        self.failUnlessEqual(l1a.getText(), "some stdout here")
 
     def test_addLogObserver(self):
         s = makeBuildStep("test_steps.Steps.test_addLogObserver")

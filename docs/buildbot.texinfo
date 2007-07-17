@@ -197,6 +197,7 @@ Python BuildSteps
 Writing New BuildSteps
 
 * BuildStep LogFiles::          
+* Reading Logfiles::            
 * Adding LogObservers::         
 * BuildStep URLs::              
 
@@ -4269,11 +4270,12 @@ TODO: add more description of BuildSteps.
 
 @menu
 * BuildStep LogFiles::          
+* Reading Logfiles::            
 * Adding LogObservers::         
 * BuildStep URLs::              
 @end menu
 
-@node BuildStep LogFiles, Adding LogObservers, Writing New BuildSteps, Writing New BuildSteps
+@node BuildStep LogFiles, Reading Logfiles, Writing New BuildSteps, Writing New BuildSteps
 @subsubsection BuildStep LogFiles
 
 Each BuildStep has a collection of ``logfiles''. Each one has a short
@@ -4363,8 +4365,31 @@ back to the BuildStep. These additions will be added to the LogFile by
 calling @code{addStdout}. These secondary LogFiles can be used as the
 source of a LogObserver just like the normal ``stdio'' LogFile.
 
+@node Reading Logfiles, Adding LogObservers, BuildStep LogFiles, Writing New BuildSteps
+@subsubsection Reading Logfiles
 
-@node Adding LogObservers, BuildStep URLs, BuildStep LogFiles, Writing New BuildSteps
+Once a LogFile has been added to a BuildStep with @code{addLog()},
+@code{addCompleteLog()}, @code{addHTMLLog()}, or @code{logfiles=},
+your BuildStep can retrieve it by using @code{getLog()}:
+
+@example
+class MyBuildStep(ShellCommand):
+    logfiles = @{ "nodelog": "_test/node.log" @}
+
+    def evaluateCommand(self, cmd):
+        nodelog = self.getLog("nodelog")
+        if "STARTED" in nodelog.getText():
+            return SUCCESS
+        else:
+            return FAILURE
+@end example
+
+For a complete list of the methods you can call on a LogFile, please
+see the docstrings on the @code{IStatusLog} class in
+@file{buildbot/interfaces.py}.
+
+
+@node Adding LogObservers, BuildStep URLs, Reading Logfiles, Writing New BuildSteps
 @subsubsection Adding LogObservers
 
 @cindex LogObserver

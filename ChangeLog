@@ -1,3 +1,10 @@
+2007-07-17  Brian Warner  <warner@lothar.com>
+
+	* buildbot/process/buildstep.py (BuildStep.getLog): add a
+	convenience method to retrieve a log added with
+	addLog()/addCompleteLog()/etc or logfiles= . I should have added
+	this two years ago..
+
 2007-07-03  Brian Warner  <warner@lothar.com>
 
 	* buildbot/slave/commands.py (ShellCommand._startCommand): when
