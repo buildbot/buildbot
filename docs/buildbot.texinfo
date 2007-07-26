@@ -154,6 +154,7 @@ Change Sources
 * P4Source::                    
 * BonsaiPoller::                
 * SVNPoller::                   
+* MercurialHook::               
 
 Build Process
 
@@ -2552,6 +2553,9 @@ process
 @itemize @bullet
 @item pb.PBChangeSource (listening for connections from
 @code{contrib/hg_buildbot.py} run in an 'incoming' hook)
+@item pb.PBChangeSource (listening for connections from
+@code{buildbot/changes/hgbuildbot.py} run as an in-process 'changegroup'
+hook)
 @end itemize
 
 @item Arch/Bazaar
@@ -2577,6 +2581,7 @@ a suitable @code{MaildirSource}.
 * P4Source::                    
 * BonsaiPoller::                
 * SVNPoller::                   
+* MercurialHook::               
 @end menu
 
 @node Choosing ChangeSources, CVSToys - PBService, Change Sources, Change Sources
@@ -2738,13 +2743,14 @@ The last kind of ChangeSource actually listens on a TCP port for
 clients to connect and push change notices @emph{into} the
 Buildmaster. This is used by the built-in @code{buildbot sendchange}
 notification tool, as well as the VC-specific
-@file{contrib/svn_buildbot.py} and @file{contrib/arch_buildbot.py}
-tools. These tools are run by the repository (in a commit hook
-script), and connect to the buildmaster directly each time a file is
-comitted. This is also useful for creating new kinds of change sources
-that work on a @code{push} model instead of some kind of subscription
-scheme, for example a script which is run out of an email .forward
-file.
+@file{contrib/svn_buildbot.py}, @file{contrib/arch_buildbot.py},
+@file{contrib/hg_buildbot.py} tools, and the
+@code{buildbot.changes.hgbuildbot} hook. These tools are run by the
+repository (in a commit hook script), and connect to the buildmaster
+directly each time a file is comitted. This is also useful for
+creating new kinds of change sources that work on a @code{push} model
+instead of some kind of subscription scheme, for example a script
+which is run out of an email .forward file.
 
 This ChangeSource can be configured to listen on its own TCP port, or
 it can share the port that the buildmaster is already using for the
@@ -2866,7 +2872,7 @@ Please take a look at the BonsaiPoller docstring for details about the
 arguments it accepts.
 
 
-@node SVNPoller,  , BonsaiPoller, Change Sources
+@node SVNPoller, MercurialHook, BonsaiPoller, Change Sources
 @subsection SVNPoller
 
 @csindex buildbot.changes.svnpoller.SVNPoller
@@ -3139,6 +3145,96 @@ def my_file_splitter(path):
         return None # wrong project
     return (branch, '/'.join(pieces))
 @end example
+
+@node MercurialHook,  , SVNPoller, Change Sources
+@subsection MercurialHook
+
+Since Mercurial is written in python, the hook script can invoke
+Buildbot's @code{sendchange} function directly, rather than having to
+spawn an external process. This function delivers the same sort of
+changes as @code{buildbot sendchange} and the various hook scripts in
+contrib/, so you'll need to add a @code{pb.PBChangeSource} to your
+buildmaster to receive these changes.
+
+To set this up, first choose a Mercurial repository that represents
+your central ``official'' source tree. This will be the same
+repository that your buildslaves will eventually pull from. Install
+Buildbot on the machine that hosts this repository, using the same
+version of python as Mercurial is using (so that the Mercurial hook
+can import code from buildbot). Then add the following to the
+@code{.hg/hgrc} file in that repository, replacing the buildmaster
+hostname/portnumber as appropriate for your buildbot:
+
+@example
+[hooks]
+changegroup.buildbot = python:buildbot.changes.hgbuildbot.hook
+
+[hgbuildbot]
+master = buildmaster.example.org:9987
+@end example
+
+(Note that Mercurial lets you define multiple @code{changegroup} hooks
+by giving them distinct names, like @code{changegroup.foo} and
+@code{changegroup.bar}, which is why we use
+@code{changegroup.buildbot} in this example. There is nothing magical
+about the ``buildbot'' suffix in the hook name. The
+@code{[hgbuildbot]} section @emph{is} special, however, as it is the
+only section that the buildbot hook pays attention to.)
+
+Also note that this runs as a @code{changegroup} hook, rather than as
+an @code{incoming} hook. The @code{changegroup} hook is run with
+multiple revisions at a time (say, if multiple revisions are being
+pushed to this repository in a single @command{hg push} command),
+whereas the @code{incoming} hook is run with just one revision at a
+time. The @code{hgbuildbot.hook} function will only work with the
+@code{changegroup} hook.
+
+The @code{[hgbuildbot]} section has two other parameters that you
+might specify, both of which control the name of the branch that is
+attached to the changes coming from this hook.
+
+One common branch naming policy for Mercurial repositories is to use
+it just like Darcs: each branch goes into a separate repository, and
+all the branches for a single project share a common parent directory.
+For example, you might have @file{/var/repos/PROJECT/trunk/} and
+@file{/var/repos/PROJECT/release}. To use this style, use the
+@code{branchtype = dirname} setting, which simply uses the last
+component of the repository's enclosing directory as the branch name:
+
+@example
+[hgbuildbot]
+master = buildmaster.example.org:9987
+branchtype = dirname
+@end example
+
+Another approach is to use Mercurial's built-in branches (the kind
+created with @command{hg branch} and listed with @command{hg
+branches}). This feature associates persistent names with particular
+lines of descent within a single repository. (note that the buildbot
+@code{source.Mercurial} checkout step does not yet support this kind
+of branch). To have the commit hook deliver this sort of branch name
+with the Change object, use @code{branchtype = inrepo}:
+
+@example
+[hgbuildbot]
+master = buildmaster.example.org:9987
+branchtype = inrepo
+@end example
+
+Finally, if you want to simply specify the branchname directly, for
+all changes, use @code{branch = BRANCHNAME}. This overrides
+@code{branchtype}:
+
+@example
+[hgbuildbot]
+master = buildmaster.example.org:9987
+branch = trunk
+@end example
+
+If you use @code{branch=} like this, you'll need to put a separate
+.hgrc in each repository. If you use @code{branchtype=}, you may be
+able to use the same .hgrc for all your repositories, stored in
+@file{~/.hgrc} or @file{/etc/mercurial/hgrc}.
 
 
 @node Build Process, Status Delivery, Getting Source Code Changes, Top

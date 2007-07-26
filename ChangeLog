@@ -1,3 +1,10 @@
+2007-07-26  Brian Warner  <warner@lothar.com>
+
+	* buildbot/changes/hgbuildbot.py (hook): add an in-process
+	Mercurial change-sending hook, contributed by Frederic Leroy.
+	Thanks! Addresses #50.
+	* docs/buildbot.texinfo (MercurialHook): document it
+
 2007-07-17  Brian Warner  <warner@lothar.com>
 
 	* buildbot/process/buildstep.py (BuildStep.getLog): add a
