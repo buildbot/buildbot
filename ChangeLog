@@ -5,6 +5,9 @@
 	Thanks! Addresses #50.
 	* docs/buildbot.texinfo (MercurialHook): document it
 
+	* buildbot/changes/hgbuildbot.py: change the way imports are done,
+	to make it compatible with at least hg-0.9.1 and the current 0.9.4
+
 2007-07-17  Brian Warner  <warner@lothar.com>
 
 	* buildbot/process/buildstep.py (BuildStep.getLog): add a

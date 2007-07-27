@@ -5,13 +5,6 @@
 # This software may be used and distributed according to the terms
 # of the GNU General Public License, incorporated herein by reference.
 
-from mercurial.demandload import *
-from mercurial.i18n import gettext as _
-from mercurial.node import *
-from buildbot.clients import sendchange
-from twisted.internet import defer, reactor
-demandload(globals(), "os sys mercurial:hg,util")
-
 # hook extension to send change notifications to buildbot when a changeset is
 # brought into the repository from elsewhere.
 #
@@ -37,6 +30,24 @@ demandload(globals(), "os sys mercurial:hg,util")
 #                                        # inrepo:  branch = mercurial branch
 #
 #   branch = branchname                  # if set, branch is always branchname
+
+import os
+
+from mercurial.i18n import gettext as _
+from mercurial.node import bin, hex
+
+# mercurial's on-demand-importing hacks interfere with the:
+#from zope.interface import Interface
+# that Twisted needs to do, so disable it.
+try:
+    from mercurial import demandimport
+    demandimport.disable()
+except ImportError:
+    pass
+
+from buildbot.clients import sendchange
+from twisted.internet import defer, reactor
+
 
 def hook(ui, repo, hooktype, node=None, source=None, **kwargs):
     # read config parameters
