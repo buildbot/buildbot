@@ -2212,17 +2212,19 @@ and they are all configured to contact the buildmaster at
 @node Buildslave Specifiers, Defining Builders, Setting the slaveport, Configuration
 @section Buildslave Specifiers
 
-@bcindex c['bots']
+@bcindex c['slaves']
 
-The @code{c['bots']} key is a list of known buildslaves. Each
-buildslave is defined by a tuple of (slavename, slavepassword). These
-are the same two values that need to be provided to the buildslave
-administrator when they create the buildslave.
+The @code{c['slaves']} key is a list of known buildslaves. Each
+buildslave is defined by an instance of the BuildSlave class, created
+with two values: (slavename, slavepassword). These are the same two
+values that need to be provided to the buildslave administrator when
+they create the buildslave.
 
 @example
-c['bots'] = [('bot-solaris', 'solarispasswd'),
-             ('bot-bsd', 'bsdpasswd'),
-            ]
+from buildbot.slave import BuildSlave
+c['slaves'] = [BuildSlave('bot-solaris', 'solarispasswd'),
+               BuildSlave('bot-bsd', 'bsdpasswd'),
+              ]
 @end example
 
 The slavenames must be unique, of course. The password exists to
@@ -2233,6 +2235,11 @@ real ones.
 Buildslaves with an unrecognized slavename or a non-matching password
 will be rejected when they attempt to connect, and a message
 describing the problem will be put in the log file (see @ref{Logfiles}).
+
+Historical note: in buildbot-0.7.5 and earlier, the @code{c['bots']}
+key was used instead, and it took a list of (name, password) tuples.
+This key is accepted for backwards compatibility, but is deprecated as
+of 0.7.6 and will go away in some future release.
 
 
 @node Defining Builders, Defining Status Targets, Buildslave Specifiers, Configuration
@@ -2261,7 +2268,7 @@ reports.
 
 @item slavename
 This specifies which buildslave will be used by this Builder.
-@code{slavename} must appear in the @code{c['bots']} list. Each
+@code{slavename} must appear in the @code{c['slaves']} list. Each
 buildslave can accomodate multiple Builders.
 
 @item slavenames

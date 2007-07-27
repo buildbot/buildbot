@@ -97,7 +97,7 @@ class TestChangePerspective(unittest.TestCase):
 
 config_empty = """
 BuildmasterConfig = c = {}
-c['bots'] = []
+c['slaves'] = []
 c['builders'] = []
 c['sources'] = []
 c['schedulers'] = []

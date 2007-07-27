@@ -15,6 +15,7 @@ from buildbot.test.runutils import rmtree
 config = """
 from buildbot.process import factory
 from buildbot.steps import dummy
+from buildbot.slave import BuildSlave
 
 def s(klass, **kwargs):
     return (klass, kwargs)
@@ -23,7 +24,7 @@ f1 = factory.BuildFactory([
     s(dummy.Dummy, timeout=1),
     ])
 c = {}
-c['bots'] = [['bot1', 'sekrit']]
+c['slaves'] = [BuildSlave('bot1', 'sekrit')]
 c['sources'] = []
 c['schedulers'] = []
 c['builders'] = [{'name': 'force', 'slavename': 'bot1',

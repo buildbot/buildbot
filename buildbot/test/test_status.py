@@ -729,6 +729,7 @@ class Log(unittest.TestCase):
 config_base = """
 from buildbot.process import factory
 from buildbot.steps import dummy
+from buildbot.slave import BuildSlave
 s = factory.s
 
 f1 = factory.QuickBuildFactory('fakerep', 'cvsmodule', configure=None)
@@ -739,7 +740,7 @@ f2 = factory.BuildFactory([
     ])
 
 BuildmasterConfig = c = {}
-c['bots'] = [['bot1', 'sekrit']]
+c['slaves'] = [BuildSlave('bot1', 'sekrit')]
 c['sources'] = []
 c['schedulers'] = []
 c['builders'] = []

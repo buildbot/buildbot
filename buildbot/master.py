@@ -11,6 +11,7 @@ try:
     pickle = cPickle
 except ImportError:
     import pickle
+import warnings
 
 from zope.interface import implements
 from twisted.python import log, components
@@ -29,6 +30,7 @@ from buildbot.status.builder import SlaveStatus, Status
 from buildbot.changes.changes import Change, ChangeMaster
 from buildbot.sourcestamp import SourceStamp
 from buildbot import interfaces
+from buildbot.slave import BuildSlave
 
 ########################################
 
@@ -38,7 +40,7 @@ from buildbot import interfaces
 class BotPerspective(NewCredPerspective):
     """This is the master-side representative for a remote buildbot slave.
     There is exactly one for each slave described in the config file (the
-    c['bots'] list). When buildbots connect in (.attach), they get a
+    c['slaves'] list). When buildbots connect in (.attach), they get a
     reference to this instance. The BotMaster object is stashed as the
     .service attribute."""
 
@@ -530,7 +532,7 @@ class BuildMaster(service.MultiService, styles.Versioned):
 
         self.statusTargets = []
 
-        self.bots = []
+        self.slaves = []
         # this ChangeMaster is a dummy, only used by tests. In the real
         # buildmaster, where the BuildMaster instance is activated
         # (startService is called) by twistd, this attribute is overwritten.
@@ -649,21 +651,21 @@ class BuildMaster(service.MultiService, styles.Versioned):
             log.err("config file must define BuildmasterConfig")
             raise
 
-        known_keys = "bots sources schedulers builders slavePortnum " + \
-                     "debugPassword manhole " + \
-                     "status projectName projectURL buildbotURL"
-        known_keys = known_keys.split()
+        known_keys = ("bots", "slaves", "sources", "schedulers", "builders",
+                      "slavePortnum", "debugPassword", "manhole",
+                      "status", "projectName", "projectURL", "buildbotURL",
+                      )
         for k in config.keys():
             if k not in known_keys:
                 log.msg("unknown key '%s' defined in config dictionary" % k)
 
         try:
             # required
-            bots = config['bots']
             sources = config['sources']
             schedulers = config['schedulers']
             builders = config['builders']
             slavePortnum = config['slavePortnum']
+            #slaves = config['slaves']
 
             # optional
             debugPassword = config.get('debugPassword')
@@ -678,10 +680,28 @@ class BuildMaster(service.MultiService, styles.Versioned):
             log.msg("leaving old configuration in place")
             raise
 
+        #if "bots" in config:
+        #    raise KeyError("c['bots'] is no longer accepted")
+
+        slaves = config.get('slaves', [])
+        if "bots" in config:
+            m = ("c['bots'] is deprecated as of 0.7.6, please use "
+                 "c['slaves'] instead")
+            log.msg(m)
+            warnings.warn(m, DeprecationWarning)
+            for name, passwd in config['bots']:
+                slaves.append(BuildSlave(name, passwd))
+
+        if "bots" not in config and "slaves" not in config:
+            log.msg("config dictionary must have either 'bots' or 'slaves'")
+            log.msg("leaving old configuration in place")
+            raise KeyError("must have either 'bots' or 'slaves'")
+
         # do some validation first
-        for name, passwd in bots:
-            if name in ("debug", "change", "status"):
-                raise KeyError, "reserved name '%s' used for a bot" % name
+        for s in slaves:
+            assert isinstance(s, BuildSlave)
+            if s.name in ("debug", "change", "status"):
+                raise KeyError, "reserved name '%s' used for a bot" % s.name
         if config.has_key('interlocks'):
             raise KeyError("c['interlocks'] is no longer accepted")
 
@@ -698,7 +718,7 @@ class BuildMaster(service.MultiService, styles.Versioned):
         for s in status:
             assert interfaces.IStatusReceiver(s, None)
 
-        slavenames = [name for name,pw in bots]
+        slavenames = [s.name for s in slaves]
         buildernames = []
         dirnames = []
         for b in builders:
@@ -784,10 +804,10 @@ class BuildMaster(service.MultiService, styles.Versioned):
         self.projectURL = projectURL
         self.buildbotURL = buildbotURL
 
-        # self.bots: Disconnect any that were attached and removed from the
-        # list. Update self.checker with the new list of passwords,
-        # including debug/change/status.
-        d.addCallback(lambda res: self.loadConfig_Slaves(bots))
+        # self.slaves: Disconnect any that were attached and removed from the
+        # list. Update self.checker with the new list of passwords, including
+        # debug/change/status.
+        d.addCallback(lambda res: self.loadConfig_Slaves(slaves))
 
         # self.debugPassword
         if debugPassword:
@@ -846,25 +866,30 @@ class BuildMaster(service.MultiService, styles.Versioned):
         d.addCallback(lambda res: self.botmaster.maybeStartAllBuilds())
         return d
 
-    def loadConfig_Slaves(self, bots):
+    def loadConfig_Slaves(self, slaves):
         # set up the Checker with the names and passwords of all valid bots
         self.checker.users = {} # violates abstraction, oh well
-        for user, passwd in bots:
-            self.checker.addUser(user, passwd)
+        for s in slaves:
+            self.checker.addUser(s.name, s.password)
         self.checker.addUser("change", "changepw")
 
         # identify new/old bots
-        old = self.bots; oldnames = [name for name,pw in old]
-        new = bots; newnames = [name for name,pw in new]
+        old = []; new = []
+        for s in slaves:
+            if s not in self.slaves:
+                new.append(s)
+        for s in self.slaves:
+            if s not in slaves:
+                old.append(s)
         # removeSlave will hang up on the old bot
-        dl = [self.botmaster.removeSlave(name)
-              for name in oldnames if name not in newnames]
-        [self.botmaster.addSlave(name)
-         for name in newnames if name not in oldnames]
-
-        # all done
-        self.bots = bots
-        return defer.DeferredList(dl, fireOnOneErrback=1, consumeErrors=0)
+        dl = [self.botmaster.removeSlave(s.name) for s in old]
+        d = defer.DeferredList(dl, fireOnOneErrback=True)
+        def _add(res):
+            for s in new:
+                self.botmaster.addSlave(s.name)
+            self.slaves = slaves
+        d.addCallback(_add)
+        return d
 
     def loadConfig_Sources(self, sources):
         log.msg("loadConfig_Sources, change_svc is", self.change_svc,

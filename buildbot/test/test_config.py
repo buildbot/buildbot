@@ -36,7 +36,7 @@ except ImportError:
 emptyCfg = \
 """
 BuildmasterConfig = c = {}
-c['bots'] = []
+c['slaves'] = []
 c['sources'] = []
 c['schedulers'] = []
 c['builders'] = []
@@ -49,8 +49,9 @@ c['buildbotURL'] = 'http://dummy.example.com/buildbot'
 buildersCfg = \
 """
 from buildbot.process.factory import BasicBuildFactory
+from buildbot.slave import BuildSlave
 BuildmasterConfig = c = {}
-c['bots'] = [('bot1', 'pw1')]
+c['slaves'] = [BuildSlave('bot1', 'pw1')]
 c['sources'] = []
 c['schedulers'] = []
 c['slavePortnum'] = 9999
@@ -158,8 +159,9 @@ c['debugPassword'] = 'sekrit'
 interlockCfgBad = \
 """
 from buildbot.process.factory import BasicBuildFactory
+from buildbot.slave import BuildSlave
 c = {}
-c['bots'] = [('bot1', 'pw1')]
+c['slaves'] = [BuildSlave('bot1', 'pw1')]
 c['sources'] = []
 c['schedulers'] = []
 f1 = BasicBuildFactory('cvsroot', 'cvsmodule')
@@ -181,8 +183,9 @@ lockCfgBad1 = \
 from buildbot.steps.dummy import Dummy
 from buildbot.process.factory import BuildFactory, s
 from buildbot.locks import MasterLock
+from buildbot.slave import BuildSlave
 c = {}
-c['bots'] = [('bot1', 'pw1')]
+c['slaves'] = [BuildSlave('bot1', 'pw1')]
 c['sources'] = []
 c['schedulers'] = []
 l1 = MasterLock('lock1')
@@ -203,8 +206,9 @@ lockCfgBad2 = \
 from buildbot.steps.dummy import Dummy
 from buildbot.process.factory import BuildFactory, s
 from buildbot.locks import MasterLock, SlaveLock
+from buildbot.slave import BuildSlave
 c = {}
-c['bots'] = [('bot1', 'pw1')]
+c['slaves'] = [BuildSlave('bot1', 'pw1')]
 c['sources'] = []
 c['schedulers'] = []
 l1 = MasterLock('lock1')
@@ -225,8 +229,9 @@ lockCfgBad3 = \
 from buildbot.steps.dummy import Dummy
 from buildbot.process.factory import BuildFactory, s
 from buildbot.locks import MasterLock
+from buildbot.slave import BuildSlave
 c = {}
-c['bots'] = [('bot1', 'pw1')]
+c['slaves'] = [BuildSlave('bot1', 'pw1')]
 c['sources'] = []
 c['schedulers'] = []
 l1 = MasterLock('lock1')
@@ -247,8 +252,9 @@ lockCfg1a = \
 """
 from buildbot.process.factory import BasicBuildFactory
 from buildbot.locks import MasterLock
+from buildbot.slave import BuildSlave
 c = {}
-c['bots'] = [('bot1', 'pw1')]
+c['slaves'] = [BuildSlave('bot1', 'pw1')]
 c['sources'] = []
 c['schedulers'] = []
 f1 = BasicBuildFactory('cvsroot', 'cvsmodule')
@@ -268,8 +274,9 @@ lockCfg1b = \
 """
 from buildbot.process.factory import BasicBuildFactory
 from buildbot.locks import MasterLock
+from buildbot.slave import BuildSlave
 c = {}
-c['bots'] = [('bot1', 'pw1')]
+c['slaves'] = [BuildSlave('bot1', 'pw1')]
 c['sources'] = []
 c['schedulers'] = []
 f1 = BasicBuildFactory('cvsroot', 'cvsmodule')
@@ -291,8 +298,9 @@ lockCfg2a = \
 from buildbot.steps.dummy import Dummy
 from buildbot.process.factory import BuildFactory, s
 from buildbot.locks import MasterLock
+from buildbot.slave import BuildSlave
 c = {}
-c['bots'] = [('bot1', 'pw1')]
+c['slaves'] = [BuildSlave('bot1', 'pw1')]
 c['sources'] = []
 c['schedulers'] = []
 l1 = MasterLock('lock1')
@@ -315,8 +323,9 @@ lockCfg2b = \
 from buildbot.steps.dummy import Dummy
 from buildbot.process.factory import BuildFactory, s
 from buildbot.locks import MasterLock
+from buildbot.slave import BuildSlave
 c = {}
-c['bots'] = [('bot1', 'pw1')]
+c['slaves'] = [BuildSlave('bot1', 'pw1')]
 c['sources'] = []
 c['schedulers'] = []
 l1 = MasterLock('lock1')
@@ -339,8 +348,9 @@ lockCfg2c = \
 from buildbot.steps.dummy import Dummy
 from buildbot.process.factory import BuildFactory, s
 from buildbot.locks import MasterLock
+from buildbot.slave import BuildSlave
 c = {}
-c['bots'] = [('bot1', 'pw1')]
+c['slaves'] = [BuildSlave('bot1', 'pw1')]
 c['sources'] = []
 c['schedulers'] = []
 l1 = MasterLock('lock1')
@@ -362,8 +372,9 @@ schedulersCfg = \
 """
 from buildbot.scheduler import Scheduler, Dependent
 from buildbot.process.factory import BasicBuildFactory
+from buildbot.slave import BuildSlave
 c = {}
-c['bots'] = [('bot1', 'pw1')]
+c['slaves'] = [BuildSlave('bot1', 'pw1')]
 c['sources'] = []
 f1 = BasicBuildFactory('cvsroot', 'cvsmodule')
 b1 = {'name':'builder1', 'slavename':'bot1',
@@ -496,6 +507,15 @@ class ConfigTest(unittest.TestCase):
         master.loadConfig(emptyCfg)
         self.failUnlessEqual(master.checker.users,
                              {"change": "changepw"})
+        slavesCfg = (emptyCfg +
+                     "from buildbot.slave import BuildSlave\n"
+                     "c['slaves'] = [BuildSlave('bot1','pw1'), "
+                     "BuildSlave('bot2','pw2')]\n")
+        master.loadConfig(slavesCfg)
+        self.failUnlessEqual(master.checker.users,
+                             {"change": "changepw",
+                              "bot1": "pw1",
+                              "bot2": "pw2"})
 
 
     def testSources(self):
@@ -1107,8 +1127,9 @@ cfg1 = \
 from buildbot.process.factory import BuildFactory, s
 from buildbot.steps.shell import ShellCommand
 from buildbot.steps.source import Darcs
+from buildbot.slave import BuildSlave
 BuildmasterConfig = c = {}
-c['bots'] = [('bot1', 'pw1')]
+c['slaves'] = [BuildSlave('bot1', 'pw1')]
 c['sources'] = []
 c['schedulers'] = []
 c['slavePortnum'] = 9999

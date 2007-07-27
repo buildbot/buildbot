@@ -283,11 +283,12 @@ class LockStep(dummy.Dummy):
 config_1 = """
 from buildbot import locks
 from buildbot.process import factory
+from buildbot.slave import BuildSlave
 s = factory.s
 from buildbot.test.test_locks import LockStep
 
 BuildmasterConfig = c = {}
-c['bots'] = [('bot1', 'sekrit'), ('bot2', 'sekrit')]
+c['slaves'] = [BuildSlave('bot1', 'sekrit'), BuildSlave('bot2', 'sekrit')]
 c['sources'] = []
 c['schedulers'] = []
 c['slavePortnum'] = 0

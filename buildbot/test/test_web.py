@@ -36,7 +36,7 @@ components.registerAdapter(master.Control, ConfiguredMaster,
 base_config = """
 from buildbot.status import html
 BuildmasterConfig = c = {
-    'bots': [],
+    'slaves': [],
     'sources': [],
     'schedulers': [],
     'builders': [],
@@ -281,6 +281,7 @@ from buildbot.process import factory
 from buildbot.steps import dummy
 from buildbot.scheduler import Scheduler
 from buildbot.changes.base import ChangeSource
+from buildbot.slave import BuildSlave
 s = factory.s
 
 class DiscardScheduler(Scheduler):
@@ -290,7 +291,7 @@ class DummyChangeSource(ChangeSource):
     pass
 
 BuildmasterConfig = c = {}
-c['bots'] = [('bot1', 'sekrit'), ('bot2', 'sekrit')]
+c['slaves'] = [BuildSlave('bot1', 'sekrit'), BuildSlave('bot2', 'sekrit')]
 c['sources'] = [DummyChangeSource()]
 c['schedulers'] = [DiscardScheduler('discard', None, 60, ['b1'])]
 c['slavePortnum'] = 0
@@ -385,9 +386,10 @@ class Logfile(BaseWeb, RunMixin, unittest.TestCase):
         config = """
 from buildbot.status import html
 from buildbot.process.factory import BasicBuildFactory
+from buildbot.slave import BuildSlave
 f1 = BasicBuildFactory('cvsroot', 'cvsmodule')
 BuildmasterConfig = {
-    'bots': [('bot1', 'passwd1')],
+    'slaves': [BuildSlave('bot1', 'passwd1')],
     'sources': [],
     'schedulers': [],
     'builders': [{'name': 'builder1', 'slavename': 'bot1',

@@ -97,13 +97,14 @@ def myGetProcessOutputAndValue(executable, args=(), env={}, path='.',
 config_vc = """
 from buildbot.process import factory
 from buildbot.steps import source
+from buildbot.slave import BuildSlave
 s = factory.s
 
 f1 = factory.BuildFactory([
     %s,
     ])
 c = {}
-c['bots'] = [['bot1', 'sekrit']]
+c['slaves'] = [BuildSlave('bot1', 'sekrit')]
 c['sources'] = []
 c['schedulers'] = []
 c['builders'] = [{'name': 'vc', 'slavename': 'bot1',

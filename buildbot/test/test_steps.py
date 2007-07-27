@@ -311,11 +311,12 @@ class VersionCheckingStep(buildstep.BuildStep):
 version_config = """
 from buildbot.process import factory
 from buildbot.test.test_steps import VersionCheckingStep
+from buildbot.slave import BuildSlave
 BuildmasterConfig = c = {}
 f1 = factory.BuildFactory([
     factory.s(VersionCheckingStep),
     ])
-c['bots'] = [['bot1', 'sekrit']]
+c['slaves'] = [BuildSlave('bot1', 'sekrit')]
 c['sources'] = []
 c['schedulers'] = []
 c['builders'] = [{'name':'quick', 'slavename':'bot1',

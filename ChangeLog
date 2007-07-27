@@ -1,3 +1,15 @@
+2007-07-27  Brian Warner  <warner@lothar.com>
+
+	* buildbot/master.py (BuildMaster.loadConfig_Slaves): rename
+	c['bots'] to c['slaves'], and use buildbot.slave.BuildSlave
+	instances instead of tuples. Closes #63.
+	* buildbot/slave/__init__.py (BuildSlave): define marker class
+	* buildbot/scripts/sample.cfg: use c['slaves'] in sample config
+	* docs/buildbot.texinfo (Buildslave Specifiers): document c['slaves']
+	* buildbot/test/test_*.py: update tests to match
+	* buildbot/test/test_config.py (ConfigTest.testBots): verify that
+	the c['bots'] backwards-compatibility handler works
+
 2007-07-26  Brian Warner  <warner@lothar.com>
 
 	* buildbot/changes/hgbuildbot.py (hook): add an in-process
