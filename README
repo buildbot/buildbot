@@ -179,7 +179,7 @@ seconds (10 minutes) is a reasonable value.
 Please read the user's manual for instructions. The short form is that you
 use 'buildbot create-master MASTERDIR' to create the base directory, then you
 edit the 'master.cfg' file to configure the buildmaster. Once this is ready,
-you use 'buildbot START MASTERDIR' to launch it.
+you use 'buildbot start MASTERDIR' to launch it.
 
 A sample configuration file will be created for you in WORKDIR/master.cfg .
 There are more examples in docs/examples/, and plenty of documentation in the

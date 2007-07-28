@@ -1,5 +1,8 @@
 2007-07-28  Brian Warner  <warner@lothar.com>
 
+	* README (SETTING UP A BUILD MASTER): fix capitalization-typo.
+	Closes SF#1752648.
+
 	* buildbot/test/test_mailparse.py: rename sample emails a bit
 	* buildbot/test/mail/msg*: same
 
