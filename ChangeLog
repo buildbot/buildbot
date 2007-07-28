@@ -1,5 +1,8 @@
 2007-07-27  Brian Warner  <warner@lothar.com>
 
+	* docs/buildbot.texinfo (Getting Source Code Changes): refactor
+	docs on email-based ChangeSources
+
 	* docs/buildbot.texinfo (Getting Source Code Changes): move all
 	the changesource types up a level, removing the one-entry menu in
 	the process

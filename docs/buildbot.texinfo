@@ -145,13 +145,24 @@ Getting Source Code Changes
 * Change Sources::              
 * Choosing ChangeSources::      
 * CVSToys - PBService::         
-* CVSToys - mail notification::  
-* Other mail notification ChangeSources::  
+* Mail-parsing ChangeSources::  
 * PBChangeSource::              
 * P4Source::                    
 * BonsaiPoller::                
 * SVNPoller::                   
 * MercurialHook::               
+
+Mail-parsing ChangeSources
+
+* Subscribing the Buildmaster::  
+* Using Maildirs::              
+* Parsing Email Change Messages::  
+
+Parsing Email Change Messages
+
+* CVSToys MailNotification::    
+* SyncmailMaildirSource::       
+* BonsaiMaildirSource::         
 
 Build Process
 
@@ -1380,7 +1391,7 @@ is given a @code{baseURL} and @code{defaultBranch} instead of getting
 the @code{repoURL} argument.
 
 
-@uref{http://abridgegame.org/darcs/, Darcs} doesn't really have the
+@uref{http://darcs.net/, Darcs} doesn't really have the
 notion of a single master repository. Nor does it really have
 branches. In Darcs, each working directory is also a repository, and
 there are operations to push and pull patches from one of these
@@ -2474,8 +2485,7 @@ occurred. For more information on VC systems and Changes, see
 * Change Sources::              
 * Choosing ChangeSources::      
 * CVSToys - PBService::         
-* CVSToys - mail notification::  
-* Other mail notification ChangeSources::  
+* Mail-parsing ChangeSources::  
 * PBChangeSource::              
 * P4Source::                    
 * BonsaiPoller::                
@@ -2611,7 +2621,7 @@ ignored by the changesource: it does not generate Changes for those
 files.
 
 
-@node CVSToys - PBService, CVSToys - mail notification, Choosing ChangeSources, Getting Source Code Changes
+@node CVSToys - PBService, Mail-parsing ChangeSources, Choosing ChangeSources, Getting Source Code Changes
 @section CVSToys - PBService
 
 @csindex buildbot.changes.freshcvs.FreshCVSSource
@@ -2684,9 +2694,147 @@ outside that directory, and to strip that common prefix from all pathnames
 it handles.
 
 
+@node Mail-parsing ChangeSources, PBChangeSource, CVSToys - PBService, Getting Source Code Changes
+@section Mail-parsing ChangeSources
 
-@node CVSToys - mail notification, Other mail notification ChangeSources, CVSToys - PBService, Getting Source Code Changes
-@section CVSToys - mail notification
+Many projects publish information about changes to their source tree
+by sending an email message out to a mailing list, frequently named
+PROJECT-commits or PROJECT-changes. Each message usually contains a
+description of the change (who made the change, which files were
+affected) and sometimes a copy of the diff. Humans can subscribe to
+this list to stay informed about what's happening to the source tree.
+
+The Buildbot can also be subscribed to a -commits mailing list, and
+can trigger builds in response to Changes that it hears about. The
+buildmaster admin needs to arrange for these email messages to arrive
+in a place where the buildmaster can find them, and configure the
+buildmaster to parse the messages correctly. Once that is in place,
+the email parser will create Change objects and deliver them to the
+Schedulers (see @pxref{Scheduler Types}) just like any other
+ChangeSource.
+
+There are two components to setting up an email-based ChangeSource.
+The first is to route the email messages to the buildmaster, which is
+done by dropping them into a ``maildir''. The second is to actually
+parse the messages, which is highly dependent upon the tool that was
+used to create them. Each VC system has a collection of favorite
+change-emailing tools, and each has a slightly different format, so
+each has a different parsing function.
+
+@menu
+* Subscribing the Buildmaster::  
+* Using Maildirs::              
+* Parsing Email Change Messages::  
+@end menu
+
+@node Subscribing the Buildmaster, Using Maildirs, Mail-parsing ChangeSources, Mail-parsing ChangeSources
+@subsection Subscribing the Buildmaster
+
+The recommended way to install the buildbot is to create a dedicated
+account for the buildmaster. If you do this, the account will probably
+have a distinct email address (perhaps
+@email{buildmaster@@example.org}). Then just arrange for this
+account's email to be delivered to a suitable maildir (described in
+the next section).
+
+If the buildbot does not have its own account, ``extension addresses''
+can be used to distinguish between email intended for the buildmaster
+and email intended for the rest of the account. In most modern MTAs,
+the e.g. @code{foo@@example.org} account has control over every email
+address at example.org which begins with "foo", such that email
+addressed to @email{account-foo@@example.org} can be delivered to a
+different destination than @email{account-bar@@example.org}. qmail
+does this by using separate .qmail files for the two destinations
+(@file{.qmail-foo} and @file{.qmail-bar}, with @file{.qmail}
+controlling the base address and @file{.qmail-default} controlling all
+other extensions). Other MTAs have similar mechanisms.
+
+Thus you can assign an extension address like
+@email{foo-buildmaster@@example.org} to the buildmaster, and retain
+@email{foo@@example.org} for your own use.
+
+
+@node Using Maildirs, Parsing Email Change Messages, Subscribing the Buildmaster, Mail-parsing ChangeSources
+@subsection Using Maildirs
+
+A ``maildir'' is a simple directory structure originally developed for
+qmail that allows safe atomic update without locking. Create a base
+directory with three subdirectories: ``new'', ``tmp'', and ``cur''.
+When messages arrive, they are put into a uniquely-named file (using
+pids, timestamps, and random numbers) in ``tmp''. When the file is
+complete, it is atomically renamed into ``new''. Eventually the
+buildmaster notices the file in ``new'', reads and parses the
+contents, then moves it into ``cur''. A cronjob can be used to delete
+files in ``cur'' at leisure.
+
+Maildirs are frequently created with the @command{maildirmake} tool,
+but a simple @command{mkdir -p ~/MAILDIR/@{cur,new,tmp@}} is pretty much
+equivalent.
+
+Many modern MTAs can deliver directly to maildirs. The usual .forward
+or .procmailrc syntax is to name the base directory with a trailing
+slash, so something like @code{~/MAILDIR/} . qmail and postfix are
+maildir-capable MTAs, and procmail is a maildir-capable MDA (Mail
+Delivery Agent).
+
+For MTAs which cannot put files into maildirs directly, the
+``safecat'' tool can be executed from a .forward file to accomplish
+the same thing.
+
+The Buildmaster uses the linux DNotify facility to receive immediate
+notification when the maildir's ``new'' directory has changed. When
+this facility is not available, it polls the directory for new
+messages, every 10 seconds by default.
+
+@node Parsing Email Change Messages,  , Using Maildirs, Mail-parsing ChangeSources
+@subsection Parsing Email Change Messages
+
+The second component to setting up an email-based ChangeSource is to
+parse the actual notices. This is highly dependent upon the VC system
+and commit script in use.
+
+A couple of common tools used to create these change emails are:
+
+@table @samp
+
+@item CVS
+@table @samp
+@item CVSToys MailNotifier
+http://twistedmatrix.com/users/acapnotic/wares/code/CVSToys/
+@item Bonsai notification
+http://www.mozilla.org/bonsai.html
+@item syncmail
+http://sourceforge.net/projects/cvs-syncmail
+@end table
+
+@item SVN
+@table @samp
+@item svnmailer
+http://opensource.perlig.de/en/svnmailer/
+@item commit-email.pl
+(distributed with Subversion)
+@end table
+
+@item Mercurial
+@table @samp
+@item NotifyExtension
+http://www.selenic.com/mercurial/wiki/index.cgi/NotifyExtension
+@end table
+
+@end table
+
+The following sections describe the parsers available for each of
+these tools.
+
+@menu
+* CVSToys MailNotification::    
+* SyncmailMaildirSource::       
+* BonsaiMaildirSource::         
+@end menu
+
+@node CVSToys MailNotification, SyncmailMaildirSource, Parsing Email Change Messages, Parsing Email Change Messages
+@subsubsection CVSToys MailNotification
+
 
 @csindex buildbot.changes.mail.FCMaildirSource
 
@@ -2699,43 +2847,28 @@ creating a ViewCVS URL for each file changed).
 
 The Buildbot's @code{FCMaildirSource} is a ChangeSource which knows
 how to parse these CVSToys messages and turn them into Change objects.
-It watches a Maildir for new messages. The usually installation
-process looks like:
-
-@enumerate
-@item
-Create a mailing list, @code{projectname-commits}.
-@item
-In CVSToys' freshCfg file, use a @code{MailNotification} action to
-send commit mail to this mailing list.
-@item
-Subscribe the buildbot user to the mailing list.
-@item
-Configure your .qmail or .forward file to deliver these messages into
-a maildir.
-@item
-In the Buildbot's master.cfg file, use a @code{FCMaildirSource} to
-watch the maildir for commit messages.
-@end enumerate
+It watches a Maildir for new messages.
 
 The @code{FCMaildirSource} is created with two parameters: the
 directory name of the maildir root, and the prefix to strip.
 
-@node Other mail notification ChangeSources, PBChangeSource, CVSToys - mail notification, Getting Source Code Changes
-@section Other mail notification ChangeSources
+@node SyncmailMaildirSource, BonsaiMaildirSource, CVSToys MailNotification, Parsing Email Change Messages
+@subsubsection SyncmailMaildirSource
 
 @csindex buildbot.changes.mail.SyncmailMaildirSource
-@csindex buildbot.changes.mail.BonsaiMaildirSource
-
-There are other types of maildir-watching ChangeSources, which only
-differ in the function used to parse the message body.
 
 @code{SyncmailMaildirSource} knows how to parse the message format
 used in mail sent by Syncmail.
 
+@node BonsaiMaildirSource,  , SyncmailMaildirSource, Parsing Email Change Messages
+@subsubsection BonsaiMaildirSource
+
+@csindex buildbot.changes.mail.BonsaiMaildirSource
+
 @code{BonsaiMaildirSource} parses messages sent out by Bonsai.
 
-@node PBChangeSource, P4Source, Other mail notification ChangeSources, Getting Source Code Changes
+
+@node PBChangeSource, P4Source, Mail-parsing ChangeSources, Getting Source Code Changes
 @section PBChangeSource
 
 @csindex buildbot.changes.pb.PBChangeSource
@@ -3663,7 +3796,7 @@ will concatenate ``svn://svn.example.org/MyProject/'' with
 
 
 The @code{Darcs} build step performs a
-@uref{http://abridgegame.org/darcs/, Darcs} checkout or update.
+@uref{http://darcs.net/, Darcs} checkout or update.
 
 Like @xref{SVN}, this step can either be configured to always check
 out a specific tree, or set up to pull from a particular branch that
