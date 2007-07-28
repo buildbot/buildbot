@@ -12,14 +12,14 @@ class TestFreshCVS(unittest.TestCase):
         return s.parse(open(msg, "r"))
 
     def testMsg1(self):
-        c = self.get("mail/msg1")
+        c = self.get("mail/freshcvs.1")
         self.assertEqual(c.who, "moshez")
         self.assertEqual(c.files, ["Twisted/debian/python-twisted.menu.in"])
         self.assertEqual(c.comments, "Instance massenger, apparently\n")
         self.assertEqual(c.isdir, 0)
 
     def testMsg2(self):
-        c = self.get("mail/msg2")
+        c = self.get("mail/freshcvs.2")
         self.assertEqual(c.who, "itamarst")
         self.assertEqual(c.files, ["Twisted/twisted/web/woven/form.py",
                                    "Twisted/twisted/python/formmethod.py"])
@@ -29,7 +29,7 @@ class TestFreshCVS(unittest.TestCase):
 
     def testMsg3(self):
         # same as msg2 but missing the ViewCVS section
-        c = self.get("mail/msg3")
+        c = self.get("mail/freshcvs.3")
         self.assertEqual(c.who, "itamarst")
         self.assertEqual(c.files, ["Twisted/twisted/web/woven/form.py",
                                    "Twisted/twisted/python/formmethod.py"])
@@ -39,7 +39,7 @@ class TestFreshCVS(unittest.TestCase):
 
     def testMsg4(self):
         # same as msg3 but also missing CVS patch section
-        c = self.get("mail/msg4")
+        c = self.get("mail/freshcvs.4")
         self.assertEqual(c.who, "itamarst")
         self.assertEqual(c.files, ["Twisted/twisted/web/woven/form.py",
                                    "Twisted/twisted/python/formmethod.py"])
@@ -49,7 +49,7 @@ class TestFreshCVS(unittest.TestCase):
 
     def testMsg5(self):
         # creates a directory
-        c = self.get("mail/msg5")
+        c = self.get("mail/freshcvs.5")
         self.assertEqual(c.who, "etrepum")
         self.assertEqual(c.files, ["Twisted/doc/examples/cocoaDemo"])
         self.assertEqual(c.comments,
@@ -58,7 +58,7 @@ class TestFreshCVS(unittest.TestCase):
 
     def testMsg6(self):
         # adds files
-        c = self.get("mail/msg6")
+        c = self.get("mail/freshcvs.6")
         self.assertEqual(c.who, "etrepum")
         self.assertEqual(c.files, [
             "Twisted/doc/examples/cocoaDemo/MyAppDelegate.py",
@@ -75,7 +75,7 @@ class TestFreshCVS(unittest.TestCase):
 
     def testMsg7(self):
         # deletes files
-        c = self.get("mail/msg7")
+        c = self.get("mail/freshcvs.7")
         self.assertEqual(c.who, "etrepum")
         self.assertEqual(c.files, [
             "Twisted/doc/examples/cocoaDemo/MyAppDelegate.py",
@@ -92,7 +92,7 @@ class TestFreshCVS(unittest.TestCase):
 
     def testMsg8(self):
         # files outside Twisted/
-        c = self.get("mail/msg8")
+        c = self.get("mail/freshcvs.8")
         self.assertEqual(c.who, "acapnotic")
         self.assertEqual(c.files, [ "CVSROOT/freshCfg" ])
         self.assertEqual(c.comments, "it doesn't work with invalid syntax\n")
@@ -100,7 +100,7 @@ class TestFreshCVS(unittest.TestCase):
 
     def testMsg9(self):
         # also creates a directory
-        c = self.get("mail/msg9")
+        c = self.get("mail/freshcvs.9")
         self.assertEqual(c.who, "exarkun")
         self.assertEqual(c.files, ["Twisted/sandbox/exarkun/persist-plugin"])
         self.assertEqual(c.comments,
@@ -115,13 +115,13 @@ class TestFreshCVS_Prefix(unittest.TestCase):
         return s.parse(open(msg, "r"), prefix="Twisted/")
 
     def testMsg1p(self):
-        c = self.get("mail/msg1")
+        c = self.get("mail/freshcvs.1")
         self.assertEqual(c.who, "moshez")
         self.assertEqual(c.files, ["debian/python-twisted.menu.in"])
         self.assertEqual(c.comments, "Instance massenger, apparently\n")
 
     def testMsg2p(self):
-        c = self.get("mail/msg2")
+        c = self.get("mail/freshcvs.2")
         self.assertEqual(c.who, "itamarst")
         self.assertEqual(c.files, ["twisted/web/woven/form.py",
                                    "twisted/python/formmethod.py"])
@@ -130,7 +130,7 @@ class TestFreshCVS_Prefix(unittest.TestCase):
 
     def testMsg3p(self):
         # same as msg2 but missing the ViewCVS section
-        c = self.get("mail/msg3")
+        c = self.get("mail/freshcvs.3")
         self.assertEqual(c.who, "itamarst")
         self.assertEqual(c.files, ["twisted/web/woven/form.py",
                                    "twisted/python/formmethod.py"])
@@ -139,7 +139,7 @@ class TestFreshCVS_Prefix(unittest.TestCase):
 
     def testMsg4p(self):
         # same as msg3 but also missing CVS patch section
-        c = self.get("mail/msg4")
+        c = self.get("mail/freshcvs.4")
         self.assertEqual(c.who, "itamarst")
         self.assertEqual(c.files, ["twisted/web/woven/form.py",
                                    "twisted/python/formmethod.py"])
@@ -148,7 +148,7 @@ class TestFreshCVS_Prefix(unittest.TestCase):
 
     def testMsg5p(self):
         # creates a directory
-        c = self.get("mail/msg5")
+        c = self.get("mail/freshcvs.5")
         self.assertEqual(c.who, "etrepum")
         self.assertEqual(c.files, ["doc/examples/cocoaDemo"])
         self.assertEqual(c.comments,
@@ -157,7 +157,7 @@ class TestFreshCVS_Prefix(unittest.TestCase):
 
     def testMsg6p(self):
         # adds files
-        c = self.get("mail/msg6")
+        c = self.get("mail/freshcvs.6")
         self.assertEqual(c.who, "etrepum")
         self.assertEqual(c.files, [
             "doc/examples/cocoaDemo/MyAppDelegate.py",
@@ -174,7 +174,7 @@ class TestFreshCVS_Prefix(unittest.TestCase):
 
     def testMsg7p(self):
         # deletes files
-        c = self.get("mail/msg7")
+        c = self.get("mail/freshcvs.7")
         self.assertEqual(c.who, "etrepum")
         self.assertEqual(c.files, [
             "doc/examples/cocoaDemo/MyAppDelegate.py",
@@ -191,7 +191,7 @@ class TestFreshCVS_Prefix(unittest.TestCase):
 
     def testMsg8p(self):
         # files outside Twisted/
-        c = self.get("mail/msg8")
+        c = self.get("mail/freshcvs.8")
         self.assertEqual(c, None)
 
 
