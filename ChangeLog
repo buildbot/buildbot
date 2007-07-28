@@ -1,5 +1,8 @@
 2007-07-28  Brian Warner  <warner@lothar.com>
 
+	* buildbot/test/test_maildir.py (MaildirTest.testMaildir): oops,
+	this needs to match the renaming in test/mail/msg*
+
 	* README (SETTING UP A BUILD MASTER): fix capitalization-typo.
 	Closes SF#1752648.
 

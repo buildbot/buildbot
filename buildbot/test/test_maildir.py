@@ -53,11 +53,13 @@ class MaildirTest(unittest.TestCase):
         s.startService()
         testfiles_dir = util.sibpath(__file__, "mail")
         testfiles = [msg for msg in os.listdir(testfiles_dir)
-                     if msg.startswith("msg")]
+                     if msg.startswith("freshcvs")]
+        assert testfiles
         testfiles.sort()
         count = len(testfiles)
         d = defer.Deferred()
 
+        i = 1
         for i in range(count):
             msg = testfiles[i]
             reactor.callLater(self.SECONDS_PER_MESSAGE*i, self.deliverMail,
