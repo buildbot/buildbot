@@ -329,4 +329,131 @@ class BonsaiMaildirSource(MaildirSource):
         return changes.Change(who, files, comments, when=timestamp,
                               branch=branch)
 
+# svn "commit-email.pl" handler.  The format is very similar to freshcvs mail;
+# here's a sample:
+
+#  From: username [at] apache.org    [slightly obfuscated to avoid spam here]
+#  To: commits [at] spamassassin.apache.org
+#  Subject: svn commit: r105955 - in spamassassin/trunk: . lib/Mail
+#  ...
+#
+#  Author: username
+#  Date: Sat Nov 20 00:17:49 2004      [note: TZ = local tz on server!]
+#  New Revision: 105955
+#
+#  Modified:   [also Removed: and Added:]
+#    [filename]
+#    ...
+#  Log:
+#  [log message]
+#  ...
+#
+#
+#  Modified: spamassassin/trunk/lib/Mail/SpamAssassin.pm
+#  [unified diff]
+#
+#  [end of mail]
+
+class SVNCommitEmailMaildirSource(MaildirSource):
+    name = "SVN commit-email.pl"
+
+    def parse(self, fd, prefix=None):
+        """Parse messages sent by the svn 'commit-email.pl' trigger.
+        """
+
+        m = Message(fd)
+        # The mail is sent from the person doing the checkin. Assume that the
+        # local username is enough to identify them (this assumes a one-server
+        # cvs-over-rsh environment rather than the server-dirs-shared-over-NFS
+        # model)
+        name, addr = m.getaddr("from")
+        if not addr:
+            return None # no From means this message isn't from FreshCVS
+        at = addr.find("@")
+        if at == -1:
+            who = addr # might still be useful
+        else:
+            who = addr[:at]
+
+        # we take the time of receipt as the time of checkin. Not correct (it
+        # depends upon the email latency), but it avoids the
+        # out-of-order-changes issue. Also syncmail doesn't give us anything
+        # better to work with, unless you count pulling the v1-vs-v2
+        # timestamp out of the diffs, which would be ugly. TODO: Pulling the
+        # 'Date:' header from the mail is a possibility, and
+        # email.Utils.parsedate_tz may be useful. It should be configurable,
+        # however, because there are a lot of broken clocks out there.
+        when = util.now()
+
+        files = []
+        comments = ""
+        isdir = 0
+        lines = m.fp.readlines()
+        rev = None
+        while lines:
+            line = lines.pop(0)
+
+            # "Author: jmason"
+            match = re.search(r"^Author: (\S+)", line)
+            if match:
+                who = match.group(1)
+
+            # "New Revision: 105955"
+            match = re.search(r"^New Revision: (\d+)", line)
+            if match:
+                rev = match.group(1)
+
+            # possible TODO: use "Date: ..." data here instead of time of
+            # commit message receipt, above. however, this timestamp is
+            # specified *without* a timezone, in the server's local TZ, so to
+            # be accurate buildbot would need a config setting to specify the
+            # source server's expected TZ setting! messy.
+
+            # this stanza ends with the "Log:"
+            if (line == "Log:\n"):
+                break
+
+        # commit message is terminated by the file-listing section
+        while lines:
+            line = lines.pop(0)
+            if (line == "Modified:\n" or
+                line == "Added:\n" or
+                line == "Removed:\n"):
+                break
+            comments += line
+        comments = comments.rstrip() + "\n"
+
+        while lines:
+            line = lines.pop(0)
+            if line == "\n":
+                break
+            if line.find("Modified:\n") == 0:
+                continue            # ignore this line
+            if line.find("Added:\n") == 0:
+                continue            # ignore this line
+            if line.find("Removed:\n") == 0:
+                continue            # ignore this line
+            line = line.strip()
+
+            thesefiles = line.split(" ")
+            for f in thesefiles:
+                if prefix:
+                    # insist that the file start with the prefix: we may get
+                    # changes we don't care about too
+                    if f.startswith(prefix):
+                        f = f[len(prefix):]
+                    else:
+                        log.msg("ignored file from svn commit: prefix '%s' "
+                                "does not match filename '%s'" % (prefix, f))
+                        continue
+
+                # TODO: figure out how new directories are described, set
+                # .isdir
+                files.append(f)
+
+        if not files:
+            log.msg("no matching files found, ignoring commit")
+            return None
+
+        return changes.Change(who, files, comments, when=when, revision=rev)
 

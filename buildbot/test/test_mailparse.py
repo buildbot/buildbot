@@ -2,13 +2,13 @@
 
 from twisted.trial import unittest
 from twisted.python import util
-from buildbot.changes.mail import FCMaildirSource, SyncmailMaildirSource
+from buildbot.changes import mail
 
-class Test1(unittest.TestCase):
+class TestFreshCVS(unittest.TestCase):
 
     def get(self, msg):
         msg = util.sibpath(__file__, msg)
-        s = FCMaildirSource(None)
+        s = mail.FCMaildirSource(None)
         return s.parse(open(msg, "r"))
 
     def testMsg1(self):
@@ -108,10 +108,10 @@ class Test1(unittest.TestCase):
         self.assertEqual(c.isdir, 1)
 
 
-class Test2(unittest.TestCase):
+class TestFreshCVS_Prefix(unittest.TestCase):
     def get(self, msg):
         msg = util.sibpath(__file__, msg)
-        s = FCMaildirSource(None)
+        s = mail.FCMaildirSource(None)
         return s.parse(open(msg, "r"), prefix="Twisted/")
 
     def testMsg1p(self):
@@ -195,15 +195,15 @@ class Test2(unittest.TestCase):
         self.assertEqual(c, None)
 
 
-class Test3(unittest.TestCase):
+class TestSyncmail(unittest.TestCase):
     def get(self, msg):
         msg = util.sibpath(__file__, msg)
-        s = SyncmailMaildirSource(None)
+        s = mail.SyncmailMaildirSource(None)
         return s.parse(open(msg, "r"), prefix="buildbot/")
 
     def getNoPrefix(self, msg):
         msg = util.sibpath(__file__, msg)
-        s = SyncmailMaildirSource(None)
+        s = mail.SyncmailMaildirSource(None)
         return s.parse(open(msg, "r"))
 
     def testMsgS1(self):
@@ -249,3 +249,45 @@ class Test3(unittest.TestCase):
                                    ])
         self.assertEqual(c.branch, "BRANCH-DEVEL")
         self.assertEqual(c.isdir, 0)
+
+
+class TestSVNCommitEmail(unittest.TestCase):
+    def get(self, msg, prefix):
+        msg = util.sibpath(__file__, msg)
+        s = mail.SVNCommitEmailMaildirSource(None)
+        return s.parse(open(msg, "r"), prefix)
+
+    def test1(self):
+        c = self.get("mail/svn-commit.1", "spamassassin/trunk/")
+        self.failUnless(c)
+        self.failUnlessEqual(c.who, "felicity")
+        self.failUnlessEqual(c.files, ["sa-update.raw"])
+        self.failUnlessEqual(c.branch, None)
+        self.failUnlessEqual(c.comments,
+                             "bug 4864: remove extraneous front-slash "
+                             "from gpghomedir path\n")
+
+    def test2a(self):
+        c = self.get("mail/svn-commit.2", "spamassassin/trunk/")
+        self.failIf(c)
+
+    def test2b(self):
+        c = self.get("mail/svn-commit.2", "spamassassin/branches/3.1/")
+        self.failUnless(c)
+        self.failUnlessEqual(c.who, "sidney")
+        self.failUnlessEqual(c.files,
+                             ["lib/Mail/SpamAssassin/Timeout.pm",
+                              "MANIFEST",
+                              "lib/Mail/SpamAssassin/Logger.pm",
+                              "lib/Mail/SpamAssassin/Plugin/DCC.pm",
+                              "lib/Mail/SpamAssassin/Plugin/DomainKeys.pm",
+                              "lib/Mail/SpamAssassin/Plugin/Pyzor.pm",
+                              "lib/Mail/SpamAssassin/Plugin/Razor2.pm",
+                              "lib/Mail/SpamAssassin/Plugin/SPF.pm",
+                              "lib/Mail/SpamAssassin/SpamdForkScaling.pm",
+                              "spamd/spamd.raw",
+                              ])
+        self.failUnlessEqual(c.comments,
+                             "Bug 4696: consolidated fixes for timeout bugs\n")
+
+

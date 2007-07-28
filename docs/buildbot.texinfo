@@ -163,6 +163,7 @@ Parsing Email Change Messages
 * FCMaildirSource::             
 * SyncmailMaildirSource::       
 * BonsaiMaildirSource::         
+* SVNCommitEmailMaildirSource::  
 
 Build Process
 
@@ -2563,6 +2564,7 @@ database directly
 @item pb.PBChangeSource (listening for connections from a long-running
 @code{contrib/svn_watcher.py} or @code{contrib/svnpoller.py} polling
 process
+@item mail.SVNCommitEmailMaildirSource (watching for email sent by commit-email.pl)
 @item svnpoller.SVNPoller (polling the SVN repository)
 @end itemize
 
@@ -2823,7 +2825,7 @@ A couple of common tools used to create these change emails are:
 @item svnmailer
 http://opensource.perlig.de/en/svnmailer/
 @item commit-email.pl
-(distributed with Subversion)
+@ref{SVNCommitEmailMaildirSource}
 @end table
 
 @item Mercurial
@@ -2833,6 +2835,10 @@ http://www.selenic.com/mercurial/wiki/index.cgi/NotifyExtension
 @end table
 
 @end table
+
+
+The following sections describe the parsers available for each of
+these tools.
 
 Most of these parsers accept a @code{prefix=} argument, which is used
 to limit the set of files that the buildmaster pays attention to. This
@@ -2844,14 +2850,11 @@ is ignored. If the filename @emph{does} start with the prefix, that
 prefix is stripped from the filename before any further processing is
 done. Thus the prefix usually ends with a slash.
 
-
-The following sections describe the parsers available for each of
-these tools.
-
 @menu
 * FCMaildirSource::             
 * SyncmailMaildirSource::       
 * BonsaiMaildirSource::         
+* SVNCommitEmailMaildirSource::  
 @end menu
 
 @node FCMaildirSource, SyncmailMaildirSource, Parsing Email Change Messages, Parsing Email Change Messages
@@ -2894,15 +2897,37 @@ from buildbot.changes.mail import SyncmailMaildirSource
 c['sources'] = SyncmailMaildirSource("~/maildir-buildbot")
 @end example
 
-@node BonsaiMaildirSource,  , SyncmailMaildirSource, Parsing Email Change Messages
+@node BonsaiMaildirSource, SVNCommitEmailMaildirSource, SyncmailMaildirSource, Parsing Email Change Messages
 @subsubsection BonsaiMaildirSource
 
 @csindex buildbot.changes.mail.BonsaiMaildirSource
 
 http://www.mozilla.org/bonsai.html
 
-@code{bonsai_parser} parses messages sent out by Bonsai, the CVS
+@code{BonsaiMaildirSource} parses messages sent out by Bonsai, the CVS
 tree-management system built by Mozilla.
+
+@example
+from buildbot.changes.mail import BonsaiMaildirSource
+c['sources'] = BonsaiMaildirSource("~/maildir-buildbot")
+@end example
+
+@node SVNCommitEmailMaildirSource,  , BonsaiMaildirSource, Parsing Email Change Messages
+@subsubsection SVNCommitEmailMaildirSource
+
+@csindex buildbot.changes.mail.SVNCommitEmailMaildirSource
+
+@code{SVNCommitEmailMaildirSource} parses message sent out by the
+@code{commit-email.pl} script, which is included in the Subversion
+distribution.
+
+It does not currently handle branches: all of the Change objects that
+it creates will be associated with the default (i.e. trunk) branch.
+
+@example
+from buildbot.changes.mail import SVNCommitEmailMaildirSource
+c['sources'] = SVNCommitEmailMaildirSource("~/maildir-buildbot")
+@end example
 
 
 @node PBChangeSource, P4Source, Mail-parsing ChangeSources, Getting Source Code Changes

@@ -1,3 +1,12 @@
+2007-07-28  Brian Warner  <warner@lothar.com>
+
+	* buildbot/changes/mail.py (SVNCommitEmailMaildirSource): add a
+	parser for the "commit-email.pl" script that is shipped with SVN,
+	written by Justin Mason. Thanks! Closes SF#1072845.
+	* buildbot/test/mail/svn-commit.*: sample messages
+	* buildbot/test/test_mailparse.py (TestSVNCommitEmail): test it
+	* docs/buildbot.texinfo (SVNCommitEmailMaildirSource): docs
+
 2007-07-27  Brian Warner  <warner@lothar.com>
 
 	* buildbot/changes/mail.py: refactor: move parsing into a method
