@@ -9,7 +9,7 @@ class TestFreshCVS(unittest.TestCase):
     def get(self, msg):
         msg = util.sibpath(__file__, msg)
         s = mail.FCMaildirSource(None)
-        return s.parse(open(msg, "r"))
+        return s.parse_file(open(msg, "r"))
 
     def testMsg1(self):
         c = self.get("mail/freshcvs.1")
@@ -112,7 +112,7 @@ class TestFreshCVS_Prefix(unittest.TestCase):
     def get(self, msg):
         msg = util.sibpath(__file__, msg)
         s = mail.FCMaildirSource(None)
-        return s.parse(open(msg, "r"), prefix="Twisted/")
+        return s.parse_file(open(msg, "r"), prefix="Twisted/")
 
     def testMsg1p(self):
         c = self.get("mail/freshcvs.1")
@@ -199,12 +199,12 @@ class TestSyncmail(unittest.TestCase):
     def get(self, msg):
         msg = util.sibpath(__file__, msg)
         s = mail.SyncmailMaildirSource(None)
-        return s.parse(open(msg, "r"), prefix="buildbot/")
+        return s.parse_file(open(msg, "r"), prefix="buildbot/")
 
     def getNoPrefix(self, msg):
         msg = util.sibpath(__file__, msg)
         s = mail.SyncmailMaildirSource(None)
-        return s.parse(open(msg, "r"))
+        return s.parse_file(open(msg, "r"))
 
     def testMsgS1(self):
         c = self.get("mail/syncmail.1")
@@ -255,7 +255,7 @@ class TestSVNCommitEmail(unittest.TestCase):
     def get(self, msg, prefix):
         msg = util.sibpath(__file__, msg)
         s = mail.SVNCommitEmailMaildirSource(None)
-        return s.parse(open(msg, "r"), prefix)
+        return s.parse_file(open(msg, "r"), prefix)
 
     def test1(self):
         c = self.get("mail/svn-commit.1", "spamassassin/trunk/")

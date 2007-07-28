@@ -4,7 +4,9 @@
 Parse various kinds of 'CVS notify' email.
 """
 import os, re
-from rfc822 import Message
+from email import message_from_file
+from email.Utils import parseaddr
+from email.Iterators import body_line_iterator
 
 from zope.interface import implements
 from twisted.python import log
@@ -34,24 +36,25 @@ class MaildirSource(MaildirService, util.ComparableMixin):
 
     def messageReceived(self, filename):
         path = os.path.join(self.basedir, "new", filename)
-        change = self.parse(open(path, "r"), self.prefix)
+        change = self.parse_file(open(path, "r"), self.prefix)
         if change:
             self.parent.addChange(change)
         os.rename(os.path.join(self.basedir, "new", filename),
                   os.path.join(self.basedir, "cur", filename))
 
+    def parse_file(self, fd, prefix=None):
+        m = message_from_file(fd)
+        return self.parse(m, prefix)
+
 class FCMaildirSource(MaildirSource):
     name = "FreshCVS"
 
-    def parse(self, fd, prefix=None):
+    def parse(self, m, prefix=None):
         """Parse mail sent by FreshCVS"""
-        # this uses rfc822.Message so it can run under python2.1 . In the
-        # future it will be updated to use python2.2's "email" module.
 
-        m = Message(fd)
         # FreshCVS sets From: to "user CVS <user>", but the <> part may be
         # modified by the MTA (to include a local domain)
-        name, addr = m.getaddr("from")
+        name, addr = parseaddr(m["from"])
         if not name:
             return None # no From means this message isn't from FreshCVS
         cvs = name.find(" CVS")
@@ -67,7 +70,7 @@ class FCMaildirSource(MaildirSource):
         files = []
         comments = ""
         isdir = 0
-        lines = m.fp.readlines()
+        lines = list(body_line_iterator(m))
         while lines:
             line = lines.pop(0)
             if line == "Modified files:\n":
@@ -115,7 +118,7 @@ class FCMaildirSource(MaildirSource):
 class SyncmailMaildirSource(MaildirSource):
     name = "Syncmail"
 
-    def parse(self, fd, prefix=None):
+    def parse(self, m, prefix=None):
         """Parse messages sent by the 'syncmail' program, as suggested by the
         sourceforge.net CVS Admin documentation. Syncmail is maintained at
         syncmail.sf.net .
@@ -123,12 +126,11 @@ class SyncmailMaildirSource(MaildirSource):
         # pretty much the same as freshcvs mail, not surprising since CVS is
         # the one creating most of the text
 
-        m = Message(fd)
         # The mail is sent from the person doing the checkin. Assume that the
         # local username is enough to identify them (this assumes a one-server
         # cvs-over-rsh environment rather than the server-dirs-shared-over-NFS
         # model)
-        name, addr = m.getaddr("from")
+        name, addr = parseaddr(m["from"])
         if not addr:
             return None # no From means this message isn't from FreshCVS
         at = addr.find("@")
@@ -147,7 +149,7 @@ class SyncmailMaildirSource(MaildirSource):
         # however, because there are a lot of broken clocks out there.
         when = util.now()
 
-        subject = m.getheader("subject")
+        subject = m["subject"]
         # syncmail puts the repository-relative directory in the subject:
         # mprefix + "%(dir)s %(file)s,%(oldversion)s,%(newversion)s", where
         # 'mprefix' is something that could be added by a mailing list
@@ -164,7 +166,7 @@ class SyncmailMaildirSource(MaildirSource):
         isdir = 0
         branch = None
 
-        lines = m.fp.readlines()
+        lines = list(body_line_iterator(m))
         while lines:
             line = lines.pop(0)
 
@@ -264,10 +266,8 @@ class SyncmailMaildirSource(MaildirSource):
 class BonsaiMaildirSource(MaildirSource):
     name = "Bonsai"
 
-    def parse(self, fd, prefix=None):
+    def parse(self, m, prefix=None):
         """Parse mail sent by the Bonsai cvs loginfo script."""
-
-        msg = Message(fd)
 
         # we don't care who the email came from b/c the cvs user is in the
         # msg text
@@ -275,7 +275,7 @@ class BonsaiMaildirSource(MaildirSource):
         who = "unknown"
         timestamp = None
         files = []
-        lines = msg.fp.readlines()
+        lines = list(body_line_iterator(m))
 
         # read the control lines (what/who/where/file/etc.)
         while lines:
@@ -357,16 +357,15 @@ class BonsaiMaildirSource(MaildirSource):
 class SVNCommitEmailMaildirSource(MaildirSource):
     name = "SVN commit-email.pl"
 
-    def parse(self, fd, prefix=None):
+    def parse(self, m, prefix=None):
         """Parse messages sent by the svn 'commit-email.pl' trigger.
         """
 
-        m = Message(fd)
         # The mail is sent from the person doing the checkin. Assume that the
         # local username is enough to identify them (this assumes a one-server
         # cvs-over-rsh environment rather than the server-dirs-shared-over-NFS
         # model)
-        name, addr = m.getaddr("from")
+        name, addr = parseaddr(m["from"])
         if not addr:
             return None # no From means this message isn't from FreshCVS
         at = addr.find("@")
@@ -388,7 +387,7 @@ class SVNCommitEmailMaildirSource(MaildirSource):
         files = []
         comments = ""
         isdir = 0
-        lines = m.fp.readlines()
+        lines = list(body_line_iterator(m))
         rev = None
         while lines:
             line = lines.pop(0)

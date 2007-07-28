@@ -1,5 +1,11 @@
 2007-07-28  Brian Warner  <warner@lothar.com>
 
+	* buildbot/changes/mail.py (MaildirSource): parse with python's
+	stdlib 'email' module, which has been available since python2.2,
+	and drop use of the 'rfc822' module, which has been depreceated
+	since python2.3 .
+	* buildbot/test/test_maildir.py: same: use parse_file() not parse
+
 	* buildbot/test/test_maildir.py (MaildirTest.testMaildir): oops,
 	this needs to match the renaming in test/mail/msg*
 
