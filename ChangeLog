@@ -1,7 +1,13 @@
 2007-07-27  Brian Warner  <warner@lothar.com>
 
 	* buildbot/changes/mail.py: refactor: move parsing into a method
-	named 'parse', each parser type gets a separate subclass
+	named 'parse', each parser type gets a separate subclass. Remove
+	the old 'sep' argument (hardcode it to '/'), fix usage of prefix=
+	to be a simple leading-substring match. Add a warning to the logs
+	if prefix= does not end in a slash, since that's probably a
+	mistake. Fix both places where a prefix= mismatch would skip all
+	subsequent files in the same email, instead of just skipping the
+	one that didn't match.
 	* buildbot/test/test_mailparse.py: match changes
 
 	* docs/buildbot.texinfo (Getting Source Code Changes): refactor

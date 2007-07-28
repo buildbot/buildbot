@@ -7,6 +7,7 @@ import os, re
 from rfc822 import Message
 
 from zope.interface import implements
+from twisted.python import log
 from buildbot import util
 from buildbot.interfaces import IChangeSource
 from buildbot.changes import changes
@@ -24,6 +25,9 @@ class MaildirSource(MaildirService, util.ComparableMixin):
     def __init__(self, maildir, prefix=None):
         MaildirService.__init__(self, maildir)
         self.prefix = prefix
+        if prefix and not prefix.endswith("/"):
+            log.msg("%s: you probably want your prefix=('%s') to end with "
+                    "a slash")
 
     def describe(self):
         return "%s mailing list in maildir %s" % (self.name, self.basedir)
@@ -39,7 +43,7 @@ class MaildirSource(MaildirService, util.ComparableMixin):
 class FCMaildirSource(MaildirSource):
     name = "FreshCVS"
 
-    def parse(self, fd, prefix=None, sep="/"):
+    def parse(self, fd, prefix=None):
         """Parse mail sent by FreshCVS"""
         # this uses rfc822.Message so it can run under python2.1 . In the
         # future it will be updated to use python2.2's "email" module.
@@ -78,11 +82,10 @@ class FCMaildirSource(MaildirSource):
             if prefix:
                 # insist that the file start with the prefix: FreshCVS sends
                 # changes we don't care about too
-                bits = file.split(sep)
-                if bits[0] == prefix:
-                    file = sep.join(bits[1:])
+                if file.startswith(prefix):
+                    file = file[len(prefix):]
                 else:
-                    break
+                    continue
             if len(linebits) == 1:
                 isdir = 1
             elif linebits[1] == "0 0":
@@ -112,7 +115,7 @@ class FCMaildirSource(MaildirSource):
 class SyncmailMaildirSource(MaildirSource):
     name = "Syncmail"
 
-    def parse(self, fd, prefix=None, sep="/"):
+    def parse(self, fd, prefix=None):
         """Parse messages sent by the 'syncmail' program, as suggested by the
         sourceforge.net CVS Admin documentation. Syncmail is maintained at
         syncmail.sf.net .
@@ -191,20 +194,16 @@ class SyncmailMaildirSource(MaildirSource):
                 branch = line.split(' ')[-1].rstrip()
                 continue
 
-            # note: it doesn't actually make sense to use portable functions
-            # like os.path.join and os.sep, because these filenames all use
-            # separator conventions established by the remote CVS server (which
-            # is probably running on unix), not the local buildmaster system.
             thesefiles = line.split(" ")
             for f in thesefiles:
-                f = sep.join([directory, f])
+                f = directory + "/" + f
                 if prefix:
                     # insist that the file start with the prefix: we may get
                     # changes we don't care about too
-                    bits = f.split(sep)
-                    if bits[0] == prefix:
-                        f = sep.join(bits[1:])
+                    if f.startswith(prefix):
+                        f = f[len(prefix):]
                     else:
+                        continue
                         break
                 # TODO: figure out how new directories are described, set
                 # .isdir
@@ -265,7 +264,7 @@ class SyncmailMaildirSource(MaildirSource):
 class BonsaiMaildirSource(MaildirSource):
     name = "Bonsai"
 
-    def parse(self, fd, prefix=None, sep="/"):
+    def parse(self, fd, prefix=None):
         """Parse mail sent by the Bonsai cvs loginfo script."""
 
         msg = Message(fd)

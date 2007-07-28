@@ -112,7 +112,7 @@ class Test2(unittest.TestCase):
     def get(self, msg):
         msg = util.sibpath(__file__, msg)
         s = FCMaildirSource(None)
-        return s.parse(open(msg, "r"), prefix="Twisted")
+        return s.parse(open(msg, "r"), prefix="Twisted/")
 
     def testMsg1p(self):
         c = self.get("mail/msg1")
@@ -199,7 +199,7 @@ class Test3(unittest.TestCase):
     def get(self, msg):
         msg = util.sibpath(__file__, msg)
         s = SyncmailMaildirSource(None)
-        return s.parse(open(msg, "r"), prefix="buildbot")
+        return s.parse(open(msg, "r"), prefix="buildbot/")
 
     def getNoPrefix(self, msg):
         msg = util.sibpath(__file__, msg)
