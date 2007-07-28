@@ -160,7 +160,7 @@ Mail-parsing ChangeSources
 
 Parsing Email Change Messages
 
-* CVSToys MailNotification::    
+* FCMaildirSource::             
 * SyncmailMaildirSource::       
 * BonsaiMaildirSource::         
 
@@ -2719,7 +2719,18 @@ done by dropping them into a ``maildir''. The second is to actually
 parse the messages, which is highly dependent upon the tool that was
 used to create them. Each VC system has a collection of favorite
 change-emailing tools, and each has a slightly different format, so
-each has a different parsing function.
+each has a different parsing function. There is a separate
+ChangeSource variant for each parsing function.
+
+Once you've chosen a maildir location and a parsing function, create
+the change source and put it in the @code{c['sources']} list. Since
+buildmasters usually only have a single change source,
+@code{c['sources']} can also be a single instance:
+
+@example
+from buildbot.changes.mail import SyncmailMaildirSource
+c['sources'] = SyncmailMaildirSource("~/maildir-buildbot", prefix="/trunk/")
+@end example
 
 @menu
 * Subscribing the Buildmaster::  
@@ -2800,11 +2811,11 @@ A couple of common tools used to create these change emails are:
 @item CVS
 @table @samp
 @item CVSToys MailNotifier
-http://twistedmatrix.com/users/acapnotic/wares/code/CVSToys/
+@ref{FCMaildirSource}
 @item Bonsai notification
-http://www.mozilla.org/bonsai.html
+@ref{BonsaiMaildirSource}
 @item syncmail
-http://sourceforge.net/projects/cvs-syncmail
+@ref{SyncmailMaildirSource}
 @end table
 
 @item SVN
@@ -2823,49 +2834,75 @@ http://www.selenic.com/mercurial/wiki/index.cgi/NotifyExtension
 
 @end table
 
+Most of these parsers accept a @code{prefix=} argument, which is used
+to limit the set of files that the buildmaster pays attention to. This
+is most useful for systems like CVS and SVN which put multiple
+projects in a single repository (or use repository names to indicate
+branches). Each filename that appears in the email is tested against
+the prefix: if the filename does not start with the prefix, the file
+is ignored. If the filename @emph{does} start with the prefix, that
+prefix is stripped from the filename before any further processing is
+done. Thus the prefix usually ends with a slash.
+
+
 The following sections describe the parsers available for each of
 these tools.
 
 @menu
-* CVSToys MailNotification::    
+* FCMaildirSource::             
 * SyncmailMaildirSource::       
 * BonsaiMaildirSource::         
 @end menu
 
-@node CVSToys MailNotification, SyncmailMaildirSource, Parsing Email Change Messages, Parsing Email Change Messages
-@subsubsection CVSToys MailNotification
+@node FCMaildirSource, SyncmailMaildirSource, Parsing Email Change Messages, Parsing Email Change Messages
+@subsubsection FCMaildirSource
 
 
 @csindex buildbot.changes.mail.FCMaildirSource
 
-CVSToys also provides a @code{MailNotification} action which will send
-email to a list of recipients for each commit. This tends to work
-better than using @code{/bin/mail} from within the CVSROOT/loginfo
-file directly, as CVSToys will batch together all files changed during
-the same CVS invocation, and can provide more information (like
-creating a ViewCVS URL for each file changed).
+http://twistedmatrix.com/users/acapnotic/wares/code/CVSToys/
 
-The Buildbot's @code{FCMaildirSource} is a ChangeSource which knows
-how to parse these CVSToys messages and turn them into Change objects.
-It watches a Maildir for new messages.
+This parser works with the CVSToys @code{MailNotification} action,
+which will send email to a list of recipients for each commit. This
+tends to work better than using @code{/bin/mail} from within the
+CVSROOT/loginfo file directly, as CVSToys will batch together all
+files changed during the same CVS invocation, and can provide more
+information (like creating a ViewCVS URL for each file changed).
 
-The @code{FCMaildirSource} is created with two parameters: the
-directory name of the maildir root, and the prefix to strip.
+The Buildbot's @code{FCMaildirSource} knows for to parse these CVSToys
+messages and turn them into Change objects. It can be given two
+parameters: the directory name of the maildir root, and the prefix to
+strip.
 
-@node SyncmailMaildirSource, BonsaiMaildirSource, CVSToys MailNotification, Parsing Email Change Messages
+@example
+from buildbot.changes.mail import FCMaildirSource
+c['sources'] = FCMaildirSource("~/maildir-buildbot")
+@end example
+
+@node SyncmailMaildirSource, BonsaiMaildirSource, FCMaildirSource, Parsing Email Change Messages
 @subsubsection SyncmailMaildirSource
 
 @csindex buildbot.changes.mail.SyncmailMaildirSource
 
-@code{SyncmailMaildirSource} knows how to parse the message format
-used in mail sent by Syncmail.
+http://sourceforge.net/projects/cvs-syncmail
+
+@code{SyncmailMaildirSource} knows how to parse the message format used by
+the CVS ``syncmail'' script.
+
+@example
+from buildbot.changes.mail import SyncmailMaildirSource
+c['sources'] = SyncmailMaildirSource("~/maildir-buildbot")
+@end example
 
 @node BonsaiMaildirSource,  , SyncmailMaildirSource, Parsing Email Change Messages
 @subsubsection BonsaiMaildirSource
 
 @csindex buildbot.changes.mail.BonsaiMaildirSource
 
-@code{BonsaiMaildirSource} parses messages sent out by Bonsai.
+http://www.mozilla.org/bonsai.html
+
+@code{bonsai_parser} parses messages sent out by Bonsai, the CVS
+tree-management system built by Mozilla.
 
 
 @node PBChangeSource, P4Source, Mail-parsing ChangeSources, Getting Source Code Changes
