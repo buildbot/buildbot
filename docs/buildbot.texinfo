@@ -143,9 +143,6 @@ Listing Change Sources and Schedulers
 Getting Source Code Changes
 
 * Change Sources::              
-
-Change Sources
-
 * Choosing ChangeSources::      
 * CVSToys - PBService::         
 * CVSToys - mail notification::  
@@ -2475,11 +2472,20 @@ occurred. For more information on VC systems and Changes, see
 
 @menu
 * Change Sources::              
+* Choosing ChangeSources::      
+* CVSToys - PBService::         
+* CVSToys - mail notification::  
+* Other mail notification ChangeSources::  
+* PBChangeSource::              
+* P4Source::                    
+* BonsaiPoller::                
+* SVNPoller::                   
+* MercurialHook::               
 @end menu
 
 
 
-@node Change Sources,  , Getting Source Code Changes, Getting Source Code Changes
+@node Change Sources, Choosing ChangeSources, Getting Source Code Changes, Getting Source Code Changes
 @section Change Sources
 
 @c TODO: rework this, the one-buildmaster-one-tree thing isn't quite
@@ -2579,20 +2585,8 @@ If you write an email parsing function, they can also all be driven by
 a suitable @code{MaildirSource}.
 
 
-@menu
-* Choosing ChangeSources::      
-* CVSToys - PBService::         
-* CVSToys - mail notification::  
-* Other mail notification ChangeSources::  
-* PBChangeSource::              
-* P4Source::                    
-* BonsaiPoller::                
-* SVNPoller::                   
-* MercurialHook::               
-@end menu
-
-@node Choosing ChangeSources, CVSToys - PBService, Change Sources, Change Sources
-@subsection Choosing ChangeSources
+@node Choosing ChangeSources, CVSToys - PBService, Change Sources, Getting Source Code Changes
+@section Choosing ChangeSources
 
 The @code{master.cfg} configuration file has a dictionary key named
 @code{BuildmasterConfig['sources']}, which holds a list of
@@ -2617,8 +2611,8 @@ ignored by the changesource: it does not generate Changes for those
 files.
 
 
-@node CVSToys - PBService, CVSToys - mail notification, Choosing ChangeSources, Change Sources
-@subsection CVSToys - PBService
+@node CVSToys - PBService, CVSToys - mail notification, Choosing ChangeSources, Getting Source Code Changes
+@section CVSToys - PBService
 
 @csindex buildbot.changes.freshcvs.FreshCVSSource
 
@@ -2691,8 +2685,8 @@ it handles.
 
 
 
-@node CVSToys - mail notification, Other mail notification ChangeSources, CVSToys - PBService, Change Sources
-@subsection CVSToys - mail notification
+@node CVSToys - mail notification, Other mail notification ChangeSources, CVSToys - PBService, Getting Source Code Changes
+@section CVSToys - mail notification
 
 @csindex buildbot.changes.mail.FCMaildirSource
 
@@ -2727,8 +2721,8 @@ watch the maildir for commit messages.
 The @code{FCMaildirSource} is created with two parameters: the
 directory name of the maildir root, and the prefix to strip.
 
-@node Other mail notification ChangeSources, PBChangeSource, CVSToys - mail notification, Change Sources
-@subsection Other mail notification ChangeSources
+@node Other mail notification ChangeSources, PBChangeSource, CVSToys - mail notification, Getting Source Code Changes
+@section Other mail notification ChangeSources
 
 @csindex buildbot.changes.mail.SyncmailMaildirSource
 @csindex buildbot.changes.mail.BonsaiMaildirSource
@@ -2741,8 +2735,8 @@ used in mail sent by Syncmail.
 
 @code{BonsaiMaildirSource} parses messages sent out by Bonsai.
 
-@node PBChangeSource, P4Source, Other mail notification ChangeSources, Change Sources
-@subsection PBChangeSource
+@node PBChangeSource, P4Source, Other mail notification ChangeSources, Getting Source Code Changes
+@section PBChangeSource
 
 @csindex buildbot.changes.pb.PBChangeSource
 
@@ -2811,8 +2805,8 @@ stripping prefixes at the sending end.
 
 @end table
 
-@node P4Source, BonsaiPoller, PBChangeSource, Change Sources
-@subsection P4Source
+@node P4Source, BonsaiPoller, PBChangeSource, Getting Source Code Changes
+@section P4Source
 
 @csindex buildbot.changes.p4poller.P4Source
 
@@ -2862,8 +2856,8 @@ c['sources'].append(p4poller.P4Source(
 ))
 @end example
 
-@node BonsaiPoller, SVNPoller, P4Source, Change Sources
-@subsection BonsaiPoller
+@node BonsaiPoller, SVNPoller, P4Source, Getting Source Code Changes
+@section BonsaiPoller
 
 @csindex buildbot.changes.bonsaipoller.BonsaiPoller
 
@@ -2879,8 +2873,8 @@ Please take a look at the BonsaiPoller docstring for details about the
 arguments it accepts.
 
 
-@node SVNPoller, MercurialHook, BonsaiPoller, Change Sources
-@subsection SVNPoller
+@node SVNPoller, MercurialHook, BonsaiPoller, Getting Source Code Changes
+@section SVNPoller
 
 @csindex buildbot.changes.svnpoller.SVNPoller
 
@@ -3153,8 +3147,8 @@ def my_file_splitter(path):
     return (branch, '/'.join(pieces))
 @end example
 
-@node MercurialHook,  , SVNPoller, Change Sources
-@subsection MercurialHook
+@node MercurialHook,  , SVNPoller, Getting Source Code Changes
+@section MercurialHook
 
 Since Mercurial is written in python, the hook script can invoke
 Buildbot's @code{sendchange} function directly, rather than having to

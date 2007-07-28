@@ -1,5 +1,9 @@
 2007-07-27  Brian Warner  <warner@lothar.com>
 
+	* docs/buildbot.texinfo (Getting Source Code Changes): move all
+	the changesource types up a level, removing the one-entry menu in
+	the process
+
 	* buildbot/master.py (BuildMaster.loadConfig_Slaves): rename
 	c['bots'] to c['slaves'], and use buildbot.slave.BuildSlave
 	instances instead of tuples. Closes #63.
