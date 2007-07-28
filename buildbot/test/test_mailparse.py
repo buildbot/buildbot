@@ -2,13 +2,14 @@
 
 from twisted.trial import unittest
 from twisted.python import util
-from buildbot.changes.mail import parseFreshCVSMail, parseSyncmail
+from buildbot.changes.mail import FCMaildirSource, SyncmailMaildirSource
 
 class Test1(unittest.TestCase):
 
     def get(self, msg):
         msg = util.sibpath(__file__, msg)
-        return parseFreshCVSMail(None, open(msg, "r"))
+        s = FCMaildirSource(None)
+        return s.parse(open(msg, "r"))
 
     def testMsg1(self):
         c = self.get("mail/msg1")
@@ -110,7 +111,8 @@ class Test1(unittest.TestCase):
 class Test2(unittest.TestCase):
     def get(self, msg):
         msg = util.sibpath(__file__, msg)
-        return parseFreshCVSMail(None, open(msg, "r"), prefix="Twisted")
+        s = FCMaildirSource(None)
+        return s.parse(open(msg, "r"), prefix="Twisted")
 
     def testMsg1p(self):
         c = self.get("mail/msg1")
@@ -196,11 +198,13 @@ class Test2(unittest.TestCase):
 class Test3(unittest.TestCase):
     def get(self, msg):
         msg = util.sibpath(__file__, msg)
-        return parseSyncmail(None, open(msg, "r"), prefix="buildbot")
+        s = SyncmailMaildirSource(None)
+        return s.parse(open(msg, "r"), prefix="buildbot")
 
     def getNoPrefix(self, msg):
         msg = util.sibpath(__file__, msg)
-        return parseSyncmail(None, open(msg, "r"))
+        s = SyncmailMaildirSource(None)
+        return s.parse(open(msg, "r"))
 
     def testMsgS1(self):
         c = self.get("mail/syncmail.1")

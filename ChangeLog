@@ -1,5 +1,9 @@
 2007-07-27  Brian Warner  <warner@lothar.com>
 
+	* buildbot/changes/mail.py: refactor: move parsing into a method
+	named 'parse', each parser type gets a separate subclass
+	* buildbot/test/test_mailparse.py: match changes
+
 	* docs/buildbot.texinfo (Getting Source Code Changes): refactor
 	docs on email-based ChangeSources
 
