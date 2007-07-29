@@ -651,7 +651,9 @@ class BuildMaster(service.MultiService, styles.Versioned):
             log.err("config file must define BuildmasterConfig")
             raise
 
-        known_keys = ("bots", "slaves", "sources", "schedulers", "builders",
+        known_keys = ("bots", "slaves",
+                      "sources", "change_source",
+                      "schedulers", "builders",
                       "slavePortnum", "debugPassword", "manhole",
                       "status", "projectName", "projectURL", "buildbotURL",
                       )
@@ -661,11 +663,11 @@ class BuildMaster(service.MultiService, styles.Versioned):
 
         try:
             # required
-            sources = config['sources']
             schedulers = config['schedulers']
             builders = config['builders']
             slavePortnum = config['slavePortnum']
             #slaves = config['slaves']
+            #change_source = config['change_source']
 
             # optional
             debugPassword = config.get('debugPassword')
@@ -685,8 +687,8 @@ class BuildMaster(service.MultiService, styles.Versioned):
 
         slaves = config.get('slaves', [])
         if "bots" in config:
-            m = ("c['bots'] is deprecated as of 0.7.6, please use "
-                 "c['slaves'] instead")
+            m = ("c['bots'] is deprecated as of 0.7.6 and will be "
+                 "removed by 0.8.0 . Please use c['slaves'] instead.")
             log.msg(m)
             warnings.warn(m, DeprecationWarning)
             for name, passwd in config['bots']:
@@ -697,6 +699,22 @@ class BuildMaster(service.MultiService, styles.Versioned):
             log.msg("leaving old configuration in place")
             raise KeyError("must have either 'bots' or 'slaves'")
 
+        #if "sources" in config:
+        #    raise KeyError("c['sources'] is no longer accepted")
+
+        change_source = config.get('change_source', [])
+        if isinstance(change_source, (list, tuple)):
+            change_sources = change_source
+        else:
+            change_sources = [change_source]
+        if "sources" in config:
+            m = ("c['sources'] is deprecated as of 0.7.6 and will be "
+                 "removed by 0.8.0 . Please use c['change_source'] instead.")
+            log.msg(m)
+            warnings.warn(m, DeprecationWarning)
+            for s in config['sources']:
+                change_sources.append(s)
+
         # do some validation first
         for s in slaves:
             assert isinstance(s, BuildSlave)
@@ -705,8 +723,8 @@ class BuildMaster(service.MultiService, styles.Versioned):
         if config.has_key('interlocks'):
             raise KeyError("c['interlocks'] is no longer accepted")
 
-        assert isinstance(sources, (list, tuple))
-        for s in sources:
+        assert isinstance(change_sources, (list, tuple))
+        for s in change_sources:
             assert interfaces.IChangeSource(s, None)
         # this assertion catches c['schedulers'] = Scheduler(), since
         # Schedulers are service.MultiServices and thus iterable.
@@ -839,7 +857,7 @@ class BuildMaster(service.MultiService, styles.Versioned):
         # Schedulers are added after Builders in case they start right away
         d.addCallback(lambda res: self.loadConfig_Schedulers(schedulers))
         # and Sources go after Schedulers for the same reason
-        d.addCallback(lambda res: self.loadConfig_Sources(sources))
+        d.addCallback(lambda res: self.loadConfig_Sources(change_sources))
 
         # self.slavePort
         if self.slavePortnum != slavePortnum:
@@ -892,8 +910,8 @@ class BuildMaster(service.MultiService, styles.Versioned):
         return d
 
     def loadConfig_Sources(self, sources):
-        log.msg("loadConfig_Sources, change_svc is", self.change_svc,
-                self.change_svc.parent)
+        if not sources:
+            log.msg("warning: no ChangeSources specified in c['change_source']")
         # shut down any that were removed, start any that were added
         deleted_sources = [s for s in self.change_svc if s not in sources]
         added_sources = [s for s in sources if s not in self.change_svc]

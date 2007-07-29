@@ -1999,17 +1999,26 @@ more information about this buildbot.
 @section Listing Change Sources and Schedulers
 
 @bcindex c['sources']
-The @code{c['sources']} key is a list of ChangeSource
-instances@footnote{To be precise, it is a list of objects which all
-implement the @code{buildbot.interfaces.IChangeSource} Interface}.
-This defines how the buildmaster learns about source code changes.
-More information about what goes here is available in @xref{Getting
-Source Code Changes}.
+@bcindex c['change_source']
+
+The @code{c['change_source']} key is the ChangeSource
+instance@footnote{To be precise, it is an object or a list of objects
+which all implement the @code{buildbot.interfaces.IChangeSource}
+Interface. It is unusual to have multiple ChangeSources, so this key
+accepts either a single ChangeSource or a sequence of them.} that
+defines how the buildmaster learns about source code changes. More
+information about what goes here is available in @xref{Getting Source
+Code Changes}.
 
 @example
-import buildbot.changes.pb
-c['sources'] = [buildbot.changes.pb.PBChangeSource()]
+from buildbot.changes.pb import PBChangeSource
+c['change_source'] = PBChangeSource()
 @end example
+
+(note: in buildbot-0.7.5 and earlier, this key was named
+@code{c['sources']}, and required a list. @code{c['sources']} is
+deprecated as of buildbot-0.7.6 and is scheduled to be removed in a
+future release).
 
 @bcindex c['schedulers']
 @code{c['schedulers']} is a list of Scheduler instances, each of which
@@ -2601,16 +2610,21 @@ a suitable @code{MaildirSource}.
 @section Choosing ChangeSources
 
 The @code{master.cfg} configuration file has a dictionary key named
-@code{BuildmasterConfig['sources']}, which holds a list of
-@code{IChangeSource} objects. The config file will typically create an
-object from one of the classes described below and stuff it into the
-list.
+@code{BuildmasterConfig['change_source']}, which holds the active
+@code{IChangeSource} object. The config file will typically create an
+object from one of the classes described below and stuff it into this
+key.
+
+Each buildmaster typically has just a single ChangeSource, since it is
+only watching a single source tree. But if, for some reason, you need
+multiple sources, just set @code{c['change_source']} to a list of
+ChangeSources.. it will accept that too.
 
 @example
 s = FreshCVSSourceNewcred(host="host", port=4519,
                           user="alice", passwd="secret",
                           prefix="Twisted")
-BuildmasterConfig['sources'] = [s]
+BuildmasterConfig['change_source'] = [s]
 @end example
 
 Each source tree has a nominal @code{top}. Each Change has a list of
@@ -2682,9 +2696,9 @@ using a username of 'foo' and a password of 'bar'.
 Then add a clause like this to your buildmaster's @file{master.cfg}:
 
 @example
-BuildmasterConfig['sources'] = [FreshCVSSource("cvs.example.com", 4519,
-                                "foo", "bar",
-                                prefix="glib/")]
+BuildmasterConfig['change_source'] = FreshCVSSource("cvs.example.com", 4519,
+                                                    "foo", "bar",
+                                                    prefix="glib/")
 @end example
 
 where "cvs.example.com" is the host that is running the FreshCVS daemon, and
@@ -2725,13 +2739,12 @@ each has a different parsing function. There is a separate
 ChangeSource variant for each parsing function.
 
 Once you've chosen a maildir location and a parsing function, create
-the change source and put it in the @code{c['sources']} list. Since
-buildmasters usually only have a single change source,
-@code{c['sources']} can also be a single instance:
+the change source and put it in @code{c['change_source']}:
 
 @example
 from buildbot.changes.mail import SyncmailMaildirSource
-c['sources'] = SyncmailMaildirSource("~/maildir-buildbot", prefix="/trunk/")
+c['change_source'] = SyncmailMaildirSource("~/maildir-buildbot",
+                                           prefix="/trunk/")
 @end example
 
 @menu
@@ -2879,7 +2892,7 @@ strip.
 
 @example
 from buildbot.changes.mail import FCMaildirSource
-c['sources'] = FCMaildirSource("~/maildir-buildbot")
+c['change_source'] = FCMaildirSource("~/maildir-buildbot")
 @end example
 
 @node SyncmailMaildirSource, BonsaiMaildirSource, FCMaildirSource, Parsing Email Change Messages
@@ -2894,7 +2907,7 @@ the CVS ``syncmail'' script.
 
 @example
 from buildbot.changes.mail import SyncmailMaildirSource
-c['sources'] = SyncmailMaildirSource("~/maildir-buildbot")
+c['change_source'] = SyncmailMaildirSource("~/maildir-buildbot")
 @end example
 
 @node BonsaiMaildirSource, SVNCommitEmailMaildirSource, SyncmailMaildirSource, Parsing Email Change Messages
@@ -2909,7 +2922,7 @@ tree-management system built by Mozilla.
 
 @example
 from buildbot.changes.mail import BonsaiMaildirSource
-c['sources'] = BonsaiMaildirSource("~/maildir-buildbot")
+c['change_source'] = BonsaiMaildirSource("~/maildir-buildbot")
 @end example
 
 @node SVNCommitEmailMaildirSource,  , BonsaiMaildirSource, Parsing Email Change Messages
@@ -2926,7 +2939,7 @@ it creates will be associated with the default (i.e. trunk) branch.
 
 @example
 from buildbot.changes.mail import SVNCommitEmailMaildirSource
-c['sources'] = SVNCommitEmailMaildirSource("~/maildir-buildbot")
+c['change_source'] = SVNCommitEmailMaildirSource("~/maildir-buildbot")
 @end example
 
 
@@ -3045,10 +3058,10 @@ components after.
 
 @example
 import buildbot.changes.p4poller
-c['sources'].append(p4poller.P4Source(
-        p4base='//depot/project/',
-        split_file=lambda branchfile: branchfile.split('/',1)
-))
+s = p4poller.P4Source(p4base='//depot/project/',
+                      split_file=lambda branchfile: branchfile.split('/',1),
+                     )
+c['change_source'] = s
 @end example
 
 @node BonsaiPoller, SVNPoller, P4Source, Getting Source Code Changes
@@ -3188,8 +3201,7 @@ nothing else), we would use the following:
 
 @example
 from buildbot.changes.svnpoller import SVNPoller
-s = SVNPoller("svn://svn.twistedmatrix.com/svn/Twisted/trunk")
-c['sources'].append(ss)
+c['change_source'] = SVNPoller("svn://svn.twistedmatrix.com/svn/Twisted/trunk")
 @end example
 
 In this case, every Change that our @code{SVNPoller} produces will
@@ -3242,9 +3254,8 @@ multiple branches, we would use this:
 
 @example
 from buildbot.changes.svnpoller import SVNPoller, split_file_branches
-s = SVNPoller("svn://svn.twistedmatrix.com/svn/Twisted",
-              split_file=split_file_branches)
-c['sources'].append(ss)
+c['change_source'] = SVNPoller("svn://svn.twistedmatrix.com/svn/Twisted",
+                               split_file=split_file_branches)
 @end example
 
 Changes for all sorts of branches (with names like ``branches/1.5.x'',
@@ -3283,8 +3294,7 @@ described earlier:
 
 @example
 from buildbot.changes.svnpoller import SVNPoller
-s = SVNPoller("http://divmod.org/svn/Divmod/trunk/Nevow")
-c['sources'].append(ss)
+c['change_source'] = SVNPoller("http://divmod.org/svn/Divmod/trunk/Nevow")
 @end example
 
 But what happens when we want to track multiple Nevow branches? We
@@ -3297,9 +3307,8 @@ as figuring out which branch each one is on.
 
 @example
 from buildbot.changes.svnpoller import SVNPoller
-s = SVNPoller("http://divmod.org/svn/Divmod",
-              split_file=my_file_splitter)
-c['sources'].append(ss)
+c['change_source'] = SVNPoller("http://divmod.org/svn/Divmod",
+                               split_file=my_file_splitter)
 @end example
 
 The @code{my_file_splitter} function will be called with
@@ -3821,7 +3830,7 @@ from buildbot.scheduler import AnyBranchScheduler
 from buildbot.process import source, factory
 from buildbot.steps import source, shell
 
-c['sources'] = [PBChangeSource()]
+c['change_source'] = PBChangeSource()
 s1 = AnyBranchScheduler('main',
                         ['trunk', 'features/newthing', 'features/otherthing'],
                         10*60, ['test-i386', 'test-ppc'])
@@ -6534,8 +6543,8 @@ These tools are generally used by buildmaster administrators.
 This command is used to tell the buildmaster about source changes. It
 is intended to be used from within a commit script, installed on the
 VC server. It requires that you have a PBChangeSource
-(@pxref{PBChangeSource}) running in the buildmaster (by being included
-in the @code{c['sources']} list).
+(@pxref{PBChangeSource}) running in the buildmaster (by being set in
+@code{c['change_source']}).
 
 
 @example
@@ -6800,7 +6809,7 @@ admins are unlikely to have much use for.
 @unnumbered Index of master.cfg keys
 
 This is a list of all of the significant keys in master.cfg . Recall
-that master.cfg is effectively a small python program one
+that master.cfg is effectively a small python program with exactly one
 responsibility: create a dictionary named @code{BuildmasterConfig}.
 The keys of this dictionary are listed here. The beginning of the
 master.cfg file typically starts with something like:
@@ -6809,8 +6818,8 @@ master.cfg file typically starts with something like:
 BuildmasterConfig = c = @{@}
 @end example
 
-Therefore a config key of @code{sources} will usually appear in
-master.cfg as @code{c['sources']}.
+Therefore a config key of @code{change_source} will usually appear in
+master.cfg as @code{c['change_source']}.
 
 @printindex bc
 

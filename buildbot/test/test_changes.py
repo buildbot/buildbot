@@ -99,7 +99,6 @@ config_empty = """
 BuildmasterConfig = c = {}
 c['slaves'] = []
 c['builders'] = []
-c['sources'] = []
 c['schedulers'] = []
 c['slavePortnum'] = 0
 """
@@ -107,7 +106,7 @@ c['slavePortnum'] = 0
 config_sender = config_empty + \
 """
 from buildbot.changes import pb
-c['sources'] = [pb.PBChangeSource(port=None)]
+c['change_source'] = pb.PBChangeSource(port=None)
 """
 
 class Sender(unittest.TestCase):

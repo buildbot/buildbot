@@ -27,7 +27,6 @@ f2 = factory.BuildFactory([
 
 BuildmasterConfig = c = {}
 c['slaves'] = [BuildSlave('bot1', 'sekrit')]
-c['sources'] = []
 c['schedulers'] = []
 c['builders'] = []
 c['builders'].append({'name':'quick', 'slavename':'bot1',

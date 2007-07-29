@@ -317,7 +317,6 @@ f1 = factory.BuildFactory([
     factory.s(VersionCheckingStep),
     ])
 c['slaves'] = [BuildSlave('bot1', 'sekrit')]
-c['sources'] = []
 c['schedulers'] = []
 c['builders'] = [{'name':'quick', 'slavename':'bot1',
                   'builddir': 'quickdir', 'factory': f1}]

@@ -140,7 +140,6 @@ s = factory.s
 
 BuildmasterConfig = c = {}
 c['slaves'] = [BuildSlave('bot1', 'sekrit')]
-c['sources'] = []
 c['schedulers'] = []
 c['slavePortnum'] = 0
 

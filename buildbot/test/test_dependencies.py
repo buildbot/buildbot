@@ -17,7 +17,6 @@ from buildbot.test.test_locks import LockStep
 
 BuildmasterConfig = c = {}
 c['slaves'] = [BuildSlave('bot1', 'sekrit'), BuildSlave('bot2', 'sekrit')]
-c['sources'] = []
 c['schedulers'] = []
 c['slavePortnum'] = 0
 

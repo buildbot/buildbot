@@ -25,7 +25,6 @@ f1 = factory.BuildFactory([
     ])
 c = {}
 c['slaves'] = [BuildSlave('bot1', 'sekrit')]
-c['sources'] = []
 c['schedulers'] = []
 c['builders'] = [{'name': 'force', 'slavename': 'bot1',
                   'builddir': 'force-dir', 'factory': f1}]

@@ -7,13 +7,6 @@ from twisted.trial import unittest
 from twisted.python import failure
 from twisted.internet import defer
 
-cvstoys = None
-try:
-    import cvstoys
-    from buildbot.changes.freshcvs import FreshCVSSource
-except ImportError:
-    pass
-
 from buildbot.master import BuildMaster
 from buildbot import scheduler
 from twisted.application import service, internet
@@ -22,6 +15,8 @@ from twisted.web.server import Site
 from twisted.web.distrib import ResourcePublisher
 from buildbot.process.builder import Builder
 from buildbot.process.factory import BasicBuildFactory
+from buildbot.changes.pb import PBChangeSource
+from buildbot.changes.mail import SyncmailMaildirSource
 from buildbot.steps.source import CVS, Darcs
 from buildbot.steps.shell import Compile, Test, ShellCommand
 from buildbot.status import base
@@ -37,7 +32,6 @@ emptyCfg = \
 """
 BuildmasterConfig = c = {}
 c['slaves'] = []
-c['sources'] = []
 c['schedulers'] = []
 c['builders'] = []
 c['slavePortnum'] = 9999
@@ -52,7 +46,6 @@ from buildbot.process.factory import BasicBuildFactory
 from buildbot.slave import BuildSlave
 BuildmasterConfig = c = {}
 c['slaves'] = [BuildSlave('bot1', 'pw1')]
-c['sources'] = []
 c['schedulers'] = []
 c['slavePortnum'] = 9999
 f1 = BasicBuildFactory('cvsroot', 'cvsmodule')
@@ -162,7 +155,6 @@ from buildbot.process.factory import BasicBuildFactory
 from buildbot.slave import BuildSlave
 c = {}
 c['slaves'] = [BuildSlave('bot1', 'pw1')]
-c['sources'] = []
 c['schedulers'] = []
 f1 = BasicBuildFactory('cvsroot', 'cvsmodule')
 c['builders'] = [
@@ -186,7 +178,6 @@ from buildbot.locks import MasterLock
 from buildbot.slave import BuildSlave
 c = {}
 c['slaves'] = [BuildSlave('bot1', 'pw1')]
-c['sources'] = []
 c['schedulers'] = []
 l1 = MasterLock('lock1')
 l2 = MasterLock('lock1') # duplicate lock name
@@ -209,7 +200,6 @@ from buildbot.locks import MasterLock, SlaveLock
 from buildbot.slave import BuildSlave
 c = {}
 c['slaves'] = [BuildSlave('bot1', 'pw1')]
-c['sources'] = []
 c['schedulers'] = []
 l1 = MasterLock('lock1')
 l2 = SlaveLock('lock1') # duplicate lock name
@@ -232,7 +222,6 @@ from buildbot.locks import MasterLock
 from buildbot.slave import BuildSlave
 c = {}
 c['slaves'] = [BuildSlave('bot1', 'pw1')]
-c['sources'] = []
 c['schedulers'] = []
 l1 = MasterLock('lock1')
 l2 = MasterLock('lock1') # duplicate lock name
@@ -255,7 +244,6 @@ from buildbot.locks import MasterLock
 from buildbot.slave import BuildSlave
 c = {}
 c['slaves'] = [BuildSlave('bot1', 'pw1')]
-c['sources'] = []
 c['schedulers'] = []
 f1 = BasicBuildFactory('cvsroot', 'cvsmodule')
 l1 = MasterLock('lock1')
@@ -277,7 +265,6 @@ from buildbot.locks import MasterLock
 from buildbot.slave import BuildSlave
 c = {}
 c['slaves'] = [BuildSlave('bot1', 'pw1')]
-c['sources'] = []
 c['schedulers'] = []
 f1 = BasicBuildFactory('cvsroot', 'cvsmodule')
 l1 = MasterLock('lock1')
@@ -301,7 +288,6 @@ from buildbot.locks import MasterLock
 from buildbot.slave import BuildSlave
 c = {}
 c['slaves'] = [BuildSlave('bot1', 'pw1')]
-c['sources'] = []
 c['schedulers'] = []
 l1 = MasterLock('lock1')
 l2 = MasterLock('lock2')
@@ -326,7 +312,6 @@ from buildbot.locks import MasterLock
 from buildbot.slave import BuildSlave
 c = {}
 c['slaves'] = [BuildSlave('bot1', 'pw1')]
-c['sources'] = []
 c['schedulers'] = []
 l1 = MasterLock('lock1')
 l2 = MasterLock('lock2')
@@ -351,7 +336,6 @@ from buildbot.locks import MasterLock
 from buildbot.slave import BuildSlave
 c = {}
 c['slaves'] = [BuildSlave('bot1', 'pw1')]
-c['sources'] = []
 c['schedulers'] = []
 l1 = MasterLock('lock1')
 l2 = MasterLock('lock2')
@@ -375,7 +359,6 @@ from buildbot.process.factory import BasicBuildFactory
 from buildbot.slave import BuildSlave
 c = {}
 c['slaves'] = [BuildSlave('bot1', 'pw1')]
-c['sources'] = []
 f1 = BasicBuildFactory('cvsroot', 'cvsmodule')
 b1 = {'name':'builder1', 'slavename':'bot1',
       'builddir':'workdir', 'factory':f1}
@@ -485,7 +468,7 @@ class ConfigTest(unittest.TestCase):
         self.failIf(p is ports[0],
                     "slave port was unchanged but configuration was changed")
 
-    def testBots(self):
+    def testSlaves(self):
         master = self.buildmaster
         master.loadChanges()
         master.loadConfig(emptyCfg)
@@ -518,54 +501,97 @@ class ConfigTest(unittest.TestCase):
                               "bot2": "pw2"})
 
 
-    def testSources(self):
-        if not cvstoys:
-            raise unittest.SkipTest("this test needs CVSToys installed")
+    def testChangeSource(self):
         master = self.buildmaster
         master.loadChanges()
         master.loadConfig(emptyCfg)
         self.failUnlessEqual(list(master.change_svc), [])
 
-        self.sourcesCfg = emptyCfg + \
+        sourcesCfg = emptyCfg + \
 """
-from buildbot.changes.freshcvs import FreshCVSSource
-s1 = FreshCVSSource('cvs.example.com', 1000, 'pname', 'spass',
-                    prefix='Prefix/')
-c['sources'] = [s1]
+from buildbot.changes.pb import PBChangeSource
+c['change_source'] = PBChangeSource()
 """
 
-        d = master.loadConfig(self.sourcesCfg)
-        d.addCallback(self._testSources_1)
-        return d
+        d = master.loadConfig(sourcesCfg)
+        def _check1(res):
+            self.failUnlessEqual(len(list(self.buildmaster.change_svc)), 1)
+            s1 = list(self.buildmaster.change_svc)[0]
+            self.failUnless(isinstance(s1, PBChangeSource))
+            self.failUnlessEqual(s1, list(self.buildmaster.change_svc)[0])
+            self.failUnless(s1.parent)
 
-    def _testSources_1(self, res):
-        self.failUnlessEqual(len(list(self.buildmaster.change_svc)), 1)
-        s1 = list(self.buildmaster.change_svc)[0]
-        self.failUnless(isinstance(s1, FreshCVSSource))
-        self.failUnlessEqual(s1.host, "cvs.example.com")
-        self.failUnlessEqual(s1.port, 1000)
-        self.failUnlessEqual(s1.prefix, "Prefix/")
-        self.failUnlessEqual(s1, list(self.buildmaster.change_svc)[0])
-        self.failUnless(s1.parent)
+            # verify that unchanged sources are not interrupted
+            d1 = self.buildmaster.loadConfig(sourcesCfg)
 
-        # verify that unchanged sources are not interrupted
-        d = self.buildmaster.loadConfig(self.sourcesCfg)
-        d.addCallback(self._testSources_2, s1)
-        return d
-
-    def _testSources_2(self, res, s1):
-        self.failUnlessEqual(len(list(self.buildmaster.change_svc)), 1)
-        s2 = list(self.buildmaster.change_svc)[0]
-        self.failUnlessIdentical(s1, s2)
-        self.failUnless(s1.parent)
+            def _check2(res):
+                self.failUnlessEqual(len(list(self.buildmaster.change_svc)), 1)
+                s2 = list(self.buildmaster.change_svc)[0]
+                self.failUnlessIdentical(s1, s2)
+                self.failUnless(s1.parent)
+            d1.addCallback(_check2)
+            return d1
+        d.addCallback(_check1)
 
         # make sure we can get rid of the sources too
-        d = self.buildmaster.loadConfig(emptyCfg)
-        d.addCallback(self._testSources_3)
+        d.addCallback(lambda res: self.buildmaster.loadConfig(emptyCfg))
+
+        def _check3(res):
+            self.failUnlessEqual(list(self.buildmaster.change_svc), [])
+        d.addCallback(_check3)
+
         return d
 
-    def _testSources_3(self, res):
-        self.failUnlessEqual(list(self.buildmaster.change_svc), [])
+    def testChangeSources(self):
+        # make sure we can accept a list
+        master = self.buildmaster
+        master.loadChanges()
+        master.loadConfig(emptyCfg)
+        self.failUnlessEqual(list(master.change_svc), [])
+
+        sourcesCfg = emptyCfg + \
+"""
+from buildbot.changes.pb import PBChangeSource
+from buildbot.changes.mail import SyncmailMaildirSource
+c['change_source'] = [PBChangeSource(),
+                     SyncmailMaildirSource('.'),
+                    ]
+"""
+
+        d = master.loadConfig(sourcesCfg)
+        def _check1(res):
+            self.failUnlessEqual(len(list(self.buildmaster.change_svc)), 2)
+            s1,s2 = list(self.buildmaster.change_svc)
+            if isinstance(s2, PBChangeSource):
+                s1,s2 = s2,s1
+            self.failUnless(isinstance(s1, PBChangeSource))
+            self.failUnless(s1.parent)
+            self.failUnless(isinstance(s2, SyncmailMaildirSource))
+            self.failUnless(s2.parent)
+        d.addCallback(_check1)
+        return d
+
+    def testSources(self):
+        # test backwards compatibility. c['sources'] is deprecated.
+        master = self.buildmaster
+        master.loadChanges()
+        master.loadConfig(emptyCfg)
+        self.failUnlessEqual(list(master.change_svc), [])
+
+        sourcesCfg = emptyCfg + \
+"""
+from buildbot.changes.pb import PBChangeSource
+c['sources'] = [PBChangeSource()]
+"""
+
+        d = master.loadConfig(sourcesCfg)
+        def _check1(res):
+            self.failUnlessEqual(len(list(self.buildmaster.change_svc)), 1)
+            s1 = list(self.buildmaster.change_svc)[0]
+            self.failUnless(isinstance(s1, PBChangeSource))
+            self.failUnless(s1.parent)
+        d.addCallback(_check1)
+        return d
 
     def shouldBeFailure(self, res, *expected):
         self.failUnless(isinstance(res, failure.Failure),
@@ -1130,7 +1156,6 @@ from buildbot.steps.source import Darcs
 from buildbot.slave import BuildSlave
 BuildmasterConfig = c = {}
 c['slaves'] = [BuildSlave('bot1', 'pw1')]
-c['sources'] = []
 c['schedulers'] = []
 c['slavePortnum'] = 9999
 f1 = BuildFactory([ShellCommand(command='echo yes'),

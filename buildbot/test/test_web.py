@@ -37,7 +37,6 @@ base_config = """
 from buildbot.status import html
 BuildmasterConfig = c = {
     'slaves': [],
-    'sources': [],
     'schedulers': [],
     'builders': [],
     'slavePortnum': 0,
@@ -196,7 +195,7 @@ class Waterfall(BaseWeb, unittest.TestCase):
         # this is the right way to configure the Waterfall status
         config1 = base_config + """
 from buildbot.changes import mail
-c['sources'] = [mail.SyncmailMaildirSource('my-maildir')]
+c['change_source'] = mail.SyncmailMaildirSource('my-maildir')
 c['status'] = [html.Waterfall(http_port=0, robots_txt=%s)]
 """ % repr(self.robots_txt)
 
@@ -292,7 +291,7 @@ class DummyChangeSource(ChangeSource):
 
 BuildmasterConfig = c = {}
 c['slaves'] = [BuildSlave('bot1', 'sekrit'), BuildSlave('bot2', 'sekrit')]
-c['sources'] = [DummyChangeSource()]
+c['change_source'] = DummyChangeSource()
 c['schedulers'] = [DiscardScheduler('discard', None, 60, ['b1'])]
 c['slavePortnum'] = 0
 c['status'] = [html.Waterfall(http_port=0)]
@@ -390,7 +389,6 @@ from buildbot.slave import BuildSlave
 f1 = BasicBuildFactory('cvsroot', 'cvsmodule')
 BuildmasterConfig = {
     'slaves': [BuildSlave('bot1', 'passwd1')],
-    'sources': [],
     'schedulers': [],
     'builders': [{'name': 'builder1', 'slavename': 'bot1',
                   'builddir':'workdir', 'factory':f1}],
