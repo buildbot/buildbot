@@ -1,5 +1,10 @@
 2007-07-29  Brian Warner  <warner@lothar.com>
 
+	* buildbot/scripts/sample.cfg: remove the spurious 'builders'
+	variable, since it wasn't used and is confusing in the presence of
+	c['builders'] (which *is* used). Thanks to Thomas Vander Stichele
+	for the suggestion.
+
 	* buildbot/status/web/waterfall.py (WaterfallStatusResource): update
 	the Buildbot home-page link to point at buildbot.net instead of 
 	sourceforge, and add a current-version query parameter so we can
