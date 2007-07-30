@@ -1,3 +1,10 @@
+2007-07-29  Brian Warner  <warner@lothar.com>
+
+	* buildbot/status/web/waterfall.py (WaterfallStatusResource): update
+	the Buildbot home-page link to point at buildbot.net instead of 
+	sourceforge, and add a current-version query parameter so we can
+	get some statistics on which versions are in use out there.
+
 2007-07-28  Brian Warner  <warner@lothar.com>
 
 	* buildbot/master.py (BuildMaster.loadConfig): replace c['sources']

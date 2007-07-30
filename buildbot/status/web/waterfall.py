@@ -1130,8 +1130,8 @@ class WaterfallStatusResource(HtmlResource):
 
         data += "<hr />\n"
 
-        data += "<a href=\"http://buildbot.sourceforge.net/\">Buildbot</a>"
-        data += "-%s " % version
+        bburl = "http://buildbot.net/?bb-ver=%s" % urllib.quote(version)
+        data += "<a href=\"%s\">Buildbot-%s</a> " % (bburl, version)
         if projectName:
             data += "working for the "
             if projectURL:
