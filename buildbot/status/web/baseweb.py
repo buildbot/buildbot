@@ -14,10 +14,15 @@ from buildbot.status.web.waterfall import WaterfallStatusResource
 
 class ImprovedWaterfall(WaterfallStatusResource):
     def __init__(self):
-        HtmlResource.__init__(self)
+        WaterfallStatusResource.__init__(self, css="/buildbot.css")
 
-    def render(self, request):
-        status = request.site.status
+    def getStatus(self, request):
+        return request.site.status
+    def getControl(self, request):
+        return request.site.control
+    def getChangemaster(self, request):
+        return request.site.changemaster
+
 
 HEADER = '''
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
@@ -37,7 +42,8 @@ FOOTER = '''
 class WebStatus(service.MultiService):
     implements(IStatusReceiver)
 
-    def __init__(self, http_port=None, distrib_port=None, allowForce=False):
+    def __init__(self, http_port=None, distrib_port=None, allowForce=False,
+                 css=None):
         service.MultiService.__init__(self)
         if type(http_port) is int:
             http_port = "tcp:%d" % http_port
@@ -59,6 +65,7 @@ class WebStatus(service.MultiService):
         self.site = server.Site(self.root)
         self.site.header = HEADER
         self.site.footer = FOOTER
+        self.site.css = css
 
         if self.http_port is not None:
             s = strports.service(self.http_port, self.site)
@@ -72,7 +79,7 @@ class WebStatus(service.MultiService):
         r = static.Data("This tree contains the built-in status pages\n",
                         "text/plain")
         self.root.putChild("_buildbot", r)
-        #r.putChild("waterfall", WaterfallStatusResource
+        r.putChild("waterfall", ImprovedWaterfall())
         r.putChild("one_line_per_build", OneLinePerBuild())
 
     def getStatus(self):
@@ -86,15 +93,15 @@ class WebStatus(service.MultiService):
         self.setup()
 
     def setup(self):
-        status = self.parent.getStatus()
+        self.site.status = self.parent.getStatus()
         if self.allowForce:
-            control = IControl(self.parent)
+            self.site.control = IControl(self.parent)
         else:
-            control = None
+            self.site.control = None
+        self.site.changemaster = self.parent.change_svc
         self.site.webstatus = self # TODO: why?
-        self.site.status = status
-        self.site.control = control
         self.site.basedir = self.parent.basedir # TODO: also why?
+        # maybe self.site.head_stuff, to add to <head>
 
 # resources can get access to the site with request.site
 
@@ -105,6 +112,7 @@ class HtmlResource(Resource):
     css = None
     contentType = "text/html; charset=UTF-8"
     title = "Dummy"
+    depth = None # must be specified
 
     def render(self, request):
         data = self.content(request)
@@ -116,12 +124,22 @@ class HtmlResource(Resource):
             return ''
         return data
 
+    def getCSSlink(self, request):
+        css = request.site.css # might be None
+        if not css:
+            return None
+        url = "/".join([".." * self.depth] + [css])
+        link = '  <link href="%s" rel="stylesheet" type="text/css"/>\n' % url
+        return url
     def make_head(self, request):
         data = ""
         data += '  <title>%s</title>\n' % self.title
         # TODO: use some sort of relative link up to the root page, so
         # this css can be used from child pages too
-        data += '  <link href="/buildbot.css" rel="stylesheet" type="text/css"/>\n'
+        csslink = self.getCSSlink(request)
+        if csslink:
+            data += csslink
+        # TODO: favicon
         return data
 
     def content(self, request):

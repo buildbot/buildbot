@@ -155,6 +155,9 @@ class HtmlResource(Resource):
             return ''
         return data
 
+    def getTitle(self, request):
+        return self.title
+
     def content(self, request):
         data = ('<!DOCTYPE html PUBLIC'
                 ' "-//W3C//DTD XHTML 1.0 Transitional//EN"\n'
@@ -164,7 +167,7 @@ class HtmlResource(Resource):
                 ' lang="en"'
                 ' xml:lang="en">\n')
         data += "<head>\n"
-        data += "  <title>" + self.title + "</title>\n"
+        data += "  <title>" + self.getTitle(request) + "</title>\n"
         if self.css:
             # TODO: use some sort of relative link up to the root page, so
             # this css can be used from child pages too
@@ -1038,30 +1041,41 @@ def insertGaps(g, lastEventTime, idleGap=2):
 class WaterfallStatusResource(HtmlResource):
     """This builds the main status page, with the waterfall display, and
     all child pages."""
-    title = "BuildBot"
-    def __init__(self, status, changemaster, categories, css=None):
+
+    def __init__(self, categories=None, css=None):
         HtmlResource.__init__(self)
-        self.status = status
-        self.changemaster = changemaster
         self.categories = categories
-        p = self.status.getProjectName()
-        if p:
-            self.title = "BuildBot: %s" % p
         self.css = css
+
+    def getTitle(self, request):
+        status = self.getStatus(request)
+        p = status.getProjectName()
+        if p:
+            return "BuildBot: %s" % p
+        else:
+            return "BuildBot"
+
+    def getStatus(self, request):
+        return self.status
+    def getControl(self, request):
+        return self.control
+    def getChangemaster(self, request):
+        return self.changemaster
 
     def body(self, request):
         "This method builds the main waterfall display."
 
+        status = self.getStatus(request)
         data = ''
 
-        projectName = self.status.getProjectName()
-        projectURL = self.status.getProjectURL()
+        projectName = status.getProjectName()
+        projectURL = status.getProjectURL()
 
         phase = request.args.get("phase",["2"])
         phase = int(phase[0])
 
         showBuilders = request.args.get("show", None)
-        allBuilders = self.status.getBuilderNames(categories=self.categories)
+        allBuilders = status.getBuilderNames(categories=self.categories)
         if showBuilders:
             builderNames = []
             for b in showBuilders:
@@ -1072,7 +1086,7 @@ class WaterfallStatusResource(HtmlResource):
                 builderNames.append(b)
         else:
             builderNames = allBuilders
-        builders = map(lambda name: self.status.getBuilder(name),
+        builders = map(lambda name: status.getBuilder(name),
                        builderNames)
 
         if phase == -1:
@@ -1101,7 +1115,7 @@ class WaterfallStatusResource(HtmlResource):
         data += ' <tr class="Activity">\n'
         data += td('current activity', align='right', colspan=2)
         for b in builders:
-            box = ICurrentBox(b).getBox(self.status)
+            box = ICurrentBox(b).getBox(status)
             data += box.td(align="center")
         data += " </tr>\n"
         
@@ -1202,7 +1216,7 @@ class WaterfallStatusResource(HtmlResource):
         # (commit, all builders) if they have any events there. Build up the
         # array of events, and stop when we have a reasonable number.
             
-        commit_source = self.changemaster
+        commit_source = self.getChangemaster(request)
 
         lastEventTime = util.now()
         sources = [commit_source] + builders
@@ -1528,10 +1542,11 @@ class StatusResource(Resource):
         self.status = status
         self.control = control
         self.changemaster = changemaster
-        self.categories = categories
         self.css = css
-        waterfall = WaterfallStatusResource(self.status, changemaster,
-                                            categories, css)
+        waterfall = WaterfallStatusResource(categories, css)
+        waterfall.status = self.status
+        waterfall.control = control
+        waterfall.changemaster = changemaster
         self.putChild("", waterfall)
 
     def render(self, request):
