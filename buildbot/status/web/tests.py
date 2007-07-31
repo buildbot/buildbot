@@ -1,4 +1,9 @@
 
+from twisted.web.error import NoResource
+from twisted.web import html
+
+from buildbot.status.web.base import HtmlResource
+
 # $builder/builds/NN/tests/TESTNAME
 class StatusResourceTestResult(HtmlResource):
     title = "Test Logs"

@@ -4,159 +4,25 @@ from zope.interface import implements
 
 from twisted.python import log
 from twisted.application import service, strports
-from twisted.web.resource import Resource
 from twisted.web import server, distrib, static
 from twisted.spread import pb
 
 from buildbot.interfaces import IStatusReceiver, IControl
 from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE, EXCEPTION
 from buildbot.status.web.waterfall import WaterfallStatusResource
+from buildbot.status.web.base import HtmlResource
 
-class ImprovedWaterfall(WaterfallStatusResource):
-    def __init__(self):
-        WaterfallStatusResource.__init__(self, css="/buildbot.css")
+from buildbot.status.web.changes import StatusResourceChanges
+from buildbot.status.web.step import StatusResourceBuildStep
+from buildbot.status.web.build import StatusResourceBuild
+from buildbot.status.web.builder import StatusResourceBuilder
 
-    def getStatus(self, request):
-        return request.site.status
-    def getControl(self, request):
-        return request.site.control
-    def getChangemaster(self, request):
-        return request.site.changemaster
-
-
-HEADER = '''
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
- "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-
-<html
- xmlns="http://www.w3.org/1999/xhtml"
- lang="en"
- xml:lang="en">
-
-'''
-
-FOOTER = '''
-</html>
-'''
-
-class WebStatus(service.MultiService):
-    implements(IStatusReceiver)
-
-    def __init__(self, http_port=None, distrib_port=None, allowForce=False,
-                 css=None):
-        service.MultiService.__init__(self)
-        if type(http_port) is int:
-            http_port = "tcp:%d" % http_port
-        self.http_port = http_port
-        if distrib_port is not None:
-            if type(distrib_port) is int:
-                distrib_port = "tcp:%d" % distrib_port
-            if distrib_port[0] in "/~.": # pathnames
-                distrib_port = "unix:%s" % distrib_port
-        self.distrib_port = distrib_port
-        self.allowForce = allowForce
-
-        self.root = static.File("public_html")
-        log.msg("WebStatus using (%s)" % self.root.path)
-        self.setupUsualPages()
-        # once we get enabled, we'll stash a reference to the main IStatus
-        # instance in site.status, so all of our childrens' render() methods
-        # can access it as request.site.status
-        self.site = server.Site(self.root)
-        self.site.header = HEADER
-        self.site.footer = FOOTER
-        self.site.css = css
-
-        if self.http_port is not None:
-            s = strports.service(self.http_port, self.site)
-            s.setServiceParent(self)
-        if self.distrib_port is not None:
-            f = pb.PBServerFactory(distrib.ResourcePublisher(self.site))
-            s = strports.service(self.distrib_port, f)
-            s.setServiceParent(self)
-
-    def setupUsualPages(self):
-        r = static.Data("This tree contains the built-in status pages\n",
-                        "text/plain")
-        self.root.putChild("_buildbot", r)
-        r.putChild("waterfall", ImprovedWaterfall())
-        r.putChild("one_line_per_build", OneLinePerBuild())
-
-    def getStatus(self):
-        return self.site.status
-
-    def setServiceParent(self, parent):
-        """
-        @type  parent: L{buildbot.master.BuildMaster}
-        """
-        service.MultiService.setServiceParent(self, parent)
-        self.setup()
-
-    def setup(self):
-        self.site.status = self.parent.getStatus()
-        if self.allowForce:
-            self.site.control = IControl(self.parent)
-        else:
-            self.site.control = None
-        self.site.changemaster = self.parent.change_svc
-        self.site.webstatus = self # TODO: why?
-        self.site.basedir = self.parent.basedir # TODO: also why?
-        # maybe self.site.head_stuff, to add to <head>
-
-# resources can get access to the site with request.site
+# this class contains the status services (WebStatus and the older Waterfall)
+# which can be put in c['status']. It also contains some of the resources
+# that are attached to the WebStatus at various well-known URLs, which the
+# admin might wish to attach (using WebStatus.putChild) at other URLs.
 
 
-
-class HtmlResource(Resource):
-    # this is a cheap sort of template thingy
-    css = None
-    contentType = "text/html; charset=UTF-8"
-    title = "Dummy"
-    depth = None # must be specified
-
-    def render(self, request):
-        data = self.content(request)
-        if isinstance(data, unicode):
-            data = data.encode("utf-8")
-        request.setHeader("content-type", self.contentType)
-        if request.method == "HEAD":
-            request.setHeader("content-length", len(data))
-            return ''
-        return data
-
-    def getCSSlink(self, request):
-        css = request.site.css # might be None
-        if not css:
-            return None
-        url = "/".join([".." * self.depth] + [css])
-        link = '  <link href="%s" rel="stylesheet" type="text/css"/>\n' % url
-        return url
-    def make_head(self, request):
-        data = ""
-        data += '  <title>%s</title>\n' % self.title
-        # TODO: use some sort of relative link up to the root page, so
-        # this css can be used from child pages too
-        csslink = self.getCSSlink(request)
-        if csslink:
-            data += csslink
-        # TODO: favicon
-        return data
-
-    def content(self, request):
-        data = ""
-        data += request.site.header
-        data += "<head>\n"
-        data += self.make_head(request)
-        data += "</head>\n"
-
-        data += '<body vlink="#800080">\n'
-        data += self.body(request)
-        data += "</body>\n"
-        data += request.site.footer
-        return data
-
-    def body(self, request):
-        return "Dummy\n"
 
 class TimelineOfEverything(WaterfallStatusResource):
 
@@ -315,4 +181,151 @@ class OneLinePerBuildOneBuilder(HtmlResource):
 
         return data
 
+
+
+HEADER = '''
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+ "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html
+ xmlns="http://www.w3.org/1999/xhtml"
+ lang="en"
+ xml:lang="en">
+
+<head>
+  <title>%(title)s</title>
+  <link href="%(css_path)s" rel="stylesheet" type="text/css" />
+</head>
+
+'''
+
+FOOTER = '''
+</html>
+'''
+
+
+class WebStatus(service.MultiService):
+    implements(IStatusReceiver)
+
+    """
+    The webserver provided by this class has the following resources:
+
+     /waterfall : the big time-oriented 'waterfall' display, with links
+                  to individual changes, builders, builds, steps, and logs.
+                  A number of query-arguments can be added to influence
+                  the display.
+     /builders/BUILDERNAME: a page summarizing the builder. This includes
+                            references to the Schedulers that feed it,
+                            any builds currently in the queue, which
+                            buildslaves are designated or attached, and a
+                            summary of the build process it uses.
+     /builders/BUILDERNAME/builds/NUM: a page describing a single Build
+     /builders/BUILDERNAME/builds/NUM/steps/STEPNUM: describes a single step
+     /builders/BUILDERNAME/builds/NUM/steps/STEPNUM/logs/LOGNAME: a StatusLog
+     /changes/CHANGENUM: a page describing a single Change
+     /schedulers/SCHEDULERNAME: a page describing a Scheduler, including
+                                a description of its behavior, a list of the
+                                Builders it triggers, and list of the Changes
+                                that are queued awaiting the tree-stable
+                                timer, and controls to accelerate the timer.
+     /others...
+
+    All URLs for pages which are not defined here are used to look for files
+    in BASEDIR/public_html/ , which means that /robots.txt or /buildbot.css
+    can be placed in that directory. If an index file (index.html, index.htm,
+    or index, in that order) is present in public_html/, it will be used for
+    the root resource. If not, the default behavior is to put a redirection
+    to the /waterfall page.
+
+    All of the resources provided by this service use relative URLs to reach
+    each other. The only absolute links are the c['projectURL'] links at the
+    top and bottom of the page, and the buildbot home-page link at the
+    bottom.
+    """
+
+    def __init__(self, http_port=None, distrib_port=None,
+                 allowForce=False, css="buildbot.css"):
+        """Run a web server that provides Buildbot status.
+
+        @param http_port: an int or strports specification that controls where
+                          the web server should listen.
+        @param distrib_port: an int or strports specification or filename
+                             that controls where a twisted.web.distrib socket
+                             should listen. If distrib_port is a filename,
+                             a unix-domain socket will be used.
+        @param allowForce: boolean, if True then the webserver will allow
+                           visitors to trigger and cancel builds
+        @param css: a URL. If set, the header of each generated page will
+                    include a link to add the given URL as a CSS stylesheet
+                    for the page.
+        """
+
+        service.MultiService.__init__(self)
+        if type(http_port) is int:
+            http_port = "tcp:%d" % http_port
+        self.http_port = http_port
+        if distrib_port is not None:
+            if type(distrib_port) is int:
+                distrib_port = "tcp:%d" % distrib_port
+            if distrib_port[0] in "/~.": # pathnames
+                distrib_port = "unix:%s" % distrib_port
+        self.distrib_port = distrib_port
+        self.allowForce = allowForce
+        self.css = css
+
+        self.setupSite()
+
+        if self.http_port is not None:
+            s = strports.service(self.http_port, self.site)
+            s.setServiceParent(self)
+        if self.distrib_port is not None:
+            f = pb.PBServerFactory(distrib.ResourcePublisher(self.site))
+            s = strports.service(self.distrib_port, f)
+            s.setServiceParent(self)
+
+    def setupSite(self):
+        # this is responsible for setting self.root and self.site
+        self.root = static.File("public_html")
+        log.msg("WebStatus using (%s)" % self.root.path)
+        self.setupUsualPages(self.root)
+        # once we get enabled, we'll stash a reference to the main IStatus
+        # instance in site.status, so all of our childrens' render() methods
+        # can access it as request.site.status
+        self.site = server.Site(self.root)
+        self.site.buildbot_service = self
+        self.header = HEADER
+        self.footer = FOOTER
+        self.template_values = {}
+
+    def getStatus(self):
+        return self.parent.getStatus()
+    def getControl(self):
+        if self.allowForce:
+            return IControl(self.parent)
+        return None
+
+    def setupUsualPages(self, root):
+        #root.putChild("", IndexOrWaterfallRedirection())
+        root.putChild("waterfall", WaterfallStatusResource())
+        #root.putChild("builders", BuildersResource())
+        #root.putChild("changes", ChangesResource())
+        #root.putChild("schedulers", SchedulersResource())
+
+        root.putChild("one_line_per_build", OneLinePerBuild())
+
+    def putChild(self, name, child_resource):
+        self.root.putChild(name, child_resource)
+
+# resources can get access to the IStatus by calling
+# request.site.buildbot_service.getStatus()
+
+# this is the compatibility class for the old waterfall. It is exactly like a
+# regular WebStatus except that the root resource (e.g. http://buildbot.net/)
+# is a WaterfallStatusResource. In the normal WebStatus, the waterfall is at
+# e.g. http://builbot.net/waterfall, and the root resource either redirects
+# the browser to that or serves BASEDIR/public_html/index.html .
+class Waterfall(WebStatus):
+    def setupSite(self):
+        WebStatus.setupSite(self)
+        self.root.putChild("", WaterfallStatusResource())
 

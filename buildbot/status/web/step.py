@@ -1,4 +1,14 @@
 
+from zope.interface import implements
+from twisted.web.error import NoResource
+from twisted.web import html
+
+import urllib
+from twisted.python import components, log
+from buildbot import interfaces
+from buildbot.status import builder
+from buildbot.status.web.base import HtmlResource, Box, IBox, IHTMLLog, \
+     build_get_class
 
 # $builder/builds/NN/stepname
 class StatusResourceBuildStep(HtmlResource):

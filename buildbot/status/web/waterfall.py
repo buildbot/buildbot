@@ -1,33 +1,17 @@
 # -*- test-case-name: buildbot.test.test_web -*-
 
-from __future__ import generators
-
+from zope.interface import implements
 from twisted.python import log, components
-import urllib, re
+import urllib
 
-from twisted.internet import defer, reactor
-from twisted.web.resource import Resource
-from twisted.web import static, html, server, distrib
-from twisted.web.error import NoResource
-from twisted.web.util import Redirect, DeferredResource
-from twisted.application import strports
-from twisted.spread import pb
-from zope.interface import Interface, implements
-
-import sys, string, types, time, os.path
+import time
 
 from buildbot import interfaces, util
 from buildbot import version
-from buildbot.sourcestamp import SourceStamp
-from buildbot.status import builder, base
-from buildbot.changes import changes
-from buildbot.process.base import BuildRequest
+from buildbot.status import builder
 
-from buildbot.status.web.changes import StatusResourceChanges
-from buildbot.status.web.builder import StatusResourceBuilder
-from buildbot.status.web.build import StatusResourceBuild
-from buildbot.status.web.step import StatusResourceBuildStep
-
+from buildbot.status.web.base import Box, HtmlResource, IBox, ICurrentBox, \
+     ITopBox, td
 
 
 class EventBox(components.Adapter):
@@ -112,12 +96,9 @@ class WaterfallStatusResource(HtmlResource):
         else:
             return "BuildBot"
 
-    def getStatus(self, request):
-        return self.status
-    def getControl(self, request):
-        return self.control
     def getChangemaster(self, request):
-        return self.changemaster
+        # TODO: this wants to go away, access it through IStatus
+        return request.site.buildbot_service.parent.change_svc
 
     def body(self, request):
         "This method builds the main waterfall display."

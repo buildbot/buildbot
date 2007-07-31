@@ -1,4 +1,10 @@
 
+from zope.interface import Interface
+from twisted.web import html, resource
+from buildbot.status import builder
+
+
+
 class ITopBox(Interface):
     """I represent a box in the top row of the waterfall display: the one
     which shows the status of the last build for each builder."""
@@ -58,8 +64,8 @@ def td(text="", parms={}, **props):
     data += ">"
     if not text:
         text = "&nbsp;"
-    if type(text) == types.ListType:
-        data += string.join(text, "<br />")
+    if isinstance(text, list):
+        data += "<br />".join(text)
     else:
         data += text
     data += "</td>\n"
@@ -116,7 +122,8 @@ class Box:
         return td(text, props, bgcolor=self.color, class_=self.class_)
 
 
-class HtmlResource(Resource):
+class HtmlResource(resource.Resource):
+    # this is a cheap sort of template thingy
     css = None
     contentType = "text/html; charset=UTF-8"
     title = "Dummy"
@@ -131,28 +138,43 @@ class HtmlResource(Resource):
             return ''
         return data
 
+    def getStatus(self, request):
+        return request.site.buildbot_service.getStatus()
+    def getControl(self, request):
+        return request.site.buildbot_service.getControl()
+
+    def getChangemaster(self, request):
+        return request.site.buildbot_service.parent.change_svc
+
+    def path_to_root(self, request):
+        return "../" * len(request.prepath)
+
     def getTitle(self, request):
         return self.title
 
+    def fillTemplate(self, template, request):
+        s = request.site.buildbot_service
+        values = s.template_values.copy()
+        values['css_path'] = self.path_to_root(request) + s.css
+        values['title'] = self.getTitle(request)
+        return template % values
+
+    def getCSSlink(self, request):
+        css = request.site.css # might be None
+        if not css:
+            return None
+        url = "/".join([".." * self.depth] + [css])
+        return url
+
     def content(self, request):
-        data = ('<!DOCTYPE html PUBLIC'
-                ' "-//W3C//DTD XHTML 1.0 Transitional//EN"\n'
-                '"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">\n'
-                '<html'
-                ' xmlns="http://www.w3.org/1999/xhtml"'
-                ' lang="en"'
-                ' xml:lang="en">\n')
-        data += "<head>\n"
-        data += "  <title>" + self.getTitle(request) + "</title>\n"
-        if self.css:
-            # TODO: use some sort of relative link up to the root page, so
-            # this css can be used from child pages too
-            data += ('  <link href="%s" rel="stylesheet" type="text/css"/>\n'
-                     % "buildbot.css")
-        data += "</head>\n"
+        s = request.site.buildbot_service
+        data = ""
+        data += self.fillTemplate(s.header, request)
+
         data += '<body vlink="#800080">\n'
         data += self.body(request)
-        data += "</body></html>\n"
+        data += "</body>\n"
+        data += s.footer
         return data
 
     def body(self, request):
