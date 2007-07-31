@@ -157,7 +157,7 @@ class Maker:
         if os.path.exists("public_html"):
             if not self.quiet:
                 print "public_html/ already exists: not replacing"
-                return
+            return
         if not self.quiet:
             print "populating public_html/"
         os.mkdir("public_html")

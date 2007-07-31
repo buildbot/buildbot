@@ -1,15 +1,17 @@
 
+import os, sys, urllib
 from itertools import count
 from zope.interface import implements
 
 from twisted.python import log
 from twisted.application import service, strports
-from twisted.web import server, distrib, static
+from twisted.web import server, distrib, static, util
 from twisted.spread import pb
 
 from buildbot.interfaces import IStatusReceiver, IControl
 from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE, EXCEPTION
 
+from buildbot.status.base import StatusReceiverMultiService
 from buildbot.status.web.base import HtmlResource
 from buildbot.status.web.waterfall import WaterfallStatusResource
 from buildbot.status.web.changes import ChangesResource
@@ -201,8 +203,7 @@ FOOTER = '''
 '''
 
 
-class WebStatus(service.MultiService):
-    implements(IStatusReceiver)
+class WebStatus(StatusReceiverMultiService):
 
     """
     The webserver provided by this class has the following resources:
@@ -307,7 +308,7 @@ class WebStatus(service.MultiService):
                     for the page.
         """
 
-        service.MultiService.__init__(self)
+        StatusReceiverMultiService.__init__(self)
         if type(http_port) is int:
             http_port = "tcp:%d" % http_port
         self.http_port = http_port
@@ -320,7 +321,18 @@ class WebStatus(service.MultiService):
         self.allowForce = allowForce
         self.css = css
 
-        self.setupSite()
+        # this will be replaced once we've been attached to a parent (and
+        # thus have a basedir and can reference BASEDIR/public_html/)
+        root = static.Data("placeholder", "text/plain")
+        self.site = server.Site(root)
+        self.childrenToBeAdded = {}
+
+        self.setupUsualPages()
+
+        self.site.buildbot_service = self
+        self.header = HEADER
+        self.footer = FOOTER
+        self.template_values = {}
 
         if self.http_port is not None:
             s = strports.service(self.http_port, self.site)
@@ -330,38 +342,14 @@ class WebStatus(service.MultiService):
             s = strports.service(self.distrib_port, f)
             s.setServiceParent(self)
 
-    def setupSite(self):
-        # this is responsible for setting self.root and self.site
-        self.root = static.File("public_html")
-        log.msg("WebStatus using (%s)" % self.root.path)
-        self.setupUsualPages(self.root)
-        # once we get enabled, we'll stash a reference to the main IStatus
-        # instance in site.status, so all of our childrens' render() methods
-        # can access it as request.site.status
-        self.site = server.Site(self.root)
-        self.site.buildbot_service = self
-        self.header = HEADER
-        self.footer = FOOTER
-        self.template_values = {}
+    def setupUsualPages(self):
+        #self.putChild("", IndexOrWaterfallRedirection())
+        self.putChild("waterfall", WaterfallStatusResource())
+        self.putChild("builders", BuildersResource())
+        self.putChild("changes", ChangesResource())
+        #self.putChild("schedulers", SchedulersResource())
 
-    def getStatus(self):
-        return self.parent.getStatus()
-    def getControl(self):
-        if self.allowForce:
-            return IControl(self.parent)
-        return None
-
-    def setupUsualPages(self, root):
-        #root.putChild("", IndexOrWaterfallRedirection())
-        root.putChild("waterfall", WaterfallStatusResource())
-        root.putChild("builders", BuildersResource())
-        root.putChild("changes", ChangesResource())
-        #root.putChild("schedulers", SchedulersResource())
-
-        root.putChild("one_line_per_build", OneLinePerBuild())
-
-    def putChild(self, name, child_resource):
-        self.root.putChild(name, child_resource)
+        self.putChild("one_line_per_build", OneLinePerBuild())
 
     def __repr__(self):
         if self.http_port is None:
@@ -371,16 +359,86 @@ class WebStatus(service.MultiService):
         return "<WebStatus on port %s and path %s>" % (self.http_port,
                                                        self.distrib_port)
 
+    def setServiceParent(self, parent):
+        StatusReceiverMultiService.setServiceParent(self, parent)
+        self.setupSite()
+
+    def setupSite(self):
+        # this is responsible for creating the root resource. It isn't done
+        # at __init__ time because we need to reference the parent's basedir.
+        htmldir = os.path.join(self.parent.basedir, "public_html")
+        if not os.path.isdir(htmldir):
+            os.mkdir(htmldir)
+        root = static.File(htmldir)
+        log.msg("WebStatus using (%s)" % htmldir)
+
+        for name, child_resource in self.childrenToBeAdded.iteritems():
+            root.putChild(name, child_resource)
+
+        self.site.resource = root
+
+    def putChild(self, name, child_resource):
+        """This behaves a lot like root.putChild() . """
+        self.childrenToBeAdded[name] = child_resource
+
+    def getStatus(self):
+        return self.parent.getStatus()
+    def getControl(self):
+        if self.allowForce:
+            return IControl(self.parent)
+        return None
+
+    def getPortnum(self):
+        # this is for the benefit of unit tests
+        s = list(self)[0]
+        return s._port.getHost().port
+
 # resources can get access to the IStatus by calling
 # request.site.buildbot_service.getStatus()
 
 # this is the compatibility class for the old waterfall. It is exactly like a
 # regular WebStatus except that the root resource (e.g. http://buildbot.net/)
-# is a WaterfallStatusResource. In the normal WebStatus, the waterfall is at
-# e.g. http://builbot.net/waterfall, and the root resource either redirects
-# the browser to that or serves BASEDIR/public_html/index.html .
-class Waterfall(WebStatus):
-    def setupSite(self):
-        WebStatus.setupSite(self)
-        self.root.putChild("", WaterfallStatusResource())
+# always redirects to a WaterfallStatusResource, and the old arguments are
+# mapped into the new resource-tree approach. In the normal WebStatus, the
+# root resource either redirects the browser to /waterfall or serves
+# BASEDIR/public_html/index.html, and favicon/robots.txt are provided by
+# having the admin write actual files into BASEDIR/public_html/ .
 
+
+class Waterfall(WebStatus):
+
+    if hasattr(sys, "frozen"):
+        # all 'data' files are in the directory of our executable
+        here = os.path.dirname(sys.executable)
+        buildbot_icon = os.path.abspath(os.path.join(here, "buildbot.png"))
+        buildbot_css = os.path.abspath(os.path.join(here, "classic.css"))
+    else:
+        # running from source
+        # the icon is sibpath(__file__, "../buildbot.png") . This is for
+        # portability.
+        up = os.path.dirname
+        buildbot_icon = os.path.abspath(os.path.join(up(up(up(__file__))),
+                                                     "buildbot.png"))
+        buildbot_css = os.path.abspath(os.path.join(up(__file__),
+                                                    "classic.css"))
+
+    compare_attrs = ["http_port", "distrib_port", "allowForce",
+                     "categories", "css", "favicon", "robots_txt"]
+
+    def __init__(self, http_port=None, distrib_port=None, allowForce=True,
+                 categories=None, css=buildbot_css, favicon=buildbot_icon,
+                 robots_txt=None):
+        WebStatus.__init__(self, http_port, distrib_port, allowForce, css)
+        if favicon:
+            data = open(favicon, "rb").read()
+            self.putChild("favicon.ico", static.Data(data, "image/x-icon"))
+        if robots_txt:
+            data = open(robots_txt, "rb").read()
+            self.putChild("robots.txt", static.Data(data, "text/plain"))
+        root_target = "/waterfall"
+        args = []
+        if categories:
+            args.extend(["category=%s" % urllib.quote(c) for c in categories])
+        if args:
+            root_target += "?" + "&".join(args)
+        self.putChild("", util.Redirect(root_target))
