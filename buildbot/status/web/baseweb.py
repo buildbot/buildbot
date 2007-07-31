@@ -1,14 +1,13 @@
 
-import os, sys, urllib
+import os, sys
 from itertools import count
-from zope.interface import implements
 
 from twisted.python import log
-from twisted.application import service, strports
-from twisted.web import server, distrib, static, util
+from twisted.application import strports
+from twisted.web import server, distrib, static
 from twisted.spread import pb
 
-from buildbot.interfaces import IStatusReceiver, IControl
+from buildbot.interfaces import IControl
 from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE, EXCEPTION
 
 from buildbot.status.base import StatusReceiverMultiService
@@ -435,10 +434,4 @@ class Waterfall(WebStatus):
         if robots_txt:
             data = open(robots_txt, "rb").read()
             self.putChild("robots.txt", static.Data(data, "text/plain"))
-        root_target = "/waterfall"
-        args = []
-        if categories:
-            args.extend(["category=%s" % urllib.quote(c) for c in categories])
-        if args:
-            root_target += "?" + "&".join(args)
-        self.putChild("", util.Redirect(root_target))
+        self.putChild("", WaterfallStatusResource(categories, css))
