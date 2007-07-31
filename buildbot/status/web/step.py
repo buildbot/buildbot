@@ -1,29 +1,31 @@
 
-from zope.interface import implements
 from twisted.web.error import NoResource
 from twisted.web import html
 
 import urllib
-from twisted.python import components, log
 from buildbot import interfaces
-from buildbot.status import builder
-from buildbot.status.web.base import HtmlResource, Box, IBox, IHTMLLog, \
-     build_get_class
+from buildbot.status.web.base import HtmlResource, IHTMLLog
+from buildbot.status.web.logs import LogsResource
 
-# $builder/builds/NN/stepname
+# builders/$builder/builds/$buildnum/steps/$stepname
 class StatusResourceBuildStep(HtmlResource):
     title = "Build Step"
 
-    def __init__(self, status, step):
+    def __init__(self, build_status, step_status):
         HtmlResource.__init__(self)
-        self.status = status
-        self.step = step
+        self.status = build_status
+        self.step_status = step_status
 
-    def body(self, request):
-        s = self.step
+    def body(self, req):
+        s = self.step_status
         b = s.getBuild()
-        data = "<h1>BuildStep %s:#%d:%s</h1>\n" % \
-               (b.getBuilder().getName(), b.getNumber(), s.getName())
+        builder_name = b.getBuilder().getName()
+        build_num = b.getNumber()
+        data = ""
+        data += ("<h1>BuildStep <a href=\"../../../../%s\">%s</a>:" %
+                 (urllib.quote(builder_name), builder_name))
+        data += "<a href=\"../../%d\">#%d</a>" % (build_num, build_num)
+        data += ":%s</h1>\n" % s.getName()
 
         if s.isFinished():
             data += ("<h2>Finished</h2>\n"
@@ -44,24 +46,26 @@ class StatusResourceBuildStep(HtmlResource):
         if logs:
             data += ("<h2>Logs</h2>\n"
                      "<ul>\n")
-            for num in range(len(logs)):
-                if logs[num].hasContents():
+            for logfile in logs:
+                if logfile.hasContents():
                     # FIXME: If the step name has a / in it, this is broken
                     # either way.  If we quote it but say '/'s are safe,
                     # it chops up the step name.  If we quote it and '/'s
                     # are not safe, it escapes the / that separates the
                     # step name from the log number.
-                    data += '<li><a href="%s">%s</a></li>\n' % \
-                            (urllib.quote(request.childLink("%d" % num)),
-                             html.escape(logs[num].getName()))
+                    logname = logfile.getName()
+                    logurl = req.childLink("logs/%s" % urllib.quote(logname))
+                    data += ('<li><a href="%s">%s</a></li>\n' % 
+                             (logurl, html.escape(logname)))
                 else:
-                    data += ('<li>%s</li>\n' %
-                             html.escape(logs[num].getName()))
+                    data += '<li>%s</li>\n' % html.escape(logname)
             data += "</ul>\n"
 
         return data
 
-    def getChild(self, path, request):
+    def getChild(self, path, req):
+        if path == "logs":
+            return LogsResource(self.step_status)
         logname = path
         try:
             log = self.step.getLogs()[int(logname)]
@@ -72,34 +76,14 @@ class StatusResourceBuildStep(HtmlResource):
             return NoResource("No such Log '%s'" % logname)
 
 
-class StepBox(components.Adapter):
-    implements(IBox)
 
-    def getBox(self):
-        b = self.original.getBuild()
-        urlbase = "%s/builds/%d/step-%s" % (
-            urllib.quote(b.getBuilder().getName(), safe=''),
-            b.getNumber(),
-            urllib.quote(self.original.getName(), safe=''))
-        text = self.original.getText()
-        if text is None:
-            log.msg("getText() gave None", urlbase)
-            text = []
-        text = text[:]
-        logs = self.original.getLogs()
-        for num in range(len(logs)):
-            name = logs[num].getName()
-            if logs[num].hasContents():
-                url = "%s/%d" % (urlbase, num)
-                text.append("<a href=\"%s\">%s</a>" % (url, html.escape(name)))
-            else:
-                text.append(html.escape(name))
-        urls = self.original.getURLs()
-        ex_url_class = "BuildStep external"
-        for name, target in urls.items():
-            text.append('[<a href="%s" class="%s">%s</a>]' %
-                        (target, ex_url_class, html.escape(name)))
-        color = self.original.getColor()
-        class_ = "BuildStep " + build_get_class(self.original)
-        return Box(text, color, class_=class_)
-components.registerAdapter(StepBox, builder.BuildStepStatus, IBox)
+class StepsResource(HtmlResource):
+    def __init__(self, build_status):
+        HtmlResource.__init__(self)
+        self.build_status = build_status
+
+    def getChild(self, path, req):
+        for s in self.build_status.getSteps():
+            if s.getName() == path:
+                return StatusResourceBuildStep(self.build_status, s)
+        return NoResource("No such BuildStep '%s'" % path)

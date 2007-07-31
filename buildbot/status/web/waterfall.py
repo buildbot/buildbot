@@ -2,6 +2,7 @@
 
 from zope.interface import implements
 from twisted.python import log, components
+from twisted.web import html
 import urllib
 
 import time
@@ -11,7 +12,161 @@ from buildbot import version
 from buildbot.status import builder
 
 from buildbot.status.web.base import Box, HtmlResource, IBox, ICurrentBox, \
-     ITopBox, td
+     ITopBox, td, build_get_class
+
+
+
+class CurrentBox(components.Adapter):
+    # this provides the "current activity" box, just above the builder name
+    implements(ICurrentBox)
+
+    def formatETA(self, eta):
+        if eta is None:
+            return []
+        if eta < 0:
+            return ["Soon"]
+        abstime = time.strftime("%H:%M:%S", time.localtime(util.now()+eta))
+        return ["ETA in", "%d secs" % eta, "at %s" % abstime]
+
+    def getBox(self, status):
+        # getState() returns offline, idle, or building
+        state, builds = self.original.getState()
+
+        # look for upcoming builds. We say the state is "waiting" if the
+        # builder is otherwise idle and there is a scheduler which tells us a
+        # build will be performed some time in the near future. TODO: this
+        # functionality used to be in BuilderStatus.. maybe this code should
+        # be merged back into it.
+        upcoming = []
+        builderName = self.original.getName()
+        for s in status.getSchedulers():
+            if builderName in s.listBuilderNames():
+                upcoming.extend(s.getPendingBuildTimes())
+        if state == "idle" and upcoming:
+            state = "waiting"
+
+        if state == "building":
+            color = "yellow"
+            text = ["building"]
+            if builds:
+                for b in builds:
+                    eta = b.getETA()
+                    if eta:
+                        text.extend(self.formatETA(eta))
+        elif state == "offline":
+            color = "red"
+            text = ["offline"]
+        elif state == "idle":
+            color = "white"
+            text = ["idle"]
+        elif state == "waiting":
+            color = "yellow"
+            text = ["waiting"]
+        else:
+            # just in case I add a state and forget to update this
+            color = "white"
+            text = [state]
+
+        # TODO: for now, this pending/upcoming stuff is in the "current
+        # activity" box, but really it should go into a "next activity" row
+        # instead. The only times it should show up in "current activity" is
+        # when the builder is otherwise idle.
+
+        # are any builds pending? (waiting for a slave to be free)
+        pbs = self.original.getPendingBuilds()
+        if pbs:
+            text.append("%d pending" % len(pbs))
+        for t in upcoming:
+            text.extend(["next at", 
+                         time.strftime("%H:%M:%S", time.localtime(t)),
+                         "[%d secs]" % (t - util.now()),
+                         ])
+            # TODO: the upcoming-builds box looks like:
+            #  ['waiting', 'next at', '22:14:15', '[86 secs]']
+            # while the currently-building box is reversed:
+            #  ['building', 'ETA in', '2 secs', 'at 22:12:50']
+            # consider swapping one of these to make them look the same. also
+            # consider leaving them reversed to make them look different.
+        return Box(text, color=color, class_="Activity " + state)
+
+components.registerAdapter(CurrentBox, builder.BuilderStatus, ICurrentBox)
+
+
+class BuildTopBox(components.Adapter):
+    # this provides a per-builder box at the very top of the display,
+    # showing the results of the most recent build
+    implements(IBox)
+
+    def getBox(self):
+        assert interfaces.IBuilderStatus(self.original)
+        b = self.original.getLastFinishedBuild()
+        if not b:
+            return Box(["none"], "white", class_="LastBuild")
+        name = b.getBuilder().getName()
+        number = b.getNumber()
+        url = "%s/builds/%d" % (name, number)
+        text = b.getText()
+        # TODO: add logs?
+        # TODO: add link to the per-build page at 'url'
+        c = b.getColor()
+        class_ = build_get_class(b)
+        return Box(text, c, class_="LastBuild %s" % class_)
+components.registerAdapter(BuildTopBox, builder.BuilderStatus, ITopBox)
+
+class BuildBox(components.Adapter):
+    # this provides the yellow "starting line" box for each build
+    implements(IBox)
+
+    def getBox(self):
+        b = self.original
+        name = b.getBuilder().getName()
+        number = b.getNumber()
+        url = "builders/%s/builds/%d" % (urllib.quote(name, safe=''), number)
+        reason = b.getReason()
+        text = ('<a title="Reason: %s" href="%s">Build %d</a>'
+                % (html.escape(reason), url, number))
+        color = "yellow"
+        class_ = "start"
+        if b.isFinished() and not b.getSteps():
+            # the steps have been pruned, so there won't be any indication
+            # of whether it succeeded or failed. Color the box red or green
+            # to show its status
+            color = b.getColor()
+            class_ = build_get_class(b)
+        return Box([text], color=color, class_="BuildStep " + class_)
+components.registerAdapter(BuildBox, builder.BuildStatus, IBox)
+
+class StepBox(components.Adapter):
+    implements(IBox)
+
+    def getBox(self):
+        b = self.original.getBuild()
+        urlbase = "builders/%s/builds/%d/steps/%s" % (
+            urllib.quote(b.getBuilder().getName(), safe=''),
+            b.getNumber(),
+            urllib.quote(self.original.getName(), safe=''))
+        text = self.original.getText()
+        if text is None:
+            log.msg("getText() gave None", urlbase)
+            text = []
+        text = text[:]
+        logs = self.original.getLogs()
+        for num in range(len(logs)):
+            name = logs[num].getName()
+            if logs[num].hasContents():
+                url = urlbase + "/logs/%s" % urllib.quote(name)
+                text.append("<a href=\"%s\">%s</a>" % (url, html.escape(name)))
+            else:
+                text.append(html.escape(name))
+        urls = self.original.getURLs()
+        ex_url_class = "BuildStep external"
+        for name, target in urls.items():
+            text.append('[<a href="%s" class="%s">%s</a>]' %
+                        (target, ex_url_class, html.escape(name)))
+        color = self.original.getColor()
+        class_ = "BuildStep " + build_get_class(self.original)
+        return Box(text, color, class_=class_)
+components.registerAdapter(StepBox, builder.BuildStepStatus, IBox)
 
 
 class EventBox(components.Adapter):
@@ -165,10 +320,9 @@ class WaterfallStatusResource(HtmlResource):
                 "<a href=\"%s\">%s</a>" % (urllib.quote(name, safe=''), name),
                 align="center", class_="Change")
         for name in builderNames:
-            data += td(
-                #"<a href=\"%s\">%s</a>" % (request.childLink(name), name),
-                "<a href=\"%s\">%s</a>" % (urllib.quote(name, safe=''), name),
-                align="center", class_="Builder")
+            safename = urllib.quote(name, safe='')
+            data += td( "<a href=\"builders/%s\">%s</a>" % (safename, name),
+                        align="center", class_="Builder")
         data += " </tr>\n"
 
         if phase == 1:
@@ -250,6 +404,10 @@ class WaterfallStatusResource(HtmlResource):
 
         # XXX: see if we can use a cached copy
 
+        showEvents = False
+        if request.args.get("show_events", ["false"])[0].lower() == "true":
+            showEvents = True
+
         # first step is to walk backwards in time, asking each column
         # (commit, all builders) if they have any events there. Build up the
         # array of events, and stop when we have a reasonable number.
@@ -263,18 +421,26 @@ class WaterfallStatusResource(HtmlResource):
         sourceNames = changeNames + builderNames
         sourceEvents = []
         sourceGenerators = []
+
+        def get_event_from(g):
+            try:
+                while True:
+                    e = g.next()
+                    if not showEvents and isinstance(e, builder.Event):
+                        continue
+                    break
+                event = interfaces.IStatusEvent(e)
+                if debug:
+                    log.msg("gen %s gave1 %s" % (g, event.getText()))
+            except StopIteration:
+                event = None
+            return event
+
         for s in sources:
             gen = insertGaps(s.eventGenerator(), lastEventTime)
             sourceGenerators.append(gen)
             # get the first event
-            try:
-                e = gen.next()
-                event = interfaces.IStatusEvent(e)
-                if debug:
-                    log.msg("gen %s gave1 %s" % (gen, event.getText()))
-            except StopIteration:
-                event = None
-            sourceEvents.append(event)
+            sourceEvents.append(get_event_from(gen))
         eventGrid = []
         timestamps = []
         spanLength = 10  # ten-second chunks
@@ -318,14 +484,7 @@ class WaterfallStatusResource(HtmlResource):
                     events.append(event)
                     starts, finishes = event.getTimes()
                     firstTimestamp = util.earlier(firstTimestamp, starts)
-                    try:
-                        event = sourceGenerators[c].next()
-                        #event = interfaces.IStatusEvent(event)
-                        if debug:
-                            log.msg("gen[%s] gave2 %s" % (sourceNames[c],
-                                                          event.getText()))
-                    except StopIteration:
-                        event = None
+                    event = get_event_from(sourceGenerators[c])
                 if debug:
                     log.msg("finished span")
 

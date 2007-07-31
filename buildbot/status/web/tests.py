@@ -5,18 +5,17 @@ from twisted.web import html
 from buildbot.status.web.base import HtmlResource
 
 # $builder/builds/NN/tests/TESTNAME
-class StatusResourceTestResult(HtmlResource):
+class TestResult(HtmlResource):
     title = "Test Logs"
 
-    def __init__(self, status, name, result):
+    def __init__(self, name, test_result):
         HtmlResource.__init__(self)
-        self.status = status
         self.name = name
-        self.result = result
+        self.test_result = test_result
 
     def body(self, request):
         dotname = ".".join(self.name)
-        logs = self.result.getLogs()
+        logs = self.test_result.getLogs()
         lognames = logs.keys()
         lognames.sort()
         data = "<h1>%s</h1>\n" % html.escape(dotname)
@@ -28,16 +27,16 @@ class StatusResourceTestResult(HtmlResource):
 
 
 # $builder/builds/NN/tests
-class StatusResourceTestResults(HtmlResource):
+class TestsResource(HtmlResource):
     title = "Test Results"
 
-    def __init__(self, status, results):
+    def __init__(self, build_status):
         HtmlResource.__init__(self)
-        self.status = status
-        self.results = results
+        self.build_status = build_status
+        self.test_results = build_status.getTestResults()
 
     def body(self, request):
-        r = self.results
+        r = self.test_results
         data = "<h1>Test Results</h1>\n"
         data += "<ul>\n"
         testnames = r.keys()
@@ -59,8 +58,7 @@ class StatusResourceTestResults(HtmlResource):
     def getChild(self, path, request):
         try:
             name = tuple(path.split("."))
-            result = self.results[name]
-            return StatusResourceTestResult(self.status, name, result)
+            result = self.test_results[name]
+            return TestResult(name, result)
         except KeyError:
             return NoResource("No such test name '%s'" % path)
-

@@ -1810,6 +1810,11 @@ class Status:
                 "step-" + urllib.quote(step.getName(), safe=''),
                 lognum)
 
+    def getChangeSources(self):
+        return list(self.botmaster.parent.change_svc)
+
+    def getChange(self, number):
+        return self.botmaster.parent.change_svc.getChangeNumbered(number)
 
     def getSchedulers(self):
         return self.botmaster.parent.allSchedulers()

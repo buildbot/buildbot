@@ -104,6 +104,23 @@ class Change:
                    'comments': html.PRE(self.comments) }
         return html_tmpl % kwargs
 
+    def get_HTML_box(self, url):
+        """Return the contents of a TD cell for the waterfall display.
+
+        @param url: the URL that points to an HTML page that will render
+        using our asHTML method. The Change is free to use this or ignore it
+        as it pleases.
+
+        @return: the HTML that will be put inside the table cell. Typically
+        this is just a single href named after the author of the change and
+        pointing at the passed-in 'url'.
+        """
+        who = self.getShortAuthor()
+        return '<a href="%s">%s</a>' % (url, html.escape(who))
+
+    def getShortAuthor(self):
+        return self.who
+
     def getTime(self):
         if not self.when:
             return "?"

@@ -134,6 +134,12 @@ class IStatus(Interface):
         interfaces defined in L{buildbot.interfaces}. Returns None if no
         suitable page is available (or if no Waterfall is running)."""
 
+    def getChangeSources():
+        """Return a list of IChangeSource objects."""
+
+    def getChange(number):
+        """Return an IChange object."""
+
     def getSchedulers():
         """Return a list of ISchedulerStatus objects for all
         currently-registered Schedulers."""

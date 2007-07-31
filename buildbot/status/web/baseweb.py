@@ -9,19 +9,16 @@ from twisted.spread import pb
 
 from buildbot.interfaces import IStatusReceiver, IControl
 from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE, EXCEPTION
-from buildbot.status.web.waterfall import WaterfallStatusResource
-from buildbot.status.web.base import HtmlResource
 
-from buildbot.status.web.changes import StatusResourceChanges
-from buildbot.status.web.step import StatusResourceBuildStep
-from buildbot.status.web.build import StatusResourceBuild
-from buildbot.status.web.builder import StatusResourceBuilder
+from buildbot.status.web.base import HtmlResource
+from buildbot.status.web.waterfall import WaterfallStatusResource
+from buildbot.status.web.changes import ChangesResource
+from buildbot.status.web.builder import BuildersResource
 
 # this class contains the status services (WebStatus and the older Waterfall)
 # which can be put in c['status']. It also contains some of the resources
 # that are attached to the WebStatus at various well-known URLs, which the
 # admin might wish to attach (using WebStatus.putChild) at other URLs.
-
 
 
 class TimelineOfEverything(WaterfallStatusResource):
@@ -220,8 +217,11 @@ class WebStatus(service.MultiService):
                             buildslaves are designated or attached, and a
                             summary of the build process it uses.
      /builders/BUILDERNAME/builds/NUM: a page describing a single Build
-     /builders/BUILDERNAME/builds/NUM/steps/STEPNUM: describes a single step
-     /builders/BUILDERNAME/builds/NUM/steps/STEPNUM/logs/LOGNAME: a StatusLog
+     /builders/BUILDERNAME/builds/NUM/steps/STEPNAME: describes a single step
+     /builders/BUILDERNAME/builds/NUM/steps/STEPNAME/logs/LOGNAME: a StatusLog
+     /builders/BUILDERNAME/builds/NUM/tests : summarize test results
+     /builders/BUILDERNAME/builds/NUM/tests/TEST.NAME: results of one test
+     /changes : summarize all ChangeSources
      /changes/CHANGENUM: a page describing a single Change
      /schedulers/SCHEDULERNAME: a page describing a Scheduler, including
                                 a description of its behavior, a list of the
@@ -232,27 +232,74 @@ class WebStatus(service.MultiService):
 
     All URLs for pages which are not defined here are used to look for files
     in BASEDIR/public_html/ , which means that /robots.txt or /buildbot.css
-    can be placed in that directory. If an index file (index.html, index.htm,
-    or index, in that order) is present in public_html/, it will be used for
-    the root resource. If not, the default behavior is to put a redirection
-    to the /waterfall page.
+    or /favicon.ico can be placed in that directory.
+
+    If an index file (index.html, index.htm, or index, in that order) is
+    present in public_html/, it will be used for the root resource. If not,
+    the default behavior is to put a redirection to the /waterfall page.
 
     All of the resources provided by this service use relative URLs to reach
     each other. The only absolute links are the c['projectURL'] links at the
     top and bottom of the page, and the buildbot home-page link at the
     bottom.
+
+    This webserver defines class attributes on elements so they can be styled
+    with CSS stylesheets. Buildbot uses some generic classes to identify the
+    type of object, and some more specific classes for the various kinds of
+    those types. It does this by specifying both in the class attributes
+    where applicable, separated by a space. It is important that in your CSS
+    you declare the more generic class styles above the more specific ones.
+    For example, first define a style for .Event, and below that for .SUCCESS
+
+    The following CSS class names are used:
+        - Activity, Event, BuildStep, LastBuild: general classes
+        - waiting, interlocked, building, offline, idle: Activity states
+        - start, running, success, failure, warnings, skipped, exception:
+          LastBuild and BuildStep states
+        - Change: box with change
+        - Builder: box for builder name (at top)
+        - Project
+        - Time
+
     """
+
+    compare_attrs = ["http_port", "distrib_port", "allowForce", "css"]
+    # TODO: putChild should cause two instances to compare differently
 
     def __init__(self, http_port=None, distrib_port=None,
                  allowForce=False, css="buildbot.css"):
         """Run a web server that provides Buildbot status.
 
-        @param http_port: an int or strports specification that controls where
-                          the web server should listen.
-        @param distrib_port: an int or strports specification or filename
-                             that controls where a twisted.web.distrib socket
-                             should listen. If distrib_port is a filename,
-                             a unix-domain socket will be used.
+        @type  http_port: int or L{twisted.application.strports} string
+        @param http_port: a strports specification describing which port the
+                          buildbot should use for its web server, with the
+                          Waterfall display as the root page. For backwards
+                          compatibility this can also be an int. Use
+                          'tcp:8000' to listen on that port, or
+                          'tcp:12345:interface=127.0.0.1' if you only want
+                          local processes to connect to it (perhaps because
+                          you are using an HTTP reverse proxy to make the
+                          buildbot available to the outside world, and do not
+                          want to make the raw port visible).
+
+        @type  distrib_port: int or L{twisted.application.strports} string
+        @param distrib_port: Use this if you want to publish the Waterfall
+                             page using web.distrib instead. The most common
+                             case is to provide a string that is an absolute
+                             pathname to the unix socket on which the
+                             publisher should listen
+                             (C{os.path.expanduser(~/.twistd-web-pb)} will
+                             match the default settings of a standard
+                             twisted.web 'personal web server'). Another
+                             possibility is to pass an integer, which means
+                             the publisher should listen on a TCP socket,
+                             allowing the web server to be on a different
+                             machine entirely. Both forms are provided for
+                             backwards compatibility; the preferred form is a
+                             strports specification like
+                             'unix:/home/buildbot/.twistd-web-pb'. Providing
+                             a non-absolute pathname will probably confuse
+                             the strports parser.
         @param allowForce: boolean, if True then the webserver will allow
                            visitors to trigger and cancel builds
         @param css: a URL. If set, the header of each generated page will
@@ -307,14 +354,22 @@ class WebStatus(service.MultiService):
     def setupUsualPages(self, root):
         #root.putChild("", IndexOrWaterfallRedirection())
         root.putChild("waterfall", WaterfallStatusResource())
-        #root.putChild("builders", BuildersResource())
-        #root.putChild("changes", ChangesResource())
+        root.putChild("builders", BuildersResource())
+        root.putChild("changes", ChangesResource())
         #root.putChild("schedulers", SchedulersResource())
 
         root.putChild("one_line_per_build", OneLinePerBuild())
 
     def putChild(self, name, child_resource):
         self.root.putChild(name, child_resource)
+
+    def __repr__(self):
+        if self.http_port is None:
+            return "<WebStatus on path %s>" % self.distrib_port
+        if self.distrib_port is None:
+            return "<WebStatus on port %s>" % self.http_port
+        return "<WebStatus on port %s and path %s>" % (self.http_port,
+                                                       self.distrib_port)
 
 # resources can get access to the IStatus by calling
 # request.site.buildbot_service.getStatus()

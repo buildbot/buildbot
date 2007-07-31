@@ -1,37 +1,35 @@
 
-from zope.interface import implements
 from twisted.web.error import NoResource
 from twisted.web import html, static
 from twisted.web.util import Redirect
 
-import re, time, urllib
-from twisted.python import components, log
-from buildbot import util, interfaces
-from buildbot.status import builder
-from buildbot.status.web.base import HtmlResource, Box, IBox, \
-     build_get_class, make_row, ICurrentBox, ITopBox
+import re, urllib
+from twisted.python import log
+from buildbot import interfaces
+from buildbot.status.web.base import HtmlResource, make_row
 from buildbot.process.base import BuildRequest
-from buildbot.status.web.build import StatusResourceBuild
-
 from buildbot.sourcestamp import SourceStamp
+
+from buildbot.status.web.build import BuildsResource
 
 # $builder
 class StatusResourceBuilder(HtmlResource):
 
-    def __init__(self, status, builder, control):
+    def __init__(self, builder_status, builder_control):
         HtmlResource.__init__(self)
-        self.status = status
-        self.title = builder.getName() + " Builder"
-        self.builder = builder
-        self.control = control
+        self.builder_status = builder_status
+        self.builder_control = builder_control
 
-    def body(self, request):
-        b = self.builder
+    def body(self, req):
+        b = self.builder_status
+        control = self.builder_control
+        status = self.getStatus(req)
+
         slaves = b.getSlaves()
         connected_slaves = [s for s in slaves if s.isConnected()]
 
-        buildbotURL = self.status.getBuildbotURL()
-        projectName = self.status.getProjectName()
+        buildbotURL = status.getBuildbotURL()
+        projectName = status.getProjectName()
         data = "<a href=\"%s\">%s</a>\n" % (buildbotURL, projectName)
         data += make_row("Builder:", html.escape(b.getName()))
         b1 = b.getBuild(-1)
@@ -53,8 +51,8 @@ class StatusResourceBuilder(HtmlResource):
             data += "</li>\n"
         data += "</ol>\n"
 
-        if self.control is not None and connected_slaves:
-            forceURL = urllib.quote(request.childLink("force"))
+        if control is not None and connected_slaves:
+            forceURL = urllib.quote(req.childLink("force"))
             data += (
                 """
                 <form action='%(forceURL)s' class='command forcebuild'>
@@ -72,14 +70,14 @@ class StatusResourceBuilder(HtmlResource):
                 <input type='submit' value='Force Build' />
                 </form>
                 """) % {"forceURL": forceURL}
-        elif self.control is not None:
+        elif control is not None:
             data += """
             <p>All buildslaves appear to be offline, so it's not possible
             to force this build to execute at this time.</p>
             """
 
-        if self.control is not None:
-            pingURL = urllib.quote(request.childLink("ping"))
+        if control is not None:
+            pingURL = urllib.quote(req.childLink("ping"))
             data += """
             <form action="%s" class='command pingbuilder'>
             <p>To ping the buildslave(s), push the 'Ping' button</p>
@@ -90,18 +88,18 @@ class StatusResourceBuilder(HtmlResource):
 
         return data
 
-    def force(self, request):
-        name = request.args.get("username", ["<unknown>"])[0]
-        reason = request.args.get("comments", ["<no reason specified>"])[0]
-        branch = request.args.get("branch", [""])[0]
-        revision = request.args.get("revision", [""])[0]
+    def force(self, req):
+        name = req.args.get("username", ["<unknown>"])[0]
+        reason = req.args.get("comments", ["<no reason specified>"])[0]
+        branch = req.args.get("branch", [""])[0]
+        revision = req.args.get("revision", [""])[0]
 
         r = "The web-page 'force build' button was pressed by '%s': %s\n" \
             % (name, reason)
         log.msg("web forcebuild of builder '%s', branch='%s', revision='%s'"
                 % (self.builder.name, branch, revision))
 
-        if not self.control:
+        if not self.builder_control:
             # TODO: tell the web user that their request was denied
             log.msg("but builder control is disabled")
             return Redirect("..")
@@ -125,34 +123,32 @@ class StatusResourceBuilder(HtmlResource):
         s = SourceStamp(branch=branch, revision=revision)
         req = BuildRequest(r, s, self.builder.getName())
         try:
-            self.control.requestBuildSoon(req)
+            self.builder_control.requestBuildSoon(req)
         except interfaces.NoSlaveError:
             # TODO: tell the web user that their request could not be
             # honored
             pass
         return Redirect("..")
 
-    def ping(self, request):
+    def ping(self, req):
         log.msg("web ping of builder '%s'" % self.builder.name)
-        self.control.ping() # TODO: there ought to be an ISlaveControl
+        self.builder_control.ping() # TODO: there ought to be an ISlaveControl
         return Redirect("..")
 
-    def getChild(self, path, request):
+    def getChild(self, path, req):
         if path == "force":
-            return self.force(request)
+            return self.force(req)
         if path == "ping":
-            return self.ping(request)
-        if not path in ("events", "builds"):
-            return NoResource("Bad URL '%s'" % path)
-        num = request.postpath.pop(0)
-        request.prepath.append(num)
-        num = int(num)
+            return self.ping(req)
         if path == "events":
+            num = req.postpath.pop(0)
+            req.prepath.append(num)
+            num = int(num)
             # TODO: is this dead code? .statusbag doesn't exist,right?
-            log.msg("getChild['path']: %s" % request.uri)
+            log.msg("getChild['path']: %s" % req.uri)
             return NoResource("events are unavailable until code gets fixed")
-            filename = request.postpath.pop(0)
-            request.prepath.append(filename)
+            filename = req.postpath.pop(0)
+            req.prepath.append(filename)
             e = self.builder.statusbag.getEventNumbered(num)
             if not e:
                 return NoResource("No such event '%d'" % num)
@@ -165,111 +161,20 @@ class StatusResourceBuilder(HtmlResource):
                 return static.Data(file, "text/plain")
             return file
         if path == "builds":
-            build = self.builder.getBuild(num)
-            if build:
-                control = None
-                if self.control:
-                    control = self.control.getBuild(num)
-                return StatusResourceBuild(self.status, build,
-                                           self.control, control)
-            else:
-                return NoResource("No such build '%d'" % num)
+            return BuildsResource(self.builder_status, self.builder_control)
+
         return NoResource("really weird URL %s" % path)
 
 
-class CurrentBox(components.Adapter):
-    # this provides the "current activity" box, just above the builder name
-    implements(ICurrentBox)
+class BuildersResource(HtmlResource):
+    def getChild(self, path, req):
+        s = self.getStatus(req)
+        if path in s.getBuilderNames():
+            builder_status = s.getBuilder(path)
+            builder_control = None
+            c = self.getControl(req)
+            if c:
+                builder_control = c.getBuilder(path)
+            return StatusResourceBuilder(builder_status, builder_control)
 
-    def formatETA(self, eta):
-        if eta is None:
-            return []
-        if eta < 0:
-            return ["Soon"]
-        abstime = time.strftime("%H:%M:%S", time.localtime(util.now()+eta))
-        return ["ETA in", "%d secs" % eta, "at %s" % abstime]
-
-    def getBox(self, status):
-        # getState() returns offline, idle, or building
-        state, builds = self.original.getState()
-
-        # look for upcoming builds. We say the state is "waiting" if the
-        # builder is otherwise idle and there is a scheduler which tells us a
-        # build will be performed some time in the near future. TODO: this
-        # functionality used to be in BuilderStatus.. maybe this code should
-        # be merged back into it.
-        upcoming = []
-        builderName = self.original.getName()
-        for s in status.getSchedulers():
-            if builderName in s.listBuilderNames():
-                upcoming.extend(s.getPendingBuildTimes())
-        if state == "idle" and upcoming:
-            state = "waiting"
-
-        if state == "building":
-            color = "yellow"
-            text = ["building"]
-            if builds:
-                for b in builds:
-                    eta = b.getETA()
-                    if eta:
-                        text.extend(self.formatETA(eta))
-        elif state == "offline":
-            color = "red"
-            text = ["offline"]
-        elif state == "idle":
-            color = "white"
-            text = ["idle"]
-        elif state == "waiting":
-            color = "yellow"
-            text = ["waiting"]
-        else:
-            # just in case I add a state and forget to update this
-            color = "white"
-            text = [state]
-
-        # TODO: for now, this pending/upcoming stuff is in the "current
-        # activity" box, but really it should go into a "next activity" row
-        # instead. The only times it should show up in "current activity" is
-        # when the builder is otherwise idle.
-
-        # are any builds pending? (waiting for a slave to be free)
-        pbs = self.original.getPendingBuilds()
-        if pbs:
-            text.append("%d pending" % len(pbs))
-        for t in upcoming:
-            text.extend(["next at", 
-                         time.strftime("%H:%M:%S", time.localtime(t)),
-                         "[%d secs]" % (t - util.now()),
-                         ])
-            # TODO: the upcoming-builds box looks like:
-            #  ['waiting', 'next at', '22:14:15', '[86 secs]']
-            # while the currently-building box is reversed:
-            #  ['building', 'ETA in', '2 secs', 'at 22:12:50']
-            # consider swapping one of these to make them look the same. also
-            # consider leaving them reversed to make them look different.
-        return Box(text, color=color, class_="Activity " + state)
-
-components.registerAdapter(CurrentBox, builder.BuilderStatus, ICurrentBox)
-
-
-class BuildTopBox(components.Adapter):
-    # this provides a per-builder box at the very top of the display,
-    # showing the results of the most recent build
-    implements(IBox)
-
-    def getBox(self):
-        assert interfaces.IBuilderStatus(self.original)
-        b = self.original.getLastFinishedBuild()
-        if not b:
-            return Box(["none"], "white", class_="LastBuild")
-        name = b.getBuilder().getName()
-        number = b.getNumber()
-        url = "%s/builds/%d" % (name, number)
-        text = b.getText()
-        # TODO: add logs?
-        # TODO: add link to the per-build page at 'url'
-        c = b.getColor()
-        class_ = build_get_class(b)
-        return Box(text, c, class_="LastBuild %s" % class_)
-components.registerAdapter(BuildTopBox, builder.BuilderStatus, ITopBox)
+        return NoResource("No such Builder '%s'" % path)

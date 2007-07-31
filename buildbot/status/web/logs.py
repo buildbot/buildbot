@@ -1,4 +1,16 @@
 
+from zope.interface import implements
+from twisted.python import components
+from twisted.spread import pb
+from twisted.web import html, server
+from twisted.web.resource import Resource
+from twisted.web.error import NoResource
+
+from buildbot import interfaces
+from buildbot.status import builder
+from buildbot.status.web.base import IHTMLLog, HtmlResource
+
+
 textlog_stylesheet = """
 <style type="text/css">
  div.data {
@@ -137,3 +149,18 @@ class HTMLLog(Resource):
 
 components.registerAdapter(HTMLLog, builder.HTMLLogFile, IHTMLLog)
 
+
+class LogsResource(HtmlResource):
+    def __init__(self, step_status):
+        HtmlResource.__init__(self)
+        self.step_status = step_status
+
+    def getChild(self, path, req):
+        try:
+            for log in self.step_status.getLogs():
+                if path == log.getName():
+                    if log.hasContents():
+                        return IHTMLLog(interfaces.IStatusLog(log))
+                    return NoResource("Empty Log '%s'" % path)
+        except (IndexError, ValueError):
+            return NoResource("No such Log '%s'" % path)

@@ -1,40 +1,37 @@
 
-from zope.interface import implements
 from twisted.web.error import NoResource
 from twisted.web import html
 from twisted.web.util import Redirect, DeferredResource
 from twisted.internet import defer, reactor
 
 import urllib
-from twisted.python import components, log
-from buildbot.status import builder
-from buildbot.status.web.base import HtmlResource, Box, IBox, \
-     build_get_class, make_row
+from twisted.python import log
+from buildbot.status.web.base import HtmlResource, make_row
 
-from buildbot.status.web.tests import StatusResourceTestResults
-from buildbot.status.web.step import StatusResourceBuildStep
+from buildbot.status.web.tests import TestsResource
+from buildbot.status.web.step import StepsResource
 
-# $builder/builds/NN
+# builders/$builder/builds/$buildnum
 class StatusResourceBuild(HtmlResource):
     title = "Build"
 
-    def __init__(self, status, build, builderControl, buildControl):
+    def __init__(self, build_status, build_control, builder_control):
         HtmlResource.__init__(self)
-        self.status = status
-        self.build = build
-        self.builderControl = builderControl
-        self.control = buildControl
+        self.build_status = build_status
+        self.build_control = build_control
+        self.builder_control = builder_control
 
-    def body(self, request):
-        b = self.build
-        buildbotURL = self.status.getBuildbotURL()
-        projectName = self.status.getProjectName()
+    def body(self, req):
+        b = self.build_status
+        status = self.getStatus(req)
+        buildbotURL = status.getBuildbotURL()
+        projectName = status.getProjectName()
         data = '<div class="title"><a href="%s">%s</a></div>\n'%(buildbotURL,
                                                                  projectName)
         # the color in the following line gives python-mode trouble
-        data += ("<h1>Build <a href=\"%s\">%s</a>:#%d</h1>\n"
-                 % (self.status.getURLForThing(b.getBuilder()),
-                    b.getBuilder().getName(), b.getNumber()))
+        builder_name = b.getBuilder().getName()
+        data += ("<h1><a href=\"../../%s\">Builder %s</a>: Build #%d</h1>\n"
+                 % (urllib.quote(builder_name), builder_name, b.getNumber()))
         data += "<h2>Buildslave:</h2>\n %s\n" % html.escape(b.getSlavename())
         data += "<h2>Reason:</h2>\n%s\n" % html.escape(b.getReason())
 
@@ -57,12 +54,12 @@ class StatusResourceBuild(HtmlResource):
             data += "<h2>Results:</h2>\n"
             data += " ".join(b.getText()) + "\n"
             if b.getTestResults():
-                url = request.childLink("tests")
+                url = req.childLink("tests")
                 data += "<h3><a href=\"%s\">test results</a></h3>\n" % url
         else:
             data += "<h2>Build In Progress</h2>"
-            if self.control is not None:
-                stopURL = urllib.quote(request.childLink("stop"))
+            if self.build_control is not None:
+                stopURL = urllib.quote(req.childLink("stop"))
                 data += """
                 <form action="%s" class='command stopbuild'>
                 <p>To stop this build, fill out the following fields and
@@ -75,7 +72,7 @@ class StatusResourceBuild(HtmlResource):
                 </form>
                 """
 
-        if b.isFinished() and self.builderControl is not None:
+        if b.isFinished() and self.builder_control is not None:
             data += "<h3>Resubmit Build:</h3>\n"
             # can we rebuild it exactly?
             exactly = (revision is not None) or b.getChanges()
@@ -91,7 +88,7 @@ class StatusResourceBuild(HtmlResource):
                          "exactly. Any changes that have been committed \n"
                          "after this build was started <b>will</b> be \n"
                          "included in a rebuild.</p>\n")
-            rebuildURL = urllib.quote(request.childLink("rebuild"))
+            rebuildURL = urllib.quote(req.childLink("rebuild"))
             data += ('<form action="%s" class="command rebuild">\n'
                      % rebuildURL)
             data += make_row("Your name:",
@@ -105,15 +102,20 @@ class StatusResourceBuild(HtmlResource):
         if b.getLogs():
             data += "<ol>\n"
             for s in b.getSteps():
+                name = s.getName()
                 data += (" <li><a href=\"%s\">%s</a> [%s]\n"
-                         % (self.status.getURLForThing(s), s.getName(),
+                         % (req.childLink("steps/%s" % urllib.quote(name)),
+                            name,
                             " ".join(s.getText())))
                 if s.getLogs():
                     data += "  <ol>\n"
                     for logfile in s.getLogs():
+                        logname = logfile.getName()
+                        logurl = req.childLink("steps/%s/logs/%s" %
+                                               (urllib.quote(name),
+                                                urllib.quote(logname)))
                         data += ("   <li><a href=\"%s\">%s</a></li>\n" %
-                                 (self.status.getURLForThing(logfile),
-                                  logfile.getName()))
+                                 (logurl, logfile.getName()))
                     data += "  </ol>\n"
                 data += " </li>\n"
             data += "</ol>\n"
@@ -133,15 +135,16 @@ class StatusResourceBuild(HtmlResource):
         #data += html.PRE(b.changesText()) # TODO
         return data
 
-    def stop(self, request):
+    def stop(self, req):
+        b = self.build_status
+        c = self.build_control
         log.msg("web stopBuild of build %s:%s" % \
-                (self.build.getBuilder().getName(),
-                 self.build.getNumber()))
-        name = request.args.get("username", ["<unknown>"])[0]
-        comments = request.args.get("comments", ["<no reason specified>"])[0]
+                (b.getBuilder().getName(), b.getNumber()))
+        name = req.args.get("username", ["<unknown>"])[0]
+        comments = req.args.get("comments", ["<no reason specified>"])[0]
         reason = ("The web-page 'stop build' button was pressed by "
                   "'%s': %s\n" % (name, comments))
-        self.control.stopBuild(reason)
+        c.stopBuild(reason)
         # we're at http://localhost:8080/svn-hello/builds/5/stop?[args] and
         # we want to go to: http://localhost:8080/svn-hello/builds/5 or
         # http://localhost:8080/
@@ -152,20 +155,21 @@ class StatusResourceBuild(HtmlResource):
         reactor.callLater(1, d.callback, r)
         return DeferredResource(d)
 
-    def rebuild(self, request):
+    def rebuild(self, req):
+        b = self.build_status
+        bc = self.builder_control
         log.msg("web rebuild of build %s:%s" % \
-                (self.build.getBuilder().getName(),
-                 self.build.getNumber()))
-        name = request.args.get("username", ["<unknown>"])[0]
-        comments = request.args.get("comments", ["<no reason specified>"])[0]
+                (b.getBuilder().getName(), b.getNumber()))
+        name = req.args.get("username", ["<unknown>"])[0]
+        comments = req.args.get("comments", ["<no reason specified>"])[0]
         reason = ("The web-page 'rebuild' button was pressed by "
                   "'%s': %s\n" % (name, comments))
-        if not self.builderControl or not self.build.isFinished():
+        if not bc or not b.isFinished():
             log.msg("could not rebuild: bc=%s, isFinished=%s"
-                    % (self.builderControl, self.build.isFinished()))
+                    % (bc, b.isFinished()))
             # TODO: indicate an error
         else:
-            self.builderControl.resubmitBuild(self.build, reason)
+            bc.resubmitBuild(b, reason)
         # we're at http://localhost:8080/svn-hello/builds/5/rebuild?[args] and
         # we want to go to the top, at http://localhost:8080/
         r = Redirect("../../..")
@@ -173,42 +177,33 @@ class StatusResourceBuild(HtmlResource):
         reactor.callLater(1, d.callback, r)
         return DeferredResource(d)
 
-    def getChild(self, path, request):
-        if path == "tests":
-            return StatusResourceTestResults(self.status,
-                                             self.build.getTestResults())
+    def getChild(self, path, req):
         if path == "stop":
-            return self.stop(request)
+            return self.stop(req)
         if path == "rebuild":
-            return self.rebuild(request)
-        if path.startswith("step-"):
-            stepname = path[len("step-"):]
-            steps = self.build.getSteps()
-            for s in steps:
-                if s.getName() == stepname:
-                    return StatusResourceBuildStep(self.status, s)
-            return NoResource("No such BuildStep '%s'" % stepname)
+            return self.rebuild(req)
+        if path == "steps":
+            return StepsResource(self.build_status)
+        if path == "tests":
+            return TestsResource(self.build_status)
+
         return NoResource("No such resource '%s'" % path)
 
-class BuildBox(components.Adapter):
-    # this provides the yellow "starting line" box for each build
-    implements(IBox)
+class BuildsResource(HtmlResource):
+    def __init__(self, builder_status, builder_control):
+        HtmlResource.__init__(self)
+        self.builder_status = builder_status
+        self.builder_control = builder_control
 
-    def getBox(self):
-        b = self.original
-        name = b.getBuilder().getName()
-        number = b.getNumber()
-        url = "%s/builds/%d" % (urllib.quote(name, safe=''), number)
-        reason = b.getReason()
-        text = ('<a title="Reason: %s" href="%s">Build %d</a>'
-                % (html.escape(reason), url, number))
-        color = "yellow"
-        class_ = "start"
-        if b.isFinished() and not b.getSteps():
-            # the steps have been pruned, so there won't be any indication
-            # of whether it succeeded or failed. Color the box red or green
-            # to show its status
-            color = b.getColor()
-            class_ = build_get_class(b)
-        return Box([text], color=color, class_="BuildStep " + class_)
-components.registerAdapter(BuildBox, builder.BuildStatus, IBox)
+    def getChild(self, path, req):
+        num = int(path)
+        build_status = self.builder_status.getBuild(num)
+        if build_status:
+            build_control = None
+            if self.builder_control:
+                builder_control = self.builder_control.getBuild(num)
+            return StatusResourceBuild(build_status, build_control,
+                                       self.builder_control)
+
+        return NoResource("No such Build '%d'" % num)
+

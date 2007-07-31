@@ -2,21 +2,17 @@
 from zope.interface import implements
 from twisted.python import components
 from twisted.web.error import NoResource
-from twisted.web import html
 
 from buildbot.changes.changes import Change
 from buildbot.status.web.base import HtmlResource, StaticHTML, IBox, Box
 
 # $changes/NN
-class StatusResourceChanges(HtmlResource):
-    def __init__(self, status, changemaster):
-        HtmlResource.__init__(self)
-        self.status = status
-        self.changemaster = changemaster
-    def body(self, request):
+class ChangesResource(HtmlResource):
+
+    def body(self, req):
         data = ""
         data += "Change sources:\n"
-        sources = list(self.changemaster)
+        sources = self.getStatus(req).getChangeSources()
         if sources:
             data += "<ol>\n"
             for s in sources:
@@ -25,9 +21,10 @@ class StatusResourceChanges(HtmlResource):
         else:
             data += "none (push only)\n"
         return data
-    def getChild(self, path, request):
+
+    def getChild(self, path, req):
         num = int(path)
-        c = self.changemaster.getChangeNumbered(num)
+        c = self.getStatus(req).getChange(num)
         if not c:
             return NoResource("No change number '%d'" % num)
         return StaticHTML(c.asHTML(), "Change #%d" % num)
@@ -38,6 +35,7 @@ class ChangeBox(components.Adapter):
 
     def getBox(self):
         url = "changes/%d" % self.original.number
-        text = '<a href="%s">%s</a>' % (url, html.escape(self.original.who))
+        text = self.original.get_HTML_box(url)
         return Box([text], color="white", class_="Change")
 components.registerAdapter(ChangeBox, Change, IBox)
+
