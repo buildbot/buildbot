@@ -240,16 +240,16 @@ class MailNotifier(base.StatusReceiverMultiService):
         if ss is None:
             source = "unavailable"
         else:
-            branch, revision, patch = ss
             source = ""
-            if branch:
-                source += "[branch %s] " % branch
-            if revision:
-                source += revision
+            if ss.branch:
+                source += "[branch %s] " % ss.branch
+            if ss.revision:
+                source += ss.revision
             else:
                 source += "HEAD"
-            if patch is not None:
+            if ss.patch is not None:
                 source += " (plus patch)"
+                patch = ss.patch
         text += "Build Source Stamp: %s\n" % source
 
         text += "Blamelist: %s\n" % ",".join(build.getResponsibleUsers())

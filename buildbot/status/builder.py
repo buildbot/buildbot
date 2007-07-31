@@ -952,7 +952,7 @@ class BuildStatus(styles.Versioned):
         return self.builder.getBuild(self.number-1)
 
     def getSourceStamp(self):
-        return (self.source.branch, self.source.revision, self.source.patch)
+        return self.source
 
     def getReason(self):
         return self.reason

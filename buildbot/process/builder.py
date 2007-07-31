@@ -670,9 +670,8 @@ class BuilderControl(components.Adapter):
     def resubmitBuild(self, bs, reason="<rebuild, no reason given>"):
         if not bs.isFinished():
             return
-        branch, revision, patch = bs.getSourceStamp()
-        changes = bs.getChanges()
-        ss = sourcestamp.SourceStamp(branch, revision, patch, changes)
+
+        ss = bs.getSourceStamp()
         req = base.BuildRequest(reason, ss, self.original.name)
         self.requestBuild(req)
 

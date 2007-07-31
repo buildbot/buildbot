@@ -62,7 +62,7 @@ class Request(unittest.TestCase):
         self.failUnlessEqual(sm.branch, "branch1")
         self.failUnlessEqual(sm.revision, None)
         self.failUnlessEqual(sm.patch, None)
-        self.failUnlessEqual(sm.changes, [])
+        self.failUnlessEqual(sm.changes, ())
 
         ss = b1r1.mergeWith([b1r1])
         self.failUnlessEqual(ss, S("branch1", "rev1", None, None))

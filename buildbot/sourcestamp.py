@@ -15,7 +15,7 @@ class SourceStamp(util.ComparableMixin):
        If REV is None, checkout HEAD and patch it.
      - (revision=None, patchspec=None, changes=[CHANGES]): let the Source
        step check out the latest revision indicated by the given Changes.
-       CHANGES is a list of L{buildbot.changes.changes.Change} instances,
+       CHANGES is a tuple of L{buildbot.changes.changes.Change} instances,
        and all must be on the same branch.
     """
 
@@ -23,7 +23,7 @@ class SourceStamp(util.ComparableMixin):
     branch = None
     revision = None
     patch = None
-    changes = []
+    changes = ()
 
     compare_attrs = ('branch', 'revision', 'patch', 'changes')
 
@@ -35,7 +35,7 @@ class SourceStamp(util.ComparableMixin):
         self.revision = revision
         self.patch = patch
         if changes:
-            self.changes = changes
+            self.changes = tuple(changes)
             self.branch = changes[0].branch
 
     def canBeMergedWith(self, other):
@@ -80,3 +80,13 @@ class SourceStamp(util.ComparableMixin):
                                 changes=changes)
         return newsource
 
+    def getText(self):
+        # TODO: this won't work for VC's with huge 'revision' strings
+        if self.revision is None:
+            return [ "latest" ]
+        text = [ str(self.revision) ]
+        if self.branch:
+            text.append("in '%s'" % self.branch)
+        if self.patch:
+            text.append("[patch]")
+        return text

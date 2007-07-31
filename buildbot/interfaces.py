@@ -73,7 +73,37 @@ class IUpstreamScheduler(Interface):
         Scheduler might feed."""
 
 class ISourceStamp(Interface):
-    pass
+    """
+    @cvar branch: branch from which source was drawn
+    @type branch: string or None
+
+    @cvar revision: revision of the source, or None to use CHANGES
+    @type revision: varies depending on VC
+
+    @cvar patch: patch applied to the source, or None if no patch
+    @type patch: None or tuple (level diff)
+
+    @cvar changes: the source step should check out hte latest revision
+                   in the given changes
+    @type changes: tuple of L{buildbot.changes.changes.Change} instances,
+                   all of which are on the same branch
+    """
+
+    def canBeMergedWith(self, other):
+        """
+        Can this SourceStamp be merged with OTHER?
+        """
+
+    def mergeWith(self, others):
+        """Generate a SourceStamp for the merger of me and all the other
+        BuildRequests. This is called by a Build when it starts, to figure
+        out what its sourceStamp should be."""
+
+    def getText(self):
+        """Returns a list of strings to describe the stamp. These are
+        intended to be displayed in a narrow column. If more space is
+        available, the caller should join them together with spaces before
+        presenting them to the user."""
 
 class IEmailSender(Interface):
     """I know how to send email, and can be used by other parts of the
@@ -139,6 +169,11 @@ class IBuildSetStatus(Interface):
     using the same source tree."""
 
     def getSourceStamp():
+        """Return a SourceStamp object which can be used to re-create
+        the source tree that this build used.
+
+        This method will return None if the source information is no longer
+        available."""
         pass
     def getReason():
         pass
@@ -176,6 +211,11 @@ class IBuildRequestStatus(Interface):
     finally turned into a Build."""
 
     def getSourceStamp():
+        """Return a SourceStamp object which can be used to re-create
+        the source tree that this build used.
+
+        This method will return None if the source information is no longer
+        available."""
         pass
     def getBuilderName():
         pass
@@ -306,22 +346,13 @@ class IBuildStatus(Interface):
         added in the future."""
 
     def getSourceStamp():
-        """Return a tuple of (branch, revision, patch) which can be used to
-        re-create the source tree that this build used. 'branch' is a string
-        with a VC-specific meaning, or None to indicate that the checkout
-        step used its default branch. 'revision' is a string, the sort you
-        would pass to 'cvs co -r REVISION'. 'patch' is either None, or a
-        (level, diff) tuple which represents a patch that should be applied
-        with 'patch -pLEVEL < DIFF' from the directory created by the
-        checkout operation.
+        """Return a SourceStamp object which can be used to re-create
+        the source tree that this build used.
 
         This method will return None if the source information is no longer
         available."""
         # TODO: it should be possible to expire the patch but still remember
         # that the build was r123+something.
-
-        # TODO: change this to return the actual SourceStamp instance, and
-        # remove getChanges()
 
     def getChanges():
         """Return a list of Change objects which represent which source

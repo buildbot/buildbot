@@ -100,5 +100,5 @@ class Force(unittest.TestCase):
         self.failUnless(bs.isFinished())
         self.failUnlessEqual(bs.getResults(), SUCCESS)
         #self.failUnlessEqual(bs.getResponsibleUsers(), ["bob"]) # TODO
-        self.failUnlessEqual(bs.getChanges(), [])
+        self.failUnlessEqual(bs.getChanges(), ())
         #self.failUnlessEqual(bs.getReason(), "forced") # TODO

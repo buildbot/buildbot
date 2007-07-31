@@ -1,3 +1,17 @@
+2007-07-30  Brian Warner  <warner@lothar.com>
+
+	* buildbot/interfaces.py (ISourceStamp): cleanup patch by Dustin
+	Mitchell: pass SourceStamps around rather than branch/version/etc
+	tuples. Thanks Dustin! Closes #70.
+	* buildbot/sourcestamp.py (SourceStamp): insist that .changes is a
+	tuple rather than a list, to avoid surprising mutations
+	* buildbot/process/builder.py (BuilderControl.resubmitBuild): same
+	* buildbot/status/mail.py (MailNotifier.buildMessage): same
+	* buildbot/status/builder.py (BuildStatus.getSourceStamp): same
+	* buildbot/test/test_status.py (Subscription): same
+	* buildbot/test/test_control.py (Force): same
+	* buildbot/test/test_buildreq.py (Request.testMerge): same
+
 2007-07-29  Brian Warner  <warner@lothar.com>
 
 	* buildbot/scripts/sample.cfg: remove the spurious 'builders'
