@@ -5,7 +5,7 @@ from twisted.python import log, components
 from twisted.spread import pb
 from twisted.internet import reactor, defer
 
-from buildbot import interfaces, sourcestamp
+from buildbot import interfaces
 from buildbot.status.progress import Expectations
 from buildbot.util import now
 from buildbot.process import base
