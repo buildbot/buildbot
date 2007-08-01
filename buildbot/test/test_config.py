@@ -860,39 +860,42 @@ c['schedulers'] = [s1, Dependent('downstream', s1, ['builder1'])]
         master.loadChanges()
 
         d = master.loadConfig(webCfg1)
-        d.addCallback(self._testWebPortnum_1)
-        return d
-    def _testWebPortnum_1(self, res):
-        ports = self.checkPorts(self.buildmaster, [(9999, pb.PBServerFactory),
-                                                   (9980, Site)])
-        p = ports[1]
+        def _check1(res):
+            ports = self.checkPorts(self.buildmaster,
+                                    [(9999, pb.PBServerFactory), (9980, Site)])
+            p = ports[1]
 
-        d = self.buildmaster.loadConfig(webCfg1) # nothing should be changed
-        d.addCallback(self._testWebPortnum_2, p)
-        return d
-    def _testWebPortnum_2(self, res, p):
-        ports = self.checkPorts(self.buildmaster, [(9999, pb.PBServerFactory),
-                                                   (9980, Site)])
-        self.failUnlessIdentical(p, ports[1],
-                                 "web port was changed even though " + \
-                                 "configuration was not")
+            d1 = self.buildmaster.loadConfig(webCfg1)
+            # nothing should be changed
+            d1.addCallback(lambda res: p)
+            return d1
+        d.addCallback(_check1)
+        def _check2(p):
+            ports = self.checkPorts(self.buildmaster,
+                                    [(9999, pb.PBServerFactory), (9980, Site)])
+            self.failUnlessIdentical(p, ports[1],
+                                     "web port was changed even though "
+                                     "configuration was not")
 
-        d = self.buildmaster.loadConfig(webCfg2) # changes to 9981
-        d.addCallback(self._testWebPortnum_3, p)
-        return d
-    def _testWebPortnum_3(self, res, p):
-        ports = self.checkPorts(self.buildmaster, [(9999, pb.PBServerFactory),
-                                                   (9981, Site)])
-        self.failIf(p is ports[1],
-                    "configuration was changed but web port was unchanged")
-        d = self.buildmaster.loadConfig(webCfg3) # 9981 on only localhost
-        d.addCallback(self._testWebPortnum_4, ports[1])
-        return d
-    def _testWebPortnum_4(self, res, p):
-        ports = self.checkPorts(self.buildmaster, [(9999, pb.PBServerFactory),
-                                                   (9981, Site)])
-        self.failUnlessEqual(ports[1].kwargs['interface'], "127.0.0.1")
-        d = self.buildmaster.loadConfig(emptyCfg)
+            d1 = self.buildmaster.loadConfig(webCfg2) # changes to 9981
+            d1.addCallback(lambda res: p)
+            return d1
+        d.addCallback(_check2)
+        def _check3(p):
+            ports = self.checkPorts(self.buildmaster,
+                                    [(9999, pb.PBServerFactory), (9981, Site)])
+            self.failIf(p is ports[1],
+                        "configuration was changed but web port was unchanged")
+            d1 = self.buildmaster.loadConfig(webCfg3) # 9981 on only localhost
+            d1.addCallback(lambda res: ports[1])
+            return d1
+        d.addCallback(_check3)
+        def _check4(p):
+            ports = self.checkPorts(self.buildmaster,
+                                    [(9999, pb.PBServerFactory), (9981, Site)])
+            self.failUnlessEqual(ports[1].kwargs['interface'], "127.0.0.1")
+            return self.buildmaster.loadConfig(emptyCfg)
+        d.addCallback(_check4)
         d.addCallback(lambda res:
                       self.checkPorts(self.buildmaster,
                                       [(9999, pb.PBServerFactory)]))
@@ -903,40 +906,43 @@ c['schedulers'] = [s1, Dependent('downstream', s1, ['builder1'])]
         master.loadChanges()
 
         d = master.loadConfig(webNameCfg1)
-        d.addCallback(self._testWebPathname_1)
-        return d
-    def _testWebPathname_1(self, res):
-        self.checkPorts(self.buildmaster,
-                        [(9999, pb.PBServerFactory),
-                         ('~/.twistd-web-pb', pb.PBServerFactory)])
-        unixports = self.UNIXports(self.buildmaster)
-        f = unixports[0].args[1]
-        self.failUnless(isinstance(f.root, ResourcePublisher))
+        def _check1(res):
+            self.checkPorts(self.buildmaster,
+                            [(9999, pb.PBServerFactory),
+                             ('~/.twistd-web-pb', pb.PBServerFactory)])
+            unixports = self.UNIXports(self.buildmaster)
+            f = unixports[0].args[1]
+            self.failUnless(isinstance(f.root, ResourcePublisher))
 
-        d = self.buildmaster.loadConfig(webNameCfg1)
+            d1 = self.buildmaster.loadConfig(webNameCfg1)
+            d1.addCallback(lambda res: f)
+            return d1
+        d.addCallback(_check1)
         # nothing should be changed
-        d.addCallback(self._testWebPathname_2, f)
-        return d
-    def _testWebPathname_2(self, res, f):
-        self.checkPorts(self.buildmaster,
-                        [(9999, pb.PBServerFactory),
-                         ('~/.twistd-web-pb', pb.PBServerFactory)])
-        self.failUnlessIdentical(f,
-                                 self.UNIXports(self.buildmaster)[0].args[1],
-                                 "web factory was changed even though " + \
-                                 "configuration was not")
+        def _check2(f):
+            self.checkPorts(self.buildmaster,
+                            [(9999, pb.PBServerFactory),
+                             ('~/.twistd-web-pb', pb.PBServerFactory)])
+            newf = self.UNIXports(self.buildmaster)[0].args[1]
+            self.failUnlessIdentical(f, newf,
+                                     "web factory was changed even though "
+                                     "configuration was not")
 
-        d = self.buildmaster.loadConfig(webNameCfg2)
-        d.addCallback(self._testWebPathname_3, f)
-        return d
-    def _testWebPathname_3(self, res, f):
-        self.checkPorts(self.buildmaster,
-                        [(9999, pb.PBServerFactory),
-                         ('./bar.socket', pb.PBServerFactory)])
-        self.failIf(f is self.UNIXports(self.buildmaster)[0].args[1],
-                    "web factory was unchanged but configuration was changed")
+            d1 = self.buildmaster.loadConfig(webNameCfg2)
+            d1.addCallback(lambda res: f)
+            return d1
+        d.addCallback(_check2)
+        def _check3(f):
+            self.checkPorts(self.buildmaster,
+                            [(9999, pb.PBServerFactory),
+                             ('./bar.socket', pb.PBServerFactory)])
+            newf = self.UNIXports(self.buildmaster)[0].args[1],
+            self.failIf(f is newf,
+                        "web factory was unchanged but "
+                        "configuration was changed")
 
-        d = self.buildmaster.loadConfig(emptyCfg)
+            return self.buildmaster.loadConfig(emptyCfg)
+        d.addCallback(_check3)
         d.addCallback(lambda res:
                       self.checkPorts(self.buildmaster,
                                       [(9999, pb.PBServerFactory)]))
