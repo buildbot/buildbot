@@ -2,15 +2,15 @@
 import os, sys
 from itertools import count
 
+from zope.interface import implements
 from twisted.python import log
-from twisted.application import strports
+from twisted.application import strports, service
 from twisted.web import server, distrib, static
 from twisted.spread import pb
 
-from buildbot.interfaces import IControl
+from buildbot.interfaces import IControl, IStatusReceiver
 from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE, EXCEPTION
 
-from buildbot.status.base import StatusReceiverMultiService
 from buildbot.status.web.base import HtmlResource
 from buildbot.status.web.waterfall import WaterfallStatusResource
 from buildbot.status.web.changes import ChangesResource
@@ -204,7 +204,14 @@ FOOTER = '''
 '''
 
 
-class WebStatus(StatusReceiverMultiService):
+class WebStatus(service.MultiService):
+    implements(IStatusReceiver)
+    # TODO: IStatusReceiver is really about things which subscribe to hear
+    # about buildbot events. We need a different interface (perhaps a parent
+    # of IStatusReceiver) for status targets that don't subscribe, like the
+    # WebStatus class. buildbot.master.BuildMaster.loadConfig:737 asserts
+    # that everything in c['status'] provides IStatusReceiver, but really it
+    # should check that they provide IStatusTarget instead.
 
     """
     The webserver provided by this class has the following resources:
@@ -265,8 +272,8 @@ class WebStatus(StatusReceiverMultiService):
 
     """
 
-    compare_attrs = ["http_port", "distrib_port", "allowForce", "css"]
-    # TODO: putChild should cause two instances to compare differently
+    # we are not a ComparableMixin, and therefore the webserver will be
+    # rebuilt every time we reconfig.
 
     def __init__(self, http_port=None, distrib_port=None,
                  allowForce=False, css="buildbot.css"):
@@ -309,7 +316,7 @@ class WebStatus(StatusReceiverMultiService):
                     for the page.
         """
 
-        StatusReceiverMultiService.__init__(self)
+        service.MultiService.__init__(self)
         if type(http_port) is int:
             http_port = "tcp:%d" % http_port
         self.http_port = http_port
@@ -365,7 +372,7 @@ class WebStatus(StatusReceiverMultiService):
                                                        self.distrib_port)
 
     def setServiceParent(self, parent):
-        StatusReceiverMultiService.setServiceParent(self, parent)
+        service.MultiService.setServiceParent(self, parent)
         self.setupSite()
 
     def setupSite(self):

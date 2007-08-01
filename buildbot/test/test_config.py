@@ -875,7 +875,9 @@ c['schedulers'] = [s1, Dependent('downstream', s1, ['builder1'])]
             self.failUnlessIdentical(self.p, ports[1],
                                      "web port was changed even though "
                                      "configuration was not")
-        d.addCallback(_check2)
+        # WebStatus is no longer a ComparableMixin, so it will be
+        # rebuilt on each reconfig
+        #d.addCallback(_check2)
 
         d.addCallback(lambda res: self.buildmaster.loadConfig(webCfg2))
         # changes port to 9981
@@ -924,7 +926,9 @@ c['schedulers'] = [s1, Dependent('downstream', s1, ['builder1'])]
             self.failUnlessIdentical(self.f, newf,
                                      "web factory was changed even though "
                                      "configuration was not")
-        d.addCallback(_check2)
+        # WebStatus is no longer a ComparableMixin, so it will be
+        # rebuilt on each reconfig
+        #d.addCallback(_check2)
 
         d.addCallback(lambda res: self.buildmaster.loadConfig(webNameCfg2))
         def _check3(res):
