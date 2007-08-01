@@ -237,9 +237,15 @@ Process-Specific build factories
 Status Delivery
 
 * HTML Waterfall::              
+* WebStatus::                   
 * IRC Bot::                     
 * PBListener::                  
 * Writing New Status Plugins::  
+
+WebStatus
+
+* Buildbot Web Resources::      
+* XMLRPC server::               
 
 Command-line tool
 
@@ -5810,6 +5816,7 @@ notifications of builder events, in which case they must define
 
 @menu
 * HTML Waterfall::              
+* WebStatus::                   
 * IRC Bot::                     
 * PBListener::                  
 * Writing New Status Plugins::  
@@ -5820,7 +5827,7 @@ notifications of builder events, in which case they must define
 
 @c DOCUMENT THIS
 
-@node HTML Waterfall, IRC Bot, Status Delivery, Status Delivery
+@node HTML Waterfall, WebStatus, Status Delivery, Status Delivery
 @section HTML Waterfall
 
 @cindex Waterfall
@@ -5923,27 +5930,36 @@ the contents of the @file{public_html/index.html} file. Likewise,
 @file{public_html/robots.txt} and @file{public_html/buildbot.css} are
 useful things to create.
 
-All URLs that start with @file{_buildbot/} will be handled by code
-internal to the buildbot. The pages available in this space provide
-various views into the buildbot status, each with a different focus.
-These pages can be configured further by adding query arguments, for
-example to restrict the page to only display certain Builders, or
-limit it to builds of a specific branch.
+Certain URL prefixes are handled specially by code within the
+buildbot. The pages available in these spaces provide various views into
+the buildbot status, each with a different focus. These pages can be
+configured further by adding query arguments, for example to restrict
+the page to only display certain Builders, or limit it to builds of a
+specific branch.
 
 In addition, if you are familiar with twisted.web @emph{Resource
 Trees}, you can write code to add additional pages at places inside
-this web space. Just use @code{webstatus.root.putChild} to places
-these resources.
+this web space. Just use @code{webstatus.putChild} to place these
+resources.
 
+The following section describes the special URLs and the status views
+they provide.
+
+
+@menu
+* Buildbot Web Resources::      
+* XMLRPC server::               
+@end menu
 
 @node Buildbot Web Resources, XMLRPC server, WebStatus, WebStatus
 @subsection Buildbot Web Resources
 
-All URLs that start with @file{_buildbot/} are handled by various
-classes in the @file{buildbot.status.web} package. The most common way
-to access these pages is for the buildmaster admin to write or modify
-the @file{index.html} page to contain links to them. Of course other
-project web pages can contain links to these buildbot pages as well.
+Certain URLs are ``magic'', and the pages they serve are created by
+various classes in the @file{buildbot.status.web} package instead of
+being read from disk. The most common way to access these pages is for
+the buildmaster admin to write or modify the @file{index.html} page to
+contain links to them. Of course other project web pages can contain
+links to these buildbot pages as well.
 
 Each page can be modified by adding query arguments to the URL. For
 example, a page which shows the results of the most recent build
@@ -5957,15 +5973,17 @@ show builds for just those two Builders.
 
 Some pages may include the Builder name or the build number in the
 main part of the URL itself. For example, a page that describes Build
-#7 of the ``i386'' builder might live at
-@file{_buildbot/builders/i386/builds/7}.
+#7 of the ``i386'' builder would live at @file{/builders/i386/builds/7}.
 
 The table below lists all of the internal pages and the URLs that can
 be used to access them.
 
+NOTE: of the pages described here, only the @code{/waterfall} and
+@code{/builders} are implemented yet.
+
 @table @code
 
-@item /_buildbot/timeline
+@item /waterfall
 
 This provides a chronologically-oriented display of the activity of
 all builders. It is the same display used by the Waterfall display.
@@ -5973,7 +5991,35 @@ all builders. It is the same display used by the Waterfall display.
 By adding one or more ``builder='' arguments, the Waterfall is
 restricted to only showing information about the given Builders.
 
-@item /_buildbot/one_line_per_build
+The Waterfall has references to resources in the @file{/builders}
+portion of the URL space to give access to individual builds.
+
+@item /builders/$BUILDERNAME/
+
+This describes the given Builder, and provides buttons to force a build.
+
+@item /builders/$BUILDERNAME/builds/$BUILDNUM/
+
+This describes a specific Build.
+
+@item /builders/$BUILDERNAME/builds/$BUILDNUM/steps/$STEPNAME
+
+This describes a specific BuildStep.
+
+@item /builders/$BUILDERNAME/builds/$BUILDNUM/steps/$STEPNAME/logs/$LOGNAME
+
+This provides an HTML representation of a specific logfile.
+
+@item /builders/$BUILDERNAME/builds/$BUILDNUM/steps/$STEPNAME/logs/$LOGNAME/text
+
+This returns the logfile as plain text, without any HTML coloring
+markup. It also removes the ``headers'', which are the lines that
+describe what command was run and what the environment variable
+settings were like. This maybe be useful for saving to disk and
+feeding to tools like 'grep'.
+
+
+@item /one_line_per_build
 
 This page shows one line of text for each build, merging information
 from all Builders@footnote{Apparently this is the same way
@@ -5981,19 +6027,14 @@ http://buildd.debian.org displays build status}. Each line specifies
 the name of the Builder, the number of the Build, what revision it
 used, and a summary of the results. Successful builds are in green,
 while failing builds are in red. The date and time of the build are
-added to the right-hand edge of the line.
+added to the right-hand edge of the line. The lines are ordered by
+build finish timestamp.
 
 One of more ``builder='' arguments can be used to restrict the list.
 In addition, a ``numbuilds='' argument will control how many lines are
 displayed (20 by default).
 
-@item /_buildbot/one_line_per_build/$BUILDERNAME
-
-By adding the name of a single Builder to the URL, the
-one_line_per_build display is restricted to just that one Builder. The
-``numbuilds='' argument is still relevant.
-
-@item SlaveStatusTimeline
+@item /slave_status_timeline
 
 This provides a chronological display of configuration and operational
 events: master startup/shutdown, slave connect/disconnect, and
@@ -6003,7 +6044,7 @@ an error in the config file, the error is displayed on this page.
 This page does not show any builds.
 
 
-@item LastBuild
+@item /last_build
 
 This shows one box per Builder, showing the results of the most recent
 complete build. It does not show the individual steps, or the current
@@ -6018,7 +6059,7 @@ branches: only show builds of specific branches
 @end itemize
 
 
-@item LastBuildImage
+@item /last_build/$BUILDERNAME/status.png
 
 This returns a PNG image that describes the results of the most recent
 build, which can be referenced in an IMG tag by other pages, perhaps
@@ -6031,11 +6072,7 @@ by other programs, rather than humans.
 
 @table @code
 
-@item RSS
-
-This provides an RSS feed of recent builds.
-
-@item /_buildbot/xmlrpc
+@item /xmlrpc
 
 This runs an XML-RPC server which can be used to query status
 information about various builds. See @xref{XMLRPC server} for more
@@ -6047,16 +6084,16 @@ details.
 @subsection XMLRPC server
 
 When using WebStatus, the buildbot runs an XML-RPC server at
-@file{/_buildbot/xmlrpc} that can be used by other programs to query
-build status. The following table lists the methods that can be
-invoked using this interface.
+@file{/xmlrpc} that can be used by other programs to query build
+status. The following table lists the methods that can be invoked
+using this interface.
 
 @table @code
 
 @end table
 
 
-@node IRC Bot, PBListener, HTML Waterfall, Status Delivery
+@node IRC Bot, PBListener, WebStatus, Status Delivery
 @section IRC Bot
 
 @cindex IRC
