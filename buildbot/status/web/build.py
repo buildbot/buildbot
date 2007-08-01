@@ -35,19 +35,19 @@ class StatusResourceBuild(HtmlResource):
         data += "<h2>Buildslave:</h2>\n %s\n" % html.escape(b.getSlavename())
         data += "<h2>Reason:</h2>\n%s\n" % html.escape(b.getReason())
 
-        branch, revision, patch = b.getSourceStamp()
+        ss = b.getSourceStamp()
         data += "<h2>SourceStamp:</h2>\n"
         data += " <ul>\n"
-        if branch:
-            data += "  <li>Branch: %s</li>\n" % html.escape(branch)
-        if revision:
-            data += "  <li>Revision: %s</li>\n" % html.escape(str(revision))
-        if patch:
+        if ss.branch:
+            data += "  <li>Branch: %s</li>\n" % html.escape(ss.branch)
+        if ss.revision:
+            data += "  <li>Revision: %s</li>\n" % html.escape(str(ss.revision))
+        if ss.patch:
             data += "  <li>Patch: YES</li>\n" # TODO: provide link to .diff
-        if b.getChanges():
+        if ss.changes:
             data += "  <li>Changes: see below</li>\n"
-        if (branch is None and revision is None and patch is None
-            and not b.getChanges()):
+        if (ss.branch is None and ss.revision is None and ss.patch is None
+            and not ss.changes):
             data += "  <li>build of most recent revision</li>\n"
         data += " </ul>\n"
         if b.isFinished():
@@ -75,14 +75,14 @@ class StatusResourceBuild(HtmlResource):
         if b.isFinished() and self.builder_control is not None:
             data += "<h3>Resubmit Build:</h3>\n"
             # can we rebuild it exactly?
-            exactly = (revision is not None) or b.getChanges()
+            exactly = (ss.revision is not None) or b.getChanges()
             if exactly:
                 data += ("<p>This tree was built from a specific set of \n"
                          "source files, and can be rebuilt exactly</p>\n")
             else:
                 data += ("<p>This tree was built from the most recent "
                          "revision")
-                if branch:
+                if ss.branch:
                     data += " (along some branch)"
                 data += (" and thus it might not be possible to rebuild it \n"
                          "exactly. Any changes that have been committed \n"
@@ -126,7 +126,7 @@ class StatusResourceBuild(HtmlResource):
             data += "  <li>%s</li>\n" % html.escape(who)
         data += (" </ol>\n"
                  "<h2>All Changes</h2>\n")
-        changes = b.getChanges()
+        changes = ss.changes
         if changes:
             data += "<ol>\n"
             for c in changes:
@@ -150,7 +150,7 @@ class StatusResourceBuild(HtmlResource):
         # http://localhost:8080/
         #
         #return Redirect("../%d" % self.build.getNumber())
-        r = Redirect("../../..")
+        r = Redirect("../../..") # TODO: no longer correct
         d = defer.Deferred()
         reactor.callLater(1, d.callback, r)
         return DeferredResource(d)
@@ -172,7 +172,7 @@ class StatusResourceBuild(HtmlResource):
             bc.resubmitBuild(b, reason)
         # we're at http://localhost:8080/svn-hello/builds/5/rebuild?[args] and
         # we want to go to the top, at http://localhost:8080/
-        r = Redirect("../../..")
+        r = Redirect("../../..") # TODO: no longer correct
         d = defer.Deferred()
         reactor.callLater(1, d.callback, r)
         return DeferredResource(d)
