@@ -156,11 +156,9 @@ class LogsResource(HtmlResource):
         self.step_status = step_status
 
     def getChild(self, path, req):
-        try:
-            for log in self.step_status.getLogs():
-                if path == log.getName():
-                    if log.hasContents():
-                        return IHTMLLog(interfaces.IStatusLog(log))
-                    return NoResource("Empty Log '%s'" % path)
-        except (IndexError, ValueError):
-            return NoResource("No such Log '%s'" % path)
+        for log in self.step_status.getLogs():
+            if path == log.getName():
+                if log.hasContents():
+                    return IHTMLLog(interfaces.IStatusLog(log))
+                return NoResource("Empty Log '%s'" % path)
+        return NoResource("No such Log '%s'" % path)

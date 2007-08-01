@@ -155,7 +155,9 @@ class HtmlResource(resource.Resource):
     def fillTemplate(self, template, request):
         s = request.site.buildbot_service
         values = s.template_values.copy()
-        values['css_path'] = self.path_to_root(request) + s.css
+        values['root'] = self.path_to_root(request)
+        # e.g. to reference the top-level 'buildbot.css' page, use
+        # "%(root)sbuildbot.css"
         values['title'] = self.getTitle(request)
         return template % values
 
@@ -170,11 +172,16 @@ class HtmlResource(resource.Resource):
         s = request.site.buildbot_service
         data = ""
         data += self.fillTemplate(s.header, request)
+        data += "<head>\n"
+        for he in s.head_elements:
+            data += " " + self.fillTemplate(he, request) + "\n"
+        data += "</head>\n\n"
 
-        data += '<body vlink="#800080">\n'
+        data += '<body %s>\n' % " ".join(['%s="%s"' % (k,v)
+                                          for (k,v) in s.body_attrs.items()])
         data += self.body(request)
         data += "</body>\n"
-        data += s.footer
+        data += self.fillTemplate(s.footer, request)
         return data
 
     def body(self, request):

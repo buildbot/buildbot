@@ -189,13 +189,15 @@ HEADER = '''
  xmlns="http://www.w3.org/1999/xhtml"
  lang="en"
  xml:lang="en">
-
-<head>
-  <title>%(title)s</title>
-  <link href="%(css_path)s" rel="stylesheet" type="text/css" />
-</head>
-
 '''
+
+HEAD_ELEMENTS = [
+    '<title>%(title)s</title>',
+    '<link href="%(root)sbuildbot.css" rel="stylesheet" type="text/css" />',
+    ]
+BODY_ATTRS = {
+    'vlink': "#800080",
+    }
 
 FOOTER = '''
 </html>
@@ -328,8 +330,12 @@ class WebStatus(StatusReceiverMultiService):
 
         self.setupUsualPages()
 
+        # the following items are accessed by HtmlResource when it renders
+        # each page.
         self.site.buildbot_service = self
         self.header = HEADER
+        self.head_elements = HEAD_ELEMENTS[:]
+        self.body_attrs = BODY_ATTRS.copy()
         self.footer = FOOTER
         self.template_values = {}
 
@@ -403,6 +409,9 @@ class WebStatus(StatusReceiverMultiService):
 # BASEDIR/public_html/index.html, and favicon/robots.txt are provided by
 # having the admin write actual files into BASEDIR/public_html/ .
 
+# note: we don't use a util.Redirect here because HTTP requires that the
+# Location: header provide an absolute URI, and it's non-trivial to figure
+# out our absolute URI from here.
 
 class Waterfall(WebStatus):
 
