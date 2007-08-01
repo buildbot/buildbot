@@ -238,10 +238,9 @@ class WaterfallStatusResource(HtmlResource):
     """This builds the main status page, with the waterfall display, and
     all child pages."""
 
-    def __init__(self, categories=None, css=None):
+    def __init__(self, categories=None):
         HtmlResource.__init__(self)
         self.categories = categories
-        self.css = css
 
     def getTitle(self, request):
         status = self.getStatus(request)

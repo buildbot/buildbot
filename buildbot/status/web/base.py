@@ -124,7 +124,6 @@ class Box:
 
 class HtmlResource(resource.Resource):
     # this is a cheap sort of template thingy
-    css = None
     contentType = "text/html; charset=UTF-8"
     title = "Dummy"
 
@@ -160,13 +159,6 @@ class HtmlResource(resource.Resource):
         # "%(root)sbuildbot.css"
         values['title'] = self.getTitle(request)
         return template % values
-
-    def getCSSlink(self, request):
-        css = request.site.css # might be None
-        if not css:
-            return None
-        url = "/".join([".." * self.depth] + [css])
-        return url
 
     def content(self, request):
         s = request.site.buildbot_service

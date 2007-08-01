@@ -253,12 +253,16 @@ class WebStatus(service.MultiService):
     bottom.
 
     This webserver defines class attributes on elements so they can be styled
-    with CSS stylesheets. Buildbot uses some generic classes to identify the
-    type of object, and some more specific classes for the various kinds of
-    those types. It does this by specifying both in the class attributes
-    where applicable, separated by a space. It is important that in your CSS
-    you declare the more generic class styles above the more specific ones.
-    For example, first define a style for .Event, and below that for .SUCCESS
+    with CSS stylesheets. All pages pull in public_html/buildbot.css, and you
+    can cause additional stylesheets to be loaded by adding a suitable <link>
+    to the WebStatus instance's .head_elements attribute.
+
+    Buildbot uses some generic classes to identify the type of object, and
+    some more specific classes for the various kinds of those types. It does
+    this by specifying both in the class attributes where applicable,
+    separated by a space. It is important that in your CSS you declare the
+    more generic class styles above the more specific ones. For example,
+    first define a style for .Event, and below that for .SUCCESS
 
     The following CSS class names are used:
         - Activity, Event, BuildStep, LastBuild: general classes
@@ -275,8 +279,7 @@ class WebStatus(service.MultiService):
     # we are not a ComparableMixin, and therefore the webserver will be
     # rebuilt every time we reconfig.
 
-    def __init__(self, http_port=None, distrib_port=None,
-                 allowForce=False, css="buildbot.css"):
+    def __init__(self, http_port=None, distrib_port=None, allowForce=False):
         """Run a web server that provides Buildbot status.
 
         @type  http_port: int or L{twisted.application.strports} string
@@ -311,9 +314,6 @@ class WebStatus(service.MultiService):
                              the strports parser.
         @param allowForce: boolean, if True then the webserver will allow
                            visitors to trigger and cancel builds
-        @param css: a URL. If set, the header of each generated page will
-                    include a link to add the given URL as a CSS stylesheet
-                    for the page.
         """
 
         service.MultiService.__init__(self)
@@ -327,7 +327,6 @@ class WebStatus(service.MultiService):
                 distrib_port = "unix:%s" % distrib_port
         self.distrib_port = distrib_port
         self.allowForce = allowForce
-        self.css = css
 
         # this will be replaced once we've been attached to a parent (and
         # thus have a basedir and can reference BASEDIR/public_html/)
@@ -443,11 +442,14 @@ class Waterfall(WebStatus):
     def __init__(self, http_port=None, distrib_port=None, allowForce=True,
                  categories=None, css=buildbot_css, favicon=buildbot_icon,
                  robots_txt=None):
-        WebStatus.__init__(self, http_port, distrib_port, allowForce, css)
+        WebStatus.__init__(self, http_port, distrib_port, allowForce)
+        self.css = css
+        self.favicon = favicon
+        self.robots_txt = robots_txt
         if favicon:
             data = open(favicon, "rb").read()
             self.putChild("favicon.ico", static.Data(data, "image/x-icon"))
         if robots_txt:
             data = open(robots_txt, "rb").read()
             self.putChild("robots.txt", static.Data(data, "text/plain"))
-        self.putChild("", WaterfallStatusResource(categories, css))
+        self.putChild("", WaterfallStatusResource(categories))
