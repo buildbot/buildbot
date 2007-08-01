@@ -10,6 +10,7 @@ from buildbot.status.web.logs import LogsResource
 # builders/$builder/builds/$buildnum/steps/$stepname
 class StatusResourceBuildStep(HtmlResource):
     title = "Build Step"
+    addSlash = True
 
     def __init__(self, build_status, step_status):
         HtmlResource.__init__(self)
@@ -66,18 +67,13 @@ class StatusResourceBuildStep(HtmlResource):
     def getChild(self, path, req):
         if path == "logs":
             return LogsResource(self.step_status)
-        logname = path
-        try:
-            log = self.step.getLogs()[int(logname)]
-            if log.hasContents():
-                return IHTMLLog(interfaces.IStatusLog(log))
-            return NoResource("Empty Log '%s'" % logname)
-        except (IndexError, ValueError):
-            return NoResource("No such Log '%s'" % logname)
+        return HtmlResource.getChild(self, path, req)
 
 
 
 class StepsResource(HtmlResource):
+    addSlash = True
+
     def __init__(self, build_status):
         HtmlResource.__init__(self)
         self.build_status = build_status
@@ -86,4 +82,4 @@ class StepsResource(HtmlResource):
         for s in self.build_status.getSteps():
             if s.getName() == path:
                 return StatusResourceBuildStep(self.build_status, s)
-        return NoResource("No such BuildStep '%s'" % path)
+        return HtmlResource.getChild(self, path, req)

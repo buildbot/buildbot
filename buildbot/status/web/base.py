@@ -126,8 +126,18 @@ class HtmlResource(resource.Resource):
     # this is a cheap sort of template thingy
     contentType = "text/html; charset=UTF-8"
     title = "Dummy"
+    addSlash = False # adapted from Nevow
+
+    def getChild(self, path, request):
+        if self.addSlash and path == "" and len(request.postpath) == 0:
+            return self
+        return resource.Resource.getChild(self, path, request)
 
     def render(self, request):
+        if self.addSlash and request.prepath[-1] != '':
+            request.redirect(request.URLPath().child(''))
+            return ''
+
         data = self.content(request)
         if isinstance(data, unicode):
             data = data.encode("utf-8")
@@ -146,7 +156,11 @@ class HtmlResource(resource.Resource):
         return request.site.buildbot_service.parent.change_svc
 
     def path_to_root(self, request):
-        return "../" * len(request.prepath)
+        segs = len(request.prepath)
+        if request.prepath and request.prepath[-1] == '':
+            segs -= 1
+        root = "../" * segs
+        return root
 
     def getTitle(self, request):
         return self.title

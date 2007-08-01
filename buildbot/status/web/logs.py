@@ -66,7 +66,7 @@ class TextLog(Resource):
         if path == "text":
             self.asText = True
             return self
-        return NoResource("bad pathname")
+        return HtmlResource.getChild(self, path, req)
 
     def htmlHeader(self, request):
         title = "Log File contents"
@@ -151,6 +151,8 @@ components.registerAdapter(HTMLLog, builder.HTMLLogFile, IHTMLLog)
 
 
 class LogsResource(HtmlResource):
+    addSlash = True
+
     def __init__(self, step_status):
         HtmlResource.__init__(self)
         self.step_status = step_status
@@ -161,4 +163,4 @@ class LogsResource(HtmlResource):
                 if log.hasContents():
                     return IHTMLLog(interfaces.IStatusLog(log))
                 return NoResource("Empty Log '%s'" % path)
-        return NoResource("No such Log '%s'" % path)
+        return HtmlResource.getChild(self, path, req)

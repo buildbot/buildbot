@@ -14,6 +14,7 @@ from buildbot.status.web.build import BuildsResource
 
 # $builder
 class StatusResourceBuilder(HtmlResource):
+    addSlash = True
 
     def __init__(self, builder_status, builder_control):
         HtmlResource.__init__(self)
@@ -163,10 +164,12 @@ class StatusResourceBuilder(HtmlResource):
         if path == "builds":
             return BuildsResource(self.builder_status, self.builder_control)
 
-        return NoResource("really weird URL %s" % path)
+        return HtmlResource.getChild(self, path, req)
 
 
 class BuildersResource(HtmlResource):
+    addSlash = True
+
     def getChild(self, path, req):
         s = self.getStatus(req)
         if path in s.getBuilderNames():
@@ -177,4 +180,5 @@ class BuildersResource(HtmlResource):
                 builder_control = c.getBuilder(path)
             return StatusResourceBuilder(builder_status, builder_control)
 
-        return NoResource("No such Builder '%s'" % path)
+        return HtmlResource.getChild(self, path, req)
+

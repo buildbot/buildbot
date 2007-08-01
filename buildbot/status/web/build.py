@@ -14,6 +14,7 @@ from buildbot.status.web.step import StepsResource
 # builders/$builder/builds/$buildnum
 class StatusResourceBuild(HtmlResource):
     title = "Build"
+    addSlash = True
 
     def __init__(self, build_status, build_control, builder_control):
         HtmlResource.__init__(self)
@@ -187,23 +188,29 @@ class StatusResourceBuild(HtmlResource):
         if path == "tests":
             return TestsResource(self.build_status)
 
-        return NoResource("No such resource '%s'" % path)
+        return HtmlResource.getChild(self, path, req)
 
 class BuildsResource(HtmlResource):
+    addSlash = True
+
     def __init__(self, builder_status, builder_control):
         HtmlResource.__init__(self)
         self.builder_status = builder_status
         self.builder_control = builder_control
 
     def getChild(self, path, req):
-        num = int(path)
-        build_status = self.builder_status.getBuild(num)
-        if build_status:
-            build_control = None
-            if self.builder_control:
-                builder_control = self.builder_control.getBuild(num)
-            return StatusResourceBuild(build_status, build_control,
-                                       self.builder_control)
+        try:
+            num = int(path)
+        except ValueError:
+            num = None
+        if num is not None:
+            build_status = self.builder_status.getBuild(num)
+            if build_status:
+                build_control = None
+                if self.builder_control:
+                    builder_control = self.builder_control.getBuild(num)
+                return StatusResourceBuild(build_status, build_control,
+                                           self.builder_control)
 
-        return NoResource("No such Build '%d'" % num)
+        return HtmlResource.getChild(self, path, req)
 
