@@ -1,5 +1,7 @@
 2007-07-31  Brian Warner  <warner@lothar.com>
 
+	* buildbot/scripts/startup.py (launch): import twistd.run in a
+	different way to hush pyflakes
 	* buildbot/process/builder.py: remove unused import
 
 2007-07-30  Brian Warner  <warner@lothar.com>

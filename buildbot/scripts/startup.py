@@ -107,8 +107,10 @@ def launch(config):
 
         # this is copied from bin/twistd. twisted-2.0.0 uses _twistw.
         if platformType == "win32":
-            from twisted.scripts._twistw import run
+            from twisted.scripts import _twistw
+            run = _twistw.run
         else:
-            from twisted.scripts.twistd import run
+            from twisted.scripts import twistd
+            run = twistd.run
         run()
 
