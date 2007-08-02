@@ -1,3 +1,8 @@
+2007-08-02  Brian Warner  <warner@lothar.com>
+
+	* buildbot/test/test_maildir.py (MaildirTest.testMaildir): cleanup
+	the TimeOutError timer, patch by Dustin Mitchell.
+
 2007-08-01  Brian Warner  <warner@lothar.com>
 
 	* buildbot/status/web/baseweb.py (OneLinePerBuild): make this

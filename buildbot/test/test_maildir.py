@@ -66,7 +66,7 @@ class MaildirTest(unittest.TestCase):
                               os.path.join(testfiles_dir, msg))
         self.loop = task.LoopingCall(self.poll, self.changes, count, d)
         self.loop.start(0.1)
-        t = reactor.callLater(self.SECONDS_PER_MESSAGE*i + 15,
+        t = reactor.callLater(self.SECONDS_PER_MESSAGE*count + 15,
                               d.errback, TimeOutError)
         # TODO: verify the messages, should use code from test_mailparse but
         # I'm not sure how to factor the verification routines out in a
