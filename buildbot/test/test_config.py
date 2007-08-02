@@ -1,6 +1,5 @@
 # -*- test-case-name: buildbot.test.test_config -*-
 
-from __future__ import generators
 import os
 
 from twisted.trial import unittest

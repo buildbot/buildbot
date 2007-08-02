@@ -1,5 +1,11 @@
 2007-08-01  Brian Warner  <warner@lothar.com>
 
+	* all: bring import statements up-to-date: don't import
+	__future__, assume cPickle and cStringIO are always available.
+	Also remove #!/usr/bin/python lines from non-scripts, my editor
+	has been a bit over-enthusiastic about stuffing them into new .py
+	files.
+
 	* buildbot/status/web/index.html: put a link to the waterfall page
 	on the index, otherwise first-time users of WebStatus aren't going
 	to see anything very interesting.

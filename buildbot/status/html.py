@@ -1,4 +1,3 @@
-#! /usr/bin/python
 
 # compatibility wrapper. This is currently the preferred place for master.cfg
 # to import from.

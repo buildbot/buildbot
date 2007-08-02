@@ -1,4 +1,3 @@
-#! /usr/bin/python
 
 # leftover import for compatibility
 

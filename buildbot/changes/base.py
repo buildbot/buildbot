@@ -1,4 +1,3 @@
-#! /usr/bin/python
 
 from zope.interface import implements
 from twisted.application import service

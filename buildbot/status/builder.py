@@ -1,7 +1,5 @@
 # -*- test-case-name: buildbot.test.test_status -*-
 
-from __future__ import generators
-
 from zope.interface import implements
 from twisted.python import log
 from twisted.persisted import styles
@@ -9,11 +7,7 @@ from twisted.internet import reactor, defer
 from twisted.protocols import basic
 
 import os, shutil, sys, re, urllib
-try:
-    import cPickle
-    pickle = cPickle
-except ImportError:
-    import pickle
+from cPickle import load, dump
 from cStringIO import StringIO
 
 # sibling imports
@@ -1255,7 +1249,7 @@ class BuildStatus(styles.Versioned):
             shutil.rmtree(filename, ignore_errors=True)
         tmpfilename = filename + ".tmp"
         try:
-            pickle.dump(self, open(tmpfilename, "wb"), -1)
+            dump(self, open(tmpfilename, "wb"), -1)
             if sys.platform == 'win32':
                 # windows cannot rename a file on top of an existing one, so
                 # fall back to delete-first. There are ways this can fail and
@@ -1384,7 +1378,7 @@ class BuilderStatus(styles.Versioned):
         filename = os.path.join(self.basedir, "builder")
         tmpfilename = filename + ".tmp"
         try:
-            pickle.dump(self, open(tmpfilename, "wb"), -1)
+            dump(self, open(tmpfilename, "wb"), -1)
             if sys.platform == 'win32':
                 # windows cannot rename a file on top of an existing one
                 if os.path.exists(filename):
@@ -1413,7 +1407,7 @@ class BuilderStatus(styles.Versioned):
                 return build
         filename = os.path.join(self.basedir, "%d" % number)
         try:
-            build = pickle.load(open(filename, "rb"))
+            build = load(open(filename, "rb"))
             styles.doUpgrade()
             build.builder = self
             # handle LogFiles from after 0.5.0 and before 0.6.5
@@ -1866,7 +1860,7 @@ class Status:
         log.msg("trying to load status pickle from %s" % filename)
         builder_status = None
         try:
-            builder_status = pickle.load(open(filename, "rb"))
+            builder_status = load(open(filename, "rb"))
             styles.doUpgrade()
         except IOError:
             log.msg("no saved status pickle, creating a new one")

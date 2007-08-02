@@ -6,11 +6,7 @@ try:
     import signal
 except ImportError:
     pass
-try:
-    import cPickle
-    pickle = cPickle
-except ImportError:
-    import pickle
+from cPickle import load
 import warnings
 
 from zope.interface import implements
@@ -586,7 +582,7 @@ class BuildMaster(service.MultiService, styles.Versioned):
     def loadChanges(self):
         filename = os.path.join(self.basedir, "changes.pck")
         try:
-            changes = pickle.load(open(filename, "rb"))
+            changes = load(open(filename, "rb"))
             styles.doUpgrade()
         except IOError:
             log.msg("changes.pck missing, using new one")

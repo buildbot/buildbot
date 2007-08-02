@@ -1,4 +1,3 @@
-#! /usr/bin/python
 
 # Build classes specific to the Twisted codebase
 

@@ -1,12 +1,6 @@
-#! /usr/bin/python
 
-from __future__ import generators
 import sys, os, time
-try:
-    import cPickle
-    pickle = cPickle
-except ImportError:
-    import pickle
+from cPickle import dump
 
 from zope.interface import implements
 from twisted.python import log
@@ -265,7 +259,7 @@ class ChangeMaster(service.MultiService):
         filename = os.path.join(self.basedir, "changes.pck")
         tmpfilename = filename + ".tmp"
         try:
-            pickle.dump(self, open(tmpfilename, "wb"))
+            dump(self, open(tmpfilename, "wb"))
             if sys.platform == 'win32':
                 # windows cannot rename a file on top of an existing one
                 if os.path.exists(filename):

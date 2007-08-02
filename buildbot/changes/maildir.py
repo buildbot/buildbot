@@ -1,4 +1,3 @@
-#! /usr/bin/python
 
 # This is a class which watches a maildir for new messages. It uses the
 # linux dirwatcher API (if available) to look for new files. The

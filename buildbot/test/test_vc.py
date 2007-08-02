@@ -1,9 +1,8 @@
 # -*- test-case-name: buildbot.test.test_vc -*-
 
-from __future__ import generators
-
 import sys, os, time, re
 from email.Utils import mktime_tz, parsedate_tz
+from cStringIO import StringIO
 
 from twisted.trial import unittest
 from twisted.internet import defer, reactor, utils, protocol, error
@@ -53,17 +52,11 @@ from twisted.internet.defer import waitForDeferred, deferredGenerator
 # use a predetermined Internet-domain port number, unless we want to go
 # all-out: bind the listen socket ourselves and pretend to be inetd.
 
-try:
-    import cStringIO
-    StringIO = cStringIO
-except ImportError:
-    import StringIO
-
 class _PutEverythingGetter(protocol.ProcessProtocol):
     def __init__(self, deferred, stdin):
         self.deferred = deferred
-        self.outBuf = StringIO.StringIO()
-        self.errBuf = StringIO.StringIO()
+        self.outBuf = StringIO()
+        self.errBuf = StringIO()
         self.outReceived = self.outBuf.write
         self.errReceived = self.errBuf.write
         self.stdin = stdin

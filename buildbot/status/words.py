@@ -1,4 +1,3 @@
-#! /usr/bin/python
 
 # code to deliver build status through twisted.words (instant messaging
 # protocols: irc, etc)

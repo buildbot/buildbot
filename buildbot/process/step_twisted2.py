@@ -1,4 +1,3 @@
-#! /usr/bin/python
 
 from buildbot.status import tests
 from buildbot.process.step import SUCCESS, FAILURE, BuildStep

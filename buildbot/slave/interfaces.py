@@ -1,4 +1,3 @@
-#! /usr/bin/python
 
 from zope.interface import Interface
 

@@ -1,4 +1,3 @@
-#! /usr/bin/python
 
 from twisted.web import resource
 from twisted.web.error import NoResource
