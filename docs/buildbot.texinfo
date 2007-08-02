@@ -5961,7 +5961,7 @@ the buildmaster admin to write or modify the @file{index.html} page to
 contain links to them. Of course other project web pages can contain
 links to these buildbot pages as well.
 
-Each page can be modified by adding query arguments to the URL. For
+Many pages can be modified by adding query arguments to the URL. For
 example, a page which shows the results of the most recent build
 normally does this for all builders at once. But by appending
 ``?builder=i386'' to the end of the URL, the page will show only the
@@ -5970,6 +5970,19 @@ multiple ``builder='' arguments to see multiple builders. Remembering
 that URL query arguments are separated @emph{from each other} with
 ampersands, a URL that ends in ``?builder=i386&builder=ppc'' would
 show builds for just those two Builders.
+
+The @code{branch=} query argument can be used on some pages. This
+filters the information displayed by that page down to only the builds
+or changes which involved the given branch. Multiple @code{branch=}
+arguments can be used to examine multiple branches at once (so
+appending @code{?branch=foo&branch=bar} to the URL will show builds
+involving either branch). No @code{branch=} arguments means to show
+builds and changes for all branches.
+
+Note that branch-handling still needs to be cleaned up: in particular
+there is currently no way to refer to the default (or ``trunk'')
+branch using @code{branch=} arguments. This will be improved in a
+future release.
 
 Some pages may include the Builder name or the build number in the
 main part of the URL itself. For example, a page that describes Build
@@ -5989,7 +6002,9 @@ This provides a chronologically-oriented display of the activity of
 all builders. It is the same display used by the Waterfall display.
 
 By adding one or more ``builder='' query arguments, the Waterfall is
-restricted to only showing information about the given Builders.
+restricted to only showing information about the given Builders. By
+adding one or more ``branch='' query arguments, the display is
+restricted to showing information about the given branches.
 
 A 'show_events=true' query argument causes the display to include
 non-Build events, like slaves attaching and detaching, as well as
@@ -6080,7 +6095,7 @@ by other programs, rather than humans.
 @item /xmlrpc
 
 This runs an XML-RPC server which can be used to query status
-information about various builds. See @xref{XMLRPC server} for more
+information about various builds. See @ref{XMLRPC server} for more
 details.
 
 @end table

@@ -22,6 +22,7 @@
 	* buildbot/status/builder.py (BuilderStatus.eventGenerator): same
 	* buildbot/changes/changes.py (ChangeMaster.eventGenerator): same
 	* buildbot/interfaces.py (IEventSource.eventGenerator): same
+	* docs/buildbot.texinfo (Buildbot Web Resources): document it
 
 	* all: bring import statements up-to-date: don't import
 	__future__, assume cPickle and cStringIO are always available.
