@@ -184,6 +184,8 @@ class ChangeMaster(service.MultiService):
     
     """
 
+    implements(interfaces.IEventSource)
+
     debug = False
     # todo: use Maildir class to watch for changes arriving by mail
 

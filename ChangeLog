@@ -1,5 +1,10 @@
 2007-08-01  Brian Warner  <warner@lothar.com>
 
+	* buildbot/interfaces.py (IEventSource): document this interface.
+	Thanks to Dustin Mitchell for the patch. Closes #60.
+	* buildbot/status/builder.py (BuilderStatus): same
+	* buildbot/changes/changes.py (ChangeMaster): same
+
 	* buildbot/status/web/waterfall.py (WaterfallStatusResource.buildGrid):
 	add a query arg of 'show_events=true' to display non-build events,
 	like slaves attaching/detaching and reconfig events, or

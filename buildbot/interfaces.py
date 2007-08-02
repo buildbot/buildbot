@@ -323,6 +323,14 @@ class IBuilderStatus(Interface):
         """Unregister an IStatusReceiver. No further status messgaes will be
         delivered."""
 
+class IEventSource(Interface):
+    def eventGenerator():
+        """This function creates a generator which will yield all of this
+        object's status events, starting with the most recent and progressing
+        backwards in time. These events provide the IStatusEvent interface.
+        At the moment they are all instances of buildbot.status.builder.Event
+        or buildbot.status.builder.BuildStepStatus ."""
+
 class IBuildStatus(Interface):
     """I represent the status of a single Build/BuildRequest. It could be
     in-progress or finished."""

@@ -1290,7 +1290,7 @@ class BuilderStatus(styles.Versioned):
                      used to filter on in status clients
     """
 
-    implements(interfaces.IBuilderStatus)
+    implements(interfaces.IBuilderStatus, interfaces.IEventSource)
     persistenceVersion = 1
 
     # these limit the amount of memory we consume, as well as the size of the
