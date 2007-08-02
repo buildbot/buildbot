@@ -1,3 +1,15 @@
+2007-08-01  Brian Warner  <warner@lothar.com>
+
+	* web-parts: merge in web-parts branch. Lots of changes. The new
+	functionality is to add buildbot.status.html.WebStatus, which is a
+	superset of the Waterfall that adds new status pages and serves
+	regular files from BASEDIR/public_html/ , which is now the preferred
+	place to put robots.txt, buildbot.css, and index.html .
+	* buildbot/scripts/runner.py: the 'create-master' command now
+	creates public_html/ too, and populates it with a couple of
+	static files.
+	* buildbot/status/web: split waterfall code into smaller pieces
+
 2007-07-31  Brian Warner  <warner@lothar.com>
 
 	* buildbot/scripts/startup.py (launch): import twistd.run in a
