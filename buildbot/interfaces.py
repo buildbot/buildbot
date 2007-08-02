@@ -323,12 +323,18 @@ class IBuilderStatus(Interface):
         delivered."""
 
 class IEventSource(Interface):
-    def eventGenerator():
+    def eventGenerator(branches=[]):
         """This function creates a generator which will yield all of this
         object's status events, starting with the most recent and progressing
         backwards in time. These events provide the IStatusEvent interface.
         At the moment they are all instances of buildbot.status.builder.Event
-        or buildbot.status.builder.BuildStepStatus ."""
+        or buildbot.status.builder.BuildStepStatus .
+
+        @param branches: a list of branch names. The generator should only
+        return events that are associated with these branches. If the list is
+        empty, events for all branches should be returned (i.e. an empty list
+        means 'accept all' rather than 'accept none').
+        """
 
 class IBuildStatus(Interface):
     """I represent the status of a single Build/BuildRequest. It could be

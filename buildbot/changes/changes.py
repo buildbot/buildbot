@@ -219,10 +219,11 @@ class ChangeMaster(service.MultiService):
     def pruneChanges(self):
         self.changes = self.changes[-100:] # or something
 
-    def eventGenerator(self):
+    def eventGenerator(self, branches=[]):
         for i in range(len(self.changes)-1, -1, -1):
             c = self.changes[i]
-            yield c
+            if not branches or c.branch in branches:
+                yield c
 
     def getChangeNumbered(self, num):
         if not self.changes:

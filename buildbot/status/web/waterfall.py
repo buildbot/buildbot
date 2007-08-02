@@ -400,12 +400,12 @@ class WaterfallStatusResource(HtmlResource):
     
     def buildGrid(self, request, builders):
         debug = False
-
-        # XXX: see if we can use a cached copy
+        # TODO: see if we can use a cached copy
 
         showEvents = False
         if request.args.get("show_events", ["true"])[0].lower() == "true":
             showEvents = True
+        filterBranches = request.args.get("branch", [])
 
         # first step is to walk backwards in time, asking each column
         # (commit, all builders) if they have any events there. Build up the
@@ -436,7 +436,7 @@ class WaterfallStatusResource(HtmlResource):
             return event
 
         for s in sources:
-            gen = insertGaps(s.eventGenerator(), lastEventTime)
+            gen = insertGaps(s.eventGenerator(filterBranches), lastEventTime)
             sourceGenerators.append(gen)
             # get the first event
             sourceEvents.append(get_event_from(gen))

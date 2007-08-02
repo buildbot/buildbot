@@ -1,5 +1,19 @@
 2007-08-01  Brian Warner  <warner@lothar.com>
 
+	* buildbot/status/web/waterfall.py (WaterfallStatusResource): add
+	a branch= query argument, to filter the display down to builds and
+	changes that involve the given branch. You can add multiple
+	branch= arguments to see multiple branches (using a logical OR).
+	Note that there is no way to include the default branch (i.e.
+	None, i.e. trunk) yet, there is still work to be done to allow for
+	simple+uniform names of branches (i.e. removing the VC-specific
+	details of how branches are implemented, so calling the branch
+	'beta4' even though the SVN checkout step requires
+	'branches/beta4').
+	* buildbot/status/builder.py (BuilderStatus.eventGenerator): same
+	* buildbot/changes/changes.py (ChangeMaster.eventGenerator): same
+	* buildbot/interfaces.py (IEventSource.eventGenerator): same
+
 	* all: bring import statements up-to-date: don't import
 	__future__, assume cPickle and cStringIO are always available.
 	Also remove #!/usr/bin/python lines from non-scripts, my editor

@@ -1466,7 +1466,7 @@ class BuilderStatus(styles.Versioned):
         except IndexError:
             return None
 
-    def eventGenerator(self):
+    def eventGenerator(self, branches=[]):
         """This function creates a generator which will provide all of this
         Builder's status events, starting with the most recent and
         progressing backwards in time. """
@@ -1476,12 +1476,18 @@ class BuilderStatus(styles.Versioned):
         # TODO: interleave build steps and self.events by timestamp.
         # TODO: um, I think we're already doing that.
 
+        # TODO: there's probably something clever we could do here to
+        # interleave two event streams (one from self.getBuild and the other
+        # from self.getEvent), which would be simpler than this control flow
+
         eventIndex = -1
         e = self.getEvent(eventIndex)
         for Nb in range(1, self.nextBuildNumber+1):
             b = self.getBuild(-Nb)
             if not b:
                 break
+            if branches and not b.getSourceStamp().branch in branches:
+                continue
             steps = b.getSteps()
             for Ns in range(1, len(steps)+1):
                 if steps[-Ns].started:
