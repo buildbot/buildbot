@@ -1,5 +1,11 @@
 2007-08-01  Brian Warner  <warner@lothar.com>
 
+	* buildbot/status/web/waterfall.py (WaterfallStatusResource.buildGrid):
+	add a query arg of 'show_events=true' to display non-build events,
+	like slaves attaching/detaching and reconfig events, or
+	'show_events=false' to hide them. The default is 'true'.
+	* docs/buildbot.texinfo (Buildbot Web Resources): document it
+
 	* web-parts: merge in web-parts branch. Lots of changes. The new
 	functionality is to add buildbot.status.html.WebStatus, which is a
 	superset of the Waterfall that adds new status pages and serves

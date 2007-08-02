@@ -5988,8 +5988,13 @@ NOTE: of the pages described here, only the @code{/waterfall} and
 This provides a chronologically-oriented display of the activity of
 all builders. It is the same display used by the Waterfall display.
 
-By adding one or more ``builder='' arguments, the Waterfall is
+By adding one or more ``builder='' query arguments, the Waterfall is
 restricted to only showing information about the given Builders.
+
+A 'show_events=true' query argument causes the display to include
+non-Build events, like slaves attaching and detaching, as well as
+reconfiguration events. 'show_events=false' hides these events. The
+default is to show them.
 
 The Waterfall has references to resources in the @file{/builders}
 portion of the URL space to give access to individual builds.

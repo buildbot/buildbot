@@ -404,7 +404,7 @@ class WaterfallStatusResource(HtmlResource):
         # XXX: see if we can use a cached copy
 
         showEvents = False
-        if request.args.get("show_events", ["false"])[0].lower() == "true":
+        if request.args.get("show_events", ["true"])[0].lower() == "true":
             showEvents = True
 
         # first step is to walk backwards in time, asking each column
