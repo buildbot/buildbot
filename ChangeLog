@@ -1,5 +1,14 @@
 2007-08-01  Brian Warner  <warner@lothar.com>
 
+	* buildbot/status/web/builder.py (StatusResourceBuilder.force):
+	bring this up-to-date w.r.t. recent refactorings, and fix
+	redirections to bounce the browser to the top page after hitting
+	the 'force' button. This needs to be improved, but at least it now
+	redirects to a valid page.
+	(StatusResourceBuilder.ping): same
+	(StatusResourceBuilder.getChild): same, although I think this code
+	might be dead anyways
+
 	* buildbot/status/web/waterfall.py (WaterfallStatusResource): add
 	a branch= query argument, to filter the display down to builds and
 	changes that involve the given branch. You can add multiple

@@ -98,7 +98,7 @@ class StatusResourceBuilder(HtmlResource):
         r = "The web-page 'force build' button was pressed by '%s': %s\n" \
             % (name, reason)
         log.msg("web forcebuild of builder '%s', branch='%s', revision='%s'"
-                % (self.builder.name, branch, revision))
+                % (self.builder_status.getName(), branch, revision))
 
         if not self.builder_control:
             # TODO: tell the web user that their request was denied
@@ -122,19 +122,19 @@ class StatusResourceBuilder(HtmlResource):
         # button, use their name instead of None, so they'll be informed of
         # the results.
         s = SourceStamp(branch=branch, revision=revision)
-        req = BuildRequest(r, s, self.builder.getName())
+        req = BuildRequest(r, s, self.builder_status.getName())
         try:
             self.builder_control.requestBuildSoon(req)
         except interfaces.NoSlaveError:
             # TODO: tell the web user that their request could not be
             # honored
             pass
-        return Redirect("..")
+        return Redirect("../..")
 
     def ping(self, req):
-        log.msg("web ping of builder '%s'" % self.builder.name)
+        log.msg("web ping of builder '%s'" % self.builder_status.getName())
         self.builder_control.ping() # TODO: there ought to be an ISlaveControl
-        return Redirect("..")
+        return Redirect("../..")
 
     def getChild(self, path, req):
         if path == "force":
@@ -150,7 +150,7 @@ class StatusResourceBuilder(HtmlResource):
             return NoResource("events are unavailable until code gets fixed")
             filename = req.postpath.pop(0)
             req.prepath.append(filename)
-            e = self.builder.statusbag.getEventNumbered(num)
+            e = self.builder_status.getEventNumbered(num)
             if not e:
                 return NoResource("No such event '%d'" % num)
             file = e.files.get(filename, None)
