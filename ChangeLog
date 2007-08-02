@@ -1,5 +1,9 @@
 2007-08-01  Brian Warner  <warner@lothar.com>
 
+	* buildbot/status/web/index.html: put a link to the waterfall page
+	on the index, otherwise first-time users of WebStatus aren't going
+	to see anything very interesting.
+
 	* buildbot/interfaces.py (IEventSource): document this interface.
 	Thanks to Dustin Mitchell for the patch. Closes #60.
 	* buildbot/status/builder.py (BuilderStatus): same
