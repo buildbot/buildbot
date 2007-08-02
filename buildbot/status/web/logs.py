@@ -62,7 +62,7 @@ class TextLog(Resource):
         Resource.__init__(self)
         self.original = original
 
-    def getChild(self, path, request):
+    def getChild(self, path, req):
         if path == "text":
             self.asText = True
             return self

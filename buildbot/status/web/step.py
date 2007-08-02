@@ -1,10 +1,8 @@
 
-from twisted.web.error import NoResource
 from twisted.web import html
 
 import urllib
-from buildbot import interfaces
-from buildbot.status.web.base import HtmlResource, IHTMLLog
+from buildbot.status.web.base import HtmlResource
 from buildbot.status.web.logs import LogsResource
 
 # builders/$builder/builds/$buildnum/steps/$stepname
