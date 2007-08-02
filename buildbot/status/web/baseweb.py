@@ -1,5 +1,5 @@
 
-import os, sys
+import os, sys, time
 from itertools import count
 
 from zope.interface import implements
@@ -62,38 +62,47 @@ def getLastNBuilds(status, numbuilds, builders=[], branches=[]):
     return [e[2] for e in events[-numbuilds:]]
 
 
-def oneLineForABuild(status, build):
-    css_classes = {SUCCESS: "success",
-                   WARNINGS: "warnings",
-                   FAILURE: "failure",
-                   EXCEPTION: "exception",
-                   }
+class OneLineMixin:
+    def make_line(self, req, status, build):
+        css_classes = {SUCCESS: "success",
+                       WARNINGS: "warnings",
+                       FAILURE: "failure",
+                       EXCEPTION: "exception",
+                       }
 
-    builder_name = build.getBuilder().getName()
-    results = build.getResults()
-    try:
-        rev = build.getProperty("got_revision")
-    except KeyError:
-        rev = "??"
-    if len(rev) > 20:
-        rev = "?too-long?"
-    values = {'class': css_classes[results],
-              'builder_name': builder_name,
-              'buildnum': build.getNumber(),
-              'results': css_classes[results],
-              'buildurl': status.getURLForThing(build),
-              'rev': rev,
-              }
-    fmt = ('<div class="%(class)s">Build '
-           '<a href="%(buildurl)s">#%(buildnum)d</a> of '
-           '%(builder_name)s [%(rev)s]: '
-           '<span class="%(class)s">%(results)s</span></div>\n')
-    data = fmt % values
-    return data
+        builder_name = build.getBuilder().getName()
+        results = build.getResults()
+        try:
+            rev = build.getProperty("got_revision")
+        except KeyError:
+            rev = "??"
+        if len(rev) > 20:
+            rev = "?too-long?"
+        root = self.path_to_root(req)
+        values = {'class': css_classes[results],
+                  'builder_name': builder_name,
+                  'buildnum': build.getNumber(),
+                  'results': css_classes[results],
+                  'buildurl': (root +
+                               "builders/%s/builds/%d" % (builder_name,
+                                                          build.getNumber())),
+                  'rev': rev,
+                  'time': time.strftime("%H:%M:%S",
+                                        time.localtime(build.getTimes()[0])),
+                  }
+
+        fmt = ('<div>'
+               '%(time)s: '
+               '<a href="%(buildurl)s">Build #%(buildnum)d</a> of '
+               '%(builder_name)s [%(rev)s]: '
+               '<span class="%(class)s">%(results)s</span>'
+               '</div>\n')
+        data = fmt % values
+        return data
 
 # /one_line_per_build
 #  accepts builder=, branch=, numbuilds=
-class OneLinePerBuild(HtmlResource):
+class OneLinePerBuild(HtmlResource, OneLineMixin):
     """This shows one line per build, combining all builders together. Useful
     query arguments:
 
@@ -119,9 +128,12 @@ class OneLinePerBuild(HtmlResource):
 
         builds = getLastNBuilds(status, numbuilds, builders, branches)
         data = ""
+        data += "<h1>Last %d builds</h1>" % min(self.numbuilds, len(builds))
+        if builders:
+            data += ("<p>of builders: %s</p>" % (", ".join(builders)))
         for build in reversed(builds):
-            data += oneLineForABuild(status, build)
-        else:
+            data += self.make_line(req, status, build)
+        if not builds:
             data += "<div>No matching builds found</div>"
         return data
 
@@ -130,10 +142,11 @@ class OneLinePerBuild(HtmlResource):
 # /one_line_per_build/$BUILDERNAME
 #  accepts branch=, numbuilds=
 
-class OneLinePerBuildOneBuilder(HtmlResource):
+class OneLinePerBuildOneBuilder(HtmlResource, OneLineMixin):
     def __init__(self, builder, numbuilds=20):
         HtmlResource.__init__(self)
         self.builder = builder
+        self.builder_name = builder.getName()
         self.numbuilds = numbuilds
 
     def body(self, req):
@@ -145,13 +158,9 @@ class OneLinePerBuildOneBuilder(HtmlResource):
         # islice is cool but not exactly what we need here
         #events = itertools.islice(b.eventGenerator(), self.numbuilds)
 
-        css_classes = {SUCCESS: "success",
-                       WARNINGS: "warnings",
-                       FAILURE: "failure",
-                       EXCEPTION: "exception",
-                       }
-
         data = ""
+        data += "<h1>Last %d builds of builder: %s</h1>" % (self.numbuilds,
+                                                            self.builder_name)
         i = 1
         while i < numbuilds:
             build = self.builder.getBuild(-i)
@@ -159,7 +168,7 @@ class OneLinePerBuildOneBuilder(HtmlResource):
                 break
             i += 1
 
-            data += oneLineForABuild(status, build)
+            data += self.make_line(req, status, build)
 
         return data
 

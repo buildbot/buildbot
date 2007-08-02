@@ -1,5 +1,8 @@
 2007-08-02  Brian Warner  <warner@lothar.com>
 
+	* buildbot/status/web/baseweb.py (OneLinePerBuild): improve
+	one-line-per-build pages a bit, add a header, refactor slightly
+
 	* buildbot/test/test_maildir.py (MaildirTest.testMaildir): cleanup
 	the TimeOutError timer, patch by Dustin Mitchell.
 
