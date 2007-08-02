@@ -22,43 +22,25 @@ from buildbot.status.web.builder import BuildersResource
 # admin might wish to attach (using WebStatus.putChild) at other URLs.
 
 
-class TimelineOfEverything(WaterfallStatusResource):
-
-    def __init__(self):
-        HtmlResource.__init__(self)
-
-    def render(self, request):
-        webstatus = request.site.webstatus
-        self.css = webstatus.css
-        self.status = request.site.status
-        self.changemaster = webstatus.parent.change_svc
-        self.categories = None
-        self.title = self.status.getProjectName()
-        if self.title is None:
-            self.title = "BuildBot"
-        return WaterfallStatusResource.render(self, request)
-
-
 class LastBuild(HtmlResource):
     def body(self, request):
         return "missing\n"
 
-def getLastNBuilds(status, numbuilds, desired_builder_names=None):
+def getLastNBuilds(status, numbuilds, builders=[], branches=[]):
     """Return a list with the last few Builds, sorted by start time.
     builder_names=None means all builders
     """
 
     # TODO: this unsorts the list of builder names, ick
     builder_names = set(status.getBuilderNames())
-    if desired_builder_names is not None:
-        desired_builder_names = set(desired_builder_names)
-        builder_names = builder_names.intersection(desired_builder_names)
+    if builders:
+        builder_names = builder_names.intersection(set(builders))
 
     # to make sure that we get everything, we must get 'numbuilds' builds
     # from *each* source, then sort by ending time, then trim to the last
     # 20. We could be more efficient, but it would require the same
     # gnarly code that the Waterfall uses to generate one event at a
-    # time.
+    # time. TODO: factor that code out into some useful class.
     events = []
     for builder_name in builder_names:
         builder = status.getBuilder(builder_name)
@@ -89,9 +71,12 @@ def oneLineForABuild(status, build):
 
     builder_name = build.getBuilder().getName()
     results = build.getResults()
-    rev = build.getProperty("got_revision")
+    try:
+        rev = build.getProperty("got_revision")
+    except KeyError:
+        rev = "??"
     if len(rev) > 20:
-        rev = "?"
+        rev = "?too-long?"
     values = {'class': css_classes[results],
               'builder_name': builder_name,
               'buildnum': build.getNumber(),
@@ -106,7 +91,8 @@ def oneLineForABuild(status, build):
     data = fmt % values
     return data
 
-# /_buildbot/one_line_per_build
+# /one_line_per_build
+#  accepts builder=, branch=, numbuilds=
 class OneLinePerBuild(HtmlResource):
     """This shows one line per build, combining all builders together. Useful
     query arguments:
@@ -120,21 +106,18 @@ class OneLinePerBuild(HtmlResource):
         HtmlResource.__init__(self)
         self.numbuilds = numbuilds
 
-    def getChild(self, path, request):
-        status = request.site.status
+    def getChild(self, path, req):
+        status = self.getStatus(req)
         builder = status.getBuilder(path)
         return OneLinePerBuildOneBuilder(builder)
 
-    def body(self, request):
-        status = request.site.status
-        numbuilds = self.numbuilds
-        if "numbuilds" in request.args:
-            numbuilds = int(request.args["numbuilds"][0])
+    def body(self, req):
+        status = self.getStatus(req)
+        numbuilds = int(req.args.get("numbuilds", [self.numbuilds])[0])
+        builders = req.args.get("builder", [])
+        branches = req.args.get("branch", [])
 
-        desired_builder_names = None
-        if "builder" in request.args:
-            desired_builder_names = request.args["builder"]
-        builds = getLastNBuilds(status, numbuilds, desired_builder_names)
+        builds = getLastNBuilds(status, numbuilds, builders, branches)
         data = ""
         for build in reversed(builds):
             data += oneLineForABuild(status, build)
@@ -144,18 +127,19 @@ class OneLinePerBuild(HtmlResource):
 
 
 
-# /_buildbot/one_line_per_build/$BUILDERNAME
+# /one_line_per_build/$BUILDERNAME
+#  accepts branch=, numbuilds=
+
 class OneLinePerBuildOneBuilder(HtmlResource):
     def __init__(self, builder, numbuilds=20):
         HtmlResource.__init__(self)
         self.builder = builder
         self.numbuilds = numbuilds
 
-    def body(self, request):
-        status = request.site.status
-        numbuilds = self.numbuilds
-        if "numbuilds" in request.args:
-            numbuilds = int(request.args["numbuilds"][0])
+    def body(self, req):
+        status = self.getStatus(req)
+        numbuilds = int(req.args.get("numbuilds", [self.numbuilds])[0])
+        branches = req.args.get("branch", [])
         # walk backwards through all builds of a single builder
 
         # islice is cool but not exactly what we need here
@@ -359,7 +343,6 @@ class WebStatus(service.MultiService):
         self.putChild("builders", BuildersResource())
         self.putChild("changes", ChangesResource())
         #self.putChild("schedulers", SchedulersResource())
-
         self.putChild("one_line_per_build", OneLinePerBuild())
 
     def __repr__(self):

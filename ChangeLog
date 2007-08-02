@@ -1,5 +1,9 @@
 2007-08-01  Brian Warner  <warner@lothar.com>
 
+	* buildbot/status/web/baseweb.py (OneLinePerBuild): make this
+	mostly work (branch= is still ignored, we need a useful header)
+	(OneLinePerBuildOneBuilder.body): this too
+
 	* buildbot/status/web/builder.py (StatusResourceBuilder.force):
 	bring this up-to-date w.r.t. recent refactorings, and fix
 	redirections to bounce the browser to the top page after hitting
