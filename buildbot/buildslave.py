@@ -221,3 +221,11 @@ class BuildSlave(NewCredPerspective):
     def perspective_keepalive(self):
         pass
 
+    def canStartBuild(self):
+        """
+        I am called when a build is requested to see if this buildslave
+        can start a build.  This function can be used to limit overall
+        concurrency on the buildslave.
+        """
+        return True
+

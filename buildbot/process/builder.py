@@ -49,11 +49,27 @@ class SlaveBuilder(pb.Referenceable):
         return self.remoteCommands.get(command)
 
     def isAvailable(self):
-        if self.state == IDLE:
-            return True
+        # if this SlaveBuilder is busy, then it's definitely not available
+        if self.state != IDLE:
+            return False
+
+        # otherwise, check in with the BuildSlave
+        if self.slave:
+            return self.slave.canStartBuild()
+
+        # no slave? not very available.
         return False
 
     def attached(self, slave, remote, commands):
+        """
+        @type  slave: L{buildbot.buildslave.BuildSlave}
+        @param slave: the BuildSlave that represents the buildslave as a
+                      whole
+        @type  remote: L{twisted.spread.pb.RemoteReference}
+        @param remote: a reference to the L{buildbot.slave.bot.SlaveBuilder}
+        @type  commands: dict: string -> string, or None
+        @param commands: provides the slave's version of each RemoteCommand
+        """
         self.slave = slave
         self.remote = remote
         self.remoteCommands = commands # maps command name to version

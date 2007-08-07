@@ -1,5 +1,12 @@
 2007-08-07  Brian Warner  <warner@lothar.com>
 
+	* buildbot/buildslave.py (BuildSlave.canStartBuild): incorporate
+	the second of Dustin's #48 patches, this one adding a method to
+	the BuildSlave that allows it to decide whether it is willing to
+	participate in a build or not.
+	(SlaveBuilder.isAvailable): use canStartBuild() to decide
+	* buildbot/test/test_run.py (CanStartBuild): test for it
+
 	* all: incorporate the first of four patches by Dustin Mitchell
 	from ticket #48, working towards improving control over slave
 	concurrency. The first patch is to use a long-lived BuildSlave

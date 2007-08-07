@@ -39,6 +39,23 @@ from buildbot.scheduler import Scheduler
 c['schedulers'] = [Scheduler('quick', None, 120, ['quick'])]
 """
 
+config_can_build = config_base + """
+from buildbot.buildslave import BuildSlave
+c['slaves'] = [ BuildSlave('bot1', 'sekrit') ]
+
+from buildbot.scheduler import Scheduler
+c['schedulers'] = [Scheduler('dummy', None, 0.1, ['dummy'])]
+
+c['builders'] = [{'name': 'dummy', 'slavename': 'bot1',
+                  'builddir': 'dummy1', 'factory': f2}]
+"""
+
+config_cant_build = config_can_build + """
+class MyBuildSlave(BuildSlave):
+    def canStartBuild(self): return False
+c['slaves'] = [ MyBuildSlave('bot1', 'sekrit') ]
+"""
+
 config_2 = config_base + """
 c['builders'] = [{'name': 'dummy', 'slavename': 'bot1',
                   'builddir': 'dummy1', 'factory': f2},
@@ -88,6 +105,60 @@ class Run(unittest.TestCase):
         self.failUnless(s.timer)
         # halting the service will also stop the timer
         d = defer.maybeDeferred(m.stopService)
+        return d
+
+class CanStartBuild(RunMixin, unittest.TestCase):
+    def rmtree(self, d):
+        rmtree(d)
+
+    def testCanStartBuild(self):
+        return self.do_test(config_can_build, True)
+
+    def testCantStartBuild(self):
+        return self.do_test(config_cant_build, False)
+
+    def do_test(self, config, builder_should_run):
+        self.master.loadConfig(config)
+        self.master.readConfig = True
+        self.master.startService()
+        d = self.connectSlave()
+
+        # send a change
+        cm = self.master.change_svc
+        c = changes.Change("bob", ["Makefile", "foo/bar.c"], "changed stuff")
+        cm.addChange(c)
+
+        d.addCallback(self._do_test1, builder_should_run)
+
+        return d
+
+    def _do_test1(self, res, builder_should_run):
+        # delay a little bit. Note that relying upon timers is a bit fragile,
+        # in this case we're hoping that our 0.5 second timer will land us
+        # somewhere in the middle of the [0.1s, 3.1s] window (after the 0.1
+        # second Scheduler fires, then during the 3-second build), so that
+        # when we sample BuildSlave.state, we'll see BUILDING (or IDLE if the
+        # slave was told to be unavailable). On a heavily loaded system, our
+        # 0.5 second timer might not actually fire until after the build has
+        # completed. In the long run, it would be good to change this test to
+        # pass under those circumstances too.
+        d = defer.Deferred()
+        reactor.callLater(.5, d.callback, builder_should_run)
+        d.addCallback(self._do_test2)
+        return d
+
+    def _do_test2(self, builder_should_run):
+        b = self.master.botmaster.builders['dummy']
+        self.failUnless(len(b.slaves) == 1)
+
+        bs = b.slaves[0]
+        from buildbot.process.builder import IDLE, BUILDING
+        if builder_should_run:
+            self.failUnlessEqual(bs.state, BUILDING)
+        else:
+            self.failUnlessEqual(bs.state, IDLE)
+
+        d = defer.maybeDeferred(self.master.stopService)
         return d
 
 class Ping(RunMixin, unittest.TestCase):
