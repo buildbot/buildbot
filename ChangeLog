@@ -1,3 +1,30 @@
+2007-08-07  Brian Warner  <warner@lothar.com>
+
+	* all: incorporate the first of four patches by Dustin Mitchell
+	from ticket #48, working towards improving control over slave
+	concurrency. The first patch is to use a long-lived BuildSlave
+	object per slave, on which other behavior can be added later. I've
+	modified his patch considerably.
+	* buildbot/buildslave.py (BuildSlave): move class out of
+	slave/__init__.py (where it would get loaded by the slave as well
+	as the master, making dependencies trickier), and merge it with
+	BotPerspective. Now these BuildSlave instances are created once in
+	the master.cfg file, and not destroyed until they are either
+	removed from the config file or changed so
+	much (name/password/class changes) that we cannot continue to use
+	the old one. This affects config files: they must use
+	'from buildbot.buildslave import BuildSlave' instead of using
+	'from buildbot.slave import BuildSlave'.
+	* buildbot/master.py: move BotPerspective out
+	(BuildMaster.loadConfig_Slaves): examine old and new slaves,
+	add or remove as necessary, update the rest using data from
+	the new config file.
+	* buildbot/slave/__init__.py: move BuildSlave out
+	* buildbot/test/test*.py: import BuildSlave from the new place
+	* buildbot/scripts/sample.cfg: update to match
+	* docs/buildbot.texinfo: update to match
+	* buildbot/process/builder.py: update comments to match
+
 2007-08-02  Brian Warner  <warner@lothar.com>
 
 	* buildbot/status/web/baseweb.py (OneLinePerBuild): improve

@@ -2245,7 +2245,7 @@ values that need to be provided to the buildslave administrator when
 they create the buildslave.
 
 @example
-from buildbot.slave import BuildSlave
+from buildbot.buildslave import BuildSlave
 c['slaves'] = [BuildSlave('bot-solaris', 'solarispasswd'),
                BuildSlave('bot-bsd', 'bsdpasswd'),
               ]

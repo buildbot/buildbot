@@ -135,7 +135,7 @@ class Interpolate(unittest.TestCase):
 run_config = """
 from buildbot.process import factory
 from buildbot.steps.shell import ShellCommand, WithProperties
-from buildbot.slave import BuildSlave
+from buildbot.buildslave import BuildSlave
 s = factory.s
 
 BuildmasterConfig = c = {}

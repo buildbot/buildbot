@@ -283,7 +283,7 @@ class LockStep(dummy.Dummy):
 config_1 = """
 from buildbot import locks
 from buildbot.process import factory
-from buildbot.slave import BuildSlave
+from buildbot.buildslave import BuildSlave
 s = factory.s
 from buildbot.test.test_locks import LockStep
 

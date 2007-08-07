@@ -15,7 +15,7 @@ from buildbot.test.runutils import rmtree
 config = """
 from buildbot.process import factory
 from buildbot.steps import dummy
-from buildbot.slave import BuildSlave
+from buildbot.buildslave import BuildSlave
 
 def s(klass, **kwargs):
     return (klass, kwargs)

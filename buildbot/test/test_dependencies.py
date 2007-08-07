@@ -11,7 +11,7 @@ config_1 = """
 from buildbot import scheduler
 from buildbot.process import factory
 from buildbot.steps import dummy
-from buildbot.slave import BuildSlave
+from buildbot.buildslave import BuildSlave
 s = factory.s
 from buildbot.test.test_locks import LockStep
 

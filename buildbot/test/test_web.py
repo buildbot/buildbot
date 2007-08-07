@@ -288,7 +288,7 @@ from buildbot.process import factory
 from buildbot.steps import dummy
 from buildbot.scheduler import Scheduler
 from buildbot.changes.base import ChangeSource
-from buildbot.slave import BuildSlave
+from buildbot.buildslave import BuildSlave
 s = factory.s
 
 class DiscardScheduler(Scheduler):
@@ -393,7 +393,7 @@ class Logfile(BaseWeb, RunMixin, unittest.TestCase):
         config = """
 from buildbot.status import html
 from buildbot.process.factory import BasicBuildFactory
-from buildbot.slave import BuildSlave
+from buildbot.buildslave import BuildSlave
 f1 = BasicBuildFactory('cvsroot', 'cvsmodule')
 BuildmasterConfig = {
     'slaves': [BuildSlave('bot1', 'passwd1')],

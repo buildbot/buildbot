@@ -29,6 +29,7 @@ except ImportError:
 
 emptyCfg = \
 """
+from buildbot.buildslave import BuildSlave
 BuildmasterConfig = c = {}
 c['slaves'] = []
 c['schedulers'] = []
@@ -42,7 +43,7 @@ c['buildbotURL'] = 'http://dummy.example.com/buildbot'
 buildersCfg = \
 """
 from buildbot.process.factory import BasicBuildFactory
-from buildbot.slave import BuildSlave
+from buildbot.buildslave import BuildSlave
 BuildmasterConfig = c = {}
 c['slaves'] = [BuildSlave('bot1', 'pw1')]
 c['schedulers'] = []
@@ -151,7 +152,7 @@ c['debugPassword'] = 'sekrit'
 interlockCfgBad = \
 """
 from buildbot.process.factory import BasicBuildFactory
-from buildbot.slave import BuildSlave
+from buildbot.buildslave import BuildSlave
 c = {}
 c['slaves'] = [BuildSlave('bot1', 'pw1')]
 c['schedulers'] = []
@@ -174,7 +175,7 @@ lockCfgBad1 = \
 from buildbot.steps.dummy import Dummy
 from buildbot.process.factory import BuildFactory, s
 from buildbot.locks import MasterLock
-from buildbot.slave import BuildSlave
+from buildbot.buildslave import BuildSlave
 c = {}
 c['slaves'] = [BuildSlave('bot1', 'pw1')]
 c['schedulers'] = []
@@ -196,7 +197,7 @@ lockCfgBad2 = \
 from buildbot.steps.dummy import Dummy
 from buildbot.process.factory import BuildFactory, s
 from buildbot.locks import MasterLock, SlaveLock
-from buildbot.slave import BuildSlave
+from buildbot.buildslave import BuildSlave
 c = {}
 c['slaves'] = [BuildSlave('bot1', 'pw1')]
 c['schedulers'] = []
@@ -218,7 +219,7 @@ lockCfgBad3 = \
 from buildbot.steps.dummy import Dummy
 from buildbot.process.factory import BuildFactory, s
 from buildbot.locks import MasterLock
-from buildbot.slave import BuildSlave
+from buildbot.buildslave import BuildSlave
 c = {}
 c['slaves'] = [BuildSlave('bot1', 'pw1')]
 c['schedulers'] = []
@@ -240,7 +241,7 @@ lockCfg1a = \
 """
 from buildbot.process.factory import BasicBuildFactory
 from buildbot.locks import MasterLock
-from buildbot.slave import BuildSlave
+from buildbot.buildslave import BuildSlave
 c = {}
 c['slaves'] = [BuildSlave('bot1', 'pw1')]
 c['schedulers'] = []
@@ -261,7 +262,7 @@ lockCfg1b = \
 """
 from buildbot.process.factory import BasicBuildFactory
 from buildbot.locks import MasterLock
-from buildbot.slave import BuildSlave
+from buildbot.buildslave import BuildSlave
 c = {}
 c['slaves'] = [BuildSlave('bot1', 'pw1')]
 c['schedulers'] = []
@@ -284,7 +285,7 @@ lockCfg2a = \
 from buildbot.steps.dummy import Dummy
 from buildbot.process.factory import BuildFactory, s
 from buildbot.locks import MasterLock
-from buildbot.slave import BuildSlave
+from buildbot.buildslave import BuildSlave
 c = {}
 c['slaves'] = [BuildSlave('bot1', 'pw1')]
 c['schedulers'] = []
@@ -308,7 +309,7 @@ lockCfg2b = \
 from buildbot.steps.dummy import Dummy
 from buildbot.process.factory import BuildFactory, s
 from buildbot.locks import MasterLock
-from buildbot.slave import BuildSlave
+from buildbot.buildslave import BuildSlave
 c = {}
 c['slaves'] = [BuildSlave('bot1', 'pw1')]
 c['schedulers'] = []
@@ -332,7 +333,7 @@ lockCfg2c = \
 from buildbot.steps.dummy import Dummy
 from buildbot.process.factory import BuildFactory, s
 from buildbot.locks import MasterLock
-from buildbot.slave import BuildSlave
+from buildbot.buildslave import BuildSlave
 c = {}
 c['slaves'] = [BuildSlave('bot1', 'pw1')]
 c['schedulers'] = []
@@ -355,7 +356,7 @@ schedulersCfg = \
 """
 from buildbot.scheduler import Scheduler, Dependent
 from buildbot.process.factory import BasicBuildFactory
-from buildbot.slave import BuildSlave
+from buildbot.buildslave import BuildSlave
 c = {}
 c['slaves'] = [BuildSlave('bot1', 'pw1')]
 f1 = BasicBuildFactory('cvsroot', 'cvsmodule')
@@ -474,6 +475,9 @@ class ConfigTest(unittest.TestCase):
         self.failUnlessEqual(master.botmaster.builders, {})
         self.failUnlessEqual(master.checker.users,
                              {"change": "changepw"})
+        # 'botsCfg' is testing backwards compatibility, for 0.7.5 config
+        # files that have not yet been updated to 0.7.6 . This compatibility
+        # (and this test) is scheduled for removal in 0.8.0 .
         botsCfg = (emptyCfg +
                    "c['bots'] = [('bot1', 'pw1'), ('bot2', 'pw2')]\n")
         master.loadConfig(botsCfg)
@@ -490,7 +494,7 @@ class ConfigTest(unittest.TestCase):
         self.failUnlessEqual(master.checker.users,
                              {"change": "changepw"})
         slavesCfg = (emptyCfg +
-                     "from buildbot.slave import BuildSlave\n"
+                     "from buildbot.buildslave import BuildSlave\n"
                      "c['slaves'] = [BuildSlave('bot1','pw1'), "
                      "BuildSlave('bot2','pw2')]\n")
         master.loadConfig(slavesCfg)
@@ -1157,7 +1161,7 @@ cfg1 = \
 from buildbot.process.factory import BuildFactory, s
 from buildbot.steps.shell import ShellCommand
 from buildbot.steps.source import Darcs
-from buildbot.slave import BuildSlave
+from buildbot.buildslave import BuildSlave
 BuildmasterConfig = c = {}
 c['slaves'] = [BuildSlave('bot1', 'pw1')]
 c['schedulers'] = []

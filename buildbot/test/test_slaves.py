@@ -13,7 +13,7 @@ from buildbot.slave import bot
 config_1 = """
 from buildbot.process import factory
 from buildbot.steps import dummy
-from buildbot.slave import BuildSlave
+from buildbot.buildslave import BuildSlave
 s = factory.s
 
 BuildmasterConfig = c = {}
@@ -191,7 +191,7 @@ class Slave(RunMixin, unittest.TestCase):
 config_3 = """
 from buildbot.process import factory
 from buildbot.steps import dummy
-from buildbot.slave import BuildSlave
+from buildbot.buildslave import BuildSlave
 s = factory.s
 
 BuildmasterConfig = c = {}

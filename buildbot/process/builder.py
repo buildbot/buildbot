@@ -158,7 +158,7 @@ class Ping:
 
     def _ping_timeout(self, remote):
         log.msg("ping timeout")
-        # force the BotPerspective to disconnect, since this indicates that
+        # force the BuildSlave to disconnect, since this indicates that
         # the bot is unreachable.
         del self.timer
         remote.broker.transport.loseConnection()
@@ -401,12 +401,11 @@ class Builder(pb.Referenceable):
             reactor.callLater(0, w.callback, fire_with)
 
     def attached(self, slave, remote, commands):
-        """This is invoked by the BotPerspective when the self.slavename bot
+        """This is invoked by the BuildSlave when the self.slavename bot
         registers their builder.
 
-        @type  slave: L{buildbot.master.BotPerspective}
-        @param slave: the BotPerspective that represents the buildslave as a
-                      whole
+        @type  slave: L{buildbot.master.BuildSlave}
+        @param slave: the BuildSlave that represents the buildslave as a whole
         @type  remote: L{twisted.spread.pb.RemoteReference}
         @param remote: a reference to the L{buildbot.slave.bot.SlaveBuilder}
         @type  commands: dict: string -> string, or None

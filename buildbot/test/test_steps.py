@@ -311,7 +311,7 @@ class VersionCheckingStep(buildstep.BuildStep):
 version_config = """
 from buildbot.process import factory
 from buildbot.test.test_steps import VersionCheckingStep
-from buildbot.slave import BuildSlave
+from buildbot.buildslave import BuildSlave
 BuildmasterConfig = c = {}
 f1 = factory.BuildFactory([
     factory.s(VersionCheckingStep),

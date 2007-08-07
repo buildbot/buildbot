@@ -90,7 +90,7 @@ def myGetProcessOutputAndValue(executable, args=(), env={}, path='.',
 config_vc = """
 from buildbot.process import factory
 from buildbot.steps import source
-from buildbot.slave import BuildSlave
+from buildbot.buildslave import BuildSlave
 s = factory.s
 
 f1 = factory.BuildFactory([
