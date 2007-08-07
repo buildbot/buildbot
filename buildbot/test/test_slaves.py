@@ -440,3 +440,34 @@ class Slave2(RunMixin, unittest.TestCase):
         reasons = [build.getReason() for build in builds]
         self.failUnlessEqual(reasons, ["first", "second"])
 
+config_multi_builders = config_1 + """
+c['builders'] = [
+    {'name': 'dummy', 'slavenames': ['bot1','bot2','bot3'],
+     'builddir': 'b1', 'factory': f2},
+    {'name': 'dummy2', 'slavenames': ['bot1','bot2','bot3'],
+     'builddir': 'b2', 'factory': f2},
+    {'name': 'dummy3', 'slavenames': ['bot1','bot2','bot3'],
+     'builddir': 'b3', 'factory': f2},
+    ]
+
+"""
+
+class BuildSlave(RunMixin, unittest.TestCase):
+    def test_track_builders(self):
+        self.master.loadConfig(config_multi_builders)
+        self.master.readConfig = True
+        self.master.startService()
+        d = self.connectSlave()
+
+        def _check(res):
+            b = self.master.botmaster.builders['dummy']
+            self.failUnless(len(b.slaves) == 1) # just bot1
+
+            bs = b.slaves[0].slave
+            self.failUnless(len(bs.slavebuilders) == 3)
+            self.failUnless(b in [sb.builder for sb in bs.slavebuilders])
+
+            return self.master.stopService()
+        d.addCallback(_check)
+        return d
+

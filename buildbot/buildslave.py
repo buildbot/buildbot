@@ -23,6 +23,7 @@ class BuildSlave(NewCredPerspective):
         self.slave_status = SlaveStatus(name)
         self.slave = None # a RemoteReference to the Bot, when connected
         self.slave_commands = None
+        self.slavebuilders = []
 
     def update(self, new):
         """
@@ -220,6 +221,15 @@ class BuildSlave(NewCredPerspective):
 
     def perspective_keepalive(self):
         pass
+
+    def addSlaveBuilder(self, sb):
+        log.msg("%s adding %s" % (self, sb))
+        self.slavebuilders.append(sb)
+
+    def removeSlaveBuilder(self, sb):
+        log.msg("%s removing %s" % (self, sb))
+        if sb in self.slavebuilders:
+            self.slavebuilders.remove(sb)
 
     def canStartBuild(self):
         """

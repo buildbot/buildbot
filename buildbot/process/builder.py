@@ -73,6 +73,7 @@ class SlaveBuilder(pb.Referenceable):
         self.slave = slave
         self.remote = remote
         self.remoteCommands = commands # maps command name to version
+        self.slave.addSlaveBuilder(self)
         log.msg("Buildslave %s attached to %s" % (slave.slavename,
                                                   self.builder_name))
         d = self.remote.callRemote("setMaster", self)
@@ -100,6 +101,8 @@ class SlaveBuilder(pb.Referenceable):
     def detached(self):
         log.msg("Buildslave %s detached from %s" % (self.slave.slavename,
                                                     self.builder_name))
+        if self.slave:
+            self.slave.removeSlaveBuilder(self)
         self.slave = None
         self.remote = None
         self.remoteCommands = None
