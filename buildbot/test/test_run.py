@@ -203,7 +203,7 @@ class ConcurrencyLimit(RunMixin, unittest.TestCase):
             for builder in builders:
                 self.failUnless(len(builder.slaves) == 1)
 
-            from buildbot.process.builder import IDLE, BUILDING
+            from buildbot.process.builder import BUILDING
             building_bs = [ builder
                             for builder in builders
                             if builder.slaves[0].state == BUILDING ]
