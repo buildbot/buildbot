@@ -50,7 +50,7 @@ class SlaveBuilder(pb.Referenceable):
 
     def isAvailable(self):
         # if this SlaveBuilder is busy, then it's definitely not available
-        if self.state != IDLE:
+        if self.isBusy():
             return False
 
         # otherwise, check in with the BuildSlave
@@ -59,6 +59,9 @@ class SlaveBuilder(pb.Referenceable):
 
         # no slave? not very available.
         return False
+
+    def isBusy(self):
+        return self.state != IDLE
 
     def attached(self, slave, remote, commands):
         """
@@ -112,7 +115,7 @@ class SlaveBuilder(pb.Referenceable):
 
     def buildFinished(self):
         self.state = IDLE
-        reactor.callLater(0, self.builder.maybeStartBuild)
+        reactor.callLater(0, self.builder.botmaster.maybeStartAllBuilds)
 
     def ping(self, timeout, status=None):
         """Ping the slave to make sure it is still there. Returns a Deferred

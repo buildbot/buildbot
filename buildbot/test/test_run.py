@@ -56,6 +56,19 @@ class MyBuildSlave(BuildSlave):
 c['slaves'] = [ MyBuildSlave('bot1', 'sekrit') ]
 """
 
+config_concurrency = config_base + """
+from buildbot.buildslave import BuildSlave
+c['slaves'] = [ BuildSlave('bot1', 'sekrit', max_builds=1) ]
+
+from buildbot.scheduler import Scheduler
+c['schedulers'] = [Scheduler('dummy', None, 0.1, ['dummy', 'dummy2'])]
+
+c['builders'].append({'name': 'dummy', 'slavename': 'bot1',
+                      'builddir': 'dummy', 'factory': f2})
+c['builders'].append({'name': 'dummy2', 'slavename': 'bot1',
+                      'builddir': 'dummy2', 'factory': f2})
+"""
+
 config_2 = config_base + """
 c['builders'] = [{'name': 'dummy', 'slavename': 'bot1',
                   'builddir': 'dummy1', 'factory': f2},
@@ -157,6 +170,50 @@ class CanStartBuild(RunMixin, unittest.TestCase):
             self.failUnlessEqual(bs.state, BUILDING)
         else:
             self.failUnlessEqual(bs.state, IDLE)
+
+
+class ConcurrencyLimit(RunMixin, unittest.TestCase):
+
+    def testConcurrencyLimit(self):
+        d = self.master.loadConfig(config_concurrency)
+        d.addCallback(lambda res: self.master.startService())
+        d.addCallback(lambda res: self.connectSlave())
+
+        def _send(res):
+            # send a change. This will trigger both builders at the same
+            # time, but since they share a slave, the max_builds=1 setting
+            # will insure that only one of the two builds gets to run.
+            cm = self.master.change_svc
+            c = changes.Change("bob", ["Makefile", "foo/bar.c"],
+                               "changed stuff")
+            cm.addChange(c)
+        d.addCallback(_send)
+
+        def _delay(res):
+            d1 = defer.Deferred()
+            reactor.callLater(1, d1.callback, None)
+            # this test depends upon this 1s delay landing us in the middle
+            # of one of the builds.
+            return d1
+        d.addCallback(_delay)
+
+        def _check(res):
+            builders = [ self.master.botmaster.builders[bn]
+                         for bn in ('dummy', 'dummy2') ]
+            for builder in builders:
+                self.failUnless(len(builder.slaves) == 1)
+
+            from buildbot.process.builder import IDLE, BUILDING
+            building_bs = [ builder
+                            for builder in builders
+                            if builder.slaves[0].state == BUILDING ]
+            # assert that only one build is running right now. If the
+            # max_builds= weren't in effect, this would be 2.
+            self.failUnlessEqual(len(building_bs), 1)
+        d.addCallback(_check)
+
+        return d
+
 
 class Ping(RunMixin, unittest.TestCase):
     def testPing(self):

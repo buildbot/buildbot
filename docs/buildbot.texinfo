@@ -2260,11 +2260,19 @@ Buildslaves with an unrecognized slavename or a non-matching password
 will be rejected when they attempt to connect, and a message
 describing the problem will be put in the log file (see @ref{Logfiles}).
 
+The @code{BuildSlave} constructor can take an optional
+@code{max_builds} parameter to limit the number of builds that it will
+execute simultaneously:
+
+@example
+from buildbot.buildslave import BuildSlave
+c['slaves'] = [BuildSlave("bot-linux", "linuxpassword", max_builds=2)]
+@end example
+
 Historical note: in buildbot-0.7.5 and earlier, the @code{c['bots']}
 key was used instead, and it took a list of (name, password) tuples.
 This key is accepted for backwards compatibility, but is deprecated as
 of 0.7.6 and will go away in some future release.
-
 
 @node Defining Builders, Defining Status Targets, Buildslave Specifiers, Configuration
 @section Defining Builders

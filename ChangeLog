@@ -1,5 +1,23 @@
 2007-08-07  Brian Warner  <warner@lothar.com>
 
+	* buildbot/buildslave.py (BuildSlave.__init__): add max_builds=,
+	which imposes a per-slave limit on how many builds are allowed to
+	run simultaneously. This has a the same scope than the SlaveLock,
+	but is different because max_builds= gives the buildmaster the
+	freedom to assign the build to a different slave, whereas the
+	SlaveLock doesn't get tested until after the build is irrevocably
+	assigned to a slave. Therefore using max_builds= will improve
+	utilization in the presence of multiple buildslaves that are
+	attached to the same Builder. This completes the incorporation of
+	Dustin Mitchell's patches, and closes ticket #48. Thanks Dustin!
+	* buildbot/process/builder.py (SlaveBuilder.buildFinished): when
+	any Builder finishes, potentially trigger *all* Builders, since
+	max_builds= may have stalled someone else while waiting for the
+	slave.
+	* buildbot/scripts/sample.cfg: mention max_builds=
+	* buildbot/test/test_run.py (ConcurrencyLimit): test it
+	* docs/buildbot.texinfo (Buildslave Specifiers): document it
+
 	* buildbot/test/test_run.py (CanStartBuild._do_test2): tests which
 	inherit from RunMixin do not need to call master.stopService()
 	themselves, since RunMixin.tearDown does that. The double call

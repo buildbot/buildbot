@@ -16,7 +16,16 @@ class BuildSlave(NewCredPerspective):
     running builds.  I am instantiated by the configuration file, and can be
     subclassed to add extra functionality."""
 
-    def __init__(self, name, password):
+    def __init__(self, name, password, max_builds=None):
+        """
+        @param name: botname this machine will supply when it connects
+        @param password: password this machine will supply when
+                         it connects
+        @param max_builds: maximum number of simultaneous builds that will
+                           be run concurrently on this buildslave (the
+                           default is None for no limit)
+        """
+
         self.slavename = name
         self.password = password
         self.botmaster = None # no buildmaster yet
@@ -24,6 +33,7 @@ class BuildSlave(NewCredPerspective):
         self.slave = None # a RemoteReference to the Bot, when connected
         self.slave_commands = None
         self.slavebuilders = []
+        self.max_builds = max_builds
 
     def update(self, new):
         """
@@ -33,7 +43,9 @@ class BuildSlave(NewCredPerspective):
         """
         # the reconfiguration logic should guarantee this:
         assert self.slavename == new.slavename
-        self.password = new.password
+        assert self.password == new.password
+        assert self.__class__ == new.__class__
+        self.max_builds = new.max_builds
 
     def __repr__(self):
         builders = self.botmaster.getBuildersForSlave(self.slavename)
@@ -237,5 +249,9 @@ class BuildSlave(NewCredPerspective):
         can start a build.  This function can be used to limit overall
         concurrency on the buildslave.
         """
+        if self.max_builds:
+            active_builders = [sb for sb in self.slavebuilders if sb.isBusy()]
+            if len(active_builders) >= self.max_builds:
+                return False
         return True
 
