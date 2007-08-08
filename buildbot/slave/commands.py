@@ -2156,7 +2156,7 @@ class P4(SourceBase):
     ['p4user'] (optional): user to use for access
     ['p4passwd'] (optional): passwd to try for the user
     ['p4client'] (optional): client spec to use
-    ['p4views'] (optional): client views to use
+    ['p4extra_views'] (optional): additional client views to use
     """
 
     header = "p4"
@@ -2171,7 +2171,6 @@ class P4(SourceBase):
         self.p4extra_views = args['p4extra_views']
         self.p4mode = args['mode']
         self.p4branch = args['branch']
-        self.p4logname = os.environ['LOGNAME']
 
         self.sourcedata = str([
             # Perforce server.
@@ -2236,8 +2235,8 @@ class P4(SourceBase):
         command = ['p4']
         client_spec = ''
         client_spec += "Client: %s\n\n" % self.p4client
-        client_spec += "Owner: %s\n\n" % self.p4logname
-        client_spec += "Description:\n\tCreated by %s\n\n" % self.p4logname
+        client_spec += "Owner: %s\n\n" % self.p4user
+        client_spec += "Description:\n\tCreated by %s\n\n" % self.p4user
         client_spec += "Root:\t%s\n\n" % self.builder.basedir
         client_spec += "Options:\tallwrite rmdir\n\n"
         client_spec += "LineEnd:\tlocal\n\n"

@@ -1,5 +1,11 @@
 2007-08-07  Brian Warner  <warner@lothar.com>
 
+	* buildbot/slave/commands.py (P4): use 'p4user' to construct the
+	'Owner:' field of the view, rather than 'p4logname', since
+	p4logname comes from the buildslave's environment and seems
+	unlikely to ever do the right thing. Thanks to Wade Brainerd for
+	the patch. Closes #40.
+
 	* buildbot/buildslave.py (BuildSlave.__init__): add max_builds=,
 	which imposes a per-slave limit on how many builds are allowed to
 	run simultaneously. This has a the same scope than the SlaveLock,
