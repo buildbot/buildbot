@@ -158,9 +158,6 @@ class CanStartBuild(RunMixin, unittest.TestCase):
         else:
             self.failUnlessEqual(bs.state, IDLE)
 
-        d = defer.maybeDeferred(self.master.stopService)
-        return d
-
 class Ping(RunMixin, unittest.TestCase):
     def testPing(self):
         self.master.loadConfig(config_2)

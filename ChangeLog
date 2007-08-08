@@ -1,5 +1,11 @@
 2007-08-07  Brian Warner  <warner@lothar.com>
 
+	* buildbot/test/test_run.py (CanStartBuild._do_test2): tests which
+	inherit from RunMixin do not need to call master.stopService()
+	themselves, since RunMixin.tearDown does that. The double call
+	fails on Twisted-2.0.x, which didn't happen to protect against it.
+	* buildbot/test/test_slaves.py (BuildSlave.test_track_builders): same
+
 	* buildbot/buildslave.py (BuildSlave.addSlaveBuilder): third patch
 	from #48, this one to have the BuildSlave objects track
 	SlaveBuilders, so they'll be able to use that knowledge to

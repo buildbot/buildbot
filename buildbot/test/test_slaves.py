@@ -467,7 +467,6 @@ class BuildSlave(RunMixin, unittest.TestCase):
             self.failUnless(len(bs.slavebuilders) == 3)
             self.failUnless(b in [sb.builder for sb in bs.slavebuilders])
 
-            return self.master.stopService()
         d.addCallback(_check)
         return d
 
