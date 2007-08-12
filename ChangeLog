@@ -1,5 +1,11 @@
 2007-08-12  Brian Warner  <warner@lothar.com>
 
+	* contrib/darcs_buildbot.py (makeChange): handle moved files too,
+	by adding the file's new name to the list of changed files. This
+	ought to be sufficient for things like isFileImportant and trial
+	tests that only exercise tests for files that have been modified.
+	Closes #31.
+
 	* buildbot/status/web/xmlrpc.py (XMLRPCServer): add preliminary
 	XMLRPC server to the WebStatus page. This only has two methods
 	right now (getAllBuildsInInterval and getBuild), but we'll be

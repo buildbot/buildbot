@@ -45,6 +45,10 @@ def makeChange(p):
         if filenode.nodeName in ("add_file", "modify_file", "remove_file"):
             filename = getText(filenode).strip()
             files.append(filename)
+        elif filenode.nodeName == "move":
+            from_name = filenode.getAttribute("from")
+            to_name = filenode.getAttribute("to")
+            files.append(to_name)
 
     # note that these are all unicode. Because PB can't handle unicode, we
     # encode them into ascii, which will blow up early if there's anything we
