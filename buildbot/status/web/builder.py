@@ -3,10 +3,10 @@ from twisted.web.error import NoResource
 from twisted.web import html, static
 from twisted.web.util import Redirect
 
-import re, urllib
+import re, urllib, time
 from twisted.python import log
 from buildbot import interfaces
-from buildbot.status.web.base import HtmlResource, make_row
+from buildbot.status.web.base import HtmlResource, make_row, css_classes
 from buildbot.process.base import BuildRequest
 from buildbot.sourcestamp import SourceStamp
 
@@ -21,6 +21,27 @@ class StatusResourceBuilder(HtmlResource):
         self.builder_status = builder_status
         self.builder_control = builder_control
 
+    def build_line(self, build, req):
+        buildnum = build.getNumber()
+        buildurl = "builds/%d" % buildnum
+        data = '<a href="%s">#%d</a> ' % (buildurl, buildnum)
+        when = build.getETA()
+        if when is not None:
+            when_time = time.strftime("%H:%M:%S",
+                                      time.localtime(time.time() + when))
+            data += "ETA %ds (%s) " % (when, when_time)
+        data += "[%s]" % build.getCurrentStep().getName()
+        return data
+
+    def build_finished_line(self, build, req):
+        buildnum = build.getNumber()
+        buildurl = "builds/%d" % buildnum
+        results = build.getResults()
+        text = " ".join(build.getText())
+        data = '<a href="%s">#%d</a> ' % (buildurl, buildnum)
+        data += '<span class="%s">%s</span>' % (css_classes[results], text)
+        return data
+
     def body(self, req):
         b = self.builder_status
         control = self.builder_control
@@ -31,12 +52,37 @@ class StatusResourceBuilder(HtmlResource):
 
         buildbotURL = status.getBuildbotURL()
         projectName = status.getProjectName()
+
         data = "<a href=\"%s\">%s</a>\n" % (buildbotURL, projectName)
-        data += make_row("Builder:", html.escape(b.getName()))
-        b1 = b.getBuild(-1)
-        if b1 is not None:
-            data += make_row("Current/last build:", str(b1.getNumber()))
-        data += "\n<br />BUILDSLAVES<br />\n"
+
+        data += "<h1>Builder: %s</h1>\n" % html.escape(b.getName())
+
+        # the first section shows builds which are currently running, if any.
+
+        current = b.getCurrentBuilds()
+        if current:
+            data += "<h2>Currently Building:</h2>\n"
+            data += "<ul>\n"
+            for build in current:
+                data += " <li>" + self.build_line(build, req) + "</li>\n"
+            data += "</ul>\n"
+        else:
+            data += "<h2>no current builds</h2>\n"
+
+        # Then a section with the last 5 builds, with the most recent build
+        # distinguished from the rest.
+
+        data += "<h2>Recent Builds:</h2>\n"
+        data += "<ul>\n"
+        for i,build in enumerate(b.generateFinishedBuilds(num_builds=5)):
+            data += " <li>" + self.build_finished_line(build, req) + "</li>\n"
+            if i == 0:
+                data += "<br />\n" # separator
+                # TODO: or empty list?
+        data += "</ul>\n"
+
+
+        data += "<h2>Buildslaves:</h2>\n"
         data += "<ol>\n"
         for slave in slaves:
             data += "<li><b>%s</b>: " % html.escape(slave.getName())

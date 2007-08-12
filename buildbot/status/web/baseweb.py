@@ -9,9 +9,8 @@ from twisted.web import server, distrib, static
 from twisted.spread import pb
 
 from buildbot.interfaces import IControl, IStatusReceiver
-from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE, EXCEPTION
 
-from buildbot.status.web.base import HtmlResource
+from buildbot.status.web.base import HtmlResource, css_classes
 from buildbot.status.web.waterfall import WaterfallStatusResource
 from buildbot.status.web.changes import ChangesResource
 from buildbot.status.web.builder import BuildersResource
@@ -63,21 +62,17 @@ def getLastNBuilds(status, numbuilds, builders=[], branches=[]):
 
 
 class OneLineMixin:
-    def make_line(self, req, status, build):
-        css_classes = {SUCCESS: "success",
-                       WARNINGS: "warnings",
-                       FAILURE: "failure",
-                       EXCEPTION: "exception",
-                       }
-
+    def make_line(self, req, build):
         builder_name = build.getBuilder().getName()
         results = build.getResults()
         try:
             rev = build.getProperty("got_revision")
+            if rev is None:
+                rev = "??"
         except KeyError:
             rev = "??"
         if len(rev) > 20:
-            rev = "?too-long?"
+            rev = "version is too-long"
         root = self.path_to_root(req)
         values = {'class': css_classes[results],
                   'builder_name': builder_name,
@@ -86,16 +81,18 @@ class OneLineMixin:
                   'buildurl': (root +
                                "builders/%s/builds/%d" % (builder_name,
                                                           build.getNumber())),
+                  'builderurl': (root + "builders/%s" % builder_name),
                   'rev': rev,
-                  'time': time.strftime("%H:%M:%S",
+                  'time': time.strftime("%Y-%m-%d %H:%M:%S",
                                         time.localtime(build.getTimes()[0])),
                   }
 
         fmt = ('<div>'
-               '%(time)s: '
-               '<a href="%(buildurl)s">Build #%(buildnum)d</a> of '
-               '%(builder_name)s [%(rev)s]: '
-               '<span class="%(class)s">%(results)s</span>'
+               '<font size="-1">(%(time)s)</font> '
+               '<a href="%(builderurl)s">%(builder_name)s</a> '
+               'rev=[%(rev)s]: '
+               '<span class="%(class)s">%(results)s</span> '
+               '<a href="%(buildurl)s">#%(buildnum)d</a> '
                '</div>\n')
         data = fmt % values
         return data
@@ -126,15 +123,21 @@ class OneLinePerBuild(HtmlResource, OneLineMixin):
         builders = req.args.get("builder", [])
         branches = req.args.get("branch", [])
 
-        builds = getLastNBuilds(status, numbuilds, builders, branches)
+        g = status.generateFinishedBuilds(builders, branches, numbuilds)
+
         data = ""
-        data += "<h1>Last %d builds</h1>" % min(self.numbuilds, len(builds))
+
+        # really this is "up to %d builds"
+        data += "<h1>Last %d finished builds</h1>\n" % numbuilds
         if builders:
-            data += ("<p>of builders: %s</p>" % (", ".join(builders)))
-        for build in reversed(builds):
-            data += self.make_line(req, status, build)
-        if not builds:
-            data += "<div>No matching builds found</div>"
+            data += ("<p>of builders: %s</p>\n" % (", ".join(builders)))
+
+        got = 0
+        for build in g:
+            got += 1
+            data += self.make_line(req, build)
+        if not got:
+            data += "<div>No matching builds found</div>\n"
         return data
 
 
@@ -153,22 +156,19 @@ class OneLinePerBuildOneBuilder(HtmlResource, OneLineMixin):
         status = self.getStatus(req)
         numbuilds = int(req.args.get("numbuilds", [self.numbuilds])[0])
         branches = req.args.get("branch", [])
-        # walk backwards through all builds of a single builder
 
-        # islice is cool but not exactly what we need here
-        #events = itertools.islice(b.eventGenerator(), self.numbuilds)
+        # walk backwards through all builds of a single builder
+        g = self.builder.generateFinishedBuilds(branches, numbuilds)
 
         data = ""
-        data += "<h1>Last %d builds of builder: %s</h1>" % (self.numbuilds,
-                                                            self.builder_name)
-        i = 1
-        while i < numbuilds:
-            build = self.builder.getBuild(-i)
-            if not build:
-                break
-            i += 1
-
-            data += self.make_line(req, status, build)
+        data += ("<h1>Last %d builds of builder: %s</h1>\n" %
+                 (numbuilds, self.builder_name))
+        got = 0
+        for build in g:
+            got += 1
+            data += self.make_line(req, build)
+        if not got:
+            data += "<div>No matching builds found</div>\n"
 
         return data
 

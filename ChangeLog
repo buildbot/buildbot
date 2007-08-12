@@ -1,5 +1,13 @@
 2007-08-12  Brian Warner  <warner@lothar.com>
 
+	* buildbot/status/web/baseweb.py (OneLinePerBuild): refactor using
+	generateFinishedBuilds, and improve the data displayed.
+	* buildbot/status/web/build.py (StatusResourceBuild): rearrange
+	the per-Build page, add some information like ETA and got_revision
+	* buildbot/status/web/builder.py (StatusResourceBuilder): same,
+	adding a list of recently completed builds
+	* buildbot/status/web/base.py (css_classes): factor this out
+
 	* buildbot/interfaces.py (IStatus.generateFinishedBuilds): define
 	new method, to make status display classes easier to write,
 	especially the WebStatus 'one_line_per_build' page.

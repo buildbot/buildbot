@@ -3,9 +3,9 @@ from twisted.web import html
 from twisted.web.util import Redirect, DeferredResource
 from twisted.internet import defer, reactor
 
-import urllib
+import urllib, time
 from twisted.python import log
-from buildbot.status.web.base import HtmlResource, make_row
+from buildbot.status.web.base import HtmlResource, make_row, css_classes
 
 from buildbot.status.web.tests import TestsResource
 from buildbot.status.web.step import StepsResource
@@ -30,10 +30,40 @@ class StatusResourceBuild(HtmlResource):
                                                                  projectName)
         # the color in the following line gives python-mode trouble
         builder_name = b.getBuilder().getName()
-        data += ("<h1><a href=\"../../%s\">Builder %s</a>: Build #%d</h1>\n"
-                 % (urllib.quote(builder_name), builder_name, b.getNumber()))
-        data += "<h2>Buildslave:</h2>\n %s\n" % html.escape(b.getSlavename())
-        data += "<h2>Reason:</h2>\n%s\n" % html.escape(b.getReason())
+        data += ("<h1><a href=\"../..\">Builder %s</a>: Build #%d</h1>\n"
+                 % (builder_name, b.getNumber()))
+
+        if not b.isFinished():
+            data += "<h2>Build In Progress</h2>"
+            when = b.getETA()
+            if when is not None:
+                when_time = time.strftime("%H:%M:%S",
+                                          time.localtime(time.time() + when))
+                data += "<div>ETA %ds (%s)</div>\n" % (when, when_time)
+
+            if self.build_control is not None:
+                stopURL = urllib.quote(req.childLink("stop"))
+                data += """
+                <form action="%s" class='command stopbuild'>
+                <p>To stop this build, fill out the following fields and
+                push the 'Stop' button</p>\n""" % stopURL
+                data += make_row("Your name:",
+                                 "<input type='text' name='username' />")
+                data += make_row("Reason for stopping build:",
+                                 "<input type='text' name='comments' />")
+                data += """<input type="submit" value="Stop Builder" />
+                </form>
+                """
+
+        if b.isFinished():
+            results = b.getResults()
+            data += "<h2>Results:</h2>\n"
+            text = " ".join(b.getText())
+            data += '<span class="%s">%s</span>\n' % (css_classes[results],
+                                                      text)
+            if b.getTestResults():
+                url = req.childLink("tests")
+                data += "<h3><a href=\"%s\">test results</a></h3>\n" % url
 
         ss = b.getSourceStamp()
         data += "<h2>SourceStamp:</h2>\n"
@@ -49,28 +79,61 @@ class StatusResourceBuild(HtmlResource):
         if (ss.branch is None and ss.revision is None and ss.patch is None
             and not ss.changes):
             data += "  <li>build of most recent revision</li>\n"
+        got_revision = None
+        try:
+            got_revision = b.getProperty("got_revision")
+        except KeyError:
+            pass
+        if got_revision:
+            if len(got_revision) > 40:
+                got_revision = "[revision string too long]"
+            data += "  <li>Got Revision: %s</li>\n" % got_revision
         data += " </ul>\n"
-        if b.isFinished():
-            data += "<h2>Results:</h2>\n"
-            data += " ".join(b.getText()) + "\n"
-            if b.getTestResults():
-                url = req.childLink("tests")
-                data += "<h3><a href=\"%s\">test results</a></h3>\n" % url
+
+        # TODO: turn this into a table, or some other sort of definition-list
+        # that doesn't take up quite so much vertical space
+        data += "<h2>Buildslave:</h2>\n %s\n" % html.escape(b.getSlavename())
+        data += "<h2>Reason:</h2>\n%s\n" % html.escape(b.getReason())
+
+        data += "<h2>Steps and Logfiles:</h2>\n"
+        if b.getLogs():
+            data += "<ol>\n"
+            for s in b.getSteps():
+                name = s.getName()
+                data += (" <li><a href=\"%s\">%s</a> [%s]\n"
+                         % (req.childLink("steps/%s" % urllib.quote(name)),
+                            name,
+                            " ".join(s.getText())))
+                if s.getLogs():
+                    data += "  <ol>\n"
+                    for logfile in s.getLogs():
+                        logname = logfile.getName()
+                        logurl = req.childLink("steps/%s/logs/%s" %
+                                               (urllib.quote(name),
+                                                urllib.quote(logname)))
+                        data += ("   <li><a href=\"%s\">%s</a></li>\n" %
+                                 (logurl, logfile.getName()))
+                    data += "  </ol>\n"
+                data += " </li>\n"
+            data += "</ol>\n"
+
+        data += "<h2>Blamelist:</h2>\n"
+        if list(b.getResponsibleUsers()):
+            data += " <ol>\n"
+            for who in b.getResponsibleUsers():
+                data += "  <li>%s</li>\n" % html.escape(who)
+            data += " </ol>\n"
         else:
-            data += "<h2>Build In Progress</h2>"
-            if self.build_control is not None:
-                stopURL = urllib.quote(req.childLink("stop"))
-                data += """
-                <form action="%s" class='command stopbuild'>
-                <p>To stop this build, fill out the following fields and
-                push the 'Stop' button</p>\n""" % stopURL
-                data += make_row("Your name:",
-                                 "<input type='text' name='username' />")
-                data += make_row("Reason for stopping build:",
-                                 "<input type='text' name='comments' />")
-                data += """<input type="submit" value="Stop Builder" />
-                </form>
-                """
+            data += "<div>no responsible users</div>\n"
+
+        if ss.changes:
+            data += "<h2>All Changes</h2>\n"
+            data += "<ol>\n"
+            for c in ss.changes:
+                data += "<li>" + c.asHTML() + "</li>\n"
+            data += "</ol>\n"
+            #data += html.PRE(b.changesText()) # TODO
+
 
         if b.isFinished() and self.builder_control is not None:
             data += "<h3>Resubmit Build:</h3>\n"
@@ -98,41 +161,6 @@ class StatusResourceBuild(HtmlResource):
             data += '<input type="submit" value="Rebuild" />\n'
             data += '</form>\n'
 
-        data += "<h2>Steps and Logfiles:</h2>\n"
-        if b.getLogs():
-            data += "<ol>\n"
-            for s in b.getSteps():
-                name = s.getName()
-                data += (" <li><a href=\"%s\">%s</a> [%s]\n"
-                         % (req.childLink("steps/%s" % urllib.quote(name)),
-                            name,
-                            " ".join(s.getText())))
-                if s.getLogs():
-                    data += "  <ol>\n"
-                    for logfile in s.getLogs():
-                        logname = logfile.getName()
-                        logurl = req.childLink("steps/%s/logs/%s" %
-                                               (urllib.quote(name),
-                                                urllib.quote(logname)))
-                        data += ("   <li><a href=\"%s\">%s</a></li>\n" %
-                                 (logurl, logfile.getName()))
-                    data += "  </ol>\n"
-                data += " </li>\n"
-            data += "</ol>\n"
-
-        data += ("<h2>Blamelist:</h2>\n"
-                 " <ol>\n")
-        for who in b.getResponsibleUsers():
-            data += "  <li>%s</li>\n" % html.escape(who)
-        data += (" </ol>\n"
-                 "<h2>All Changes</h2>\n")
-        changes = ss.changes
-        if changes:
-            data += "<ol>\n"
-            for c in changes:
-                data += "<li>" + c.asHTML() + "</li>\n"
-            data += "</ol>\n"
-        #data += html.PRE(b.changesText()) # TODO
         return data
 
     def stop(self, req):

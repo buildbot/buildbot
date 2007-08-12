@@ -2,7 +2,7 @@
 from zope.interface import Interface
 from twisted.web import html, resource
 from buildbot.status import builder
-
+from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE, EXCEPTION
 
 
 class ITopBox(Interface):
@@ -21,11 +21,18 @@ class IBox(Interface):
 class IHTMLLog(Interface):
     pass
 
+css_classes = {SUCCESS: "success",
+               WARNINGS: "warnings",
+               FAILURE: "failure",
+               EXCEPTION: "exception",
+               }
+
 ROW_TEMPLATE = '''
 <div class="row">
   <span class="label">%(label)s</span>
   <span class="field">%(field)s</span>
-</div>'''
+</div>
+'''
 
 def make_row(label, field):
     """Create a name/value row for the HTML.
