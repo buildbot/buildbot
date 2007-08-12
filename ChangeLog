@@ -1,3 +1,8 @@
+2007-08-12  Brian Warner  <warner@lothar.com>
+
+	* buildbot/interfaces.py (IBuildStatus.getProperty): note that
+	this might raise KeyError
+
 2007-08-07  Brian Warner  <warner@lothar.com>
 
 	* buildbot/slave/commands.py (P4): use 'p4user' to construct the

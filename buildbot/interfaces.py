@@ -357,7 +357,8 @@ class IBuildStatus(Interface):
         callback is given this IBuildStatus instance as an argument."""
 
     def getProperty(propname):
-        """Return the value of the build property with the given name."""
+        """Return the value of the build property with the given name. Raises
+        KeyError if there is no such property on this build."""
 
     def getReason():
         """Return a string that indicates why the build was run. 'changes',
