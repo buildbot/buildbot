@@ -1,5 +1,11 @@
 2007-08-12  Brian Warner  <warner@lothar.com>
 
+	* buildbot/status/web/xmlrpc.py (XMLRPCServer): add preliminary
+	XMLRPC server to the WebStatus page. This only has two methods
+	right now (getAllBuildsInInterval and getBuild), but we'll be
+	adding more in the future. This server is extracted from the
+	trac-plugin branch.
+
 	* buildbot/status/web/baseweb.py (OneLinePerBuild): refactor using
 	generateFinishedBuilds, and improve the data displayed.
 	* buildbot/status/web/build.py (StatusResourceBuild): rearrange
