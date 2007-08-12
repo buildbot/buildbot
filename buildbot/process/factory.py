@@ -56,8 +56,6 @@ class GNUAutoconf(BuildFactory):
                  configureFlags=[],
                  compile=["make", "all"],
                  test=["make", "check"]):
-        assert isinstance(source, tuple)
-        assert issubclass(source[0], BuildStep)
         BuildFactory.__init__(self, [source])
         if configure is not None:
             # we either need to wind up with a string (which will be
@@ -80,8 +78,6 @@ class GNUAutoconf(BuildFactory):
 
 class CPAN(BuildFactory):
     def __init__(self, source, perl="perl"):
-        assert isinstance(source, tuple)
-        assert issubclass(source[0], BuildStep)
         BuildFactory.__init__(self, [source])
         self.addStep(Configure, command=[perl, "Makefile.PL"])
         self.addStep(Compile, command=["make"])
@@ -89,8 +85,6 @@ class CPAN(BuildFactory):
 
 class Distutils(BuildFactory):
     def __init__(self, source, python="python", test=None):
-        assert isinstance(source, tuple)
-        assert issubclass(source[0], BuildStep)
         BuildFactory.__init__(self, [source])
         self.addStep(Compile, command=[python, "./setup.py", "build"])
         if test is not None:
@@ -116,8 +110,6 @@ class Trial(BuildFactory):
                  testpath=".", randomly=None, recurse=None,
                  tests=None,  useTestCaseNames=False, env=None):
         BuildFactory.__init__(self, [source])
-        assert isinstance(source, tuple)
-        assert issubclass(source[0], BuildStep)
         assert tests or useTestCaseNames, "must use one or the other"
         if trial is not None:
             self.trial = trial

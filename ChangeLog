@@ -1,5 +1,12 @@
 2007-08-12  Brian Warner  <warner@lothar.com>
 
+	* buildbot/process/factory.py (GNUAutoconf.__init__): allow
+	'source' to be a BuildStep instance, since BuildFactory accepts
+	them now.
+	(CPAN.__init__): same
+	(Distutils.__init__): same
+	(Trial.__init__): same
+
 	* buildbot/interfaces.py (IBuildStatus.getProperty): note that
 	this might raise KeyError
 
