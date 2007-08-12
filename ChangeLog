@@ -1,5 +1,12 @@
 2007-08-12  Brian Warner  <warner@lothar.com>
 
+	* buildbot/interfaces.py (IStatus.generateFinishedBuilds): define
+	new method, to make status display classes easier to write,
+	especially the WebStatus 'one_line_per_build' page.
+	(IBuilderStatus.generateFinishedBuilds): same
+	* buildbot/status/builder.py (BuilderStatus.generateFinishedBuilds):
+	(Status.generateFinishedBuilds): implement it
+
 	* buildbot/process/factory.py (GNUAutoconf.__init__): allow
 	'source' to be a BuildStep instance, since BuildFactory accepts
 	them now.

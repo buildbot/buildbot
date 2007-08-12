@@ -154,6 +154,31 @@ class IStatus(Interface):
     def getBuildSets():
         """Return a list of active (non-finished) IBuildSetStatus objects."""
 
+    def generateFinishedBuilds(builders=[], branches=[],
+                               num_builds=None, finished_before=None):
+        """Return a generator that will produce IBuildStatus objects each
+        time you invoke its .next() method, starting with the most recent
+        finished build and working backwards.
+
+        @param builders: this is a list of Builder names, and the generator
+                         will only produce builds that ran on the given
+                         Builders. If the list is empty, produce builds from
+                         all Builders.
+
+        @param branches: this is a list of branch names, and the generator
+                         will only produce builds that used the given
+                         branches. If the list is empty, produce builds from
+                         all branches.
+
+        @param num_builds: the generator will stop after providing this many
+                           builds. The default of None means to produce as
+                           many builds as possible.
+
+        @type finished_before: int: a timestamp, seconds since the epoch
+        @param finished_before: if provided, do not produce any builds that
+                                finished after the given timestamp.
+        """
+
     def subscribe(receiver):
         """Register an IStatusReceiver to receive new status events. The
         receiver will immediately be sent a set of 'builderAdded' messages
@@ -312,6 +337,40 @@ class IBuilderStatus(Interface):
         connecting and disconnecting are events, as are ping attempts.
         getEvent(-1) will return the most recent event. Events are numbered,
         but it probably doesn't make sense to ever do getEvent(+n)."""
+
+    def generateFinishedBuilds(branches=[],
+                               num_builds=None,
+                               max_buildnum=None, finished_before=None
+                               ):
+        """Return a generator that will produce IBuildStatus objects each
+        time you invoke its .next() method, starting with the most recent
+        finished build, then the previous build, and so on back to the oldest
+        build available.
+
+        @param branches: this is a list of branch names, and the generator
+                         will only produce builds that involve the given
+                         branches. If the list is empty, the generator will
+                         produce all builds regardless of what branch they
+                         used.
+
+        @param num_builds: if provided, the generator will stop after
+                           providing this many builds. The default of None
+                           means to produce as many builds as possible.
+
+        @param max_buildnum: if provided, the generator will start by
+                             providing the build with this number, or the
+                             highest-numbered preceding build (i.e. the
+                             generator will not produce any build numbered
+                             *higher* than max_buildnum). The default of None
+                             means to start with the most recent finished
+                             build. -1 means the same as None. -2 means to
+                             start with the next-most-recent completed build,
+                             etc.
+
+        @type finished_before: int: a timestamp, seconds since the epoch
+        @param finished_before: if provided, do not produce any builds that
+                                finished after the given timestamp.
+        """
 
     def subscribe(receiver):
         """Register an IStatusReceiver to receive new status events. The

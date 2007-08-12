@@ -6,7 +6,7 @@ from twisted.persisted import styles
 from twisted.internet import reactor, defer
 from twisted.protocols import basic
 
-import os, shutil, sys, re, urllib
+import os, shutil, sys, re, urllib, itertools
 from cPickle import load, dump
 from cStringIO import StringIO
 
@@ -1466,6 +1466,35 @@ class BuilderStatus(styles.Versioned):
         except IndexError:
             return None
 
+    def generateFinishedBuilds(self, branches=[],
+                               num_builds=None,
+                               max_buildnum=None,
+                               finished_before=None):
+        got = 0
+        for Nb in itertools.count(1):
+            if Nb > self.nextBuildNumber:
+                break
+            build = self.getBuild(-Nb)
+            if build is None:
+                continue
+            if max_buildnum is not None:
+                if build.getNumber() > max_buildnum:
+                    continue
+            if not build.isFinished():
+                continue
+            if finished_before is not None:
+                start, end = build.getTimes()
+                if end >= finished_before:
+                    continue
+            if branches:
+                if build.getSourceStamp().branch not in branches:
+                    continue
+            got += 1
+            yield build
+            if num_builds is not None:
+                if got >= num_builds:
+                    return
+
     def eventGenerator(self, branches=[]):
         """This function creates a generator which will provide all of this
         Builder's status events, starting with the most recent and
@@ -1842,6 +1871,64 @@ class Status:
 
     def getBuildSets(self):
         return self.activeBuildSets[:]
+
+    def generateFinishedBuilds(self, builders=[], branches=[],
+                               num_builds=None, finished_before=None):
+
+        def want_builder(bn):
+            if builders:
+                return bn in builders
+            return True
+        builder_names = [bn
+                         for bn in self.getBuilderNames()
+                         if want_builder(bn)]
+
+        # 'sources' is a list of generators, one for each Builder we're
+        # using. When the generator is exhausted, it is replaced in this list
+        # with None.
+        sources = []
+        for bn in builder_names:
+            b = self.getBuilder(bn)
+            g = b.generateFinishedBuilds(branches,
+                                         finished_before=finished_before)
+            sources.append(g)
+
+        # next_build the next build from each source
+        next_build = [None] * len(sources)
+
+        def refill():
+            for i,g in enumerate(sources):
+                if next_build[i]:
+                    # already filled
+                    continue
+                if not g:
+                    # already exhausted
+                    continue
+                try:
+                    next_build[i] = g.next()
+                except StopIteration:
+                    next_build[i] = None
+                    sources[i] = None
+
+        got = 0
+        while True:
+            refill()
+            # find the latest build among all the candidates
+            candidates = [(i, b, b.getTimes()[1])
+                          for i,b in enumerate(next_build)
+                          if b is not None]
+            candidates.sort(lambda x,y: cmp(x[2], y[2]))
+            if not candidates:
+                return
+
+            # and remove it from the list
+            i, build, finshed_time = candidates[-1]
+            next_build[i] = None
+            got += 1
+            yield build
+            if num_builds is not None:
+                if got >= num_builds:
+                    return
 
     def subscribe(self, target):
         self.watchers.append(target)
