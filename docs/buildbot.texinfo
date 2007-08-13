@@ -6002,8 +6002,9 @@ main part of the URL itself. For example, a page that describes Build
 The table below lists all of the internal pages and the URLs that can
 be used to access them.
 
-NOTE: of the pages described here, only the @code{/waterfall} and
-@code{/builders} are implemented yet.
+NOTE: of the pages described here, @code{/slave_status_timeline} and
+@code{/last_build} have not yet been implemented, and @code{/xmlrpc}
+has only a few methods so far. Future releases will improve this.
 
 @table @code
 
@@ -6022,8 +6023,16 @@ non-Build events, like slaves attaching and detaching, as well as
 reconfiguration events. 'show_events=false' hides these events. The
 default is to show them.
 
-The Waterfall has references to resources in the @file{/builders}
-portion of the URL space to give access to individual builds.
+The @code{last_time=}, @code{first_time=}, and @code{show_time=}
+arguments will control what interval of time is displayed. The default
+is to show the latest events, but these can be used to look at earlier
+periods in history. The @code{num_events=} argument also provides a
+limit on the size of the displayed page.
+
+The Waterfall has references to resources many of the other portions
+of the URL space: @file{/builders} for access to individual builds,
+@file{/changes} for access to information about source code changes,
+etc.
 
 @item /builders/$BUILDERNAME/
 
@@ -6061,9 +6070,9 @@ while failing builds are in red. The date and time of the build are
 added to the right-hand edge of the line. The lines are ordered by
 build finish timestamp.
 
-One of more ``builder='' arguments can be used to restrict the list.
-In addition, a ``numbuilds='' argument will control how many lines are
-displayed (20 by default).
+One or more @code{builder=} or @code{branch=} arguments can be used to
+restrict the list. In addition, a @code{numbuilds=} argument will
+control how many lines are displayed (20 by default).
 
 @item /slave_status_timeline
 

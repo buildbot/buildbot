@@ -1,5 +1,11 @@
 2007-08-13  Brian Warner  <warner@lothar.com>
 
+	* buildbot/status/web/about.py (AboutBuildbot): add an 'about'
+	page with versions of python, buildbot, and twisted
+	* buildbot/status/web/baseweb.py (WebStatus.setupUsualPages): same
+	* buildbot/status/web/index.html: add links to most pages
+	* docs/buildbot.texinfo (Buildbot Web Resources): update docs
+
 	* buildbot/status/web/robots.txt: put a robots.txt in new installs
 	which discourages robot access to all large dynamically-generated
 	pages. The intention is that the index page and the 'about' page

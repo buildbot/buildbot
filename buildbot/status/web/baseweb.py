@@ -16,6 +16,7 @@ from buildbot.status.web.changes import ChangesResource
 from buildbot.status.web.builder import BuildersResource
 from buildbot.status.web.slaves import BuildSlavesResource
 from buildbot.status.web.xmlrpc import XMLRPCServer
+from buildbot.status.web.about import AboutBuildbot
 
 # this class contains the status services (WebStatus and the older Waterfall)
 # which can be put in c['status']. It also contains some of the resources
@@ -364,6 +365,7 @@ class WebStatus(service.MultiService):
         #self.putChild("schedulers", SchedulersResource())
         self.putChild("one_line_per_build", OneLinePerBuild())
         self.putChild("xmlrpc", XMLRPCServer())
+        self.putChild("about", AboutBuildbot())
 
     def __repr__(self):
         if self.http_port is None:
