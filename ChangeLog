@@ -1,3 +1,24 @@
+2007-08-13  Brian Warner  <warner@lothar.com>
+
+	* buildbot/status/web/waterfall.py: add 'refresh' query arg, to
+	activate automatic reloading of the page (using a meta Refresh:
+	tag). Closes #69.
+	(WaterfallHelp): new page to explain all the nifty query arguments
+	you can use on the Waterfall, along with forms to set them for
+	you. From this page, you can add filters for builder=, branch=,
+	show_events=, as well as turning on reload=.
+	(WaterfallStatusResource.buildGrid): new query args: last_time=,
+	first_time=, show_time=, num_events= . The old show= is still
+	accepted, but the new builder= is preferred. We ignore empty
+	branch= arguments, to make the WaterfallHelp form easier to
+	implement.
+	(WaterfallStatusResource.head): new method to add text to the
+	<head> of the page.
+	* buildbot/status/web/base.py (HtmlResource.content): use head()
+	* buildbot/status/web/baseweb.py (OneLinePerBuild.body): ignore
+	empty branch= arguments
+	(OneLinePerBuildOneBuilder.body): same
+
 2007-08-12  Brian Warner  <warner@lothar.com>
 
 	* buildbot/status/web/waterfall.py (WaterfallStatusResource): add

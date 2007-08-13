@@ -188,6 +188,7 @@ class HtmlResource(resource.Resource):
         data += "<head>\n"
         for he in s.head_elements:
             data += " " + self.fillTemplate(he, request) + "\n"
+            data += self.head(request)
         data += "</head>\n\n"
 
         data += '<body %s>\n' % " ".join(['%s="%s"' % (k,v)
@@ -196,6 +197,9 @@ class HtmlResource(resource.Resource):
         data += "</body>\n"
         data += self.fillTemplate(s.footer, request)
         return data
+
+    def head(self, request):
+        return ""
 
     def body(self, request):
         return "Dummy\n"

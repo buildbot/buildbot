@@ -126,7 +126,7 @@ class OneLinePerBuild(HtmlResource, OneLineMixin):
         status = self.getStatus(req)
         numbuilds = int(req.args.get("numbuilds", [self.numbuilds])[0])
         builders = req.args.get("builder", [])
-        branches = req.args.get("branch", [])
+        branches = [b for b in req.args.get("branch", []) if b]
 
         g = status.generateFinishedBuilds(builders, branches, numbuilds)
 
@@ -162,7 +162,7 @@ class OneLinePerBuildOneBuilder(HtmlResource, OneLineMixin):
     def body(self, req):
         status = self.getStatus(req)
         numbuilds = int(req.args.get("numbuilds", [self.numbuilds])[0])
-        branches = req.args.get("branch", [])
+        branches = [b for b in req.args.get("branch", []) if b]
 
         # walk backwards through all builds of a single builder
         g = self.builder.generateFinishedBuilds(branches, numbuilds)
