@@ -1,5 +1,8 @@
 2007-08-12  Brian Warner  <warner@lothar.com>
 
+	* buildbot/interfaces.py (IStatus.getSlaveNames): new method to
+	list all buildslaves
+
 	* buildbot/buildslave.py (BuildSlave.messageReceivedFromSlave):
 	use the BuildSlave to keep track of the last time we've heard from
 	the buildslave. This is updated upon receipt of any message from

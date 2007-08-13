@@ -148,6 +148,10 @@ class IStatus(Interface):
     def getBuilder(name):
         """Return the IBuilderStatus object for a given named Builder. Raises
         KeyError if there is no Builder by that name."""
+
+    def getSlaveNames():
+        """Return a list of buildslave names, suitable for passing to
+        getSlave()."""
     def getSlave(name):
         """Return the ISlaveStatus object for a given named buildslave."""
 

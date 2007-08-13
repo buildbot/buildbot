@@ -1871,6 +1871,9 @@ class Status:
         """
         return self.botmaster.builders[name].builder_status
 
+    def getSlaveNames(self):
+        return self.botmaster.slaves.keys()
+
     def getSlave(self, slavename):
         return self.botmaster.slaves[slavename].slave_status
 
