@@ -367,9 +367,9 @@ class WaterfallHelp(HtmlResource):
         # just after that text
         show_reload_input = '<table>\n'
         times = [("none", "None"),
-                 ("30", "30 seconds"),
                  ("60", "60 seconds"),
                  ("300", "5 minutes"),
+                 ("600", "10 minutes"),
                  ]
         current_reload_time = request.args.get("reload", ["none"])
         if current_reload_time:
