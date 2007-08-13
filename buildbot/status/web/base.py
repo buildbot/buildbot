@@ -208,3 +208,27 @@ class StaticHTML(HtmlResource):
     def body(self, request):
         return self.bodyHTML
 
+MINUTE = 60
+HOUR = 60*MINUTE
+DAY = 24*HOUR
+WEEK = 7*DAY
+MONTH = 30*DAY
+
+def plural(word, words, num):
+    if int(num) == 1:
+        return "%d %s" % (num, word)
+    else:
+        return "%d %s" % (num, words)
+
+def abbreviate_age(age):
+    if age <= 90:
+        return "%s ago" % plural("second", "seconds", age)
+    if age < 90*MINUTE:
+        return "about %s ago" % plural("minute", "minutes", age / MINUTE)
+    if age < DAY:
+        return "about %s ago" % plural("hour", "hours", age / HOUR)
+    if age < 2*WEEK:
+        return "about %s ago" % plural("day", "days", age / DAY)
+    if age < 2*MONTH:
+        return "about %s ago" % plural("week", "weeks", age / WEEK)
+    return "a long time ago"

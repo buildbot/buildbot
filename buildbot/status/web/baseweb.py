@@ -14,6 +14,7 @@ from buildbot.status.web.base import HtmlResource, css_classes
 from buildbot.status.web.waterfall import WaterfallStatusResource
 from buildbot.status.web.changes import ChangesResource
 from buildbot.status.web.builder import BuildersResource
+from buildbot.status.web.slaves import BuildSlavesResource
 from buildbot.status.web.xmlrpc import XMLRPCServer
 
 # this class contains the status services (WebStatus and the older Waterfall)
@@ -359,6 +360,7 @@ class WebStatus(service.MultiService):
         self.putChild("waterfall", WaterfallStatusResource())
         self.putChild("builders", BuildersResource())
         self.putChild("changes", ChangesResource())
+        self.putChild("buildslaves", BuildSlavesResource())
         #self.putChild("schedulers", SchedulersResource())
         self.putChild("one_line_per_build", OneLinePerBuild())
         self.putChild("xmlrpc", XMLRPCServer())
