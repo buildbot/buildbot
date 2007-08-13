@@ -1035,3 +1035,6 @@ class ILogObserver(Interface):
     def logChunk(build, step, log, channel, text):
         pass
 
+class IBuildSlave(Interface):
+    # this is a marker interface for the BuildSlave class
+    pass

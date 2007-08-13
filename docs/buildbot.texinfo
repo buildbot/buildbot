@@ -6984,6 +6984,7 @@ BuildMaster
   [IChangeSource instances]
  [IScheduler instances]  (in .schedulers)
  BotMaster  (in .botmaster)
+  [IBuildSlave instances]
  [IStatusTarget instances]  (in .statusTargets)
 @end example
 

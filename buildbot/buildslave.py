@@ -1,12 +1,15 @@
 
 import time
+from zope.interface import implements
 from twisted.python import log
 from twisted.internet import defer, reactor
+from twisted.application import service
 
 from buildbot.pbutil import NewCredPerspective
 from buildbot.status.builder import SlaveStatus
+from buildbot.interfaces import IBuildSlave
 
-class BuildSlave(NewCredPerspective):
+class BuildSlave(NewCredPerspective, service.MultiService):
     """This is the master-side representative for a remote buildbot slave.
     There is exactly one for each slave described in the config file (the
     c['slaves'] list). When buildbots connect in (.attach), they get a
@@ -17,6 +20,8 @@ class BuildSlave(NewCredPerspective):
     running builds.  I am instantiated by the configuration file, and can be
     subclassed to add extra functionality."""
 
+    implements(IBuildSlave)
+
     def __init__(self, name, password, max_builds=None):
         """
         @param name: botname this machine will supply when it connects
@@ -26,7 +31,7 @@ class BuildSlave(NewCredPerspective):
                            be run concurrently on this buildslave (the
                            default is None for no limit)
         """
-
+        service.MultiService.__init__(self)
         self.slavename = name
         self.password = password
         self.botmaster = None # no buildmaster yet

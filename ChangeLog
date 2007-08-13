@@ -1,5 +1,22 @@
 2007-08-12  Brian Warner  <warner@lothar.com>
 
+	* buildbot/buildslave.py (BuildSlave): these are now MultiService
+	instances too, and live as children of the BotMaster. The main
+	advantage of this approach is that BuildSlaves can know when they
+	are being removed (so they can shut off the upcoming
+	when-do-we-email-an-admin-because-we-lost-our-slave timer).
+	* buildbot/interfaces.py (IBuildSlave): marker interface so we can
+	identify which service children are BuildSlaves
+	* buildbot/master.py (BuildMaster.loadConfig_Slaves): handle the
+	Checker updates here, but delegate the rest to..
+	(BotMaster.loadConfig_Slaves): .. here, which looks at the
+	BotMaster's service children to identify the old slaves. I think
+	the previous approach of using master.slaves was broken in the
+	face of config updates that modified BuildSlave instances but did
+	not completely replace them.
+	* docs/buildbot.texinfo (Developer's Appendix): note the change to
+	the Service hierarchy
+
 	* buildbot/status/web/slaves.py (BuildSlavesResource): new status
 	page (at URL /buildslaves/) to view status of all buildslaves at
 	once, including how long it's been since we last heard from them,

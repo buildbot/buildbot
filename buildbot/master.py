@@ -30,7 +30,7 @@ from buildbot import interfaces
 
 ########################################
     
-class BotMaster(service.Service):
+class BotMaster(service.MultiService):
 
     """This is the master-side service which manages remote buildbot slaves.
     It provides them with BuildSlaves, and distributes file change
@@ -40,6 +40,7 @@ class BotMaster(service.Service):
     debug = 0
 
     def __init__(self):
+        service.MultiService.__init__(self)
         self.builders = {}
         self.builderNames = []
         # builders maps Builder names to instances of bb.p.builder.Builder,
@@ -96,14 +97,58 @@ class BotMaster(service.Service):
                 return d
         return defer.succeed(None)
 
+    def loadConfig_Slaves(self, new_slaves):
+        old_slaves = [c for c in list(self)
+                      if interfaces.IBuildSlave.providedBy(c)]
 
-    def addSlave(self, slave):
-        slave.setBotmaster(self)
-        self.slaves[slave.slavename] = slave
+        # identify added/removed slaves. For each slave we construct a tuple
+        # of (name, password, class), and we consider the slave to be already
+        # present if the tuples match. (we include the class to make sure
+        # that BuildSlave(name,pw) is different than
+        # SubclassOfBuildSlave(name,pw) ). If the password or class has
+        # changed, we will remove the old version of the slave and replace it
+        # with a new one. If anything else has changed, we just update the
+        # old BuildSlave instance in place. If the name has changed, of
+        # course, it looks exactly the same as deleting one slave and adding
+        # an unrelated one.
+        old_t = {}
+        for s in old_slaves:
+            old_t[(s.slavename, s.password, s.__class__)] = s
+        new_t = {}
+        for s in new_slaves:
+            new_t[(s.slavename, s.password, s.__class__)] = s
+        removed = [old_t[t]
+                   for t in old_t
+                   if t not in new_t]
+        added = [new_t[t]
+                 for t in new_t
+                 if t not in old_t]
+        remaining_t = [t
+                       for t in new_t
+                       if t in old_t]
+        # removeSlave will hang up on the old bot
+        dl = []
+        for s in removed:
+            dl.append(self.removeSlave(s))
+        d = defer.DeferredList(dl, fireOnOneErrback=True)
+        def _add(res):
+            for s in added:
+                self.addSlave(s)
+            for t in remaining_t:
+                old_t[t].update(new_t[t])
+        d.addCallback(_add)
+        return d
 
-    def removeSlave(self, slavename):
-        d = self.slaves[slavename].disconnect()
-        del self.slaves[slavename]
+    def addSlave(self, s):
+        s.setServiceParent(self)
+        s.setBotmaster(self)
+        self.slaves[s.slavename] = s
+
+    def removeSlave(self, s):
+        # TODO: technically, disownServiceParent could return a Deferred
+        s.disownServiceParent()
+        d = self.slaves[s.slavename].disconnect()
+        del self.slaves[s.slavename]
         return d
 
     def slaveLost(self, bot):
@@ -326,7 +371,6 @@ class BuildMaster(service.MultiService, styles.Versioned):
 
         self.statusTargets = []
 
-        self.slaves = []
         # this ChangeMaster is a dummy, only used by tests. In the real
         # buildmaster, where the BuildMaster instance is activated
         # (startService is called) by twistd, this attribute is overwritten.
@@ -684,43 +728,8 @@ class BuildMaster(service.MultiService, styles.Versioned):
         for s in new_slaves:
             self.checker.addUser(s.slavename, s.password)
         self.checker.addUser("change", "changepw")
-
-        # identify new/old slaves. For each slave we construct a tuple of
-        # (name, password, class), and we consider the slave to be already
-        # present if the tuples match. (we include the class to make sure
-        # that BuildSlave(name,pw) is different than
-        # SubclassOfBuildSlave(name,pw) ). If the password or class has
-        # changed, we will remove the old version of the slave and replace it
-        # with a new one. If anything else has changed, we just update the
-        # old BuildSlave instance in place. If the name has changed, of
-        # course, it looks exactly the same as deleting one slave and adding
-        # an unrelated one.
-        old_t = {}
-        for s in self.slaves:
-            old_t[(s.slavename, s.password, s.__class__)] = s
-        new_t = {}
-        for s in new_slaves:
-            new_t[(s.slavename, s.password, s.__class__)] = s
-        removed = [old_t[t]
-                   for t in old_t
-                   if t not in new_t]
-        added = [new_t[t]
-                 for t in new_t
-                 if t not in old_t]
-        remaining_t = [t
-                       for t in new_t
-                       if t in old_t]
-        # removeSlave will hang up on the old bot
-        dl = [self.botmaster.removeSlave(s.slavename) for s in removed]
-        d = defer.DeferredList(dl, fireOnOneErrback=True)
-        def _add(res):
-            for s in added:
-                self.botmaster.addSlave(s)
-            for t in remaining_t:
-                old_t[t].update(new_t[t])
-            self.slaves = new_slaves
-        d.addCallback(_add)
-        return d
+        # let the BotMaster take care of the rest
+        return self.botmaster.loadConfig_Slaves(new_slaves)
 
     def loadConfig_Sources(self, sources):
         if not sources:
