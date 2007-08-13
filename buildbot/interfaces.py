@@ -278,6 +278,10 @@ class ISlaveStatus(Interface):
     def isConnected():
         """Return True if the slave is currently online, False if not."""
 
+    def lastMessageReceived():
+        """Return a timestamp (seconds since epoch) indicating when the most
+        recent message was received from the buildslave."""
+
 class ISchedulerStatus(Interface):
     def getName():
         """Return the name of this Scheduler (a string)."""

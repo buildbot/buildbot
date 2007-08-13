@@ -1727,6 +1727,7 @@ class SlaveStatus:
 
     def __init__(self, name):
         self.name = name
+        self._lastMessageReceived = 0
 
     def getName(self):
         return self.name
@@ -1736,6 +1737,8 @@ class SlaveStatus:
         return self.host
     def isConnected(self):
         return self.connected
+    def lastMessageReceived(self):
+        return self._lastMessageReceived
 
     def setAdmin(self, admin):
         self.admin = admin
@@ -1743,6 +1746,8 @@ class SlaveStatus:
         self.host = host
     def setConnected(self, isConnected):
         self.connected = isConnected
+    def setLastMessageReceived(self, when):
+        self._lastMessageReceived = when
 
 class Status:
     """

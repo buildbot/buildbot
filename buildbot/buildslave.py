@@ -152,6 +152,7 @@ class BuildSlave(NewCredPerspective):
     def messageReceivedFromSlave(self):
         now = time.time()
         self.lastMessageReceived = now
+        self.slave_status.setLastMessageReceived(now)
 
     def detached(self, mind):
         self.slave = None

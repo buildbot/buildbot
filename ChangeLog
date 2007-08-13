@@ -15,6 +15,10 @@
 	(RemoteCommand.remote_complete): same
 	* buildbot/test/runutils.py (StepTester.makeStep): match the change
 	* buildbot/test/test_steps.py (BuildStep.testShellCommand1): same
+	* buildbot/interfaces.py (ISlaveStatus.lastMessageReceived): new
+	interface to retrieve this timestamp
+	* buildbot/status/builder.py (SlaveStatus): track a copy of the
+	timestamp
 
 
 	* buildbot/status/web/baseweb.py (OneLineMixin.make_line): tighten
