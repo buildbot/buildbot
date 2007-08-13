@@ -21,6 +21,7 @@ from twisted.internet import reactor, defer
 
 from buildbot.sourcestamp import SourceStamp
 from buildbot.process import buildstep, base, factory
+from buildbot.buildslave import BuildSlave
 from buildbot.steps import shell, source, python
 from buildbot.status import builder
 from buildbot.status.builder import SUCCESS, FAILURE
@@ -100,6 +101,7 @@ class BuildStep(unittest.TestCase):
         buildstep.RemoteCommand.commandCounter[0] = 3
         c = MyShellCommand(workdir=dir, command=cmd, timeout=10)
         c.setBuild(self.build)
+        c.setBuildSlave(BuildSlave("name", "password"))
         self.assertEqual(self.remote.events, self.expectedEvents)
         c.step_status = self.build_status.addStepWithName("myshellcommand")
         d = c.startStep(self.remote)

@@ -1,4 +1,5 @@
 
+import time
 from twisted.python import log
 from twisted.internet import defer, reactor
 
@@ -34,6 +35,7 @@ class BuildSlave(NewCredPerspective):
         self.slave_commands = None
         self.slavebuilders = []
         self.max_builds = max_builds
+        self.lastMessageReceived = 0
 
     def update(self, new):
         """
@@ -138,6 +140,7 @@ class BuildSlave(NewCredPerspective):
             self.slave_commands = state.get("slave_commands")
             self.slave = bot
             log.msg("bot attached")
+            self.messageReceivedFromSlave()
             return self.updateSlave()
         d.addCallback(_accept_slave)
 
@@ -145,6 +148,10 @@ class BuildSlave(NewCredPerspective):
         # receive this later, after we've started using them.
         d.addCallback(lambda res: self)
         return d
+
+    def messageReceivedFromSlave(self):
+        now = time.time()
+        self.lastMessageReceived = now
 
     def detached(self, mind):
         self.slave = None

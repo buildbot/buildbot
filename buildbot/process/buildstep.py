@@ -152,6 +152,7 @@ class RemoteCommand(pb.Referenceable):
         @type  updates: list of [object, int]
         @param updates: list of updates from the remote command
         """
+        self.buildslave.messageReceivedFromSlave()
         max_updatenum = 0
         for (update, num) in updates:
             #log.msg("update[%d]:" % num)
@@ -179,6 +180,7 @@ class RemoteCommand(pb.Referenceable):
 
         @rtype: None
         """
+        self.buildslave.messageReceivedFromSlave()
         # call the real remoteComplete a moment later, but first return an
         # acknowledgement so the slave can retire the completion message.
         if self.active:
@@ -583,6 +585,9 @@ class BuildStep:
         # afterwards.
         self.build = build
 
+    def setBuildSlave(self, buildslave):
+        self.buildslave = buildslave
+
     def setDefaultWorkdir(self, workdir):
         # the Build calls this just after __init__ and setDefaultWorkdir.
         # ShellCommand and variants use a slave-side workdir, but some other
@@ -887,6 +892,7 @@ class BuildStep:
         self.step_status.addURL(name, url)
 
     def runCommand(self, c):
+        c.buildslave = self.buildslave
         d = c.run(self, self.remote)
         return d
 

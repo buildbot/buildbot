@@ -1,5 +1,22 @@
 2007-08-12  Brian Warner  <warner@lothar.com>
 
+	* buildbot/buildslave.py (BuildSlave.messageReceivedFromSlave):
+	use the BuildSlave to keep track of the last time we've heard from
+	the buildslave. This is updated upon receipt of any message from
+	any SlaveBuilder (which generally means when RemoteCommands are
+	giving us status updates, as BuildSteps run). In the future this
+	will include slave pings too.
+	* buildbot/process/base.py
+	(Build.setupBuild): give each BuildStep a reference to the BuildSlave
+	* buildbot/process/buildstep.py:
+	(BuildStep.setBuildSlave): accept that reference
+	(BuildStep.runCommand): pass the reference on to the RemoteCommand
+	(RemoteCommand.remote_update): update the timestamp
+	(RemoteCommand.remote_complete): same
+	* buildbot/test/runutils.py (StepTester.makeStep): match the change
+	* buildbot/test/test_steps.py (BuildStep.testShellCommand1): same
+
+
 	* buildbot/status/web/baseweb.py (OneLineMixin.make_line): tighten
 	up the format a bit
 	(OneLinePerBuild.body): use a <ul> instead of <div>s

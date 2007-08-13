@@ -354,6 +354,7 @@ class Build:
                         % (factory, args))
                 raise
             step.setBuild(self)
+            step.setBuildSlave(self.slavebuilder.slave)
             step.setDefaultWorkdir(self.workdir)
             name = step.name
             count = 1

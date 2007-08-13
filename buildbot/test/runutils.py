@@ -6,6 +6,7 @@ from twisted.python import log, util
 
 from buildbot import master, interfaces
 from buildbot.slave import bot
+from buildbot.buildslave import BuildSlave
 from buildbot.process.builder import Builder
 from buildbot.process.base import BuildRequest, Build
 from buildbot.process.buildstep import BuildStep
@@ -405,6 +406,7 @@ class StepTester:
     workdir = "build"
     def makeStep(self, factory, **kwargs):
         step = makeBuildStep(self.masterbase, factory, **kwargs)
+        step.setBuildSlave(BuildSlave("name", "password"))
         step.setDefaultWorkdir(self.workdir)
         return step
 
