@@ -543,7 +543,8 @@ class WaterfallStatusResource(HtmlResource):
                                  [("last_time", str(int(bottom)))])
             data += '<a href="%s">next page</a>\n' % nextpage
 
-        helppage = with_args(request, new_path="waterfall/help")
+        helpurl = self.path_to_root(request) + "waterfall/help"
+        helppage = with_args(request, new_path=helpurl)
         data += '<a href="%s">help</a>\n' % helppage
 
         if self.get_reload_time(request) is not None:
