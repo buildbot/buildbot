@@ -63,6 +63,8 @@ def getLastNBuilds(status, numbuilds, builders=[], branches=[]):
 
 
 class OneLineMixin:
+    LINE_TIME_FORMAT = "%b %d %H:%M"
+
     def make_line(self, req, build):
         builder_name = build.getBuilder().getName()
         results = build.getResults()
@@ -84,17 +86,16 @@ class OneLineMixin:
                                                           build.getNumber())),
                   'builderurl': (root + "builders/%s" % builder_name),
                   'rev': rev,
-                  'time': time.strftime("%Y-%m-%d %H:%M:%S",
+                  'time': time.strftime(self.LINE_TIME_FORMAT,
                                         time.localtime(build.getTimes()[0])),
                   }
 
-        fmt = ('<div>'
-               '<font size="-1">(%(time)s)</font> '
+        fmt = ('<font size="-1">(%(time)s)</font> '
                '<a href="%(builderurl)s">%(builder_name)s</a> '
-               'rev=[%(rev)s]: '
+               'rev=[%(rev)s] '
+               '<a href="%(buildurl)s">#%(buildnum)d</a>: '
                '<span class="%(class)s">%(results)s</span> '
-               '<a href="%(buildurl)s">#%(buildnum)d</a> '
-               '</div>\n')
+               )
         data = fmt % values
         return data
 
@@ -132,13 +133,14 @@ class OneLinePerBuild(HtmlResource, OneLineMixin):
         data += "<h1>Last %d finished builds</h1>\n" % numbuilds
         if builders:
             data += ("<p>of builders: %s</p>\n" % (", ".join(builders)))
-
+        data += "<ul>\n"
         got = 0
         for build in g:
             got += 1
-            data += self.make_line(req, build)
+            data += " <li>" + self.make_line(req, build) + "</li>\n"
         if not got:
-            data += "<div>No matching builds found</div>\n"
+            data += " <li>No matching builds found</li>\n"
+        data += "</ul>\n"
         return data
 
 
@@ -164,12 +166,14 @@ class OneLinePerBuildOneBuilder(HtmlResource, OneLineMixin):
         data = ""
         data += ("<h1>Last %d builds of builder: %s</h1>\n" %
                  (numbuilds, self.builder_name))
+        data += "<ul>\n"
         got = 0
         for build in g:
             got += 1
-            data += self.make_line(req, build)
+            data += " <li>" + self.make_line(req, build) + "</li>\n"
         if not got:
-            data += "<div>No matching builds found</div>\n"
+            data += " <li>No matching builds found</li>\n"
+        data += "</ul>\n"
 
         return data
 
