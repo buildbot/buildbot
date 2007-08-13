@@ -535,8 +535,6 @@ class WaterfallStatusResource(HtmlResource):
             if new_path:
                 new_url.path = new_path
             new_url.query = newquery
-            #if newquery:
-            #    new_url += "?" + newquery
             return str(new_url)
 
         if timestamps:
