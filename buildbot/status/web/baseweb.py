@@ -110,6 +110,8 @@ class OneLinePerBuild(HtmlResource, OneLineMixin):
               can be used to see builds from any builder in the set.
     """
 
+    title = "Recent Builds"
+
     def __init__(self, numbuilds=20):
         HtmlResource.__init__(self)
         self.numbuilds = numbuilds
@@ -154,6 +156,7 @@ class OneLinePerBuildOneBuilder(HtmlResource, OneLineMixin):
         self.builder = builder
         self.builder_name = builder.getName()
         self.numbuilds = numbuilds
+        self.title = "Recent Builds of %s" % self.builder_name
 
     def body(self, req):
         status = self.getStatus(req)

@@ -1,5 +1,8 @@
 2007-08-12  Brian Warner  <warner@lothar.com>
 
+	* buildbot/status/web/baseweb.py: fix title of one-line-per-build
+	pages
+
 	* buildbot/interfaces.py (IStatus.getSlaveNames): new method to
 	list all buildslaves
 
