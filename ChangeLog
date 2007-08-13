@@ -1,5 +1,13 @@
 2007-08-13  Brian Warner  <warner@lothar.com>
 
+	* buildbot/status/web/robots.txt: put a robots.txt in new installs
+	which discourages robot access to all large dynamically-generated
+	pages. The intention is that the index page and the 'about' page
+	are the only ones which should be crawlable.
+	* buildbot/scripts/runner.py (Maker.public_html): same
+	(createMaster): same
+	* setup.py: ship index.html and robots.txt in source distributions
+
 	* buildbot/status/web/waterfall.py: add 'refresh' query arg, to
 	activate automatic reloading of the page (using a meta Refresh:
 	tag). Closes #69.

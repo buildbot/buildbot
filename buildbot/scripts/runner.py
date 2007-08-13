@@ -153,7 +153,7 @@ class Maker:
         f.close()
         os.chmod(target, 0600)
 
-    def public_html(self, index_html, buildbot_css):
+    def public_html(self, index_html, buildbot_css, robots_txt):
         if os.path.exists("public_html"):
             if not self.quiet:
                 print "public_html/ already exists: not replacing"
@@ -169,6 +169,11 @@ class Maker:
         target = os.path.join("public_html", "buildbot.css")
         f = open(target, "wt")
         f.write(open(buildbot_css, "rt").read())
+        f.close()
+
+        target = os.path.join("public_html", "robots.txt")
+        f = open(target, "wt")
+        f.write(open(robots_txt, "rt").read())
         f.close()
 
 
@@ -215,6 +220,7 @@ def createMaster(config):
     m.sampleconfig(util.sibpath(__file__, "sample.cfg"))
     m.public_html(util.sibpath(__file__, "../status/web/index.html"),
                   util.sibpath(__file__, "../status/web/classic.css"),
+                  util.sibpath(__file__, "../status/web/robots.txt"),
                   )
     m.makefile()
 

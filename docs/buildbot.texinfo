@@ -5936,7 +5936,10 @@ will serve files from this directory: for example, when a user points
 their browser at the buildbot's @code{WebStatus} URL, they will see
 the contents of the @file{public_html/index.html} file. Likewise,
 @file{public_html/robots.txt} and @file{public_html/buildbot.css} are
-useful things to create.
+useful things to have in there. The first time a buildmaster is
+created, the @file{public_html} directory is populated with some
+sample files, which you will probably want to customize for your own
+project.
 
 Certain URL prefixes are handled specially by code within the
 buildbot. The pages available in these spaces provide various views into
@@ -5963,11 +5966,11 @@ they provide.
 @subsection Buildbot Web Resources
 
 Certain URLs are ``magic'', and the pages they serve are created by
-various classes in the @file{buildbot.status.web} package instead of
-being read from disk. The most common way to access these pages is for
-the buildmaster admin to write or modify the @file{index.html} page to
-contain links to them. Of course other project web pages can contain
-links to these buildbot pages as well.
+code in various classes in the @file{buildbot.status.web} package
+instead of being read from disk. The most common way to access these
+pages is for the buildmaster admin to write or modify the
+@file{index.html} page to contain links to them. Of course other
+project web pages can contain links to these buildbot pages as well.
 
 Many pages can be modified by adding query arguments to the URL. For
 example, a page which shows the results of the most recent build
