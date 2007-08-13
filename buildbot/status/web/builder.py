@@ -12,7 +12,7 @@ from buildbot.sourcestamp import SourceStamp
 
 from buildbot.status.web.build import BuildsResource
 
-# $builder
+# builders/$builder
 class StatusResourceBuilder(HtmlResource):
     addSlash = True
 
