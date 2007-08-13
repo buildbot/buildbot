@@ -520,7 +520,8 @@ class WaterfallStatusResource(HtmlResource):
             newargs = req.args.copy()
             for argname in remove_args:
                 newargs[argname] = []
-            newargs["branch"] = [b for b in newargs["branch"] if b]
+            if "branch" in newargs:
+                newargs["branch"] = [b for b in newargs["branch"] if b]
             for k,v in new_args:
                 if k in newargs:
                     newargs[k].append(v)
