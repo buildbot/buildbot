@@ -335,6 +335,22 @@ class WaterfallStatusResource(HtmlResource):
 
         data += "<hr />\n"
 
+        if timestamps:
+            # sigh, nevow makes this sort of manipulation easier
+            bottom = timestamps[-1]
+            newargs = request.args.copy()
+            newargs["last_time"] = [str(int(bottom))]
+            newquery = "&".join(["%s=%s" % (k, v)
+                                 for k in newargs
+                                 for v in newargs[k]
+                                 ])
+            nextpage = str(request.URLPath())
+            if newquery:
+                nextpage += "?" + newquery
+            data += '<a href="%s">next page</a>\n' % nextpage
+        data += "<br />\n"
+
+
         bburl = "http://buildbot.net/?bb-ver=%s" % urllib.quote(version)
         data += "<a href=\"%s\">Buildbot-%s</a> " % (bburl, version)
         if projectName:
@@ -406,6 +422,15 @@ class WaterfallStatusResource(HtmlResource):
         if request.args.get("show_events", ["true"])[0].lower() == "true":
             showEvents = True
         filterBranches = request.args.get("branch", [])
+        maxTime = int(request.args.get("last_time", [util.now()])[0])
+        if "show_time" in request.args:
+            minTime = maxTime - int(request.args["show_time"][0])
+        elif "first_time" in request.args:
+            minTime = int(request.args["first_time"][0])
+        else:
+            minTime = None
+        spanLength = 10  # ten-second chunks
+        maxPageLen = int(request.args.get("num_events", [200])[0])
 
         # first step is to walk backwards in time, asking each column
         # (commit, all builders) if they have any events there. Build up the
@@ -442,9 +467,6 @@ class WaterfallStatusResource(HtmlResource):
             sourceEvents.append(get_event_from(gen))
         eventGrid = []
         timestamps = []
-        spanLength = 10  # ten-second chunks
-        tooOld = util.now() - 12*60*60 # never show more than 12 hours
-        maxPageLen = 200
 
         lastEventTime = 0
         for e in sourceEvents:
@@ -496,19 +518,21 @@ class WaterfallStatusResource(HtmlResource):
                 sourceEvents[c] = event # refill the tableau
                 spanEvents.append(events)
 
-            if firstTimestamp is not None:
+            # only show events older than maxTime. This makes it possible to
+            # visit a page that shows what it would be like to scroll off the
+            # bottom of this one.
+            if firstTimestamp is not None and firstTimestamp <= maxTime:
                 eventGrid.append(spanEvents)
                 timestamps.append(firstTimestamp)
-            
 
             if lastTimestamp:
                 spanStart = lastTimestamp - spanLength
             else:
                 # no more events
                 break
-            if lastTimestamp < tooOld:
-                pass
-                #break
+            if minTime is not None and lastTimestamp < minTime:
+                break
+
             if len(timestamps) > maxPageLen:
                 break
             

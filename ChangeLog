@@ -1,5 +1,16 @@
 2007-08-12  Brian Warner  <warner@lothar.com>
 
+	* buildbot/status/web/waterfall.py (WaterfallStatusResource): add
+	new query args: 'last_time' is a timestamp of the top-most event
+	on the display, 'first_time' is a timestamp for the bottom-most
+	event. 'show_time' is the difference between them, and overrides
+	'first_time'. 'num_events' puts an upper limit on the number of
+	timestamps that will be displayed on the left hand edge.
+	(WaterfallStatusResource.body): add a 'next page' link to the
+	bottom, which shows the events that come just after those shown on
+	the current page. This is a first step towards #67, but we need
+	some more controls before we can close that one.
+
 	* buildbot/buildslave.py (BuildSlave): these are now MultiService
 	instances too, and live as children of the BotMaster. The main
 	advantage of this approach is that BuildSlaves can know when they
