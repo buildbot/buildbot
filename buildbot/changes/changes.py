@@ -110,7 +110,9 @@ class Change:
         pointing at the passed-in 'url'.
         """
         who = self.getShortAuthor()
-        return '<a href="%s">%s</a>' % (url, html.escape(who))
+        return '<a href="%s" title="%s">%s</a>' % (url,
+                                                   html.escape(self.comments),
+                                                   html.escape(who))
 
     def getShortAuthor(self):
         return self.who

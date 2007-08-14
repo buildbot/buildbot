@@ -1,5 +1,10 @@
 2007-08-13  Brian Warner  <warner@lothar.com>
 
+	* buildbot/changes/changes.py (Change.get_HTML_box): add a tooltip
+	that contains the checkin comments when you hover over the entry
+	in the 'changes' column of the waterfall. Thanks to Frederic Leroy
+	for the patch.
+
 	* buildbot/status/web/waterfall.py (WaterfallStatusResource): improve
 	'help' page linkage
 
