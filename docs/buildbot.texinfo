@@ -5941,6 +5941,11 @@ created, the @file{public_html} directory is populated with some
 sample files, which you will probably want to customize for your own
 project.
 
+@example
+from buildbot.status.html import WebStatus
+c['status'].append(WebStatus(8080))
+@end example
+
 Certain URL prefixes are handled specially by code within the
 buildbot. The pages available in these spaces provide various views into
 the buildbot status, each with a different focus. These pages can be

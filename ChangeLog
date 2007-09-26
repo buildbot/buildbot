@@ -1,5 +1,7 @@
 2007-09-25  Brian Warner  <warner@lothar.com>
 
+	* docs/buildbot.texinfo (WebStatus): provide an example
+
 	* buildbot/status/web/baseweb.py (OneBoxPerBuilder): new status
 	page, shows a simple table with one row per Builder. Still pretty
 	ugly, but functional.
