@@ -1,5 +1,9 @@
 2007-09-25  Brian Warner  <warner@lothar.com>
 
+	* buildbot/status/web/waterfall.py (Spacer): make this *not*
+	inherit from builder.Event, so that show_events=false doesn't hide
+	spacers, since that would make the waterfall weirdly compressed.
+
 	* buildbot/status/web/waterfall.py (HELP): put the View button in
 	its own section, so it doesn't get visually confused with the
 	reload-timer section

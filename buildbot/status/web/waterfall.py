@@ -182,10 +182,19 @@ class EventBox(components.Adapter):
 components.registerAdapter(EventBox, builder.Event, IBox)
         
 
-class Spacer(builder.Event):
+class Spacer:
+    implements(interfaces.IStatusEvent)
+
     def __init__(self, start, finish):
         self.started = start
         self.finished = finish
+
+    def getTimes(self):
+        return (self.started, self.finished)
+    def getText(self):
+        return []
+    def getColor(self):
+        return None
 
 class SpacerBox(components.Adapter):
     implements(IBox)
@@ -661,6 +670,11 @@ class WaterfallStatusResource(HtmlResource):
             try:
                 while True:
                     e = g.next()
+                    # e might be builder.BuildStepStatus,
+                    # builder.BuildStatus, builder.Event,
+                    # waterfall.Spacer(builder.Event), or changes.Change .
+                    # The showEvents=False flag means we should hide
+                    # builder.Event .
                     if not showEvents and isinstance(e, builder.Event):
                         continue
                     break
