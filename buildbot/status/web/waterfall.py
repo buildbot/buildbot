@@ -304,6 +304,7 @@ reload itself after that many seconds.</p>
 
 %(show_reload_input)s
 
+<h2>Reload Waterfall Page</h2>
 
 <input type="submit" value="View Waterfall" />
 </form>
@@ -545,15 +546,18 @@ class WaterfallStatusResource(HtmlResource):
             bottom = timestamps[-1]
             nextpage = with_args(request, ["last_time"],
                                  [("last_time", str(int(bottom)))])
-            data += '<a href="%s">next page</a>\n' % nextpage
+            data += '[<a href="%s">next page</a>]\n' % nextpage
 
         helpurl = self.path_to_root(request) + "waterfall/help"
         helppage = with_args(request, new_path=helpurl)
-        data += '<a href="%s">help</a>\n' % helppage
+        data += '[<a href="%s">help</a>]\n' % helppage
+
+        welcomeurl = self.path_to_root(request) + "."
+        data += '[<a href="%s">welcome</a>]\n' % welcomeurl
 
         if self.get_reload_time(request) is not None:
             no_reload_page = with_args(request, remove_args=["reload"])
-            data += '<a href="%s">Stop Reloading</a>\n' % no_reload_page
+            data += '[<a href="%s">Stop Reloading</a>]\n' % no_reload_page
 
         data += "<br />\n"
 

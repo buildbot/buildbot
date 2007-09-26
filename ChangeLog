@@ -1,5 +1,14 @@
 2007-09-25  Brian Warner  <warner@lothar.com>
 
+	* buildbot/status/web/waterfall.py (HELP): put the View button in
+	its own section, so it doesn't get visually confused with the
+	reload-timer section
+	(WaterfallStatusResource.body): make the '[help]' links more
+	visually distinct from each other, and add a link to the Welcome
+	page
+	* buildbot/status/web/slaves.py (BuildSlavesResource): handle
+	unused buildslaves without exploding
+
 	* buildbot/status/web/waterfall.py
 	(WaterfallStatusResource.body.with_args): don't use req.URLPath,
 	it gives us absolute paths that break proxies

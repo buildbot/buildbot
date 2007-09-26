@@ -31,8 +31,11 @@ class BuildSlavesResource(HtmlResource):
             data += " <li>%s:\n" % name
             data += " <ul>\n"
             builder_links = ['<a href="../builders/%s">%s</a>' % (bname, bname)
-                             for bname in used_by_builder[name]]
-            data += "  <li>Used by: %s</li>\n" % ", ".join(builder_links)
+                             for bname in used_by_builder.get(name, [])]
+            if builder_links:
+                data += "  <li>Used by: %s</li>\n" % ", ".join(builder_links)
+            else:
+                data += "  <li>Not used by any Builders</li>\n"
             if slave.isConnected():
                 data += "  <li>Slave is currently connected</li>\n"
                 admin = slave.getAdmin()
