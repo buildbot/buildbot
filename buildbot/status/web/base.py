@@ -163,6 +163,10 @@ class HtmlResource(resource.Resource):
         return request.site.buildbot_service.parent.change_svc
 
     def path_to_root(self, request):
+        # /waterfall : ['waterfall'] -> ''
+        # /somewhere/lower : ['somewhere', 'lower'] -> '../'
+        # /somewhere/indexy/ : ['somewhere', 'indexy', ''] -> '../../'
+        # / : [] -> ''
         if request.prepath:
             segs = len(request.prepath) - 1
         else:
