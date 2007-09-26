@@ -1,4 +1,5 @@
 
+import urlparse
 from zope.interface import Interface
 from twisted.web import html, resource
 from buildbot.status import builder
@@ -142,7 +143,15 @@ class HtmlResource(resource.Resource):
 
     def render(self, request):
         if self.addSlash and request.prepath[-1] != '':
-            request.redirect(request.URLPath().child(''))
+            # this is intended to behave like request.URLPath().child('')
+            # but we need a relative URL, since we might be living behind a
+            # reverse proxy
+            url = request.prePathURL()
+            scheme, netloc, path, query, fragment = urlparse.urlsplit(url)
+            new_url = request.prepath[-1] + "/"
+            if query:
+                new_url += "?" + query
+            request.redirect(new_url)
             return ''
 
         data = self.content(request)

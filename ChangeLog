@@ -1,5 +1,8 @@
 2007-09-25  Brian Warner  <warner@lothar.com>
 
+	* buildbot/status/web/base.py (HtmlResource.render): fix addSlash
+	to emit relative URLs instead of using URLPath,
+
 	* docs/buildbot.texinfo (WebStatus): provide an example
 
 	* buildbot/status/web/baseweb.py (OneBoxPerBuilder): new status
