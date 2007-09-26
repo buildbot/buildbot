@@ -212,10 +212,10 @@ class OneBoxPerBuilder(HtmlResource):
             data += "<td>%s</td>\n" % html.escape(bn)
             b = builder.getLastFinishedBuild()
             if b:
-                url = "%s/builders/%s/builds/%d" % \
-                      (self.path_to_root(req),
-                       urllib.quote(bn, safe=''),
-                       b.getNumber())
+                url = (self.path_to_root(req) +
+                       "builders/" +
+                       urllib.quote(bn, safe='') +
+                       "/builds/%d" % b.getNumber())
                 try:
                     label = b.getProperty("got_revision")
                 except KeyError:
