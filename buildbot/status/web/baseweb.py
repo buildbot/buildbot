@@ -1,16 +1,16 @@
 
-import os, sys, time
+import os, sys, time, urllib
 from itertools import count
 
 from zope.interface import implements
 from twisted.python import log
 from twisted.application import strports, service
-from twisted.web import server, distrib, static
+from twisted.web import server, distrib, static, html
 from twisted.spread import pb
 
 from buildbot.interfaces import IControl, IStatusReceiver
 
-from buildbot.status.web.base import HtmlResource, css_classes
+from buildbot.status.web.base import HtmlResource, css_classes, Box, build_get_class, ICurrentBox
 from buildbot.status.web.waterfall import WaterfallStatusResource
 from buildbot.status.web.changes import ChangesResource
 from buildbot.status.web.builder import BuildersResource
@@ -180,6 +180,58 @@ class OneLinePerBuildOneBuilder(HtmlResource, OneLineMixin):
             data += " <li>No matching builds found</li>\n"
         data += "</ul>\n"
 
+        return data
+
+# /one_box_per_builder
+#  accepts builder=, branch=
+class OneBoxPerBuilder(HtmlResource):
+    """This shows a narrow table with one row per build. The leftmost column
+    contains the builder name. The next column contains the results of the
+    most recent build. The right-hand column shows the builder's current
+    activity.
+
+    builder=: show only builds for this builder. Multiple builder= arguments
+              can be used to see builds from any builder in the set.
+    """
+
+    title = "Latest Build"
+
+    def body(self, req):
+        status = self.getStatus(req)
+        
+        builders = req.args.get("builder", status.getBuilderNames())
+        branches = [b for b in req.args.get("branch", []) if b]
+
+        data = ""
+
+        data += "<h2>Latest builds</h2>\n"
+        data += "<table>\n"
+        for bn in builders:
+            builder = status.getBuilder(bn)
+            data += "<tr>\n"
+            data += "<td>%s</td>\n" % html.escape(bn)
+            b = builder.getLastFinishedBuild()
+            if b:
+                url = "%s/builders/%s/builds/%d" % \
+                      (self.path_to_root(req),
+                       urllib.quote(bn, safe=''),
+                       b.getNumber())
+                try:
+                    label = b.getProperty("got_revision")
+                except KeyError:
+                    label = None
+                if not label or len(str(label)) > 20:
+                    label = "#%d" % b.getNumber()
+                text = ['<a href="%s">%s</a>' % (url, label)]
+                text.extend(b.getText())
+                box = Box(text, b.getColor(),
+                          class_="LastBuild %s" % build_get_class(b))
+                data += box.td(align="center")
+            else:
+                data += "<td></td>\n"
+            current_box = ICurrentBox(builder).getBox(status)
+            data += current_box.td(align="center")
+        data += "</table>\n"
         return data
 
 
@@ -364,6 +416,7 @@ class WebStatus(service.MultiService):
         self.putChild("buildslaves", BuildSlavesResource())
         #self.putChild("schedulers", SchedulersResource())
         self.putChild("one_line_per_build", OneLinePerBuild())
+        self.putChild("one_box_per_builder", OneBoxPerBuilder())
         self.putChild("xmlrpc", XMLRPCServer())
         self.putChild("about", AboutBuildbot())
 

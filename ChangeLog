@@ -1,5 +1,10 @@
 2007-09-25  Brian Warner  <warner@lothar.com>
 
+	* buildbot/status/web/baseweb.py (OneBoxPerBuilder): new status
+	page, shows a simple table with one row per Builder. Still pretty
+	ugly, but functional.
+	* buildbot/status/web/index.html: reference it
+
 	* buildbot/status/web/waterfall.py (Spacer): make this *not*
 	inherit from builder.Event, so that show_events=false doesn't hide
 	spacers, since that would make the waterfall weirdly compressed.
