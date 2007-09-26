@@ -1,5 +1,12 @@
 2007-09-25  Brian Warner  <warner@lothar.com>
 
+	* buildbot/status/web/waterfall.py
+	(WaterfallStatusResource.body.with_args): don't use req.URLPath,
+	it gives us absolute paths that break proxies
+	* buildbot/status/web/base.py (HtmlResource.path_to_root): fix
+	this, it was giving bad results when the Waterfall is behind a
+	reverse proxy.
+
 	* buildbot/scripts/runner.py (upgradeMaster): first phase of the
 	new 'upgrade-master' command, which will bring an old buildmaster
 	directory up-to-date. Right now the only thing it does is populate

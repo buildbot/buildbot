@@ -531,11 +531,15 @@ class WaterfallStatusResource(HtmlResource):
                                  for k in newargs
                                  for v in newargs[k]
                                  ])
-            new_url = req.URLPath()
             if new_path:
-                new_url.path = new_path
-            new_url.query = newquery
-            return str(new_url)
+                new_url = new_path
+            elif req.prepath:
+                new_url = req.prepath[-1]
+            else:
+                new_url = ''
+            if newquery:
+                new_url += "?" + newquery
+            return new_url
 
         if timestamps:
             bottom = timestamps[-1]

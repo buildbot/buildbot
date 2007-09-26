@@ -163,9 +163,10 @@ class HtmlResource(resource.Resource):
         return request.site.buildbot_service.parent.change_svc
 
     def path_to_root(self, request):
-        segs = len(request.prepath)
-        if request.prepath and request.prepath[-1] == '':
-            segs -= 1
+        if request.prepath:
+            segs = len(request.prepath) - 1
+        else:
+            segs = 0
         root = "../" * segs
         return root
 
