@@ -59,7 +59,7 @@ class Maker:
     def __init__(self, config):
         self.config = config
         self.basedir = config['basedir']
-        self.force = config['force']
+        self.force = config.get('force', False)
         self.quiet = config['quiet']
 
     def mkdir(self):
@@ -153,29 +153,72 @@ class Maker:
         f.close()
         os.chmod(target, 0600)
 
-    def public_html(self, index_html, buildbot_css, robots_txt):
-        if os.path.exists("public_html"):
-            if not self.quiet:
-                print "public_html/ already exists: not replacing"
-            return
+    def public_html(self, index_html, buildbot_css, robots_txt,
+                    repopulate=False):
+        webdir = os.path.join(self.basedir, "public_html")
+        if os.path.exists(webdir):
+            if not repopulate:
+                if not self.quiet:
+                    print "public_html/ already exists: not replacing"
+                return
+        else:
+            os.mkdir(webdir)
         if not self.quiet:
             print "populating public_html/"
-        os.mkdir("public_html")
-        target = os.path.join("public_html", "index.html")
+        target = os.path.join(webdir, "index.html")
         f = open(target, "wt")
         f.write(open(index_html, "rt").read())
         f.close()
 
-        target = os.path.join("public_html", "buildbot.css")
+        target = os.path.join(webdir, "buildbot.css")
         f = open(target, "wt")
         f.write(open(buildbot_css, "rt").read())
         f.close()
 
-        target = os.path.join("public_html", "robots.txt")
+        target = os.path.join(webdir, "robots.txt")
         f = open(target, "wt")
         f.write(open(robots_txt, "rt").read())
         f.close()
 
+
+class UpgradeMasterOptions(MakerBase):
+    optFlags = [
+        ["replace", "r", "Replace any modified files without confirmation."],
+        ]
+
+    def getSynopsis(self):
+        return "Usage:    buildbot upgrade-master [options] <basedir>"
+
+    longdesc = """
+    This command takes an existing buildmaster working directory and
+    adds/modifies the files there to work with the current version of
+    buildbot. When this command is finished, the buildmaster directory should
+    look much like a brand-new one created by the 'create-master' command.
+
+    Use this after you've upgraded your buildbot installation and before you
+    restart the buildmaster to use the new version.
+
+    If you have modified the files in your working directory, this command
+    will leave them untouched, but will put the new recommended contents in a
+    .new file (for example, if index.html has been modified, this command
+    will create index.html.new). You can then look at the new version and
+    decide how to merge its contents into your modified file.
+    """
+
+def upgradeMaster(config):
+    basedir = config['basedir']
+    m = Maker(config)
+    m.quiet = True
+    # check TAC file
+    # check sample.cfg
+    # check web files: index.html, classic.css, robots.txt
+    webdir = os.path.join(basedir, "public_html")
+    m.public_html(util.sibpath(__file__, "../status/web/index.html"),
+                  util.sibpath(__file__, "../status/web/classic.css"),
+                  util.sibpath(__file__, "../status/web/robots.txt"),
+                  repopulate=True
+                  )
+    # check Makefile
 
 class MasterOptions(MakerBase):
     optFlags = [
@@ -684,6 +727,8 @@ class Options(usage.Options):
         # the following are all admin commands
         ['create-master', None, MasterOptions,
          "Create and populate a directory for a new buildmaster"],
+        ['upgrade-master', None, UpgradeMasterOptions,
+         "Upgrade an existing buildmaster directory for the current version"],
         ['create-slave', None, SlaveOptions,
          "Create and populate a directory for a new buildslave"],
         ['start', None, StartOptions, "Start a buildmaster or buildslave"],
@@ -746,6 +791,8 @@ def run():
 
     if command == "create-master":
         createMaster(so)
+    elif command == "upgrade-master":
+        upgradeMaster(so)
     elif command == "create-slave":
         createSlave(so)
     elif command == "start":

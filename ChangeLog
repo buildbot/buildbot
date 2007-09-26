@@ -1,3 +1,12 @@
+2007-09-25  Brian Warner  <warner@lothar.com>
+
+	* buildbot/scripts/runner.py (upgradeMaster): first phase of the
+	new 'upgrade-master' command, which will bring an old buildmaster
+	directory up-to-date. Right now the only thing it does is populate
+	public_html/ if it wasn't already there. Still to do: check the
+	other files, add documentation.
+	* buildbot/test/test_runner.py (Create.testUpgradeMaster): test it
+
 2007-08-13  Brian Warner  <warner@lothar.com>
 
 	* buildbot/changes/changes.py (Change.get_HTML_box): add a tooltip

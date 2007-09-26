@@ -80,6 +80,12 @@ class Create(unittest.TestCase):
     def failIfExists(self, filename):
         self.failIf(os.path.exists(filename), "%s should not exist" % filename)
 
+    def setUp(self):
+        self.cwd = os.getcwd()
+
+    def tearDown(self):
+        os.chdir(self.cwd)
+
     def testMaster(self):
         basedir = "test_runner.master"
         options = runner.MasterOptions()
@@ -148,6 +154,63 @@ class Create(unittest.TestCase):
                          "rt").read()
         self.failUnlessEqual(samplecfg, oldsamplecfg,
                              "*should* rewrite master.cfg.sample")
+
+    def testUpgradeMaster(self):
+        # first, create a master and then upgrade it. Nothing should change.
+        basedir = "test_runner.master2"
+        options = runner.MasterOptions()
+        options.parseOptions(["-q", basedir])
+        cwd = os.getcwd()
+        runner.createMaster(options)
+        os.chdir(cwd)
+
+        files1 = self.record_files(basedir)
+
+        # upgrade it
+        options = runner.UpgradeMasterOptions()
+        options.parseOptions([basedir])
+        cwd = os.getcwd()
+        runner.upgradeMaster(options)
+        os.chdir(cwd)
+
+        files2 = self.record_files(basedir)
+        self.failUnlessSameFiles(files1, files2)
+
+        # now make it look like the one that 0.7.6 creates: no public_html
+        for fn in os.listdir(os.path.join(basedir, "public_html")):
+            os.unlink(os.path.join(basedir, "public_html", fn))
+        os.rmdir(os.path.join(basedir, "public_html"))
+
+        # and make sure that upgrading it re-populates public_html
+        options = runner.UpgradeMasterOptions()
+        options.parseOptions([basedir])
+        cwd = os.getcwd()
+        runner.upgradeMaster(options)
+        os.chdir(cwd)
+
+        files3 = self.record_files(basedir)
+        self.failUnlessSameFiles(files1, files3)
+
+    def failUnlessSameFiles(self, files1, files2):
+        f1 = set(files1.keys())
+        f2 = set(files2.keys())
+        msg = ""
+        if f2 - f1:
+            msg += "Missing from files1: %s\n" % (list(f2-f1),)
+        if f1 - f2:
+            msg += "Missing from files2: %s\n" % (list(f1-f2),)
+        if msg:
+            self.fail(msg)
+
+    def record_files(self, basedir):
+        allfiles = {}
+        for root, dirs, files in os.walk(basedir):
+            for f in files:
+                fn = os.path.join(root, f)
+                allfiles[fn] = ("FILE", open(fn,"rb").read())
+            for d in dirs:
+                allfiles[os.path.join(root, d)] = ("DIR",)
+        return allfiles
 
 
     def testSlave(self):
