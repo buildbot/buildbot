@@ -6,6 +6,7 @@
 	public_html/ if it wasn't already there. Still to do: check the
 	other files, add documentation.
 	* buildbot/test/test_runner.py (Create.testUpgradeMaster): test it
+	(Create.failUnlessSameFiles): use sets.Set() for 2.3 compatibility
 
 2007-08-13  Brian Warner  <warner@lothar.com>
 

@@ -4,6 +4,7 @@
 from twisted.trial import unittest
 from twisted.python import usage
 import os, shutil, shlex
+import sets
 
 from buildbot.scripts import runner, tryclient
 
@@ -192,8 +193,8 @@ class Create(unittest.TestCase):
         self.failUnlessSameFiles(files1, files3)
 
     def failUnlessSameFiles(self, files1, files2):
-        f1 = set(files1.keys())
-        f2 = set(files2.keys())
+        f1 = sets.Set(files1.keys())
+        f2 = sets.Set(files2.keys())
         msg = ""
         if f2 - f1:
             msg += "Missing from files1: %s\n" % (list(f2-f1),)
