@@ -1,3 +1,12 @@
+2007-09-27  Brian Warner  <warner@lothar.com>
+
+	* buildbot/status/web/base.py (HtmlResource.title): change the
+	default title of all Buildbot-generated page to "Buildbot"
+	* buildbot/status/web/builder.py (StatusResourceBuilder.getTitle):
+	change the title to include the Builder name
+	* buildbot/status/web/build.py (StatusResourceBuild.getTitle):
+	same, and also show the build number
+
 2007-09-26  Brian Warner  <warner@lothar.com>
 
 	* buildbot/status/web/baseweb.py (OneBoxPerBuilder.body): fix URL

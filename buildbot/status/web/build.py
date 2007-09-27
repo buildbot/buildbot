@@ -12,7 +12,6 @@ from buildbot.status.web.step import StepsResource
 
 # builders/$builder/builds/$buildnum
 class StatusResourceBuild(HtmlResource):
-    title = "Build"
     addSlash = True
 
     def __init__(self, build_status, build_control, builder_control):
@@ -20,6 +19,11 @@ class StatusResourceBuild(HtmlResource):
         self.build_status = build_status
         self.build_control = build_control
         self.builder_control = builder_control
+
+    def getTitle(self, request):
+        return ("Buildbot: %s Build #%d" %
+                (html.escape(self.builder_status.getName()),
+                 self.build_status.getNumber()))
 
     def body(self, req):
         b = self.build_status

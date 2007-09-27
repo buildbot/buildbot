@@ -133,7 +133,7 @@ class Box:
 class HtmlResource(resource.Resource):
     # this is a cheap sort of template thingy
     contentType = "text/html; charset=UTF-8"
-    title = "Dummy"
+    title = "Buildbot"
     addSlash = False # adapted from Nevow
 
     def getChild(self, path, request):
