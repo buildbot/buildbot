@@ -6,6 +6,8 @@
 	change the title to include the Builder name
 	* buildbot/status/web/build.py (StatusResourceBuild.getTitle):
 	same, and also show the build number
+	(StatusResourceBuild.rebuild): after using the 'Rebuild' button,
+	redirect the browser to the Builder page
 
 2007-09-26  Brian Warner  <warner@lothar.com>
 

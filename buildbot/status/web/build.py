@@ -190,8 +190,8 @@ class StatusResourceBuild(HtmlResource):
     def rebuild(self, req):
         b = self.build_status
         bc = self.builder_control
-        log.msg("web rebuild of build %s:%s" % \
-                (b.getBuilder().getName(), b.getNumber()))
+        builder_name = b.getBuilder().getName()
+        log.msg("web rebuild of build %s:%s" % (builder_name, b.getNumber()))
         name = req.args.get("username", ["<unknown>"])[0]
         comments = req.args.get("comments", ["<no reason specified>"])[0]
         reason = ("The web-page 'rebuild' button was pressed by "
@@ -202,9 +202,21 @@ class StatusResourceBuild(HtmlResource):
             # TODO: indicate an error
         else:
             bc.resubmitBuild(b, reason)
-        # we're at http://localhost:8080/svn-hello/builds/5/rebuild?[args] and
-        # we want to go to the top, at http://localhost:8080/
-        r = Redirect("../../..") # TODO: no longer correct
+        # we're at
+        # http://localhost:8080/builders/NAME/builds/5/rebuild?[args]
+        # Where should we send them?
+        #
+        # Ideally it would be to the per-build page that they just started,
+        # but we don't know the build number for it yet (besides, it might
+        # have to wait for a current build to finish). The next-most
+        # preferred place is somewhere that the user can see tangible
+        # evidence of their build starting (or to see the reason that it
+        # didn't start). This could either be the Builder page, or the
+        # waterfall.
+        #r = Redirect("../../../..") # this takes us back to the welcome page
+        #r = Redirect("../../../../waterfall") # or the Waterfall
+        #r = Redirect("../../../../waterfall?show=%s" % builder_name)
+        r = Redirect("../..") # the Builder's page
         d = defer.Deferred()
         reactor.callLater(1, d.callback, r)
         return DeferredResource(d)
