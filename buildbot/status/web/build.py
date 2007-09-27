@@ -22,7 +22,7 @@ class StatusResourceBuild(HtmlResource):
 
     def getTitle(self, request):
         return ("Buildbot: %s Build #%d" %
-                (html.escape(self.builder_status.getName()),
+                (html.escape(self.build_status.getBuilder().getName()),
                  self.build_status.getNumber()))
 
     def body(self, req):
