@@ -280,6 +280,8 @@ class WaterfallSteps(unittest.TestCase):
         s.addURL("coverage", "http://coverage.example.org/target")
         s.addURL("icon", "http://coverage.example.org/icon.png")
         class FakeRequest:
+            prepath = []
+            postpath = []
             def childLink(self, name):
                 return name
         req = FakeRequest()

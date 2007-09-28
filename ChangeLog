@@ -1,5 +1,8 @@
 2007-09-28  Brian Warner  <warner@lothar.com>
 
+	* buildbot/test/test_web.py (WaterfallSteps.test_urls.FakeRequest):
+	fix a test failure by adding .prepath to this fake object
+
 	* buildbot/status/web/*: big set of changes to WebStatus, cleaning
 	up generation of relative URLs. With luck, this should play with
 	reverse proxies much better now.
