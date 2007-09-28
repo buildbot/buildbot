@@ -210,8 +210,10 @@ class OneBoxPerBuilder(HtmlResource):
             builder = status.getBuilder(bn)
             data += "<tr>\n"
             data += "<td>%s</td>\n" % html.escape(bn)
-            b = builder.getLastFinishedBuild()
-            if b:
+            builds = list(builder.generateFinishedBuilds(branches,
+                                                         num_builds=1))
+            if builds:
+                b = builds[0]
                 url = (self.path_to_root(req) +
                        "builders/" +
                        urllib.quote(bn, safe='') +

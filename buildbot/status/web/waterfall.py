@@ -99,14 +99,17 @@ class BuildTopBox(components.Adapter):
 
     def getBox(self, req):
         assert interfaces.IBuilderStatus(self.original)
-        b = self.original.getLastFinishedBuild()
-        if not b:
+        branches = [b for b in req.args.get("branch", []) if b]
+        builds = list(self.original.generateFinishedBuilds(branches,
+                                                           num_builds=1))
+        if not builds:
             return Box(["none"], "white", class_="LastBuild")
+        b = builds[0]
         name = b.getBuilder().getName()
         number = b.getNumber()
         url = path_to_build(req, b)
         text = b.getText()
-        # TODO: add logs?
+        # TODO: maybe add logs?
         # TODO: add link to the per-build page at 'url'
         c = b.getColor()
         class_ = build_get_class(b)

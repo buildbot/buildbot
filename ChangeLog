@@ -1,5 +1,10 @@
 2007-09-28  Brian Warner  <warner@lothar.com>
 
+	* buildbot/status/web/baseweb.py (OneBoxPerBuilder): make this page
+	respect branch= queryargs, by restricting the builds displayed to
+	those matching the given branch names
+	* buildbot/status/web/waterfall.py (BuildTopBox): same
+
 	* buildbot/test/test_web.py (WaterfallSteps.test_urls.FakeRequest):
 	fix a test failure by adding .prepath to this fake object
 
