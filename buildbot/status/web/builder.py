@@ -53,10 +53,9 @@ class StatusResourceBuilder(HtmlResource):
         slaves = b.getSlaves()
         connected_slaves = [s for s in slaves if s.isConnected()]
 
-        buildbotURL = status.getBuildbotURL()
         projectName = status.getProjectName()
 
-        data = "<a href=\"%s\">%s</a>\n" % (buildbotURL, projectName)
+        data = '<a href="../..">%s</a>\n' % projectName
 
         data += "<h1>Builder: %s</h1>\n" % html.escape(b.getName())
 

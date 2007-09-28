@@ -1,5 +1,10 @@
 2007-09-27  Brian Warner  <warner@lothar.com>
 
+	* buildbot/status/web/build.py (StatusResourceBuild.body): use a
+	relative URL to the buildbot welcome page, rather than
+	getBuildbotURL.
+	* buildbot/status/web/builder.py (StatusResourceBuilder.body): same
+
 	* buildbot/status/web/base.py (HtmlResource.title): change the
 	default title of all Buildbot-generated page to "Buildbot"
 	* buildbot/status/web/builder.py (StatusResourceBuilder.getTitle):

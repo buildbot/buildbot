@@ -28,10 +28,9 @@ class StatusResourceBuild(HtmlResource):
     def body(self, req):
         b = self.build_status
         status = self.getStatus(req)
-        buildbotURL = status.getBuildbotURL()
         projectName = status.getProjectName()
-        data = '<div class="title"><a href="%s">%s</a></div>\n'%(buildbotURL,
-                                                                 projectName)
+        data = ('<div class="title"><a href="../../../..">%s</a></div>\n'
+                % projectName)
         # the color in the following line gives python-mode trouble
         builder_name = b.getBuilder().getName()
         data += ("<h1><a href=\"../..\">Builder %s</a>: Build #%d</h1>\n"
