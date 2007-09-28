@@ -12,7 +12,7 @@ from buildbot import version
 from buildbot.status import builder
 
 from buildbot.status.web.base import Box, HtmlResource, IBox, ICurrentBox, \
-     ITopBox, td, build_get_class
+     ITopBox, td, build_get_class, path_to_build, path_to_step
 
 
 
@@ -97,14 +97,14 @@ class BuildTopBox(components.Adapter):
     # showing the results of the most recent build
     implements(IBox)
 
-    def getBox(self):
+    def getBox(self, req):
         assert interfaces.IBuilderStatus(self.original)
         b = self.original.getLastFinishedBuild()
         if not b:
             return Box(["none"], "white", class_="LastBuild")
         name = b.getBuilder().getName()
         number = b.getNumber()
-        url = "%s/builds/%d" % (name, number)
+        url = path_to_build(req, b)
         text = b.getText()
         # TODO: add logs?
         # TODO: add link to the per-build page at 'url'
@@ -117,11 +117,10 @@ class BuildBox(components.Adapter):
     # this provides the yellow "starting line" box for each build
     implements(IBox)
 
-    def getBox(self):
+    def getBox(self, req):
         b = self.original
-        name = b.getBuilder().getName()
         number = b.getNumber()
-        url = "builders/%s/builds/%d" % (urllib.quote(name, safe=''), number)
+        url = path_to_build(req, b)
         reason = b.getReason()
         text = ('<a title="Reason: %s" href="%s">Build %d</a>'
                 % (html.escape(reason), url, number))
@@ -139,12 +138,8 @@ components.registerAdapter(BuildBox, builder.BuildStatus, IBox)
 class StepBox(components.Adapter):
     implements(IBox)
 
-    def getBox(self):
-        b = self.original.getBuild()
-        urlbase = "builders/%s/builds/%d/steps/%s" % (
-            urllib.quote(b.getBuilder().getName(), safe=''),
-            b.getNumber(),
-            urllib.quote(self.original.getName(), safe=''))
+    def getBox(self, req):
+        urlbase = path_to_step(req, self.original)
         text = self.original.getText()
         if text is None:
             log.msg("getText() gave None", urlbase)
@@ -172,7 +167,7 @@ components.registerAdapter(StepBox, builder.BuildStepStatus, IBox)
 class EventBox(components.Adapter):
     implements(IBox)
 
-    def getBox(self):
+    def getBox(self, req):
         text = self.original.getText()
         color = self.original.getColor()
         class_ = "Event"
@@ -199,7 +194,7 @@ class Spacer:
 class SpacerBox(components.Adapter):
     implements(IBox)
 
-    def getBox(self):
+    def getBox(self, req):
         #b = Box(["spacer"], "white")
         b = Box([])
         b.spacer = True
@@ -483,14 +478,14 @@ class WaterfallStatusResource(HtmlResource):
 
         if projectName and projectURL:
             # TODO: this is going to look really ugly
-            topleft = "<a href=\"%s\">%s</a><br />last build" % \
+            topleft = '<a href="%s">%s</a><br />last build' % \
                       (projectURL, projectName)
         else:
             topleft = "last build"
         data += ' <tr class="LastBuild">\n'
         data += td(topleft, align="right", colspan=2, class_="Project")
         for b in builders:
-            box = ITopBox(b).getBox()
+            box = ITopBox(b).getBox(request)
             data += box.td(align="center")
         data += " </tr>\n"
 
@@ -504,14 +499,13 @@ class WaterfallStatusResource(HtmlResource):
         data += " <tr>\n"
         TZ = time.tzname[time.daylight]
         data += td("time (%s)" % TZ, align="center", class_="Time")
-        name = changeNames[0]
-        data += td(
-                "<a href=\"%s\">%s</a>" % (urllib.quote(name, safe=''), name),
-                align="center", class_="Change")
+        data += td('<a href="%s">changes</a>' % request.childLink("../changes"),
+                   align="center", class_="Change")
         for name in builderNames:
             safename = urllib.quote(name, safe='')
-            data += td( "<a href=\"builders/%s\">%s</a>" % (safename, name),
-                        align="center", class_="Builder")
+            data += td('<a href="%s">%s</a>' %
+                       (request.childLink("../builders/%s" % safename), name),
+                       align="center", class_="Builder")
         data += " </tr>\n"
 
         if phase == 1:
@@ -572,11 +566,11 @@ class WaterfallStatusResource(HtmlResource):
 
 
         bburl = "http://buildbot.net/?bb-ver=%s" % urllib.quote(version)
-        data += "<a href=\"%s\">Buildbot-%s</a> " % (bburl, version)
+        data += '<a href="%s">Buildbot-%s</a> ' % (bburl, version)
         if projectName:
             data += "working for the "
             if projectURL:
-                data += "<a href=\"%s\">%s</a> project." % (projectURL,
+                data += '<a href="%s">%s</a> project.' % (projectURL,
                                                             projectName)
             else:
                 data += "%s project." % projectName
@@ -592,8 +586,7 @@ class WaterfallStatusResource(HtmlResource):
         # build the waterfall display
         data = ""
         data += "<h2>Basic display</h2>\n"
-        data += "<p>See <a href=\"%s\">here</a>" % \
-                urllib.quote(request.childLink("waterfall"))
+        data += '<p>See <a href="%s">here</a>' % request.childLink("../waterfall")
         data += " for the waterfall display</p>\n"
                 
         data += '<table border="0" cellspacing="0">\n'
@@ -618,9 +611,9 @@ class WaterfallStatusResource(HtmlResource):
         data += td("Time", align="center")
         data += td("Changes", align="center")
         for name in names:
-            data += td(
-                "<a href=\"%s\">%s</a>" % (urllib.quote(request.childLink(name)), name),
-                align="center")
+            data += td('<a href="%s">%s</a>' %
+                       (request.childLink("../" + urllib.quote(name)), name),
+                       align="center")
         data += " </tr>\n"
 
         # all further rows involve timestamps, commit events, and build events
@@ -834,7 +827,7 @@ class WaterfallStatusResource(HtmlResource):
                         data += td("")
                     else:
                         e = block[i-offset]
-                        box = IBox(e).getBox()
+                        box = IBox(e).getBox(request)
                         box.parms["show_idle"] = 1
                         data += box.td(valign="top", align="center")
                 data += " </tr>\n"
@@ -894,7 +887,7 @@ class WaterfallStatusResource(HtmlResource):
                     grid[c+1].append(None)
                 for i in range(len(block)):
                     # so the events are bottom-justified
-                    b = IBox(block[i]).getBox()
+                    b = IBox(block[i]).getBox(request)
                     b.parms['valign'] = "top"
                     b.parms['align'] = "center"
                     grid[c+1].append(b)
@@ -906,7 +899,7 @@ class WaterfallStatusResource(HtmlResource):
             assert(len(strip) == gridlen)
             if strip[-1] == None:
                 if sourceEvents[i-1]:
-                    filler = IBox(sourceEvents[i-1]).getBox()
+                    filler = IBox(sourceEvents[i-1]).getBox(request)
                 else:
                     # this can happen if you delete part of the build history
                     filler = Box(text=["?"], align="center")

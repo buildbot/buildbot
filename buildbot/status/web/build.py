@@ -5,12 +5,13 @@ from twisted.internet import defer, reactor
 
 import urllib, time
 from twisted.python import log
-from buildbot.status.web.base import HtmlResource, make_row, css_classes
+from buildbot.status.web.base import HtmlResource, make_row, css_classes, \
+     path_to_builder
 
 from buildbot.status.web.tests import TestsResource
 from buildbot.status.web.step import StepsResource
 
-# builders/$builder/builds/$buildnum
+# /builders/$builder/builds/$buildnum
 class StatusResourceBuild(HtmlResource):
     addSlash = True
 
@@ -29,12 +30,13 @@ class StatusResourceBuild(HtmlResource):
         b = self.build_status
         status = self.getStatus(req)
         projectName = status.getProjectName()
-        data = ('<div class="title"><a href="../../../..">%s</a></div>\n'
-                % projectName)
+        data = ('<div class="title"><a href="%s">%s</a></div>\n'
+                % (self.path_to_root(req), projectName))
         # the color in the following line gives python-mode trouble
         builder_name = b.getBuilder().getName()
-        data += ("<h1><a href=\"../..\">Builder %s</a>: Build #%d</h1>\n"
-                 % (builder_name, b.getNumber()))
+        data += ("<h1><a href=\"%s\">Builder %s</a>: Build #%d</h1>\n"
+                 % (path_to_builder(req, b.getBuilder()),
+                    builder_name, b.getNumber()))
 
         if not b.isFinished():
             data += "<h2>Build In Progress</h2>"
@@ -99,6 +101,12 @@ class StatusResourceBuild(HtmlResource):
         data += "<h2>Reason:</h2>\n%s\n" % html.escape(b.getReason())
 
         data += "<h2>Steps and Logfiles:</h2>\n"
+        # TODO:
+#        urls = self.original.getURLs()
+#        ex_url_class = "BuildStep external"
+#        for name, target in urls.items():
+#            text.append('[<a href="%s" class="%s">%s</a>]' %
+#                        (target, ex_url_class, html.escape(name)))
         if b.getLogs():
             data += "<ol>\n"
             for s in b.getSteps():
@@ -232,6 +240,7 @@ class StatusResourceBuild(HtmlResource):
 
         return HtmlResource.getChild(self, path, req)
 
+# /builders/$builder/builds
 class BuildsResource(HtmlResource):
     addSlash = True
 

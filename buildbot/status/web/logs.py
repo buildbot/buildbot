@@ -50,6 +50,8 @@ class ChunkConsumer:
     def finish(self):
         self.textlog.finished()
 
+
+# /builders/$builder/builds/$buildnum/steps/$stepname/logs/$logname
 class TextLog(Resource):
     # a new instance of this Resource is created for each client who views
     # it, so we can afford to track the request in the Resource.

@@ -2,11 +2,11 @@
 import time
 from buildbot.status.web.base import HtmlResource, abbreviate_age
 
-# buildslaves/$slavename
+# /buildslaves/$slavename
 class OneBuildSlaveResource(HtmlResource):
-    pass
+    pass  # TODO
 
-# buildslaves/
+# /buildslaves/
 class BuildSlavesResource(HtmlResource):
     title = "BuildSlaves"
     addSlash = True
@@ -30,10 +30,12 @@ class BuildSlavesResource(HtmlResource):
             slave = s.getSlave(name)
             data += " <li>%s:\n" % name
             data += " <ul>\n"
-            builder_links = ['<a href="../builders/%s">%s</a>' % (bname, bname)
+            builder_links = ['<a href="%s">%s</a>'
+                             % (req.childLink("../builders/%s" % bname),bname)
                              for bname in used_by_builder.get(name, [])]
             if builder_links:
-                data += "  <li>Used by: %s</li>\n" % ", ".join(builder_links)
+                data += ("  <li>Used by Builders: %s</li>\n" %
+                         ", ".join(builder_links))
             else:
                 data += "  <li>Not used by any Builders</li>\n"
             if slave.isConnected():

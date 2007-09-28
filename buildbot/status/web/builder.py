@@ -12,7 +12,7 @@ from buildbot.sourcestamp import SourceStamp
 
 from buildbot.status.web.build import BuildsResource
 
-# builders/$builder
+# /builders/$builder
 class StatusResourceBuilder(HtmlResource):
     addSlash = True
 
@@ -26,7 +26,7 @@ class StatusResourceBuilder(HtmlResource):
 
     def build_line(self, build, req):
         buildnum = build.getNumber()
-        buildurl = "builds/%d" % buildnum
+        buildurl = req.childLink("builds/%d" % buildnum)
         data = '<a href="%s">#%d</a> ' % (buildurl, buildnum)
         when = build.getETA()
         if when is not None:
@@ -38,7 +38,7 @@ class StatusResourceBuilder(HtmlResource):
 
     def build_finished_line(self, build, req):
         buildnum = build.getNumber()
-        buildurl = "builds/%d" % buildnum
+        buildurl = req.childLink("builds/%d" % buildnum)
         results = build.getResults()
         text = " ".join(build.getText())
         data = '<a href="%s">#%d</a> ' % (buildurl, buildnum)
@@ -55,7 +55,7 @@ class StatusResourceBuilder(HtmlResource):
 
         projectName = status.getProjectName()
 
-        data = '<a href="../..">%s</a>\n' % projectName
+        data = '<a href="%s">%s</a>\n' % (self.path_to_root(req), projectName)
 
         data += "<h1>Builder: %s</h1>\n" % html.escape(b.getName())
 
@@ -215,8 +215,27 @@ class StatusResourceBuilder(HtmlResource):
         return HtmlResource.getChild(self, path, req)
 
 
+# /builders
 class BuildersResource(HtmlResource):
+    title = "Builders"
     addSlash = True
+
+    def body(self, req):
+        s = self.getStatus(req)
+        data = ""
+        data += "<h1>Builders</h1>\n"
+
+        # TODO: this is really basic. It should be expanded to include a
+        # brief one-line summary of the builder (perhaps with whatever the
+        # builder is currently doing)
+        data += "<ol>\n"
+        for bname in s.getBuilderNames():
+            data += (' <li><a href="%s">%s</a></li>\n' %
+                     (req.childLink(urllib.quote(bname, safe='')),
+                      urllib.quote(bname, safe='')))
+        data += "</ol>\n"
+
+        return data
 
     def getChild(self, path, req):
         s = self.getStatus(req)

@@ -1,3 +1,12 @@
+2007-09-28  Brian Warner  <warner@lothar.com>
+
+	* buildbot/status/web/*: big set of changes to WebStatus, cleaning
+	up generation of relative URLs. With luck, this should play with
+	reverse proxies much better now.
+	* buildbot/test/test_webparts.py: new test for most of the subpages
+	* buildbot/test/test_web.py (base_config): add enough of a config
+	to exercise more Waterfall code
+
 2007-09-27  Brian Warner  <warner@lothar.com>
 
 	* buildbot/status/web/build.py (StatusResourceBuild.body): use a

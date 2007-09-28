@@ -1,5 +1,5 @@
 
-import urlparse
+import urlparse, urllib
 from zope.interface import Interface
 from twisted.web import html, resource
 from buildbot.status import builder
@@ -9,15 +9,22 @@ from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE, EXCEPTION
 class ITopBox(Interface):
     """I represent a box in the top row of the waterfall display: the one
     which shows the status of the last build for each builder."""
-    pass
+    def getBox(self, request):
+        """Return a Box instance, which can produce a <td> cell.
+        """
 
 class ICurrentBox(Interface):
     """I represent the 'current activity' box, just above the builder name."""
-    pass
+    def getBox(self, status):
+        """Return a Box instance, which can produce a <td> cell.
+        """
 
 class IBox(Interface):
     """I represent a box in the waterfall display."""
-    pass
+    def getBox(self, request):
+        """Return a Box instance, which wraps an Event and can produce a <td>
+        cell.
+        """
 
 class IHTMLLog(Interface):
     pass
@@ -102,6 +109,31 @@ def build_get_class(b):
         return "running"
     return builder.Results[result]
 
+def path_to_root(request):
+    # /waterfall : ['waterfall'] -> ''
+    # /somewhere/lower : ['somewhere', 'lower'] -> '../'
+    # /somewhere/indexy/ : ['somewhere', 'indexy', ''] -> '../../'
+    # / : [] -> ''
+    if request.prepath:
+        segs = len(request.prepath) - 1
+    else:
+        segs = 0
+    root = "../" * segs
+    return root
+
+def path_to_builder(request, builderstatus):
+    return (path_to_root(request) +
+            "builders/" +
+            urllib.quote(builderstatus.getName(), safe=''))
+
+def path_to_build(request, buildstatus):
+    return (path_to_builder(request, buildstatus.getBuilder()) +
+            "/builds/%d" % buildstatus.getNumber())
+
+def path_to_step(request, stepstatus):
+    return (path_to_build(request, stepstatus.getBuild()) +
+            "/steps/%s" % urllib.quote(stepstatus.getName(), safe=''))
+
 class Box:
     # a Box wraps an Event. The Box has HTML <td> parameters that Events
     # lack, and it has a base URL to which each File's name is relative.
@@ -142,10 +174,23 @@ class HtmlResource(resource.Resource):
         return resource.Resource.getChild(self, path, request)
 
     def render(self, request):
-        if self.addSlash and request.prepath[-1] != '':
+
+        # Our pages no longer require that their URL end in a slash. Instead,
+        # they all use request.childLink() or some equivalent which takes the
+        # last path component into account. This clause is left here for
+        # historical and educational purposes.
+        if False and self.addSlash and request.prepath[-1] != '':
             # this is intended to behave like request.URLPath().child('')
             # but we need a relative URL, since we might be living behind a
             # reverse proxy
+            #
+            # note that the Location: header (as used in redirects) are
+            # required to have absolute URIs, and my attempt to handle
+            # reverse-proxies gracefully violates rfc2616. This frequently
+            # works, but single-component paths sometimes break. The best
+            # strategy is to avoid these redirects whenever possible by using
+            # HREFs with trailing slashes, and only use the redirects for
+            # manually entered URLs.
             url = request.prePathURL()
             scheme, netloc, path, query, fragment = urlparse.urlsplit(url)
             new_url = request.prepath[-1] + "/"
@@ -172,16 +217,7 @@ class HtmlResource(resource.Resource):
         return request.site.buildbot_service.parent.change_svc
 
     def path_to_root(self, request):
-        # /waterfall : ['waterfall'] -> ''
-        # /somewhere/lower : ['somewhere', 'lower'] -> '../'
-        # /somewhere/indexy/ : ['somewhere', 'indexy', ''] -> '../../'
-        # / : [] -> ''
-        if request.prepath:
-            segs = len(request.prepath) - 1
-        else:
-            segs = 0
-        root = "../" * segs
-        return root
+        return path_to_root(request)
 
     def getTitle(self, request):
         return self.title

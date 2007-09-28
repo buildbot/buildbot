@@ -292,7 +292,14 @@ class WebStatus(service.MultiService):
                                 Builders it triggers, and list of the Changes
                                 that are queued awaiting the tree-stable
                                 timer, and controls to accelerate the timer.
-     /others...
+     /buildslaves : list all BuildSlaves
+     /buildslaves/SLAVENAME : describe a single BuildSlave
+     /one_line_per_build : summarize the last few builds, one line each
+     /one_line_per_build/BUILDERNAME : same, but only for a single builder
+     /one_box_per_builder : show the latest build and current activity
+     /about : describe this buildmaster (Buildbot and support library versions)
+     /xmlrpc : (not yet implemented) an XMLRPC server with build status
+
 
     All URLs for pages which are not defined here are used to look for files
     in BASEDIR/public_html/ , which means that /robots.txt or /buildbot.css
@@ -411,7 +418,7 @@ class WebStatus(service.MultiService):
     def setupUsualPages(self):
         #self.putChild("", IndexOrWaterfallRedirection())
         self.putChild("waterfall", WaterfallStatusResource())
-        self.putChild("builders", BuildersResource())
+        self.putChild("builders", BuildersResource()) # has builds/steps/logs
         self.putChild("changes", ChangesResource())
         self.putChild("buildslaves", BuildSlavesResource())
         #self.putChild("schedulers", SchedulersResource())

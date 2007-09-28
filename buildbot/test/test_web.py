@@ -34,11 +34,18 @@ components.registerAdapter(master.Control, ConfiguredMaster,
 
 
 base_config = """
+from buildbot.changes.pb import PBChangeSource
 from buildbot.status import html
+from buildbot.buildslave import BuildSlave
+from buildbot.scheduler import Scheduler
+from buildbot.process.factory import BuildFactory
+
 BuildmasterConfig = c = {
-    'slaves': [],
-    'schedulers': [],
-    'builders': [],
+    'change_source': PBChangeSource(),
+    'slaves': [BuildSlave('bot1name', 'bot1passwd')],
+    'schedulers': [Scheduler('name', None, 60, ['builder1'])],
+    'builders': [{'name': 'builder1', 'slavename': 'bot1name',
+                  'builddir': 'builder1', 'factory': BuildFactory()}],
     'slavePortnum': 0,
     }
 """
@@ -108,8 +115,8 @@ def stopHTTPLog():
 class BaseWeb:
     master = None
 
-    def failUnlessIn(self, substr, string):
-        self.failUnless(string.find(substr) != -1)
+    def failUnlessIn(self, substr, string, note=None):
+        self.failUnless(string.find(substr) != -1, note)
 
     def tearDown(self):
         stopHTTPLog()
@@ -272,7 +279,11 @@ class WaterfallSteps(unittest.TestCase):
         s = setupBuildStepStatus("test_web.test_urls")
         s.addURL("coverage", "http://coverage.example.org/target")
         s.addURL("icon", "http://coverage.example.org/icon.png")
-        box = waterfall.IBox(s).getBox()
+        class FakeRequest:
+            def childLink(self, name):
+                return name
+        req = FakeRequest()
+        box = waterfall.IBox(s).getBox(req)
         td = box.td()
         e1 = '[<a href="http://coverage.example.org/target" class="BuildStep external">coverage</a>]'
         self.failUnlessSubstring(e1, td)

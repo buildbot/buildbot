@@ -6,7 +6,7 @@ from twisted.web.error import NoResource
 from buildbot.changes.changes import Change
 from buildbot.status.web.base import HtmlResource, StaticHTML, IBox, Box
 
-# $changes/NN
+# /changes/NN
 class ChangesResource(HtmlResource):
 
     def body(self, req):
@@ -33,8 +33,8 @@ class ChangesResource(HtmlResource):
 class ChangeBox(components.Adapter):
     implements(IBox)
 
-    def getBox(self):
-        url = "changes/%d" % self.original.number
+    def getBox(self, req):
+        url = req.childLink("../changes/%d" % self.original.number)
         text = self.original.get_HTML_box(url)
         return Box([text], color="white", class_="Change")
 components.registerAdapter(ChangeBox, Change, IBox)

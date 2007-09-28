@@ -2,10 +2,11 @@
 from twisted.web import html
 
 import urllib
-from buildbot.status.web.base import HtmlResource
+from buildbot.status.web.base import HtmlResource, path_to_builder, \
+     path_to_build
 from buildbot.status.web.logs import LogsResource
 
-# builders/$builder/builds/$buildnum/steps/$stepname
+# /builders/$builder/builds/$buildnum/steps/$stepname
 class StatusResourceBuildStep(HtmlResource):
     title = "Build Step"
     addSlash = True
@@ -21,9 +22,9 @@ class StatusResourceBuildStep(HtmlResource):
         builder_name = b.getBuilder().getName()
         build_num = b.getNumber()
         data = ""
-        data += ("<h1>BuildStep <a href=\"../../../../%s\">%s</a>:" %
-                 (urllib.quote(builder_name), builder_name))
-        data += "<a href=\"../../%d\">#%d</a>" % (build_num, build_num)
+        data += ('<h1>BuildStep <a href="%s">%s</a>:' %
+                 (path_to_builder(req, b.getBuilder()), builder_name))
+        data += '<a href="%s">#%d</a>' % (path_to_build(req, b), build_num)
         data += ":%s</h1>\n" % s.getName()
 
         if s.isFinished():
@@ -69,6 +70,7 @@ class StatusResourceBuildStep(HtmlResource):
 
 
 
+# /builders/$builder/builds/$buildnum/steps
 class StepsResource(HtmlResource):
     addSlash = True
 

@@ -4,7 +4,7 @@ from twisted.web import html
 
 from buildbot.status.web.base import HtmlResource
 
-# $builder/builds/NN/tests/TESTNAME
+# /builders/$builder/builds/$buildnum/tests/$testname
 class TestResult(HtmlResource):
     title = "Test Logs"
 
@@ -26,7 +26,7 @@ class TestResult(HtmlResource):
         return data
 
 
-# $builder/builds/NN/tests
+# /builders/$builder/builds/$buildnum/tests
 class TestsResource(HtmlResource):
     title = "Test Results"
 
