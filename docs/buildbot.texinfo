@@ -140,6 +140,10 @@ Listing Change Sources and Schedulers
 * Scheduler Types::             
 * Build Dependencies::          
 
+Buildslave Specifiers
+
+* When Buildslaves Go Missing::  
+
 Getting Source Code Changes
 
 * Change Sources::              
@@ -238,6 +242,7 @@ Status Delivery
 
 * HTML Waterfall::              
 * WebStatus::                   
+* MailNotifier::                
 * IRC Bot::                     
 * PBListener::                  
 * Writing New Status Plugins::  
@@ -1763,12 +1768,12 @@ fixing anything.
 @node Email Addresses, IRC Nicknames, Doing Things With Users, Users
 @subsection Email Addresses
 
-The @code{buildbot.status.mail.MailNotifier} class provides a
-status target which can send email about the results of each build. It
-accepts a static list of email addresses to which each message should be
-delivered, but it can also be configured to send mail to the Build's
-Interested Users. To do this, it needs a way to convert User names into
-email addresses.
+The @code{buildbot.status.mail.MailNotifier} class
+(@pxref{MailNotifier}) provides a status target which can send email
+about the results of each build. It accepts a static list of email
+addresses to which each message should be delivered, but it can also
+be configured to send mail to the Build's Interested Users. To do
+this, it needs a way to convert User names into email addresses.
 
 For many VC systems, the User Name is actually an account name on the
 system which hosts the repository. As such, turning the name into an
@@ -2273,6 +2278,69 @@ Historical note: in buildbot-0.7.5 and earlier, the @code{c['bots']}
 key was used instead, and it took a list of (name, password) tuples.
 This key is accepted for backwards compatibility, but is deprecated as
 of 0.7.6 and will go away in some future release.
+
+@menu
+* When Buildslaves Go Missing::  
+@end menu
+
+@node When Buildslaves Go Missing,  , Buildslave Specifiers, Buildslave Specifiers
+@subsection When Buildslaves Go Missing
+
+Sometimes, the buildslaves go away. One very common reason for this is
+when the buildslave process is started once (manually) and left
+running, but then later the machine reboots and the process is not
+automatically restarted.
+
+If you'd like to have the administrator of the buildslave (or other
+people) be notified by email when the buildslave has been missing for
+too long, just add the @code{notify_on_missing=} argument to the
+@code{BuildSlave} definition:
+
+@example
+c['slaves'] = [BuildSlave('bot-solaris', 'solarispasswd',
+                          notify_on_missing="bob@@example.com"),
+              ]
+@end example
+
+By default, this will send email when the buildslave has been
+disconnected for more than one hour. Only one email per
+connection-loss event will be sent. To change the timeout, use
+@code{missing_timeout=} and give it a number of seconds (the default
+is 3600).
+
+You can have the buildmaster send email to multiple recipients: just
+provide a list of addresses instead of a single one:
+
+@example
+c['slaves'] = [BuildSlave('bot-solaris', 'solarispasswd',
+                          notify_on_missing=["bob@@example.com",
+                                             "alice@@example.org"],
+                          missing_timeout=300, # notify after 10 minutes
+                          ),
+              ]
+@end example
+
+The email sent this way will use a MailNotifier (@pxref{MailNotifier})
+status target, if one is configured. This provides a way for you to
+control the ``from'' address of the email, as well as the relayhost
+(aka ``smarthost'') to use as an SMTP server. If no MailNotifier is
+configured on this buildmaster, the buildslave-missing emails will be
+sent using a default configuration.
+
+Note that if you want to have a MailNotifier for buildslave-missing
+emails but not for regular build emails, just create one with
+builders=[], as follows:
+
+@example
+from buildbot.status import mail
+m = mail.MailNotifier(fromaddr="buildbot@@localhost", builders=[],
+                      relayhost="smtp.example.org")
+c['status'].append(m)
+c['slaves'] = [BuildSlave('bot-solaris', 'solarispasswd',
+                          notify_on_missing="bob@@example.com"),
+              ]
+@end example
+
 
 @node Defining Builders, Defining Status Targets, Buildslave Specifiers, Configuration
 @section Defining Builders
@@ -5825,6 +5893,7 @@ notifications of builder events, in which case they must define
 @menu
 * HTML Waterfall::              
 * WebStatus::                   
+* MailNotifier::                
 * IRC Bot::                     
 * PBListener::                  
 * Writing New Status Plugins::  
@@ -5918,7 +5987,7 @@ generated status pages.
 @end table
 
 
-@node WebStatus, IRC Bot, HTML Waterfall, Status Delivery
+@node WebStatus, MailNotifier, HTML Waterfall, Status Delivery
 @section WebStatus
 
 @cindex WebStatus
@@ -6138,7 +6207,129 @@ using this interface.
 @end table
 
 
-@node IRC Bot, PBListener, WebStatus, Status Delivery
+@node MailNotifier, IRC Bot, WebStatus, Status Delivery
+@section MailNotifier
+
+@cindex email
+@cindex mail
+@stindex buildbot.status.mail.MailNotifier
+
+The buildbot can also send email when builds finish. The most common
+use of this is to tell developers when their change has caused the
+build to fail. It is also quite common to send a message to a mailing
+list (usually named ``builds'' or similar) about every build.
+
+The @code{MailNotifier} status target is used to accomplish this. You
+configure it by specifying who mail should be sent to, under what
+circumstances mail should be sent, and how to deliver the mail. It can
+be configured to only send out mail for certain builders, and only
+send messages when the build fails, or when the builder transitions
+from success to failure. It can also be configured to include various
+build logs in each message.
+
+
+By default, the message will be sent to the Interested Users list
+(@pxref{Doing Things With Users}), which includes all developers who
+made changes in the build. You can add additional recipients with the
+extraRecipients argument.
+
+Each MailNotifier sends mail to a single set of recipients. To send
+different kinds of mail to different recipients, use multiple
+MailNotifiers.
+
+The following simple example will send an email upon the completion of
+each build, to just those developers whose Changes were included in
+the build. The email contains a description of the Build, its results,
+and URLs where more information can be obtained.
+
+@example
+from buildbot.status.mail import MailNotifier
+mn = MailNotifier(fromaddr="buildbot@@example.org", lookup="example.org")
+c['status'].append(mn)
+@end example
+
+To get a simple one-message-per-build (say, for a mailing list), use
+the following form instead. This form does not send mail to individual
+developers (and thus does not need the @code{lookup=} argument,
+explained below), instead it only ever sends mail to the ``extra
+recipients'' named in the arguments:
+
+@example
+mn = MailNotifier(fromaddr="buildbot@@example.org",
+                  sendToInterestedUsers=False,
+                  extraRecipients=['listaddr@@example.org'])
+@end example
+
+@heading MailNotifier arguments
+
+@table @code
+@item fromaddr
+The email address to be used in the 'From' header.
+
+@item sendToInterestedUsers
+(boolean). If True (the default), send mail to all of the Interested
+Users. If False, only send mail to the extraRecipients list.
+
+@item extraRecipients
+(tuple of strings). A list of email addresses to which messages should
+be sent (in addition to the InterestedUsers list, which includes any
+developers who made Changes that went into this build). It is a good
+idea to create a small mailing list and deliver to that, then let
+subscribers come and go as they please.
+
+@item subject
+(string). A string to be used as the subject line of the message.
+@code{%(builder)s} will be replaced with the name of the builder which
+provoked the message.
+
+@item mode
+(string). Default to 'all'. One of:
+@table @code
+@item all
+Send mail about all builds, bothpassing and failing
+@item failing
+Only send mail about builds which fail
+@item problem
+Only send mail about a build which failed when the previous build has passed.
+If your builds usually pass, then this will only send mail when a problem
+occurs.
+@end table
+
+@item builders
+(list of strings). A list of builder names for which mail should be
+sent. Defaults to None (send mail for all builds). Use either builders
+or categories, but not both.
+
+@item categories
+(list of strings). A list of category names to serve status
+information for. Defaults to None (all categories). Use either
+builders or categories, but not both.
+
+@item addLogs
+(boolean). If True, include all build logs as attachments to the
+messages. These can be quite large. This can also be set to a list of
+log names, to send a subset of the logs. Defaults to False.
+
+@item relayhost
+(string). The host to which the outbound SMTP connection should be
+made. Defaults to 'localhost'
+
+@item lookup
+(implementor of @code{IEmailLookup}). Object which provides
+IEmailLookup, which is responsible for mapping User names (which come
+from the VC system) into valid email addresses. If not provided, the
+notifier will only be able to send mail to the addresses in the
+extraRecipients list. Most of the time you can use a simple Domain
+instance. As a shortcut, you can pass as string: this will be treated
+as if you had provided Domain(str). For example,
+lookup='twistedmatrix.com' will allow mail to be sent to all
+developers whose SVN usernames match their twistedmatrix.com account
+names. See buildbot/status/mail.py for more details.
+
+@end table
+
+
+@node IRC Bot, PBListener, MailNotifier, Status Delivery
 @section IRC Bot
 
 @cindex IRC
@@ -6248,8 +6439,8 @@ Status plugins which only react to human queries (like the Waterfall
 display) never need to subscribe to anything: they are idle until
 someone asks a question, then wake up and extract the information they
 need to answer it, then they go back to sleep. Plugins which need to
-act spontaneously when builds complete (like the Mail plugin) need to
-subscribe to hear about new builds.
+act spontaneously when builds complete (like the MailNotifier plugin)
+need to subscribe to hear about new builds.
 
 If the status plugin needs to run network services (like the HTTP
 server used by the Waterfall plugin), they can be attached as Service
@@ -7039,7 +7230,6 @@ admins are unlikely to have much use for.
 @printindex st
 
 @c TODO: undocumented targets
-@stindex buildbot.status.mail.MailNotifier
 
 @node Index of master.cfg keys, Index, Index of Useful Classes, Top
 @unnumbered Index of master.cfg keys

@@ -8,6 +8,7 @@ from buildbot.test.runutils import RunMixin
 from buildbot.sourcestamp import SourceStamp
 from buildbot.process.base import BuildRequest
 from buildbot.status.builder import SUCCESS
+from buildbot.status import mail
 from buildbot.slave import bot
 
 config_1 = """
@@ -452,6 +453,22 @@ c['builders'] = [
 
 """
 
+config_mail_missing = config_1 + """
+c['slaves'] = [BuildSlave('bot1', 'sekrit', notify_on_missing='admin',
+                          missing_timeout=1)]
+c['builders'] = [
+    {'name': 'dummy', 'slavenames': ['bot1'],
+     'builddir': 'b1', 'factory': f1},
+    ]
+c['projectName'] = 'myproject'
+c['projectURL'] = 'myURL'
+"""
+
+class FakeMailer(mail.MailNotifier):
+    def sendMessage(self, m, recipients):
+        self.messages.append((m,recipients))
+        return defer.succeed(None)
+
 class BuildSlave(RunMixin, unittest.TestCase):
     def test_track_builders(self):
         self.master.loadConfig(config_multi_builders)
@@ -470,3 +487,47 @@ class BuildSlave(RunMixin, unittest.TestCase):
         d.addCallback(_check)
         return d
 
+    def test_mail_on_missing(self):
+        self.master.loadConfig(config_mail_missing)
+        self.master.readConfig = True
+        self.master.startService()
+        fm = FakeMailer("buildbot@example.org")
+        fm.messages = []
+        fm.setServiceParent(self.master)
+        self.master.statusTargets.append(fm)
+        
+        d = self.connectSlave()
+        d.addCallback(self.stall, 1)
+        d.addCallback(lambda res: self.shutdownSlave("bot1", "dummy"))
+        def _not_yet(res):
+            self.failIf(fm.messages)
+        d.addCallback(_not_yet)
+        # we reconnect right away, so the timer shouldn't fire
+        d.addCallback(lambda res: self.connectSlave())
+        d.addCallback(self.stall, 3)
+        d.addCallback(_not_yet)
+        d.addCallback(lambda res: self.shutdownSlave("bot1", "dummy"))
+        d.addCallback(_not_yet)
+        # now we let it sit disconnected for long enough for the timer to
+        # fire
+        d.addCallback(self.stall, 3)
+        def _check(res):
+            self.failUnlessEqual(len(fm.messages), 1)
+            msg,recips = fm.messages[0]
+            self.failUnlessEqual(recips, ["admin"])
+            body = msg.as_string()
+            self.failUnlessIn("Subject: Buildbot: buildslave bot1 was lost",
+                              body)
+            self.failUnlessIn("From: buildbot@example.org", body)
+            self.failUnlessIn("working for 'myproject'", body)
+            self.failUnlessIn("has noticed that the buildslave named bot1 went away",
+                              body)
+            self.failUnlessIn("was 'one'", body)
+            self.failUnlessIn("myURL", body)
+        d.addCallback(_check)
+        return d
+
+    def stall(self, result, delay=1):
+        d = defer.Deferred()
+        reactor.callLater(delay, d.callback, result)
+        return d

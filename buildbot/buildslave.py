@@ -1,5 +1,7 @@
 
 import time
+from email.Message import Message
+from email.Utils import formatdate
 from zope.interface import implements
 from twisted.python import log
 from twisted.internet import defer, reactor
@@ -7,6 +9,7 @@ from twisted.application import service
 
 from buildbot.pbutil import NewCredPerspective
 from buildbot.status.builder import SlaveStatus
+from buildbot.status.mail import MailNotifier
 from buildbot.interfaces import IBuildSlave
 
 class BuildSlave(NewCredPerspective, service.MultiService):
@@ -14,7 +17,7 @@ class BuildSlave(NewCredPerspective, service.MultiService):
     There is exactly one for each slave described in the config file (the
     c['slaves'] list). When buildbots connect in (.attach), they get a
     reference to this instance. The BotMaster object is stashed as the
-    .service attribute.
+    .botmaster attribute. The BotMaster is also our '.parent' Service.
 
     I represent a build slave -- a remote machine capable of
     running builds.  I am instantiated by the configuration file, and can be
@@ -22,7 +25,8 @@ class BuildSlave(NewCredPerspective, service.MultiService):
 
     implements(IBuildSlave)
 
-    def __init__(self, name, password, max_builds=None):
+    def __init__(self, name, password, max_builds=None,
+                 notify_on_missing=[], missing_timeout=3600):
         """
         @param name: botname this machine will supply when it connects
         @param password: password this machine will supply when
@@ -41,6 +45,13 @@ class BuildSlave(NewCredPerspective, service.MultiService):
         self.slavebuilders = []
         self.max_builds = max_builds
         self.lastMessageReceived = 0
+        if isinstance(notify_on_missing, str):
+            notify_on_missing = [notify_on_missing]
+        self.notify_on_missing = notify_on_missing
+        for i in notify_on_missing:
+            assert isinstance(i, str)
+        self.missing_timeout = missing_timeout
+        self.missing_timer = None
 
     def update(self, new):
         """
@@ -77,6 +88,10 @@ class BuildSlave(NewCredPerspective, service.MultiService):
 
         @return: a Deferred that fires with a suitable pb.IPerspective to
                  give to the slave (i.e. 'self')"""
+
+        if self.missing_timer:
+            self.missing_timer.cancel()
+            self.missing_timer = None
 
         if self.slave:
             # uh-oh, we've got a duplicate slave. The most likely
@@ -164,7 +179,52 @@ class BuildSlave(NewCredPerspective, service.MultiService):
         self.slave_status.setConnected(False)
         self.botmaster.slaveLost(self)
         log.msg("BuildSlave.detached(%s)" % self.slavename)
+        if self.notify_on_missing and self.parent:
+            self.missing_timer = reactor.callLater(self.missing_timeout,
+                                                   self._missing_timer_fired)
 
+    def _missing_timer_fired(self):
+        self.missing_timer = None
+        # notify people, but only if we're still in the config
+        if not self.parent:
+            return
+
+        # first, see if we have a MailNotifier we can use. This gives us a
+        # fromaddr and a relayhost.
+        buildmaster = self.botmaster.parent
+        status = buildmaster.getStatus()
+        for st in buildmaster.statusTargets:
+            if isinstance(st, MailNotifier):
+                break
+        else:
+            # if not, they get a default MailNotifier, which always uses SMTP
+            # to localhost and uses a dummy fromaddr of "buildbot".
+            log.msg("buildslave-missing msg using default MailNotifier")
+            st = MailNotifier("buildbot")
+        # now construct the mail
+        text = "The Buildbot working for '%s'\n" % status.getProjectName()
+        text += ("has noticed that the buildslave named %s went away\n" %
+                 self.slavename)
+        text += "\n"
+        text += ("It last disconnected at %s (buildmaster-local time)\n" %
+                 time.ctime(time.time() - self.missing_timeout)) # close enough
+        text += "\n"
+        text += "The admin on record (as reported by BUILDSLAVE:info/admin)\n"
+        text += "was '%s'.\n" % self.slave_status.getAdmin()
+        text += "\n"
+        text += "Sincerely,\n"
+        text += " The Buildbot\n"
+        text += " %s\n" % status.getProjectURL()
+
+        m = Message()
+        m.set_payload(text)
+        m['Date'] = formatdate(localtime=True)
+        m['Subject'] = "Buildbot: buildslave %s was lost" % self.slavename
+        m['From'] = st.fromaddr
+        recipients = self.notify_on_missing
+        d = st.sendMessage(m, recipients)
+        # return the Deferred for testing purposes
+        return d
 
     def disconnect(self):
         """Forcibly disconnect the slave.

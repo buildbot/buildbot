@@ -1,5 +1,14 @@
 2007-09-28  Brian Warner  <warner@lothar.com>
 
+	* buildbot/buildslave.py (BuildSlave): add notify_on_missing=
+	argument, to send email about buildslaves which are disconnected
+	for more than an hour. Closes #64.
+	* buildbot/test/test_slaves.py (BuildSlave.test_mail_on_missing):
+	test it
+	* docs/buildbot.texinfo (When Buildslaves Go Missing): document it
+	(MailNotifier): add docs for this too
+
+
 	* buildbot/status/web/baseweb.py (OneBoxPerBuilder): make this page
 	respect branch= queryargs, by restricting the builds displayed to
 	those matching the given branch names
