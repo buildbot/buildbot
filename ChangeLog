@@ -1,5 +1,9 @@
 2007-09-30  Brian Warner  <warner@lothar.com>
 
+	* docs/buildbot.texinfo (WebStatus): explain robots.txt a bit more
+	* buildbot/status/web/robots.txt (Disallow): update to cover all
+	dynamically-generated pages
+
 	* buildbot/status/web/base.py (map_branches): when we see 'trunk',
 	include both 'trunk' and None in the output list, since some VC
 	systems (SVN, frequently) refer to trunk as 'trunk'.
