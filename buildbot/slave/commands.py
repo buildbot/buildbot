@@ -1511,6 +1511,9 @@ class SVN(SourceBase):
         d = c.start()
         def _parse(res):
             r = c.stdout.strip()
+            # Support for removing svnversion indicator for 'modified'
+            if r[-1] == 'M':
+                r = r[:-1]
             got_version = None
             try:
                 got_version = int(r)

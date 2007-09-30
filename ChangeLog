@@ -1,5 +1,11 @@
 2007-09-30  Brian Warner  <warner@lothar.com>
 
+	* buildbot/slave/commands.py (SVN.parseGotRevision._parse): remove
+	the trailing "M" indicator that tells us this is a modified file.
+	This should help with mode="update" builds that modify files
+	in-place. Thanks to "Oz" (chris at santacruzgames.com) for the
+	patch.
+
 	* buildbot/scripts/runner.py (upgradeMaster): improvements: write
 	new copies of files (to .new) when those files already exist,
 	check the master.cfg file for errors (and give DeprecationWarnings
