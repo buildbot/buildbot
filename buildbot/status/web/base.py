@@ -341,6 +341,9 @@ class OneLineMixin:
 def map_branches(branches):
     # when the query args say "trunk", present that to things like
     # IBuilderStatus.generateFinishedBuilds as None, since that's the
-    # convention in use. In the long run we should clean this up better,
+    # convention in use. But also include 'trunk', because some VC systems
+    # refer to it that way. In the long run we should clean this up better,
     # maybe with Branch objects or something.
-    return [b != "trunk" and b or None for b in branches]
+    if "trunk" in branches:
+        return branches + [None]
+    return branches
