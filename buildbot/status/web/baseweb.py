@@ -501,8 +501,12 @@ class Waterfall(WebStatus):
         WebStatus.__init__(self, http_port, distrib_port, allowForce)
         self.css = css
         if css:
-            data = open(css, "rb").read()
-            self.putChild("buildbot.css", static.Data(data, "text/plain"))
+            if os.path.exists(os.path.join("public_html", "buildbot.css")):
+                # they've upgraded, so defer to that copy instead
+                pass
+            else:
+                data = open(css, "rb").read()
+                self.putChild("buildbot.css", static.Data(data, "text/plain"))
         self.favicon = favicon
         self.robots_txt = robots_txt
         if favicon:

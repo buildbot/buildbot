@@ -1,5 +1,17 @@
 2007-09-30  Brian Warner  <warner@lothar.com>
 
+	* buildbot/status/web/baseweb.py (Waterfall.__init__): if an old
+	Waterfall is running in an upgraded master (which is the usual
+	case for folks who have followed the instructions to run
+	'upgrade-master' but who have not yet resolved all the
+	DeprecationWarnings), prefer the buildbot.css from public_html/
+	rather than the one passed in on the buildbot= argument.
+	Otherwise, the resulting pages don't quite use CSS right..
+	sometimes it works, sometimes it doesn't, and I don't know why.
+	Sites that are using custom CSS will see the default CSS until
+	they modify public_html/buildbot.css to include their
+	customizations.
+
 	* docs/buildbot.texinfo (WebStatus): explain robots.txt a bit more
 	* buildbot/status/web/robots.txt (Disallow): update to cover all
 	dynamically-generated pages
