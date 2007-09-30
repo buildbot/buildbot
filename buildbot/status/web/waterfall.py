@@ -12,7 +12,7 @@ from buildbot import version
 from buildbot.status import builder
 
 from buildbot.status.web.base import Box, HtmlResource, IBox, ICurrentBox, \
-     ITopBox, td, build_get_class, path_to_build, path_to_step
+     ITopBox, td, build_get_class, path_to_build, path_to_step, map_branches
 
 
 
@@ -100,8 +100,9 @@ class BuildTopBox(components.Adapter):
     def getBox(self, req):
         assert interfaces.IBuilderStatus(self.original)
         branches = [b for b in req.args.get("branch", []) if b]
-        builds = list(self.original.generateFinishedBuilds(branches,
-                                                           num_builds=1))
+        builder = self.original
+        builds = list(builder.generateFinishedBuilds(map_branches(branches),
+                                                     num_builds=1))
         if not builds:
             return Box(["none"], "white", class_="LastBuild")
         b = builds[0]
@@ -638,6 +639,7 @@ class WaterfallStatusResource(HtmlResource):
         if request.args.get("show_events", ["true"])[0].lower() == "true":
             showEvents = True
         filterBranches = [b for b in request.args.get("branch", []) if b]
+        filterBranches = map_branches(filterBranches)
         maxTime = int(request.args.get("last_time", [util.now()])[0])
         if "show_time" in request.args:
             minTime = maxTime - int(request.args["show_time"][0])

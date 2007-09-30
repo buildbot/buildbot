@@ -6083,16 +6083,13 @@ show builds for just those two Builders.
 
 The @code{branch=} query argument can be used on some pages. This
 filters the information displayed by that page down to only the builds
-or changes which involved the given branch. Multiple @code{branch=}
-arguments can be used to examine multiple branches at once (so
-appending @code{?branch=foo&branch=bar} to the URL will show builds
-involving either branch). No @code{branch=} arguments means to show
-builds and changes for all branches.
-
-Note that branch-handling still needs to be cleaned up: in particular
-there is currently no way to refer to the default (or ``trunk'')
-branch using @code{branch=} arguments. This will be improved in a
-future release.
+or changes which involved the given branch. Use @code{branch=trunk} to
+reference the trunk: if you aren't intentionally using branches,
+you're probably using trunk. Multiple @code{branch=} arguments can be
+used to examine multiple branches at once (so appending
+@code{?branch=foo&branch=bar} to the URL will show builds involving
+either branch). No @code{branch=} arguments means to show builds and
+changes for all branches.
 
 Some pages may include the Builder name or the build number in the
 main part of the URL itself. For example, a page that describes Build

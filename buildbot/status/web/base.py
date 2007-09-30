@@ -333,3 +333,10 @@ class OneLineMixin:
         fmt_pieces.append('<a href="%(buildurl)s">#%(buildnum)d</a>:')
         data = " ".join(fmt_pieces) % values
         return data
+
+def map_branches(branches):
+    # when the query args say "trunk", present that to things like
+    # IBuilderStatus.generateFinishedBuilds as None, since that's the
+    # convention in use. In the long run we should clean this up better,
+    # maybe with Branch objects or something.
+    return [b != "trunk" and b or None for b in branches]

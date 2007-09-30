@@ -1,7 +1,21 @@
 2007-09-30  Brian Warner  <warner@lothar.com>
 
+	* buildbot/status/web/base.py (map_branches): when referring to
+	branches through WebStatus (i.e. by appending ?branch=FOO query
+	arguments to the URL), make "trunk" mean trunk, by mapping it to
+	None before passing it to generateFinishedBuilds() and the like.
+	* buildbot/status/web/baseweb.py (OneLinePerBuild.body): same
+	(OneBoxPerBuilder.body): same, also improve display of branches in
+	the HTML a bit
+	* buildbot/status/web/waterfall.py (BuildTopBox.getBox): same
+	(WaterfallStatusResource.buildGrid): same. Note that this filters
+	Changes as well as Builds.
+	* docs/buildbot.texinfo (Buildbot Web Resources): remove the
+	caveat about trunk branches, now that it's fixed
+
 	* buildbot/status/web/base.py (OneLineMixin): refactor, move this
 	from builder.py, use it on the Builder page too
+
 	* buildbot/status/web/builder.py (StatusResourceBuilder): same
 	* buildbot/status/web/baseweb.py (OneLinePerBuild): display branch
 	names, add some CSS classes

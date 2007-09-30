@@ -11,7 +11,7 @@ from twisted.spread import pb
 from buildbot.interfaces import IControl, IStatusReceiver
 
 from buildbot.status.web.base import HtmlResource, Box, \
-     build_get_class, ICurrentBox, OneLineMixin
+     build_get_class, ICurrentBox, OneLineMixin, map_branches
 from buildbot.status.web.waterfall import WaterfallStatusResource
 from buildbot.status.web.changes import ChangesResource
 from buildbot.status.web.builder import BuildersResource
@@ -93,13 +93,14 @@ class OneLinePerBuild(HtmlResource, OneLineMixin):
         builders = req.args.get("builder", [])
         branches = [b for b in req.args.get("branch", []) if b]
 
-        g = status.generateFinishedBuilds(builders, branches, numbuilds)
+        g = status.generateFinishedBuilds(builders, map_branches(branches),
+                                          numbuilds)
 
         data = ""
 
         # really this is "up to %d builds"
         data += "<h1>Last %d finished builds: %s</h1>\n" % \
-                (numbuilds, " ".join(branches))
+                (numbuilds, ", ".join(branches))
         if builders:
             data += ("<p>of builders: %s</p>\n" % (", ".join(builders)))
         data += "<ul>\n"
@@ -131,11 +132,12 @@ class OneLinePerBuildOneBuilder(HtmlResource, OneLineMixin):
         branches = [b for b in req.args.get("branch", []) if b]
 
         # walk backwards through all builds of a single builder
-        g = self.builder.generateFinishedBuilds(branches, numbuilds)
+        g = self.builder.generateFinishedBuilds(map_branches(branches),
+                                                numbuilds)
 
         data = ""
-        data += ("<h1>Last %d builds of builder: %s</h1>\n" %
-                 (numbuilds, self.builder_name))
+        data += ("<h1>Last %d builds of builder %s: %s</h1>\n" %
+                 (numbuilds, self.builder_name, ", ".join(branches)))
         data += "<ul>\n"
         got = 0
         for build in g:
@@ -169,13 +171,13 @@ class OneBoxPerBuilder(HtmlResource):
 
         data = ""
 
-        data += "<h2>Latest builds: %s</h2>\n" % " ".join(branches)
+        data += "<h2>Latest builds: %s</h2>\n" % ", ".join(branches)
         data += "<table>\n"
         for bn in builders:
             builder = status.getBuilder(bn)
             data += "<tr>\n"
             data += '<td class="box">%s</td>\n' % html.escape(bn)
-            builds = list(builder.generateFinishedBuilds(branches,
+            builds = list(builder.generateFinishedBuilds(map_branches(branches),
                                                          num_builds=1))
             if builds:
                 b = builds[0]
