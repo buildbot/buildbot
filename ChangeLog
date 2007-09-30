@@ -1,3 +1,12 @@
+2007-09-30  Brian Warner  <warner@lothar.com>
+
+	* buildbot/scripts/runner.py (upgradeMaster): improvements: write
+	new copies of files (to .new) when those files already exist,
+	check the master.cfg file for errors (and give DeprecationWarnings
+	a chance to be displayed).
+	* buildbot/test/test_runner.py: add more tests
+	* docs/buildbot.texinfo (Upgrading an Existing Buildmaster): docs
+
 2007-09-29  Brian Warner  <warner@lothar.com>
 
 	* buildbot/steps/source.py (Mercurial.computeSourceRevision): take

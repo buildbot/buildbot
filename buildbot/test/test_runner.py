@@ -157,7 +157,8 @@ class Create(unittest.TestCase):
                              "*should* rewrite master.cfg.sample")
 
     def testUpgradeMaster(self):
-        # first, create a master and then upgrade it. Nothing should change.
+        # first, create a master, run it briefly, then upgrade it. Nothing
+        # should change.
         basedir = "test_runner.master2"
         options = runner.MasterOptions()
         options.parseOptions(["-q", basedir])
@@ -165,11 +166,20 @@ class Create(unittest.TestCase):
         runner.createMaster(options)
         os.chdir(cwd)
 
+        f = open(os.path.join(basedir, "master.cfg"), "w")
+        f.write(open(os.path.join(basedir, "master.cfg.sample"), "r").read())
+        f.close()
+
+        # the upgrade process (specifically the verify-master.cfg step) will
+        # create any builder status directories that weren't already created.
+        # Create those ahead of time.
+        os.mkdir(os.path.join(basedir, "full"))
+
         files1 = self.record_files(basedir)
 
         # upgrade it
         options = runner.UpgradeMasterOptions()
-        options.parseOptions([basedir])
+        options.parseOptions(["--quiet", basedir])
         cwd = os.getcwd()
         runner.upgradeMaster(options)
         os.chdir(cwd)
@@ -177,20 +187,37 @@ class Create(unittest.TestCase):
         files2 = self.record_files(basedir)
         self.failUnlessSameFiles(files1, files2)
 
-        # now make it look like the one that 0.7.6 creates: no public_html
+        # now make it look like the one that 0.7.5 creates: no public_html
         for fn in os.listdir(os.path.join(basedir, "public_html")):
             os.unlink(os.path.join(basedir, "public_html", fn))
         os.rmdir(os.path.join(basedir, "public_html"))
 
         # and make sure that upgrading it re-populates public_html
         options = runner.UpgradeMasterOptions()
-        options.parseOptions([basedir])
+        options.parseOptions(["-q", basedir])
         cwd = os.getcwd()
         runner.upgradeMaster(options)
         os.chdir(cwd)
 
         files3 = self.record_files(basedir)
         self.failUnlessSameFiles(files1, files3)
+
+        # now induce an error in master.cfg and make sure that upgrade
+        # notices it.
+        f = open(os.path.join(basedir, "master.cfg"), "a")
+        f.write("raise RuntimeError('catch me please')\n")
+        f.close()
+
+        options = runner.UpgradeMasterOptions()
+        options.parseOptions(["-q", basedir])
+        cwd = os.getcwd()
+        rc = runner.upgradeMaster(options)
+        os.chdir(cwd)
+        self.failUnless(rc != 0, rc)
+        # TODO: change the way runner.py works to let us pass in a stderr
+        # filehandle, and use a StringIO to capture its output, and make sure
+        # the right error messages appear therein.
+
 
     def failUnlessSameFiles(self, files1, files2):
         f1 = sets.Set(files1.keys())

@@ -153,14 +153,12 @@ class Maker:
         f.close()
         os.chmod(target, 0600)
 
-    def public_html(self, index_html, buildbot_css, robots_txt,
-                    repopulate=False):
+    def public_html(self, index_html, buildbot_css, robots_txt):
         webdir = os.path.join(self.basedir, "public_html")
         if os.path.exists(webdir):
-            if not repopulate:
-                if not self.quiet:
-                    print "public_html/ already exists: not replacing"
-                return
+            if not self.quiet:
+                print "public_html/ already exists: not replacing"
+            return
         else:
             os.mkdir(webdir)
         if not self.quiet:
@@ -180,6 +178,83 @@ class Maker:
         f.write(open(robots_txt, "rt").read())
         f.close()
 
+    def populate_if_missing(self, target, source, overwrite=False):
+        new_contents = open(source, "rt").read()
+        if os.path.exists(target):
+            old_contents = open(target, "rt").read()
+            if old_contents != new_contents:
+                if overwrite:
+                    if not self.quiet:
+                        print "%s has old/modified contents" % target
+                        print " overwriting it with new contents"
+                    open(target, "wt").write(new_contents)
+                else:
+                    if not self.quiet:
+                        print "%s has old/modified contents" % target
+                        print " writing new contents to %s.new" % target
+                    open(target + ".new", "wt").write(new_contents)
+            # otherwise, it's up to date
+        else:
+            if not self.quiet:
+                print "populating %s" % target
+            open(target, "wt").write(new_contents)
+
+    def upgrade_public_html(self, index_html, buildbot_css, robots_txt):
+        webdir = os.path.join(self.basedir, "public_html")
+        if not os.path.exists(webdir):
+            if not self.quiet:
+                print "populating public_html/"
+            os.mkdir(webdir)
+        self.populate_if_missing(os.path.join(webdir, "index.html"),
+                                 index_html)
+        self.populate_if_missing(os.path.join(webdir, "buildbot.css"),
+                                 buildbot_css)
+        self.populate_if_missing(os.path.join(webdir, "robots.txt"),
+                                 robots_txt)
+
+    def check_master_cfg(self):
+        from buildbot.master import BuildMaster
+        from twisted.python import log, failure
+
+        master_cfg = os.path.join(self.basedir, "master.cfg")
+        if not os.path.exists(master_cfg):
+            if not self.quiet:
+                print "No master.cfg found"
+            return 1
+
+        # side-effects of loading the config file:
+
+        #  for each Builder defined in c['builders'], if the status directory
+        #  didn't already exist, it will be created, and the
+        #  $BUILDERNAME/builder pickle might be created (with a single
+        #  "builder created" event).
+
+        m = BuildMaster(self.basedir)
+        # we need to route log.msg to stdout, so any problems can be seen
+        # there. But if everything goes well, I'd rather not clutter stdout
+        # with log messages. So instead we add a logObserver which gathers
+        # messages and only displays them if something goes wrong.
+        messages = []
+        log.addObserver(messages.append)
+        try:
+            # this will raise an exception if there's something wrong with
+            # the config file. Note that this BuildMaster instance is never
+            # started, so it won't actually do anything with the
+            # configuration.
+            m.loadConfig(open(master_cfg, "r"))
+        except:
+            f = failure.Failure()
+            if not self.quiet:
+                print
+                for m in messages:
+                    print "".join(m['message'])
+                print f
+                print
+                print "An error was detected in the master.cfg file."
+                print "Please correct the problem and run 'buildbot upgrade-master' again."
+                print
+            return 1
+        return 0
 
 class UpgradeMasterOptions(MakerBase):
     optFlags = [
@@ -208,17 +283,23 @@ class UpgradeMasterOptions(MakerBase):
 def upgradeMaster(config):
     basedir = config['basedir']
     m = Maker(config)
-    m.quiet = True
-    # check TAC file
-    # check sample.cfg
+    # TODO: check Makefile
+    # TODO: check TAC file
     # check web files: index.html, classic.css, robots.txt
     webdir = os.path.join(basedir, "public_html")
-    m.public_html(util.sibpath(__file__, "../status/web/index.html"),
-                  util.sibpath(__file__, "../status/web/classic.css"),
-                  util.sibpath(__file__, "../status/web/robots.txt"),
-                  repopulate=True
-                  )
-    # check Makefile
+    m.upgrade_public_html(util.sibpath(__file__, "../status/web/index.html"),
+                          util.sibpath(__file__, "../status/web/classic.css"),
+                          util.sibpath(__file__, "../status/web/robots.txt"),
+                          )
+    m.populate_if_missing(os.path.join(basedir, "master.cfg.sample"),
+                          util.sibpath(__file__, "sample.cfg"),
+                          overwrite=True)
+    rc = m.check_master_cfg()
+    if rc:
+        return rc
+    if not config['quiet']:
+        print "upgrade complete"
+
 
 class MasterOptions(MakerBase):
     optFlags = [

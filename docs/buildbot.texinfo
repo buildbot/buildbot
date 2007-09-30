@@ -83,6 +83,7 @@ Installation
 * Requirements::                
 * Installing the code::         
 * Creating a buildmaster::      
+* Upgrading an Existing Buildmaster::  
 * Creating a buildslave::       
 * Launching the daemons::       
 * Logfiles::                    
@@ -600,6 +601,7 @@ like IRC.
 * Requirements::                
 * Installing the code::         
 * Creating a buildmaster::      
+* Upgrading an Existing Buildmaster::  
 * Creating a buildslave::       
 * Launching the daemons::       
 * Logfiles::                    
@@ -718,7 +720,7 @@ That will populate @file{~/lib/python} and create
 @code{PYTHONPATH}.
 
 
-@node Creating a buildmaster, Creating a buildslave, Installing the code, Installation
+@node Creating a buildmaster, Upgrading an Existing Buildmaster, Installing the code, Installation
 @section Creating a buildmaster
 
 As you learned earlier (@pxref{System Architecture}), the buildmaster
@@ -770,8 +772,41 @@ In addition to @file{buildbot.tac}, a small @file{Makefile.sample} is
 installed. This can be used as the basis for customized daemon startup,
 @xref{Launching the daemons}.
 
+@node Upgrading an Existing Buildmaster, Creating a buildslave, Creating a buildmaster, Installation
+@section Upgrading an Existing Buildmaster
 
-@node Creating a buildslave, Launching the daemons, Creating a buildmaster, Installation
+If you have just installed a new version of the Buildbot code, and you
+have buildmasters that were created using an older version, you'll
+need to upgrade these buildmasters before you can use them. The
+upgrade process adds and modifies files in the buildmaster's base
+directory to make it compatible with the new code.
+
+@example
+buildbot upgrade-master @var{basedir}
+@end example
+
+This command will also scan your @file{master.cfg} file for
+incompatbilities (by loading it and printing any errors or deprecation
+warnings that occur). Each buildbot release tries to be compatible
+with configurations that worked cleanly (i.e. without deprecation
+warnings) on the previous release: any functions or classes that are
+to be removed will first be deprecated in a release, to give users a
+chance to start using their replacement.
+
+The 0.7.6 release introduced the @file{public_html/} directory, which
+contains @file{index.html} and other files served by the
+@code{WebStatus} and @code{Waterfall} status displays. The
+@code{upgrade-master} command will create these files if they do not
+already exist. It will not modify existing copies, but it will write a
+new copy in e.g. @file{index.html.new} if the new version differs from
+the version that already exists.
+
+The @code{upgrade-master} command is idempotent. It is safe to run it
+multiple times. After each upgrade of the buildbot code, you should
+use @code{upgrade-master} on all your buildmasters.
+
+
+@node Creating a buildslave, Launching the daemons, Upgrading an Existing Buildmaster, Installation
 @section Creating a buildslave
 
 Typically, you will be adding a buildslave to an existing buildmaster,
