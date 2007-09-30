@@ -6,14 +6,14 @@ from twisted.web.util import Redirect
 import re, urllib, time
 from twisted.python import log
 from buildbot import interfaces
-from buildbot.status.web.base import HtmlResource, make_row, css_classes
+from buildbot.status.web.base import HtmlResource, make_row, OneLineMixin
 from buildbot.process.base import BuildRequest
 from buildbot.sourcestamp import SourceStamp
 
 from buildbot.status.web.build import BuildsResource
 
 # /builders/$builder
-class StatusResourceBuilder(HtmlResource):
+class StatusResourceBuilder(HtmlResource, OneLineMixin):
     addSlash = True
 
     def __init__(self, builder_status, builder_control):
@@ -34,15 +34,6 @@ class StatusResourceBuilder(HtmlResource):
                                       time.localtime(time.time() + when))
             data += "ETA %ds (%s) " % (when, when_time)
         data += "[%s]" % build.getCurrentStep().getName()
-        return data
-
-    def build_finished_line(self, build, req):
-        buildnum = build.getNumber()
-        buildurl = req.childLink("builds/%d" % buildnum)
-        results = build.getResults()
-        text = " ".join(build.getText())
-        data = '<a href="%s">#%d</a> ' % (buildurl, buildnum)
-        data += '<span class="%s">%s</span>' % (css_classes[results], text)
         return data
 
     def body(self, req):
@@ -77,7 +68,7 @@ class StatusResourceBuilder(HtmlResource):
         data += "<h2>Recent Builds:</h2>\n"
         data += "<ul>\n"
         for i,build in enumerate(b.generateFinishedBuilds(num_builds=5)):
-            data += " <li>" + self.build_finished_line(build, req) + "</li>\n"
+            data += " <li>" + self.make_line(req, build, False) + "</li>\n"
             if i == 0:
                 data += "<br />\n" # separator
                 # TODO: or empty list?

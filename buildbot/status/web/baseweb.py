@@ -1,5 +1,5 @@
 
-import os, sys, time, urllib, weakref
+import os, sys, urllib, weakref
 from itertools import count
 
 from zope.interface import implements
@@ -10,7 +10,8 @@ from twisted.spread import pb
 
 from buildbot.interfaces import IControl, IStatusReceiver
 
-from buildbot.status.web.base import HtmlResource, css_classes, Box, build_get_class, ICurrentBox
+from buildbot.status.web.base import HtmlResource, Box, \
+     build_get_class, ICurrentBox, OneLineMixin
 from buildbot.status.web.waterfall import WaterfallStatusResource
 from buildbot.status.web.changes import ChangesResource
 from buildbot.status.web.builder import BuildersResource
@@ -64,43 +65,6 @@ def getLastNBuilds(status, numbuilds, builders=[], branches=[]):
     return [e[2] for e in events[-numbuilds:]]
 
 
-class OneLineMixin:
-    LINE_TIME_FORMAT = "%b %d %H:%M"
-
-    def make_line(self, req, build):
-        builder_name = build.getBuilder().getName()
-        results = build.getResults()
-        try:
-            rev = build.getProperty("got_revision")
-            if rev is None:
-                rev = "??"
-        except KeyError:
-            rev = "??"
-        if len(rev) > 20:
-            rev = "version is too-long"
-        root = self.path_to_root(req)
-        values = {'class': css_classes[results],
-                  'builder_name': builder_name,
-                  'buildnum': build.getNumber(),
-                  'results': css_classes[results],
-                  'buildurl': (root +
-                               "builders/%s/builds/%d" % (builder_name,
-                                                          build.getNumber())),
-                  'builderurl': (root + "builders/%s" % builder_name),
-                  'rev': rev,
-                  'time': time.strftime(self.LINE_TIME_FORMAT,
-                                        time.localtime(build.getTimes()[0])),
-                  }
-
-        fmt = ('<font size="-1">(%(time)s)</font> '
-               '<a href="%(builderurl)s">%(builder_name)s</a> '
-               'rev=[%(rev)s] '
-               '<a href="%(buildurl)s">#%(buildnum)d</a>: '
-               '<span class="%(class)s">%(results)s</span> '
-               )
-        data = fmt % values
-        return data
-
 # /one_line_per_build
 #  accepts builder=, branch=, numbuilds=
 class OneLinePerBuild(HtmlResource, OneLineMixin):
@@ -134,7 +98,8 @@ class OneLinePerBuild(HtmlResource, OneLineMixin):
         data = ""
 
         # really this is "up to %d builds"
-        data += "<h1>Last %d finished builds</h1>\n" % numbuilds
+        data += "<h1>Last %d finished builds: %s</h1>\n" % \
+                (numbuilds, " ".join(branches))
         if builders:
             data += ("<p>of builders: %s</p>\n" % (", ".join(builders)))
         data += "<ul>\n"
@@ -204,12 +169,12 @@ class OneBoxPerBuilder(HtmlResource):
 
         data = ""
 
-        data += "<h2>Latest builds</h2>\n"
+        data += "<h2>Latest builds: %s</h2>\n" % " ".join(branches)
         data += "<table>\n"
         for bn in builders:
             builder = status.getBuilder(bn)
             data += "<tr>\n"
-            data += "<td>%s</td>\n" % html.escape(bn)
+            data += '<td class="box">%s</td>\n' % html.escape(bn)
             builds = list(builder.generateFinishedBuilds(branches,
                                                          num_builds=1))
             if builds:
@@ -227,10 +192,10 @@ class OneBoxPerBuilder(HtmlResource):
                 text = ['<a href="%s">%s</a>' % (url, label)]
                 text.extend(b.getText())
                 box = Box(text, b.getColor(),
-                          class_="LastBuild %s" % build_get_class(b))
+                          class_="LastBuild box %s" % build_get_class(b))
                 data += box.td(align="center")
             else:
-                data += "<td></td>\n"
+                data += '<td class="LastBuild box" >no build</td>\n'
             current_box = ICurrentBox(builder).getBox(status)
             data += current_box.td(align="center")
         data += "</table>\n"

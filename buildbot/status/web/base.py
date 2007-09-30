@@ -1,5 +1,5 @@
 
-import urlparse, urllib
+import urlparse, urllib, time
 from zope.interface import Interface
 from twisted.web import html, resource
 from buildbot.status import builder
@@ -294,3 +294,42 @@ def abbreviate_age(age):
     if age < 2*MONTH:
         return "about %s ago" % plural("week", "weeks", age / WEEK)
     return "a long time ago"
+
+
+class OneLineMixin:
+    LINE_TIME_FORMAT = "%b %d %H:%M"
+
+    def make_line(self, req, build, include_builder=True):
+        builder_name = build.getBuilder().getName()
+        results = build.getResults()
+        try:
+            rev = build.getProperty("got_revision")
+            if rev is None:
+                rev = "??"
+        except KeyError:
+            rev = "??"
+        if len(rev) > 20:
+            rev = "version is too-long"
+        root = self.path_to_root(req)
+        values = {'class': css_classes[results],
+                  'builder_name': builder_name,
+                  'buildnum': build.getNumber(),
+                  'results': css_classes[results],
+                  'buildurl': (root +
+                               "builders/%s/builds/%d" % (builder_name,
+                                                          build.getNumber())),
+                  'builderurl': (root + "builders/%s" % builder_name),
+                  'rev': rev,
+                  'time': time.strftime(self.LINE_TIME_FORMAT,
+                                        time.localtime(build.getTimes()[0])),
+                  }
+
+        fmt_pieces = ['<font size="-1">(%(time)s)</font>',
+                      'rev=[%(rev)s]',
+                      '<span class="%(class)s">%(results)s</span>',
+                      ]
+        if include_builder:
+            fmt_pieces.append('<a href="%(builderurl)s">%(builder_name)s</a>')
+        fmt_pieces.append('<a href="%(buildurl)s">#%(buildnum)d</a>:')
+        data = " ".join(fmt_pieces) % values
+        return data

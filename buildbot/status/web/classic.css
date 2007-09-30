@@ -7,6 +7,10 @@ td.Event, td.BuildStep, td.Activity, td.Change, td.Time, td.Builder {
     border-right: 1px solid;
 }
 
+td.box {
+       border: 1px solid;
+}
+
 /* Activity states */
 .offline { 
         background-color: red;
