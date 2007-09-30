@@ -1,5 +1,11 @@
 2007-09-30  Brian Warner  <warner@lothar.com>
 
+	* buildbot/scripts/runner.py (Maker.check_master_cfg): prepend
+	basedir to sys.path, to mimic what a real buildmaster would have
+	access to, since it is common for master.cfg to import helper
+	classes from .py files in the buildmaster directory, and we want
+	config-file checking to accomodate this.
+
 	* buildbot/status/web/base.py (map_branches): when referring to
 	branches through WebStatus (i.e. by appending ?branch=FOO query
 	arguments to the URL), make "trunk" mean trunk, by mapping it to

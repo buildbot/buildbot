@@ -229,6 +229,14 @@ class Maker:
         #  $BUILDERNAME/builder pickle might be created (with a single
         #  "builder created" event).
 
+        # we put basedir in front of sys.path, because that's how the
+        # buildmaster itself will run, and it is quite common to have the
+        # buildmaster import helper classes from other .py files in its
+        # basedir.
+
+        if sys.path[0] != self.basedir:
+            sys.path.insert(0, self.basedir)
+
         m = BuildMaster(self.basedir)
         # we need to route log.msg to stdout, so any problems can be seen
         # there. But if everything goes well, I'd rather not clutter stdout
