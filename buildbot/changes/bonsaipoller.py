@@ -1,10 +1,10 @@
 import time
-from urllib import urlopen
 from xml.dom import minidom
 
 from twisted.python import log, failure
-from twisted.internet import defer, reactor
+from twisted.internet import reactor
 from twisted.internet.task import LoopingCall
+from twisted.web.client import getPage
 
 from buildbot.changes import base, changes
 
@@ -64,14 +64,12 @@ class FileNode:
 class BonsaiParser:
     """I parse the XML result from a bonsai cvsquery."""
 
-    def __init__(self, bonsaiQuery):
+    def __init__(self, data):
         try:
         # this is a fix for non-ascii characters
-        # readlines() + join is being used because read() is not guaranteed
-        # to work. because bonsai does not give us an encoding to work with
+        # because bonsai does not give us an encoding to work with
         # it impossible to be 100% sure what to decode it as but latin1 covers
         # the broadest base
-            data = "".join(bonsaiQuery.readlines())
             data = data.decode("latin1")
             data = data.encode("ascii", "replace")
             self.dom = minidom.parseString(data)
@@ -148,7 +146,10 @@ class BonsaiParser:
         elif len(logs) > 1:
             raise InvalidResultError("Multiple logs present")
 
-        return logs[0].firstChild.data
+        # catch empty check-in comments
+        if logs[0].firstChild:
+            return logs[0].firstChild.data
+        return ''
 
     def _getWho(self):
         """Returns the e-mail address of the commiter"""
@@ -284,10 +285,9 @@ class BonsaiPoller(base.ChangeSource):
 
         self.lastPoll = time.time()
         # get the page, in XML format
-        return defer.maybeDeferred(urlopen, url)
+        return getPage(url, timeout=self.pollInterval)
 
     def _process_changes(self, query):
-        files = []
         try:
             bp = BonsaiParser(query)
             result = bp.getData()
@@ -298,8 +298,8 @@ class BonsaiPoller(base.ChangeSource):
             return
 
         for cinode in result.nodes:
-            for file in cinode.files:
-                files.append(file.filename+' (revision '+file.revision+')')
+            files = [file.filename + ' (revision '+file.revision+')'
+                     for file in cinode.files]
             c = changes.Change(who = cinode.who,
                                files = files,
                                comments = cinode.log,
