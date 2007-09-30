@@ -1,5 +1,14 @@
 2007-09-30  Brian Warner  <warner@lothar.com>
 
+	* buildbot/interfaces.py (IStatus.generateFinishedBuilds): add a
+	'max_search=' argument, to limit the number of builds that are
+	examined while trying to find ones that match the other criteria.
+	This helps to limit the work we do, since otherwise we might have
+	to trawl through all history.
+	(IBuilderStatus.generateFinishedBuilds): same
+	* buildbot/status/builder.py (Status.generateFinishedBuilds): same
+	(BuilderStatus.generateFinishedBuilds): same
+
 	* buildbot/status/web/base.py (OneLineMixin.make_line): stringify
 	our got_revision before checking its length: SVN (at least) still
 	reports numeric values for this.

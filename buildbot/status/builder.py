@@ -1469,10 +1469,13 @@ class BuilderStatus(styles.Versioned):
     def generateFinishedBuilds(self, branches=[],
                                num_builds=None,
                                max_buildnum=None,
-                               finished_before=None):
+                               finished_before=None,
+                               max_search=200):
         got = 0
         for Nb in itertools.count(1):
             if Nb > self.nextBuildNumber:
+                break
+            if Nb > max_search:
                 break
             build = self.getBuild(-Nb)
             if build is None:
@@ -1881,7 +1884,8 @@ class Status:
         return self.activeBuildSets[:]
 
     def generateFinishedBuilds(self, builders=[], branches=[],
-                               num_builds=None, finished_before=None):
+                               num_builds=None, finished_before=None,
+                               max_search=200):
 
         def want_builder(bn):
             if builders:
@@ -1898,7 +1902,8 @@ class Status:
         for bn in builder_names:
             b = self.getBuilder(bn)
             g = b.generateFinishedBuilds(branches,
-                                         finished_before=finished_before)
+                                         finished_before=finished_before,
+                                         max_search=max_search)
             sources.append(g)
 
         # next_build the next build from each source

@@ -159,7 +159,8 @@ class IStatus(Interface):
         """Return a list of active (non-finished) IBuildSetStatus objects."""
 
     def generateFinishedBuilds(builders=[], branches=[],
-                               num_builds=None, finished_before=None):
+                               num_builds=None, finished_before=None,
+                               max_search=200):
         """Return a generator that will produce IBuildStatus objects each
         time you invoke its .next() method, starting with the most recent
         finished build and working backwards.
@@ -181,6 +182,14 @@ class IStatus(Interface):
         @type finished_before: int: a timestamp, seconds since the epoch
         @param finished_before: if provided, do not produce any builds that
                                 finished after the given timestamp.
+
+        @type max_search: int
+        @param max_search: this method may have to examine a lot of builds
+                           to find some that match the search parameters,
+                           especially if there aren't any matching builds.
+                           This argument imposes a hard limit on the number
+                           of builds that will be examined within any given
+                           Builder.
         """
 
     def subscribe(receiver):
@@ -348,7 +357,8 @@ class IBuilderStatus(Interface):
 
     def generateFinishedBuilds(branches=[],
                                num_builds=None,
-                               max_buildnum=None, finished_before=None
+                               max_buildnum=None, finished_before=None,
+                               max_search=200,
                                ):
         """Return a generator that will produce IBuildStatus objects each
         time you invoke its .next() method, starting with the most recent
@@ -378,6 +388,13 @@ class IBuilderStatus(Interface):
         @type finished_before: int: a timestamp, seconds since the epoch
         @param finished_before: if provided, do not produce any builds that
                                 finished after the given timestamp.
+
+        @type max_search: int
+        @param max_search: this method may have to examine a lot of builds
+                           to find some that match the search parameters,
+                           especially if there aren't any matching builds.
+                           This argument imposes a hard limit on the number
+                           of builds that will be examined.
         """
 
     def subscribe(receiver):
