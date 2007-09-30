@@ -1,5 +1,9 @@
 2007-09-30  Brian Warner  <warner@lothar.com>
 
+	* buildbot/status/web/base.py (OneLineMixin.make_line): add the
+	build's text to the end of the line, without a CSS class so it
+	remains uncolored.
+
 	* buildbot/interfaces.py (IStatus.generateFinishedBuilds): add a
 	'max_search=' argument, to limit the number of builds that are
 	examined while trying to find ones that match the other criteria.

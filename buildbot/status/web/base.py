@@ -302,6 +302,7 @@ class OneLineMixin:
     def make_line(self, req, build, include_builder=True):
         builder_name = build.getBuilder().getName()
         results = build.getResults()
+        text = build.getText()
         try:
             rev = build.getProperty("got_revision")
             if rev is None:
@@ -316,6 +317,7 @@ class OneLineMixin:
                   'builder_name': builder_name,
                   'buildnum': build.getNumber(),
                   'results': css_classes[results],
+                  'text': " ".join(build.getText()),
                   'buildurl': (root +
                                "builders/%s/builds/%d" % (builder_name,
                                                           build.getNumber())),
@@ -332,6 +334,7 @@ class OneLineMixin:
         if include_builder:
             fmt_pieces.append('<a href="%(builderurl)s">%(builder_name)s</a>')
         fmt_pieces.append('<a href="%(buildurl)s">#%(buildnum)d</a>:')
+        fmt_pieces.append('%(text)s')
         data = " ".join(fmt_pieces) % values
         return data
 
