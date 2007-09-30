@@ -308,6 +308,7 @@ class OneLineMixin:
                 rev = "??"
         except KeyError:
             rev = "??"
+        rev = str(rev)
         if len(rev) > 20:
             rev = "version is too-long"
         root = self.path_to_root(req)

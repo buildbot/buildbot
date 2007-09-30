@@ -1,5 +1,13 @@
 2007-09-30  Brian Warner  <warner@lothar.com>
 
+	* buildbot/status/web/base.py (OneLineMixin.make_line): stringify
+	our got_revision before checking its length: SVN (at least) still
+	reports numeric values for this.
+	* buildbot/status/web/build.py (StatusResourceBuild.body): same
+	* buildbot/status/web/xmlrpc.py
+	(XMLRPCServer.xmlrpc_getAllBuildsInInterval): same, also stop
+	serving a completely fake revision
+
 	* buildbot/scripts/runner.py (Maker.check_master_cfg): prepend
 	basedir to sys.path, to mimic what a real buildmaster would have
 	access to, since it is common for master.cfg to import helper

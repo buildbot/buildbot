@@ -90,6 +90,7 @@ class StatusResourceBuild(HtmlResource):
         except KeyError:
             pass
         if got_revision:
+            got_revision = str(got_revision)
             if len(got_revision) > 40:
                 got_revision = "[revision string too long]"
             data += "  <li>Got Revision: %s</li>\n" % got_revision

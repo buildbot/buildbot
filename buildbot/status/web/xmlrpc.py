@@ -69,7 +69,7 @@ class XMLRPCServer(xmlrpc.XMLRPC):
                     revision = build.getProperty("got_revision")
                 except KeyError:
                     revision = ""
-                revision = "fake-rev"
+                revision = str(revision)
 
                 answer = (builder_name,
                           build.getNumber(),
