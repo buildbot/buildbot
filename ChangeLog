@@ -1,5 +1,9 @@
 2007-09-29  Brian Warner  <warner@lothar.com>
 
+	* buildbot/status/tinderbox.py (TinderboxMailNotifier): allow
+	this to specify an errorparser. From Ted Mielczarek and the
+	mozilla crew. Closes #94.
+
 	* buildbot/changes/bonsaipoller.py (BonsaiParser): "Make
 	bonsaipoller ignore funkyness in xml output for empy log
 	messages", from Axel Hecht. Closes #90.

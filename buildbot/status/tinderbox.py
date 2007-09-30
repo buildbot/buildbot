@@ -33,12 +33,12 @@ class TinderboxMailNotifier(mail.MailNotifier):
 
     compare_attrs = ["extraRecipients", "fromaddr", "categories", "builders",
                      "addLogs", "relayhost", "subject", "binaryURL", "tree",
-                     "logCompression"]
+                     "logCompression", "errorparser"]
 
     def __init__(self, fromaddr, tree, extraRecipients,
                  categories=None, builders=None, relayhost="localhost",
                  subject="buildbot %(result)s in %(builder)s", binaryURL="",
-                 logCompression=""):
+                 logCompression="", errorparser="unix"):
         """
         @type  fromaddr: string
         @param fromaddr: the email address to be used in the 'From' header.
@@ -82,6 +82,11 @@ class TinderboxMailNotifier(mail.MailNotifier):
         @param logCompression: The type of compression to use on the log.
                                Valid options are"bzip2" and "gzip". gzip is
                                only known to work on Python 2.4 and above.
+
+        @type  errorparser: string
+        @param errorparser: The error parser that the Tinderbox server
+                            should use when scanning the log file.
+                            Default is "unix".
         """
 
         mail.MailNotifier.__init__(self, fromaddr, categories=categories,
@@ -92,6 +97,7 @@ class TinderboxMailNotifier(mail.MailNotifier):
         self.tree = tree
         self.binaryURL = binaryURL
         self.logCompression = logCompression
+        self.errorparser = errorparser
 
     def buildStarted(self, name, build):
         builder = build.getBuilder()
@@ -130,7 +136,7 @@ class TinderboxMailNotifier(mail.MailNotifier):
         text += "\n";
 
         text += "%s build: %s\n" % (t, name)
-        text += "%s errorparser: unix\n" % t # always use the unix errorparser
+        text += "%s errorparser: %s\n" % (t, self.errorparser)
 
         # if the build just started...
         if results == "building":
