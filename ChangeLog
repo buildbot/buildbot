@@ -1,5 +1,11 @@
 2007-09-29  Brian Warner  <warner@lothar.com>
 
+	* buildbot/changes/bonsaipoller.py (BonsaiParser): "Make
+	bonsaipoller ignore funkyness in xml output for empy log
+	messages", from Axel Hecht. Closes #90.
+	* buildbot/test/test_bonsaipoller.py
+	(TestBonsaiPoller.testMergeEmptyLogMsg): same
+
 	* buildbot/status/tinderbox.py (TinderboxMailNotifier.buildStarted):
 	respect 'builders' arg, from Ben Hearsum. Closes #89.
 

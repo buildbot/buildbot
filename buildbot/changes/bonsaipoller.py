@@ -100,8 +100,16 @@ class BonsaiParser:
                     pass
                 except InvalidResultError:
                     raise
-                nodes.append(CiNode(self._getLog(), self._getWho(),
-                                    self._getDate(), files))
+                cinode = CiNode(self._getLog(), self._getWho(),
+                                self._getDate(), files)
+                # hack around bonsai xml output bug for empty check-in comments
+                if not cinode.log and nodes and \
+                        not nodes[-1].log and \
+                        cinode.who == nodes[-1].who and \
+                        cinode.date == nodes[-1].date:
+                    nodes[-1].files += cinode.files
+                else:
+                    nodes.append(cinode)
 
         except NoMoreCiNodes:
             pass
