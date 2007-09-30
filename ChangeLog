@@ -1,5 +1,13 @@
 2007-09-29  Brian Warner  <warner@lothar.com>
 
+	* buildbot/scripts/runner.py (stop): increase the timeout from 5
+	seconds to 10, to give heavily loaded machines a better chance to
+	finish shutting down. Addresses (partially) #68.
+	* buildbot/scripts/logwatcher.py (LogWatcher.TIMEOUT_DELAY): same,
+	on startup
+	* buildbot/scripts/reconfig.py (Reconfigurator.run): same
+	* buildbot/scripts/startup.py (Follower._failure): update message
+
 	* buildbot/changes/bonsaipoller.py: apply changes from the Mozilla
 	team, to fix some bugs and avoid the use of blocking urlopen().
 	closes #61.

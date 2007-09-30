@@ -20,7 +20,7 @@ class Reconfigurator:
         # keep reading twistd.log. Display all messages between "loading
         # configuration from ..." and "configuration update complete" or
         # "I will keep using the previous config file instead.", or until
-        # 5 seconds have elapsed.
+        # 10 seconds have elapsed.
 
         self.sent_signal = False
         lw = LogWatcher("twistd.log")

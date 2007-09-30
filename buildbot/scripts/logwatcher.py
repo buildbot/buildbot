@@ -18,7 +18,7 @@ class BuildSlaveDetectedError(Exception):
 
 class LogWatcher(LineOnlyReceiver):
     POLL_INTERVAL = 0.1
-    TIMEOUT_DELAY = 5.0
+    TIMEOUT_DELAY = 10.0
     delimiter = os.linesep
 
     def __init__(self, logfile):
@@ -31,7 +31,7 @@ class LogWatcher(LineOnlyReceiver):
     def start(self):
         # return a Deferred that fires when the reconfig process has
         # finished. It errbacks with TimeoutError if the finish line has not
-        # been seen within 5 seconds, and with ReconfigError if the error
+        # been seen within 10 seconds, and with ReconfigError if the error
         # line was seen. If the logfile could not be opened, it errbacks with
         # an IOError.
         self.running = True

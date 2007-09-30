@@ -377,8 +377,8 @@ def stop(config, signame="TERM", wait=False):
             print "sent SIG%s to process" % signame
         return
     time.sleep(0.1)
-    while timer < 5:
-        # poll once per second until twistd.pid goes away, up to 5 seconds
+    while timer < 10:
+        # poll once per second until twistd.pid goes away, up to 10 seconds
         try:
             os.kill(pid, 0)
         except OSError:
