@@ -174,6 +174,14 @@ class HtmlResource(resource.Resource):
         return resource.Resource.getChild(self, path, request)
 
     def render(self, request):
+        # tell the WebStatus about the HTTPChannel that got opened, so they
+        # can close it if we get reconfigured and the WebStatus goes away.
+        # They keep a weakref to this, since chances are good that it will be
+        # closed by the browser or by us before we get reconfigured. See
+        # ticket #102 for details.
+        if hasattr(request, "channel"):
+            # web.distrib.Request has no .channel
+            request.site.buildbot_service.registerChannel(request.channel)
 
         # Our pages no longer require that their URL end in a slash. Instead,
         # they all use request.childLink() or some equivalent which takes the

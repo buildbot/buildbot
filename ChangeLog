@@ -1,5 +1,12 @@
 2007-09-29  Brian Warner  <warner@lothar.com>
 
+	* buildbot/status/web/base.py (HtmlResource.render): keep track of
+	HTTPChannels, so we can shut them down at reconfig time (when the
+	WebStatus goes away). Closes #102.
+	* buildbot/status/web/baseweb.py (WebStatus.__init__): same
+	(WebStatus.registerChannel): same
+	(WebStatus.stopService): do .loseConnection() here
+
 	* buildbot/test/test_webparts.py (Webparts.testPages): reload the
 	WebStatus, make sure all pages are still retrievable. I thought
 	this would exercise a bug, but it turns out that it was firefox

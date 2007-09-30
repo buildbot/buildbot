@@ -1,5 +1,5 @@
 
-import os, sys, time, urllib
+import os, sys, time, urllib, weakref
 from itertools import count
 
 from zope.interface import implements
@@ -341,7 +341,10 @@ class WebStatus(service.MultiService):
     """
 
     # we are not a ComparableMixin, and therefore the webserver will be
-    # rebuilt every time we reconfig.
+    # rebuilt every time we reconfig. This is because WebStatus.putChild()
+    # makes it too difficult to tell whether two instances are the same or
+    # not (we'd have to do a recursive traversal of all children to discover
+    # all the changes).
 
     def __init__(self, http_port=None, distrib_port=None, allowForce=False):
         """Run a web server that provides Buildbot status.
@@ -409,14 +412,9 @@ class WebStatus(service.MultiService):
         self.footer = FOOTER
         self.template_values = {}
 
-        # TODO: browsers will cache connections, and if we've recently
-        # reloaded the config file, a browser might still be talking to the
-        # previous Site, which will work for some things, but will break when
-        # they try to reach through our .parent attribute (usually via
-        # HtmlResource.getStatus(), which does
-        # request.site.buildbot_service.parent). I don't know of a good way
-        # to deal with this.. maybe the Site has some list of current
-        # connections which we can crawl through and terminate?
+        # keep track of cached connections so we can break them when we shut
+        # down. See ticket #102 for more details.
+        self.channels = weakref.WeakKeyDictionary()
 
         if self.http_port is not None:
             s = strports.service(self.http_port, self.site)
@@ -469,6 +467,19 @@ class WebStatus(service.MultiService):
     def putChild(self, name, child_resource):
         """This behaves a lot like root.putChild() . """
         self.childrenToBeAdded[name] = child_resource
+
+    def registerChannel(self, channel):
+        self.channels[channel] = 1 # weakrefs
+
+    def stopService(self):
+        for channel in self.channels:
+            try:
+                channel.transport.loseConnection()
+            except:
+                log.msg("WebStatus.stopService: error while disconnecting"
+                        " leftover clients")
+                log.err()
+        return service.MultiService.stopService(self)
 
     def getStatus(self):
         return self.parent.getStatus()
