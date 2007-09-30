@@ -1,5 +1,9 @@
 2007-09-29  Brian Warner  <warner@lothar.com>
 
+	* buildbot/steps/source.py (Mercurial.computeSourceRevision): take
+	the revision id from the last change in our list, since that's the
+	best we can do without knowing the full ancestry graph. Closes #103.
+
 	* buildbot/scripts/sample.cfg: use buildstep instances in
 	f.addStep, to demonstrate the (correct) modern usage.
 	* docs/examples/hello.cfg: bring this up to date. Closes #79.

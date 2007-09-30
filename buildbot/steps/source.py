@@ -890,6 +890,15 @@ class Mercurial(Source):
         cmd = LoggedRemoteCommand("hg", self.args)
         self.startCommand(cmd)
 
+    def computeSourceRevision(self, changes):
+        if not changes:
+            return None
+        # without knowing the revision ancestry graph, we can't sort the
+        # changes at all. So for now, assume they were given to us in sorted
+        # order, and just pay attention to the last one. See ticket #103 for
+        # more details.
+        return changes[-1].revision
+
 
 class P4(Source):
     """ P4 is a class for accessing perforce revision control"""
