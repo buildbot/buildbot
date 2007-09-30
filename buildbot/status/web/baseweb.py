@@ -409,6 +409,15 @@ class WebStatus(service.MultiService):
         self.footer = FOOTER
         self.template_values = {}
 
+        # TODO: browsers will cache connections, and if we've recently
+        # reloaded the config file, a browser might still be talking to the
+        # previous Site, which will work for some things, but will break when
+        # they try to reach through our .parent attribute (usually via
+        # HtmlResource.getStatus(), which does
+        # request.site.buildbot_service.parent). I don't know of a good way
+        # to deal with this.. maybe the Site has some list of current
+        # connections which we can crawl through and terminate?
+
         if self.http_port is not None:
             s = strports.service(self.http_port, self.site)
             s.setServiceParent(self)
@@ -431,11 +440,13 @@ class WebStatus(service.MultiService):
 
     def __repr__(self):
         if self.http_port is None:
-            return "<WebStatus on path %s>" % self.distrib_port
+            return "<WebStatus on path %s at %s>" % (self.distrib_port,
+                                                     hex(id(self)))
         if self.distrib_port is None:
-            return "<WebStatus on port %s>" % self.http_port
-        return "<WebStatus on port %s and path %s>" % (self.http_port,
-                                                       self.distrib_port)
+            return "<WebStatus on port %s at %s>" % (self.http_port,
+                                                     hex(id(self)))
+        return ("<WebStatus on port %s and path %s at %s>" %
+                (self.http_port, self.distrib_port, hex(id(self))))
 
     def setServiceParent(self, parent):
         service.MultiService.setServiceParent(self, parent)

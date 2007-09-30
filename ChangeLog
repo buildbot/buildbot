@@ -1,5 +1,13 @@
 2007-09-29  Brian Warner  <warner@lothar.com>
 
+	* buildbot/test/test_webparts.py (Webparts.testPages): reload the
+	WebStatus, make sure all pages are still retrievable. I thought
+	this would exercise a bug, but it turns out that it was firefox
+	caching connections (and continuing to talk to the old WebStatus
+	even though I'd loaded a new one).
+	* buildbot/status/web/baseweb.py (WebStatus): add some comments
+	(WebStatus.__repr__): include id() in the repr
+
 	* buildbot/status/tinderbox.py (TinderboxMailNotifier): allow
 	this to specify an errorparser. From Ted Mielczarek and the
 	mozilla crew. Closes #94.

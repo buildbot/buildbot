@@ -28,6 +28,16 @@ class Webparts(BaseWeb, unittest.TestCase):
         port = list(self.find_webstatus(m)[0])[0]._port.getHost().port
         self.baseurl = "http://localhost:%d/" % port
 
+    def reconfigMaster(self, extraconfig):
+        config = base_config + extraconfig
+        d = self.master.loadConfig(config)
+        def _done(res):
+            m = self.master
+            port = list(self.find_webstatus(m)[0])[0]._port.getHost().port
+            self.baseurl = "http://localhost:%d/" % port
+        d.addCallback(_done)
+        return d
+
     def getAndCheck(self, url, substring, show=False):
         d = client.getPage(url)
         def _show_weberror(why):
@@ -91,6 +101,17 @@ ws = html.WebStatus(http_port=0)
 c['status'] = [ws]
 """
         self.startMaster(extraconfig)
+        d = defer.succeed(None)
+        d.addCallback(self._do_page_tests)
+        extraconfig2 = """
+ws = html.WebStatus(http_port=0, allowForce=True)
+c['status'] = [ws]
+"""
+        d.addCallback(lambda res: self.reconfigMaster(extraconfig2))
+        d.addCallback(self._do_page_tests)
+        return d
+
+    def _do_page_tests(self, res):
         d = defer.succeed(None)
         d.addCallback(self._check, "", "Welcome to the Buildbot")
         d.addCallback(self._check, "waterfall", "current activity")
