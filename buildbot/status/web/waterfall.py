@@ -559,7 +559,7 @@ class WaterfallStatusResource(HtmlResource):
         helppage = with_args(request, new_path=helpurl)
         data += '[<a href="%s">help</a>]\n' % helppage
 
-        welcomeurl = self.path_to_root(request) + "."
+        welcomeurl = self.path_to_root(request) + "index.html"
         data += '[<a href="%s">welcome</a>]\n' % welcomeurl
 
         if self.get_reload_time(request) is not None:

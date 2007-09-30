@@ -1,5 +1,10 @@
 2007-09-30  Brian Warner  <warner@lothar.com>
 
+	* buildbot/status/web/waterfall.py (WaterfallStatusResource):
+	point the 'welcome' link explicitly at index.html, rather than
+	'.', so that old Waterfall users can reach it and discover all the
+	new pages.
+
 	* buildbot/status/web/base.py (OneLineMixin.make_line): add the
 	build's text to the end of the line, without a CSS class so it
 	remains uncolored.
