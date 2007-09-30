@@ -6,7 +6,7 @@ from buildbot.status.web.base import HtmlResource, abbreviate_age
 class OneBuildSlaveResource(HtmlResource):
     pass  # TODO
 
-# /buildslaves/
+# /buildslaves
 class BuildSlavesResource(HtmlResource):
     title = "BuildSlaves"
     addSlash = True

@@ -1,5 +1,7 @@
 2007-09-30  Brian Warner  <warner@lothar.com>
 
+	* docs/buildbot.texinfo (WebStatus): update docs
+
 	* buildbot/slave/commands.py (SVN.parseGotRevision._parse): remove
 	the trailing "M" indicator that tells us this is a modified file.
 	This should help with mode="update" builds that modify files

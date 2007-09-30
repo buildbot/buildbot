@@ -241,7 +241,6 @@ Process-Specific build factories
 
 Status Delivery
 
-* HTML Waterfall::              
 * WebStatus::                   
 * MailNotifier::                
 * IRC Bot::                     
@@ -250,8 +249,10 @@ Status Delivery
 
 WebStatus
 
+* WebStatus Configuration Parameters::  
 * Buildbot Web Resources::      
 * XMLRPC server::               
+* HTML Waterfall::              
 
 Command-line tool
 
@@ -5909,11 +5910,11 @@ source comes from, as well as accomodating binary extension modules:
 @node Status Delivery, Command-line tool, Build Process, Top
 @chapter Status Delivery
 
-More details are available in the docstrings for each class, use
-@code{pydoc buildbot.status.html.Waterfall} to see them. Most status
-delivery objects take a @code{categories=} argument, which can contain
-a list of ``category'' names: in this case, it will only show status
-for Builders that are in one of the named categories.
+More details are available in the docstrings for each class, use a
+command like @code{pydoc buildbot.status.html.WebStatus} to see them.
+Most status delivery objects take a @code{categories=} argument, which
+can contain a list of ``category'' names: in this case, it will only
+show status for Builders that are in one of the named categories.
 
 (implementor's note: each of these objects should be a
 service.MultiService which will be attached to the BuildMaster object
@@ -5926,7 +5927,6 @@ notifications of builder events, in which case they must define
 @file{buildbot/interfaces.py} for full details.)
 
 @menu
-* HTML Waterfall::              
 * WebStatus::                   
 * MailNotifier::                
 * IRC Bot::                     
@@ -5939,26 +5939,90 @@ notifications of builder events, in which case they must define
 
 @c DOCUMENT THIS
 
-@node HTML Waterfall, WebStatus, Status Delivery, Status Delivery
-@section HTML Waterfall
 
-@cindex Waterfall
-@stindex buildbot.status.html.Waterfall
+@node WebStatus, MailNotifier, Status Delivery, Status Delivery
+@section WebStatus
 
+@cindex WebStatus
+@stindex buildbot.status.web.baseweb.WebStatus
+
+The @code{buildbot.status.html.WebStatus} status target runs a small
+web server inside the buildmaster. You can point a browser at this web
+server and retrieve information about every build the buildbot knows
+about, as well as find out what the buildbot is currently working on.
+
+The first page you will see is the ``Welcome Page'', which contains
+links to all the other useful pages. This page is simply served from
+the @file{public_html/index.html} file in the buildmaster's base
+directory, where it is created by the @command{buildbot create-master}
+command along with the rest of the buildmaster.
+
+The most complex resource provided by @code{WebStatus} is the
+``Waterfall Display'', which shows a time-based chart of events. This
+somewhat-busy display provides detailed information about all steps of
+all recent builds, and provides hyperlinks to look at individual build
+logs and source changes. By simply reloading this page on a regular
+basis, you will see a complete description of everything the buildbot
+is currently working on.
+
+There are also pages with more specialized information. For example,
+there is a page which shows the last 20 builds performed by the
+buildbot, one line each. Each line is a link to detailed information
+about that build. By adding query arguments to the URL used to reach
+this page, you can narrow the display to builds that involved certain
+branches, or which ran on certain Builders. These pages are described
+in great detail below.
+
+
+When the buildmaster is created, a subdirectory named
+@file{public_html/} is created in its base directory. @code{WebStatus}
+will serve files from this directory: for example, when a user points
+their browser at the buildbot's @code{WebStatus} URL, they will see
+the contents of the @file{public_html/index.html} file. Likewise,
+@file{public_html/robots.txt}, @file{public_html/buildbot.css}, and
+@file{public_html/favicon.ico} are all useful things to have in there.
+The first time a buildmaster is created, the @file{public_html}
+directory is populated with some sample files, which you will probably
+want to customize for your own project. These files are all static:
+the buildbot does not modify them in any way as it serves them to HTTP
+clients.
 
 @example
-from buildbot.status import html
-w = html.Waterfall(http_port=8080)
-c['status'].append(w)
+from buildbot.status.html import WebStatus
+c['status'].append(WebStatus(8080))
 @end example
 
-The @code{buildbot.status.html.Waterfall} status target creates an
-HTML ``waterfall display'', which shows a time-based chart of events.
-This display provides detailed information about all steps of all
-recent builds, and provides hyperlinks to look at individual build
-logs and source changes. If the @code{http_port} argument is provided,
-it provides a strports specification for the port that the web server
-should listen on. This can be a simple port number, or a string like
+In addition, if you are familiar with twisted.web @emph{Resource
+Trees}, you can write code to add additional pages at places inside
+this web space. Just use @code{webstatus.putChild} to place these
+resources.
+
+The following section describes the special URLs and the status views
+they provide.
+
+
+@menu
+* WebStatus Configuration Parameters::  
+* Buildbot Web Resources::      
+* XMLRPC server::               
+* HTML Waterfall::              
+@end menu
+
+@node WebStatus Configuration Parameters, Buildbot Web Resources, WebStatus, WebStatus
+@subsection WebStatus Configuration Parameters
+
+The most common way to run a @code{WebStatus} is on a regular TCP
+port. To do this, just pass in the TCP port number when you create the
+@code{WebStatus} instance; this is called the @code{http_port} argument:
+
+@example
+from buildbot.status.html import WebStatus
+c['status'].append(WebStatus(8080))
+@end example
+
+The @code{http_port} argument is actually a ``strports specification''
+for the port that the web server should listen on. This can be a
+simple port number, or a string like
 @code{tcp:8080:interface=127.0.0.1} (to limit connections to the
 loopback interface, and therefore to clients running on the same
 host)@footnote{It may even be possible to provide SSL access by using
@@ -5986,92 +6050,18 @@ configuration will make the HTML status page available at
 appear at @code{http://host/buildbot/}, and the right virtual host
 setup can even place it at @code{http://buildbot.host/} .
 
-Other arguments:
-
-@table @code
-@item allowForce
-If set to True (the default), then the web page will provide a ``Force
-Build'' button that allows visitors to manually trigger builds. This
-is useful for developers to re-run builds that have failed because of
-intermittent problems in the test suite, or because of libraries that
-were not installed at the time of the previous build. You may not wish
-to allow strangers to cause a build to run: in that case, set this to
-False to remove these buttons.
-
-@item favicon
-If set to a string, this will be interpreted as a filename containing
-a ``favicon'': a small image that contains an icon for the web site.
-This is returned to browsers that request the @code{favicon.ico} file,
-and should point to a .png or .ico image file. The default value uses
-the buildbot/buildbot.png image (a small hex nut) contained in the
-buildbot distribution. You can set this to None to avoid using a
-favicon at all.
-
-@item robots_txt
-If set to a string, this will be interpreted as a filename containing
-the contents of ``robots.txt''. Many search engine spiders request
-this file before indexing the site. Setting it to a file which
-contains:
-@example
-User-agent: *
-Disallow: /
-@end example
-will prevent most search engines from trawling the (voluminous)
-generated status pages.
-
-@end table
+The other @code{WebStatus} argument is @code{allowForce}. If set to
+True, then the web page will provide a ``Force Build'' button that
+allows visitors to manually trigger builds. This is useful for
+developers to re-run builds that have failed because of intermittent
+problems in the test suite, or because of libraries that were not
+installed at the time of the previous build. You may not wish to allow
+strangers to cause a build to run: in that case, set this to False to
+remove these buttons. The default value is False.
 
 
-@node WebStatus, MailNotifier, HTML Waterfall, Status Delivery
-@section WebStatus
 
-@cindex WebStatus
-@stindex buildbot.status.web.baseweb.WebStatus
-
-The Waterfall object is actually a subset of the views available with
-the more generalized @code{WebStatus} target. When you use
-@code{WebStatus}, you can put HTML files, CSS stylesheets, robots.txt,
-and other resources in a @file{public_html/} directory for use by the
-built-in webserver.
-
-When the buildmaster is created, a subdirectory named
-@file{public_html/} is created in its base directory. @code{WebStatus}
-will serve files from this directory: for example, when a user points
-their browser at the buildbot's @code{WebStatus} URL, they will see
-the contents of the @file{public_html/index.html} file. Likewise,
-@file{public_html/robots.txt} and @file{public_html/buildbot.css} are
-useful things to have in there. The first time a buildmaster is
-created, the @file{public_html} directory is populated with some
-sample files, which you will probably want to customize for your own
-project.
-
-@example
-from buildbot.status.html import WebStatus
-c['status'].append(WebStatus(8080))
-@end example
-
-Certain URL prefixes are handled specially by code within the
-buildbot. The pages available in these spaces provide various views into
-the buildbot status, each with a different focus. These pages can be
-configured further by adding query arguments, for example to restrict
-the page to only display certain Builders, or limit it to builds of a
-specific branch.
-
-In addition, if you are familiar with twisted.web @emph{Resource
-Trees}, you can write code to add additional pages at places inside
-this web space. Just use @code{webstatus.putChild} to place these
-resources.
-
-The following section describes the special URLs and the status views
-they provide.
-
-
-@menu
-* Buildbot Web Resources::      
-* XMLRPC server::               
-@end menu
-
-@node Buildbot Web Resources, XMLRPC server, WebStatus, WebStatus
+@node Buildbot Web Resources, XMLRPC server, WebStatus Configuration Parameters, WebStatus
 @subsection Buildbot Web Resources
 
 Certain URLs are ``magic'', and the pages they serve are created by
@@ -6143,11 +6133,11 @@ of the URL space: @file{/builders} for access to individual builds,
 @file{/changes} for access to information about source code changes,
 etc.
 
-@item /builders/$BUILDERNAME/
+@item /builders/$BUILDERNAME
 
 This describes the given Builder, and provides buttons to force a build.
 
-@item /builders/$BUILDERNAME/builds/$BUILDNUM/
+@item /builders/$BUILDERNAME/builds/$BUILDNUM
 
 This describes a specific Build.
 
@@ -6167,6 +6157,22 @@ describe what command was run and what the environment variable
 settings were like. This maybe be useful for saving to disk and
 feeding to tools like 'grep'.
 
+@item /changes
+
+This provides a brief description of the ChangeSource in use
+(@pxref{Change Sources}).
+
+@item /changes/NN
+
+This shows detailed information about the numbered Change: who was the
+author, what files were changed, what revision number was represented,
+etc.
+
+@item /buildslaves
+
+This summarizes each BuildSlave, including which Builders are
+configured to use it, whether the buildslave is currently connected or
+not, and host information retrieved from the buildslave itself.
 
 @item /one_line_per_build
 
@@ -6183,7 +6189,25 @@ One or more @code{builder=} or @code{branch=} arguments can be used to
 restrict the list. In addition, a @code{numbuilds=} argument will
 control how many lines are displayed (20 by default).
 
+@item /one_box_per_builder
+
+This page shows a small table, with one box for each Builder,
+containing the results of the most recent Build. It does not show the
+individual steps, or the current status. This is a simple summary of
+buildbot status: if this page is green, then all tests are passing.
+
+As with @code{/one_line_per_build}, this page will also honor
+@code{builder=} and @code{branch=} arguments.
+
+@item /about
+
+This page gives a brief summary of the Buildbot itself: software
+version, versions of some libraries that the Buildbot depends upon,
+etc. It also contains a link to the buildbot.net home page.
+
 @item /slave_status_timeline
+
+(note: this page has not yet been implemented)
 
 This provides a chronological display of configuration and operational
 events: master startup/shutdown, slave connect/disconnect, and
@@ -6191,22 +6215,6 @@ config-file changes. When a config-file reload is abandoned because of
 an error in the config file, the error is displayed on this page.
 
 This page does not show any builds.
-
-
-@item /last_build
-
-This shows one box per Builder, showing the results of the most recent
-complete build. It does not show the individual steps, or the current
-status.
-
-There are some options to limit the boxes displayed:
-
-@itemize @bullet
-@item
-branches: only show builds of specific branches
-@item only show specific builders
-@end itemize
-
 
 @item /last_build/$BUILDERNAME/status.png
 
@@ -6229,7 +6237,7 @@ details.
 
 @end table
 
-@node XMLRPC server,  , Buildbot Web Resources, WebStatus
+@node XMLRPC server, HTML Waterfall, Buildbot Web Resources, WebStatus
 @subsection XMLRPC server
 
 When using WebStatus, the buildbot runs an XML-RPC server at
@@ -6238,8 +6246,55 @@ status. The following table lists the methods that can be invoked
 using this interface.
 
 @table @code
+@item getAllBuildsInInterval(start, stop)
+
+Return a list of builds that have completed after the 'start'
+timestamp and before the 'stop' timestamp. This looks at all Builders.
+
+The timestamps are integers, interpreted as standard unix timestamps
+(seconds since epoch).
+
+Each Build is returned as a tuple in the form: @code{(buildername,
+buildnumber, build_end, branchname, revision, results, text)}
+
+The buildnumber is an integer. 'build_end' is an integer (seconds
+since epoch) specifying when the build finished.
+
+The branchname is a string, which may be an empty string to indicate
+None (i.e. the default branch). The revision is a string whose meaning
+is specific to the VC system in use, and comes from the 'got_revision'
+build property. The results are expressed as a string, one of
+('success', 'warnings', 'failure', 'exception'). The text is a list of
+short strings that ought to be joined by spaces and include slightly
+more data about the results of the build.
+
+@item getBuild(builder_name, build_number)
+
+Return information about a specific build.
+
+This returns a dictionary (aka ``struct'' in XMLRPC terms) with
+complete information about the build. It does not include the contents
+of the log files, but it has just about everything else.
 
 @end table
+
+@node HTML Waterfall,  , XMLRPC server, WebStatus
+@subsection HTML Waterfall
+
+@cindex Waterfall
+@stindex buildbot.status.html.Waterfall
+
+The @code{Waterfall} status target, deprecated as of 0.7.6, is a
+subset of the regular @code{WebStatus} resource (@pxref{WebStatus}).
+This section (and the @code{Waterfall} class itself) will be removed
+from a future release.
+
+@example
+from buildbot.status import html
+w = html.Waterfall(http_port=8080)
+c['status'].append(w)
+@end example
+
 
 
 @node MailNotifier, IRC Bot, WebStatus, Status Delivery
