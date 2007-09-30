@@ -94,6 +94,12 @@ class TinderboxMailNotifier(mail.MailNotifier):
         self.logCompression = logCompression
 
     def buildStarted(self, name, build):
+        builder = build.getBuilder()
+        if self.builders is not None and name not in self.builders:
+            return # ignore this Build
+        if self.categories is not None and \
+                builder.category not in self.categories:
+            return # ignore this build
         self.buildMessage(name, build, "building")
 
     def buildMessage(self, name, build, results):

@@ -1,5 +1,8 @@
 2007-09-29  Brian Warner  <warner@lothar.com>
 
+	* buildbot/status/tinderbox.py (TinderboxMailNotifier.buildStarted):
+	respect 'builders' arg, from Ben Hearsum. Closes #89.
+
 	* buildbot/scripts/runner.py (stop): increase the timeout from 5
 	seconds to 10, to give heavily loaded machines a better chance to
 	finish shutting down. Addresses (partially) #68.
