@@ -1,5 +1,13 @@
 2007-09-29  Brian Warner  <warner@lothar.com>
 
+	* buildbot/scripts/sample.cfg: use buildstep instances in
+	f.addStep, to demonstrate the (correct) modern usage.
+	* docs/examples/hello.cfg: bring this up to date. Closes #79.
+	* docs/examples/twisted_master.cfg: add a big warning about how
+	old this is
+	* docs/examples/glib_master.cfg: delete this one entirely, it is
+	ancient and not a very useful example anyways
+
 	* buildbot/status/web/base.py (HtmlResource.render): keep track of
 	HTTPChannels, so we can shut them down at reconfig time (when the
 	WebStatus goes away). Closes #102.
