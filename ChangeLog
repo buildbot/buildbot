@@ -1,5 +1,10 @@
 2007-09-30  Brian Warner  <warner@lothar.com>
 
+	* buildbot/status/web/baseweb.py (WebStatus): emit a useful log
+	message when public_html/ is missing (indicating that you should
+	probably run 'upgrade-master'), and don't auto-create an empty
+	directory in that case.
+
 	* contrib/darcs_buildbot.py: refactor internals a bit, make it
 	possible to use as an importable module (to make it easier to
 	write some unit tests for it)

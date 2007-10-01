@@ -421,10 +421,14 @@ class WebStatus(service.MultiService):
         # this is responsible for creating the root resource. It isn't done
         # at __init__ time because we need to reference the parent's basedir.
         htmldir = os.path.join(self.parent.basedir, "public_html")
-        if not os.path.isdir(htmldir):
-            os.mkdir(htmldir)
+        if os.path.isdir(htmldir):
+            log.msg("WebStatus using (%s)" % htmldir)
+        else:
+            log.msg("WebStatus: warning: %s is missing. Do you need to run"
+                    " 'buildbot upgrade-master' on this buildmaster?" % htmldir)
+            # all static pages will get a 404 until upgrade-master is used to
+            # populate this directory
         root = static.File(htmldir)
-        log.msg("WebStatus using (%s)" % htmldir)
 
         for name, child_resource in self.childrenToBeAdded.iteritems():
             root.putChild(name, child_resource)
