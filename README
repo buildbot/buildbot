@@ -1,6 +1,6 @@
 
 BuildBot: build/test automation
-  http://buildbot.sourceforge.net/
+  http://buildbot.net
   Brian Warner <warner-buildbot @ lothar . com>
 
 
@@ -67,16 +67,6 @@ REQUIREMENTS:
    page, and delivering build status via IRC, respectively). You might also
    want TwistedConch (for the encrypted Manhole debug port). Note that
    Twisted requires ZopeInterface to be installed as well.
-
-ACCESSORIES:
-
- CVSToys: http://purl.net/net/CVSToys
-
-   If your buildmaster uses FreshCVSSource to receive change notification
-   from a cvstoys daemon, it will require CVSToys be installed (tested with
-   CVSToys-1.0.10). If the it doesn't use that source (i.e. if you only use
-   a mail-parsing change source, or the SVN notification script), you will
-   not need CVSToys.
 
 INSTALLATION:
 
@@ -189,5 +179,4 @@ user's manual. Everything is controlled by the config file.
 SUPPORT:
 
  Please send questions, bugs, patches, etc, to the buildbot-devel mailing
- list reachable through http://buildbot.sourceforge.net/, so that everyone
- can see them.
+ list reachable through http://buildbot.net/, so that everyone can see them.

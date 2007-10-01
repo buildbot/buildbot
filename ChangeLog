@@ -1,5 +1,8 @@
 2007-09-30  Brian Warner  <warner@lothar.com>
 
+	* README: reference buildbot.net, remove CVSToys section (does
+	anyone still use it?)
+
 	* buildbot/status/web/baseweb.py (WebStatus): emit a useful log
 	message when public_html/ is missing (indicating that you should
 	probably run 'upgrade-master'), and don't auto-create an empty
