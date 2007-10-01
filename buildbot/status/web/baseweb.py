@@ -427,7 +427,9 @@ class WebStatus(service.MultiService):
             log.msg("WebStatus: warning: %s is missing. Do you need to run"
                     " 'buildbot upgrade-master' on this buildmaster?" % htmldir)
             # all static pages will get a 404 until upgrade-master is used to
-            # populate this directory
+            # populate this directory. Create the directory, though, since
+            # otherwise we get internal server errors instead of 404s.
+            os.mkdir(htmldir)
         root = static.File(htmldir)
 
         for name, child_resource in self.childrenToBeAdded.iteritems():
