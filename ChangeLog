@@ -1,5 +1,8 @@
 2007-09-30  Brian Warner  <warner@lothar.com>
 
+	* buildbot/steps/source.py (Mercurial.computeSourceRevision): log a
+	warning if we must invoke the last-change-is-most-recent guess
+
 	* buildbot/status/web/baseweb.py (Waterfall.__init__): if an old
 	Waterfall is running in an upgraded master (which is the usual
 	case for folks who have followed the instructions to run

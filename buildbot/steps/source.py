@@ -897,6 +897,10 @@ class Mercurial(Source):
         # changes at all. So for now, assume they were given to us in sorted
         # order, and just pay attention to the last one. See ticket #103 for
         # more details.
+        if len(changes) > 1:
+            log.msg("Mercurial.computeSourceRevision: warning: "
+                    "there are %d changes here, assuming the last one is "
+                    "the most recent" % len(changes))
         return changes[-1].revision
 
 
