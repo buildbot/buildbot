@@ -1,5 +1,7 @@
 2007-09-30  Brian Warner  <warner@lothar.com>
 
+	* setup.py: install all test files from buildbot/test/mail/* . Also
+	update URL to point at buildbot.net
 	* MANIFEST.in: update with new files
 
 	* buildbot/status/web/baseweb.py (WebStatus.setupSite): ugh, yes

@@ -1,6 +1,6 @@
 #! /usr/bin/python
 
-import sys, os
+import sys, os, re
 from distutils.core import setup
 from buildbot import version
 
@@ -41,7 +41,7 @@ testmsgs = []
 for f in os.listdir("buildbot/test/mail"):
     if f.endswith("~"):
         continue
-    if f.startswith("msg") or f.startswith("syncmail"):
+    if re.search(r'\.\d+$', f):
         testmsgs.append("buildbot/test/mail/%s" % f)
 
 setup(name="buildbot",
@@ -50,7 +50,7 @@ setup(name="buildbot",
       long_description=long_description,
       author="Brian Warner",
       author_email="warner-buildbot@lothar.com",
-      url="http://buildbot.sourceforge.net/",
+      url="http://buildbot.net/",
       license="GNU GPL",
       # does this classifiers= mean that this can't be installed on 2.2/2.3?
       classifiers=[
