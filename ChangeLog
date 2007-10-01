@@ -1,5 +1,10 @@
 2007-09-30  Brian Warner  <warner@lothar.com>
 
+	* buildbot/status/web/waterfall.py
+	(WaterfallStatusResource.get_reload_time): if the suggest a
+	reload time of less than 15 seconds, give them 15 seconds instead
+	of ignoring their request entirely, because that'd be confusing.
+
 	* buildbot/steps/source.py (Mercurial.computeSourceRevision): log a
 	warning if we must invoke the last-change-is-most-recent guess
 

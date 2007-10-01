@@ -429,8 +429,7 @@ class WaterfallStatusResource(HtmlResource):
         if "reload" in request.args:
             try:
                 reload_time = int(request.args["reload"][0])
-                if reload_time > 15:
-                    return reload_time
+                return max(reload_time, 15)
             except ValueError:
                 pass
         return None
