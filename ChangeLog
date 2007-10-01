@@ -1,5 +1,10 @@
 2007-09-30  Brian Warner  <warner@lothar.com>
 
+	* buildbot/__init__.py (version): Releasing buildbot-0.7.6
+	* docs/buildbot.texinfo: same
+
+2007-09-30  Brian Warner  <warner@lothar.com>
+
 	* NEWS: small updates, remove duplicate items from the 0.7.5 notes
 	* setup.py: install all test files from buildbot/test/mail/* . Also
 	update URL to point at buildbot.net
