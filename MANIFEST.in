@@ -1,14 +1,14 @@
 
 include ChangeLog MANIFEST.in README README.w32 NEWS CREDITS
 include docs/examples/*.cfg
-include docs/buildbot.texinfo
-include docs/buildbot.info
-include docs/buildbot.html docs/images/*.png
+include docs/buildbot.texinfo docs/buildbot.info* docs/buildbot.html
+include docs/*.png docs/images/*.png docs/images/*.svg docs/images/*.txt
 include docs/epyrun docs/gen-reference
 include buildbot/test/mail/* buildbot/test/subdir/*
 include buildbot/scripts/sample.cfg
-include buildbot/status/web/classic.css
+include buildbot/status/web/*.css buildbot/status/web/*.html
+include buildbot/status/web/robots.txt
 include buildbot/clients/debug.glade
 include buildbot/buildbot.png
 
-include contrib/* contrib/windows/*
+include contrib/* contrib/windows/* contrib/OS-X/* contrib/CSS/*

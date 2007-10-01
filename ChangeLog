@@ -1,5 +1,7 @@
 2007-09-30  Brian Warner  <warner@lothar.com>
 
+	* MANIFEST.in: update with new files
+
 	* buildbot/status/web/baseweb.py (WebStatus.setupSite): ugh, yes
 	auto-create an empty public_html directory, otherwise we get
 	internal server errors instead of 404s.
