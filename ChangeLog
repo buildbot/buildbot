@@ -1,5 +1,9 @@
 2007-09-30  Brian Warner  <warner@lothar.com>
 
+	* buildbot/status/web/baseweb.py (Waterfall.__init__): add a
+	DeprecationWarning for Waterfall, advising users to switch over to
+	WebStatus instead.
+
 	* NEWS: update with user-visible changes since the last release
 
 	* buildbot/status/web/waterfall.py

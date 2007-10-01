@@ -498,6 +498,12 @@ class Waterfall(WebStatus):
     def __init__(self, http_port=None, distrib_port=None, allowForce=True,
                  categories=None, css=buildbot_css, favicon=buildbot_icon,
                  robots_txt=None):
+        import warnings
+        m = ("buildbot.status.html.Waterfall is deprecated as of 0.7.6 "
+             "and will be removed from a future release. "
+             "Please use html.WebStatus instead.")
+        warnings.warn(m, DeprecationWarning)
+
         WebStatus.__init__(self, http_port, distrib_port, allowForce)
         self.css = css
         if css:
