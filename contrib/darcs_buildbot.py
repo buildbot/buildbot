@@ -10,7 +10,8 @@
 #
 # (the second command is necessary to avoid the usual "do you really want to
 # run this hook" prompt. Note that you cannot have multiple 'apply posthook'
-# lines.)
+# lines: if you need this, you must create a shell script to run all your
+# desired commands, then point the posthook at that shell script.)
 #
 # Note that both Buildbot and Darcs must be installed on the repository
 # machine. You will also need the Python/XML distribution installed (the
@@ -73,12 +74,8 @@ def makeChange(p):
 
 
 
-MASTER = sys.argv[1]
-LASTCHANGEFILE = ".darcs_buildbot-lastchange"
-
-def getSomeChanges(count):
-    out = commands.getoutput("darcs changes --last=%d --xml-output --summary"
-                             % count)
+def getChangesFromCommand(cmd, count):
+    out = commands.getoutput(cmd)
     try:
         doc = minidom.parseString(out)
     except xml.parsers.expat.ExpatError, e:
@@ -97,6 +94,13 @@ def getSomeChanges(count):
             break
         changes.append(makeChange(p))
     return changes
+
+def getSomeChanges(count):
+    cmd = "darcs changes --last=%d --xml-output --summary" % count
+    return getChangesFromCommand(cmd, count)
+
+
+LASTCHANGEFILE = ".darcs_buildbot-lastchange"
 
 def findNewChanges():
     if os.path.exists(LASTCHANGEFILE):
@@ -123,34 +127,38 @@ def findNewChanges():
                                                                 lookback))
         lookback = 2*lookback
 
-changes = findNewChanges()
-s = sendchange.Sender(MASTER, None)
+def sendChanges(master):
+    changes = findNewChanges()
+    s = sendchange.Sender(master, None)
 
-d = defer.Deferred()
-reactor.callLater(0, d.callback, None)
+    d = defer.Deferred()
+    reactor.callLater(0, d.callback, None)
 
-if not changes:
-    print "darcs_buildbot.py: weird, no changes to send"
-elif len(changes) == 1:
-    print "sending 1 change to buildmaster:"
-else:
-    print "sending %d changes to buildmaster:" % len(changes)
+    if not changes:
+        print "darcs_buildbot.py: weird, no changes to send"
+    elif len(changes) == 1:
+        print "sending 1 change to buildmaster:"
+    else:
+        print "sending %d changes to buildmaster:" % len(changes)
 
-def _send(res, c):
-    branch = None
-    print " %s" % c['revision']
-    return s.send(branch, c['revision'], c['comments'], c['files'],
-                  c['username'])
-for c in changes:
-    d.addCallback(_send, c)
+    def _send(res, c):
+        branch = None
+        print " %s" % c['revision']
+        return s.send(branch, c['revision'], c['comments'], c['files'],
+                      c['username'])
+    for c in changes:
+        d.addCallback(_send, c)
 
-d.addCallbacks(s.printSuccess, s.printFailure)
-d.addBoth(s.stop)
-s.run()
+    d.addCallbacks(s.printSuccess, s.printFailure)
+    d.addBoth(s.stop)
+    s.run()
 
-if changes:
-    lastchange = changes[-1]['revision']
-    f = open(LASTCHANGEFILE, "w")
-    f.write(lastchange)
-    f.close()
+    if changes:
+        lastchange = changes[-1]['revision']
+        f = open(LASTCHANGEFILE, "w")
+        f.write(lastchange)
+        f.close()
 
+if __name__ == '__main__':
+    MASTER = sys.argv[1]
+    sendChanges(MASTER)

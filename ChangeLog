@@ -1,5 +1,9 @@
 2007-09-30  Brian Warner  <warner@lothar.com>
 
+	* contrib/darcs_buildbot.py: refactor internals a bit, make it
+	possible to use as an importable module (to make it easier to
+	write some unit tests for it)
+
 	* buildbot/status/web/baseweb.py (Waterfall.__init__): add a
 	DeprecationWarning for Waterfall, advising users to switch over to
 	WebStatus instead.
