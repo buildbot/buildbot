@@ -1,5 +1,6 @@
 2007-09-30  Brian Warner  <warner@lothar.com>
 
+	* NEWS: small updates, remove duplicate items from the 0.7.5 notes
 	* setup.py: install all test files from buildbot/test/mail/* . Also
 	update URL to point at buildbot.net
 	* MANIFEST.in: update with new files

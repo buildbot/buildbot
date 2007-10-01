@@ -25,9 +25,13 @@ The old Waterfall page is deprecated, but it should continue to work for
 another few releases. It is now a subclass of WebStatus which just replaces
 the default root URL with another copy of the /waterfall resource.
 
-*** Minimum Requirements: Python-2.3 and Twisted-2.0
+*** Compatiblity: Python-2.3 or newer, Twisted-2.0 or newer
 
-We've dropped support for python-2.2 and for Twisted-1.3.0 .
+No compatiblity losses here, buildbot-0.7.6 is compatible with the same
+versions of python and twisted that 0.7.5 was.
+
+Buildbot is tested on a regular basis (http://buildbot.buildbot.net) against
+nearly a full matrix of Python-(2.3,2.4,2.5) * Twisted-(2.0,2.1,2.2,2.4,2.5).
 
 *** New Buildbot Home Page
 
@@ -179,13 +183,6 @@ source.Bazaar . A future release might change this.
 A rudimentary Gnome Panel applet is provided in contrib/bb_applet.py, which
 provides 'buildbot statusgui' -like colored status boxes inside the panel.
 Installing it is a bit tricky, though.
-
-A certain amount of integration with the Bonsai and Tinderbox tools has been
-contributed by the Mozilla crew. The goal is to slowly replace tinderbox with
-buildbot, one component at a time, and these integration classes allow the
-buildbot to accept changes (via email) from Bonsai, run builds, and then
-deliver build results (via email) to tinderbox status clients. Work on this
-project is ongoing.
 
 The 'buildbot try' command now accepts a '--diff=foo.patch' argument, to let
 you provide a pre-computed patch. This makes it easier to test out patches
