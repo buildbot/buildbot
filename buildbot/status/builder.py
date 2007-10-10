@@ -1798,23 +1798,23 @@ class Status:
             pass
         if interfaces.IBuilderStatus.providedBy(thing):
             builder = thing
-            return prefix + urllib.quote(builder.getName(), safe='')
+            return prefix + "builders/%s" % (
+                urllib.quote(builder.getName(), safe=''),
+                )
         if interfaces.IBuildStatus.providedBy(thing):
             build = thing
             builder = build.getBuilder()
-            return "%s%s/builds/%d" % (
-                prefix,
+            return prefix + "builders/%s/builds/%d" % (
                 urllib.quote(builder.getName(), safe=''),
                 build.getNumber())
         if interfaces.IBuildStepStatus.providedBy(thing):
             step = thing
             build = step.getBuild()
             builder = build.getBuilder()
-            return "%s%s/builds/%d/%s" % (
-                prefix,
+            return prefix + "builders/%s/builds/%d/steps/%s" % (
                 urllib.quote(builder.getName(), safe=''),
                 build.getNumber(),
-                "step-" + urllib.quote(step.getName(), safe=''))
+                urllib.quote(step.getName(), safe=''))
         # IBuildSetStatus
         # IBuildRequestStatus
         # ISlaveStatus
@@ -1840,11 +1840,10 @@ class Status:
                     break
             else:
                 return None
-            return "%s%s/builds/%d/%s/%d" % (
-                prefix,
+            return prefix + "builders/%s/builds/%d/steps/%s/logs/%d" % (
                 urllib.quote(builder.getName(), safe=''),
                 build.getNumber(),
-                "step-" + urllib.quote(step.getName(), safe=''),
+                urllib.quote(step.getName(), safe=''),
                 lognum)
 
     def getChangeSources(self):

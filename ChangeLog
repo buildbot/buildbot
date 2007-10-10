@@ -1,5 +1,9 @@
 2007-10-10  Brian Warner  <warner@lothar.com>
 
+	* buildbot/status/builder.py (Status.getURLForThing): update this
+	to match new URL layout, I completely forgot about it. Closes #112.
+	* buildbot/test/test_web.py (GetURL): add unit tests
+
 	* buildbot/status/web/build.py (BuildsResource.getChild): fix
 	silly typo which prevented the Build page from ever offering
 	control options like 'Stop Build'. Thanks to Aaron Hsieh for the

@@ -369,7 +369,7 @@ class GetURL(RunMixin, unittest.TestCase):
         s = self.status
         self.assertURLEqual(s, "")
         builder = s.getBuilder("b1")
-        self.assertURLEqual(builder, "b1")
+        self.assertURLEqual(builder, "builders/b1")
 
     def testChange(self):
         s = self.status
@@ -391,13 +391,13 @@ class GetURL(RunMixin, unittest.TestCase):
         s = self.status
         builder = s.getBuilder("b1")
         build = builder.getLastFinishedBuild()
-        self.assertURLEqual(build, "b1/builds/0")
+        self.assertURLEqual(build, "builders/b1/builds/0")
         # no page for builder.getEvent(-1)
         step = build.getSteps()[0]
-        self.assertURLEqual(step, "b1/builds/0/step-remote%20dummy")
+        self.assertURLEqual(step, "builders/b1/builds/0/steps/remote%20dummy")
         # maybe page for build.getTestResults?
         self.assertURLEqual(step.getLogs()[0],
-                            "b1/builds/0/step-remote%20dummy/0")
+                            "builders/b1/builds/0/steps/remote%20dummy/logs/0")
 
 
 
