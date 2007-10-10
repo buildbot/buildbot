@@ -1,5 +1,12 @@
 2007-10-10  Brian Warner  <warner@lothar.com>
 
+	* buildbot/status/web/build.py (BuildsResource.getChild): fix
+	silly typo which prevented the Build page from ever offering
+	control options like 'Stop Build'. Thanks to Aaron Hsieh for the
+	catch. Closes #114.
+	* buildbot/test/test_webparts.py (Webparts._do_page_tests): it'd
+	be nice to test this
+
 	* buildbot/__init__.py (version): bump to 0.7.6+ while between
 	releases
 	* docs/buildbot.texinfo: same

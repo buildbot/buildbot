@@ -258,9 +258,10 @@ class BuildsResource(HtmlResource):
         if num is not None:
             build_status = self.builder_status.getBuild(num)
             if build_status:
-                build_control = None
                 if self.builder_control:
-                    builder_control = self.builder_control.getBuild(num)
+                    build_control = self.builder_control.getBuild(num)
+                else:
+                    build_control = None
                 return StatusResourceBuild(build_status, build_control,
                                            self.builder_control)
 

@@ -127,6 +127,7 @@ c['status'] = [ws]
         # TODO: the pages beyond here would be great to test, but that would
         # require causing a build to complete.
         #d.addCallback(self._check, "builders/builder1/builds/1", "")
+        # it'd be nice to assert that the Build page has a "Stop Build" button
         #d.addCallback(self._check, "builders/builder1/builds/1/steps", "")
         #d.addCallback(self._check,
         #              "builders/builder1/builds/1/steps/compile", "")
