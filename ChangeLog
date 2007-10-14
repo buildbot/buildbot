@@ -1,3 +1,10 @@
+2007-10-13  Brian Warner  <warner@lothar.com>
+
+	* README (COPYING): make it clear that buildbot is distributed under
+	the GPL (version 2)
+	* COPYING: add a copy of the GPLv2 to the source tree
+	* MANIFEST.in: .. and to the source distribution too
+
 2007-10-10  Brian Warner  <warner@lothar.com>
 
 	* buildbot/status/builder.py (Status.getURLForThing): update this
