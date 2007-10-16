@@ -1,3 +1,9 @@
+2007-10-16  Brian Warner  <warner@lothar.com>
+
+	* buildbot/status/web/slaves.py (BuildSlavesResource.body): fix
+	timestamp, I was using %M (minutes) where I meant to be using
+	%b (abbreviated month name). Closes #109.
+
 2007-10-13  Brian Warner  <warner@lothar.com>
 
 	* README (COPYING): make it clear that buildbot is distributed under

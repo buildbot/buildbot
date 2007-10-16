@@ -47,7 +47,7 @@ class BuildSlavesResource(HtmlResource):
                     data += "  <li>Admin: %s</li>\n" % admin
                 last = slave.lastMessageReceived()
                 if last:
-                    lt = time.strftime("%Y-%M-%d %H:%M:%S",
+                    lt = time.strftime("%Y-%b-%d %H:%M:%S",
                                        time.localtime(last))
                     age = abbreviate_age(time.time() - last)
                     data += "  <li>Last heard from: %s " % age
