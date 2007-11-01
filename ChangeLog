@@ -1,5 +1,10 @@
 2007-11-01  Brian Warner  <warner@lothar.com>
 
+	* buildbot/status/web/base.py (OneLineMixin.make_line): tolerate
+	results == None (i.e. when the build hasn't finished yet);
+	previously this code exploded when trying to find a CSS class for
+	that results value. Patch from Greg Ward. Closes #118.
+
 	* buildbot/status/client.py (RemoteBuildStep.remote_getLogs):
 	IBuildStepStatus.getLogs() returns a list, not a dict. Patch from
 	Fabrice Crestois. Closes #121.

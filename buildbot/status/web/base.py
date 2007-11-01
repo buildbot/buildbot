@@ -313,10 +313,11 @@ class OneLineMixin:
         if len(rev) > 20:
             rev = "version is too-long"
         root = self.path_to_root(req)
-        values = {'class': css_classes[results],
+        css_class = css_classes.get(results, "")
+        values = {'class': css_class,
                   'builder_name': builder_name,
                   'buildnum': build.getNumber(),
-                  'results': css_classes[results],
+                  'results': css_class,
                   'text': " ".join(build.getText()),
                   'buildurl': (root +
                                "builders/%s/builds/%d" % (builder_name,
