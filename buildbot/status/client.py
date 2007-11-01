@@ -251,8 +251,8 @@ class RemoteBuildStep(pb.Referenceable):
 
     def remote_getLogs(self):
         logs = {}
-        for name,log in self.s.getLogs().items():
-            logs[name] = IRemote(log)
+        for log in self.s.getLogs():
+            logs[log.getName()] = IRemote(log)
         return logs
 
     def remote_isFinished(self):

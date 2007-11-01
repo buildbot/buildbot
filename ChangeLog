@@ -1,3 +1,9 @@
+2007-11-01  Brian Warner  <warner@lothar.com>
+
+	* buildbot/status/client.py (RemoteBuildStep.remote_getLogs):
+	IBuildStepStatus.getLogs() returns a list, not a dict. Patch from
+	Fabrice Crestois. Closes #121.
+
 2007-10-31  Brian Warner  <warner@lothar.com>
 
 	* buildbot/status/words.py (Contact.emit_status): if there's no
