@@ -306,7 +306,10 @@ class Contact:
             t = []
             for build in builds:
                 step = build.getCurrentStep()
-                s = "(%s)" % " ".join(step.getText())
+                if step:
+                    s = "(%s)" % " ".join(step.getText())
+                else:
+                    s = "(no current step)"
                 ETA = build.getETA()
                 if ETA is not None:
                     s += " [ETA %s]" % self.convertTime(ETA)

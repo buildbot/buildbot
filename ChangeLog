@@ -1,5 +1,10 @@
 2007-10-31  Brian Warner  <warner@lothar.com>
 
+	* buildbot/status/words.py (Contact.emit_status): if there's no
+	current step, don't try to display its description. This should
+	fix the crash when asking the irc bot about builds which are
+	waiting for a build-wide Lock. Closes #96.
+
 	* buildbot/status/tinderbox.py (TinderboxMailNotifier): add
 	'columnName' argument, from a patch by Ben Hearsum. Closes #120.
 
