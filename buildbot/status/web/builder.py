@@ -33,7 +33,12 @@ class StatusResourceBuilder(HtmlResource, OneLineMixin):
             when_time = time.strftime("%H:%M:%S",
                                       time.localtime(time.time() + when))
             data += "ETA %ds (%s) " % (when, when_time)
-        data += "[%s]" % build.getCurrentStep().getName()
+        step = build.getCurrentStep()
+        if step:
+            data += "[%s]" % step.getName()
+        else:
+            data += "[waiting for Lock]"
+            # TODO: is this necessarily the case?
         return data
 
     def body(self, req):

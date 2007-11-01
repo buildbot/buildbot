@@ -1,5 +1,9 @@
 2007-11-01  Brian Warner  <warner@lothar.com>
 
+	* buildbot/status/web/builder.py (StatusResourceBuilder.build_line):
+	if there's no current step, don't try to display its description.
+	Same crash as in #96, this time in the web page. Closes #111.
+
 	* buildbot/status/web/base.py (OneLineMixin.make_line): tolerate
 	results == None (i.e. when the build hasn't finished yet);
 	previously this code exploded when trying to find a CSS class for
