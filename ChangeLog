@@ -1,3 +1,8 @@
+2007-10-31  Brian Warner  <warner@lothar.com>
+
+	* buildbot/status/tinderbox.py (TinderboxMailNotifier): add
+	'columnName' argument, from a patch by Ben Hearsum. Closes #120.
+
 2007-10-16  Brian Warner  <warner@lothar.com>
 
 	* buildbot/status/web/slaves.py (BuildSlavesResource.body): fix
