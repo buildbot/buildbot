@@ -4,6 +4,8 @@
 	and one_box_per_builder) to force/stop builds on all Builders at
 	once.
 	* buildbot/status/web/baseweb.py: same
+	(OneBoxPerBuilder.body): add links to the per-Builder page
+
 	* buildbot/status/web/builder.py: same
 
 	* buildbot/status/web/builder.py (StatusResourceBuilder.body):

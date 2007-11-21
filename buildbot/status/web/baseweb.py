@@ -193,18 +193,18 @@ class OneBoxPerBuilder(HtmlResource):
 
         building = False
         online = 0
+        base_builders_url = self.path_to_root(req) + "builders/"
         for bn in builders:
+            base_builder_url = base_builders_url + urllib.quote(bn, safe='')
             builder = status.getBuilder(bn)
             data += "<tr>\n"
-            data += '<td class="box">%s</td>\n' % html.escape(bn)
+            data += '<td class="box"><a href="%s">%s</a></td>\n' \
+                  % (base_builder_url, html.escape(bn))
             builds = list(builder.generateFinishedBuilds(map_branches(branches),
                                                          num_builds=1))
             if builds:
                 b = builds[0]
-                url = (self.path_to_root(req) +
-                       "builders/" +
-                       urllib.quote(bn, safe='') +
-                       "/builds/%d" % b.getNumber())
+                url = (base_builder_url + "/builds/%d" % b.getNumber())
                 try:
                     label = b.getProperty("got_revision")
                 except KeyError:
