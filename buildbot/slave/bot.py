@@ -37,7 +37,7 @@ class SlaveBuild:
     """
     def __init__(self, builder):
         self.builder = builder
-    
+
 class SlaveBuilder(pb.Referenceable, service.Service):
 
     """This is the local representation of a single Builder: it handles a
@@ -134,7 +134,7 @@ class SlaveBuilder(pb.Referenceable, service.Service):
         self.remoteStep = None
         if self.stopCommandOnShutdown:
             self.stopCommand()
-        
+
     # the following are Commands that can be invoked by the master-side
     # Builder
     def remote_startBuild(self):
@@ -257,8 +257,8 @@ class SlaveBuilder(pb.Referenceable, service.Service):
     def remote_shutdown(self):
         print "slave shutting down on command from master"
         reactor.stop()
-        
-        
+
+
 class Bot(pb.Referenceable, service.MultiService):
     """I represent the slave-side bot."""
     usePTY = None

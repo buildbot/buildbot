@@ -157,9 +157,9 @@ class StatusResourceBuilder(HtmlResource, OneLineMixin):
         if not re.match(r'^[\w\.\-\/]*$', revision):
             log.msg("bad revision '%s'" % revision)
             return Redirect("..")
-        if branch == "":
+        if not branch:
             branch = None
-        if revision == "":
+        if not revision:
             revision = None
 
         # TODO: if we can authenticate that a particular User pushed the
