@@ -53,10 +53,15 @@ def make_row(label, field):
     label = html.escape(label)
     return ROW_TEMPLATE % {"label": label, "field": field}
 
-def make_stop_form(stopURL):
-    data = """<form action="%s" class='command stopbuild'>
-      <p>To stop this build, fill out the following fields and
-      click the 'Stop' button</p>\n""" % stopURL
+def make_stop_form(stopURL, on_all=False):
+    if on_all:
+        data = """<form action="%s" class='command stopbuild'>
+          <p>To stop all builds, fill out the following fields and
+          push the 'Stop' button</p>\n""" % stopURL
+    else:
+        data = """<form action="%s" class='command stopbuild'>
+          <p>To stop this build, fill out the following fields and
+          push the 'Stop' button</p>\n""" % stopURL
     data += make_row("Your name:",
                      "<input type='text' name='username' />")
     data += make_row("Reason for stopping build:",
@@ -64,10 +69,15 @@ def make_stop_form(stopURL):
     data += '<input type="submit" value="Stop Builder" /></form>\n'
     return data
 
-def make_force_build_form(forceURL):
-    data = """<form action="%s" class="command forcebuild">
-      <p>To force a build, fill out the following fields and
-      click the 'Force Build' button</p>""" % forceURL
+def make_force_build_form(forceURL, on_all=False):
+    if on_all:
+        data = """<form action="%s" class="command forcebuild">
+          <p>To force a build on all Builders, fill out the following fields
+          and push the 'Force Build' button</p>""" % forceURL
+    else:
+        data = """<form action="%s" class="command forcebuild">
+          <p>To force a build, fill out the following fields and
+          push the 'Force Build' button</p>""" % forceURL
     return (data
       + make_row("Your name:",
                  "<input type='text' name='username' />")

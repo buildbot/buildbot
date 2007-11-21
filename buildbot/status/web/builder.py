@@ -11,7 +11,7 @@ from buildbot.status.web.base import HtmlResource, make_row, \
 from buildbot.process.base import BuildRequest
 from buildbot.sourcestamp import SourceStamp
 
-from buildbot.status.web.build import BuildsResource
+from buildbot.status.web.build import BuildsResource, StatusResourceBuild
 
 # /builders/$builder
 class StatusResourceBuilder(HtmlResource, OneLineMixin):
@@ -204,6 +204,57 @@ class StatusResourceBuilder(HtmlResource, OneLineMixin):
         return HtmlResource.getChild(self, path, req)
 
 
+# /builders/_all
+class StatusResourceAllBuilders(HtmlResource, OneLineMixin):
+
+    def __init__(self, status, control):
+        HtmlResource.__init__(self)
+        self.status = status
+        self.control = control
+
+    def getChild(self, path, req):
+        if path == "force":
+            return self.force(req)
+        if path == "stop":
+            return self.stop(req)
+
+        return HtmlResource.getChild(self, path, req)
+
+    def force(self, req):
+        for bname in self.status.getBuilderNames():
+            builder_status = self.status.getBuilder(bname)
+            builder_control = None
+            c = self.getControl(req)
+            if c:
+                builder_control = c.getBuilder(bname)
+            build = StatusResourceBuilder(builder_status, builder_control)
+            build.force(req)
+        return Redirect("../../waterfall")
+
+    def stop(self, req):
+        for bname in self.status.getBuilderNames():
+            builder_status = self.status.getBuilder(bname)
+            builder_control = None
+            c = self.getControl(req)
+            if c:
+                builder_control = c.getBuilder(bname)
+            (state, current_builds) = builder_status.getState()
+            if state != "building":
+                continue
+            for b in current_builds:
+                build_status = builder_status.getBuild(b.number)
+                if not build_status:
+                    continue
+                if builder_control:
+                    build_control = builder_control.getBuild(b.number)
+                else:
+                    build_control = None
+                build = StatusResourceBuild(build_status, build_control,
+                                            builder_control)
+                build.stop(req)
+        return Redirect("../../waterfall")
+
+
 # /builders
 class BuildersResource(HtmlResource):
     title = "Builders"
@@ -235,6 +286,9 @@ class BuildersResource(HtmlResource):
             if c:
                 builder_control = c.getBuilder(path)
             return StatusResourceBuilder(builder_status, builder_control)
+        if path == "_all":
+            return StatusResourceAllBuilders(self.getStatus(req),
+                                             self.getControl(req))
 
         return HtmlResource.getChild(self, path, req)
 

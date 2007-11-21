@@ -11,7 +11,8 @@ from twisted.spread import pb
 from buildbot.interfaces import IControl, IStatusReceiver
 
 from buildbot.status.web.base import HtmlResource, Box, \
-     build_get_class, ICurrentBox, OneLineMixin, map_branches
+     build_get_class, ICurrentBox, OneLineMixin, map_branches, \
+     make_stop_form, make_force_build_form
 from buildbot.status.web.waterfall import WaterfallStatusResource
 from buildbot.status.web.changes import ChangesResource
 from buildbot.status.web.builder import BuildersResource
@@ -105,12 +106,28 @@ class OneLinePerBuild(HtmlResource, OneLineMixin):
             data += ("<p>of builders: %s</p>\n" % (", ".join(builders)))
         data += "<ul>\n"
         got = 0
+        building = False
+        online = 0
         for build in g:
             got += 1
             data += " <li>" + self.make_line(req, build) + "</li>\n"
+            builder_status = build.getBuilder().getState()[0]
+            if builder_status == "building":
+                building = True
+                online += 1
+            elif builder_status != "offline":
+                online += 1
         if not got:
             data += " <li>No matching builds found</li>\n"
         data += "</ul>\n"
+
+        if building:
+            stopURL = "builders/_all/stop"
+            data += make_stop_form(stopURL, True)
+        if online:
+            forceURL = "builders/_all/force"
+            data += make_force_build_form(forceURL, True)
+
         return data
 
 
@@ -165,7 +182,7 @@ class OneBoxPerBuilder(HtmlResource):
 
     def body(self, req):
         status = self.getStatus(req)
-        
+
         builders = req.args.get("builder", status.getBuilderNames())
         branches = [b for b in req.args.get("branch", []) if b]
 
@@ -173,6 +190,9 @@ class OneBoxPerBuilder(HtmlResource):
 
         data += "<h2>Latest builds: %s</h2>\n" % ", ".join(branches)
         data += "<table>\n"
+
+        building = False
+        online = 0
         for bn in builders:
             builder = status.getBuilder(bn)
             data += "<tr>\n"
@@ -200,7 +220,23 @@ class OneBoxPerBuilder(HtmlResource):
                 data += '<td class="LastBuild box" >no build</td>\n'
             current_box = ICurrentBox(builder).getBox(status)
             data += current_box.td(align="center")
+
+            builder_status = builder.getState()[0]
+            if builder_status == "building":
+                building = True
+                online += 1
+            elif builder_status != "offline":
+                online += 1
+
         data += "</table>\n"
+
+        if building:
+            stopURL = "builders/_all/stop"
+            data += make_stop_form(stopURL, True)
+        if online:
+            forceURL = "builders/_all/force"
+            data += make_force_build_form(forceURL, True)
+
         return data
 
 
@@ -254,6 +290,7 @@ class WebStatus(service.MultiService):
      /builders/BUILDERNAME/builds/NUM/steps/STEPNAME/logs/LOGNAME: a StatusLog
      /builders/BUILDERNAME/builds/NUM/tests : summarize test results
      /builders/BUILDERNAME/builds/NUM/tests/TEST.NAME: results of one test
+     /builders/_all/{force,stop}: force a build/stop building on all builders.
      /changes : summarize all ChangeSources
      /changes/CHANGENUM: a page describing a single Change
      /schedulers/SCHEDULERNAME: a page describing a Scheduler, including

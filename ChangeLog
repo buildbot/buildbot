@@ -1,5 +1,11 @@
 2007-11-21  Brian Warner  <warner@lothar.com>
 
+	* buildbot/status/web/base.py: add buttons (to one_line_per_build
+	and one_box_per_builder) to force/stop builds on all Builders at
+	once.
+	* buildbot/status/web/baseweb.py: same
+	* buildbot/status/web/builder.py: same
+
 	* buildbot/status/web/builder.py (StatusResourceBuilder.body):
 	factor out force/stop form generation
 	* buildbot/status/web/base.py: same
