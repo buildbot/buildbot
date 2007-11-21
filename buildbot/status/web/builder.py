@@ -181,12 +181,12 @@ class StatusResourceBuilder(HtmlResource, OneLineMixin):
             # TODO: tell the web user that their request could not be
             # honored
             pass
-        return Redirect("../..")
+        return Redirect("../../waterfall")
 
     def ping(self, req):
         log.msg("web ping of builder '%s'" % self.builder_status.getName())
         self.builder_control.ping() # TODO: there ought to be an ISlaveControl
-        return Redirect("../..")
+        return Redirect("../../waterfall")
 
     def getChild(self, path, req):
         if path == "force":

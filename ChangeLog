@@ -5,6 +5,10 @@
 	(StatusResourceBuilder.build_line): add a 'Stop Build' button next
 	to the 'Force Build' button, so you can start and stop a build
 	from the same place.
+	(StatusResourceBuilder.force): redirect back to the waterfall,
+	rather than the index page
+	(StatusResourceBuilder.ping): same
+	* buildbot/status/web/build.py (StatusResourceBuild.stop): same
 
 	* buildbot/slave/bot.py (Bot.remote_setBuilderList): don't
 	consider the 'info' directory as a leftover directory. Patch from

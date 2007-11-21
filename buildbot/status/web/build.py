@@ -187,10 +187,10 @@ class StatusResourceBuild(HtmlResource):
         c.stopBuild(reason)
         # we're at http://localhost:8080/svn-hello/builds/5/stop?[args] and
         # we want to go to: http://localhost:8080/svn-hello/builds/5 or
-        # http://localhost:8080/
+        # http://localhost:8080/waterfall
         #
         #return Redirect("../%d" % self.build.getNumber())
-        r = Redirect("../../..") # TODO: no longer correct
+        r = Redirect("../../../../waterfall")
         d = defer.Deferred()
         reactor.callLater(1, d.callback, r)
         return DeferredResource(d)
