@@ -2,6 +2,10 @@
 
 	* buildbot/status/web/builder.py (StatusResourceBuilder.force):
 	simplify some 'if' statements
+	(StatusResourceBuilder.build_line): add a 'Stop Build' button next
+	to the 'Force Build' button, so you can start and stop a build
+	from the same place.
+
 	* buildbot/slave/bot.py (Bot.remote_setBuilderList): don't
 	consider the 'info' directory as a leftover directory. Patch from
 	Benoit Sigoure, ticket #138.

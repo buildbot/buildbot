@@ -28,6 +28,7 @@ class StatusResourceBuilder(HtmlResource, OneLineMixin):
         buildnum = build.getNumber()
         buildurl = req.childLink("builds/%d" % buildnum)
         data = '<a href="%s">#%d</a> ' % (buildurl, buildnum)
+
         when = build.getETA()
         if when is not None:
             when_time = time.strftime("%H:%M:%S",
@@ -39,6 +40,13 @@ class StatusResourceBuilder(HtmlResource, OneLineMixin):
         else:
             data += "[waiting for Lock]"
             # TODO: is this necessarily the case?
+
+        if self.builder_control is not None:
+            stopURL = urllib.quote(req.childLink("builds/%d/stop" % buildnum))
+            data += '''
+<form action="%s" class="command stopbuild" style="display:inline">
+  <input type="submit" value="Stop Build" />
+</form>''' % stopURL
         return data
 
     def body(self, req):
