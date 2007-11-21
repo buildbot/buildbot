@@ -29,7 +29,7 @@ from buildbot.buildslave import BuildSlave
 from buildbot import interfaces
 
 ########################################
-    
+
 class BotMaster(service.MultiService):
 
     """This is the master-side service which manages remote buildbot slaves.
@@ -503,6 +503,13 @@ class BuildMaster(service.MultiService, styles.Versioned):
             # required
             schedulers = config['schedulers']
             builders = config['builders']
+            for k in builders:
+                if k['name'].startswith("_"):
+                    errmsg = ("builder names must not start with an "
+                              "underscore: " + k['name'])
+                    log.err(errmsg)
+                    raise ValueError(errmsg)
+
             slavePortnum = config['slavePortnum']
             #slaves = config['slaves']
             #change_source = config['change_source']

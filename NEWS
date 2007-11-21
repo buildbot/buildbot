@@ -1,5 +1,16 @@
 User visible changes in Buildbot.             -*- outline -*-
 
+* Release 0.?.? (?)
+
+** Things You Need To Know
+
+*** builder names must not start with an underscore (`_').
+
+These are now reserved for internal buildbot purposes, such as the magic
+"_all" pseudo-builder that the web pages use to allow force-build buttons
+that start builds on all Builders at once.
+
+
 * Release 0.7.6 (30 Sep 2007)
 
 ** Things You Need To Know
