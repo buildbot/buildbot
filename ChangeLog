@@ -1,5 +1,8 @@
 2007-11-21  Brian Warner  <warner@lothar.com>
 
+	* lots: a whole batch of patches from Benoit Sigoure, referenced
+	in ticket #138. Thanks!
+
 	* buildbot/master.py (BuildMaster.loadConfig): builder names that
 	begin with an underscore are now reserved, so prohibit them from
 	appearing in the config file.
