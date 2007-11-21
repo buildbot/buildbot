@@ -1,3 +1,9 @@
+2007-11-21  Brian Warner  <warner@lothar.com>
+
+	* buildbot/slave/bot.py (Bot.remote_setBuilderList): don't
+	consider the 'info' directory as a leftover directory. Patch from
+	Benoit Sigoure, ticket #138.
+
 2007-11-01  Brian Warner  <warner@lothar.com>
 
 	* buildbot/status/web/builder.py (StatusResourceBuilder.build_line):

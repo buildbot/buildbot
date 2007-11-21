@@ -286,7 +286,7 @@ class Bot(pb.Referenceable, service.MultiService):
 
     def remote_setBuilderList(self, wanted):
         retval = {}
-        wanted_dirs = []
+        wanted_dirs = ["info"]
         for (name, builddir) in wanted:
             wanted_dirs.append(builddir)
             b = self.builders.get(name, None)
