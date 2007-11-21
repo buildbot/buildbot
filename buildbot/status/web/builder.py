@@ -6,7 +6,8 @@ from twisted.web.util import Redirect
 import re, urllib, time
 from twisted.python import log
 from buildbot import interfaces
-from buildbot.status.web.base import HtmlResource, make_row, OneLineMixin
+from buildbot.status.web.base import HtmlResource, make_row, \
+     make_force_build_form, OneLineMixin
 from buildbot.process.base import BuildRequest
 from buildbot.sourcestamp import SourceStamp
 
@@ -106,23 +107,7 @@ class StatusResourceBuilder(HtmlResource, OneLineMixin):
 
         if control is not None and connected_slaves:
             forceURL = urllib.quote(req.childLink("force"))
-            data += (
-                """
-                <form action='%(forceURL)s' class='command forcebuild'>
-                <p>To force a build, fill out the following fields and
-                push the 'Force Build' button</p>"""
-                + make_row("Your name:",
-                           "<input type='text' name='username' />")
-                + make_row("Reason for build:",
-                           "<input type='text' name='comments' />")
-                + make_row("Branch to build:",
-                           "<input type='text' name='branch' />")
-                + make_row("Revision to build:",
-                           "<input type='text' name='revision' />")
-                + """
-                <input type='submit' value='Force Build' />
-                </form>
-                """) % {"forceURL": forceURL}
+            data += make_force_build_form(forceURL)
         elif control is not None:
             data += """
             <p>All buildslaves appear to be offline, so it's not possible

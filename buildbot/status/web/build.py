@@ -5,8 +5,8 @@ from twisted.internet import defer, reactor
 
 import urllib, time
 from twisted.python import log
-from buildbot.status.web.base import HtmlResource, make_row, css_classes, \
-     path_to_builder
+from buildbot.status.web.base import HtmlResource, make_row, make_stop_form, \
+     css_classes, path_to_builder
 
 from buildbot.status.web.tests import TestsResource
 from buildbot.status.web.step import StepsResource
@@ -48,17 +48,7 @@ class StatusResourceBuild(HtmlResource):
 
             if self.build_control is not None:
                 stopURL = urllib.quote(req.childLink("stop"))
-                data += """
-                <form action="%s" class='command stopbuild'>
-                <p>To stop this build, fill out the following fields and
-                push the 'Stop' button</p>\n""" % stopURL
-                data += make_row("Your name:",
-                                 "<input type='text' name='username' />")
-                data += make_row("Reason for stopping build:",
-                                 "<input type='text' name='comments' />")
-                data += """<input type="submit" value="Stop Builder" />
-                </form>
-                """
+                data += make_stop_form(stopURL)
 
         if b.isFinished():
             results = b.getResults()

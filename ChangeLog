@@ -1,5 +1,10 @@
 2007-11-21  Brian Warner  <warner@lothar.com>
 
+	* buildbot/status/web/builder.py (StatusResourceBuilder.body):
+	factor out force/stop form generation
+	* buildbot/status/web/base.py: same
+	* buildbot/status/web/build.py: same
+
 	* buildbot/status/web/builder.py (StatusResourceBuilder.force):
 	simplify some 'if' statements
 	(StatusResourceBuilder.build_line): add a 'Stop Build' button next
