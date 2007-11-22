@@ -15,7 +15,7 @@ from buildbot.slave.registry import registerSlaveCommand
 # this used to be a CVS $-style "Revision" auto-updated keyword, but since I
 # moved to Darcs as the primary repository, this is updated manually each
 # time this file is changed. The last cvs_ver that was here was 1.51 .
-command_version = "2.3"
+command_version = "2.4"
 
 # version history:
 #  >=1.17: commands are interruptable
@@ -35,6 +35,7 @@ command_version = "2.3"
 #          (release 0.7.4)
 #  >= 2.2: added monotone, uploadFile, and downloadFile (release 0.7.5)
 #  >= 2.3: added bzr
+#  >= 2.4: Git understands 'revision' and branches
 
 class CommandInterrupted(Exception):
     pass
@@ -707,7 +708,7 @@ class SlaveFileUploadCommand(Command):
         self.rc = 0
 
     def start(self):
-	if self.debug:
+        if self.debug:
             log.msg('SlaveFileUploadCommand started')
 
         # Open file
@@ -819,7 +820,7 @@ class SlaveFileDownloadCommand(Command):
         self.rc = 0
 
     def start(self):
-	if self.debug:
+        if self.debug:
             log.msg('SlaveFileDownloadCommand starting')
 
         # Open file
@@ -1718,7 +1719,9 @@ class Git(SourceBase):
     """Git specific VC operation. In addition to the arguments
     handled by SourceBase, this command reads the following keys:
 
-    ['repourl'] (required): the Cogito repository string
+    ['repourl'] (required): the upstream GIT repository string
+    ['branch'] (optional): which version (i.e. branch or tag) to
+                           retrieve. Default: "master".
     """
 
     header = "git operation"
@@ -1726,31 +1729,75 @@ class Git(SourceBase):
     def setup(self, args):
         SourceBase.setup(self, args)
         self.repourl = args['repourl']
-        #self.sourcedata = "" # TODO
+        self.branch = args.get('branch')
+        if not self.branch:
+            self.branch = "master"
+        self.sourcedata = "%s %s\n" % (self.repourl, self.branch)
+
+    def _fullSrcdir(self):
+        return os.path.join(self.builder.basedir, self.srcdir)
+
+    def _commitSpec(self):
+        if self.revision:
+            return self.revision
+        return self.branch
 
     def sourcedirIsUpdateable(self):
-        if os.path.exists(os.path.join(self.builder.basedir,
-                                       self.srcdir, ".buildbot-patched")):
+        if os.path.exists(os.path.join(self._fullSrcdir(),
+                                       ".buildbot-patched")):
             return False
-        return os.path.isdir(os.path.join(self.builder.basedir,
-                                          self.srcdir, ".git"))
+        return os.path.isdir(os.path.join(self._fullSrcdir(), ".git"))
+
+    def _didFetch(self, res):
+        if self.revision:
+            head = self.revision
+        else:
+            head = 'FETCH_HEAD'
+
+        command = ['git-reset', '--hard', head]
+        c = ShellCommand(self.builder, command, self._fullSrcdir(),
+                         sendRC=False, timeout=self.timeout)
+        self.command = c
+        return c.start()
 
     def doVCUpdate(self):
-        d = os.path.join(self.builder.basedir, self.srcdir)
-        command = ['cg-update']
-        c = ShellCommand(self.builder, command, d,
+        command = ['git-fetch', self.repourl, self.branch]
+        self.sendStatus({"header": "fetching branch %s from %s\n"
+                                        % (self.branch, self.repourl)})
+        c = ShellCommand(self.builder, command, self._fullSrcdir(),
                          sendRC=False, timeout=self.timeout)
         self.command = c
-        return c.start()
+        d = c.start()
+        d.addCallback(self._abandonOnFailure)
+        d.addCallback(self._didFetch)
+        return d
+
+    def _didInit(self, res):
+        return self.doVCUpdate()
 
     def doVCFull(self):
-        d = os.path.join(self.builder.basedir, self.srcdir)
-        os.mkdir(d)
-        command = ['cg-clone', '-s', self.repourl]
-        c = ShellCommand(self.builder, command, d,
+        os.mkdir(self._fullSrcdir())
+        c = ShellCommand(self.builder, ['git-init'], self._fullSrcdir(),
                          sendRC=False, timeout=self.timeout)
         self.command = c
-        return c.start()
+        d = c.start()
+        d.addCallback(self._abandonOnFailure)
+        d.addCallback(self._didInit)
+        return d
+
+    def parseGotRevision(self):
+        command = ['git-rev-parse', 'HEAD']
+        c = ShellCommand(self.builder, command, self._fullSrcdir(),
+                         sendRC=False, keepStdout=True)
+        c.usePTY = False
+        d = c.start()
+        def _parse(res):
+            hash = c.stdout.strip()
+            if len(hash) != 40:
+                return None
+            return hash
+        d.addCallback(_parse)
+        return d
 
 registerSlaveCommand("git", Git, command_version)
 

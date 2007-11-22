@@ -203,6 +203,32 @@ class DarcsExtractor(SourceStampExtractor):
         d.addCallback(self.readPatch, self.patchlevel)
         return d
 
+class GitExtractor(SourceStampExtractor):
+    patchlevel = 1
+    vcexe = "git"
+
+    def getBaseRevision(self):
+        d = self.dovc(["branch", "--no-color", "-v", "--no-abbrev"])
+        d.addCallback(self.parseStatus)
+        return d
+
+    def parseStatus(self, res):
+        # The current branch is marked by '*' at the start of the
+        # line, followed by the branch name and the SHA1.
+        #
+        # Branch names may contain pretty much anything but whitespace.
+        m = re.search(r'^\* (\S+)\s+([0-9a-f]{40})', res, re.MULTILINE)
+        if m:
+            self.branch = m.group(1)
+            self.baserev = m.group(2)
+            return
+        raise IndexError("Could not find current GIT branch: %s" % res)
+
+    def getPatch(self, res):
+        d = self.dovc(["diff", self.baserev])
+        d.addCallback(self.readPatch, self.patchlevel)
+        return d
+
 def getSourceStamp(vctype, treetop, branch=None):
     if vctype == "cvs":
         e = CVSExtractor(treetop, branch)
@@ -218,6 +244,8 @@ def getSourceStamp(vctype, treetop, branch=None):
         e = MercurialExtractor(treetop, branch)
     elif vctype == "darcs":
         e = DarcsExtractor(treetop, branch)
+    elif vctype == "git":
+        e = GitExtractor(treetop, branch)
     else:
         raise KeyError("unknown vctype '%s'" % vctype)
     return e.get()

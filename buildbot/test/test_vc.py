@@ -342,7 +342,8 @@ class BaseHelper:
         self.branch.append(rev)
         self.allrevs.append(rev)
 
-    def runCommand(self, basedir, command, failureIsOk=False, stdin=None):
+    def runCommand(self, basedir, command, failureIsOk=False,
+                   stdin=None, env=None):
         # all commands passed to do() should be strings or lists. If they are
         # strings, none of the arguments may have spaces. This makes the
         # commands less verbose at the expense of restricting what they can
@@ -355,7 +356,9 @@ class BaseHelper:
             print " in basedir %s" % basedir
             if stdin:
                 print " STDIN:\n", stdin, "\n--STDIN DONE"
-        env = os.environ.copy()
+
+        if not env:
+            env = os.environ.copy()
         env['LC_ALL'] = "C"
         d = myGetProcessOutputAndValue(command[0], command[1:],
                                        env=env, path=basedir,
@@ -379,19 +382,19 @@ class BaseHelper:
         d.addCallback(check)
         return d
 
-    def do(self, basedir, command, failureIsOk=False, stdin=None):
+    def do(self, basedir, command, failureIsOk=False, stdin=None, env=None):
         d = self.runCommand(basedir, command, failureIsOk=failureIsOk,
-                            stdin=stdin)
+                            stdin=stdin, env=env)
         return waitForDeferred(d)
 
-    def dovc(self, basedir, command, failureIsOk=False, stdin=None):
+    def dovc(self, basedir, command, failureIsOk=False, stdin=None, env=None):
         """Like do(), but the VC binary will be prepended to COMMAND."""
         if isinstance(command, (str, unicode)):
             command = self.vcexe + " " + command
         else:
             # command is a list
             command = [self.vcexe] + command
-        return self.do(basedir, command, failureIsOk, stdin)
+        return self.do(basedir, command, failureIsOk, stdin, env)
 
 class VCBase(SignalMixin):
     metadir = None
@@ -2465,6 +2468,136 @@ class Mercurial(VCBase, unittest.TestCase):
         return d
 
 VCS.registerVC(Mercurial.vc_name, MercurialHelper())
+
+class GitHelper(BaseHelper):
+    branchname = "branch"
+    try_branchname = "branch"
+
+    def capable(self):
+        gitpaths = which('git')
+        if gitpaths:
+            self.vcexe = gitpaths[0]
+            return (True, None)
+        return (False, "GIT is not installed")
+
+    def createRepository(self):
+        self.createBasedir()
+        self.gitrepo = os.path.join(self.repbase,
+                                   "GIT-Repository")
+        tmp = os.path.join(self.repbase, "gittmp")
+
+        env = os.environ.copy()
+        env['GIT_DIR'] = self.gitrepo
+        w = self.dovc(self.repbase, "init", env=env)
+        yield w; w.getResult()
+
+        self.populate(tmp)
+        w = self.dovc(tmp, "init")
+        yield w; w.getResult()
+        w = self.dovc(tmp, ["add", "."])
+        yield w; w.getResult()
+        w = self.dovc(tmp, ["commit", "-m", "initial_import"])
+        yield w; w.getResult()
+
+        w = self.dovc(tmp, ["checkout", "-b", self.branchname])
+        yield w; w.getResult()
+        self.populate_branch(tmp)
+        w = self.dovc(tmp, ["commit", "-a", "-m", "commit_on_branch"])
+        yield w; w.getResult()
+
+        w = self.dovc(tmp, ["rev-parse", "master", self.branchname])
+        yield w; out = w.getResult()
+        revs = out.splitlines()
+        self.addTrunkRev(revs[0])
+        self.addBranchRev(revs[1])
+
+        w = self.dovc(tmp, ["push", self.gitrepo, "master", self.branchname])
+        yield w; w.getResult()
+
+        rmdirRecursive(tmp)
+    createRepository = deferredGenerator(createRepository)
+
+    def vc_revise(self):
+        tmp = os.path.join(self.repbase, "gittmp")
+        rmdirRecursive(tmp)
+        log.msg("vc_revise" + self.gitrepo)
+        w = self.dovc(self.repbase, ["clone", self.gitrepo, "gittmp"])
+        yield w; w.getResult()
+
+        self.version += 1
+        version_c = VERSION_C % self.version
+        open(os.path.join(tmp, "version.c"), "w").write(version_c)
+
+        w = self.dovc(tmp, ["commit", "-m", "revised_to_%d" % self.version,
+                            "version.c"])
+        yield w; w.getResult()
+        w = self.dovc(tmp, ["rev-parse", "master"])
+        yield w; out = w.getResult()
+        self.addTrunkRev(out.strip())
+
+        w = self.dovc(tmp, ["push", self.gitrepo, "master"])
+        yield w; out = w.getResult()
+        rmdirRecursive(tmp)
+    vc_revise = deferredGenerator(vc_revise)
+
+    def vc_try_checkout(self, workdir, rev, branch=None):
+        assert os.path.abspath(workdir) == workdir
+        if os.path.exists(workdir):
+            rmdirRecursive(workdir)
+
+        w = self.dovc(self.repbase, ["clone", self.gitrepo, workdir])
+        yield w; w.getResult()
+
+        if branch is not None:
+            w = self.dovc(workdir, ["checkout", "-b", branch,
+                                    "origin/%s" % branch])
+            yield w; w.getResult()
+
+        # Hmm...why do nobody else bother to check out the correct
+        # revision?
+        w = self.dovc(workdir, ["reset", "--hard", rev])
+        yield w; w.getResult()
+
+        try_c_filename = os.path.join(workdir, "subdir", "subdir.c")
+        open(try_c_filename, "w").write(TRY_C)
+    vc_try_checkout = deferredGenerator(vc_try_checkout)
+
+    def vc_try_finish(self, workdir):
+        rmdirRecursive(workdir)
+
+class Git(VCBase, unittest.TestCase):
+    vc_name = "git"
+
+    # No 'export' mode yet...
+    # metadir = ".git"
+    vctype = "source.Git"
+    vctype_try = "git"
+    has_got_revision = True
+
+    def testCheckout(self):
+        self.helper.vcargs = { 'repourl': self.helper.gitrepo }
+        d = self.do_vctest()
+        return d
+
+    def testPatch(self):
+        self.helper.vcargs = { 'repourl': self.helper.gitrepo,
+                               'branch': "master" }
+        d = self.do_patch()
+        return d
+
+    def testCheckoutBranch(self):
+        self.helper.vcargs = { 'repourl': self.helper.gitrepo,
+                               'branch': "master" }
+        d = self.do_branch()
+        return d
+
+    def testTry(self):
+        self.helper.vcargs = { 'repourl': self.helper.gitrepo,
+                               'branch': "master" }
+        d = self.do_getpatch()
+        return d
+
+VCS.registerVC(Git.vc_name, GitHelper())
 
 
 class Sources(unittest.TestCase):

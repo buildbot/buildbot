@@ -1,5 +1,20 @@
 2007-11-21  Brian Warner  <warner@lothar.com>
 
+	* lots: improve Git support, AMAZING patch from Haavard
+	Skinnemoen, complete with unit tests and docs, thanks! Closes #130.
+	* buildbot/scripts/tryclient.py (GitExtractor): add 'try' support
+	* buildbot/slave/commands.py (Git): accept branch and revisions,
+	and use 'git' instead of the 'cogito' wrapper
+	* buildbot/steps/source.py (Git.__init__): same
+	* buildbot/test/test_vc.py (BaseHelper.runCommand): offer control
+	over env=
+	(BaseHelper.do): same
+	(BaseHelper.dovc): same
+	(Git): unit tests for Git support. Wow!
+	* docs/buildbot.texinfo (Git): docs for Git support. Double Wow!
+	* contrib/git_buildbot.py: commit-hook script for git
+
+
 	* buildbot/changes/p4poller.py (P4Source._finished): don't let a
 	failure cause us to stop polling. Thanks to John Backstrand for
 	the patch. Closes #135.

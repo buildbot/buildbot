@@ -196,6 +196,7 @@ Source Checkout
 * Bazaar::                      
 * Bzr::                         
 * P4::                          
+* Git::                         
 
 Simple ShellCommand Subclasses
 
@@ -1268,9 +1269,9 @@ Arch/Baz/Bazaar, or a labeled tag used in CVS)@footnote{many VC
 systems provide more complexity than this: in particular the local
 views that P4 and ClearCase can assemble out of various source
 directories are more complex than we're prepared to take advantage of
-here}. The SHA1 revision ID used by Monotone and Mercurial is also a
-kind of revision stamp, in that it specifies a unique copy of the
-source tree, as does a Darcs ``context'' file.
+here}. The SHA1 revision ID used by Monotone, Mercurial, and Git is
+also a kind of revision stamp, in that it specifies a unique copy of
+the source tree, as does a Darcs ``context'' file.
 
 When we aren't intending to make any changes to the sources we check out
 (at least not any that need to be committed back upstream), there are two
@@ -1468,6 +1469,16 @@ each branch is stored in a separate repository. The @code{repourl},
 same way as with Darcs. The ``revision'', however, is the hash
 identifier returned by @command{hg identify}.
 
+@uref{http://git.or.cz/, Git} also follows a decentralized model, and
+each repository can have several branches and tags. The source Step is
+configured with a static @code{repourl} which specifies the location
+of the repository. In addition, an optional @code{branch} parameter
+can be specified to check out code from a specific branch instead of
+the default ``master'' branch. The ``revision'' is specified as a SHA1
+hash as returned by e.g. @command{git rev-parse}. No attempt is made
+to ensure that the specified revision is actually a subset of the
+specified branch.
+
 
 @node Attributes of Changes,  , How Different VC Systems Specify Sources, Version Control Systems
 @subsection Attributes of Changes
@@ -1526,6 +1537,9 @@ consumed by the @code{computeSourceRevision} method in the appropriate
 @code{revision} is the full revision ID (ending in --patch-%d)
 @item P4
 @code{revision} is an int, the transaction number
+@item Git
+@code{revision} is a short string (a SHA1 hash), the output of e.g.
+@code{git rev-parse}
 @end table
 
 @heading Branches
@@ -1534,14 +1548,15 @@ The Change might also have a @code{branch} attribute. This indicates
 that all of the Change's files are in the same named branch. The
 Schedulers get to decide whether the branch should be built or not.
 
-For VC systems like CVS, Arch, and Monotone, the @code{branch} name is
-unrelated to the filename. (that is, the branch name and the filename
-inhabit unrelated namespaces). For SVN, branches are expressed as
-subdirectories of the repository, so the file's ``svnurl'' is a
-combination of some base URL, the branch name, and the filename within
-the branch. (In a sense, the branch name and the filename inhabit the
-same namespace). Darcs branches are subdirectories of a base URL just
-like SVN. Mercurial branches are the same as Darcs.
+For VC systems like CVS, Arch, Monotone, and Git, the @code{branch}
+name is unrelated to the filename. (that is, the branch name and the
+filename inhabit unrelated namespaces). For SVN, branches are
+expressed as subdirectories of the repository, so the file's
+``svnurl'' is a combination of some base URL, the branch name, and the
+filename within the branch. (In a sense, the branch name and the
+filename inhabit the same namespace). Darcs branches are
+subdirectories of a base URL just like SVN. Mercurial branches are the
+same as Darcs.
 
 @table @samp
 @item CVS
@@ -1554,6 +1569,8 @@ branch='warner-newfeature', files=['src/foo.c']
 branch='warner-newfeature', files=['src/foo.c']
 @item Arch/Bazaar
 branch='buildbot--usebranches--0', files=['buildbot/master.py']
+@item Git
+branch='warner-newfeature', files=['src/foo.c']
 @end table
 
 @heading Links
@@ -2716,6 +2733,12 @@ hook)
 @code{contrib/arch_buildbot.py} run in a commit hook)
 @end itemize
 
+@item Git
+@itemize @bullet
+@item pb.PBChangeSource (listening for connections from
+@code{contrib/git_buildbot.py} run in the post-receive hook)
+@end itemize
+
 @end table
 
 All VC systems can be driven by a PBChangeSource and the
@@ -2963,6 +2986,12 @@ http://opensource.perlig.de/en/svnmailer/
 @table @samp
 @item NotifyExtension
 http://www.selenic.com/mercurial/wiki/index.cgi/NotifyExtension
+@end table
+
+@item Git
+@table @samp
+@item post-receive-email
+http://git.kernel.org/?p=git/git.git;a=blob;f=contrib/hooks/post-receive-email;hb=HEAD
 @end table
 
 @end table
@@ -3801,6 +3830,7 @@ arguments are described on the following pages.
 * Bazaar::                      
 * Bzr::                         
 * P4::                          
+* Git::                         
 @end menu
 
 @node CVS, SVN, Source Checkout, Source Checkout
@@ -4134,7 +4164,7 @@ will be passed to the @code{bzr checkout} command.
 
 
 
-@node P4,  , Bzr, Source Checkout
+@node P4, Git, Bzr, Source Checkout
 @subsubsection P4
 
 @cindex Perforce Update
@@ -4173,6 +4203,29 @@ for each checkout directory to avoid incorrect synchronization. For
 this reason, Python percent substitution will be performed on this value
 to replace %(slave)s with the slave name and %(builder)s with the
 builder name. The default is "buildbot_%(slave)s_%(build)s".
+@end table
+
+@node Git,  , P4, Source Checkout
+@subsubsection Git
+
+@cindex Git Checkout
+@bsindex buildbot.steps.source.Git
+
+
+The @code{Git} build step clones or updates a @uref{http://git.or.cz/,
+Git} repository and checks out the specified branch or revision.
+
+The Git step takes the following arguments:
+
+@table @code
+@item repourl
+(required): the URL of the upstream Git repository.
+
+@item branch
+(optional): this specifies the name of the branch to use when a Build
+does not provide one of its own. If this this parameter is not
+specified, and the Build does not provide a branch, the ``master''
+branch will be used.
 @end table
 
 @node ShellCommand, Simple ShellCommand Subclasses, Source Checkout, Build Steps
@@ -6914,7 +6967,7 @@ for each tree you use, so it may be more convenient to use the
 @code{try_topfile} approach instead.
 
 Other VC systems which work on full projects instead of individual
-directories (tla, baz, darcs, monotone, mercurial) do not require
+directories (tla, baz, darcs, monotone, mercurial, git) do not require
 @command{try} to know the top directory, so the @option{--try-topfile}
 and @option{--try-topdir} arguments will be ignored.
 @c is this true? I think I currently require topdirs all the time.
@@ -6993,7 +7046,20 @@ revision. For @command{try} to work, your working directory must only
 have patches that are available from the same remotely-available
 repository that the build process' @code{step.Mercurial} will use.
 
-@c TODO: monotone, git
+@item Git
+@code{git branch -v} lists all the branches available in the local
+repository along with the revision ID it points to and a short summary
+of the last commit. The line containing the currently checked out
+branch begins with '* ' (star and space) while all the others start
+with '  ' (two spaces). @command{try} scans for this line and extracts
+the branch name and revision from it. Then it generates a diff against
+the base revision.
+@c TODO: I'm not sure if this actually works the way it's intended
+@c since the extracted base revision might not actually exist in the
+@c upstream repository. Perhaps we need to add a --remote option to
+@c specify the remote tracking branch to generate a diff against.
+
+@c TODO: monotone
 @end table
 
 @heading waiting for results

@@ -571,15 +571,25 @@ class Git(Source):
 
     name = "git"
 
-    def __init__(self, repourl, **kwargs):
+    def __init__(self, repourl, branch="master", **kwargs):
         """
         @type  repourl: string
         @param repourl: the URL which points at the git repository
+
+        @type  branch: string
+        @param branch: The branch or tag to check out by default. If
+                       a build specifies a different branch, it will
+                       be used instead of this.
         """
-        self.branch = None # TODO
         Source.__init__(self, **kwargs)
-        self.addFactoryArguments(repourl=repourl)
-        self.args['repourl'] = repourl
+        self.addFactoryArguments(repourl=repourl, branch=branch)
+        self.args.update({'repourl': repourl,
+                          'branch': branch})
+
+    def computeSourceRevision(self, changes):
+        if not changes:
+            return None
+        return changes[-1].revision
 
     def startVC(self, branch, revision, patch):
         self.args['branch'] = branch
