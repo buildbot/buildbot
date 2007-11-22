@@ -111,6 +111,7 @@ class P4Source(base.ChangeSource, util.ComparableMixin):
         # If there's a failure, log it so it isn't lost.
         if isinstance(res, failure.Failure):
             log.msg('P4 poll failed: %s' % res)
+            return None
         return res
 
     def _get_changes(self):

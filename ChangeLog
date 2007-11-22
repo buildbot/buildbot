@@ -1,5 +1,9 @@
 2007-11-21  Brian Warner  <warner@lothar.com>
 
+	* buildbot/changes/p4poller.py (P4Source._finished): don't let a
+	failure cause us to stop polling. Thanks to John Backstrand for
+	the patch. Closes #135.
+
 	* buildbot/status/web/waterfall.py (WaterfallStatusResource.body):
 	fix timezone calculation, we were always emitting DST, even in
 	winter. Thanks to Charles Lepple and John Saxton for the patch.
