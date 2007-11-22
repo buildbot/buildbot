@@ -153,22 +153,21 @@ class TestP4Poller(unittest.TestCase):
         return when
 
     def testFailedChanges(self):
-        """'p4 changes' failure is properly reported"""
+        """'p4 changes' failure is properly ignored"""
         self.t = MockP4Source(p4changes=['Perforce client error:\n...'],
                               p4change={},
                               p4port=None, p4user=None)
         self.t.parent = self
         d = self.t.checkp4()
-        d.addBoth(self._testFailedChanges2)
+        d.addCallback(self._testFailedChanges2)
         return d
 
     def _testFailedChanges2(self, f):
-        self.assert_(isinstance(f, failure.Failure))
-        self.failUnlessIn('Perforce client error', str(f))
+        self.failUnlessEqual(f, None)
         self.assert_(not self.t.working)
 
     def testFailedDescribe(self):
-        """'p4 describe' failure is properly reported"""
+        """'p4 describe' failure is properly ignored"""
         c = dict(p4change)
         c[3] = 'Perforce client error:\n...'
         self.t = MockP4Source(p4changes=[first_p4changes, second_p4changes],
@@ -180,11 +179,10 @@ class TestP4Poller(unittest.TestCase):
 
     def _testFailedDescribe2(self, res):
         # first time finds nothing; check again.
-        return self.t.checkp4().addBoth(self._testFailedDescribe3)
+        return self.t.checkp4().addCallback(self._testFailedDescribe3)
 
     def _testFailedDescribe3(self, f):
-        self.assert_(isinstance(f, failure.Failure))
-        self.failUnlessIn('Perforce client error', str(f))
+        self.failUnlessEqual(f, None)
         self.assert_(not self.t.working)
         self.assertEquals(self.t.last_change, 2)
 
