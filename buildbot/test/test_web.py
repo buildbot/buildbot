@@ -232,7 +232,7 @@ c['status'] = [html.Waterfall(http_port=0, robots_txt=%s)]
             self.failUnless(page)
             self.failUnlessIn("current activity", page)
             self.failUnlessIn("<html", page)
-            TZ = time.tzname[time.daylight]
+            TZ = time.tzname[time.localtime()[-1]]
             self.failUnlessIn("time (%s)" % TZ, page)
 
             # phase=0 is really for debugging the waterfall layout

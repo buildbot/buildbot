@@ -500,7 +500,7 @@ class WaterfallStatusResource(HtmlResource):
         data += " </tr>\n"
         
         data += " <tr>\n"
-        TZ = time.tzname[time.daylight]
+        TZ = time.tzname[time.localtime()[-1]]
         data += td("time (%s)" % TZ, align="center", class_="Time")
         data += td('<a href="%s">changes</a>' % request.childLink("../changes"),
                    align="center", class_="Change")

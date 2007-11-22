@@ -1,5 +1,12 @@
 2007-11-21  Brian Warner  <warner@lothar.com>
 
+	* buildbot/status/web/waterfall.py (WaterfallStatusResource.body):
+	fix timezone calculation, we were always emitting DST, even in
+	winter. Thanks to Charles Lepple and John Saxton for the patch.
+	Closes #137.
+	* buildbot/test/test_web.py (Waterfall.test_waterfall._check1): same
+
+
 	* lots: a whole batch of patches from Benoit Sigoure, referenced
 	in ticket #138. Thanks!
 
