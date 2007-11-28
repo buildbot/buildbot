@@ -1,3 +1,10 @@
+2007-11-27  Brian Warner  <warner@lothar.com>
+
+	* buildbot/test/test_vc.py (GitHelper.createRepository): use 'git
+	init-db' instead of 'git init', since older versions of git (such
+	as the one that shipped with Dapper) don't know about the newer
+	alias.
+
 2007-11-21  Brian Warner  <warner@lothar.com>
 
 	* lots: improve Git support, AMAZING patch from Haavard

@@ -2488,11 +2488,11 @@ class GitHelper(BaseHelper):
 
         env = os.environ.copy()
         env['GIT_DIR'] = self.gitrepo
-        w = self.dovc(self.repbase, "init", env=env)
+        w = self.dovc(self.repbase, "init-db", env=env)
         yield w; w.getResult()
 
         self.populate(tmp)
-        w = self.dovc(tmp, "init")
+        w = self.dovc(tmp, "init-db")
         yield w; w.getResult()
         w = self.dovc(tmp, ["add", "."])
         yield w; w.getResult()
