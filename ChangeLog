@@ -1,5 +1,23 @@
 2007-11-27  Brian Warner  <warner@lothar.com>
 
+	* buildbot/slave/commands.py (Mercurial._maybeFallback): when hg
+	is doing a 'clone' operation, to a remote repository (e.g. over
+	HTTP), and either the server or the client is hg-0.9.1 or older,
+	'hg clone' cannot accept a --rev argument: instead, you have to
+	clone the tip and then update back to the desired revision. Added
+	code to detect this failure mode and fall back to the clone+update
+	scheme. Closes #122 and #103.
+	(ShellCommand.__init__): add a keepStderr= flag to support this
+
+	* buildbot/test/test_vc.py (VCBase._do_vctest_clobber_2): add a
+	test that does a checkout to a specific version, to exercise the
+	mercurial limitation workaround.
+	(Mercurial.serveHTTP): add code to test hg checkout over HTTP,
+	using mercurial's built-in 'hg serve' command. Because of
+	limitations in hg, this code uses a randomly-selected TCP
+	port (rather than claiming a free one), so every once in a while
+	this test is going to fail because of a port-number collision.
+
 	* buildbot/test/test_vc.py (GitHelper.capable): skip Git tests if
 	the version of Git installed is older than 1.2.x . Git 1.1.3
 	doesn't accept 'git init' (it wants 'git init-db' instead) and the

@@ -15,7 +15,7 @@ from buildbot.slave.registry import registerSlaveCommand
 # this used to be a CVS $-style "Revision" auto-updated keyword, but since I
 # moved to Darcs as the primary repository, this is updated manually each
 # time this file is changed. The last cvs_ver that was here was 1.51 .
-command_version = "2.4"
+command_version = "2.5"
 
 # version history:
 #  >=1.17: commands are interruptable
@@ -34,8 +34,9 @@ command_version = "2.4"
 #          keepStdinOpen=) and no longer accepts stdin=)
 #          (release 0.7.4)
 #  >= 2.2: added monotone, uploadFile, and downloadFile (release 0.7.5)
-#  >= 2.3: added bzr
+#  >= 2.3: added bzr (release 0.7.6)
 #  >= 2.4: Git understands 'revision' and branches
+#  >= 2.5: workaround added for remote 'hg clone --rev REV' when hg<0.9.2
 
 class CommandInterrupted(Exception):
     pass
@@ -226,7 +227,7 @@ class ShellCommand:
                  workdir, environ=None,
                  sendStdout=True, sendStderr=True, sendRC=True,
                  timeout=None, initialStdin=None, keepStdinOpen=False,
-                 keepStdout=False,
+                 keepStdout=False, keepStderr=False,
                  logfiles={}):
         """
 
@@ -234,6 +235,7 @@ class ShellCommand:
                            that we've seen. This copy is available in
                            self.stdout, which can be read after the command
                            has finished.
+        @param keepStderr: same, for stderr
 
         """
 
@@ -270,6 +272,7 @@ class ShellCommand:
         self.timeout = timeout
         self.timer = None
         self.keepStdout = keepStdout
+        self.keepStderr = keepStderr
 
         # usePTY=True is a convenience for cleaning up all children and
         # grandchildren of a hung command. Fall back to usePTY=False on
@@ -299,6 +302,8 @@ class ShellCommand:
         # completes
         if self.keepStdout:
             self.stdout = ""
+        if self.keepStderr:
+            self.stderr = ""
         self.deferred = defer.Deferred()
         try:
             self._startCommand()
@@ -419,6 +424,8 @@ class ShellCommand:
     def addStderr(self, data):
         if self.sendStderr:
             self.sendStatus({'stderr': data})
+        if self.keepStderr:
+            self.stderr += data
         if self.timer:
             self.timer.reset(self.timeout)
 
@@ -2171,14 +2178,56 @@ class Mercurial(SourceBase):
         return res
 
     def doVCFull(self):
-        d = os.path.join(self.builder.basedir, self.srcdir)
+        newdir = os.path.join(self.builder.basedir, self.srcdir)
         command = [self.vcexe, 'clone']
         if self.args['revision']:
             command.extend(['--rev', self.args['revision']])
-        command.extend([self.repourl, d])
+        command.extend([self.repourl, newdir])
+        c = ShellCommand(self.builder, command, self.builder.basedir,
+                         sendRC=False, keepStdout=True, keepStderr=True,
+                         timeout=self.timeout)
+        self.command = c
+        d = c.start()
+        d.addCallback(self._maybeFallback, c)
+        return d
+
+    def _maybeFallback(self, res, c):
+        # if either the client or the server is older than hg-0.9.2, and the
+        # repository being cloned was reached over HTTP, and we tried to do
+        # an 'hg clone -r REV' (i.e. check out a specific revision), the
+        # operation will fail: support for this sort of operation was added
+        # to mercurial relatively late. In this case, we need to do a
+        # checkout of HEAD (spelled 'tip' in hg parlance) and then 'hg
+        # update' *backwards* to the desired revision.
+        e = "abort: clone by revision not supported yet for remote repositories"
+        if res == 0:
+            return res
+        # the error message might be in stdout if we're using PTYs, which
+        # merge stdout and stderr.
+        if (e not in c.stdout and e not in c.stderr):
+            return # some other error
+
+        # ok, do the fallback
+        newdir = os.path.join(self.builder.basedir, self.srcdir)
+        command = [self.vcexe, 'clone']
+        command.extend([self.repourl, newdir])
         c = ShellCommand(self.builder, command, self.builder.basedir,
                          sendRC=False, timeout=self.timeout)
         self.command = c
+        d = c.start()
+        d.addCallback(self._updateToDesiredRevision)
+        return d
+
+    def _updateToDesiredRevision(self, res):
+        assert self.args['revision']
+        newdir = os.path.join(self.builder.basedir, self.srcdir)
+        # hg-0.9.1 and earlier (which need this fallback) also want to see
+        # 'hg update REV' instead of 'hg update --rev REV'. Note that this is
+        # the only place we use 'hg update', since what most VC tools mean
+        # by, say, 'cvs update' is expressed as 'hg pull --update' instead.
+        command = [self.vcexe, 'update', self.args['revision']]
+        c = ShellCommand(self.builder, command, newdir,
+                         sendRC=False, timeout=self.timeout)
         return c.start()
 
     def parseGotRevision(self):

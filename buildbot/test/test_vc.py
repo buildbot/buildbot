@@ -587,6 +587,25 @@ class VCBase(SignalMixin):
         return d
     def _do_vctest_clobber_2(self, res):
         self.shouldNotExist(self.workdir, "newfile")
+        # do a checkout to a specific version. Mercurial-over-HTTP (when
+        # either client or server is older than hg-0.9.2) cannot do this
+        # directly, so it must checkout HEAD and then update back to the
+        # requested revision.
+        d = self.doBuild(ss=SourceStamp(revision=self.helper.trunk[0]))
+        d.addCallback(self._do_vctest_clobber_3)
+        return d
+    def _do_vctest_clobber_3(self, bs):
+        self.shouldExist(self.workdir, "main.c")
+        self.shouldExist(self.workdir, "version.c")
+        self.shouldExist(self.workdir, "subdir", "subdir.c")
+        if self.metadir:
+            self.shouldExist(self.workdir, self.metadir)
+        self.failUnlessEqual(bs.getProperty("revision"), self.helper.trunk[0])
+        self.failUnlessEqual(bs.getProperty("branch"), None)
+        self.checkGotRevision(bs, self.helper.trunk[0])
+        # leave the tree at HEAD
+        return self.doBuild()
+
 
     def _do_vctest_update(self, res):
         log.msg("_do_vctest_update")
@@ -2419,6 +2438,13 @@ class MercurialHelper(BaseHelper):
     def vc_try_finish(self, workdir):
         rmdirRecursive(workdir)
 
+class MercurialServerPP(protocol.ProcessProtocol):
+    def outReceived(self, data):
+        #print "HG-SERVE-STDOUT:", data
+        log.msg("hg-serve-stdout: %s" % (data,))
+    def errReceived(self, data):
+        print "HG-SERVE-STDERR:", data
+        log.msg("hg-serve-stderr: %s" % (data,))
 
 class Mercurial(VCBase, unittest.TestCase):
     vc_name = "hg"
@@ -2428,6 +2454,7 @@ class Mercurial(VCBase, unittest.TestCase):
     vctype = "source.Mercurial"
     vctype_try = "hg"
     has_got_revision = True
+    _hg_server = None
 
     def testCheckout(self):
         self.helper.vcargs = { 'repourl': self.helper.rep_trunk }
@@ -2449,17 +2476,43 @@ class Mercurial(VCBase, unittest.TestCase):
         d = self.do_branch()
         return d
 
+    def serveHTTP(self):
+        # the easiest way to publish hg over HTTP is by running 'hg serve' as
+        # a child process while the test is running. (you can also use a CGI
+        # script, which sounds difficult, or you can publish the files
+        # directly, which isn't well documented).
+
+        # grr.. 'hg serve' doesn't let you use --port=0 to mean "pick a free
+        # port", instead it uses it as a signal to use the default (port
+        # 8000). This means there is no way to make it choose a free port, so
+        # we are forced to make it use a statically-defined one, making it
+        # harder to avoid collisions.
+        self.httpPort = 8300 + (os.getpid() % 200)
+        args = [self.helper.vcexe,
+                "serve", "--port", str(self.httpPort), "--verbose"]
+        pp = MercurialServerPP() # logs+discards everything
+        # this serves one tree at a time, so we serve trunk. TODO: test hg's
+        # in-repo branches, for which a single tree will hold all branches.
+        self._hg_server = reactor.spawnProcess(pp, self.helper.vcexe, args,
+                                               os.environ,
+                                               self.helper.rep_trunk)
+        time.sleep(1) # give it a moment to get started
+
+    def tearDown(self):
+        if self._hg_server:
+            try:
+                self._hg_server.signalProcess("KILL")
+            except error.ProcessExitedAlready:
+                pass
+            self._hg_server = None
+        return VCBase.tearDown(self)
+
     def testCheckoutHTTP(self):
         self.serveHTTP()
-        repourl = "http://localhost:%d/Mercurial-Repository/trunk/.hg" % self.httpPort
+        repourl = "http://localhost:%d/" % self.httpPort
         self.helper.vcargs =  { 'repourl': repourl }
         d = self.do_vctest(testRetry=False)
         return d
-    # TODO: The easiest way to publish hg over HTTP is by running 'hg serve'
-    # as a child process while the test is running. (you can also use a CGI
-    # script, which sounds difficult, or you can publish the files directly,
-    # which isn't well documented).
-    testCheckoutHTTP.skip = "not yet implemented, use 'hg serve'"
 
     def testTry(self):
         self.helper.vcargs = { 'baseURL': self.helper.hg_base + "/",
