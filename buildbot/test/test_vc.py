@@ -2475,10 +2475,33 @@ class GitHelper(BaseHelper):
 
     def capable(self):
         gitpaths = which('git')
-        if gitpaths:
-            self.vcexe = gitpaths[0]
-            return (True, None)
-        return (False, "GIT is not installed")
+        if not gitpaths:
+            return (False, "GIT is not installed")
+        d = utils.getProcessOutput(gitpaths[0], ["--version"], env=os.environ)
+        d.addCallback(self._capable, gitpaths[0])
+        return d
+
+    def _capable(self, v, vcexe):
+        m = re.search(r'\b([\d\.]+)\b', v)
+        if not m:
+            log.msg("couldn't identify git version number in output:")
+            log.msg("'''%s'''" % v)
+            log.msg("skipping tests")
+            return (False,
+                    "Found git (%s) but couldn't identify its version" % vcexe)
+        ver_s = m.group(1)
+        ver = tuple([int(num) for num in ver_s.split(".")])
+
+        # git-1.1.3 (as shipped with Dapper) doesn't understand 'git
+        # init' (it wants 'git init-db'), and fails unit tests that
+        # involve branches. git-1.5.3.6 (on my debian/unstable system)
+        # works. I don't know where the dividing point is: if someone can
+        # figure it out (or figure out how to make buildbot support more
+        # versions), please update this check.
+        if ver < (1,2):
+            return (False, "Found git (%s) but it is older than 1.2.x" % vcexe)
+        self.vcexe = vcexe
+        return (True, None)
 
     def createRepository(self):
         self.createBasedir()
@@ -2488,11 +2511,11 @@ class GitHelper(BaseHelper):
 
         env = os.environ.copy()
         env['GIT_DIR'] = self.gitrepo
-        w = self.dovc(self.repbase, "init-db", env=env)
+        w = self.dovc(self.repbase, "init", env=env)
         yield w; w.getResult()
 
         self.populate(tmp)
-        w = self.dovc(tmp, "init-db")
+        w = self.dovc(tmp, "init")
         yield w; w.getResult()
         w = self.dovc(tmp, ["add", "."])
         yield w; w.getResult()

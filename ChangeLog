@@ -1,9 +1,12 @@
 2007-11-27  Brian Warner  <warner@lothar.com>
 
-	* buildbot/test/test_vc.py (GitHelper.createRepository): use 'git
-	init-db' instead of 'git init', since older versions of git (such
-	as the one that shipped with Dapper) don't know about the newer
-	alias.
+	* buildbot/test/test_vc.py (GitHelper.capable): skip Git tests if
+	the version of Git installed is older than 1.2.x . Git 1.1.3
+	doesn't accept 'git init' (it wants 'git init-db' instead) and the
+	branch tests fail. I know that Git 1.5.3.6 works. I don't know
+	what the dividing line is.. if someone can figure it out, please
+	update this check. Also, if someone can make buildbot's git
+	support handle older versions, please do that too! Addresses #130.
 
 2007-11-21  Brian Warner  <warner@lothar.com>
 
