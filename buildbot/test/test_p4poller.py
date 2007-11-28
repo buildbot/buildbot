@@ -1,6 +1,5 @@
 import time
 
-from twisted.python import failure
 from twisted.internet import defer
 from twisted.trial import unittest
 

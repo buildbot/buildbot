@@ -1,5 +1,7 @@
 2007-11-27  Brian Warner  <warner@lothar.com>
 
+	* buildbot/test/test_p4poller.py: hush pyflakes warning
+
 	* buildbot/slave/commands.py (Mercurial._maybeFallback): when hg
 	is doing a 'clone' operation, to a remote repository (e.g. over
 	HTTP), and either the server or the client is hg-0.9.1 or older,
