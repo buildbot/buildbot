@@ -1,3 +1,9 @@
+2007-11-28  Brian Warner  <warner@lothar.com>
+
+	* buildbot/slave/commands.py (Mercurial._maybeFallback): improve
+	hg fallback so that it works when the client hg is new and the
+	server hg is old (the error message is different in this case).
+
 2007-11-27  Brian Warner  <warner@lothar.com>
 
 	* buildbot/test/test_p4poller.py: hush pyflakes warning

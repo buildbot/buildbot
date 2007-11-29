@@ -2192,20 +2192,26 @@ class Mercurial(SourceBase):
         return d
 
     def _maybeFallback(self, res, c):
-        # if either the client or the server is older than hg-0.9.2, and the
-        # repository being cloned was reached over HTTP, and we tried to do
-        # an 'hg clone -r REV' (i.e. check out a specific revision), the
-        # operation will fail: support for this sort of operation was added
-        # to mercurial relatively late. In this case, we need to do a
-        # checkout of HEAD (spelled 'tip' in hg parlance) and then 'hg
-        # update' *backwards* to the desired revision.
-        e = "abort: clone by revision not supported yet for remote repositories"
+        # to do 'hg clone -r REV' (i.e. to check out a specific revision)
+        # from a remote (HTTP) repository, both the client and the server
+        # need to be hg-0.9.2 or newer. If this caused a checkout failure, we
+        # fall back to doing a checkout of HEAD (spelled 'tip' in hg
+        # parlance) and then 'hg update' *backwards* to the desired revision.
         if res == 0:
             return res
+
+        # hg-0.9.1 and earlier says this
+        e1 = ("abort: clone by revision not supported yet for "
+              "remote repositories")
+        # hg-0.9.2 and later say this when the other end is too old
+        e2 = ("abort: src repository does not support revision lookup "
+              "and so doesn't support clone by revision")
+
         # the error message might be in stdout if we're using PTYs, which
         # merge stdout and stderr.
-        if (e not in c.stdout and e not in c.stderr):
-            return # some other error
+        allout = c.stdout + c.stderr
+        if not (e1 in allout or e2 in allout):
+            return # must be some other error
 
         # ok, do the fallback
         newdir = os.path.join(self.builder.basedir, self.srcdir)
