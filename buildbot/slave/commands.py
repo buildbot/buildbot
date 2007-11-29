@@ -2221,6 +2221,7 @@ class Mercurial(SourceBase):
                          sendRC=False, timeout=self.timeout)
         self.command = c
         d = c.start()
+        d.addCallback(self._abandonOnFailure)
         d.addCallback(self._updateToDesiredRevision)
         return d
 

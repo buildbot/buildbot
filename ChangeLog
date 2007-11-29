@@ -1,3 +1,9 @@
+2007-11-29  Brian Warner  <warner@lothar.com>
+
+	* buildbot/slave/commands.py (Mercurial._maybeFallback): add an
+	_abandonOnFailure call to the fallback, to skip the 'update' step
+	if the checkout fails.
+
 2007-11-28  Brian Warner  <warner@lothar.com>
 
 	* buildbot/slave/commands.py (Mercurial._maybeFallback): improve
