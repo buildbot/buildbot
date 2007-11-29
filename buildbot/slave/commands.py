@@ -2200,18 +2200,29 @@ class Mercurial(SourceBase):
         if res == 0:
             return res
 
-        # hg-0.9.1 and earlier says this
-        e1 = ("abort: clone by revision not supported yet for "
-              "remote repositories")
-        # hg-0.9.2 and later say this when the other end is too old
-        e2 = ("abort: src repository does not support revision lookup "
-              "and so doesn't support clone by revision")
+        errmsgs = [
+            # hg-0.6 didn't even have the 'clone' command
+            # hg-0.7
+            "hg clone: option --rev not recognized",
+            # hg-0.8, 0.8.1, 0.9
+            "abort: clone -r not supported yet for remote repositories.",
+            # hg-0.9.1
+            ("abort: clone by revision not supported yet for "
+             "remote repositories"),
+            # hg-0.9.2 and later say this when the other end is too old
+            ("abort: src repository does not support revision lookup "
+             "and so doesn't support clone by revision"),
+            ]
 
-        # the error message might be in stdout if we're using PTYs, which
-        # merge stdout and stderr.
-        allout = c.stdout + c.stderr
-        if not (e1 in allout or e2 in allout):
-            return # must be some other error
+        fallback_is_useful = False
+        for errmsg in errmsgs:
+            # the error message might be in stdout if we're using PTYs, which
+            # merge stdout and stderr.
+            if errmsg in c.stdout or errmsg in c.stderr:
+                fallback_is_useful = True
+                break
+        if not fallback_is_useful:
+            return res # must be some other error
 
         # ok, do the fallback
         newdir = os.path.join(self.builder.basedir, self.srcdir)
