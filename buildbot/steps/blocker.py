@@ -32,7 +32,8 @@ class Blocker(BuildStep):
             raise ValueError("upstreamSteps must be a non-empty list")
 
         # "full names" of the upstream steps (for status reporting)
-        self._fullnames = ["%s.%s" % step for step in self.upstreamSteps]
+        self._fullnames = ["%s:%s," % step for step in self.upstreamSteps]
+        self._fullnames[-1] = self._fullnames[-1][:-1] # strip last comma
 
     def _getStepStatus(self, botmaster, builderName, stepName):
         try:
@@ -63,7 +64,7 @@ class Blocker(BuildStep):
         return build.build_status.steps[index]
 
     def start(self):
-        log.msg("Blocker.start: searching for steps %r" % self._fullnames)
+        log.msg("Blocker.start: searching for steps %s" % "".join(self._fullnames))
         self.step_status.setText(["blocking on"] + self._fullnames)
 
         botmaster = self.build.slavebuilder.slave.parent
@@ -122,5 +123,7 @@ class Blocker(BuildStep):
         log.msg("Blocker.finished: overallCode=%r, overallText=%r"
                 % (overallCode, overallText))
 
-        self.step_status.setText(self._fullnames + [builder.Results[overallCode]])
+        fullnames = self._fullnames[:]
+        fullnames[-1] += ":"
+        self.step_status.setText(fullnames + [builder.Results[overallCode]])
         BuildStep.finished(self, (overallCode, overallText))
