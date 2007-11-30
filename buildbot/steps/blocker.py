@@ -31,37 +31,52 @@ class Blocker(BuildStep):
         if len(self.upstreamSteps) < 1:
             raise ValueError("upstreamSteps must be a non-empty list")
 
+        # what to do if an upstream builder is idle?
+        self.idlePolicy = "error"       # blow up
+        #self.idlePolicy = "ignore"      # go right ahead (assume it has already run)
+        #self.idlePolicy = "block"       # wait until it has a build running
+
         # "full names" of the upstream steps (for status reporting)
         self._fullnames = ["%s:%s," % step for step in self.upstreamSteps]
         self._fullnames[-1] = self._fullnames[-1][:-1] # strip last comma
 
     def _getStepStatus(self, botmaster, builderName, stepName):
         try:
+            # Get the buildbot.process.builder.Builder object for the
+            # requested upstream builder: this is a long-lived object
+            # that exists and has useful info in it whether or not a
+            # build is currently running under it.
             builder = botmaster.builders[builderName]
         except KeyError:
             raise BadStepError(
                 "no builder named %r" % builderName)
-        if not builder.building:
-            raise BadStepError(
-                "no builds building in builder %r" % builderName)
+
+        # The Builder's BuilderStatus object is where we can find out
+        # what's going on right now ... like, say, the list of
+        # BuildStatus objects representing any builds running now.
+        current = builder.builder_status.getCurrentBuilds()
+
+        if not current:
+            msg = "no builds building in builder %r" % builderName
+            if self.idlePolicy == "error":
+                raise BadStepError(msg)
+            elif self.idlePolicy == "ignore":
+                # don't hang around waiting (assume the build has finished)
+                log.msg("Blocker: " + msg + ": skipping it")
+                return None
+            elif self.idlePolicy == "block":
+                raise RuntimeError("not implemented yet")
 
         # XXX what if there is more than one build a-building?
-        build = builder.building[0]
-        log.msg("Blocker.start: found builder=%r, build=%r" % (builder, build))
+        build_status = current[0]
+        log.msg("Blocker.start: found builder=%r, build_status=%r" % (builder, build_status))
 
         index = None
-        for (idx, factory) in enumerate(build.stepFactories):
-            name = factory[1].get('name') # not all steps have a name!
-            if name is not None and name == stepName:
-                index = idx
-                break
-        if index is None:
-            raise BadStepError(
-                "builder %r has no step named %r" % (builderName, stepName))
-        log.msg("Blocker.start: step %r is at index %d"
-                % (stepName, index))
-
-        return build.build_status.steps[index]
+        for step_status in build_status.getSteps():
+            if step_status.name == stepName:
+                return step_status
+        raise BadStepError(
+            "builder %r has no step named %r" % (builderName, stepName))
 
     def start(self):
         log.msg("Blocker.start: searching for steps %s" % "".join(self._fullnames))
@@ -72,10 +87,13 @@ class Blocker(BuildStep):
         errors = []                     # list of strings
         for (builderName, stepName) in self.upstreamSteps:
             try:
-                stepStatusList.append(
-                    self._getStepStatus(botmaster, builderName, stepName))
+                stepStatus = self._getStepStatus(botmaster, builderName, stepName)
             except BadStepError, err:
                 errors.append(err.message)
+            else:
+                if stepStatus is not None:
+                    stepStatusList.append(stepStatus)
+
         if len(errors) == 1:
             raise BadStepError(errors[0])
         elif len(errors) > 1:
