@@ -10,8 +10,7 @@ class Blocker(BuildStep):
                          identifying the other build steps that must
                          complete in order to unblock this Blocker.
     """
-    parms = ['upstreamSteps',
-            ]
+    parms = BuildStep.parms + ['upstreamSteps']
 
     flunkOnFailure = True               # override BuildStep's default
     upstreamSteps = None
