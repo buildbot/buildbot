@@ -2,6 +2,15 @@ from twisted.python import log
 from twisted.internet import defer
 from buildbot.process.buildstep import BuildStep
 
+class BadStepError(Exception):
+    """Raised by Blocker when it is passed an upstream step that cannot
+    be found or is in a bad state."""
+    def __init__(self, message):
+        self.message = message
+
+    def __str__(self):
+        return self.message
+
 class Blocker(BuildStep):
     """
     Build step that blocks until at least one other step finishes.
@@ -26,25 +35,28 @@ class Blocker(BuildStep):
         self._fullnames = ["%s.%s" % step for step in self.upstreamSteps]
 
     def _getStepStatus(self, botmaster, builderName, stepName):
-        builder = botmaster.builders[builderName]
-        assert builder.building, \
-               "no builds building in builder %r" % builderName
-        build = builder.building[0]   # buildbot.process.base.Build
-        log.msg("Blocker.start: found builder=%r, build=%r"
-                % (builder, build))
+        try:
+            builder = botmaster.builders[builderName]
+        except KeyError:
+            raise BadStepError(
+                "no builder named %r" % builderName)
+        if not builder.building:
+            raise BadStepError(
+                "no builds building in builder %r" % builderName)
 
-        #log.msg("Blocker.start: searching %d step factories for build step %r"
-        #        % (len(build.stepFactories), stepName))
+        # XXX what if there is more than one build a-building?
+        build = builder.building[0]
+        log.msg("Blocker.start: found builder=%r, build=%r" % (builder, build))
+
         index = None
         for (idx, factory) in enumerate(build.stepFactories):
-            #log.msg("Blocker.start: idx=%d, factory=%r" % (idx, factory))
             name = factory[1].get('name') # not all steps have a name!
             if name is not None and name == stepName:
                 index = idx
                 break
         if index is None:
-            raise RuntimeError("no step named %r found in builder %r"
-                               % (stepName, builderName))
+            raise BadStepError(
+                "builder %r has no step named %r" % (builderName, stepName))
         log.msg("Blocker.start: step %r is at index %d"
                 % (stepName, index))
 
@@ -55,9 +67,21 @@ class Blocker(BuildStep):
         self.step_status.setText(["blocking on"] + self._fullnames)
 
         botmaster = self.build.slavebuilder.slave.parent
-        deferreds = []
+        stepStatusList = []             # list of BuildStepStatus objects
+        errors = []                     # list of strings
         for (builderName, stepName) in self.upstreamSteps:
-            stepStatus = self._getStepStatus(botmaster, builderName, stepName)
+            try:
+                stepStatusList.append(
+                    self._getStepStatus(botmaster, builderName, stepName))
+            except BadStepError, err:
+                errors.append(err.message)
+        if len(errors) == 1:
+            raise BadStepError(errors[0])
+        elif len(errors) > 1:
+            raise BadStepError("multiple errors:\n" + "\n".join(errors))
+
+        deferreds = []
+        for stepStatus in stepStatusList:
             deferreds.append(stepStatus.waitUntilFinished())
 
         # N.B. DeferredList has nifty options that we could use here:
