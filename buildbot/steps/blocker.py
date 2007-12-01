@@ -1,6 +1,7 @@
-from twisted.python import log
+from twisted.python import log, failure
 from twisted.internet import defer
 from buildbot.process.buildstep import BuildStep
+from buildbot.status import builder
 
 class BadStepError(Exception):
     """Raised by Blocker when it is passed an upstream step that cannot
@@ -32,15 +33,26 @@ class Blocker(BuildStep):
             raise ValueError("upstreamSteps must be a non-empty list")
 
         # what to do if an upstream builder is idle?
-        self.idlePolicy = "error"       # blow up
+        #self.idlePolicy = "error"       # blow up
         #self.idlePolicy = "ignore"      # go right ahead (assume it has already run)
-        #self.idlePolicy = "block"       # wait until it has a build running
+        self.idlePolicy = "block"       # wait until it has a build running
 
         # "full names" of the upstream steps (for status reporting)
         self._fullnames = ["%s:%s," % step for step in self.upstreamSteps]
         self._fullnames[-1] = self._fullnames[-1][:-1] # strip last comma
 
-    def _getStepStatus(self, botmaster, builderName, stepName):
+        # set of build steps (as BuildStepStatus objects) that we're
+        # waiting on
+        self._blocking_steps = set()
+
+        # set of builders (as BuilderStatus objects) that have to start
+        # a Build before we can block on one of their BuildSteps
+        self._blocking_builders = set()
+
+        self._overall_code = builder.SUCCESS # assume the best
+        self._overall_text = []
+
+    def _getBuildStatus(self, botmaster, builderName):
         try:
             # Get the buildbot.process.builder.Builder object for the
             # requested upstream builder: this is a long-lived object
@@ -54,7 +66,8 @@ class Blocker(BuildStep):
         # The Builder's BuilderStatus object is where we can find out
         # what's going on right now ... like, say, the list of
         # BuildStatus objects representing any builds running now.
-        current = builder.builder_status.getCurrentBuilds()
+        builderStatus = builder.builder_status
+        current = builderStatus.getCurrentBuilds()
 
         if not current:
             msg = "no builds building in builder %r" % builderName
@@ -65,83 +78,141 @@ class Blocker(BuildStep):
                 log.msg("Blocker: " + msg + ": skipping it")
                 return None
             elif self.idlePolicy == "block":
-                raise RuntimeError("not implemented yet")
+                if builderStatus not in self._blocking_builders:
+                    self._blocking_builders.add(builderStatus)
+                return None
+
+            # N.B. when it comes time to look for last finished build,
+            # e.g. to see if it finished less than N sec ago,
+            # builderStatus.getLastFinishedBuild() could come
+            # in handy
 
         # XXX what if there is more than one build a-building?
-        build_status = current[0]
-        log.msg("Blocker.start: found builder=%r, build_status=%r" % (builder, build_status))
+        buildStatus = current[0]
+        log.msg("Blocker.start: found builder=%r, buildStatus=%r"
+                % (builder, buildStatus))
+        return buildStatus
 
-        index = None
-        for step_status in build_status.getSteps():
+    def _getStepStatus(self, buildStatus, stepName):
+        for step_status in buildStatus.getSteps():
             if step_status.name == stepName:
                 return step_status
         raise BadStepError(
-            "builder %r has no step named %r" % (builderName, stepName))
+            "builder %r has no step named %r"
+            % (buildStatus.builder.name, stepName))
 
     def start(self):
         log.msg("Blocker.start: searching for steps %s" % "".join(self._fullnames))
         self.step_status.setText(["blocking on"] + self._fullnames)
 
         botmaster = self.build.slavebuilder.slave.parent
-        stepStatusList = []             # list of BuildStepStatus objects
+        stepStatuses = []               # list of BuildStepStatus objects
         errors = []                     # list of strings
         for (builderName, stepName) in self.upstreamSteps:
+            buildStatus = stepStatus = None
             try:
-                stepStatus = self._getStepStatus(botmaster, builderName, stepName)
+                buildStatus = self._getBuildStatus(botmaster, builderName)
+                if buildStatus is not None:
+                    stepStatus = self._getStepStatus(buildStatus, stepName)
             except BadStepError, err:
                 errors.append(err.message)
-            else:
-                if stepStatus is not None:
-                    stepStatusList.append(stepStatus)
+            if stepStatus is not None:
+                stepStatuses.append(stepStatus)
 
         if len(errors) == 1:
             raise BadStepError(errors[0])
         elif len(errors) > 1:
             raise BadStepError("multiple errors:\n" + "\n".join(errors))
 
-        deferreds = []
-        for stepStatus in stepStatusList:
-            deferreds.append(stepStatus.waitUntilFinished())
+        for stepStatus in stepStatuses:
+            # Register with each blocking BuildStepStatus that we
+            # want a callback when the step finishes.
+            self._addBlockingStep(stepStatus)
 
-        # N.B. DeferredList has nifty options that we could use here:
-        #  - fireOnOneCallback=True would mean "block until *any* upstream step
-        #    completes", i.e. changes Blocker from "and" to "or" semantics
-        #  - fireOnOneErrback=True would let us fail early if any of the upstream
-        #    steps errback (i.e. throw an exception -- not for build failure)
-        deferredList = defer.DeferredList(deferreds)
-        deferredList.addCallback(self.finished)
+        log.msg("Blocker: will block on %d steps: %r"
+                % (len(self._blocking_steps), self._blocking_steps))
+        if self._blocking_builders:
+            log.msg("Blocker: will also block on %d builders starting a build: %r"
+                    % (len(self._blocking_builders), self._blocking_builders))
 
-    def finished(self, resultList):
-        from buildbot.status import builder
+        # Subscribe to each builder that we're waiting on to start.
+        for bs in self._blocking_builders:
+            bs.subscribe(BuilderStatusReceiver(self, bs))
 
-        log.msg("Blocker.finished: resultList=%r" % resultList)
-        overallCode = builder.SUCCESS
-        overallText = []
+    def _addBlockingStep(self, stepStatus):
+        self._blocking_steps.add(stepStatus)
+        d = stepStatus.waitUntilFinished()
+        d.addCallback(self._upstreamStepFinished)
 
-        # Compute an overall status code.  This is rather arbitrary but
-        # it seems to work: if all upstream steps succeeded, the Blocker
-        # succeeds; otherwise, the status of the blocker is the status
-        # of the first non-SUCCESS upstream step.
-        for (success, results) in resultList:
-            # 'success' here is in the Deferred sense, not the Buildbot
-            # sense: ie. it's only False if the upstream BuildStep threw
-            # an exception
-            if not success:
-                overallCode = builder.EXCEPTION
-                overallText.append("exception")
-            else:
-                (code, text) = results.getResults()
-                log.msg("Blocker.finished: results=%r, code=%r, text=%r, overallCode=%r"
-                        % (results, code, text, overallCode))
+    def _upstreamStepFinished(self, results):
+        assert isinstance(results, builder.BuildStepStatus)
+        log.msg("Blocker: build step %r:%r finished; results=%r"
+                % (results.getBuild().builder.getName(),
+                   results.getName(),
+                   results.getResults()))
 
-                if code != builder.SUCCESS and overallCode == builder.SUCCESS:
-                    overallCode = code
-                overallText.extend(text)
+        (code, text) = results.getResults()
+        if code != builder.SUCCESS and self._overall_code == builder.SUCCESS:
+            # first non-SUCCESS result wins
+            self._overall_code = code
+        self._overall_text.extend(text)
 
-        log.msg("Blocker.finished: overallCode=%r, overallText=%r"
-                % (overallCode, overallText))
+        self._blocking_steps.remove(results)
+        self._checkFinished()
 
-        fullnames = self._fullnames[:]
-        fullnames[-1] += ":"
-        self.step_status.setText(fullnames + [builder.Results[overallCode]])
-        BuildStep.finished(self, (overallCode, overallText))
+    def _upstreamBuildStarted(self, builderStatus, receiver):
+        assert isinstance(builderStatus, builder.BuilderStatus)
+        builderStatus.unsubscribe(receiver)
+        buildStatus = builderStatus.getCurrentBuilds()[0]
+        log.msg("Blocker: builder %r (%r) started a build; buildStatus=%r"
+                % (builderStatus, builderStatus.getName(), buildStatus))
+
+        for (builderName, stepName) in self.upstreamSteps:
+            if builderName == builderStatus.getName():
+                try:
+                    stepStatus = self._getStepStatus(buildStatus, stepName)
+                except BadStepError, err:
+                    self.failed(failure.Failure())
+                    #log.err()
+                    #self._overall_code = builder.EXCEPTION
+                    #self._overall_text.append(str(err))
+                else:
+                    self._addBlockingStep(stepStatus)
+
+        self._blocking_builders.remove(builderStatus)
+        self._checkFinished()
+
+    def _checkFinished(self):
+        if self.step_status.isFinished():
+            # this can happen if _upstreamBuildStarted() catches BadStepError
+            # and fails the step
+            log.msg("Blocker._checkFinished: already finished, so nothing to do here")
+            return
+
+        log.msg("Blocker._checkFinished: _blocking_steps=%r, _blocking_builders=%r"
+                % (self._blocking_steps, self._blocking_builders))
+
+        if not self._blocking_steps and not self._blocking_builders:
+            fullnames = self._fullnames[:]
+            fullnames[-1] += ":"
+            self.step_status.setText(fullnames + [builder.Results[self._overall_code]])
+            self.finished((self._overall_code, self._overall_text))
+
+class BuilderStatusReceiver:
+    def __init__(self, blocker, builderStatus):
+        # the Blocker step that wants to find out when a Builder starts
+        # a Build
+        self.blocker = blocker
+        self.builderStatus = builderStatus
+
+    def builderChangedState(self, *args):
+        pass
+
+    def buildStarted(self, name, buildStatus):
+        log.msg("BuilderStatusReceiver: "
+                "apparently, builder %r has started build %r"
+                % (name, buildStatus))
+        self.blocker._upstreamBuildStarted(self.builderStatus, self)
+
+    def buildFinished(self, *args):
+        pass
