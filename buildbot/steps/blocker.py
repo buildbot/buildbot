@@ -19,11 +19,26 @@ class Blocker(BuildStep):
     @ivar upstreamSteps: a non-empty list of (builderName, stepName) tuples
                          identifying the other build steps that must
                          complete in order to unblock this Blocker.
+    @ivar idlePolicy: string: what to do if one of the upstream builders is
+                      idle when this Blocker starts; one of:
+                        \"error\": just blow up (the Blocker will fail with
+                          status EXCEPTION)
+                        \"ignore\": carry on as if the referenced build step
+                          was not mentioned (or is already complete)
+                        \"block\": block until the referenced builder starts
+                          a build, and then block until the referenced build
+                          step in that build finishes
     """
-    parms = BuildStep.parms + ['upstreamSteps']
+    parms = (BuildStep.parms +
+             ['upstreamSteps',
+              'idlePolicy',
+             ])
 
     flunkOnFailure = True               # override BuildStep's default
     upstreamSteps = None
+    idlePolicy = "error"
+
+    VALID_IDLE_POLICIES = ("error", "ignore", "block")
 
     def __init__(self, **kwargs):
         BuildStep.__init__(self, **kwargs)
@@ -31,11 +46,11 @@ class Blocker(BuildStep):
             raise ValueError("you must supply upstreamSteps")
         if len(self.upstreamSteps) < 1:
             raise ValueError("upstreamSteps must be a non-empty list")
-
-        # what to do if an upstream builder is idle?
-        #self.idlePolicy = "error"       # blow up
-        #self.idlePolicy = "ignore"      # go right ahead (assume it has already run)
-        self.idlePolicy = "block"       # wait until it has a build running
+        if self.idlePolicy not in self.VALID_IDLE_POLICIES:
+            raise ValueError(
+                "invalid value for idlePolicy: %r (must be one of %s)"
+                % (self.idlePolicy,
+                   ", ".join(map(repr, self.VALID_IDLE_POLICIES))))
 
         # "full names" of the upstream steps (for status reporting)
         self._fullnames = ["%s:%s," % step for step in self.upstreamSteps]
@@ -70,7 +85,7 @@ class Blocker(BuildStep):
         current = builderStatus.getCurrentBuilds()
 
         if not current:
-            msg = "no builds building in builder %r" % builderName
+            msg = "builder %r is idle (no builds a-building)" % builderName
             if self.idlePolicy == "error":
                 raise BadStepError(msg)
             elif self.idlePolicy == "ignore":
@@ -78,8 +93,8 @@ class Blocker(BuildStep):
                 log.msg("Blocker: " + msg + ": skipping it")
                 return None
             elif self.idlePolicy == "block":
-                if builderStatus not in self._blocking_builders:
-                    self._blocking_builders.add(builderStatus)
+                log.msg("Blocker: " + msg + ": will block until it starts a build")
+                self._blocking_builders.add(builderStatus)
                 return None
 
             # N.B. when it comes time to look for last finished build,
