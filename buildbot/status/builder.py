@@ -1276,8 +1276,8 @@ class BuilderStatus(styles.Versioned):
     I am responsible for maintaining the list of historic Events and Builds,
     pruning old ones, and loading them from / saving them to disk.
 
-    I live in the buildbot.process.base.Builder object, in the .statusbag
-    attribute.
+    I live in the buildbot.process.base.Builder object, in the
+    .builder_status attribute.
 
     @type  category: string
     @ivar  category: user-defined category this builder belongs to; can be

@@ -130,7 +130,7 @@ class BuildRequest:
 
 
 class Build:
-    """I represent a single build by a single bot. Specialized Builders can
+    """I represent a single build by a single slave. Specialized Builders can
     use subclasses of Build to hold status information unique to those build
     processes.
 
@@ -147,7 +147,7 @@ class Build:
     I can be used by a factory by setting buildClass on
     L{buildbot.process.factory.BuildFactory}
 
-    @ivar request: the L{BuildRequest} that triggered me
+    @ivar requests: the list of L{BuildRequest}s that triggered me
     @ivar build_status: the L{buildbot.status.builder.BuildStatus} that
                         collects our status
     """

@@ -1,3 +1,9 @@
+2007-11-30  Brian Warner  <warner@lothar.com>
+
+	* buildbot/status/builder.py (BuilderStatus): small docs patches
+	from Greg Ward.. thanks!
+	* buildbot/process/base.py (Build): same
+
 2007-11-29  Brian Warner  <warner@lothar.com>
 
 	* buildbot/slave/commands.py (Mercurial._maybeFallback): add an
