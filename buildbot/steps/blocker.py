@@ -1,5 +1,6 @@
 from twisted.python import log, failure
-from twisted.internet import defer
+from twisted.internet import defer, reactor
+
 from buildbot.process.buildstep import BuildStep
 from buildbot.status import builder
 
@@ -28,15 +29,19 @@ class Blocker(BuildStep):
                         \"block\": block until the referenced builder starts
                           a build, and then block until the referenced build
                           step in that build finishes
+    @ivar timeout: int: how long to block, in seconds, before giving up and
+                   failing (default: None, meaning block forever)
     """
     parms = (BuildStep.parms +
              ['upstreamSteps',
               'idlePolicy',
+              'timeout',
              ])
 
     flunkOnFailure = True               # override BuildStep's default
     upstreamSteps = None
     idlePolicy = "error"
+    timeout = None
 
     VALID_IDLE_POLICIES = ("error", "ignore", "block")
 
@@ -66,6 +71,8 @@ class Blocker(BuildStep):
 
         self._overall_code = builder.SUCCESS # assume the best
         self._overall_text = []
+
+        self._timer = None              # object returned by reactor.callLater()
 
     def _getBuildStatus(self, botmaster, builderName):
         try:
@@ -120,6 +127,11 @@ class Blocker(BuildStep):
         log.msg("Blocker.start: searching for steps %s" % "".join(self._fullnames))
         self.step_status.setText(["blocking on"] + self._fullnames)
 
+        log.msg("Blocker.start: self.timeout=%r" % self.timeout)
+        if self.timeout is not None:
+            self._timer = reactor.callLater(self.timeout, self._timeoutExpired)
+        log.msg("Blocker.start: self._timer=%r" % self._timer)
+
         botmaster = self.build.slavebuilder.slave.parent
         stepStatuses = []               # list of BuildStepStatus objects
         errors = []                     # list of strings
@@ -158,6 +170,12 @@ class Blocker(BuildStep):
         self._blocking_steps.add(stepStatus)
         d = stepStatus.waitUntilFinished()
         d.addCallback(self._upstreamStepFinished)
+
+    def _timeoutExpired(self):
+        log.msg("Blocker: timeout (%.1f sec) expired" % self.timeout)
+        self.step_status.setColor("red")
+        self.step_status.setText(["timed out", "(%.1f sec)" % self.timeout])
+        self.finished(builder.FAILURE)
 
     def _upstreamStepFinished(self, results):
         assert isinstance(results, builder.BuildStepStatus)
@@ -208,6 +226,9 @@ class Blocker(BuildStep):
                 % (self._blocking_steps, self._blocking_builders))
 
         if not self._blocking_steps and not self._blocking_builders:
+            if self.timeout:
+                self._timer.cancel()
+
             fullnames = self._fullnames[:]
             fullnames[-1] += ":"
             self.step_status.setText(fullnames + [builder.Results[self._overall_code]])
