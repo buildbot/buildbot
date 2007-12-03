@@ -165,17 +165,21 @@ class Blocker(BuildStep):
             except BadStepError, err:
                 errors.append(err.message)
             if stepStatus is not None:
-                stepStatuses.append(stepStatus)
+                # Make sure newly-discovered blocking steps are all
+                # added to _blocking_steps before we subscribe to their
+                # "finish" events!
+                self._blocking_steps.add(stepStatus)
 
         if len(errors) == 1:
             raise BadStepError(errors[0])
         elif len(errors) > 1:
             raise BadStepError("multiple errors:\n" + "\n".join(errors))
 
-        for stepStatus in stepStatuses:
-            # Register with each blocking BuildStepStatus that we
-            # want a callback when the step finishes.
-            self._addBlockingStep(stepStatus)
+        # Now we can register with each blocking step (BuildStepStatus
+        # objects, actually) that we want a callback when the step
+        # finishes.
+        for stepStatus in self._blocking_steps.copy():
+            self._awaitStepFinished(stepStatus)
 
         log.msg("Blocker: will block on %d steps: %r"
                 % (len(self._blocking_steps), self._blocking_steps))
@@ -187,8 +191,7 @@ class Blocker(BuildStep):
         for bs in self._blocking_builders:
             bs.subscribe(BuilderStatusReceiver(self, bs))
 
-    def _addBlockingStep(self, stepStatus):
-        self._blocking_steps.add(stepStatus)
+    def _awaitStepFinished(self, stepStatus):
         d = stepStatus.waitUntilFinished()
         d.addCallback(self._upstreamStepFinished)
 
@@ -221,6 +224,10 @@ class Blocker(BuildStep):
         log.msg("Blocker: builder %r (%r) started a build; buildStatus=%r"
                 % (builderStatus, builderStatus.getName(), buildStatus))
 
+        # Need to accumulate newly-discovered steps separately, so we
+        # can add them to _blocking_steps en masse before subscribing to
+        # their "finish" events.
+        new_blocking_steps = []
         for (builderName, stepName) in self.upstreamSteps:
             if builderName == builderStatus.getName():
                 try:
@@ -231,7 +238,11 @@ class Blocker(BuildStep):
                     #self._overall_code = builder.EXCEPTION
                     #self._overall_text.append(str(err))
                 else:
-                    self._addBlockingStep(stepStatus)
+                    new_blocking_steps.append(stepStatus)
+
+        self._blocking_steps.update(new_blocking_steps)
+        for stepStatus in new_blocking_steps:
+            self._awaitStepFinished(stepStatus)
 
         self._blocking_builders.remove(builderStatus)
         self._checkFinished()
