@@ -57,10 +57,6 @@ class Blocker(BuildStep):
                 % (self.idlePolicy,
                    ", ".join(map(repr, self.VALID_IDLE_POLICIES))))
 
-        # "full names" of the upstream steps (for status reporting)
-        self._fullnames = ["%s:%s," % step for step in self.upstreamSteps]
-        self._fullnames[-1] = self._fullnames[-1][:-1] # strip last comma
-
         # set of build steps (as BuildStepStatus objects) that we're
         # waiting on
         self._blocking_steps = set()
@@ -123,9 +119,34 @@ class Blocker(BuildStep):
             "builder %r has no step named %r"
             % (buildStatus.builder.name, stepName))
 
+    def _getFullnames(self):
+        if len(self.upstreamSteps) == 1:
+            fullnames = ["(%s:%s)" % self.upstreamSteps[0]]
+        else:
+            fullnames = []
+            fullnames.append("(%s:%s," % self.upstreamSteps[0])
+            fullnames.extend(["%s:%s," % pair for pair in self.upstreamSteps[1:-1]])
+            fullnames.append("%s:%s)" % self.upstreamSteps[-1])
+        return fullnames
+
+    def _getBlockingStatusText(self):
+        return [self.name+":", "blocking on"] + self._getFullnames()
+
+    def _getFinishStatusText(self, code, elapsed):
+        meaning = builder.Results[code]
+        text = [self.name+":",
+                "upstream %s" % meaning,
+                "after %.1f sec" % elapsed]
+        if code != builder.SUCCESS:
+            text += self._getFullnames()
+        return text
+
+    def _getTimeoutStatusText(self):
+        return [self.name+":", "timed out", "(%.1f sec)" % self.timeout]
+
     def start(self):
-        log.msg("Blocker.start: searching for steps %s" % "".join(self._fullnames))
-        self.step_status.setText(["blocking on"] + self._fullnames)
+        log.msg("Blocker.start: searching for steps %s" % "".join(self._getFullnames()))
+        self.step_status.setText(self._getBlockingStatusText())
 
         log.msg("Blocker.start: self.timeout=%r" % self.timeout)
         if self.timeout is not None:
@@ -174,7 +195,7 @@ class Blocker(BuildStep):
     def _timeoutExpired(self):
         log.msg("Blocker: timeout (%.1f sec) expired" % self.timeout)
         self.step_status.setColor("red")
-        self.step_status.setText(["timed out", "(%.1f sec)" % self.timeout])
+        self.step_status.setText(self._getTimeoutStatusText())
         self.finished(builder.FAILURE)
 
     def _upstreamStepFinished(self, results):
@@ -229,10 +250,10 @@ class Blocker(BuildStep):
             if self.timeout:
                 self._timer.cancel()
 
-            fullnames = self._fullnames[:]
-            fullnames[-1] += ":"
-            self.step_status.setText(fullnames + [builder.Results[self._overall_code]])
             self.finished((self._overall_code, self._overall_text))
+            (start, finish) = self.step_status.getTimes()
+            self.step_status.setText(
+                self._getFinishStatusText(self._overall_code, finish - start))
 
 class BuilderStatusReceiver:
     def __init__(self, blocker, builderStatus):

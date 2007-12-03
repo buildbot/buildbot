@@ -2,8 +2,9 @@ from twisted.trial import unittest
 from twisted.internet import reactor, defer
 
 from buildbot.test.runutils import RunMixin
-from buildbot.sourcestamp import SourceStamp
 from buildbot.process.base import BuildRequest
+from buildbot.status import builder
+from buildbot.sourcestamp import SourceStamp
 from buildbot.steps import blocker
 
 class TestBlockerTrivial(unittest.TestCase):
@@ -47,8 +48,52 @@ class TestBlockerTrivial(unittest.TestCase):
         # builder name and step name do not matter to constructor
         bstep = blocker.Blocker(upstreamSteps=[("b1", "s1"), ("b1", "s3")])
 
-        # test construction of _fullnames
-        self.assertEqual(["b1:s1,", "b1:s3"], bstep._fullnames)
-
         # test validation of idlePolicy arg
         self.assertRaises(ValueError, blocker.Blocker, idlePolicy="foo")
+
+    def testFullnames(self):
+        bstep = blocker.Blocker(upstreamSteps=[("b1", "s1")])
+        self.assertEqual(["(b1:s1)"], bstep._getFullnames())
+
+        bstep = blocker.Blocker(upstreamSteps=[("b1", "s1"), ("b1", "s3")])
+        self.assertEqual(["(b1:s1,", "b1:s3)"], bstep._getFullnames())
+
+        bstep = blocker.Blocker(upstreamSteps=[("b1", "s1"), ("b1", "s3"), ("b2", "s1")])
+        self.assertEqual(["(b1:s1,", "b1:s3,", "b2:s1)"], bstep._getFullnames())
+
+
+    def testStatusText(self):
+        bstep = blocker.Blocker(
+            name="block-something",
+            upstreamSteps=([("builder1", "step1"), ("builder3", "step4")]),
+            )
+
+        # A Blocker can be in various states, each of which has a
+        # distinct status text:
+        #   1) blocking, ie. waiting for upstream builders/steps
+        #   2) successfully done (upstream steps all succeeded)
+        #   3) failed (at least upstream step failed)
+        #   4) timed out (waited too long)
+
+        self.assertEqual(["block-something:",
+                          "blocking on",
+                          "(builder1:step1,",
+                          "builder3:step4)"],
+                         bstep._getBlockingStatusText())
+        self.assertEqual(["block-something:",
+                          "upstream success",
+                          "after 4.3 sec"],
+                         bstep._getFinishStatusText(builder.SUCCESS, 4.3))
+        self.assertEqual(["block-something:",
+                          "upstream failure",
+                          "after 11.0 sec",
+                          "(builder1:step1,",
+                          "builder3:step4)"],
+                         bstep._getFinishStatusText(builder.FAILURE, 11.0))
+
+        bstep.timeout = 1.5
+        self.assertEqual(["block-something:",
+                          "timed out",
+                          "(1.5 sec)"],
+                         bstep._getTimeoutStatusText())
+
