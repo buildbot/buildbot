@@ -261,7 +261,8 @@ class Blocker(BuildStep):
             if self.timeout:
                 self._timer.cancel()
 
-            self.finished((self._overall_code, self._overall_text))
+            self.finished(self._overall_code)
+            self.step_status.setText2(self._overall_text)
             (start, finish) = self.step_status.getTimes()
             self.step_status.setText(
                 self._getFinishStatusText(self._overall_code, finish - start))
