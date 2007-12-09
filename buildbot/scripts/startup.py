@@ -105,8 +105,12 @@ def launch(config):
             argv.append("--reactor=win32")
         sys.argv = argv
 
-        # this is copied from bin/twistd. twisted-2.0.0 uses _twistw.
-        if platformType == "win32":
+        # this is copied from bin/twistd. twisted-2.0.0 through 2.4.0 use
+        # _twistw.run . Twisted-2.5.0 and later use twistd.run, even for
+        # windows.
+        from twisted import version
+        if (platformType == "win32"
+            and (version.major == 2 and version.minor < 5)):
             from twisted.scripts import _twistw
             run = _twistw.run
         else:

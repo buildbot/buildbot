@@ -1,3 +1,9 @@
+2007-12-08  Brian Warner  <warner@lothar.com>
+
+	* buildbot/scripts/startup.py (launch): twisted-2.5.0 and later
+	doesn't need twisted.scripts._twistw.run; instead, it uses
+	twisted.scripts.twistd.run on all platforms. Closes #53.
+
 2007-11-30  Brian Warner  <warner@lothar.com>
 
 	* buildbot/status/builder.py (BuilderStatus): small docs patches
