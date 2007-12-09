@@ -4205,15 +4205,18 @@ to replace %(slave)s with the slave name and %(builder)s with the
 builder name. The default is "buildbot_%(slave)s_%(build)s".
 @end table
 
+
 @node Git,  , P4, Source Checkout
 @subsubsection Git
 
 @cindex Git Checkout
 @bsindex buildbot.steps.source.Git
 
-
 The @code{Git} build step clones or updates a @uref{http://git.or.cz/,
-Git} repository and checks out the specified branch or revision.
+Git} repository and checks out the specified branch or revision. Note
+that the buildbot supports Git version 1.2.0 and later: earlier
+versions (such as the one shipped in Ubuntu 'Dapper') do not support
+the @command{git init} command that the buildbot uses.
 
 The Git step takes the following arguments:
 
@@ -4227,6 +4230,7 @@ does not provide one of its own. If this this parameter is not
 specified, and the Build does not provide a branch, the ``master''
 branch will be used.
 @end table
+
 
 @node ShellCommand, Simple ShellCommand Subclasses, Source Checkout, Build Steps
 @subsection ShellCommand
