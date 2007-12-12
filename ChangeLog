@@ -1,3 +1,9 @@
+2007-12-11  Brian Warner  <warner@lothar.com>
+
+	* buildbot/scripts/startup.py (launch): use twisted.__version__,
+	rather than twisted.version, since the latter didn't appear until
+	Twisted-2.4.0 . This unbreaks 'buildbot start' on older Twisteds.
+
 2007-12-08  Brian Warner  <warner@lothar.com>
 
 	* docs/buildbot.texinfo (Git): document the fact that we require
