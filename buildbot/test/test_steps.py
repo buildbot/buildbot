@@ -200,6 +200,36 @@ class Steps(unittest.TestCase):
         b = f.newBuild([req])
         #for s in b.steps: print s.name
 
+    def failUnlessClones(self, s1, attrnames):
+        f1 = s1.getStepFactory()
+        f,args = f1
+        s2 = f(**args)
+        for name in attrnames:
+            self.failUnlessEqual(getattr(s1, name), getattr(s2, name))
+
+    def clone(self, s1):
+        f1 = s1.getStepFactory()
+        f,args = f1
+        s2 = f(**args)
+        return s2
+
+    def testClone(self):
+        s1 = shell.ShellCommand(command=["make", "test"],
+                                timeout=1234,
+                                workdir="here",
+                                description="yo",
+                                descriptionDone="yoyo",
+                                env={'key': 'value'},
+                                want_stdout=False,
+                                want_stderr=False,
+                                logfiles={"name": "filename"},
+                               )
+        shellparms = (buildstep.BuildStep.parms +
+                      ("remote_kwargs description descriptionDone "
+                       "command logfiles").split() )
+        self.failUnlessClones(s1, shellparms)
+
+
     # test the various methods available to buildsteps
 
     def test_getProperty(self):

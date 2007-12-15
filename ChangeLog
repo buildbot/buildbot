@@ -1,3 +1,10 @@
+2007-12-14  Brian Warner  <warner@lothar.com>
+
+	* buildbot/steps/shell.py (ShellCommand.__init__): stash the
+	RemoteShellCommands args too, so things like 'workdir' and 'env'
+	and 'timeout' are preserved. This ought to fix #150.
+	* buildbot/test/test_steps.py (Steps.testClone): test it
+
 2007-12-11  Brian Warner  <warner@lothar.com>
 
 	* buildbot/scripts/startup.py (launch): use twisted.__version__,

@@ -116,6 +116,8 @@ class ShellCommand(LoggingBuildStep):
         # everything left over goes to the RemoteShellCommand
         kwargs['workdir'] = workdir # including a copy of 'workdir'
         self.remote_kwargs = kwargs
+        # we need to stash the RemoteShellCommand's args too
+        self.addFactoryArguments(**kwargs)
 
     def setDefaultWorkdir(self, workdir):
         rkw = self.remote_kwargs
