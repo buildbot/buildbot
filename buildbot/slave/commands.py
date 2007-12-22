@@ -222,6 +222,7 @@ class ShellCommand:
     notreally = False
     BACKUP_TIMEOUT = 5
     KILL = "KILL"
+    CHUNK_LIMIT = 128*1024
 
     def __init__(self, builder, command,
                  workdir, environ=None,
@@ -413,9 +414,17 @@ class ShellCommand:
             w.start()
 
 
+    def _chunkForSend(self, data):
+        # limit the chunks that we send over PB to 128k, since it has a
+        # hardwired string-size limit of 640k.
+        LIMIT = self.CHUNK_LIMIT
+        for i in range(0, len(data), LIMIT):
+            yield data[i:i+LIMIT]
+
     def addStdout(self, data):
         if self.sendStdout:
-            self.sendStatus({'stdout': data})
+            for chunk in self._chunkForSend(data):
+                self.sendStatus({'stdout': chunk})
         if self.keepStdout:
             self.stdout += data
         if self.timer:
@@ -423,14 +432,16 @@ class ShellCommand:
 
     def addStderr(self, data):
         if self.sendStderr:
-            self.sendStatus({'stderr': data})
+            for chunk in self._chunkForSend(data):
+                self.sendStatus({'stderr': chunk})
         if self.keepStderr:
             self.stderr += data
         if self.timer:
             self.timer.reset(self.timeout)
 
     def addLogfile(self, name, data):
-        self.sendStatus({'log': (name, data)})
+        for chunk in self._chunkForSend(data):
+            self.sendStatus({'log': (name, chunk)})
         if self.timer:
             self.timer.reset(self.timeout)
 

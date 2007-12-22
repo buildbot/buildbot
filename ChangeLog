@@ -1,3 +1,13 @@
+2007-12-22  Brian Warner  <warner@lothar.com>
+
+	* buildbot/slave/commands.py (ShellCommand._chunkForSend): don't
+	send more than 128kB of stdout/stderr/logfile text in a single PB
+	string, since PB has a hardwired limit of 640kB. This should fix
+	crashes that occur when the test process generates output very
+	very quickly. Patch by chops@demiurgestudios.com, thanks! I
+	haven't been able to reproduce this locally, but the potential bug
+	is clear. This should close #129.
+
 2007-12-21  Brian Warner  <warner@lothar.com>
 
 	* buildbot/scripts/startup.py (start): check to see if there's a
