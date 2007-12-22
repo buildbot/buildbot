@@ -1,7 +1,7 @@
 
 import os
 from twisted.python.failure import Failure
-from twisted.internet import task, defer, reactor
+from twisted.internet import defer, reactor, protocol, error
 from twisted.protocols.basic import LineOnlyReceiver
 
 class FakeTransport:
@@ -16,6 +16,13 @@ class ReconfigError(Exception):
 class BuildSlaveDetectedError(Exception):
     pass
 
+class TailProcess(protocol.ProcessProtocol):
+    def outReceived(self, data):
+        self.lw.dataReceived(data)
+    def errReceived(self, data):
+        print "ERR: '%s'" % (data,)
+
+
 class LogWatcher(LineOnlyReceiver):
     POLL_INTERVAL = 0.1
     TIMEOUT_DELAY = 10.0
@@ -25,8 +32,10 @@ class LogWatcher(LineOnlyReceiver):
         self.logfile = logfile
         self.in_reconfig = False
         self.transport = FakeTransport()
-        self.f = None
+        self.pp = TailProcess()
+        self.pp.lw = self
         self.processtype = "buildmaster"
+        self.timer = None
 
     def start(self):
         # return a Deferred that fires when the reconfig process has
@@ -34,29 +43,35 @@ class LogWatcher(LineOnlyReceiver):
         # been seen within 10 seconds, and with ReconfigError if the error
         # line was seen. If the logfile could not be opened, it errbacks with
         # an IOError.
+        self.p = reactor.spawnProcess(self.pp, "/usr/bin/tail",
+                                      ("tail", "-F", "-n", "0", self.logfile),
+                                      env=os.environ,
+                                      )
         self.running = True
         d = defer.maybeDeferred(self._start)
         return d
 
     def _start(self):
         self.d = defer.Deferred()
-        try:
-            self.f = open(self.logfile, "rb")
-            self.f.seek(0, 2) # start watching from the end
-        except IOError:
-            pass
-        reactor.callLater(self.TIMEOUT_DELAY, self.timeout)
-        self.poller = task.LoopingCall(self.poll)
-        self.poller.start(self.POLL_INTERVAL)
+        self.timer = reactor.callLater(self.TIMEOUT_DELAY, self.timeout)
         return self.d
 
     def timeout(self):
+        self.timer = None
         if self.processtype == "buildmaster":
-            self.d.errback(BuildmasterTimeoutError())
+            e = BuildmasterTimeoutError()
         else:
-            self.d.errback(BuildslaveTimeoutError())
+            e = BuildslaveTimeoutError()
+        self.finished(Failure(e))
 
     def finished(self, results):
+        try:
+            self.p.signalProcess("KILL")
+        except error.ProcessExitedAlready:
+            pass
+        if self.timer:
+            self.timer.cancel()
+            self.timer = None
         self.running = False
         self.in_reconfig = False
         self.d.callback(results)
@@ -80,16 +95,3 @@ class LogWatcher(LineOnlyReceiver):
             return self.finished(Failure(ReconfigError()))
         if "configuration update complete" in line:
             return self.finished("buildmaster")
-
-    def poll(self):
-        if not self.f:
-            try:
-                self.f = open(self.logfile, "rb")
-            except IOError:
-                return
-        while True:
-            data = self.f.read(1000)
-            if not data:
-                return
-            self.dataReceived(data)
-

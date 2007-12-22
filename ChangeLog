@@ -1,3 +1,13 @@
+2007-12-21  Brian Warner  <warner@lothar.com>
+
+	* buildbot/scripts/logwatcher.py (LogWatcher.start): rewrite to
+	spawn /usr/bin/tail to follow the target's twistd.log . It turns
+	out that OS-X file EOF semantics are different, and the naive
+	read-then-read-again approach I was using doesn't work (the first
+	EOF we hit is sticky). tail gets it right, so rely upon it instead
+	of reimplementing the wheel. This should make 'buildbot start'
+	correctly follow the logfile on OS-X, thus closing #141.
+
 2007-12-14  Brian Warner  <warner@lothar.com>
 
 	* buildbot/steps/shell.py (ShellCommand.__init__): stash the
