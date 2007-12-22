@@ -1,5 +1,9 @@
 2007-12-21  Brian Warner  <warner@lothar.com>
 
+	* buildbot/scripts/startup.py (start): check to see if there's a
+	buildbot.tac before doing anything else. This improves the error
+	message when you do 'buildbot start' in the wrong directory.
+
 	* buildbot/scripts/logwatcher.py (LogWatcher.start): rewrite to
 	spawn /usr/bin/tail to follow the target's twistd.log . It turns
 	out that OS-X file EOF semantics are different, and the naive

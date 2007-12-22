@@ -64,6 +64,12 @@ stop it, fix the config file, and restart.
 
 def start(config):
     os.chdir(config['basedir'])
+    if (not os.path.exists("buildbot.tac") and
+        not os.path.exists("Makefile.buildbot")):
+        print "This doesn't look like a buildbot base directory:"
+        print "No buildbot.tac or Makefile.buildbot file."
+        print "Giving up!"
+        sys.exit(1)
     if config['quiet']:
         return launch(config)
 
