@@ -4389,11 +4389,35 @@ but you can change this by providing a @code{command=} parameter.
 
 @bsindex buildbot.steps.shell.Compile
 
-This is meant to handle compiling or building a project written in C. The
-default command is @code{make all}. When the compile is finished, the
-log file is scanned for GCC error/warning messages and a summary log is
-created with any problems that were seen (TODO: the summary is not yet
-created).
+This is meant to handle compiling or building a project written in C.
+The default command is @code{make all}. When the compile is finished,
+the log file is scanned for GCC warning messages, a summary log is
+created with any problems that were seen, and the step is marked as
+WARNINGS if any were discovered. The number of warnings is stored in a
+Build Property named ``warnings-count'', which is accumulated over all
+Compile steps (so if two warnings are found in one step, and three are
+found in another step, the overall build will have a
+``warnings-count'' property of 5.
+
+The default regular expression used to detect a warning is
+@code{'.*warning[: ].*'} , which is fairly liberal and may cause
+false-positives. To use a different regexp, provide a
+@code{warningPattern=} argument, or use a subclass which sets the
+@code{warningPattern} attribute:
+
+@example
+f.addStep(Compile(command=["make", "test"],
+                  warningPattern="^Warning: "))
+@end example
+
+The @code{warningPattern=} can also be a pre-compiled python regexp
+object: this makes it possible to add flags like @code{re.I} (to use
+case-insensitive matching).
+
+(TODO: this step needs to be extended to look for GCC error messages
+as well, and collect them into a separate logfile, along with the
+source code filenames involved).
+
 
 @node Test, Build Properties, Compile, Simple ShellCommand Subclasses
 @subsubsection Test

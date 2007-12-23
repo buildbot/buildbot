@@ -262,7 +262,70 @@ class Configure(ShellCommand):
     descriptionDone = ["configure"]
     command = ["./configure"]
 
-class Compile(ShellCommand):
+class WarningCountingShellCommand(ShellCommand):
+    warnCount = 0
+    warningPattern = '.*warning[: ].*'
+
+    def __init__(self, **kwargs):
+        # See if we've been given a regular expression to use to match
+        # warnings. If not, use a default that assumes any line with "warning"
+        # present is a warning. This may lead to false positives in some cases.
+        wp = None
+        if kwargs.has_key('warningPattern'):
+            wp = kwargs['warningPattern']
+            del kwargs['warningPattern']
+            self.warningPattern = wp
+
+        # And upcall to let the base class do its work
+        ShellCommand.__init__(self, **kwargs)
+
+        if wp:
+            self.addFactoryArguments(warningPattern=wp)
+
+    def createSummary(self, log):
+        self.warnCount = 0
+
+        # Now compile a regular expression from whichever warning pattern we're
+        # using
+        if not self.warningPattern:
+            return
+
+        wre = self.warningPattern
+        if isinstance(wre, str):
+            wre = re.compile(wre)
+
+        # Check if each line in the output from this command matched our
+        # warnings regular expressions. If did, bump the warnings count and
+        # add the line to the collection of lines with warnings
+        warnings = []
+        # TODO: use log.readlines(), except we need to decide about stdout vs
+        # stderr
+        for line in log.getText().split("\n"):
+            if wre.match(line):
+                warnings.append(line)
+                self.warnCount += 1
+
+        # If there were any warnings, make the log if lines with warnings
+        # available
+        if self.warnCount:
+            self.addCompleteLog("warnings", "\n".join(warnings) + "\n")
+
+        try:
+            old_count = self.getProperty("warnings-count")
+        except KeyError:
+            old_count = 0
+        self.setProperty("warnings-count", old_count + self.warnCount)
+
+
+    def evaluateCommand(self, cmd):
+        if cmd.rc != 0:
+            return FAILURE
+        if self.warnCount:
+            return WARNINGS
+        return SUCCESS
+
+
+class Compile(WarningCountingShellCommand):
 
     name = "compile"
     haltOnFailure = 1
@@ -275,11 +338,12 @@ class Compile(ShellCommand):
     # traversed (assuming 'make' is being used)
 
     def createSummary(self, cmd):
-        # TODO: grep for the characteristic GCC warning/error lines and
+        # TODO: grep for the characteristic GCC error lines and
         # assemble them into a pair of buffers
+        WarningCountingShellCommand.createSummary(self, cmd)
         pass
 
-class Test(ShellCommand):
+class Test(WarningCountingShellCommand):
 
     name = "test"
     warnOnFailure = 1

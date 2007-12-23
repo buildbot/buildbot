@@ -24,7 +24,7 @@ from buildbot.process import buildstep, base, factory
 from buildbot.buildslave import BuildSlave
 from buildbot.steps import shell, source, python
 from buildbot.status import builder
-from buildbot.status.builder import SUCCESS, FAILURE
+from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE
 from buildbot.test.runutils import RunMixin, rmtree
 from buildbot.test.runutils import makeBuildStep, StepTester
 from buildbot.slave import commands, registry
@@ -522,3 +522,100 @@ buildbot/scripts/imaginary.py:18: 'from buildbot import *' used; unable to detec
         self.failUnless("import*=1" in desc)
         self.failIf("misc" in desc)
 
+
+class OrdinaryCompile(shell.Compile):
+    warningPattern = "ordinary line"
+
+class Warnings(StepTester, unittest.TestCase):
+    def testCompile1(self):
+        self.masterbase = "Warnings.testCompile1"
+        step = self.makeStep(shell.Compile)
+        output = \
+"""Compile started
+normal line
+warning: oh noes!
+ordinary line
+error (but we aren't looking for errors now, are we)
+line 23: warning: we are now on line 23
+ending line
+"""
+        log = step.addLog("stdio")
+        log.addStdout(output)
+        log.finish()
+        step.createSummary(log)
+        self.failUnlessEqual(step.getProperty("warnings-count"), 2)
+        logs = {}
+        for log in step.step_status.getLogs():
+            logs[log.getName()] = log
+        self.failUnless("warnings" in logs)
+        lines = logs["warnings"].readlines()
+        self.failUnlessEqual(len(lines), 2)
+        self.failUnlessEqual(lines[0], "warning: oh noes!\n")
+        self.failUnlessEqual(lines[1],
+                             "line 23: warning: we are now on line 23\n")
+
+        cmd = buildstep.RemoteCommand(None, {})
+        cmd.rc = 0
+        results = step.evaluateCommand(cmd)
+        self.failUnlessEqual(results, WARNINGS)
+
+    def testCompile2(self):
+        self.masterbase = "Warnings.testCompile2"
+        step = self.makeStep(shell.Compile, warningPattern="ordinary line")
+        output = \
+"""Compile started
+normal line
+warning: oh noes!
+ordinary line
+error (but we aren't looking for errors now, are we)
+line 23: warning: we are now on line 23
+ending line
+"""
+        log = step.addLog("stdio")
+        log.addStdout(output)
+        log.finish()
+        step.createSummary(log)
+        self.failUnlessEqual(step.getProperty("warnings-count"), 1)
+        logs = {}
+        for log in step.step_status.getLogs():
+            logs[log.getName()] = log
+        self.failUnless("warnings" in logs)
+        lines = logs["warnings"].readlines()
+        self.failUnlessEqual(len(lines), 1)
+        self.failUnlessEqual(lines[0], "ordinary line\n")
+
+        cmd = buildstep.RemoteCommand(None, {})
+        cmd.rc = 0
+        results = step.evaluateCommand(cmd)
+        self.failUnlessEqual(results, WARNINGS)
+
+    def testCompile3(self):
+        self.masterbase = "Warnings.testCompile3"
+        step = self.makeStep(OrdinaryCompile)
+        output = \
+"""Compile started
+normal line
+warning: oh noes!
+ordinary line
+error (but we aren't looking for errors now, are we)
+line 23: warning: we are now on line 23
+ending line
+"""
+        step.setProperty("warnings-count", 10)
+        log = step.addLog("stdio")
+        log.addStdout(output)
+        log.finish()
+        step.createSummary(log)
+        self.failUnlessEqual(step.getProperty("warnings-count"), 11)
+        logs = {}
+        for log in step.step_status.getLogs():
+            logs[log.getName()] = log
+        self.failUnless("warnings" in logs)
+        lines = logs["warnings"].readlines()
+        self.failUnlessEqual(len(lines), 1)
+        self.failUnlessEqual(lines[0], "ordinary line\n")
+
+        cmd = buildstep.RemoteCommand(None, {})
+        cmd.rc = 0
+        results = step.evaluateCommand(cmd)
+        self.failUnlessEqual(results, WARNINGS)

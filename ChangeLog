@@ -1,5 +1,17 @@
 2007-12-22  Brian Warner  <warner@lothar.com>
 
+	* buildbot/steps/shell.py (WarningCountingShellCommand): utility
+	subclass which uses a regular expression to count warning messages
+	in the output. This also puts warning messages in a new 'warnings'
+	logfile, sets the 'warnings-count' build property with the total
+	count, and marks the step results as WARNINGS if there are any
+	warnings. Thanks to Roch Gadsdon (rochg) for the patch. Closes
+	#74.
+	(Compile): derive from WarningCountingShellCommand
+	(Test): same
+	* docs/buildbot.texinfo (Compile): document it
+	* buildbot/test/test_steps.py (Warnings): test it
+
 	* buildbot/slave/commands.py (ShellCommand._chunkForSend): don't
 	send more than 128kB of stdout/stderr/logfile text in a single PB
 	string, since PB has a hardwired limit of 640kB. This should fix
