@@ -233,25 +233,26 @@ class ShellCommand(LoggingBuildStep):
 
 class TreeSize(ShellCommand):
     name = "treesize"
-    command = ["du", "-s", "."]
-    kb = None
+    command = ["du", "-s", "-k", "."]
+    kib = None
 
     def commandComplete(self, cmd):
-        out = cmd.log.getText()
+        out = cmd.logs['stdio'].getText()
         m = re.search(r'^(\d+)', out)
         if m:
-            self.kb = int(m.group(1))
+            self.kib = int(m.group(1))
+            self.setProperty("tree-size-KiB", self.kib)
 
     def evaluateCommand(self, cmd):
         if cmd.rc != 0:
             return FAILURE
-        if self.kb is None:
+        if self.kib is None:
             return WARNINGS # not sure how 'du' could fail, but whatever
         return SUCCESS
 
     def getText(self, cmd, results):
-        if self.kb is not None:
-            return ["treesize", "%d kb" % self.kb]
+        if self.kib is not None:
+            return ["treesize", "%d KiB" % self.kib]
         return ["treesize", "unknown"]
 
 class Configure(ShellCommand):

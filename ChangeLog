@@ -1,5 +1,13 @@
 2007-12-22  Brian Warner  <warner@lothar.com>
 
+	* buildbot/steps/shell.py (TreeSize): This never worked properly.
+	Fix it. Also, stash the tree size in a build property named
+	'tree-size-kb'. Note that this records size in KiB (1024 bytes),
+	not KB (1000 bytes), because that's what du will give us. This
+	closes #47.
+	* docs/buildbot.texinfo (TreeSize): document it
+	* buildbot/test/test_steps.py (TreeSize.testTreeSize): test it
+
 	* buildbot/steps/shell.py (WarningCountingShellCommand): utility
 	subclass which uses a regular expression to count warning messages
 	in the output. This also puts warning messages in a new 'warnings'

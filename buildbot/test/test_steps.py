@@ -619,3 +619,23 @@ ending line
         cmd.rc = 0
         results = step.evaluateCommand(cmd)
         self.failUnlessEqual(results, WARNINGS)
+
+
+class TreeSize(StepTester, unittest.TestCase):
+    def testTreeSize(self):
+        self.slavebase = "TreeSize.testTreeSize.slave"
+        self.masterbase = "TreeSize.testTreeSize.master"
+
+        sb = self.makeSlaveBuilder()
+        step = self.makeStep(shell.TreeSize)
+        d = self.runStep(step)
+        def _check(results):
+            self.failUnlessEqual(results, SUCCESS)
+            kib = step.getProperty("tree-size-KiB")
+            self.failUnless(isinstance(kib, int))
+            self.failUnless(kib < 100) # should be empty, I get '4'
+            s = step.step_status
+            self.failUnlessEqual(" ".join(s.getText()),
+                                 "treesize %d KiB" % kib)
+        d.addCallback(_check)
+        return d

@@ -203,6 +203,7 @@ Simple ShellCommand Subclasses
 * Configure::                   
 * Compile::                     
 * Test::                        
+* TreeSize::                    
 * Build Properties::            
 
 Python BuildSteps
@@ -4371,6 +4372,7 @@ file less verbose.
 * Configure::                   
 * Compile::                     
 * Test::                        
+* TreeSize::                    
 * Build Properties::            
 @end menu
 
@@ -4419,7 +4421,7 @@ as well, and collect them into a separate logfile, along with the
 source code filenames involved).
 
 
-@node Test, Build Properties, Compile, Simple ShellCommand Subclasses
+@node Test, TreeSize, Compile, Simple ShellCommand Subclasses
 @subsubsection Test
 
 @bsindex buildbot.steps.shell.Test
@@ -4427,9 +4429,18 @@ source code filenames involved).
 This is meant to handle unit tests. The default command is @code{make
 test}, and the @code{warnOnFailure} flag is set.
 
+@node TreeSize, Build Properties, Test, Simple ShellCommand Subclasses
+@subsubsection TreeSize
+
+@bsindex buildbot.steps.shell.TreeSize
+
+This is a simple command that uses the 'du' tool to measure the size
+of the code tree. It puts the size (as a count of 1024-byte blocks,
+aka 'KiB' or 'kibibytes') on the step's status text, and sets a build
+property named 'tree-size-KiB' with the same value.
 
 
-@node Build Properties,  , Test, Simple ShellCommand Subclasses
+@node Build Properties,  , TreeSize, Simple ShellCommand Subclasses
 @subsubsection Build Properties
 
 @cindex build properties
