@@ -340,7 +340,10 @@ class LocalWrapper:
         self.target = target
 
     def callRemote(self, name, *args, **kwargs):
-        d = defer.maybeDeferred(self._callRemote, name, *args, **kwargs)
+        # callRemote is not allowed to fire its Deferred in the same turn
+        d = defer.Deferred()
+        d.addCallback(self._callRemote, *args, **kwargs)
+        reactor.callLater(0, d.callback, name)
         return d
 
     def _callRemote(self, name, *args, **kwargs):

@@ -1,3 +1,15 @@
+2007-12-31  Brian Warner  <warner@lothar.com>
+
+	* buildbot/slave/commands.py (SlaveFileUploadCommand.start):
+	rewrite the main loop to avoid tail recursion, since Deferreds
+	don't optimize those out. Without this, at the end of the transfer
+	we'd hit a stack depth of about two or three frames per block
+	transferred, and for large transfers this would run into a "stack
+	depth exceeded" error. Closes #106.
+	(SlaveFileDownloadCommand.start): same, for downloads.
+	* buildbot/test/test_transfer.py (Upload.testLotsOfBlocks): test it
+	(Download.testLotsOfBlocks): same
+
 2007-12-22  Brian Warner  <warner@lothar.com>
 
 	* buildbot/steps/shell.py (TreeSize): This never worked properly.

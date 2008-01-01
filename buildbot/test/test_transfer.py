@@ -7,7 +7,6 @@ from buildbot.steps.transfer import FileUpload, FileDownload
 from buildbot.test.runutils import StepTester
 from buildbot.status.builder import SUCCESS, FAILURE
 
-
 # these steps pass a pb.Referenceable inside their arguments, so we have to
 # catch and wrap them. If the LocalAsRemote wrapper were a proper membrane,
 # we wouldn't have to do this.
@@ -154,7 +153,47 @@ class Upload(StepTester, unittest.TestCase):
         d.addCallback(_checkUpload)
         return d
 
-    
+    def testLotsOfBlocks(self):
+        self.slavebase = "Upload.testLotsOfBlocks.slave"
+        self.masterbase = "Upload.testLotsOfBlocks.master"
+        sb = self.makeSlaveBuilder()
+        os.mkdir(os.path.join(self.slavebase, self.slavebuilderbase,
+                              "build"))
+        # the buildmaster normally runs chdir'ed into masterbase, so uploaded
+        # files will appear there. Under trial, we're chdir'ed into
+        # _trial_temp instead, so use a different masterdest= to keep the
+        # uploaded file in a test-local directory
+        masterdest = os.path.join(self.masterbase, "dest.text")
+        step = self.makeStep(FileUpload,
+                             slavesrc="source.txt",
+                             masterdest=masterdest,
+                             blocksize=15)
+        slavesrc = os.path.join(self.slavebase,
+                                self.slavebuilderbase,
+                                "build",
+                                "source.txt")
+        contents = "".join(["this is the source file #%d\n" % i
+                            for i in range(1000)])
+        open(slavesrc, "w").write(contents)
+        f = open(masterdest, "w")
+        f.write("overwrite me\n")
+        f.close()
+
+        d = self.runStep(step)
+        def _checkUpload(results):
+            step_status = step.step_status
+            #l = step_status.getLogs()
+            #if l:
+            #    logtext = l[0].getText()
+            #    print logtext
+            self.failUnlessEqual(results, SUCCESS)
+            self.failUnless(os.path.exists(masterdest))
+            masterdest_contents = open(masterdest, "r").read()
+            self.failUnlessEqual(masterdest_contents, contents)
+        d.addCallback(_checkUpload)
+        return d
+    testLotsOfBlocks.timeout = 20
+
 
 class Download(StepTester, unittest.TestCase):
 
@@ -288,6 +327,39 @@ class Download(StepTester, unittest.TestCase):
         d.addCallbacks(_checkDownload)
 
         return d
+
+    def testLotsOfBlocks(self):
+        self.slavebase = "Download.testLotsOfBlocks.slave"
+        self.masterbase = "Download.testLotsOfBlocks.master"
+        sb = self.makeSlaveBuilder()
+        os.mkdir(os.path.join(self.slavebase, self.slavebuilderbase,
+                              "build"))
+        mastersrc = os.path.join(self.masterbase, "source.text")
+        slavedest = os.path.join(self.slavebase,
+                                 self.slavebuilderbase,
+                                 "build",
+                                 "dest.txt")
+        step = self.makeStep(FileDownload,
+                             mastersrc=mastersrc,
+                             slavedest="dest.txt",
+                             blocksize=15)
+        contents = "".join(["this is the source file #%d\n" % i
+                            for i in range(1000)])
+        open(mastersrc, "w").write(contents)
+        f = open(slavedest, "w")
+        f.write("overwrite me\n")
+        f.close()
+
+        d = self.runStep(step)
+        def _checkDownload(results):
+            step_status = step.step_status
+            self.failUnlessEqual(results, SUCCESS)
+            self.failUnless(os.path.exists(slavedest))
+            slavedest_contents = open(slavedest, "r").read()
+            self.failUnlessEqual(slavedest_contents, contents)
+        d.addCallback(_checkDownload)
+        return d
+    testLotsOfBlocks.timeout = 20
 
 
 # TODO:

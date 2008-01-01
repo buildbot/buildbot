@@ -748,20 +748,36 @@ class SlaveFileUploadCommand(Command):
         self.sendStatus({'header': "sending %s" % self.path})
 
         d = defer.Deferred()
-        d.addCallback(self._writeBlock)
+        reactor.callLater(0, self._loop, d)
+        def _close(res):
+            # close the file, but pass through any errors from _loop
+            d1 = self.writer.callRemote("close")
+            d1.addErrback(log.err)
+            d1.addCallback(lambda ignored: res)
+            return d1
+        d.addBoth(_close)
         d.addBoth(self.finished)
-        reactor.callLater(0, d.callback, None)
         return d
 
-    def _writeBlock(self, res):
-        """
-        Write a block of data to the remote writer
-        """
+    def _loop(self, fire_when_done):
+        d = defer.maybeDeferred(self._writeBlock)
+        def _done(finished):
+            if finished:
+                fire_when_done.callback(None)
+            else:
+                self._loop(fire_when_done)
+        def _err(why):
+            fire_when_done.errback(why)
+        d.addCallbacks(_done, _err)
+        return None
+
+    def _writeBlock(self):
+        """Write a block of data to the remote writer"""
+
         if self.interrupted or self.fp is None:
             if self.debug:
                 log.msg('SlaveFileUploadCommand._writeBlock(): end')
-            d = self.writer.callRemote('close')
-            return d
+            return True
 
         length = self.blocksize
         if self.remaining is not None and length > self.remaining:
@@ -780,14 +796,14 @@ class SlaveFileUploadCommand(Command):
             log.msg('SlaveFileUploadCommand._writeBlock(): '+
                     'allowed=%d readlen=%d' % (length, len(data)))
         if len(data) == 0:
-            d = self.writer.callRemote('close')
-            return d
+            log.msg("EOF: callRemote(close)")
+            return True
 
         if self.remaining is not None:
             self.remaining = self.remaining - len(data)
             assert self.remaining >= 0
         d = self.writer.callRemote('write', data)
-        d.addCallback(self._writeBlock)
+        d.addCallback(lambda res: False)
         return d
 
     def interrupt(self):
@@ -867,20 +883,36 @@ class SlaveFileDownloadCommand(Command):
                 log.msg('Cannot open file %r for download' % self.path)
 
         d = defer.Deferred()
-        d.addCallback(self._readBlock)
+        reactor.callLater(0, self._loop, d)
+        def _close(res):
+            # close the file, but pass through any errors from _loop
+            d1 = self.reader.callRemote('close')
+            d1.addErrback(log.err)
+            d1.addCallback(lambda ignored: res)
+            return d1
+        d.addBoth(_close)
         d.addBoth(self.finished)
-        reactor.callLater(0, d.callback, None)
         return d
 
-    def _readBlock(self, res):
-        """
-        Read a block of data from the remote reader
-        """
+    def _loop(self, fire_when_done):
+        d = defer.maybeDeferred(self._readBlock)
+        def _done(finished):
+            if finished:
+                fire_when_done.callback(None)
+            else:
+                self._loop(fire_when_done)
+        def _err(why):
+            fire_when_done.errback(why)
+        d.addCallbacks(_done, _err)
+        return None
+
+    def _readBlock(self):
+        """Read a block of data from the remote reader."""
+
         if self.interrupted or self.fp is None:
             if self.debug:
                 log.msg('SlaveFileDownloadCommand._readBlock(): end')
-            d = self.reader.callRemote('close')
-            return d
+            return True
 
         length = self.blocksize
         if self.bytes_remaining is not None and length > self.bytes_remaining:
@@ -891,26 +923,24 @@ class SlaveFileDownloadCommand(Command):
                 self.stderr = 'Maximum filesize reached, truncating file %r' \
                                 % self.path
                 self.rc = 1
-            d = self.reader.callRemote('close')
+            return True
         else:
             d = self.reader.callRemote('read', length)
             d.addCallback(self._writeData)
-        return d
+            return d
 
     def _writeData(self, data):
         if self.debug:
             log.msg('SlaveFileDownloadCommand._readBlock(): readlen=%d' %
                     len(data))
         if len(data) == 0:
-            d = self.reader.callRemote('close')
-            return d
+            return True
 
         if self.bytes_remaining is not None:
             self.bytes_remaining = self.bytes_remaining - len(data)
             assert self.bytes_remaining >= 0
         self.fp.write(data)
-        d = self._readBlock(None) # setup call back for next block (or finish)
-        return d
+        return False
 
     def interrupt(self):
         if self.debug:
