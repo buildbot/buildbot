@@ -192,7 +192,6 @@ class Upload(StepTester, unittest.TestCase):
             self.failUnlessEqual(masterdest_contents, contents)
         d.addCallback(_checkUpload)
         return d
-    testLotsOfBlocks.timeout = 20
 
 
 class Download(StepTester, unittest.TestCase):
@@ -359,7 +358,6 @@ class Download(StepTester, unittest.TestCase):
             self.failUnlessEqual(slavedest_contents, contents)
         d.addCallback(_checkDownload)
         return d
-    testLotsOfBlocks.timeout = 20
 
 
 # TODO:

@@ -1,5 +1,10 @@
 2007-12-31  Brian Warner  <warner@lothar.com>
 
+	* buildbot/test/test_transfer.py (Upload.testLotsOfBlocks): remove
+	the short timeouts, these can cause false test failures on slow
+	systems, and were only needed while developing the recent patch
+	(Download.testLotsOfBlocks): same
+
 	* buildbot/scripts/reconfig.py (Reconfigurator.run): if we're on
 	windows, make 'buildbot reconfig' emit a warning message (since
 	there's no SIGHUP to be had) rather than just hanging. Addresses
