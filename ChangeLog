@@ -1,5 +1,11 @@
 2007-12-31  Brian Warner  <warner@lothar.com>
 
+	* buildbot/scripts/reconfig.py (Reconfigurator.run): if we're on
+	windows, make 'buildbot reconfig' emit a warning message (since
+	there's no SIGHUP to be had) rather than just hanging. Addresses
+	#105, but we still need to document this somewhere. Thanks to
+	Ben Hearsum for the patch.
+
 	* buildbot/slave/commands.py (SlaveFileUploadCommand.start):
 	rewrite the main loop to avoid tail recursion, since Deferreds
 	don't optimize those out. Without this, at the end of the transfer

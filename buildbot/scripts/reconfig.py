@@ -1,5 +1,5 @@
 
-import os, signal
+import os, signal, platform
 from twisted.internet import reactor
 
 from buildbot.scripts.logwatcher import LogWatcher, BuildmasterTimeoutError, \
@@ -7,6 +7,12 @@ from buildbot.scripts.logwatcher import LogWatcher, BuildmasterTimeoutError, \
 
 class Reconfigurator:
     def run(self, config):
+        # Returns "Microsoft" for Vista and "Windows" for other versions
+        if platform.system() in ("Windows", "Microsoft"):
+            print "Reconfig (through SIGHUP) is not supported on Windows."
+            print "The 'buildbot debugclient' tool can trigger a reconfig"
+            print "remotely, but requires Gtk+ libraries to run."
+            return
 
         basedir = config['basedir']
         quiet = config['quiet']
