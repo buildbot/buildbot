@@ -57,9 +57,9 @@ class Blocker(BuildStep):
                 % (self.idlePolicy,
                    ", ".join(map(repr, self.VALID_IDLE_POLICIES))))
 
-        # set of build steps (as BuildStepStatus objects) that we're
-        # waiting on
-        self._blocking_steps = set()
+        # list of build steps (as BuildStepStatus objects) that we're
+        # currently waiting on
+        self._blocking_steps = []
 
         # set of builders (as BuilderStatus objects) that have to start
         # a Build before we can block on one of their BuildSteps
@@ -69,6 +69,9 @@ class Blocker(BuildStep):
         self._overall_text = []
 
         self._timer = None              # object returned by reactor.callLater()
+
+    def _log(self, message, *args):
+        log.msg("Blocker:" + self.name + ": " + (message % args))
 
     def _getBuildStatus(self, botmaster, builderName):
         try:
@@ -93,10 +96,10 @@ class Blocker(BuildStep):
                 raise BadStepError(msg)
             elif self.idlePolicy == "ignore":
                 # don't hang around waiting (assume the build has finished)
-                log.msg("Blocker: " + msg + ": skipping it")
+                self._log(msg + ": skipping it")
                 return None
             elif self.idlePolicy == "block":
-                log.msg("Blocker: " + msg + ": will block until it starts a build")
+                self._log(msg + ": will block until it starts a build")
                 self._blocking_builders.add(builderStatus)
                 return None
 
@@ -107,7 +110,7 @@ class Blocker(BuildStep):
 
         # XXX what if there is more than one build a-building?
         buildStatus = current[0]
-        log.msg("Blocker.start: found builder=%r, buildStatus=%r"
+        self._log("found builder=%r, buildStatus=%r"
                 % (builder, buildStatus))
         return buildStatus
 
@@ -145,13 +148,13 @@ class Blocker(BuildStep):
         return [self.name+":", "timed out", "(%.1f sec)" % self.timeout]
 
     def start(self):
-        log.msg("Blocker.start: searching for steps %s" % "".join(self._getFullnames()))
+        self._log("searching for steps %s" % "".join(self._getFullnames()))
         self.step_status.setText(self._getBlockingStatusText())
 
-        log.msg("Blocker.start: self.timeout=%r" % self.timeout)
+        self._log("self.timeout=%r" % self.timeout)
         if self.timeout is not None:
             self._timer = reactor.callLater(self.timeout, self._timeoutExpired)
-        log.msg("Blocker.start: self._timer=%r" % self._timer)
+        self._log("self._timer=%r" % self._timer)
 
         botmaster = self.build.slavebuilder.slave.parent
         stepStatuses = []               # list of BuildStepStatus objects
@@ -168,7 +171,7 @@ class Blocker(BuildStep):
                 # Make sure newly-discovered blocking steps are all
                 # added to _blocking_steps before we subscribe to their
                 # "finish" events!
-                self._blocking_steps.add(stepStatus)
+                self._blocking_steps.append(stepStatus)
 
         if len(errors) == 1:
             raise BadStepError(errors[0])
@@ -181,13 +184,13 @@ class Blocker(BuildStep):
         # because it can be modified while we iterate: if any upstream
         # step is already finished, the _upstreamStepFinished() callback
         # will be called immediately.
-        for stepStatus in self._blocking_steps.copy():
+        for stepStatus in self._blocking_steps[:]:
             self._awaitStepFinished(stepStatus)
 
-        log.msg("Blocker: will block on %d steps: %r"
+        self._log("will block on %d steps: %r"
                 % (len(self._blocking_steps), self._blocking_steps))
         if self._blocking_builders:
-            log.msg("Blocker: will also block on %d builders starting a build: %r"
+            self._log("will also block on %d builders starting a build: %r"
                     % (len(self._blocking_builders), self._blocking_builders))
 
         # Subscribe to each builder that we're waiting on to start.
@@ -202,14 +205,14 @@ class Blocker(BuildStep):
         d.addCallback(self._upstreamStepFinished)
 
     def _timeoutExpired(self):
-        log.msg("Blocker: timeout (%.1f sec) expired" % self.timeout)
+        self._log("timeout (%.1f sec) expired" % self.timeout)
         self.step_status.setColor("red")
         self.step_status.setText(self._getTimeoutStatusText())
         self.finished(builder.FAILURE)
 
     def _upstreamStepFinished(self, stepStatus):
         assert isinstance(stepStatus, builder.BuildStepStatus)
-        log.msg("Blocker: build step %s:%s finished; stepStatus=%r"
+        self._log("build step %s:%s finished; stepStatus=%r"
                 % (stepStatus.getBuild().builder.getName(),
                    stepStatus.getName(),
                    stepStatus.getResults()))
@@ -227,7 +230,7 @@ class Blocker(BuildStep):
         assert isinstance(builderStatus, builder.BuilderStatus)
         builderStatus.unsubscribe(receiver)
         buildStatus = builderStatus.getCurrentBuilds()[0]
-        log.msg("Blocker: builder %r (%r) started a build; buildStatus=%r"
+        self._log("builder %r (%r) started a build; buildStatus=%r"
                 % (builderStatus, builderStatus.getName(), buildStatus))
 
         # Need to accumulate newly-discovered steps separately, so we
@@ -246,7 +249,7 @@ class Blocker(BuildStep):
                 else:
                     new_blocking_steps.append(stepStatus)
 
-        self._blocking_steps.update(new_blocking_steps)
+        self._blocking_steps.extend(new_blocking_steps)
         for stepStatus in new_blocking_steps:
             self._awaitStepFinished(stepStatus)
 
@@ -257,10 +260,10 @@ class Blocker(BuildStep):
         if self.step_status.isFinished():
             # this can happen if _upstreamBuildStarted() catches BadStepError
             # and fails the step
-            log.msg("Blocker._checkFinished: already finished, so nothing to do here")
+            self._log("_checkFinished: already finished, so nothing to do here")
             return
 
-        log.msg("Blocker._checkFinished: _blocking_steps=%r, _blocking_builders=%r"
+        self._log("_checkFinished: _blocking_steps=%r, _blocking_builders=%r"
                 % (self._blocking_steps, self._blocking_builders))
 
         if not self._blocking_steps and not self._blocking_builders:
