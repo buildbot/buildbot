@@ -110,13 +110,14 @@ class Blocker(BuildStep):
 
         # XXX what if there is more than one build a-building?
         buildStatus = current[0]
-        self._log("found builder=%r, buildStatus=%r"
-                % (builder, buildStatus))
+        self._log("found builder %r: %r", builderName, builder)
         return buildStatus
 
     def _getStepStatus(self, buildStatus, stepName):
         for step_status in buildStatus.getSteps():
             if step_status.name == stepName:
+                self._log("found build step %r in builder %r: %r",
+                          stepName, buildStatus.getBuilder().getName(), step_status)
                 return step_status
         raise BadStepError(
             "builder %r has no step named %r"
@@ -148,14 +149,12 @@ class Blocker(BuildStep):
         return [self.name+":", "timed out", "(%.1f sec)" % self.timeout]
 
     def start(self):
-        self._log("searching for steps %s" % "".join(self._getFullnames()))
         self.step_status.setText(self._getBlockingStatusText())
 
-        self._log("self.timeout=%r" % self.timeout)
         if self.timeout is not None:
             self._timer = reactor.callLater(self.timeout, self._timeoutExpired)
-        self._log("self._timer=%r" % self._timer)
 
+        self._log("searching for upstream build steps")
         botmaster = self.build.slavebuilder.slave.parent
         stepStatuses = []               # list of BuildStepStatus objects
         errors = []                     # list of strings
@@ -178,6 +177,12 @@ class Blocker(BuildStep):
         elif len(errors) > 1:
             raise BadStepError("multiple errors:\n" + "\n".join(errors))
 
+        self._log("will block on %d upstream build steps: %r",
+                  len(self._blocking_steps), self._blocking_steps)
+        if self._blocking_builders:
+            self._log("will also block on %d builders starting a build: %r",
+                      len(self._blocking_builders), self._blocking_builders)
+
         # Now we can register with each blocking step (BuildStepStatus
         # objects, actually) that we want a callback when the step
         # finishes.  Need to iterate over a copy of _blocking_steps
@@ -186,12 +191,9 @@ class Blocker(BuildStep):
         # will be called immediately.
         for stepStatus in self._blocking_steps[:]:
             self._awaitStepFinished(stepStatus)
-
-        self._log("will block on %d steps: %r"
-                % (len(self._blocking_steps), self._blocking_steps))
-        if self._blocking_builders:
-            self._log("will also block on %d builders starting a build: %r"
-                    % (len(self._blocking_builders), self._blocking_builders))
+        self._log("after registering for each upstream build step, "
+                  "_blocking_steps = %r",
+                  self._blocking_steps)
 
         # Subscribe to each builder that we're waiting on to start.
         for bs in self._blocking_builders:
@@ -205,23 +207,25 @@ class Blocker(BuildStep):
         d.addCallback(self._upstreamStepFinished)
 
     def _timeoutExpired(self):
-        self._log("timeout (%.1f sec) expired" % self.timeout)
+        self._log("timeout (%.1f sec) expired", self.timeout)
         self.step_status.setColor("red")
         self.step_status.setText(self._getTimeoutStatusText())
         self.finished(builder.FAILURE)
 
     def _upstreamStepFinished(self, stepStatus):
         assert isinstance(stepStatus, builder.BuildStepStatus)
-        self._log("build step %s:%s finished; stepStatus=%r"
-                % (stepStatus.getBuild().builder.getName(),
-                   stepStatus.getName(),
-                   stepStatus.getResults()))
+        self._log("upstream build step %s:%s finished; results=%r",
+                  stepStatus.getBuild().builder.getName(),
+                  stepStatus.getName(),
+                  stepStatus.getResults())
 
         (code, text) = stepStatus.getResults()
         if code != builder.SUCCESS and self._overall_code == builder.SUCCESS:
             # first non-SUCCESS result wins
             self._overall_code = code
         self._overall_text.extend(text)
+        self._log("now _overall_code=%r, _overall_text=%r",
+                  self._overall_code, self._overall_text)
 
         self._blocking_steps.remove(stepStatus)
         self._checkFinished()
@@ -230,8 +234,8 @@ class Blocker(BuildStep):
         assert isinstance(builderStatus, builder.BuilderStatus)
         builderStatus.unsubscribe(receiver)
         buildStatus = builderStatus.getCurrentBuilds()[0]
-        self._log("builder %r (%r) started a build; buildStatus=%r"
-                % (builderStatus, builderStatus.getName(), buildStatus))
+        self._log("builder %r (%r) started a build; buildStatus=%r",
+                  builderStatus, builderStatus.getName(), buildStatus)
 
         # Need to accumulate newly-discovered steps separately, so we
         # can add them to _blocking_steps en masse before subscribing to
@@ -263,8 +267,8 @@ class Blocker(BuildStep):
             self._log("_checkFinished: already finished, so nothing to do here")
             return
 
-        self._log("_checkFinished: _blocking_steps=%r, _blocking_builders=%r"
-                % (self._blocking_steps, self._blocking_builders))
+        self._log("_checkFinished: _blocking_steps=%r, _blocking_builders=%r",
+                  self._blocking_steps, self._blocking_builders)
 
         if not self._blocking_steps and not self._blocking_builders:
             if self.timeout:
