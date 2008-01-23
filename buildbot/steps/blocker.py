@@ -177,7 +177,10 @@ class Blocker(BuildStep):
 
         # Now we can register with each blocking step (BuildStepStatus
         # objects, actually) that we want a callback when the step
-        # finishes.
+        # finishes.  Need to iterate over a copy of _blocking_steps
+        # because it can be modified while we iterate: if any upstream
+        # step is already finished, the _upstreamStepFinished() callback
+        # will be called immediately.
         for stepStatus in self._blocking_steps.copy():
             self._awaitStepFinished(stepStatus)
 
@@ -192,6 +195,9 @@ class Blocker(BuildStep):
             bs.subscribe(BuilderStatusReceiver(self, bs))
 
     def _awaitStepFinished(self, stepStatus):
+        # N.B. this will callback *immediately* (i.e. even before we
+        # relinquish control to the reactor) if the upstream step in
+        # question has already finished.
         d = stepStatus.waitUntilFinished()
         d.addCallback(self._upstreamStepFinished)
 
@@ -201,20 +207,20 @@ class Blocker(BuildStep):
         self.step_status.setText(self._getTimeoutStatusText())
         self.finished(builder.FAILURE)
 
-    def _upstreamStepFinished(self, results):
-        assert isinstance(results, builder.BuildStepStatus)
-        log.msg("Blocker: build step %r:%r finished; results=%r"
-                % (results.getBuild().builder.getName(),
-                   results.getName(),
-                   results.getResults()))
+    def _upstreamStepFinished(self, stepStatus):
+        assert isinstance(stepStatus, builder.BuildStepStatus)
+        log.msg("Blocker: build step %s:%s finished; stepStatus=%r"
+                % (stepStatus.getBuild().builder.getName(),
+                   stepStatus.getName(),
+                   stepStatus.getResults()))
 
-        (code, text) = results.getResults()
+        (code, text) = stepStatus.getResults()
         if code != builder.SUCCESS and self._overall_code == builder.SUCCESS:
             # first non-SUCCESS result wins
             self._overall_code = code
         self._overall_text.extend(text)
 
-        self._blocking_steps.remove(results)
+        self._blocking_steps.remove(stepStatus)
         self._checkFinished()
 
     def _upstreamBuildStarted(self, builderStatus, receiver):
