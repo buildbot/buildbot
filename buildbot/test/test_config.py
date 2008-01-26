@@ -1,6 +1,6 @@
 # -*- test-case-name: buildbot.test.test_config -*-
 
-import os
+import os, warnings, exceptions
 
 from twisted.trial import unittest
 from twisted.python import failure
@@ -373,6 +373,9 @@ BuildmasterConfig = c
 
 class ConfigTest(unittest.TestCase):
     def setUp(self):
+        # this class generates several deprecation warnings, which the user
+        # doesn't need to see.
+        warnings.simplefilter('ignore', exceptions.DeprecationWarning)
         self.buildmaster = BuildMaster(".")
         
     def failUnlessListsEquivalent(self, list1, list2):
