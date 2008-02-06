@@ -1,3 +1,11 @@
+2008-02-05  Brian Warner  <warner@lothar.com>
+
+	* buildbot/buildslave.py (BuildSlave._missing_timer_fired): add a
+	To: header to the email message we're composing. Oops. Thanks
+	to Zandr Milewski for the catch.
+	* buildbot/test/test_slaves.py (BuildSlave.test_mail_on_missing):
+	test for it
+
 2007-12-31  Brian Warner  <warner@lothar.com>
 
 	* buildbot/test/test_transfer.py (Upload.testLotsOfBlocks): remove

@@ -516,6 +516,7 @@ class BuildSlave(RunMixin, unittest.TestCase):
             msg,recips = fm.messages[0]
             self.failUnlessEqual(recips, ["admin"])
             body = msg.as_string()
+            self.failUnlessIn("To: admin", body)
             self.failUnlessIn("Subject: Buildbot: buildslave bot1 was lost",
                               body)
             self.failUnlessIn("From: buildbot@example.org", body)

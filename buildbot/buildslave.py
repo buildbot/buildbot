@@ -222,6 +222,7 @@ class BuildSlave(NewCredPerspective, service.MultiService):
         m['Subject'] = "Buildbot: buildslave %s was lost" % self.slavename
         m['From'] = st.fromaddr
         recipients = self.notify_on_missing
+        m['To'] = ", ".join(recipients)
         d = st.sendMessage(m, recipients)
         # return the Deferred for testing purposes
         return d
