@@ -10,7 +10,7 @@ from buildbot.changes import changes
 from buildbot.status import builder
 from buildbot.process.base import BuildRequest
 
-from buildbot.test.runutils import RunMixin, rmtree
+from buildbot.test.runutils import RunMixin, TestFlagMixin, rmtree
 
 config_base = """
 from buildbot.process import factory
@@ -627,6 +627,43 @@ class Basedir(RunMixin, unittest.TestCase):
         # add a new builder, which causes the basedir list to be reloaded
         d = self.master.loadConfig(config_4_newbuilder)
         return d
+
+config_test_flag = config_base + """
+from buildbot.scheduler import Scheduler
+c['schedulers'] = [Scheduler('quick', None, 0.1, ['dummy'])]
+
+from buildbot.test.runutils import SetTestFlagStep
+f3 = factory.BuildFactory([
+    s(SetTestFlagStep, flagname='foo', value='bar'),
+    ])
+
+c['builders'] = [{'name': 'dummy', 'slavename': 'bot1',
+                  'builddir': 'dummy', 'factory': f3}]
+"""
+
+class TestFlag(RunMixin, TestFlagMixin, unittest.TestCase):
+    """Test for the TestFlag functionality in runutils"""
+    def testTestFlag(self):
+        m = self.master
+        m.loadConfig(config_test_flag)
+        m.readConfig = True
+        m.startService()
+
+        c = changes.Change("bob", ["Makefile", "foo/bar.c"], "changed stuff")
+        m.change_svc.addChange(c)
+
+        d = self.connectSlave()
+        d.addCallback(self._testTestFlag_1)
+        return d
+
+    def _testTestFlag_1(self, res):
+        d = defer.Deferred()
+        reactor.callLater(0.5, d.callback, None)
+        d.addCallback(self._testTestFlag_2)
+        return d
+
+    def _testTestFlag_2(self, res):
+        self.failUnlessEqual(self.getFlag('foo'), 'bar')
 
 # TODO: test everything, from Change submission to Scheduler to Build to
 # Status. Use all the status types. Specifically I want to catch recurrences
