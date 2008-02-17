@@ -692,7 +692,7 @@ class BuilderControl(components.Adapter):
         if not bs.isFinished():
             return
 
-        ss = bs.getSourceStamp()
+        ss = bs.getSourceStamp(absolute=True)
         req = base.BuildRequest(reason, ss, self.original.name)
         self.requestBuild(req)
 

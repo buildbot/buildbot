@@ -98,6 +98,10 @@ class ISourceStamp(Interface):
         BuildRequests. This is called by a Build when it starts, to figure
         out what its sourceStamp should be."""
 
+    def getAbsoluteSourceStamp(self, got_revision):
+        """Get a new SourceStamp object reflecting the actual revision found
+        by a Source step."""
+
     def getText(self):
         """Returns a list of strings to describe the stamp. These are
         intended to be displayed in a narrow column. If more space is
@@ -255,7 +259,11 @@ class IBuildRequestStatus(Interface):
 
     def getSourceStamp():
         """Return a SourceStamp object which can be used to re-create
-        the source tree that this build used.
+        the source tree that this build used.  This method will
+        return an absolute SourceStamp if possible, and its results
+        may change as the build progresses.  Specifically, a "HEAD"
+        build may later be more accurately specified by an absolute
+        SourceStamp with the specific revision information.
 
         This method will return None if the source information is no longer
         available."""
