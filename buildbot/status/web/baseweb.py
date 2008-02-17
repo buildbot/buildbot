@@ -14,6 +14,7 @@ from buildbot.status.web.base import HtmlResource, Box, \
      build_get_class, ICurrentBox, OneLineMixin, map_branches, \
      make_stop_form, make_force_build_form
 from buildbot.status.web.waterfall import WaterfallStatusResource
+from buildbot.status.web.grid import GridStatusResource
 from buildbot.status.web.changes import ChangesResource
 from buildbot.status.web.builder import BuildersResource
 from buildbot.status.web.slaves import BuildSlavesResource
@@ -280,6 +281,9 @@ class WebStatus(service.MultiService):
                   to individual changes, builders, builds, steps, and logs.
                   A number of query-arguments can be added to influence
                   the display.
+     /grid : another summary display that shows a grid of builds, with
+             sourcestamps on the x axis, and builders on the y.  Query 
+             arguments similar to those for the waterfall can be added.
      /builders/BUILDERNAME: a page summarizing the builder. This includes
                             references to the Schedulers that feed it,
                             any builds currently in the queue, which
@@ -431,6 +435,7 @@ class WebStatus(service.MultiService):
     def setupUsualPages(self):
         #self.putChild("", IndexOrWaterfallRedirection())
         self.putChild("waterfall", WaterfallStatusResource())
+        self.putChild("grid", GridStatusResource())
         self.putChild("builders", BuildersResource()) # has builds/steps/logs
         self.putChild("changes", ChangesResource())
         self.putChild("buildslaves", BuildSlavesResource())

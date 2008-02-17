@@ -41,3 +41,38 @@ td.box {
 .start,.running {
 	background-color: yellow;
 }
+
+/* grid styles */
+
+table.Grid {
+    border-collapse: collapse;
+}
+
+table.Grid tr td {
+    padding: 0.2em;
+    margin: 0px;
+    text-align: center;
+}
+
+table.Grid tr td.title {
+    font-size: 90%;
+    border-right: 1px gray solid;
+    border-bottom: 1px gray solid;
+}
+
+table.Grid tr td.sourcestamp {
+    font-size: 90%;
+}
+
+table.Grid tr td.builder {
+    text-align: right;
+    font-size: 90%;
+}
+
+table.Grid tr td.build {
+    border: 1px gray solid;
+}
+
+div.footer {
+    font-size: 80%;
+}

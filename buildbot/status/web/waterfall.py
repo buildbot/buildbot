@@ -528,7 +528,7 @@ class WaterfallStatusResource(HtmlResource):
 
         data += "</table>\n"
 
-        data += "<hr />\n"
+        data += '<hr /><div class="footer"\n'
 
         def with_args(req, remove_args=[], new_args=[], new_path=None):
             # sigh, nevow makes this sort of manipulation easier
@@ -591,6 +591,7 @@ class WaterfallStatusResource(HtmlResource):
                  time.strftime("%a %d %b %Y %H:%M:%S",
                                time.localtime(util.now()))
                  + "\n")
+        data += '</div>\n'
         return data
 
     def body0(self, request, builders):
