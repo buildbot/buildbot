@@ -1530,12 +1530,12 @@ class SVN(SourceBase):
         d = self.builder.basedir
         if self.mode == "export":
             command = [self.vcexe, 'export', '--revision', str(revision),
-                       '--non-interactive',
+                       '--non-interactive', '--no-auth-cache',
                        self.svnurl, self.srcdir]
         else:
             # mode=='clobber', or copy/update on a broken workspace
             command = [self.vcexe, 'checkout', '--revision', str(revision),
-                       '--non-interactive',
+                       '--non-interactive', '--no-auth-cache',
                        self.svnurl, self.srcdir]
         c = ShellCommand(self.builder, command, d,
                          sendRC=False, timeout=self.timeout,
