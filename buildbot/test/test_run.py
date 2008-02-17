@@ -628,6 +628,77 @@ class Basedir(RunMixin, unittest.TestCase):
         d = self.master.loadConfig(config_4_newbuilder)
         return d
 
+class Triggers(RunMixin, TestFlagMixin, unittest.TestCase):
+    config_trigger = config_base + """
+from buildbot.scheduler import Triggerable, Scheduler
+from buildbot.steps.trigger import Trigger
+from buildbot.steps.dummy import Dummy
+from buildbot.test.runutils import SetTestFlagStep
+c['schedulers'] = [
+    Scheduler('triggerer', None, 0.1, ['triggerer']),
+    Triggerable('triggeree', ['triggeree'])
+]
+triggerer = factory.BuildFactory([
+    s(SetTestFlagStep, flagname='triggerer_started'),
+    s(Trigger, flunkOnFailure=True, @ARGS@),
+    s(SetTestFlagStep, flagname='triggerer_finished'),
+    ])
+triggeree = factory.BuildFactory([
+    s(SetTestFlagStep, flagname='triggeree_started'),
+    s(@DUMMYCLASS@),
+    s(SetTestFlagStep, flagname='triggeree_finished'),
+    ])
+c['builders'] = [{'name': 'triggerer', 'slavename': 'bot1',
+                  'builddir': 'triggerer', 'factory': triggerer},
+                 {'name': 'triggeree', 'slavename': 'bot1',
+                  'builddir': 'triggeree', 'factory': triggeree}]
+"""
+
+    def mkConfig(self, args, dummyclass="Dummy"):
+        return self.config_trigger.replace("@ARGS@", args).replace("@DUMMYCLASS@", dummyclass)
+
+    def setupTest(self, args, dummyclass, checkFn):
+        self.clearFlags()
+        m = self.master
+        m.loadConfig(self.mkConfig(args, dummyclass))
+        m.readConfig = True
+        m.startService()
+
+        c = changes.Change("bob", ["Makefile", "foo/bar.c"], "changed stuff")
+        m.change_svc.addChange(c)
+
+        d = self.connectSlave(builders=['triggerer', 'triggeree'])
+        d.addCallback(self.startTimer, 0.5, checkFn)
+        return d
+
+    def startTimer(self, res, time, next_fn):
+        d = defer.Deferred()
+        reactor.callLater(time, d.callback, None)
+        d.addCallback(next_fn)
+        return d
+
+    def testTriggerBuild(self):
+        return self.setupTest("schedulers=['triggeree']",
+                "Dummy",
+                self._checkTriggerBuild)
+
+    def _checkTriggerBuild(self, res):
+        self.failIfFlagNotSet('triggerer_started')
+        self.failIfFlagNotSet('triggeree_started')
+        self.failIfFlagSet('triggeree_finished')
+        self.failIfFlagNotSet('triggerer_finished')
+
+    def testTriggerBuildWait(self):
+        return self.setupTest("schedulers=['triggeree'], waitForFinish=1",
+                "Dummy",
+                self._checkTriggerBuildWait)
+
+    def _checkTriggerBuildWait(self, res):
+        self.failIfFlagNotSet('triggerer_started')
+        self.failIfFlagNotSet('triggeree_started')
+        self.failIfFlagSet('triggeree_finished')
+        self.failIfFlagSet('triggerer_finished')
+
 config_test_flag = config_base + """
 from buildbot.scheduler import Scheduler
 c['schedulers'] = [Scheduler('quick', None, 0.1, ['dummy'])]
