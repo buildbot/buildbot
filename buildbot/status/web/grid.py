@@ -188,7 +188,7 @@ class GridStatusResource(HtmlResource):
 
             build = builder.getBuild(-1)
             while build and None in builds:
-                ss = build.getSourceStamp(specific=True)
+                ss = build.getSourceStamp(absolute=True)
                 for i in range(len(stamps)):
                     if ss == stamps[i] and builds[i] is None:
                         builds[i] = build
@@ -239,7 +239,7 @@ class GridStatusResource(HtmlResource):
                 continue
             build = builder.getBuild(-1)
             while build:
-                ss = build.getSourceStamp(specific=True)
+                ss = build.getSourceStamp(absolute=True)
                 start = build.getTimes()[0]
                 build = build.getPreviousBuild()
 
