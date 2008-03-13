@@ -57,9 +57,9 @@ class ShellCommand(LoggingBuildStep):
       - a command= parameter to my constructor (overrides .command)
       - set explicitly with my .setCommand() method (overrides both)
 
-    @ivar command: a list of argv strings (or WithProperties instances).
-                   This will be used by start() to create a
-                   RemoteShellCommand instance.
+    @ivar command: a list of renderable objects (typically strings or
+                   WithProperties instances). This will be used by start()
+                   to create a RemoteShellCommand instance.
 
     @ivar logfiles: a dict mapping log NAMEs to workdir-relative FILENAMEs
                     of their corresponding logfiles. The contents of the file
@@ -149,9 +149,10 @@ class ShellCommand(LoggingBuildStep):
             return self.description
 
         words = self.command
-        # TODO: handle WithProperties here
         if isinstance(words, types.StringTypes):
             words = words.split()
+        # render() each word to handle WithProperties objects
+        words = [render(word, self.build) for word in words]
         if len(words) < 1:
             return ["???"]
         if len(words) == 1:
