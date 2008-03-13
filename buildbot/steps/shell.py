@@ -6,7 +6,7 @@ from buildbot import util
 from buildbot.process.buildstep import LoggingBuildStep, RemoteShellCommand
 from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE
 
-class _BuildPropertyDictionary:
+class _BuildPropertyMapping:
     def __init__(self, build):
         self.build = build
     def __getitem__(self, name):
@@ -36,7 +36,7 @@ class WithProperties(util.ComparableMixin):
                 strings.append(p)
             s = self.fmtstring % tuple(strings)
         else:
-            s = self.fmtstring % _BuildPropertyDictionary(build)
+            s = self.fmtstring % _BuildPropertyMapping(build)
         return s
 
 class ShellCommand(LoggingBuildStep):
