@@ -27,16 +27,14 @@ class WithProperties(util.ComparableMixin):
         self.args = args
 
     def render(self, build):
+        pmap = _BuildPropertyMapping(build)
         if self.args:
             strings = []
             for name in self.args:
-                p = build.getProperty(name)
-                if p is None:
-                    p = ""
-                strings.append(p)
+                strings.append(pmap[name])
             s = self.fmtstring % tuple(strings)
         else:
-            s = self.fmtstring % _BuildPropertyMapping(build)
+            s = self.fmtstring % pmap
         return s
 
 class ShellCommand(LoggingBuildStep):
