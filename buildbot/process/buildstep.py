@@ -8,6 +8,7 @@ from twisted.python import log
 from twisted.python.failure import Failure
 from twisted.web.util import formatFailure
 
+from buildbot import util
 from buildbot import interfaces
 from buildbot.status import progress
 from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE, SKIPPED, \
@@ -1082,3 +1083,46 @@ class LoggingBuildStep(BuildStep):
         self.step_status.setText(self.getText(cmd, results))
         self.step_status.setText2(self.maybeGetText2(cmd, results))
 
+class _BuildPropertyMapping:
+    def __init__(self, build):
+        self.build = build
+    def __getitem__(self, name):
+        p = self.build.getProperty(name)
+        if p is None:
+            p = ""
+        return p
+
+class WithProperties(util.ComparableMixin):
+    """This is a marker class, used in ShellCommand's command= argument to
+    indicate that we want to interpolate a build property.
+    """
+
+    compare_attrs = ('fmtstring', 'args')
+
+    def __init__(self, fmtstring, *args):
+        self.fmtstring = fmtstring
+        self.args = args
+
+    def render(self, build):
+        pmap = _BuildPropertyMapping(build)
+        if self.args:
+            strings = []
+            for name in self.args:
+                strings.append(pmap[name])
+            s = self.fmtstring % tuple(strings)
+        else:
+            s = self.fmtstring % pmap
+        return s
+
+def render(s, build):
+    """Return a string based on s and build that is suitable for use
+    in a running BuildStep.  If s is a string, return s.  If s is a
+    WithProperties object, return the result of s.render(build).
+    Otherwise, return str(s).
+    """
+    if isinstance(s, (str, unicode)):
+        return s
+    elif isinstance(s, WithProperties):
+        return s.render(build)
+    else:
+        return str(s)

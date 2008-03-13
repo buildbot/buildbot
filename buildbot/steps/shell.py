@@ -2,40 +2,11 @@
 
 import types, re
 from twisted.python import log
-from buildbot import util
-from buildbot.process.buildstep import LoggingBuildStep, RemoteShellCommand
+from buildbot.process.buildstep import LoggingBuildStep, RemoteShellCommand, render
 from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE
 
-class _BuildPropertyMapping:
-    def __init__(self, build):
-        self.build = build
-    def __getitem__(self, name):
-        p = self.build.getProperty(name)
-        if p is None:
-            p = ""
-        return p
-
-class WithProperties(util.ComparableMixin):
-    """This is a marker class, used in ShellCommand's command= argument to
-    indicate that we want to interpolate a build property.
-    """
-
-    compare_attrs = ('fmtstring', 'args')
-
-    def __init__(self, fmtstring, *args):
-        self.fmtstring = fmtstring
-        self.args = args
-
-    def render(self, build):
-        pmap = _BuildPropertyMapping(build)
-        if self.args:
-            strings = []
-            for name in self.args:
-                strings.append(pmap[name])
-            s = self.fmtstring % tuple(strings)
-        else:
-            s = self.fmtstring % pmap
-        return s
+# for existing configurations that import WithProperties from here
+from buildbot.process.buildstep import WithProperties
 
 class ShellCommand(LoggingBuildStep):
     """I run a single shell command on the buildslave. I return FAILURE if
