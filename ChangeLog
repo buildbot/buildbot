@@ -1,3 +1,11 @@
+2008-03-18  Brian Warner  <warner@lothar.com>
+
+	* buildbot/test/test_vc.py (VCBase.connectSlave): turn off usePTY
+	for all slave commands: I'm seeing 'cp' and 'rm' fail with SIGHUP,
+	probably when we close stdin. This happens on my debian/sid
+	system, but not on older unixes, so I suspect some change in
+	behavior in the kernel or glibc or something similar.
+
 2008-02-05  Brian Warner  <warner@lothar.com>
 
 	* buildbot/buildslave.py (BuildSlave._missing_timer_fired): add a

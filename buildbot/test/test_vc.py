@@ -439,7 +439,7 @@ class VCBase(SignalMixin):
     def connectSlave(self):
         port = self.master.slavePort._port.getHost().port
         slave = bot.BuildSlave("localhost", port, "bot1", "sekrit",
-                               self.slavebase, keepalive=0, usePTY=1)
+                               self.slavebase, keepalive=0, usePTY=False)
         self.slave = slave
         slave.startService()
         d = self.master.botmaster.waitUntilBuilderAttached("vc")
@@ -559,11 +559,13 @@ class VCBase(SignalMixin):
         d.addCallback(lambda res: self.loadConfig(config % 'copy'))
         d.addCallback(lambda res: log.msg("testing copy"))
         d.addCallback(self._do_vctest_copy)
+        d.addCallback(lambda res: log.msg("did copy test"))
         if self.metadir:
             d.addCallback(lambda res: log.msg("doing export"))
             d.addCallback(lambda res: self.loadConfig(config % 'export'))
             d.addCallback(lambda res: log.msg("testing export"))
             d.addCallback(self._do_vctest_export)
+            d.addCallback(lambda res: log.msg("did export test"))
         return d
 
     def _do_vctest_clobber(self, res):
@@ -698,10 +700,12 @@ class VCBase(SignalMixin):
         pass
 
     def _do_vctest_copy(self, res):
+        log.msg("_do_vctest_copy 1")
         d = self.doBuild() # copy rebuild clobbers new files
         d.addCallback(self._do_vctest_copy_1)
         return d
     def _do_vctest_copy_1(self, bs):
+        log.msg("_do_vctest_copy 2")
         if self.metadir:
             self.shouldExist(self.workdir, self.metadir)
         self.shouldNotExist(self.workdir, "newfile")
@@ -714,6 +718,7 @@ class VCBase(SignalMixin):
         d.addCallback(self._do_vctest_copy_2)
         return d
     def _do_vctest_copy_2(self, bs):
+        log.msg("_do_vctest_copy 3")
         if self.metadir:
             self.shouldExist(self.workdir, self.metadir)
         self.shouldNotExist(self.workdir, "newfile")
