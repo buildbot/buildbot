@@ -1,5 +1,10 @@
 2008-03-18  Brian Warner  <warner@lothar.com>
 
+	* buildbot/buildslave.py (BuildSlave.__repr__): protect against
+	.botmaster being empty, to allow pretty-printing of configuration
+	files before the twisted reactor starts. Patch from Dustin
+	Mitchell.
+
 	* docs/buildbot.texinfo (Shutdown): make it clear that 'buildbot
 	reconfig' (which uses SIGHUP) doesn't work on windows. Acknowledge
 	the occasional failures in reconfig (and suggest 'buildbot
