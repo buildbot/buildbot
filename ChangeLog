@@ -1,5 +1,10 @@
 2008-03-18  Brian Warner  <warner@lothar.com>
 
+	* docs/buildbot.texinfo (Shutdown): make it clear that 'buildbot
+	reconfig' (which uses SIGHUP) doesn't work on windows. Acknowledge
+	the occasional failures in reconfig (and suggest 'buildbot
+	restart' as a fallback). Closes #105.
+
 	* buildbot/steps/shell.py (ShellCommand._interpolateProperties):
 	apply patch from Albert Hofkamp to allow WithProperties in
 	environment variables and the workdir= argument. Closes #52.

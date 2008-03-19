@@ -1097,7 +1097,9 @@ buildmaster and buildslave will respond to this by shutting down
 normally.
 
 The buildmaster will respond to a @code{SIGHUP} by re-reading its
-config file. The following shortcut is available:
+config file. Of course, this only works on unix-like systems with
+signal support, and won't work on Windows. The following shortcut is
+available:
 
 @example
 buildbot reconfig @var{BASEDIR}
@@ -1112,6 +1114,10 @@ use the @code{restart} shortcut, which does both steps for you:
 @example
 buildbot restart @var{BASEDIR}
 @end example
+
+There are certain configuration changes that are not handled cleanly
+by @code{buildbot reconfig}. If this occurs, @code{buildbot restart}
+is a more robust tool to fully switch over to the new configuration.
 
 
 @node Maintenance, Troubleshooting, Shutdown, Installation
