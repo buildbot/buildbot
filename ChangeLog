@@ -1,5 +1,16 @@
 2008-03-18  Brian Warner  <warner@lothar.com>
 
+	* buildbot/interfaces.py (ISourceStamp.getAbsoluteSourceStamp):
+	merge patch from Dustin to add "absolute source stamps": just like
+	normal SourceStamp instances except that they have a .revision
+	attribute copied out of the got_revision property of a build. If
+	the input SourceStamp says .revision=None (i.e. HEAD), and the
+	build is done when the tree is at r1234, then the "absolute"
+	SourceStamp should have .revision=1234 .
+	* buildbot/sourcestamp.py (SourceStamp.getAbsoluteSourceStamp): same
+	* buildbot/status/builder.py (BuildStatus.getSourceStamp): add
+	absolute= argument
+
 	* buildbot/test/runutils.py (SetTestFlagStep): test utility class,
 	adding 'flags' that can be set by specific buildsteps. This makes
 	it easier to write tests that detect whether certain buildsteps
