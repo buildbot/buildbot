@@ -1,5 +1,12 @@
 2008-03-18  Brian Warner  <warner@lothar.com>
 
+	* buildbot/steps/shell.py (ShellCommand._interpolateProperties):
+	apply patch from Albert Hofkamp to allow WithProperties in
+	environment variables and the workdir= argument. Closes #52.
+	* buildbot/test/test_properties.py (Interpolate.testCustomBuildStep):
+	remove this test, it was pretty weird and didn't work with the
+	new _interpolateProperties approach.
+
 	* buildbot/test/test_vc.py (VCBase.connectSlave): turn off usePTY
 	for all slave commands: I'm seeing 'cp' and 'rm' fail with SIGHUP,
 	probably when we close stdin. This happens on my debian/sid

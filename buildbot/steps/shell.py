@@ -148,8 +148,7 @@ class ShellCommand(LoggingBuildStep):
         if self.description is not None:
             return self.description
 
-        words = self.command
-        # TODO: handle WithProperties here
+        words = self._interpolateProperties(self.command)
         if isinstance(words, types.StringTypes):
             words = words.split()
         if len(words) < 1:
@@ -160,17 +159,35 @@ class ShellCommand(LoggingBuildStep):
             return ["'%s" % words[0], "%s'" % words[1]]
         return ["'%s" % words[0], "%s" % words[1], "...'"]
 
-    def _interpolateProperties(self, command):
-        # interpolate any build properties into our command
-        if not isinstance(command, (list, tuple)):
-            return command
-        command_argv = []
-        for argv in command:
-            if isinstance(argv, WithProperties):
-                command_argv.append(argv.render(self.build))
-            else:
-                command_argv.append(argv)
-        return command_argv
+
+    def _interpolateProperties(self, value):
+        """
+        Expand the L{WithProperties} objects in L{value}
+        """
+        if isinstance(value, types.StringTypes) or \
+           isinstance(value, types.BooleanType) or \
+           isinstance(value, types.IntType) or \
+           isinstance(value, types.FloatType):
+            return value
+
+        if isinstance(value, types.ListType):
+            return [self._interpolateProperties(val) for val in value]
+
+        if isinstance(value, types.TupleType):
+            return tuple([self._interpolateProperties(val) for val in value])
+
+        if isinstance(value, types.DictType):
+            new_dict = { }
+            for key, val in value.iteritems():
+                new_key = self._interpolateProperties(key)
+                new_dict[new_key] = self._interpolateProperties(val)
+            return new_dict
+
+        # To make sure we catch anything we forgot
+        assert isinstance(value, WithProperties), \
+               "%s (%s) is not a WithProperties" % (value, type(value))
+
+        return value.render(self.build)
 
     def _interpolateWorkdir(self, workdir):
         if isinstance(workdir, WithProperties):
@@ -186,7 +203,7 @@ class ShellCommand(LoggingBuildStep):
         if slaveEnv:
             if cmd.args['env'] is None:
                 cmd.args['env'] = {}
-            cmd.args['env'].update(slaveEnv)
+            cmd.args['env'].update(self._interpolateProperties(slaveEnv))
             # note that each RemoteShellCommand gets its own copy of the
             # dictionary, so we shouldn't be affecting anyone but ourselves.
 
@@ -219,7 +236,7 @@ class ShellCommand(LoggingBuildStep):
         command = self._interpolateProperties(self.command)
         assert isinstance(command, (list, tuple, str))
         # create the actual RemoteShellCommand instance now
-        kwargs = self.remote_kwargs
+        kwargs = self._interpolateProperties(self.remote_kwargs)
         kwargs['workdir'] = self._interpolateWorkdir(kwargs['workdir'])
         kwargs['command'] = command
         kwargs['logfiles'] = self.logfiles
