@@ -1,5 +1,11 @@
 2008-03-18  Brian Warner  <warner@lothar.com>
 
+	* buildbot/test/runutils.py (SetTestFlagStep): test utility class,
+	adding 'flags' that can be set by specific buildsteps. This makes
+	it easier to write tests that detect whether certain buildsteps
+	have been reached or not. Patch by Dustin Mitchell.
+	* buildbot/test/test_run.py (TestFlag.testTestFlag): test for it.
+
 	* buildbot/buildslave.py (BuildSlave.__repr__): protect against
 	.botmaster being empty, to allow pretty-printing of configuration
 	files before the twisted reactor starts. Patch from Dustin
