@@ -1,5 +1,11 @@
 2008-03-19  Brian Warner  <warner@lothar.com>
 
+	* buildbot/status/web/xmlrpc.py (XMLRPCServer.xmlrpc_getAllBuilders):
+	merge Etienne Pierre's patch (via Dustin): add new XMLRPC methods.
+	(XMLRPCServer.xmlrpc_getStatus): same
+	(XMLRPCServer.xmlrpc_getLastBuilds): same, returns the last N
+	completed builds for a given Builder
+
 	* buildbot/test/test_config.py (ConfigTest.setUp): merge Dustin's
 	patch: suppress DeprecationWarnings in our tests of deprecated
 	features that aren't scheduled for removal quite yet. In the long

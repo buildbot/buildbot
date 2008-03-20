@@ -21,7 +21,7 @@ class XMLRPCServer(xmlrpc.XMLRPC):
         """
         log.msg("getAllBuilders")
         return self.status.getBuilderNames()
-    
+
     def xmlrpc_getStatus(self, builder_name):
         """Return the result of the last build for the given builder
         """
@@ -30,7 +30,7 @@ class XMLRPCServer(xmlrpc.XMLRPC):
         return Results[lastbuild.getResults()]
 
     def xmlrpc_getLastBuilds(self, builder_name, num_builds):
-        """Return the last builds for the given builder
+        """Return the last N completed builds for the given builder.
         'builder_name' is the name of the builder to query
         'num_builds' is the number of builds to return
 
@@ -58,13 +58,13 @@ class XMLRPCServer(xmlrpc.XMLRPC):
             revision = str(revision)
 
             answer = (builder_name,
-                    build.getNumber(),
-                    build_end,
-                    branch,
-                    revision,
-                    Results[build.getResults()],
-                    build.getText(),
-                    )
+                      build.getNumber(),
+                      build_end,
+                      branch,
+                      revision,
+                      Results[build.getResults()],
+                      build.getText(),
+                      )
             all_builds.append((build_end, answer))
 
         # now we've gotten all the builds we're interested in. Sort them by
@@ -76,8 +76,6 @@ class XMLRPCServer(xmlrpc.XMLRPC):
         log.msg("ready to go: %s" % (all_builds,))
 
         return all_builds
-
-
 
 
     def xmlrpc_getAllBuildsInInterval(self, start, stop):
