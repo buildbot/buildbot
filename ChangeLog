@@ -1,3 +1,16 @@
+2008-03-19  Brian Warner  <warner@lothar.com>
+
+	* buildbot/scheduler.py (Triggerable): merge Dustin's patch: add
+	"Triggerable" Schedulers, to start builds at specific phases of
+	other builds rather than in response to source code changes or
+	periodic timers. These phases are marked by "Trigger" steps, which
+	are configured with a list of Triggerable schedulers that they
+	should fire. Closes #56.
+	* buildbot/steps/trigger.py (Trigger): buildstep to match
+	* buildbot/test/test_run.py (Triggers): test for it
+	* docs/buildbot.texinfo (Build Dependencies): document it
+	(Triggering Schedulers): same
+
 2008-03-18  Brian Warner  <warner@lothar.com>
 
 	* buildbot/interfaces.py (ISourceStamp.getAbsoluteSourceStamp):
