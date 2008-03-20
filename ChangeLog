@@ -1,5 +1,10 @@
 2008-03-19  Brian Warner  <warner@lothar.com>
 
+	* buildbot/test/test_config.py (ConfigTest.setUp): merge Dustin's
+	patch: suppress DeprecationWarnings in our tests of deprecated
+	features that aren't scheduled for removal quite yet. In the long
+	run, we'll remove the old features and the tests.
+
 	* NEWS: add a deprecation schedule
 	* buildbot/changes/freshcvsmail.py: remove this file, it was
 	replaced by mail.FCMaildirSource in the previous release.
