@@ -1,5 +1,9 @@
 2008-03-19  Brian Warner  <warner@lothar.com>
 
+	* NEWS: add a deprecation schedule
+	* buildbot/changes/freshcvsmail.py: remove this file, it was
+	replaced by mail.FCMaildirSource in the previous release.
+
 	* buildbot/test/runutils.py: set usePTY=False everywhere we aren't
 	explicitly testing =True, to avoid SIGHUP-based failures that I
 	now see about 10% of the time.

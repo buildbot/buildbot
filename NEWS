@@ -10,6 +10,20 @@ These are now reserved for internal buildbot purposes, such as the magic
 "_all" pseudo-builder that the web pages use to allow force-build buttons
 that start builds on all Builders at once.
 
+** Deprecation Schedule
+
+The changes.freshcvsmail change source was replaced by
+changes.mail.FCMaildirSource in 0.7.6, and has been removed in 0.7.7 .
+
+c['sources'] (plural) was replaced by c['change_source'] (singular) in 0.7.6,
+and will be removed by 0.8.0.
+
+c['bots'] was replaced by c['buildslaves'] in 0.7.6, and will be removed by
+0.8.0
+
+The html.Waterfall status target was replaced by html.WebStatus in 0.7.6, and
+will be removed by 0.8.0.
+
 
 * Release 0.7.6 (30 Sep 2007)
 
