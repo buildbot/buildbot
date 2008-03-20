@@ -36,7 +36,7 @@ The old Waterfall page is deprecated, but it should continue to work for
 another few releases. It is now a subclass of WebStatus which just replaces
 the default root URL with another copy of the /waterfall resource.
 
-*** Compatiblity: Python-2.3 or newer, Twisted-2.0 or newer
+*** Compatibility: Python-2.3 or newer, Twisted-2.0 or newer
 
 No compatiblity losses here, buildbot-0.7.6 is compatible with the same
 versions of python and twisted that 0.7.5 was.
