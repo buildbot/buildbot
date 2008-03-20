@@ -1,5 +1,9 @@
 2008-03-19  Brian Warner  <warner@lothar.com>
 
+	* buildbot/test/runutils.py: set usePTY=False everywhere we aren't
+	explicitly testing =True, to avoid SIGHUP-based failures that I
+	now see about 10% of the time.
+
 	* buildbot/scheduler.py (Triggerable): merge Dustin's patch: add
 	"Triggerable" Schedulers, to start builds at specific phases of
 	other builds rather than in response to source code changes or

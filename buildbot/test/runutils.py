@@ -48,7 +48,7 @@ class RunMixin:
         os.mkdir("slavebase-%s" % slavename)
         slave = MyBuildSlave("localhost", port, slavename, "sekrit",
                              "slavebase-%s" % slavename,
-                             keepalive=0, usePTY=1, debugOpts=opts)
+                             keepalive=0, usePTY=False, debugOpts=opts)
         slave.info = {"admin": "one"}
         self.slaves[slavename] = slave
         slave.startService()
@@ -84,7 +84,7 @@ class RunMixin:
         os.mkdir("slavebase-bot2")
         # this uses bot1, really
         slave = MyBuildSlave("localhost", port, "bot1", "sekrit",
-                             "slavebase-bot2", keepalive=0, usePTY=1)
+                             "slavebase-bot2", keepalive=0, usePTY=False)
         slave.info = {"admin": "two"}
         self.slaves['bot2'] = slave
         slave.startService()
@@ -95,7 +95,7 @@ class RunMixin:
         self.rmtree("slavebase-bot1")
         os.mkdir("slavebase-bot1")
         slave = MyBuildSlave("localhost", port, "bot1", "sekrit",
-                             "slavebase-bot1", keepalive=2, usePTY=1,
+                             "slavebase-bot1", keepalive=2, usePTY=False,
                              keepaliveTimeout=1)
         slave.info = {"admin": "one"}
         self.slaves['bot1'] = slave
