@@ -184,6 +184,7 @@ Build Steps
 * Simple ShellCommand Subclasses::  
 * Python BuildSteps::           
 * Transferring Files::          
+* Triggering Schedulers::       
 * Writing New BuildSteps::      
 
 Source Checkout
@@ -3722,7 +3723,7 @@ control each.
 * Simple ShellCommand Subclasses::  
 * Python BuildSteps::           
 * Transferring Files::          
-* Triggering Schedulers::
+* Triggering Schedulers::       
 * Writing New BuildSteps::      
 @end menu
 
@@ -4659,7 +4660,7 @@ running on.
 
 @end table
 
-@node Python BuildSteps, Triggering Schedulers, Simple ShellCommand Subclasses, Build Steps
+@node Python BuildSteps, Transferring Files, Simple ShellCommand Subclasses, Build Steps
 @subsection Python BuildSteps
 
 Here are some BuildSteps that are specifcally useful for projects

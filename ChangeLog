@@ -1,3 +1,7 @@
+2008-03-20  Brian Warner  <warner@lothar.com>
+
+	* docs/buildbot.texinfo (Build Properties): fix up nodes+menus
+
 2008-03-19  Brian Warner  <warner@lothar.com>
 
 	* buildbot/status/web/xmlrpc.py (XMLRPCServer.xmlrpc_getAllBuilders):
