@@ -1,5 +1,7 @@
 2008-03-20  Brian Warner  <warner@lothar.com>
 
+	* buildbot/steps/trigger.py: remove unused imports to hush pyflakes
+
 	* docs/buildbot.texinfo (Build Properties): fix up nodes+menus
 
 2008-03-19  Brian Warner  <warner@lothar.com>

@@ -1,10 +1,7 @@
 from buildbot.process.buildstep import LoggingBuildStep, SUCCESS, FAILURE, EXCEPTION
 from buildbot.steps.shell import WithProperties
-from buildbot.sourcestamp import SourceStamp
 from buildbot.scheduler import Triggerable
 from twisted.internet import defer
-from twisted.python import log
-import os
 
 class Trigger(LoggingBuildStep):
     """
