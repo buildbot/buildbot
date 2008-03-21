@@ -3,6 +3,9 @@
 	* buildbot/process/buildstep.py (render_properties): more cleanup:
 	rename 'render' to 'render_properties'.
 	* buildbot/steps/shell.py: same
+	(ShellCommand._interpolateProperties): tolerate None in the value,
+	clean up the isinstance checks, stop using the 'types' module
+
 	* buildbot/steps/transfer.py (FileUpload.start): same, other cleanups
 
 	* buildbot/steps/shell.py (render): oops, remove redundant

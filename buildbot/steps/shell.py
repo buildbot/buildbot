@@ -1,6 +1,6 @@
 # -*- test-case-name: buildbot.test.test_steps,buildbot.test.test_properties -*-
 
-import types, re
+import re
 from twisted.python import log
 from buildbot.process.buildstep import LoggingBuildStep, RemoteShellCommand, \
      render_properties
@@ -119,7 +119,7 @@ class ShellCommand(LoggingBuildStep):
             return self.description
 
         words = self.command
-        if isinstance(words, types.StringTypes):
+        if isinstance(words, (str, unicode)):
             words = words.split()
         # render() each word to handle WithProperties objects
         words = [render_properties(word, self.build) for word in words]
@@ -135,19 +135,16 @@ class ShellCommand(LoggingBuildStep):
         """
         Expand the L{WithProperties} objects in L{value}
         """
-        if isinstance(value, types.StringTypes) or \
-           isinstance(value, types.BooleanType) or \
-           isinstance(value, types.IntType) or \
-           isinstance(value, types.FloatType):
+        if isinstance(value, (str, unicode, bool, int, float, type(None))):
             return value
 
-        if isinstance(value, types.ListType):
+        if isinstance(value, list):
             return [self._interpolateProperties(val) for val in value]
 
-        if isinstance(value, types.TupleType):
+        if isinstance(value, tuple):
             return tuple([self._interpolateProperties(val) for val in value])
 
-        if isinstance(value, types.DictType):
+        if isinstance(value, dict):
             new_dict = { }
             for key, val in value.iteritems():
                 new_key = self._interpolateProperties(key)
