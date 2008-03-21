@@ -1,5 +1,14 @@
 2008-03-20  Brian Warner  <warner@lothar.com>
 
+	* buildbot/scheduler.py (Triggerable): cleanup: wrap docstring
+	* buildbot/steps/trigger.py (Trigger): cleanup: rename schedulers=
+	to schedulerNames=, make updateSourceStamp=True by default, tolerate
+	missing got_revision property (i.e. if updateSourceStamp=True but
+	there was no checkout/update step run), add TODO notes for further
+	cleanup.
+	* buildbot/test/test_run.py (Triggers): update to match
+	* docs/buildbot.texinfo (Build Dependencies): same
+
 	* buildbot/slave/commands.py (SVN.doVCFull): merge Dustin's patch:
 	add --no-auth-cache option to svn invocations to avoid caching
 	buildbot's credentials. This also helps when users run a

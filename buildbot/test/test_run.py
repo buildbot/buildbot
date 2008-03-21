@@ -678,7 +678,7 @@ c['builders'] = [{'name': 'triggerer', 'slavename': 'bot1',
         return d
 
     def testTriggerBuild(self):
-        return self.setupTest("schedulers=['triggeree']",
+        return self.setupTest("schedulerNames=['triggeree']",
                 "Dummy",
                 self._checkTriggerBuild)
 
@@ -689,7 +689,7 @@ c['builders'] = [{'name': 'triggerer', 'slavename': 'bot1',
         self.failIfFlagNotSet('triggerer_finished')
 
     def testTriggerBuildWait(self):
-        return self.setupTest("schedulers=['triggeree'], waitForFinish=1",
+        return self.setupTest("schedulerNames=['triggeree'], waitForFinish=1",
                 "Dummy",
                 self._checkTriggerBuildWait)
 

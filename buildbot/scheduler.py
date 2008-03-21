@@ -683,9 +683,9 @@ class Try_Userpass_Perspective(pbutil.NewCredPerspective):
         return makeRemote(bs.status)
 
 class Triggerable(BaseUpstreamScheduler):
-    """
-    This scheduler doesn't do anything until it is triggered by
-    a Trigger step in a factory.
+    """This scheduler doesn't do anything until it is triggered by a Trigger
+    step in a factory. In general, that step will not complete until all of
+    the builds that I fire have finished.
     """
 
     def __init__(self, name, builderNames):
@@ -699,9 +699,8 @@ class Triggerable(BaseUpstreamScheduler):
         return []
 
     def trigger(self, ss):
-        """
-        Trigger this scheduler.  Returns a deferred that will fire when the buildset
-        is finished.
+        """Trigger this scheduler. Returns a deferred that will fire when the
+        buildset is finished.
         """
         bs = buildset.BuildSet(self.builderNames, ss)
         d = bs.waitUntilFinished()

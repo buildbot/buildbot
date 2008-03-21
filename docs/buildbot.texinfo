@@ -2268,54 +2268,49 @@ Note that @code{Dependent}'s upstream scheduler argument is given as a
 @code{Scheduler} @emph{instance}, not a name. This makes it impossible
 to create circular dependencies in the config file.
 
-A more general way to coordinate builds is by ``triggering'' schedulers
-from builds.  The Triggerable waits to be triggered by a
-Trigger step in another build.  That step can optionally
-wait for the scheduler's builds to complete.  This provides two
-advantages over Dependent schedulers.  First, the same scheduler
-can be triggered from multiple builds.  Second, the ability to wait
-for a Triggerable's builds to complete provides a form of
-"subroutine call", where one or more builds can "call" a scheduler
-to perform some work for them,  perhaps on other buildslaves.
+A more general way to coordinate builds is by ``triggering''
+schedulers from builds. The Triggerable waits to be triggered by a
+Trigger step (@pxref{Triggering Schedulers}) in another build. That
+step can optionally wait for the scheduler's builds to complete. This
+provides two advantages over Dependent schedulers. First, the same
+scheduler can be triggered from multiple builds. Second, the ability
+to wait for a Triggerable's builds to complete provides a form of
+"subroutine call", where one or more builds can "call" a scheduler to
+perform some work for them, perhaps on other buildslaves.
 
 @example
 from buildbot import scheduler
 from buildbot.steps import trigger
-checkin = scheduler.Scheduler("checkin", None, 5*60,
-                            ["checkin"])
-nightly = scheduler.Scheduler("nightly", ...
-                            ["nightly"])
+
+checkin = scheduler.Scheduler("checkin", None, 5*60, ["checkin"])
+nightly = scheduler.Scheduler("nightly", ... , ["nightly"])
+
 mktarball = scheduler.Triggerable("mktarball",
-                              ["mktarball"])
+                                  ["mktarball"])
 build = scheduler.Triggerable("build-all-platforms",
                               ["build-all-platforms"])
 test = scheduler.Triggerable("distributed-test",
-                              ["distributed-test"])
+                             ["distributed-test"])
 package = scheduler.Triggerable("package-all-platforms",
-                              ["package-all-platforms"])
+                                ["package-all-platforms"])
+
 c['schedulers'] = [checkin, nightly, build, test, package]
 
 checkin_factory = factory.BuildFactory()
-f.addStep(trigger.TriggerStep('mktarball',
-    schedulers=['mktarball'],
-    waitForFinish=1)
-f.addStep(trigger.TriggerStep('build',
-    schedulers=['build-all-platforms'],
-    waitForFinish=1)
-f.addStep(trigger.TriggerStep('test',
-    schedulers=['distributed-test'],
-    waitForFinish=1)
+f.addStep(trigger.Trigger('mktarball', schedulers=['mktarball'],
+                                       waitForFinish=True)
+f.addStep(trigger.Trigger('build', schedulers=['build-all-platforms'],
+                                   waitForFinish=True)
+f.addStep(trigger.Trigger('test', schedulers=['distributed-test'],
+                                  waitForFinish=True)
 
 nightly_factory = factory.BuildFactory()
-f.addStep(trigger.TriggerStep('mktarball',
-    schedulers=['mktarball'],
-    waitForFinish=1)
-f.addStep(trigger.TriggerStep('build',
-    schedulers=['build-all-platforms'],
-    waitForFinish=1)
-f.addStep(trigger.TriggerStep('package',
-    schedulers=['package-all-platforms'],
-    waitForFinish=1)
+f.addStep(trigger.Trigger('mktarball', schedulers=['mktarball'],
+                                       waitForFinish=True)
+f.addStep(trigger.Trigger('build', schedulers=['build-all-platforms'],
+                                   waitForFinish=True)
+f.addStep(trigger.Trigger('package', schedulers=['package-all-platforms'],
+                                     waitForFinish=True)
 @end example
 
 @node Setting the slaveport, Buildslave Specifiers, Listing Change Sources and Schedulers, Configuration
@@ -4833,29 +4828,29 @@ The counterpart to the Triggerable described in section
 
 @example
 from buildbot.steps.trigger import Trigger
-f.addStep(Trigger,
-          schedulers=['build-prep'],
-          waitForFinish=1,
-          updateSourceStamp=1)
+f.addStep(Trigger, schedulerNames=['build-prep'],
+                   waitForFinish=True,
+                   updateSourceStamp=True)
 @end example
 
-The @code{schedulers=} argument lists the Triggerables
+The @code{schedulerNames=} argument lists the Triggerables
 that should be triggered when this step is executed.  Note that
 it is possible, but not advisable, to create a cycle where a build
 continually triggers itself, because the schedulers are specified
 by name.
 
-If @code{waitForFinish} is true, then the step will not finish until
-all of the builds from the triggered schedulers have finished.  If this
-argument is not given, then the buildstep succeeds immediately after
-triggering the schedulers.
+If @code{waitForFinish} is True, then the step will not finish until
+all of the builds from the triggered schedulers have finished. If this
+argument is False (the default) or not given, then the buildstep
+succeeds immediately after triggering the schedulers.
 
-If @code{updateSourceStamp} is true, then step updates the SourceStamp
-given to the Triggerables to include @code{got_revision}
-(the revision actually used in this build) as @code{revision} (the
-revision to use in the triggered builds).  This is useful to ensure
-that all of the builds use exactly the same SourceStamp, even if
-other Changes have occurred while the build was running.
+If @code{updateSourceStamp} is True (the default), then step updates
+the SourceStamp given to the Triggerables to include
+@code{got_revision} (the revision actually used in this build) as
+@code{revision} (the revision to use in the triggered builds). This is
+useful to ensure that all of the builds use exactly the same
+SourceStamp, even if other Changes have occurred while the build was
+running.
 
 @node Writing New BuildSteps,  , Triggering Schedulers, Build Steps
 @subsection Writing New BuildSteps
