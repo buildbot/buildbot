@@ -8,19 +8,6 @@ from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE
 # for existing configurations that import WithProperties from here
 from buildbot.process.buildstep import WithProperties
 
-def render(s, build):
-    """Return a string based on s and build that is suitable for use
-    in a running BuildStep.  If s is a string, return s.  If s is a
-    WithProperties object, return the result of s.render(build).
-    Otherwise, return str(s).
-    """
-    if isinstance(s, (str, unicode)):
-        return s
-    elif isinstance(s, WithProperties):
-        return s.render(build)
-    else:
-        return str(s)
-
 class ShellCommand(LoggingBuildStep):
     """I run a single shell command on the buildslave. I return FAILURE if
     the exit code of that command is non-zero, SUCCESS otherwise. To change

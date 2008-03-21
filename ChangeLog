@@ -1,5 +1,8 @@
 2008-03-20  Brian Warner  <warner@lothar.com>
 
+	* buildbot/steps/shell.py (render): oops, remove redundant
+	definition that probably crept in during a merge conflict
+
 	* buildbot/scheduler.py (Triggerable): cleanup: wrap docstring
 	* buildbot/steps/trigger.py (Trigger): cleanup: rename schedulers=
 	to schedulerNames=, make updateSourceStamp=True by default, tolerate
