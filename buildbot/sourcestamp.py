@@ -80,6 +80,9 @@ class SourceStamp(util.ComparableMixin):
                                 changes=changes)
         return newsource
 
+    def getAbsoluteSourceStamp(self, got_revision):
+        return SourceStamp(branch=self.branch, revision=got_revision, patch=self.patch)
+
     def getText(self):
         # TODO: this won't work for VC's with huge 'revision' strings
         if self.revision is None:

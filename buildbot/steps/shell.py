@@ -2,42 +2,24 @@
 
 import types, re
 from twisted.python import log
-from buildbot import util
-from buildbot.process.buildstep import LoggingBuildStep, RemoteShellCommand
+from buildbot.process.buildstep import LoggingBuildStep, RemoteShellCommand, render
 from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE
 
-class _BuildPropertyDictionary:
-    def __init__(self, build):
-        self.build = build
-    def __getitem__(self, name):
-        p = self.build.getProperty(name)
-        if p is None:
-            p = ""
-        return p
+# for existing configurations that import WithProperties from here
+from buildbot.process.buildstep import WithProperties
 
-class WithProperties(util.ComparableMixin):
-    """This is a marker class, used in ShellCommand's command= argument to
-    indicate that we want to interpolate a build property.
+def render(s, build):
+    """Return a string based on s and build that is suitable for use
+    in a running BuildStep.  If s is a string, return s.  If s is a
+    WithProperties object, return the result of s.render(build).
+    Otherwise, return str(s).
     """
-
-    compare_attrs = ('fmtstring', 'args')
-
-    def __init__(self, fmtstring, *args):
-        self.fmtstring = fmtstring
-        self.args = args
-
-    def render(self, build):
-        if self.args:
-            strings = []
-            for name in self.args:
-                p = build.getProperty(name)
-                if p is None:
-                    p = ""
-                strings.append(p)
-            s = self.fmtstring % tuple(strings)
-        else:
-            s = self.fmtstring % _BuildPropertyDictionary(build)
+    if isinstance(s, (str, unicode)):
         return s
+    elif isinstance(s, WithProperties):
+        return s.render(build)
+    else:
+        return str(s)
 
 class ShellCommand(LoggingBuildStep):
     """I run a single shell command on the buildslave. I return FAILURE if
@@ -161,22 +143,37 @@ class ShellCommand(LoggingBuildStep):
             return ["'%s" % words[0], "%s'" % words[1]]
         return ["'%s" % words[0], "%s" % words[1], "...'"]
 
-    def _interpolateProperties(self, command):
-        # interpolate any build properties into our command
-        if not isinstance(command, (list, tuple)):
-            return command
-        command_argv = []
-        for argv in command:
-            if isinstance(argv, WithProperties):
-                command_argv.append(argv.render(self.build))
-            else:
-                command_argv.append(argv)
-        return command_argv
+    def _interpolateProperties(self, value):
+        """
+        Expand the L{WithProperties} objects in L{value}
+        """
+        if isinstance(value, types.StringTypes) or \
+           isinstance(value, types.BooleanType) or \
+           isinstance(value, types.IntType) or \
+           isinstance(value, types.FloatType):
+            return value
+
+        if isinstance(value, types.ListType):
+            return [self._interpolateProperties(val) for val in value]
+
+        if isinstance(value, types.TupleType):
+            return tuple([self._interpolateProperties(val) for val in value])
+
+        if isinstance(value, types.DictType):
+            new_dict = { }
+            for key, val in value.iteritems():
+                new_key = self._interpolateProperties(key)
+                new_dict[new_key] = self._interpolateProperties(val)
+            return new_dict
+
+        # To make sure we catch anything we forgot
+        assert isinstance(value, WithProperties), \
+               "%s (%s) is not a WithProperties" % (value, type(value))
+
+        return value.render(self.build)
 
     def _interpolateWorkdir(self, workdir):
-        if isinstance(workdir, WithProperties):
-            return workdir.render(self.build)
-        return workdir
+        return render(workdir, self.build)
 
     def setupEnvironment(self, cmd):
         # merge in anything from Build.slaveEnvironment . Earlier steps
@@ -187,7 +184,7 @@ class ShellCommand(LoggingBuildStep):
         if slaveEnv:
             if cmd.args['env'] is None:
                 cmd.args['env'] = {}
-            cmd.args['env'].update(slaveEnv)
+            cmd.args['env'].update(self._interpolateProperties(slaveEnv))
             # note that each RemoteShellCommand gets its own copy of the
             # dictionary, so we shouldn't be affecting anyone but ourselves.
 
@@ -220,7 +217,7 @@ class ShellCommand(LoggingBuildStep):
         command = self._interpolateProperties(self.command)
         assert isinstance(command, (list, tuple, str))
         # create the actual RemoteShellCommand instance now
-        kwargs = self.remote_kwargs
+        kwargs = self._interpolateProperties(self.remote_kwargs)
         kwargs['workdir'] = self._interpolateWorkdir(kwargs['workdir'])
         kwargs['command'] = command
         kwargs['logfiles'] = self.logfiles

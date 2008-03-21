@@ -11,13 +11,6 @@ from buildbot.status import builder
 from buildbot.slave.commands import rmdirRecursive
 from buildbot.test.runutils import RunMixin
 
-class MyBuildStep(ShellCommand):
-    def _interpolateProperties(self, command):
-        command = ["tar", "czf",
-                   "build-%s.tar.gz" % self.getProperty("revision"),
-                   "source"]
-        return ShellCommand._interpolateProperties(self, command)
-
 
 class FakeBuild:
     pass
@@ -91,13 +84,6 @@ class Interpolate(unittest.TestCase):
         cmd = c._interpolateProperties(c.command)
         self.failUnlessEqual(cmd,
                              ["tar", "czf", "build-.tar.gz", "source"])
-
-    def testCustomBuildStep(self):
-        c = MyBuildStep(workdir=dir)
-        c.setBuild(self.build)
-        cmd = c._interpolateProperties(c.command)
-        self.failUnlessEqual(cmd,
-                             ["tar", "czf", "build-1234.tar.gz", "source"])
 
     def testSourceStamp(self):
         c = ShellCommand(workdir=dir,

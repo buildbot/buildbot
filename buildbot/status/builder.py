@@ -945,8 +945,10 @@ class BuildStatus(styles.Versioned):
             return None
         return self.builder.getBuild(self.number-1)
 
-    def getSourceStamp(self):
-        return self.source
+    def getSourceStamp(self, absolute=False):
+        if not absolute or not self.properties.has_key('got_revision'):
+            return self.source
+        return self.source.getAbsoluteSourceStamp(self.properties['got_revision'])
 
     def getReason(self):
         return self.reason

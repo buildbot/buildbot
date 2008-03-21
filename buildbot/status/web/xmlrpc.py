@@ -16,6 +16,68 @@ class XMLRPCServer(xmlrpc.XMLRPC):
         self.control = req.site.buildbot_service.getControl()
         return xmlrpc.XMLRPC.render(self, req)
 
+    def xmlrpc_getAllBuilders(self):
+        """Return a list of all builder names
+        """
+        log.msg("getAllBuilders")
+        return self.status.getBuilderNames()
+
+    def xmlrpc_getStatus(self, builder_name):
+        """Return the result of the last build for the given builder
+        """
+        builder = self.status.getBuilder(builder_name)
+        lastbuild = builder.getBuild(-1)
+        return Results[lastbuild.getResults()]
+
+    def xmlrpc_getLastBuilds(self, builder_name, num_builds):
+        """Return the last N completed builds for the given builder.
+        'builder_name' is the name of the builder to query
+        'num_builds' is the number of builds to return
+
+	Each build is returned in the same form as xmlrpc_getAllBuildsInInterval
+        """
+        log.msg("getLastBuilds: %s - %d" % (builder_name, num_builds))
+        builder = self.status.getBuilder(builder_name)
+        all_builds = []
+        for build_number in range(1, num_builds+1):
+            build = builder.getBuild(-build_number)
+            if not build:
+                break
+            if not build.isFinished():
+                continue
+            (build_start, build_end) = build.getTimes()
+
+            ss = build.getSourceStamp()
+            branch = ss.branch
+            if branch is None:
+                branch = ""
+            try:
+                revision = build.getProperty("got_revision")
+            except KeyError:
+                revision = ""
+            revision = str(revision)
+
+            answer = (builder_name,
+                      build.getNumber(),
+                      build_end,
+                      branch,
+                      revision,
+                      Results[build.getResults()],
+                      build.getText(),
+                      )
+            all_builds.append((build_end, answer))
+
+        # now we've gotten all the builds we're interested in. Sort them by
+        # end time.
+        all_builds.sort(lambda a,b: cmp(a[0], b[0]))
+        # and remove the timestamps
+        all_builds = [t[1] for t in all_builds]
+
+        log.msg("ready to go: %s" % (all_builds,))
+
+        return all_builds
+
+
     def xmlrpc_getAllBuildsInInterval(self, start, stop):
         """Return a list of builds that have completed after the 'start'
         timestamp and before the 'stop' timestamp. This looks at all

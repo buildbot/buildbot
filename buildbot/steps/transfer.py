@@ -4,7 +4,7 @@ import os.path
 from twisted.internet import reactor
 from twisted.spread import pb
 from twisted.python import log
-from buildbot.process.buildstep import RemoteCommand, BuildStep
+from buildbot.process.buildstep import RemoteCommand, BuildStep, render
 from buildbot.process.buildstep import SUCCESS, FAILURE
 from buildbot.interfaces import BuildSlaveTooOldError
 
@@ -114,8 +114,8 @@ class FileUpload(BuildStep):
             m = "slave is too old, does not know about uploadFile"
             raise BuildSlaveTooOldError(m)
 
-        source = self.slavesrc
-        masterdest = self.masterdest
+        source = render(self.slavesrc, self.build)
+        masterdest = render(self.masterdest, self.build)
         # we rely upon the fact that the buildmaster runs chdir'ed into its
         # basedir to make sure that relative paths in masterdest are expanded
         # properly. TODO: maybe pass the master's basedir all the way down
@@ -128,7 +128,8 @@ class FileUpload(BuildStep):
         self.step_status.setText(['uploading', os.path.basename(source)])
 
         # we use maxsize to limit the amount of data on both sides
-        fileWriter = _FileWriter(self.masterdest, self.maxsize, self.mode)
+        # XXX should that be 'masterdest' or 'target'?
+        fileWriter = _FileWriter(masterdest, self.maxsize, self.mode)
 
         # default arguments
         args = {
@@ -243,8 +244,8 @@ class FileDownload(BuildStep):
 
         # we are currently in the buildmaster's basedir, so any non-absolute
         # paths will be interpreted relative to that
-        source = os.path.expanduser(self.mastersrc)
-        slavedest = self.slavedest
+        source = os.path.expanduser(render(self.mastersrc, self.build))
+        slavedest = render(self.slavedest, self.build)
         log.msg("FileDownload started, from master %r to slave %r" %
                 (source, slavedest))
 
@@ -267,7 +268,7 @@ class FileDownload(BuildStep):
 
         # default arguments
         args = {
-            'slavedest': self.slavedest,
+            'slavedest': slavedest,
             'maxsize': self.maxsize,
             'reader': fileReader,
             'blocksize': self.blocksize,

@@ -682,3 +682,28 @@ class Try_Userpass_Perspective(pbutil.NewCredPerspective):
         from buildbot.status.client import makeRemote
         return makeRemote(bs.status)
 
+class Triggerable(BaseUpstreamScheduler):
+    """
+    This scheduler doesn't do anything until it is triggered by
+    a Trigger step in a factory.
+    """
+
+    def __init__(self, name, builderNames):
+        BaseUpstreamScheduler.__init__(self, name)
+        self.builderNames = builderNames
+
+    def listBuilderNames(self):
+        return self.builderNames
+
+    def getPendingBuildTimes(self):
+        return []
+
+    def trigger(self, ss):
+        """
+        Trigger this scheduler.  Returns a deferred that will fire when the buildset
+        is finished.
+        """
+        bs = buildset.BuildSet(self.builderNames, ss)
+        d = bs.waitUntilFinished()
+        self.submit(bs)
+        return d

@@ -1,4 +1,82 @@
+2008-03-20  Brian Warner  <warner@lothar.com>
+
+	* buildbot/steps/shell.py: merge Greg Ward's patch (via Dustin):
+	refactor WithProperties handling, allow WithProperties in more
+	places. Closes #115.
+	* buildbot/process/buildstep.py: same
+	* buildbot/steps/transfer.py: same, allow WithProperties in filenames
+
+	* buildbot/steps/trigger.py: remove unused imports to hush pyflakes
+
+	* docs/buildbot.texinfo (Build Properties): fix up nodes+menus
+
+2008-03-19  Brian Warner  <warner@lothar.com>
+
+	* buildbot/status/web/xmlrpc.py (XMLRPCServer.xmlrpc_getAllBuilders):
+	merge Etienne Pierre's patch (via Dustin): add new XMLRPC methods.
+	(XMLRPCServer.xmlrpc_getStatus): same
+	(XMLRPCServer.xmlrpc_getLastBuilds): same, returns the last N
+	completed builds for a given Builder
+
+	* buildbot/test/test_config.py (ConfigTest.setUp): merge Dustin's
+	patch: suppress DeprecationWarnings in our tests of deprecated
+	features that aren't scheduled for removal quite yet. In the long
+	run, we'll remove the old features and the tests.
+
+	* NEWS: add a deprecation schedule
+	* buildbot/changes/freshcvsmail.py: remove this file, it was
+	replaced by mail.FCMaildirSource in the previous release.
+
+	* buildbot/test/runutils.py: set usePTY=False everywhere we aren't
+	explicitly testing =True, to avoid SIGHUP-based failures that I
+	now see about 10% of the time.
+
+	* buildbot/scheduler.py (Triggerable): merge Dustin's patch: add
+	"Triggerable" Schedulers, to start builds at specific phases of
+	other builds rather than in response to source code changes or
+	periodic timers. These phases are marked by "Trigger" steps, which
+	are configured with a list of Triggerable schedulers that they
+	should fire. Closes #56.
+	* buildbot/steps/trigger.py (Trigger): buildstep to match
+	* buildbot/test/test_run.py (Triggers): test for it
+	* docs/buildbot.texinfo (Build Dependencies): document it
+	(Triggering Schedulers): same
+
 2008-03-18  Brian Warner  <warner@lothar.com>
+
+	* buildbot/interfaces.py (ISourceStamp.getAbsoluteSourceStamp):
+	merge patch from Dustin to add "absolute source stamps": just like
+	normal SourceStamp instances except that they have a .revision
+	attribute copied out of the got_revision property of a build. If
+	the input SourceStamp says .revision=None (i.e. HEAD), and the
+	build is done when the tree is at r1234, then the "absolute"
+	SourceStamp should have .revision=1234 .
+	* buildbot/sourcestamp.py (SourceStamp.getAbsoluteSourceStamp): same
+	* buildbot/status/builder.py (BuildStatus.getSourceStamp): add
+	absolute= argument
+
+	* buildbot/test/runutils.py (SetTestFlagStep): test utility class,
+	adding 'flags' that can be set by specific buildsteps. This makes
+	it easier to write tests that detect whether certain buildsteps
+	have been reached or not. Patch by Dustin Mitchell.
+	* buildbot/test/test_run.py (TestFlag.testTestFlag): test for it.
+
+	* buildbot/buildslave.py (BuildSlave.__repr__): protect against
+	.botmaster being empty, to allow pretty-printing of configuration
+	files before the twisted reactor starts. Patch from Dustin
+	Mitchell.
+
+	* docs/buildbot.texinfo (Shutdown): make it clear that 'buildbot
+	reconfig' (which uses SIGHUP) doesn't work on windows. Acknowledge
+	the occasional failures in reconfig (and suggest 'buildbot
+	restart' as a fallback). Closes #105.
+
+	* buildbot/steps/shell.py (ShellCommand._interpolateProperties):
+	apply patch from Albert Hofkamp to allow WithProperties in
+	environment variables and the workdir= argument. Closes #52.
+	* buildbot/test/test_properties.py (Interpolate.testCustomBuildStep):
+	remove this test, it was pretty weird and didn't work with the
+	new _interpolateProperties approach.
 
 	* buildbot/test/test_vc.py (VCBase.connectSlave): turn off usePTY
 	for all slave commands: I'm seeing 'cp' and 'rm' fail with SIGHUP,

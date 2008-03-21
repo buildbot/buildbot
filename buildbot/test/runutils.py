@@ -48,7 +48,7 @@ class RunMixin:
         os.mkdir("slavebase-%s" % slavename)
         slave = MyBuildSlave("localhost", port, slavename, "sekrit",
                              "slavebase-%s" % slavename,
-                             keepalive=0, usePTY=1, debugOpts=opts)
+                             keepalive=0, usePTY=False, debugOpts=opts)
         slave.info = {"admin": "one"}
         self.slaves[slavename] = slave
         slave.startService()
@@ -84,7 +84,7 @@ class RunMixin:
         os.mkdir("slavebase-bot2")
         # this uses bot1, really
         slave = MyBuildSlave("localhost", port, "bot1", "sekrit",
-                             "slavebase-bot2", keepalive=0, usePTY=1)
+                             "slavebase-bot2", keepalive=0, usePTY=False)
         slave.info = {"admin": "two"}
         self.slaves['bot2'] = slave
         slave.startService()
@@ -95,7 +95,7 @@ class RunMixin:
         self.rmtree("slavebase-bot1")
         os.mkdir("slavebase-bot1")
         slave = MyBuildSlave("localhost", port, "bot1", "sekrit",
-                             "slavebase-bot1", keepalive=2, usePTY=1,
+                             "slavebase-bot1", keepalive=2, usePTY=False,
                              keepaliveTimeout=1)
         slave.info = {"admin": "one"}
         self.slaves['bot1'] = slave
@@ -423,3 +423,45 @@ class StepTester:
     def filterArgs(self, args):
         # this can be overridden
         return args
+
+# ----------------------------------------
+
+_flags = {}
+
+def setTestFlag(flagname, value):
+    _flags[flagname] = value
+
+class SetTestFlagStep(BuildStep):
+    """
+    A special BuildStep to set a named flag; this can be used with the
+    TestFlagMixin to monitor what has and has not run in a particular
+    configuration.
+    """
+    def __init__(self, flagname='flag', value=1, **kwargs):
+        BuildStep.__init__(self, **kwargs)
+        self.flagname = flagname
+        self.value = value
+
+    def start(self):
+        _flags[self.flagname] = self.value
+        self.finished(builder.SUCCESS)
+
+class TestFlagMixin:
+    def clearFlags(self):
+        """
+        Set up for a test by clearing all flags; call this from your test
+        function.
+        """
+        _flags.clear()
+
+    def failIfFlagSet(self, flagname, msg=None):
+        if not msg: msg = "flag '%s' is set" % flagname
+        self.failIf(_flags.has_key(flagname), msg=msg)
+
+    def failIfFlagNotSet(self, flagname, msg=None):
+        if not msg: msg = "flag '%s' is not set" % flagname
+        self.failUnless(_flags.has_key(flagname), msg=msg)
+
+    def getFlag(self, flagname):
+        self.failIfFlagNotSet(flagname, "flag '%s' not set" % flagname)
+        return _flags.get(flagname)
