@@ -1,5 +1,12 @@
 2008-03-20  Brian Warner  <warner@lothar.com>
 
+	* buildbot/slave/commands.py (SVN.doVCFull): merge Dustin's patch:
+	add --no-auth-cache option to svn invocations to avoid caching
+	buildbot's credentials. This also helps when users run a
+	buildslave from their personal account, to keep the buildslave
+	from clobbering their manually-provided svn password. Closes #188.
+	(SVN.doVCUpdate): do it for 'svn update' too.
+
 	* buildbot/steps/shell.py: merge Greg Ward's patch (via Dustin):
 	refactor WithProperties handling, allow WithProperties in more
 	places. Closes #115.

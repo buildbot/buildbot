@@ -1518,7 +1518,7 @@ class SVN(SourceBase):
         # update: possible for mode in ('copy', 'update')
         d = os.path.join(self.builder.basedir, self.srcdir)
         command = [self.vcexe, 'update', '--revision', str(revision),
-                   '--non-interactive']
+                   '--non-interactive', '--no-auth-cache']
         c = ShellCommand(self.builder, command, d,
                          sendRC=False, timeout=self.timeout,
                          keepStdout=True)
