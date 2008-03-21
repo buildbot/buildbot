@@ -4,7 +4,8 @@ import os.path
 from twisted.internet import reactor
 from twisted.spread import pb
 from twisted.python import log
-from buildbot.process.buildstep import RemoteCommand, BuildStep, render
+from buildbot.process.buildstep import RemoteCommand, BuildStep, \
+     render_properties
 from buildbot.process.buildstep import SUCCESS, FAILURE
 from buildbot.interfaces import BuildSlaveTooOldError
 
@@ -114,21 +115,20 @@ class FileUpload(BuildStep):
             m = "slave is too old, does not know about uploadFile"
             raise BuildSlaveTooOldError(m)
 
-        source = render(self.slavesrc, self.build)
-        masterdest = render(self.masterdest, self.build)
+        source = render_properties(self.slavesrc, self.build)
+        masterdest = render_properties(self.masterdest, self.build)
         # we rely upon the fact that the buildmaster runs chdir'ed into its
         # basedir to make sure that relative paths in masterdest are expanded
         # properly. TODO: maybe pass the master's basedir all the way down
         # into the BuildStep so we can do this better.
-        target = os.path.expanduser(masterdest)
+        masterdest = os.path.expanduser(masterdest)
         log.msg("FileUpload started, from slave %r to master %r"
-                % (source, target))
+                % (source, masterdest))
 
         self.step_status.setColor('yellow')
         self.step_status.setText(['uploading', os.path.basename(source)])
 
         # we use maxsize to limit the amount of data on both sides
-        # XXX should that be 'masterdest' or 'target'?
         fileWriter = _FileWriter(masterdest, self.maxsize, self.mode)
 
         # default arguments
@@ -244,8 +244,9 @@ class FileDownload(BuildStep):
 
         # we are currently in the buildmaster's basedir, so any non-absolute
         # paths will be interpreted relative to that
-        source = os.path.expanduser(render(self.mastersrc, self.build))
-        slavedest = render(self.slavedest, self.build)
+        source = os.path.expanduser(render_properties(self.mastersrc,
+                                                      self.build))
+        slavedest = render_properties(self.slavedest, self.build)
         log.msg("FileDownload started, from master %r to slave %r" %
                 (source, slavedest))
 

@@ -1,5 +1,10 @@
 2008-03-20  Brian Warner  <warner@lothar.com>
 
+	* buildbot/process/buildstep.py (render_properties): more cleanup:
+	rename 'render' to 'render_properties'.
+	* buildbot/steps/shell.py: same
+	* buildbot/steps/transfer.py (FileUpload.start): same, other cleanups
+
 	* buildbot/steps/shell.py (render): oops, remove redundant
 	definition that probably crept in during a merge conflict
 

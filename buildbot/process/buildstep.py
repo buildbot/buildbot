@@ -1114,7 +1114,7 @@ class WithProperties(util.ComparableMixin):
             s = self.fmtstring % pmap
         return s
 
-def render(s, build):
+def render_properties(s, build):
     """Return a string based on s and build that is suitable for use
     in a running BuildStep.  If s is a string, return s.  If s is a
     WithProperties object, return the result of s.render(build).

@@ -2,7 +2,8 @@
 
 import types, re
 from twisted.python import log
-from buildbot.process.buildstep import LoggingBuildStep, RemoteShellCommand, render
+from buildbot.process.buildstep import LoggingBuildStep, RemoteShellCommand, \
+     render_properties
 from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE
 
 # for existing configurations that import WithProperties from here
@@ -121,7 +122,7 @@ class ShellCommand(LoggingBuildStep):
         if isinstance(words, types.StringTypes):
             words = words.split()
         # render() each word to handle WithProperties objects
-        words = [render(word, self.build) for word in words]
+        words = [render_properties(word, self.build) for word in words]
         if len(words) < 1:
             return ["???"]
         if len(words) == 1:
@@ -160,7 +161,7 @@ class ShellCommand(LoggingBuildStep):
         return value.render(self.build)
 
     def _interpolateWorkdir(self, workdir):
-        return render(workdir, self.build)
+        return render_properties(workdir, self.build)
 
     def setupEnvironment(self, cmd):
         # merge in anything from Build.slaveEnvironment . Earlier steps
