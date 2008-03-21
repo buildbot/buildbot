@@ -1,5 +1,10 @@
 2008-03-20  Brian Warner  <warner@lothar.com>
 
+	* buildbot/status/web/waterfall.py (CurrentBox.formatETA): apply
+	patch from TedMielczarek to display hours/minutes/seconds in the
+	ETA display. Thanks Ted! Also make 'next build starts in' box use
+	the same format. Closes #95.
+
 	* buildbot/process/buildstep.py (render_properties): more cleanup:
 	rename 'render' to 'render_properties'.
 	* buildbot/steps/shell.py: same
