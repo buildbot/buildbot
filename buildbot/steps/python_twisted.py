@@ -135,7 +135,7 @@ def countFailedTests(output):
 
 
 class TrialTestCaseCounter(LogLineObserver):
-    _line_re = re.compile(r'^([\w\.]+) \.\.\. \[([^\]]+)\]$')
+    _line_re = re.compile(r'^(?:Doctest: )?([\w\.]+) \.\.\. \[([^\]]+)\]$')
     numTests = 0
     finished = False
 
@@ -146,6 +146,8 @@ class TrialTestCaseCounter(LogLineObserver):
         #  2.1.0: buildbot.test.test_runner.Create.testSlave ... [OK]
         #  2.4.0: buildbot.test.test_runner.Create.testSlave ... [OK]
         # Let's just handle the most recent version, since it's the easiest.
+        # Note that doctests create lines line this:
+        #  Doctest: viff.field.GF ... [OK]
 
         if self.finished:
             return

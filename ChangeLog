@@ -1,3 +1,9 @@
+2008-03-22  Brian Warner  <warner@lothar.com>
+
+	* buildbot/steps/python_twisted.py (TrialTestCaseCounter): modify
+	regexp to count "Doctest:" lines as well as normal tests. Thanks to
+	Martin Geisler for the patch. Closes #196.
+
 2008-03-20  Brian Warner  <warner@lothar.com>
 
 	* buildbot/status/web/waterfall.py (CurrentBox.formatETA): apply
