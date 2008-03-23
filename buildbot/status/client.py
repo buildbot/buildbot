@@ -1,7 +1,7 @@
 # -*- test-case-name: buildbot.test.test_status -*-
 
 from twisted.spread import pb
-from twisted.python import log, components
+from twisted.python import components, log as twlog
 from twisted.internet import reactor
 from twisted.application import strports
 from twisted.cred import portal, checkers
@@ -361,17 +361,17 @@ class StatusClientPerspective(base.StatusReceiverPerspective):
         return d
 
     def attached(self, mind):
-        #log.msg("StatusClientPerspective.attached")
+        #twlog.msg("StatusClientPerspective.attached")
         return self
 
     def detached(self, mind):
-        log.msg("PB client detached")
+        twlog.msg("PB client detached")
         self.client = None
         for name in self.subscribed_to_builders:
-            log.msg(" unsubscribing from Builder(%s)" % name)
+            twlog.msg(" unsubscribing from Builder(%s)" % name)
             self.status.getBuilder(name).unsubscribe(self)
         for s in self.subscribed_to:
-            log.msg(" unsubscribe from %s" % s)
+            twlog.msg(" unsubscribe from %s" % s)
             s.unsubscribe(self)
         self.subscribed = None
 
@@ -397,7 +397,7 @@ class StatusClientPerspective(base.StatusReceiverPerspective):
 
         assert mode in ("builders", "builds", "steps", "logs", "full")
         assert target
-        log.msg("PB subscribe(%s)" % mode)
+        twlog.msg("PB subscribe(%s)" % mode)
 
         self.client = target
         self.subscribed = mode
@@ -409,7 +409,7 @@ class StatusClientPerspective(base.StatusReceiverPerspective):
         return None
 
     def perspective_unsubscribe(self):
-        log.msg("PB unsubscribe")
+        twlog.msg("PB unsubscribe")
         self.status.unsubscribe(self)
         self.subscribed_to.remove(self.status)
         self.client = None

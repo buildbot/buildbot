@@ -15,7 +15,7 @@ import urllib
 from zope.interface import implements
 from twisted.internet import defer
 from twisted.mail.smtp import sendmail
-from twisted.python import log
+from twisted.python import log as twlog
 
 from buildbot import interfaces, util
 from buildbot.status import base
@@ -153,7 +153,7 @@ class MailNotifier(base.StatusReceiverMultiService):
 
         # you should either limit on builders or categories, not both
         if self.builders != None and self.categories != None:
-            log.err("Please specify only builders to ignore or categories to include")
+            twlog.err("Please specify only builders to ignore or categories to include")
             raise # FIXME: the asserts above do not raise some Exception either
 
     def setServiceParent(self, parent):
@@ -292,10 +292,10 @@ class MailNotifier(base.StatusReceiverMultiService):
         if patch or self.addLogs:
             haveAttachments = True
             if not canDoAttachments:
-                log.msg("warning: I want to send mail with attachments, "
-                        "but this python is too old to have "
-                        "email.MIMEMultipart . Please upgrade to python-2.3 "
-                        "or newer to enable addLogs=True")
+                twlog.msg("warning: I want to send mail with attachments, "
+                          "but this python is too old to have "
+                          "email.MIMEMultipart . Please upgrade to python-2.3 "
+                          "or newer to enable addLogs=True")
 
         if haveAttachments and canDoAttachments:
             m = MIMEMultipart()
@@ -350,7 +350,7 @@ class MailNotifier(base.StatusReceiverMultiService):
     def sendMessage(self, m, recipients):
         s = m.as_string()
         ds = []
-        log.msg("sending mail (%d bytes) to" % len(s), recipients)
+        twlog.msg("sending mail (%d bytes) to" % len(s), recipients)
         for recip in recipients:
             ds.append(sendmail(self.relayhost, self.fromaddr, recip, s))
         return defer.DeferredList(ds)
