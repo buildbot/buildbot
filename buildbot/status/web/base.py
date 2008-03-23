@@ -53,7 +53,7 @@ def make_row(label, field):
     label = html.escape(label)
     return ROW_TEMPLATE % {"label": label, "field": field}
 
-def make_stop_form(stopURL, on_all=False):
+def make_stop_form(stopURL, on_all=False, label="Build"):
     if on_all:
         data = """<form action="%s" class='command stopbuild'>
           <p>To stop all builds, fill out the following fields and
@@ -66,7 +66,7 @@ def make_stop_form(stopURL, on_all=False):
                      "<input type='text' name='username' />")
     data += make_row("Reason for stopping build:",
                      "<input type='text' name='comments' />")
-    data += '<input type="submit" value="Stop Builder" /></form>\n'
+    data += '<input type="submit" value="Stop %s" /></form>\n' % label
     return data
 
 def make_force_build_form(forceURL, on_all=False):

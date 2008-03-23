@@ -1,5 +1,11 @@
 2008-03-22  Brian Warner  <warner@lothar.com>
 
+	* buildbot/status/web/base.py (make_stop_form): add a label=
+	argument so that the button says "Stop Builds" or "Stop Build" as
+	appropriate. It used to say "Stop Builder", which was wrong.
+	* buildbot/status/web/baseweb.py (OneLinePerBuild.body): same
+	(OneBoxPerBuilder.body): same
+
 	* buildbot/process/builder.py (Builder): use self.old_building to
 	track Builds from a previous version of this Builder and are still
 	running. This makes it possible for IBuilderControl to get at

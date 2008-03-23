@@ -123,7 +123,7 @@ class OneLinePerBuild(HtmlResource, OneLineMixin):
 
         if building:
             stopURL = "builders/_all/stop"
-            data += make_stop_form(stopURL, True)
+            data += make_stop_form(stopURL, True, "Builds")
         if online:
             forceURL = "builders/_all/force"
             data += make_force_build_form(forceURL, True)
@@ -232,7 +232,7 @@ class OneBoxPerBuilder(HtmlResource):
 
         if building:
             stopURL = "builders/_all/stop"
-            data += make_stop_form(stopURL, True)
+            data += make_stop_form(stopURL, True, "Builds")
         if online:
             forceURL = "builders/_all/force"
             data += make_force_build_form(forceURL, True)
