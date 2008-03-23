@@ -5,9 +5,10 @@ from email.Utils import mktime_tz, parsedate_tz
 from cStringIO import StringIO
 
 from twisted.trial import unittest
-from twisted.internet import defer, reactor, utils, protocol, error
+from twisted.internet import defer, reactor, utils, protocol, task, error
 from twisted.python import failure
 from twisted.python.procutils import which
+from twisted.web import client
 
 #defer.Deferred.debug = True
 
@@ -2445,7 +2446,6 @@ class MercurialHelper(BaseHelper):
 
 class MercurialServerPP(protocol.ProcessProtocol):
     def outReceived(self, data):
-        #print "HG-SERVE-STDOUT:", data
         log.msg("hg-serve-stdout: %s" % (data,))
     def errReceived(self, data):
         print "HG-SERVE-STDERR:", data
@@ -2460,6 +2460,7 @@ class Mercurial(VCBase, unittest.TestCase):
     vctype_try = "hg"
     has_got_revision = True
     _hg_server = None
+    _wait_for_server_poller = None
 
     def testCheckout(self):
         self.helper.vcargs = { 'repourl': self.helper.rep_trunk }
@@ -2495,15 +2496,37 @@ class Mercurial(VCBase, unittest.TestCase):
         self.httpPort = 8300 + (os.getpid() % 200)
         args = [self.helper.vcexe,
                 "serve", "--port", str(self.httpPort), "--verbose"]
+
+        # in addition, hg doesn't flush its stdout, so we can't wait for the
+        # "listening at" message to know when it's safe to start the test.
+        # Instead, poll every second until a getPage works.
+
         pp = MercurialServerPP() # logs+discards everything
         # this serves one tree at a time, so we serve trunk. TODO: test hg's
         # in-repo branches, for which a single tree will hold all branches.
         self._hg_server = reactor.spawnProcess(pp, self.helper.vcexe, args,
                                                os.environ,
                                                self.helper.rep_trunk)
-        time.sleep(1) # give it a moment to get started
+        log.msg("waiting for hg serve to start")
+        done_d = defer.Deferred()
+        def poll():
+            d = client.getPage("http://localhost:%d/" % self.httpPort)
+            def success(res):
+                log.msg("hg serve appears to have started")
+                self._wait_for_server_poller.stop()
+                done_d.callback(None)
+            def ignore_connection_refused(f):
+                f.trap(error.ConnectionRefusedError)
+            d.addCallbacks(success, ignore_connection_refused)
+            d.addErrback(done_d.errback)
+        self._wait_for_server_poller = task.LoopingCall(poll)
+        self._wait_for_server_poller.start(0.5, True)
+        return done_d
 
     def tearDown(self):
+        if self._wait_for_server_poller:
+            if self._wait_for_server_poller.running:
+                self._wait_for_server_poller.stop()
         if self._hg_server:
             try:
                 self._hg_server.signalProcess("KILL")
@@ -2513,10 +2536,12 @@ class Mercurial(VCBase, unittest.TestCase):
         return VCBase.tearDown(self)
 
     def testCheckoutHTTP(self):
-        self.serveHTTP()
-        repourl = "http://localhost:%d/" % self.httpPort
-        self.helper.vcargs =  { 'repourl': repourl }
-        d = self.do_vctest(testRetry=False)
+        d = self.serveHTTP()
+        def _started(res):
+            repourl = "http://localhost:%d/" % self.httpPort
+            self.helper.vcargs =  { 'repourl': repourl }
+            return self.do_vctest(testRetry=False)
+        d.addCallback(_started)
         return d
 
     def testTry(self):
