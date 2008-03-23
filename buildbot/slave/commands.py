@@ -377,6 +377,22 @@ class ShellCommand:
         log.msg(" environment: %s" % (self.environ,))
         self.sendStatus({'header': msg})
 
+        if self.initialStdin:
+            msg = " writing %d bytes to stdin" % len(self.initialStdin)
+            log.msg(" " + msg)
+            self.sendStatus({'header': msg+"\n"})
+
+        if self.keepStdinOpen:
+            msg = " leaving stdin open"
+        else:
+            msg = " closing stdin"
+        log.msg(" " + msg)
+        self.sendStatus({'header': msg+"\n"})
+
+        msg = " using PTY: %s" % bool(self.usePTY)
+        log.msg(" " + msg)
+        self.sendStatus({'header': msg+"\n"})
+
         # this will be buffered until connectionMade is called
         if self.initialStdin:
             self.pp.writeStdin(self.initialStdin)

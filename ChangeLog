@@ -1,5 +1,12 @@
 2008-03-22  Brian Warner  <warner@lothar.com>
 
+	* buildbot/slave/commands.py (ShellCommand): record more
+	information in the 'header' section: how much we write into stdin,
+	do we close stdin, are we using a PTY. There are lingering
+	problems with PTYs and with closing stdin (see #198 and #158).
+	This doesn't fix those problems, but it should provide more
+	information to developers.
+
 	* buildbot/status/client.py: hush pyflakes, log.msg vs log
 	* buildbot/status/mail.py: same
 
