@@ -1,5 +1,7 @@
 2008-03-22  Brian Warner  <warner@lothar.com>
 
+	* buildbot/locks.py (debuglog): hush pyflakes
+
 	* buildbot/steps/source.py (SVN.__init__): fix pyflakes: it
 	doesn't like a variable named 'warnings' that shadows the import
 

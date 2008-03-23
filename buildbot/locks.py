@@ -5,11 +5,9 @@ from twisted.internet import reactor, defer
 from buildbot import util
 
 if False: # for debugging
-    def debuglog(msg):
-        log.msg(msg)
+    debuglog = log.msg
 else:
-    def debuglog(msg):
-        pass
+    debuglog = lambda m: None
 
 class BaseLock:
     description = "<BaseLock>"
