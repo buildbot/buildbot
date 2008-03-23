@@ -1,5 +1,5 @@
 
-import random
+import random, weakref
 from zope.interface import implements
 from twisted.python import log, components
 from twisted.spread import pb
@@ -284,6 +284,8 @@ class Builder(pb.Referenceable):
         # build/wannabuild slots: Build objects move along this sequence
         self.buildable = []
         self.building = []
+        # old_building holds active builds that were stolen from a predecessor
+        self.old_building = weakref.WeakKeyDictionary()
 
         # buildslaves which have connected but which are not yet available.
         # These are always in the ATTACHING state.
@@ -376,13 +378,21 @@ class Builder(pb.Referenceable):
         self.buildable.extend(old.buildable)
         old.buildable = []
 
-        # old.building is not migrated: it keeps track of builds which were
-        # in progress in the old Builder. When those builds finish, the old
-        # Builder will be notified, not us. However, since the old
-        # SlaveBuilder will point to us, it is our maybeStartBuild() that
-        # will be triggered.
+        # old.building (i.e. builds which are still running) is not migrated
+        # directly: it keeps track of builds which were in progress in the
+        # old Builder. When those builds finish, the old Builder will be
+        # notified, not us. However, since the old SlaveBuilder will point to
+        # us, it is our maybeStartBuild() that will be triggered.
         if old.building:
             self.builder_status.setBigState("building")
+        # however, we do grab a weakref to the active builds, so that our
+        # BuilderControl can see them and stop them. We use a weakref because
+        # we aren't the one to get notified, so there isn't a convenient
+        # place to remove it from self.building .
+        for b in old.building:
+            self.old_building[b] = None
+        for b in old.old_building:
+            self.old_building[b] = None
 
         # Our set of slavenames may be different. Steal any of the old
         # buildslaves that we want to keep using.
@@ -413,6 +423,15 @@ class Builder(pb.Referenceable):
         #  Therefore, we don't need to do anything about old.attaching_slaves
 
         return # all done
+
+    def getBuild(self, number):
+        for b in self.building:
+            if b.build_status.number == number:
+                return b
+        for b in self.old_building.keys():
+            if b.build_status.number == number:
+                return b
+        return None
 
     def fireTestEvent(self, name, fire_with=None):
         if fire_with is None:
@@ -701,10 +720,7 @@ class BuilderControl(components.Adapter):
         raise NotImplementedError
 
     def getBuild(self, number):
-        for b in self.original.building:
-            if b.build_status.number == number:
-                return b
-        return None
+        return self.original.getBuild(number)
 
     def ping(self, timeout=30):
         if not self.original.slaves:

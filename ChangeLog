@@ -1,5 +1,15 @@
 2008-03-22  Brian Warner  <warner@lothar.com>
 
+	* buildbot/process/builder.py (Builder): use self.old_building to
+	track Builds from a previous version of this Builder and are still
+	running. This makes it possible for IBuilderControl to get at
+	them, allowing the "Stop Build" button to work after a
+	Builder-replacing reconfig. Closes #22.
+	(Builder.consumeTheSoulOfYourPredecessor): grab weakrefs from the
+	old Builder's self.building attribute, instead of strongrefs,
+	since there's no good place to explicitly forget about them.
+	(Builder.getBuild): factor this out of BuilderControl
+
 	* buildbot/process/buildstep.py (LogLineObserver.setMaxLineLength):
 	new method to override the default 16KiB line length. Lines that
 	are longer than this will cause the rest of the log file to be
