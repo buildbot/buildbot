@@ -1,5 +1,10 @@
 2008-03-22  Brian Warner  <warner@lothar.com>
 
+	* Makefile (pyflakes): sort+uniqify, since newer pyflakes isn't
+	smart enough to do this on its own
+	* buildbot/test/runutils.py (myGetProcessOutputAndValue): move this
+	method out from test_vc.py, hush pyflakes complaints
+
 	* buildbot/test/test_vc.py (Mercurial.serveHTTP): wait for the 'hg
 	serve' command to be ready, by polling with twisted.web's
 	client.getPage . Unfortunately mercurial doesn't flush its stdout

@@ -54,4 +54,5 @@ release: docs
 
 FLAKES=buildbot
 pyflakes:
-	pyflakes $(FLAKES)
+	pyflakes $(FLAKES) |sort |uniq
+

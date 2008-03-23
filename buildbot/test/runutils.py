@@ -1,7 +1,8 @@
 
 import signal
 import shutil, os, errno
-from twisted.internet import defer, reactor
+from cStringIO import StringIO
+from twisted.internet import defer, reactor, protocol
 from twisted.python import log, util
 
 from buildbot import master, interfaces
@@ -12,6 +13,42 @@ from buildbot.process.base import BuildRequest, Build
 from buildbot.process.buildstep import BuildStep
 from buildbot.sourcestamp import SourceStamp
 from buildbot.status import builder
+
+
+
+class _PutEverythingGetter(protocol.ProcessProtocol):
+    def __init__(self, deferred, stdin):
+        self.deferred = deferred
+        self.outBuf = StringIO()
+        self.errBuf = StringIO()
+        self.outReceived = self.outBuf.write
+        self.errReceived = self.errBuf.write
+        self.stdin = stdin
+
+    def connectionMade(self):
+        if self.stdin is not None:
+            self.transport.write(self.stdin)
+            self.transport.closeStdin()
+
+    def processEnded(self, reason):
+        out = self.outBuf.getvalue()
+        err = self.errBuf.getvalue()
+        e = reason.value
+        code = e.exitCode
+        if e.signal:
+            self.deferred.errback((out, err, e.signal))
+        else:
+            self.deferred.callback((out, err, code))
+
+def myGetProcessOutputAndValue(executable, args=(), env={}, path='.',
+                               _reactor_ignored=None, stdin=None):
+    """Like twisted.internet.utils.getProcessOutputAndValue but takes
+    stdin, too."""
+    d = defer.Deferred()
+    p = _PutEverythingGetter(d, stdin)
+    reactor.spawnProcess(p, executable, (executable,)+tuple(args), env, path)
+    return d
+
 
 class MyBot(bot.Bot):
     def remote_getSlaveInfo(self):

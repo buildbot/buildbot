@@ -2,13 +2,12 @@
 
 import sys, os, time, re
 from email.Utils import mktime_tz, parsedate_tz
-from cStringIO import StringIO
 
 from twisted.trial import unittest
 from twisted.internet import defer, reactor, utils, protocol, task, error
 from twisted.python import failure
 from twisted.python.procutils import which
-from twisted.web import client
+from twisted.web import client, static, server
 
 #defer.Deferred.debug = True
 
@@ -24,7 +23,7 @@ from buildbot.steps import source
 from buildbot.changes import changes
 from buildbot.sourcestamp import SourceStamp
 from buildbot.scripts import tryclient
-from buildbot.test.runutils import SignalMixin
+from buildbot.test.runutils import SignalMixin, myGetProcessOutputAndValue
 
 #step.LoggedRemoteCommand.debug = True
 
@@ -52,41 +51,6 @@ from twisted.internet.defer import waitForDeferred, deferredGenerator
 # Perforce starts the daemon running on localhost. Unfortunately, it must
 # use a predetermined Internet-domain port number, unless we want to go
 # all-out: bind the listen socket ourselves and pretend to be inetd.
-
-class _PutEverythingGetter(protocol.ProcessProtocol):
-    def __init__(self, deferred, stdin):
-        self.deferred = deferred
-        self.outBuf = StringIO()
-        self.errBuf = StringIO()
-        self.outReceived = self.outBuf.write
-        self.errReceived = self.errBuf.write
-        self.stdin = stdin
-
-    def connectionMade(self):
-        if self.stdin is not None:
-            self.transport.write(self.stdin)
-            self.transport.closeStdin()
-
-    def processEnded(self, reason):
-        out = self.outBuf.getvalue()
-        err = self.errBuf.getvalue()
-        e = reason.value
-        code = e.exitCode
-        if e.signal:
-            self.deferred.errback((out, err, e.signal))
-        else:
-            self.deferred.callback((out, err, code))
-
-def myGetProcessOutputAndValue(executable, args=(), env={}, path='.',
-                               reactor=None, stdin=None):
-    """Like twisted.internet.utils.getProcessOutputAndValue but takes
-    stdin, too."""
-    if reactor is None:
-        from twisted.internet import reactor
-    d = defer.Deferred()
-    p = _PutEverythingGetter(d, stdin)
-    reactor.spawnProcess(p, executable, (executable,)+tuple(args), env, path)
-    return d
 
 config_vc = """
 from buildbot.process import factory
@@ -460,8 +424,6 @@ class VCBase(SignalMixin):
 
     def serveHTTP(self):
         # launch an HTTP server to serve the repository files
-        from twisted.web import static, server
-        from twisted.internet import reactor
         self.root = static.File(self.helper.repbase)
         self.site = server.Site(self.root)
         self.httpServer = reactor.listenTCP(0, self.site)
