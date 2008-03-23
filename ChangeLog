@@ -1,5 +1,8 @@
 2008-03-22  Brian Warner  <warner@lothar.com>
 
+	* buildbot/test/test_run.py (Disconnect.testBuild2): fix old
+	cut-and-paste typo that was causing us to run the wrong callback
+
 	* Makefile (pyflakes): sort+uniqify, since newer pyflakes isn't
 	smart enough to do this on its own
 	* buildbot/test/runutils.py (myGetProcessOutputAndValue): move this

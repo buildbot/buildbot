@@ -370,11 +370,11 @@ class Disconnect(RunMixin, unittest.TestCase):
     def testBuild2(self):
         # this next sequence is timing-dependent
         d = self.submitBuild()
-        d.addCallback(self._testBuild1_1)
+        d.addCallback(self._testBuild2_1)
         return d
     testBuild2.timeout = 30
 
-    def _testBuild1_1(self, bc):
+    def _testBuild2_1(self, bc):
         bs = bc.getStatus()
         # shutdown the slave while it's running the first step
         reactor.callLater(0.5, self.shutdownAllSlaves)
