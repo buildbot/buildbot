@@ -5021,7 +5021,11 @@ can choose from (defined in @code{buildbot.process.buildstep}, and of
 course you can subclass them to add further customization. The
 @code{LogLineObserver} class handles the grunt work of buffering and
 scanning for end-of-line delimiters, allowing your parser to operate
-on complete stdout/stderr lines.
+on complete stdout/stderr lines. (Lines longer than a set maximum
+length are dropped; the maximum defaults to 16384 bytes, but you can
+change it by calling @code{setMaxLineLength()} on your
+@code{LogLineObserver} instance.  Use @code{sys.maxint} for effective
+infinity.)
 
 For example, let's take a look at the @code{TrialTestCaseCounter},
 which is used by the Trial step to count test cases as they are run.

@@ -400,6 +400,15 @@ class LogLineObserver(LogObserver):
         self.stderrParser.lineReceived = self.errLineReceived
         self.stderrParser.transport = self
 
+    def setMaxLineLength(self, max_length):
+        """
+        Set the maximum line length: lines longer than max_length are
+        dropped.  Default is 16384 bytes.  Use sys.maxint for effective
+        infinity.
+        """
+        self.stdoutParser.MAX_LENGTH = max_length
+        self.stderrParser.MAX_LENGTH = max_length
+
     def outReceived(self, data):
         self.stdoutParser.dataReceived(data)
 

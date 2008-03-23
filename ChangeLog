@@ -1,5 +1,12 @@
 2008-03-22  Brian Warner  <warner@lothar.com>
 
+	* buildbot/process/buildstep.py (LogLineObserver.setMaxLineLength):
+	new method to override the default 16KiB line length. Lines that
+	are longer than this will cause the rest of the log file to be
+	ignored. Thanks to Greg Ward for the patch. Closes #201.
+	* buildbot/test/test_buildstep.py: new tests for log observers
+	* docs/buildbot.texinfo (Adding LogObservers): document it
+
 	* buildbot/slave/commands.py (ShellCommand): record more
 	information in the 'header' section: how much we write into stdin,
 	do we close stdin, are we using a PTY. There are lingering
