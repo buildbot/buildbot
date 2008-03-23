@@ -1,5 +1,8 @@
 2008-03-22  Brian Warner  <warner@lothar.com>
 
+	* NEWS: preliminary list of changes for the upcoming release.
+	Needs editing and explanations.
+
 	* buildbot/status/web/base.py (make_stop_form): add a label=
 	argument so that the button says "Stop Builds" or "Stop Build" as
 	appropriate. It used to say "Stop Builder", which was wrong.
