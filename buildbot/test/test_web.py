@@ -362,14 +362,14 @@ class GetURL(RunMixin, unittest.TestCase):
     def _testMissingBase_1(self, res):
         s = self.status
         self.assertNoURL(s)
-        builder = s.getBuilder("b1")
-        self.assertNoURL(builder)
+        builder_s = s.getBuilder("b1")
+        self.assertNoURL(builder_s)
 
     def testBase(self):
         s = self.status
         self.assertURLEqual(s, "")
-        builder = s.getBuilder("b1")
-        self.assertURLEqual(builder, "builders/b1")
+        builder_s = s.getBuilder("b1")
+        self.assertURLEqual(builder_s, "builders/b1")
 
     def testChange(self):
         s = self.status
@@ -389,11 +389,11 @@ class GetURL(RunMixin, unittest.TestCase):
 
     def _testBuild_1(self, res):
         s = self.status
-        builder = s.getBuilder("b1")
-        build = builder.getLastFinishedBuild()
-        self.assertURLEqual(build, "builders/b1/builds/0")
+        builder_s = s.getBuilder("b1")
+        build_s = builder_s.getLastFinishedBuild()
+        self.assertURLEqual(build_s, "builders/b1/builds/0")
         # no page for builder.getEvent(-1)
-        step = build.getSteps()[0]
+        step = build_s.getSteps()[0]
         self.assertURLEqual(step, "builders/b1/builds/0/steps/remote%20dummy")
         # maybe page for build.getTestResults?
         self.assertURLEqual(step.getLogs()[0],

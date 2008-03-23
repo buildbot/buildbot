@@ -1,5 +1,8 @@
 2008-03-22  Brian Warner  <warner@lothar.com>
 
+	* buildbot/test/test_web.py: fix some pyflakes warnings, caused by
+	having a variable name shadow a top-level import
+
 	* buildbot/test/test_run.py (Disconnect.testBuild2): fix old
 	cut-and-paste typo that was causing us to run the wrong callback
 
