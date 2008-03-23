@@ -1,6 +1,6 @@
 # -*- test-case-name: buildbot.test.test_vc -*-
 
-import warnings
+from warnings import warn
 from email.Utils import formatdate
 from twisted.python import log
 from buildbot.process.buildstep import LoggingBuildStep, LoggedRemoteCommand
@@ -376,8 +376,7 @@ class SVN(Source):
 
         if not kwargs.has_key('workdir') and directory is not None:
             # deal with old configs
-            warnings.warn("Please use workdir=, not directory=",
-                          DeprecationWarning)
+            warn("Please use workdir=, not directory=", DeprecationWarning)
             kwargs['workdir'] = directory
 
         self.svnurl = svnurl

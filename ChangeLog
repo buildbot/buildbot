@@ -1,5 +1,8 @@
 2008-03-22  Brian Warner  <warner@lothar.com>
 
+	* buildbot/steps/source.py (SVN.__init__): fix pyflakes: it
+	doesn't like a variable named 'warnings' that shadows the import
+
 	* buildbot/test/test_web.py: fix some pyflakes warnings, caused by
 	having a variable name shadow a top-level import
 
