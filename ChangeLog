@@ -1,5 +1,9 @@
 2008-03-22  Brian Warner  <warner@lothar.com>
 
+	* buildbot/test/test_vc.py (Mercurial.serveHTTP): another attempt
+	to make Mercurial.testCheckoutHTTP not fail on heavily loaded
+	machines: avoid overlapping poll() calls.
+
 	* NEWS: preliminary list of changes for the upcoming release.
 	Needs editing and explanations.
 

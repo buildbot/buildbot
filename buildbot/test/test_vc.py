@@ -2481,6 +2481,7 @@ class Mercurial(VCBase, unittest.TestCase):
                 f.trap(error.ConnectionRefusedError)
             d.addCallbacks(success, ignore_connection_refused)
             d.addErrback(done_d.errback)
+            return d
         self._wait_for_server_poller = task.LoopingCall(poll)
         self._wait_for_server_poller.start(0.5, True)
         return done_d
