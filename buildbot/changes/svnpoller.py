@@ -385,10 +385,7 @@ class SVNPoller(base.ChangeSource, util.ComparableMixin):
 
         for el in new_logentries:
             branch_files = [] # get oldest change first
-            # TODO: revisit this, I think I've settled on Change.revision
-            # being a string everywhere, and leaving the interpretation
-            # of that string up to b.s.source.SVN methods
-            revision = int(el.getAttribute("revision"))
+            revision = str(el.getAttribute("revision"))
             dbgMsg("Adding change revision %s" % (revision,))
             # TODO: the rest of buildbot may not be ready for unicode 'who'
             # values
