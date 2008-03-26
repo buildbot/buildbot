@@ -186,7 +186,7 @@ class Source(LoggingBuildStep):
     def commandComplete(self, cmd):
         got_revision = None
         if cmd.updates.has_key("got_revision"):
-            got_revision = cmd.updates["got_revision"][-1]
+            got_revision = str(cmd.updates["got_revision"][-1])
         self.setProperty("got_revision", got_revision)
 
 
