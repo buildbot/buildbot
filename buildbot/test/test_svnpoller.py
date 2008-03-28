@@ -277,10 +277,10 @@ class ComputeChanges(unittest.TestCase):
         changes = s.create_changes(logentries)
         self.failUnlessEqual(len(changes), 2)
         self.failUnlessEqual(changes[0].branch, "branch")
-        self.failUnlessEqual(changes[0].revision, 2)
+        self.failUnlessEqual(changes[0].revision, '2')
         self.failUnlessEqual(changes[1].branch, "branch")
         self.failUnlessEqual(changes[1].files, ["main.c"])
-        self.failUnlessEqual(changes[1].revision, 3)
+        self.failUnlessEqual(changes[1].revision, '3')
 
         # and now pull in r4
         doc = s.parse_logs(make_changes_output(4))
@@ -290,7 +290,7 @@ class ComputeChanges(unittest.TestCase):
         changes = s.create_changes(logentries)
         self.failUnlessEqual(len(changes), 1)
         self.failUnlessEqual(changes[0].branch, None)
-        self.failUnlessEqual(changes[0].revision, 4)
+        self.failUnlessEqual(changes[0].revision, '4')
         self.failUnlessEqual(changes[0].files, ["version.c"])
 
     def testFirstTime(self):
@@ -379,7 +379,7 @@ class Everything(unittest.TestCase):
 
         c = s.finished_changes[0]
         self.failUnlessEqual(c.branch, "branch")
-        self.failUnlessEqual(c.revision, 2)
+        self.failUnlessEqual(c.revision, '2')
         self.failUnlessEqual(c.files, [''])
         # TODO: this is what creating the branch looks like: a Change with a
         # zero-length file. We should decide if we want filenames like this
@@ -412,13 +412,13 @@ class Everything(unittest.TestCase):
 
         c3 = s.finished_changes[1]
         self.failUnlessEqual(c3.branch, "branch")
-        self.failUnlessEqual(c3.revision, 3)
+        self.failUnlessEqual(c3.revision, '3')
         self.failUnlessEqual(c3.files, ["main.c"])
         self.failUnlessEqual(c3.comments, "commit_on_branch")
 
         c4 = s.finished_changes[2]
         self.failUnlessEqual(c4.branch, None)
-        self.failUnlessEqual(c4.revision, 4)
+        self.failUnlessEqual(c4.revision, '4')
         self.failUnlessEqual(c4.files, ["version.c"])
         self.failUnlessEqual(c4.comments, "revised_to_2")
         self.failUnless(abs(c4.when - time.time()) < 60)

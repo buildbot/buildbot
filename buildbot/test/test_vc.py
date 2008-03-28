@@ -483,7 +483,7 @@ class VCBase(SignalMixin):
 
     def checkGotRevision(self, bs, expected):
         if self.has_got_revision:
-            self.failUnlessEqual(bs.getProperty("got_revision"), expected)
+            self.failUnlessEqual(bs.getProperty("got_revision"), str(expected))
 
     def checkGotRevisionIsLatest(self, bs):
         expected = self.helper.trunk[-1]
