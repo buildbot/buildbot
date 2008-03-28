@@ -3,6 +3,7 @@
 # N.B.: don't import anything that might pull in a reactor yet. Some of our
 # subcommands want to load modules that need the gtk reactor.
 import os, sys, stat, re, time
+import traceback
 from twisted.python import usage, util, runtime
 
 # this is mostly just a front-end for mktap, twistd, and kill(1), but in the
@@ -809,6 +810,39 @@ def doTryServer(config):
     os.rename(tmpfile, newfile)
 
 
+class CheckConfigOptions(usage.Options):
+    optFlags = [
+        ['quiet', 'q', "Don't display error messages or tracebacks"],
+    ]
+
+    def getSynopsis(self):
+        return "Usage		:buildbot checkconfig [configFile]\n" + \
+         "		If not specified, 'master.cfg' will be used as 'configFile'"
+
+    def parseArgs(self, *args):
+        if len(args) >= 1:
+            self['configFile'] = args[0]
+        else:
+            self['configFile'] = 'master.cfg'
+
+
+def doCheckConfig(config):
+    quiet = config.get('quiet')
+    configFile = config.get('configFile')
+    try:
+        from buildbot.scripts.checkconfig import ConfigLoader
+        ConfigLoader(configFile)
+    except:
+        if not quiet:
+            # Print out the traceback in a nice format
+            t, v, tb = sys.exc_info()
+            traceback.print_exception(t, v, tb)
+        sys.exit(1)
+
+    if not quiet:
+        print "Config file is good!"
+
+
 class Options(usage.Options):
     synopsis = "Usage:    buildbot <command> [command options]"
 
@@ -846,6 +880,9 @@ class Options(usage.Options):
 
         ['tryserver', None, TryServerOptions,
          "buildmaster-side 'try' support function, not for users"],
+
+        ['checkconfig', None, CheckConfigOptions,
+         "test the validity of a master.cfg config file"],
 
         # TODO: 'watch'
         ]
@@ -906,5 +943,7 @@ def run():
         doTry(so)
     elif command == "tryserver":
         doTryServer(so)
+    elif command == "checkconfig":
+        doCheckConfig(so)
 
 

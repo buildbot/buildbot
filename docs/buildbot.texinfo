@@ -128,6 +128,7 @@ Configuration
 
 * Config File Format::          
 * Loading the Config File::     
+* Testing the Config File::     
 * Defining the Project::        
 * Listing Change Sources and Schedulers::  
 * Setting the slaveport::       
@@ -1922,6 +1923,7 @@ understand how to fill in each section properly.
 @menu
 * Config File Format::          
 * Loading the Config File::     
+* Testing the Config File::     
 * Defining the Project::        
 * Listing Change Sources and Schedulers::  
 * Setting the slaveport::       
@@ -1994,7 +1996,7 @@ use. The config file is located in
 @end table
 
 
-@node Loading the Config File, Defining the Project, Config File Format, Configuration
+@node Loading the Config File, Testing the Config File, Config File Format, Configuration
 @section Loading the Config File
 
 The config file is only read at specific points in time. It is first
@@ -2028,7 +2030,48 @@ is currently running, that Build will keep running with the old
 process until it completes. Any previously queued Builds (or Builds
 which get queued after the reconfig) will use the new process.
 
-@node Defining the Project, Listing Change Sources and Schedulers, Loading the Config File, Configuration
+@node Testing the Config File, Defining the Project, Loading the Config File, Configuration
+@section Testing the Config File
+
+To verify that the config file is well-formed and contains no
+deprecated or invalid elements, use the ``checkconfig'' command:
+
+@example
+% buildbot checkconfig master.cfg
+Config file is good!
+@end example
+
+If the config file has deprecated features (perhaps because you've
+upgraded the buildmaster and need to update the config file to match),
+they will be announced by checkconfig. In this case, the config file
+will work, but you should really remove the deprecated items and use
+the recommended replacements instead:
+
+@example
+% buildbot checkconfig master.cfg
+/usr/lib/python2.4/site-packages/buildbot/master.py:559: DeprecationWarning: c['sources'] is deprecated as of 0.7.6 and will be removed by 0.8.0 . Please use c['change_source'] instead.
+  warnings.warn(m, DeprecationWarning)
+Config file is good!
+@end example
+
+If the config file is simply broken, that will be caught too:
+
+@example
+% buildbot checkconfig master.cfg
+Traceback (most recent call last):
+  File "/usr/lib/python2.4/site-packages/buildbot/scripts/runner.py", line 834, in doCheckConfig
+    ConfigLoader(configFile)
+  File "/usr/lib/python2.4/site-packages/buildbot/scripts/checkconfig.py", line 31, in __init__
+    self.loadConfig(configFile)
+  File "/usr/lib/python2.4/site-packages/buildbot/master.py", line 480, in loadConfig
+    exec f in localDict
+  File "/home/warner/BuildBot/master/foolscap/master.cfg", line 90, in ?
+    c[bogus] = "stuff"
+NameError: name 'bogus' is not defined
+@end example
+
+
+@node Defining the Project, Listing Change Sources and Schedulers, Testing the Config File, Configuration
 @section Defining the Project
 
 There are a couple of basic settings that you use to tell the buildbot
