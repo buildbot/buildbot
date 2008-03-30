@@ -1,5 +1,10 @@
 2008-03-29  Brian Warner  <warner@lothar.com>
 
+	* NEWS: update with all changes since the last release. I left the
+	bugs-fixed section somewhat terse, but there's a link to the Trac
+	page with more details.
+	* CREDITS: update
+
 	* buildbot/status/web/waterfall.py (WaterfallStatusResource):
 	accept category= arguments in the query-arg portion of the URL.
 	These behave like the builder= queryargs: if any category=
