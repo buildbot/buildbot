@@ -1,3 +1,14 @@
+2008-03-29  Brian Warner  <warner@lothar.com>
+
+	* buildbot/changes/svnpoller.py (SVNPoller.create_changes): pass
+	revision as a string, not an int. This fixes a problem in
+	MailNotifier, which expects a string. Thanks to Dan Locks for the
+	patch, and Dustin Mitchell for the test fixups. Closes #208.
+	* buildbot/steps/source.py (Source.commandComplete): treat
+	got_revision as a string too.
+	* buildbot/test/test_svnpoller.py: update test to match
+	* buildbot/test/test_vc.py: same
+
 2008-03-27  Brian Warner  <warner@lothar.com>
 
 	* buildbot/scripts/runner.py (doCheckConfig): patch from Ben
