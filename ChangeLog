@@ -1,5 +1,10 @@
 2008-03-29  Brian Warner  <warner@lothar.com>
 
+	* buildbot/__init__.py (version): Releasing buildbot-0.7.7
+	* docs/buildbot.texinfo: same
+
+2008-03-29  Brian Warner  <warner@lothar.com>
+
 	* NEWS: update with all changes since the last release. I left the
 	bugs-fixed section somewhat terse, but there's a link to the Trac
 	page with more details.
