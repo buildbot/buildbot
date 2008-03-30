@@ -6350,7 +6350,10 @@ all builders. It is the same display used by the Waterfall display.
 By adding one or more ``builder='' query arguments, the Waterfall is
 restricted to only showing information about the given Builders. By
 adding one or more ``branch='' query arguments, the display is
-restricted to showing information about the given branches.
+restricted to showing information about the given branches. In
+addition, adding one or more ``category='' query arguments to the URL
+will limit the display to Builders that were defined with one of the
+given categories.
 
 A 'show_events=true' query argument causes the display to include
 non-Build events, like slaves attaching and detaching, as well as

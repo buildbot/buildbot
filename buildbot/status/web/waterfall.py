@@ -453,21 +453,29 @@ class WaterfallStatusResource(HtmlResource):
         phase = request.args.get("phase",["2"])
         phase = int(phase[0])
 
+        # we start with all Builders available to this Waterfall: this is
+        # limited by the config-file -time categories= argument, and defaults
+        # to all defined Builders.
+        allBuilderNames = status.getBuilderNames(categories=self.categories)
+        builders = [status.getBuilder(name) for name in allBuilderNames]
+
+        # but if the URL has one or more builder= arguments (or the old show=
+        # argument, which is still accepted for backwards compatibility), we
+        # use that set of builders instead. We still don't show anything
+        # outside the config-file time set limited by categories=.
         showBuilders = request.args.get("show", [])
         showBuilders.extend(request.args.get("builder", []))
-        allBuilders = status.getBuilderNames(categories=self.categories)
         if showBuilders:
-            builderNames = []
-            for b in showBuilders:
-                if b not in allBuilders:
-                    continue
-                if b in builderNames:
-                    continue
-                builderNames.append(b)
-        else:
-            builderNames = allBuilders
-        builders = map(lambda name: status.getBuilder(name),
-                       builderNames)
+            builders = [b for b in builders if b.name in showBuilders]
+
+        # now, if the URL has one or category= arguments, use them as a
+        # filter: only show those builders which belong to one of the given
+        # categories.
+        showCategories = request.args.get("category", [])
+        if showCategories:
+            builders = [b for b in builders if b.category in showCategories]
+
+        builderNames = [b.name for b in builders]
 
         if phase == -1:
             return self.body0(request, builders)

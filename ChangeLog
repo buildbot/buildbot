@@ -1,5 +1,14 @@
 2008-03-29  Brian Warner  <warner@lothar.com>
 
+	* buildbot/status/web/waterfall.py (WaterfallStatusResource):
+	accept category= arguments in the query-arg portion of the URL.
+	These behave like the builder= queryargs: if any category=
+	queryargs are present, we'll only show Builders that fit into one
+	of the specified categories. Using multiple category= arguments
+	will show more Builders. Thanks to Jerome Davann (hollowman) for
+	the idea and the patch. Closes #117.
+	* docs/buildbot.texinfo (Buildbot Web Resources): document it
+
 	* buildbot/changes/svnpoller.py (SVNPoller.create_changes): pass
 	revision as a string, not an int. This fixes a problem in
 	MailNotifier, which expects a string. Thanks to Dan Locks for the
