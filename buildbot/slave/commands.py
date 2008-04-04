@@ -1559,15 +1559,24 @@ class SVN(SourceBase):
         self.command = c
         return c.start()
 
-    def parseGotRevision(self):
+    def getSvnVersionCommand(self):
+        """
+        Get the (shell) command used to determine SVN revision number
+        of checked-out code
+
+        return: list of strings, passable as the command argument to ShellCommand
+        """
         # svn checkout operations finish with 'Checked out revision 16657.'
         # svn update operations finish the line 'At revision 16654.'
         # But we don't use those. Instead, run 'svnversion'.
         svnversion_command = getCommand("svnversion")
         # older versions of 'svnversion' (1.1.4) require the WC_PATH
         # argument, newer ones (1.3.1) do not.
-        command = [svnversion_command, "."]
-        c = ShellCommand(self.builder, command,
+        return [svnversion_command, "."]
+
+    def parseGotRevision(self):
+        c = ShellCommand(self.builder,
+                         self.getSvnVersionCommand(),
                          os.path.join(self.builder.basedir, self.srcdir),
                          environ=self.env,
                          sendStdout=False, sendStderr=False, sendRC=False,
@@ -1575,16 +1584,16 @@ class SVN(SourceBase):
         c.usePTY = False
         d = c.start()
         def _parse(res):
-            r = c.stdout.strip()
-            # Support for removing svnversion indicator for 'modified'
-            if r[-1] == 'M':
-                r = r[:-1]
+            r_raw = c.stdout.strip()
+            # Extract revision from the version "number" string
+            r = r_raw.rstrip('MS')
+            r = r.split(':')[-1]
             got_version = None
             try:
                 got_version = int(r)
             except ValueError:
                 msg =("SVN.parseGotRevision unable to parse output "
-                      "of svnversion: '%s'" % r)
+                      "of svnversion: '%s'" % r_raw)
                 log.msg(msg)
                 self.sendStatus({'header': msg + "\n"})
             return got_version
