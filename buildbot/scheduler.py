@@ -170,7 +170,8 @@ class Scheduler(BaseUpstreamScheduler):
 
         # create a BuildSet, submit it to the BuildMaster
         bs = buildset.BuildSet(self.builderNames,
-                               SourceStamp(changes=changes))
+                               SourceStamp(changes=changes),
+                               scheduler=self)
         self.submit(bs)
 
     def stopService(self):
@@ -304,7 +305,7 @@ class Dependent(BaseUpstreamScheduler):
         return d
 
     def upstreamBuilt(self, ss):
-        bs = buildset.BuildSet(self.builderNames, ss)
+        bs = buildset.BuildSet(self.builderNames, ss, scheduler=self)
         self.submit(bs)
 
 
@@ -343,7 +344,7 @@ class Periodic(BaseUpstreamScheduler):
     def doPeriodicBuild(self):
         bs = buildset.BuildSet(self.builderNames,
                                SourceStamp(branch=self.branch),
-                               self.reason)
+                               self.reason, scheduler=self)
         self.submit(bs)
 
 
@@ -501,7 +502,7 @@ class Nightly(BaseUpstreamScheduler):
         # And trigger a build
         bs = buildset.BuildSet(self.builderNames,
                                SourceStamp(branch=self.branch),
-                               self.reason)
+                               self.reason, scheduler=self)
         self.submit(bs)
 
     def addChange(self, change):
@@ -623,7 +624,7 @@ class Try_Jobdir(TryBase):
                 return
 
         reason = "'try' job"
-        bs = buildset.BuildSet(builderNames, ss, reason=reason, bsid=bsid)
+        bs = buildset.BuildSet(builderNames, ss, reason=reason, bsid=bsid, scheduler=self)
         self.parent.submitBuildSet(bs)
 
 class Try_Userpass(TryBase):
@@ -675,7 +676,7 @@ class Try_Userpass_Perspective(pbutil.NewCredPerspective):
                 return
         ss = SourceStamp(branch, revision, patch)
         reason = "'try' job from user %s" % self.username
-        bs = buildset.BuildSet(builderNames, ss, reason=reason)
+        bs = buildset.BuildSet(builderNames, ss, reason=reason, scheduler=self)
         self.parent.submitBuildSet(bs)
 
         # return a remotely-usable BuildSetStatus object
@@ -702,7 +703,7 @@ class Triggerable(BaseUpstreamScheduler):
         """Trigger this scheduler. Returns a deferred that will fire when the
         buildset is finished.
         """
-        bs = buildset.BuildSet(self.builderNames, ss)
+        bs = buildset.BuildSet(self.builderNames, ss, scheduler=self)
         d = bs.waitUntilFinished()
         self.submit(bs)
         return d

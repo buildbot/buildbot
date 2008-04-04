@@ -23,6 +23,8 @@ class FakeSlaveBuilder:
     slave = FakeSlave()
     def getSlaveCommandVersion(self, command, oldversion=None):
         return "1.10"
+class FakeScheduler:
+    name = "fakescheduler"
 
 class Interpolate(unittest.TestCase):
     def setUp(self):
@@ -52,6 +54,7 @@ class Interpolate(unittest.TestCase):
         cmd = c._interpolateProperties(c.command)
         self.failUnlessEqual(cmd,
                              ["tar", "czf", "build-47.tar.gz", "source"])
+        self.failUnlessEqual(self.build.getProperty("scheduler"), "none")
 
     def testWorkdir(self):
         self.build.setProperty("revision", 47)
@@ -117,6 +120,25 @@ class Interpolate(unittest.TestCase):
         self.failUnlessEqual(cmd,
                              ["touch", "build-5", "builder-fakebuilder"])
 
+class SchedulerTest(unittest.TestCase):
+    def setUp(self):
+        self.builder = FakeBuilder()
+        self.builder_status = builder.BuilderStatus("fakebuilder")
+        self.builder_status.basedir = "test_properties"
+        self.builder_status.nextBuildNumber = 5
+        rmdirRecursive(self.builder_status.basedir)
+        os.mkdir(self.builder_status.basedir)
+        self.build_status = self.builder_status.newBuild()
+        req = base.BuildRequest("reason", SourceStamp(branch="branch2",
+                                revision=1234), scheduler=FakeScheduler())
+        self.build = base.Build([req])
+        self.build.setBuilder(self.builder)
+        self.build.setupStatus(self.build_status)
+        self.build.setupSlaveBuilder(FakeSlaveBuilder())
+
+    def testWithScheduler(self):
+        self.failUnlessEqual(self.build.getProperty("scheduler"),
+                             "fakescheduler")
 
 run_config = """
 from buildbot.process import factory

@@ -52,12 +52,14 @@ class BuildRequest:
 
     implements(interfaces.IBuildRequestControl)
 
-    def __init__(self, reason, source, builderName=None):
+    def __init__(self, reason, source, builderName=None, scheduler=None):
         # TODO: remove the =None on builderName, it is there so I don't have
         # to change a lot of tests that create BuildRequest objects
         assert interfaces.ISourceStamp(source, None)
         self.reason = reason
         self.source = source
+        self.scheduler = scheduler
+
         self.start_watchers = []
         self.finish_watchers = []
         self.status = BuildRequestStatus(source, builderName)
@@ -168,6 +170,7 @@ class Build:
         # build a source stamp
         self.source = requests[0].mergeWith(requests[1:])
         self.reason = requests[0].mergeReasons(requests[1:])
+        self.scheduler = requests[0].scheduler
 
         #self.abandoned = False
 
@@ -261,6 +264,10 @@ class Build:
         self.setProperty("buildnumber", self.build_status.number)
         self.setProperty("branch", self.source.branch)
         self.setProperty("revision", self.source.revision)
+        if self.scheduler is None:
+            self.setProperty("scheduler", "none")
+        else:
+            self.setProperty("scheduler", self.scheduler.name)
 
     def setupSlaveBuilder(self, slavebuilder):
         self.slavebuilder = slavebuilder
