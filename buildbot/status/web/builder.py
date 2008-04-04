@@ -196,7 +196,7 @@ class StatusResourceBuilder(HtmlResource, OneLineMixin):
         # button, use their name instead of None, so they'll be informed of
         # the results.
         s = SourceStamp(branch=branch, revision=revision)
-        req = BuildRequest(r, s, custom_props, self.builder_status.getName())
+        req = BuildRequest(r, s, builderName=self.builder_status.getName(), custom_props=custom_props)
         try:
             self.builder_control.requestBuildSoon(req)
         except interfaces.NoSlaveError:

@@ -41,7 +41,8 @@ class BuildSet:
         # create the requests
         for b in builders:
             req = base.BuildRequest(self.reason, self.source, b.name, 
-                                    self.scheduler, self.custom_props)
+                                    scheduler=self.scheduler,
+                                    custom_props=self.custom_props)
             reqs.append((b, req))
             self.requests.append(req)
             d = req.waitUntilFinished()
