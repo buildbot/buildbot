@@ -66,6 +66,8 @@ class BuildRequest:
 
         if not custom_props: custom_props = {}
         self.custom_props = custom_props
+        assert isinstance(self.custom_props, dict), \
+               "custom_props must be a dict (not %r)" % (self.custom_props,)
 
         self.start_watchers = []
         self.finish_watchers = []

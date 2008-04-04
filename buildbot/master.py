@@ -227,11 +227,19 @@ class DebugPerspective(NewCredPerspective):
     def detached(self, mind):
         pass
 
-    def perspective_requestBuild(self, buildername, reason, branch, revision):
+    def perspective_requestBuild(self, buildername, reason, branch, revision, custom_props):
+        assert isinstance(custom_props, dict), \
+               "custom_props must be a dict (not %r)" % (custom_props,)
+
+        # Provide default values for any custom build properties the
+        # client did not send.
+        for propertyDict in (self.master.customBuildProperties or []):
+            custom_props.setdefault(propertyDict['propertyName'], "")
+
         c = interfaces.IControl(self.master)
         bc = c.getBuilder(buildername)
         ss = SourceStamp(branch, revision)
-        br = BuildRequest(reason, ss, buildername)
+        br = BuildRequest(reason, ss, builderName=buildername, custom_props=custom_props)
         bc.requestBuild(br)
 
     def perspective_pingBuilder(self, buildername):
