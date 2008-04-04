@@ -4561,6 +4561,21 @@ checked out (which can be useful when the SourceStamp in use merely
 requested the ``latest revision'': @code{got_revision} will tell you
 what was actually built).
 
+@itemize
+@item buildername
+Name of this builder
+@item buildnumber
+Number of this build (numbers are unique within the builder)
+@item branch
+Branch of the source being built, from the SourceStamp
+@item revision
+Revision of the source being built, from the SourceStamp, as a string
+@item scheduler
+The name of the scheduler that invoked this build
+@item slavename
+The name of the buildslave performing this build
+@end itemize
+
 In custom BuildSteps, you can get and set the build properties with
 the @code{getProperty}/@code{setProperty} methods. Each takes a string
 for the name of the property, and returns or accepts an
