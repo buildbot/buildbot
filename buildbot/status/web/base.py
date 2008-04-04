@@ -335,7 +335,10 @@ def abbreviate_age(age):
 class OneLineMixin:
     LINE_TIME_FORMAT = "%b %d %H:%M"
 
-    def make_line(self, req, build, include_builder=True):
+    def get_line_values(self, req, build):
+        '''
+        Collect the data needed for each line display
+        '''
         builder_name = build.getBuilder().getName()
         results = build.getResults()
         text = build.getText()
@@ -363,7 +366,13 @@ class OneLineMixin:
                   'time': time.strftime(self.LINE_TIME_FORMAT,
                                         time.localtime(build.getTimes()[0])),
                   }
+        return values
 
+    def make_line(self, req, build, include_builder=True):
+        '''
+        Format and render a single line into HTML
+        '''
+        values = self.get_line_values(req, build)
         fmt_pieces = ['<font size="-1">(%(time)s)</font>',
                       'rev=[%(rev)s]',
                       '<span class="%(class)s">%(results)s</span>',
