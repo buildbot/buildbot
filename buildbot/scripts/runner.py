@@ -763,6 +763,8 @@ class TryOptions(usage.Options):
 
         ["builder", "b", None,
          "Run the trial build on this Builder. Can be used multiple times."],
+        ["customproperties", None, None,
+         "A set of custom properties made available in the build environment, format:prop=value,propb=valueb..."],
         ]
 
     optFlags = [
@@ -772,9 +774,21 @@ class TryOptions(usage.Options):
     def __init__(self):
         super(TryOptions, self).__init__()
         self['builders'] = []
+        self['custom_props'] = {}
 
     def opt_builder(self, option):
         self['builders'].append(option)
+
+    def opt_customproperties(self, option):
+        # We need to split the value of this option into a dictionary of custom
+        # properties
+        custom_props = {}
+        propertylist = option.split(",")
+        for i in range(0,len(propertylist)):
+            print propertylist[i]
+            splitproperty = propertylist[i].split("=")
+            custom_props[splitproperty[0]] = splitproperty[1]
+        self['custom_props'] = custom_props
 
     def opt_patchlevel(self, option):
         self['patchlevel'] = int(option)

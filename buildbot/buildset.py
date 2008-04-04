@@ -10,13 +10,18 @@ class BuildSet:
     source.revision), or a build of a certain set of Changes
     (source.changes=list)."""
 
-    def __init__(self, builderNames, source, reason=None, bsid=None, scheduler=None):
+    def __init__(self, builderNames, source, reason=None, bsid=None,
+                 scheduler=None, custom_props=None):
         """
         @param source: a L{buildbot.sourcestamp.SourceStamp}
         """
         self.builderNames = builderNames
         self.source = source
         self.reason = reason
+
+        if not custom_props: custom_props = {}
+        self.custom_props = custom_props
+
         self.stillHopeful = True
         self.status = bss = builder.BuildSetStatus(source, reason,
                                                    builderNames, bsid)
@@ -35,7 +40,8 @@ class BuildSet:
 
         # create the requests
         for b in builders:
-            req = base.BuildRequest(self.reason, self.source, b.name, self.scheduler)
+            req = base.BuildRequest(self.reason, self.source, b.name, 
+                                    self.scheduler, self.custom_props)
             reqs.append((b, req))
             self.requests.append(req)
             d = req.waitUntilFinished()

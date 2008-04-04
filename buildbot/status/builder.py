@@ -1789,6 +1789,8 @@ class Status:
         return self.botmaster.parent.projectURL
     def getBuildbotURL(self):
         return self.botmaster.parent.buildbotURL
+    def getCustomBuildProperties(self):
+     return self.botmaster.parent.customBuildProperties
 
     def getURLForThing(self, thing):
         prefix = self.getBuildbotURL()

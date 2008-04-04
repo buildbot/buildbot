@@ -442,9 +442,13 @@ class Try(pb.Referenceable):
 
     def _deliverJob_pb(self, remote):
         ss = self.sourcestamp
+
         d = remote.callRemote("try",
-                              ss.branch, ss.revision, ss.patch,
-                              self.builderNames)
+                              ss.branch,
+                              ss.revision,
+                              ss.patch,
+                              self.builderNames,
+                              self.config.get('custom_props', {}))
         d.addCallback(self._deliverJob_pb2)
         return d
     def _deliverJob_pb2(self, status):

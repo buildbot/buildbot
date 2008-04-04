@@ -51,6 +51,7 @@ class Trigger(LoggingBuildStep):
             self.step_status.setText(["interrupted"])
 
     def start(self):
+        custom_props = {}
         self.running = True
         ss = self.build.getSourceStamp()
         if self.updateSourceStamp:
@@ -61,6 +62,7 @@ class Trigger(LoggingBuildStep):
                 pass
             if got:
                 ss = ss.getAbsoluteSourceStamp(got)
+        custom_props = self.build.getCustomProperties()
         # (is there an easier way to find the BuildMaster?)
         all_schedulers = self.build.builder.botmaster.parent.allSchedulers()
         all_schedulers = dict([(sch.name, sch) for sch in all_schedulers])
@@ -75,7 +77,7 @@ class Trigger(LoggingBuildStep):
             if all_schedulers.has_key(scheduler):
                 sch = all_schedulers[scheduler]
                 if isinstance(sch, Triggerable):
-                    dl.append(sch.trigger(ss))
+                    dl.append(sch.trigger(ss, custom_props))
                     triggered_schedulers.append(scheduler)
                 else:
                     unknown_schedulers.append(scheduler)

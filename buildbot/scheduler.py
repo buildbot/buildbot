@@ -665,7 +665,8 @@ class Try_Userpass_Perspective(pbutil.NewCredPerspective):
         self.parent = parent
         self.username = username
 
-    def perspective_try(self, branch, revision, patch, builderNames):
+    def perspective_try(self, branch, revision, patch, builderNames,
+                        custom_props):
         log.msg("user %s requesting build on builders %s" % (self.username,
                                                              builderNames))
         for b in builderNames:
@@ -676,7 +677,13 @@ class Try_Userpass_Perspective(pbutil.NewCredPerspective):
                 return
         ss = SourceStamp(branch, revision, patch)
         reason = "'try' job from user %s" % self.username
-        bs = buildset.BuildSet(builderNames, ss, reason=reason, scheduler=self)
+
+        bs = buildset.BuildSet(builderNames, 
+                               ss,
+                               reason=reason, 
+                               scheduler=self,
+                               custom_props=custom_props)
+
         self.parent.submitBuildSet(bs)
 
         # return a remotely-usable BuildSetStatus object
@@ -699,11 +706,11 @@ class Triggerable(BaseUpstreamScheduler):
     def getPendingBuildTimes(self):
         return []
 
-    def trigger(self, ss):
+    def trigger(self, ss, custom_props={}):
         """Trigger this scheduler. Returns a deferred that will fire when the
         buildset is finished.
         """
-        bs = buildset.BuildSet(self.builderNames, ss, scheduler=self)
+        bs = buildset.BuildSet(self.builderNames, ss, scheduler=self, custom_props=custom_props)
         d = bs.waitUntilFinished()
         self.submit(bs)
         return d

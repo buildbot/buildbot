@@ -39,6 +39,9 @@ class BuildRequest:
                   provide this, but for forced builds the user requesting the
                   build will provide a string.
 
+    @type custom_props: dictionary.
+    @ivar custom_props: custom user properties.
+
     @ivar status: the IBuildStatus object which tracks our status
 
     @ivar submittedAt: a timestamp (seconds since epoch) when this request
@@ -49,16 +52,20 @@ class BuildRequest:
     source = None
     builder = None
     startCount = 0 # how many times we have tried to start this build
+    custom_props = {}
 
     implements(interfaces.IBuildRequestControl)
 
-    def __init__(self, reason, source, builderName=None, scheduler=None):
+    def __init__(self, reason, source, builderName=None, scheduler=None, custom_props=None):
         # TODO: remove the =None on builderName, it is there so I don't have
         # to change a lot of tests that create BuildRequest objects
         assert interfaces.ISourceStamp(source, None)
         self.reason = reason
         self.source = source
         self.scheduler = scheduler
+
+        if not custom_props: custom_props = {}
+        self.custom_props = custom_props
 
         self.start_watchers = []
         self.finish_watchers = []
@@ -85,6 +92,9 @@ class BuildRequest:
         d = defer.Deferred()
         self.finish_watchers.append(d)
         return d
+
+    def customProps(self):
+     return self.custom_props
 
     # these are called by the Builder
 
@@ -172,6 +182,9 @@ class Build:
         self.reason = requests[0].mergeReasons(requests[1:])
         self.scheduler = requests[0].scheduler
 
+        # Set custom properties.
+        self.custom_properties = requests[0].customProps()
+
         #self.abandoned = False
 
         self.progress = None
@@ -198,9 +211,11 @@ class Build:
         properties can live."""
         self.build_status.setProperty(propname, value)
 
+    def getCustomProperties(self):
+        return self.custom_properties
+
     def getProperty(self, propname):
         return self.build_status.properties[propname]
-
 
     def allChanges(self):
         return self.source.changes
@@ -268,6 +283,8 @@ class Build:
             self.setProperty("scheduler", "none")
         else:
             self.setProperty("scheduler", self.scheduler.name)
+        for key, userProp in self.custom_properties.items():
+            self.setProperty(key, userProp)
 
     def setupSlaveBuilder(self, slavebuilder):
         self.slavebuilder = slavebuilder

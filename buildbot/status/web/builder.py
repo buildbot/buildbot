@@ -152,7 +152,18 @@ class StatusResourceBuilder(HtmlResource, OneLineMixin):
 
         return data
 
-    def force(self, req):
+    def force(self, req, custom_props={}):
+        """
+
+        Custom properties can be passed from the web form.  To do
+        this, subclass this class, overriding the force() method.  You
+        can then determine the properties (usually from form values,
+        by inspecting req.args), then pass them to this superclass
+        force method.
+        
+        @param custom_props: Custom properties to set on build
+        
+        """
         name = req.args.get("username", ["<unknown>"])[0]
         reason = req.args.get("comments", ["<no reason specified>"])[0]
         branch = req.args.get("branch", [""])[0]
@@ -185,7 +196,7 @@ class StatusResourceBuilder(HtmlResource, OneLineMixin):
         # button, use their name instead of None, so they'll be informed of
         # the results.
         s = SourceStamp(branch=branch, revision=revision)
-        req = BuildRequest(r, s, self.builder_status.getName())
+        req = BuildRequest(r, s, custom_props, self.builder_status.getName())
         try:
             self.builder_control.requestBuildSoon(req)
         except interfaces.NoSlaveError:
