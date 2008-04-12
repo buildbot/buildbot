@@ -6670,7 +6670,7 @@ queries. It can also be asked to announce builds as they occur, or be
 told to shut up.
 
 @example
-from twisted.status import words
+from buildbot.status import words
 irc = words.IRC("irc.example.org", "botnickname", 
                 channels=["channel1", "channel2"],
                 password="mysecretpassword")
