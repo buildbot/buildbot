@@ -233,8 +233,6 @@ class DebugPerspective(NewCredPerspective):
 
         # Provide default values for any custom build properties the
         # client did not send.
-        for propertyDict in (self.master.customBuildProperties or []):
-            custom_props.setdefault(propertyDict['propertyName'], "")
 
         c = interfaces.IControl(self.master)
         bc = c.getBuilder(buildername)
@@ -347,7 +345,6 @@ class BuildMaster(service.MultiService, styles.Versioned):
     projectURL = None
     buildbotURL = None
     change_svc = None
-    customBuildProperties = None
 
     def __init__(self, basedir, configFileName="master.cfg"):
         service.MultiService.__init__(self)
@@ -503,7 +500,6 @@ class BuildMaster(service.MultiService, styles.Versioned):
                       "schedulers", "builders",
                       "slavePortnum", "debugPassword", "manhole",
                       "status", "projectName", "projectURL", "buildbotURL",
-                      "customBuildProperties"
                       )
         for k in config.keys():
             if k not in known_keys:
@@ -531,7 +527,6 @@ class BuildMaster(service.MultiService, styles.Versioned):
             projectName = config.get('projectName')
             projectURL = config.get('projectURL')
             buildbotURL = config.get('buildbotURL')
-            customBuildProperties = config.get('customBuildProperties')
 
         except KeyError, e:
             log.msg("config dictionary is missing a required parameter")
@@ -677,7 +672,6 @@ class BuildMaster(service.MultiService, styles.Versioned):
         self.projectName = projectName
         self.projectURL = projectURL
         self.buildbotURL = buildbotURL
-        self.customBuildProperties = customBuildProperties
 
         # self.slaves: Disconnect any that were attached and removed from the
         # list. Update self.checker with the new list of passwords, including
