@@ -27,6 +27,7 @@ from buildbot.changes.changes import Change, ChangeMaster
 from buildbot.sourcestamp import SourceStamp
 from buildbot.buildslave import BuildSlave
 from buildbot import interfaces
+from buildbot.process.properties import Properties
 
 ########################################
 
@@ -231,9 +232,6 @@ class DebugPerspective(NewCredPerspective):
         assert isinstance(custom_props, dict), \
                "custom_props must be a dict (not %r)" % (custom_props,)
 
-        # Provide default values for any custom build properties the
-        # client did not send.
-
         c = interfaces.IControl(self.master)
         bc = c.getBuilder(buildername)
         ss = SourceStamp(branch, revision)
@@ -345,6 +343,7 @@ class BuildMaster(service.MultiService, styles.Versioned):
     projectURL = None
     buildbotURL = None
     change_svc = None
+    properties = Properties()
 
     def __init__(self, basedir, configFileName="master.cfg"):
         service.MultiService.__init__(self)
@@ -500,6 +499,7 @@ class BuildMaster(service.MultiService, styles.Versioned):
                       "schedulers", "builders",
                       "slavePortnum", "debugPassword", "manhole",
                       "status", "projectName", "projectURL", "buildbotURL",
+                      "properties"
                       )
         for k in config.keys():
             if k not in known_keys:
@@ -527,6 +527,7 @@ class BuildMaster(service.MultiService, styles.Versioned):
             projectName = config.get('projectName')
             projectURL = config.get('projectURL')
             buildbotURL = config.get('buildbotURL')
+            properties = config.get('properties', {})
 
         except KeyError, e:
             log.msg("config dictionary is missing a required parameter")
@@ -658,6 +659,9 @@ class BuildMaster(service.MultiService, styles.Versioned):
                     else:
                         locks[l.name] = l
 
+        if not isinstance(properties, dict):
+            raise ValueError("c['properties'] must be a dictionary")
+
         # slavePortnum supposed to be a strports specification
         if type(slavePortnum) is int:
             slavePortnum = "tcp:%d" % slavePortnum
@@ -672,6 +676,9 @@ class BuildMaster(service.MultiService, styles.Versioned):
         self.projectName = projectName
         self.projectURL = projectURL
         self.buildbotURL = buildbotURL
+        
+        self.properties = Properties()
+        self.properties.update(properties, self.configFileName)
 
         # self.slaves: Disconnect any that were attached and removed from the
         # list. Update self.checker with the new list of passwords, including

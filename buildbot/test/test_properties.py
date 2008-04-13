@@ -15,9 +15,14 @@ from buildbot.test.runutils import RunMixin
 
 class FakeBuild:
     pass
+class FakeBuildMaster:
+    properties = Properties(masterprop="master")
+class FakeBotMaster:
+    parent = FakeBuildMaster()
 class FakeBuilder:
     statusbag = None
     name = "fakebuilder"
+    botmaster = FakeBotMaster()
 class FakeSlave:
     slavename = "bot12"
     properties = Properties()
@@ -28,7 +33,7 @@ class FakeSlaveBuilder:
         return "1.10"
 class FakeScheduler:
     name = "fakescheduler"
-    properties = Properties({'name' : name}, 'Scheduler')
+    properties = Properties(name=name)
 
 class TestProperties(unittest.TestCase):
     def setUp(self):
@@ -135,7 +140,7 @@ class BuildProperties(unittest.TestCase):
         self.build_status = self.builder_status.newBuild()
         req = base.BuildRequest("reason", 
                     SourceStamp(branch="branch2", revision="1234"),
-                    properties=Properties({"scheduler" : "fakescheduler"}, "Scheduler"))
+                    properties=Properties(scheduler="fakescheduler"))
         self.build = base.Build([req])
         self.build.build_status = self.build_status
         self.build.setBuilder(self.builder)
@@ -149,6 +154,7 @@ class BuildProperties(unittest.TestCase):
         self.failUnlessEqual(self.build.getProperty("slavename"), "bot12")
         self.failUnlessEqual(self.build.getProperty("buildnumber"), 5)
         self.failUnlessEqual(self.build.getProperty("buildername"), "fakebuilder")
+        self.failUnlessEqual(self.build.getProperty("masterprop"), "master")
 
 run_config = """
 from buildbot.process import factory
@@ -160,6 +166,7 @@ BuildmasterConfig = c = {}
 c['slaves'] = [BuildSlave('bot1', 'sekrit', properties={'slprop':'slprop'})]
 c['schedulers'] = []
 c['slavePortnum'] = 0
+c['properties'] = { 'global' : 'global' }
 
 # Note: when run against twisted-1.3.0, this locks up about 5% of the time. I
 # suspect that a command with no output that finishes quickly triggers a race
@@ -170,8 +177,8 @@ c['slavePortnum'] = 0
 f1 = factory.BuildFactory([s(ShellCommand,
                              flunkOnFailure=True,
                              command=['touch',
-                                      WithProperties('%s-slave-%s',
-                                        'slavename', 'slprop'),
+                                      WithProperties('%s-%s-%s',
+                                        'slavename', 'global', 'slprop'),
                                       ],
                              workdir='.',
                              timeout=10,
@@ -191,7 +198,7 @@ class Run(RunMixin, unittest.TestCase):
         d.addCallback(lambda res: self.requestBuild("full1"))
         d.addCallback(self.failUnlessBuildSucceeded)
         def _check_touch(res):
-            f = os.path.join("slavebase-bot1", "bd1", "bot1-slave-slprop")
+            f = os.path.join("slavebase-bot1", "bd1", "bot1-global-slprop")
             self.failUnless(os.path.exists(f))
             return res
         d.addCallback(_check_touch)

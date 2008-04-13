@@ -273,7 +273,9 @@ class Build:
     def setupProperties(self):
         props = self.getProperties()
 
-        #props.updateFromProperties(self.global_properties) TODO
+        # start with global properties from the configuration
+        buildmaster = self.builder.botmaster.parent
+        props.updateFromProperties(buildmaster.properties)
 
         # get any properties from requests (this is the path through
         # which schedulers will send us properties)

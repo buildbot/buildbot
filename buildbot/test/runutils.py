@@ -13,6 +13,7 @@ from buildbot.process.base import BuildRequest, Build
 from buildbot.process.buildstep import BuildStep
 from buildbot.sourcestamp import SourceStamp
 from buildbot.status import builder
+from buildbot.process.properties import Properties
 
 
 
@@ -275,6 +276,12 @@ def fake_slaveVersion(command, oldversion=None):
     from buildbot.slave.registry import commandRegistry
     return commandRegistry[command]
 
+class FakeBuildMaster:
+    properties = Properties(masterprop="master")
+
+class FakeBotMaster:
+    parent = FakeBuildMaster()
+
 def makeBuildStep(basedir, step_class=BuildStep, **kwargs):
     bss = setupBuildStepStatus(basedir)
 
@@ -282,6 +289,7 @@ def makeBuildStep(basedir, step_class=BuildStep, **kwargs):
     setup = {'name': "builder1", "slavename": "bot1",
              'builddir': "builddir", 'factory': None}
     b0 = Builder(setup, bss.getBuild().getBuilder())
+    b0.botmaster = FakeBotMaster()
     br = BuildRequest("reason", ss)
     b = Build([br])
     b.setBuilder(b0)

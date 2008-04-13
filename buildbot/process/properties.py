@@ -18,13 +18,12 @@ class Properties:
     As a special case, a property value of None is returned as an empty 
     string when used as a mapping.
     """
-    def __init__(self, props={}, props_source=''):
+    def __init__(self, **kwargs):
         """
-        @param props: dictionary giving initial property values (for testing)
-        @param props_source: source to use for props
+        @param kwargs: initial property values (for testing)
         """
         self.properties = {}
-        if props: self.update(props, props_source)
+        if kwargs: self.update(kwargs, "TEST")
 
     def __getitem__(self, name):
         """Just get the value for this property, special-casing None -> ''"""
