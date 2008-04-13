@@ -4,8 +4,7 @@ import os.path
 from twisted.internet import reactor
 from twisted.spread import pb
 from twisted.python import log
-from buildbot.process.buildstep import RemoteCommand, BuildStep, \
-     render_properties
+from buildbot.process.buildstep import RemoteCommand, BuildStep
 from buildbot.process.buildstep import SUCCESS, FAILURE
 from buildbot.interfaces import BuildSlaveTooOldError
 
@@ -111,12 +110,14 @@ class FileUpload(BuildStep):
 
     def start(self):
         version = self.slaveVersion("uploadFile")
+        properties = self.build.getProperties()
+
         if not version:
             m = "slave is too old, does not know about uploadFile"
             raise BuildSlaveTooOldError(m)
 
-        source = render_properties(self.slavesrc, self.build)
-        masterdest = render_properties(self.masterdest, self.build)
+        source = properties.render(self.slavesrc)
+        masterdest = properties.render(self.masterdest)
         # we rely upon the fact that the buildmaster runs chdir'ed into its
         # basedir to make sure that relative paths in masterdest are expanded
         # properly. TODO: maybe pass the master's basedir all the way down
@@ -237,6 +238,8 @@ class FileDownload(BuildStep):
         self.mode = mode
 
     def start(self):
+        properties = self.build.getProperties()
+
         version = self.slaveVersion("downloadFile")
         if not version:
             m = "slave is too old, does not know about downloadFile"
@@ -244,9 +247,8 @@ class FileDownload(BuildStep):
 
         # we are currently in the buildmaster's basedir, so any non-absolute
         # paths will be interpreted relative to that
-        source = os.path.expanduser(render_properties(self.mastersrc,
-                                                      self.build))
-        slavedest = render_properties(self.slavedest, self.build)
+        source = os.path.expanduser(properties.render(self.mastersrc))
+        slavedest = properties.render(self.slavedest)
         log.msg("FileDownload started, from master %r to slave %r" %
                 (source, slavedest))
 

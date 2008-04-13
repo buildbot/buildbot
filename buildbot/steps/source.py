@@ -187,7 +187,7 @@ class Source(LoggingBuildStep):
         got_revision = None
         if cmd.updates.has_key("got_revision"):
             got_revision = str(cmd.updates["got_revision"][-1])
-        self.setProperty("got_revision", got_revision)
+        self.setProperty("got_revision", got_revision, "source")
 
 
 

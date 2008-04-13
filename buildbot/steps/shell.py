@@ -2,12 +2,12 @@
 
 import re
 from twisted.python import log
-from buildbot.process.buildstep import LoggingBuildStep, RemoteShellCommand, \
-     render_properties
+from buildbot.process.buildstep import LoggingBuildStep, RemoteShellCommand
 from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE
 
-# for existing configurations that import WithProperties from here
-from buildbot.process.buildstep import WithProperties
+# for existing configurations that import WithProperties from here.  We like
+# to move this class around just to keep our readers guessing.
+from buildbot.process.properties import WithProperties
 
 class ShellCommand(LoggingBuildStep):
     """I run a single shell command on the buildslave. I return FAILURE if
@@ -118,11 +118,12 @@ class ShellCommand(LoggingBuildStep):
         if self.description is not None:
             return self.description
 
+        properties = self.build.getProperties()
         words = self.command
         if isinstance(words, (str, unicode)):
             words = words.split()
         # render() each word to handle WithProperties objects
-        words = [render_properties(word, self.build) for word in words]
+        words = [properties.render(word) for word in words]
         if len(words) < 1:
             return ["???"]
         if len(words) == 1:
@@ -131,45 +132,18 @@ class ShellCommand(LoggingBuildStep):
             return ["'%s" % words[0], "%s'" % words[1]]
         return ["'%s" % words[0], "%s" % words[1], "...'"]
 
-    def _interpolateProperties(self, value):
-        """
-        Expand the L{WithProperties} objects in L{value}
-        """
-        if isinstance(value, (str, unicode, bool, int, float, type(None))):
-            return value
-
-        if isinstance(value, list):
-            return [self._interpolateProperties(val) for val in value]
-
-        if isinstance(value, tuple):
-            return tuple([self._interpolateProperties(val) for val in value])
-
-        if isinstance(value, dict):
-            new_dict = { }
-            for key, val in value.iteritems():
-                new_key = self._interpolateProperties(key)
-                new_dict[new_key] = self._interpolateProperties(val)
-            return new_dict
-
-        # To make sure we catch anything we forgot
-        assert isinstance(value, WithProperties), \
-               "%s (%s) is not a WithProperties" % (value, type(value))
-
-        return value.render(self.build)
-
-    def _interpolateWorkdir(self, workdir):
-        return render_properties(workdir, self.build)
-
     def setupEnvironment(self, cmd):
+        # XXX is this used? documented? replaced by properties?
         # merge in anything from Build.slaveEnvironment . Earlier steps
         # (perhaps ones which compile libraries or sub-projects that need to
         # be referenced by later steps) can add keys to
         # self.build.slaveEnvironment to affect later steps.
+        properties = self.build.getProperties()
         slaveEnv = self.build.slaveEnvironment
         if slaveEnv:
             if cmd.args['env'] is None:
                 cmd.args['env'] = {}
-            cmd.args['env'].update(self._interpolateProperties(slaveEnv))
+            cmd.args['env'].update(properties.render(slaveEnv))
             # note that each RemoteShellCommand gets its own copy of the
             # dictionary, so we shouldn't be affecting anyone but ourselves.
 
@@ -199,12 +173,11 @@ class ShellCommand(LoggingBuildStep):
         # this block is specific to ShellCommands. subclasses that don't need
         # to set up an argv array, an environment, or extra logfiles= (like
         # the Source subclasses) can just skip straight to startCommand()
-        command = self._interpolateProperties(self.command)
-        assert isinstance(command, (list, tuple, str))
+        properties = self.build.getProperties()
+
         # create the actual RemoteShellCommand instance now
-        kwargs = self._interpolateProperties(self.remote_kwargs)
-        kwargs['workdir'] = self._interpolateWorkdir(kwargs['workdir'])
-        kwargs['command'] = command
+        kwargs = properties.render(self.remote_kwargs)
+        kwargs['command'] = properties.render(self.command)
         kwargs['logfiles'] = self.logfiles
         cmd = RemoteShellCommand(**kwargs)
         self.setupEnvironment(cmd)
@@ -224,7 +197,7 @@ class TreeSize(ShellCommand):
         m = re.search(r'^(\d+)', out)
         if m:
             self.kib = int(m.group(1))
-            self.setProperty("tree-size-KiB", self.kib)
+            self.setProperty("tree-size-KiB", self.kib, "treesize")
 
     def evaluateCommand(self, cmd):
         if cmd.rc != 0:
@@ -298,7 +271,7 @@ class WarningCountingShellCommand(ShellCommand):
             old_count = self.getProperty("warnings-count")
         except KeyError:
             old_count = 0
-        self.setProperty("warnings-count", old_count + self.warnCount)
+        self.setProperty("warnings-count", old_count + self.warnCount, "WarningCountingShellCommand")
 
 
     def evaluateCommand(self, cmd):

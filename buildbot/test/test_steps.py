@@ -236,13 +236,13 @@ class Steps(unittest.TestCase):
         s = makeBuildStep("test_steps.Steps.test_getProperty")
         bs = s.step_status.getBuild()
 
-        s.setProperty("prop1", "value1")
-        s.setProperty("prop2", "value2")
+        s.setProperty("prop1", "value1", "test")
+        s.setProperty("prop2", "value2", "test")
         self.failUnlessEqual(s.getProperty("prop1"), "value1")
         self.failUnlessEqual(bs.getProperty("prop1"), "value1")
         self.failUnlessEqual(s.getProperty("prop2"), "value2")
         self.failUnlessEqual(bs.getProperty("prop2"), "value2")
-        s.setProperty("prop1", "value1a")
+        s.setProperty("prop1", "value1a", "test")
         self.failUnlessEqual(s.getProperty("prop1"), "value1a")
         self.failUnlessEqual(bs.getProperty("prop1"), "value1a")
 
@@ -601,7 +601,7 @@ error (but we aren't looking for errors now, are we)
 line 23: warning: we are now on line 23
 ending line
 """
-        step.setProperty("warnings-count", 10)
+        step.setProperty("warnings-count", 10, "test")
         log = step.addLog("stdio")
         log.addStdout(output)
         log.finish()

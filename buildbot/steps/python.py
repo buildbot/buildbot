@@ -96,8 +96,8 @@ class PyFlakes(ShellCommand):
             if counts[m]:
                 self.descriptionDone.append("%s=%d" % (m, counts[m]))
                 self.addCompleteLog(m, "".join(summaries[m]))
-            self.setProperty("pyflakes-%s" % m, counts[m])
-        self.setProperty("pyflakes-total", sum(counts.values()))
+            self.setProperty("pyflakes-%s" % m, counts[m], "pyflakes")
+        self.setProperty("pyflakes-total", sum(counts.values()), "pyflakes")
 
 
     def evaluateCommand(self, cmd):

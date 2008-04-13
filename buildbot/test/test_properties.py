@@ -6,7 +6,8 @@ from twisted.trial import unittest
 
 from buildbot.sourcestamp import SourceStamp
 from buildbot.process import base
-from buildbot.steps.shell import ShellCommand, WithProperties
+from buildbot.process.properties import WithProperties, Properties
+from buildbot.steps.shell import ShellCommand
 from buildbot.status import builder
 from buildbot.slave.commands import rmdirRecursive
 from buildbot.test.runutils import RunMixin
@@ -26,7 +27,97 @@ class FakeSlaveBuilder:
 class FakeScheduler:
     name = "fakescheduler"
 
-class Interpolate(unittest.TestCase):
+class TestProperties(unittest.TestCase):
+    def setUp(self):
+        self.props = Properties()
+
+    def testDictBehavior(self):
+        self.props.setProperty("do-tests", 1, "scheduler")
+        self.props.setProperty("do-install", 2, "scheduler")
+
+        self.assert_(self.props.has_key('do-tests'))
+        self.failUnlessEqual(self.props['do-tests'], 1)
+        self.failUnlessEqual(self.props['do-install'], 2)
+        self.assertRaises(KeyError, lambda : self.props['do-nothing'])
+        self.failUnlessEqual(self.props.getProperty('do-install'), (2, 'scheduler'))
+
+    def testEmpty(self):
+        # test the special case for Null
+        self.props.setProperty("x", None, "hi")
+        self.failUnlessEqual(self.props.getProperty('x'), (None, 'hi'))
+        self.failUnlessEqual(self.props['x'], '')
+
+    def testUpdate(self):
+        self.props.setProperty("x", 24, "old")
+        newprops = { 'a' : 1, 'b' : 2 }
+        self.props.update(newprops, "new")
+
+        self.failUnlessEqual(self.props.getProperty('x'), (24, 'old'))
+        self.failUnlessEqual(self.props.getProperty('a'), (1, 'new'))
+
+    def testUpdateFromProperties(self):
+        self.props.setProperty("x", 24, "old")
+        newprops = Properties()
+        newprops.setProperty('a', 1, "new")
+        newprops.setProperty('b', 2, "new")
+        self.props.updateFromProperties(newprops)
+
+        self.failUnlessEqual(self.props.getProperty('x'), (24, 'old'))
+        self.failUnlessEqual(self.props.getProperty('a'), (1, 'new'))
+
+    # render() is pretty well tested by TestWithProperties
+
+class TestWithProperties(unittest.TestCase):
+    def setUp(self):
+        self.props = Properties()
+
+    def testBasic(self):
+        # test basic substitution with WithProperties
+        self.props.setProperty("revision", "47", "test")
+        command = WithProperties("build-%s.tar.gz", "revision")
+        self.failUnlessEqual(self.props.render(command),
+                             "build-47.tar.gz")
+
+    def testDict(self):
+        # test dict-style substitution with WithProperties
+        self.props.setProperty("other", "foo", "test")
+        command = WithProperties("build-%(other)s.tar.gz")
+        self.failUnlessEqual(self.props.render(command),
+                             "build-foo.tar.gz")
+
+    def testEmpty(self):
+        # None should render as ''
+        self.props.setProperty("empty", None, "test")
+        command = WithProperties("build-%(empty)s.tar.gz")
+        self.failUnlessEqual(self.props.render(command),
+                             "build-.tar.gz")
+
+    def testRecursiveList(self):
+        self.props.setProperty("x", 10, "test")
+        self.props.setProperty("y", 20, "test")
+        command = [ WithProperties("%(x)s %(y)s"), "and",
+                    WithProperties("%(y)s %(x)s") ]
+        self.failUnlessEqual(self.props.render(command),
+                             ["10 20", "and", "20 10"])
+
+    def testRecursiveTuple(self):
+        self.props.setProperty("x", 10, "test")
+        self.props.setProperty("y", 20, "test")
+        command = ( WithProperties("%(x)s %(y)s"), "and",
+                    WithProperties("%(y)s %(x)s") )
+        self.failUnlessEqual(self.props.render(command),
+                             ("10 20", "and", "20 10"))
+
+    def testRecursiveDict(self):
+        self.props.setProperty("x", 10, "test")
+        self.props.setProperty("y", 20, "test")
+        command = { WithProperties("%(x)s %(y)s") : 
+                    WithProperties("%(y)s %(x)s") }
+        self.failUnlessEqual(self.props.render(command),
+                             {"10 20" : "20 10"})
+
+class BuildProperties(unittest.TestCase):
+    """Test the properties that a build should have."""
     def setUp(self):
         self.builder = FakeBuilder()
         self.builder_status = builder.BuilderStatus("fakebuilder")
@@ -36,89 +127,21 @@ class Interpolate(unittest.TestCase):
         os.mkdir(self.builder_status.basedir)
         self.build_status = self.builder_status.newBuild()
         req = base.BuildRequest("reason", SourceStamp(branch="branch2",
-                                                      revision=1234))
+                                                      revision="1234"))
         self.build = base.Build([req])
         self.build.setBuilder(self.builder)
         self.build.setupStatus(self.build_status)
         self.build.setupSlaveBuilder(FakeSlaveBuilder())
 
-    def testWithProperties(self):
-        self.build.setProperty("revision", 47)
-        self.failUnlessEqual(self.build_status.getProperty("revision"), 47)
-        c = ShellCommand(workdir=dir,
-                         command=["tar", "czf",
-                                  WithProperties("build-%s.tar.gz",
-                                                 "revision"),
-                                  "source"])
-        c.setBuild(self.build)
-        cmd = c._interpolateProperties(c.command)
-        self.failUnlessEqual(cmd,
-                             ["tar", "czf", "build-47.tar.gz", "source"])
+    def testProperties(self):
+        # if not started from a scheduler, the 'scheduler' property
+        # should be 'none'
         self.failUnlessEqual(self.build.getProperty("scheduler"), "none")
-
-    def testWorkdir(self):
-        self.build.setProperty("revision", 47)
-        self.failUnlessEqual(self.build_status.getProperty("revision"), 47)
-        c = ShellCommand(command=["tar", "czf", "foo.tar.gz", "source"])
-        c.setBuild(self.build)
-        workdir = WithProperties("workdir-%d", "revision")
-        workdir = c._interpolateWorkdir(workdir)
-        self.failUnlessEqual(workdir, "workdir-47")
-
-    def testWithPropertiesDict(self):
-        self.build.setProperty("other", "foo")
-        self.build.setProperty("missing", None)
-        c = ShellCommand(workdir=dir,
-                         command=["tar", "czf",
-                                  WithProperties("build-%(other)s.tar.gz"),
-                                  "source"])
-        c.setBuild(self.build)
-        cmd = c._interpolateProperties(c.command)
-        self.failUnlessEqual(cmd,
-                             ["tar", "czf", "build-foo.tar.gz", "source"])
-
-    def testWithPropertiesEmpty(self):
-        self.build.setProperty("empty", None)
-        c = ShellCommand(workdir=dir,
-                         command=["tar", "czf",
-                                  WithProperties("build-%(empty)s.tar.gz"),
-                                  "source"])
-        c.setBuild(self.build)
-        cmd = c._interpolateProperties(c.command)
-        self.failUnlessEqual(cmd,
-                             ["tar", "czf", "build-.tar.gz", "source"])
-
-    def testSourceStamp(self):
-        c = ShellCommand(workdir=dir,
-                         command=["touch",
-                                  WithProperties("%s-dir", "branch"),
-                                  WithProperties("%s-rev", "revision"),
-                                  ])
-        c.setBuild(self.build)
-        cmd = c._interpolateProperties(c.command)
-        self.failUnlessEqual(cmd,
-                             ["touch", "branch2-dir", "1234-rev"])
-
-    def testSlaveName(self):
-        c = ShellCommand(workdir=dir,
-                         command=["touch",
-                                  WithProperties("%s-slave", "slavename"),
-                                  ])
-        c.setBuild(self.build)
-        cmd = c._interpolateProperties(c.command)
-        self.failUnlessEqual(cmd,
-                             ["touch", "bot12-slave"])
-
-    def testBuildNumber(self):
-        c = ShellCommand(workdir=dir,
-                         command=["touch",
-                                  WithProperties("build-%d", "buildnumber"),
-                                  WithProperties("builder-%s", "buildername"),
-                                  ])
-        c.setBuild(self.build)
-        cmd = c._interpolateProperties(c.command)
-        self.failUnlessEqual(cmd,
-                             ["touch", "build-5", "builder-fakebuilder"])
+        self.failUnlessEqual(self.build.getProperty("branch"), "branch2")
+        self.failUnlessEqual(self.build.getProperty("revision"), "1234")
+        self.failUnlessEqual(self.build.getProperty("slavename"), "bot12")
+        self.failUnlessEqual(self.build.getProperty("buildnumber"), 5)
+        self.failUnlessEqual(self.build.getProperty("buildername"), "fakebuilder")
 
 class SchedulerTest(unittest.TestCase):
     def setUp(self):

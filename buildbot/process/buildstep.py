@@ -632,8 +632,8 @@ class BuildStep:
     def getProperty(self, propname):
         return self.build.getProperty(propname)
 
-    def setProperty(self, propname, value):
-        self.build.setProperty(propname, value)
+    def setProperty(self, propname, value, source):
+        self.build.setProperty(propname, value, source)
 
     def startStep(self, remote):
         """Begin the step. This returns a Deferred that will fire when the
@@ -1092,46 +1092,5 @@ class LoggingBuildStep(BuildStep):
         self.step_status.setText(self.getText(cmd, results))
         self.step_status.setText2(self.maybeGetText2(cmd, results))
 
-class _BuildPropertyMapping:
-    def __init__(self, build):
-        self.build = build
-    def __getitem__(self, name):
-        p = self.build.getProperty(name)
-        if p is None:
-            p = ""
-        return p
-
-class WithProperties(util.ComparableMixin):
-    """This is a marker class, used in ShellCommand's command= argument to
-    indicate that we want to interpolate a build property.
-    """
-
-    compare_attrs = ('fmtstring', 'args')
-
-    def __init__(self, fmtstring, *args):
-        self.fmtstring = fmtstring
-        self.args = args
-
-    def render(self, build):
-        pmap = _BuildPropertyMapping(build)
-        if self.args:
-            strings = []
-            for name in self.args:
-                strings.append(pmap[name])
-            s = self.fmtstring % tuple(strings)
-        else:
-            s = self.fmtstring % pmap
-        return s
-
-def render_properties(s, build):
-    """Return a string based on s and build that is suitable for use
-    in a running BuildStep.  If s is a string, return s.  If s is a
-    WithProperties object, return the result of s.render(build).
-    Otherwise, return str(s).
-    """
-    if isinstance(s, (str, unicode)):
-        return s
-    elif isinstance(s, WithProperties):
-        return s.render(build)
-    else:
-        return str(s)
+# (WithProeprties used to be available in this module)
+from buildbot.process.properties import WithProperties

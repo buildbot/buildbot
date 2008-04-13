@@ -5,6 +5,7 @@ from twisted.python import log
 from twisted.persisted import styles
 from twisted.internet import reactor, defer
 from twisted.protocols import basic
+from buildbot.process.properties import Properties
 
 import os, shutil, sys, re, urllib, itertools
 from cPickle import load, dump
@@ -888,7 +889,7 @@ class BuildStepStatus(styles.Versioned):
 
 class BuildStatus(styles.Versioned):
     implements(interfaces.IBuildStatus, interfaces.IStatusEvent)
-    persistenceVersion = 2
+    persistenceVersion = 3
 
     source = None
     reason = None
@@ -924,7 +925,7 @@ class BuildStatus(styles.Versioned):
         self.finishedWatchers = []
         self.steps = []
         self.testResults = {}
-        self.properties = {}
+        self.properties = Properties()
 
     # IBuildStatus
 
@@ -936,6 +937,9 @@ class BuildStatus(styles.Versioned):
 
     def getProperty(self, propname):
         return self.properties[propname]
+
+    def getProperties(self):
+        return self.properties
 
     def getNumber(self):
         return self.number
@@ -1074,8 +1078,8 @@ class BuildStatus(styles.Versioned):
         self.steps.append(s)
         return s
 
-    def setProperty(self, propname, value):
-        self.properties[propname] = value
+    def setProperty(self, propname, value, source):
+        self.properties.setProperty(propname, value, source)
 
     def addTestResult(self, result):
         self.testResults[result.getName()] = result
@@ -1228,6 +1232,12 @@ class BuildStatus(styles.Versioned):
 
     def upgradeToVersion2(self):
         self.properties = {}
+
+    def upgradeToVersion3(self):
+        # in version 3, self.properties became a Properties object
+        propdict = self.properties
+        self.properties = Properties()
+        self.properties.update(propdict)
 
     def upgradeLogfiles(self):
         # upgrade any LogFiles that need it. This must occur after we've been

@@ -207,14 +207,17 @@ class Build:
     def getSourceStamp(self):
         return self.source
 
-    def setProperty(self, propname, value):
+    def setProperty(self, propname, value, source):
         """Set a property on this build. This may only be called after the
         build has started, so that it has a BuildStatus object where the
         properties can live."""
-        self.build_status.setProperty(propname, value)
+        self.build_status.setProperty(propname, value, source)
 
     def getCustomProperties(self):
         return self.custom_properties
+
+    def getProperties(self):
+        return self.build_status.getProperties()
 
     def getProperty(self, propname):
         return self.build_status.properties[propname]
@@ -277,22 +280,22 @@ class Build:
 
     def setupStatus(self, build_status):
         self.build_status = build_status
-        self.setProperty("buildername", self.builder.name)
-        self.setProperty("buildnumber", self.build_status.number)
-        self.setProperty("branch", self.source.branch)
-        self.setProperty("revision", self.source.revision)
+        self.setProperty("buildername", self.builder.name, "build")
+        self.setProperty("buildnumber", self.build_status.number, "build")
+        self.setProperty("branch", self.source.branch, "build")
+        self.setProperty("revision", self.source.revision, "build")
         if self.scheduler is None:
-            self.setProperty("scheduler", "none")
+            self.setProperty("scheduler", "none", "build")
         else:
-            self.setProperty("scheduler", self.scheduler.name)
+            self.setProperty("scheduler", self.scheduler.name, "build")
         for key, userProp in self.custom_properties.items():
-            self.setProperty(key, userProp)
+            self.setProperty(key, userProp, "custom_props")
 
     def setupSlaveBuilder(self, slavebuilder):
         self.slavebuilder = slavebuilder
         self.slavename = slavebuilder.slave.slavename
         self.build_status.setSlavename(self.slavename)
-        self.setProperty("slavename", self.slavename)
+        self.setProperty("slavename", self.slavename, "build")
 
     def startBuild(self, build_status, expectations, slavebuilder):
         """This method sets up the build, then starts it by invoking the
