@@ -104,9 +104,9 @@ class DebugWidget:
             if revision == '':
                 revision = None
         reason = "debugclient 'Request Build' button pushed"
-        custom_props = {}
+        properties = {}
         d = self.remote.callRemote("requestBuild",
-                                   name, reason, branch, revision, custom_props)
+                                   name, reason, branch, revision, properties)
         d.addErrback(self.err)
 
     def do_ping(self, widget):

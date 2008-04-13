@@ -448,7 +448,7 @@ class Try(pb.Referenceable):
                               ss.revision,
                               ss.patch,
                               self.builderNames,
-                              self.config.get('custom_props', {}))
+                              self.config.get('properties', {}))
         d.addCallback(self._deliverJob_pb2)
         return d
     def _deliverJob_pb2(self, status):

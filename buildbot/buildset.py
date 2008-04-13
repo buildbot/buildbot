@@ -11,15 +11,13 @@ class BuildSet:
     (source.changes=list)."""
 
     def __init__(self, builderNames, source, reason=None, bsid=None,
-                 custom_props=None, properties=None):
+                 properties=None):
         """
         @param source: a L{buildbot.sourcestamp.SourceStamp}
         """
         self.builderNames = builderNames
         self.source = source
         self.reason = reason
-
-        self.custom_props = custom_props
 
         self.properties = Properties()
         if properties: self.properties.updateFromProperties(properties)
@@ -42,7 +40,6 @@ class BuildSet:
         # create the requests
         for b in builders:
             req = base.BuildRequest(self.reason, self.source, b.name, 
-                                    custom_props=self.custom_props,
                                     properties=self.properties)
             reqs.append((b, req))
             self.requests.append(req)

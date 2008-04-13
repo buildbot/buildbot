@@ -53,11 +53,10 @@ class BuildRequest:
     source = None
     builder = None
     startCount = 0 # how many times we have tried to start this build
-    custom_props = {}
 
     implements(interfaces.IBuildRequestControl)
 
-    def __init__(self, reason, source, builderName=None, custom_props=None, properties=None):
+    def __init__(self, reason, source, builderName=None, properties=None):
         # TODO: remove the =None on builderName, it is there so I don't have
         # to change a lot of tests that create BuildRequest objects
         assert interfaces.ISourceStamp(source, None)
@@ -67,8 +66,6 @@ class BuildRequest:
         self.properties = Properties()
         if properties:
             self.properties.updateFromProperties(properties)
-        if custom_props:
-            self.properties.update(custom_props, "BuildRequest-custom_props")
 
         self.start_watchers = []
         self.finish_watchers = []
@@ -95,9 +92,6 @@ class BuildRequest:
         d = defer.Deferred()
         self.finish_watchers.append(d)
         return d
-
-    def customProps(self):
-     return self.custom_props
 
     # these are called by the Builder
 

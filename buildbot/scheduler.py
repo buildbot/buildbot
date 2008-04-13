@@ -685,8 +685,7 @@ class Try_Userpass_Perspective(pbutil.NewCredPerspective):
         self.parent = parent
         self.username = username
 
-    def perspective_try(self, branch, revision, patch, builderNames,
-                        custom_props):
+    def perspective_try(self, branch, revision, patch, builderNames, properties={}):
         log.msg("user %s requesting build on builders %s" % (self.username,
                                                              builderNames))
         for b in builderNames:
@@ -698,11 +697,15 @@ class Try_Userpass_Perspective(pbutil.NewCredPerspective):
         ss = SourceStamp(branch, revision, patch)
         reason = "'try' job from user %s" % self.username
 
+        # roll the specified props in with our inherited props
+        combined_props = Properties()
+        combined_props.updateFromProperties(self.parent.properties)
+        combined_props.update(properties, "try build")
+
         bs = buildset.BuildSet(builderNames, 
                                ss,
                                reason=reason, 
-                               custom_props=custom_props,
-                               properties=self.parent.properties)
+                               properties=combined_props)
 
         self.parent.submitBuildSet(bs)
 
@@ -728,7 +731,7 @@ class Triggerable(BaseUpstreamScheduler):
     def getPendingBuildTimes(self):
         return []
 
-    def trigger(self, ss, custom_props={}, set_props=None):
+    def trigger(self, ss, set_props=None):
         """Trigger this scheduler. Returns a deferred that will fire when the
         buildset is finished.
         """
@@ -739,7 +742,7 @@ class Triggerable(BaseUpstreamScheduler):
         props.updateFromProperties(self.properties)
         if set_props: props.updateFromProperties(set_props)
 
-        bs = buildset.BuildSet(self.builderNames, ss, custom_props=custom_props, properties=props)
+        bs = buildset.BuildSet(self.builderNames, ss, properties=props)
         d = bs.waitUntilFinished()
         self.submitBuildSet(bs)
         return d
