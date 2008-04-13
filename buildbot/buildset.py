@@ -11,7 +11,7 @@ class BuildSet:
     (source.changes=list)."""
 
     def __init__(self, builderNames, source, reason=None, bsid=None,
-                 scheduler=None, custom_props=None):
+                 custom_props=None, properties=None):
         """
         @param source: a L{buildbot.sourcestamp.SourceStamp}
         """
@@ -19,13 +19,12 @@ class BuildSet:
         self.source = source
         self.reason = reason
 
-        if not custom_props: custom_props = {}
         self.custom_props = custom_props
+        self.properties = properties
 
         self.stillHopeful = True
         self.status = bss = builder.BuildSetStatus(source, reason,
                                                    builderNames, bsid)
-	self.scheduler = scheduler
 
     def waitUntilSuccess(self):
         return self.status.waitUntilSuccess()
@@ -41,8 +40,8 @@ class BuildSet:
         # create the requests
         for b in builders:
             req = base.BuildRequest(self.reason, self.source, b.name, 
-                                    scheduler=self.scheduler,
-                                    custom_props=self.custom_props)
+                                    custom_props=self.custom_props,
+                                    properties=self.properties)
             reqs.append((b, req))
             self.requests.append(req)
             d = req.waitUntilFinished()

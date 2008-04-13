@@ -11,6 +11,7 @@ from buildbot.pbutil import NewCredPerspective
 from buildbot.status.builder import SlaveStatus
 from buildbot.status.mail import MailNotifier
 from buildbot.interfaces import IBuildSlave
+from buildbot.process.properties import Properties
 
 class BuildSlave(NewCredPerspective, service.MultiService):
     """This is the master-side representative for a remote buildbot slave.
@@ -26,7 +27,8 @@ class BuildSlave(NewCredPerspective, service.MultiService):
     implements(IBuildSlave)
 
     def __init__(self, name, password, max_builds=None,
-                 notify_on_missing=[], missing_timeout=3600):
+                 notify_on_missing=[], missing_timeout=3600,
+                 properties={}):
         """
         @param name: botname this machine will supply when it connects
         @param password: password this machine will supply when
@@ -34,6 +36,9 @@ class BuildSlave(NewCredPerspective, service.MultiService):
         @param max_builds: maximum number of simultaneous builds that will
                            be run concurrently on this buildslave (the
                            default is None for no limit)
+        @param properties: properties that will be applied to builds run on 
+                           this slave
+        @type properties: dictionary
         """
         service.MultiService.__init__(self)
         self.slavename = name
@@ -44,6 +49,11 @@ class BuildSlave(NewCredPerspective, service.MultiService):
         self.slave_commands = None
         self.slavebuilders = []
         self.max_builds = max_builds
+
+        self.properties = Properties()
+        self.properties.update(properties, "BuildSlave")
+        self.properties.setProperty("slavename", name, "BuildSlave")
+
         self.lastMessageReceived = 0
         if isinstance(notify_on_missing, str):
             notify_on_missing = [notify_on_missing]

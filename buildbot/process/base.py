@@ -11,6 +11,7 @@ from buildbot import interfaces
 from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE, EXCEPTION
 from buildbot.status.builder import Results, BuildRequestStatus
 from buildbot.status.progress import BuildProgress
+from buildbot.process.properties import Properties
 
 class BuildRequest:
     """I represent a request to a specific Builder to run a single build.
@@ -39,8 +40,8 @@ class BuildRequest:
                   provide this, but for forced builds the user requesting the
                   build will provide a string.
 
-    @type custom_props: dictionary.
-    @ivar custom_props: custom user properties.
+    @type properties: Properties object
+    @ivar properties: properties that should be applied to this build
 
     @ivar status: the IBuildStatus object which tracks our status
 
@@ -56,18 +57,18 @@ class BuildRequest:
 
     implements(interfaces.IBuildRequestControl)
 
-    def __init__(self, reason, source, builderName=None, scheduler=None, custom_props=None):
+    def __init__(self, reason, source, builderName=None, custom_props=None, properties=None):
         # TODO: remove the =None on builderName, it is there so I don't have
         # to change a lot of tests that create BuildRequest objects
         assert interfaces.ISourceStamp(source, None)
         self.reason = reason
         self.source = source
-        self.scheduler = scheduler
 
-        if not custom_props: custom_props = {}
-        self.custom_props = custom_props
-        assert isinstance(self.custom_props, dict), \
-               "custom_props must be a dict (not %r)" % (self.custom_props,)
+        self.properties = Properties()
+        if properties:
+            self.properties.updateFromProperties(properties)
+        if custom_props:
+            self.properties.update(custom_props, "BuildRequest-custom_props")
 
         self.start_watchers = []
         self.finish_watchers = []
@@ -182,12 +183,6 @@ class Build:
         # build a source stamp
         self.source = requests[0].mergeWith(requests[1:])
         self.reason = requests[0].mergeReasons(requests[1:])
-        self.scheduler = requests[0].scheduler
-
-        # Set custom properties.
-        self.custom_properties = requests[0].customProps()
-
-        #self.abandoned = False
 
         self.progress = None
         self.currentStep = None
@@ -213,14 +208,11 @@ class Build:
         properties can live."""
         self.build_status.setProperty(propname, value, source)
 
-    def getCustomProperties(self):
-        return self.custom_properties
-
     def getProperties(self):
         return self.build_status.getProperties()
 
     def getProperty(self, propname):
-        return self.build_status.properties[propname]
+        return self.build_status.getProperty(propname)
 
     def allChanges(self):
         return self.source.changes
@@ -278,24 +270,33 @@ class Build:
     def getSlaveName(self):
         return self.slavebuilder.slave.slavename
 
-    def setupStatus(self, build_status):
-        self.build_status = build_status
-        self.setProperty("buildername", self.builder.name, "build")
-        self.setProperty("buildnumber", self.build_status.number, "build")
-        self.setProperty("branch", self.source.branch, "build")
-        self.setProperty("revision", self.source.revision, "build")
-        if self.scheduler is None:
-            self.setProperty("scheduler", "none", "build")
-        else:
-            self.setProperty("scheduler", self.scheduler.name, "build")
-        for key, userProp in self.custom_properties.items():
-            self.setProperty(key, userProp, "custom_props")
+    def setupProperties(self):
+        props = self.getProperties()
+
+        #props.updateFromProperties(self.global_properties) TODO
+
+        # get any properties from requests (this is the path through
+        # which schedulers will send us properties)
+        for rq in self.requests:
+            props.updateFromProperties(rq.properties)
+
+        # now set some properties of our own, corresponding to the
+        # build itself
+        props.setProperty("buildername", self.builder.name, "Build")
+        props.setProperty("buildnumber", self.build_status.number, "Build")
+        props.setProperty("branch", self.source.branch, "Build")
+        props.setProperty("revision", self.source.revision, "Build")
 
     def setupSlaveBuilder(self, slavebuilder):
         self.slavebuilder = slavebuilder
+
+        # navigate our way back to the L{buildbot.buildslave.BuildSlave}
+        # object that came from the config, and get its properties
+        buildslave_properties = slavebuilder.slave.properties
+        self.getProperties().updateFromProperties(buildslave_properties)
+
         self.slavename = slavebuilder.slave.slavename
         self.build_status.setSlavename(self.slavename)
-        self.setProperty("slavename", self.slavename, "build")
 
     def startBuild(self, build_status, expectations, slavebuilder):
         """This method sets up the build, then starts it by invoking the
@@ -308,8 +309,9 @@ class Build:
         # the Deferred returned by this method.
 
         log.msg("%s.startBuild" % self)
-        self.setupStatus(build_status)
+        self.build_status = build_status
         # now that we have a build_status, we can set properties
+        self.setupProperties()
         self.setupSlaveBuilder(slavebuilder)
 
         # convert all locks into their real forms

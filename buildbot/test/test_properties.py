@@ -20,12 +20,15 @@ class FakeBuilder:
     name = "fakebuilder"
 class FakeSlave:
     slavename = "bot12"
+    properties = Properties()
+    properties.setProperty("slavename", slavename, "BuildSlave")
 class FakeSlaveBuilder:
     slave = FakeSlave()
     def getSlaveCommandVersion(self, command, oldversion=None):
         return "1.10"
 class FakeScheduler:
     name = "fakescheduler"
+    properties = Properties({'name' : name}, 'Scheduler')
 
 class TestProperties(unittest.TestCase):
     def setUp(self):
@@ -130,42 +133,22 @@ class BuildProperties(unittest.TestCase):
         rmdirRecursive(self.builder_status.basedir)
         os.mkdir(self.builder_status.basedir)
         self.build_status = self.builder_status.newBuild()
-        req = base.BuildRequest("reason", SourceStamp(branch="branch2",
-                                                      revision="1234"))
+        req = base.BuildRequest("reason", 
+                    SourceStamp(branch="branch2", revision="1234"),
+                    properties=Properties({"scheduler" : "fakescheduler"}, "Scheduler"))
         self.build = base.Build([req])
+        self.build.build_status = self.build_status
         self.build.setBuilder(self.builder)
-        self.build.setupStatus(self.build_status)
+        self.build.setupProperties()
         self.build.setupSlaveBuilder(FakeSlaveBuilder())
 
     def testProperties(self):
-        # if not started from a scheduler, the 'scheduler' property
-        # should be 'none'
-        self.failUnlessEqual(self.build.getProperty("scheduler"), "none")
+        self.failUnlessEqual(self.build.getProperty("scheduler"), "fakescheduler")
         self.failUnlessEqual(self.build.getProperty("branch"), "branch2")
         self.failUnlessEqual(self.build.getProperty("revision"), "1234")
         self.failUnlessEqual(self.build.getProperty("slavename"), "bot12")
         self.failUnlessEqual(self.build.getProperty("buildnumber"), 5)
         self.failUnlessEqual(self.build.getProperty("buildername"), "fakebuilder")
-
-class SchedulerTest(unittest.TestCase):
-    def setUp(self):
-        self.builder = FakeBuilder()
-        self.builder_status = builder.BuilderStatus("fakebuilder")
-        self.builder_status.basedir = "test_properties"
-        self.builder_status.nextBuildNumber = 5
-        rmdirRecursive(self.builder_status.basedir)
-        os.mkdir(self.builder_status.basedir)
-        self.build_status = self.builder_status.newBuild()
-        req = base.BuildRequest("reason", SourceStamp(branch="branch2",
-                                revision=1234), scheduler=FakeScheduler())
-        self.build = base.Build([req])
-        self.build.setBuilder(self.builder)
-        self.build.setupStatus(self.build_status)
-        self.build.setupSlaveBuilder(FakeSlaveBuilder())
-
-    def testWithScheduler(self):
-        self.failUnlessEqual(self.build.getProperty("scheduler"),
-                             "fakescheduler")
 
 run_config = """
 from buildbot.process import factory
@@ -174,7 +157,7 @@ from buildbot.buildslave import BuildSlave
 s = factory.s
 
 BuildmasterConfig = c = {}
-c['slaves'] = [BuildSlave('bot1', 'sekrit')]
+c['slaves'] = [BuildSlave('bot1', 'sekrit', properties={'slprop':'slprop'})]
 c['schedulers'] = []
 c['slavePortnum'] = 0
 
@@ -187,7 +170,8 @@ c['slavePortnum'] = 0
 f1 = factory.BuildFactory([s(ShellCommand,
                              flunkOnFailure=True,
                              command=['touch',
-                                      WithProperties('%s-slave', 'slavename'),
+                                      WithProperties('%s-slave-%s',
+                                        'slavename', 'slprop'),
                                       ],
                              workdir='.',
                              timeout=10,
@@ -207,7 +191,7 @@ class Run(RunMixin, unittest.TestCase):
         d.addCallback(lambda res: self.requestBuild("full1"))
         d.addCallback(self.failUnlessBuildSucceeded)
         def _check_touch(res):
-            f = os.path.join("slavebase-bot1", "bd1", "bot1-slave")
+            f = os.path.join("slavebase-bot1", "bd1", "bot1-slave-slprop")
             self.failUnless(os.path.exists(f))
             return res
         d.addCallback(_check_touch)

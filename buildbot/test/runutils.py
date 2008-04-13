@@ -152,7 +152,7 @@ class RunMixin:
         if bs.getResults() != builder.SUCCESS:
             log.msg("failUnlessBuildSucceeded noticed that the build failed")
             self.logBuildResults(bs)
-        self.failUnless(bs.getResults() == builder.SUCCESS)
+        self.failUnlessEqual(bs.getResults(), builder.SUCCESS)
         return bs # useful for chaining
 
     def logBuildResults(self, bs):
@@ -288,7 +288,8 @@ def makeBuildStep(basedir, step_class=BuildStep, **kwargs):
     s = step_class(**kwargs)
     s.setBuild(b)
     s.setStepStatus(bss)
-    b.setupStatus(bss.getBuild())
+    b.build_status = bss.getBuild()
+    b.setupProperties()
     s.slaveVersion = fake_slaveVersion
     return s
 

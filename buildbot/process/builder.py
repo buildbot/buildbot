@@ -253,6 +253,8 @@ class Builder(pb.Referenceable):
     @type building: list of L{buildbot.process.base.Build}
     @ivar building: Builds that are actively running
 
+    @type slaves: list of L{buildbot.buildslave.BuildSlave} objects
+    @ivar slaves: the slaves currently available for building
     """
 
     expectations = None # this is created the first time we get a good build
@@ -445,7 +447,7 @@ class Builder(pb.Referenceable):
         """This is invoked by the BuildSlave when the self.slavename bot
         registers their builder.
 
-        @type  slave: L{buildbot.master.BuildSlave}
+        @type  slave: L{buildbot.buildslave.BuildSlave}
         @param slave: the BuildSlave that represents the buildslave as a whole
         @type  remote: L{twisted.spread.pb.RemoteReference}
         @param remote: a reference to the L{buildbot.slave.bot.SlaveBuilder}

@@ -14,14 +14,33 @@ from buildbot import interfaces, buildset, util, pbutil
 from buildbot.status import builder
 from buildbot.sourcestamp import SourceStamp
 from buildbot.changes.maildir import MaildirService
+from buildbot.process.properties import Properties
 
 
 class BaseScheduler(service.MultiService, util.ComparableMixin):
+    """
+    A Schduler creates BuildSets and submits them to the BuildMaster.
+
+    @ivar name: name of the scheduler
+
+    @ivar properties: additional properties specified in this 
+        scheduler's configuration
+    @type properties: Properties object
+    """
     implements(interfaces.IScheduler)
 
-    def __init__(self, name):
+    def __init__(self, name, properties={}):
+        """
+        @param name: name for this scheduler
+
+        @param properties: properties to be propagated from this scheduler
+        @type properties: dict
+        """
         service.MultiService.__init__(self)
         self.name = name
+        self.properties = Properties()
+        self.properties.update(properties, "Scheduler")
+        self.properties.setProperty("scheduler", name, "Scheduler")
 
     def __repr__(self):
         # TODO: why can't id() return a positive number? %d is ugly.
@@ -170,8 +189,7 @@ class Scheduler(BaseUpstreamScheduler):
 
         # create a BuildSet, submit it to the BuildMaster
         bs = buildset.BuildSet(self.builderNames,
-                               SourceStamp(changes=changes),
-                               scheduler=self)
+                               SourceStamp(changes=changes))
         self.submit(bs)
 
     def stopService(self):
@@ -305,7 +323,7 @@ class Dependent(BaseUpstreamScheduler):
         return d
 
     def upstreamBuilt(self, ss):
-        bs = buildset.BuildSet(self.builderNames, ss, scheduler=self)
+        bs = buildset.BuildSet(self.builderNames, ss)
         self.submit(bs)
 
 
@@ -344,7 +362,7 @@ class Periodic(BaseUpstreamScheduler):
     def doPeriodicBuild(self):
         bs = buildset.BuildSet(self.builderNames,
                                SourceStamp(branch=self.branch),
-                               self.reason, scheduler=self)
+                               self.reason)
         self.submit(bs)
 
 
@@ -502,7 +520,7 @@ class Nightly(BaseUpstreamScheduler):
         # And trigger a build
         bs = buildset.BuildSet(self.builderNames,
                                SourceStamp(branch=self.branch),
-                               self.reason, scheduler=self)
+                               self.reason)
         self.submit(bs)
 
     def addChange(self, change):
@@ -624,7 +642,7 @@ class Try_Jobdir(TryBase):
                 return
 
         reason = "'try' job"
-        bs = buildset.BuildSet(builderNames, ss, reason=reason, bsid=bsid, scheduler=self)
+        bs = buildset.BuildSet(builderNames, ss, reason=reason, bsid=bsid)
         self.parent.submitBuildSet(bs)
 
 class Try_Userpass(TryBase):
@@ -681,7 +699,6 @@ class Try_Userpass_Perspective(pbutil.NewCredPerspective):
         bs = buildset.BuildSet(builderNames, 
                                ss,
                                reason=reason, 
-                               scheduler=self,
                                custom_props=custom_props)
 
         self.parent.submitBuildSet(bs)
@@ -710,7 +727,7 @@ class Triggerable(BaseUpstreamScheduler):
         """Trigger this scheduler. Returns a deferred that will fire when the
         buildset is finished.
         """
-        bs = buildset.BuildSet(self.builderNames, ss, scheduler=self, custom_props=custom_props)
+        bs = buildset.BuildSet(self.builderNames, ss, custom_props=custom_props)
         d = bs.waitUntilFinished()
         self.submit(bs)
         return d

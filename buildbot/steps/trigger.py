@@ -62,7 +62,6 @@ class Trigger(LoggingBuildStep):
                 pass
             if got:
                 ss = ss.getAbsoluteSourceStamp(got)
-        custom_props = self.build.getCustomProperties()
         # (is there an easier way to find the BuildMaster?)
         all_schedulers = self.build.builder.botmaster.parent.allSchedulers()
         all_schedulers = dict([(sch.name, sch) for sch in all_schedulers])
@@ -77,7 +76,7 @@ class Trigger(LoggingBuildStep):
             if all_schedulers.has_key(scheduler):
                 sch = all_schedulers[scheduler]
                 if isinstance(sch, Triggerable):
-                    dl.append(sch.trigger(ss, custom_props))
+                    dl.append(sch.trigger(ss, {})) # TODO: copy some properties, set the rest
                     triggered_schedulers.append(scheduler)
                 else:
                     unknown_schedulers.append(scheduler)
