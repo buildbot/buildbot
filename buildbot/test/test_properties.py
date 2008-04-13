@@ -39,12 +39,12 @@ class TestProperties(unittest.TestCase):
         self.failUnlessEqual(self.props['do-tests'], 1)
         self.failUnlessEqual(self.props['do-install'], 2)
         self.assertRaises(KeyError, lambda : self.props['do-nothing'])
-        self.failUnlessEqual(self.props.getProperty('do-install'), (2, 'scheduler'))
+        self.failUnlessEqual(self.props.getProperty('do-install'), 2)
 
     def testEmpty(self):
         # test the special case for Null
         self.props.setProperty("x", None, "hi")
-        self.failUnlessEqual(self.props.getProperty('x'), (None, 'hi'))
+        self.failUnlessEqual(self.props.getProperty('x'), None)
         self.failUnlessEqual(self.props['x'], '')
 
     def testUpdate(self):
@@ -52,8 +52,10 @@ class TestProperties(unittest.TestCase):
         newprops = { 'a' : 1, 'b' : 2 }
         self.props.update(newprops, "new")
 
-        self.failUnlessEqual(self.props.getProperty('x'), (24, 'old'))
-        self.failUnlessEqual(self.props.getProperty('a'), (1, 'new'))
+        self.failUnlessEqual(self.props.getProperty('x'), 24)
+        self.failUnlessEqual(self.props.getPropertySource('x'), 'old')
+        self.failUnlessEqual(self.props.getProperty('a'), 1)
+        self.failUnlessEqual(self.props.getPropertySource('a'), 'new')
 
     def testUpdateFromProperties(self):
         self.props.setProperty("x", 24, "old")
@@ -62,8 +64,10 @@ class TestProperties(unittest.TestCase):
         newprops.setProperty('b', 2, "new")
         self.props.updateFromProperties(newprops)
 
-        self.failUnlessEqual(self.props.getProperty('x'), (24, 'old'))
-        self.failUnlessEqual(self.props.getProperty('a'), (1, 'new'))
+        self.failUnlessEqual(self.props.getProperty('x'), 24)
+        self.failUnlessEqual(self.props.getPropertySource('x'), 'old')
+        self.failUnlessEqual(self.props.getProperty('a'), 1)
+        self.failUnlessEqual(self.props.getPropertySource('a'), 'new')
 
     # render() is pretty well tested by TestWithProperties
 

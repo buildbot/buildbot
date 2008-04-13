@@ -30,9 +30,12 @@ class Properties:
     def has_key(self, name):
         return self.properties.has_key(name)
 
-    def getProperty(self, name, default=(None,None)):
-        """Get the (value, source) tuple for the given property"""
-        return self.properties.get(name, default)
+    def getProperty(self, name, default=None):
+        """Get the value for the given property, with no None -> '' special case"""
+        return self.properties.get(name, default)[0]
+
+    def getPropertySource(self, name):
+        return self.properties[name][1]
 
     def setProperty(self, name, value, source):
         self.properties[name] = (value, source)
