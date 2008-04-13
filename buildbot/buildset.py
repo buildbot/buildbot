@@ -1,6 +1,6 @@
-
 from buildbot.process import base
 from buildbot.status import builder
+from buildbot.process.properties import Properties
 
 
 class BuildSet:
@@ -20,7 +20,9 @@ class BuildSet:
         self.reason = reason
 
         self.custom_props = custom_props
-        self.properties = properties
+
+        self.properties = Properties()
+        if properties: self.properties.updateFromProperties(properties)
 
         self.stillHopeful = True
         self.status = bss = builder.BuildSetStatus(source, reason,

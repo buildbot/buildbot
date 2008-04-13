@@ -699,6 +699,108 @@ c['builders'] = [{'name': 'triggerer', 'slavename': 'bot1',
         self.failIfFlagSet('triggeree_finished')
         self.failIfFlagSet('triggerer_finished')
 
+class PropertyPropagation(RunMixin, TestFlagMixin, unittest.TestCase):
+    def setupTest(self, config, builders, checkFn):
+        self.clearFlags()
+        m = self.master
+        m.loadConfig(config)
+        m.readConfig = True
+        m.startService()
+
+        c = changes.Change("bob", ["Makefile", "foo/bar.c"], "changed stuff")
+        m.change_svc.addChange(c)
+
+        d = self.connectSlave(builders=builders)
+        d.addCallback(self.startTimer, 0.5, checkFn)
+        return d
+
+    def startTimer(self, res, time, next_fn):
+        d = defer.Deferred()
+        reactor.callLater(time, d.callback, None)
+        d.addCallback(next_fn)
+        return d
+
+    config_schprop = config_base + """
+from buildbot.scheduler import Scheduler
+from buildbot.steps.dummy import Dummy
+from buildbot.test.runutils import SetTestFlagStep
+from buildbot.process.properties import WithProperties
+c['schedulers'] = [
+    Scheduler('mysched', None, 0.1, ['flagcolor'], properties={'color':'red'}),
+]
+factory = factory.BuildFactory([
+    s(SetTestFlagStep, flagname='testresult', 
+      value=WithProperties('color=%(color)s sched=%(scheduler)s')),
+    ])
+c['builders'] = [{'name': 'flagcolor', 'slavename': 'bot1',
+                  'builddir': 'test', 'factory': factory},
+                ]
+"""
+
+    def testScheduler(self):
+        def _check(res):
+            self.failUnlessEqual(self.getFlag('testresult'),
+                'color=red sched=mysched')
+        return self.setupTest(self.config_schprop, ['flagcolor'], _check)
+
+    config_slaveprop = config_base + """
+from buildbot.scheduler import Scheduler
+from buildbot.steps.dummy import Dummy
+from buildbot.test.runutils import SetTestFlagStep
+from buildbot.process.properties import WithProperties
+c['schedulers'] = [
+    Scheduler('mysched', None, 0.1, ['flagcolor'])
+]
+c['slaves'] = [BuildSlave('bot1', 'sekrit', properties={'color':'orange'})]
+factory = factory.BuildFactory([
+    s(SetTestFlagStep, flagname='testresult', 
+      value=WithProperties('color=%(color)s slavename=%(slavename)s')),
+    ])
+c['builders'] = [{'name': 'flagcolor', 'slavename': 'bot1',
+                  'builddir': 'test', 'factory': factory},
+                ]
+"""
+    def testSlave(self):
+        def _check(res):
+            self.failUnlessEqual(self.getFlag('testresult'),
+                'color=orange slavename=bot1')
+        return self.setupTest(self.config_slaveprop, ['flagcolor'], _check)
+
+    config_trigger = config_base + """
+from buildbot.scheduler import Triggerable, Scheduler
+from buildbot.steps.trigger import Trigger
+from buildbot.steps.dummy import Dummy
+from buildbot.test.runutils import SetTestFlagStep
+from buildbot.process.properties import WithProperties
+c['schedulers'] = [
+    Scheduler('triggerer', None, 0.1, ['triggerer'], 
+        properties={'color':'mauve', 'pls_trigger':'triggeree'}),
+    Triggerable('triggeree', ['triggeree'], properties={'color':'invisible'})
+]
+triggerer = factory.BuildFactory([
+    s(SetTestFlagStep, flagname='testresult', value='wrongone'),
+    s(Trigger, flunkOnFailure=True, 
+        schedulerNames=[WithProperties('%(pls_trigger)s')],
+        set_properties={'color' : WithProperties('%(color)s')}),
+    s(SetTestFlagStep, flagname='testresult', value='triggered'),
+    ])
+triggeree = factory.BuildFactory([
+    s(SetTestFlagStep, flagname='testresult', 
+        value=WithProperties('sched=%(scheduler)s color=%(color)s')),
+    ])
+c['builders'] = [{'name': 'triggerer', 'slavename': 'bot1',
+                  'builddir': 'triggerer', 'factory': triggerer},
+                 {'name': 'triggeree', 'slavename': 'bot1',
+                  'builddir': 'triggeree', 'factory': triggeree}]
+"""
+    def testTrigger(self):
+        def _check(res):
+            self.failUnlessEqual(self.getFlag('testresult'),
+                'sched=triggeree color=mauve')
+        return self.setupTest(self.config_trigger, 
+                ['triggerer', 'triggeree'], _check)
+
+
 config_test_flag = config_base + """
 from buildbot.scheduler import Scheduler
 c['schedulers'] = [Scheduler('quick', None, 0.1, ['dummy'])]

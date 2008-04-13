@@ -3,7 +3,7 @@ from buildbot import util
 from twisted.python import log
 from twisted.python.failure import Failure
 
-class Properties:
+class Properties(util.ComparableMixin):
     """
     I represent a set of properties that can be interpolated into various
     strings in buildsteps.
@@ -18,6 +18,9 @@ class Properties:
     As a special case, a property value of None is returned as an empty 
     string when used as a mapping.
     """
+
+    compare_attrs = ('properties')
+
     def __init__(self, **kwargs):
         """
         @param kwargs: initial property values (for testing)
@@ -36,7 +39,7 @@ class Properties:
 
     def getProperty(self, name, default=None):
         """Get the value for the given property, with no None -> '' special case"""
-        return self.properties.get(name, default)[0]
+        return self.properties.get(name, (default,))[0]
 
     def getPropertySource(self, name):
         return self.properties[name][1]

@@ -1,5 +1,5 @@
 from buildbot.process.buildstep import LoggingBuildStep, SUCCESS, FAILURE, EXCEPTION
-from buildbot.steps.shell import WithProperties
+from buildbot.process.properties import WithProperties, Properties
 from buildbot.scheduler import Triggerable
 from twisted.internet import defer
 
@@ -12,7 +12,7 @@ class Trigger(LoggingBuildStep):
     flunkOnFailure = True
 
     def __init__(self, schedulerNames=[], updateSourceStamp=True,
-                 waitForFinish=False, **kwargs):
+                 waitForFinish=False, set_properties={}, **kwargs):
         """
         Trigger the given schedulers when this step is executed.
 
@@ -33,11 +33,19 @@ class Trigger(LoggingBuildStep):
                               schedulers. If True, I will wait until all of
                               the triggered schedulers have finished their
                               builds.
+
+        @param set_properties: A dictionary of properties to set for any
+                               builds resulting from this trigger.  To copy
+                               existing properties, use WithProperties.  These
+                               properties will override properties set in the
+                               Triggered scheduler's constructor.
+
         """
         assert schedulerNames, "You must specify a scheduler to trigger"
         self.schedulerNames = schedulerNames
         self.updateSourceStamp = updateSourceStamp
         self.waitForFinish = waitForFinish
+        self.set_properties = set_properties
         self.running = False
         LoggingBuildStep.__init__(self, **kwargs)
         self.addFactoryArguments(schedulerNames=schedulerNames,
@@ -51,17 +59,20 @@ class Trigger(LoggingBuildStep):
             self.step_status.setText(["interrupted"])
 
     def start(self):
-        custom_props = {}
+        properties = self.build.getProperties()
+
+        # make a new properties object from a dict rendered by the old 
+        # properties object
+        props_to_set = Properties()
+        props_to_set.update(properties.render(self.set_properties), "Trigger")
+
         self.running = True
         ss = self.build.getSourceStamp()
         if self.updateSourceStamp:
-            got = None
-            try:
-                got = self.build.getProperty('got_revision')
-            except KeyError:
-                pass
+            got = properties.getProperty('got_revision')
             if got:
                 ss = ss.getAbsoluteSourceStamp(got)
+
         # (is there an easier way to find the BuildMaster?)
         all_schedulers = self.build.builder.botmaster.parent.allSchedulers()
         all_schedulers = dict([(sch.name, sch) for sch in all_schedulers])
@@ -71,12 +82,11 @@ class Trigger(LoggingBuildStep):
         # TODO: don't fire any schedulers if we discover an unknown one
         dl = []
         for scheduler in self.schedulerNames:
-            if isinstance(scheduler, WithProperties):
-                scheduler = scheduler.render(self.build)
+            scheduler = properties.render(scheduler)
             if all_schedulers.has_key(scheduler):
                 sch = all_schedulers[scheduler]
                 if isinstance(sch, Triggerable):
-                    dl.append(sch.trigger(ss, {})) # TODO: copy some properties, set the rest
+                    dl.append(sch.trigger(ss, set_props=props_to_set))
                     triggered_schedulers.append(scheduler)
                 else:
                     unknown_schedulers.append(scheduler)
@@ -100,10 +110,8 @@ class Trigger(LoggingBuildStep):
         else:
             d = defer.succeed([])
 
-        # TODO: review this shadowed 'rc' value: can the callback modify the
-        # one that was defined above?
         def cb(rclist):
-            rc = SUCCESS
+            rc = SUCCESS # (this rc is not the same variable as that above)
             for was_cb, buildsetstatus in rclist:
                 # TODO: make this algo more configurable
                 if not was_cb:

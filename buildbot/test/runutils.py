@@ -489,7 +489,8 @@ class SetTestFlagStep(BuildStep):
         self.value = value
 
     def start(self):
-        _flags[self.flagname] = self.value
+        properties = self.build.getProperties()
+        _flags[self.flagname] = properties.render(self.value)
         self.finished(builder.SUCCESS)
 
 class TestFlagMixin:

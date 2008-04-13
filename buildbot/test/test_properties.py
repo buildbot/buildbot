@@ -25,15 +25,13 @@ class FakeBuilder:
     botmaster = FakeBotMaster()
 class FakeSlave:
     slavename = "bot12"
-    properties = Properties()
-    properties.setProperty("slavename", slavename, "BuildSlave")
+    properties = Properties(slavename="bot12")
 class FakeSlaveBuilder:
     slave = FakeSlave()
     def getSlaveCommandVersion(self, command, oldversion=None):
         return "1.10"
 class FakeScheduler:
     name = "fakescheduler"
-    properties = Properties(name=name)
 
 class TestProperties(unittest.TestCase):
     def setUp(self):

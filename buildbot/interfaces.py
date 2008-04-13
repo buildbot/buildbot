@@ -38,7 +38,12 @@ class IChangeSource(Interface):
 class IScheduler(Interface):
     """I watch for Changes in the source tree and decide when to trigger
     Builds. I create BuildSet objects and submit them to the BuildMaster. I
-    am a service, and the BuildMaster is always my parent."""
+    am a service, and the BuildMaster is always my parent.
+    
+    @ivar properties: properties to be applied to all builds started by this
+    scheduler
+    @type properties: L<buildbot.process.properties.Properties>
+    """
 
     def addChange(change):
         """A Change has just been dispatched by one of the ChangeSources.

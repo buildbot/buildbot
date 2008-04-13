@@ -46,7 +46,7 @@ class BaseScheduler(service.MultiService, util.ComparableMixin):
         # TODO: why can't id() return a positive number? %d is ugly.
         return "<Scheduler '%s' at %d>" % (self.name, id(self))
 
-    def submit(self, bs):
+    def submitBuildSet(self, bs):
         self.parent.submitBuildSet(bs)
 
     def addChange(self, change):
@@ -55,8 +55,8 @@ class BaseScheduler(service.MultiService, util.ComparableMixin):
 class BaseUpstreamScheduler(BaseScheduler):
     implements(interfaces.IUpstreamScheduler)
 
-    def __init__(self, name):
-        BaseScheduler.__init__(self, name)
+    def __init__(self, name, properties={}):
+        BaseScheduler.__init__(self, name, properties)
         self.successWatchers = []
 
     def subscribeToSuccessfulBuilds(self, watcher):
@@ -64,10 +64,10 @@ class BaseUpstreamScheduler(BaseScheduler):
     def unsubscribeToSuccessfulBuilds(self, watcher):
         self.successWatchers.remove(watcher)
 
-    def submit(self, bs):
+    def submitBuildSet(self, bs):
         d = bs.waitUntilFinished()
         d.addCallback(self.buildSetFinished)
-        self.parent.submitBuildSet(bs)
+        BaseScheduler.submitBuildSet(self, bs)
 
     def buildSetFinished(self, bss):
         if not self.running:
@@ -88,10 +88,10 @@ class Scheduler(BaseUpstreamScheduler):
 
     fileIsImportant = None
     compare_attrs = ('name', 'treeStableTimer', 'builderNames', 'branch',
-                     'fileIsImportant')
+                     'fileIsImportant', 'properties')
     
     def __init__(self, name, branch, treeStableTimer, builderNames,
-                 fileIsImportant=None):
+                 fileIsImportant=None, properties={}):
         """
         @param name: the name of this Scheduler
         @param branch: The branch name that the Scheduler should pay
@@ -113,9 +113,12 @@ class Scheduler(BaseUpstreamScheduler):
                                 build is triggered by an important change.
                                 The default value of None means that all
                                 Changes are important.
+
+        @param properties: properties to apply to all builds started from this 
+                           scheduler
         """
 
-        BaseUpstreamScheduler.__init__(self, name)
+        BaseUpstreamScheduler.__init__(self, name, properties)
         self.treeStableTimer = treeStableTimer
         errmsg = ("The builderNames= argument to Scheduler must be a list "
                   "of Builder description names (i.e. the 'name' key of the "
@@ -189,8 +192,9 @@ class Scheduler(BaseUpstreamScheduler):
 
         # create a BuildSet, submit it to the BuildMaster
         bs = buildset.BuildSet(self.builderNames,
-                               SourceStamp(changes=changes))
-        self.submit(bs)
+                               SourceStamp(changes=changes),
+                               properties=self.properties)
+        self.submitBuildSet(bs)
 
     def stopService(self):
         self.stopTimer()
@@ -206,10 +210,10 @@ class AnyBranchScheduler(BaseUpstreamScheduler):
     fileIsImportant = None
 
     compare_attrs = ('name', 'branches', 'treeStableTimer', 'builderNames',
-                     'fileIsImportant')
+                     'fileIsImportant', 'properties')
 
     def __init__(self, name, branches, treeStableTimer, builderNames,
-                 fileIsImportant=None):
+                 fileIsImportant=None, properties={}):
         """
         @param name: the name of this Scheduler
         @param branches: The branch names that the Scheduler should pay
@@ -234,9 +238,12 @@ class AnyBranchScheduler(BaseUpstreamScheduler):
                                 build is triggered by an important change.
                                 The default value of None means that all
                                 Changes are important.
+
+        @param properties: properties to apply to all builds started from this 
+                           scheduler
         """
 
-        BaseUpstreamScheduler.__init__(self, name)
+        BaseUpstreamScheduler.__init__(self, name, properties)
         self.treeStableTimer = treeStableTimer
         for b in builderNames:
             assert isinstance(b, str)
@@ -290,19 +297,16 @@ class AnyBranchScheduler(BaseUpstreamScheduler):
             self.schedulers[branch] = s
         s.addChange(change)
 
-    def submitBuildSet(self, bs):
-        self.parent.submitBuildSet(bs)
-
 
 class Dependent(BaseUpstreamScheduler):
     """This scheduler runs some set of 'downstream' builds when the
     'upstream' scheduler has completed successfully."""
 
-    compare_attrs = ('name', 'upstream', 'builders')
+    compare_attrs = ('name', 'upstream', 'builders', 'properties')
 
-    def __init__(self, name, upstream, builderNames):
+    def __init__(self, name, upstream, builderNames, properties={}):
         assert interfaces.IUpstreamScheduler.providedBy(upstream)
-        BaseUpstreamScheduler.__init__(self, name)
+        BaseUpstreamScheduler.__init__(self, name, properties)
         self.upstream = upstream
         self.builderNames = builderNames
 
@@ -323,8 +327,9 @@ class Dependent(BaseUpstreamScheduler):
         return d
 
     def upstreamBuilt(self, ss):
-        bs = buildset.BuildSet(self.builderNames, ss)
-        self.submit(bs)
+        bs = buildset.BuildSet(self.builderNames, ss,
+                    properties=self.properties)
+        self.submitBuildSet(bs)
 
 
 
@@ -337,11 +342,11 @@ class Periodic(BaseUpstreamScheduler):
     # TODO: consider having this watch another (changed-based) scheduler and
     # merely enforce a minimum time between builds.
 
-    compare_attrs = ('name', 'builderNames', 'periodicBuildTimer', 'branch')
+    compare_attrs = ('name', 'builderNames', 'periodicBuildTimer', 'branch', 'properties')
 
     def __init__(self, name, builderNames, periodicBuildTimer,
-                 branch=None):
-        BaseUpstreamScheduler.__init__(self, name)
+                 branch=None, properties={}):
+        BaseUpstreamScheduler.__init__(self, name, properties)
         self.builderNames = builderNames
         self.periodicBuildTimer = periodicBuildTimer
         self.branch = branch
@@ -362,8 +367,9 @@ class Periodic(BaseUpstreamScheduler):
     def doPeriodicBuild(self):
         bs = buildset.BuildSet(self.builderNames,
                                SourceStamp(branch=self.branch),
-                               self.reason)
-        self.submit(bs)
+                               self.reason,
+                               properties=self.properties)
+        self.submitBuildSet(bs)
 
 
 
@@ -407,15 +413,15 @@ class Nightly(BaseUpstreamScheduler):
 
     compare_attrs = ('name', 'builderNames',
                      'minute', 'hour', 'dayOfMonth', 'month',
-                     'dayOfWeek', 'branch')
+                     'dayOfWeek', 'branch', 'properties')
 
     def __init__(self, name, builderNames, minute=0, hour='*',
                  dayOfMonth='*', month='*', dayOfWeek='*',
-                 branch=None):
+                 branch=None, properties={}):
         # Setting minute=0 really makes this an 'Hourly' scheduler. This
         # seemed like a better default than minute='*', which would result in
         # a build every 60 seconds.
-        BaseUpstreamScheduler.__init__(self, name)
+        BaseUpstreamScheduler.__init__(self, name, properties)
         self.builderNames = builderNames
         self.minute = minute
         self.hour = hour
@@ -520,20 +526,18 @@ class Nightly(BaseUpstreamScheduler):
         # And trigger a build
         bs = buildset.BuildSet(self.builderNames,
                                SourceStamp(branch=self.branch),
-                               self.reason)
-        self.submit(bs)
+                               self.reason,
+                               properties=self.properties)
+        self.submitBuildSet(bs)
 
     def addChange(self, change):
         pass
 
 
 
-class TryBase(service.MultiService, util.ComparableMixin):
-    implements(interfaces.IScheduler)
-
-    def __init__(self, name, builderNames):
-        service.MultiService.__init__(self)
-        self.name = name
+class TryBase(BaseScheduler):
+    def __init__(self, name, builderNames, properties={}):
+        BaseScheduler.__init__(self, name, properties)
         self.builderNames = builderNames
 
     def listBuilderNames(self):
@@ -564,10 +568,10 @@ class JobFileScanner(basic.NetstringReceiver):
         self.error = True
 
 class Try_Jobdir(TryBase):
-    compare_attrs = ["name", "builderNames", "jobdir"]
+    compare_attrs = ( 'name', 'builderNames', 'jobdir', 'properties' )
 
-    def __init__(self, name, builderNames, jobdir):
-        TryBase.__init__(self, name, builderNames)
+    def __init__(self, name, builderNames, jobdir, properties={}):
+        TryBase.__init__(self, name, builderNames, properties)
         self.jobdir = jobdir
         self.watcher = MaildirService()
         self.watcher.setServiceParent(self)
@@ -642,15 +646,16 @@ class Try_Jobdir(TryBase):
                 return
 
         reason = "'try' job"
-        bs = buildset.BuildSet(builderNames, ss, reason=reason, bsid=bsid)
-        self.parent.submitBuildSet(bs)
+        bs = buildset.BuildSet(builderNames, ss, reason=reason, 
+                    bsid=bsid, properties=self.properties)
+        self.submitBuildSet(bs)
 
 class Try_Userpass(TryBase):
-    compare_attrs = ["name", "builderNames", "port", "userpass"]
+    compare_attrs = ( 'name', 'builderNames', 'port', 'userpass', 'properties' )
     implements(portal.IRealm)
 
-    def __init__(self, name, builderNames, port, userpass):
-        TryBase.__init__(self, name, builderNames)
+    def __init__(self, name, builderNames, port, userpass, properties={}):
+        TryBase.__init__(self, name, builderNames, properties)
         if type(port) is int:
             port = "tcp:%d" % port
         self.port = port
@@ -675,9 +680,6 @@ class Try_Userpass(TryBase):
         p = Try_Userpass_Perspective(self, avatarID)
         return (pb.IPerspective, p, lambda: None)
 
-    def submitBuildSet(self, bs):
-        return self.parent.submitBuildSet(bs)
-
 class Try_Userpass_Perspective(pbutil.NewCredPerspective):
     def __init__(self, parent, username):
         self.parent = parent
@@ -699,7 +701,8 @@ class Try_Userpass_Perspective(pbutil.NewCredPerspective):
         bs = buildset.BuildSet(builderNames, 
                                ss,
                                reason=reason, 
-                               custom_props=custom_props)
+                               custom_props=custom_props,
+                               properties=self.parent.properties)
 
         self.parent.submitBuildSet(bs)
 
@@ -713,8 +716,10 @@ class Triggerable(BaseUpstreamScheduler):
     the builds that I fire have finished.
     """
 
-    def __init__(self, name, builderNames):
-        BaseUpstreamScheduler.__init__(self, name)
+    compare_attrs = ('name', 'builderNames', 'properties')
+
+    def __init__(self, name, builderNames, properties={}):
+        BaseUpstreamScheduler.__init__(self, name, properties)
         self.builderNames = builderNames
 
     def listBuilderNames(self):
@@ -723,11 +728,18 @@ class Triggerable(BaseUpstreamScheduler):
     def getPendingBuildTimes(self):
         return []
 
-    def trigger(self, ss, custom_props={}):
+    def trigger(self, ss, custom_props={}, set_props=None):
         """Trigger this scheduler. Returns a deferred that will fire when the
         buildset is finished.
         """
-        bs = buildset.BuildSet(self.builderNames, ss, custom_props=custom_props)
+
+        # properties for this buildset are composed of our own properties,
+        # potentially overridden by anything from the triggering build
+        props = Properties()
+        props.updateFromProperties(self.properties)
+        if set_props: props.updateFromProperties(set_props)
+
+        bs = buildset.BuildSet(self.builderNames, ss, custom_props=custom_props, properties=props)
         d = bs.waitUntilFinished()
-        self.submit(bs)
+        self.submitBuildSet(bs)
         return d
