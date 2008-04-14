@@ -121,6 +121,12 @@ class StatusResourceBuild(HtmlResource):
                 data += " </li>\n"
             data += "</ol>\n"
 
+        data += "<h2>Build Properties:</h2>\n"
+        data += "<table><tr><th valign=\"left\">Name</th><th valign=\"left\">Value</th><th valign=\"left\">Source</th></tr>\n"
+        for name, value, source in b.getProperties().asList():
+            data += "<tr><td>%s</td><td>%s</td><td>%s</td></tr>\n" % (name, value, source)
+        data += "</table>"
+            
         data += "<h2>Blamelist:</h2>\n"
         if list(b.getResponsibleUsers()):
             data += " <ol>\n"

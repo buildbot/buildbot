@@ -44,6 +44,12 @@ class Properties(util.ComparableMixin):
     def getPropertySource(self, name):
         return self.properties[name][1]
 
+    def asList(self):
+        """Return the properties as a sorted list of (name, value, source)"""
+        l = [ (k, v[0], v[1]) for k,v in self.properties.items() ]
+        l.sort()
+        return l
+
     def __repr__(self):
         return repr(dict([ (k,v[0]) for k,v in self.properties.iteritems() ]))
 

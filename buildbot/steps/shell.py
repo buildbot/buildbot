@@ -123,7 +123,7 @@ class ShellCommand(LoggingBuildStep):
         if isinstance(words, (str, unicode)):
             words = words.split()
         # render() each word to handle WithProperties objects
-        words = [properties.render(word) for word in words]
+        words = properties.render(words)
         if len(words) < 1:
             return ["???"]
         if len(words) == 1:
