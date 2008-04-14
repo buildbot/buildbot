@@ -109,6 +109,7 @@ Concepts
 * BuildRequest::                
 * Builder::                     
 * Users::                       
+* Build Properties::
 
 Version Control Systems
 
@@ -130,17 +131,23 @@ Configuration
 * Loading the Config File::     
 * Testing the Config File::     
 * Defining the Project::        
-* Listing Change Sources and Schedulers::  
+* Change Sources and Schedulers::  
 * Setting the slaveport::       
 * Buildslave Specifiers::       
+* Defining Global Properties::           
 * Defining Builders::           
 * Defining Status Targets::     
 * Debug options::               
 
-Listing Change Sources and Schedulers
+Change Sources and Schedulers
 
-* Scheduler Types::             
-* Build Dependencies::          
+* Scheduler Scheduler::             
+* AnyBranchScheduler::          
+* Dependent Scheduler::          
+* Periodic Scheduler::          
+* Nightly Scheduler::          
+* Try Schedulers::          
+* Triggerable Scheduler::          
 
 Buildslave Specifiers
 
@@ -180,6 +187,7 @@ Build Process
 Build Steps
 
 * Common Parameters::           
+* Using Build Properties::
 * Source Checkout::             
 * ShellCommand::                
 * Simple ShellCommand Subclasses::  
@@ -206,7 +214,6 @@ Simple ShellCommand Subclasses
 * Compile::                     
 * Test::                        
 * TreeSize::                    
-* Build Properties::            
 
 Python BuildSteps
 
@@ -1231,6 +1238,7 @@ configure it properly.
 * BuildRequest::                
 * Builder::                     
 * Users::                       
+* Build Properties::
 @end menu
 
 @node Version Control Systems, Schedulers, Concepts, Concepts
@@ -1756,7 +1764,7 @@ Linux or Solaris builds) should naturally be associated with an
 OS-X-based buildslave.
 
 
-@node Users,  , Builder, Concepts
+@node Users, Build Properties, Builder, Concepts
 @section Users
 
 @cindex Users
@@ -1897,6 +1905,49 @@ status client could then be used as a message-delivery service, providing an
 alternative way to deliver low-latency high-interruption messages to the
 developer (like ``hey, you broke the build'').
 
+@node Build Properties, , Users, Concepts
+@section Build Properties
+@cindex Properties
+
+Each build has a set of ``Build Properties'', which can be used by its
+BuildStep to modify their actions.  These properties, in the form of
+key-value pairs, provide a general framework for dynamically altering
+the behavior of a build based on its circumstances.
+
+Properties come from a number of places:
+@itemize
+@item global configuration --
+These properties apply to all builds.
+@item schedulers --
+A scheduler can specify properties available to all the builds it 
+starts.
+@item buildslaves --
+A buildslave can pass properties on to the builds it performs.
+@item builds --
+A build automatically sets a number of properties on itself.
+@item steps --
+Steps of a build can set properties that are available to subsequent
+steps.  In particular, source steps set a number of properties.
+@end itemize
+
+Properties are very flexible, and can be used to implement all manner
+of functionality.  Here are some examples:
+
+Most Source steps record the revision that they checked out in
+the @code{got_revision} property.  A later step could use this
+property to specify the name of a fully-built tarball, dropped in an
+easily-acessible directory for later testing.
+
+Some projects want to perform nightly builds as well as in response
+to committed changes.  Such a project would run two schedulers,
+both pointing to the same set of builders, but could provide an
+@code{is_nightly} property so that steps can distinguish the nightly
+builds, perhaps to run more resource-intensive tests.
+
+Some projects have different build processes on different systems.
+Rather than create a build factory for each slave, the steps can use
+buildslave properties to identify the unique aspects of each slave
+and adapt the build process dynamically.
 
 @node Configuration, Getting Source Code Changes, Concepts, Top
 @chapter Configuration
@@ -1925,9 +1976,10 @@ understand how to fill in each section properly.
 * Loading the Config File::     
 * Testing the Config File::     
 * Defining the Project::        
-* Listing Change Sources and Schedulers::  
+* Change Sources and Schedulers::  
 * Setting the slaveport::       
 * Buildslave Specifiers::       
+* Defining Global Properties::           
 * Defining Builders::           
 * Defining Status Targets::     
 * Debug options::               
@@ -2072,7 +2124,7 @@ NameError: name 'bogus' is not defined
 @end example
 
 
-@node Defining the Project, Listing Change Sources and Schedulers, Testing the Config File, Configuration
+@node Defining the Project, Change Sources and Schedulers, Testing the Config File, Configuration
 @section Defining the Project
 
 There are a couple of basic settings that you use to tell the buildbot
@@ -2111,8 +2163,8 @@ available to queriers (over IRC) who want to find out where to get
 more information about this buildbot.
 
 
-@node Listing Change Sources and Schedulers, Setting the slaveport, Defining the Project, Configuration
-@section Listing Change Sources and Schedulers
+@node Change Sources and Schedulers, Setting the slaveport, Defining the Project, Configuration
+@section Change Sources and Schedulers
 
 @bcindex c['sources']
 @bcindex c['change_source']
@@ -2130,37 +2182,89 @@ Code Changes}.
 from buildbot.changes.pb import PBChangeSource
 c['change_source'] = PBChangeSource()
 @end example
+@bcindex c['schedulers']
 
 (note: in buildbot-0.7.5 and earlier, this key was named
 @code{c['sources']}, and required a list. @code{c['sources']} is
 deprecated as of buildbot-0.7.6 and is scheduled to be removed in a
 future release).
 
-@bcindex c['schedulers']
-@code{c['schedulers']} is a list of Scheduler instances, each of which
-causes builds to be started on a particular set of Builders. The two
-basic Scheduler classes you are likely to start with are
-@code{Scheduler} and @code{Periodic}, but you can write a customized
-subclass to implement more complicated build scheduling.
+@code{c['schedulers']} is a list of Scheduler instances, each
+of which causes builds to be started on a particular set of
+Builders. The two basic Scheduler classes you are likely to start
+with are @code{Scheduler} and @code{Periodic}, but you can write a
+customized subclass to implement more complicated build scheduling.
 
-The docstring for @code{buildbot.scheduler.Scheduler} is the best
-place to see all the options that can be used. Type @code{pydoc
-buildbot.scheduler.Scheduler} to see it, or look in
-@file{buildbot/scheduler.py} directly.
+Scheduler arguments
+should always be specified by name (as keyword arguments), to allow
+for future expansion:
 
-The basic Scheduler takes four arguments:
+@example
+sched = Scheduler(name="quick", builderNames=['lin', 'win'])
+@end example
+
+All schedulers have several arguments in common:  
 
 @table @code
 @item name
-Each Scheduler must have a unique name. This is only used in status
-displays.
+
+Each Scheduler must have a unique name. This is used in status
+displays, and is also available in the build property @code{scheduler}.
+
+@item builderNames
+
+This is the set of builders which this scheduler should trigger, specified
+as a list of names (strings).
+
+@item properties
+@cindex Properties
+
+This is a dictionary specifying properties that will be transmitted
+to all builds started by this scheduler.
+
+@end table
+
+Here is a brief catalog of the available Scheduler types. All these
+Schedulers are classes in @code{buildbot.scheduler}, and the
+docstrings there are the best source of documentation on the arguments
+taken by each one.
+
+@menu
+* Scheduler Scheduler::             
+* AnyBranchScheduler::          
+* Dependent Scheduler::          
+* Periodic Scheduler::          
+* Nightly Scheduler::          
+* Try Schedulers::          
+* Triggerable Scheduler::          
+@end menu
+
+@node Scheduler Scheduler
+@subsection Scheduler Scheduler
+@slindex buildbot.scheduler.Scheduler
+
+This is the original and still most popular Scheduler class. It follows
+exactly one branch, and starts a configurable tree-stable-timer after
+each change on that branch. When the timer expires, it starts a build
+on some set of Builders. The Scheduler accepts a @code{fileIsImportant}
+function which can be used to ignore some Changes if they do not
+affect any ``important'' files.
+
+The arguments to this scheduler are:
+
+@table @code
+@item name
+
+@item builderNames
+
+@item properties
 
 @item branch
 This Scheduler will pay attention to a single branch, ignoring Changes
 that occur on other branches. Setting @code{branch} equal to the
-special value of @code{None} means it should only pay attention to the
-default branch. Note that @code{None} is a keyword, not a string, so
-you want to use @code{None} and not @code{"None"}.
+special value of @code{None} means it should only pay attention to
+the default branch. Note that @code{None} is a keyword, not a string,
+so you want to use @code{None} and not @code{"None"}.
 
 @item treeStableTimer
 The Scheduler will wait for this many seconds before starting the
@@ -2168,108 +2272,78 @@ build. If new changes are made during this interval, the timer will be
 restarted, so really the build will be started after a change and then
 after this many seconds of inactivity.
 
-@item builderNames
-When the tree-stable-timer finally expires, builds will be started on
-these Builders. Each Builder gets a unique name: these strings must
-match.
-
+@item fileIsImportant
+A callable which takes one argument, a Change instance, and returns
+@code{True} if the change is worth building, and @code{False} if
+it is not.  Unimportant Changes are accumulated until the build is
+triggered by an important change.  The default value of None means
+that all Changes are important.
 @end table
+
+Example:
 
 @example
 from buildbot import scheduler
-quick = scheduler.Scheduler("quick", None, 60,
-                            ["quick-linux", "quick-netbsd"])
-full = scheduler.Scheduler("full", None, 5*60,
-                           ["full-linux", "full-netbsd", "full-OSX"])
-nightly = scheduler.Periodic("nightly", ["full-solaris"], 24*60*60)
-c['schedulers'] = [quick, full, nightly]
+quick = scheduler.Scheduler(name="quick", 
+                    branch=None, 
+                    treeStableTimer=60,
+                    builderNames=["quick-linux", "quick-netbsd"])
+full = scheduler.Scheduler(name="full", 
+                    branch=None,
+                    treeStableTimer=5*60,
+                    builderNames=["full-linux", "full-netbsd", "full-OSX"])
+c['schedulers'] = [quick, full]
 @end example
 
-In this example, the two ``quick'' builds are triggered 60 seconds
+In this example, the two ``quick'' builders are triggered 60 seconds
 after the tree has been changed. The ``full'' builds do not run quite
 so quickly (they wait 5 minutes), so hopefully if the quick builds
 fail due to a missing file or really simple typo, the developer can
 discover and fix the problem before the full builds are started. Both
-Schedulers only pay attention to the default branch: any changes on
-other branches are ignored by these Schedulers. Each Scheduler
+Schedulers only pay attention to the default branch: any changes
+on other branches are ignored by these Schedulers. Each Scheduler
 triggers a different set of Builders, referenced by name.
 
-The third Scheduler in this example just runs the full solaris build
-once per day. (note that this Scheduler only lets you control the time
-between builds, not the absolute time-of-day of each Build, so this
-could easily wind up a ``daily'' or ``every afternoon'' scheduler
-depending upon when it was first activated).
-
-@menu
-* Scheduler Types::             
-* Build Dependencies::          
-@end menu
-
-@node Scheduler Types, Build Dependencies, Listing Change Sources and Schedulers, Listing Change Sources and Schedulers
-@subsection Scheduler Types
-
-@slindex buildbot.scheduler.Scheduler
+@node AnyBranchScheduler
+@subsection AnyBranchScheduler
 @slindex buildbot.scheduler.AnyBranchScheduler
-@slindex buildbot.scheduler.Periodic
-@slindex buildbot.scheduler.Nightly
 
-Here is a brief catalog of the available Scheduler types. All these
-Schedulers are classes in @code{buildbot.scheduler}, and the
-docstrings there are the best source of documentation on the arguments
-taken by each one.
-
-@table @code
-@item Scheduler
-This is the default Scheduler class. It follows exactly one branch,
-and starts a configurable tree-stable-timer after each change on that
-branch. When the timer expires, it starts a build on some set of
-Builders. The Scheduler accepts a @code{fileIsImportant} function
-which can be used to ignore some Changes if they do not affect any
-``important'' files.
-
-@item AnyBranchScheduler
 This scheduler uses a tree-stable-timer like the default one, but
 follows multiple branches at once. Each branch gets a separate timer.
 
-@item Dependent
-This scheduler watches an ``upstream'' Scheduler. When all the
-Builders launched by that Scheduler successfully finish, the Dependent
-scheduler is triggered. The next section (@pxref{Build Dependencies})
-describes this scheduler in more detail.
+The arguments to this scheduler are:
 
-@item Triggerable
-This scheduler does nothing until it is triggered by a Trigger
-step in another build.  This facilitates a more general form of
-build dependencies, as described in the next section (@pxref{Build
-Dependencies}).
+@table @code
+@item name
 
-@item Periodic
-This simple scheduler just triggers a build every N seconds.
+@item builderNames
 
-@item Nightly
-This is highly configurable periodic build scheduler, which triggers a
-build at particular times of day, week, month, or year. The
-configuration syntax is very similar to the well-known @code{crontab}
-format, in which you provide values for minute, hour, day, and month
-(some of which can be wildcards), and a build is triggered whenever
-the current time matches the given constraints. This can run a build
-every night, every morning, every weekend, alternate Thursdays, on
-your boss's birthday, etc.
+@item properties
 
-@item Try_Jobdir / Try_Userpass
-This scheduler allows developers to use the @code{buildbot try}
-command to trigger builds of code they have not yet committed. See
-@ref{try} for complete details.
+@item branches
+This Scheduler will pay attention to any number of branches, ignoring
+Changes that occur on other branches. Branches are specified just as
+for the @code{Scheduler} class.
 
+@item treeStableTimer
+The Scheduler will wait for this many seconds before starting the
+build. If new changes are made during this interval, the timer will be
+restarted, so really the build will be started after a change and then
+after this many seconds of inactivity.
+
+@item fileIsImportant
+A callable which takes one argument, a Change instance, and returns
+@code{True} if the change is worth building, and @code{False} if
+it is not.  Unimportant Changes are accumulated until the build is
+triggered by an important change.  The default value of None means
+that all Changes are important.
 @end table
 
-@node Build Dependencies,  , Scheduler Types, Listing Change Sources and Schedulers
-@subsection Build Dependencies
-
+@node Dependent Scheduler
+@subsection Dependent Scheduler
 @cindex Dependent
 @cindex Dependencies
 @slindex buildbot.scheduler.Dependent
-@slindex buildbot.scheduler.Triggerable
 
 It is common to wind up with one kind of build which should only be
 performed if the same source code was successfully handled by some
@@ -2285,61 +2359,239 @@ code. Or, if one Build creates a product (like a compiled library)
 that is used by some other Builder, you'd want to make sure the
 consuming Build is run @emph{after} the producing one.
 
-You can use @code{Dependencies} to express this relationship to the
-Buildbot. There is a special kind of Scheduler named
+You can use ``Dependencies'' to express this relationship
+to the Buildbot. There is a special kind of Scheduler named
 @code{scheduler.Dependent} that will watch an ``upstream'' Scheduler
-for builds to complete successfully (on all of its Builders). Each
-time that happens, the same source code (i.e. the same
-@code{SourceStamp}) will be used to start a new set of builds, on a
-different set of Builders. This ``downstream'' scheduler doesn't pay
-attention to Changes at all, it only pays attention to the upstream
-scheduler.
+for builds to complete successfully (on all of its Builders). Each time
+that happens, the same source code (i.e. the same @code{SourceStamp})
+will be used to start a new set of builds, on a different set of
+Builders. This ``downstream'' scheduler doesn't pay attention to
+Changes at all. It only pays attention to the upstream scheduler.
 
-If the SourceStamp fails on any of the Builders in the upstream set,
-the downstream builds will not fire.
+If the build fails on any of the Builders in the upstream set,
+the downstream builds will not fire.  Note that, for SourceStamps
+generated by a ChangeSource, the @code{revision} is None, meaning HEAD.
+If any changes are committed between the time the upstream scheduler
+begins its build and the time the dependent scheduler begins its
+build, then those changes will be included in the downstream build.
+See the @pxref{Triggerable Scheduler} for a more flexible dependency
+mechanism that can avoid this problem.
+
+The arguments to this scheduler are:
+
+@table @code
+@item name
+
+@item builderNames
+
+@item properties
+
+@item upstream
+The upstream scheduler to watch.  Note that this is an ``instance'',
+not the name of the scheduler.
+@end table
+
+Example:
 
 @example
 from buildbot import scheduler
-tests = scheduler.Scheduler("tests", None, 5*60,
+tests = scheduler.Scheduler("just-tests", None, 5*60,
                             ["full-linux", "full-netbsd", "full-OSX"])
-package = scheduler.Dependent("package",
-                              tests, # upstream scheduler
+package = scheduler.Dependent("build-package",
+                              tests, # upstream scheduler -- no quotes!
                               ["make-tarball", "make-deb", "make-rpm"])
 c['schedulers'] = [tests, package]
 @end example
 
-Note that @code{Dependent}'s upstream scheduler argument is given as a
-@code{Scheduler} @emph{instance}, not a name. This makes it impossible
-to create circular dependencies in the config file.
+@node Periodic Scheduler
+@subsection Periodic Scheduler
+@slindex buildbot.scheduler.Periodic
 
-A more general way to coordinate builds is by ``triggering''
-schedulers from builds. The Triggerable waits to be triggered by a
-Trigger step (@pxref{Triggering Schedulers}) in another build. That
-step can optionally wait for the scheduler's builds to complete. This
+This simple scheduler just triggers a build every N seconds.
+
+The arguments to this scheduler are:
+
+@table @code
+@item name
+
+@item builderNames
+
+@item properties
+
+@item periodicBuildTimer
+The time, in seconds, after which to start a build.
+@end table
+
+Example:
+
+@example
+from buildbot import scheduler
+nightly = scheduler.Periodic(name="nightly",
+                builderNames=["full-solaris"],
+                periodicBuildTimer=24*60*60)
+c['schedulers'] = [nightly]
+@end example
+
+The Scheduler in this example just runs the full solaris build once
+per day. Note that this Scheduler only lets you control the time
+between builds, not the absolute time-of-day of each Build, so this
+could easily wind up a ``daily'' or ``every afternoon'' scheduler
+depending upon when it was first activated.
+
+@node Nightly Scheduler
+@subsection Nightly Scheduler
+@slindex buildbot.scheduler.Nightly
+
+This is highly configurable periodic build scheduler, which triggers
+a build at particular times of day, week, month, or year. The
+configuration syntax is very similar to the well-known @code{crontab}
+format, in which you provide values for minute, hour, day, and month
+(some of which can be wildcards), and a build is triggered whenever
+the current time matches the given constraints. This can run a build
+every night, every morning, every weekend, alternate Thursdays,
+on your boss's birthday, etc.
+
+Pass some subset of @code{minute}, @code{hour}, @code{dayOfMonth},
+@code{month}, and @code{dayOfWeek}; each may be a single number or
+a list of valid values. The builds will be triggered whenever the
+current time matches these values. Wildcards are represented by a
+'*' string. All fields default to a wildcard except 'minute', so
+with no fields this defaults to a build every hour, on the hour.
+The full list of parameters is:
+
+@table @code
+@item name
+
+@item builderNames
+
+@item properties
+
+@item branch
+The branch to build, just as for @code{Scheduler}.
+
+@item minute
+The minute of the hour on which to start the build.  This defaults
+to 0, meaning an hourly build.
+
+@item hour
+The hour of the day on which to start the build, in 24-hour notation.
+This defaults to *, meaning every hour.
+
+@item month
+The month in which to start the build, with January = 1.  This defaults
+to *, meaning every month.
+
+@item dayOfWeek
+The day of the week to start a build, with Monday = 0.  This defauls
+to *, meaning every day of the week.
+@end table
+
+For example, the following master.cfg clause will cause a build to be
+started every night at 3:00am:
+
+@example
+s = scheduler.Nightly(name='nightly',
+        builderNames=['builder1', 'builder2'],
+        hour=3, 
+        minute=0)
+@end example
+
+This scheduler will perform a build each monday morning at 6:23am and
+again at 8:23am:
+
+@example
+s = scheduler.Nightly(name='BeforeWork',
+         builderNames=['builder1'],
+         dayOfWeek=0,
+         hour=[6,8],
+         minute=23)
+@end example
+
+The following runs a build every two hours, using Python's @code{range}
+function:
+
+@example
+s = Nightly(name='every2hours',
+        builderNames=['builder1'],
+        hour=range(0, 24, 2))
+@end example
+
+Finally, this example will run only on December 24th:
+
+@example
+s = Nightly(name='SleighPreflightCheck',
+        builderNames=['flying_circuits', 'radar'],
+        month=12,
+        dayOfMonth=24,
+        hour=12,
+        minute=0)
+@end example
+
+@node Try Schedulers
+@subsection Try Schedulers
+@slindex buildbot.scheduler.Try_Jobdir
+@slindex buildbot.scheduler.Try_Userpass
+
+This scheduler allows developers to use the @code{buildbot try}
+command to trigger builds of code they have not yet committed. See
+@ref{try} for complete details.
+
+Two implementations are available: @code{Try_Jobdir} and
+@code{Try_Userpass}.  The former monitors a job directory, specified
+by the @code{jobdir} parameter, while the latter listens for PB 
+connections on a specific @code{port}, and authenticates against
+@code{userport}.
+
+@node Triggerable Scheduler
+@subsection Triggerable Scheduler
+@cindex Triggers
+@slindex buildbot.scheduler.Triggerable
+
+The @code{Triggerable} scheduler waits to be triggered by a Trigger
+step (see @ref{Triggering Schedulers}) in another build. That step
+can optionally wait for the scheduler's builds to complete. This
 provides two advantages over Dependent schedulers. First, the same
 scheduler can be triggered from multiple builds. Second, the ability
 to wait for a Triggerable's builds to complete provides a form of
-"subroutine call", where one or more builds can "call" a scheduler to
-perform some work for them, perhaps on other buildslaves.
+"subroutine call", where one or more builds can "call" a scheduler
+to perform some work for them, perhaps on other buildslaves.
+
+The parameters are just the basics:
+
+@table @code
+@item name
+@item builderNames
+@item properties
+@end table
+
+This class is only useful in conjunction with the @code{Trigger} step.
+Here is a fully-worked example:
 
 @example
 from buildbot import scheduler
 from buildbot.steps import trigger
 
-checkin = scheduler.Scheduler("checkin", None, 5*60, ["checkin"])
-nightly = scheduler.Scheduler("nightly", ... , ["nightly"])
+checkin = scheduler.Scheduler(name="checkin",
+            branch=None,
+            treeStableTimer=5*60,
+            builderNames=["checkin"])
+nightly = scheduler.Nightly(name='nightly',
+            builderNames=['nightly'],
+            hour=3, 
+            minute=0)
 
-mktarball = scheduler.Triggerable("mktarball",
-                                  ["mktarball"])
-build = scheduler.Triggerable("build-all-platforms",
-                              ["build-all-platforms"])
-test = scheduler.Triggerable("distributed-test",
-                             ["distributed-test"])
-package = scheduler.Triggerable("package-all-platforms",
-                                ["package-all-platforms"])
+mktarball = scheduler.Triggerable(name="mktarball",
+                builderNames=["mktarball"])
+build = scheduler.Triggerable(name="build-all-platforms",
+                builderNames=["build-all-platforms"])
+test = scheduler.Triggerable(name="distributed-test",
+                builderNames=["distributed-test"])
+package = scheduler.Triggerable(name="package-all-platforms",
+                builderNames=["package-all-platforms"])
 
 c['schedulers'] = [checkin, nightly, build, test, package]
 
+# on checkin, make a tarball, build it, and test it
 checkin_factory = factory.BuildFactory()
 f.addStep(trigger.Trigger('mktarball', schedulers=['mktarball'],
                                        waitForFinish=True)
@@ -2348,6 +2600,7 @@ f.addStep(trigger.Trigger('build', schedulers=['build-all-platforms'],
 f.addStep(trigger.Trigger('test', schedulers=['distributed-test'],
                                   waitForFinish=True)
 
+# and every night, make a tarball, build it, and package it
 nightly_factory = factory.BuildFactory()
 f.addStep(trigger.Trigger('mktarball', schedulers=['mktarball'],
                                        waitForFinish=True)
@@ -2357,7 +2610,7 @@ f.addStep(trigger.Trigger('package', schedulers=['package-all-platforms'],
                                      waitForFinish=True)
 @end example
 
-@node Setting the slaveport, Buildslave Specifiers, Listing Change Sources and Schedulers, Configuration
+@node Setting the slaveport, Buildslave Specifiers, Change Sources and Schedulers, Configuration
 @section Setting the slaveport
 
 @bcindex c['slavePortnum']
@@ -2394,7 +2647,7 @@ and they are all configured to contact the buildmaster at
 @code{localhost:10000}.
 
 
-@node Buildslave Specifiers, Defining Builders, Setting the slaveport, Configuration
+@node Buildslave Specifiers
 @section Buildslave Specifiers
 
 @bcindex c['slaves']
@@ -2405,13 +2658,6 @@ with two values: (slavename, slavepassword). These are the same two
 values that need to be provided to the buildslave administrator when
 they create the buildslave.
 
-@example
-from buildbot.buildslave import BuildSlave
-c['slaves'] = [BuildSlave('bot-solaris', 'solarispasswd'),
-               BuildSlave('bot-bsd', 'bsdpasswd'),
-              ]
-@end example
-
 The slavenames must be unique, of course. The password exists to
 prevent evildoers from interfering with the buildbot by inserting
 their own (broken) buildslaves into the system and thus displacing the
@@ -2421,9 +2667,28 @@ Buildslaves with an unrecognized slavename or a non-matching password
 will be rejected when they attempt to connect, and a message
 describing the problem will be put in the log file (see @ref{Logfiles}).
 
-The @code{BuildSlave} constructor can take an optional
-@code{max_builds} parameter to limit the number of builds that it will
-execute simultaneously:
+@example
+from buildbot.buildslave import BuildSlave
+c['slaves'] = [BuildSlave('bot-solaris', 'solarispasswd')
+               BuildSlave('bot-bsd', 'bsdpasswd')
+              ]
+@end example
+
+@cindex Properties
+@code{BuildSlave} objects can also be created with an optional
+@code{properties} argument, a dictionary specifying properties that
+will be available to any builds performed on this slave.  For example:
+
+@example
+from buildbot.buildslave import BuildSlave
+c['slaves'] = [BuildSlave('bot-solaris', 'solarispasswd',
+                    properties=@{'os':'solaris'@}),
+              ]
+@end example
+
+The @code{BuildSlave} constructor can also take an optional
+@code{max_builds} parameter to limit the number of builds that it
+will execute simultaneously:
 
 @example
 from buildbot.buildslave import BuildSlave
@@ -2497,8 +2762,23 @@ c['slaves'] = [BuildSlave('bot-solaris', 'solarispasswd',
               ]
 @end example
 
+@node Defining Global Properties
+@section Defining Global Properties
+@bcindex c['properties']
+@cindex Properties
 
-@node Defining Builders, Defining Status Targets, Buildslave Specifiers, Configuration
+The @code{'properties'} configuration key defines a dictionary
+of properties that will be available to all builds started by the
+buildmaster:
+
+@example
+c['properties'] = @{
+    'Widget-version' : '1.2',
+    'release-stage' : 'alpha'
+@}
+@end example
+
+@node Defining Builders
 @section Defining Builders
 
 @bcindex c['builders']
@@ -2578,7 +2858,7 @@ move them over to the active category.
 @end table
 
 
-@node Defining Status Targets, Debug options, Defining Builders, Configuration
+@node Defining Status Targets
 @section Defining Status Targets
 
 The Buildmaster has a variety of ways to present build status to
@@ -2970,8 +3250,8 @@ buildmaster admin needs to arrange for these email messages to arrive
 in a place where the buildmaster can find them, and configure the
 buildmaster to parse the messages correctly. Once that is in place,
 the email parser will create Change objects and deliver them to the
-Schedulers (see @pxref{Scheduler Types}) just like any other
-ChangeSource.
+Schedulers (see @pxref{Change Sources and Schedulers}) just
+like any other ChangeSource.
 
 There are two components to setting up an email-based ChangeSource.
 The first is to route the email messages to the buildmaster, which is
@@ -3722,7 +4002,7 @@ behavior.
 * Build Factories::             
 @end menu
 
-@node Build Steps, Interlocks, Build Process, Build Process
+@node Build Steps
 @section Build Steps
 
 @code{BuildStep}s are usually specified in the buildmaster's
@@ -3757,6 +4037,7 @@ control each.
 
 @menu
 * Common Parameters::           
+* Using Build Properties::
 * Source Checkout::             
 * ShellCommand::                
 * Simple ShellCommand Subclasses::  
@@ -3766,7 +4047,7 @@ control each.
 * Writing New BuildSteps::      
 @end menu
 
-@node Common Parameters, Source Checkout, Build Steps, Build Steps
+@node Common Parameters
 @subsection Common Parameters
 
 The standard @code{Build} runs a series of @code{BuildStep}s in order,
@@ -3817,8 +4098,163 @@ names. Also note that all Locks must have unique names.
 
 @end table
 
+@node Using Build Properties
+@subsection Using Build Properties
+@cindex Properties
 
-@node Source Checkout, ShellCommand, Common Parameters, Build Steps
+Build properties are a generalized way to provide configuration
+information to build steps; see @ref{Build Properties}.
+
+Some build properties are inherited from external sources -- global
+properties, schedulers, or buildslaves.  Some build properties are
+set when the build starts, such as the SourceStamp information. Other
+properties can be set by BuildSteps as they run, for example the
+various Source steps will set the @code{got_revision} property to the
+source revision that was actually checked out (which can be useful
+when the SourceStamp in use merely requested the ``latest revision'':
+@code{got_revision} will tell you what was actually built).
+
+In custom BuildSteps, you can get and set the build properties with
+the @code{getProperty}/@code{setProperty} methods. Each takes a string
+for the name of the property, and returns or accepts an
+arbitrary@footnote{Build properties are serialized along with the
+build results, so they must be serializable. For this reason, the
+value of any build property should be simple inert data: strings,
+numbers, lists, tuples, and dictionaries. They should not contain
+class instances.} object. For example:
+
+@example
+class MakeTarball(ShellCommand):
+    def start(self):
+        if self.getProperty("os") == "win":
+            self.setCommand([ ... ]) # windows-only command
+        else:
+            self.setCommand([ ... ]) # equivalent for other systems
+        ShellCommand.start(self)
+@end example
+
+@heading WithProperties
+@cindex WithProperties
+
+You can use build properties in ShellCommands by using the
+@code{WithProperties} wrapper when setting the arguments of the
+ShellCommand. This interpolates the named build properties into the
+generated shell command. You can also use a @code{WithProperties}
+as the @code{workdir=} argument: this allows the working directory
+for a command to be varied for each build, depending upon various
+build properties.
+
+@example
+from buildbot.steps.shell import ShellCommand
+from buildbot.process.properties import WithProperties
+
+f.addStep(ShellCommand,
+          command=["tar", "czf",
+                   WithProperties("build-%s.tar.gz", "revision"),
+                   "source"])
+@end example
+
+If this BuildStep were used in a tree obtained from Subversion, it
+would create a tarball with a name like @file{build-1234.tar.gz}.
+
+The @code{WithProperties} function does @code{printf}-style string
+interpolation, using strings obtained by calling
+@code{build.getProperty(propname)}. Note that for every @code{%s} (or
+@code{%d}, etc), you must have exactly one additional argument to
+indicate which build property you want to insert.
+
+You can also use python dictionary-style string interpolation by using
+the @code{%(propname)s} syntax. In this form, the property name goes
+in the parentheses, and WithProperties takes @emph{no} additional
+arguments:
+
+@example
+f.addStep(ShellCommand,
+          command=["tar", "czf",
+                   WithProperties("build-%(revision)s.tar.gz"),
+                   "source"])
+@end example
+
+Don't forget the extra ``s'' after the closing parenthesis! This is
+the cause of many confusing errors. 
+
+Note that, like python, you can either do positional-argument
+interpolation @emph{or} keyword-argument interpolation, not both. Thus
+you cannot use a string like
+@code{WithProperties("foo-%(revision)s-%s", "branch")}.
+
+Most step parameters accept @code{WithProperties}.  Please file bugs
+for any parameters which do not.
+
+@heading Common Build Properties
+
+The following build properties are set when the build is started, and
+are available to all steps.
+
+@table @code
+@item branch
+
+This comes from the build's SourceStamp, and describes which branch is
+being checked out. This will be @code{None} (which interpolates into
+@code{WithProperties} as an empty string) if the build is on the
+default branch, which is generally the trunk. Otherwise it will be a
+string like ``branches/beta1.4''. The exact syntax depends upon the VC
+system being used.
+
+@item revision
+
+This also comes from the SourceStamp, and is the revision of the
+source code tree that was requested from the VC system. When a build
+is requested of a specific revision (as is generally the case when
+the build is triggered by Changes), this will contain the revision
+specification. The syntax depends upon the VC system in use: for SVN
+it is an integer, for Mercurial it is a short string, for Darcs it
+is a rather large string, etc.
+
+If the ``force build'' button was pressed, the revision will be
+@code{None}, which means to use the most recent revision available.
+This is a ``trunk build''. This will be interpolated as an empty
+string.
+
+@item got_revision
+
+This is set when a Source step checks out the source tree, and
+provides the revision that was actually obtained from the VC system.
+In general this should be the same as @code{revision}, except for
+trunk builds, where @code{got_revision} indicates what revision was
+current when the checkout was performed. This can be used to rebuild
+the same source code later.
+
+Note that for some VC systems (Darcs in particular), the revision is a
+large string containing newlines, and is not suitable for interpolation
+into a filename.
+
+@item buildername
+
+This is a string that indicates which Builder the build was a part of.
+The combination of buildername and buildnumber uniquely identify a
+build.
+
+@item buildnumber
+
+Each build gets a number, scoped to the Builder (so the first build
+performed on any given Builder will have a build number of 0). This
+integer property contains the build's number.
+
+@item slavename
+
+This is a string which identifies which buildslave the build is
+running on.
+
+@item scheduler
+
+If the build was started from a scheduler, then this property will
+contain the name of that scheduler.
+
+@end table
+
+
+@node Source Checkout
 @subsection Source Checkout
 
 The first step of any build is typically to acquire the source code
@@ -4476,7 +4912,6 @@ file less verbose.
 * Compile::                     
 * Test::                        
 * TreeSize::                    
-* Build Properties::            
 @end menu
 
 @node Configure, Compile, Simple ShellCommand Subclasses, Simple ShellCommand Subclasses
@@ -4532,7 +4967,7 @@ source code filenames involved).
 This is meant to handle unit tests. The default command is @code{make
 test}, and the @code{warnOnFailure} flag is set.
 
-@node TreeSize, Build Properties, Test, Simple ShellCommand Subclasses
+@node TreeSize, , Test, Simple ShellCommand Subclasses
 @subsubsection TreeSize
 
 @bsindex buildbot.steps.shell.TreeSize
@@ -4542,177 +4977,6 @@ of the code tree. It puts the size (as a count of 1024-byte blocks,
 aka 'KiB' or 'kibibytes') on the step's status text, and sets a build
 property named 'tree-size-KiB' with the same value.
 
-
-@node Build Properties,  , TreeSize, Simple ShellCommand Subclasses
-@subsubsection Build Properties
-
-@cindex build properties
-
-Each build has a set of ``Build Properties'', which can be used by its
-BuildStep to modify their actions. For example, the SVN revision
-number of the source code being built is available as a build
-property, and a ShellCommand step could incorporate this number into a
-command which create a numbered release tarball.
-
-Some build properties are set when the build starts, such as the
-SourceStamp information. Other properties can be set by BuildSteps as
-they run, for example the various Source steps will set the
-@code{got_revision} property to the source revision that was actually
-checked out (which can be useful when the SourceStamp in use merely
-requested the ``latest revision'': @code{got_revision} will tell you
-what was actually built).
-
-@itemize
-@item buildername
-Name of this builder
-@item buildnumber
-Number of this build (numbers are unique within the builder)
-@item branch
-Branch of the source being built, from the SourceStamp
-@item revision
-Revision of the source being built, from the SourceStamp, as a string
-@item scheduler
-The name of the scheduler that invoked this build
-@item slavename
-The name of the buildslave performing this build
-@end itemize
-
-In custom BuildSteps, you can get and set the build properties with
-the @code{getProperty}/@code{setProperty} methods. Each takes a string
-for the name of the property, and returns or accepts an
-arbitrary@footnote{Build properties are serialized along with the
-build results, so they must be serializable. For this reason, the
-value of any build property should be simple inert data: strings,
-numbers, lists, tuples, and dictionaries. They should not contain
-class instances.} object. For example:
-
-@example
-class MakeTarball(ShellCommand):
-    def start(self):
-        self.setCommand(["tar", "czf",
-                         "build-%s.tar.gz" % self.getProperty("revision"),
-                         "source"])
-        ShellCommand.start(self)
-@end example
-
-@cindex WithProperties
-
-You can use build properties in ShellCommands by using the
-@code{WithProperties} wrapper when setting the arguments of the
-ShellCommand. This interpolates the named build properties into the
-generated shell command. You can also use a @code{WithProperties} as
-the @code{workdir=} argument: this allows the working directory for a
-command to be varied for each build, depending upon various build
-properties.
-
-@example
-from buildbot.steps.shell import ShellCommand, WithProperties
-
-f.addStep(ShellCommand,
-          command=["tar", "czf",
-                   WithProperties("build-%s.tar.gz", "revision"),
-                   "source"])
-@end example
-
-If this BuildStep were used in a tree obtained from Subversion, it
-would create a tarball with a name like @file{build-1234.tar.gz}.
-
-The @code{WithProperties} function does @code{printf}-style string
-interpolation, using strings obtained by calling
-@code{build.getProperty(propname)}. Note that for every @code{%s} (or
-@code{%d}, etc), you must have exactly one additional argument to
-indicate which build property you want to insert.
-
-
-You can also use python dictionary-style string interpolation by using
-the @code{%(propname)s} syntax. In this form, the property name goes
-in the parentheses, and WithProperties takes @emph{no} additional
-arguments:
-
-@example
-f.addStep(ShellCommand,
-          command=["tar", "czf",
-                   WithProperties("build-%(revision)s.tar.gz"),
-                   "source"])
-@end example
-
-Don't forget the extra ``s'' after the closing parenthesis! This is
-the cause of many confusing errors. Also note that you can only use
-WithProperties in the list form of the command= definition. You cannot
-currently use it in the (discouraged) @code{command="stuff"}
-single-string form. However, you can use something like
-@code{command=["/bin/sh", "-c", "stuff", WithProperties(stuff)]} to
-use both shell expansion and WithProperties interpolation.
-
-Note that, like python, you can either do positional-argument
-interpolation @emph{or} keyword-argument interpolation, not both. Thus
-you cannot use a string like
-@code{WithProperties("foo-%(revision)s-%s", "branch")}.
-
-At the moment, the only way to set build properties is by writing a
-custom BuildStep.
-
-@heading Common Build Properties
-
-The following build properties are set when the build is started, and
-are available to all steps.
-
-@table @code
-@item branch
-
-This comes from the build's SourceStamp, and describes which branch is
-being checked out. This will be @code{None} (which interpolates into
-@code{WithProperties} as an empty string) if the build is on the
-default branch, which is generally the trunk. Otherwise it will be a
-string like ``branches/beta1.4''. The exact syntax depends upon the VC
-system being used.
-
-@item revision
-
-This also comes from the SourceStamp, and is the revision of the
-source code tree that was requested from the VC system. When a build
-is requested of a specific revision (as is generally the case when the
-build is triggered by Changes), this will contain the revision
-specification. The syntax depends upon the VC system in use: for SVN
-it is an integer, for Mercurial it is a short string, for Darcs it is
-a rather large string, etc.
-
-If the ``force build'' button was pressed, the revision will be
-@code{None}, which means to use the most recent revision available.
-This is a ``trunk build''. This will be interpolated as an empty
-string.
-
-@item got_revision
-
-This is set when a Source step checks out the source tree, and
-provides the revision that was actually obtained from the VC system.
-In general this should be the same as @code{revision}, except for
-trunk builds, where @code{got_revision} indicates what revision was
-current when the checkout was performed. This can be used to rebuild
-the same source code later.
-
-Note that for some VC systems (Darcs in particular), the revision is a
-large string containing newlines, and is not suitable for
-interpolation into a filename.
-
-@item buildername
-
-This is a string that indicates which Builder the build was a part of.
-The combination of buildername and buildnumber uniquely identify a
-build.
-
-@item buildnumber
-
-Each build gets a number, scoped to the Builder (so the first build
-performed on any given Builder will have a build number of 0). This
-integer property contains the build's number.
-
-@item slavename
-
-This is a string which identifies which buildslave the build is
-running on.
-
-@end table
 
 @node Python BuildSteps, Transferring Files, Simple ShellCommand Subclasses, Build Steps
 @subsection Python BuildSteps
@@ -4883,7 +5147,7 @@ creation time (@pxref{Buildslave Options}).
 @subsection Triggering Schedulers
 
 The counterpart to the Triggerable described in section
-@pxref{Build Dependencies} is the Trigger BuildStep.
+@pxref{Triggerable Scheduler} is the Trigger BuildStep.
 
 @example
 from buildbot.steps.trigger import Trigger
