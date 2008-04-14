@@ -5302,9 +5302,19 @@ Python 2.4.4c0 (#2, Oct  2 2006, 00:57:46)
 [GCC 4.1.2 20060928 (prerelease) (Debian 4.1.1-15)] on linux2
 Type "help", "copyright", "credits" or "license" for more information.
 >>> import sys
->>> print sys.path
-['', '/usr/lib/python24.zip', '/usr/lib/python2.4', '/usr/lib/python2.4/plat-linux2', '/usr/lib/python2.4/lib-tk', '/usr/lib/python2.4/lib-dynload', '/usr/local/lib/python2.4/site-packages', '/usr/lib/python2.4/site-packages', '/usr/lib/python2.4/site-packages/Numeric', '/var/lib/python-support/python2.4', '/usr/lib/site-python']
->>> 
+>>> import pprint
+>>> pprint.pprint(sys.path)
+['',
+ '/usr/lib/python24.zip',
+ '/usr/lib/python2.4',
+ '/usr/lib/python2.4/plat-linux2',
+ '/usr/lib/python2.4/lib-tk',
+ '/usr/lib/python2.4/lib-dynload',
+ '/usr/local/lib/python2.4/site-packages',
+ '/usr/lib/python2.4/site-packages',
+ '/usr/lib/python2.4/site-packages/Numeric',
+ '/var/lib/python-support/python2.4',
+ '/usr/lib/site-python']
 @end example
 
 In this case, putting the code into
