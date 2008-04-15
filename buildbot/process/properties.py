@@ -65,7 +65,6 @@ class Properties(util.ComparableMixin):
         return repr(dict([ (k,v[0]) for k,v in self.properties.iteritems() ]))
 
     def setProperty(self, name, value, source):
-        self._wpmap = None
         self.properties[name] = (value, source)
 
     def update(self, dict, source):
@@ -82,6 +81,8 @@ class Properties(util.ComparableMixin):
         Return a variant of value that has any WithProperties objects
         substituted.  This recurses into Python's compound data types.
         """
+        # we use isinstance to detect Python's standard data types, and call
+        # this function recursively for the values in those types
         if isinstance(value, (str, unicode)):
             return value
         elif isinstance(value, WithProperties):
@@ -96,6 +97,10 @@ class Properties(util.ComparableMixin):
             return value
 
 class PropertyMap:
+    """
+    Privately-used mapping object to implement WithProperties' substitutions,
+    including the rendering of None as ''.
+    """
     colon_minus_re = re.compile(r"(.*):-(.*)")
     colon_plus_re = re.compile(r"(.*):\+(.*)")
     def __init__(self, properties):
@@ -106,6 +111,8 @@ class PropertyMap:
         properties = self.properties()
         assert properties is not None
 
+        # %(prop:-repl)s
+        # if prop exists, use it; otherwise, use repl
         mo = self.colon_minus_re.match(key)
         if mo:
             prop, repl = mo.group(1,2)
@@ -114,6 +121,8 @@ class PropertyMap:
             else:
                 rv = repl
         else:
+            # %(prop:+repl)s
+            # if prop exists, use repl; otherwise, an empty string
             mo = self.colon_plus_re.match(key)
             if mo:
                 prop, repl = mo.group(1,2)
@@ -129,8 +138,9 @@ class PropertyMap:
         return rv
 
 class WithProperties(util.ComparableMixin):
-    """This is a marker class, used in ShellCommand's command= argument to
-    indicate that we want to interpolate a build property.
+    """
+    This is a marker class, used fairly widely to indicate that we
+    want to interpolate build properties.
     """
 
     compare_attrs = ('fmtstring', 'args')
