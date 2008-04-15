@@ -89,6 +89,15 @@ setup_args = {
     'cmdclass': {'install_data': install_data_twisted},
     }
 
+try:
+    # If setuptools is installed, then we'll add setuptools-specific arguments
+    # to the setup args.
+    import setuptools
+except ImportError:
+    pass
+else:
+    setup_args['install_requires'] = ['twisted >= 2.4.0']
+
 setup(**setup_args)
 
 # Local Variables:
