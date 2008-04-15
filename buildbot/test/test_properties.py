@@ -47,12 +47,6 @@ class TestProperties(unittest.TestCase):
         self.assertRaises(KeyError, lambda : self.props['do-nothing'])
         self.failUnlessEqual(self.props.getProperty('do-install'), 2)
 
-    def testEmpty(self):
-        # test the special case for Null
-        self.props.setProperty("x", None, "hi")
-        self.failUnlessEqual(self.props.getProperty('x'), None)
-        self.failUnlessEqual(self.props['x'], '')
-
     def testUpdate(self):
         self.props.setProperty("x", 24, "old")
         newprops = { 'a' : 1, 'b' : 2 }
@@ -94,6 +88,20 @@ class TestWithProperties(unittest.TestCase):
         command = WithProperties("build-%(other)s.tar.gz")
         self.failUnlessEqual(self.props.render(command),
                              "build-foo.tar.gz")
+
+    def testDictColonMinus(self):
+        # test dict-style substitution with WithProperties
+        self.props.setProperty("prop1", "foo", "test")
+        command = WithProperties("build-%(prop1:-empty)s-%(prop2:-empty)s.tar.gz")
+        self.failUnlessEqual(self.props.render(command),
+                             "build-foo-empty.tar.gz")
+
+    def testDictColonPlus(self):
+        # test dict-style substitution with WithProperties
+        self.props.setProperty("prop1", "foo", "test")
+        command = WithProperties("build-%(prop1:+exists)s-%(prop2:+exists)s.tar.gz")
+        self.failUnlessEqual(self.props.render(command),
+                             "build-exists-.tar.gz")
 
     def testEmpty(self):
         # None should render as ''

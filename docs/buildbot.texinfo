@@ -4137,12 +4137,11 @@ class MakeTarball(ShellCommand):
 @cindex WithProperties
 
 You can use build properties in ShellCommands by using the
-@code{WithProperties} wrapper when setting the arguments of the
-ShellCommand. This interpolates the named build properties into the
-generated shell command. You can also use a @code{WithProperties}
-as the @code{workdir=} argument: this allows the working directory
-for a command to be varied for each build, depending upon various
-build properties.
+@code{WithProperties} wrapper when setting the arguments of
+the ShellCommand. This interpolates the named build properties
+into the generated shell command.  Most step parameters accept
+@code{WithProperties}.  Please file bugs for any parameters which
+do not.
 
 @example
 from buildbot.steps.shell import ShellCommand
@@ -4178,13 +4177,29 @@ f.addStep(ShellCommand,
 Don't forget the extra ``s'' after the closing parenthesis! This is
 the cause of many confusing errors. 
 
-Note that, like python, you can either do positional-argument
-interpolation @emph{or} keyword-argument interpolation, not both. Thus
-you cannot use a string like
-@code{WithProperties("foo-%(revision)s-%s", "branch")}.
+The dictionary-style interpolation supports a number of more advanced
+syntaxes, too.
 
-Most step parameters accept @code{WithProperties}.  Please file bugs
-for any parameters which do not.
+@table @code
+
+@item propname:-replacement
+If @code{propname} exists, substitute its value; otherwise,
+substitute @code{replacement}.  @code{replacement} may be empty
+(@code{%(propname:-)s})
+
+@item propname:+replacement
+If @code{propname} exists, substitute @code{replacement}; otherwise,
+substitute an empty string.
+
+@end table
+
+Although these are similar to shell substitutions, no other
+substitutions are currently supported, and @code{replacement} in the
+above cannot contain more substitutions.
+
+Note: like python, you can either do positional-argument interpolation
+@emph{or} keyword-argument interpolation, not both. Thus you cannot use
+a string like @code{WithProperties("foo-%(revision)s-%s", "branch")}.
 
 @heading Common Build Properties
 
@@ -6992,6 +7007,32 @@ If the given Builder is currently running, wait until the Build is
 finished and then announce the results.
 @item last BUILDER
 Return the results of the last build to run on the given Builder.
+@item join CHANNEL
+Join the given IRC channel
+@item leave CHANNEL
+Leave the given IRC channel
+@item notify on|off|list EVENT
+Report events relating to builds.  If the command is issued as a
+private message, then the report will be sent back as a private
+message to the user who issued the command.  Otherwise, the report
+will be sent to the channel.  Available events to be notified are:
+
+@table
+@item started
+A build has started
+@item finished
+A build has finished
+@item success
+A build finished successfully
+@item failed
+A build failed
+@item exception
+A build generated and exception
+@item successToFailure
+The previous build was successful, but this one failed
+@item failureToSuccess
+The previous build failed, but this one was successful
+@end table
 
 @item help COMMAND
 Describe a command. Use @code{help commands} to get a list of known

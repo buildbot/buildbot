@@ -1,3 +1,5 @@
+import re
+import weakref
 from zope.interface import implements
 from buildbot import util
 from twisted.python import log
@@ -26,19 +28,28 @@ class Properties(util.ComparableMixin):
         @param kwargs: initial property values (for testing)
         """
         self.properties = {}
+        self.pmap = PropertyMap(self)
         if kwargs: self.update(kwargs, "TEST")
 
+    def __getstate__(self):
+        d = self.__dict__.copy()
+        del d['pmap']
+        return d
+
+    def __setstate__(self, d):
+        self.__dict__ = d
+        self.pmap = PropertyMap(self)
+
     def __getitem__(self, name):
-        """Just get the value for this property, special-casing None -> ''"""
+        """Just get the value for this property."""
         rv = self.properties[name][0]
-        if rv is None: rv = ''
         return rv
 
     def has_key(self, name):
         return self.properties.has_key(name)
 
     def getProperty(self, name, default=None):
-        """Get the value for the given property, with no None -> '' special case"""
+        """Get the value for the given property."""
         return self.properties.get(name, (default,))[0]
 
     def getPropertySource(self, name):
@@ -54,6 +65,7 @@ class Properties(util.ComparableMixin):
         return repr(dict([ (k,v[0]) for k,v in self.properties.iteritems() ]))
 
     def setProperty(self, name, value, source):
+        self._wpmap = None
         self.properties[name] = (value, source)
 
     def update(self, dict, source):
@@ -73,7 +85,7 @@ class Properties(util.ComparableMixin):
         if isinstance(value, (str, unicode)):
             return value
         elif isinstance(value, WithProperties):
-            return value.render(self)
+            return value.render(self.pmap)
         elif isinstance(value, list):
             return [ self.render(e) for e in value ]
         elif isinstance(value, tuple):
@@ -82,6 +94,39 @@ class Properties(util.ComparableMixin):
             return dict([ (self.render(k), self.render(v)) for k,v in value.iteritems() ])
         else:
             return value
+
+class PropertyMap:
+    colon_minus_re = re.compile(r"(.*):-(.*)")
+    colon_plus_re = re.compile(r"(.*):\+(.*)")
+    def __init__(self, properties):
+        # use weakref here to avoid a reference loop
+        self.properties = weakref.ref(properties)
+
+    def __getitem__(self, key):
+        properties = self.properties()
+        assert properties is not None
+
+        mo = self.colon_minus_re.match(key)
+        if mo:
+            prop, repl = mo.group(1,2)
+            if properties.has_key(prop):
+                rv = properties[prop]
+            else:
+                rv = repl
+        else:
+            mo = self.colon_plus_re.match(key)
+            if mo:
+                prop, repl = mo.group(1,2)
+                if properties.has_key(prop):
+                    rv = repl
+                else:
+                    rv = ''
+            else:
+                rv = properties[key]
+
+        # translate 'None' to an empty string
+        if rv is None: rv = ''
+        return rv
 
 class WithProperties(util.ComparableMixin):
     """This is a marker class, used in ShellCommand's command= argument to
@@ -94,12 +139,12 @@ class WithProperties(util.ComparableMixin):
         self.fmtstring = fmtstring
         self.args = args
 
-    def render(self, properties):
+    def render(self, pmap):
         if self.args:
             strings = []
             for name in self.args:
-                strings.append(properties[name])
+                strings.append(pmap[name])
             s = self.fmtstring % tuple(strings)
         else:
-            s = self.fmtstring % properties
+            s = self.fmtstring % pmap
         return s

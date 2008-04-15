@@ -9,7 +9,8 @@ from twisted.trial import unittest
 from buildbot import interfaces
 from buildbot.sourcestamp import SourceStamp
 from buildbot.process.base import BuildRequest
-from buildbot.status import builder, base
+from buildbot.status import builder, base, words
+from buildbot.changes.changes import Change
 
 mail = None
 try:
@@ -980,3 +981,216 @@ class Client(unittest.TestCase):
         self.failUnless(isinstance(b2, client.RemoteBuilder))
         b3 = client.makeRemote(None)
         self.failUnless(b3 is None)
+
+
+class ContactTester(unittest.TestCase):
+    def test_notify_invalid_syntax(self):
+        irc = MyContact()
+        self.assertRaises(words.UsageError, lambda args, who: irc.command_NOTIFY(args, who), "", "mynick")
+
+    def test_notify_list(self):
+        irc = MyContact()
+        irc.command_NOTIFY("list", "mynick")
+        self.failUnlessEqual(irc.message, "The following events are being notified: []", "empty notify list")
+
+        irc.message = ""
+        irc.command_NOTIFY("on started", "mynick")
+        self.failUnlessEqual(irc.message, "The following events are being notified: ['started']", "on started")
+
+        irc.message = ""
+        irc.command_NOTIFY("on finished", "mynick")
+        self.failUnlessEqual(irc.message, "The following events are being notified: ['started', 'finished']", "on finished")
+
+        irc.message = ""
+        irc.command_NOTIFY("off", "mynick")
+        self.failUnlessEqual(irc.message, "The following events are being notified: []", "off all")
+
+        irc.message = ""
+        irc.command_NOTIFY("on", "mynick")
+        self.failUnlessEqual(irc.message, "The following events are being notified: ['started', 'finished']", "on default set")
+
+        irc.message = ""
+        irc.command_NOTIFY("off started", "mynick")
+        self.failUnlessEqual(irc.message, "The following events are being notified: ['finished']", "off started")
+
+        irc.message = ""
+        irc.command_NOTIFY("on success failed exception", "mynick")
+        self.failUnlessEqual(irc.message, "The following events are being notified: ['failed', 'finished', 'exception', 'success']", "on multiple events")
+
+    def test_notification_default(self):
+        irc = MyContact()
+
+        my_builder = MyBuilder("builder78")
+        my_build = MyIrcBuild(my_builder, 23, builder.SUCCESS)
+
+        irc.buildStarted(my_builder.getName(), my_build)
+        self.failUnlessEqual(irc.message, "", "No notification with default settings")
+
+        irc.buildFinished(my_builder.getName(), my_build, None)
+        self.failUnlessEqual(irc.message, "", "No notification with default settings")
+
+    def test_notification_started(self):
+        irc = MyContact()
+
+        my_builder = MyBuilder("builder78")
+        my_build = MyIrcBuild(my_builder, 23, builder.SUCCESS)
+        my_build.changes = (
+            Change(who = 'author1', files = ['file1'], comments = 'comment1', revision = 123),
+            Change(who = 'author2', files = ['file2'], comments = 'comment2', revision = 456),
+            )
+
+        irc.command_NOTIFY("on started", "mynick")
+
+        irc.message = ""
+        irc.buildStarted(my_builder.getName(), my_build)
+        self.failUnlessEqual(irc.message, "build #23 of builder78 started including [123, 456]", "Start notification generated with notify_events=['started']")
+
+        irc.message = ""
+        irc.buildFinished(my_builder.getName(), my_build, None)
+        self.failUnlessEqual(irc.message, "", "No finished notification with notify_events=['started']")
+
+    def test_notification_finished(self):
+        irc = MyContact()
+
+        my_builder = MyBuilder("builder834")
+        my_build = MyIrcBuild(my_builder, 862, builder.SUCCESS)
+        my_build.changes = (
+            Change(who = 'author1', files = ['file1'], comments = 'comment1', revision = 943),
+            )
+
+        irc.command_NOTIFY("on finished", "mynick")
+
+        irc.message = ""
+        irc.buildStarted(my_builder.getName(), my_build)
+        self.failUnlessEqual(irc.message, "", "No started notification with notify_events=['finished']")
+
+        irc.message = ""
+        irc.buildFinished(my_builder.getName(), my_build, None)
+        self.failUnlessEqual(irc.message, "build #862 of builder834 is complete: Success [step1 step2]  Build details are at http://myserver/mypath?build=765", "Finish notification generated with notify_events=['finished']")
+
+    def test_notification_success(self):
+        irc = MyContact()
+
+        my_builder = MyBuilder("builder834")
+        my_build = MyIrcBuild(my_builder, 862, builder.SUCCESS)
+        my_build.changes = (
+            Change(who = 'author1', files = ['file1'], comments = 'comment1', revision = 943),
+            )
+
+        irc.command_NOTIFY("on success", "mynick")
+
+        irc.message = ""
+        irc.buildStarted(my_builder.getName(), my_build)
+        self.failUnlessEqual(irc.message, "", "No started notification with notify_events=['success']")
+
+        irc.message = ""
+        irc.buildFinished(my_builder.getName(), my_build, None)
+        self.failUnlessEqual(irc.message, "build #862 of builder834 is complete: Success [step1 step2]  Build details are at http://myserver/mypath?build=765", "Finish notification generated on success with notify_events=['success']")
+
+        irc.message = ""
+        my_build.results = builder.FAILURE
+        irc.buildFinished(my_builder.getName(), my_build, None)
+        self.failUnlessEqual(irc.message, "", "No finish notification generated on failure with notify_events=['success']")
+
+        irc.message = ""
+        my_build.results = builder.EXCEPTION
+        irc.buildFinished(my_builder.getName(), my_build, None)
+        self.failUnlessEqual(irc.message, "", "No finish notification generated on exception with notify_events=['success']")
+
+    def test_notification_failed(self):
+        irc = MyContact()
+
+        my_builder = MyBuilder("builder834")
+        my_build = MyIrcBuild(my_builder, 862, builder.FAILURE)
+        my_build.changes = (
+            Change(who = 'author1', files = ['file1'], comments = 'comment1', revision = 943),
+            )
+
+        irc.command_NOTIFY("on failed", "mynick")
+
+        irc.message = ""
+        irc.buildStarted(my_builder.getName(), my_build)
+        self.failUnlessEqual(irc.message, "", "No started notification with notify_events=['failed']")
+
+        irc.message = ""
+        irc.buildFinished(my_builder.getName(), my_build, None)
+        self.failUnlessEqual(irc.message, "build #862 of builder834 is complete: Failure [step1 step2]  Build details are at http://myserver/mypath?build=765", "Finish notification generated on failure with notify_events=['failed']")
+
+        irc.message = ""
+        my_build.results = builder.SUCCESS
+        irc.buildFinished(my_builder.getName(), my_build, None)
+        self.failUnlessEqual(irc.message, "", "No finish notification generated on success with notify_events=['failed']")
+
+        irc.message = ""
+        my_build.results = builder.EXCEPTION
+        irc.buildFinished(my_builder.getName(), my_build, None)
+        self.failUnlessEqual(irc.message, "", "No finish notification generated on exception with notify_events=['failed']")
+
+    def test_notification_exception(self):
+        irc = MyContact()
+
+        my_builder = MyBuilder("builder834")
+        my_build = MyIrcBuild(my_builder, 862, builder.EXCEPTION)
+        my_build.changes = (
+            Change(who = 'author1', files = ['file1'], comments = 'comment1', revision = 943),
+            )
+
+        irc.command_NOTIFY("on exception", "mynick")
+
+        irc.message = ""
+        irc.buildStarted(my_builder.getName(), my_build)
+        self.failUnlessEqual(irc.message, "", "No started notification with notify_events=['exception']")
+
+        irc.message = ""
+        irc.buildFinished(my_builder.getName(), my_build, None)
+        self.failUnlessEqual(irc.message, "build #862 of builder834 is complete: Exception [step1 step2]  Build details are at http://myserver/mypath?build=765", "Finish notification generated on failure with notify_events=['exception']")
+
+        irc.message = ""
+        my_build.results = builder.SUCCESS
+        irc.buildFinished(my_builder.getName(), my_build, None)
+        self.failUnlessEqual(irc.message, "", "No finish notification generated on success with notify_events=['exception']")
+
+        irc.message = ""
+        my_build.results = builder.FAILURE
+        irc.buildFinished(my_builder.getName(), my_build, None)
+        self.failUnlessEqual(irc.message, "", "No finish notification generated on exception with notify_events=['exception']")
+
+class MyIrcBuild(builder.BuildStatus):
+    results = None
+
+    def __init__(self, parent, number, results):
+        builder.BuildStatus.__init__(self, parent, number)
+        self.results = results
+
+    def getResults(self):
+        return self.results
+
+    def getText(self):
+        return ('step1', 'step2')
+
+class URLProducer:
+    def getURLForThing(self, build):
+        return 'http://myserver/mypath?build=765'
+
+class MyChannel:
+    categories = None
+    status = URLProducer()
+
+    def __init__(self):
+        pass
+
+class MyContact(words.Contact):
+    message = ""
+
+    def __init__(self, channel = MyChannel()):
+        words.Contact.__init__(self, channel)
+        self.message = ""
+
+    def subscribe_to_build_events(self):
+        pass
+
+    def unsubscribe_from_build_events(self):
+        pass
+
+    def send(self, msg):
+        self.message += msg

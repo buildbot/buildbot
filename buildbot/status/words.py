@@ -66,6 +66,8 @@ class Contact:
 
     def __init__(self, channel):
         self.channel = channel
+        self.notify_events = {}
+        self.subscribed = 0
 
     silly = {
         "What happen ?": "Somebody set up us the bomb.",
@@ -165,6 +167,77 @@ class Contact:
         self.emit_status(which)
     command_STATUS.usage = "status [<which>] - List status of a builder (or all builders)"
 
+    def validate_notification_event(self, event):
+        if not re.compile("^(started|finished|success|failed|exception)$").match(event):
+            raise UsageError("try 'notify on|off <EVENT>'")
+
+    def list_notified_events(self):
+        self.send( "The following events are being notified: %r" % self.notify_events.keys() )
+
+    def notify_for(self, *events):
+        for event in events:
+            if self.notify_events.has_key(event):
+                return 1
+        return 0
+
+    def subscribe_to_build_events(self):
+        self.channel.status.subscribe(self)
+        self.subscribed = 1
+
+    def unsubscribe_from_build_events(self):
+        self.channel.status.unsubscribe(self)
+        self.subscribed = 0
+
+    def add_notification_events(self, events):
+        for event in events:
+            self.validate_notification_event(event)
+            self.notify_events[event] = 1
+
+    def remove_notification_events(self, events):
+        for event in events:
+            self.validate_notification_event(event)
+            del self.notify_events[event]
+
+    def remove_all_notification_events(self):
+        self.notify_events = {}
+
+    def command_NOTIFY(self, args, who):
+        args = args.split()
+
+        if not args:
+            raise UsageError("try 'notify on|off|list <EVENT>'")
+        action = args.pop(0)
+        events = args
+
+        if action == "on":
+            if not events: events = ('started','finished')
+            self.add_notification_events(events)
+
+            self.list_notified_events()
+
+        elif action == "off":
+            if events:
+                self.remove_notification_events(events)
+            else:
+                self.remove_all_notification_events()
+
+            self.list_notified_events()
+
+        elif action == "list":
+            self.list_notified_events()
+            return
+
+        else:
+            raise UsageError("try 'notify on|off <EVENT>'")
+
+        if len(self.notify_events) > 0 and not self.subscribed:
+            self.subscribe_to_build_events()
+
+        elif len(self.notify_events) == 0 and self.subscribed:
+            self.unsubscribe_from_build_events()
+
+    command_NOTIFY.usage = "notify on|off|list [<EVENT>] ... - Notify me about build events.  event should be one or more of: 'started', 'finished', 'failed', 'success', 'exception', 'successToFailed', 'failedToSuccess'"
+
     def command_WATCH(self, args, who):
         args = args.split()
         if len(args) != 1:
@@ -178,7 +251,7 @@ class Contact:
         for build in builds:
             assert not build.isFinished()
             d = build.waitUntilFinished()
-            d.addCallback(self.buildFinished)
+            d.addCallback(self.watchedBuildFinished)
             r = "watching build %s #%d until it finishes" \
                 % (which, build.getNumber())
             eta = build.getETA()
@@ -188,7 +261,89 @@ class Contact:
             self.send(r)
     command_WATCH.usage = "watch <which> - announce the completion of an active build"
 
-    def buildFinished(self, b):
+    def buildsetSubmitted(self, buildset):
+        log.msg('[Contact] Buildset %s added' % (buildset))
+
+    def builderAdded(self, builderName, builder):
+        log.msg('[Contact] Builder %s added' % (builder))
+        builder.subscribe(self)
+
+    def builderChangedState(self, builderName, state):
+        log.msg('[Contact] Builder %s changed state to %s' % (builderName, state))
+
+    def builderRemoved(self, builderName):
+        log.msg('[Contact] Builder %s removed' % (builderName))
+
+    def buildStarted(self, builderName, build):
+        builder = build.getBuilder()
+        log.msg('[Contact] Builder %r in category %s started' % (builder, builder.category))
+
+        # only notify about builders we are interested in
+
+        if (self.channel.categories != None and
+           builder.category not in self.channel.categories):
+            log.msg('Not notifying for a build in the wrong category')
+            return
+
+        if not self.notify_for('started'):
+            log.msg('Not notifying for a build when started-notification disabled')
+            return
+
+        r = "build #%d of %s started" % \
+           (build.getNumber(),
+             builder.getName())
+
+        r += " including [" + ", ".join(map(lambda c: repr(c.revision), build.getChanges())) + "]"
+
+        self.send(r)
+
+    def buildFinished(self, builderName, build, results):
+        builder = build.getBuilder()
+
+        results_descriptions = {
+            SUCCESS: "Success",
+            WARNINGS: "Warnings",
+            FAILURE: "Failure",
+            EXCEPTION: "Exception",
+            }
+
+        # only notify about builders we are interested in
+        log.msg('[Contact] builder %r in category %s finished' % (builder, builder.category))
+
+        if not self.notify_for('finished', 'failed', 'success', 'exception', 'failedToSuccess', 'successToFailed'):
+            return
+
+        if (self.channel.categories != None and
+            builder.category not in self.channel.categories):
+            return
+
+        results = build.getResults()
+
+        r = "build #%d of %s is complete: %s" % \
+            (build.getNumber(),
+             builder.getName(),
+             results_descriptions.get(results, "??"))
+        r += " [%s]" % " ".join(build.getText())
+        buildurl = self.channel.status.getURLForThing(build)
+        if buildurl:
+            r += "  Build details are at %s" % buildurl
+
+        if (self.notify_for('finished')) or \
+           (self.notify_for('success') and results == SUCCESS) or \
+           (self.notify_for('failed') and results == FAILURE) or \
+           (self.notify_for('exception') and results == EXCEPTION):
+            self.send(r)
+            return
+
+        prevBuild = build.getPreviousBuild()
+        if prevBuild:
+            prevResult = prevBuild.getResult()
+
+            if (self.notify_for('failureToSuccess') and prevResult == FAILURE and results == SUCCESS) or \
+               (self.notify_for('successToFailure') and prevResult == SUCCESS and results == FAILURE):
+                self.send(r)
+
+    def watchedBuildFinished(self, b):
         results = {SUCCESS: "Success",
                    WARNINGS: "Warnings",
                    FAILURE: "Failure",
@@ -429,6 +584,20 @@ class IRCContact(Contact):
     def act(self, action):
         self.channel.me(self.dest, action)
 
+    def command_JOIN(self, args, who):
+        args = args.split()
+        to_join = args[0]
+        self.channel.join(to_join)
+        self.send("Joined %s" % to_join)
+    command_JOIN.usage = "join channel - Join another channel"
+
+    def command_LEAVE(self, args, who):
+        args = args.split()
+        to_leave = args[0]
+        self.send("Buildbot has been told to leave %s" % to_leave)
+        self.channel.part(to_leave)
+    command_LEAVE.usage = "leave channel - Leave a channel"
+
 
     def handleMessage(self, message, who):
         # a message has arrived from 'who'. For broadcast contacts (i.e. when
@@ -541,7 +710,7 @@ class IrcStatusBot(irc.IRCClient):
         # else it's a broadcast message, maybe for us, maybe not. 'channel'
         # is '#twisted' or the like.
         contact = self.getContact(channel)
-        if message.startswith("%s:" % self.nickname):
+        if message.startswith("%s:" % self.nickname) or message.startswith("%s," % self.nickname):
             message = message[len("%s:" % self.nickname):]
             contact.handleMessage(message, user)
         # to track users comings and goings, add code here
