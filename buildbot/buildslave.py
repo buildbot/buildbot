@@ -198,7 +198,7 @@ class BuildSlave(NewCredPerspective, service.MultiService):
         self.slave_status.setConnected(False)
         self.botmaster.slaveLost(self)
         log.msg("BuildSlave.detached(%s)" % self.slavename)
-        if self.notify_on_missing and self.parent:
+        if self.notify_on_missing and self.parent and not self.missing_timer:
             self.missing_timer = reactor.callLater(self.missing_timeout,
                                                    self._missing_timer_fired)
 
