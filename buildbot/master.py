@@ -17,6 +17,7 @@ from twisted.cred import portal, checkers
 from twisted.application import service, strports
 from twisted.persisted import styles
 
+import buildbot
 # sibling imports
 from buildbot.util import now
 from buildbot.pbutil import NewCredPerspective
@@ -451,6 +452,7 @@ class BuildMaster(service.MultiService, styles.Versioned):
         if not configFile:
             configFile = os.path.join(self.basedir, self.configFileName)
 
+        log.msg("Creating BuildMaster -- buildbot.version: %s" % buildbot.version)
         log.msg("loading configuration from %s" % configFile)
         configFile = os.path.expanduser(configFile)
 
