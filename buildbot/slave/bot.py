@@ -1,6 +1,8 @@
 
 import os.path
 
+import buildbot
+
 from twisted.spread import pb
 from twisted.python import log
 from twisted.internet import reactor, defer
@@ -465,7 +467,7 @@ class BuildSlave(service.MultiService):
     def __init__(self, buildmaster_host, port, name, passwd, basedir,
                  keepalive, usePTY, keepaliveTimeout=30, umask=None,
                  debugOpts={}):
-        log.msg("Creating BuildSlave")
+        log.msg("Creating BuildSlave -- buildbot.version: %s" % buildbot.version)
         service.MultiService.__init__(self)
         self.debugOpts = debugOpts.copy()
         bot = self.botClass(basedir, usePTY)
