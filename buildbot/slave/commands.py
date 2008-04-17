@@ -224,6 +224,14 @@ class ShellCommand:
     KILL = "KILL"
     CHUNK_LIMIT = 128*1024
 
+    # For sending elapsed time:
+    startTime = None
+    elapsedTime = None
+    # I wish we had easy access to CLOCK_MONOTONIC in Python:
+    # http://www.opengroup.org/onlinepubs/000095399/functions/clock_getres.html
+    # Then changes to the system clock during a run wouldn't effect the "elapsed
+    # time" results.
+
     def __init__(self, builder, command,
                  workdir, environ=None,
                  sendStdout=True, sendStderr=True, sendRC=True,
@@ -409,6 +417,7 @@ class ShellCommand:
         # called right after we return, but somehow before connectionMade
         # were called, then kill() would blow up).
         self.process = None
+        self.startTime = time.time()
         p = reactor.spawnProcess(self.pp, argv[0], argv,
                                  self.environ,
                                  self.workdir,
@@ -462,7 +471,8 @@ class ShellCommand:
             self.timer.reset(self.timeout)
 
     def finished(self, sig, rc):
-        log.msg("command finished with signal %s, exit code %s" % (sig,rc))
+        self.elapsedTime = time.time() - self.startTime
+        log.msg("command finished with signal %s, exit code %s, elapsedTime: %0.6f" % (sig,rc,self.elapsedTime))
         for w in self.logFileWatchers:
              # this will send the final updates
             w.stop()
@@ -473,6 +483,7 @@ class ShellCommand:
                 self.sendStatus(
                     {'header': "process killed by signal %d\n" % sig})
             self.sendStatus({'rc': rc})
+        self.sendStatus({'header': "elapsedTime=%0.6f\n" % self.elapsedTime})
         if self.timer:
             self.timer.cancel()
             self.timer = None
