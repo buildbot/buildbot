@@ -78,6 +78,9 @@ def grab_commit_info(c, rev):
             logging.debug("Got committer: %s" % m.group(1))
             c['who'] = m.group(1)
 
+        if re.match(r"^Merge: .*$", line):
+            files.append('merge')
+
     c['files'] = files
     status = f.close()
     if status:
