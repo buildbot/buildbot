@@ -341,7 +341,6 @@ class Build:
             d.callback(self)
             return d
 
-        self.build_status.buildStarted(self)
         self.acquireLocks().addCallback(self._startBuild_2)
         return d
 
@@ -361,6 +360,7 @@ class Build:
         return defer.succeed(None)
 
     def _startBuild_2(self, res):
+        self.build_status.buildStarted(self)
         self.startNextStep()
 
     def setupBuild(self, expectations):
