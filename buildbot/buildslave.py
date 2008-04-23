@@ -108,10 +108,6 @@ class BuildSlave(NewCredPerspective, service.MultiService):
         @return: a Deferred that fires with a suitable pb.IPerspective to
                  give to the slave (i.e. 'self')"""
 
-        if self.missing_timer:
-            self.missing_timer.cancel()
-            self.missing_timer = None
-
         if self.slave:
             # uh-oh, we've got a duplicate slave. The most likely
             # explanation is that the slave is behind a slow link, thinks we
@@ -180,6 +176,10 @@ class BuildSlave(NewCredPerspective, service.MultiService):
             self.slave = bot
             log.msg("bot attached")
             self.messageReceivedFromSlave()
+            if self.missing_timer:
+                self.missing_timer.cancel()
+                self.missing_timer = None
+
             return self.updateSlave()
         d.addCallback(_accept_slave)
 
