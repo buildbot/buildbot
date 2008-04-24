@@ -476,9 +476,9 @@ class SVN(Source):
 class Darcs(Source):
     """Check out a source tree from a Darcs repository at 'repourl'.
 
-    To the best of my knowledge, Darcs has no concept of file modes. This
-    means the eXecute-bit will be cleared on all source files. As a result,
-    you may need to invoke configuration scripts with something like:
+    Darcs has no concept of file modes. This means the eXecute-bit will be
+    cleared on all source files. As a result, you may need to invoke
+    configuration scripts with something like:
 
     C{s(step.Configure, command=['/bin/sh', './configure'])}
     """
