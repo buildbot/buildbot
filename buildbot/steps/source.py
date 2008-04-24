@@ -212,7 +212,7 @@ class CVS(Source):
     # parsing each line. Might be handy to have a hook in LogFile that gets
     # called with each complete line.
 
-    def __init__(self, cvsroot, cvsmodule, 
+    def __init__(self, cvsroot, cvsmodule,
                  global_options=[], branch=None, checkoutDelay=None,
                  login=None,
                  **kwargs):
@@ -267,7 +267,7 @@ class CVS(Source):
                                read-only (I assume this means it won't
                                use locks to insure atomic access to the
                                ,v files)."""
-                               
+
         self.checkoutDelay = checkoutDelay
         self.branch = branch
 
@@ -366,7 +366,7 @@ class SVN(Source):
                         which a branch name will be appended. It should
                         probably end in a slash. Use exactly one of
                         C{svnurl} and C{baseURL}.
-                         
+
         @param defaultBranch: if branches are enabled, this is the branch
                               to use if the Build does not specify one
                               explicitly. It will simply be appended
@@ -499,7 +499,7 @@ class Darcs(Source):
                         which a branch name will be appended. It should
                         probably end in a slash. Use exactly one of
                         C{repourl} and C{baseURL}.
-                         
+
         @param defaultBranch: if branches are enabled, this is the branch
                               to use if the Build does not specify one
                               explicitly. It will simply be appended to
@@ -789,7 +789,7 @@ class Bzr(Source):
                         which a branch name will be appended. It should
                         probably end in a slash. Use exactly one of
                         C{repourl} and C{baseURL}.
-                         
+
         @param defaultBranch: if branches are enabled, this is the branch
                               to use if the Build does not specify one
                               explicitly. It will simply be appended to
