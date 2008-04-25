@@ -1,5 +1,7 @@
 2008-04-24  Brian Warner  <warner@lothar.com>
 
+	* setup.py (setup_args): apply patches from zooko: prepare
+	setup.py for optional setuptoolsification
 	* bin/buildbot: apply patch from zooko: use /usr/bin/env in shbang
 
 	* README (REQUIREMENTS): we handle twisted-8.0.1 just fine.
