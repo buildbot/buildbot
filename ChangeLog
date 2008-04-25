@@ -1,5 +1,7 @@
 2008-04-24  Brian Warner  <warner@lothar.com>
 
+	* bin/buildbot: apply patch from zooko: use /usr/bin/env in shbang
+
 	* README (REQUIREMENTS): we handle twisted-8.0.1 just fine.
 
 2008-04-15  Brian Warner  <warner@lothar.com>
