@@ -2,6 +2,10 @@
 
 	* setup.py (setup_args): apply patches from zooko: prepare
 	setup.py for optional setuptoolsification
+	(entry_points): zooko's other patches: if setuptools is available,
+	create an executable via 'entry_points', and declare a dependency
+	upon twisted
+
 	* bin/buildbot: apply patch from zooko: use /usr/bin/env in shbang
 
 	* README (REQUIREMENTS): we handle twisted-8.0.1 just fine.
