@@ -34,12 +34,14 @@ class TinderboxMailNotifier(mail.MailNotifier):
 
     compare_attrs = ["extraRecipients", "fromaddr", "categories", "builders",
                      "addLogs", "relayhost", "subject", "binaryURL", "tree",
-                     "logCompression", "errorparser", "columnName"]
+                     "logCompression", "errorparser", "columnName",
+                     "useChangeTime"]
 
     def __init__(self, fromaddr, tree, extraRecipients,
                  categories=None, builders=None, relayhost="localhost",
                  subject="buildbot %(result)s in %(builder)s", binaryURL="",
-                 logCompression="", errorparser="unix", columnName=None):
+                 logCompression="", errorparser="unix", columnName=None,
+                 useChangeTime=False):
         """
         @type  fromaddr: string
         @param fromaddr: the email address to be used in the 'From' header.
@@ -97,6 +99,10 @@ class TinderboxMailNotifier(mail.MailNotifier):
                            about (not recommended). When columnName is a
                            WithProperties instance it will be interpolated
                            as such. See WithProperties for more detail.
+        @type  useChangeTime: bool
+        @param useChangeTime: When True, the time of the first Change for a
+                              build is used as the builddate. When False,
+                              the current time is used as the builddate.
         """
 
         mail.MailNotifier.__init__(self, fromaddr, categories=categories,
@@ -108,6 +114,7 @@ class TinderboxMailNotifier(mail.MailNotifier):
         self.binaryURL = binaryURL
         self.logCompression = logCompression
         self.errorparser = errorparser
+        self.useChangeTime = useChangeTime
         assert columnName is None or type(columnName) is str \
             or isinstance(columnName, WithProperties), \
             "columnName must be None, a string, or a WithProperties instance"
@@ -131,7 +138,15 @@ class TinderboxMailNotifier(mail.MailNotifier):
         text += "%s tree: %s\n" % (t, self.tree)
         # the start time
         # getTimes() returns a fractioned time that tinderbox doesn't understand
-        text += "%s builddate: %s\n" % (t, int(build.getTimes()[0]))
+        builddate = int(build.getTimes()[0])
+        # attempt to pull a Change time from this Build's Changes.
+        # if that doesn't work, fall back on the current time
+        if self.useChangeTime:
+            try:
+                builddate = build.getChanges()[-1].when
+            except:
+                pass
+        text += "%s builddate: %s\n" % (t, builddate)
         text += "%s status: " % t
 
         if results == "building":
@@ -151,13 +166,13 @@ class TinderboxMailNotifier(mail.MailNotifier):
 
         if self.columnName is None:
             # use the builder name
-            text = "%s build: %s\n" % (t, name)
+            text += "%s build: %s\n" % (t, name)
         elif type(self.columnName) is str:
             # use the exact string given
-            text = "%s build: %s\n" % (t, self.columnName)
+            text += "%s build: %s\n" % (t, self.columnName)
         elif isinstance(self.columnName, WithProperties):
             # interpolate the WithProperties instance, use that
-            text = "%s build: %s\n" % (t, self.columnName.render(build))
+            text += "%s build: %s\n" % (t, self.columnName.render(build))
         else:
             raise Exception("columnName is an unhandled value")
         text += "%s errorparser: %s\n" % (t, self.errorparser)

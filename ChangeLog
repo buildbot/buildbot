@@ -1,5 +1,8 @@
 2008-04-29  Brian Warner  <warner@lothar.com>
 
+	* buildbot/status/tinderbox.py (TinderboxMailNotifier): add
+	useChangeTime= argument, from Ben Hearsum, closes #213.
+
 	* buildbot/changes/svnpoller.py (SVNPoller.checksvn): fix missing
 	argument, thanks to 'thatch' for the catch.
 
