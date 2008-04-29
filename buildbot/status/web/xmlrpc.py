@@ -22,7 +22,7 @@ class XMLRPCServer(xmlrpc.XMLRPC):
         log.msg("getAllBuilders")
         return self.status.getBuilderNames()
 
-    def xmlrpc_getStatus(self, builder_name):
+    def xmlrpc_getLastBuildResults(self, builder_name):
         """Return the result of the last build for the given builder
         """
         builder = self.status.getBuilder(builder_name)
