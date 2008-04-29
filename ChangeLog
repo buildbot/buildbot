@@ -1,3 +1,8 @@
+2008-04-29  Brian Warner  <warner@lothar.com>
+
+	* docs/buildbot.texinfo (IRC Bot): fix typo, patch by Christian
+	Theune. Closes #231.
+
 2008-04-24  Brian Warner  <warner@lothar.com>
 
 	* setup.py (setup_args): apply patches from zooko: prepare
