@@ -171,10 +171,10 @@ class TinderboxMailNotifier(mail.MailNotifier):
             text += "%s logcompression: %s\n" % (t, self.logCompression)
 
             # logs will always be appended
+            logEncoding = ""
             tinderboxLogs = ""
             for log in build.getLogs():
                 l = ""
-                logEncoding = ""
                 if self.logCompression == "bzip2":
                     compressedLog = bz2.compress(log.getText())
                     l = base64.encodestring(compressedLog)

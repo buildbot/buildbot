@@ -1,5 +1,8 @@
 2008-04-29  Brian Warner  <warner@lothar.com>
 
+	* buildbot/status/tinderbox.py (TinderboxMailNotifier): fix scope
+	of logEncoding, patch by Ben Hearsum
+
 	* docs/buildbot.texinfo (IRC Bot): fix typo, patch by Christian
 	Theune. Closes #231.
 
