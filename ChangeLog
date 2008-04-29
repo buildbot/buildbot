@@ -1,5 +1,8 @@
 2008-04-29  Brian Warner  <warner@lothar.com>
 
+	* buildbot/scripts/sample.cfg: fix comment, thanks to 'ludovic'
+	for the catch. Closes #193.
+
 	* buildbot/changes/bonsaipoller.py: apply fixes from Ben Hearsum,
 	closes #216.
 	* buildbot/test/test_bonsaipoller.py: same
