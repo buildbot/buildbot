@@ -235,7 +235,7 @@ class SVNPoller(base.ChangeSource, util.ComparableMixin):
 
         if self.working:
             log.msg("SVNPoller(%s) overrun: timer fired but the previous "
-                    "poll had not yet finished.")
+                    "poll had not yet finished." % self.svnurl)
             self.overrun_counter += 1
             return defer.succeed(None)
         self.working = True

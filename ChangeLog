@@ -1,7 +1,10 @@
 2008-04-29  Brian Warner  <warner@lothar.com>
 
+	* buildbot/changes/svnpoller.py (SVNPoller.checksvn): fix missing
+	argument, thanks to 'thatch' for the catch.
+
 	* buildbot/status/tinderbox.py (TinderboxMailNotifier): fix scope
-	of logEncoding, patch by Ben Hearsum
+	of logEncoding, patch by Ben Hearsum. Closes #214.
 
 	* docs/buildbot.texinfo (IRC Bot): fix typo, patch by Christian
 	Theune. Closes #231.
