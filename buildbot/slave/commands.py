@@ -1391,7 +1391,7 @@ class SourceBase(Command):
         if runtime.platformType != "posix":
             shutil.copytree(fromdir, todir)
             return defer.succeed(0)
-        command = ['cp', '-r', '-p', fromdir, todir]
+        command = ['cp', '-R', '-P', '-p', fromdir, todir]
         c = ShellCommand(self.builder, command, self.builder.basedir,
                          sendRC=False, timeout=self.timeout)
         self.command = c

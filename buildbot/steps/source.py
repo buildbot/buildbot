@@ -47,8 +47,8 @@ class Source(LoggingBuildStep):
              should be maintained in a separate directory (called the
              'copydir'), using checkout or update as necessary. For each
              build, a new workdir is created with a copy of the source
-             tree (rm -rf workdir; cp -r copydir workdir). This doubles
-             the disk space required, but keeps the bandwidth low
+             tree (rm -rf workdir; cp -R -P -p copydir workdir). This
+             doubles the disk space required, but keeps the bandwidth low
              (update instead of a full checkout). A full 'clean' build
              is performed each time.  This avoids any generated-file
              build problems, but is still occasionally vulnerable to

@@ -1,5 +1,11 @@
 2008-04-29  Brian Warner  <warner@lothar.com>
 
+	* buildbot/slave/commands.py (SourceBase.doCopy): use 'cp -RPp'
+	instead of 'cp -rp': this fixes freebsd-vs-svn-vs-symlinks, and
+	should work with both POSIX and GNU cp. Thanks to Pete Curry for
+	the patch. Closes #86.
+	* buildbot/steps/source.py (Source.__init__): update docstring
+
 	* buildbot/scripts/sample.cfg: fix comment, thanks to 'ludovic'
 	for the catch. Closes #193.
 
