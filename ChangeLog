@@ -1,5 +1,8 @@
 2008-04-29  Brian Warner  <warner@lothar.com>
 
+	* buildbot/status/mail.py (MailNotifier): add mode="passing",
+	thanks to 'matisse' for the patch, closes #169.
+
 	* buildbot/status/tinderbox.py (TinderboxMailNotifier): add
 	useChangeTime= argument, from Ben Hearsum, closes #213.
 

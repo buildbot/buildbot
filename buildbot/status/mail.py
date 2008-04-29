@@ -90,6 +90,7 @@ class MailNotifier(base.StatusReceiverMultiService):
         @param mode: one of:
                      - 'all': send mail about all builds, passing and failing
                      - 'failing': only send mail about builds which fail
+                     - 'passing': only send mail about builds which succeed
                      - 'problem': only send mail about a build which failed
                      when the previous build passed
 
@@ -199,6 +200,8 @@ class MailNotifier(base.StatusReceiverMultiService):
 
         if self.mode == "failing" and results != FAILURE:
             return
+        if self.mode == "passing" and results != SUCCESS:
+            return
         if self.mode == "problem":
             if results != FAILURE:
                 return
@@ -220,6 +223,8 @@ class MailNotifier(base.StatusReceiverMultiService):
             text += "The Buildbot has finished a build"
         elif self.mode == "failing":
             text += "The Buildbot has detected a failed build"
+        elif self.mode == "passing":
+            text += "The Buildbot has detected a passing build"
         else:
             text += "The Buildbot has detected a new failure"
         text += " of %s on %s.\n" % (name, projectName)
