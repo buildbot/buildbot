@@ -1,5 +1,9 @@
 2008-04-29  Brian Warner  <warner@lothar.com>
 
+	* buildbot/changes/bonsaipoller.py: apply fixes from Ben Hearsum,
+	closes #216.
+	* buildbot/test/test_bonsaipoller.py: same
+
 	* buildbot/status/mail.py (MailNotifier): add mode="passing",
 	thanks to 'matisse' for the patch, closes #169.
 

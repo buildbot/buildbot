@@ -3,6 +3,7 @@
 from twisted.trial import unittest
 from buildbot.changes.bonsaipoller import FileNode, CiNode, BonsaiResult, \
      BonsaiParser, BonsaiPoller, InvalidResultError, EmptyResult
+from buildbot.changes.changes import ChangeMaster
 
 from copy import deepcopy
 import re
@@ -73,9 +74,6 @@ badUnparsedResult = badUnparsedResult.replace("</queryResults>", "")
 invalidDateResult = deepcopy(goodUnparsedResult)
 invalidDateResult = invalidDateResult.replace(str(date1), "foobar")
 
-missingRevisionResult = deepcopy(goodUnparsedResult)
-missingRevisionResult = missingRevisionResult.replace("rev=\""+rev3+"\"", "")
-
 missingFilenameResult = deepcopy(goodUnparsedResult)
 missingFilenameResult = missingFilenameResult.replace(file2, "")
 
@@ -140,9 +138,17 @@ noCheckinMsgRef = [dict(filename="first/file.ext",
                 dict(filename="third/file.ext",
                      revision="1.3")]
 
+class FakeChangeMaster(ChangeMaster):
+    def __init__(self):
+        ChangeMaster.__init__(self)
+
+    def addChange(self, change):
+        pass
+
 class FakeBonsaiPoller(BonsaiPoller):
     def __init__(self):
         BonsaiPoller.__init__(self, "fake url", "fake module", "fake branch")
+        self.parent = FakeChangeMaster()
 
 class TestBonsaiPoller(unittest.TestCase):
     def testFullyFormedResult(self):
@@ -165,13 +171,6 @@ class TestBonsaiPoller(unittest.TestCase):
         try:
             BonsaiParser(invalidDateResult)
             self.fail(badResultMsgs["invalidDateResult"])
-        except InvalidResultError:
-            pass
-
-    def testMissingRevisionResult(self):
-        try:
-            BonsaiParser(missingRevisionResult)
-            self.fail(badResultMsgs["missingRevisionResult"])
         except InvalidResultError:
             pass
 
@@ -210,6 +209,21 @@ class TestBonsaiPoller(unittest.TestCase):
         poller._process_changes(badUnparsedResult)
         # self.lastChange will not be updated if the change was not submitted
         self.failUnlessEqual(lastChangeBefore, poller.lastChange)
+
+    def testParserWorksAfterInvalidResult(self):
+        """Make sure the BonsaiPoller still works after catching an
+        InvalidResultError"""
+
+        poller = FakeBonsaiPoller()
+
+        lastChangeBefore = poller.lastChange
+        # generate an exception first
+        poller._process_changes(badUnparsedResult)
+        # now give it a valid one...
+        poller._process_changes(goodUnparsedResult)
+        # if poller.lastChange has not been updated then the good result
+        # was not parsed
+        self.failIfEqual(lastChangeBefore, poller.lastChange)
 
     def testMergeEmptyLogMsg(self):
         """Ensure that BonsaiPoller works around the bonsai xml output

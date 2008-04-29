@@ -184,12 +184,7 @@ class BonsaiParser:
         return filename
 
     def _getRevision(self):
-        """Returns the revision of the current <f> node"""
-        rev = self.currentFileNode.getAttribute("rev")
-        if rev == "":
-            raise InvalidResultError("A revision was missing from a file")
-
-        return rev
+        return self.currentFileNode.getAttribute("rev")
 
 
 class BonsaiPoller(base.ChangeSource):
@@ -224,7 +219,8 @@ class BonsaiPoller(base.ChangeSource):
         @param  cvsroot:        The cvsroot of the repository. Usually this is
                                 '/cvsroot'
         @type   pollInterval:   int
-        @param  pollInterval:   The time (in seconds) between queries for changes
+        @param  pollInterval:   The time (in seconds) between queries for
+                                changes
         """
 
         self.bonsaiURL = bonsaiURL
@@ -261,17 +257,24 @@ class BonsaiPoller(base.ChangeSource):
             self.working = True
             d = self._get_changes()
             d.addCallback(self._process_changes)
-            d.addBoth(self._finished)
+            d.addCallbacks(self._finished_ok, self._finished_failure)
         return
 
-    def _finished(self, res):
+    def _finished_ok(self, res):
         assert self.working
         self.working = False
 
-        # check for failure
+        # check for failure -- this is probably never hit but the twisted docs
+        # are not clear enough to be sure. it is being kept "just in case"
         if isinstance(res, failure.Failure):
             log.msg("Bonsai poll failed: %s" % res)
         return res
+
+    def _finished_failure(self, res):
+        log.msg("Bonsai poll failed: %s" % res)
+        assert self.working
+        self.working = False
+        return None # eat the failure
 
     def _make_url(self):
         args = ["treeid=%s" % self.tree, "module=%s" % self.module,
