@@ -4927,6 +4927,8 @@ file less verbose.
 * Compile::                     
 * Test::                        
 * TreeSize::                    
+* SetProperty::                    
+* Build Properties::            
 @end menu
 
 @node Configure, Compile, Simple ShellCommand Subclasses, Simple ShellCommand Subclasses
@@ -4982,7 +4984,7 @@ source code filenames involved).
 This is meant to handle unit tests. The default command is @code{make
 test}, and the @code{warnOnFailure} flag is set.
 
-@node TreeSize, , Test, Simple ShellCommand Subclasses
+@node TreeSize
 @subsubsection TreeSize
 
 @bsindex buildbot.steps.shell.TreeSize
@@ -4992,6 +4994,219 @@ of the code tree. It puts the size (as a count of 1024-byte blocks,
 aka 'KiB' or 'kibibytes') on the step's status text, and sets a build
 property named 'tree-size-KiB' with the same value.
 
+@node SetProperty
+@subsubsection SetProperty
+
+@bsindex buildbot.steps.shell.SetProperty
+
+This buildstep is similar to ShellCommand, except that it captures the
+output of the command into a property.  It is usually used like this:
+
+@example
+f.addStep(SetProperty(command="uname -a", property="uname"))
+@end example
+
+This runs @code{uname -a} and captures its stdout, stripped of leading
+and trailing whitespace, in the property "uname".  To avoid stripping,
+add @code{strip=False}.  The @code{property} argument can be specified
+as a @code{WithProperties} object.
+
+The more advanced usage allows you to specify a function to extract
+properties from the command output.  Here you can use regular
+expressions, string interpolation, or whatever you would like.
+The function is called with three arguments: the exit status of the
+command, its standard output as a string, and its standard error as
+a string.  It should return a dictionary containing all new properties.
+
+@example
+def glob2list(rc, stdout, stderr):
+    jpgs = [ l.strip() for l in stdout.split('\n') ]
+    return @{ 'jpgs' : jpgs @}
+f.addStep(SetProperty(command="ls -1 *.jpg", extract_fn=glob2list))
+@end example
+
+Note that any ordering relationship of the contents of stdout and
+stderr is lost.  For example, given
+
+@example
+f.addStep(SetProperty(
+    command="echo output1; echo error >&2; echo output2", 
+    extract_fn=my_extract))
+@end example
+
+Then @code{my_extract} will see @code{stdout="output1\noutput2\n"}
+and @code{stderr="error\n"}.
+
+@node Build Properties
+@subsubsection Build Properties
+
+@cindex build properties
+
+Each build has a set of ``Build Properties'', which can be used by its
+BuildStep to modify their actions. For example, the SVN revision
+number of the source code being built is available as a build
+property, and a ShellCommand step could incorporate this number into a
+command which create a numbered release tarball.
+
+Some build properties are set when the build starts, such as the
+SourceStamp information. Other properties can be set by BuildSteps as
+they run, for example the various Source steps will set the
+@code{got_revision} property to the source revision that was actually
+checked out (which can be useful when the SourceStamp in use merely
+requested the ``latest revision'': @code{got_revision} will tell you
+what was actually built).
+
+@itemize
+@item buildername
+Name of this builder
+@item buildnumber
+Number of this build (numbers are unique within the builder)
+@item branch
+Branch of the source being built, from the SourceStamp
+@item revision
+Revision of the source being built, from the SourceStamp, as a string
+@item scheduler
+The name of the scheduler that invoked this build
+@item slavename
+The name of the buildslave performing this build
+@end itemize
+
+In custom BuildSteps, you can get and set the build properties with
+the @code{getProperty}/@code{setProperty} methods. Each takes a string
+for the name of the property, and returns or accepts an
+arbitrary@footnote{Build properties are serialized along with the
+build results, so they must be serializable. For this reason, the
+value of any build property should be simple inert data: strings,
+numbers, lists, tuples, and dictionaries. They should not contain
+class instances.} object. For example:
+
+@example
+class MakeTarball(ShellCommand):
+    def start(self):
+        self.setCommand(["tar", "czf",
+                         "build-%s.tar.gz" % self.getProperty("revision"),
+                         "source"])
+        ShellCommand.start(self)
+@end example
+
+@cindex WithProperties
+
+You can use build properties in ShellCommands by using the
+@code{WithProperties} wrapper when setting the arguments of the
+ShellCommand. This interpolates the named build properties into the
+generated shell command. You can also use a @code{WithProperties} as
+the @code{workdir=} argument: this allows the working directory for a
+command to be varied for each build, depending upon various build
+properties.
+
+@example
+from buildbot.steps.shell import ShellCommand, WithProperties
+
+f.addStep(ShellCommand,
+          command=["tar", "czf",
+                   WithProperties("build-%s.tar.gz", "revision"),
+                   "source"])
+@end example
+
+If this BuildStep were used in a tree obtained from Subversion, it
+would create a tarball with a name like @file{build-1234.tar.gz}.
+
+The @code{WithProperties} function does @code{printf}-style string
+interpolation, using strings obtained by calling
+@code{build.getProperty(propname)}. Note that for every @code{%s} (or
+@code{%d}, etc), you must have exactly one additional argument to
+indicate which build property you want to insert.
+
+
+You can also use python dictionary-style string interpolation by using
+the @code{%(propname)s} syntax. In this form, the property name goes
+in the parentheses, and WithProperties takes @emph{no} additional
+arguments:
+
+@example
+f.addStep(ShellCommand,
+          command=["tar", "czf",
+                   WithProperties("build-%(revision)s.tar.gz"),
+                   "source"])
+@end example
+
+Don't forget the extra ``s'' after the closing parenthesis! This is
+the cause of many confusing errors. Also note that you can only use
+WithProperties in the list form of the command= definition. You cannot
+currently use it in the (discouraged) @code{command="stuff"}
+single-string form. However, you can use something like
+@code{command=["/bin/sh", "-c", "stuff", WithProperties(stuff)]} to
+use both shell expansion and WithProperties interpolation.
+
+Note that, like python, you can either do positional-argument
+interpolation @emph{or} keyword-argument interpolation, not both. Thus
+you cannot use a string like
+@code{WithProperties("foo-%(revision)s-%s", "branch")}.
+
+At the moment, the only way to set build properties is by writing a
+custom BuildStep.
+
+@heading Common Build Properties
+
+The following build properties are set when the build is started, and
+are available to all steps.
+
+@table @code
+@item branch
+
+This comes from the build's SourceStamp, and describes which branch is
+being checked out. This will be @code{None} (which interpolates into
+@code{WithProperties} as an empty string) if the build is on the
+default branch, which is generally the trunk. Otherwise it will be a
+string like ``branches/beta1.4''. The exact syntax depends upon the VC
+system being used.
+
+@item revision
+
+This also comes from the SourceStamp, and is the revision of the
+source code tree that was requested from the VC system. When a build
+is requested of a specific revision (as is generally the case when the
+build is triggered by Changes), this will contain the revision
+specification. The syntax depends upon the VC system in use: for SVN
+it is an integer, for Mercurial it is a short string, for Darcs it is
+a rather large string, etc.
+
+If the ``force build'' button was pressed, the revision will be
+@code{None}, which means to use the most recent revision available.
+This is a ``trunk build''. This will be interpolated as an empty
+string.
+
+@item got_revision
+
+This is set when a Source step checks out the source tree, and
+provides the revision that was actually obtained from the VC system.
+In general this should be the same as @code{revision}, except for
+trunk builds, where @code{got_revision} indicates what revision was
+current when the checkout was performed. This can be used to rebuild
+the same source code later.
+
+Note that for some VC systems (Darcs in particular), the revision is a
+large string containing newlines, and is not suitable for
+interpolation into a filename.
+
+@item buildername
+
+This is a string that indicates which Builder the build was a part of.
+The combination of buildername and buildnumber uniquely identify a
+build.
+
+@item buildnumber
+
+Each build gets a number, scoped to the Builder (so the first build
+performed on any given Builder will have a build number of 0). This
+integer property contains the build's number.
+
+@item slavename
+
+This is a string which identifies which buildslave the build is
+running on.
+
+@end table
 
 @node Python BuildSteps, Transferring Files, Simple ShellCommand Subclasses, Build Steps
 @subsection Python BuildSteps

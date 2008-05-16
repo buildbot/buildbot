@@ -210,5 +210,65 @@ class Run(RunMixin, unittest.TestCase):
         d.addCallback(_check_touch)
         return d
 
+    SetProperty_base_config = """
+from buildbot.process import factory
+from buildbot.steps.shell import ShellCommand, SetProperty, WithProperties
+from buildbot.buildslave import BuildSlave
+s = factory.s
+
+BuildmasterConfig = c = {}
+c['slaves'] = [BuildSlave('bot1', 'sekrit')]
+c['schedulers'] = []
+c['slavePortnum'] = 0
+
+f1 = factory.BuildFactory([
+##STEPS##
+])
+
+b1 = {'name': 'full1', 'slavename': 'bot1', 'builddir': 'bd1', 'factory': f1}
+c['builders'] = [b1]
+"""
+
+    SetPropertySimple_config = SetProperty_base_config.replace("##STEPS##", """
+        SetProperty(property='foo', command="echo foo"),
+        SetProperty(property=WithProperties('wp'), command="echo wp"),
+        SetProperty(property='bar', command="echo bar", strip=False),
+    """)
+
+    def testSetPropertySimple(self):
+        d = self.master.loadConfig(self.SetPropertySimple_config)
+        d.addCallback(lambda res: self.master.startService())
+        d.addCallback(lambda res: self.connectOneSlave("bot1"))
+        d.addCallback(lambda res: self.requestBuild("full1"))
+        d.addCallback(self.failUnlessBuildSucceeded)
+        def _check_props(bs):
+            self.failUnlessEqual(bs.getProperty("foo"), "foo")
+            self.failUnlessEqual(bs.getProperty("wp"), "wp")
+            # (will this fail on some platforms, due to newline differences?)
+            self.failUnlessEqual(bs.getProperty("bar"), "bar\n")
+            return bs
+        d.addCallback(_check_props)
+        return d
+
+    SetPropertyExtractFn_config = SetProperty_base_config.replace("##STEPS##", """
+        SetProperty(
+            extract_fn=lambda rc,stdout,stderr : {
+                'foo' : stdout.strip(),
+                'bar' : stderr.strip() },
+            command="echo foo; echo bar >&2"),
+    """)
+
+    def testSetPropertyExtractFn(self):
+        d = self.master.loadConfig(self.SetPropertyExtractFn_config)
+        d.addCallback(lambda res: self.master.startService())
+        d.addCallback(lambda res: self.connectOneSlave("bot1"))
+        d.addCallback(lambda res: self.requestBuild("full1"))
+        d.addCallback(self.failUnlessBuildSucceeded)
+        def _check_props(bs):
+            self.failUnlessEqual(bs.getProperty("foo"), "foo")
+            self.failUnlessEqual(bs.getProperty("bar"), "bar")
+            return bs
+        d.addCallback(_check_props)
+        return d
 
 # we test got_revision in test_vc

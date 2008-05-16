@@ -3,7 +3,7 @@
 import re
 from twisted.python import log
 from buildbot.process.buildstep import LoggingBuildStep, RemoteShellCommand
-from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE
+from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE, STDOUT, STDERR
 
 # for existing configurations that import WithProperties from here.  We like
 # to move this class around just to keep our readers guessing.
@@ -210,6 +210,61 @@ class TreeSize(ShellCommand):
         if self.kib is not None:
             return ["treesize", "%d KiB" % self.kib]
         return ["treesize", "unknown"]
+
+class SetProperty(ShellCommand):
+    name = "setproperty"
+
+    def __init__(self, **kwargs):
+        self.property = None
+        self.extract_fn = None
+        self.strip = True
+
+        if kwargs.has_key('property'):
+            self.property = kwargs['property']
+            del kwargs['property']
+        if kwargs.has_key('extract_fn'):
+            self.extract_fn = kwargs['extract_fn']
+            del kwargs['extract_fn']
+        if kwargs.has_key('strip'):
+            self.strip = kwargs['strip']
+            del kwargs['strip']
+
+        ShellCommand.__init__(self, **kwargs)
+
+        self.addFactoryArguments(property=self.property)
+        self.addFactoryArguments(extract_fn=self.extract_fn)
+        self.addFactoryArguments(strip=self.strip)
+
+        assert self.property or self.extract_fn, \
+            "SetProperty step needs either property= or extract_fn="
+
+        self.property_changes = {}
+
+    def commandComplete(self, cmd):
+        if self.property:
+            result = cmd.logs['stdio'].getText()
+            if self.strip: result = result.strip()
+            propname = render_properties(self.property, self.build)
+            self.setProperty(propname, result)
+            self.property_changes[propname] = result
+        else:
+            log = cmd.logs['stdio']
+            new_props = self.extract_fn(cmd.rc,
+                    ''.join(log.getChunks([STDOUT], onlyText=True)),
+                    ''.join(log.getChunks([STDERR], onlyText=True)))
+            for k,v in new_props.items():
+                self.setProperty(k, v)
+            self.property_changes = new_props
+
+    def createSummary(self, log):
+        props_set = [ "%s: %r" % (k,v) for k,v in self.property_changes.items() ]
+        self.addCompleteLog('property changes', "\n".join(props_set))
+
+    def getText(self, cmd, results):
+        if self.property_changes:
+            return [ "set props:" ] + self.property_changes.keys()
+        else:
+            return [ "no change" ]
 
 class Configure(ShellCommand):
 
