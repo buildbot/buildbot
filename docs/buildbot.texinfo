@@ -6728,6 +6728,32 @@ If the given Builder is currently running, wait until the Build is
 finished and then announce the results.
 @item last BUILDER
 Return the results of the last build to run on the given Builder.
+@item join CHANNEL
+Join the given IRC channel
+@item leave CHANNEL
+Leave the given IRC channel
+@item notify on|off|list EVENT
+Report events relating to builds.  If the command is issued as a
+private message, then the report will be sent back as a private
+message to the user who issued the command.  Otherwise, the report
+will be sent to the channel.  Available events to be notified are:
+
+@table
+@item started
+A build has started
+@item finished
+A build has finished
+@item success
+A build finished successfully
+@item failed
+A build failed
+@item exception
+A build generated and exception
+@item successToFailure
+The previous build was successful, but this one failed
+@item failureToSuccess
+The previous build failed, but this one was successful
+@end table
 
 @item help COMMAND
 Describe a command. Use @code{help commands} to get a list of known
