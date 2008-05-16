@@ -4476,6 +4476,7 @@ file less verbose.
 * Compile::                     
 * Test::                        
 * TreeSize::                    
+* SetProperty::                    
 * Build Properties::            
 @end menu
 
@@ -4532,7 +4533,7 @@ source code filenames involved).
 This is meant to handle unit tests. The default command is @code{make
 test}, and the @code{warnOnFailure} flag is set.
 
-@node TreeSize, Build Properties, Test, Simple ShellCommand Subclasses
+@node TreeSize
 @subsubsection TreeSize
 
 @bsindex buildbot.steps.shell.TreeSize
@@ -4542,8 +4543,50 @@ of the code tree. It puts the size (as a count of 1024-byte blocks,
 aka 'KiB' or 'kibibytes') on the step's status text, and sets a build
 property named 'tree-size-KiB' with the same value.
 
+@node SetProperty
+@subsubsection SetProperty
 
-@node Build Properties,  , TreeSize, Simple ShellCommand Subclasses
+@bsindex buildbot.steps.shell.SetProperty
+
+This buildstep is similar to ShellCommand, except that it captures the
+output of the command into a property.  It is usually used like this:
+
+@example
+f.addStep(SetProperty(command="uname -a", property="uname"))
+@end example
+
+This runs @code{uname -a} and captures its stdout, stripped of leading
+and trailing whitespace, in the property "uname".  To avoid stripping,
+add @code{strip=False}.  The @code{property} argument can be specified
+as a @code{WithProperties} object.
+
+The more advanced usage allows you to specify a function to extract
+properties from the command output.  Here you can use regular
+expressions, string interpolation, or whatever you would like.
+The function is called with three arguments: the exit status of the
+command, its standard output as a string, and its standard error as
+a string.  It should return a dictionary containing all new properties.
+
+@example
+def glob2list(rc, stdout, stderr):
+    jpgs = [ l.strip() for l in stdout.split('\n') ]
+    return @{ 'jpgs' : jpgs @}
+f.addStep(SetProperty(command="ls -1 *.jpg", extract_fn=glob2list))
+@end example
+
+Note that any ordering relationship of the contents of stdout and
+stderr is lost.  For example, given
+
+@example
+f.addStep(SetProperty(
+    command="echo output1; echo error >&2; echo output2", 
+    extract_fn=my_extract))
+@end example
+
+Then @code{my_extract} will see @code{stdout="output1\noutput2\n"}
+and @code{stderr="error\n"}.
+
+@node Build Properties
 @subsubsection Build Properties
 
 @cindex build properties
