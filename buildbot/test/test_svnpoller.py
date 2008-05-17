@@ -117,7 +117,33 @@ class ComputePrefix(unittest.TestCase):
 # output from svn log on .../SVN-Repository/sample
 # (so it includes trunk and branches)
 sample_base = "file:///usr/home/warner/stuff/Projects/BuildBot/trees/misc/_trial_temp/test_vc/repositories/SVN-Repository/sample"
-sample_logentries = [None] * 4
+sample_logentries = [None] * 6
+
+sample_logentries[5] = """\
+<logentry
+   revision="6">
+<author>warner</author>
+<date>2006-10-01T19:35:16.165664Z</date>
+<paths>
+<path
+   action="D">/sample/branch/version.c</path>
+</paths>
+<msg>revised_to_2</msg>
+</logentry>
+"""
+
+sample_logentries[4] = """\
+<logentry
+   revision="5">
+<author>warner</author>
+<date>2006-10-01T19:35:16.165664Z</date>
+<paths>
+<path
+   action="D">/sample/branch</path>
+</paths>
+<msg>revised_to_2</msg>
+</logentry>
+"""
 
 sample_logentries[3] = """\
 <logentry
@@ -291,6 +317,27 @@ class ComputeChanges(unittest.TestCase):
         self.failUnlessEqual(len(changes), 1)
         self.failUnlessEqual(changes[0].branch, None)
         self.failUnlessEqual(changes[0].revision, '4')
+        self.failUnlessEqual(changes[0].files, ["version.c"])
+
+        # and now pull in r5 (should *not* create a change as it's a
+        # branch deletion
+        doc = s.parse_logs(make_changes_output(5))
+        newlast, logentries = s._filter_new_logentries(doc, newlast)
+        self.failUnlessEqual(newlast, 5)
+        # so we see revision 5 as being new
+        changes = s.create_changes(logentries)
+        self.failUnlessEqual(len(changes), 0)
+
+        # and now pull in r6 (should create a change as it's not
+        # deleting an entire branch
+        doc = s.parse_logs(make_changes_output(6))
+        newlast, logentries = s._filter_new_logentries(doc, newlast)
+        self.failUnlessEqual(newlast, 6)
+        # so we see revision 6 as being new
+        changes = s.create_changes(logentries)
+        self.failUnlessEqual(len(changes), 1)
+        self.failUnlessEqual(changes[0].branch, 'branch')
+        self.failUnlessEqual(changes[0].revision, '6')
         self.failUnlessEqual(changes[0].files, ["version.c"])
 
     def testFirstTime(self):

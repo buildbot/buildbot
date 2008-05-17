@@ -402,6 +402,7 @@ class SVNPoller(base.ChangeSource, util.ComparableMixin):
             branches = {}
             pathlist = el.getElementsByTagName("paths")[0]
             for p in pathlist.getElementsByTagName("path"):
+                action = p.getAttribute("action")
                 path = "".join([t.data for t in p.childNodes])
                 # the rest of buildbot is certaily not yet ready to handle
                 # unicode filenames, because they get put in RemoteCommands
@@ -411,21 +412,32 @@ class SVNPoller(base.ChangeSource, util.ComparableMixin):
                 if path.startswith("/"):
                     path = path[1:]
                 where = self._transform_path(path)
+
                 # if 'where' is None, the file was outside any project that
                 # we care about and we should ignore it
                 if where:
                     branch, filename = where
                     if not branch in branches:
-                        branches[branch] = []
-                    branches[branch].append(filename)
+                        branches[branch] = { 'files': []}
+                    branches[branch]['files'].append(filename)
 
-            for branch in branches:
-                c = Change(who=author,
-                           files=branches[branch],
-                           comments=comments,
-                           revision=revision,
-                           branch=branch)
-                changes.append(c)
+                    if not branches[branch].has_key('action'):
+                        branches[branch]['action'] = action
+
+            for branch in branches.keys():
+                action = branches[branch]['action']
+                files  = branches[branch]['files']
+                number_of_files_changed = len(files)
+
+                if action == u'D' and number_of_files_changed == 1 and files[0] == '':
+                    log.msg("Ignoring deletion of branch '%s'" % branch)
+                else:
+                    c = Change(who=author,
+                               files=files,
+                               comments=comments,
+                               revision=revision,
+                               branch=branch)
+                    changes.append(c)
 
         return changes
 
