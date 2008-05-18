@@ -2565,6 +2565,10 @@ class GitHelper(BaseHelper):
         yield w; w.getResult()
         w = self.dovc(tmp, ["add", "."])
         yield w; w.getResult()
+        w = self.dovc(tmp, ["config", "user.email", "buildbot-trial@localhost"])
+        yield w; w.getResult()
+        w = self.dovc(tmp, ["config", "user.name", "Buildbot Trial"])
+        yield w; w.getResult()
         w = self.dovc(tmp, ["commit", "-m", "initial_import"])
         yield w; w.getResult()
 
