@@ -244,8 +244,8 @@ class SetProperty(ShellCommand):
         if self.property:
             result = cmd.logs['stdio'].getText()
             if self.strip: result = result.strip()
-            propname = render_properties(self.property, self.build)
-            self.setProperty(propname, result)
+            propname = self.build.getProperties().render(self.property)
+            self.setProperty(propname, result, "SetProperty Step")
             self.property_changes[propname] = result
         else:
             log = cmd.logs['stdio']
@@ -253,7 +253,7 @@ class SetProperty(ShellCommand):
                     ''.join(log.getChunks([STDOUT], onlyText=True)),
                     ''.join(log.getChunks([STDERR], onlyText=True)))
             for k,v in new_props.items():
-                self.setProperty(k, v)
+                self.setProperty(k, v, "SetProperty Step")
             self.property_changes = new_props
 
     def createSummary(self, log):
