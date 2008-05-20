@@ -541,8 +541,8 @@ class VCBase(SignalMixin):
         self.shouldExist(self.workdir, "subdir", "subdir.c")
         if self.metadir:
             self.shouldExist(self.workdir, self.metadir)
-        self.failUnlessEqual(bs.getProperty("revision"), '')
-        self.failUnlessEqual(bs.getProperty("branch"), '')
+        self.failUnlessEqual(bs.getProperty("revision"), None)
+        self.failUnlessEqual(bs.getProperty("branch"), None)
         self.checkGotRevisionIsLatest(bs)
 
         self.touch(self.workdir, "newfile")
@@ -565,8 +565,8 @@ class VCBase(SignalMixin):
         self.shouldExist(self.workdir, "subdir", "subdir.c")
         if self.metadir:
             self.shouldExist(self.workdir, self.metadir)
-        self.failUnlessEqual(bs.getProperty("revision"), self.helper.trunk[0] or '')
-        self.failUnlessEqual(bs.getProperty("branch"), '')
+        self.failUnlessEqual(bs.getProperty("revision"), self.helper.trunk[0] or None)
+        self.failUnlessEqual(bs.getProperty("branch"), None)
         self.checkGotRevision(bs, self.helper.trunk[0])
         # leave the tree at HEAD
         return self.doBuild()
@@ -585,7 +585,7 @@ class VCBase(SignalMixin):
                            "version=%d" % self.helper.version)
         if self.metadir:
             self.shouldExist(self.workdir, self.metadir)
-        self.failUnlessEqual(bs.getProperty("revision"), '')
+        self.failUnlessEqual(bs.getProperty("revision"), None)
         self.checkGotRevisionIsLatest(bs)
 
         self.touch(self.workdir, "newfile")
@@ -609,7 +609,7 @@ class VCBase(SignalMixin):
         self.shouldContain(self.workdir, "version.c",
                            "version=%d" % self.helper.version)
         self.shouldExist(self.workdir, "newfile")
-        self.failUnlessEqual(bs.getProperty("revision"), '')
+        self.failUnlessEqual(bs.getProperty("revision"), None)
         self.checkGotRevisionIsLatest(bs)
 
         # now "update" to an older revision
@@ -623,7 +623,7 @@ class VCBase(SignalMixin):
         self.shouldContain(self.workdir, "version.c",
                            "version=%d" % (self.helper.version-1))
         self.failUnlessEqual(bs.getProperty("revision"),
-                             self.helper.trunk[-2] or '')
+                             self.helper.trunk[-2] or None)
         self.checkGotRevision(bs, self.helper.trunk[-2])
 
         # now update to the newer revision
@@ -637,7 +637,7 @@ class VCBase(SignalMixin):
         self.shouldContain(self.workdir, "version.c",
                            "version=%d" % self.helper.version)
         self.failUnlessEqual(bs.getProperty("revision"),
-                             self.helper.trunk[-1] or '')
+                             self.helper.trunk[-1] or None)
         self.checkGotRevision(bs, self.helper.trunk[-1])
 
 
@@ -674,7 +674,7 @@ class VCBase(SignalMixin):
         self.shouldNotExist(self.workdir, "newfile")
         self.touch(self.workdir, "newfile")
         self.touch(self.vcdir, "newvcfile")
-        self.failUnlessEqual(bs.getProperty("revision"), '')
+        self.failUnlessEqual(bs.getProperty("revision"), None)
         self.checkGotRevisionIsLatest(bs)
 
         d = self.doBuild() # copy rebuild clobbers new files
@@ -687,7 +687,7 @@ class VCBase(SignalMixin):
         self.shouldNotExist(self.workdir, "newfile")
         self.shouldExist(self.vcdir, "newvcfile")
         self.shouldExist(self.workdir, "newvcfile")
-        self.failUnlessEqual(bs.getProperty("revision"), '')
+        self.failUnlessEqual(bs.getProperty("revision"), None)
         self.checkGotRevisionIsLatest(bs)
         self.touch(self.workdir, "newfile")
 
@@ -698,7 +698,7 @@ class VCBase(SignalMixin):
     def _do_vctest_export_1(self, bs):
         self.shouldNotExist(self.workdir, self.metadir)
         self.shouldNotExist(self.workdir, "newfile")
-        self.failUnlessEqual(bs.getProperty("revision"), '')
+        self.failUnlessEqual(bs.getProperty("revision"), None)
         #self.checkGotRevisionIsLatest(bs)
         # VC 'export' is not required to have a got_revision
         self.touch(self.workdir, "newfile")
@@ -709,7 +709,7 @@ class VCBase(SignalMixin):
     def _do_vctest_export_2(self, bs):
         self.shouldNotExist(self.workdir, self.metadir)
         self.shouldNotExist(self.workdir, "newfile")
-        self.failUnlessEqual(bs.getProperty("revision"), '')
+        self.failUnlessEqual(bs.getProperty("revision"), None)
         #self.checkGotRevisionIsLatest(bs)
         # VC 'export' is not required to have a got_revision
 
@@ -744,7 +744,7 @@ class VCBase(SignalMixin):
         data = open(subdir_c, "r").read()
         self.failUnlessIn("Hello patched subdir.\\n", data)
         self.failUnlessEqual(bs.getProperty("revision"),
-                             self.helper.trunk[-1] or '')
+                             self.helper.trunk[-1] or None)
         self.checkGotRevision(bs, self.helper.trunk[-1])
 
         # make sure that a rebuild does not use the leftover patched workdir
@@ -758,7 +758,7 @@ class VCBase(SignalMixin):
                                 "subdir", "subdir.c")
         data = open(subdir_c, "r").read()
         self.failUnlessIn("Hello subdir.\\n", data)
-        self.failUnlessEqual(bs.getProperty("revision"), '')
+        self.failUnlessEqual(bs.getProperty("revision"), None)
         self.checkGotRevisionIsLatest(bs)
 
         # now make sure we can patch an older revision. We need at least two
@@ -783,7 +783,7 @@ class VCBase(SignalMixin):
         data = open(subdir_c, "r").read()
         self.failUnlessIn("Hello patched subdir.\\n", data)
         self.failUnlessEqual(bs.getProperty("revision"),
-                             self.helper.trunk[-2] or '')
+                             self.helper.trunk[-2] or None)
         self.checkGotRevision(bs, self.helper.trunk[-2])
 
         # now check that we can patch a branch
@@ -802,8 +802,8 @@ class VCBase(SignalMixin):
         data = open(subdir_c, "r").read()
         self.failUnlessIn("Hello patched subdir.\\n", data)
         self.failUnlessEqual(bs.getProperty("revision"),
-                             self.helper.branch[-1] or '')
-        self.failUnlessEqual(bs.getProperty("branch"), self.helper.branchname or '')
+                             self.helper.branch[-1] or None)
+        self.failUnlessEqual(bs.getProperty("branch"), self.helper.branchname or None)
         self.checkGotRevision(bs, self.helper.branch[-1])
 
 
@@ -2596,6 +2596,10 @@ class GitHelper(BaseHelper):
         log.msg("vc_revise" + self.gitrepo)
         w = self.dovc(self.repbase, ["clone", self.gitrepo, "gittmp"])
         yield w; w.getResult()
+        w = self.dovc(tmp, ["config", "user.email", "buildbot-trial@localhost"])
+        yield w; w.getResult()
+        w = self.dovc(tmp, ["config", "user.name", "Buildbot Trial"])
+        yield w; w.getResult()
 
         self.version += 1
         version_c = VERSION_C % self.version
@@ -2619,6 +2623,10 @@ class GitHelper(BaseHelper):
             rmdirRecursive(workdir)
 
         w = self.dovc(self.repbase, ["clone", self.gitrepo, workdir])
+        yield w; w.getResult()
+        w = self.dovc(workdir, ["config", "user.email", "buildbot-trial@localhost"])
+        yield w; w.getResult()
+        w = self.dovc(workdir, ["config", "user.name", "Buildbot Trial"])
         yield w; w.getResult()
 
         if branch is not None:
