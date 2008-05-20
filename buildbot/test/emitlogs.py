@@ -1,5 +1,3 @@
-#! /usr/bin/python
-
 import sys, time, os.path, StringIO
 
 mode = 0

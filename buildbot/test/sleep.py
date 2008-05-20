@@ -1,4 +1,3 @@
-#! /usr/bin/python
 
 import sys, time
 delay = int(sys.argv[1])
