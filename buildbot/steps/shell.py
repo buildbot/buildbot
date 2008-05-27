@@ -363,3 +363,56 @@ class Test(WarningCountingShellCommand):
     descriptionDone = ["test"]
     command = ["make", "test"]
 
+class PerlModuleTest(Test):
+    command=["prove", "--lib", "lib", "-r", "t"]
+    total = 0
+
+    def evaluateCommand(self, cmd):
+        lines = self.getLog('stdio').readlines()
+
+        re_test_result = re.compile("^(All tests successful)|(\d+)/(\d+) subtests failed|Files=\d+, Tests=(\d+),")
+
+        mos = map(lambda line: re_test_result.search(line), lines)
+        test_result_lines = [mo.groups() for mo in mos if mo]
+
+        if not test_result_lines:
+            return cmd.rc
+
+        test_result_line = test_result_lines[0]
+
+        success = test_result_line[0]
+
+        if success:
+            failed = 0
+
+            test_totals_line = test_result_lines[1]
+            total_str = test_totals_line[3]
+
+            rc = SUCCESS
+        else:
+            failed_str = test_result_line[1]
+            failed = int(failed_str)
+
+            total_str = test_result_line[2]
+
+            rc = FAILURE
+
+        total = int(total_str)
+        passed = total - failed
+
+        self.total, self.failed, self.passed = total, failed, passed
+
+        self.setProperty('tests-total', total, "PerlModuleTest")
+        self.setProperty('tests-failed', failed, "PerlModuleTest")
+        self.setProperty('tests-passed', passed, "PerlModuleTest")
+
+        self.warnings = failed
+
+        return rc
+
+    def getText(self, cmd, results):
+        if self.total:
+            return [ "%d failed, %d passed" % (self.failed, self.passed) ]
+        else:
+            return [ "no results" ]
+

@@ -639,3 +639,38 @@ class TreeSize(StepTester, unittest.TestCase):
                                  "treesize %d KiB" % kib)
         d.addCallback(_check)
         return d
+
+class PerlModuleTest(StepTester, unittest.TestCase):
+    def testAllTestsPassed(self):
+        self.masterbase = "Warnings.testAllTestsPassed"
+        step = self.makeStep(shell.PerlModuleTest)
+        output = \
+"""ok 1
+ok 2
+All tests successful
+Files=1, Tests=123, other stuff
+"""
+        log = step.addLog("stdio")
+        log.addStdout(output)
+        log.finish()
+        step.evaluateCommand(log)
+        self.failUnlessEqual(step.getProperty('tests-failed'), 0)
+        self.failUnlessEqual(step.getProperty('tests-total'), 123)
+        self.failUnlessEqual(step.getProperty('tests-passed'), 123)
+
+    def testFailures(self):
+        self.masterbase = "Warnings.testFailures"
+        step = self.makeStep(shell.PerlModuleTest)
+        output = \
+"""
+ok 1
+ok 2
+3/7 subtests failed
+"""
+        log = step.addLog("stdio")
+        log.addStdout(output)
+        log.finish()
+        step.evaluateCommand(log)
+        self.failUnlessEqual(step.getProperty('tests-failed'), 3)
+        self.failUnlessEqual(step.getProperty('tests-total'), 7)
+        self.failUnlessEqual(step.getProperty('tests-passed'), 4)

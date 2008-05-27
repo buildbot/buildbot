@@ -4,7 +4,7 @@ from buildbot import util
 from buildbot.process.base import Build
 from buildbot.process.buildstep import BuildStep
 from buildbot.steps.source import CVS, SVN
-from buildbot.steps.shell import Configure, Compile, Test
+from buildbot.steps.shell import Configure, Compile, Test, PerlModuleTest
 
 # deprecated, use BuildFactory.addStep
 def s(steptype, **kwargs):
@@ -81,7 +81,7 @@ class CPAN(BuildFactory):
         BuildFactory.__init__(self, [source])
         self.addStep(Configure, command=[perl, "Makefile.PL"])
         self.addStep(Compile, command=["make"])
-        self.addStep(Test, command=["make", "test"])
+        self.addStep(PerlModuleTest, command=["make", "test"])
 
 class Distutils(BuildFactory):
     def __init__(self, source, python="python", test=None):

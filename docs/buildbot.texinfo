@@ -4927,6 +4927,7 @@ file less verbose.
 * Compile::                     
 * Test::                        
 * TreeSize::                    
+* PerlModuleTest::
 * SetProperty::                    
 * Build Properties::            
 @end menu
@@ -4993,6 +4994,15 @@ This is a simple command that uses the 'du' tool to measure the size
 of the code tree. It puts the size (as a count of 1024-byte blocks,
 aka 'KiB' or 'kibibytes') on the step's status text, and sets a build
 property named 'tree-size-KiB' with the same value.
+
+@node PerlModuleTest, Build Properties, TreeSize, Simple ShellCommand Subclasses
+@subsubsection PerlModuleTest
+
+@bsindex buildbot.steps.shell.PerlModuleTest
+
+This is a simple command that knows how to run tests of perl modules.
+It parses the output to determine the number of tests passed and
+failed and total number executed, saving the results for later query.
 
 @node SetProperty
 @subsubsection SetProperty
