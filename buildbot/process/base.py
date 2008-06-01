@@ -309,6 +309,7 @@ class Build:
         # now that we have a build_status, we can set properties
         self.setupProperties()
         self.setupSlaveBuilder(slavebuilder)
+        slavebuilder.slave.updateSlaveStatus(buildStarted=build_status)
 
         # convert all locks into their real forms
         self.locks = [self.builder.botmaster.getLockByID(l)
@@ -318,10 +319,11 @@ class Build:
         self.remote = slavebuilder.remote
         self.remote.notifyOnDisconnect(self.lostRemote)
         d = self.deferred = defer.Deferred()
-        def _release_slave(res):
+        def _release_slave(res, slave, bs):
             self.slavebuilder.buildFinished()
+            slave.updateSlaveStatus(buildFinished=bs)
             return res
-        d.addCallback(_release_slave)
+        d.addCallback(_release_slave, self.slavebuilder.slave, build_status)
 
         try:
             self.setupBuild(expectations) # create .steps

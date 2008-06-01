@@ -96,6 +96,12 @@ class BuildSlave(NewCredPerspective, service.MultiService):
             return self.sendBuilderList()
         return defer.succeed(None)
 
+    def updateSlaveStatus(self, buildStarted=None, buildFinished=None):
+        if buildStarted:
+            self.slave_status.buildStarted(buildStarted)
+        if buildFinished:
+            self.slave_status.buildFinished(buildFinished)
+
     def attached(self, bot):
         """This is called when the slave connects.
 

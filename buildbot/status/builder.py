@@ -1743,6 +1743,7 @@ class SlaveStatus:
     def __init__(self, name):
         self.name = name
         self._lastMessageReceived = 0
+        self.runningBuilds = []
 
     def getName(self):
         return self.name
@@ -1754,6 +1755,8 @@ class SlaveStatus:
         return self.connected
     def lastMessageReceived(self):
         return self._lastMessageReceived
+    def getRunningBuilds(self):
+        return self.runningBuilds
 
     def setAdmin(self, admin):
         self.admin = admin
@@ -1763,6 +1766,11 @@ class SlaveStatus:
         self.connected = isConnected
     def setLastMessageReceived(self, when):
         self._lastMessageReceived = when
+
+    def buildStarted(self, build):
+        self.runningBuilds.append(build)
+    def buildFinished(self, build):
+        self.runningBuilds.remove(build)
 
 class Status:
     """

@@ -28,6 +28,8 @@ class BuildSlavesResource(HtmlResource):
         data += "<ol>\n"
         for name in s.getSlaveNames():
             slave = s.getSlave(name)
+            slave_status = s.botmaster.slaves[name].slave_status
+            isBusy = len(slave_status.getRunningBuilds())
             data += " <li>%s:\n" % name
             data += " <ul>\n"
             builder_links = ['<a href="%s">%s</a>'
@@ -53,8 +55,12 @@ class BuildSlavesResource(HtmlResource):
                     data += "  <li>Last heard from: %s " % age
                     data += '<font size="-1">(%s)</font>' % lt
                     data += "</li>\n"
+                    if isBusy:
+                        data += "<li>Slave is currently building.</li>"
+                    else:
+                        data += "<li>Slave is idle.</li>"
             else:
-                data += "  <li>Slave is NOT currently connected</li>\n"
+                data += "  <li><b>Slave is NOT currently connected</b></li>\n"
 
             data += " </ul>\n"
             data += " </li>\n"

@@ -26,6 +26,8 @@ c['schedulers'] = []
 
 f1 = factory.BuildFactory([s(dummy.RemoteDummy, timeout=1)])
 f2 = factory.BuildFactory([s(dummy.RemoteDummy, timeout=2)])
+f3 = factory.BuildFactory([s(dummy.RemoteDummy, timeout=3)])
+f4 = factory.BuildFactory([s(dummy.RemoteDummy, timeout=5)])
 
 c['builders'] = [
     {'name': 'b1', 'slavenames': ['bot1','bot2','bot3'],
@@ -40,6 +42,15 @@ c['builders'] = [
      'builddir': 'b1', 'factory': f2},
     ]
 
+"""
+
+config_busyness = config_1 + """
+c['builders'] = [
+    {'name': 'b1', 'slavenames': ['bot1'],
+     'builddir': 'b1', 'factory': f3},
+    {'name': 'b2', 'slavenames': ['bot1'],
+     'builddir': 'b2', 'factory': f4},
+    ]
 """
 
 class Slave(RunMixin, unittest.TestCase):
@@ -188,6 +199,84 @@ class Slave(RunMixin, unittest.TestCase):
         return d1
     def _testDontClaimPingingSlave_3(self, res):
         self.failUnlessEqual(res.getSlavename(), "bot1")
+
+
+class SlaveBusyness(RunMixin, unittest.TestCase):
+
+    def setUp(self):
+        RunMixin.setUp(self)
+        self.master.loadConfig(config_busyness)
+        self.master.startService()
+        d = self.connectSlave(["b1", "b2"])
+        return d
+
+    def doBuild(self, buildername):
+        br = BuildRequest("forced", SourceStamp())
+        d = br.waitUntilFinished()
+        self.control.getBuilder(buildername).requestBuild(br)
+        return d
+
+    def getRunningBuilds(self):
+        return len(self.status.getSlave("bot1").getRunningBuilds())
+
+    def testSlaveNotBusy(self):
+        self.failUnlessEqual(self.getRunningBuilds(), 0)
+        # now kick a build, wait for it to finish, then check again
+        d = self.doBuild("b1")
+        d.addCallback(self._testSlaveNotBusy_1)
+        return d
+
+    def _testSlaveNotBusy_1(self, res):
+        self.failUnlessEqual(self.getRunningBuilds(), 0)
+
+    def testSlaveBusyOneBuild(self):
+        d1 = self.doBuild("b1")
+        d2 = defer.Deferred()
+        reactor.callLater(.5, d2.callback, None)
+        d2.addCallback(self._testSlaveBusyOneBuild_1)
+        d1.addCallback(self._testSlaveBusyOneBuild_finished_1)
+        return defer.DeferredList([d1,d2])
+
+    def _testSlaveBusyOneBuild_1(self, res):
+        self.failUnlessEqual(self.getRunningBuilds(), 1)
+
+    def _testSlaveBusyOneBuild_finished_1(self, res):
+        self.failUnlessEqual(self.getRunningBuilds(), 0)
+
+    def testSlaveBusyTwoBuilds(self):
+        d1 = self.doBuild("b1")
+        d2 = self.doBuild("b2")
+        d3 = defer.Deferred()
+        reactor.callLater(.5, d3.callback, None)
+        d3.addCallback(self._testSlaveBusyTwoBuilds_1)
+        d1.addCallback(self._testSlaveBusyTwoBuilds_finished_1, d2)
+        return defer.DeferredList([d1,d3])
+
+    def _testSlaveBusyTwoBuilds_1(self, res):
+        self.failUnlessEqual(self.getRunningBuilds(), 2)
+
+    def _testSlaveBusyTwoBuilds_finished_1(self, res, d2):
+        self.failUnlessEqual(self.getRunningBuilds(), 1)
+        d2.addCallback(self._testSlaveBusyTwoBuilds_finished_2)
+        return d2
+
+    def _testSlaveBusyTwoBuilds_finished_2(self, res):
+        self.failUnlessEqual(self.getRunningBuilds(), 0)
+
+    def testSlaveDisconnect(self):
+        d1 = self.doBuild("b1")
+        d2 = defer.Deferred()
+        reactor.callLater(.5, d2.callback, None)
+        d2.addCallback(self._testSlaveDisconnect_1)
+        d1.addCallback(self._testSlaveDisconnect_finished_1)
+        return defer.DeferredList([d1, d2])
+
+    def _testSlaveDisconnect_1(self, res):
+        self.failUnlessEqual(self.getRunningBuilds(), 1)
+        return self.shutdownAllSlaves()
+
+    def _testSlaveDisconnect_finished_1(self, res):
+        self.failUnlessEqual(self.getRunningBuilds(), 0)
 
 config_3 = """
 from buildbot.process import factory
