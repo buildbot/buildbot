@@ -530,7 +530,7 @@ class WaterfallStatusResource(HtmlResource):
 
         data += "</table>\n"
 
-        data += '<hr /><div class="footer"\n'
+        data += '<hr /><div class="footer">\n'
 
         def with_args(req, remove_args=[], new_args=[], new_path=None):
             # sigh, nevow makes this sort of manipulation easier
