@@ -179,7 +179,9 @@ class GridStatusResource(HtmlResource):
             data += self.stamp_td(stamp)
         data += '</tr>\n'
 
-        for bn in status.getBuilderNames():
+        sortedBuilderNames = status.getBuilderNames()[:]
+        sortedBuilderNames.sort()
+        for bn in sortedBuilderNames:
             builds = [None] * len(stamps)
 
             builder = status.getBuilder(bn)
