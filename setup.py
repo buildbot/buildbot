@@ -85,7 +85,7 @@ setup_args = {
                 ("buildbot/test/mail", testmsgs),
                 ("buildbot/test/subdir", ["buildbot/test/subdir/emit.py"]),
                 ],
-    'scripts ':  scripts,
+    'scripts':  scripts,
     'cmdclass': {'install_data': install_data_twisted},
     }
 
