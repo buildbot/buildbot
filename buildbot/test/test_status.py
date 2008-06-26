@@ -1,6 +1,7 @@
 # -*- test-case-name: buildbot.test.test_status -*-
 
 import email, os
+import operator
 
 from zope.interface import implements
 from twisted.internet import defer, reactor
@@ -1194,3 +1195,36 @@ class MyContact(words.Contact):
 
     def send(self, msg):
         self.message += msg
+
+class StepStatistics(unittest.TestCase):
+    def testStepStatistics(self):
+        status = builder.BuildStatus(builder.BuilderStatus("test"), 123)
+        status.addStepWithName('step1')
+        status.addStepWithName('step2')
+        status.addStepWithName('step3')
+        status.addStepWithName('step4')
+
+        steps = status.getSteps()
+        (step1, step2, step3, step4) = steps
+
+        step1.setStatistic('test-prop', 1)
+        step3.setStatistic('test-prop', 2)
+        step4.setStatistic('test-prop', 4)
+
+        step1.setStatistic('other-prop', 27)
+        # Just to have some other properties around
+
+        self.failUnlessEqual(step1.getStatistic('test-prop'), 1,
+            'Retrieve an existing property')
+        self.failUnlessEqual(step1.getStatistic('test-prop', 99), 1,
+            "Don't default an existing property")
+        self.failUnlessEqual(step2.getStatistic('test-prop', 99), 99,
+            'Default a non-existant property')
+
+        self.failUnlessEqual(
+            status.getSummaryStatistic('test-prop', operator.add), 7,
+            'Sum property across the build')
+
+        self.failUnlessEqual(
+            status.getSummaryStatistic('test-prop', operator.add, 13), 20,
+            'Sum property across the build with initial value')

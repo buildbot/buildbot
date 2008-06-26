@@ -449,7 +449,6 @@ class LogFile:
             self.finish() # releases self.openfile, which will be closed
         del self.entries
 
-
 class HTMLLogFile:
     implements(interfaces.IStatusLog)
 
@@ -642,6 +641,11 @@ class BuildStepStatus(styles.Versioned):
     I represent a collection of output status for a
     L{buildbot.process.step.BuildStep}.
 
+    Statistics contain any information gleaned from a step that is
+    not in the form of a logfile.  As an example, steps that run
+    tests might gather statistics about the number of passed, failed,
+    or skipped tests.
+
     @type color: string
     @cvar color: color that this step feels best represents its
                  current mood. yellow,green,red,orange are the
@@ -655,11 +659,13 @@ class BuildStepStatus(styles.Versioned):
     @cvar text2: list of short texts added to the overall build description
     @type logs: dict of string -> L{buildbot.status.builder.LogFile}
     @ivar logs: logs of steps
+    @type statistics: dict
+    @ivar statistics: results from running this step
     """
     # note that these are created when the Build is set up, before each
     # corresponding BuildStep has started.
     implements(interfaces.IBuildStepStatus, interfaces.IStatusEvent)
-    persistenceVersion = 1
+    persistenceVersion = 2
 
     started = None
     finished = None
@@ -671,6 +677,7 @@ class BuildStepStatus(styles.Versioned):
     watchers = []
     updates = {}
     finishedWatchers = []
+    statistics = {}
 
     def __init__(self, parent):
         assert interfaces.IBuildStatus(parent)
@@ -680,6 +687,7 @@ class BuildStepStatus(styles.Versioned):
         self.watchers = []
         self.updates = {}
         self.finishedWatchers = []
+        self.statistics = {}
 
     def getName(self):
         """Returns a short string with the name of this step. This string
@@ -764,6 +772,16 @@ class BuildStepStatus(styles.Versioned):
         """
         return (self.results, self.text2)
 
+    def hasStatistic(self, name):
+        """Return true if this step has a value for the given statistic.
+        """
+        return self.statistics.has_key(name)
+
+    def getStatistic(self, name, default=None):
+        """Return the given statistic, if present
+        """
+        return self.statistics.get(name, default)
+
     # subscription interface
 
     def subscribe(self, receiver, updateInterval=10):
@@ -847,6 +865,11 @@ class BuildStepStatus(styles.Versioned):
     def setText2(self, text):
         self.text2 = text
 
+    def setStatistic(self, name, value):
+        """Set the given statistic.  Usually called by subclasses.
+        """
+        self.statistics[name] = value
+
     def stepFinished(self, results):
         self.finished = util.now()
         self.results = results
@@ -885,6 +908,10 @@ class BuildStepStatus(styles.Versioned):
     def upgradeToVersion1(self):
         if not hasattr(self, "urls"):
             self.urls = {}
+
+    def upgradeToVersion2(self):
+        if not hasattr(self, "statistics"):
+            self.statistics = {}
 
 
 class BuildStatus(styles.Versioned):
@@ -977,6 +1004,23 @@ class BuildStatus(styles.Versioned):
 
     def getTimes(self):
         return (self.started, self.finished)
+
+    _sentinel = [] # used as a sentinel to indicate unspecified initial_value
+    def getSummaryStatistic(self, name, summary_fn, initial_value=_sentinel):
+        """Summarize the named statistic over all steps in which it
+        exists, using combination_fn and initial_value to combine multiple
+        results into a single result.  This translates to a call to Python's
+        X{reduce}::
+            return reduce(summary_fn, step_stats_list, initial_value)
+        """
+        step_stats_list = [
+                st.getStatistic(name)
+                for st in self.steps
+                if st.hasStatistic(name) ]
+        if initial_value is self._sentinel:
+            return reduce(summary_fn, step_stats_list)
+        else:
+            return reduce(summary_fn, step_stats_list, initial_value)
 
     def isFinished(self):
         return (self.finished is not None)
