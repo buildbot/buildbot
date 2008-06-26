@@ -1237,7 +1237,7 @@ class BuildStatus(styles.Versioned):
         # in version 3, self.properties became a Properties object
         propdict = self.properties
         self.properties = Properties()
-        self.properties.update(propdict)
+        self.properties.update(propdict, "Upgrade from previous version")
 
     def upgradeLogfiles(self):
         # upgrade any LogFiles that need it. This must occur after we've been
