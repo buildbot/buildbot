@@ -4147,10 +4147,10 @@ do not.
 from buildbot.steps.shell import ShellCommand
 from buildbot.process.properties import WithProperties
 
-f.addStep(ShellCommand,
+f.addStep(ShellCommand(
           command=["tar", "czf",
                    WithProperties("build-%s.tar.gz", "revision"),
-                   "source"])
+                   "source"]))
 @end example
 
 If this BuildStep were used in a tree obtained from Subversion, it
@@ -4168,10 +4168,10 @@ in the parentheses, and WithProperties takes @emph{no} additional
 arguments:
 
 @example
-f.addStep(ShellCommand,
+f.addStep(ShellCommand(
           command=["tar", "czf",
                    WithProperties("build-%(revision)s.tar.gz"),
-                   "source"])
+                   "source"]))
 @end example
 
 Don't forget the extra ``s'' after the closing parenthesis! This is
@@ -4832,8 +4832,8 @@ command's environment. For example, to run tests with a different i18n
 language setting, you might use
 
 @example
-f.addStep(ShellCommand, command=["make", "test"],
-          env=@{'LANG': 'fr_FR'@})
+f.addStep(ShellCommand(command=["make", "test"],
+                       env=@{'LANG': 'fr_FR'@}))
 @end example
 
 These variable settings will override any existing ones in the
@@ -4846,9 +4846,10 @@ to any existing $PYTHONPATH setting, you would do something like the
 following:
 
 @example
-f.addStep(ShellCommand, command=["make", "test"],
-          env=@{'PYTHONPATH': ["/usr/local/lib/python2.3",
-                              "/home/buildbot/lib/python"] @})
+f.addStep(ShellCommand(
+              command=["make", "test"],
+              env=@{'PYTHONPATH': ["/usr/local/lib/python2.3",
+                                   "/home/buildbot/lib/python"] @}))
 @end example
 
 @item want_stdout
@@ -4878,8 +4879,9 @@ file will be polled on a regular basis (every couple of seconds) as
 the build runs, and any new text will be sent over to the buildmaster.
 
 @example
-f.addStep(ShellCommand, command=["make", "test"],
-          logfiles=@{"triallog": "_trial_temp/test.log"@})
+f.addStep(ShellCommand(
+              command=["make", "test"],
+              logfiles=@{"triallog": "_trial_temp/test.log"@}))
 @end example
 
 
@@ -4907,9 +4909,9 @@ This may be a bit too wide to fit comfortably on the Waterfall
 display.
 
 @example
-f.addStep(ShellCommand, command=["make", "test"],
-          description=["testing"],
-          descriptionDone=["tests"])
+f.addStep(ShellCommand(command=["make", "test"],
+                       description=["testing"],
+                       descriptionDone=["tests"]))
 @end example
 
 @end table
@@ -5091,7 +5093,7 @@ same place where the generated install tarball is placed.
 from buildbot.steps.python import BuildEPYDoc
 
 ...
-f.addStep(BuildEPYDoc, command=["epydoc", "-o", "apiref", "source/mypkg"])
+f.addStep(BuildEPYDoc(command=["epydoc", "-o", "apiref", "source/mypkg"]))
 @end example
 
 
@@ -5118,7 +5120,7 @@ with a ``pyflakes'' target. You might want to use something like
 from buildbot.steps.python import PyFlakes
 
 ...
-f.addStep(PyFlakes, command=["pyflakes", "src"])
+f.addStep(PyFlakes(command=["pyflakes", "src"]))
 @end example
 
 
@@ -5150,10 +5152,9 @@ master-side @file{~/public_html/ref.html}.
 from buildbot.steps.shell import ShellCommand
 from buildbot.steps.transfer import FileUpload
 
-f.addStep(ShellCommand, command=["make", "docs"])
-f.addStep(FileUpload,
-          slavesrc="docs/reference.html",
-          masterdest="~/public_html/ref.html")
+f.addStep(ShellCommand(command=["make", "docs"]))
+f.addStep(FileUpload(slavesrc="docs/reference.html",
+                     masterdest="~/public_html/ref.html"))
 @end example
 
 The @code{masterdest=} argument will be passed to os.path.expanduser,
@@ -5173,10 +5174,9 @@ side:
 from buildbot.steps.shell import ShellCommand
 from buildbot.steps.transfer import FileUpload
 
-f.addStep(FileDownload
-          mastersrc="~/todays_build_config.txt",
-          slavedest="build_config.txt")
-f.addStep(ShellCommand, command=["make", "config"])
+f.addStep(FileDownload(mastersrc="~/todays_build_config.txt",
+                       slavedest="build_config.txt"))
+f.addStep(ShellCommand(command=["make", "config"]))
 @end example
 
 Like @code{FileUpload}, the @code{mastersrc=} argument is interpreted
@@ -5219,9 +5219,9 @@ The counterpart to the Triggerable described in section
 
 @example
 from buildbot.steps.trigger import Trigger
-f.addStep(Trigger, schedulerNames=['build-prep'],
-                   waitForFinish=True,
-                   updateSourceStamp=True)
+f.addStep(Trigger(schedulerNames=['build-prep'],
+                  waitForFinish=True,
+                  updateSourceStamp=True))
 @end example
 
 The @code{schedulerNames=} argument lists the Triggerables
