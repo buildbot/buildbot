@@ -1,8 +1,0 @@
-precious ^m$
-precious ^s$
-precious ^svn$
-junk ^_trial_temp$
-junk ^MANIFEST$
-junk ^dist$
-junk ^_darcs$
-junk ^.darcs-boring$

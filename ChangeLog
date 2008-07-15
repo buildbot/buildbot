@@ -1,3 +1,74 @@
+2008-06-25  Dustin J. Mitchell  <dustin@zmanda.com>
+
+	* docs/buildbot.texinfo: Patch by Albert Hofkamp to use step
+	instances universally in the documentation. (#305)
+
+2008-06-25  Dustin J. Mitchell  <dustin@zmanda.com>
+
+	* buildbot/status/builder.py: Upgrading from version 2 to 3
+	of BuildStatus had an incorrect call to properties.update.
+	Closes #295.
+
+2008-06-13  Dustin J. Mitchell  <dustin@zmanda.com>
+
+	* buildbot/status/web/grid.py: Sort the builders in the
+	grid display (#300)
+
+2008-06-01  Dustin J. Mitchell	<dustin@zmanda.com>
+
+	* buildbot/buildslave.py buildbot/process/base.py
+	buildbot/status/builder.py buildbot/status/web/slaves.py
+	buildbot/test/test_slaves.py: short patch by Ben Hearsum to
+	make the /buildslaves WebStatus? page a little more useful. It
+	does do things: 1) bolds the 'slave is NOT connected' line
+	to make it more visible 2) shows whether each slave is busy
+	(building) or not (#278)
+
+2008-05-26  Dustin J. Mitchell  <dustin@zmanda.com>
+
+	* buildbot/process/factory.py buildbot/status/web/waterfall.py
+	buildbot/steps/shell.py buildbot/test/test_steps.py
+	docs/buildbot.texinfo: Patch by Neil Hemingway
+	<nhemingway@googlemail.com> to add a PerlModuleTest step (#228)
+
+2008-05-19  Dustin J. Mitchell  <dustin@zmanda.com>
+
+	* buildbot/changes/dnotify.py buildbot/clients/base.py
+	buildbot/clients/debug.py buildbot/clients/gtkPanes.py
+	buildbot/dnotify.py buildbot/test/emit.py
+	buildbot/test/emitlogs.py buildbot/test/sleep.py: Patch by
+	Gianluca Sforna <giallu@gmail.com> to remove unnecessary
+	shebangs about which rpmlint complains. (#282)
+
+2008-05-17  Dustin J. Mitchell  <dustin@zmanda.com>
+
+	* buildbot/test/test_vc.py: Configure username and email in
+	case the user running trial does not have git config in their
+	home directory. (#281)
+
+2008-05-16  Dustin J. Mitchell  <dustin@zmanda.com>
+
+	* buildbot/changes/svnpoller.py
+	buildbot/test/test_svnpoller.py: Patch by Neil Hemingway
+	<neil.hemingway@googlemail.com> that has svnpoller checking
+	whether the change reported by SVN is a branch deletion. If
+	it is, a buildbot Change is not created. (#261)
+
+2008-05-15  Dustin J. Mitchell  <dustin@zmanda.com>
+
+	* buildbot/status/words.py buildbot/test/test_status.py
+	docs/buildbot.texinfo: Patch by Neil Hemingway
+	<nhemingway@googlemail.com>: allow the IRC daemon to notify
+	users on build events, either via private messages or channel
+	messages (#171)
+
+2008-05-14  Dustin J. Mitchell  <dustin@zmanda.com>
+
+	* buildbot/steps/shell.py buildbot/test/test_properties.py
+	docs/buildbot.texinfo: A buildstep that is similar to
+	ShellCommand, except that it captures the output of the
+	command into a property. (#232)
+
 2008-04-29  Brian Warner  <warner@lothar.com>
 
 	* buildbot/slave/commands.py (SourceBase.doCopy): use 'cp -RPp'
@@ -28,6 +99,11 @@
 	* docs/buildbot.texinfo (IRC Bot): fix typo, patch by Christian
 	Theune. Closes #231.
 
+2008-04-28  Dustin J. Mitchell  <dustin@zmanda.com>
+
+	* buildbot/status/web/xmlrpc.py: Change xmlrpc_getStatus to
+	xmlrpc_getLastBuildResults as Brian suggested (#195)
+
 2008-04-24  Brian Warner  <warner@lothar.com>
 
 	* setup.py (setup_args): apply patches from zooko: prepare
@@ -40,11 +116,157 @@
 
 	* README (REQUIREMENTS): we handle twisted-8.0.1 just fine.
 
+2008-04-21  Dustin J. Mitchell  <dustin@zmanda.com>
+
+	* buildbot/process/base.py: Patch by Ben Hearsum
+	<bhearsum@wittydomain.com>: delay status notification
+	about build start until _startBuild_2 (after a lock has
+	been acquired) (#107)
+
+2008-04-20  Dustin J. Mitchell  <dustin@zmanda.com>
+
+	* buildbot/status/web/baseweb.py: Patch by Ben Hearsum
+	<bhearsum@wittydomain.com>: don't appear to be able to control
+	builds when you can't (#246)
+
 2008-04-15  Brian Warner  <warner@lothar.com>
 
 	* buildbot/__init__.py (version): bump to 0.7.7+ while between
 	releases
 	* docs/buildbot.texinfo: same
+
+2008-04-15  Dustin J. Mitchell  <dustin@zmanda.com>
+
+	* buildbot/process/properties.py
+	buildbot/test/test_properties.py docs/buildbot.texinfo:
+	Add support for shell-style substitutions, e.g.,
+	%(propname:-replacement)s and %(propname:+replacement)s (#234)
+
+2008-04-14  Dustin J. Mitchell  <dustin@zmanda.com>
+
+	* buildbot/process/properties.py buildbot/status/web/build.py
+	buildbot/steps/shell.py buildbot/steps/source.py: Display
+	build properties in the build status page.
+
+	* docs/buildbot.texinfo: Add properties to the documentation,
+	along with a nontrivial reorganization of the scheduler
+	section of the documentation. (#124)
+
+2008-04-13  Dustin J. Mitchell  <dustin@zmanda.com>
+
+	* buildbot/buildset.py buildbot/clients/debug.py
+	buildbot/master.py buildbot/process/base.py
+	buildbot/scheduler.py buildbot/scripts/runner.py
+	buildbot/scripts/tryclient.py buildbot/status/web/builder.py:
+	Remove custom properties, which are now largely redundant,
+	and on which the properties interface was modeled. (#124)
+
+2008-04-13  Dustin J. Mitchell  <dustin@zmanda.com>
+
+	* buildbot/buildset.py buildbot/interfaces.py
+	buildbot/process/properties.py buildbot/scheduler.py
+	buildbot/steps/trigger.py buildbot/test/runutils.py
+	buildbot/test/test_properties.py buildbot/test/test_run.py:
+	Make the scheduler classes actually provide properties to
+	the buildsets they submit.  Triggerable schedulers also do
+	a nice job of configurably propagating properties from the
+	triggering build. (#124)
+
+2008-04-12  Dustin J. Mitchell  <dustin@zmanda.com>
+
+	* buildbot/master.py buildbot/process/base.py
+	buildbot/process/properties.py buildbot/test/runutils.py
+	buildbot/test/test_properties.py: Support global properties,
+	defined with c['properties'] = {} in master.cfg (#124)
+
+2008-04-12  Dustin J. Mitchell  <dustin@zmanda.com>
+
+	* buildbot/buildset.py buildbot/buildslave.py
+	buildbot/process/base.py buildbot/process/builder.py
+	buildbot/process/properties.py buildbot/scheduler.py
+	buildbot/steps/trigger.py buildbot/test/runutils.py
+	buildbot/test/test_properties.py: Arrange for properties to
+	come down from schedulers, via BuildStep and BuildRequest
+	objects.  custom_props are still present, in parallel, but
+	will go eventually. Triggered builds no longer propagate
+	custom props. (#124)
+
+2008-04-12  Dustin J. Mitchell  <dustin@zmanda.com>
+
+	* buildbot/process/properties.py
+	buildbot/test/test_properties.py: Change Property.getProperty
+	to just return the property value, since having getProperty
+	return different things on different objects is confusing. (#124)
+
+2008-04-12  Dustin J. Mitchell  <dustin@zmanda.com>
+
+	* buildbot/process/base.py buildbot/process/buildstep.py
+	buildbot/process/properties.py buildbot/status/builder.py
+	buildbot/steps/python.py buildbot/steps/shell.py
+	buildbot/steps/source.py buildbot/steps/transfer.py
+	buildbot/test/test_properties.py buildbot/test/test_steps.py
+	buildbot/test/test_vc.py: Add and use a Properties class,
+	refactor the way properties are rendered, and update unit
+	tests accordingly. (#124)
+
+2008-04-12  Dustin J. Mitchell  <dustin@zmanda.com>
+
+	* buildbot/master.py buildbot/status/builder.py: Remove unused
+	and undocumented customBuildProperties config.	This did not
+	allow users to specify global properties; rather, it specified
+	descriptions for properties that were not used anywhere in
+	the codebase. (#124)
+
+2008-04-11  Dustin J. Mitchell  <dustin@zmanda.com>
+
+	* docs/buildbot.texinfo: fix typo (thanks to Christian Theune)
+
+2008-04-04  Dustin J. Mitchell  <dustin@zmanda.com>
+
+	* buildbot/clients/debug.py buildbot/master.py
+	buildbot/process/base.py: Patch by gward to teach
+	DebugPerspective and debugclient about custom build properties
+	(#87)
+
+2008-04-03  Dustin J. Mitchell  <dustin@zmanda.com>
+
+	* buildbot/buildset.py buildbot/master.py
+	buildbot/process/base.py buildbot/scheduler.py
+	buildbot/scripts/runner.py buildbot/scripts/tryclient.py
+	buildbot/status/builder.py buildbot/status/web/builder.py
+	buildbot/steps/shell.py buildbot/steps/trigger.py: Patch
+	by Paul Gain, Roch Gadson <rochester.gadsdon@bakbone.com>,
+	and Aaron Maxwell <amax@snaplogic.org> to implement "custom
+	properties": build properties that can be specified when the
+	build is initially created, e.g., by a scheduler. (#87)
+
+2008-04-03  Dustin J. Mitchell  <dustin@zmanda.com>
+
+	* buildbot/status/web/base.py: Patch from Aaron Maxwell
+	<amax@snaplogic.org>.  Refactor OneLineMixin.make_line(),
+	splitting in into two methods: one that gathers all the data
+	needed for a build (get_line_values), and one that takes that
+	data, and renders it into an HTML line (make_line).  (#145)
+
+2008-04-03  Dustin J. Mitchell  <dustin@zmanda.com>
+
+	* buildbot/slave/commands.py: Patch from Aaron
+	Maxwell <amax@snaplogic.org>: introduce a method
+	SVN.getSvnVersionCommand() that returns the shell command used
+	to determine the svn version.  Useful for subclassing. (#140)
+
+2008-04-03  Dustin J. Mitchell  <dustin@zmanda.com>
+
+	* buildbot/buildset.py buildbot/process/base.py
+	buildbot/scheduler.py buildbot/test/test_properties.py: Patch
+	by Dossy Shiobara <dossy@panoptic.com>: It is useful to know
+	the name of the scheduler that initiated a build request,
+	i.e., to conditionally FileUpload the results of a Nightly
+	scheduled build.  This patch passes the Scheduler along the
+	BuildRequest chain so that Build can setProperty("scheduler",
+	self.scheduler.name) in Build.setupStatus(). (#227)
+
+	* docs/buildbot.texinfo: docs for same
 
 2008-03-29  Brian Warner  <warner@lothar.com>
 
@@ -272,6 +494,23 @@
 	probably when we close stdin. This happens on my debian/sid
 	system, but not on older unixes, so I suspect some change in
 	behavior in the kernel or glibc or something similar.
+
+2008-03-12  Dustin J. Mitchell  <dustin@zmanda.com>
+
+	* buildbot/status/web/grid.py:	 Use "absolute" instead
+	  of "specific" sourcestamps; thanks to Ivan Chelyubeev
+	  <ivan.chelubeev@gmail.com> for providing the patch. (#72)
+
+2008-02-17  Dustin J. Mitchell  <dustin@zmanda.com>
+
+	Bug #72: the grid display
+	* buildbot/status/web/grid.py: new 'grid' display to complement waterfall
+	* buildbot/status/web/baseweb.py: add link to grid
+	* buildbot/status/web/build.py: add footer, fix redirects
+	* buildbot/status/web/builder.py: same
+	* buildbot/status/web/classic.css: grid styles
+	* buildbot/status/web/index.html: link to grid
+	* buildbot/status/web/waterfall.py: fix footer
 
 2008-02-05  Brian Warner  <warner@lothar.com>
 
