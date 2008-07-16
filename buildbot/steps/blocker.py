@@ -73,6 +73,15 @@ class Blocker(BuildStep):
     def _log(self, message, *args):
         log.msg("Blocker:" + self.name + ": " + (message % args))
 
+    def _buildsMatch(self, buildStatus1, buildStatus2):
+        """
+        Return true if buildStatus1 and buildStatus2 match for the
+        purposes of blocking: that is, the current Blocker is blocking
+        the buildStatus1's Build, and we need to know if buildStatus2's
+        Build is the right Build to wait on.
+        """
+        return buildStatus1.getNumber() == buildStatus2.getNumber()
+
     def _getBuildStatus(self, botmaster, builderName):
         try:
             # Get the buildbot.process.builder.Builder object for the
@@ -87,11 +96,28 @@ class Blocker(BuildStep):
         # The Builder's BuilderStatus object is where we can find out
         # what's going on right now ... like, say, the list of
         # BuildStatus objects representing any builds running now.
+        myBuildStatus = self.build.getStatus()
+        self._log("prospective builds must match %r (number = %r)",
+                  myBuildStatus, myBuildStatus.getNumber())
         builderStatus = builder.builder_status
-        current = builderStatus.getCurrentBuilds()
+        matchingBuild = None
 
-        if not current:
-            msg = "builder %r is idle (no builds a-building)" % builderName
+        # Get a list of all builds in this builder, past and present.
+        # This isn't really *all* builds for this builder, but it's
+        # everything that it has in memory.  Too bad BuilderStatus
+        # doesn't expose its cache of old builds in a nice way.
+        all_builds = (builderStatus.buildCache +
+                      builderStatus.getCurrentBuilds())
+
+        for buildStatus in all_builds:
+            self._log("considering build %r (number = %r)",
+                      buildStatus, buildStatus.getNumber())
+            if self._buildsMatch(myBuildStatus, buildStatus):
+                matchingBuild = buildStatus
+                break
+
+        if matchingBuild is None:
+            msg = "no matching builds found in builder %r" % builderName
             if self.idlePolicy == "error":
                 raise BadStepError(msg)
             elif self.idlePolicy == "ignore":
@@ -103,15 +129,8 @@ class Blocker(BuildStep):
                 self._blocking_builders.add(builderStatus)
                 return None
 
-            # N.B. when it comes time to look for last finished build,
-            # e.g. to see if it finished less than N sec ago,
-            # builderStatus.getLastFinishedBuild() could come
-            # in handy
-
-        # XXX what if there is more than one build a-building?
-        buildStatus = current[0]
         self._log("found builder %r: %r", builderName, builder)
-        return buildStatus
+        return matchingBuild
 
     def _getStepStatus(self, buildStatus, stepName):
         for step_status in buildStatus.getSteps():
@@ -230,12 +249,24 @@ class Blocker(BuildStep):
         self._blocking_steps.remove(stepStatus)
         self._checkFinished()
 
-    def _upstreamBuildStarted(self, builderStatus, receiver):
+    def _upstreamBuildStarted(self, builderStatus, buildStatus, receiver):
         assert isinstance(builderStatus, builder.BuilderStatus)
+        self._log("builder %r (%r) started a build; "
+                  "buildStatus=%r (number = %r)",
+                  builderStatus,
+                  builderStatus.getName(),
+                  buildStatus,
+                  buildStatus.getNumber())
+
+        myBuildStatus = self.build.getStatus()
+        self._log("testing for match (my number = %r)",
+                  myBuildStatus.getNumber())
+        if not self._buildsMatch(myBuildStatus, buildStatus):
+            self._log("but the just-started build does not match: "
+                      "ignoring it")
+            return
+
         builderStatus.unsubscribe(receiver)
-        buildStatus = builderStatus.getCurrentBuilds()[0]
-        self._log("builder %r (%r) started a build; buildStatus=%r",
-                  builderStatus, builderStatus.getName(), buildStatus)
 
         # Need to accumulate newly-discovered steps separately, so we
         # can add them to _blocking_steps en masse before subscribing to
@@ -294,7 +325,7 @@ class BuilderStatusReceiver:
         log.msg("BuilderStatusReceiver: "
                 "apparently, builder %r has started build %r"
                 % (name, buildStatus))
-        self.blocker._upstreamBuildStarted(self.builderStatus, self)
+        self.blocker._upstreamBuildStarted(self.builderStatus, buildStatus, self)
 
     def buildFinished(self, *args):
         pass
