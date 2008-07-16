@@ -97,8 +97,6 @@ class Blocker(BuildStep):
         # what's going on right now ... like, say, the list of
         # BuildStatus objects representing any builds running now.
         myBuildStatus = self.build.getStatus()
-        self._log("prospective builds must match %r (number = %r)",
-                  myBuildStatus, myBuildStatus.getNumber())
         builderStatus = builder.builder_status
         matchingBuild = None
 
@@ -110,8 +108,6 @@ class Blocker(BuildStep):
                       builderStatus.getCurrentBuilds())
 
         for buildStatus in all_builds:
-            self._log("considering build %r (number = %r)",
-                      buildStatus, buildStatus.getNumber())
             if self._buildsMatch(myBuildStatus, buildStatus):
                 matchingBuild = buildStatus
                 break
@@ -251,16 +247,10 @@ class Blocker(BuildStep):
 
     def _upstreamBuildStarted(self, builderStatus, buildStatus, receiver):
         assert isinstance(builderStatus, builder.BuilderStatus)
-        self._log("builder %r (%r) started a build; "
-                  "buildStatus=%r (number = %r)",
-                  builderStatus,
-                  builderStatus.getName(),
-                  buildStatus,
-                  buildStatus.getNumber())
+        self._log("builder %r (%r) started a build; buildStatus=%r",
+                  builderStatus, builderStatus.getName(), buildStatus)
 
         myBuildStatus = self.build.getStatus()
-        self._log("testing for match (my number = %r)",
-                  myBuildStatus.getNumber())
         if not self._buildsMatch(myBuildStatus, buildStatus):
             self._log("but the just-started build does not match: "
                       "ignoring it")
