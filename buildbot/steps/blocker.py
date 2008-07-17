@@ -73,12 +73,15 @@ class Blocker(BuildStep):
     def _log(self, message, *args):
         log.msg("Blocker:" + self.name + ": " + (message % args))
 
-    def _buildsMatch(self, buildStatus1, buildStatus2):
+    def buildsMatch(self, buildStatus1, buildStatus2):
         """
-        Return true if buildStatus1 and buildStatus2 match for the
-        purposes of blocking: that is, the current Blocker is blocking
-        the buildStatus1's Build, and we need to know if buildStatus2's
-        Build is the right Build to wait on.
+        Return true if a Blocker step running in buildStatus2 should be
+        blocked by an upstream step in buildStatus1, or false if those
+        two BuildStatus objects are from unrelated Builds.
+
+        Default implementation simply compares build numbers; you should
+        override this method to implement custom logic (e.g. by
+        comparing source stamps or some build property).
         """
         return buildStatus1.getNumber() == buildStatus2.getNumber()
 
@@ -108,7 +111,7 @@ class Blocker(BuildStep):
                       builderStatus.getCurrentBuilds())
 
         for buildStatus in all_builds:
-            if self._buildsMatch(myBuildStatus, buildStatus):
+            if self.buildsMatch(myBuildStatus, buildStatus):
                 matchingBuild = buildStatus
                 break
 
@@ -251,7 +254,7 @@ class Blocker(BuildStep):
                   builderStatus, builderStatus.getName(), buildStatus)
 
         myBuildStatus = self.build.getStatus()
-        if not self._buildsMatch(myBuildStatus, buildStatus):
+        if not self.buildsMatch(myBuildStatus, buildStatus):
             self._log("but the just-started build does not match: "
                       "ignoring it")
             return
