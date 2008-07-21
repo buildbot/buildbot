@@ -6,6 +6,7 @@ from twisted.web import html
 import urllib
 
 import time
+import operator
 
 from buildbot import interfaces, util
 from buildbot import version
@@ -110,8 +111,8 @@ class BuildTopBox(components.Adapter):
         number = b.getNumber()
         url = path_to_build(req, b)
         text = b.getText()
-        #tests_failed = b.sumStepProperty('tests-failed')
-        #if tests_failed: text.extend(["Failed tests: %d" % tests_failed])
+        tests_failed = b.getSummaryStatistic('failed', operator.add)
+        if tests_failed: text.extend(["Failed tests: %d" % tests_failed])
         # TODO: maybe add logs?
         # TODO: add link to the per-build page at 'url'
         c = b.getColor()
