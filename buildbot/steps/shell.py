@@ -322,6 +322,9 @@ class WarningCountingShellCommand(ShellCommand):
         if self.warnCount:
             self.addCompleteLog("warnings", "\n".join(warnings) + "\n")
 
+        warnings_stat = self.step_status.getStatistic('warnings', 0)
+        self.step_status.setStatistic('warnings', warnings_stat + self.warnCount)
+
         try:
             old_count = self.getProperty("warnings-count")
         except KeyError:
@@ -363,6 +366,36 @@ class Test(WarningCountingShellCommand):
     descriptionDone = ["test"]
     command = ["make", "test"]
 
+    def setTestResults(self, total=0, failed=0, passed=0, warnings=0):
+        """
+        Called by subclasses to set the relevant statistics; this actually
+        adds to any statistics already present
+        """
+        total += self.step_status.getStatistic('total', 0)
+        self.step_status.setStatistic('total', total)
+        failed += self.step_status.getStatistic('failed', 0)
+        self.step_status.setStatistic('failed', failed)
+        warnings += self.step_status.getStatistic('warnings', 0)
+        self.step_status.setStatistic('warnings', warnings)
+        passed += self.step_status.getStatistic('passed', 0)
+        self.step_status.setStatistic('passed', passed)
+
+    def getText(self, cmd, results):
+        if self.step_status.hasStatistic('total'):
+            total, failed, passed, warnings = \
+                [ self.step_status.getStatistic(n,0)
+                  for n in 'total', 'failed', 'passed', 'warnings' ]
+            if not total: total = failed + passed + warnings
+
+            rv = []
+            if total: rv.append('%d tests' % total)
+            if passed: rv.append('%d passed' % passed)
+            if warnings: rv.append('%d warnings' % warnings)
+            if failed: rv.append('%d failed' % failed)
+            return rv
+        else:
+            return [ "no test results" ]
+
 class PerlModuleTest(Test):
     command=["prove", "--lib", "lib", "-r", "t"]
     total = 0
@@ -400,19 +433,6 @@ class PerlModuleTest(Test):
         total = int(total_str)
         passed = total - failed
 
-        self.total, self.failed, self.passed = total, failed, passed
-
-        self.setProperty('tests-total', total, "PerlModuleTest")
-        self.setProperty('tests-failed', failed, "PerlModuleTest")
-        self.setProperty('tests-passed', passed, "PerlModuleTest")
-
-        self.warnings = failed
+        self.setTestResults(total=total, failed=failed, passed=passed)
 
         return rc
-
-    def getText(self, cmd, results):
-        if self.total:
-            return [ "%d failed, %d passed" % (self.failed, self.passed) ]
-        else:
-            return [ "no results" ]
-
