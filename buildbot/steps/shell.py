@@ -371,21 +371,23 @@ class Test(WarningCountingShellCommand):
         Called by subclasses to set the relevant statistics; this actually
         adds to any statistics already present
         """
-        total += self.step_status.getStatistic('total', 0)
-        self.step_status.setStatistic('total', total)
-        failed += self.step_status.getStatistic('failed', 0)
-        self.step_status.setStatistic('failed', failed)
-        warnings += self.step_status.getStatistic('warnings', 0)
-        self.step_status.setStatistic('warnings', warnings)
-        passed += self.step_status.getStatistic('passed', 0)
-        self.step_status.setStatistic('passed', passed)
+        total += self.step_status.getStatistic('tests-total', 0)
+        self.step_status.setStatistic('tests-total', total)
+        failed += self.step_status.getStatistic('tests-failed', 0)
+        self.step_status.setStatistic('tests-failed', failed)
+        warnings += self.step_status.getStatistic('tests-warnings', 0)
+        self.step_status.setStatistic('tests-warnings', warnings)
+        passed += self.step_status.getStatistic('tests-passed', 0)
+        self.step_status.setStatistic('tests-passed', passed)
 
     def getText(self, cmd, results):
-        if self.step_status.hasStatistic('total'):
-            total, failed, passed, warnings = \
-                [ self.step_status.getStatistic(n,0)
-                  for n in 'total', 'failed', 'passed', 'warnings' ]
-            if not total: total = failed + passed + warnings
+        if self.step_status.hasStatistic('tests-total'):
+            total = self.step_status.getStatistic("tests-total", 0)
+            failed = self.step_status.getStatistic("tests-failed", 0)
+            passed = self.step_status.getStatistic("tests-passed", 0)
+            warnings = self.step_status.getStatistic("tests-warnings", 0)
+            if not total:
+                total = failed + passed + warnings
 
             rv = []
             if total: rv.append('%d tests' % total)

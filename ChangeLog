@@ -1,5 +1,13 @@
 2008-07-23  Brian Warner  <warner@lothar.com>
 
+	* buildbot/steps/shell.py (Test.setTestResults): set statistics
+	with names like "tests-total" instead of just "total".
+	(Test.getText): same
+	* buildbot/test/test_steps.py (PerlModuleTest): use
+	getStatistic (with "tests-total") instead of getProperty, and call
+	it on the step_status, not the step itself. This pair makes the
+	PerlModuleTest pass again
+
 	* docs/buildbot.texinfo: update node names and menus
 	* .darcs-boring: resurrect this file after it was accidentally
 	deleted

@@ -654,9 +654,10 @@ Files=1, Tests=123, other stuff
         log.addStdout(output)
         log.finish()
         step.evaluateCommand(log)
-        self.failUnlessEqual(step.getProperty('tests-failed'), 0)
-        self.failUnlessEqual(step.getProperty('tests-total'), 123)
-        self.failUnlessEqual(step.getProperty('tests-passed'), 123)
+        ss = step.step_status
+        self.failUnlessEqual(ss.getStatistic('tests-failed'), 0)
+        self.failUnlessEqual(ss.getStatistic('tests-total'), 123)
+        self.failUnlessEqual(ss.getStatistic('tests-passed'), 123)
 
     def testFailures(self):
         self.masterbase = "Warnings.testFailures"
@@ -671,6 +672,7 @@ ok 2
         log.addStdout(output)
         log.finish()
         step.evaluateCommand(log)
-        self.failUnlessEqual(step.getProperty('tests-failed'), 3)
-        self.failUnlessEqual(step.getProperty('tests-total'), 7)
-        self.failUnlessEqual(step.getProperty('tests-passed'), 4)
+        ss = step.step_status
+        self.failUnlessEqual(ss.getStatistic('tests-failed'), 3)
+        self.failUnlessEqual(ss.getStatistic('tests-total'), 7)
+        self.failUnlessEqual(ss.getStatistic('tests-passed'), 4)
