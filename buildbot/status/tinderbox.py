@@ -172,7 +172,7 @@ class TinderboxMailNotifier(mail.MailNotifier):
             text += "%s build: %s\n" % (t, self.columnName)
         elif isinstance(self.columnName, WithProperties):
             # interpolate the WithProperties instance, use that
-            text += "%s build: %s\n" % (t, self.columnName.render(build))
+            text += "%s build: %s\n" % (t, build.getProperties().render(self.columnName))
         else:
             raise Exception("columnName is an unhandled value")
         text += "%s errorparser: %s\n" % (t, self.errorparser)
