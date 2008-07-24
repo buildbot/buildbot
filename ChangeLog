@@ -1,5 +1,6 @@
 2008-07-23  Brian Warner  <warner@lothar.com>
 
+	* docs/buildbot.texinfo: update node names and menus
 	* .darcs-boring: resurrect this file after it was accidentally
 	deleted
 

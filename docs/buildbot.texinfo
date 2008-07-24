@@ -109,7 +109,7 @@ Concepts
 * BuildRequest::                
 * Builder::                     
 * Users::                       
-* Build Properties::
+* Build Properties::            
 
 Version Control Systems
 
@@ -134,20 +134,20 @@ Configuration
 * Change Sources and Schedulers::  
 * Setting the slaveport::       
 * Buildslave Specifiers::       
-* Defining Global Properties::           
+* Defining Global Properties::  
 * Defining Builders::           
 * Defining Status Targets::     
 * Debug options::               
 
 Change Sources and Schedulers
 
-* Scheduler Scheduler::             
+* Scheduler Scheduler::         
 * AnyBranchScheduler::          
-* Dependent Scheduler::          
+* Dependent Scheduler::         
 * Periodic Scheduler::          
-* Nightly Scheduler::          
-* Try Schedulers::          
-* Triggerable Scheduler::          
+* Nightly Scheduler::           
+* Try Schedulers::              
+* Triggerable Scheduler::       
 
 Buildslave Specifiers
 
@@ -187,7 +187,7 @@ Build Process
 Build Steps
 
 * Common Parameters::           
-* Using Build Properties::
+* Using Build Properties::      
 * Source Checkout::             
 * ShellCommand::                
 * Simple ShellCommand Subclasses::  
@@ -214,6 +214,8 @@ Simple ShellCommand Subclasses
 * Compile::                     
 * Test::                        
 * TreeSize::                    
+* PerlModuleTest::              
+* SetProperty::                 
 
 Python BuildSteps
 
@@ -1238,7 +1240,7 @@ configure it properly.
 * BuildRequest::                
 * Builder::                     
 * Users::                       
-* Build Properties::
+* Build Properties::            
 @end menu
 
 @node Version Control Systems, Schedulers, Concepts, Concepts
@@ -1894,7 +1896,7 @@ the likelihood that the user saw the given message (based upon how long the
 user has been inactive on the channel), which might prompt the Problem
 Hassler logic to send them an email message instead.
 
-@node Live Status Clients
+@node Live Status Clients,  , IRC Nicknames, Users
 @subsection Live Status Clients
 
 The Buildbot also offers a PB-based status client interface which can
@@ -1905,7 +1907,7 @@ status client could then be used as a message-delivery service, providing an
 alternative way to deliver low-latency high-interruption messages to the
 developer (like ``hey, you broke the build'').
 
-@node Build Properties
+@node Build Properties,  , Users, Concepts
 @section Build Properties
 @cindex Properties
 
@@ -1979,7 +1981,7 @@ understand how to fill in each section properly.
 * Change Sources and Schedulers::  
 * Setting the slaveport::       
 * Buildslave Specifiers::       
-* Defining Global Properties::           
+* Defining Global Properties::  
 * Defining Builders::           
 * Defining Status Targets::     
 * Debug options::               
@@ -2230,16 +2232,16 @@ docstrings there are the best source of documentation on the arguments
 taken by each one.
 
 @menu
-* Scheduler Scheduler::             
+* Scheduler Scheduler::         
 * AnyBranchScheduler::          
-* Dependent Scheduler::          
+* Dependent Scheduler::         
 * Periodic Scheduler::          
-* Nightly Scheduler::          
-* Try Schedulers::          
-* Triggerable Scheduler::          
+* Nightly Scheduler::           
+* Try Schedulers::              
+* Triggerable Scheduler::       
 @end menu
 
-@node Scheduler Scheduler
+@node Scheduler Scheduler, AnyBranchScheduler, Change Sources and Schedulers, Change Sources and Schedulers
 @subsection Scheduler Scheduler
 @slindex buildbot.scheduler.Scheduler
 
@@ -2304,7 +2306,7 @@ Schedulers only pay attention to the default branch: any changes
 on other branches are ignored by these Schedulers. Each Scheduler
 triggers a different set of Builders, referenced by name.
 
-@node AnyBranchScheduler
+@node AnyBranchScheduler, Dependent Scheduler, Scheduler Scheduler, Change Sources and Schedulers
 @subsection AnyBranchScheduler
 @slindex buildbot.scheduler.AnyBranchScheduler
 
@@ -2339,7 +2341,7 @@ triggered by an important change.  The default value of None means
 that all Changes are important.
 @end table
 
-@node Dependent Scheduler
+@node Dependent Scheduler, Periodic Scheduler, AnyBranchScheduler, Change Sources and Schedulers
 @subsection Dependent Scheduler
 @cindex Dependent
 @cindex Dependencies
@@ -2403,7 +2405,7 @@ package = scheduler.Dependent("build-package",
 c['schedulers'] = [tests, package]
 @end example
 
-@node Periodic Scheduler
+@node Periodic Scheduler, Nightly Scheduler, Dependent Scheduler, Change Sources and Schedulers
 @subsection Periodic Scheduler
 @slindex buildbot.scheduler.Periodic
 
@@ -2438,7 +2440,7 @@ between builds, not the absolute time-of-day of each Build, so this
 could easily wind up a ``daily'' or ``every afternoon'' scheduler
 depending upon when it was first activated.
 
-@node Nightly Scheduler
+@node Nightly Scheduler, Try Schedulers, Periodic Scheduler, Change Sources and Schedulers
 @subsection Nightly Scheduler
 @slindex buildbot.scheduler.Nightly
 
@@ -2527,7 +2529,7 @@ s = Nightly(name='SleighPreflightCheck',
         minute=0)
 @end example
 
-@node Try Schedulers
+@node Try Schedulers, Triggerable Scheduler, Nightly Scheduler, Change Sources and Schedulers
 @subsection Try Schedulers
 @slindex buildbot.scheduler.Try_Jobdir
 @slindex buildbot.scheduler.Try_Userpass
@@ -2542,7 +2544,7 @@ by the @code{jobdir} parameter, while the latter listens for PB
 connections on a specific @code{port}, and authenticates against
 @code{userport}.
 
-@node Triggerable Scheduler
+@node Triggerable Scheduler,  , Try Schedulers, Change Sources and Schedulers
 @subsection Triggerable Scheduler
 @cindex Triggers
 @slindex buildbot.scheduler.Triggerable
@@ -2647,7 +2649,7 @@ and they are all configured to contact the buildmaster at
 @code{localhost:10000}.
 
 
-@node Buildslave Specifiers
+@node Buildslave Specifiers, Defining Global Properties, Setting the slaveport, Configuration
 @section Buildslave Specifiers
 
 @bcindex c['slaves']
@@ -2762,7 +2764,7 @@ c['slaves'] = [BuildSlave('bot-solaris', 'solarispasswd',
               ]
 @end example
 
-@node Defining Global Properties
+@node Defining Global Properties, Defining Builders, Buildslave Specifiers, Configuration
 @section Defining Global Properties
 @bcindex c['properties']
 @cindex Properties
@@ -2778,7 +2780,7 @@ c['properties'] = @{
 @}
 @end example
 
-@node Defining Builders
+@node Defining Builders, Defining Status Targets, Defining Global Properties, Configuration
 @section Defining Builders
 
 @bcindex c['builders']
@@ -2858,7 +2860,7 @@ move them over to the active category.
 @end table
 
 
-@node Defining Status Targets
+@node Defining Status Targets, Debug options, Defining Builders, Configuration
 @section Defining Status Targets
 
 The Buildmaster has a variety of ways to present build status to
@@ -4002,7 +4004,7 @@ behavior.
 * Build Factories::             
 @end menu
 
-@node Build Steps
+@node Build Steps, Interlocks, Build Process, Build Process
 @section Build Steps
 
 @code{BuildStep}s are usually specified in the buildmaster's
@@ -4037,7 +4039,7 @@ control each.
 
 @menu
 * Common Parameters::           
-* Using Build Properties::
+* Using Build Properties::      
 * Source Checkout::             
 * ShellCommand::                
 * Simple ShellCommand Subclasses::  
@@ -4047,7 +4049,7 @@ control each.
 * Writing New BuildSteps::      
 @end menu
 
-@node Common Parameters
+@node Common Parameters, Using Build Properties, Build Steps, Build Steps
 @subsection Common Parameters
 
 The standard @code{Build} runs a series of @code{BuildStep}s in order,
@@ -4098,7 +4100,7 @@ names. Also note that all Locks must have unique names.
 
 @end table
 
-@node Using Build Properties
+@node Using Build Properties, Source Checkout, Common Parameters, Build Steps
 @subsection Using Build Properties
 @cindex Properties
 
@@ -4269,7 +4271,7 @@ contain the name of that scheduler.
 @end table
 
 
-@node Source Checkout
+@node Source Checkout, ShellCommand, Using Build Properties, Build Steps
 @subsection Source Checkout
 
 The first step of any build is typically to acquire the source code
@@ -4929,8 +4931,8 @@ file less verbose.
 * Compile::                     
 * Test::                        
 * TreeSize::                    
-* PerlModuleTest::
-* SetProperty::                    
+* PerlModuleTest::              
+* SetProperty::                 
 @end menu
 
 @node Configure, Compile, Simple ShellCommand Subclasses, Simple ShellCommand Subclasses
@@ -4986,7 +4988,7 @@ source code filenames involved).
 This is meant to handle unit tests. The default command is @code{make
 test}, and the @code{warnOnFailure} flag is set.
 
-@node TreeSize
+@node TreeSize, PerlModuleTest, Test, Simple ShellCommand Subclasses
 @subsubsection TreeSize
 
 @bsindex buildbot.steps.shell.TreeSize
@@ -4996,7 +4998,7 @@ of the code tree. It puts the size (as a count of 1024-byte blocks,
 aka 'KiB' or 'kibibytes') on the step's status text, and sets a build
 property named 'tree-size-KiB' with the same value.
 
-@node PerlModuleTest
+@node PerlModuleTest, SetProperty, TreeSize, Simple ShellCommand Subclasses
 @subsubsection PerlModuleTest
 
 @bsindex buildbot.steps.shell.PerlModuleTest
@@ -5005,7 +5007,7 @@ This is a simple command that knows how to run tests of perl modules.
 It parses the output to determine the number of tests passed and
 failed and total number executed, saving the results for later query.
 
-@node SetProperty
+@node SetProperty,  , PerlModuleTest, Simple ShellCommand Subclasses
 @subsubsection SetProperty
 
 @bsindex buildbot.steps.shell.SetProperty
@@ -5048,7 +5050,7 @@ f.addStep(SetProperty(
 Then @code{my_extract} will see @code{stdout="output1\noutput2\n"}
 and @code{stderr="error\n"}.
 
-@node Python BuildSteps
+@node Python BuildSteps, Transferring Files, Simple ShellCommand Subclasses, Build Steps
 @subsection Python BuildSteps
 
 Here are some BuildSteps that are specifcally useful for projects
@@ -5059,7 +5061,7 @@ implemented in Python.
 * PyFlakes::                    
 @end menu
 
-@node BuildEPYDoc
+@node BuildEPYDoc, PyFlakes, Python BuildSteps, Python BuildSteps
 @subsubsection BuildEPYDoc
 
 @bsindex buildbot.steps.python.BuildEPYDoc
