@@ -111,7 +111,7 @@ class BuildTopBox(components.Adapter):
         number = b.getNumber()
         url = path_to_build(req, b)
         text = b.getText()
-        tests_failed = b.getSummaryStatistic('failed', operator.add, 0)
+        tests_failed = b.getSummaryStatistic('tests-failed', operator.add, 0)
         if tests_failed: text.extend(["Failed tests: %d" % tests_failed])
         # TODO: maybe add logs?
         # TODO: add link to the per-build page at 'url'
