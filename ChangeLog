@@ -1,3 +1,8 @@
+2008-07-23  Brian Warner  <warner@lothar.com>
+
+	* .darcs-boring: resurrect this file after it was accidentally
+	deleted
+
 2008-06-25  Dustin J. Mitchell  <dustin@zmanda.com>
 
 	* docs/buildbot.texinfo: Patch by Albert Hofkamp to use step
