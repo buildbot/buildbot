@@ -1,5 +1,8 @@
 2008-07-23  Brian Warner  <warner@lothar.com>
 
+	* buildbot/status/web/build.py (StatusResourceBuild.stop): fix
+	failure due to typo, caught by pyflakes
+
 	* buildbot/steps/shell.py (Test.setTestResults): set statistics
 	with names like "tests-total" instead of just "total".
 	(Test.getText): same
