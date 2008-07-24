@@ -8,6 +8,8 @@ from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE, STDOUT, STDERR
 # for existing configurations that import WithProperties from here.  We like
 # to move this class around just to keep our readers guessing.
 from buildbot.process.properties import WithProperties
+_hush_pyflakes = [WithProperties]
+del _hush_pyflakes
 
 class ShellCommand(LoggingBuildStep):
     """I run a single shell command on the buildslave. I return FAILURE if

@@ -1,5 +1,5 @@
 from buildbot.process.buildstep import LoggingBuildStep, SUCCESS, FAILURE, EXCEPTION
-from buildbot.process.properties import WithProperties, Properties
+from buildbot.process.properties import Properties
 from buildbot.scheduler import Triggerable
 from twisted.internet import defer
 

@@ -1,9 +1,6 @@
 import re
 import weakref
-from zope.interface import implements
 from buildbot import util
-from twisted.python import log
-from twisted.python.failure import Failure
 
 class Properties(util.ComparableMixin):
     """

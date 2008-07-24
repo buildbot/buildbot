@@ -8,7 +8,6 @@ from twisted.python import log
 from twisted.python.failure import Failure
 from twisted.web.util import formatFailure
 
-from buildbot import util
 from buildbot import interfaces
 from buildbot.status import progress
 from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE, SKIPPED, \
@@ -1094,3 +1093,6 @@ class LoggingBuildStep(BuildStep):
 
 # (WithProeprties used to be available in this module)
 from buildbot.process.properties import WithProperties
+_hush_pyflakes = [WithProperties]
+del _hush_pyflakes
+

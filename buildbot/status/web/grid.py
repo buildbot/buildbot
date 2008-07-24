@@ -1,9 +1,9 @@
 from __future__ import generators
 
-import sys, string, types, time, os.path
+import sys, time, os.path
 import urllib
 
-from buildbot import interfaces, util
+from buildbot import util
 from buildbot import version
 from buildbot.status.web.base import HtmlResource
 

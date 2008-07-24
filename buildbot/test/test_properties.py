@@ -7,7 +7,6 @@ from twisted.trial import unittest
 from buildbot.sourcestamp import SourceStamp
 from buildbot.process import base
 from buildbot.process.properties import WithProperties, Properties
-from buildbot.steps.shell import ShellCommand
 from buildbot.status import builder
 from buildbot.slave.commands import rmdirRecursive
 from buildbot.test.runutils import RunMixin
