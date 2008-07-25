@@ -631,7 +631,7 @@ class BuildStep:
     def getProperty(self, propname):
         return self.build.getProperty(propname)
 
-    def setProperty(self, propname, value, source):
+    def setProperty(self, propname, value, source="Step"):
         self.build.setProperty(propname, value, source)
 
     def startStep(self, remote):

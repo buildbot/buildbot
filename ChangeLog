@@ -1,5 +1,9 @@
 2008-07-24  Brian Warner  <warner@lothar.com>
 
+	* buildbot/process/buildstep.py (BuildStep.setProperty): provide a
+	default value for source=, to accomodate custom buildsteps that
+	don't otherwise provide one
+
 	* buildbot/master.py (DebugPerspective.perspective_requestBuild):
 	fix variable-name collision that broke the debugclient's 'force
 	build' button
