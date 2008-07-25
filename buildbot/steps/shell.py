@@ -383,6 +383,7 @@ class Test(WarningCountingShellCommand):
         self.step_status.setStatistic('tests-passed', passed)
 
     def getText(self, cmd, results):
+        text = WarningCountingShellCommand.getText(self, cmd, results)
         if self.step_status.hasStatistic('tests-total'):
             total = self.step_status.getStatistic("tests-total", 0)
             failed = self.step_status.getStatistic("tests-failed", 0)
@@ -391,14 +392,15 @@ class Test(WarningCountingShellCommand):
             if not total:
                 total = failed + passed + warnings
 
-            rv = []
-            if total: rv.append('%d tests' % total)
-            if passed: rv.append('%d passed' % passed)
-            if warnings: rv.append('%d warnings' % warnings)
-            if failed: rv.append('%d failed' % failed)
-            return rv
-        else:
-            return [ "no test results" ]
+            if total:
+                text.append('%d tests' % total)
+            if passed:
+                text.append('%d passed' % passed)
+            if warnings:
+                text.append('%d warnings' % warnings)
+            if failed:
+                text.append('%d failed' % failed)
+        return text
 
 class PerlModuleTest(Test):
     command=["prove", "--lib", "lib", "-r", "t"]

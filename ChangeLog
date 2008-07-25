@@ -1,5 +1,9 @@
 2008-07-24  Brian Warner  <warner@lothar.com>
 
+	* buildbot/steps/shell.py (Test.getText): include summary text
+	from the parent class (so 'test' or 'running tests' or whatever),
+	and don't add anything if there weren't any test results.
+
 	* buildbot/status/web/build.py (StatusResourceBuild.body): don't
 	show more than 500 characters of a property value, since the
 	got_revision property for Darcs checkouts can be 10kB or more.
