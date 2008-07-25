@@ -232,9 +232,9 @@ class DebugPerspective(NewCredPerspective):
         c = interfaces.IControl(self.master)
         bc = c.getBuilder(buildername)
         ss = SourceStamp(branch, revision)
-        properties = Properties()
-        properties.update(properties, "remote requestBuild")
-        br = BuildRequest(reason, ss, builderName=buildername, properties=properties)
+        bpr = Properties()
+        bpr.update(properties, "remote requestBuild")
+        br = BuildRequest(reason, ss, builderName=buildername, properties=bpr)
         bc.requestBuild(br)
 
     def perspective_pingBuilder(self, buildername):

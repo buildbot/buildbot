@@ -1,5 +1,10 @@
 2008-07-24  Brian Warner  <warner@lothar.com>
 
+	* buildbot/master.py (DebugPerspective.perspective_requestBuild):
+	fix variable-name collision that broke the debugclient's 'force
+	build' button
+	* buildbot/clients/debug.py (DebugWidget.err): print errors
+
 	* buildbot/test/test_bonsaipoller.py
 	(TestBonsaiPoller.testParserWorksAfterInvalidResult): increment
 	the .lastPoll timestamp between calls to _process_changes,

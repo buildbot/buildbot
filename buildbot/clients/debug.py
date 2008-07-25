@@ -165,9 +165,7 @@ class DebugWidget:
         d = self.remote.callRemote("setCurrentState", name, state)
         d.addErrback(self.err)
     def err(self, failure):
-        print "received error"
-        failure.printTraceback()
-        
+        print "received error:", failure
 
     def run(self):
         reactor.run()
