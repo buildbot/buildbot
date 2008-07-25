@@ -27,6 +27,23 @@ Buildbot to test a perl module available from CPAN should be as easy as:
  s = source.CVS(cvsroot, cvsmodule)
  f = factory.CPAN(s)
 
+Build Properties have been generalized: they remain associated with a single
+Build, but the properties can be set from a variety of sources. In previous
+releases, the Build itself would set properties like 'buildername', 'branch',
+and 'revision' (the latter two indicating which version of the source code it
+was trying to get), and the source-checkout BuildSteps would set a property
+named 'got_revision' (to indicate what version of the soruce code it actually
+got). In this release, the 'scheduler' property is set to indicate which
+Scheduler caused the build to be started. In addition, the config file can
+specify properties to be set on all Builds, or on all Builds for a specific
+Builder. All these properties are available for interpolation into
+ShellCommands and environment variables by using the WithProperties() marker.
+
+It may be easier to implement simple build parameterization (e.g. to upload
+generated binaries to a specific directory, or to only perform long-running
+tests on a nightly build instead of upon every checkin) by using these Build
+Properties than to write custom BuildSteps.
+
 ** Other improvements
 
 The /buildslaves web page shows which slaves are currently running builds.
