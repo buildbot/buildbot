@@ -1,3 +1,8 @@
+2008-07-24  Brian Warner  <warner@lothar.com>
+
+	* NEWS: update with recent changes in preparation for the upcoming
+	release
+
 2008-07-21  Dustin J. Mitchell  <dustin@zmanda.com>
 
 	* buildbot/status/web/waterfall.py (BuildTopBox): show summary
