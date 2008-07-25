@@ -1,5 +1,9 @@
 2008-07-24  Brian Warner  <warner@lothar.com>
 
+	* setup.py: reduce the setuptools-visible dependency on Twisted to
+	be >=2.0.0 (rather than >=2.4.0), since we can handle older
+	Twisteds without problems.
+
 	* NEWS: update with recent changes in preparation for the upcoming
 	release
 

@@ -96,7 +96,7 @@ try:
 except ImportError:
     pass
 else:
-    setup_args['install_requires'] = ['twisted >= 2.4.0']
+    setup_args['install_requires'] = ['twisted >= 2.0.0']
     entry_points={
         'console_scripts': [
             'buildbot = buildbot.scripts.runner:run'
