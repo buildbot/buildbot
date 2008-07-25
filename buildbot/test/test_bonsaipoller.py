@@ -217,9 +217,14 @@ class TestBonsaiPoller(unittest.TestCase):
         poller = FakeBonsaiPoller()
 
         lastChangeBefore = poller.lastChange
-        # generate an exception first
+        # generate an exception first. pretend that we're doing a poll and
+        # increment the timestamp, otherwise the failIfEqual test at the
+        # bottom will depend upon there being a noticeable difference between
+        # two successive calls to time.time().
+        poller.lastPoll += 1.0
         poller._process_changes(badUnparsedResult)
         # now give it a valid one...
+        poller.lastPoll += 1.0
         poller._process_changes(goodUnparsedResult)
         # if poller.lastChange has not been updated then the good result
         # was not parsed

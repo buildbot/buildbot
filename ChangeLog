@@ -1,5 +1,10 @@
 2008-07-24  Brian Warner  <warner@lothar.com>
 
+	* buildbot/test/test_bonsaipoller.py
+	(TestBonsaiPoller.testParserWorksAfterInvalidResult): increment
+	the .lastPoll timestamp between calls to _process_changes,
+	otherwise the test fails on a machine with low-res time.time()
+
 	* setup.py: reduce the setuptools-visible dependency on Twisted to
 	be >=2.0.0 (rather than >=2.4.0), since we can handle older
 	Twisteds without problems.
