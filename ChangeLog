@@ -1,5 +1,11 @@
 2008-07-24  Brian Warner  <warner@lothar.com>
 
+	* buildbot/status/web/build.py (StatusResourceBuild.body): don't
+	show more than 500 characters of a property value, since the
+	got_revision property for Darcs checkouts can be 10kB or more.
+	Also HTML-escape everything, so <> in the value doesn't confuse
+	the resulting page.
+
 	* buildbot/process/buildstep.py (BuildStep.setProperty): provide a
 	default value for source=, to accomodate custom buildsteps that
 	don't otherwise provide one
