@@ -1,3 +1,12 @@
+2008-07-21  Dustin J. Mitchell  <dustin@zmanda.com>
+
+	* buildbot/status/web/waterfall.py (BuildTopBox): show summary
+	even if there were no test results, patch from Pike
+	(BuildTopBox): use the right statistic name, 'tests-failed'
+	instead of just 'failed'
+	* buildbot/status/tinderbox.py: fix regression, patch from Axel
+	Hecht
+
 2008-07-23  Brian Warner  <warner@lothar.com>
 
 	* buildbot/status/web/build.py (StatusResourceBuild.stop): fix
@@ -15,47 +24,77 @@
 	* .darcs-boring: resurrect this file after it was accidentally
 	deleted
 
+2008-07-21  Dustin J. Mitchell  <dustin@zmanda.com>
+
+	* buildbot/steps/shell.py (WarningCountingShellCommand): add
+	warning count to the 'warnings' statistic
+	(Test.setTestResults): count stats
+	(Test.getText): include stats in summary text
+	(PerlModuleTest): use setTestResults
+
 2008-06-25  Dustin J. Mitchell  <dustin@zmanda.com>
 
 	* docs/buildbot.texinfo: Patch by Albert Hofkamp to use step
 	instances universally in the documentation. (#305)
 
-2008-06-25  Dustin J. Mitchell  <dustin@zmanda.com>
-
 	* buildbot/status/builder.py: Upgrading from version 2 to 3
 	of BuildStatus had an incorrect call to properties.update.
 	Closes #295.
 
+	* buildbot/status/builder.py (BuildStepStatus): introduce
+	'statistics': counters of things that happen a build that
+	aren't better expressed as logfiles or properties. Examples
+	include the number of tests that pass/fail/skip.
+	(BuildStepStatus.hasStatistic)
+	(BuildStepStatus.getStatistic): accessor methods
+	(BuildStepStatus.setStatistic): setter
+	(BuildStatus.getSummaryStatistic): method to summarize stats,
+	using a caller-provided sum() function
+	* buildbot/test/test_status.py (StepStatistics): test it
+
+	* buildbot/status/web/waterfall.py (BuildTopBox): use stats instead
+	of sumStepProperty
+
 2008-06-13  Dustin J. Mitchell  <dustin@zmanda.com>
 
-	* buildbot/status/web/grid.py: Sort the builders in the
-	grid display (#300)
+	* buildbot/status/web/grid.py (GridStatusResource): Sort the
+	builders in the grid display (#300)
 
 2008-06-01  Dustin J. Mitchell	<dustin@zmanda.com>
 
-	* buildbot/buildslave.py buildbot/process/base.py
-	buildbot/status/builder.py buildbot/status/web/slaves.py
-	buildbot/test/test_slaves.py: short patch by Ben Hearsum to
-	make the /buildslaves WebStatus? page a little more useful. It
-	does do things: 1) bolds the 'slave is NOT connected' line
-	to make it more visible 2) shows whether each slave is busy
-	(building) or not (#278)
+	* buildbot/status/web/slaves.py (BuildSlavesResource): short patch
+	by Ben Hearsum to make the /buildslaves WebStatus? page a little
+	more useful. It does do things: 1) bolds the 'slave is NOT
+	connected' line to make it more visible 2) shows whether each
+	slave is busy (building) or not (#278)
+	* buildbot/buildslave.py (BuildSlave.updateSlaveStatus): notify
+	the SlaveStatus monitor each time we start or finish a build
+	* buildbot/status/builder.py: same
+	* buildbot/process/base.py: call updateSlaveStatus at start/finish
+	* buildbot/test/test_slaves.py (SlaveBusyness): test it
 
 2008-05-26  Dustin J. Mitchell  <dustin@zmanda.com>
 
-	* buildbot/process/factory.py buildbot/status/web/waterfall.py
-	buildbot/steps/shell.py buildbot/test/test_steps.py
-	docs/buildbot.texinfo: Patch by Neil Hemingway
+	* buildbot/steps/shell.py (PerlModuleTest): Patch by Neil Hemingway
 	<nhemingway@googlemail.com> to add a PerlModuleTest step (#228)
+	* buildbot/process/factory.py (CPAN): use PerlModuleTest, not Test
+	* buildbot/status/web/waterfall.py (BuildTopBox): include count of
+	failed tests in top text, along with 'failed' or 'passed'.
+	* buildbot/test/test_steps.py (PerlModuleTest): test it
+	* docs/buildbot.texinfo (PerlModuleTest): docs
 
 2008-05-19  Dustin J. Mitchell  <dustin@zmanda.com>
 
-	* buildbot/changes/dnotify.py buildbot/clients/base.py
-	buildbot/clients/debug.py buildbot/clients/gtkPanes.py
-	buildbot/dnotify.py buildbot/test/emit.py
-	buildbot/test/emitlogs.py buildbot/test/sleep.py: Patch by
-	Gianluca Sforna <giallu@gmail.com> to remove unnecessary
-	shebangs about which rpmlint complains. (#282)
+	* buildbot/changes/dnotify.py: Patch by Gianluca Sforna
+	<giallu@gmail.com> to remove unnecessary shebangs about which
+	rpmlint complains. (#282)
+	* buildbot/clients/base.py: same
+	* buildbot/clients/debug.py: same
+	* buildbot/clients/gtkPanes.py: same
+	* buildbot/dnotify.py: same
+	* buildbot/test/emit.py: same
+	* buildbot/test/emitlogs.py: same
+	* buildbot/test/sleep.py: same
 
 2008-05-17  Dustin J. Mitchell  <dustin@zmanda.com>
 
@@ -65,26 +104,30 @@
 
 2008-05-16  Dustin J. Mitchell  <dustin@zmanda.com>
 
-	* buildbot/changes/svnpoller.py
-	buildbot/test/test_svnpoller.py: Patch by Neil Hemingway
+	* buildbot/changes/svnpoller.py: Patch by Neil Hemingway
 	<neil.hemingway@googlemail.com> that has svnpoller checking
-	whether the change reported by SVN is a branch deletion. If
-	it is, a buildbot Change is not created. (#261)
+	whether the change reported by SVN is a branch deletion. If it is,
+	a buildbot Change is not created. (#261)
+	* buildbot/test/test_svnpoller.py: test it
 
 2008-05-15  Dustin J. Mitchell  <dustin@zmanda.com>
 
-	* buildbot/status/words.py buildbot/test/test_status.py
-	docs/buildbot.texinfo: Patch by Neil Hemingway
-	<nhemingway@googlemail.com>: allow the IRC daemon to notify
-	users on build events, either via private messages or channel
-	messages (#171)
+	* buildbot/status/words.py (Contact.command_NOTIFY): Patch by Neil
+	Hemingway <nhemingway@googlemail.com>: allow the IRC daemon to
+	notify users on build events, either via private messages or
+	channel messages. (#171)
+	(IRCContact.command_JOIN, IRCContact.command_LEAVE): new commands
+	to tell the buildbot to join or leave irc channels.
+	* buildbot/test/test_status.py (ContactTester): test it
+	* docs/buildbot.texinfo: docs
 
 2008-05-14  Dustin J. Mitchell  <dustin@zmanda.com>
 
-	* buildbot/steps/shell.py buildbot/test/test_properties.py
-	docs/buildbot.texinfo: A buildstep that is similar to
-	ShellCommand, except that it captures the output of the
+	* buildbot/steps/shell.py (SetProperty): A buildstep that is
+	similar to ShellCommand, except that it captures the output of the
 	command into a property. (#232)
+	* buildbot/test/test_properties.py (Run.testSetPropertySimple): same
+	* docs/buildbot.texinfo (SetProperty): same
 
 2008-04-29  Brian Warner  <warner@lothar.com>
 
