@@ -1,7 +1,7 @@
 \input texinfo @c -*-texinfo-*-
 @c %**start of header
 @setfilename buildbot.info
-@settitle BuildBot Manual 0.7.7+
+@settitle BuildBot Manual 0.7.8
 @defcodeindex cs
 @defcodeindex sl
 @defcodeindex bf
