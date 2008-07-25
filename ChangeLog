@@ -1,5 +1,8 @@
 2008-07-24  Brian Warner  <warner@lothar.com>
 
+	* README: update dependencies, tested against twisted-8.1.0
+	* NEWS: update for 0.7.8 release
+
 	* buildbot/steps/shell.py (Test.getText): include summary text
 	from the parent class (so 'test' or 'running tests' or whatever),
 	and don't add anything if there weren't any test results.

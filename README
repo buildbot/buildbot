@@ -59,8 +59,8 @@ REQUIREMENTS:
 
    Both the buildmaster and the buildslaves require Twisted-2.0.x or later.
    As always, the most recent version is recommended. It has been tested
-   against Twisted-2.5.0, Twisted-8.0.1, and Twisted SVN as of the date of
-   release.
+   against Twisted-2.5.0, Twisted-8.0.1, Twisted-8.1.0, and Twisted SVN as of
+   the date of release.
 
    Certain versions of Twisted are delivered as a collection of subpackages.
    You'll need at least "Twisted" (the core package), and you'll also want
@@ -116,7 +116,7 @@ to:
  your buildslave's name
  the password assigned to your buildslave
  the hostname and port number of the buildmaster, i.e. example.com:8007
- 
+
 You also need to pick a working directory for the buildslave. All commands
 will be run inside this directory.
 
