@@ -350,6 +350,10 @@ class ShellCommand:
             else:
                 argv = self.command
 
+        # $PWD usually indicates the current directory; spawnProcess may not
+        # update this value, though, so we set it explicitly here.
+        self.environ['PWD'] = os.path.abspath(self.workdir)
+
         # self.stdin is handled in ShellCommandPP.connectionMade
 
         # first header line is the command in plain text, argv joined with
