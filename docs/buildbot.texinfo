@@ -1703,7 +1703,7 @@ generally triggered by a user request or Periodic build.
 
 @item (revision=REV, changes=None, patch=(LEVEL, DIFF))
 This checks out the tree at the given revision REV, then applies a
-patch (using @code{diff -pLEVEL <DIFF}). The @ref{try} feature uses
+patch (using @code{patch -pLEVEL <DIFF}). The @ref{try} feature uses
 this kind of @code{SourceStamp}. If @code{patch} is None, the patching
 step is bypassed.
 
