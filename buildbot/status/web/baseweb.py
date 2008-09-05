@@ -360,7 +360,7 @@ class WebStatus(service.MultiService):
     # all the changes).
 
     def __init__(self, http_port=None, distrib_port=None, allowForce=False,
-                       public_html=None):
+                       public_html="public_html"):
         """Run a web server that provides Buildbot status.
 
         @type  http_port: int or L{twisted.application.strports} string
