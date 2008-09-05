@@ -6565,7 +6565,7 @@ in great detail below.
 
 
 When the buildmaster is created, a subdirectory named
-@file{public_html/} is created in its base directory. @code{WebStatus}
+@file{public_html/} is created in its base directory. By default, @code{WebStatus}
 will serve files from this directory: for example, when a user points
 their browser at the buildbot's @code{WebStatus} URL, they will see
 the contents of the @file{public_html/index.html} file. Likewise,
@@ -6589,6 +6589,13 @@ through the entire history of your buildbot. If you are running the
 buildbot behind a reverse proxy, you'll probably need to put the
 robots.txt file somewhere else (at the top level of the parent web
 server), and replace the URL prefixes in it with more suitable values.
+
+If you would like to use an alternative root directory, add the
+@code{public_html=..} option to the @code{WebStatus} creation:
+
+@example
+c['status'].append(WebStatus(8080, public_html="/var/www/buildbot"))
+@end example
 
 In addition, if you are familiar with twisted.web @emph{Resource
 Trees}, you can write code to add additional pages at places inside

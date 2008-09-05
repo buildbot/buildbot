@@ -315,12 +315,13 @@ class WebStatus(service.MultiService):
      /xmlrpc : (not yet implemented) an XMLRPC server with build status
 
 
-    All URLs for pages which are not defined here are used to look for files
-    in BASEDIR/public_html/ , which means that /robots.txt or /buildbot.css
-    or /favicon.ico can be placed in that directory.
+    All URLs for pages which are not defined here are used to look
+    for files in PUBLIC_HTML, which defaults to BASEDIR/public_html.
+    This means that /robots.txt or /buildbot.css or /favicon.ico can
+    be placed in that directory.
 
     If an index file (index.html, index.htm, or index, in that order) is
-    present in public_html/, it will be used for the root resource. If not,
+    present in PUBLIC_HTML, it will be used for the root resource. If not,
     the default behavior is to put a redirection to the /waterfall page.
 
     All of the resources provided by this service use relative URLs to reach
@@ -329,7 +330,7 @@ class WebStatus(service.MultiService):
     bottom.
 
     This webserver defines class attributes on elements so they can be styled
-    with CSS stylesheets. All pages pull in public_html/buildbot.css, and you
+    with CSS stylesheets. All pages pull in PUBLIC_HTML/buildbot.css, and you
     can cause additional stylesheets to be loaded by adding a suitable <link>
     to the WebStatus instance's .head_elements attribute.
 
@@ -358,7 +359,8 @@ class WebStatus(service.MultiService):
     # not (we'd have to do a recursive traversal of all children to discover
     # all the changes).
 
-    def __init__(self, http_port=None, distrib_port=None, allowForce=False):
+    def __init__(self, http_port=None, distrib_port=None, allowForce=False,
+                       public_html=None):
         """Run a web server that provides Buildbot status.
 
         @type  http_port: int or L{twisted.application.strports} string
@@ -391,8 +393,13 @@ class WebStatus(service.MultiService):
                              'unix:/home/buildbot/.twistd-web-pb'. Providing
                              a non-absolute pathname will probably confuse
                              the strports parser.
+
         @param allowForce: boolean, if True then the webserver will allow
                            visitors to trigger and cancel builds
+
+        @param public_html: the path to the public_html directory for this display,
+                            either absolute or relative to the basedir.  The default
+                            is 'public_html', which selects BASEDIR/public_html.
         """
 
         service.MultiService.__init__(self)
@@ -406,9 +413,10 @@ class WebStatus(service.MultiService):
                 distrib_port = "unix:%s" % distrib_port
         self.distrib_port = distrib_port
         self.allowForce = allowForce
+        self.public_html = public_html
 
         # this will be replaced once we've been attached to a parent (and
-        # thus have a basedir and can reference BASEDIR/public_html/)
+        # thus have a basedir and can reference BASEDIR)
         root = static.Data("placeholder", "text/plain")
         self.site = server.Site(root)
         self.childrenToBeAdded = {}
@@ -466,7 +474,7 @@ class WebStatus(service.MultiService):
     def setupSite(self):
         # this is responsible for creating the root resource. It isn't done
         # at __init__ time because we need to reference the parent's basedir.
-        htmldir = os.path.join(self.parent.basedir, "public_html")
+        htmldir = os.path.abspath(os.path.join(self.parent.basedir, self.public_html))
         if os.path.isdir(htmldir):
             log.msg("WebStatus using (%s)" % htmldir)
         else:
@@ -520,8 +528,8 @@ class WebStatus(service.MultiService):
 # always redirects to a WaterfallStatusResource, and the old arguments are
 # mapped into the new resource-tree approach. In the normal WebStatus, the
 # root resource either redirects the browser to /waterfall or serves
-# BASEDIR/public_html/index.html, and favicon/robots.txt are provided by
-# having the admin write actual files into BASEDIR/public_html/ .
+# PUBLIC_HTML/index.html, and favicon/robots.txt are provided by
+# having the admin write actual files into PUBLIC_HTML/ .
 
 # note: we don't use a util.Redirect here because HTTP requires that the
 # Location: header provide an absolute URI, and it's non-trivial to figure
