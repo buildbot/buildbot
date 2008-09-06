@@ -1130,6 +1130,10 @@ There are certain configuration changes that are not handled cleanly
 by @code{buildbot reconfig}. If this occurs, @code{buildbot restart}
 is a more robust tool to fully switch over to the new configuration.
 
+@code{buildbot restart} may also be used to start a stopped Buildbot
+instance. This behaviour is useful when writing scripts that stop, start
+and restart Buildbot.
+
 
 @node Maintenance, Troubleshooting, Shutdown, Installation
 @section Maintenance
