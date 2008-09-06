@@ -382,25 +382,28 @@ class Test(WarningCountingShellCommand):
         passed += self.step_status.getStatistic('tests-passed', 0)
         self.step_status.setStatistic('tests-passed', passed)
 
-    def getText(self, cmd, results):
-        text = WarningCountingShellCommand.getText(self, cmd, results)
-        if self.step_status.hasStatistic('tests-total'):
-            total = self.step_status.getStatistic("tests-total", 0)
-            failed = self.step_status.getStatistic("tests-failed", 0)
-            passed = self.step_status.getStatistic("tests-passed", 0)
-            warnings = self.step_status.getStatistic("tests-warnings", 0)
-            if not total:
-                total = failed + passed + warnings
+    def describe(self, done=False):
+        description = WarningCountingShellCommand.describe(self, done)
+        if done:
+            if self.step_status.hasStatistic('tests-total'):
+                total = self.step_status.getStatistic("tests-total", 0)
+                failed = self.step_status.getStatistic("tests-failed", 0)
+                passed = self.step_status.getStatistic("tests-passed", 0)
+                warnings = self.step_status.getStatistic("tests-warnings", 0)
+                if not total:
+                    total = failed + passed + warnings
 
-            if total:
-                text.append('%d tests' % total)
-            if passed:
-                text.append('%d passed' % passed)
-            if warnings:
-                text.append('%d warnings' % warnings)
-            if failed:
-                text.append('%d failed' % failed)
-        return text
+                if total:
+                    description.append('%d tests' % total)
+                if passed:
+                    description.append('%d passed' % passed)
+                if warnings:
+                    description.append('%d warnings' % warnings)
+                if failed:
+                    description.append('%d failed' % failed)
+            else:
+                description.append("no test results")
+        return description
 
 class PerlModuleTest(Test):
     command=["prove", "--lib", "lib", "-r", "t"]
