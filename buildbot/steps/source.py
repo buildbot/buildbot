@@ -591,7 +591,9 @@ class Git(Source):
         return changes[-1].revision
 
     def startVC(self, branch, revision, patch):
-        self.args['branch'] = branch
+        if branch is not None:
+            self.args['branch'] = branch
+
         self.args['revision'] = revision
         self.args['patch'] = patch
         slavever = self.slaveVersion("git")
