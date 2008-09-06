@@ -6,6 +6,8 @@ import os, sys, stat, re, time
 import traceback
 from twisted.python import usage, util, runtime
 
+from buildbot.interfaces import BuildbotNotRunningError
+
 # this is mostly just a front-end for mktap, twistd, and kill(1), but in the
 # future it will also provide an interface to some developer tools that talk
 # directly to a remote buildmaster (like 'try' and a status client)
@@ -457,7 +459,10 @@ def stop(config, signame="TERM", wait=False):
     basedir = config['basedir']
     quiet = config['quiet']
     os.chdir(basedir)
-    f = open("twistd.pid", "rt")
+    try:
+        f = open("twistd.pid", "rt")
+    except:
+        raise BuildbotNotRunningError
     pid = int(f.read().strip())
     signum = getattr(signal, "SIG"+signame)
     timer = 0
@@ -483,7 +488,10 @@ def stop(config, signame="TERM", wait=False):
 def restart(config):
     quiet = config['quiet']
     from buildbot.scripts.startup import start
-    stop(config, wait=True)
+    try:
+        stop(config, wait=True)
+    except BuildbotNotRunningError:
+        pass
     if not quiet:
         print "now restarting buildbot process.."
     start(config)
