@@ -10,6 +10,16 @@ else:
     debuglog = lambda m: None
 
 class BaseLock:
+    """
+    Class handling claiming and releasing of L{self}, and keeping track of
+    current and waiting owners.
+
+    @note: Ideally, we'd like to maintain FIFO order. The place to do that
+           would be the L{isAvailable()} function. However, this function is
+           called by builds/steps both for the first time, and after waking
+           them up by L{self} from the L{self.waiting} queue. There is
+           currently no way of distinguishing between them.
+    """
     description = "<BaseLock>"
 
     def __init__(self, name, maxCount=1):
@@ -22,10 +32,12 @@ class BaseLock:
         return self.description
 
     def isAvailable(self):
+        """ Return a boolean whether the lock is available for claiming """
         debuglog("%s isAvailable: self.owners=%r" % (self, self.owners))
         return len(self.owners) < self.maxCount
 
     def claim(self, owner):
+        """ Claim the lock (lock must be available) """
         debuglog("%s claim(%s)" % (self, owner))
         assert owner is not None
         assert len(self.owners) < self.maxCount, "ask for isAvailable() first"
@@ -33,6 +45,7 @@ class BaseLock:
         debuglog(" %s is claimed" % (self,))
 
     def release(self, owner):
+        """ Release the lock """
         debuglog("%s release(%s)" % (self, owner))
         assert owner in self.owners
         self.owners.remove(owner)
@@ -90,11 +103,21 @@ class RealSlaveLock:
         return self.locks[slavename]
 
 
+class BaseLockId(util.ComparableMixin):
+    """ Abstract base class for LockId classes.
+
+    Derived classes should add
+    - Comparison with the L{util.ComparableMixin} via the L{compare_attrs}
+      class variable.
+    - Link to the actual lock class should be added with the L{lockClass}
+      class variable.
+    """
+
 # master.cfg should only reference the following MasterLock and SlaveLock
 # classes. They are identifiers that will be turned into real Locks later,
 # via the BotMaster.getLockByID method.
 
-class MasterLock(util.ComparableMixin):
+class MasterLock(BaseLockId):
     """I am a semaphore that limits the number of simultaneous actions.
 
     Builds and BuildSteps can declare that they wish to claim me as they run.
@@ -113,7 +136,7 @@ class MasterLock(util.ComparableMixin):
         self.name = name
         self.maxCount = maxCount
 
-class SlaveLock(util.ComparableMixin):
+class SlaveLock(BaseLockId):
     """I am a semaphore that limits simultaneous actions on each buildslave.
 
     Builds and BuildSteps can declare that they wish to claim me as they run.

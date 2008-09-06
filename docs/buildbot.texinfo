@@ -5806,7 +5806,7 @@ one-Build-at-a-time limit for each machine, but still allow as many
 simultaneous builds as there are machines.
 
 Each @code{Lock} is created with a unique name. Each lock gets a count
-of how many owners it may have: how many processes can claim it at ths
+of how many owners it may have: how many processes can claim it at the
 same time. This limit defaults to one, and is controllable through the
 @code{maxCount} argument. On @code{SlaveLock}s you can set the owner
 count on a per-slave basis by providing a dictionary (that maps from
@@ -5856,9 +5856,9 @@ f = factory.BuildFactory()
 f.addStep(source.SVN(svnurl="http://example.org/svn/Trunk"))
 f.addStep(shell.ShellCommand(command="make all"))
 f.addStep(shell.ShellCommand(command="make test", locks=[db_lock]))
-b1 = @{'name': 'full1', 'slavename': 'bot-1', builddir='f1', 'factory': f@}
-b2 = @{'name': 'full2', 'slavename': 'bot-2', builddir='f2', 'factory': f@}
-b3 = @{'name': 'full3', 'slavename': 'bot-3', builddir='f3', 'factory': f@}
+b1 = @{'name': 'full1', 'slavename': 'bot-1', 'builddir': 'f1', 'factory': f@}
+b2 = @{'name': 'full2', 'slavename': 'bot-2', 'builddir': 'f2', 'factory': f@}
+b3 = @{'name': 'full3', 'slavename': 'bot-3', 'builddir': 'f3', 'factory': f@}
 c['builders'] = [b1, b2, b3]
 @end example
 
@@ -5885,12 +5885,12 @@ source = s(source.SVN, svnurl="http://example.org/svn/Trunk")
 f22 = factory.Trial(source, trialpython=["python2.2"])
 f23 = factory.Trial(source, trialpython=["python2.3"])
 f24 = factory.Trial(source, trialpython=["python2.4"])
-b1 = @{'name': 'p22', 'slavename': 'bot-1', builddir='p22', 'factory': f22,
-      'locks': [slow_lock] @}
-b2 = @{'name': 'p23', 'slavename': 'bot-1', builddir='p23', 'factory': f23,
-      'locks': [slow_lock] @}
-b3 = @{'name': 'p24', 'slavename': 'bot-1', builddir='p24', 'factory': f24,
-      'locks': [slow_lock] @}
+b1 = @{'name': 'p22', 'slavename': 'bot-1', 'builddir': 'p22',
+      'factory': f22, 'locks': [slow_lock] @}
+b2 = @{'name': 'p23', 'slavename': 'bot-1', 'builddir': 'p23',
+      'factory': f23, 'locks': [slow_lock] @}
+b3 = @{'name': 'p24', 'slavename': 'bot-1', 'builddir': 'p24',
+      'factory': f24, 'locks': [slow_lock] @}
 c['builders'] = [b1, b2, b3]
 @end example
 
@@ -5918,13 +5918,13 @@ f.addStep(shell.ShellCommand(command="make all", locks=[cpu_lock]))
 f.addStep(shell.ShellCommand(command="make test", locks=[cpu_lock]))
 f.addStep(shell.ShellCommand(command="make db-test", locks=[db_lock, cpu_lock]))
 
-b1 = @{'name': 'full1', 'slavename': 'bot-slow', builddir='full1',
+b1 = @{'name': 'full1', 'slavename': 'bot-slow', 'builddir': 'full1',
       'factory': f@}
-b2 = @{'name': 'full2', 'slavename': 'bot-slow', builddir='full2',
+b2 = @{'name': 'full2', 'slavename': 'bot-slow', 'builddir': 'full2',
       'factory': f@}
-b3 = @{'name': 'full3', 'slavename': 'bot-fast', builddir='full3',
+b3 = @{'name': 'full3', 'slavename': 'bot-fast', 'builddir': 'full3',
       'factory': f@}
-b4 = @{'name': 'full4', 'slavename': 'bot-fast', builddir='full4',
+b4 = @{'name': 'full4', 'slavename': 'bot-fast', 'builddir': 'full4',
       'factory': f@}
 c['builders'] = [b1, b2, b3, b4]
 @end example
@@ -6899,7 +6899,7 @@ from a future release.
 
 @example
 from buildbot.status import html
-w = html.Waterfall(http_port=8080)
+w = html.WebStatus(http_port=8080)
 c['status'].append(w)
 @end example
 
