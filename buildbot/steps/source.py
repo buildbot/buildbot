@@ -395,7 +395,7 @@ class SVN(Source):
 
 
     def computeSourceRevision(self, changes):
-        if not changes:
+        if not changes or None in [c.revision for c in changes]:
             return None
         lastChange = max([int(c.revision) for c in changes])
         return lastChange
