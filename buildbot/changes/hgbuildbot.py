@@ -83,7 +83,7 @@ def hook(ui, repo, hooktype, node=None, source=None, **kwargs):
         for rev in xrange(start, end):
             # send changeset
             n = repo.changelog.node(rev)
-            changeset=repo.changelog.extract(repo.changelog.revision(n))
+            changeset=repo.changelog.read(n)
             change = {
                 'master': master,
                 # note: this is more likely to be a full email address, which
