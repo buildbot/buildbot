@@ -641,6 +641,8 @@ class BuildMaster(service.MultiService, styles.Versioned):
         lock_dict = {}
         for b in builders:
             for l in b.get('locks', []):
+                if isinstance(l, locks.LockAccess): # User specified access to the lock
+                    l = l.lockid
                 if lock_dict.has_key(l.name):
                     if lock_dict[l.name] is not l:
                         raise ValueError("Two different locks (%s and %s) "
@@ -653,6 +655,8 @@ class BuildMaster(service.MultiService, styles.Versioned):
             # important.
             for s in b['factory'].steps:
                 for l in s[1].get('locks', []):
+                    if isinstance(l, locks.LockAccess): # User specified access to the lock
+                        l = l.lockid
                     if lock_dict.has_key(l.name):
                         if lock_dict[l.name] is not l:
                             raise ValueError("Two different locks (%s and %s)"

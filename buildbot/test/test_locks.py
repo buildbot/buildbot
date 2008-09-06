@@ -12,133 +12,202 @@ from buildbot.process.base import BuildRequest
 from buildbot.test.runutils import RunMixin
 from buildbot import locks
 
-def claimHarder(lock, owner):
+def claimHarder(lock, owner, la):
     """Return a Deferred that will fire when the lock is claimed. Keep trying
     until we succeed."""
-    if lock.isAvailable():
+    if lock.isAvailable(la):
         #print "claimHarder(%s): claiming" % owner
-        lock.claim(owner)
+        lock.claim(owner, la)
         return defer.succeed(lock)
     #print "claimHarder(%s): waiting" % owner
-    d = lock.waitUntilMaybeAvailable(owner)
-    d.addCallback(claimHarder, owner)
+    d = lock.waitUntilMaybeAvailable(owner, la)
+    d.addCallback(claimHarder, owner, la)
     return d
 
-def hold(lock, owner, mode="now"):
+def hold(lock, owner, la, mode="now"):
     if mode == "now":
-        lock.release(owner)
+        lock.release(owner, la)
     elif mode == "very soon":
-        reactor.callLater(0, lock.release, owner)
+        reactor.callLater(0, lock.release, owner, la)
     elif mode == "soon":
-        reactor.callLater(0.1, lock.release, owner)
-
+        reactor.callLater(0.1, lock.release, owner, la)
 
 class Unit(unittest.TestCase):
-    def testNow(self):
+    def testNowCounting(self):
+        lid = locks.MasterLock('dummy')
+        la = locks.LockAccess(lid, 'counting')
+        return self._testNow(la)
+
+    def testNowExclusive(self):
+        lid = locks.MasterLock('dummy')
+        la = locks.LockAccess(lid, 'exclusive')
+        return self._testNow(la)
+
+    def _testNow(self, la):
         l = locks.BaseLock("name")
-        self.failUnless(l.isAvailable())
-        l.claim("owner1")
-        self.failIf(l.isAvailable())
-        l.release("owner1")
-        self.failUnless(l.isAvailable())
+        self.failUnless(l.isAvailable(la))
+        l.claim("owner1", la)
+        self.failIf(l.isAvailable(la))
+        l.release("owner1", la)
+        self.failUnless(l.isAvailable(la))
 
-    def testLater(self):
+    def testNowMixed1(self):
+        """ Test exclusive is not possible when a counting has the lock """
+        lid = locks.MasterLock('dummy')
+        lac = locks.LockAccess(lid, 'counting')
+        lae = locks.LockAccess(lid, 'exclusive')
+        l = locks.BaseLock("name", maxCount=2)
+        self.failUnless(l.isAvailable(lac))
+        l.claim("count-owner", lac)
+        self.failIf(l.isAvailable(lae))
+        l.release("count-owner", lac)
+        self.failUnless(l.isAvailable(lac))
+
+    def testNowMixed2(self):
+        """ Test counting is not possible when an exclsuive has the lock """
+        lid = locks.MasterLock('dummy')
+        lac = locks.LockAccess(lid, 'counting')
+        lae = locks.LockAccess(lid, 'exclusive')
+        l = locks.BaseLock("name", maxCount=2)
+        self.failUnless(l.isAvailable(lae))
+        l.claim("count-owner", lae)
+        self.failIf(l.isAvailable(lac))
+        l.release("count-owner", lae)
+        self.failUnless(l.isAvailable(lae))
+
+    def testLaterCounting(self):
+        lid = locks.MasterLock('dummy')
+        la = locks.LockAccess(lid, 'counting')
+        return self._testLater(la)
+
+    def testLaterExclusive(self):
+        lid = locks.MasterLock('dummy')
+        la = locks.LockAccess(lid, 'exclusive')
+        return self._testLater(la)
+
+    def _testLater(self, la):
         lock = locks.BaseLock("name")
-        d = claimHarder(lock, "owner1")
-        d.addCallback(lambda lock: lock.release("owner1"))
+        d = claimHarder(lock, "owner1", la)
+        d.addCallback(lambda lock: lock.release("owner1", la))
         return d
 
-    def testCompetition(self):
+    def testCompetitionCounting(self):
+        lid = locks.MasterLock('dummy')
+        la = locks.LockAccess(lid, 'counting')
+        return self._testCompetition(la)
+
+    def testCompetitionExclusive(self):
+        lid = locks.MasterLock('dummy')
+        la = locks.LockAccess(lid, 'exclusive')
+        return self._testCompetition(la)
+
+    def _testCompetition(self, la):
         lock = locks.BaseLock("name")
-        d = claimHarder(lock, "owner1")
-        d.addCallback(self._claim1)
+        d = claimHarder(lock, "owner1", la)
+        d.addCallback(self._claim1, la)
         return d
-    def _claim1(self, lock):
+    def _claim1(self, lock, la):
         # we should have claimed it by now
-        self.failIf(lock.isAvailable())
+        self.failIf(lock.isAvailable(la))
         # now set up two competing owners. We don't know which will get the
         # lock first.
-        d2 = claimHarder(lock, "owner2")
-        d2.addCallback(hold, "owner2", "now")
-        d3 = claimHarder(lock, "owner3")
-        d3.addCallback(hold, "owner3", "soon")
+        d2 = claimHarder(lock, "owner2", la)
+        d2.addCallback(hold, "owner2", la, "now")
+        d3 = claimHarder(lock, "owner3", la)
+        d3.addCallback(hold, "owner3", la, "soon")
         dl = defer.DeferredList([d2,d3])
-        dl.addCallback(self._cleanup, lock)
+        dl.addCallback(self._cleanup, lock, la)
         # and release the lock in a moment
-        reactor.callLater(0.1, lock.release, "owner1")
+        reactor.callLater(0.1, lock.release, "owner1", la)
         return dl
 
-    def _cleanup(self, res, lock):
-        d = claimHarder(lock, "cleanup")
-        d.addCallback(lambda lock: lock.release("cleanup"))
+    def _cleanup(self, res, lock, la):
+        d = claimHarder(lock, "cleanup", la)
+        d.addCallback(lambda lock: lock.release("cleanup", la))
         return d
 
-    def testRandom(self):
+    def testRandomCounting(self):
+        lid = locks.MasterLock('dummy')
+        la = locks.LockAccess(lid, 'counting')
+        return self._testRandom(la)
+
+    def testRandomExclusive(self):
+        lid = locks.MasterLock('dummy')
+        la = locks.LockAccess(lid, 'exclusive')
+        return self._testRandom(la)
+
+    def _testRandom(self, la):
         lock = locks.BaseLock("name")
         dl = []
         for i in range(100):
             owner = "owner%d" % i
             mode = random.choice(["now", "very soon", "soon"])
-            d = claimHarder(lock, owner)
-            d.addCallback(hold, owner, mode)
+            d = claimHarder(lock, owner, la)
+            d.addCallback(hold, owner, la, mode)
             dl.append(d)
         d = defer.DeferredList(dl)
-        d.addCallback(self._cleanup, lock)
+        d.addCallback(self._cleanup, lock, la)
         return d
 
 class Multi(unittest.TestCase):
-    def testNow(self):
+    def testNowCounting(self):
+        lid = locks.MasterLock('dummy')
+        la = locks.LockAccess(lid, 'counting')
         lock = locks.BaseLock("name", 2)
-        self.failUnless(lock.isAvailable())
-        lock.claim("owner1")
-        self.failUnless(lock.isAvailable())
-        lock.claim("owner2")
-        self.failIf(lock.isAvailable())
-        lock.release("owner1")
-        self.failUnless(lock.isAvailable())
-        lock.release("owner2")
-        self.failUnless(lock.isAvailable())
+        self.failUnless(lock.isAvailable(la))
+        lock.claim("owner1", la)
+        self.failUnless(lock.isAvailable(la))
+        lock.claim("owner2", la)
+        self.failIf(lock.isAvailable(la))
+        lock.release("owner1", la)
+        self.failUnless(lock.isAvailable(la))
+        lock.release("owner2", la)
+        self.failUnless(lock.isAvailable(la))
 
-    def testLater(self):
+    def testLaterCounting(self):
+        lid = locks.MasterLock('dummy')
+        la = locks.LockAccess(lid, 'counting')
         lock = locks.BaseLock("name", 2)
-        lock.claim("owner1")
-        lock.claim("owner2")
-        d = claimHarder(lock, "owner3")
-        d.addCallback(lambda lock: lock.release("owner3"))
-        lock.release("owner2")
-        lock.release("owner1")
+        lock.claim("owner1", la)
+        lock.claim("owner2", la)
+        d = claimHarder(lock, "owner3", la)
+        d.addCallback(lambda lock: lock.release("owner3", la))
+        lock.release("owner2", la)
+        lock.release("owner1", la)
         return d
 
-    def _cleanup(self, res, lock, count):
+    def _cleanup(self, res, lock, count, la):
         dl = []
         for i in range(count):
-            d = claimHarder(lock, "cleanup%d" % i)
+            d = claimHarder(lock, "cleanup%d" % i, la)
             dl.append(d)
         d2 = defer.DeferredList(dl)
         # once all locks are claimed, we know that any previous owners have
         # been flushed out
         def _release(res):
             for i in range(count):
-                lock.release("cleanup%d" % i)
+                lock.release("cleanup%d" % i, la)
         d2.addCallback(_release)
         return d2
 
-    def testRandom(self):
+    def testRandomCounting(self):
+        lid = locks.MasterLock('dummy')
+        la = locks.LockAccess(lid, 'counting')
         COUNT = 5
         lock = locks.BaseLock("name", COUNT)
         dl = []
         for i in range(100):
             owner = "owner%d" % i
             mode = random.choice(["now", "very soon", "soon"])
-            d = claimHarder(lock, owner)
+            d = claimHarder(lock, owner, la)
             def _check(lock):
                 self.failIf(len(lock.owners) > COUNT)
                 return lock
             d.addCallback(_check)
-            d.addCallback(hold, owner, mode)
+            d.addCallback(hold, owner, la, mode)
             dl.append(d)
         d = defer.DeferredList(dl)
-        d.addCallback(self._cleanup, lock, COUNT)
+        d.addCallback(self._cleanup, lock, COUNT, la)
         return d
 
 class Dummy:

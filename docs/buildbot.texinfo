@@ -5786,6 +5786,7 @@ will be unavoidable.
 @cindex locks
 @slindex buildbot.locks.MasterLock
 @slindex buildbot.locks.SlaveLock
+@slindex buildbot.locks.LockAccess
 
 For various reasons, you may want to prevent certain Steps (or perhaps
 entire Builds) from running simultaneously. Limited CPU speed or
@@ -5805,8 +5806,14 @@ separate copy of each @code{SlaveLock}, which could enforce a
 one-Build-at-a-time limit for each machine, but still allow as many
 simultaneous builds as there are machines.
 
+When using a @code{Lock}, you can specify how you want to access it
+with a @code{LockAccess} object. You can have an exclusive lock (the
+@code{'exclusive'} mode) where the lock has exactly one owner, or
+share it with with others up to the limit (the @code{'counting'}
+mode).
+
 Each @code{Lock} is created with a unique name. Each lock gets a count
-of how many owners it may have: how many processes can claim it at the
+of how many owners it may have in @code{'counting'} mode: how many processes can claim it at the
 same time. This limit defaults to one, and is controllable through the
 @code{maxCount} argument. On @code{SlaveLock}s you can set the owner
 count on a per-slave basis by providing a dictionary (that maps from
@@ -5814,14 +5821,19 @@ slavename to maximum owner count) to its @code{maxCountForSlave}
 argument. Any buildslaves that aren't mentioned in
 @code{maxCountForSlave} get their owner count from @code{maxCount}.
 
-To use a lock, simply include it in the @code{locks=} argument of the
+To use a lock, simply include it with the desired mode of access in the @code{locks=} argument of the
 @code{BuildStep} object that should obtain the lock before it runs.
-This argument accepts a list of @code{Lock} objects: the Step will
-acquire all of them before it runs.
+This argument accepts a list of @code{LockAccess} objects: the Step will
+acquire all of them before it runs. (For backwards compatibility, the
+list also accepts @code{Lock} objects which are accessed in
+@code{'counting'} mode.)
 
 To claim a lock for the whole Build, add a @code{'locks'} key to the
-builder specification dictionary with the same list of @code{Lock}
-objects. (This is the dictionary that has the @code{'name'},
+builder specification dictionary with the same list of
+@code{LockAccess} objects (and for backwards compatibility, the list
+also accepts @code{Lock} objects which are accessed in
+@code{'counting'} mode).
+(The builder specification dictionary is the dictionary that has the @code{'name'},
 @code{'slavename'}, @code{'builddir'}, and @code{'factory'} keys). The
 @code{Build} object also accepts a @code{locks=} argument, but unless
 you are writing your own @code{BuildFactory} subclass then it will be
@@ -5855,12 +5867,16 @@ db_lock = locks.MasterLock("database")
 f = factory.BuildFactory()
 f.addStep(source.SVN(svnurl="http://example.org/svn/Trunk"))
 f.addStep(shell.ShellCommand(command="make all"))
-f.addStep(shell.ShellCommand(command="make test", locks=[db_lock]))
+f.addStep(shell.ShellCommand(command="make test",
+                             locks=[db_lock.access('exclusive')]))
 b1 = @{'name': 'full1', 'slavename': 'bot-1', 'builddir': 'f1', 'factory': f@}
 b2 = @{'name': 'full2', 'slavename': 'bot-2', 'builddir': 'f2', 'factory': f@}
 b3 = @{'name': 'full3', 'slavename': 'bot-3', 'builddir': 'f3', 'factory': f@}
 c['builders'] = [b1, b2, b3]
 @end example
+
+Note that by default, a @code{Lock} uses a @code{maxCount=1} limit, so
+you can also use the @code{'counting'} access mode in this example.
 
 In the next example, we have one buildslave hosting three separate
 Builders (each running tests against a different version of Python).
@@ -5886,12 +5902,38 @@ f22 = factory.Trial(source, trialpython=["python2.2"])
 f23 = factory.Trial(source, trialpython=["python2.3"])
 f24 = factory.Trial(source, trialpython=["python2.4"])
 b1 = @{'name': 'p22', 'slavename': 'bot-1', 'builddir': 'p22',
-      'factory': f22, 'locks': [slow_lock] @}
+      'factory': f22, 'locks': [slow_lock.access('counting')] @}
 b2 = @{'name': 'p23', 'slavename': 'bot-1', 'builddir': 'p23',
-      'factory': f23, 'locks': [slow_lock] @}
+      'factory': f23, 'locks': [slow_lock.access('counting')] @}
 b3 = @{'name': 'p24', 'slavename': 'bot-1', 'builddir': 'p24',
-      'factory': f24, 'locks': [slow_lock] @}
+      'factory': f24, 'locks': [slow_lock.access('counting')] @}
 c['builders'] = [b1, b2, b3]
+@end example
+
+You can also mix access modes. In the next example, a limit of at most
+two builds is enforced. The cleanup process however needs exclusive
+access to prevent interference with the build processes.
+
+@example
+from buildbot import locks
+from buildbot.steps import source, shell
+from buildbot.process import factory
+
+build_lock = locks.MasterLock("builds", maxCount=2)
+fb = factory.BuildFactory()
+fb.addStep(source.SVN(svnurl="http://example.org/svn/Trunk"))
+fb.addStep(shell.ShellCommand(command=["make", "all"]))
+b1 = @{'name': 'b1', 'slavename': 'bot-1', 'builddir' : 'b1',
+      'factory': fb, 'locks': [build_lock.access('counting')] @}
+b2 = @{'name': 'b2', 'slavename': 'bot-2', 'builddir' : 'b2',
+      'factory': fb, 'locks': [build_lock.access('counting')] @}
+b3 = @{'name': 'b3', 'slavename': 'bot-3', 'builddir' : 'b3',
+      'factory': fb, 'locks': [build_lock.access('counting')] @}
+fc = factory.BuildFactory()
+fc.addStep(shell.ShellCommand(command=["cleanup"]))
+cl = @{'name': 'clean', 'slavename': 'bot-1', 'builddir' :clean',
+      'factory': fc, 'locks': [build_lock.access('exclusive')] @}
+c['builders'] = [b1, b2, b3, cl]
 @end example
 
 In the last example, we use two Locks at the same time. In this case,
@@ -5914,9 +5956,13 @@ slavecounts = @{"bot-slow": 1, "bot-fast": 100@}
 cpu_lock = locks.SlaveLock("cpu", maxCountForSlave=slavecounts)
 f = factory.BuildFactory()
 f.addStep(source.SVN(svnurl="http://example.org/svn/Trunk"))
-f.addStep(shell.ShellCommand(command="make all", locks=[cpu_lock]))
-f.addStep(shell.ShellCommand(command="make test", locks=[cpu_lock]))
-f.addStep(shell.ShellCommand(command="make db-test", locks=[db_lock, cpu_lock]))
+f.addStep(shell.ShellCommand(command="make all",
+                             locks=[cpu_lock.access('counting')]))
+f.addStep(shell.ShellCommand(command="make test",
+                             locks=[cpu_lock.access('counting')]))
+f.addStep(shell.ShellCommand(command="make db-test",
+                             locks=[db_lock.access('exclusive'),
+			            cpu_lock.access('counting')]))
 
 b1 = @{'name': 'full1', 'slavename': 'bot-slow', 'builddir': 'full1',
       'factory': f@}

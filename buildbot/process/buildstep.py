@@ -8,7 +8,7 @@ from twisted.python import log
 from twisted.python.failure import Failure
 from twisted.web.util import formatFailure
 
-from buildbot import interfaces
+from buildbot import interfaces, locks
 from buildbot.status import progress
 from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE, SKIPPED, \
      EXCEPTION
@@ -662,12 +662,18 @@ class BuildStep:
         self.remote = remote
         self.deferred = defer.Deferred()
         # convert all locks into their real form
-        self.locks = [self.build.builder.botmaster.getLockByID(l)
-                      for l in self.locks]
+        lock_list = []
+        for access in self.locks:
+            if not isinstance(access, locks.LockAccess):
+                # Buildbot 0.7.7 compability: user did not specify access
+                access = access.defaultAccess()
+            lock = self.build.builder.botmaster.getLockByID(access.lockid)
+            lock_list.append((lock, access))
+        self.locks = lock_list
         # then narrow SlaveLocks down to the slave that this build is being
         # run on
-        self.locks = [l.getLock(self.build.slavebuilder) for l in self.locks]
-        for l in self.locks:
+        self.locks = [(l.getLock(self.build.slavebuilder), la) for l, la in self.locks]
+        for l, la in self.locks:
             if l in self.build.locks:
                 log.msg("Hey, lock %s is claimed by both a Step (%s) and the"
                         " parent Build (%s)" % (l, self, self.build))
@@ -680,15 +686,15 @@ class BuildStep:
         log.msg("acquireLocks(step %s, locks %s)" % (self, self.locks))
         if not self.locks:
             return defer.succeed(None)
-        for lock in self.locks:
-            if not lock.isAvailable():
+        for lock, access in self.locks:
+            if not lock.isAvailable(access):
                 log.msg("step %s waiting for lock %s" % (self, lock))
-                d = lock.waitUntilMaybeAvailable(self)
+                d = lock.waitUntilMaybeAvailable(self, access)
                 d.addCallback(self.acquireLocks)
                 return d
         # all locks are available, claim them all
-        for lock in self.locks:
-            lock.claim(self)
+        for lock, access in self.locks:
+            lock.claim(self, access)
         return defer.succeed(None)
 
     def _startStep_2(self, res):
@@ -769,8 +775,8 @@ class BuildStep:
 
     def releaseLocks(self):
         log.msg("releaseLocks(%s): %s" % (self, self.locks))
-        for lock in self.locks:
-            lock.release(self)
+        for lock, access in self.locks:
+            lock.release(self, access)
 
     def finished(self, results):
         if self.progress:

@@ -23,38 +23,84 @@ class BaseLock:
     description = "<BaseLock>"
 
     def __init__(self, name, maxCount=1):
-        self.name = name
-        self.waiting = []
-        self.owners = []
-        self.maxCount=maxCount
+        self.name = name        # Name of the lock
+        self.waiting = []       # Current queue, tuples (LockAccess, deferred)
+        self.owners = []        # Current owners, tuples (owner, LockAccess)
+        self.maxCount=maxCount  # maximal number of counting owners
 
     def __repr__(self):
         return self.description
 
-    def isAvailable(self):
+    def _getOwnersCount(self):
+        """ Return the number of current exclusive and counting owners.
+
+            @return: Tuple (number exclusive owners, number counting owners)
+        """
+        num_excl, num_counting = 0, 0
+        for owner in self.owners:
+            if owner[1].mode == 'exclusive':
+                num_excl = num_excl + 1
+            else: # mode == 'counting'
+                num_counting = num_counting + 1
+
+        assert (num_excl == 1 and num_counting == 0) \
+                or (num_excl == 0 and num_counting <= self.maxCount)
+        return num_excl, num_counting
+
+
+    def isAvailable(self, access):
         """ Return a boolean whether the lock is available for claiming """
-        debuglog("%s isAvailable: self.owners=%r" % (self, self.owners))
-        return len(self.owners) < self.maxCount
+        debuglog("%s isAvailable(%s): self.owners=%r"
+                                            % (self, access, self.owners))
+        num_excl, num_counting = self._getOwnersCount()
+        if access.mode == 'counting':
+            # Wants counting access
+            return num_excl == 0 and num_counting < self.maxCount
+        else:
+            # Wants exclusive access
+            return num_excl == 0 and num_counting == 0
 
-    def claim(self, owner):
+    def claim(self, owner, access):
         """ Claim the lock (lock must be available) """
-        debuglog("%s claim(%s)" % (self, owner))
+        debuglog("%s claim(%s, %s)" % (self, owner, access.mode))
         assert owner is not None
-        assert len(self.owners) < self.maxCount, "ask for isAvailable() first"
-        self.owners.append(owner)
-        debuglog(" %s is claimed" % (self,))
+        assert self.isAvailable(access), "ask for isAvailable() first"
 
-    def release(self, owner):
+        assert isinstance(access, LockAccess)
+        assert access.mode in ['counting', 'exclusive']
+        self.owners.append((owner, access))
+        debuglog(" %s is claimed '%s'" % (self, access.mode))
+
+    def release(self, owner, access):
         """ Release the lock """
-        debuglog("%s release(%s)" % (self, owner))
-        assert owner in self.owners
-        self.owners.remove(owner)
+        assert isinstance(access, LockAccess)
+
+        debuglog("%s release(%s, %s)" % (self, owner, access.mode))
+        entry = (owner, access)
+        assert entry in self.owners
+        self.owners.remove(entry)
         # who can we wake up?
-        if self.waiting:
-            d = self.waiting.pop(0)
+        # After an exclusive access, we may need to wake up several waiting.
+        # Break out of the loop when the first waiting client should not be awakened.
+        num_excl, num_counting = self._getOwnersCount()
+        while len(self.waiting) > 0:
+            access, d = self.waiting[0]
+            if access.mode == 'counting':
+                if num_excl > 0 or num_counting == self.maxCount:
+                    break
+                else:
+                    num_counting = num_counting + 1
+            else:
+                # access.mode == 'exclusive'
+                if num_excl > 0 or num_counting > 0:
+                    break
+                else:
+                    num_excl = num_excl + 1
+
+            del self.waiting[0]
             reactor.callLater(0, d.callback, self)
 
-    def waitUntilMaybeAvailable(self, owner):
+    def waitUntilMaybeAvailable(self, owner, access):
         """Fire when the lock *might* be available. The caller will need to
         check with isAvailable() when the deferred fires. This loose form is
         used to avoid deadlocks. If we were interested in a stronger form,
@@ -62,10 +108,11 @@ class BaseLock:
         after the lock had been claimed.
         """
         debuglog("%s waitUntilAvailable(%s)" % (self, owner))
-        if self.isAvailable():
+        assert isinstance(access, LockAccess)
+        if self.isAvailable(access):
             return defer.succeed(self)
         d = defer.Deferred()
-        self.waiting.append(d)
+        self.waiting.append((access, d))
         return d
 
 
@@ -103,15 +150,46 @@ class RealSlaveLock:
         return self.locks[slavename]
 
 
+class LockAccess:
+    """ I am an object representing a way to access a lock.
+
+    @param lockid: LockId instance that should be accessed.
+    @type  lockid: A MasterLock or SlaveLock instance.
+
+    @param mode: Mode of accessing the lock.
+    @type  mode: A string, either 'counting' or 'exclusive'.
+    """
+    def __init__(self, lockid, mode):
+        self.lockid = lockid
+        self.mode = mode
+
+        assert isinstance(lockid, (MasterLock, SlaveLock))
+        assert mode in ['counting', 'exclusive']
+
+
 class BaseLockId(util.ComparableMixin):
     """ Abstract base class for LockId classes.
 
+    Sets up the 'access()' function for the LockId's available to the user
+    (MasterLock and SlaveLock classes).
     Derived classes should add
     - Comparison with the L{util.ComparableMixin} via the L{compare_attrs}
       class variable.
     - Link to the actual lock class should be added with the L{lockClass}
       class variable.
     """
+    def access(self, mode):
+        """ Express how the lock should be accessed """
+        assert mode in ['counting', 'exclusive']
+        return LockAccess(self, mode)
+
+    def defaultAccess(self):
+        """ For buildbot 0.7.7 compability: When user doesn't specify an access
+            mode, this one is chosen.
+        """
+        return self.access('counting')
+
+
 
 # master.cfg should only reference the following MasterLock and SlaveLock
 # classes. They are identifiers that will be turned into real Locks later,
