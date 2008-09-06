@@ -888,6 +888,11 @@ class SlaveFileDownloadCommand(Command):
         self.path = os.path.join(self.builder.basedir,
                                  self.workdir,
                                  os.path.expanduser(self.filename))
+
+        dirname = os.path.dirname(self.path)
+        if not os.path.exists(dirname):
+            os.makedirs(dirname)
+
         try:
             self.fp = open(self.path, 'wb')
             if self.debug:

@@ -5192,9 +5192,8 @@ directory. If the buildslave is running in @file{~buildslave}, and the
 builder's ``builddir'' is something like @file{tests-i386}, then the
 workdir is going to be @file{~buildslave/tests-i386/build}, and a
 @code{slavedest=} of @file{foo/bar.html} will get put in
-@file{~buildslave/tests-i386/build/foo/bar.html}. Remember that
-neither of these commands will create missing directories for you.
-
+@file{~buildslave/tests-i386/build/foo/bar.html}. Both of these commands
+will create any missing intervening directories.
 
 @subheading Other Parameters
 
