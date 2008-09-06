@@ -24,6 +24,17 @@ def later(old, new):
         return old
     return new
 
+def formatInterval(eta):
+    eta_parts = []
+    if eta > 3600:
+        eta_parts.append("%d hrs" % (eta / 3600))
+        eta %= 3600
+    if eta > 60:
+        eta_parts.append("%d mins" % (eta / 60))
+        eta %= 60
+    eta_parts.append("%d secs" % eta)
+    return ", ".join(eta_parts)
+
 class CancelableDeferred(Deferred):
     """I am a version of Deferred that can be canceled by calling my
     .cancel() method. After being canceled, no callbacks or errbacks will be

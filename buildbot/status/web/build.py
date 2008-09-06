@@ -143,6 +143,16 @@ class StatusResourceBuild(HtmlResource):
         else:
             data += "<div>no responsible users</div>\n"
 
+
+        (start, end) = b.getTimes()
+        data += "<h2>Timing</h2>\n"
+        data += "<table>\n"
+        data += "<tr><td>Start</td><td>%s</td></tr>\n" % time.ctime(start)
+        if end:
+            data += "<tr><td>End</td><td>%s</td></tr>\n" % time.ctime(end)
+            data += "<tr><td>Elapsed</td><td>%s</td></tr>\n" % util.formatInterval(end - start)
+        data += "</table>\n"
+
         if ss.changes:
             data += "<h2>All Changes</h2>\n"
             data += "<ol>\n"

@@ -5,6 +5,8 @@ import urllib
 from buildbot.status.web.base import HtmlResource, path_to_builder, \
      path_to_build
 from buildbot.status.web.logs import LogsResource
+from buildbot import util
+from time import ctime
 
 # /builders/$builder/builds/$buildnum/steps/$stepname
 class StatusResourceBuildStep(HtmlResource):
@@ -42,6 +44,16 @@ class StatusResourceBuildStep(HtmlResource):
                 data += "<li>%s: current=%s, target=%s</li>\n" % \
                         (html.escape(e[0]), e[1], e[2])
             data += "</ul>\n"
+
+        (start, end) = s.getTimes()
+        data += "<h2>Timing</h2>\n"
+        data += "<table>\n"
+        data += "<tr><td>Start</td><td>%s</td></tr>\n" % ctime(start)
+        if end:
+            data += "<tr><td>End</td><td>%s</td></tr>\n" % ctime(end)
+            data += "<tr><td>Elapsed</td><td>%s</td></tr>\n" % util.formatInterval(end - start)
+        data += "</table>\n"
+
         logs = s.getLogs()
         if logs:
             data += ("<h2>Logs</h2>\n"
