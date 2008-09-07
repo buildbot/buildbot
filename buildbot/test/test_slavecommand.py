@@ -102,9 +102,14 @@ class ShellBase(SignalMixin):
             self.assertEquals(got, contents)
 
     def getrc(self):
-        self.failUnless(self.builder.updates[-1].has_key('rc'))
-        got = self.builder.updates[-1]['rc']
-        return got
+        # updates[-2] is the rc, unless the step was interrupted
+        # updates[-1] is the elapsed-time header
+        u = self.builder.updates[-1]
+        if "rc" not in u:
+            self.failUnless(len(self.builder.updates) >= 2)
+            u = self.builder.updates[-2]
+            self.failUnless("rc" in u)
+        return u['rc']
     def checkrc(self, expected):
         got = self.getrc()
         self.assertEquals(got, expected)
