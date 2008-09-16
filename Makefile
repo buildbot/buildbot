@@ -45,7 +45,7 @@ release: docs
 	chmod 0755 .
 	find buildbot contrib docs -type d -exec chmod 0755 {} \;
 	find bin buildbot contrib docs -type f -exec chmod 0644 {} \;
-	chmod 0644 ChangeLog MANIFEST* NEWS README* setup.py
+	chmod 0644 MANIFEST* NEWS README* setup.py
 	chmod a+x bin/buildbot contrib/*.py contrib/windows/*.py
 	rm -rf _trial_temp
 	python ./setup.py clean

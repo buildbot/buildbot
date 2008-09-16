@@ -1,5 +1,5 @@
 
-include ChangeLog MANIFEST.in README README.w32 NEWS CREDITS COPYING
+include MANIFEST.in README README.w32 NEWS CREDITS COPYING
 include docs/examples/*.cfg
 include docs/buildbot.texinfo docs/buildbot.info* docs/buildbot.html
 include docs/*.png docs/images/*.png docs/images/*.svg docs/images/*.txt
