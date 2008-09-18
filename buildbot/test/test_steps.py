@@ -640,9 +640,13 @@ class TreeSize(StepTester, unittest.TestCase):
         d.addCallback(_check)
         return d
 
+class FakeCommand:
+    def __init__(self, rc):
+        self.rc = rc
+
 class PerlModuleTest(StepTester, unittest.TestCase):
     def testAllTestsPassed(self):
-        self.masterbase = "Warnings.testAllTestsPassed"
+        self.masterbase = "PMT.testAllTestsPassed"
         step = self.makeStep(shell.PerlModuleTest)
         output = \
 """ok 1
@@ -653,14 +657,15 @@ Files=1, Tests=123, other stuff
         log = step.addLog("stdio")
         log.addStdout(output)
         log.finish()
-        step.evaluateCommand(log)
+        rc = step.evaluateCommand(FakeCommand(rc=241))
+        self.failUnlessEqual(rc, SUCCESS)
         ss = step.step_status
         self.failUnlessEqual(ss.getStatistic('tests-failed'), 0)
         self.failUnlessEqual(ss.getStatistic('tests-total'), 123)
         self.failUnlessEqual(ss.getStatistic('tests-passed'), 123)
 
-    def testFailures(self):
-        self.masterbase = "Warnings.testFailures"
+    def testFailures_OldTestHarness(self):
+        self.masterbase = "PMT.testFailures_OldTestHarness"
         step = self.makeStep(shell.PerlModuleTest)
         output = \
 """
@@ -671,8 +676,71 @@ ok 2
         log = step.addLog("stdio")
         log.addStdout(output)
         log.finish()
-        step.evaluateCommand(log)
+        rc = step.evaluateCommand(FakeCommand(rc = 123))
+        self.failUnlessEqual(rc, FAILURE)
         ss = step.step_status
         self.failUnlessEqual(ss.getStatistic('tests-failed'), 3)
         self.failUnlessEqual(ss.getStatistic('tests-total'), 7)
         self.failUnlessEqual(ss.getStatistic('tests-passed'), 4)
+
+    def testFailures_UnparseableStdio(self):
+        self.masterbase = "PMT.testFailures_UnparseableStdio"
+        step = self.makeStep(shell.PerlModuleTest)
+        output = \
+"""
+just some random stuff, you know
+"""
+        log = step.addLog("stdio")
+        log.addStdout(output)
+        log.finish()
+        rc = step.evaluateCommand(FakeCommand(rc = 243))
+        self.failUnlessEqual(rc, 243)
+        ss = step.step_status
+        self.failUnlessEqual(ss.getStatistic('tests-failed'), None)
+        self.failUnlessEqual(ss.getStatistic('tests-total'), None)
+        self.failUnlessEqual(ss.getStatistic('tests-passed'), None)
+
+    def testFailures_NewTestHarness(self):
+        self.masterbase = "PMT.testFailures_NewTestHarness"
+        step = self.makeStep(shell.PerlModuleTest)
+        output = \
+"""
+# Looks like you failed 15 tests of 18.
+tests/services.......................... Failed 265/30904 subtests
+        (less 16 skipped subtests: 30623 okay)
+tests/simple_query_backend..............ok
+tests/simple_query_middleware...........ok
+tests/soap_globalcollect................ok
+tests/three_d_me........................ok
+tests/three_d_me_callback...............ok
+tests/transaction_create................ok
+tests/unique_txid.......................ok
+
+Test Summary Report
+-------------------
+tests/000policies                   (Wstat: 5632 Tests: 9078 Failed: 22)
+  Failed tests:  2409, 2896-2897, 2900-2901, 2940-2941, 2944-2945
+                2961-2962, 2965-2966, 2969-2970, 2997-2998
+                3262, 3281-3282, 3288-3289
+  Non-zero exit status: 22
+tests/services                      (Wstat: 0 Tests: 30904 Failed: 265)
+  Failed tests:  14, 16-21, 64-69, 71-96, 98, 30157, 30159
+                30310, 30316, 30439-30543, 30564, 30566-30577
+                30602, 30604-30607, 30609-30612, 30655
+                30657-30668, 30675, 30697-30716, 30718-30720
+                30722-30736, 30773-30774, 30776-30777, 30786
+                30791, 30795, 30797, 30801, 30822-30827
+                30830-30831, 30848-30855, 30858-30859, 30888-30899
+                30901, 30903-30904
+Files=68, Tests=264809, 1944 wallclock secs (17.59 usr  0.63 sys + 470.04 cusr 131.40 csys = 619.66 CPU)
+Result: FAIL
+"""
+        log = step.addLog("stdio")
+        log.addStdout(output)
+        log.finish()
+        rc = step.evaluateCommand(FakeCommand(rc=87))
+        self.failUnlessEqual(rc, FAILURE)
+        ss = step.step_status
+        self.failUnlessEqual(ss.getStatistic('tests-failed'), 287)
+        self.failUnlessEqual(ss.getStatistic('tests-total'), 39982)
+        self.failUnlessEqual(ss.getStatistic('tests-passed'), 39695)
