@@ -168,7 +168,7 @@ class Contact:
     command_STATUS.usage = "status [<which>] - List status of a builder (or all builders)"
 
     def validate_notification_event(self, event):
-        if not re.compile("^(started|finished|success|failed|exception)$").match(event):
+        if not re.compile("^(started|finished|success|failed|exception|successToFailed|failedToSuccess)$").match(event):
             raise UsageError("try 'notify on|off <EVENT>'")
 
     def list_notified_events(self):
@@ -337,7 +337,7 @@ class Contact:
 
         prevBuild = build.getPreviousBuild()
         if prevBuild:
-            prevResult = prevBuild.getResult()
+            prevResult = prevBuild.getResults()
 
             if (self.notify_for('failureToSuccess') and prevResult == FAILURE and results == SUCCESS) or \
                (self.notify_for('successToFailure') and prevResult == SUCCESS and results == FAILURE):
