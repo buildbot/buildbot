@@ -430,7 +430,7 @@ class PerlModuleTest(Test):
 
             del lines[0:test_summary_report_index + 2]
 
-            re_test_result = re.compile("^Result: (PASS|FAIL)$|Tests: (\d+) Failed: (\d+)\)")
+            re_test_result = re.compile("^Result: (PASS|FAIL)$|Tests: \d+ Failed: (\d+)\)|Files=\d+, Tests=(\d+)")
 
             mos = map(lambda line: re_test_result.search(line), lines)
             test_result_lines = [mo.groups() for mo in mos if mo]
@@ -440,9 +440,10 @@ class PerlModuleTest(Test):
                     rc = SUCCESS
                 elif line[0] == 'FAIL':
                     rc = FAILURE
-                else:
-                    total += int(line[1])
-                    failed += int(line[2])
+                elif line[1]:
+                    failed += int(line[1])
+                elif line[2]:
+                    total = int(line[2])
 
         except ValueError: # Nope, it's the old version
             re_test_result = re.compile("^(All tests successful)|(\d+)/(\d+) subtests failed|Files=\d+, Tests=(\d+),")

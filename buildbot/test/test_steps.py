@@ -742,5 +742,5 @@ Result: FAIL
         self.failUnlessEqual(rc, FAILURE)
         ss = step.step_status
         self.failUnlessEqual(ss.getStatistic('tests-failed'), 287)
-        self.failUnlessEqual(ss.getStatistic('tests-total'), 39982)
-        self.failUnlessEqual(ss.getStatistic('tests-passed'), 39695)
+        self.failUnlessEqual(ss.getStatistic('tests-total'), 264809)
+        self.failUnlessEqual(ss.getStatistic('tests-passed'), 264522)
