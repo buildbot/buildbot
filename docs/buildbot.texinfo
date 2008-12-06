@@ -5811,75 +5811,82 @@ will be unavoidable.
 @slindex buildbot.locks.SlaveLock
 @slindex buildbot.locks.LockAccess
 
-For various reasons, you may want to prevent certain Steps (or perhaps
-entire Builds) from running simultaneously. Limited CPU speed or
-network bandwidth to the VC server, problems with simultaneous access
-to a database server used by unit tests, or multiple Builds which
-access shared state may all require some kind of interlock to prevent
-corruption, confusion, or resource overload. These resources might
-require completely exclusive access, or it might be sufficient to
-establish a limit of two or three simultaneous builds.
+Until now, we assumed that a master can run builds at any slave whenever
+needed or desired.  Some times, you want to enforce additional constraints on
+builds. For reasons like limited network bandwidth, old slave machines, or a
+self-willed data base server, you may want to limit the number of builds (or
+build steps) that can access a resource.
 
-@code{Locks} are the mechanism used to express these kinds of
-constraints on when Builds or Steps can be run. There are two kinds of
-@code{Locks}, each with their own scope: @code{MasterLock} instances
-are scoped to the buildbot as a whole, while @code{SlaveLock}s are
-scoped to a single buildslave. This means that each buildslave has a
-separate copy of each @code{SlaveLock}, which could enforce a
-one-Build-at-a-time limit for each machine, but still allow as many
-simultaneous builds as there are machines.
+The mechanism used by Buildbot is known as the read/write lock.@footnote{See
+http://en.wikipedia.org/wiki/Read/write_lock_pattern for more information.} It
+allows either many readers or a single writer but not a combination of readers
+and writers.  The general lock has been modified and extended for use in
+Buildbot.  Firstly, the general lock allows an infinite number of readers. In
+Buildbot, we often want to put an upper limit on the number of readers, for
+example allowing two out of five possible builds at the same time. To do this,
+the lock counts the number of active readers.  Secondly, the terms @emph{read
+mode} and @emph{write mode} are confusing in Buildbot context. They have been
+replaced by @emph{counting mode} (since the lock counts them) and @{exclusive
+mode}.  As a result of these changes, locks in Buildbot allow a number of
+builds (upto some fixed number) in counting mode, or they allow one build in
+exclusive mode.
 
-When using a @code{Lock}, you can specify how you want to access it
-with a @code{LockAccess} object. You can have an exclusive lock (the
-@code{'exclusive'} mode) where the lock has exactly one owner, or
-share it with with others up to the limit (the @code{'counting'}
-mode).
+Often, not all slaves are equal. To allow for this situation, Buildbot allows
+to have a separate upper limit on the count for each slave. In this way, you
+can have at most 3 concurrent builds at a fast slave, 2 at a slightly older
+slave, and 1 at all other slaves.
 
-Each @code{Lock} is created with a unique name. Each lock gets a count
-of how many owners it may have in @code{'counting'} mode: how many processes can claim it at the
-same time. This limit defaults to one, and is controllable through the
-@code{maxCount} argument. On @code{SlaveLock}s you can set the owner
-count on a per-slave basis by providing a dictionary (that maps from
-slavename to maximum owner count) to its @code{maxCountForSlave}
-argument. Any buildslaves that aren't mentioned in
-@code{maxCountForSlave} get their owner count from @code{maxCount}.
+The final thing you can specify when you introduce a new lock is its scope.
+Some constraints are global -- they must be enforced over all slaves. Other
+constraints are local to each slave.  A @emph{master lock} is used for the
+global constraints. You can ensure for example that at most one build (of all
+builds running at all slaves) accesses the data base server. With a
+@emph{slave lock} you can add a limit local to each slave. With such a lock,
+you can for example enforce an upper limit to the number of active builds at a
+slave, like above.
 
-To use a lock, simply include it with the desired mode of access in the @code{locks=} argument of the
-@code{BuildStep} object that should obtain the lock before it runs.
-This argument accepts a list of @code{LockAccess} objects: the Step will
-acquire all of them before it runs. (For backwards compatibility, the
-list also accepts @code{Lock} objects which are accessed in
-@code{'counting'} mode.)
+Time for a few examples. Below a master lock is defined to protect a data base,
+and a slave lock is created to limit the number of builds at each slave.
 
-To claim a lock for the whole Build, add a @code{'locks'} key to the
-builder specification dictionary with the same list of
-@code{LockAccess} objects (and for backwards compatibility, the list
-also accepts @code{Lock} objects which are accessed in
-@code{'counting'} mode).
-(The builder specification dictionary is the dictionary that has the @code{'name'},
-@code{'slavename'}, @code{'builddir'}, and @code{'factory'} keys). The
-@code{Build} object also accepts a @code{locks=} argument, but unless
-you are writing your own @code{BuildFactory} subclass then it will be
-easier to set the locks in the builder dictionary.
+@example
+from buildbot import locks
 
-Note that there are no partial-acquire or partial-release semantics:
-this prevents deadlocks caused by two Steps each waiting for a lock
-held by the other@footnote{Also note that a clever buildmaster admin
-could still create the opportunity for deadlock: Build A obtains Lock
-1, inside which Step A.two tries to acquire Lock 2 at the Step level.
-Meanwhile Build B obtains Lock 2, and has a Step B.two which wants to
-acquire Lock 1 at the Step level. Don't Do That.}. This also means
-that waiting to acquire a @code{Lock} can take an arbitrarily long
-time: if the buildmaster is very busy, a Step or Build which requires
-only one @code{Lock} may starve another that is waiting for that
-@code{Lock} plus some others.
+db_lock = locks.MasterLock("database")
+build_lock = locks.SlaveLock("slave_builds",
+                             maxCount = 1,
+                             maxCountForSlave = { 'fast': 3, 'new': 2 })
+@end example
 
+After importing locks from buildbot, @code{db_lock} is defined to be a master
+lock. The @code{"database"} string is used for uniquely identifying the lock.
+At the next line, a slave lock called @code{build_lock} is created. It is
+identified by the @code{"slave_builds"} string. Since the requirements of the
+lock are a bit more complicated, two optional arguments are also specified. The
+@code{maxCount} parameter sets the default limit for builds in counting mode to
+@code{1}. For the slave called @code{'fast'} however, we want to have at most
+three builds, and for the slave called @code{'new'} the upper limit is two
+builds running at the same time.
 
-In the following example, we run the same build on three different
-platforms. The unit-test steps of these builds all use a common
-database server, and would interfere with each other if allowed to run
-simultaneously. The @code{Lock} prevents more than one of these builds
-from happening at the same time.
+The next step is using the locks in builds.  Buildbot allows a lock to be used
+during an entire build (from beginning to end), or only during a single build
+step. In the latter case, the lock is claimed for use just before the step
+starts, and released again when the step ends. To prevent
+deadlocks,@footnote{Deadlock is the situation where two or more slaves each
+hold a lock in exclusive mode, and in addition want to claim the lock held by
+the other slave exclusively as well. Since locks allow at most one exclusive
+user, both slaves will wait forever.} it is not possible to claim or release
+locks at other times.
+
+To use locks, you should add them with a @code{locks} argument.
+Each use of a lock is either in counting mode (that is, possibly shared with
+other builds) or in exclusive mode. A build or build step proceeds only when it
+has acquired all locks. If a build or step needs a lot of locks, it may be
+starved@footnote{Starving is the situation that only a few locks are available,
+and they are immediately grabbed by another build. As a result, it may take a
+long time before all locks needed by the starved build are free at the same
+time.} by other builds that need fewer locks.
+
+To illustrate use of locks, a few examples.
 
 @example
 from buildbot import locks
@@ -5887,137 +5894,45 @@ from buildbot.steps import source, shell
 from buildbot.process import factory
 
 db_lock = locks.MasterLock("database")
+build_lock = locks.SlaveLock("slave_builds",
+                             maxCount = 1,
+                             maxCountForSlave = { 'fast': 3, 'new': 2 })
+
 f = factory.BuildFactory()
 f.addStep(source.SVN(svnurl="http://example.org/svn/Trunk"))
 f.addStep(shell.ShellCommand(command="make all"))
 f.addStep(shell.ShellCommand(command="make test",
                              locks=[db_lock.access('exclusive')]))
-b1 = @{'name': 'full1', 'slavename': 'bot-1', 'builddir': 'f1', 'factory': f@}
-b2 = @{'name': 'full2', 'slavename': 'bot-2', 'builddir': 'f2', 'factory': f@}
-b3 = @{'name': 'full3', 'slavename': 'bot-3', 'builddir': 'f3', 'factory': f@}
-c['builders'] = [b1, b2, b3]
-@end example
 
-Note that by default, a @code{Lock} uses a @code{maxCount=1} limit, so
-you can also use the @code{'counting'} access mode in this example.
+b1 = @{'name': 'full1', 'slavename': 'fast',  'builddir': 'f1', 'factory': f,
+       'locks': [build_lock.access('counting')] @}
 
-In the next example, we have one buildslave hosting three separate
-Builders (each running tests against a different version of Python).
-The machine which hosts this buildslave is not particularly fast, so
-we want to prevent all three builds from all happening at the same
-time. (Assume we've experimentally determined that one build leaves
-unused CPU capacity, three builds causes a lot of disk thrashing, but
-two builds at a time is Just Right). We use a @code{SlaveLock} because
-the builds happening on this one slow slave should not affect builds
-running on other slaves, and we use the lock on the build as a whole
-because the slave is so slow that even multiple simultaneous SVN
-checkouts would be too taxing. We set @code{maxCount=2} to achieve our
-goal of two simultaneous builds per slave.
+b2 = @{'name': 'full2', 'slavename': 'new',   'builddir': 'f2', 'factory': f.
+       'locks': [build_lock.access('counting')] @}
 
-@example
-from buildbot import locks
-from buildbot.steps import source
-from buildbot.process import s, factory
+b3 = @{'name': 'full3', 'slavename': 'old',   'builddir': 'f3', 'factory': f.
+       'locks': [build_lock.access('counting')] @}
 
-slow_lock = locks.SlaveLock("cpu", maxCount=2)
-source = s(source.SVN, svnurl="http://example.org/svn/Trunk")
-f22 = factory.Trial(source, trialpython=["python2.2"])
-f23 = factory.Trial(source, trialpython=["python2.3"])
-f24 = factory.Trial(source, trialpython=["python2.4"])
-b1 = @{'name': 'p22', 'slavename': 'bot-1', 'builddir': 'p22',
-      'factory': f22, 'locks': [slow_lock.access('counting')] @}
-b2 = @{'name': 'p23', 'slavename': 'bot-1', 'builddir': 'p23',
-      'factory': f23, 'locks': [slow_lock.access('counting')] @}
-b3 = @{'name': 'p24', 'slavename': 'bot-1', 'builddir': 'p24',
-      'factory': f24, 'locks': [slow_lock.access('counting')] @}
-c['builders'] = [b1, b2, b3]
-@end example
+b4 = @{'name': 'full4', 'slavename': 'other', 'builddir': 'f4', 'factory': f.
+       'locks': [build_lock.access('counting')] @}
 
-You can also mix access modes. In the next example, a limit of at most
-two builds is enforced. The cleanup process however needs exclusive
-access to prevent interference with the build processes.
-
-@example
-from buildbot import locks
-from buildbot.steps import source, shell
-from buildbot.process import factory
-
-build_lock = locks.MasterLock("builds", maxCount=2)
-fb = factory.BuildFactory()
-fb.addStep(source.SVN(svnurl="http://example.org/svn/Trunk"))
-fb.addStep(shell.ShellCommand(command=["make", "all"]))
-b1 = @{'name': 'b1', 'slavename': 'bot-1', 'builddir' : 'b1',
-      'factory': fb, 'locks': [build_lock.access('counting')] @}
-b2 = @{'name': 'b2', 'slavename': 'bot-2', 'builddir' : 'b2',
-      'factory': fb, 'locks': [build_lock.access('counting')] @}
-b3 = @{'name': 'b3', 'slavename': 'bot-3', 'builddir' : 'b3',
-      'factory': fb, 'locks': [build_lock.access('counting')] @}
-fc = factory.BuildFactory()
-fc.addStep(shell.ShellCommand(command=["cleanup"]))
-cl = @{'name': 'clean', 'slavename': 'bot-1', 'builddir' :clean',
-      'factory': fc, 'locks': [build_lock.access('exclusive')] @}
-c['builders'] = [b1, b2, b3, cl]
-@end example
-
-In the last example, we use two Locks at the same time. In this case,
-we're concerned about both of the previous constraints, but we'll say
-that only the tests are computationally intensive, and that they have
-been split into those which use the database and those which do not.
-In addition, two of the Builds run on a fast machine which does not
-need to worry about the cpu lock, but which still must be prevented
-from simultaneous database access. We use @code{maxCountForSlave} to
-limit the slow machine to one simultanous build, but allow practically
-unlimited concurrent builds on the fast machine.
-
-@example
-from buildbot import locks
-from buildbot.steps import source, shell
-from buildbot.process import factory
-
-db_lock = locks.MasterLock("database")
-slavecounts = @{"bot-slow": 1, "bot-fast": 100@}
-cpu_lock = locks.SlaveLock("cpu", maxCountForSlave=slavecounts)
-f = factory.BuildFactory()
-f.addStep(source.SVN(svnurl="http://example.org/svn/Trunk"))
-f.addStep(shell.ShellCommand(command="make all",
-                             locks=[cpu_lock.access('counting')]))
-f.addStep(shell.ShellCommand(command="make test",
-                             locks=[cpu_lock.access('counting')]))
-f.addStep(shell.ShellCommand(command="make db-test",
-                             locks=[db_lock.access('exclusive'),
-			            cpu_lock.access('counting')]))
-
-b1 = @{'name': 'full1', 'slavename': 'bot-slow', 'builddir': 'full1',
-      'factory': f@}
-b2 = @{'name': 'full2', 'slavename': 'bot-slow', 'builddir': 'full2',
-      'factory': f@}
-b3 = @{'name': 'full3', 'slavename': 'bot-fast', 'builddir': 'full3',
-      'factory': f@}
-b4 = @{'name': 'full4', 'slavename': 'bot-fast', 'builddir': 'full4',
-      'factory': f@}
 c['builders'] = [b1, b2, b3, b4]
 @end example
 
-As a final note, remember that a unit test system which breaks when
-multiple people run it at the same time is fragile and should be
-fixed. Asking your human developers to serialize themselves when
-running unit tests will just discourage them from running the unit
-tests at all. Find a way to fix this: change the database tests to
-create a new (uniquely-named) user or table for each test run, don't
-use fixed listening TCP ports for network tests (instead listen on
-port 0 to let the kernel choose a port for you and then query the
-socket to find out what port was allocated). @code{MasterLock}s can be
-used to accomodate broken test systems like this, but are really
-intended for other purposes: build processes that store or retrieve
-products in shared directories, or which do things that human
-developers would not (or which might slow down or break in ways that
-require human attention to deal with).
+Here we have four slaves @code{b1}, @code{b2}, @code{b3}, and @code{b4}. Each
+slave performs the same checkout, make, and test build step sequence.
+We want to enforce that at most one test step is executed between all slaves due
+to restrictions with the data base server. This is done by adding the
+@code{locks=} parameter with the third step. It takes a list of locks with their
+access mode. In this case only the @code{db_lock} is needed. The exclusive
+access mode is used to ensure there is at most one slave that executes the test
+step.
 
-@code{SlaveLocks}s can be used to keep automated performance tests
-from interfering with each other, when there are multiple Builders all
-using the same buildslave. But they can't prevent other users from
-running CPU-intensive jobs on that host while the tests are running.
-
+In addition to exclusive accessing the data base, we also want slaves to stay
+responsive even under the load of a large number of builds being triggered.
+For this purpose, the slave lock called @code{build_lock} is defined. Since
+the restraint holds for entire builds, the lock is specified in the builder
+with @code{'locks': [build_lock.access('counting')]}.
 @node Build Factories,  , Interlocks, Build Process
 @section Build Factories
 
