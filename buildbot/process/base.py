@@ -193,6 +193,9 @@ class Build:
     def setLocks(self, locks):
         self.locks = locks
 
+    def setSlaveEnvironment(self, env):
+        self.slaveEnvironment = env
+
     def getSourceStamp(self):
         return self.source
 

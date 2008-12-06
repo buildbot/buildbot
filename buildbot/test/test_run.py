@@ -843,3 +843,80 @@ class TestFlag(RunMixin, TestFlagMixin, unittest.TestCase):
 # of the bug where I forgot to make Waterfall inherit from StatusReceiver
 # such that buildSetSubmitted failed.
 
+config_test_builder = config_base + """
+from buildbot.scheduler import Scheduler
+c['schedulers'] = [Scheduler('quick', 'dummy', 0.1, ['dummy']),
+                   Scheduler('quick2', 'dummy2', 0.1, ['dummy2']),
+                   Scheduler('quick3', 'dummy3', 0.1, ['dummy3'])]
+
+from buildbot.steps.shell import ShellCommand
+f3 = factory.BuildFactory([
+    s(ShellCommand, command="sleep 3", env={'blah':'blah'})
+    ])
+
+c['builders'] = [{'name': 'dummy', 'slavename': 'bot1', 'env': {'foo':'bar'},
+                  'builddir': 'dummy', 'factory': f3}]
+
+c['builders'].append({'name': 'dummy2', 'slavename': 'bot1',
+                       'env': {'blah':'bar'}, 'builddir': 'dummy2',
+                       'factory': f3})
+
+f4 = factory.BuildFactory([
+    s(ShellCommand, command="sleep 3")
+    ])
+
+c['builders'].append({'name': 'dummy3', 'slavename': 'bot1',
+                       'env': {'blah':'bar'}, 'builddir': 'dummy3',
+                       'factory': f4})
+"""
+
+class TestBuilder(RunMixin, unittest.TestCase):
+    def setUp(self):
+        RunMixin.setUp(self)
+        self.master.loadConfig(config_test_builder)
+        self.master.readConfig = True
+        self.master.startService()
+        self.connectSlave(builders=["dummy", "dummy2", "dummy3"])
+
+    def doBuilderEnvTest(self, branch, cb):
+        c = changes.Change("bob", ["Makefile", "foo/bar.c"], "changed",
+                           branch=branch)
+        self.master.change_svc.addChange(c)
+
+        d = defer.Deferred()
+        reactor.callLater(0.5, d.callback, None)
+        d.addCallback(cb)
+
+        return d
+
+    def testBuilderEnv(self):
+        return self.doBuilderEnvTest("dummy", self._testBuilderEnv1)
+
+    def _testBuilderEnv1(self, res):
+        b = self.master.botmaster.builders['dummy']
+        build = b.building[0]
+        s = build.currentStep
+        self.failUnless('foo' in s.cmd.args['env'])
+        self.failUnlessEqual('bar', s.cmd.args['env']['foo'])
+        self.failUnless('blah' in s.cmd.args['env'])
+        self.failUnlessEqual('blah', s.cmd.args['env']['blah'])
+
+    def testBuilderEnvOverride(self):
+        return self.doBuilderEnvTest("dummy2", self._testBuilderEnvOverride1)
+
+    def _testBuilderEnvOverride1(self, res):
+        b = self.master.botmaster.builders['dummy2']
+        build = b.building[0]
+        s = build.currentStep
+        self.failUnless('blah' in s.cmd.args['env'])
+        self.failUnlessEqual('blah', s.cmd.args['env']['blah'])
+
+    def testBuilderNoStepEnv(self):
+        return self.doBuilderEnvTest("dummy3", self._testBuilderNoStepEnv1)
+
+    def _testBuilderNoStepEnv1(self, res):
+        b = self.master.botmaster.builders['dummy3']
+        build = b.building[0]
+        s = build.currentStep
+        self.failUnless('blah' in s.cmd.args['env'])
+        self.failUnlessEqual('bar', s.cmd.args['env']['blah'])

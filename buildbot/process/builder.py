@@ -278,6 +278,8 @@ class Builder(pb.Referenceable):
         self.builddir = setup['builddir']
         self.buildFactory = setup['factory']
         self.locks = setup.get("locks", [])
+        self.env = setup.get('env', {})
+        assert isinstance(self.env, dict)
         if setup.has_key('periodicBuildTime'):
             raise ValueError("periodicBuildTime can no longer be defined as"
                              " part of the Builder: use scheduler.Periodic"
@@ -587,6 +589,8 @@ class Builder(pb.Referenceable):
         build = self.buildFactory.newBuild(requests)
         build.setBuilder(self)
         build.setLocks(self.locks)
+        if len(self.env) > 0:
+            build.setSlaveEnvironment(self.env)
 
         # start it
         self.startBuild(build, sb)

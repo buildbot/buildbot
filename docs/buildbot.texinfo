@@ -1769,6 +1769,28 @@ A @code{Builder} which is used to perform OS-X builds (as opposed to
 Linux or Solaris builds) should naturally be associated with an
 OS-X-based buildslave.
 
+A @code{Builder} may be given a set of environments variables to be used
+in its @pxref{ShellCommand}s. These variables will override anything in the
+buildslave's environment. Variables passed directly to a ShellCommand will
+override variables of the same name passed to the Builder.
+
+For example, if you a pool of identical slaves it is often easier to manage
+variables like PATH from Buildbot rather than manually editing it inside of
+the slaves' environment.
+
+@example
+f = factory.BuildFactory
+f.addStep(ShellCommand(
+              command=['bash', './configure']))
+f.addStep(Compile())
+
+c['builders'] = [
+  @{'name': 'test', 'slavenames': ['slave1', 'slave2', 'slave3', 'slave4',
+                                   'slave5', 'slave6'],
+    'builddir': 'test', 'factory': f',
+    'env': {'PATH': '/opt/local/bin:/opt/app/bin:/usr/local/bin:/usr/bin'}}
+
+@end example
 
 @node Users, Build Properties, Builder, Concepts
 @section Users
@@ -4843,7 +4865,8 @@ f.addStep(ShellCommand(command=["make", "test"],
 @end example
 
 These variable settings will override any existing ones in the
-buildslave's environment. The exception is PYTHONPATH, which is merged
+buildslave's environment or the environment specified in the
+Builder. The exception is PYTHONPATH, which is merged
 with (actually prepended to) any existing $PYTHONPATH setting. The
 value is treated as a list of directories to prepend, and a single
 string is treated like a one-item list. For example, to prepend both

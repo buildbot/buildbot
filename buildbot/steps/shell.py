@@ -135,17 +135,20 @@ class ShellCommand(LoggingBuildStep):
         return ["'%s" % words[0], "%s" % words[1], "...'"]
 
     def setupEnvironment(self, cmd):
-        # XXX is this used? documented? replaced by properties?
-        # merge in anything from Build.slaveEnvironment . Earlier steps
-        # (perhaps ones which compile libraries or sub-projects that need to
-        # be referenced by later steps) can add keys to
-        # self.build.slaveEnvironment to affect later steps.
+        # merge in anything from Build.slaveEnvironment
+        # This can be set from a Builder-level environment, or from earlier
+        # BuildSteps. The latter method is deprecated and superceded by
+        # BuildProperties.
+        # Environment variables passed in by a BuildStep override
+        # those passed in at the Builder level.
         properties = self.build.getProperties()
         slaveEnv = self.build.slaveEnvironment
         if slaveEnv:
             if cmd.args['env'] is None:
                 cmd.args['env'] = {}
-            cmd.args['env'].update(properties.render(slaveEnv))
+            fullSlaveEnv = slaveEnv.copy()
+            fullSlaveEnv.update(cmd.args['env'])
+            cmd.args['env'] = properties.render(fullSlaveEnv)
             # note that each RemoteShellCommand gets its own copy of the
             # dictionary, so we shouldn't be affecting anyone but ourselves.
 
