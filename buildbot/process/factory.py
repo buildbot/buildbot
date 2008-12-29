@@ -47,6 +47,8 @@ class BuildFactory(util.ComparableMixin):
             s = (step_or_factory, dict(kwargs))
         self.steps.append(s)
 
+    def addSteps(self, steps):
+        self.steps.extend([ s.getStepFactory() for s in steps ])
 
 # BuildFactory subclasses for common build tools
 

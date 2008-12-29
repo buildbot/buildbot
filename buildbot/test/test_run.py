@@ -21,8 +21,8 @@ s = factory.s
 f1 = factory.QuickBuildFactory('fakerep', 'cvsmodule', configure=None)
 
 f2 = factory.BuildFactory([
-    s(dummy.Dummy, timeout=1),
-    s(dummy.RemoteDummy, timeout=2),
+    dummy.Dummy(timeout=1),
+    dummy.RemoteDummy(timeout=2),
     ])
 
 BuildmasterConfig = c = {}
@@ -638,10 +638,11 @@ c['schedulers'] = [
     Scheduler('triggerer', None, 0.1, ['triggerer']),
     Triggerable('triggeree', ['triggeree'])
 ]
-triggerer = factory.BuildFactory([
-    s(SetTestFlagStep, flagname='triggerer_started'),
-    s(Trigger, flunkOnFailure=True, @ARGS@),
-    s(SetTestFlagStep, flagname='triggerer_finished'),
+triggerer = factory.BuildFactory()
+triggerer.addSteps([
+    SetTestFlagStep(flagname='triggerer_started'),
+    Trigger(flunkOnFailure=True, @ARGS@),
+    SetTestFlagStep(flagname='triggerer_finished'),
     ])
 triggeree = factory.BuildFactory([
     s(SetTestFlagStep, flagname='triggeree_started'),

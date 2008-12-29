@@ -4059,6 +4059,20 @@ specified this way, but the preferred form is to pass actual
 @code{BuildStep} class a chance to do some validation on the
 arguments.
 
+If you have a common set of steps which are used in several factories, the
+@code{addSteps} method may be handy.  It takes an iterable of @code{BuildStep}
+instances.
+
+@example
+setup_steps = [
+    source.SVN(svnurl="http://svn.example.org/Trunk/")
+    shell.ShellCommand(command="./setup")
+]
+quick = factory.BuildFactory()
+quick.addSteps(setup_steps)
+quick.addStep(shell.shellCommand(command="make quick"))
+@end example
+
 The rest of this section lists all the standard BuildStep objects
 available for use in a Build, and the parameters which can be used to
 control each.

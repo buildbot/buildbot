@@ -485,6 +485,8 @@ class SetTestFlagStep(BuildStep):
     """
     def __init__(self, flagname='flag', value=1, **kwargs):
         BuildStep.__init__(self, **kwargs)
+        self.addFactoryArguments(flagname=flagname, value=value)
+
         self.flagname = flagname
         self.value = value
 
