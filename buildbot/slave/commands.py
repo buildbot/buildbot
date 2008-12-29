@@ -2239,7 +2239,7 @@ class Mercurial(SourceBase):
     def doVCUpdate(self):
         d = os.path.join(self.builder.basedir, self.srcdir)
         command = [self.vcexe, 'pull', '--update', '--verbose']
-        if self.args['revision']:
+        if self.args.get('revision'):
             command.extend(['--rev', self.args['revision']])
         c = ShellCommand(self.builder, command, d,
                          sendRC=False, timeout=self.timeout,
@@ -2270,10 +2270,10 @@ class Mercurial(SourceBase):
 
         def _update(res):
             updatecmd=[self.vcexe, 'update', '--repository', d]
-            if self.args['revision']:
+            if self.args.get('revision'):
                 updatecmd.extend(['--rev', self.args['revision']])
             else:
-                updatecmd.extend(['--rev', self.args['branch']])
+                updatecmd.extend(['--rev', self.args.get('branch',  'default')])
             self.command = ShellCommand(self.builder, updatecmd,
                 self.builder.basedir, sendRC=False, timeout=self.timeout)
             return self.command.start()
@@ -2282,7 +2282,7 @@ class Mercurial(SourceBase):
         return cmd1
 
     def _updateToDesiredRevision(self, res):
-        assert self.args['revision']
+        assert self.args.get('revision')
         newdir = os.path.join(self.builder.basedir, self.srcdir)
         # hg-0.9.1 and earlier (which need this fallback) also want to see
         # 'hg update REV' instead of 'hg update --rev REV'. Note that this is
