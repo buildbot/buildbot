@@ -1,6 +1,11 @@
-#! /usr/bin/env python
+#!/usr/bin/env python
+"""
+Standard setup script.
+"""
 
-import sys, os, re
+import sys
+import os
+import re
 from distutils.core import setup
 from buildbot import version
 
@@ -13,7 +18,7 @@ class install_data_twisted(install_data):
     """
     def finalize_options(self):
         self.set_undefined_options('install',
-            ('install_lib', 'install_dir')
+            ('install_lib', 'install_dir'),
         )
         install_data.finalize_options(self)
 
@@ -85,7 +90,7 @@ setup_args = {
                 ("buildbot/test/mail", testmsgs),
                 ("buildbot/test/subdir", ["buildbot/test/subdir/emit.py"]),
                 ],
-    'scripts':  scripts,
+    'scripts': scripts,
     'cmdclass': {'install_data': install_data_twisted},
     }
 
@@ -99,8 +104,7 @@ else:
     setup_args['install_requires'] = ['twisted >= 2.0.0']
     entry_points={
         'console_scripts': [
-            'buildbot = buildbot.scripts.runner:run'
-            ]
+            'buildbot = buildbot.scripts.runner:run'],
         },
 
 setup(**setup_args)
