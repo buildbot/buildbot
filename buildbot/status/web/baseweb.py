@@ -360,7 +360,7 @@ class WebStatus(service.MultiService):
     # all the changes).
 
     def __init__(self, http_port=None, distrib_port=None, allowForce=False,
-                       public_html="public_html"):
+                       public_html="public_html", site=None):
         """Run a web server that provides Buildbot status.
 
         @type  http_port: int or L{twisted.application.strports} string
@@ -400,6 +400,10 @@ class WebStatus(service.MultiService):
         @param public_html: the path to the public_html directory for this display,
                             either absolute or relative to the basedir.  The default
                             is 'public_html', which selects BASEDIR/public_html.
+
+        @type site: None or L{twisted.web.server.Site}
+        @param site: Use this if you want to define your own object instead of
+                     using the default.`
         """
 
         service.MultiService.__init__(self)
@@ -415,10 +419,14 @@ class WebStatus(service.MultiService):
         self.allowForce = allowForce
         self.public_html = public_html
 
-        # this will be replaced once we've been attached to a parent (and
-        # thus have a basedir and can reference BASEDIR)
-        root = static.Data("placeholder", "text/plain")
-        self.site = server.Site(root)
+        # If we were given a site object, go ahead and use it.
+        if site:
+            self.site = site
+        else:
+            # this will be replaced once we've been attached to a parent (and
+            # thus have a basedir and can reference BASEDIR)
+            root = static.Data("placeholder", "text/plain")
+            self.site = server.Site(root)
         self.childrenToBeAdded = {}
 
         self.setupUsualPages()
