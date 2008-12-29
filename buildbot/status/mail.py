@@ -354,8 +354,5 @@ class MailNotifier(base.StatusReceiverMultiService):
 
     def sendMessage(self, m, recipients):
         s = m.as_string()
-        ds = []
         twlog.msg("sending mail (%d bytes) to" % len(s), recipients)
-        for recip in recipients:
-            ds.append(sendmail(self.relayhost, self.fromaddr, recip, s))
-        return defer.DeferredList(ds)
+        return sendmail(self.relayhost, self.fromaddr, recipients, s)
