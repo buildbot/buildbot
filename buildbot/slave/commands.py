@@ -2260,63 +2260,26 @@ class Mercurial(SourceBase):
         return res
 
     def doVCFull(self):
-        newdir = os.path.join(self.builder.basedir, self.srcdir)
-        command = [self.vcexe, 'clone']
-        if self.args['revision']:
-            command.extend(['--rev', self.args['revision']])
-        command.extend([self.repourl, newdir])
-        c = ShellCommand(self.builder, command, self.builder.basedir,
-                         sendRC=False, keepStdout=True, keepStderr=True,
-                         timeout=self.timeout)
-        self.command = c
-        d = c.start()
-        d.addCallback(self._maybeFallback, c)
-        return d
-
-    def _maybeFallback(self, res, c):
-        # to do 'hg clone -r REV' (i.e. to check out a specific revision)
-        # from a remote (HTTP) repository, both the client and the server
-        # need to be hg-0.9.2 or newer. If this caused a checkout failure, we
-        # fall back to doing a checkout of HEAD (spelled 'tip' in hg
-        # parlance) and then 'hg update' *backwards* to the desired revision.
-        if res == 0:
-            return res
-
-        errmsgs = [
-            # hg-0.6 didn't even have the 'clone' command
-            # hg-0.7
-            "hg clone: option --rev not recognized",
-            # hg-0.8, 0.8.1, 0.9
-            "abort: clone -r not supported yet for remote repositories.",
-            # hg-0.9.1
-            ("abort: clone by revision not supported yet for "
-             "remote repositories"),
-            # hg-0.9.2 and later say this when the other end is too old
-            ("abort: src repository does not support revision lookup "
-             "and so doesn't support clone by revision"),
-            ]
-
-        fallback_is_useful = False
-        for errmsg in errmsgs:
-            # the error message might be in stdout if we're using PTYs, which
-            # merge stdout and stderr.
-            if errmsg in c.stdout or errmsg in c.stderr:
-                fallback_is_useful = True
-                break
-        if not fallback_is_useful:
-            return res # must be some other error
-
-        # ok, do the fallback
-        newdir = os.path.join(self.builder.basedir, self.srcdir)
-        command = [self.vcexe, 'clone']
-        command.extend([self.repourl, newdir])
+        d = os.path.join(self.builder.basedir, self.srcdir)
+        command = [self.vcexe, 'clone', '-U']
+        command.extend([self.repourl, d])
         c = ShellCommand(self.builder, command, self.builder.basedir,
                          sendRC=False, timeout=self.timeout)
         self.command = c
-        d = c.start()
-        d.addCallback(self._abandonOnFailure)
-        d.addCallback(self._updateToDesiredRevision)
-        return d
+        cmd1 = c.start()
+
+        def _update(res):
+            updatecmd=[self.vcexe, 'update', '--repository', d]
+            if self.args['revision']:
+                updatecmd.extend(['--rev', self.args['revision']])
+            else:
+                updatecmd.extend(['--rev', self.args['branch']])
+            self.command = ShellCommand(self.builder, updatecmd,
+                self.builder.basedir, sendRC=False, timeout=self.timeout)
+            return self.command.start()
+
+        cmd1.addCallback(_update)
+        return cmd1
 
     def _updateToDesiredRevision(self, res):
         assert self.args['revision']
