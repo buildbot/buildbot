@@ -34,7 +34,8 @@
 import os
 
 from mercurial.i18n import gettext as _
-from mercurial.node import bin, hex
+from mercurial.node import bin, hex, nullid
+from mercurial.context import workingctx
 
 # mercurial's on-demand-importing hacks interfere with the:
 #from zope.interface import Interface
@@ -65,7 +66,7 @@ def hook(ui, repo, hooktype, node=None, source=None, **kwargs):
             if branchtype == 'dirname':
                 branch = os.path.basename(os.getcwd())
             if branchtype == 'inrepo':
-                branch=repo.workingctx().branch()
+                branch = workingctx(repo).branch()
 
     if hooktype == 'changegroup':
         s = sendchange.Sender(master, None)
@@ -77,23 +78,27 @@ def hook(ui, repo, hooktype, node=None, source=None, **kwargs):
             return s.send(c['branch'], c['revision'], c['comments'],
                           c['files'], c['username'])
 
-        node=bin(node)
-        start = repo.changelog.rev(node)
-        end = repo.changelog.count()
+        try:    # first try Mercurial 1.1+ api
+            start = repo[node].rev()
+            end = len(repo)
+        except TypeError:   # else fall back to old api
+            start = repo.changelog.rev(bin(node))
+            end = repo.changelog.count()
+
         for rev in xrange(start, end):
             # send changeset
-            n = repo.changelog.node(rev)
-            changeset=repo.changelog.read(n)
+            node = repo.changelog.node(rev)
+            manifest, user, (time, timezone), files, desc, extra = repo.changelog.read(node)
+            parents = filter(lambda p: not p == nullid, repo.changelog.parents(node))
+            # merges don't always contain files, but at least one file is required by buildbot
+            if len(parents) > 1 and not files:
+                files = ["merge"]
             change = {
                 'master': master,
-                # note: this is more likely to be a full email address, which
-                # would make the left-hand "Changes" column kind of wide. The
-                # buildmaster should probably be improved to display an
-                # abbreviation of the username.
-                'username': changeset[1],
-                'revision': hex(n),
-                'comments': changeset[4],
-                'files': changeset[3],
+                'username': user,
+                'revision': hex(node),
+                'comments': desc,
+                'files': files,
                 'branch': branch
             }
             d.addCallback(_send, change)
