@@ -1,6 +1,7 @@
 # -*- test-case-name: buildbot.test.test_status -*-
 
 # the email.MIMEMultipart module is only available in python-2.2.2 and later
+import re
 
 from email.Message import Message
 from email.Utils import formatdate
@@ -21,6 +22,7 @@ from buildbot import interfaces, util
 from buildbot.status import base
 from buildbot.status.builder import FAILURE, SUCCESS, WARNINGS
 
+VALID_EMAIL = re.compile("[a-zA-Z0-9\.\_\%\-\+]+@[a-zA-Z0-9\.\_\%\-]+.[a-zA-Z]{2,6}")
 
 class Domain(util.ComparableMixin):
     implements(interfaces.IEmailLookup)
@@ -133,7 +135,7 @@ class MailNotifier(base.StatusReceiverMultiService):
         assert isinstance(extraRecipients, (list, tuple))
         for r in extraRecipients:
             assert isinstance(r, str)
-            assert "@" in r # require full email addresses, not User names
+            assert VALID_EMAIL.search(r) # require full email addresses, not User names
         self.extraRecipients = extraRecipients
         self.sendToInterestedUsers = sendToInterestedUsers
         self.fromaddr = fromaddr
@@ -346,7 +348,7 @@ class MailNotifier(base.StatusReceiverMultiService):
     def _gotRecipients(self, res, rlist, m):
         recipients = []
         for r in rlist:
-            if r is not None and r not in recipients:
+            if r is not None and VALID_EMAIL.search(r) and r not in recipients:
                 recipients.append(r)
         recipients.sort()
         m['To'] = ", ".join(recipients)
