@@ -350,16 +350,18 @@ class MailNotifier(base.StatusReceiverMultiService):
         recipients = set()
 
         for r in rlist:
+            if r is None: # getAddress didn't like this address
+                continue
 
             # Git can give emails like 'User' <user@foo.com>@foo.com so check
             # for two @ and chop the last
             if r.count('@') > 1:
                 r = r[:r.rindex('@')]
 
-            if r is not None and VALID_EMAIL.search(r):
+            if VALID_EMAIL.search(r):
                 recipients.add(r)
             else:
-                print "INVALID EMAIL: " + r
+                twlog.msg("INVALID EMAIL: %r" + r)
 
         # if we're sending to interested users move the extra's to the CC
         # list so they can tell if they are also interested in the change

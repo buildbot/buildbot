@@ -165,8 +165,8 @@ class Mail(unittest.TestCase):
         self.failUnless(len(self.messages) == 1)
         m,r = self.messages.pop()
         t = m.as_string()
-        self.failUnlessIn("To: bob@dev.com, recip2@example.com, "
-                          "recip@example.com\n", t)
+        self.failUnlessIn("To: bob@dev.com\n", t)
+        self.failUnlessIn("CC: recip2@example.com, recip@example.com\n", t)
         self.failUnlessIn("From: buildbot@example.com\n", t)
         self.failUnlessIn("Subject: buildbot success in PROJECT on builder1\n", t)
         self.failUnlessIn("Date: ", t)
@@ -291,14 +291,14 @@ class Mail(unittest.TestCase):
         self.failUnless(len(self.messages) == 1)
         m,r = self.messages.pop()
         t = m.as_string()
-        self.failUnlessIn("To: dev3@dev.com, dev4@dev.com, "
-                          "recip2@example.com, recip@example.com\n", t)
+        self.failUnlessIn("To: dev3@dev.com, dev4@dev.com\n", t)
+        self.failUnlessIn("CC: recip2@example.com, recip@example.com\n", t)
         self.failUnlessIn("From: buildbot@example.com\n", t)
         self.failUnlessIn("Subject: buildbot failure in PROJECT on builder1\n", t)
         self.failUnlessIn("The Buildbot has detected a new failure", t)
         self.failUnlessIn("BUILD FAILED: snarkleack polarization failed\n", t)
-        self.failUnlessEqual(r, ["dev3@dev.com", "dev4@dev.com",
-                                 "recip2@example.com", "recip@example.com"])
+        self.failUnlessEqual(set(r), set(["dev3@dev.com", "dev4@dev.com",
+                                 "recip2@example.com", "recip@example.com"]))
 
     def testLogs(self):
         basedir = "test_status_logs"
