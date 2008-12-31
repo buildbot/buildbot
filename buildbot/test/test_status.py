@@ -95,6 +95,8 @@ class MyStatus:
         return self.url
     def getURLForThing(self, thing):
         return None
+    def getProjectName(self):
+        return "myproj"
 
 class MyBuilder(builder.BuilderStatus):
     nextBuildNumber = 0
@@ -353,7 +355,6 @@ class Mail(unittest.TestCase):
                              'test', "Test log here\nTest 4 failed\n"),
                    ]
 
-        print "sending mail to", dest
         d = mailer.buildFinished("builder1", b1, b1.results)
         # When this fires, the mail has been sent, but the SMTP connection is
         # still up (because smtp.sendmail relies upon the server to hang up).
