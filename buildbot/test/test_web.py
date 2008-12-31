@@ -1,6 +1,7 @@
 # -*- test-case-name: buildbot.test.test_web -*-
 
 import os, time, shutil
+from HTMLParser import HTMLParser
 from twisted.python import components
 
 from twisted.trial import unittest
@@ -455,6 +456,13 @@ BuildmasterConfig = {
         log4 = step1.addCompleteLog("bigcomplete",
                                     "big2 log\n" + "a" * 1*1000*1000)
 
+        log5 = step1.addLog("mixed")
+        log5.addHeader("header content")
+        log5.addStdout("this is stdout content")
+        log5.addStderr("errors go here")
+        log5.addEntry(5, "non-standard content on channel 5")
+        log5.addStderr(" and some trailing stderr")
+
         step1.step_status.stepFinished(builder.SUCCESS)
         bs.buildFinished()
 
@@ -532,4 +540,53 @@ BuildmasterConfig = {
         d.addCallback(_check)
         return d
 
+    def test_logfile7(self):
+        # this is log5, with mixed content on the tree standard channels
+        # as well as on channel 5
 
+        class SpanParser(HTMLParser):
+            '''Parser subclass to gather all the log spans from the log page'''
+            def __init__(self, test):
+                self.spans = []
+                self.test = test
+                self.inSpan = False
+                HTMLParser.__init__(self)
+
+            def handle_starttag(self, tag, attrs):
+                if tag == 'span':
+                    self.inSpan = True
+                    cls = attrs[0]
+                    self.test.failUnless(cls[0] == 'class')
+                    self.spans.append([cls[1],''])
+
+            def handle_data(self, data):
+                if self.inSpan:
+                    self.spans[-1][1] += data
+
+            def handle_endtag(self, tag):
+                if tag == 'span':
+                    self.inSpan = False
+
+        logurl = self.getLogURL("setup", "mixed")
+        d = client.getPage(logurl, timeout=2)
+        def _check(logbody):
+            try:
+                p = SpanParser(self)
+                p.feed(logbody)
+                p.close
+            except Exception, e:
+                print e
+            self.failUnlessEqual(len(p.spans), 4)
+            self.failUnlessEqual(p.spans[0][0], 'header')
+            self.failUnlessEqual(p.spans[0][1], 'header content')
+            self.failUnlessEqual(p.spans[1][0], 'stdout')
+            self.failUnlessEqual(p.spans[1][1], 'this is stdout content')
+            self.failUnlessEqual(p.spans[2][0], 'stderr')
+            self.failUnlessEqual(p.spans[2][1], 'errors go here')
+            self.failUnlessEqual(p.spans[3][0], 'stderr')
+            self.failUnlessEqual(p.spans[3][1], ' and some trailing stderr')
+        def _fail(err):
+            pass
+        d.addCallback(_check)
+        d.addErrback(_fail)
+        return d
