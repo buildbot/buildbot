@@ -1,0 +1,13 @@
+# All files to globally ignore
+*.pyc
+*.pyo
+*$py.class
+*.swp
+*.patch
+*#
+*~
+MANIFEST
+_trial_temp
+dist
+build
+.build
