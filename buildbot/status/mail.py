@@ -1,6 +1,7 @@
 # -*- test-case-name: buildbot.test.test_status -*-
 
 # the email.MIMEMultipart module is only available in python-2.2.2 and later
+import re
 
 from email.Message import Message
 from email.Utils import formatdate
@@ -21,6 +22,7 @@ from buildbot import interfaces, util
 from buildbot.status import base
 from buildbot.status.builder import FAILURE, SUCCESS, WARNINGS
 
+VALID_EMAIL = re.compile("[a-zA-Z0-9\.\_\%\-\+]+@[a-zA-Z0-9\.\_\%\-]+.[a-zA-Z]{2,6}")
 
 class Domain(util.ComparableMixin):
     implements(interfaces.IEmailLookup)
@@ -133,7 +135,7 @@ class MailNotifier(base.StatusReceiverMultiService):
         assert isinstance(extraRecipients, (list, tuple))
         for r in extraRecipients:
             assert isinstance(r, str)
-            assert "@" in r # require full email addresses, not User names
+            assert VALID_EMAIL.search(r) # require full email addresses, not User names
         self.extraRecipients = extraRecipients
         self.sendToInterestedUsers = sendToInterestedUsers
         self.fromaddr = fromaddr
@@ -333,7 +335,8 @@ class MailNotifier(base.StatusReceiverMultiService):
 
         # now, who is this message going to?
         dl = []
-        recipients = self.extraRecipients[:]
+        recipients = []
+
         if self.sendToInterestedUsers and self.lookup:
             for u in build.getInterestedUsers():
                 d = defer.maybeDeferred(self.lookup.getAddress, u)
@@ -344,13 +347,36 @@ class MailNotifier(base.StatusReceiverMultiService):
         return d
 
     def _gotRecipients(self, res, rlist, m):
-        recipients = []
+        recipients = set()
+
         for r in rlist:
-            if r is not None and r not in recipients:
-                recipients.append(r)
-        recipients.sort()
-        m['To'] = ", ".join(recipients)
-        return self.sendMessage(m, recipients)
+
+            # Git can give emails like 'User' <user@foo.com>@foo.com so check
+            # for two @ and chop the last
+            if r.count('@') > 1:
+                r = r[:r.rindex('@')]
+
+            if r is not None and VALID_EMAIL.search(r):
+                recipients.add(r)
+            else:
+                print "INVALID EMAIL: " + r
+
+        # if we're sending to interested users move the extra's to the CC
+        # list so they can tell if they are also interested in the change
+        # unless there are no interested users
+        if self.sendToInterestedUsers and len(recipients):
+            m['CC'] = ", ".join(sorted(self.extraRecipients[:]))
+        else:
+            [recipients.add(r) for r in self.extraRecipients[:]]
+
+        m['To'] = ", ".join(sorted(recipients))
+
+        # The extras weren't part of the TO list so add them now
+        if self.sendToInterestedUsers:
+            for r in self.extraRecipients:
+                recipients.add(r)
+
+        return self.sendMessage(m, list(recipients))
 
     def sendMessage(self, m, recipients):
         s = m.as_string()

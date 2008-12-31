@@ -1396,6 +1396,10 @@ class SourceBase(Command):
         command = ["rm", "-rf", d]
         c = ShellCommand(self.builder, command, self.builder.basedir,
                          sendRC=0, timeout=self.timeout)
+
+        # Work around for Bug #255
+        c.usePTY = False
+
         self.command = c
         # sendRC=0 means the rm command will send stdout/stderr to the
         # master, but not the rc=0 when it finishes. That job is left to
