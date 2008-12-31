@@ -794,6 +794,10 @@ class STarget(base.StatusReceiver):
             print "EXP", step.getExpectations()
         if "step" in self.mode:
             return self
+    def stepTextChanged(self, build, step, text):
+        self.events.append(("stepTextChanged", step, text))
+    def stepText2Changed(self, build, step, text2):
+        self.events.append(("stepText2Changed", step, text2))
     def stepETAUpdate(self, build, step, ETA, expectations):
         self.events.append(("stepETAUpdate", build, step, ETA, expectations))
         self.announce()
@@ -903,9 +907,12 @@ class Subscription(RunMixin, unittest.TestCase):
                               "builderChangedState", # idle
                               "builderChangedState", # building
                               "buildStarted",
-                              "stepStarted", "stepETAUpdate", "stepFinished",
+                              "stepStarted", "stepETAUpdate", 
+                              "stepTextChanged", "stepFinished",
                               "stepStarted", "stepETAUpdate",
-                              "logStarted", "logFinished", "stepFinished",
+                              "stepTextChanged", "logStarted", "logFinished",
+                              "stepTextChanged", "stepText2Changed",
+                              "stepFinished",
                               "buildFinished",
                               "builderChangedState", # idle
                               ])

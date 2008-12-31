@@ -862,8 +862,12 @@ class BuildStepStatus(styles.Versioned):
         self.color = color
     def setText(self, text):
         self.text = text
+        for w in self.watchers:
+            w.stepTextChanged(self.build, self, text)
     def setText2(self, text):
         self.text2 = text
+        for w in self.watchers:
+            w.stepText2Changed(self.build, self, text)
 
     def setStatistic(self, name, value):
         """Set the given statistic.  Usually called by subclasses.
