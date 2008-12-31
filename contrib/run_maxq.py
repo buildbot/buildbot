@@ -1,6 +1,7 @@
 #!/usr/bin/env jython
 
-import sys, glob
+import sys
+import glob
 
 testdir = sys.argv[1]
 
@@ -31,7 +32,7 @@ for testlist in files:
     print "running tests from testlist", orderfiles[i]
     print "---------------------------"
     i = i + 1
-    
+
     for test in testlist:
         print "running test", test
 
@@ -44,4 +45,3 @@ for testlist in files:
 
         else:
             print "SUCCESS"
-

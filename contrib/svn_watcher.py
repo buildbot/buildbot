@@ -15,18 +15,24 @@
 
 
 # 15.03.06 by John Pye
-# 29.03.06 by Niklaus Giger, added support to run under windows, added invocation option
+# 29.03.06 by Niklaus Giger, added support to run under windows,
+# added invocation option
+
 import subprocess
 import xml.dom.minidom
 import sys
 import time
 import os
+
+
 if sys.platform == 'win32':
     import win32pipe
+
 
 def getoutput(cmd):
     p = subprocess.Popen(cmd, stdout=subprocess.PIPE)
     return p.stdout.read()
+
 
 def checkChanges(repo, master, verbose=False, oldRevision=-1):
     cmd = ["svn", "log", "--non-interactive", "--xml", "--verbose",
@@ -51,7 +57,7 @@ def checkChanges(repo, master, verbose=False, oldRevision=-1):
     el.getElementsByTagName("author")[0].childNodes])
     comments = "".join([t.data for t in
     el.getElementsByTagName("msg")[0].childNodes])
-    
+
     pathlist = el.getElementsByTagName("paths")[0]
     paths = []
     for p in pathlist.getElementsByTagName("path"):
@@ -72,25 +78,30 @@ def checkChanges(repo, master, verbose=False, oldRevision=-1):
 
         if sys.platform == 'win32':
             f = win32pipe.popen(cmd)
-            print time.strftime("%H.%M.%S ") + "Revision "+revision+ ": "+ ''.join(f.readlines())
+            print time.strftime("%H.%M.%S ") + "Revision "+revision+ ": "+ \
+''.join(f.readlines())
             f.close()
         else:
             xml1 = getoutput(cmd)
     else:
-        print time.strftime("%H.%M.%S ") + "nothing has changed since revision "+revision
+        print time.strftime("%H.%M.%S ") + \
+"nothing has changed since revision "+revision
 
     return revision
+
 
 if __name__ == '__main__':
     if len(sys.argv) == 4 and sys.argv[3] == 'watch':
         oldRevision = -1
-        print "Watching for changes in repo "+  sys.argv[1] + " master " +  sys.argv[2] 
+        print "Watching for changes in repo "+ sys.argv[1] +\
+" master " + sys.argv[2]
         while 1:
-            oldRevision = checkChanges(sys.argv[1],  sys.argv[2], False, oldRevision)
+            oldRevision = checkChanges(
+                sys.argv[1], sys.argv[2], False, oldRevision)
             time.sleep(10*60) # Check the repository every 10 minutes
 
     elif len(sys.argv) == 3:
-        checkChanges(sys.argv[1],  sys.argv[2], True )
+        checkChanges(sys.argv[1], sys.argv[2], True)
     else:
-        print os.path.basename(sys.argv[0]) + ":  http://host/path/to/repo master:port [watch]"
-
+        print os.path.basename(
+            sys.argv[0]) + ":  http://host/path/to/repo master:port [watch]"

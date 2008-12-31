@@ -63,12 +63,22 @@
 
 # Written by Mark Hammond, 2006.
 
-import sys, os, threading
+import sys
+import os
+import threading
 
 import pywintypes
-import winerror, win32con
-import win32api, win32event, win32file, win32pipe, win32process, win32security
-import win32service, win32serviceutil, servicemanager
+import winerror
+import win32con
+import win32api
+import win32event
+import win32file
+import win32pipe
+import win32process
+import win32security
+import win32service
+import win32serviceutil
+import servicemanager
 
 # Are we running in a py2exe environment?
 is_frozen = hasattr(sys, "frozen")
@@ -90,7 +100,8 @@ CHILDCAPTURE_BLOCK_SIZE = 80
 # The number of BLOCKSIZE blocks we keep as process output.
 CHILDCAPTURE_MAX_BLOCKS = 200
 
-class BBService(win32serviceutil.ServiceFramework):    
+
+class BBService(win32serviceutil.ServiceFramework):
     _svc_name_ = 'BuildBot'
     _svc_display_name_ = _svc_name_
     _svc_description_ = 'Manages local buildbot slaves and masters - ' \
@@ -99,9 +110,9 @@ class BBService(win32serviceutil.ServiceFramework):
     def __init__(self, args):
         win32serviceutil.ServiceFramework.__init__(self, args)
 
-        # Create an event which we will use to wait on. The "service stop" 
+        # Create an event which we will use to wait on. The "service stop"
         # request will set this event.
-        # * We must make it inheritable so we can pass it to the child 
+        # * We must make it inheritable so we can pass it to the child
         #   process via the cmd-line
         # * Must be manual reset so each child process and our service
         #   all get woken from a single set of the event.
@@ -122,7 +133,7 @@ class BBService(win32serviceutil.ServiceFramework):
             if os.path.isfile(msg_file):
                 servicemanager.Initialize("BuildBot", msg_file)
             else:
-                self.warning("Strange - '%s' does not exist" % (msg_file,))
+                self.warning("Strange - '%s' does not exist" % (msg_file, ))
 
     def _checkConfig(self):
         # Locate our child process runner (but only when run from source)
@@ -154,7 +165,7 @@ class BBService(win32serviceutil.ServiceFramework):
         # service do *not* persist - they apply only when you click "start"
         # on the service. When started by Windows, args are never presented.
         # Thus, it is the responsibility of the service to persist any args.
-        
+
         # so, when args are presented, we save them as a "custom option". If
         # they are not presented, we load them from the option.
         self.dirs = []
@@ -179,7 +190,7 @@ class BBService(win32serviceutil.ServiceFramework):
                 self.dirs.append(d)
             else:
                 msg = "Directory '%s' is not a buildbot dir - ignoring" \
-                      % (d,)
+                      % (d, )
                 self.warning(msg)
         if not self.dirs:
             self.error("No valid buildbot directories were specified.\n"
@@ -212,7 +223,7 @@ class BBService(win32serviceutil.ServiceFramework):
         child_infos = []
 
         for bbdir in self.dirs:
-            self.info("Starting BuildBot in directory '%s'" % (bbdir,))
+            self.info("Starting BuildBot in directory '%s'" % (bbdir, ))
             hstop = self.hWaitStop
 
             cmd = '%s --spawn %d start %s' % (self.runner_prefix, hstop, bbdir)
@@ -270,7 +281,7 @@ class BBService(win32serviceutil.ServiceFramework):
             # If necessary, kill it
             if win32process.GetExitCodeProcess(h)==win32con.STILL_ACTIVE:
                 self.warning("BuildBot process at %r failed to terminate - "
-                             "killing it" % (bbdir,))
+                             "killing it" % (bbdir, ))
                 win32api.TerminateProcess(h, 3)
             self.ReportServiceStatus(win32service.SERVICE_STOP_PENDING)
 
@@ -292,6 +303,7 @@ class BBService(win32serviceutil.ServiceFramework):
     #
     # Error reporting/logging functions.
     #
+
     def logmsg(self, event):
         # log a service event using servicemanager.LogMsg
         try:
@@ -328,10 +340,11 @@ class BBService(win32serviceutil.ServiceFramework):
 
     def error(self, s):
         self._dolog(servicemanager.LogErrorMsg, s)
-    
+
     # Functions that spawn a child process, redirecting any output.
     # Although builtbot itself does this, it is very handy to debug issues
     # such as ImportErrors that happen before buildbot has redirected.
+
     def createProcess(self, cmd):
         hInputRead, hInputWriteTemp = self.newPipe()
         hOutReadTemp, hOutWrite = self.newPipe()
@@ -371,7 +384,7 @@ class BBService(win32serviceutil.ServiceFramework):
         # start a thread collecting output
         blocks = []
         t = threading.Thread(target=self.redirectCaptureThread,
-                             args = (hOutRead,blocks))
+                             args = (hOutRead, blocks))
         t.start()
         return info[0], t, blocks
 
@@ -410,28 +423,32 @@ class BBService(win32serviceutil.ServiceFramework):
         pipe.Close()
         return dup
 
+
 # Service registration and startup
+
+
 def RegisterWithFirewall(exe_name, description):
     # Register our executable as an exception with Windows Firewall.
-    # taken from http://msdn.microsoft.com/library/default.asp?url=/library/en-us/ics/ics/wf_adding_an_application.asp
+    # taken from  http://msdn.microsoft.com/library/default.asp?url=\
+    #/library/en-us/ics/ics/wf_adding_an_application.asp
     from win32com.client import Dispatch
     #  Set constants
     NET_FW_PROFILE_DOMAIN = 0
     NET_FW_PROFILE_STANDARD = 1
-    
+
     # Scope
     NET_FW_SCOPE_ALL = 0
-    
+
     # IP Version - ANY is the only allowable setting for now
     NET_FW_IP_VERSION_ANY = 2
-    
+
     fwMgr = Dispatch("HNetCfg.FwMgr")
-    
+
     # Get the current profile for the local firewall policy.
     profile = fwMgr.LocalPolicy.CurrentProfile
-    
+
     app = Dispatch("HNetCfg.FwAuthorizedApplication")
-    
+
     app.ProcessImageFileName = exe_name
     app.Name = description
     app.Scope = NET_FW_SCOPE_ALL
@@ -439,13 +456,16 @@ def RegisterWithFirewall(exe_name, description):
     #app.RemoteAddresses = "*"
     app.IpVersion = NET_FW_IP_VERSION_ANY
     app.Enabled = True
-    
+
     # Use this line if you want to add the app, but disabled.
     #app.Enabled = False
-    
+
     profile.AuthorizedApplications.Add(app)
 
+
 # A custom install function.
+
+
 def CustomInstall(opts):
     # Register this process with the Windows Firewaall
     import pythoncom
@@ -455,20 +475,23 @@ def CustomInstall(opts):
         print "FAILED to register with the Windows firewall"
         print why
 
-#
+
 # Magic code to allow shutdown.  Note that this code is executed in
 # the *child* process, by way of the service process executing us with
 # special cmdline args (which includes the service stop handle!)
+
+
 def _RunChild():
     del sys.argv[1] # The --spawn arg.
     # Create a new thread that just waits for the event to be signalled.
-    t = threading.Thread(target=_WaitForShutdown, 
-                         args = (int(sys.argv[1]),)
+    t = threading.Thread(target=_WaitForShutdown,
+                         args = (int(sys.argv[1]), )
                          )
     del sys.argv[1] # The stop handle
     # This child process will be sent a console handler notification as
     # users log off, or as the system shuts down.  We want to ignore these
     # signals as the service parent is responsible for our shutdown.
+
     def ConsoleHandler(what):
         # We can ignore *everything* - ctrl+c will never be sent as this
         # process is never attached to a console the user can press the
@@ -486,6 +509,7 @@ def _RunChild():
     runner.run()
     print "Service child process terminating normally."
 
+
 def _WaitForShutdown(h):
     win32event.WaitForSingleObject(h, win32event.INFINITE)
     print "Shutdown requested"
@@ -493,7 +517,10 @@ def _WaitForShutdown(h):
     from twisted.internet import reactor
     reactor.callLater(0, reactor.stop)
 
+
 # This function is also called by the py2exe startup code.
+
+
 def HandleCommandLine():
     if len(sys.argv)>1 and sys.argv[1] == "--spawn":
         # Special command-line created by the service to execute the
@@ -503,6 +530,7 @@ def HandleCommandLine():
     else:
         win32serviceutil.HandleCommandLine(BBService,
                                            customOptionHandler=CustomInstall)
+
 
 if __name__ == '__main__':
     HandleCommandLine()

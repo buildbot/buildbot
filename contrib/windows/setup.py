@@ -4,14 +4,18 @@
 # Usage:
 # % setup.py py2exe
 
-import sys, os, tempfile, shutil
+import sys
+import os
+import tempfile
+import shutil
+import py2exe
+
 from os.path import dirname, join, abspath, exists, splitext
 
 this_dir = abspath(dirname(__file__))
 bb_root_dir = abspath(join(this_dir, "..", ".."))
 
 from distutils.core import setup
-import py2exe
 
 includes = []
 
@@ -41,7 +45,7 @@ py2exe_options = {"bundle_files": 1,
 
 # Each "target" executable we create
 buildbot_target = {
-    "script": join(bb_root_dir, "bin", "buildbot")
+    "script": join(bb_root_dir, "bin", "buildbot"),
 }
 # Due to the way py2exe works, we need to rebuild the service code as a
 # normal console process - this will be executed by the service itself.

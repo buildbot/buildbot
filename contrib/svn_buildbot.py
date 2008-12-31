@@ -21,10 +21,13 @@
 # installed site-wide
 . ~/.environment
 
-/path/to/svn_buildbot.py --repository "$REPOS" --revision "$REV" --bbserver localhost --bbport 9989
+/path/to/svn_buildbot.py --repository "$REPOS" --revision "$REV" \
+--bbserver localhost --bbport 9989
 '''
 
-import commands, sys, os
+import commands
+import sys
+import os
 import re
 import sets
 
@@ -46,10 +49,12 @@ if DEBUG:
     sys.stderr = f
     sys.stdout = f
 
+
 from twisted.internet import defer, reactor
 from twisted.python import usage
 from twisted.spread import pb
 from twisted.cred import credentials
+
 
 class Options(usage.Options):
     optParameters = [
@@ -70,8 +75,8 @@ patterns.  If no filter is given, buildbot will always be notified.'''],
         ['filter', 'f', None, "Same as --include.  (Deprecated)"],
         ['exclude', 'F', None,
          '''\
-The inverse of --filter.  Changed files matching this expression will never  
-be considered for a build.  
+The inverse of --filter.  Changed files matching this expression will never
+be considered for a build.
 You may provide more than one -F argument to try multiple
 patterns.  Excludes override includes, that is, patterns that match both an
 include and an exclude will be excluded.'''],
@@ -88,19 +93,21 @@ include and an exclude will be excluded.'''],
         self['excludes'] = None
 
     def opt_include(self, arg):
-        self._includes.append('.*%s.*' % (arg,))
+        self._includes.append('.*%s.*' % (arg, ))
+
     opt_filter = opt_include
 
     def opt_exclude(self, arg):
-        self._excludes.append('.*%s.*' % (arg,))
+        self._excludes.append('.*%s.*' % (arg, ))
 
     def postOptions(self):
         if self['repository'] is None:
             raise usage.error("You must pass --repository")
         if self._includes:
-            self['includes'] = '(%s)' % ('|'.join(self._includes),)
+            self['includes'] = '(%s)' % ('|'.join(self._includes), )
         if self._excludes:
-            self['excludes'] = '(%s)' % ('|'.join(self._excludes),)
+            self['excludes'] = '(%s)' % ('|'.join(self._excludes), )
+
 
 def split_file_dummy(changed_file):
     """Split the repository-relative filename into a tuple of (branchname,
@@ -109,11 +116,14 @@ def split_file_dummy(changed_file):
     """
     return (None, changed_file)
 
+
 # this version handles repository layouts that look like:
 #  trunk/files..                  -> trunk
 #  branches/branch1/files..       -> branches/branch1
 #  branches/branch2/files..       -> branches/branch2
 #
+
+
 def split_file_branches(changed_file):
     pieces = changed_file.split(os.sep)
     if pieces[0] == 'branches':
@@ -126,6 +136,7 @@ def split_file_branches(changed_file):
     #return (pieces[0], os.path.join(*pieces[1:]))
 
     raise RuntimeError("cannot determine branch for '%s'" % changed_file)
+
 
 split_file = split_file_dummy
 
@@ -141,10 +152,9 @@ class ChangeSender:
         print "Repo:", repo
         rev_arg = ''
         if opts['revision']:
-            rev_arg = '-r %s' % (opts['revision'],)
-        changed = commands.getoutput('svnlook changed %s "%s"' % (rev_arg,
-                                                                  repo)
-                                     ).split('\n')
+            rev_arg = '-r %s' % (opts['revision'], )
+        changed = commands.getoutput('svnlook changed %s "%s"' % (
+            rev_arg, repo)).split('\n')
         # the first 4 columns can contain status information
         changed = [x[4:] for x in changed]
 
@@ -179,7 +189,7 @@ class ChangeSender:
         files_per_branch = {}
         for f in changed:
             branch, filename = split_file(f)
-            if files_per_branch.has_key(branch):
+            if branch in files_per_branch.keys():
                 files_per_branch[branch].append(filename)
             else:
                 files_per_branch[branch] = [filename]
@@ -219,7 +229,7 @@ class ChangeSender:
 
         changes = self.getChanges(opts)
         if opts['dryrun']:
-            for i,c in enumerate(changes):
+            for i, c in enumerate(changes):
                 print "CHANGE #%d" % (i+1)
                 keys = c.keys()
                 keys.sort()
@@ -244,8 +254,7 @@ class ChangeSender:
         reactor.callLater(60, quit, "TIMEOUT")
         reactor.run()
 
+
 if __name__ == '__main__':
     s = ChangeSender()
     s.run()
-
-

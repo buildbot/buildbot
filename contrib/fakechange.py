@@ -31,19 +31,25 @@ buildbot.master.makeApp (this service is turned ON by default).
 """
 
 import sys
+import commands
+import random
+import os.path
+
 from twisted.spread import pb
 from twisted.cred import credentials
 from twisted.internet import reactor
 from twisted.python import log
-import commands, random, os.path
+
 
 def done(*args):
     reactor.stop()
+
 
 users = ('zaphod', 'arthur', 'trillian', 'marvin', 'sbfast')
 dirs = ('src', 'doc', 'tests')
 sources = ('foo.c', 'bar.c', 'baz.c', 'Makefile')
 docs = ('Makefile', 'index.html', 'manual.texinfo')
+
 
 def makeFilename():
     d = random.choice(dirs)
@@ -52,7 +58,7 @@ def makeFilename():
     else:
         f = random.choice(docs)
     return os.path.join(d, f)
-        
+
 
 def send_change(remote):
     who = random.choice(users)

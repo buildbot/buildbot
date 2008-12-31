@@ -10,7 +10,10 @@
 # buildmaster that everything changed, not just the filenames you give to
 # 'tla commit'.
 
-import os, commands, cStringIO
+import os
+import commands
+import cStringIO
+
 from buildbot.scripts import runner
 
 # Just modify the appropriate values below and then put this file in two

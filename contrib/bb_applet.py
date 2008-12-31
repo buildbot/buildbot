@@ -57,7 +57,9 @@ from twisted.cred import credentials
 SUCCESS, WARNINGS, FAILURE, SKIPPED, EXCEPTION = range(5)
 Results = ["success", "warnings", "failure", "skipped", "exception"]
 
+
 class Box:
+
     def __init__(self, buildername, hbox, tips, size, hslice):
         self.buildername = buildername
         self.hbox = hbox
@@ -96,12 +98,15 @@ class Box:
     def set_state(self, state):
         self.state = state
         self.update()
+
     def set_eta(self, eta):
         self.eta = eta
         self.update()
+
     def set_last_build_results(self, results):
         self.last_results = results
         self.update()
+
     def set_last_build_text(self, text):
         self.last_text = text
         self.update()
@@ -111,7 +116,8 @@ class Box:
                       "idle": "white",
                       "waiting": "yellow",
                       "interlocked": "yellow",
-                      "building": "yellow",}
+                      "building": "yellow",
+        }
         color = currentmap[self.state]
         self.current_box.modify_bg(gtk.STATE_NORMAL,
                                    gtk.gdk.color_parse(color))
@@ -136,7 +142,6 @@ class Box:
         self.tips.set_tip(self.last_box, last_tip)
 
 
-
 class MyApplet(pb.Referenceable):
     # CHANGE THIS TO POINT TO YOUR BUILDMASTER
     buildmaster = "buildmaster.example.org", 12345
@@ -148,10 +153,10 @@ class MyApplet(pb.Referenceable):
         self.hslice = self.size / 4
         container.set_size_request(self.size, self.size)
         self.fill_nut()
-        verbs = [ ("Props", self.menu_preferences),
-                  ("Connect", self.menu_connect),
-                  ("Disconnect", self.menu_disconnect),
-                  ]
+        verbs = [("Props", self.menu_preferences),
+                 ("Connect", self.menu_connect),
+                 ("Disconnect", self.menu_disconnect),
+        ]
         container.setup_menu(MENU, verbs)
         self.boxes = {}
         self.connect()
@@ -181,6 +186,7 @@ class MyApplet(pb.Referenceable):
         reactor.connectTCP(host, port, cf)
         d.addCallback(self.connected)
         return d
+
     def connected(self, ref):
         print "connected"
         ref.notifyOnDisconnect(self.disconnected)
@@ -205,6 +211,7 @@ class MyApplet(pb.Referenceable):
         self.applet.set_size_request(self.hslice * len(self.boxes),
                                      self.size)
         d = builder.callRemote("getLastFinishedBuild")
+
         def _got(build):
             if build:
                 d1 = build.callRemote("getResults")
@@ -212,7 +219,6 @@ class MyApplet(pb.Referenceable):
                 d2 = build.callRemote("getText")
                 d2.addCallback(box.set_last_build_text)
         d.addCallback(_got)
-
 
     def remote_builderRemoved(self, buildername):
         self.boxes[buildername].remove()
@@ -266,6 +272,7 @@ class MyApplet(pb.Referenceable):
 
 
 class Prefs:
+
     def __init__(self, parent):
         self.parent = parent
 
@@ -287,13 +294,13 @@ class Prefs:
 
         w.add(v)
         w.show_all()
+
     def done(self, widget):
         buildmaster = self.buildmaster_entry.get_text()
         self.parent.set_buildmaster(buildmaster)
         self.w.unmap()
 
-        
-              
+
 def factory(applet, iid):
     MyApplet(applet)
     applet.show_all()
@@ -312,7 +319,6 @@ gnomeapplet.bonobo_factory("OAFIID:GNOME_Buildbot_Factory",
 # code ends here: bonobo_factory runs gtk.mainloop() internally and
 # doesn't return until the program ends
 
-
 # SUPPORTING FILES:
 
 # save the following as ~/lib/bonobo/servers/bb_applet.server, and update all
@@ -321,32 +327,32 @@ bb_applet_server = """
 <oaf_info>
 
 <oaf_server iid="OAFIID:GNOME_Buildbot_Factory"
-	    type="exe"
-	    location="/home/warner/stuff/buildbot-trunk/contrib/bb_applet.py">
+            type="exe"
+            location="/home/warner/stuff/buildbot-trunk/contrib/bb_applet.py">
 
-	<oaf_attribute name="repo_ids" type="stringv">
-		<item value="IDL:Bonobo/GenericFactory:1.0"/>
-		<item value="IDL:Bonobo/Unknown:1.0"/>
-	</oaf_attribute>
-	<oaf_attribute name="name" type="string" value="Buildbot Factory"/>
-	<oaf_attribute name="description" type="string" value="Test"/>
+        <oaf_attribute name="repo_ids" type="stringv">
+            <item value="IDL:Bonobo/GenericFactory:1.0"/>
+            <item value="IDL:Bonobo/Unknown:1.0"/>
+        </oaf_attribute>
+        <oaf_attribute name="name" type="string" value="Buildbot Factory"/>
+        <oaf_attribute name="description" type="string" value="Test"/>
 </oaf_server>
 
 <oaf_server iid="OAFIID:GNOME_Buildbot"
-	    type="factory"
-	    location="OAFIID:GNOME_Buildbot_Factory">
+            type="factory"
+            location="OAFIID:GNOME_Buildbot_Factory">
 
-	<oaf_attribute name="repo_ids" type="stringv">
-		<item value="IDL:GNOME/Vertigo/PanelAppletShell:1.0"/>
-		<item value="IDL:Bonobo/Control:1.0"/>
-		<item value="IDL:Bonobo/Unknown:1.0"/>
-	</oaf_attribute>
-	<oaf_attribute name="name" type="string" value="Buildbot"/>
-	<oaf_attribute name="description" type="string"
+        <oaf_attribute name="repo_ids" type="stringv">
+                <item value="IDL:GNOME/Vertigo/PanelAppletShell:1.0"/>
+                <item value="IDL:Bonobo/Control:1.0"/>
+                <item value="IDL:Bonobo/Unknown:1.0"/>
+        </oaf_attribute>
+        <oaf_attribute name="name" type="string" value="Buildbot"/>
+        <oaf_attribute name="description" type="string"
           value="Watch Buildbot status"
         />
-	<oaf_attribute name="panel:category" type="string" value="Utility"/>
-	<oaf_attribute name="panel:icon" type="string"
+        <oaf_attribute name="panel:category" type="string" value="Utility"/>
+        <oaf_attribute name="panel:icon" type="string"
  value="/home/warner/stuff/buildbot-trunk/doc/hexnut32.png"
  />
 
@@ -405,4 +411,3 @@ bb_applet_server = """
 
 # Enjoy!
 #  -Brian Warner
-

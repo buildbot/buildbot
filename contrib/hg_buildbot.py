@@ -12,7 +12,10 @@
 # Note that both Buildbot and Mercurial must be installed on the repository
 # machine.
 
-import os, sys, commands
+import os
+import sys
+import commands
+
 from StringIO import StringIO
 from buildbot.scripts import runner
 
@@ -22,7 +25,8 @@ CHANGESET_ID = os.environ["HG_NODE"]
 
 # TODO: consider doing 'import mercurial.hg' and extract this information
 # using the native python
-out = commands.getoutput("hg log -r %s --template '{author}\n{files}\n{desc}'" % CHANGESET_ID)
+out = commands.getoutput(
+    "hg log -r %s --template '{author}\n{files}\n{desc}'" % CHANGESET_ID)
 
 s = StringIO(out)
 user = s.readline().strip()
@@ -40,7 +44,6 @@ change = {
     'revision': CHANGESET_ID,
     'comments': comments,
     'files': files,
-    }
+}
 
 runner.sendchange(change, True)
-

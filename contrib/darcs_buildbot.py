@@ -17,24 +17,30 @@
 # machine. You will also need the Python/XML distribution installed (the
 # "python2.3-xml" package under debian).
 
-import os, sys, commands
+import os
+import sys
+import commands
+import xml
+
 from buildbot.clients import sendchange
 from twisted.internet import defer, reactor
-import xml
 from xml.dom import minidom
+
 
 def getText(node):
     return "".join([cn.data
                     for cn in node.childNodes
                     if cn.nodeType == cn.TEXT_NODE])
+
+
 def getTextFromChild(parent, childtype):
     children = parent.getElementsByTagName(childtype)
     if not children:
         return ""
     return getText(children[0])
 
-def makeChange(p):
 
+def makeChange(p):
     author = p.getAttribute("author")
     revision = p.getAttribute("hash")
     comments = (getTextFromChild(p, "name") + "\n" +
@@ -73,7 +79,6 @@ def makeChange(p):
     return change
 
 
-
 def getChangesFromCommand(cmd, count):
     out = commands.getoutput(cmd)
     try:
@@ -89,11 +94,12 @@ def getChangesFromCommand(cmd, count):
 
     c = doc.getElementsByTagName("changelog")[0]
     changes = []
-    for i,p in enumerate(c.getElementsByTagName("patch")):
+    for i, p in enumerate(c.getElementsByTagName("patch")):
         if i >= count:
             break
         changes.append(makeChange(p))
     return changes
+
 
 def getSomeChanges(count):
     cmd = "darcs changes --last=%d --xml-output --summary" % count
@@ -101,6 +107,7 @@ def getSomeChanges(count):
 
 
 LASTCHANGEFILE = ".darcs_buildbot-lastchange"
+
 
 def findNewChanges():
     if os.path.exists(LASTCHANGEFILE):
@@ -116,7 +123,7 @@ def findNewChanges():
         # we want to scan the newest first until we find the changes we sent
         # last time, then deliver everything newer than that (and send them
         # oldest-first).
-        for i,c in enumerate(changes):
+        for i, c in enumerate(changes):
             if c['revision'] == lastchange:
                 newchanges = changes[:i]
                 newchanges.reverse()
@@ -126,6 +133,7 @@ def findNewChanges():
                                "(%s) in the last %d changes" % (lastchange,
                                                                 lookback))
         lookback = 2*lookback
+
 
 def sendChanges(master):
     changes = findNewChanges()
@@ -158,6 +166,7 @@ def sendChanges(master):
         f = open(LASTCHANGEFILE, "w")
         f.write(lastchange)
         f.close()
+
 
 if __name__ == '__main__':
     MASTER = sys.argv[1]
