@@ -545,6 +545,7 @@ BuildmasterConfig = {
         # as well as on channel 5
 
         class SpanParser(HTMLParser):
+            '''Parser subclass to gather all the log spans from the log page'''
             def __init__(self, test):
                 self.spans = []
                 self.test = test
