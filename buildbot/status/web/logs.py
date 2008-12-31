@@ -85,6 +85,9 @@ class TextLog(Resource):
         spanfmt = '<span class="%s">%s</span>'
         data = ""
         for type, entry in entries:
+            if type >= len(builder.ChunkTypes) or type < 0:
+                # non-std channel, don't display
+                continue
             if self.asText:
                 if type != builder.HEADER:
                     data += entry
