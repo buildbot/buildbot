@@ -923,6 +923,18 @@ class IStatusReceiver(Interface):
         logStarted/logFinished messages, it will also receive stepETAUpdate
         messages about every updateInterval seconds."""
 
+    def stepTextChanged(build, step, text):
+        """The text for a step has been updated.
+
+        This is called when calling setText() on the step status, and
+        hands in the text list."""
+
+    def stepText2Changed(build, step, text2):
+        """The text2 for a step has been updated.
+
+        This is called when calling setText2() on the step status, and
+        hands in text2 list."""
+
     def stepETAUpdate(build, step, ETA, expectations):
         """This is a periodic update on the progress this Step has made
         towards completion. It gets an ETA (in seconds from the present) of

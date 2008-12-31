@@ -26,6 +26,12 @@ class StatusReceiver:
     def stepStarted(self, build, step):
         pass
 
+    def stepTextChanged(self, build, step, text):
+        pass
+
+    def stepText2Changed(self, build, step, text2):
+        pass
+
     def stepETAUpdate(self, build, step, ETA, expectations):
         pass
 
