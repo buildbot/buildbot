@@ -355,7 +355,7 @@ class BaseHelper:
     def dovc(self, basedir, command, failureIsOk=False, stdin=None, env=None):
         """Like do(), but the VC binary will be prepended to COMMAND."""
         if isinstance(command, (str, unicode)):
-            command = self.vcexe + " " + command
+            command = [self.vcexe] + command.split(' ')
         else:
             # command is a list
             command = [self.vcexe] + command
@@ -1107,12 +1107,12 @@ class CVSHelper(BaseHelper):
         self.cvsrep = cvsrep = os.path.join(self.repbase, "CVS-Repository")
         tmp = os.path.join(self.repbase, "cvstmp")
 
-        w = self.dovc(self.repbase, "-d %s init" % cvsrep)
+        w = self.dovc(self.repbase, ['-d',  cvsrep,  'init'])
         yield w; w.getResult() # we must getResult() to raise any exceptions
 
         self.populate(tmp)
-        cmd = ("-d %s import" % cvsrep +
-               " -m sample_project_files sample vendortag start")
+        cmd = ['-d',  self.cvsrep,  'import', 
+                '-m', 'sample_project_files', 'sample',  'vendortag',  'start']
         w = self.dovc(tmp, cmd)
         yield w; w.getResult()
         rmdirRecursive(tmp)
@@ -1122,14 +1122,14 @@ class CVSHelper(BaseHelper):
         time.sleep(2)
 
         w = self.dovc(self.repbase,
-                      "-d %s checkout -d cvstmp sample" % self.cvsrep)
+                      ['-d',  self.cvsrep, 'checkout', '-d',  'cvstmp',  'sample'])
         yield w; w.getResult()
 
-        w = self.dovc(tmp, "tag -b %s" % self.branchname)
+        w = self.dovc(tmp, ['tag',  '-b', self.branchname])
         yield w; w.getResult()
         self.populate_branch(tmp)
         w = self.dovc(tmp,
-                      "commit -m commit_on_branch -r %s" % self.branchname)
+                      ['commit',  '-m',  'commit_on_branch',  '-r', self.branchname])
         yield w; w.getResult()
         rmdirRecursive(tmp)
         time.sleep(2)
@@ -1143,13 +1143,13 @@ class CVSHelper(BaseHelper):
         tmp = os.path.join(self.repbase, "cvstmp")
 
         w = self.dovc(self.repbase,
-                      "-d %s checkout -d cvstmp sample" % self.cvsrep)
+                      ['-d',  self.cvsrep, 'checkout',  '-d',  'cvstmp',  'sample'])
         yield w; w.getResult()
         self.version += 1
         version_c = VERSION_C % self.version
         open(os.path.join(tmp, "version.c"), "w").write(version_c)
         w = self.dovc(tmp,
-                      "commit -m revised_to_%d version.c" % self.version)
+                      ['commit',  '-m',  'revised_to_%d' % self.version,  'version.c'])
         yield w; w.getResult()
         rmdirRecursive(tmp)
         time.sleep(2)
@@ -1251,13 +1251,12 @@ class SVNHelper(BaseHelper):
         self.svnurl_trunk = self.svnurl + "/sample/trunk"
         self.svnurl_branch = self.svnurl + "/sample/branch"
 
-        w = self.do(self.repbase, self.svnadmin+" create %s" % self.svnrep)
+        w = self.do(self.repbase, [self.svnadmin, "create", self.svnrep])
         yield w; w.getResult()
 
         self.populate(tmp)
         w = self.dovc(tmp,
-                      "import -m sample_project_files %s" %
-                      self.svnurl_trunk)
+                      ['import',  '-m',  'sample_project_files',  self.svnurl_trunk])
         yield w; out = w.getResult()
         rmdirRecursive(tmp)
         m = re.search(r'Committed revision (\d+)\.', out)
@@ -1265,16 +1264,16 @@ class SVNHelper(BaseHelper):
         self.addTrunkRev(int(m.group(1)))
 
         w = self.dovc(self.repbase,
-                      "checkout %s svntmp" % self.svnurl_trunk)
+                      ['checkout',  self.svnurl_trunk,  'svntmp'])
         yield w; w.getResult()
 
-        w = self.dovc(tmp, "cp -m make_branch %s %s" % (self.svnurl_trunk,
-                                                        self.svnurl_branch))
+        w = self.dovc(tmp, ['cp',  '-m' , 'make_branch',  self.svnurl_trunk,
+                                                        self.svnurl_branch])
         yield w; w.getResult()
-        w = self.dovc(tmp, "switch %s" % self.svnurl_branch)
+        w = self.dovc(tmp, ['switch', self.svnurl_branch])
         yield w; w.getResult()
         self.populate_branch(tmp)
-        w = self.dovc(tmp, "commit -m commit_on_branch")
+        w = self.dovc(tmp, ['commit',  '-m',  'commit_on_branch'])
         yield w; out = w.getResult()
         rmdirRecursive(tmp)
         m = re.search(r'Committed revision (\d+)\.', out)
@@ -1286,12 +1285,12 @@ class SVNHelper(BaseHelper):
         rmdirRecursive(tmp)
         log.msg("vc_revise" +  self.svnurl_trunk)
         w = self.dovc(self.repbase,
-                      "checkout %s svntmp" % self.svnurl_trunk)
+                      ['checkout',  self.svnurl_trunk,  'svntmp'])
         yield w; w.getResult()
         self.version += 1
         version_c = VERSION_C % self.version
         open(os.path.join(tmp, "version.c"), "w").write(version_c)
-        w = self.dovc(tmp, "commit -m revised_to_%d" % self.version)
+        w = self.dovc(tmp, ['commit', '-m',  'revised_to_%d' % self.version])
         yield w; out = w.getResult()
         m = re.search(r'Committed revision (\d+)\.', out)
         self.addTrunkRev(int(m.group(1)))
@@ -1309,7 +1308,7 @@ class SVNHelper(BaseHelper):
             # regardless of the host operating system's filepath separator
             svnurl = self.svnurl + "/" + branch
         w = self.dovc(self.repbase,
-                      "checkout %s %s" % (svnurl, workdir))
+                      ['checkout',  svnurl, workdir])
         yield w; w.getResult()
         open(os.path.join(workdir, "subdir", "subdir.c"), "w").write(TRY_C)
     vc_try_checkout = deferredGenerator(vc_try_checkout)
@@ -2344,9 +2343,9 @@ class MercurialHelper(BaseHelper):
         yield w; w.getResult()
         w = self.dovc(tmp, "add")
         yield w; w.getResult()
-        w = self.dovc(tmp, "commit -m initial_import")
+        w = self.dovc(tmp, ['commit', '-m', 'initial_import'])
         yield w; w.getResult()
-        w = self.dovc(tmp, "push %s" % self.rep_trunk)
+        w = self.dovc(tmp, ['push', self.rep_trunk])
         # note that hg-push does not actually update the working directory
         yield w; w.getResult()
         w = self.dovc(tmp, "identify")
@@ -2354,9 +2353,9 @@ class MercurialHelper(BaseHelper):
         self.addTrunkRev(self.extract_id(out))
 
         self.populate_branch(tmp)
-        w = self.dovc(tmp, "commit -m commit_on_branch")
+        w = self.dovc(tmp, ['commit', '-m', 'commit_on_branch'])
         yield w; w.getResult()
-        w = self.dovc(tmp, "push %s" % self.rep_branch)
+        w = self.dovc(tmp, ['push', self.rep_branch])
         yield w; w.getResult()
         w = self.dovc(tmp, "identify")
         yield w; out = w.getResult()
@@ -2366,7 +2365,7 @@ class MercurialHelper(BaseHelper):
 
     def vc_revise(self):
         tmp = os.path.join(self.hg_base, "hgtmp2")
-        w = self.dovc(self.hg_base, "clone %s %s" % (self.rep_trunk, tmp))
+        w = self.dovc(self.hg_base, ['clone', self.rep_trunk, tmp])
         yield w; w.getResult()
 
         self.version += 1
@@ -2377,9 +2376,9 @@ class MercurialHelper(BaseHelper):
         # force the mtime forward a little bit
         future = time.time() + 2*self.version
         os.utime(version_c_filename, (future, future))
-        w = self.dovc(tmp, "commit -m revised_to_%d" % self.version)
+        w = self.dovc(tmp, ['commit', '-m', 'revised_to_%d' % self.version])
         yield w; w.getResult()
-        w = self.dovc(tmp, "push %s" % self.rep_trunk)
+        w = self.dovc(tmp, ['push', self.rep_trunk])
         yield w; w.getResult()
         w = self.dovc(tmp, "identify")
         yield w; out = w.getResult()
@@ -2395,7 +2394,7 @@ class MercurialHelper(BaseHelper):
             src = self.rep_branch
         else:
             src = self.rep_trunk
-        w = self.dovc(self.hg_base, "clone %s %s" % (src, workdir))
+        w = self.dovc(self.hg_base, ['clone', src, workdir])
         yield w; w.getResult()
         try_c_filename = os.path.join(workdir, "subdir", "subdir.c")
         open(try_c_filename, "w").write(TRY_C)
