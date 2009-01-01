@@ -297,6 +297,7 @@ class AnyBranchScheduler(BaseUpstreamScheduler):
                                       self.fileIsImportant)
             s.successWatchers = self.successWatchers
             s.setServiceParent(self)
+            s.properties = self.properties
             # TODO: does this result in schedulers that stack up forever?
             # When I make the persistify-pass, think about this some more.
             self.schedulers[branch] = s
