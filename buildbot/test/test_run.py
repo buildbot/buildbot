@@ -921,3 +921,53 @@ class TestBuilder(RunMixin, unittest.TestCase):
         s = build.currentStep
         self.failUnless('blah' in s.cmd.args['env'])
         self.failUnlessEqual('bar', s.cmd.args['env']['blah'])
+
+class SchedulerWatchers(RunMixin, TestFlagMixin, unittest.TestCase):
+    config_watchable = config_base + """
+from buildbot.scheduler import AnyBranchScheduler
+from buildbot.steps.dummy import Dummy
+from buildbot.test.runutils import setTestFlag, SetTestFlagStep
+s = AnyBranchScheduler(
+    name='abs',
+    branches=None,
+    treeStableTimer=0,
+    builderNames=['a', 'b'])
+c['schedulers'] = [ s ]
+
+# count the number of times a success watcher is called
+numCalls = [ 0 ]
+def watcher(ss):
+    numCalls[0] += 1
+    setTestFlag("numCalls", numCalls[0])
+s.subscribeToSuccessfulBuilds(watcher)
+
+f = factory.BuildFactory()
+f.addStep(Dummy(timeout=0))
+c['builders'] = [{'name': 'a', 'slavename': 'bot1',
+                  'builddir': 'a', 'factory': f},
+                 {'name': 'b', 'slavename': 'bot1',
+                  'builddir': 'b', 'factory': f}]
+"""
+
+    def testWatchers(self):
+        self.clearFlags()
+        m = self.master
+        m.loadConfig(self.config_watchable)
+        m.readConfig = True
+        m.startService()
+
+        c = changes.Change("bob", ["Makefile", "foo/bar.c"], "changed stuff")
+        m.change_svc.addChange(c)
+
+        d = self.connectSlave(builders=['a', 'b'])
+
+        def pause(res):
+            d = defer.Deferred()
+            reactor.callLater(1, d.callback, res)
+            return d
+        d.addCallback(pause)
+
+        def checkFn(res):
+            self.failUnlessEqual(self.getFlag('numCalls'), 1)
+        d.addCallback(checkFn)
+        return d
