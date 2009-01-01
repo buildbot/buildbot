@@ -1,4 +1,11 @@
 #!/usr/bin/env python
+#
+# This software may be freely redistributed under the terms of the GNU
+# general public license.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 """
 Standard setup script.
 """
@@ -6,16 +13,20 @@ Standard setup script.
 import sys
 import os
 import re
+
 from distutils.core import setup
 from buildbot import version
 
 # Path: twisted!cvstoys!buildbot
 from distutils.command.install_data import install_data
+
+
 class install_data_twisted(install_data):
     """make sure data files are installed in package.
     this is evil.
     copied from Twisted/setup.py.
     """
+
     def finalize_options(self):
         self.set_undefined_options('install',
             ('install_lib', 'install_dir'),
