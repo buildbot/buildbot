@@ -1,2 +1,1 @@
-@python C:\Python23\Scripts\buildbot %*
-
+@"%~dp0..\python" "%~dp0buildbot" %*
