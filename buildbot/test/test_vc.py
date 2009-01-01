@@ -2598,7 +2598,7 @@ class MercurialInRepoHelper(MercurialHelper):
     vc_try_checkout = deferredGenerator(vc_try_checkout)
 
     def vc_try_finish(self, workdir):
-#        rmdirRecursive(workdir)
+        rmdirRecursive(workdir)
         pass
 
 
