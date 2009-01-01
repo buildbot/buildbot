@@ -11,3 +11,4 @@ _trial_temp
 dist
 build
 .build
+buildbot.egg-info
