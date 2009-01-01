@@ -56,7 +56,6 @@ class Change:
     def __init__(self, who, files, comments, isdir=0, links=[],
                  revision=None, when=None, branch=None):
         self.who = who
-        self.files = files
         self.comments = comments
         self.isdir = isdir
         self.links = links
@@ -65,6 +64,10 @@ class Change:
             when = util.now()
         self.when = when
         self.branch = branch
+
+        # keep a sorted list of the files, for easier display
+        self.files = files[:]
+        self.files.sort()
 
     def asText(self):
         data = ""
