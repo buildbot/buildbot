@@ -1010,6 +1010,14 @@ this happens, the buildmaster will think that the buildslave has
 disappeared, and builds will time out. Meanwhile the buildslave will
 not realize than anything is wrong.
 
+@item --log-size
+This is the size in bytes when to rotate the Twisted log files.
+
+@item --log-count
+This is the number of log rotations to keep around. You can either
+specify a number or @code{None} (the default) to keep all
+@file{twistd.log} files around.
+
 @end table
 
 
@@ -1788,7 +1796,7 @@ c['builders'] = [
   @{'name': 'test', 'slavenames': ['slave1', 'slave2', 'slave3', 'slave4',
                                    'slave5', 'slave6'],
     'builddir': 'test', 'factory': f',
-    'env': {'PATH': '/opt/local/bin:/opt/app/bin:/usr/local/bin:/usr/bin'}}
+    'env': @{'PATH': '/opt/local/bin:/opt/app/bin:/usr/local/bin:/usr/bin'@}@}
 
 @end example
 
@@ -5840,7 +5848,7 @@ Buildbot, we often want to put an upper limit on the number of readers, for
 example allowing two out of five possible builds at the same time. To do this,
 the lock counts the number of active readers.  Secondly, the terms @emph{read
 mode} and @emph{write mode} are confusing in Buildbot context. They have been
-replaced by @emph{counting mode} (since the lock counts them) and @{exclusive
+replaced by @emph{counting mode} (since the lock counts them) and @emph{exclusive
 mode}.  As a result of these changes, locks in Buildbot allow a number of
 builds (upto some fixed number) in counting mode, or they allow one build in
 exclusive mode.
@@ -5868,7 +5876,7 @@ from buildbot import locks
 db_lock = locks.MasterLock("database")
 build_lock = locks.SlaveLock("slave_builds",
                              maxCount = 1,
-                             maxCountForSlave = { 'fast': 3, 'new': 2 })
+                             maxCountForSlave = @{ 'fast': 3, 'new': 2 @})
 @end example
 
 After importing locks from buildbot, @code{db_lock} is defined to be a master
@@ -5910,7 +5918,7 @@ from buildbot.process import factory
 db_lock = locks.MasterLock("database")
 build_lock = locks.SlaveLock("slave_builds",
                              maxCount = 1,
-                             maxCountForSlave = { 'fast': 3, 'new': 2 })
+                             maxCountForSlave = @{ 'fast': 3, 'new': 2 @})
 
 f = factory.BuildFactory()
 f.addStep(source.SVN(svnurl="http://example.org/svn/Trunk"))

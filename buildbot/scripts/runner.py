@@ -319,6 +319,10 @@ class MasterOptions(MakerBase):
         ]
     optParameters = [
         ["config", "c", "master.cfg", "name of the buildmaster config file"],
+        ["log-size", "s", "1000000",
+         "size at which to rotate twisted log files"],
+        ["log-count", "l", "None",
+         "limit the number of kept old twisted log files"],
         ]
     def getSynopsis(self):
         return "Usage:    buildbot create-master [options] <basedir>"
@@ -334,6 +338,16 @@ class MasterOptions(MakerBase):
     See doc/config.xhtml for details about what can be controlled through
     this interface."""
 
+    def postOptions(self):
+        MakerBase.postOptions(self)
+        if not re.match('^\d+$', self['log-size']):
+            raise usage.UsageError("log-size parameter needs to be an int")
+        if not re.match('^\d+$', self['log-count']) and \
+                self['log-count'] != 'None':
+            raise usage.UsageError("log-count parameter needs to be an int "+
+                                   " or None")
+
+
 masterTAC = """
 from twisted.application import service
 from buildbot.master import BuildMaster
@@ -342,6 +356,15 @@ basedir = r'%(basedir)s'
 configfile = r'%(config)s'
 
 application = service.Application('buildmaster')
+try:
+  from twisted.python.logfile import LogFile
+  from twisted.python.log import ILogObserver, FileLogObserver
+  logfile = LogFile.fromFullPath("twistd.log", rotateLength=%(log-size)s,
+                                 maxRotatedFiles=%(log-count)s)
+  application.setComponent(ILogObserver, FileLogObserver(logfile).emit)
+except ImportError:
+  # probably not yet twisted 8.2.0 and beyond, can't set log yet
+  pass
 BuildMaster(basedir, configfile).setServiceParent(application)
 
 """
@@ -378,6 +401,10 @@ class SlaveOptions(MakerBase):
          "(1 or 0) child processes should be run in a pty"],
         ["umask", None, "None",
          "controls permissions of generated files. Use --umask=022 to be world-readable"],
+        ["log-size", "s", "1000000",
+         "size at which to rotate twisted log files"],
+        ["log-count", "l", "None",
+         "limit the number of kept old twisted log files"],
         ]
     
     longdesc = """
@@ -409,6 +436,12 @@ class SlaveOptions(MakerBase):
         self['keepalive'] = int(self['keepalive'])
         if self['master'].find(":") == -1:
             raise usage.UsageError("--master must be in the form host:portnum")
+        if not re.match('^\d+$', self['log-size']):
+            raise usage.UsageError("log-size parameter needs to be an int")
+        if not re.match('^\d+$', self['log-count']) and \
+                self['log-count'] != 'None':
+            raise usage.UsageError("log-count parameter needs to be an int "+
+                                   " or None")
 
 slaveTAC = """
 from twisted.application import service
@@ -424,6 +457,15 @@ usepty = %(usepty)d
 umask = %(umask)s
 
 application = service.Application('buildslave')
+try:
+  from twisted.python.logfile import LogFile
+  from twisted.python.log import ILogObserver, FileLogObserver
+  logfile = LogFile.fromFullPath("twistd.log", rotateLength=%(log-size)s,
+                                 maxRotatedFiles=%(log-count)s)
+  application.setComponent(ILogObserver, FileLogObserver(logfile).emit)
+except ImportError:
+  # probably not yet twisted 8.2.0 and beyond, can't set log yet
+  pass
 s = BuildSlave(buildmaster_host, port, slavename, passwd, basedir,
                keepalive, usepty, umask=umask)
 s.setServiceParent(application)
