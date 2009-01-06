@@ -116,9 +116,9 @@ class ShellCommand(LoggingBuildStep):
         """
 
         if done and self.descriptionDone is not None:
-            return self.descriptionDone
+            return list(self.descriptionDone)
         if self.description is not None:
-            return self.description
+            return list(self.description)
 
         properties = self.build.getProperties()
         words = self.command
@@ -404,8 +404,6 @@ class Test(WarningCountingShellCommand):
                     description.append('%d warnings' % warnings)
                 if failed:
                     description.append('%d failed' % failed)
-            else:
-                description.append("no test results")
         return description
 
 class PerlModuleTest(Test):
