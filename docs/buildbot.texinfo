@@ -56,11 +56,11 @@ provided the copyright notice and this notice are preserved.
 * Getting Source Code Changes::  Discovering when to run a build.
 * Build Process::               Controlling how each build is run.
 * Status Delivery::             Telling the world about the build's results.
-* Command-line tool::           
+* Command-line tool::
 * Resources::                   Getting help.
-* Developer's Appendix::        
-* Index of Useful Classes::     
-* Index of master.cfg keys::    
+* Developer's Appendix::
+* Index of Useful Classes::
+* Index of master.cfg keys::
 * Index::                       Complete index.
 
 @detailmenu
@@ -68,226 +68,226 @@ provided the copyright notice and this notice are preserved.
 
 Introduction
 
-* History and Philosophy::      
-* System Architecture::         
-* Control Flow::                
+* History and Philosophy::
+* System Architecture::
+* Control Flow::
 
 System Architecture
 
-* BuildSlave Connections::      
-* Buildmaster Architecture::    
-* Status Delivery Architecture::  
+* BuildSlave Connections::
+* Buildmaster Architecture::
+* Status Delivery Architecture::
 
 Installation
 
-* Requirements::                
-* Installing the code::         
-* Creating a buildmaster::      
-* Upgrading an Existing Buildmaster::  
-* Creating a buildslave::       
-* Launching the daemons::       
-* Logfiles::                    
-* Shutdown::                    
-* Maintenance::                 
-* Troubleshooting::             
+* Requirements::
+* Installing the code::
+* Creating a buildmaster::
+* Upgrading an Existing Buildmaster::
+* Creating a buildslave::
+* Launching the daemons::
+* Logfiles::
+* Shutdown::
+* Maintenance::
+* Troubleshooting::
 
 Creating a buildslave
 
-* Buildslave Options::          
+* Buildslave Options::
 
 Troubleshooting
 
-* Starting the buildslave::     
-* Connecting to the buildmaster::  
-* Forcing Builds::              
+* Starting the buildslave::
+* Connecting to the buildmaster::
+* Forcing Builds::
 
 Concepts
 
-* Version Control Systems::     
-* Schedulers::                  
-* BuildSet::                    
-* BuildRequest::                
-* Builder::                     
-* Users::                       
-* Build Properties::            
+* Version Control Systems::
+* Schedulers::
+* BuildSet::
+* BuildRequest::
+* Builder::
+* Users::
+* Build Properties::
 
 Version Control Systems
 
-* Generalizing VC Systems::     
-* Source Tree Specifications::  
-* How Different VC Systems Specify Sources::  
-* Attributes of Changes::       
+* Generalizing VC Systems::
+* Source Tree Specifications::
+* How Different VC Systems Specify Sources::
+* Attributes of Changes::
 
 Users
 
-* Doing Things With Users::     
-* Email Addresses::             
-* IRC Nicknames::               
-* Live Status Clients::         
+* Doing Things With Users::
+* Email Addresses::
+* IRC Nicknames::
+* Live Status Clients::
 
 Configuration
 
-* Config File Format::          
-* Loading the Config File::     
-* Testing the Config File::     
-* Defining the Project::        
-* Change Sources and Schedulers::  
-* Setting the slaveport::       
-* Buildslave Specifiers::       
-* Defining Global Properties::  
-* Defining Builders::           
-* Defining Status Targets::     
-* Debug options::               
+* Config File Format::
+* Loading the Config File::
+* Testing the Config File::
+* Defining the Project::
+* Change Sources and Schedulers::
+* Setting the slaveport::
+* Buildslave Specifiers::
+* Defining Global Properties::
+* Defining Builders::
+* Defining Status Targets::
+* Debug options::
 
 Change Sources and Schedulers
 
-* Scheduler Scheduler::         
-* AnyBranchScheduler::          
-* Dependent Scheduler::         
-* Periodic Scheduler::          
-* Nightly Scheduler::           
-* Try Schedulers::              
-* Triggerable Scheduler::       
+* Scheduler Scheduler::
+* AnyBranchScheduler::
+* Dependent Scheduler::
+* Periodic Scheduler::
+* Nightly Scheduler::
+* Try Schedulers::
+* Triggerable Scheduler::
 
 Buildslave Specifiers
 
-* When Buildslaves Go Missing::  
+* When Buildslaves Go Missing::
 
 Getting Source Code Changes
 
-* Change Sources::              
-* Choosing ChangeSources::      
-* CVSToys - PBService::         
-* Mail-parsing ChangeSources::  
-* PBChangeSource::              
-* P4Source::                    
-* BonsaiPoller::                
-* SVNPoller::                   
-* MercurialHook::               
+* Change Sources::
+* Choosing ChangeSources::
+* CVSToys - PBService::
+* Mail-parsing ChangeSources::
+* PBChangeSource::
+* P4Source::
+* BonsaiPoller::
+* SVNPoller::
+* MercurialHook::
 
 Mail-parsing ChangeSources
 
-* Subscribing the Buildmaster::  
-* Using Maildirs::              
-* Parsing Email Change Messages::  
+* Subscribing the Buildmaster::
+* Using Maildirs::
+* Parsing Email Change Messages::
 
 Parsing Email Change Messages
 
-* FCMaildirSource::             
-* SyncmailMaildirSource::       
-* BonsaiMaildirSource::         
-* SVNCommitEmailMaildirSource::  
+* FCMaildirSource::
+* SyncmailMaildirSource::
+* BonsaiMaildirSource::
+* SVNCommitEmailMaildirSource::
 
 Build Process
 
-* Build Steps::                 
-* Interlocks::                  
-* Build Factories::             
+* Build Steps::
+* Interlocks::
+* Build Factories::
 
 Build Steps
 
-* Common Parameters::           
-* Using Build Properties::      
-* Source Checkout::             
-* ShellCommand::                
-* Simple ShellCommand Subclasses::  
-* Python BuildSteps::           
-* Transferring Files::          
-* Triggering Schedulers::       
-* Writing New BuildSteps::      
+* Common Parameters::
+* Using Build Properties::
+* Source Checkout::
+* ShellCommand::
+* Simple ShellCommand Subclasses::
+* Python BuildSteps::
+* Transferring Files::
+* Triggering Schedulers::
+* Writing New BuildSteps::
 
 Source Checkout
 
-* CVS::                         
-* SVN::                         
-* Darcs::                       
-* Mercurial::                   
-* Arch::                        
-* Bazaar::                      
-* Bzr::                         
-* P4::                          
-* Git::                         
+* CVS::
+* SVN::
+* Darcs::
+* Mercurial::
+* Arch::
+* Bazaar::
+* Bzr::
+* P4::
+* Git::
 
 Simple ShellCommand Subclasses
 
-* Configure::                   
-* Compile::                     
-* Test::                        
-* TreeSize::                    
-* PerlModuleTest::              
-* SetProperty::                 
+* Configure::
+* Compile::
+* Test::
+* TreeSize::
+* PerlModuleTest::
+* SetProperty::
 
 Python BuildSteps
 
-* BuildEPYDoc::                 
-* PyFlakes::                    
+* BuildEPYDoc::
+* PyFlakes::
 
 Writing New BuildSteps
 
-* BuildStep LogFiles::          
-* Reading Logfiles::            
-* Adding LogObservers::         
-* BuildStep URLs::              
+* BuildStep LogFiles::
+* Reading Logfiles::
+* Adding LogObservers::
+* BuildStep URLs::
 
 Build Factories
 
-* BuildStep Objects::           
-* BuildFactory::                
-* Process-Specific build factories::  
+* BuildStep Objects::
+* BuildFactory::
+* Process-Specific build factories::
 
 BuildStep Objects
 
-* BuildFactory Attributes::     
-* Quick builds::                
+* BuildFactory Attributes::
+* Quick builds::
 
 BuildFactory
 
-* BuildFactory Attributes::     
-* Quick builds::                
+* BuildFactory Attributes::
+* Quick builds::
 
 Process-Specific build factories
 
-* GNUAutoconf::                 
-* CPAN::                        
-* Python distutils::            
-* Python/Twisted/trial projects::  
+* GNUAutoconf::
+* CPAN::
+* Python distutils::
+* Python/Twisted/trial projects::
 
 Status Delivery
 
-* WebStatus::                   
-* MailNotifier::                
-* IRC Bot::                     
-* PBListener::                  
-* Writing New Status Plugins::  
+* WebStatus::
+* MailNotifier::
+* IRC Bot::
+* PBListener::
+* Writing New Status Plugins::
 
 WebStatus
 
-* WebStatus Configuration Parameters::  
-* Buildbot Web Resources::      
-* XMLRPC server::               
-* HTML Waterfall::              
+* WebStatus Configuration Parameters::
+* Buildbot Web Resources::
+* XMLRPC server::
+* HTML Waterfall::
 
 Command-line tool
 
-* Administrator Tools::         
-* Developer Tools::             
-* Other Tools::                 
-* .buildbot config directory::  
+* Administrator Tools::
+* Developer Tools::
+* Other Tools::
+* .buildbot config directory::
 
 Developer Tools
 
-* statuslog::                   
-* statusgui::                   
-* try::                         
+* statuslog::
+* statusgui::
+* try::
 
 waiting for results
 
-* try --diff::                  
+* try --diff::
 
 Other Tools
 
-* sendchange::                  
-* debugclient::                 
+* sendchange::
+* debugclient::
 
 @end detailmenu
 @end menu
@@ -339,9 +339,9 @@ released under the GPL
 @end itemize
 
 @menu
-* History and Philosophy::      
-* System Architecture::         
-* Control Flow::                
+* History and Philosophy::
+* System Architecture::
+* Control Flow::
 @end menu
 
 
@@ -424,9 +424,9 @@ run by anyone who has an interest in seeing the project work well on
 their favorite platform.
 
 @menu
-* BuildSlave Connections::      
-* Buildmaster Architecture::    
-* Status Delivery Architecture::  
+* BuildSlave Connections::
+* Buildmaster Architecture::
+* Status Delivery Architecture::
 @end menu
 
 @node BuildSlave Connections, Buildmaster Architecture, System Architecture, System Architecture
@@ -612,16 +612,16 @@ like IRC.
 @chapter Installation
 
 @menu
-* Requirements::                
-* Installing the code::         
-* Creating a buildmaster::      
-* Upgrading an Existing Buildmaster::  
-* Creating a buildslave::       
-* Launching the daemons::       
-* Logfiles::                    
-* Shutdown::                    
-* Maintenance::                 
-* Troubleshooting::             
+* Requirements::
+* Installing the code::
+* Creating a buildmaster::
+* Upgrading an Existing Buildmaster::
+* Creating a buildslave::
+* Launching the daemons::
+* Logfiles::
+* Shutdown::
+* Maintenance::
+* Troubleshooting::
 @end menu
 
 @node Requirements, Installing the code, Installation, Installation
@@ -952,7 +952,7 @@ with symlinks.
 @end enumerate
 
 @menu
-* Buildslave Options::          
+* Buildslave Options::
 @end menu
 
 @node Buildslave Options,  , Creating a buildslave, Creating a buildslave
@@ -1170,9 +1170,9 @@ top directory. You can use something like the following:
 Here are a few hints on diagnosing common problems.
 
 @menu
-* Starting the buildslave::     
-* Connecting to the buildmaster::  
-* Forcing Builds::              
+* Starting the buildslave::
+* Connecting to the buildmaster::
+* Forcing Builds::
 @end menu
 
 @node Starting the buildslave, Connecting to the buildmaster, Troubleshooting, Troubleshooting
@@ -1238,13 +1238,13 @@ uses. You'll need to understand how the Buildbot sees the world to
 configure it properly.
 
 @menu
-* Version Control Systems::     
-* Schedulers::                  
-* BuildSet::                    
-* BuildRequest::                
-* Builder::                     
-* Users::                       
-* Build Properties::            
+* Version Control Systems::
+* Schedulers::
+* BuildSet::
+* BuildRequest::
+* Builder::
+* Users::
+* Build Properties::
 @end menu
 
 @node Version Control Systems, Schedulers, Concepts, Concepts
@@ -1264,10 +1264,10 @@ branches, and from various points in time. The first thing we have to
 do is to specify which source tree we want to get.
 
 @menu
-* Generalizing VC Systems::     
-* Source Tree Specifications::  
-* How Different VC Systems Specify Sources::  
-* Attributes of Changes::       
+* Generalizing VC Systems::
+* Source Tree Specifications::
+* How Different VC Systems Specify Sources::
+* Attributes of Changes::
 @end menu
 
 @node Generalizing VC Systems, Source Tree Specifications, Version Control Systems, Version Control Systems
@@ -1788,7 +1788,7 @@ c['builders'] = [
   @{'name': 'test', 'slavenames': ['slave1', 'slave2', 'slave3', 'slave4',
                                    'slave5', 'slave6'],
     'builddir': 'test', 'factory': f',
-    'env': {'PATH': '/opt/local/bin:/opt/app/bin:/usr/local/bin:/usr/bin'}}
+    'env': @{'PATH': '/opt/local/bin:/opt/app/bin:/usr/local/bin:/usr/bin'@}@}
 
 @end example
 
@@ -1815,10 +1815,10 @@ is left up to the status module which needs the address. The core code knows
 nothing about email addresses or IRC nicknames, just user names.
 
 @menu
-* Doing Things With Users::     
-* Email Addresses::             
-* IRC Nicknames::               
-* Live Status Clients::         
+* Doing Things With Users::
+* Email Addresses::
+* IRC Nicknames::
+* Live Status Clients::
 @end menu
 
 @node Doing Things With Users, Email Addresses, Users, Users
@@ -1947,7 +1947,7 @@ Properties come from a number of places:
 @item global configuration --
 These properties apply to all builds.
 @item schedulers --
-A scheduler can specify properties available to all the builds it 
+A scheduler can specify properties available to all the builds it
 starts.
 @item buildslaves --
 A buildslave can pass properties on to the builds it performs.
@@ -2000,17 +2000,17 @@ various sections in it. You will need to read the later chapters to
 understand how to fill in each section properly.
 
 @menu
-* Config File Format::          
-* Loading the Config File::     
-* Testing the Config File::     
-* Defining the Project::        
-* Change Sources and Schedulers::  
-* Setting the slaveport::       
-* Buildslave Specifiers::       
-* Defining Global Properties::  
-* Defining Builders::           
-* Defining Status Targets::     
-* Debug options::               
+* Config File Format::
+* Loading the Config File::
+* Testing the Config File::
+* Defining the Project::
+* Change Sources and Schedulers::
+* Setting the slaveport::
+* Buildslave Specifiers::
+* Defining Global Properties::
+* Defining Builders::
+* Defining Status Targets::
+* Debug options::
 @end menu
 
 @node Config File Format, Loading the Config File, Configuration, Configuration
@@ -2169,7 +2169,7 @@ c['buildbotURL'] = "http://localhost:8010/"
 @bcindex c['projectName']
 @code{projectName} is a short string will be used to describe the
 project that this buildbot is working on. For example, it is used as
-the title of the waterfall HTML page. 
+the title of the waterfall HTML page.
 
 @bcindex c['projectURL']
 @code{projectURL} is a string that gives a URL for the project as a
@@ -2231,7 +2231,7 @@ for future expansion:
 sched = Scheduler(name="quick", builderNames=['lin', 'win'])
 @end example
 
-All schedulers have several arguments in common:  
+All schedulers have several arguments in common:
 
 @table @code
 @item name
@@ -2258,13 +2258,13 @@ docstrings there are the best source of documentation on the arguments
 taken by each one.
 
 @menu
-* Scheduler Scheduler::         
-* AnyBranchScheduler::          
-* Dependent Scheduler::         
-* Periodic Scheduler::          
-* Nightly Scheduler::           
-* Try Schedulers::              
-* Triggerable Scheduler::       
+* Scheduler Scheduler::
+* AnyBranchScheduler::
+* Dependent Scheduler::
+* Periodic Scheduler::
+* Nightly Scheduler::
+* Try Schedulers::
+* Triggerable Scheduler::
 @end menu
 
 @node Scheduler Scheduler, AnyBranchScheduler, Change Sources and Schedulers, Change Sources and Schedulers
@@ -2312,11 +2312,11 @@ Example:
 
 @example
 from buildbot import scheduler
-quick = scheduler.Scheduler(name="quick", 
-                    branch=None, 
+quick = scheduler.Scheduler(name="quick",
+                    branch=None,
                     treeStableTimer=60,
                     builderNames=["quick-linux", "quick-netbsd"])
-full = scheduler.Scheduler(name="full", 
+full = scheduler.Scheduler(name="full",
                     branch=None,
                     treeStableTimer=5*60,
                     builderNames=["full-linux", "full-netbsd", "full-OSX"])
@@ -2520,7 +2520,7 @@ started every night at 3:00am:
 @example
 s = scheduler.Nightly(name='nightly',
         builderNames=['builder1', 'builder2'],
-        hour=3, 
+        hour=3,
         minute=0)
 @end example
 
@@ -2566,7 +2566,7 @@ command to trigger builds of code they have not yet committed. See
 
 Two implementations are available: @code{Try_Jobdir} and
 @code{Try_Userpass}.  The former monitors a job directory, specified
-by the @code{jobdir} parameter, while the latter listens for PB 
+by the @code{jobdir} parameter, while the latter listens for PB
 connections on a specific @code{port}, and authenticates against
 @code{userport}.
 
@@ -2605,7 +2605,7 @@ checkin = scheduler.Scheduler(name="checkin",
             builderNames=["checkin"])
 nightly = scheduler.Nightly(name='nightly',
             builderNames=['nightly'],
-            hour=3, 
+            hour=3,
             minute=0)
 
 mktarball = scheduler.Triggerable(name="mktarball",
@@ -2729,7 +2729,7 @@ This key is accepted for backwards compatibility, but is deprecated as
 of 0.7.6 and will go away in some future release.
 
 @menu
-* When Buildslaves Go Missing::  
+* When Buildslaves Go Missing::
 @end menu
 
 @node When Buildslaves Go Missing,  , Buildslave Specifiers, Buildslave Specifiers
@@ -3038,15 +3038,17 @@ occurred. For more information on VC systems and Changes, see
 
 
 @menu
-* Change Sources::              
-* Choosing ChangeSources::      
-* CVSToys - PBService::         
-* Mail-parsing ChangeSources::  
-* PBChangeSource::              
-* P4Source::                    
-* BonsaiPoller::                
-* SVNPoller::                   
-* MercurialHook::               
+* Change Sources::
+* Choosing ChangeSources::
+* CVSToys - PBService::
+* Mail-parsing ChangeSources::
+* PBChangeSource::
+* P4Source::
+* BonsaiPoller::
+* SVNPoller::
+* MercurialHook::
+* Bzr Hook::
+* Bzr Poller::
 @end menu
 
 
@@ -3142,6 +3144,13 @@ hook)
 @itemize @bullet
 @item pb.PBChangeSource (listening for connections from
 @code{contrib/arch_buildbot.py} run in a commit hook)
+@end itemize
+
+@item Bzr (the newer Bazaar)
+@itemize @bullet
+@item pb.PBChangeSource (listening for connections from
+@code{contrib/bzr_buildbot.py} run in a post-change-branch-tip or commit hook)
+@item @code{contrib/bzr_buildbot.py}'s BzrPoller (polling the Bzr repository)
 @end itemize
 
 @item Git
@@ -3300,9 +3309,9 @@ c['change_source'] = SyncmailMaildirSource("~/maildir-buildbot",
 @end example
 
 @menu
-* Subscribing the Buildmaster::  
-* Using Maildirs::              
-* Parsing Email Change Messages::  
+* Subscribing the Buildmaster::
+* Using Maildirs::
+* Parsing Email Change Messages::
 @end menu
 
 @node Subscribing the Buildmaster, Using Maildirs, Mail-parsing ChangeSources, Mail-parsing ChangeSources
@@ -3422,10 +3431,10 @@ prefix is stripped from the filename before any further processing is
 done. Thus the prefix usually ends with a slash.
 
 @menu
-* FCMaildirSource::             
-* SyncmailMaildirSource::       
-* BonsaiMaildirSource::         
-* SVNCommitEmailMaildirSource::  
+* FCMaildirSource::
+* SyncmailMaildirSource::
+* BonsaiMaildirSource::
+* SVNCommitEmailMaildirSource::
 @end menu
 
 @node FCMaildirSource, SyncmailMaildirSource, Parsing Email Change Messages, Parsing Email Change Messages
@@ -3909,7 +3918,7 @@ def my_file_splitter(path):
     return (branch, '/'.join(pieces))
 @end example
 
-@node MercurialHook,  , SVNPoller, Getting Source Code Changes
+@node MercurialHook,  Bzr Hook, SVNPoller, Getting Source Code Changes
 @section MercurialHook
 
 Since Mercurial is written in python, the hook script can invoke
@@ -4000,6 +4009,98 @@ able to use the same .hgrc for all your repositories, stored in
 @file{~/.hgrc} or @file{/etc/mercurial/hgrc}.
 
 
+@node Bzr Hook, Bzr Poller, MercurialHook, Getting Source Code Changes
+@section Bzr Hook
+
+Bzr is also written in Python, and the Bzr hook depends on Twisted to send the
+changes.
+
+To install, put @code{contrib/bzr_buildbot.py} in one of your plugins
+locations a bzr plugins directory (e.g.,
+@code{~/.bazaar/plugins}). Then, in one of your bazaar conf files (e.g.,
+@code{~/.bazaar/locations.conf}), set the location you want to connect with buildbot
+with these keys:
+
+@table @code
+@item buildbot_on
+one of 'commit', 'push, or 'change'. Turns the plugin on to report changes via
+commit, changes via push, or any changes to the trunk. 'change' is
+recommended.
+
+@item buildbot_server
+(required to send to a buildbot master) the URL of the buildbot master to
+which you will connect (as of this writing, the same server and port to which
+slaves connect).
+
+@item buildbot_port
+(optional, defaults to 9989) the port of the buildbot master to which you will
+connect (as of this writing, the same server and port to which slaves connect)
+
+@item buildbot_pqm
+(optional, defaults to not pqm) Normally, the user that commits the revision
+is the user that is responsible for the change. When run in a pqm (Patch Queue
+Manager, see https://launchpad.net/pqm) environment, the user that commits is
+the Patch Queue Manager, and the user that committed the *parent* revision is
+responsible for the change. To turn on the pqm mode, set this value to any of
+(case-insensitive) "Yes", "Y", "True", or "T".
+
+@item buildbot_dry_run
+(optional, defaults to not a dry run) Normally, the post-commit hook will
+attempt to communicate with the configured buildbot server and port. If this
+parameter is included and any of (case-insensitive) "Yes", "Y", "True", or
+"T", then the hook will simply print what it would have sent, but not attempt
+to contact the buildbot master.
+
+@item buildbot_send_branch_name
+(optional, defaults to not sending the branch name) If your buildbot's bzr
+source build step uses a repourl, do *not* turn this on. If your buildbot's
+bzr build step uses a baseURL, then you may set this value to any of
+(case-insensitive) "Yes", "Y", "True", or "T" to have the buildbot master
+append the branch name to the baseURL.
+
+@end table
+
+When buildbot no longer has a hardcoded password, it will be a configuration
+option here as well.
+
+Here's a simple example that you might have in your
+@code{~/.bazaar/locations.conf}.
+
+@example
+[chroot-*:///var/local/myrepo/mybranch]
+buildbot_on = change
+buildbot_server = localhost
+@end example
+
+@node Bzr Poller, , Bzr Hook, Getting Source Code Changes
+@section Bzr Poller
+
+If you cannot insert a Bzr hook in the server, you can use the Bzr Poller. To
+use, put @code{contrib/bzr_buildbot.py} somewhere that your buildbot
+configuration can import it. Even putting it in the same directory as the master.cfg
+should work. Install the poller in the buildbot configuration as with any
+other change source. Minimally, provide a URL that you want to poll (bzr://,
+bzr+ssh://, or lp:), though make sure the buildbot user has necessary
+privileges. You may also want to specify these optional values.
+
+@table @code
+@item poll_interval
+The number of seconds to wait between polls.  Defaults to 10 minutes.
+
+@item branch_name
+Any value to be used as the branch name. Defaults to None, or specify a
+string, or specify the constants from @code{bzr_buildbot.py} SHORT or FULL to
+get the short branch name or full branch address.
+
+@item blame_merge_author
+normally, the user that commits the revision is the user that is responsible
+for the change. When run in a pqm (Patch Queue Manager, see
+https://launchpad.net/pqm) environment, the user that commits is the Patch
+Queue Manager, and the user that committed the merged, *parent* revision is
+responsible for the change. set this value to True if this is pointed against
+a PQM-managed branch.
+@end table
+
 @node Build Process, Status Delivery, Getting Source Code Changes, Top
 @chapter Build Process
 
@@ -4025,9 +4126,9 @@ you can always subclass and customize to achieve more specialized
 behavior.
 
 @menu
-* Build Steps::                 
-* Interlocks::                  
-* Build Factories::             
+* Build Steps::
+* Interlocks::
+* Build Factories::
 @end menu
 
 @node Build Steps, Interlocks, Build Process, Build Process
@@ -4078,15 +4179,15 @@ available for use in a Build, and the parameters which can be used to
 control each.
 
 @menu
-* Common Parameters::           
-* Using Build Properties::      
-* Source Checkout::             
-* ShellCommand::                
-* Simple ShellCommand Subclasses::  
-* Python BuildSteps::           
-* Transferring Files::          
-* Triggering Schedulers::       
-* Writing New BuildSteps::      
+* Common Parameters::
+* Using Build Properties::
+* Source Checkout::
+* ShellCommand::
+* Simple ShellCommand Subclasses::
+* Python BuildSteps::
+* Transferring Files::
+* Triggering Schedulers::
+* Writing New BuildSteps::
 @end menu
 
 @node Common Parameters, Using Build Properties, Build Steps, Build Steps
@@ -4217,7 +4318,7 @@ f.addStep(ShellCommand(
 @end example
 
 Don't forget the extra ``s'' after the closing parenthesis! This is
-the cause of many confusing errors. 
+the cause of many confusing errors.
 
 The dictionary-style interpolation supports a number of more advanced
 syntaxes, too.
@@ -4419,15 +4520,15 @@ arguments are described on the following pages.
 
 
 @menu
-* CVS::                         
-* SVN::                         
-* Darcs::                       
-* Mercurial::                   
-* Arch::                        
-* Bazaar::                      
-* Bzr::                         
-* P4::                          
-* Git::                         
+* CVS::
+* SVN::
+* Darcs::
+* Mercurial::
+* Arch::
+* Bazaar::
+* Bzr::
+* P4::
+* Git::
 @end menu
 
 @node CVS, SVN, Source Checkout, Source Checkout
@@ -4968,12 +5069,12 @@ parameters so you don't have to specify them yourself, making the master.cfg
 file less verbose.
 
 @menu
-* Configure::                   
-* Compile::                     
-* Test::                        
-* TreeSize::                    
-* PerlModuleTest::              
-* SetProperty::                 
+* Configure::
+* Compile::
+* Test::
+* TreeSize::
+* PerlModuleTest::
+* SetProperty::
 @end menu
 
 @node Configure, Compile, Simple ShellCommand Subclasses, Simple ShellCommand Subclasses
@@ -5084,7 +5185,7 @@ stderr is lost.  For example, given
 
 @example
 f.addStep(SetProperty(
-    command="echo output1; echo error >&2; echo output2", 
+    command="echo output1; echo error >&2; echo output2",
     extract_fn=my_extract))
 @end example
 
@@ -5098,8 +5199,8 @@ Here are some BuildSteps that are specifcally useful for projects
 implemented in Python.
 
 @menu
-* BuildEPYDoc::                 
-* PyFlakes::                    
+* BuildEPYDoc::
+* PyFlakes::
 @end menu
 
 @node BuildEPYDoc, PyFlakes, Python BuildSteps, Python BuildSteps
@@ -5304,10 +5405,10 @@ decision.
 TODO: add more description of BuildSteps.
 
 @menu
-* BuildStep LogFiles::          
-* Reading Logfiles::            
-* Adding LogObservers::         
-* BuildStep URLs::              
+* BuildStep LogFiles::
+* Reading Logfiles::
+* Adding LogObservers::
+* BuildStep URLs::
 @end menu
 
 @node BuildStep LogFiles, Reading Logfiles, Writing New BuildSteps, Writing New BuildSteps
@@ -5673,7 +5774,7 @@ Find out what your python's standard include path is by asking it:
 
 @example
 80:warner@@luther% python
-Python 2.4.4c0 (#2, Oct  2 2006, 00:57:46) 
+Python 2.4.4c0 (#2, Oct  2 2006, 00:57:46)
 [GCC 4.1.2 20060928 (prerelease) (Debian 4.1.1-15)] on linux2
 Type "help", "copyright", "credits" or "license" for more information.
 >>> import sys
@@ -5834,16 +5935,16 @@ build steps) that can access a resource.
 The mechanism used by Buildbot is known as the read/write lock.@footnote{See
 http://en.wikipedia.org/wiki/Read/write_lock_pattern for more information.} It
 allows either many readers or a single writer but not a combination of readers
-and writers.  The general lock has been modified and extended for use in
-Buildbot.  Firstly, the general lock allows an infinite number of readers. In
+and writers. The general lock has been modified and extended for use in
+Buildbot. Firstly, the general lock allows an infinite number of readers. In
 Buildbot, we often want to put an upper limit on the number of readers, for
 example allowing two out of five possible builds at the same time. To do this,
-the lock counts the number of active readers.  Secondly, the terms @emph{read
+the lock counts the number of active readers. Secondly, the terms @emph{read
 mode} and @emph{write mode} are confusing in Buildbot context. They have been
-replaced by @emph{counting mode} (since the lock counts them) and @{exclusive
-mode}.  As a result of these changes, locks in Buildbot allow a number of
-builds (upto some fixed number) in counting mode, or they allow one build in
-exclusive mode.
+replaced by @emph{counting mode} (since the lock counts them) and
+@emph{exclusive mode}. As a result of these changes, locks in Buildbot allow a
+number of builds (upto some fixed number) in counting mode, or they allow one
+build in exclusive mode.
 
 Often, not all slaves are equal. To allow for this situation, Buildbot allows
 to have a separate upper limit on the count for each slave. In this way, you
@@ -5868,7 +5969,7 @@ from buildbot import locks
 db_lock = locks.MasterLock("database")
 build_lock = locks.SlaveLock("slave_builds",
                              maxCount = 1,
-                             maxCountForSlave = { 'fast': 3, 'new': 2 })
+                             maxCountForSlave = @{ 'fast': 3, 'new': 2 @})
 @end example
 
 After importing locks from buildbot, @code{db_lock} is defined to be a master
@@ -5910,7 +6011,7 @@ from buildbot.process import factory
 db_lock = locks.MasterLock("database")
 build_lock = locks.SlaveLock("slave_builds",
                              maxCount = 1,
-                             maxCountForSlave = { 'fast': 3, 'new': 2 })
+                             maxCountForSlave = @{ 'fast': 3, 'new': 2 @})
 
 f = factory.BuildFactory()
 f.addStep(source.SVN(svnurl="http://example.org/svn/Trunk"))
@@ -5968,9 +6069,9 @@ create instances of your new Build subclass.
 
 
 @menu
-* BuildStep Objects::           
-* BuildFactory::                
-* Process-Specific build factories::  
+* BuildStep Objects::
+* BuildFactory::
+* Process-Specific build factories::
 @end menu
 
 @node BuildStep Objects, BuildFactory, Build Factories, Build Factories
@@ -6007,8 +6108,8 @@ to later builds.
 
 
 @menu
-* BuildFactory Attributes::     
-* Quick builds::                
+* BuildFactory Attributes::
+* Quick builds::
 @end menu
 
 @node BuildFactory, Process-Specific build factories, BuildStep Objects, Build Factories
@@ -6087,7 +6188,7 @@ FAILED. However, the remaining steps will still be executed. This is
 appropriate for things like multiple testing steps: a failure in any
 one of them will indicate that the build has failed, however it is
 still useful to run them all to completion.
- 
+
 @item
 Similarly, if the @code{warnOnFailure} or @code{warnOnWarnings} flag
 is set, then a result of FAILURE or WARNINGS will mark the build as
@@ -6119,8 +6220,8 @@ CVS/SVN steps need to perform their checkouts from the parent
 directory.
 
 @menu
-* BuildFactory Attributes::     
-* Quick builds::                
+* BuildFactory Attributes::
+* Quick builds::
 @end menu
 
 @node BuildFactory Attributes, Quick builds, BuildFactory, BuildFactory
@@ -6169,10 +6270,10 @@ structures. Buildbot provides several pre-configured BuildFactory
 subclasses which let you build these projects with a minimum of fuss.
 
 @menu
-* GNUAutoconf::                 
-* CPAN::                        
-* Python distutils::            
-* Python/Twisted/trial projects::  
+* GNUAutoconf::
+* CPAN::
+* Python distutils::
+* Python/Twisted/trial projects::
 @end menu
 
 @node GNUAutoconf, CPAN, Process-Specific build factories, Process-Specific build factories
@@ -6316,7 +6417,7 @@ Arguments:
 @table @code
 @item source
 (required): A step specification tuple, that that used by GNUAutoconf.
-  
+
 @item python
 A string which specifies the @code{python} executable to use. Defaults
 to just @code{python}.
@@ -6445,7 +6546,7 @@ unknown-PROJECTNAME problem described above, and is currently used in
 the Twisted buildbot to accomodate the fact that test cases are now
 distributed through multiple twisted.SUBPROJECT.test directories.
 
-@end table  
+@end table
 
 Unless one of @code{trialModule} or @code{useTestCaseNames}
 are set, no tests will be run.
@@ -6518,11 +6619,11 @@ notifications of builder events, in which case they must define
 @file{buildbot/interfaces.py} for full details.)
 
 @menu
-* WebStatus::                   
-* MailNotifier::                
-* IRC Bot::                     
-* PBListener::                  
-* Writing New Status Plugins::  
+* WebStatus::
+* MailNotifier::
+* IRC Bot::
+* PBListener::
+* Writing New Status Plugins::
 @end menu
 
 @c @node Email Delivery,  , Status Delivery, Status Delivery
@@ -6608,10 +6709,10 @@ they provide.
 
 
 @menu
-* WebStatus Configuration Parameters::  
-* Buildbot Web Resources::      
-* XMLRPC server::               
-* HTML Waterfall::              
+* WebStatus Configuration Parameters::
+* Buildbot Web Resources::
+* XMLRPC server::
+* HTML Waterfall::
 @end menu
 
 @node WebStatus Configuration Parameters, Buildbot Web Resources, WebStatus, WebStatus
@@ -7039,7 +7140,7 @@ told to shut up.
 
 @example
 from buildbot.status import words
-irc = words.IRC("irc.example.org", "botnickname", 
+irc = words.IRC("irc.example.org", "botnickname",
                 channels=["channel1", "channel2"],
                 password="mysecretpassword")
 c['status'].append(irc)
@@ -7181,10 +7282,10 @@ some are for developers who are editing the code that the buildbot is
 monitoring.
 
 @menu
-* Administrator Tools::         
-* Developer Tools::             
-* Other Tools::                 
-* .buildbot config directory::  
+* Administrator Tools::
+* Developer Tools::
+* Other Tools::
+* .buildbot config directory::
 @end menu
 
 @node Administrator Tools, Developer Tools, Command-line tool, Command-line tool
@@ -7248,9 +7349,9 @@ These tools are provided for use by the developers who are working on
 the code that the buildbot is monitoring.
 
 @menu
-* statuslog::                   
-* statusgui::                   
-* try::                         
+* statuslog::
+* statusgui::
+* try::
 @end menu
 
 @node statuslog, statusgui, Developer Tools, Developer Tools
@@ -7646,7 +7747,7 @@ exiting. Unless you use the @option{--quiet} option (or
 seconds until the builds have completed.
 
 @menu
-* try --diff::                  
+* try --diff::
 @end menu
 
 @node try --diff,  , try, try
@@ -7694,8 +7795,8 @@ buildmaster (with @option{--connect}, @option{--tryhost}, etc).
 These tools are generally used by buildmaster administrators.
 
 @menu
-* sendchange::                  
-* debugclient::                 
+* sendchange::
+* debugclient::
 @end menu
 
 @node sendchange, debugclient, Other Tools, Other Tools
@@ -7992,4 +8093,3 @@ master.cfg as @code{c['change_source']}.
 
 
 @bye
-
