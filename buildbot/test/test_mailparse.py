@@ -14,15 +14,15 @@ class TestFreshCVS(unittest.TestCase):
     def testMsg1(self):
         c = self.get("mail/freshcvs.1")
         self.assertEqual(c.who, "moshez")
-        self.assertEqual(c.files, ["Twisted/debian/python-twisted.menu.in"])
+        self.assertEqual(set(c.files), set(["Twisted/debian/python-twisted.menu.in"]))
         self.assertEqual(c.comments, "Instance massenger, apparently\n")
         self.assertEqual(c.isdir, 0)
 
     def testMsg2(self):
         c = self.get("mail/freshcvs.2")
         self.assertEqual(c.who, "itamarst")
-        self.assertEqual(c.files, ["Twisted/twisted/web/woven/form.py",
-                                   "Twisted/twisted/python/formmethod.py"])
+        self.assertEqual(set(c.files), set(["Twisted/twisted/web/woven/form.py",
+                                   "Twisted/twisted/python/formmethod.py"]))
         self.assertEqual(c.comments,
                          "submit formmethod now subclass of Choice\n")
         self.assertEqual(c.isdir, 0)
@@ -31,8 +31,8 @@ class TestFreshCVS(unittest.TestCase):
         # same as msg2 but missing the ViewCVS section
         c = self.get("mail/freshcvs.3")
         self.assertEqual(c.who, "itamarst")
-        self.assertEqual(c.files, ["Twisted/twisted/web/woven/form.py",
-                                   "Twisted/twisted/python/formmethod.py"])
+        self.assertEqual(set(c.files), set(["Twisted/twisted/web/woven/form.py",
+                                   "Twisted/twisted/python/formmethod.py"]))
         self.assertEqual(c.comments,
                          "submit formmethod now subclass of Choice\n")
         self.assertEqual(c.isdir, 0)
@@ -41,8 +41,8 @@ class TestFreshCVS(unittest.TestCase):
         # same as msg3 but also missing CVS patch section
         c = self.get("mail/freshcvs.4")
         self.assertEqual(c.who, "itamarst")
-        self.assertEqual(c.files, ["Twisted/twisted/web/woven/form.py",
-                                   "Twisted/twisted/python/formmethod.py"])
+        self.assertEqual(set(c.files), set(["Twisted/twisted/web/woven/form.py",
+                                   "Twisted/twisted/python/formmethod.py"]))
         self.assertEqual(c.comments,
                          "submit formmethod now subclass of Choice\n")
         self.assertEqual(c.isdir, 0)
@@ -51,7 +51,7 @@ class TestFreshCVS(unittest.TestCase):
         # creates a directory
         c = self.get("mail/freshcvs.5")
         self.assertEqual(c.who, "etrepum")
-        self.assertEqual(c.files, ["Twisted/doc/examples/cocoaDemo"])
+        self.assertEqual(set(c.files), set(["Twisted/doc/examples/cocoaDemo"]))
         self.assertEqual(c.comments,
                          "Directory /cvs/Twisted/doc/examples/cocoaDemo added to the repository\n")
         self.assertEqual(c.isdir, 1)
@@ -60,7 +60,7 @@ class TestFreshCVS(unittest.TestCase):
         # adds files
         c = self.get("mail/freshcvs.6")
         self.assertEqual(c.who, "etrepum")
-        self.assertEqual(c.files, [
+        self.assertEqual(set(c.files), set([
             "Twisted/doc/examples/cocoaDemo/MyAppDelegate.py",
             "Twisted/doc/examples/cocoaDemo/__main__.py",
             "Twisted/doc/examples/cocoaDemo/bin-python-main.m",
@@ -68,7 +68,7 @@ class TestFreshCVS(unittest.TestCase):
             "Twisted/doc/examples/cocoaDemo/English.lproj/MainMenu.nib/classes.nib",
             "Twisted/doc/examples/cocoaDemo/English.lproj/MainMenu.nib/info.nib",
             "Twisted/doc/examples/cocoaDemo/English.lproj/MainMenu.nib/keyedobjects.nib",
-            "Twisted/doc/examples/cocoaDemo/cocoaDemo.pbproj/project.pbxproj"])
+            "Twisted/doc/examples/cocoaDemo/cocoaDemo.pbproj/project.pbxproj"]))
         self.assertEqual(c.comments,
                          "Cocoa (OS X) clone of the QT demo, using polling reactor\n\nRequires pyobjc ( http://pyobjc.sourceforge.net ), it's not much different than the template project.  The reactor is iterated periodically by a repeating NSTimer.\n")
         self.assertEqual(c.isdir, 0)
@@ -77,7 +77,7 @@ class TestFreshCVS(unittest.TestCase):
         # deletes files
         c = self.get("mail/freshcvs.7")
         self.assertEqual(c.who, "etrepum")
-        self.assertEqual(c.files, [
+        self.assertEqual(set(c.files), set([
             "Twisted/doc/examples/cocoaDemo/MyAppDelegate.py",
             "Twisted/doc/examples/cocoaDemo/__main__.py",
             "Twisted/doc/examples/cocoaDemo/bin-python-main.m",
@@ -85,7 +85,7 @@ class TestFreshCVS(unittest.TestCase):
             "Twisted/doc/examples/cocoaDemo/English.lproj/MainMenu.nib/classes.nib",
             "Twisted/doc/examples/cocoaDemo/English.lproj/MainMenu.nib/info.nib",
             "Twisted/doc/examples/cocoaDemo/English.lproj/MainMenu.nib/keyedobjects.nib",
-            "Twisted/doc/examples/cocoaDemo/cocoaDemo.pbproj/project.pbxproj"])
+            "Twisted/doc/examples/cocoaDemo/cocoaDemo.pbproj/project.pbxproj"]))
         self.assertEqual(c.comments,
                          "Directories break debian build script, waiting for reasonable fix\n")
         self.assertEqual(c.isdir, 0)
@@ -94,7 +94,7 @@ class TestFreshCVS(unittest.TestCase):
         # files outside Twisted/
         c = self.get("mail/freshcvs.8")
         self.assertEqual(c.who, "acapnotic")
-        self.assertEqual(c.files, [ "CVSROOT/freshCfg" ])
+        self.assertEqual(set(c.files), set([ "CVSROOT/freshCfg" ]))
         self.assertEqual(c.comments, "it doesn't work with invalid syntax\n")
         self.assertEqual(c.isdir, 0)
 
@@ -102,7 +102,7 @@ class TestFreshCVS(unittest.TestCase):
         # also creates a directory
         c = self.get("mail/freshcvs.9")
         self.assertEqual(c.who, "exarkun")
-        self.assertEqual(c.files, ["Twisted/sandbox/exarkun/persist-plugin"])
+        self.assertEqual(set(c.files), set(["Twisted/sandbox/exarkun/persist-plugin"]))
         self.assertEqual(c.comments,
                          "Directory /cvs/Twisted/sandbox/exarkun/persist-plugin added to the repository\n")
         self.assertEqual(c.isdir, 1)
@@ -117,14 +117,14 @@ class TestFreshCVS_Prefix(unittest.TestCase):
     def testMsg1p(self):
         c = self.get("mail/freshcvs.1")
         self.assertEqual(c.who, "moshez")
-        self.assertEqual(c.files, ["debian/python-twisted.menu.in"])
+        self.assertEqual(set(c.files), set(["debian/python-twisted.menu.in"]))
         self.assertEqual(c.comments, "Instance massenger, apparently\n")
 
     def testMsg2p(self):
         c = self.get("mail/freshcvs.2")
         self.assertEqual(c.who, "itamarst")
-        self.assertEqual(c.files, ["twisted/web/woven/form.py",
-                                   "twisted/python/formmethod.py"])
+        self.assertEqual(set(c.files), set(["twisted/web/woven/form.py",
+                                   "twisted/python/formmethod.py"]))
         self.assertEqual(c.comments,
                          "submit formmethod now subclass of Choice\n")
 
@@ -132,8 +132,8 @@ class TestFreshCVS_Prefix(unittest.TestCase):
         # same as msg2 but missing the ViewCVS section
         c = self.get("mail/freshcvs.3")
         self.assertEqual(c.who, "itamarst")
-        self.assertEqual(c.files, ["twisted/web/woven/form.py",
-                                   "twisted/python/formmethod.py"])
+        self.assertEqual(set(c.files), set(["twisted/web/woven/form.py",
+                                   "twisted/python/formmethod.py"]))
         self.assertEqual(c.comments,
                          "submit formmethod now subclass of Choice\n")
 
@@ -141,8 +141,8 @@ class TestFreshCVS_Prefix(unittest.TestCase):
         # same as msg3 but also missing CVS patch section
         c = self.get("mail/freshcvs.4")
         self.assertEqual(c.who, "itamarst")
-        self.assertEqual(c.files, ["twisted/web/woven/form.py",
-                                   "twisted/python/formmethod.py"])
+        self.assertEqual(set(c.files), set(["twisted/web/woven/form.py",
+                                   "twisted/python/formmethod.py"]))
         self.assertEqual(c.comments,
                          "submit formmethod now subclass of Choice\n")
 
@@ -150,7 +150,7 @@ class TestFreshCVS_Prefix(unittest.TestCase):
         # creates a directory
         c = self.get("mail/freshcvs.5")
         self.assertEqual(c.who, "etrepum")
-        self.assertEqual(c.files, ["doc/examples/cocoaDemo"])
+        self.assertEqual(set(c.files), set(["doc/examples/cocoaDemo"]))
         self.assertEqual(c.comments,
                          "Directory /cvs/Twisted/doc/examples/cocoaDemo added to the repository\n")
         self.assertEqual(c.isdir, 1)
@@ -159,7 +159,7 @@ class TestFreshCVS_Prefix(unittest.TestCase):
         # adds files
         c = self.get("mail/freshcvs.6")
         self.assertEqual(c.who, "etrepum")
-        self.assertEqual(c.files, [
+        self.assertEqual(set(c.files), set([
             "doc/examples/cocoaDemo/MyAppDelegate.py",
             "doc/examples/cocoaDemo/__main__.py",
             "doc/examples/cocoaDemo/bin-python-main.m",
@@ -167,7 +167,7 @@ class TestFreshCVS_Prefix(unittest.TestCase):
             "doc/examples/cocoaDemo/English.lproj/MainMenu.nib/classes.nib",
             "doc/examples/cocoaDemo/English.lproj/MainMenu.nib/info.nib",
             "doc/examples/cocoaDemo/English.lproj/MainMenu.nib/keyedobjects.nib",
-            "doc/examples/cocoaDemo/cocoaDemo.pbproj/project.pbxproj"])
+            "doc/examples/cocoaDemo/cocoaDemo.pbproj/project.pbxproj"]))
         self.assertEqual(c.comments,
                          "Cocoa (OS X) clone of the QT demo, using polling reactor\n\nRequires pyobjc ( http://pyobjc.sourceforge.net ), it's not much different than the template project.  The reactor is iterated periodically by a repeating NSTimer.\n")
         self.assertEqual(c.isdir, 0)
@@ -176,7 +176,7 @@ class TestFreshCVS_Prefix(unittest.TestCase):
         # deletes files
         c = self.get("mail/freshcvs.7")
         self.assertEqual(c.who, "etrepum")
-        self.assertEqual(c.files, [
+        self.assertEqual(set(c.files), set([
             "doc/examples/cocoaDemo/MyAppDelegate.py",
             "doc/examples/cocoaDemo/__main__.py",
             "doc/examples/cocoaDemo/bin-python-main.m",
@@ -184,7 +184,7 @@ class TestFreshCVS_Prefix(unittest.TestCase):
             "doc/examples/cocoaDemo/English.lproj/MainMenu.nib/classes.nib",
             "doc/examples/cocoaDemo/English.lproj/MainMenu.nib/info.nib",
             "doc/examples/cocoaDemo/English.lproj/MainMenu.nib/keyedobjects.nib",
-            "doc/examples/cocoaDemo/cocoaDemo.pbproj/project.pbxproj"])
+            "doc/examples/cocoaDemo/cocoaDemo.pbproj/project.pbxproj"]))
         self.assertEqual(c.comments,
                          "Directories break debian build script, waiting for reasonable fix\n")
         self.assertEqual(c.isdir, 0)
@@ -210,7 +210,7 @@ class TestSyncmail(unittest.TestCase):
         c = self.get("mail/syncmail.1")
         self.failUnless(c is not None)
         self.assertEqual(c.who, "warner")
-        self.assertEqual(c.files, ["buildbot/changes/freshcvsmail.py"])
+        self.assertEqual(set(c.files), set(["buildbot/changes/freshcvsmail.py"]))
         self.assertEqual(c.comments,
                          "remove leftover code, leave a temporary compatibility import. Note! Start\nimporting FCMaildirSource from changes.mail instead of changes.freshcvsmail\n")
         self.assertEqual(c.isdir, 0)
@@ -218,7 +218,7 @@ class TestSyncmail(unittest.TestCase):
     def testMsgS2(self):
         c = self.get("mail/syncmail.2")
         self.assertEqual(c.who, "warner")
-        self.assertEqual(c.files, ["ChangeLog"])
+        self.assertEqual(set(c.files), set(["ChangeLog"]))
         self.assertEqual(c.comments, "\t* NEWS: started adding new features\n")
         self.assertEqual(c.isdir, 0)
 
@@ -229,10 +229,10 @@ class TestSyncmail(unittest.TestCase):
     def testMsgS4(self):
         c = self.get("mail/syncmail.4")
         self.assertEqual(c.who, "warner")
-        self.assertEqual(c.files, ["test/mail/syncmail.1",
-                                   "test/mail/syncmail.2",
-                                   "test/mail/syncmail.3"
-                                   ])
+        self.assertEqual(set(c.files),
+                         set(["test/mail/syncmail.1",
+                              "test/mail/syncmail.2",
+                              "test/mail/syncmail.3"]))
         self.assertEqual(c.comments, "test cases for syncmail parser\n")
         self.assertEqual(c.isdir, 0)
         self.assertEqual(c.branch, None)
@@ -242,11 +242,11 @@ class TestSyncmail(unittest.TestCase):
         c = self.getNoPrefix("mail/syncmail.5")
         self.failUnless(c)
         self.assertEqual(c.who, "thomas")
-        self.assertEqual(c.files, ['test1/MANIFEST',
+        self.assertEqual(set(c.files),
+                              set(['test1/MANIFEST',
                                    'test1/Makefile.am',
                                    'test1/autogen.sh',
-                                   'test1/configure.in' 
-                                   ])
+                                   'test1/configure.in']))
         self.assertEqual(c.branch, "BRANCH-DEVEL")
         self.assertEqual(c.isdir, 0)
 
@@ -261,7 +261,7 @@ class TestSVNCommitEmail(unittest.TestCase):
         c = self.get("mail/svn-commit.1", "spamassassin/trunk/")
         self.failUnless(c)
         self.failUnlessEqual(c.who, "felicity")
-        self.failUnlessEqual(c.files, ["sa-update.raw"])
+        self.failUnlessEqual(set(c.files), set(["sa-update.raw"]))
         self.failUnlessEqual(c.branch, None)
         self.failUnlessEqual(c.comments,
                              "bug 4864: remove extraneous front-slash "
@@ -275,8 +275,8 @@ class TestSVNCommitEmail(unittest.TestCase):
         c = self.get("mail/svn-commit.2", "spamassassin/branches/3.1/")
         self.failUnless(c)
         self.failUnlessEqual(c.who, "sidney")
-        self.failUnlessEqual(c.files,
-                             ["lib/Mail/SpamAssassin/Timeout.pm",
+        self.failUnlessEqual(set(c.files),
+                         set(["lib/Mail/SpamAssassin/Timeout.pm",
                               "MANIFEST",
                               "lib/Mail/SpamAssassin/Logger.pm",
                               "lib/Mail/SpamAssassin/Plugin/DCC.pm",
@@ -286,7 +286,7 @@ class TestSVNCommitEmail(unittest.TestCase):
                               "lib/Mail/SpamAssassin/Plugin/SPF.pm",
                               "lib/Mail/SpamAssassin/SpamdForkScaling.pm",
                               "spamd/spamd.raw",
-                              ])
+                              ]))
         self.failUnlessEqual(c.comments,
                              "Bug 4696: consolidated fixes for timeout bugs\n")
 
