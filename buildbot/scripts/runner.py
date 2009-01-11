@@ -717,6 +717,7 @@ class SendChangeOptions(usage.Options):
          "Location of the buildmaster's PBListener (host:port)"),
         ("username", "u", None, "Username performing the commit"),
         ("branch", "b", None, "Branch specifier"),
+        ("category", "c", None, "Category of repository"),
         ("revision", "r", None, "Revision specifier (string)"),
         ("revision_number", "n", None, "Revision specifier (integer)"),
         ("revision_file", None, None, "Filename containing revision spec"),
@@ -739,6 +740,7 @@ def sendchange(config, runReactor=False):
     user = config.get('username', opts.get('username'))
     master = config.get('master', opts.get('master'))
     branch = config.get('branch', opts.get('branch'))
+    category = config.get('category', opts.get('category'))
     revision = config.get('revision')
     # SVN and P4 use numeric revisions
     if config.get("revision_number"):
@@ -762,7 +764,7 @@ def sendchange(config, runReactor=False):
     assert master, "you must provide the master location"
 
     s = Sender(master, user)
-    d = s.send(branch, revision, comments, files)
+    d = s.send(branch, revision, comments, files, category=category)
     if runReactor:
         d.addCallbacks(s.printSuccess, s.printFailure)
         d.addBoth(s.stop)

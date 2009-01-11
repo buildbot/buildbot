@@ -19,6 +19,10 @@ d3 = {'files': ["Project/baz.c", "OtherProject/bloo.c"],
 d4 = {'files': ["trunk/baz.c", "branches/foobranch/foo.c", "trunk/bar.c"],
       'who': "alice",
       'comments': "mixed changes"}
+d5 = {'files': ["Project/foo.c"],
+      'who': "trillian",
+      'comments': "Some changes in Project",
+      'category': "categoryA"}
 
 class TestChangePerspective(unittest.TestCase):
 
@@ -93,7 +97,12 @@ class TestChangePerspective(unittest.TestCase):
         self.failUnlessEqual(set(c1.files), set(["foo.c"]))
         self.failUnlessEqual(c1.comments, "mixed changes")
 
-
+    def testCategory(self):
+        p = pb.ChangePerspective(self, None)
+        p.perspective_addChange(d5)
+        self.failUnlessEqual(len(self.changes), 1)
+        c1 = self.changes[0]
+        self.failUnlessEqual(c1.category, "categoryA")
 
 config_empty = """
 BuildmasterConfig = c = {}
@@ -144,6 +153,7 @@ class Sender(unittest.TestCase):
         self.options = {'username': "alice",
                         'master': "localhost:%d" % port,
                         'files': ["foo.c"],
+                        'category': "categoryA",
                         }
 
         d = runner.sendchange(self.options)
@@ -158,6 +168,7 @@ class Sender(unittest.TestCase):
         self.failUnlessEqual(c.files, ["foo.c"])
         self.failUnlessEqual(c.comments, "")
         self.failUnlessEqual(c.revision, None)
+        self.failUnlessEqual(c.category, "categoryA")
 
         self.options['revision'] = "r123"
         self.options['comments'] = "test change"
@@ -173,6 +184,7 @@ class Sender(unittest.TestCase):
         self.failUnlessEqual(c.files, ["foo.c"])
         self.failUnlessEqual(c.comments, "test change")
         self.failUnlessEqual(c.revision, "r123")
+        self.failUnlessEqual(c.category, "categoryA")
 
         # test options['logfile'] by creating a temporary file
         logfile = self.mktemp()
@@ -193,6 +205,7 @@ class Sender(unittest.TestCase):
         self.failUnlessEqual(c.files, ["foo.c"])
         self.failUnlessEqual(c.comments, "longer test change")
         self.failUnlessEqual(c.revision, "r123")
+        self.failUnlessEqual(c.category, "categoryA")
 
         # make sure that numeric revisions work too
         self.options['logfile'] = None
@@ -210,6 +223,7 @@ class Sender(unittest.TestCase):
         self.failUnlessEqual(c.files, ["foo.c"])
         self.failUnlessEqual(c.comments, "")
         self.failUnlessEqual(c.revision, 42)
+        self.failUnlessEqual(c.category, "categoryA")
 
         # verify --branch too
         self.options['branch'] = "branches/test"
@@ -226,3 +240,4 @@ class Sender(unittest.TestCase):
         self.failUnlessEqual(c.comments, "")
         self.failUnlessEqual(c.revision, 42)
         self.failUnlessEqual(c.branch, "branches/test")
+        self.failUnlessEqual(c.category, "categoryA")

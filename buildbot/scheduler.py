@@ -88,10 +88,10 @@ class Scheduler(BaseUpstreamScheduler):
 
     fileIsImportant = None
     compare_attrs = ('name', 'treeStableTimer', 'builderNames', 'branch',
-                     'fileIsImportant', 'properties')
+                     'fileIsImportant', 'properties', 'categories')
     
     def __init__(self, name, branch, treeStableTimer, builderNames,
-                 fileIsImportant=None, properties={}):
+                 fileIsImportant=None, properties={}, categories=None):
         """
         @param name: the name of this Scheduler
         @param branch: The branch name that the Scheduler should pay
@@ -116,6 +116,7 @@ class Scheduler(BaseUpstreamScheduler):
 
         @param properties: properties to apply to all builds started from this 
                            scheduler
+        @param categories: A list of categories of changes to accept
         """
 
         BaseUpstreamScheduler.__init__(self, name, properties)
@@ -136,6 +137,7 @@ class Scheduler(BaseUpstreamScheduler):
         self.unimportantChanges = []
         self.nextBuildTime = None
         self.timer = None
+        self.categories = categories
 
     def listBuilderNames(self):
         return self.builderNames
@@ -148,6 +150,9 @@ class Scheduler(BaseUpstreamScheduler):
     def addChange(self, change):
         if change.branch != self.branch:
             log.msg("%s ignoring off-branch %s" % (self, change))
+            return
+        if self.categories is not None and change.category not in self.categories:
+            log.msg("%s ignoring non-matching categories %s" % (self, change))
             return
         if not self.fileIsImportant:
             self.addImportantChange(change)

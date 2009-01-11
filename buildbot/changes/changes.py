@@ -54,7 +54,7 @@ class Change:
     revision = None # used to create a source-stamp
 
     def __init__(self, who, files, comments, isdir=0, links=[],
-                 revision=None, when=None, branch=None):
+                 revision=None, when=None, branch=None, category=None):
         self.who = who
         self.comments = comments
         self.isdir = isdir
@@ -64,6 +64,7 @@ class Change:
             when = util.now()
         self.when = when
         self.branch = branch
+        self.category = category
 
         # keep a sorted list of the files, for easier display
         self.files = files[:]
@@ -212,9 +213,9 @@ class ChangeMaster(service.MultiService):
         """Deliver a file change event. The event should be a Change object.
         This method will timestamp the object as it is received."""
         log.msg("adding change, who %s, %d files, rev=%s, branch=%s, "
-                "comments %s" % (change.who, len(change.files),
-                                 change.revision, change.branch,
-                                 change.comments))
+                "comments %s, category %s" % (change.who, len(change.files),
+                                              change.revision, change.branch,
+                                              change.comments, change.category))
         change.number = self.nextNumber
         self.nextNumber += 1
         self.changes.append(change)

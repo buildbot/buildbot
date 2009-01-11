@@ -34,6 +34,7 @@ class ChangePerspective(NewCredPerspective):
                                     changedict['comments'],
                                     branch=changedict.get('branch'),
                                     revision=changedict.get('revision'),
+                                    category=changedict.get('category'),
                                     )
             self.changemaster.addChange(change)
 

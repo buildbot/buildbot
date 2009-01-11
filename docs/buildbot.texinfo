@@ -1671,6 +1671,10 @@ may be useful if you have a trunk and a few release branches which
 should be tracked, but when you don't want to have the Buildbot pay
 attention to several dozen private user branches.
 
+When the setup has multiple sources of Changes the @code{category}
+can be used for @code{Scheduler} objects to filter out a subset
+of the Changes.
+
 Some Schedulers may trigger builds for other reasons, other than
 recent Changes. For example, a Scheduler subclass could connect to a
 remote buildmaster and watch for builds of a library to succeed before
@@ -8348,6 +8352,11 @@ There are other (optional) arguments which can influence the
 This provides the (string) branch specifier. If omitted, it defaults
 to None, indicating the ``default branch''. All files included in this
 Change must be on the same branch.
+
+@item --category
+This provides the (string) category specifier. If omitted, it defaults
+to None, indicating ``no category''. The category property is used
+by Schedulers to filter what changes they listen to.
 
 @item --revision_number
 This provides a (numeric) revision number for the change, used for VC systems

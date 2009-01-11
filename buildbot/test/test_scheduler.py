@@ -311,3 +311,38 @@ class Scheduling(unittest.TestCase):
         self.failUnlessEqual(s.getBuildSets(), [bs1.status])
         bs1.status.notifyFinishedWatchers()
         self.failUnlessEqual(s.getBuildSets(), [])
+
+    def testCategory(self):
+        s1 = scheduler.Scheduler("b1", "branch1", 2, ["a","b"], categories=["categoryA", "both"])
+        self.addScheduler(s1)
+        s2 = scheduler.Scheduler("b2", "branch1", 2, ["a","b"], categories=["categoryB", "both"])
+        self.addScheduler(s2)
+
+        c0 = Change("carol", ["important"], "branch1", branch="branch1", category="categoryA")
+        s1.addChange(c0)
+        s2.addChange(c0)
+
+        c1 = Change("carol", ["important"], "branch1", branch="branch1", category="categoryB")
+        s1.addChange(c1)
+        s2.addChange(c1)
+
+        c2 = Change("carol", ["important"], "branch1", branch="branch1")
+        s1.addChange(c2)
+        s2.addChange(c2)
+
+        c3 = Change("carol", ["important"], "branch1", branch="branch1", category="both")
+        s1.addChange(c3)
+        s2.addChange(c3)
+
+        self.failUnlessEqual(s1.importantChanges, [c0, c3])
+        self.failUnlessEqual(s2.importantChanges, [c1, c3])
+
+        s = scheduler.Scheduler("b3", "branch1", 2, ["a","b"])
+        self.addScheduler(s)
+
+        c0 = Change("carol", ["important"], "branch1", branch="branch1", category="categoryA")
+        s.addChange(c0)
+        c1 = Change("carol", ["important"], "branch1", branch="branch1", category="categoryB")
+        s.addChange(c1)
+
+        self.failUnlessEqual(s.importantChanges, [c0, c1])
