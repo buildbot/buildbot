@@ -1010,6 +1010,14 @@ this happens, the buildmaster will think that the buildslave has
 disappeared, and builds will time out. Meanwhile the buildslave will
 not realize than anything is wrong.
 
+@item --log-size
+This is the size in bytes when to rotate the Twisted log files.
+
+@item --log-count
+This is the number of log rotations to keep around. You can either
+specify a number or @code{None} (the default) to keep all
+@file{twistd.log} files around.
+
 @end table
 
 
@@ -5941,10 +5949,10 @@ Buildbot, we often want to put an upper limit on the number of readers, for
 example allowing two out of five possible builds at the same time. To do this,
 the lock counts the number of active readers. Secondly, the terms @emph{read
 mode} and @emph{write mode} are confusing in Buildbot context. They have been
-replaced by @emph{counting mode} (since the lock counts them) and
-@emph{exclusive mode}. As a result of these changes, locks in Buildbot allow a
-number of builds (upto some fixed number) in counting mode, or they allow one
-build in exclusive mode.
+replaced by @emph{counting mode} (since the lock counts them) and @emph{exclusive
+mode}.  As a result of these changes, locks in Buildbot allow a number of
+builds (upto some fixed number) in counting mode, or they allow one build in
+exclusive mode.
 
 Often, not all slaves are equal. To allow for this situation, Buildbot allows
 to have a separate upper limit on the count for each slave. In this way, you
