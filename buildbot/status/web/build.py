@@ -6,7 +6,7 @@ from twisted.internet import defer, reactor
 import urllib, time
 from twisted.python import log
 from buildbot.status.web.base import HtmlResource, make_row, make_stop_form, \
-     css_classes, path_to_builder
+     css_classes, path_to_builder, path_to_slave
 
 from buildbot.status.web.tests import TestsResource
 from buildbot.status.web.step import StepsResource
@@ -90,7 +90,11 @@ class StatusResourceBuild(HtmlResource):
 
         # TODO: turn this into a table, or some other sort of definition-list
         # that doesn't take up quite so much vertical space
-        data += "<h2>Buildslave:</h2>\n %s\n" % html.escape(b.getSlavename())
+        try:
+            slaveurl = path_to_slave(req, status.getSlave(b.getSlavename()))
+            data += "<h2>Buildslave:</h2>\n <a href=\"%s\">%s</a>\n" % (html.escape(slaveurl), html.escape(b.getSlavename()))
+        except KeyError:
+            data += "<h2>Buildslave:</h2>\n %s\n" % html.escape(b.getSlavename())
         data += "<h2>Reason:</h2>\n%s\n" % html.escape(b.getReason())
 
         data += "<h2>Steps and Logfiles:</h2>\n"

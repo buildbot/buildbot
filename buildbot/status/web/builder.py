@@ -7,7 +7,7 @@ import re, urllib, time
 from twisted.python import log
 from buildbot import interfaces
 from buildbot.status.web.base import HtmlResource, make_row, \
-     make_force_build_form, OneLineMixin
+     make_force_build_form, OneLineMixin, path_to_slave
 from buildbot.process.base import BuildRequest
 from buildbot.sourcestamp import SourceStamp
 from buildbot import version, util
@@ -93,7 +93,8 @@ class StatusResourceBuilder(HtmlResource, OneLineMixin):
         data += "<h2>Buildslaves:</h2>\n"
         data += "<ol>\n"
         for slave in slaves:
-            data += "<li><b>%s</b>: " % html.escape(slave.getName())
+            slaveurl = path_to_slave(req, slave)
+            data += "<li><b><a href=\"%s\">%s</a></b>: " % (html.escape(slaveurl), html.escape(slave.getName()))
             if slave.isConnected():
                 data += "CONNECTED\n"
                 if slave.getAdmin():
