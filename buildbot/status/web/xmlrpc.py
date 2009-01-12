@@ -168,7 +168,17 @@ class XMLRPCServer(xmlrpc.XMLRPC):
         info['slavename'] = build.getSlavename()
         info['results'] = build.getResults()
         info['text'] = build.getText()
+        info['number'] = build.number
         ss = build.getSourceStamp()
+        branch = ss.branch
+        if branch is None:
+            branch = ""
+        info['branch'] = branch
+        try:
+            revision = build.getProperty("got_revision")
+        except KeyError:
+            revision = ""
+        info['revision'] = str(revision)
         info['start'], info['end'] = build.getTimes()
 
         info_steps = []
