@@ -163,7 +163,7 @@ class XMLRPCServer(xmlrpc.XMLRPC):
         build = builder.getBuild(build_number)
         info = {}
         info['builder_name'] = builder.getName()
-        info['url'] = self.status.getURLForThing(build)
+        info['url'] = self.status.getURLForThing(build) or ''
         info['reason'] = build.getReason()
         info['slavename'] = build.getSlavename()
         info['results'] = build.getResults()
@@ -173,31 +173,30 @@ class XMLRPCServer(xmlrpc.XMLRPC):
         branch = ss.branch
         if branch is None:
             branch = ""
-        info['branch'] = branch
+        info['branch'] = str(branch)
         try:
-            revision = build.getProperty("got_revision")
+            revision = str(build.getProperty("got_revision"))
         except KeyError:
             revision = ""
         info['revision'] = str(revision)
         info['start'], info['end'] = build.getTimes()
 
         info_steps = []
-        for s in build.getSteps():
-            stepinfo = {}
-            stepinfo['name'] = s.getName()
-            stepinfo['start'], stepinfo['end'] = s.getTimes()
-            stepinfo['results'] = s.getResults()
-            info_steps.append(stepinfo)
+        #for s in build.getSteps():
+        #    stepinfo = {}
+        #    stepinfo['name'] = s.getName()
+        #    stepinfo['start'], stepinfo['end'] = s.getTimes()
+        #    stepinfo['results'] = s.getResults()
+        #    info_steps.append(stepinfo)
         info['steps'] = info_steps
 
         info_logs = []
-        for l in build.getLogs():
-            loginfo = {}
-            loginfo['name'] = l.getStep().getName() + "/" + l.getName()
-            #loginfo['text'] = l.getText()
-            loginfo['text'] = "HUGE"
-            info_logs.append(loginfo)
+        #for l in build.getLogs():
+        #    loginfo = {}
+        #    loginfo['name'] = l.getStep().getName() + "/" + l.getName()
+        #    #loginfo['text'] = l.getText()
+        #    loginfo['text'] = "HUGE"
+        #    info_logs.append(loginfo)
         info['logs'] = info_logs
-
         return info
 
