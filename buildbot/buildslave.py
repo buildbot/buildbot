@@ -10,10 +10,11 @@ from twisted.application import service
 from buildbot.pbutil import NewCredPerspective
 from buildbot.status.builder import SlaveStatus
 from buildbot.status.mail import MailNotifier
-from buildbot.interfaces import IBuildSlave
+from buildbot.interfaces import IBuildSlave, ILatentBuildSlave
 from buildbot.process.properties import Properties
 
-class BuildSlave(NewCredPerspective, service.MultiService):
+
+class AbstractBuildSlave(NewCredPerspective, service.MultiService):
     """This is the master-side representative for a remote buildbot slave.
     There is exactly one for each slave described in the config file (the
     c['slaves'] list). When buildbots connect in (.attach), they get a
@@ -36,7 +37,7 @@ class BuildSlave(NewCredPerspective, service.MultiService):
         @param max_builds: maximum number of simultaneous builds that will
                            be run concurrently on this buildslave (the
                            default is None for no limit)
-        @param properties: properties that will be applied to builds run on 
+        @param properties: properties that will be applied to builds run on
                            this slave
         @type properties: dictionary
         """
@@ -47,7 +48,7 @@ class BuildSlave(NewCredPerspective, service.MultiService):
         self.slave_status = SlaveStatus(name)
         self.slave = None # a RemoteReference to the Bot, when connected
         self.slave_commands = None
-        self.slavebuilders = []
+        self.slavebuilders = {}
         self.max_builds = max_builds
 
         self.properties = Properties()
@@ -78,10 +79,12 @@ class BuildSlave(NewCredPerspective, service.MultiService):
     def __repr__(self):
         if self.botmaster:
             builders = self.botmaster.getBuildersForSlave(self.slavename)
-            return "<BuildSlave '%s', current builders: %s>" % \
-               (self.slavename, ','.join(map(lambda b: b.name, builders)))
+            return "<%s '%s', current builders: %s>" % \
+               (self.__class__.__name__, self.slavename,
+                ','.join(map(lambda b: b.name, builders)))
         else:
-            return "<BuildSlave '%s', (no builders yet)>" % self.slavename
+            return "<%s '%s', (no builders yet)>" % \
+                (self.__class__.__name__, self.slavename)
 
     def setBotmaster(self, botmaster):
         assert not self.botmaster, "BuildSlave already has a botmaster"
@@ -94,7 +97,8 @@ class BuildSlave(NewCredPerspective, service.MultiService):
         accepted the new builders and/or released the old ones."""
         if self.slave:
             return self.sendBuilderList()
-        return defer.succeed(None)
+        else:
+            return defer.succeed(None)
 
     def updateSlaveStatus(self, buildStarted=None, buildFinished=None):
         if buildStarted:
@@ -196,55 +200,7 @@ class BuildSlave(NewCredPerspective, service.MultiService):
     def detached(self, mind):
         self.slave = None
         self.slave_status.setConnected(False)
-        self.botmaster.slaveLost(self)
         log.msg("BuildSlave.detached(%s)" % self.slavename)
-        if self.notify_on_missing and self.parent and not self.missing_timer:
-            self.missing_timer = reactor.callLater(self.missing_timeout,
-                                                   self._missing_timer_fired)
-
-    def _missing_timer_fired(self):
-        self.missing_timer = None
-        # notify people, but only if we're still in the config
-        if not self.parent:
-            return
-
-        # first, see if we have a MailNotifier we can use. This gives us a
-        # fromaddr and a relayhost.
-        buildmaster = self.botmaster.parent
-        status = buildmaster.getStatus()
-        for st in buildmaster.statusTargets:
-            if isinstance(st, MailNotifier):
-                break
-        else:
-            # if not, they get a default MailNotifier, which always uses SMTP
-            # to localhost and uses a dummy fromaddr of "buildbot".
-            log.msg("buildslave-missing msg using default MailNotifier")
-            st = MailNotifier("buildbot")
-        # now construct the mail
-        text = "The Buildbot working for '%s'\n" % status.getProjectName()
-        text += ("has noticed that the buildslave named %s went away\n" %
-                 self.slavename)
-        text += "\n"
-        text += ("It last disconnected at %s (buildmaster-local time)\n" %
-                 time.ctime(time.time() - self.missing_timeout)) # close enough
-        text += "\n"
-        text += "The admin on record (as reported by BUILDSLAVE:info/admin)\n"
-        text += "was '%s'.\n" % self.slave_status.getAdmin()
-        text += "\n"
-        text += "Sincerely,\n"
-        text += " The Buildbot\n"
-        text += " %s\n" % status.getProjectURL()
-
-        m = Message()
-        m.set_payload(text)
-        m['Date'] = formatdate(localtime=True)
-        m['Subject'] = "Buildbot: buildslave %s was lost" % self.slavename
-        m['From'] = st.fromaddr
-        recipients = self.notify_on_missing
-        m['To'] = ", ".join(recipients)
-        d = st.sendMessage(m, recipients)
-        # return the Deferred for testing purposes
-        return d
 
     def disconnect(self):
         """Forcibly disconnect the slave.
@@ -307,6 +263,71 @@ class BuildSlave(NewCredPerspective, service.MultiService):
         our_builders = self.botmaster.getBuildersForSlave(self.slavename)
         blist = [(b.name, b.builddir) for b in our_builders]
         d = self.slave.callRemote("setBuilderList", blist)
+        return d
+
+    def perspective_keepalive(self):
+        pass
+
+    def addSlaveBuilder(self, sb):
+        if sb.builder_name not in self.slavebuilders:
+            log.msg("%s adding %s" % (self, sb))
+        elif sb is not self.slavebuilders[sb.builder_name]:
+            log.msg("%s replacing %s" % (self, sb))
+        else:
+            return
+        self.slavebuilders[sb.builder_name] = sb
+
+    def removeSlaveBuilder(self, sb):
+        try:
+            del self.slavebuilders[sb.builder_name]
+        except KeyError:
+            pass
+        else:
+            log.msg("%s removed %s" % (self, sb))
+
+    def canStartBuild(self):
+        """
+        I am called when a build is requested to see if this buildslave
+        can start a build.  This function can be used to limit overall
+        concurrency on the buildslave.
+        """
+        if self.max_builds:
+            active_builders = [sb for sb in self.slavebuilders.values()
+                               if sb.isBusy()]
+            if len(active_builders) >= self.max_builds:
+                return False
+        return True
+
+    def _mail_missing_message(self, subject, text):
+        # first, see if we have a MailNotifier we can use. This gives us a
+        # fromaddr and a relayhost.
+        buildmaster = self.botmaster.parent
+        for st in buildmaster.statusTargets:
+            if isinstance(st, MailNotifier):
+                break
+        else:
+            # if not, they get a default MailNotifier, which always uses SMTP
+            # to localhost and uses a dummy fromaddr of "buildbot".
+            log.msg("buildslave-missing msg using default MailNotifier")
+            st = MailNotifier("buildbot")
+        # now construct the mail
+
+        m = Message()
+        m.set_payload(text)
+        m['Date'] = formatdate(localtime=True)
+        m['Subject'] = subject
+        m['From'] = st.fromaddr
+        recipients = self.notify_on_missing
+        m['To'] = ", ".join(recipients)
+        d = st.sendMessage(m, recipients)
+        # return the Deferred for testing purposes
+        return d
+
+
+class BuildSlave(AbstractBuildSlave):
+
+    def sendBuilderList(self):
+        d = AbstractBuildSlave.sendBuilderList(self)
         def _sent(slist):
             dl = []
             for name, remote in slist.items():
@@ -324,27 +345,217 @@ class BuildSlave(NewCredPerspective, service.MultiService):
         d.addCallbacks(_sent, _set_failed)
         return d
 
-    def perspective_keepalive(self):
-        pass
+    def detached(self, mind):
+        AbstractBuildSlave.detached(self, mind)
+        self.botmaster.slaveLost(self)
+        if self.notify_on_missing and self.parent and not self.missing_timer:
+            self.missing_timer = reactor.callLater(self.missing_timeout,
+                                                   self._missing_timer_fired)
 
-    def addSlaveBuilder(self, sb):
-        log.msg("%s adding %s" % (self, sb))
-        self.slavebuilders.append(sb)
+    def _missing_timer_fired(self):
+        self.missing_timer = None
+        # notify people, but only if we're still in the config
+        if not self.parent:
+            return
 
-    def removeSlaveBuilder(self, sb):
-        log.msg("%s removing %s" % (self, sb))
-        if sb in self.slavebuilders:
-            self.slavebuilders.remove(sb)
+        status = buildmaster.getStatus()
+        text = "The Buildbot working for '%s'\n" % status.getProjectName()
+        text += ("has noticed that the buildslave named %s went away\n" %
+                 self.slavename)
+        text += "\n"
+        text += ("It last disconnected at %s (buildmaster-local time)\n" %
+                 time.ctime(time.time() - self.missing_timeout)) # approx
+        text += "\n"
+        text += "The admin on record (as reported by BUILDSLAVE:info/admin)\n"
+        text += "was '%s'.\n" % self.slave_status.getAdmin()
+        text += "\n"
+        text += "Sincerely,\n"
+        text += " The Buildbot\n"
+        text += " %s\n" % status.getProjectURL()
+        subject = "Buildbot: buildslave %s was lost" % self.slavename
+        return self._mail_missing_message(subject, text)
 
-    def canStartBuild(self):
-        """
-        I am called when a build is requested to see if this buildslave
-        can start a build.  This function can be used to limit overall
-        concurrency on the buildslave.
-        """
-        if self.max_builds:
-            active_builders = [sb for sb in self.slavebuilders if sb.isBusy()]
-            if len(active_builders) >= self.max_builds:
-                return False
-        return True
 
+class AbstractLatentBuildSlave(AbstractBuildSlave):
+
+    implements(ILatentBuildSlave)
+
+    substantiated = False
+    _substantiation_deferred = None
+    build_wait_timer = None
+
+    def __init__(self, name, password, max_builds=None,
+                 notify_on_missing=[], missing_timeout=60*20,
+                 build_wait_timeout=60*10,
+                 properties={}):
+        AbstractBuildSlave.__init__(
+            self, name, password, max_builds, notify_on_missing,
+            missing_timeout, properties)
+        self.building = set()
+        self.build_wait_timeout = build_wait_timeout
+
+    def start_instance(self):
+        # responsible for starting instance that will try to connect with
+        # this master
+        raise NotImplementedError
+
+    def stop_instance(self):
+        # responsible for shutting down instance
+        raise NotImplementedError
+
+    def substantiate(self, sb):
+        if self.substantiated:
+            return defer.succeed(self)
+        if self._substantiation_deferred is None:
+            if self.parent and not self.missing_timer:
+                # start timer.  if timer times out, fail deferred
+                self.missing_timer = reactor.callLater(
+                    self.missing_timeout, self._substantiation_failed)
+            self._substantiation_deferred = defer.Deferred()
+            if self.slave is None:
+                self._substantiate() # start up instance
+            # else: we're waiting for an old one to detach.  the _substantiate
+            # will be done in ``detached`` below.
+        return self._substantiation_deferred
+
+    def _substantiate(self):
+        d = self.start_instance()
+        def clean_up(success):
+            if not success and self.missing_timer is not None:
+                self.missing_timer.cancel()
+                self._substantiation_failed() # XXX make this better
+            return success
+        d.addCallback(clean_up)
+        return d
+
+    def detached(self, mind):
+        AbstractBuildSlave.detached(self, mind)
+        if self._substantiation_deferred is not None:
+            self._substantiate()
+
+    def _substantiation_failed(self):
+        self._substantiation_deferred.errback()
+        self._substantiation_deferred = None
+        self.missing_timer = None
+        # notify people, but only if we're still in the config
+        if not self.parent or not self.notify_on_missing:
+            return
+
+        status = buildmaster.getStatus()
+        text = "The Buildbot working for '%s'\n" % status.getProjectName()
+        text += ("has noticed that the latent buildslave named %s \n" %
+                 self.slavename)
+        text += "never substantiated after a request\n"
+        text += "\n"
+        text += ("The request was made at %s (buildmaster-local time)\n" %
+                 time.ctime(time.time() - self.missing_timeout)) # approx
+        text += "\n"
+        text += "Sincerely,\n"
+        text += " The Buildbot\n"
+        text += " %s\n" % status.getProjectURL()
+        subject = "Buildbot: buildslave %s never substantiated" % self.slavename
+        return self._mail_missing_message(subject, text)
+
+    def buildStarted(self, sb):
+        assert self.substantiated
+        self._clearBuildWaitTimer()
+        self.building.add(sb.builder_name)
+
+    def buildFinished(self, sb):
+        self.building.remove(sb.builder_name)
+        if not self.building:
+            self._setBuildWaitTimer()
+
+    def _clearBuildWaitTimer(self):
+        if self.build_wait_timer is not None:
+            self.build_wait_timer.cancel()
+            self.build_wait_timer = None
+
+    def _setBuildWaitTimer(self):
+        self._clearBuildWaitTimer()
+        self.build_wait_timer = reactor.callLater(
+            self.build_wait_timeout, self.insubstantiate)
+
+    def insubstantiate(self):
+        self.build_wait_timer = None
+        self.stop_instance()
+        self.substantiated = False
+        self.building.clear() # just to be sure
+
+    def disconnect(self):
+        d = AbstractBuildSlave.disconnect(self)
+        if self.slave is not None:
+            # XXX this could be called when the slave needs to shut down,
+            # such as in BotMaster.removeSlave, *or* when a new slave requests
+            # a connection when we already have a slave. It's not clear what
+            # to do in the second case: this shouldn't happen, and if it
+            # does...if it's a latent slave, shutting down will probably kill
+            # something we want...but we can't know what the status is. So,
+            # here, we just do what should be appropriate for the first case,
+            # and put our heads in the sand for the second, at least for now.
+            self._clearBuildWaitTimer()
+            reactor.callLater(0, self.insubstantiate)
+        elif self._substantiation_deferred is not None:
+            # unlike the previous block, we don't expect this situation when
+            # ``attached`` calls ``disconnect``, only when we get a simple
+            # request to "go away".
+            self._substantiation_deferred.errback()
+            self._substantiation_deferred = None
+            if self.missing_timer:
+                self.missing_timer.cancel()
+                self.missing_timer = None
+            self.stop_instance()
+        return d
+
+    def updateSlave(self):
+        """Called to add or remove builders after the slave has connected.
+
+        Also called after botmaster's builders are initially set.
+
+        @return: a Deferred that indicates when an attached slave has
+        accepted the new builders and/or released the old ones."""
+        for b in self.botmaster.getBuildersForSlave(self.slavename):
+            if b.name not in self.slavebuilders:
+                b.addLatentSlave(self)
+        return AbstractBuildSlave.updateSlave(self)
+
+    def sendBuilderList(self):
+        d = AbstractBuildSlave.sendBuilderList(self)
+        def _sent(slist):
+            dl = []
+            for name, remote in slist.items():
+                # use get() since we might have changed our mind since then.
+                # we're checking on the builder in addition to the
+                # slavebuilders out of a bit of paranoia.
+                b = self.botmaster.builders.get(name)
+                sb = self.slavebuilders.get(name)
+                if b and sb:
+                    d1 = sb.attached(self, remote, self.slave_commands)
+                    dl.append(d1)
+            return defer.DeferredList(dl)
+        def _set_failed(why):
+            log.msg("BuildSlave.sendBuilderList (%s) failed" % self)
+            log.err(why)
+            # TODO: hang up on them?, without setBuilderList we can't use
+            # them
+            if self._substantiation_deferred:
+                self._substantiation_deferred.errback()
+                self._substantiation_deferred = None
+            if self.missing_timer:
+                self.missing_timer.cancel()
+                self.missing_timer = None
+            # TODO: maybe log?  send an email?
+            return why
+        d.addCallbacks(_sent, _set_failed)
+        def _substantiated(res):
+            self.substantiated = True
+            if self._substantiation_deferred:
+                d = self._substantiation_deferred
+                del self._substantiation_deferred
+                d.callback(None)
+            # note that the missing_timer is already handled within
+            # ``attached``
+            if not self.building:
+                self._setBuildWaitTimer()
+        d.addCallback(_substantiated)
+        return d

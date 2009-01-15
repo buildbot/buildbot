@@ -14,9 +14,11 @@ from buildbot.process import base
  IDLE, # idle, available for use
  PINGING, # build about to start, making sure it is still alive
  BUILDING, # build is running
- ) = range(4)
+ LATENT, # latent slave is not substantiated; similar to idle
+ ) = range(5)
 
-class SlaveBuilder(pb.Referenceable):
+
+class AbstractSlaveBuilder(pb.Referenceable):
     """I am the master-side representative for one of the
     L{buildbot.slave.bot.SlaveBuilder} objects that lives in a remote
     buildbot. When a remote builder connects, I query it for command versions
@@ -24,19 +26,19 @@ class SlaveBuilder(pb.Referenceable):
 
     def __init__(self):
         self.ping_watchers = []
-        self.state = ATTACHING
+        self.state = None # set in subclass
         self.remote = None
         self.slave = None
         self.builder_name = None
 
     def __repr__(self):
-        r = "<SlaveBuilder"
+        r = ["<", self.__class__.__name__]
         if self.builder_name:
-            r += " builder=%s" % self.builder_name
+            r.extend([" builder=", self.builder_name])
         if self.slave:
-            r += " slave=%s" % self.slave.slavename
-        r += ">"
-        return r
+            r.extend([" slave=", self.slave.slavename])
+        r.append(">")
+        return ''.join(r)
 
     def setBuilder(self, b):
         self.builder = b
@@ -61,7 +63,14 @@ class SlaveBuilder(pb.Referenceable):
         return False
 
     def isBusy(self):
-        return self.state != IDLE
+        return self.state not in (IDLE, LATENT)
+
+    def buildStarted(self):
+        self.state = BUILDING
+
+    def buildFinished(self):
+        self.state = IDLE
+        reactor.callLater(0, self.builder.botmaster.maybeStartAllBuilds)
 
     def attached(self, slave, remote, commands):
         """
@@ -73,10 +82,14 @@ class SlaveBuilder(pb.Referenceable):
         @type  commands: dict: string -> string, or None
         @param commands: provides the slave's version of each RemoteCommand
         """
-        self.slave = slave
+        self.state = ATTACHING
         self.remote = remote
         self.remoteCommands = commands # maps command name to version
-        self.slave.addSlaveBuilder(self)
+        if self.slave is None:
+            self.slave = slave
+            self.slave.addSlaveBuilder(self)
+        else:
+            assert self.slave == slave
         log.msg("Buildslave %s attached to %s" % (slave.slavename,
                                                   self.builder_name))
         d = self.remote.callRemote("setMaster", self)
@@ -101,22 +114,6 @@ class SlaveBuilder(pb.Referenceable):
         log.err(why)
         return why
 
-    def detached(self):
-        log.msg("Buildslave %s detached from %s" % (self.slave.slavename,
-                                                    self.builder_name))
-        if self.slave:
-            self.slave.removeSlaveBuilder(self)
-        self.slave = None
-        self.remote = None
-        self.remoteCommands = None
-
-    def buildStarted(self):
-        self.state = BUILDING
-
-    def buildFinished(self):
-        self.state = IDLE
-        reactor.callLater(0, self.builder.botmaster.maybeStartAllBuilds)
-
     def ping(self, timeout, status=None):
         """Ping the slave to make sure it is still there. Returns a Deferred
         that fires with True if it is.
@@ -124,7 +121,11 @@ class SlaveBuilder(pb.Referenceable):
         @param status: if you point this at a BuilderStatus, a 'pinging'
                        event will be pushed.
         """
-
+        if (interfaces.ILatentBuildSlave.providedBy(self.slave)
+            and not self.slave.substantiated):
+            if status:
+                status.addEvent(["ping", "latent"], "green").finish()
+            return defer.succeed(True)
         self.state = PINGING
         newping = not self.ping_watchers
         d = defer.Deferred()
@@ -154,6 +155,16 @@ class SlaveBuilder(pb.Referenceable):
             event.text = ["ping", "failed"]
             event.color = "red"
         event.finish()
+
+    def detached(self):
+        log.msg("Buildslave %s detached from %s" % (self.slave.slavename,
+                                                    self.builder_name))
+        if self.slave:
+            self.slave.removeSlaveBuilder(self)
+        self.slave = None
+        self.remote = None
+        self.remoteCommands = None
+
 
 class Ping:
     running = False
@@ -211,6 +222,50 @@ class Ping:
         # probably reconnect right away, and we'll do this game again. Maybe
         # it would be better to leave them in the PINGING state.
         self.d.callback(False)
+
+
+class SlaveBuilder(AbstractSlaveBuilder):
+
+    def __init__(self):
+        AbstractSlaveBuilder.__init__(self)
+        self.state = ATTACHING
+
+    def detached(self):
+        AbstractSlaveBuilder.detached(self)
+        if self.slave:
+            self.slave.removeSlaveBuilder(self)
+        self.slave = None
+        self.state = ATTACHING
+
+
+class LatentSlaveBuilder(AbstractSlaveBuilder):
+    def __init__(self, slave, builder):
+        AbstractSlaveBuilder.__init__(self)
+        self.slave = slave
+        self.state = LATENT
+        self.setBuilder(builder)
+        self.slave.addSlaveBuilder(self)
+        log.msg("Latent buildslave %s attached to %s" % (slave.slavename,
+                                                         self.builder_name))
+
+    def substantiate(self):
+        return self.slave.substantiate(self)
+
+    def detached(self):
+        AbstractSlaveBuilder.detached(self)
+        self.state = LATENT
+
+    def buildStarted(self):
+        AbstractSlaveBuilder.buildStarted(self)
+        self.slave.buildStarted(self)
+
+    def buildFinished(self):
+        AbstractSlaveBuilder.buildFinished(self)
+        self.slave.buildFinished(self)
+
+    def _attachFailure(self, why, where):
+        self.state = LATENT
+        return AbstractSlaveBuilder._attachFailure(self, why, where)
 
 
 class Builder(pb.Referenceable):
@@ -445,6 +500,18 @@ class Builder(pb.Referenceable):
         for w in watchers:
             reactor.callLater(0, w.callback, fire_with)
 
+    def addLatentSlave(self, slave):
+        assert interfaces.ILatentBuildSlave.providedBy(slave)
+        for s in self.slaves:
+            if s == slave:
+                break
+        else:
+            sb = LatentSlaveBuilder(slave, self)
+            self.builder_status.addPointEvent(
+                ['added', 'latent', slave.slavename])
+            self.slaves.append(sb)
+            reactor.callLater(0, self.maybeStartBuild)
+
     def attached(self, slave, remote, commands):
         """This is invoked by the BuildSlave when the self.slavename bot
         registers their builder.
@@ -567,6 +634,7 @@ class Builder(pb.Referenceable):
             self.updateBigStatus()
             return
         if self.CHOOSE_SLAVES_RANDOMLY:
+            # XXX prefer idle over latent? maybe other sorting preferences?
             sb = random.choice(available_slaves)
         else:
             sb = available_slaves[0]
@@ -607,14 +675,19 @@ class Builder(pb.Referenceable):
 
         self.building.append(build)
         self.updateBigStatus()
-
-        log.msg("starting build %s.. pinging the slave %s" % (build, sb))
+        if isinstance(sb, LatentSlaveBuilder):
+            log.msg("starting build %s.. substantiating the slave %s" %
+                    (build, sb))
+            d = sb.substantiate()
+            d.addCallback(lambda res: sb.ping(self.START_BUILD_TIMEOUT))
+        else:
+            log.msg("starting build %s.. pinging the slave %s" % (build, sb))
+            d = sb.ping(self.START_BUILD_TIMEOUT)
         # ping the slave to make sure they're still there. If they're fallen
         # off the map (due to a NAT timeout or something), this will fail in
         # a couple of minutes, depending upon the TCP timeout. TODO: consider
         # making this time out faster, or at least characterize the likely
         # duration.
-        d = sb.ping(self.START_BUILD_TIMEOUT)
         d.addCallback(self._startBuild_1, build, sb)
         return d
 
