@@ -446,7 +446,7 @@ class Build:
         # gather owners from build requests
         owners = [r.properties['owner'] for r in self.requests
                   if r.properties.has_key('owner')]
-        self.setProperty('owners', owners, self.reason)
+        if owners: self.setProperty('owners', owners, self.reason)
 
         self.results = [] # list of FAILURE, SUCCESS, WARNINGS, SKIPPED
         self.result = SUCCESS # overall result, may downgrade after each step
