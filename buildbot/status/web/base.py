@@ -170,6 +170,11 @@ def path_to_step(request, stepstatus):
     return (path_to_build(request, stepstatus.getBuild()) +
             "/steps/%s" % urllib.quote(stepstatus.getName(), safe=''))
 
+def path_to_slave(request, slave):
+    return (path_to_root(request) +
+            "buildslaves/" +
+            urllib.quote(slave.getName(), safe=''))
+
 class Box:
     # a Box wraps an Event. The Box has HTML <td> parameters that Events
     # lack, and it has a base URL to which each File's name is relative.
