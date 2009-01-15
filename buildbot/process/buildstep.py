@@ -544,11 +544,14 @@ class BuildStep:
     # immediately, the others will be taken into consideration when
     # determining the overall build status.
     #
+    # steps that are makred as alwaysRun will be run regardless of the outcome
+    # of previous steps (especially steps with haltOnFailure=True)
     haltOnFailure = False
     flunkOnWarnings = False
     flunkOnFailure = False
     warnOnWarnings = False
     warnOnFailure = False
+    alwaysRun = False
 
     # 'parms' holds a list of all the parameters we care about, to allow
     # users to instantiate a subclass of BuildStep with a mixture of
@@ -563,6 +566,7 @@ class BuildStep:
              'flunkOnFailure',
              'warnOnWarnings',
              'warnOnFailure',
+             'alwaysRun',
              'progressMetrics',
              ]
 
