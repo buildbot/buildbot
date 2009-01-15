@@ -4227,7 +4227,8 @@ used to give a name to any LogFiles created by this step.
 
 @item haltOnFailure
 if True, a FAILURE of this build step will cause the build to halt
-immediately with an overall result of FAILURE.
+immediately with an overall result of FAILURE. Steps with
+@code{alwaysRun=True} are still run.
 
 @item flunkOnWarnings
 when True, a WARNINGS or FAILURE of this build step will mark the
@@ -4245,6 +4246,10 @@ executed.
 @item warnOnFailure
 when True, a FAILURE of this build step will mark the overall build as
 having WARNINGS. The remaining steps will still be executed.
+
+@item alwaysRun
+if True, this build step will always be run, even if a previous buildstep
+with @code{haltOnFailure=True} has failed.
 
 @item locks
 a list of Locks (instances of @code{buildbot.locks.SlaveLock} or
@@ -6190,10 +6195,17 @@ Each step can affect the build process in the following ways:
 If the step's @code{haltOnFailure} attribute is True, then a failure
 in the step (i.e. if it completes with a result of FAILURE) will cause
 the whole build to be terminated immediately: no further steps will be
-executed. This is useful for setup steps upon which the rest of the
-build depends: if the CVS checkout or @code{./configure} process
-fails, there is no point in trying to compile or test the resulting
-tree.
+executed, with the exception of steps with @code{alwaysRun} set to
+True. @code{haltOnFailure} is useful for setup steps upon which the
+rest of the build depends: if the CVS checkout or @code{./configure}
+process fails, there is no point in trying to compile or test the
+resulting tree.
+
+@item
+If the step's @code{alwaysRun} attribute is True, then it will always
+be run, regardless of if previous steps have failed. This is useful
+for cleanup steps that should always be run to return the build
+directory or build slave into a good state.
 
 @item
 If the @code{flunkOnFailure} or @code{flunkOnWarnings} flag is set,
