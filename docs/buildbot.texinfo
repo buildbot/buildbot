@@ -1743,6 +1743,12 @@ this might be changed, to have the @code{Build} define @emph{what}
 gets built, and a separate @code{BuildProcess} (provided by the
 Builder) to define @emph{how} it gets built.
 
+@code{BuildRequest} is created with optional @code{Properties}.  One
+of these, @code{owner}, is collected by the resultant @code{Build} and
+added to the set of @emph{interested users} to which status
+notifications will be sent, depending on the configuration for each
+status object.
+
 The @code{BuildRequest} may be mergeable with other compatible
 @code{BuildRequest}s. Builds that are triggered by incoming Changes
 will generally be mergeable. Builds that are triggered by user

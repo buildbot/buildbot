@@ -42,6 +42,8 @@ class BuildRequest:
 
     @type properties: Properties object
     @ivar properties: properties that should be applied to this build
+                      'owner' property is used by Build objects to collect
+                      the list returned by getInterestedUsers
 
     @ivar status: the IBuildStatus object which tracks our status
 
@@ -437,6 +439,11 @@ class Build:
         self.build_status.setReason(self.reason)
         self.build_status.setBlamelist(self.blamelist())
         self.build_status.setProgress(self.progress)
+
+        # gather owners from build requests
+        owners = [r.properties['owner'] for r in self.requests
+                  if r.properties.has_key('owner')]
+        self.setProperty('owners', owners, self.reason)
 
         self.results = [] # list of FAILURE, SUCCESS, WARNINGS, SKIPPED
         self.result = SUCCESS # overall result, may downgrade after each step
