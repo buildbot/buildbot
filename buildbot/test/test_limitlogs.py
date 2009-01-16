@@ -52,7 +52,10 @@ class MasterLogs(unittest.TestCase):
             raise unittest.SkipTest("Twisted 8.2.0 or higher required")
 
     def testLog(self):
-        self.buildbotexe = which('buildbot')[0]
+        exes = which('buildbot')
+        if not exes:
+            raise unittest.SkipTest("Buildbot needs to be installed")
+        self.buildbotexe = exes[0]
         d = getProcessValue(self.buildbotexe,
                             ['create-master', '--log-size=1000', '--log-count=2',
                              'master'])
