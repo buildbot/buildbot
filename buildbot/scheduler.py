@@ -307,6 +307,7 @@ class AnyBranchScheduler(BaseUpstreamScheduler):
 class Dependent(BaseUpstreamScheduler):
     """This scheduler runs some set of 'downstream' builds when the
     'upstream' scheduler has completed successfully."""
+    implements(interfaces.IDownstreamScheduler)
 
     compare_attrs = ('name', 'upstream', 'builderNames', 'properties')
 
@@ -337,6 +338,22 @@ class Dependent(BaseUpstreamScheduler):
                     properties=self.properties)
         self.submitBuildSet(bs)
 
+    def updateSchedulers(self):
+        if self.upstream.running:
+            # good, upstream is still the right one
+            return
+        # upstream changed, get the new one by name from the master
+        up_name = self.upstream.name
+        self.upstream.unsubscribeToSuccessfulBuilds(self.upstreamBuilt)
+        for s in self.parent.allSchedulers():
+            if s.name == up_name and interfaces.IUpstreamScheduler.providedBy(s):
+                self.upstream = s
+                self.upstream.subscribeToSuccessfulBuilds(self.upstreamBuilt)
+                log.msg("Dependent <%s> connected to new Upstream <%s>" %
+                        (self.name, up_name))
+                return
+        log.msg("ERROR: Couldn't find upstream scheduler of name <%s>" %
+                up_name)
 
 
 class Periodic(BaseUpstreamScheduler):

@@ -799,6 +799,15 @@ class BuildMaster(service.MultiService, styles.Versioned):
                 s.setServiceParent(self)
         d = defer.DeferredList(dl, fireOnOneErrback=1)
         d.addCallback(addNewOnes)
+        if removed or added:
+            # notify Downstream schedulers to potentially pick up
+            # new schedulers now that we have removed and added some
+            def updateDownstreams(res):
+                log.msg("notifying downstream schedulers of changes")
+                for s in newschedulers:
+                    if interfaces.IDownstreamScheduler.providedBy(s):
+                        s.updateSchedulers()
+            d.addCallback(updateDownstreams)
         return d
 
     def loadConfig_Builders(self, newBuilderData):
