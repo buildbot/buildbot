@@ -49,7 +49,7 @@ class IrcBuildRequest:
         self.parent.send(response)
         self.parent.send("I'll give a shout when the build finishes")
         d = s.waitUntilFinished()
-        d.addCallback(self.parent.buildFinished)
+        d.addCallback(self.parent.watchedBuildFinished)
 
 
 class Contact:
