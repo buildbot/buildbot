@@ -18,7 +18,7 @@ class Properties(util.ComparableMixin):
     string when used as a mapping.
     """
 
-    compare_attrs = ('properties')
+    compare_attrs = ('properties',)
 
     def __init__(self, **kwargs):
         """

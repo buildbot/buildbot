@@ -793,6 +793,8 @@ class BuildMaster(service.MultiService, styles.Versioned):
         added = [s for s in newschedulers if s not in oldschedulers]
         dl = [defer.maybeDeferred(s.disownServiceParent) for s in removed]
         def addNewOnes(res):
+            log.msg("adding %d new schedulers, removed %d" % 
+                    (len(added), len(dl)))
             for s in added:
                 s.setServiceParent(self)
         d = defer.DeferredList(dl, fireOnOneErrback=1)

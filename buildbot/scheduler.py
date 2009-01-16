@@ -308,7 +308,7 @@ class Dependent(BaseUpstreamScheduler):
     """This scheduler runs some set of 'downstream' builds when the
     'upstream' scheduler has completed successfully."""
 
-    compare_attrs = ('name', 'upstream', 'builders', 'properties')
+    compare_attrs = ('name', 'upstream', 'builderNames', 'properties')
 
     def __init__(self, name, upstream, builderNames, properties={}):
         assert interfaces.IUpstreamScheduler.providedBy(upstream)
