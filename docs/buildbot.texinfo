@@ -1732,9 +1732,11 @@ appropriate Builders.
 @cindex BuildRequest
 
 A @code{BuildRequest} is a request to build a specific set of sources
-on a single specific Builder. Each Builder runs the
+on a single specific @code{Builder}. Each @code{Builder} runs the
 @code{BuildRequest} as soon as it can (i.e. when an associated
-buildslave becomes free).
+buildslave becomes free). @code{BuildRequest}s are prioritized from
+oldest to newest, so when a buildslave becomes free, the
+@code{Builder} with the oldest @code{BuildRequest} is run.
 
 The @code{BuildRequest} contains the @code{SourceStamp} specification.
 The actual process of running the build (the series of Steps that will

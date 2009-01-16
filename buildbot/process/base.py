@@ -49,12 +49,15 @@ class BuildRequest:
 
     @ivar submittedAt: a timestamp (seconds since epoch) when this request
                        was submitted to the Builder. This is used by the CVS
-                       step to compute a checkout timestamp.
+                       step to compute a checkout timestamp, as well as the
+                       master to prioritize build requests from oldest to
+                       newest.
     """
 
     source = None
     builder = None
     startCount = 0 # how many times we have tried to start this build
+    submittedAt = None
 
     implements(interfaces.IBuildRequestControl)
 
