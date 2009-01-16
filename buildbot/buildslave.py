@@ -221,7 +221,10 @@ class AbstractBuildSlave(NewCredPerspective, service.MultiService):
         if not self.slave:
             return defer.succeed(None)
         log.msg("disconnecting old slave %s now" % self.slavename)
+        # When this Deferred fires, we'll be ready to accept the new slave
+        return self._disconnect(self.slave)
 
+    def _disconnect(self, slave):
         # all kinds of teardown will happen as a result of
         # loseConnection(), but it happens after a reactor iteration or
         # two. Hook the actual disconnect so we can know when it is safe
@@ -234,8 +237,8 @@ class AbstractBuildSlave(NewCredPerspective, service.MultiService):
         # RemoteReference being disconnected.
         def _disconnected(rref):
             reactor.callLater(0, d.callback, None)
-        self.slave.notifyOnDisconnect(_disconnected)
-        tport = self.slave.broker.transport
+        slave.notifyOnDisconnect(_disconnected)
+        tport = slave.broker.transport
         # this is the polite way to request that a socket be closed
         tport.loseConnection()
         try:
@@ -248,7 +251,6 @@ class AbstractBuildSlave(NewCredPerspective, service.MultiService):
             # handlers from being run. Bummer.
             tport.offset = 0
             tport.dataBuffer = ""
-            pass
         except:
             # however, these hacks are pretty internal, so don't blow up if
             # they fail or are unavailable
@@ -256,7 +258,6 @@ class AbstractBuildSlave(NewCredPerspective, service.MultiService):
             pass
         log.msg("waiting for slave to finish disconnecting")
 
-        # When this Deferred fires, we'll be ready to accept the new slave
         return d
 
     def sendBuilderList(self):
@@ -358,6 +359,7 @@ class BuildSlave(AbstractBuildSlave):
         if not self.parent:
             return
 
+        buildmaster = self.botmaster.parent
         status = buildmaster.getStatus()
         text = "The Buildbot working for '%s'\n" % status.getProjectName()
         text += ("has noticed that the buildslave named %s went away\n" %
@@ -377,11 +379,17 @@ class BuildSlave(AbstractBuildSlave):
 
 
 class AbstractLatentBuildSlave(AbstractBuildSlave):
+    """A build slave that will start up a slave instance when needed.
+
+    To use, subclass and implement start_instance and stop_instance.
+
+    See ec2buildslave for a concrete example.
+    """
 
     implements(ILatentBuildSlave)
 
     substantiated = False
-    _substantiation_deferred = None
+    substantiation_deferred = None
     build_wait_timer = None
 
     def __init__(self, name, password, max_builds=None,
@@ -396,46 +404,56 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
 
     def start_instance(self):
         # responsible for starting instance that will try to connect with
-        # this master
+        # this master.  Should return deferred.  Problems should use an
+        # errback.
         raise NotImplementedError
 
     def stop_instance(self):
-        # responsible for shutting down instance
+        # responsible for shutting down instance.
         raise NotImplementedError
 
     def substantiate(self, sb):
         if self.substantiated:
             return defer.succeed(self)
-        if self._substantiation_deferred is None:
+        if self.substantiation_deferred is None:
             if self.parent and not self.missing_timer:
                 # start timer.  if timer times out, fail deferred
                 self.missing_timer = reactor.callLater(
-                    self.missing_timeout, self._substantiation_failed)
-            self._substantiation_deferred = defer.Deferred()
+                    self.missing_timeout,
+                    self._substantiation_failed, defer.TimeoutError())
+            self.substantiation_deferred = defer.Deferred()
             if self.slave is None:
                 self._substantiate() # start up instance
             # else: we're waiting for an old one to detach.  the _substantiate
             # will be done in ``detached`` below.
-        return self._substantiation_deferred
+        return self.substantiation_deferred
 
     def _substantiate(self):
         d = self.start_instance()
-        def clean_up(success):
+        def clean_up(failure):
             if not success and self.missing_timer is not None:
                 self.missing_timer.cancel()
-                self._substantiation_failed() # XXX make this better
-            return success
-        d.addCallback(clean_up)
+                self._substantiation_failed(failure) # XXX make this better
+            return failure
+        d.addErrback(clean_up)
         return d
+
+    def attached(self, bot):
+        if self.substantiation_deferred is None:
+            log.msg('Slave %s received connection while not trying to '
+                    'substantiate.  Disconnecting.' % (self.slavename,))
+            self._disconnect(bot)
+            return defer.fail()
+        return AbstractBuildSlave.attached(self, bot)
 
     def detached(self, mind):
         AbstractBuildSlave.detached(self, mind)
-        if self._substantiation_deferred is not None:
+        if self.substantiation_deferred is not None:
             self._substantiate()
 
-    def _substantiation_failed(self):
-        self._substantiation_deferred.errback()
-        self._substantiation_deferred = None
+    def _substantiation_failed(self, failure):
+        self.substantiation_deferred.errback(failure)
+        self.substantiation_deferred = None
         self.missing_timer = None
         # notify people, but only if we're still in the config
         if not self.parent or not self.notify_on_missing:
@@ -468,13 +486,14 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
 
     def _clearBuildWaitTimer(self):
         if self.build_wait_timer is not None:
-            self.build_wait_timer.cancel()
+            if self.build_wait_timer.active():
+                self.build_wait_timer.cancel()
             self.build_wait_timer = None
 
     def _setBuildWaitTimer(self):
         self._clearBuildWaitTimer()
         self.build_wait_timer = reactor.callLater(
-            self.build_wait_timeout, self.insubstantiate)
+            self.build_wait_timeout, self.disconnect)
 
     def insubstantiate(self):
         self.build_wait_timer = None
@@ -495,12 +514,12 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
             # and put our heads in the sand for the second, at least for now.
             self._clearBuildWaitTimer()
             reactor.callLater(0, self.insubstantiate)
-        elif self._substantiation_deferred is not None:
+        elif self.substantiation_deferred is not None:
             # unlike the previous block, we don't expect this situation when
             # ``attached`` calls ``disconnect``, only when we get a simple
             # request to "go away".
-            self._substantiation_deferred.errback()
-            self._substantiation_deferred = None
+            self.substantiation_deferred.errback()
+            self.substantiation_deferred = None
             if self.missing_timer:
                 self.missing_timer.cancel()
                 self.missing_timer = None
@@ -538,9 +557,9 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
             log.err(why)
             # TODO: hang up on them?, without setBuilderList we can't use
             # them
-            if self._substantiation_deferred:
-                self._substantiation_deferred.errback()
-                self._substantiation_deferred = None
+            if self.substantiation_deferred:
+                self.substantiation_deferred.errback()
+                self.substantiation_deferred = None
             if self.missing_timer:
                 self.missing_timer.cancel()
                 self.missing_timer = None
@@ -549,9 +568,9 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
         d.addCallbacks(_sent, _set_failed)
         def _substantiated(res):
             self.substantiated = True
-            if self._substantiation_deferred:
-                d = self._substantiation_deferred
-                del self._substantiation_deferred
+            if self.substantiation_deferred:
+                d = self.substantiation_deferred
+                del self.substantiation_deferred
                 d.callback(None)
             # note that the missing_timer is already handled within
             # ``attached``

@@ -13,6 +13,8 @@ class BuilderInUseError(Exception):
     pass
 class BuildSlaveTooOldError(Exception):
     pass
+class LatentBuildSlaveFailedToSubstantiate(Exception):
+    pass
 
 # other exceptions
 class BuildbotNotRunningError(Exception):

@@ -121,11 +121,6 @@ class AbstractSlaveBuilder(pb.Referenceable):
         @param status: if you point this at a BuilderStatus, a 'pinging'
                        event will be pushed.
         """
-        if (interfaces.ILatentBuildSlave.providedBy(self.slave)
-            and not self.slave.substantiated):
-            if status:
-                status.addEvent(["ping", "latent"], "green").finish()
-            return defer.succeed(True)
         self.state = PINGING
         newping = not self.ping_watchers
         d = defer.Deferred()
@@ -266,6 +261,13 @@ class LatentSlaveBuilder(AbstractSlaveBuilder):
     def _attachFailure(self, why, where):
         self.state = LATENT
         return AbstractSlaveBuilder._attachFailure(self, why, where)
+
+    def ping(self, timeout, status=None):
+        if not self.slave.substantiated:
+            if status:
+                status.addEvent(["ping", "latent"], "green").finish()
+            return defer.succeed(True)
+        return AbstractSlaveBuilder.ping(self, timeout, status)
 
 
 class Builder(pb.Referenceable):

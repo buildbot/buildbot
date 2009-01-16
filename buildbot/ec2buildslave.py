@@ -1,3 +1,8 @@
+"""A LatentSlave that uses EC2 to instantiate the slaves on demand.
+
+Tested with Python boto 1.5c and paramiko 1.7.4.
+"""
+
 import cStringIO
 import os
 import time
@@ -10,15 +15,17 @@ import twisted.internet.threads
 from twisted.python import log
 
 from buildbot.buildslave import AbstractLatentBuildSlave
+from buildbot import interfaces
 
 class EC2LatentBuildSlave(AbstractLatentBuildSlave):
 
     instance = None
-    old_instance = None
 
     def __init__(self, name, password, instance_type, machine_id,
-                 identifier=None, secret_identifier=None,
-                 keypair_name='buildbot', security_name='buildbot',
+                 elastic_ip=None, identifier=None, secret_identifier=None,
+                 aws_id_file_path=None,
+                 keypair_name='latent_buildbot_slave',
+                 security_name='latent_buildbot_slave',
                  max_builds=None, notify_on_missing=[], missing_timeout=60*20,
                  build_wait_timeout=60*10, properties={}):
         AbstractLatentBuildSlave.__init__(
@@ -31,23 +38,27 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
         if identifier is None:
             assert secret_identifier is None, (
                 'supply both or neither of identifier, secret_identifier')
-            home = os.environ['HOME']
-            aws_id = os.path.join(home, '.ec2', 'aws_id')
-            if not os.path.exists(aws_id):
+            if aws_id_file_path is None:
+                home = os.environ['HOME']
+                aws_id_file_path = os.path.join(home, '.ec2', 'aws_id')
+            if not os.path.exists(aws_id_file_path):
                 raise ValueError(
                     "Please supply your AWS access key identifier and secret "
                     "access key identifier either when instantiating this %s "
                     "or in the %s file (on two lines).\n" %
-                    (self.__class__.__name__, aws_id))
-            aws_file = open(aws_id, 'r')
+                    (self.__class__.__name__, aws_id_file_path))
+            aws_file = open(aws_id_file_path, 'r')
             try:
                 identifier = aws_file.readline().strip()
                 secret_identifier = aws_file.readline().strip()
             finally:
                 aws_file.close()
         else:
-            assert secret_identifier is not None, (
-                'supply both or neither of identifier, secret_identifier')
+            assert (aws_id_file_path is None,
+                    'if you supply the identifier and secret_identifier, '
+                    'do not specify the aws_id_file_path')
+            assert (secret_identifier is not None,
+                    'supply both or neither of identifier, secret_identifier')
         # Make the EC2 connection.
         self.conn = boto.connect_ec2(identifier, secret_identifier)
 
@@ -95,6 +106,11 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
         # get the image
         self.image = self.conn.get_image(self.machine_id)
 
+        # get the specified elastic IP, if any
+        if elastic_ip is not None:
+            elastic_ip = self.conn.get_all_addresses([elastic_ip])[0]
+        self.elastic_ip = elastic_ip
+
     @property
     def dns(self):
         if self.instance is None:
@@ -130,21 +146,31 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
                     (self.__class__.__name__, self.slavename,
                      self.instance.id, self.dns, duration//60, duration%60,
                      self.output.output))
-            return True
+            if self.elastic_ip is not None:
+                self.instance.use_ip(self.elastic_ip)
         else:
             log.msg('%s %s failed to start instance %s (%s)' %
                     (self.__class__.__name__, self.slavename,
                      self.instance.id, self.instance.state))
-            return False
+            raise interfaces.LatentBuildSlaveFailedToSubstantiate(
+                self.instance.id, self.instance.state)
 
     def stop_instance(self):
         if self.instance is None:
             raise ValueError('no instance')
-        return twisted.internet.threads.deferToThread(self._stop_instance)
+        instance = self.instance
+        self.output = self.instance = None
+        return twisted.internet.threads.deferToThread(
+            self._stop_instance, instance)
 
-    def _stop_instance(self):
-        instance = self.old_instance = self.instance
-        self.instance = self.output = None
+    def _stop_instance(self, instance):
+        if self.elastic_ip is not None:
+            self.conn.disassociate_address(self.elastic_ip.public_ip)
+        instance.update()
+        if instance.state not in ('shutting-down', 'terminated'):
+            instance.stop()
+            log.msg('%s %s terminating instance %s' %
+                    (self.__class__.__name__, self.slavename, instance.id))
         instance.update()
         if instance.state not in ('shutting-down', 'terminated'):
             instance.stop()
@@ -165,4 +191,3 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
                 'in about %d minutes %d seconds' %
                 (self.__class__.__name__, self.slavename,
                  instance.id, duration//60, duration%60))
-        return True
