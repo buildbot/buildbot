@@ -1164,7 +1164,7 @@ class ContactTester(unittest.TestCase):
         irc.buildFinished(my_builder.getName(), my_build, None)
         self.failUnlessEqual(irc.message, "", "No finish notification generated on exception with notify_events=['exception']")
 
-    def test_notification_successToFailure(self):
+    def test_notification_successToFailed(self):
         irc = MyContact()
 
         my_builder = MyBuilder("builder834")
@@ -1175,7 +1175,7 @@ class ContactTester(unittest.TestCase):
         previous_build = MyIrcBuild(my_builder, 861, builder.SUCCESS)
         my_build.setPreviousBuild(previous_build)
 
-        irc.command_NOTIFY("on successToFailure", "mynick")
+        irc.command_NOTIFY("on successToFailed", "mynick")
 
         irc.message = ""
         irc.buildStarted(my_builder.getName(), my_build)
@@ -1183,7 +1183,7 @@ class ContactTester(unittest.TestCase):
 
         irc.message = ""
         irc.buildFinished(my_builder.getName(), my_build, None)
-        self.failUnlessEqual(irc.message, "build #862 of builder834 is complete: Failure [step1 step2]  Build details are at http://myserver/mypath?build=765", "Finish notification generated on failure with notify_events=['successToFailure']")
+        self.failUnlessEqual(irc.message, "build #862 of builder834 is complete: Failure [step1 step2]  Build details are at http://myserver/mypath?build=765", "Finish notification generated on failure with notify_events=['successToFailed']")
 
         irc.message = ""
         my_build.results = builder.SUCCESS
@@ -1195,7 +1195,7 @@ class ContactTester(unittest.TestCase):
         irc.buildFinished(my_builder.getName(), my_build, None)
         self.failUnlessEqual(irc.message, "", "No finish notification generated on exception with notify_events=['failed']")
 
-    def test_notification_failureToSuccess(self):
+    def test_notification_failedToSuccess(self):
         irc = MyContact()
 
         my_builder = MyBuilder("builder834")
@@ -1206,7 +1206,7 @@ class ContactTester(unittest.TestCase):
         previous_build = MyIrcBuild(my_builder, 861, builder.FAILURE)
         my_build.setPreviousBuild(previous_build)
 
-        irc.command_NOTIFY("on failureToSuccess", "mynick")
+        irc.command_NOTIFY("on failedToSuccess", "mynick")
 
         irc.message = ""
         irc.buildStarted(my_builder.getName(), my_build)
@@ -1214,7 +1214,7 @@ class ContactTester(unittest.TestCase):
 
         irc.message = ""
         irc.buildFinished(my_builder.getName(), my_build, None)
-        self.failUnlessEqual(irc.message, "build #862 of builder834 is complete: Success [step1 step2]  Build details are at http://myserver/mypath?build=765", "Finish notification generated on success with notify_events=['failureToSuccess']")
+        self.failUnlessEqual(irc.message, "build #862 of builder834 is complete: Success [step1 step2]  Build details are at http://myserver/mypath?build=765", "Finish notification generated on success with notify_events=['failedToSuccess']")
 
         irc.message = ""
         my_build.results = builder.FAILURE

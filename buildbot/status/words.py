@@ -168,7 +168,7 @@ class Contact:
     command_STATUS.usage = "status [<which>] - List status of a builder (or all builders)"
 
     def validate_notification_event(self, event):
-        if not re.compile("^(started|finished|success|failed|exception|successToFailure|failureToSuccess)$").match(event):
+        if not re.compile("^(started|finished|success|failed|exception|successToFailed|failedToSuccess)$").match(event):
             raise UsageError("try 'notify on|off <EVENT>'")
 
     def list_notified_events(self):
@@ -310,7 +310,7 @@ class Contact:
         # only notify about builders we are interested in
         log.msg('[Contact] builder %r in category %s finished' % (builder, builder.category))
 
-        if not self.notify_for('finished', 'failed', 'success', 'exception', 'failureToSuccess', 'successToFailure'):
+        if not self.notify_for('finished', 'failed', 'success', 'exception', 'failedToSuccess', 'successToFailed'):
             return
 
         if (self.channel.categories != None and
@@ -339,8 +339,8 @@ class Contact:
         if prevBuild:
             prevResult = prevBuild.getResults()
 
-            if (self.notify_for('failureToSuccess') and prevResult == FAILURE and results == SUCCESS) or \
-               (self.notify_for('successToFailure') and prevResult == SUCCESS and results == FAILURE):
+            if (self.notify_for('failedToSuccess') and prevResult == FAILURE and results == SUCCESS) or \
+               (self.notify_for('successToFailed') and prevResult == SUCCESS and results == FAILURE):
                 self.send(r)
 
     def watchedBuildFinished(self, b):
