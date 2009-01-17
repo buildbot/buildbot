@@ -1,0 +1,24 @@
+<!DOCTYPE html
+    PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:py="http://genshi.edgewall.org/"
+      xmlns:xi="http://www.w3.org/2001/XInclude">
+  <xi:include href="layout.html" />
+  <xi:include href="macros.html" />
+  <head>
+    <title py:if="title">$title</title>
+    <meta py:if="version" name="ROBOTS" content="NOINDEX, NOFOLLOW" />
+  </head>
+
+  <body>
+    <div id="content">
+      <h1>BuildBot Watcher</h1>
+      <p class="wiki">This Trac instance is watching the BuildBot server at <pre>${url}</pre>.</p>
+      <h2>For now, you can obtain information about:</h2>
+      <ul>
+        <li><a href="${href.buildbot('builder')}">All Builders</a></li>
+      </ul>
+    </div>
+  </body>
+</html>

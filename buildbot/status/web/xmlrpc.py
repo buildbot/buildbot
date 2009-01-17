@@ -163,12 +163,23 @@ class XMLRPCServer(xmlrpc.XMLRPC):
         build = builder.getBuild(build_number)
         info = {}
         info['builder_name'] = builder.getName()
-        info['url'] = self.status.getURLForThing(build)
+        info['url'] = self.status.getURLForThing(build) or ''
         info['reason'] = build.getReason()
         info['slavename'] = build.getSlavename()
         info['results'] = build.getResults()
         info['text'] = build.getText()
+        # Added to help out requests for build -N
+        info['number'] = build.number
         ss = build.getSourceStamp()
+        branch = ss.branch
+        if branch is None:
+            branch = ""
+        info['branch'] = str(branch)
+        try:
+            revision = str(build.getProperty("got_revision"))
+        except KeyError:
+            revision = ""
+        info['revision'] = str(revision)
         info['start'], info['end'] = build.getTimes()
 
         info_steps = []
@@ -188,6 +199,5 @@ class XMLRPCServer(xmlrpc.XMLRPC):
             loginfo['text'] = "HUGE"
             info_logs.append(loginfo)
         info['logs'] = info_logs
-
         return info
 
