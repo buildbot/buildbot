@@ -168,6 +168,7 @@ class XMLRPCServer(xmlrpc.XMLRPC):
         info['slavename'] = build.getSlavename()
         info['results'] = build.getResults()
         info['text'] = build.getText()
+        # Added to help out requests for build -N
         info['number'] = build.number
         ss = build.getSourceStamp()
         branch = ss.branch
@@ -182,21 +183,21 @@ class XMLRPCServer(xmlrpc.XMLRPC):
         info['start'], info['end'] = build.getTimes()
 
         info_steps = []
-        #for s in build.getSteps():
-        #    stepinfo = {}
-        #    stepinfo['name'] = s.getName()
-        #    stepinfo['start'], stepinfo['end'] = s.getTimes()
-        #    stepinfo['results'] = s.getResults()
-        #    info_steps.append(stepinfo)
+        for s in build.getSteps():
+            stepinfo = {}
+            stepinfo['name'] = s.getName()
+            stepinfo['start'], stepinfo['end'] = s.getTimes()
+            stepinfo['results'] = s.getResults()
+            info_steps.append(stepinfo)
         info['steps'] = info_steps
 
         info_logs = []
-        #for l in build.getLogs():
-        #    loginfo = {}
-        #    loginfo['name'] = l.getStep().getName() + "/" + l.getName()
-        #    #loginfo['text'] = l.getText()
-        #    loginfo['text'] = "HUGE"
-        #    info_logs.append(loginfo)
+        for l in build.getLogs():
+            loginfo = {}
+            loginfo['name'] = l.getStep().getName() + "/" + l.getName()
+            #loginfo['text'] = l.getText()
+            loginfo['text'] = "HUGE"
+            info_logs.append(loginfo)
         info['logs'] = info_logs
         return info
 
