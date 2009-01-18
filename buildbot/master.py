@@ -806,7 +806,7 @@ class BuildMaster(service.MultiService, styles.Versioned):
                 log.msg("notifying downstream schedulers of changes")
                 for s in newschedulers:
                     if interfaces.IDownstreamScheduler.providedBy(s):
-                        s.updateSchedulers()
+                        s.checkUpstreamScheduler()
             d.addCallback(updateDownstreams)
         return d
 

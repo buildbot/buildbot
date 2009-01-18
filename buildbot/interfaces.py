@@ -85,9 +85,9 @@ class IDownstreamScheduler(Interface):
     On reconfigs, these might get notified to check if their upstream
     scheduler are stil the same."""
 
-    def updateSchedulers():
-        """Check if the upstream schedulers are still alive, and if not,
-        update them from the master."""
+    def checkUpstreamScheduler():
+        """Check if the upstream scheduler is still alive, and if not,
+        get a new upstream object from the master."""
 
 
 class ISourceStamp(Interface):
