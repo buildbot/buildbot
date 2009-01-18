@@ -44,7 +44,7 @@ class LogWatcher(LineOnlyReceiver):
         # line was seen. If the logfile could not be opened, it errbacks with
         # an IOError.
         self.p = reactor.spawnProcess(self.pp, "/usr/bin/tail",
-                                      ("tail", "-F", "-n", "0", self.logfile),
+                                      ("tail", "-f", "-n", "0", self.logfile),
                                       env=os.environ,
                                       )
         self.running = True
