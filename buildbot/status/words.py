@@ -455,8 +455,8 @@ class Contact:
             last = b.getLastFinishedBuild()
             if last:
                 start,finished = last.getTimes()
-                str += ", last build %s secs ago: %s" % \
-                       (int(util.now() - finished), " ".join(last.getText()))
+                str += ", last build %s ago: %s" % \
+                        (self.convertTime(int(util.now() - finished)), " ".join(last.getText()))
         if state == "building":
             t = []
             for build in builds:
@@ -478,7 +478,7 @@ class Contact:
             str = "(no builds run since last restart)"
         else:
             start,finish = last.getTimes()
-            str = "%s secs ago: " % (int(util.now() - finish))
+            str = "%s ago: " % (self.convertTime(int(util.now() - finish)))
             str += " ".join(last.getText())
         self.send("last build [%s]: %s" % (which, str))
 
