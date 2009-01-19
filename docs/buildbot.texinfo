@@ -1168,7 +1168,7 @@ which find's @code{-mindepth} argument helps skip everything in the
 top directory. You can use something like the following:
 
 @example
-@@weekly cd BASEDIR && find . -mindepth 2 -type f -mtime +14 -exec rm @{@} \;
+@@weekly cd BASEDIR && find . -mindepth 2 i-path './public_html/*' -prune -o -type f -mtime +14 -exec rm @{@} \;
 @@weekly cd BASEDIR && find twistd.log* -mtime +14 -exec rm @{@} \;
 @end example
 
