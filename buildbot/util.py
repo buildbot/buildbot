@@ -2,7 +2,24 @@
 
 from twisted.internet.defer import Deferred
 from twisted.spread import pb
-import time
+import time, re
+
+def naturalSort(l):
+    """Returns a sorted copy of l, so that numbers in strings are sorted in the
+    proper order.
+
+    e.g. ['foo10', 'foo1', 'foo2'] will be sorted as ['foo1', 'foo2', 'foo10']
+    instead of the default ['foo1', 'foo10', 'foo2']"""
+    l = l[:]
+    def try_int(s):
+        try:
+            return int(s)
+        except:
+            return s
+    def key_func(item):
+        return [try_int(s) for s in re.split('(\d+)', item)]
+    l.sort(key=key_func)
+    return l
 
 def now():
     #return int(time.time())

@@ -112,7 +112,7 @@ class BuildSlavesResource(HtmlResource):
                 used_by_builder[slavename].append(bname)
 
         data += "<ol>\n"
-        for name in s.getSlaveNames():
+        for name in util.naturalSort(s.getSlaveNames()):
             slave = s.getSlave(name)
             slave_status = s.botmaster.slaves[name].slave_status
             isBusy = len(slave_status.getRunningBuilds())
