@@ -33,6 +33,9 @@ class Domain(util.ComparableMixin):
         self.domain = domain
 
     def getAddress(self, name):
+        """If name is already an email address, pass it through."""
+        if '@' in name:
+            return name
         return name + "@" + self.domain
 
 
