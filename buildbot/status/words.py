@@ -580,9 +580,9 @@ class IRCContact(Contact):
     # userJoined(self, user, channel)
 
     def send(self, message):
-        self.channel.msg(self.dest, message)
+        self.channel.msg(self.dest, message.encode("ascii", "replace"))
     def act(self, action):
-        self.channel.me(self.dest, action)
+        self.channel.me(self.dest, action.encode("ascii", "replace"))
 
     def command_JOIN(self, args, who):
         args = args.split()
