@@ -428,7 +428,10 @@ class Log(unittest.TestCase):
         self.failUnlessEqual(len(list(l.getChunks())), 4)
 
         self.failUnless(l.hasContents())
-        os.unlink(l.getFilename())
+        try:
+            os.unlink(l.getFilename())
+        except OSError:
+            os.unlink(l.getFilename() + ".bz2")
         self.failIf(l.hasContents())
 
     def TODO_testDuplicate(self):
@@ -493,7 +496,7 @@ class Log(unittest.TestCase):
         self.failUnlessEqual(l.getText(), 160*"a")
 
     def testReadlines(self):
-        l = MyLog(self.basedir, "chunks")
+        l = MyLog(self.basedir, "chunks1")
         l.addHeader("HEADER\n") # should be ignored
         l.addStdout("Some text\n")
         l.addStdout("Some More Text\nAnd Some More\n")
@@ -519,7 +522,7 @@ class Log(unittest.TestCase):
 
 
     def testChunks(self):
-        l = MyLog(self.basedir, "chunks")
+        l = MyLog(self.basedir, "chunks2")
         c1 = l.getChunks()
         l.addHeader("HEADER\n")
         l.addStdout("Some text\n")
@@ -560,7 +563,10 @@ class Log(unittest.TestCase):
         # now doctor it to look like a 0.6.4-era non-upgraded logfile
         l.entries = list(l.getChunks())
         del l.filename
-        os.unlink(l.getFilename())
+        try:
+            os.unlink(l.getFilename() + ".bz2")
+        except OSError:
+            os.unlink(l.getFilename())
         # now make sure we can upgrade it
         l.upgrade("upgrade")
         self.failUnlessEqual(l.getText(),

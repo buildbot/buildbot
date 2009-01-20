@@ -10,6 +10,7 @@ from buildbot.process.properties import Properties
 import os, shutil, sys, re, urllib, itertools
 from cPickle import load, dump
 from cStringIO import StringIO
+from bz2 import BZ2File
 
 # sibling imports
 from buildbot import interfaces, util, sourcestamp
@@ -208,6 +209,7 @@ class LogFile:
     BUFFERSIZE = 2048
     filename = None # relative to the Builder's basedir
     openfile = None
+    compressLogs = True
 
     def __init__(self, parent, name, logfilename):
         """
@@ -237,7 +239,8 @@ class LogFile:
         return os.path.join(self.step.build.builder.basedir, self.filename)
 
     def hasContents(self):
-        return os.path.exists(self.getFilename())
+        return os.path.exists(self.getFilename() + '.bz2') or \
+            os.path.exists(self.getFilename())
 
     def getName(self):
         return self.name
@@ -261,6 +264,11 @@ class LogFile:
             # don't close it!
             return self.openfile
         # otherwise they get their own read-only handle
+        # try a compressed log first
+        try:
+            return BZ2File(self.getFilename() + ".bz2", "r")
+        except IOError:
+            pass
         return open(self.getFilename(), "r")
 
     def getText(self):
@@ -407,6 +415,7 @@ class LogFile:
             # filehandle will be released and automatically closed. We will
             # do a sync, however, to make sure the log gets saved in case of
             # a crash.
+            self.openfile.flush()
             os.fsync(self.openfile.fileno())
             del self.openfile
         self.finished = True
@@ -415,6 +424,20 @@ class LogFile:
         for w in watchers:
             w.callback(self)
         self.watchers = []
+        if self.compressLogs:
+            compressed = self.getFilename() + ".bz2.tmp"
+            infile = self.getFile()
+            cf = BZ2File(compressed, 'w')
+            written = 1
+            bufsize = 1024*1024
+            while True:
+                buf = infile.read(bufsize)
+                cf.write(buf)
+                if len(buf) < bufsize:
+                    break
+            cf.close()
+            os.rename(compressed, self.getFilename() + '.bz2')
+            os.remove(self.getFilename())
 
     # persistence stuff
     def __getstate__(self):
