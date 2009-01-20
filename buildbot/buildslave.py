@@ -383,7 +383,8 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
 
     To use, subclass and implement start_instance and stop_instance.
 
-    See ec2buildslave for a concrete example.
+    See ec2buildslave.py for a concrete example.  Also see the stub example in
+    test/test_slaves.py.
     """
 
     implements(ILatentBuildSlave)
