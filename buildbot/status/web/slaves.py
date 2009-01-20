@@ -1,10 +1,96 @@
 
-import time
-from buildbot.status.web.base import HtmlResource, abbreviate_age
+import time, urllib
+from twisted.python import log
+from twisted.web import html
+
+from buildbot.status.web.base import HtmlResource, abbreviate_age, OneLineMixin
+from buildbot import version, util
 
 # /buildslaves/$slavename
-class OneBuildSlaveResource(HtmlResource):
-    pass  # TODO
+class OneBuildSlaveResource(HtmlResource, OneLineMixin):
+    def __init__(self, slavename):
+        self.slavename = slavename
+
+    def getTitle(self, req):
+        return "Buildbot: %s" % html.escape(self.slavename)
+
+    def body(self, req):
+        s = self.getStatus(req)
+        my_builders = []
+        for bname in s.getBuilderNames():
+            b = s.getBuilder(bname)
+            for bs in b.getSlaves():
+                slavename = bs.getName()
+                if bs.getName() == self.slavename:
+                    my_builders.append(b)
+
+        # Current builds
+        current_builds = []
+        for b in my_builders:
+            for cb in b.getCurrentBuilds():
+                if cb.getSlavename() == self.slavename:
+                    current_builds.append(cb)
+
+        data = []
+
+        projectName = s.getProjectName()
+
+        data.append("<a href=\"%s\">%s</a>\n" % (self.path_to_root(req), projectName))
+
+        data.append("<h1>Build Slave: %s</h1>\n" % self.slavename)
+
+        if current_builds:
+            data.append("<h2>Currently building:</h2>\n")
+            data.append("<ul>\n")
+            for build in current_builds:
+                data.append("<li>%s</li>\n" % self.make_line(req, build, True))
+            data.append("</ul>\n")
+
+        else:
+            data.append("<h2>no current builds</h2>\n")
+
+
+        # Recent builds
+        data.append("<h2>Recent builds:</h2>\n")
+        data.append("<ul>\n")
+        n = 0
+        try:
+            max_builds = int(req.args.get('builds')[0])
+        except:
+            max_builds = 10
+        for build in s.generateFinishedBuilds(builders=[b.getName() for b in my_builders]):
+            if build.getSlavename() == self.slavename:
+                n += 1
+                data.append("<li>%s</li>\n" % self.make_line(req, build, True))
+                if n > max_builds:
+                    break
+        data.append("</ul>\n")
+
+        projectURL = s.getProjectURL()
+        projectName = s.getProjectName()
+        data.append('<hr /><div class="footer">\n')
+
+        welcomeurl = self.path_to_root(req) + "index.html"
+        data.append("[<a href=\"%s\">welcome</a>]\n" % welcomeurl)
+        data.append("<br />\n")
+
+        data.append('<a href="http://buildbot.sourceforge.net/">Buildbot</a>')
+        data.append("-%s " % version)
+        if projectName:
+            data.append("working for the ")
+            if projectURL:
+                data.append("<a href=\"%s\">%s</a> project." % (projectURL,
+                                                            projectName))
+            else:
+                data.append("%s project." % projectName)
+        data.append("<br />\n")
+        data.append("Page built: " +
+                 time.strftime("%a %d %b %Y %H:%M:%S",
+                               time.localtime(util.now()))
+                 + "\n")
+        data.append("</div>\n")
+
+        return "".join(data)
 
 # /buildslaves
 class BuildSlavesResource(HtmlResource):
@@ -26,11 +112,11 @@ class BuildSlavesResource(HtmlResource):
                 used_by_builder[slavename].append(bname)
 
         data += "<ol>\n"
-        for name in s.getSlaveNames():
+        for name in util.naturalSort(s.getSlaveNames()):
             slave = s.getSlave(name)
             slave_status = s.botmaster.slaves[name].slave_status
             isBusy = len(slave_status.getRunningBuilds())
-            data += " <li>%s:\n" % name
+            data += " <li><a href=\"%s\">%s</a>:\n" % (req.childLink(urllib.quote(name,'')), name)
             data += " <ul>\n"
             builder_links = ['<a href="%s">%s</a>'
                              % (req.childLink("../builders/%s" % bname),bname)
@@ -69,3 +155,6 @@ class BuildSlavesResource(HtmlResource):
         data += "</ol>\n"
 
         return data
+
+    def getChild(self, path, req):
+        return OneBuildSlaveResource(path)

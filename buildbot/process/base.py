@@ -42,17 +42,22 @@ class BuildRequest:
 
     @type properties: Properties object
     @ivar properties: properties that should be applied to this build
+                      'owner' property is used by Build objects to collect
+                      the list returned by getInterestedUsers
 
     @ivar status: the IBuildStatus object which tracks our status
 
     @ivar submittedAt: a timestamp (seconds since epoch) when this request
                        was submitted to the Builder. This is used by the CVS
-                       step to compute a checkout timestamp.
+                       step to compute a checkout timestamp, as well as the
+                       master to prioritize build requests from oldest to
+                       newest.
     """
 
     source = None
     builder = None
     startCount = 0 # how many times we have tried to start this build
+    submittedAt = None
 
     implements(interfaces.IBuildRequestControl)
 
@@ -72,7 +77,10 @@ class BuildRequest:
         self.status = BuildRequestStatus(source, builderName)
 
     def canBeMergedWith(self, other):
-        return self.source.canBeMergedWith(other.source)
+        # only merge requests with the same reason
+        # otherwise, there's no way to force repeated builds of the same source
+        return (self.reason == other.reason and
+                self.source.canBeMergedWith(other.source))
 
     def mergeWith(self, others):
         return self.source.mergeWith([o.source for o in others])
@@ -181,6 +189,8 @@ class Build:
         self.progress = None
         self.currentStep = None
         self.slaveEnvironment = {}
+
+        self.terminate = False
 
     def setBuilder(self, builder):
         """
@@ -438,6 +448,11 @@ class Build:
         self.build_status.setBlamelist(self.blamelist())
         self.build_status.setProgress(self.progress)
 
+        # gather owners from build requests
+        owners = [r.properties['owner'] for r in self.requests
+                  if r.properties.has_key('owner')]
+        if owners: self.setProperty('owners', owners, self.reason)
+
         self.results = [] # list of FAILURE, SUCCESS, WARNINGS, SKIPPED
         self.result = SUCCESS # overall result, may downgrade after each step
         self.text = [] # list of text string lists (text2)
@@ -448,7 +463,15 @@ class Build:
         is complete."""
         if not self.steps:
             return None
-        return self.steps.pop(0)
+        if self.terminate:
+            while True:
+                s = self.steps.pop(0)
+                if s.alwaysRun:
+                    return s
+                if not self.steps:
+                    return None
+        else:
+            return self.steps.pop(0)
 
     def startNextStep(self):
         try:
@@ -468,8 +491,8 @@ class Build:
             return # build was interrupted, don't keep building
         terminate = self.stepDone(results, step) # interpret/merge results
         if terminate:
-            return self.allStepsDone()
-        self.startNextStep()
+            self.terminate = True
+        return self.startNextStep()
 
     def stepDone(self, result, step):
         """This method is called when the BuildStep completes. It is passed a

@@ -189,7 +189,19 @@ class BotMaster(service.MultiService):
         return defer.DeferredList(dl)
 
     def maybeStartAllBuilds(self):
-        for b in self.builders.values():
+        builders = self.builders.values()
+        def _sortfunc(b1, b2):
+            t1 = b1.getOldestRequestTime()
+            t2 = b2.getOldestRequestTime()
+            # If t1 or t2 is None, then there are no build requests,
+            # so sort it at the end
+            if t1 is None:
+                return 1
+            if t2 is None:
+                return -1
+            return cmp(t1, t2)
+        builders.sort(cmp=_sortfunc)
+        for b in builders:
             b.maybeStartBuild()
 
     def getPerspective(self, slavename):
@@ -782,10 +794,21 @@ class BuildMaster(service.MultiService, styles.Versioned):
         added = [s for s in newschedulers if s not in oldschedulers]
         dl = [defer.maybeDeferred(s.disownServiceParent) for s in removed]
         def addNewOnes(res):
+            log.msg("adding %d new schedulers, removed %d" % 
+                    (len(added), len(dl)))
             for s in added:
                 s.setServiceParent(self)
         d = defer.DeferredList(dl, fireOnOneErrback=1)
         d.addCallback(addNewOnes)
+        if removed or added:
+            # notify Downstream schedulers to potentially pick up
+            # new schedulers now that we have removed and added some
+            def updateDownstreams(res):
+                log.msg("notifying downstream schedulers of changes")
+                for s in newschedulers:
+                    if interfaces.IDownstreamScheduler.providedBy(s):
+                        s.checkUpstreamScheduler()
+            d.addCallback(updateDownstreams)
         return d
 
     def loadConfig_Builders(self, newBuilderData):

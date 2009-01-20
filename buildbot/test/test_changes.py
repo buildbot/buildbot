@@ -33,8 +33,8 @@ class TestChangePerspective(unittest.TestCase):
         p.perspective_addChange(d1)
         self.failUnlessEqual(len(self.changes), 1)
         c1 = self.changes[0]
-        self.failUnlessEqual(c1.files,
-                             ["Project/foo.c", "Project/bar/boo.c"])
+        self.failUnlessEqual(set(c1.files),
+                             set(["Project/foo.c", "Project/bar/boo.c"]))
         self.failUnlessEqual(c1.comments, "Some changes in Project")
         self.failUnlessEqual(c1.who, "marvin")
 
@@ -44,7 +44,7 @@ class TestChangePerspective(unittest.TestCase):
         p.perspective_addChange(d1)
         self.failUnlessEqual(len(self.changes), 1)
         c1 = self.changes[-1]
-        self.failUnlessEqual(c1.files, ["foo.c", "bar/boo.c"])
+        self.failUnlessEqual(set(c1.files), set(["foo.c", "bar/boo.c"]))
         self.failUnlessEqual(c1.comments, "Some changes in Project")
         self.failUnlessEqual(c1.who, "marvin")
 
@@ -55,7 +55,7 @@ class TestChangePerspective(unittest.TestCase):
         self.failUnlessEqual(len(self.changes), 2)
 
         c3 = self.changes[-1]
-        self.failUnlessEqual(c3.files, ["baz.c"])
+        self.failUnlessEqual(set(c3.files), set(["baz.c"]))
         self.failUnlessEqual(c3.comments, "mixed changes")
         self.failUnlessEqual(c3.who, "alice")
 
@@ -65,7 +65,7 @@ class TestChangePerspective(unittest.TestCase):
         p.perspective_addChange(d1)
         self.failUnlessEqual(len(self.changes), 1)
         c1 = self.changes[-1]
-        self.failUnlessEqual(c1.files, ["boo.c"])
+        self.failUnlessEqual(set(c1.files), set(["boo.c"]))
         self.failUnlessEqual(c1.comments, "Some changes in Project")
         self.failUnlessEqual(c1.who, "marvin")
 
@@ -81,7 +81,7 @@ class TestChangePerspective(unittest.TestCase):
         p.perspective_addChange(d4)
         self.failUnlessEqual(len(self.changes), 1)
         c1 = self.changes[-1]
-        self.failUnlessEqual(c1.files, ["baz.c", "bar.c"])
+        self.failUnlessEqual(set(c1.files), set(["baz.c", "bar.c"]))
         self.failUnlessEqual(c1.comments, "mixed changes")
 
     def testPrefix4(self):
@@ -90,7 +90,7 @@ class TestChangePerspective(unittest.TestCase):
         p.perspective_addChange(d4)
         self.failUnlessEqual(len(self.changes), 1)
         c1 = self.changes[-1]
-        self.failUnlessEqual(c1.files, ["foo.c"])
+        self.failUnlessEqual(set(c1.files), set(["foo.c"]))
         self.failUnlessEqual(c1.comments, "mixed changes")
 
 

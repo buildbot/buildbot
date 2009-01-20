@@ -82,6 +82,16 @@ class IUpstreamScheduler(Interface):
         """Return a list of strings indicating the Builders that this
         Scheduler might feed."""
 
+class IDownstreamScheduler(Interface):
+    """This marks an IScheduler to be listening to other schedulers.
+    On reconfigs, these might get notified to check if their upstream
+    scheduler are stil the same."""
+
+    def checkUpstreamScheduler():
+        """Check if the upstream scheduler is still alive, and if not,
+        get a new upstream object from the master."""
+
+
 class ISourceStamp(Interface):
     """
     @cvar branch: branch from which source was drawn

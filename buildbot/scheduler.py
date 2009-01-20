@@ -307,8 +307,9 @@ class AnyBranchScheduler(BaseUpstreamScheduler):
 class Dependent(BaseUpstreamScheduler):
     """This scheduler runs some set of 'downstream' builds when the
     'upstream' scheduler has completed successfully."""
+    implements(interfaces.IDownstreamScheduler)
 
-    compare_attrs = ('name', 'upstream', 'builders', 'properties')
+    compare_attrs = ('name', 'upstream', 'builderNames', 'properties')
 
     def __init__(self, name, upstream, builderNames, properties={}):
         assert interfaces.IUpstreamScheduler.providedBy(upstream)
@@ -337,7 +338,27 @@ class Dependent(BaseUpstreamScheduler):
                     properties=self.properties)
         self.submitBuildSet(bs)
 
+    def checkUpstreamScheduler(self):
+        # find our *active* upstream scheduler (which may not be self.upstream!) by name
+        up_name = self.upstream.name
+        upstream = None
+        for s in self.parent.allSchedulers():
+            if s.name == up_name and interfaces.IUpstreamScheduler.providedBy(s):
+                upstream = s
+        if not upstream:
+            log.msg("ERROR: Couldn't find upstream scheduler of name <%s>" %
+                up_name)
 
+        # if it's already correct, we're good to go
+        if upstream is self.upstream:
+            return
+
+        # otherwise, associate with the new upstream.  We also keep listening
+        # to the old upstream, in case it's in the middle of a build
+        upstream.subscribeToSuccessfulBuilds(self.upstreamBuilt)
+        self.upstream = upstream
+        log.msg("Dependent <%s> connected to new Upstream <%s>" %
+                (self.name, up_name))
 
 class Periodic(BaseUpstreamScheduler):
     """Instead of watching for Changes, this Scheduler can just start a build

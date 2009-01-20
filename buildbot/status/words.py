@@ -49,7 +49,7 @@ class IrcBuildRequest:
         self.parent.send(response)
         self.parent.send("I'll give a shout when the build finishes")
         d = s.waitUntilFinished()
-        d.addCallback(self.parent.buildFinished)
+        d.addCallback(self.parent.watchedBuildFinished)
 
 
 class Contact:
@@ -168,7 +168,7 @@ class Contact:
     command_STATUS.usage = "status [<which>] - List status of a builder (or all builders)"
 
     def validate_notification_event(self, event):
-        if not re.compile("^(started|finished|success|failed|exception|successToFailure|failureToSuccess)$").match(event):
+        if not re.compile("^(started|finished|success|failed|exception|successToFailed|failedToSuccess)$").match(event):
             raise UsageError("try 'notify on|off <EVENT>'")
 
     def list_notified_events(self):
@@ -310,7 +310,7 @@ class Contact:
         # only notify about builders we are interested in
         log.msg('[Contact] builder %r in category %s finished' % (builder, builder.category))
 
-        if not self.notify_for('finished', 'failed', 'success', 'exception', 'failureToSuccess', 'successToFailure'):
+        if not self.notify_for('finished', 'failed', 'success', 'exception', 'failedToSuccess', 'successToFailed'):
             return
 
         if (self.channel.categories != None and
@@ -339,8 +339,8 @@ class Contact:
         if prevBuild:
             prevResult = prevBuild.getResults()
 
-            if (self.notify_for('failureToSuccess') and prevResult == FAILURE and results == SUCCESS) or \
-               (self.notify_for('successToFailure') and prevResult == SUCCESS and results == FAILURE):
+            if (self.notify_for('failedToSuccess') and prevResult == FAILURE and results == SUCCESS) or \
+               (self.notify_for('successToFailed') and prevResult == SUCCESS and results == FAILURE):
                 self.send(r)
 
     def watchedBuildFinished(self, b):
@@ -455,8 +455,8 @@ class Contact:
             last = b.getLastFinishedBuild()
             if last:
                 start,finished = last.getTimes()
-                str += ", last build %s secs ago: %s" % \
-                       (int(util.now() - finished), " ".join(last.getText()))
+                str += ", last build %s ago: %s" % \
+                        (self.convertTime(int(util.now() - finished)), " ".join(last.getText()))
         if state == "building":
             t = []
             for build in builds:
@@ -478,7 +478,7 @@ class Contact:
             str = "(no builds run since last restart)"
         else:
             start,finish = last.getTimes()
-            str = "%s secs ago: " % (int(util.now() - finish))
+            str = "%s ago: " % (self.convertTime(int(util.now() - finish)))
             str += " ".join(last.getText())
         self.send("last build [%s]: %s" % (which, str))
 
@@ -580,9 +580,9 @@ class IRCContact(Contact):
     # userJoined(self, user, channel)
 
     def send(self, message):
-        self.channel.msg(self.dest, message)
+        self.channel.msg(self.dest, message.encode("ascii", "replace"))
     def act(self, action):
-        self.channel.me(self.dest, action)
+        self.channel.me(self.dest, action.encode("ascii", "replace"))
 
     def command_JOIN(self, args, who):
         args = args.split()

@@ -392,6 +392,14 @@ class Builder(pb.Referenceable):
     def __repr__(self):
         return "<Builder '%s' at %d>" % (self.name, id(self))
 
+    def getOldestRequestTime(self):
+        """Returns the timestamp of the oldest build request for this builder.
+
+        If there are no build requests, None is returned."""
+        if self.buildable:
+            return self.buildable[0].submittedAt
+        else:
+            return None
 
     def submitBuildRequest(self, req):
         req.submittedAt = now()
