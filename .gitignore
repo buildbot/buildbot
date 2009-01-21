@@ -12,3 +12,12 @@ dist
 build
 .build
 buildbot.egg-info
+docs/buildbot.html
+docs/buildbot.info
+docs/buildbot.info-1
+docs/buildbot.info-2
+docs/images/master.png
+docs/images/overview.png
+docs/images/slavebuilder.png
+docs/images/slaves.png
+docs/images/status.png
