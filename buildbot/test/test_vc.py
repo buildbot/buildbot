@@ -1384,7 +1384,12 @@ class P4Helper(BaseHelper):
         def outReceived(self, data):
             # When it says starting, it has bound to the socket.
             if self.started:
-                if data.startswith('Perforce Server starting...'):
+                #
+                # Make sure p4d has started. Newer versions of p4d
+                # have more verbose messaging when db files don't exist, so
+                # we use re.search instead of startswith.
+                #
+                if re.search('Perforce Server starting...', data):
                     self.started.callback(None)
                 else:
                     print "p4d said %r" % data
@@ -1492,7 +1497,8 @@ class P4(VCBase, unittest.TestCase):
     metadir = None
     vctype = "source.P4"
     vc_name = "p4"
-
+    has_got_revision = True
+    
     def tearDownClass(self):
         if self.helper:
             return self.helper.shutdown_p4d()
