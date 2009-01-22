@@ -236,6 +236,46 @@ class BotMaster(service.MultiService):
 
 
 
+class LoadMaster(service.MultiService):
+    """Class to manage how we distribute load, and how much load we take.
+    """
+
+    mergeOnRequests = True
+    mergeOnReasons = False
+    mergeOnProperties = False
+    default = True
+
+    def __init__(self):
+        service.MultiService.__init__(self)
+
+    def loadConfig_LoadMaster(self, config):
+        self.mergeOnRequests = bool(config.get('mergeMatchingRequests', True))
+        self.mergeOnReasons = bool(config.get('mergeMatchingReasons', False))
+        self.mergeOnProperties = bool(config.get('mergeMatchingProperties',
+                                                 False))
+        self.default = self.mergeOnRequests or self.mergeOnReasons or \
+            self.mergeOnProperties
+        pass
+
+    def shouldMergeRequests(self, builder, req1, req2):
+        """Determine whether two BuildRequests should be merged for
+        the given builder.
+
+        """
+        if self.mergeOnRequests and not req1.canBeMergedWith(req2):
+            return False
+        if (self.mergeOnReasons and 
+            req1.reason != req2.reason):
+            return False
+        if (self.mergeOnProperties and
+            req1.properties !=  req2.properties):
+            return False
+        return self.default
+
+########################################
+
+
+
 class DebugPerspective(NewCredPerspective):
     def attached(self, mind):
         return self
@@ -384,6 +424,10 @@ class BuildMaster(service.MultiService, styles.Versioned):
         self.botmaster.setName("botmaster")
         self.botmaster.setServiceParent(self)
         dispatcher.botmaster = self.botmaster
+
+        self.loadmaster = LoadMaster()
+        self.loadmaster.setName("loadmaster")
+        self.loadmaster.setServiceParent(self)
 
         self.status = Status(self.botmaster, self.basedir)
 
@@ -728,6 +772,8 @@ class BuildMaster(service.MultiService, styles.Versioned):
         # botmaster will handle startup/shutdown issues.
         d.addCallback(lambda res: self.loadConfig_Builders(builders))
 
+        d.addCallback(lambda res: self.loadConfig_LoadMaster(config))
+
         d.addCallback(lambda res: self.loadConfig_status(status))
 
         # Schedulers are added after Builders in case they start right away
@@ -808,6 +854,21 @@ class BuildMaster(service.MultiService, styles.Versioned):
                     if interfaces.IDownstreamScheduler.providedBy(s):
                         s.checkUpstreamScheduler()
             d.addCallback(updateDownstreams)
+        return d
+
+    def loadConfig_LoadMaster(self, config):
+        if "loadMaster" in config:
+            d = defer.maybeDeferred(self.loadmaster.disownServiceParent)
+            loadmaster = config["loadMaster"]
+            def newLoadMaster(res):
+                self.loadmaster = loadmaster
+                self.loadmaster.setName("loadmaster")
+                self.loadmaster.setServiceParent(self)
+                return True
+            d.addCallback(newLoadMaster)
+        else:
+            d = defer.succeed(None)
+            self.loadmaster.loadConfig_LoadMaster(config)
         return d
 
     def loadConfig_Builders(self, newBuilderData):

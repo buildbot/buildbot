@@ -518,6 +518,8 @@ SourceStamp that describes what exact version of the source code
 should be used for the build. The Build is then randomly assigned to a
 free SlaveBuilder and the build begins.
 
+Beginning with version 0.7.10, the behaviour when BuildRequests are
+merged can be customized, @pxref{Merging BuildRequests}.
 
 @node Status Delivery Architecture,  , Buildmaster Architecture, System Architecture
 @subsection Status Delivery Architecture
@@ -2021,6 +2023,7 @@ understand how to fill in each section properly.
 * Testing the Config File::
 * Defining the Project::
 * Change Sources and Schedulers::
+* Merging BuildRequests::
 * Setting the slaveport::
 * Buildslave Specifiers::
 * Defining Global Properties::
@@ -2207,7 +2210,7 @@ available to queriers (over IRC) who want to find out where to get
 more information about this buildbot.
 
 
-@node Change Sources and Schedulers, Setting the slaveport, Defining the Project, Configuration
+@node Change Sources and Schedulers, Merging BuildRequests, Defining the Project, Configuration
 @section Change Sources and Schedulers
 
 @bcindex c['sources']
@@ -2654,7 +2657,57 @@ f.addStep(trigger.Trigger('package', schedulers=['package-all-platforms'],
                                      waitForFinish=True)
 @end example
 
-@node Setting the slaveport, Buildslave Specifiers, Change Sources and Schedulers, Configuration
+@node Merging BuildRequests, Setting the slaveport, Change Sources and Schedulers, Configuration
+@section Merging BuildRequests
+
+@bcindex c['mergeMatchingRequests']
+@bcindex c['mergeMatchingReasons']
+@bcindex c['mergeMatchingProperties']
+@bcindex c['loadMaster']
+
+By default, buildbot merges BuildRequests that have the compatible
+SourceStamps. Starting with 0.7.10, this behaviour can be customized to,
+for example, only merge when the reasons match as well, or if the build
+properties don't differ.
+
+@quotation Note
+This feature is experimental, please provide feedback in the mailing
+list on this. Future versions of buildbot might change the way this
+functionality is exposed, too.
+@end quotation
+
+The default behaviour to merge BuildRequests with matching SourceStamps
+can be overwritten by setting
+
+@example
+c['mergeMatchingRequests'] = False
+@end example
+
+Be cautious when doing that, as most VC steps will exhibit unexpected
+behaviour when given Changes with mismatching branches.
+
+To customize the behaviour such that only BuildRequests with the same
+reason get merged, set
+@example
+c['mergeMatchingReasons'] = True
+@end example
+
+Another criteria on which merging can be controlled are build
+properties, to switch those on set
+@example
+c['mergeMatchingProperties'] = True
+@end example
+
+These settings can be combined to only merge BuildRequests with matching
+SourceStamps @emph{and} matching build properties. All settings are
+taking effect on all builders. If you need a higher level of
+customization, you can specify your own class instance,
+
+@example
+c['loadMaster'] = MyLoadMaster()
+@end example
+
+@node Setting the slaveport, Buildslave Specifiers, Merging BuildRequests, Configuration
 @section Setting the slaveport
 
 @bcindex c['slavePortnum']
