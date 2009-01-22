@@ -2407,11 +2407,18 @@ class MercurialHelper(BaseHelper):
         rmdirRecursive(workdir)
 
 class MercurialServerPP(protocol.ProcessProtocol):
+    def __init__(self):
+        self.wait = defer.Deferred()
+    
     def outReceived(self, data):
         log.msg("hg-serve-stdout: %s" % (data,))
     def errReceived(self, data):
         print "HG-SERVE-STDERR:", data
         log.msg("hg-serve-stderr: %s" % (data,))
+    def processEnded(self, reason):
+        log.msg("hg-serve ended: %s" % reason)
+        self.wait.callback(None)
+        
 
 class Mercurial(VCBase, unittest.TestCase):
     vc_name = "hg"
@@ -2423,6 +2430,7 @@ class Mercurial(VCBase, unittest.TestCase):
     has_got_revision = True
     _hg_server = None
     _wait_for_server_poller = None
+    _pp = None
 
     def testCheckout(self):
         self.helper.vcargs = { 'repourl': self.helper.rep_trunk }
@@ -2463,10 +2471,11 @@ class Mercurial(VCBase, unittest.TestCase):
         # "listening at" message to know when it's safe to start the test.
         # Instead, poll every second until a getPage works.
 
-        pp = MercurialServerPP() # logs+discards everything
+        self._pp = MercurialServerPP() # logs+discards everything
+        
         # this serves one tree at a time, so we serve trunk. TODO: test hg's
         # in-repo branches, for which a single tree will hold all branches.
-        self._hg_server = reactor.spawnProcess(pp, self.helper.vcexe, args,
+        self._hg_server = reactor.spawnProcess(self._pp, self.helper.vcexe, args,
                                                os.environ,
                                                self.helper.rep_trunk)
         log.msg("waiting for hg serve to start")
@@ -2491,12 +2500,17 @@ class Mercurial(VCBase, unittest.TestCase):
             if self._wait_for_server_poller.running:
                 self._wait_for_server_poller.stop()
         if self._hg_server:
+            self._hg_server.loseConnection()
             try:
                 self._hg_server.signalProcess("KILL")
             except error.ProcessExitedAlready:
                 pass
             self._hg_server = None
         return VCBase.tearDown(self)
+    
+    def tearDown2(self):
+        if self._pp:
+            return self._pp.wait
 
     def testCheckoutHTTP(self):
         d = self.serveHTTP()
@@ -2647,14 +2661,14 @@ class MercurialInRepo(Mercurial):
         # "listening at" message to know when it's safe to start the test.
         # Instead, poll every second until a getPage works.
 
-        pp = MercurialServerPP() # logs+discards everything
+        self._pp = MercurialServerPP() # logs+discards everything
         # this serves one tree at a time, so we serve trunk. TODO: test hg's
         # in-repo branches, for which a single tree will hold all branches.
-        self._hg_server = reactor.spawnProcess(pp, self.helper.vcexe, args,
+        self._hg_server = reactor.spawnProcess(self._pp, self.helper.vcexe, args,
                                                os.environ,
                                                self.helper.repo)
         log.msg("waiting for hg serve to start")
-        done_d = defer.Deferred()
+        done_d = defer.Deferred()        
         def poll():
             d = client.getPage("http://localhost:%d/" % self.httpPort)
             def success(res):
@@ -2675,12 +2689,17 @@ class MercurialInRepo(Mercurial):
             if self._wait_for_server_poller.running:
                 self._wait_for_server_poller.stop()
         if self._hg_server:
+            self._hg_server.loseConnection()
             try:
                 self._hg_server.signalProcess("KILL")
             except error.ProcessExitedAlready:
                 pass
             self._hg_server = None
         return VCBase.tearDown(self)
+    
+    def tearDown2(self):
+        if self._pp:
+            return self._pp.wait
 
     def testCheckoutHTTP(self):
         d = self.serveHTTP()
