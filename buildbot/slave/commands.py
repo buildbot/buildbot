@@ -1231,9 +1231,7 @@ class SourceBase(Command):
                                            ".buildbot-sourcedata")
 
         d = defer.succeed(None)
-        # do we need to clobber anything?
-        if self.mode in ("copy", "clobber", "export"):
-            d.addCallback(self.doClobber, self.workdir)
+        self.maybeClobber(d)
         if not (self.sourcedirIsUpdateable() and self.sourcedataMatches()):
             # the directory cannot be updated, so we have to clobber it.
             # Perhaps the master just changed modes from 'export' to
@@ -1248,6 +1246,11 @@ class SourceBase(Command):
             d.addCallback(self.doPatch)
         d.addCallbacks(self._sendRC, self._checkAbandoned)
         return d
+
+    def maybeClobber(self, d):
+        # do we need to clobber anything?
+        if self.mode in ("copy", "clobber", "export"):
+            d.addCallback(self.doClobber, self.workdir)
 
     def interrupt(self):
         self.interrupted = True
@@ -1362,6 +1365,7 @@ class SourceBase(Command):
                 self.sendStatus({'header': msg + "\n"})
                 log.msg(msg)
                 d = defer.Deferred()
+                self.maybeClobber(d)
                 d.addCallback(lambda res: self.doVCFull())
                 d.addBoth(self.maybeDoVCRetry)
                 reactor.callLater(delay, d.callback, None)
