@@ -212,6 +212,30 @@ class GitExtractor(SourceStampExtractor):
         d.addCallback(self.parseStatus)
         return d
 
+    def readConfig(self):
+        d = self.dovc(["config", "-l"])
+        d.addCallback(self.parseConfig)
+        return d
+
+    def parseConfig(self, res):
+        git_config = {}
+        for l in res.split("\n"):
+            if l.strip():
+                parts = l.strip().split("=", 2)
+                git_config[parts[0]] = parts[1]
+
+        # If we're tracking a remote, consider that the base.
+        remote = git_config.get("branch." + self.branch + ".remote")
+        ref = git_config.get("branch." + self.branch + ".merge")
+        if remote and ref:
+            remote_branch = ref.split("/", 3)[-1]
+            d = self.dovc(["rev-parse", remote + "/" + remote_branch])
+            d.addCallback(self.override_baserev)
+            return d
+
+    def override_baserev(self, res):
+        self.baserev = res.strip()
+
     def parseStatus(self, res):
         # The current branch is marked by '*' at the start of the
         # line, followed by the branch name and the SHA1.
@@ -221,7 +245,7 @@ class GitExtractor(SourceStampExtractor):
         if m:
             self.branch = m.group(1)
             self.baserev = m.group(2)
-            return
+            return self.readConfig()
         raise IndexError("Could not find current GIT branch: %s" % res)
 
     def getPatch(self, res):
