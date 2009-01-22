@@ -77,10 +77,7 @@ class BuildRequest:
         self.status = BuildRequestStatus(source, builderName)
 
     def canBeMergedWith(self, other):
-        # only merge requests with the same reason
-        # otherwise, there's no way to force repeated builds of the same source
-        return (self.reason == other.reason and
-                self.source.canBeMergedWith(other.source))
+        return self.source.canBeMergedWith(other.source)
 
     def mergeWith(self, others):
         return self.source.mergeWith([o.source for o in others])
