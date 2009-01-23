@@ -1785,7 +1785,7 @@ A @code{Builder} which is used to perform OS-X builds (as opposed to
 Linux or Solaris builds) should naturally be associated with an
 OS-X-based buildslave.
 
-A @code{Builder} may be given a set of environments variables to be used
+A @code{Builder} may be given a set of environment variables to be used
 in its @pxref{ShellCommand}s. These variables will override anything in the
 buildslave's environment. Variables passed directly to a ShellCommand will
 override variables of the same name passed to the Builder.
@@ -4968,6 +4968,11 @@ The preferred way to specify the command is with a list of argv strings,
 since this allows for spaces in filenames and avoids doing any fragile
 shell-escaping. You can also specify the command with a single string, in
 which case the string is given to '/bin/sh -c COMMAND' for parsing.
+
+On Windows, commands are run via @code{cmd.exe /c} which works well. However,
+if you're running a batch file, the error level does not get propagated
+correctly unless you add 'call' before your batch file's name:
+@code{cmd=['call', 'myfile.bat', ...]}.
 
 All ShellCommands are run by default in the ``workdir'', which
 defaults to the ``@file{build}'' subdirectory of the slave builder's
