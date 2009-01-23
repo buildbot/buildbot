@@ -2368,7 +2368,54 @@ class Mercurial(SourceBase):
 registerSlaveCommand("hg", Mercurial, command_version)
 
 
-class P4(SourceBase):
+class P4Base(SourceBase):
+    """Base class for P4 source-updaters
+
+    ['p4port'] (required): host:port for server to access
+    ['p4user'] (optional): user to use for access
+    ['p4passwd'] (optional): passwd to try for the user
+    ['p4client'] (optional): client spec to use
+    """
+    def setup(self, args):
+        SourceBase.setup(self, args)
+        self.p4port = args['p4port']
+        self.p4client = args['p4client']
+        self.p4user = args['p4user']
+        self.p4passwd = args['p4passwd']
+
+    def parseGotRevision(self):
+        # Executes a p4 command that will give us the latest changelist number
+        # of any file under the current (or default) client:
+        command = ['p4']
+        if self.p4port:
+            command.extend(['-p', self.p4port])
+        if self.p4user:
+            command.extend(['-u', self.p4user])
+        if self.p4passwd:
+            command.extend(['-P', self.p4passwd])
+        if self.p4client:
+            command.extend(['-c', self.p4client])
+        command.extend(['changes', '-m', '1', '#have'])
+        c = ShellCommand(self.builder, command, self.builder.basedir,
+                         environ=self.env, timeout=self.timeout,
+                         sendStdout=True, sendStderr=False, sendRC=False,
+                         keepStdout=True)
+        self.command = c
+        d = c.start()
+
+        def _parse(res):
+            # 'p4 -c clien-name change -m 1 "#have"' will produce an output like:
+            # "Change 28147 on 2008/04/07 by p4user@hostname..."
+            # The number after "Change" is the one we want.
+            m = re.match('Change\s+(\d+)\s+', c.stdout)
+            if m:
+                return m.group(1)
+            return None
+        d.addCallback(_parse)
+        return d
+
+
+class P4(P4Base):
     """A P4 source-updater.
 
     ['p4port'] (required): host:port for server to access
@@ -2381,11 +2428,7 @@ class P4(SourceBase):
     header = "p4"
 
     def setup(self, args):
-        SourceBase.setup(self, args)
-        self.p4port = args['p4port']
-        self.p4client = args['p4client']
-        self.p4user = args['p4user']
-        self.p4passwd = args['p4passwd']
+        P4Base.setup(self, args)
         self.p4base = args['p4base']
         self.p4extra_views = args['p4extra_views']
         self.p4mode = args['mode']
@@ -2489,7 +2532,7 @@ class P4(SourceBase):
 registerSlaveCommand("p4", P4, command_version)
 
 
-class P4Sync(SourceBase):
+class P4Sync(P4Base):
     """A partial P4 source-updater. Requires manual setup of a per-slave P4
     environment. The only thing which comes from the master is P4PORT.
     'mode' is required to be 'copy'.
@@ -2503,12 +2546,8 @@ class P4Sync(SourceBase):
     header = "p4 sync"
 
     def setup(self, args):
-        SourceBase.setup(self, args)
+        P4Base.setup(self, args)
         self.vcexe = getCommand("p4")
-        self.p4port = args['p4port']
-        self.p4user = args['p4user']
-        self.p4passwd = args['p4passwd']
-        self.p4client = args['p4client']
 
     def sourcedirIsUpdateable(self):
         return True
