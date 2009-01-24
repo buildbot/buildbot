@@ -1231,9 +1231,7 @@ class SourceBase(Command):
                                            ".buildbot-sourcedata")
 
         d = defer.succeed(None)
-        # do we need to clobber anything?
-        if self.mode in ("copy", "clobber", "export"):
-            d.addCallback(self.doClobber, self.workdir)
+        self.maybeClobber(d)
         if not (self.sourcedirIsUpdateable() and self.sourcedataMatches()):
             # the directory cannot be updated, so we have to clobber it.
             # Perhaps the master just changed modes from 'export' to
@@ -1248,6 +1246,11 @@ class SourceBase(Command):
             d.addCallback(self.doPatch)
         d.addCallbacks(self._sendRC, self._checkAbandoned)
         return d
+
+    def maybeClobber(self, d):
+        # do we need to clobber anything?
+        if self.mode in ("copy", "clobber", "export"):
+            d.addCallback(self.doClobber, self.workdir)
 
     def interrupt(self):
         self.interrupted = True
@@ -1362,6 +1365,7 @@ class SourceBase(Command):
                 self.sendStatus({'header': msg + "\n"})
                 log.msg(msg)
                 d = defer.Deferred()
+                self.maybeClobber(d)
                 d.addCallback(lambda res: self.doVCFull())
                 d.addBoth(self.maybeDoVCRetry)
                 reactor.callLater(delay, d.callback, None)
@@ -2246,15 +2250,14 @@ class Mercurial(SourceBase):
 
     def doVCUpdate(self):
         d = os.path.join(self.builder.basedir, self.srcdir)
-        command = [self.vcexe, 'pull', '--update', '--verbose']
-        if self.args.get('revision'):
-            command.extend(['--rev', self.args['revision']])
+        command = [self.vcexe, 'pull', '--verbose', self.repourl]
         c = ShellCommand(self.builder, command, d,
                          sendRC=False, timeout=self.timeout,
                          keepStdout=True)
         self.command = c
         d = c.start()
         d.addCallback(self._handleEmptyUpdate)
+        d.addCallback(self._update)
         return d
 
     def _handleEmptyUpdate(self, res):
@@ -2269,37 +2272,83 @@ class Mercurial(SourceBase):
 
     def doVCFull(self):
         d = os.path.join(self.builder.basedir, self.srcdir)
-        command = [self.vcexe, 'clone', '-U']
-        command.extend([self.repourl, d])
+        command = [self.vcexe, 'init', d]
         c = ShellCommand(self.builder, command, self.builder.basedir,
                          sendRC=False, timeout=self.timeout)
         self.command = c
         cmd1 = c.start()
 
-        def _update(res):
-            updatecmd=[self.vcexe, 'update', '--repository', d]
-            if self.args.get('revision'):
-                updatecmd.extend(['--rev', self.args['revision']])
-            else:
-                updatecmd.extend(['--rev', self.args.get('branch',  'default')])
-            self.command = ShellCommand(self.builder, updatecmd,
-                self.builder.basedir, sendRC=False, timeout=self.timeout)
-            return self.command.start()
-
-        cmd1.addCallback(_update)
+        def _vcupdate(res):
+            return self.doVCUpdate()
+        
+        cmd1.addCallback(_vcupdate)
         return cmd1
 
-    def _updateToDesiredRevision(self, res):
-        assert self.args.get('revision')
-        newdir = os.path.join(self.builder.basedir, self.srcdir)
-        # hg-0.9.1 and earlier (which need this fallback) also want to see
-        # 'hg update REV' instead of 'hg update --rev REV'. Note that this is
-        # the only place we use 'hg update', since what most VC tools mean
-        # by, say, 'cvs update' is expressed as 'hg pull --update' instead.
-        command = [self.vcexe, 'update', self.args['revision']]
-        c = ShellCommand(self.builder, command, newdir,
-                         sendRC=False, timeout=self.timeout)
-        return c.start()
+    def _update(self, res):
+        if res != 0:
+            return res
+                
+        # compare current branch to update
+        self.update_branch = self.args.get('branch',  'default')
+
+        d = os.path.join(self.builder.basedir, self.srcdir)
+        parentscmd = [self.vcexe, 'identify', '--num', '--branch']
+        cmd = ShellCommand(self.builder, parentscmd, d,
+                           sendStdout=False, sendStderr=False, keepStdout=True, keepStderr=True)
+        
+        def _parse(res):
+            if res != 0:
+                msg = "'hg identify' failed: %s\n%s" % (cmd.stdout, cmd.stderr)
+                self.sendStatus({'header': msg + "\n"})
+                log.msg(msg)
+                return res
+            
+            log.msg('Output: %s' % cmd.stdout)
+                        
+            match = re.search(r'^(.+) (.+)$', cmd.stdout)
+            assert match
+            
+            rev = match.group(1)
+            current_branch = match.group(2)
+            
+            if rev == '-1':
+                msg = "Fresh hg repo, don't worry about branch"
+                log.msg(msg)
+                        
+            elif self.update_branch != current_branch:
+                msg = "Working dir is on branch '%s' and build needs '%s'. Clobbering." % (current_branch, self.update_branch)
+                self.sendStatus({'header': msg + "\n"})
+                log.msg(msg)
+                
+                def _vcfull(res):
+                    return self.doVCFull()
+                
+                d = self.doClobber(None, self.srcdir)                
+                d.addCallback(_vcfull)
+                return d
+                
+            else:
+                msg = "Working dir on same branch as build (%s)." % (current_branch)
+                log.msg(msg)
+                        
+            return 0            
+        
+        c = cmd.start()                
+        c.addCallback(_parse)
+        c.addCallback(self._update2)
+        return c
+        
+    def _update2(self, res):                        
+        d = os.path.join(self.builder.basedir, self.srcdir)
+
+        updatecmd=[self.vcexe, 'update', '--clean', '--repository', d]
+        if self.args.get('revision'):
+            updatecmd.extend(['--rev', self.args['revision']])
+        else:
+            updatecmd.extend(['--rev', self.args.get('branch',  'default')])
+        self.command = ShellCommand(self.builder, updatecmd,
+            self.builder.basedir, sendRC=False, timeout=self.timeout)
+        return self.command.start()
 
     def parseGotRevision(self):
         # we use 'hg identify' to find out what we wound up with
@@ -2319,7 +2368,54 @@ class Mercurial(SourceBase):
 registerSlaveCommand("hg", Mercurial, command_version)
 
 
-class P4(SourceBase):
+class P4Base(SourceBase):
+    """Base class for P4 source-updaters
+
+    ['p4port'] (required): host:port for server to access
+    ['p4user'] (optional): user to use for access
+    ['p4passwd'] (optional): passwd to try for the user
+    ['p4client'] (optional): client spec to use
+    """
+    def setup(self, args):
+        SourceBase.setup(self, args)
+        self.p4port = args['p4port']
+        self.p4client = args['p4client']
+        self.p4user = args['p4user']
+        self.p4passwd = args['p4passwd']
+
+    def parseGotRevision(self):
+        # Executes a p4 command that will give us the latest changelist number
+        # of any file under the current (or default) client:
+        command = ['p4']
+        if self.p4port:
+            command.extend(['-p', self.p4port])
+        if self.p4user:
+            command.extend(['-u', self.p4user])
+        if self.p4passwd:
+            command.extend(['-P', self.p4passwd])
+        if self.p4client:
+            command.extend(['-c', self.p4client])
+        command.extend(['changes', '-m', '1', '#have'])
+        c = ShellCommand(self.builder, command, self.builder.basedir,
+                         environ=self.env, timeout=self.timeout,
+                         sendStdout=True, sendStderr=False, sendRC=False,
+                         keepStdout=True)
+        self.command = c
+        d = c.start()
+
+        def _parse(res):
+            # 'p4 -c clien-name change -m 1 "#have"' will produce an output like:
+            # "Change 28147 on 2008/04/07 by p4user@hostname..."
+            # The number after "Change" is the one we want.
+            m = re.match('Change\s+(\d+)\s+', c.stdout)
+            if m:
+                return m.group(1)
+            return None
+        d.addCallback(_parse)
+        return d
+
+
+class P4(P4Base):
     """A P4 source-updater.
 
     ['p4port'] (required): host:port for server to access
@@ -2332,11 +2428,7 @@ class P4(SourceBase):
     header = "p4"
 
     def setup(self, args):
-        SourceBase.setup(self, args)
-        self.p4port = args['p4port']
-        self.p4client = args['p4client']
-        self.p4user = args['p4user']
-        self.p4passwd = args['p4passwd']
+        P4Base.setup(self, args)
         self.p4base = args['p4base']
         self.p4extra_views = args['p4extra_views']
         self.p4mode = args['mode']
@@ -2440,7 +2532,7 @@ class P4(SourceBase):
 registerSlaveCommand("p4", P4, command_version)
 
 
-class P4Sync(SourceBase):
+class P4Sync(P4Base):
     """A partial P4 source-updater. Requires manual setup of a per-slave P4
     environment. The only thing which comes from the master is P4PORT.
     'mode' is required to be 'copy'.
@@ -2454,12 +2546,8 @@ class P4Sync(SourceBase):
     header = "p4 sync"
 
     def setup(self, args):
-        SourceBase.setup(self, args)
+        P4Base.setup(self, args)
         self.vcexe = getCommand("p4")
-        self.p4port = args['p4port']
-        self.p4user = args['p4user']
-        self.p4passwd = args['p4passwd']
-        self.p4client = args['p4client']
 
     def sourcedirIsUpdateable(self):
         return True
