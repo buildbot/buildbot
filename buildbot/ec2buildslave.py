@@ -21,6 +21,7 @@ from buildbot import interfaces
 class EC2LatentBuildSlave(AbstractLatentBuildSlave):
 
     instance = image = None
+    _poll_resolution = 5 # hook point for tests
 
     def __init__(self, name, password, instance_type, ami=None,
                  valid_ami_owners=None, valid_ami_location_regex=None,
@@ -33,9 +34,9 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
         AbstractLatentBuildSlave.__init__(
             self, name, password, max_builds, notify_on_missing,
             missing_timeout, build_wait_timeout, properties)
-        if ((ami is not None) ^
-            (valid_ami_owners is not None or
-             valid_ami_location_regex is not None)):
+        if not ((ami is not None) ^
+                (valid_ami_owners is not None or
+                 valid_ami_location_regex is not None)):
             raise ValueError(
                 'You must provide either a specific ami, or one or both of '
                 'valid_ami_location_regex and valid_ami_owners')
@@ -131,7 +132,7 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
 
         # get the image
         if self.ami is not None:
-            self.image = self.conn.get_image(self.machine_id)
+            self.image = self.conn.get_image(self.ami)
         else:
             # verify we have access to at least one acceptable image
             discard = self.get_image()
@@ -205,7 +206,7 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
         log.msg('%s %s starting instance %s' %
                 (self.__class__.__name__, self.slavename, self.instance.id))
         duration = 0
-        interval = 5
+        interval = self._poll_resolution
         while self.instance.state == 'pending':
             time.sleep(interval)
             duration += interval
@@ -260,7 +261,7 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
             log.msg('%s %s terminating instance %s' %
                     (self.__class__.__name__, self.slavename, instance.id))
         duration = 0
-        interval = 5
+        interval = self._poll_resolution
         while instance.state != 'terminated':
             time.sleep(interval)
             duration += interval

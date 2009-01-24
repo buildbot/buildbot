@@ -284,6 +284,7 @@ c['builders'] = [
     ]
 """
 
+
 class LatentSlave(RunMixin, unittest.TestCase):
 
     def setUp(self):
@@ -540,7 +541,6 @@ class LatentSlave(RunMixin, unittest.TestCase):
         self.assertIdentical(self.bot1.slave, None)
         self.failIf(self.bot1.substantiated)
 
-
     def testPing(self):
         # While a latent slave pings normally when it is substantiated, (as
         # happens behind the scene when a build is request), when
@@ -564,6 +564,7 @@ class LatentSlave(RunMixin, unittest.TestCase):
         self.failIf(self.bot1.substantiated)
         self.assertIdentical(self.bot2.slave, None)
         self.failIf(self.bot2.substantiated)
+
 
 class SlaveBusyness(RunMixin, unittest.TestCase):
 
