@@ -2,7 +2,7 @@
 
 from twisted.trial import unittest
 from twisted.internet import defer, reactor
-from twisted.python import log, runtime
+from twisted.python import log, runtime, failure
 
 from buildbot.buildslave import AbstractLatentBuildSlave
 from buildbot.test.runutils import RunMixin
@@ -205,12 +205,21 @@ class FakeLatentBuildSlave(AbstractLatentBuildSlave):
 
     testcase = None
     stop_wait = None
+    start_message = None
+    stopped = testing_substantiation_timeout = False
 
     def start_instance(self):
         # responsible for starting instance that will try to connect with
         # this master
+        # simulate having to do some work.
+        d = defer.Deferred()
+        if not self.testing_substantiation_timeout:
+            reactor.callLater(0, self._start_instance, d)
+        return d
+
+    def _start_instance(self, d):
         self.testcase.connectOneSlave(self.slavename)
-        return defer.succeed(None)
+        d.callback(self.start_message)
 
     def stop_instance(self):
         # responsible for shutting down instance
@@ -218,6 +227,10 @@ class FakeLatentBuildSlave(AbstractLatentBuildSlave):
 
         # simulate this by replacing the slave Broker's .dataReceived method
         # with one that just throws away all data.
+        if self.slavename not in self.testcase.slaves:
+            assert self.testing_substantiation_timeout
+            self.stopped = True
+            return defer.succeed(None)
         d = defer.Deferred()
         if self.stop_wait is None:
             self._stop_instance(d)
@@ -238,7 +251,6 @@ class FakeLatentBuildSlave(AbstractLatentBuildSlave):
             broker.dataReceived = discard # seal its ears
             broker.transport.write = discard # and take away its voice
         # also discourage it from reconnecting once the connection goes away
-        assert s.bf.continueTrying
         s.bf.continueTrying = False
         # stop the service for cleanliness
         s.stopService()
@@ -325,6 +337,13 @@ class LatentSlave(RunMixin, unittest.TestCase):
         self.b1.CHOOSE_SLAVES_RANDOMLY = False
 
         self.build_deferred = self.doBuild("b1")
+        # now there's an event waiting for the slave to substantiate.
+        e = self.b1.builder_status.getEvent(-1)
+        self.assertEqual(e.text, ['substantiating'])
+        self.assertEqual(e.color, 'yellow')
+        # the substantiation_deferred is an internal stash of a deferred
+        # that we'll grab so we can find the point at which the slave is
+        # substantiated but the build has not yet started.
         d = self.bot1.substantiation_deferred
         self.assertNotIdentical(d, None)
         d.addCallback(self._testSequence_2)
@@ -332,7 +351,12 @@ class LatentSlave(RunMixin, unittest.TestCase):
     def _testSequence_2(self, res):
         # bot 1 is substantiated.
         self.assertNotIdentical(self.bot1.slave, None)
-        self.assert_(self.bot1.substantiated)
+        self.failUnless(self.bot1.substantiated)
+        # the event has announced it's success
+        e = self.b1.builder_status.getEvent(-1)
+        self.assertEqual(e.text, ['substantiate', 'success'])
+        self.assertEqual(e.color, 'green')
+        self.assertNotIdentical(e.finished, None)
         # now we'll wait for the build to complete
         d = self.build_deferred
         del self.build_deferred
@@ -343,19 +367,23 @@ class LatentSlave(RunMixin, unittest.TestCase):
         self.failUnlessEqual(res.getResults(), SUCCESS)
         self.failUnlessEqual(res.getSlavename(), "bot1")
         # bot1 is substantiated now.  bot2 has not.
-        self.assert_(self.bot1.substantiated)
-        self.assertNot(self.bot2.substantiated)
+        self.failUnless(self.bot1.substantiated)
+        self.failIf(self.bot2.substantiated)
         # bot1 is waiting a bit to see if there will be another build before
         # it shuts down the instance ("insubstantiates")
         self.build_wait_timer = self.bot1.build_wait_timer
         self.assertNotIdentical(self.build_wait_timer, None)
-        self.assert_(self.build_wait_timer.active())
+        self.failUnless(self.build_wait_timer.active())
         self.assertApproximates(
             self.bot1.build_wait_timeout,
             self.build_wait_timer.time - runtime.seconds(),
             2)
         # now we'll do another build
         d = self.doBuild("b1")
+        # the slave is already substantiated, so no event is created
+        e = self.b1.builder_status.getEvent(-1)
+        self.assertNotEqual(e.text, ['substantiating'])
+        # wait for the next build
         d.addCallback(self._testSequence_4)
         return d
     def _testSequence_4(self, res):
@@ -384,12 +412,29 @@ class LatentSlave(RunMixin, unittest.TestCase):
         # Now we'll start up another build, to show that the shutdown left
         # things in such a state that we can restart.
         d = self.doBuild("b1")
+        # the bot can return an informative message on success that the event
+        # will render.  Let's use a mechanism of our test latent bot to
+        # demonstrate that.
+        self.bot1.start_message = ['[instance id]', '[start-up time]']
+        # here's our event again:
+        self.e = self.b1.builder_status.getEvent(-1)
+        self.assertEqual(self.e.text, ['substantiating'])
+        self.assertEqual(self.e.color, 'yellow')
         d.addCallback(self._testSequence_6)
         return d
     def _testSequence_6(self, res):
         # build was a success!
         self.failUnlessEqual(res.getResults(), SUCCESS)
         self.failUnlessEqual(res.getSlavename(), "bot1")
+        # the event has announced it's success.  (Just imagine that
+        # [instance id] and [start-up time] were actually valuable
+        # information.)
+        e = self.e
+        del self.e
+        self.assertEqual(
+            e.text,
+            ['substantiate', 'success', '[instance id]', '[start-up time]'])
+        self.assertEqual(e.color, 'green')
         # Now we need to clean up the timer.  We could just cancel it, but
         # we'll go through the full dance once more time to show we can.
         # We'll set the timer to fire sooner, and wait for it to fire.
@@ -410,8 +455,94 @@ class LatentSlave(RunMixin, unittest.TestCase):
         reactor.callLater(1, d.callback, None)
         return d
 
+    def testNeverSubstantiated(self):
+        # When a substantiation is requested, the slave may never appear.
+        # This is a serious problem, and recovering from it is not really
+        # handled well right now (in part because a way to handle it is not
+        # clear).  However, at the least, the status event will show a
+        # failure, and the slave will be told to insubstantiate, and to be
+        # removed from the botmaster as anavailable slave.
+        # This tells our test bot to never start, and to not complain about
+        # being told to stop without ever starting
+        self.bot1.testing_substantiation_timeout = True
+        # normally (by default) we have 20 minutes to try and connect to the
+        # remote
+        self.assertEqual(self.bot1.missing_timeout, 20*60)
+        # for testing purposes, we'll put that down to a tenth of a second!
+        self.bot1.missing_timeout = 0.1
+        # since the current scheduling algorithm is simple and does not
+        # rotate or attempt any sort of load-balancing, two builds in
+        # sequence should both use the first slave. This may change later if
+        # we move to a more sophisticated scheme.
+        self.b1.CHOOSE_SLAVES_RANDOMLY = False
+        # start a build
+        self.build_deferred = self.doBuild('b1')
+        # the event tells us we are instantiating, as usual
+        e = self.b1.builder_status.getEvent(-1)
+        self.assertEqual(e.text, ['substantiating'])
+        self.assertEqual(e.color, 'yellow')
+        # we'll see in a moment that the test flag we have to show that the
+        # bot was told to insubstantiate has been fired.  Here, we just verify
+        # that it is ready to be fired.
+        self.failIf(self.bot1.stopped)
+        # That substantiation is going to fail.  Let's wait for it.
+        d = self.bot1.substantiation_deferred
+        self.assertNotIdentical(d, None)
+        d.addCallbacks(self._testNeverSubstantiated_BadSuccess,
+                       self._testNeverSubstantiated_1)
+        return d
+    def _testNeverSubstantiated_BadSuccess(self, res):
+        self.fail('we should not have succeeded here.')
+    def _testNeverSubstantiated_1(self, res):
+        # ok, we failed.
+        self.assertIdentical(self.bot1.slave, None)
+        self.failIf(self.bot1.substantiated)
+        self.assertIsInstance(res, failure.Failure)
+        self.assertIdentical(self.bot1.substantiation_deferred, None)
+        # our event informs us of this
+        e1 = self.b1.builder_status.getEvent(-3)
+        self.assertEqual(e1.text, ['substantiate', 'failed'])
+        self.assertEqual(e1.color, 'red')
+        self.assertNotIdentical(e1.finished, None)
+        # the slave is no longer available to build.  The events show it...
+        e2 = self.b1.builder_status.getEvent(-2)
+        self.assertEqual(e2.text, ['removing', 'latent', 'bot1'])
+        e3 = self.b1.builder_status.getEvent(-1)
+        self.assertEqual(e3.text, ['disconnect', 'bot1'])
+        # ...and the builder shows it.
+        self.assertEqual(['bot2'],
+                         [sb.slave.slavename for sb in self.b1.slaves])
+        # ideally, we would retry the build, but that infrastructure (which
+        # would be used for other situations in the builder as well) does not
+        # yet exist.  Therefore the build never completes one way or the
+        # other, just as if a normal slave detached.
+
+    def testServiceStop(self):
+        # if the slave has an instance when it is stopped, the slave should
+        # be told to shut down.
+        self.b1.CHOOSE_SLAVES_RANDOMLY = False
+        d = self.doBuild("b1")
+        d.addCallback(self._testServiceStop_1)
+        return d
+    def _testServiceStop_1(self, res):
+        # build was a success!
+        self.failUnlessEqual(res.getResults(), SUCCESS)
+        self.failUnlessEqual(res.getSlavename(), "bot1")
+        # bot 1 is substantiated.
+        self.assertNotIdentical(self.bot1.slave, None)
+        self.failUnless(self.bot1.substantiated)
+        # now let's stop the bot.
+        d = self.bot1.stopService()
+        d.addCallback(self._testServiceStop_2)
+        return d
+    def _testServiceStop_2(self, res):
+        # bot 1 is NOT substantiated.
+        self.assertIdentical(self.bot1.slave, None)
+        self.failIf(self.bot1.substantiated)
+
+
     def testPing(self):
-        # while a latent slave pings normally when it is substantiated, (as
+        # While a latent slave pings normally when it is substantiated, (as
         # happens behind the scene when a build is request), when
         # it is insubstantial, the ping is a no-op success.
         self.assertIdentical(self.bot1.slave, None)

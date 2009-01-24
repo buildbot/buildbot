@@ -243,8 +243,29 @@ class LatentSlaveBuilder(AbstractSlaveBuilder):
         log.msg("Latent buildslave %s attached to %s" % (slave.slavename,
                                                          self.builder_name))
 
-    def substantiate(self):
-        return self.slave.substantiate(self)
+    def substantiate(self, build):
+        d = self.slave.substantiate(self)
+        if not self.slave.substantiated:
+            event = self.builder.builder_status.addEvent(
+                ["substantiating"], "yellow")
+            def substantiated(res):
+                msg = ["substantiate", "success"]
+                if isinstance(res, basestring):
+                    msg.append(res)
+                elif isinstance(res, (tuple, list)):
+                    msg.extend(res)
+                event.text = msg
+                event.color = "green"
+                event.finish()
+                return res
+            def substantiation_failed(res):
+                event.text = ["substantiate", "failed"]
+                event.color = "red"
+                # TODO add log of traceback to event
+                event.finish()
+                return res
+            d.addCallbacks(substantiated, substantiation_failed)
+        return d
 
     def detached(self):
         AbstractSlaveBuilder.detached(self)
@@ -644,7 +665,7 @@ class Builder(pb.Referenceable):
             self.updateBigStatus()
             return
         if self.CHOOSE_SLAVES_RANDOMLY:
-            # XXX prefer idle over latent? maybe other sorting preferences?
+            # TODO prefer idle over latent? maybe other sorting preferences?
             sb = random.choice(available_slaves)
         else:
             sb = available_slaves[0]
@@ -688,8 +709,16 @@ class Builder(pb.Referenceable):
         if isinstance(sb, LatentSlaveBuilder):
             log.msg("starting build %s.. substantiating the slave %s" %
                     (build, sb))
-            d = sb.substantiate()
-            d.addCallback(lambda res: sb.ping(self.START_BUILD_TIMEOUT))
+            d = sb.substantiate(build)
+            def substantiated(res):
+                return sb.ping(self.START_BUILD_TIMEOUT)
+            def substantiation_failed(res):
+                self.builder_status.addPointEvent(
+                    ['removing', 'latent', sb.slave.slavename])
+                sb.slave.disconnect()
+                # TODO: should failover to a new Build
+                #self.retryBuild(sb.build)
+            d.addCallbacks(substantiated, substantiation_failed)
         else:
             log.msg("starting build %s.. pinging the slave %s" % (build, sb))
             d = sb.ping(self.START_BUILD_TIMEOUT)
