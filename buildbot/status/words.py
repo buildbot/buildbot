@@ -18,6 +18,8 @@ from buildbot.status import base
 from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE, EXCEPTION
 from buildbot.scripts.runner import ForceOptions
 
+from string import join, capitalize, lower
+
 class UsageError(ValueError):
     def __init__(self, string = "Invalid usage", *more):
         ValueError.__init__(self, string, *more)
@@ -168,7 +170,7 @@ class Contact:
     command_STATUS.usage = "status [<which>] - List status of a builder (or all builders)"
 
     def validate_notification_event(self, event):
-        if not re.compile("^(started|finished|success|failed|exception|successToFailed|failedToSuccess)$").match(event):
+        if not re.compile("^(started|finished|success|failure|exception|warnings|(success|warnings|exception|failure)To(Failure|Success|Warnings|Exception))$").match(event):
             raise UsageError("try 'notify on|off <EVENT>'")
 
     def list_notified_events(self):
@@ -236,7 +238,7 @@ class Contact:
         elif len(self.notify_events) == 0 and self.subscribed:
             self.unsubscribe_from_build_events()
 
-    command_NOTIFY.usage = "notify on|off|list [<EVENT>] ... - Notify me about build events.  event should be one or more of: 'started', 'finished', 'failed', 'success', 'exception', 'successToFailed', 'failedToSuccess'"
+    command_NOTIFY.usage = "notify on|off|list [<EVENT>] ... - Notify me about build events.  event should be one or more of: 'started', 'finished', 'failure', 'success', 'exception' or 'xToY' (where x and Y are one of success, warnings, failure, exception, but Y is capitalized)"
 
     def command_WATCH(self, args, who):
         args = args.split()
@@ -310,7 +312,7 @@ class Contact:
         # only notify about builders we are interested in
         log.msg('[Contact] builder %r in category %s finished' % (builder, builder.category))
 
-        if not self.notify_for('finished', 'failed', 'success', 'exception', 'failedToSuccess', 'successToFailed'):
+        if self.notify_for('started'):
             return
 
         if (self.channel.categories != None and
@@ -328,10 +330,7 @@ class Contact:
         if buildurl:
             r += "  Build details are at %s" % buildurl
 
-        if (self.notify_for('finished')) or \
-           (self.notify_for('success') and results == SUCCESS) or \
-           (self.notify_for('failed') and results == FAILURE) or \
-           (self.notify_for('exception') and results == EXCEPTION):
+        if self.notify_for('finished') or self.notify_for(lower(results_descriptions.get(results))):
             self.send(r)
             return
 
@@ -339,8 +338,12 @@ class Contact:
         if prevBuild:
             prevResult = prevBuild.getResults()
 
-            if (self.notify_for('failedToSuccess') and prevResult == FAILURE and results == SUCCESS) or \
-               (self.notify_for('successToFailed') and prevResult == SUCCESS and results == FAILURE):
+            required_notification_control_string = join((lower(results_descriptions.get(prevResult)), \
+                                                             'To', \
+                                                             capitalize(results_descriptions.get(results))), \
+                                                            '')
+
+            if (self.notify_for(required_notification_control_string)):
                 self.send(r)
 
     def watchedBuildFinished(self, b):

@@ -7338,10 +7338,11 @@ A build finished successfully
 A build failed
 @item exception
 A build generated and exception
-@item successToFailed
-The previous build was successful, but this one failed
-@item failedToSuccess
-The previous build failed, but this one was successful
+@item xToY
+The previous build was x, but this one is Y, where x and Y are each
+one of success, warnings, failure, exception (except Y is
+capitalized).  For example: successToFailure will notify if the
+previous build was successful, but this one failed
 @end table
 
 @item help COMMAND

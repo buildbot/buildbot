@@ -1118,8 +1118,8 @@ class ContactTester(unittest.TestCase):
         self.failUnlessEqual(irc.message, "The following events are being notified: ['finished']", "off started")
 
         irc.message = ""
-        irc.command_NOTIFY("on success failed exception", "mynick")
-        self.failUnlessEqual(irc.message, "The following events are being notified: ['failed', 'finished', 'exception', 'success']", "on multiple events")
+        irc.command_NOTIFY("on success failure exception", "mynick")
+        self.failUnlessEqual(irc.message, "The following events are being notified: ['failure', 'finished', 'exception', 'success']", "on multiple events")
 
     def test_notification_default(self):
         irc = MyContact()
@@ -1210,7 +1210,7 @@ class ContactTester(unittest.TestCase):
             Change(who = 'author1', files = ['file1'], comments = 'comment1', revision = 943),
             )
 
-        irc.command_NOTIFY("on failed", "mynick")
+        irc.command_NOTIFY("on failure", "mynick")
 
         irc.message = ""
         irc.buildStarted(my_builder.getName(), my_build)
@@ -1259,67 +1259,192 @@ class ContactTester(unittest.TestCase):
         irc.buildFinished(my_builder.getName(), my_build, None)
         self.failUnlessEqual(irc.message, "", "No finish notification generated on exception with notify_events=['exception']")
 
-    def test_notification_successToFailed(self):
+    def do_x_to_y_notification_test(self, notify, previous_result, new_result, expected_msg):
         irc = MyContact()
+        irc.command_NOTIFY("on %s" % notify, "mynick")
 
         my_builder = MyBuilder("builder834")
         my_build = MyIrcBuild(my_builder, 862, builder.FAILURE)
         my_build.changes = (
             Change(who = 'author1', files = ['file1'], comments = 'comment1', revision = 943),
             )
-        previous_build = MyIrcBuild(my_builder, 861, builder.SUCCESS)
+
+        previous_build = MyIrcBuild(my_builder, 861, previous_result)
         my_build.setPreviousBuild(previous_build)
 
-        irc.command_NOTIFY("on successToFailed", "mynick")
-
         irc.message = ""
-        irc.buildStarted(my_builder.getName(), my_build)
-        self.failUnlessEqual(irc.message, "", "No started notification with notify_events=['failed']")
-
-        irc.message = ""
+        my_build.results = new_result
         irc.buildFinished(my_builder.getName(), my_build, None)
-        self.failUnlessEqual(irc.message, "build #862 of builder834 is complete: Failure [step1 step2]  Build details are at http://myserver/mypath?build=765", "Finish notification generated on failure with notify_events=['successToFailed']")
+        self.failUnlessEqual(irc.message, expected_msg, "Finish notification generated on failure with notify_events=['successToFailure']")
 
-        irc.message = ""
-        my_build.results = builder.SUCCESS
-        irc.buildFinished(my_builder.getName(), my_build, None)
-        self.failUnlessEqual(irc.message, "", "No finish notification generated on success with notify_events=['failed']")
+    def test_notification_successToFailure(self):
+        self.do_x_to_y_notification_test(notify="successToFailure", previous_result=builder.SUCCESS, new_result=builder.FAILURE,
+                                         expected_msg="build #862 of builder834 is complete: Failure [step1 step2]  Build details are at http://myserver/mypath?build=765" )
 
-        irc.message = ""
-        my_build.results = builder.EXCEPTION
-        irc.buildFinished(my_builder.getName(), my_build, None)
-        self.failUnlessEqual(irc.message, "", "No finish notification generated on exception with notify_events=['failed']")
+        self.do_x_to_y_notification_test(notify="successToFailure", previous_result=builder.SUCCESS, new_result=builder.SUCCESS,
+                                         expected_msg = "" )
 
-    def test_notification_failedToSuccess(self):
-        irc = MyContact()
+        self.do_x_to_y_notification_test(notify="successToFailure", previous_result=builder.SUCCESS, new_result=builder.WARNINGS,
+                                         expected_msg = "" )
 
-        my_builder = MyBuilder("builder834")
-        my_build = MyIrcBuild(my_builder, 862, builder.SUCCESS)
-        my_build.changes = (
-            Change(who = 'author1', files = ['file1'], comments = 'comment1', revision = 943),
-            )
-        previous_build = MyIrcBuild(my_builder, 861, builder.FAILURE)
-        my_build.setPreviousBuild(previous_build)
+        self.do_x_to_y_notification_test(notify="successToFailure", previous_result=builder.SUCCESS, new_result=builder.EXCEPTION,
+                                         expected_msg = "" )
 
-        irc.command_NOTIFY("on failedToSuccess", "mynick")
+    def test_notification_successToWarnings(self):
+        self.do_x_to_y_notification_test(notify="successToWarnings", previous_result=builder.SUCCESS, new_result=builder.WARNINGS,
+                                         expected_msg="build #862 of builder834 is complete: Warnings [step1 step2]  Build details are at http://myserver/mypath?build=765" )
 
-        irc.message = ""
-        irc.buildStarted(my_builder.getName(), my_build)
-        self.failUnlessEqual(irc.message, "", "No started notification with notify_events=['success']")
+        self.do_x_to_y_notification_test(notify="successToWarnings", previous_result=builder.SUCCESS, new_result=builder.SUCCESS,
+                                         expected_msg = "" )
 
-        irc.message = ""
-        irc.buildFinished(my_builder.getName(), my_build, None)
-        self.failUnlessEqual(irc.message, "build #862 of builder834 is complete: Success [step1 step2]  Build details are at http://myserver/mypath?build=765", "Finish notification generated on success with notify_events=['failedToSuccess']")
+        self.do_x_to_y_notification_test(notify="successToWarnings", previous_result=builder.SUCCESS, new_result=builder.FAILURE,
+                                         expected_msg = "" )
 
-        irc.message = ""
-        my_build.results = builder.FAILURE
-        irc.buildFinished(my_builder.getName(), my_build, None)
-        self.failUnlessEqual(irc.message, "", "No finish notification generated on failure with notify_events=['success']")
+        self.do_x_to_y_notification_test(notify="successToWarnings", previous_result=builder.SUCCESS, new_result=builder.EXCEPTION,
+                                         expected_msg = "" )
 
-        irc.message = ""
-        my_build.results = builder.EXCEPTION
-        irc.buildFinished(my_builder.getName(), my_build, None)
-        self.failUnlessEqual(irc.message, "", "No finish notification generated on exception with notify_events=['success']")
+    def test_notification_successToException(self):
+        self.do_x_to_y_notification_test(notify="successToException", previous_result=builder.SUCCESS, new_result=builder.EXCEPTION,
+                                         expected_msg="build #862 of builder834 is complete: Exception [step1 step2]  Build details are at http://myserver/mypath?build=765" )
+
+        self.do_x_to_y_notification_test(notify="successToException", previous_result=builder.SUCCESS, new_result=builder.SUCCESS,
+                                         expected_msg = "" )
+
+        self.do_x_to_y_notification_test(notify="successToException", previous_result=builder.SUCCESS, new_result=builder.FAILURE,
+                                         expected_msg = "" )
+
+        self.do_x_to_y_notification_test(notify="successToException", previous_result=builder.SUCCESS, new_result=builder.WARNINGS,
+                                         expected_msg = "" )
+
+
+
+
+
+    def test_notification_failureToSuccess(self):
+        self.do_x_to_y_notification_test(notify="failureToSuccess", previous_result=builder.FAILURE,new_result=builder.SUCCESS,
+                                         expected_msg="build #862 of builder834 is complete: Success [step1 step2]  Build details are at http://myserver/mypath?build=765" )
+
+        self.do_x_to_y_notification_test(notify="failureToSuccess", previous_result=builder.FAILURE,new_result=builder.FAILURE,
+                                         expected_msg = "" )
+
+        self.do_x_to_y_notification_test(notify="failureToSuccess", previous_result=builder.FAILURE,new_result=builder.WARNINGS,
+                                         expected_msg = "" )
+
+        self.do_x_to_y_notification_test(notify="failureToSuccess", previous_result=builder.FAILURE,new_result=builder.EXCEPTION,
+                                         expected_msg = "" )
+
+    def test_notification_failureToWarnings(self):
+        self.do_x_to_y_notification_test(notify="failureToWarnings", previous_result=builder.FAILURE, new_result=builder.WARNINGS,
+                                         expected_msg="build #862 of builder834 is complete: Warnings [step1 step2]  Build details are at http://myserver/mypath?build=765" )
+
+        self.do_x_to_y_notification_test(notify="failureToWarnings", previous_result=builder.FAILURE, new_result=builder.SUCCESS,
+                                         expected_msg = "" )
+
+        self.do_x_to_y_notification_test(notify="failureToWarnings", previous_result=builder.FAILURE, new_result=builder.FAILURE,
+                                         expected_msg = "" )
+
+        self.do_x_to_y_notification_test(notify="failureToWarnings", previous_result=builder.FAILURE, new_result=builder.EXCEPTION,
+                                         expected_msg = "" )
+
+    def test_notification_failureToException(self):
+        self.do_x_to_y_notification_test(notify="failureToException", previous_result=builder.FAILURE, new_result=builder.EXCEPTION,
+                                         expected_msg="build #862 of builder834 is complete: Exception [step1 step2]  Build details are at http://myserver/mypath?build=765" )
+
+        self.do_x_to_y_notification_test(notify="failureToException", previous_result=builder.FAILURE, new_result=builder.SUCCESS,
+                                         expected_msg = "" )
+
+        self.do_x_to_y_notification_test(notify="failureToException", previous_result=builder.FAILURE, new_result=builder.FAILURE,
+                                         expected_msg = "" )
+
+        self.do_x_to_y_notification_test(notify="failureToException", previous_result=builder.FAILURE, new_result=builder.WARNINGS,
+                                         expected_msg = "" )
+
+
+
+
+
+    def test_notification_warningsToFailure(self):
+        self.do_x_to_y_notification_test(notify="warningsToFailure", previous_result=builder.WARNINGS, new_result=builder.FAILURE,
+                                         expected_msg="build #862 of builder834 is complete: Failure [step1 step2]  Build details are at http://myserver/mypath?build=765" )
+
+        self.do_x_to_y_notification_test(notify="warningsToFailure", previous_result=builder.WARNINGS, new_result=builder.SUCCESS,
+                                         expected_msg = "" )
+
+        self.do_x_to_y_notification_test(notify="warningsToFailure", previous_result=builder.WARNINGS, new_result=builder.WARNINGS,
+                                         expected_msg = "" )
+
+        self.do_x_to_y_notification_test(notify="warningsToFailure", previous_result=builder.WARNINGS, new_result=builder.EXCEPTION,
+                                         expected_msg = "" )
+
+    def test_notification_warningsToSuccess(self):
+        self.do_x_to_y_notification_test(notify="warningsToSuccess", previous_result=builder.WARNINGS, new_result=builder.SUCCESS,
+                                         expected_msg="build #862 of builder834 is complete: Success [step1 step2]  Build details are at http://myserver/mypath?build=765" )
+
+        self.do_x_to_y_notification_test(notify="warningsToSuccess", previous_result=builder.WARNINGS, new_result=builder.WARNINGS,
+                                         expected_msg = "" )
+
+        self.do_x_to_y_notification_test(notify="warningsToSuccess", previous_result=builder.WARNINGS, new_result=builder.FAILURE,
+                                         expected_msg = "" )
+
+        self.do_x_to_y_notification_test(notify="warningsToSuccess", previous_result=builder.WARNINGS, new_result=builder.EXCEPTION,
+                                         expected_msg = "" )
+
+    def test_notification_warningsToException(self):
+        self.do_x_to_y_notification_test(notify="warningsToException", previous_result=builder.WARNINGS, new_result=builder.EXCEPTION,
+                                         expected_msg="build #862 of builder834 is complete: Exception [step1 step2]  Build details are at http://myserver/mypath?build=765" )
+
+        self.do_x_to_y_notification_test(notify="warningsToException", previous_result=builder.WARNINGS, new_result=builder.SUCCESS,
+                                         expected_msg = "" )
+
+        self.do_x_to_y_notification_test(notify="warningsToException", previous_result=builder.WARNINGS, new_result=builder.FAILURE,
+                                         expected_msg = "" )
+
+        self.do_x_to_y_notification_test(notify="warningsToException", previous_result=builder.WARNINGS, new_result=builder.WARNINGS,
+                                         expected_msg = "" )
+
+
+
+
+
+    def test_notification_exceptionToFailure(self):
+        self.do_x_to_y_notification_test(notify="exceptionToFailure", previous_result=builder.EXCEPTION, new_result=builder.FAILURE,
+                                         expected_msg="build #862 of builder834 is complete: Failure [step1 step2]  Build details are at http://myserver/mypath?build=765" )
+
+        self.do_x_to_y_notification_test(notify="exceptionToFailure", previous_result=builder.EXCEPTION, new_result=builder.SUCCESS,
+                                         expected_msg = "" )
+
+        self.do_x_to_y_notification_test(notify="exceptionToFailure", previous_result=builder.EXCEPTION, new_result=builder.WARNINGS,
+                                         expected_msg = "" )
+
+        self.do_x_to_y_notification_test(notify="exceptionToFailure", previous_result=builder.EXCEPTION, new_result=builder.EXCEPTION,
+                                         expected_msg = "" )
+
+    def test_notification_exceptionToWarnings(self):
+        self.do_x_to_y_notification_test(notify="exceptionToWarnings", previous_result=builder.EXCEPTION, new_result=builder.WARNINGS,
+                                         expected_msg="build #862 of builder834 is complete: Warnings [step1 step2]  Build details are at http://myserver/mypath?build=765" )
+
+        self.do_x_to_y_notification_test(notify="exceptionToWarnings", previous_result=builder.EXCEPTION, new_result=builder.SUCCESS,
+                                         expected_msg = "" )
+
+        self.do_x_to_y_notification_test(notify="exceptionToWarnings", previous_result=builder.EXCEPTION, new_result=builder.FAILURE,
+                                         expected_msg = "" )
+
+        self.do_x_to_y_notification_test(notify="exceptionToWarnings", previous_result=builder.EXCEPTION, new_result=builder.EXCEPTION,
+                                         expected_msg = "" )
+
+    def test_notification_exceptionToSuccess(self):
+        self.do_x_to_y_notification_test(notify="exceptionToSuccess", previous_result=builder.EXCEPTION, new_result=builder.SUCCESS,
+                                         expected_msg="build #862 of builder834 is complete: Success [step1 step2]  Build details are at http://myserver/mypath?build=765" )
+
+        self.do_x_to_y_notification_test(notify="exceptionToSuccess", previous_result=builder.EXCEPTION, new_result=builder.EXCEPTION,
+                                         expected_msg = "" )
+
+        self.do_x_to_y_notification_test(notify="exceptionToSuccess", previous_result=builder.EXCEPTION, new_result=builder.FAILURE,
+                                         expected_msg = "" )
+
+        self.do_x_to_y_notification_test(notify="exceptionToSuccess", previous_result=builder.EXCEPTION, new_result=builder.WARNINGS,
+                                         expected_msg = "" )
+
 
 class MyIrcBuild(builder.BuildStatus):
     results = None
