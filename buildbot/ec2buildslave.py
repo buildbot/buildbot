@@ -42,21 +42,21 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
                 'valid_ami_location_regex and valid_ami_owners')
         self.ami = ami
         if valid_ami_owners is not None:
-            if isinstance(valid_ami_owners, basestring):
+            if isinstance(valid_ami_owners, (int, long)):
                 valid_ami_owners = (valid_ami_owners,)
             else:
                 for element in valid_ami_owners:
-                    if not isinstance(element, basestring):
+                    if not isinstance(element, (int, long)):
                         raise ValueError(
-                            'valid_ami_owners should be string or iterable '
-                            'of strings')
+                            'valid_ami_owners should be int or iterable '
+                            'of ints', element)
         if valid_ami_location_regex is not None:
             if not isinstance(valid_ami_location_regex, basestring):
                 raise ValueError(
                     'valid_ami_location_regex should be a string')
             else:
                 # verify that regex will compile
-                re.compile(self.valid_ami_location_regex)
+                re.compile(valid_ami_location_regex)
         self.valid_ami_owners = valid_ami_owners
         self.valid_ami_location_regex = valid_ami_location_regex
         self.instance_type = instance_type
@@ -154,29 +154,27 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
                 # gather sorting data
                 match = get_match(image.location)
                 if match:
-                    candidate = [image, image.id, image.location]
+                    alpha_sort = int_sort = None
                     if level < 2:
                         try:
-                            sort_element = match.group(1)
+                            alpha_sort = match.group(1)
                         except IndexError:
                             level = 2
                         else:
-                            candidate.append(sort_element)
                             if level == 0:
                                 try:
-                                    sort_element = int(sort_element)
+                                    int_sort = int(alpha_sort)
                                 except ValueError:
                                     level = 1
-                                else:
-                                    candidate.append(sort_element)
-                    candidate.reverse()
-                    options.append(candidate)
+                    options.append([int_sort, alpha_sort,
+                                    image.location, image.id, image])
             if level:
                 log.msg('sorting images at level %d' % level)
                 options = [candidate[level:] for candidate in options]
         else:
             options = [(image.location, image.id, image) for image
-                       in self.conn.get_all_images()]
+                       in self.conn.get_all_images(
+                        owners=self.valid_ami_owners)]
         options.sort()
         log.msg('sorted images (last is chosen): %s' %
                 (', '.join(

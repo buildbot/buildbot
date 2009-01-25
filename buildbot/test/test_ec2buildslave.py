@@ -117,14 +117,14 @@ class Connection:
         except KeyError:
             raise EC2ResponseError('InvalidGroup.NotFound')
 
-    def create_security_group(security_name, description):
+    def create_security_group(self, security_name, description):
         assert security_name not in self.data.security_groups
         res = Stub(name='security_group', value=security_name,
                    description=description)
         self.data.security_groups[security_name] = res
         return res
 
-    def get_all_images(owners=None):
+    def get_all_images(self, owners=None):
         # return a list of images.  images have .location and .id.
         res = self.data.images.values()
         if owners:
@@ -190,18 +190,18 @@ class Boto:
         self.images = {}
         Image.create(self, 'ami-12345', 12345667890,
                      'test-xx/image.manifest.xml')
-        Image.create(self, 'ami-F0000', 11111111111,
-                     'test-f0/image.manifest.xml')
-        Image.create(self, 'ami-E1111', 22222222222,
-                     'test-e1/image.manifest.xml')
-        Image.create(self, 'ami-D2222', 22222222222,
-                     'test-d2/image.manifest.xml')
-        Image.create(self, 'ami-C3333', 22222222222,
-                     'test-c3/image.manifest.xml')
-        Image.create(self, 'ami-B4444', 11111111111,
-                     'test-b4/image.manifest.xml')
-        Image.create(self, 'ami-A5555', 11111111111,
-                     'test-a5/image.manifest.xml')
+        Image.create(self, 'ami-AF000', 11111111111,
+                     'test-f0a/image.manifest.xml')
+        Image.create(self, 'ami-CE111', 22222222222,
+                     'test-e1b/image.manifest.xml')
+        Image.create(self, 'ami-ED222', 22222222222,
+                     'test-d2c/image.manifest.xml')
+        Image.create(self, 'ami-FC333', 22222222222,
+                     'test-c30d/image.manifest.xml')
+        Image.create(self, 'ami-DB444', 11111111111,
+                     'test-b4e/image.manifest.xml')
+        Image.create(self, 'ami-BA555', 11111111111,
+                     'test-a5f/image.manifest.xml')
 
     def connect_ec2(self, identifier, secret_identifier):
         assert identifier == 'publickey', identifier
@@ -220,28 +220,32 @@ class Mixin(RunMixin):
         return d
 
     def setUp(self):
-        RunMixin.setUp(self)
-        self.boto_setUp()
+        self.boto_setUp1()
+        self.master.loadConfig(self.config)
+        self.boto_setUp2()
+        self.boto_setUp3()
 
-    def boto_setUp(self):
+    def boto_setUp1(self):
         # debugging
         #import twisted.internet.base
         #twisted.internet.base.DelayedCall.debug = True
         # debugging
+        RunMixin.setUp(self)
         self.boto = boto = Boto(self)
-        loaded = 'boto' in sys.modules
-        if not loaded:
+        if 'boto' not in sys.modules:
             sys.modules['boto'] = boto
             sys.modules['boto.exception'] = boto.exception
         if 'buildbot.ec2buildslave' in sys.modules:
             sys.modules['buildbot.ec2buildslave'].boto = boto
-        self.master.loadConfig(self.config)
-        sys.modules['buildbot.ec2buildslave'].boto = boto
-        if not loaded:
+
+    def boto_setUp2(self):
+        if sys.modules['boto'] is self.boto:
             del sys.modules['boto']
             del sys.modules['boto.exception']
+
+    def boto_setUp3(self):
         self.master.startService()
-        boto.slave = self.bot1 = self.master.botmaster.slaves['bot1']
+        self.boto.slave = self.bot1 = self.master.botmaster.slaves['bot1']
         self.bot1._poll_resolution = 0.1
         self.b1 = self.master.botmaster.builders['b1']
 
@@ -338,40 +342,18 @@ class BasicConfig(Mixin, unittest.TestCase):
         self.assertEqual(self.instance.state, TERMINATED)
         del self.instance
 
-# class AMILocationPatternConfig
-
-class SeparateKeyFileConfig(Mixin, unittest.TestCase):
-    config = textwrap.dedent("""\
-        from buildbot.process import factory
-        from buildbot.steps import dummy
-        from buildbot.ec2buildslave import EC2LatentBuildSlave
-        s = factory.s
-
-        BuildmasterConfig = c = {}
-        c['slaves'] = [EC2LatentBuildSlave('bot1', 'sekrit', 'm1.large',
-                                           'ami-12345'
-                                           )]
-        c['schedulers'] = []
-        c['slavePortnum'] = 0
-        c['schedulers'] = []
-
-        f1 = factory.BuildFactory([s(dummy.RemoteDummy, timeout=1)])
-
-        c['builders'] = [
-            {'name': 'b1', 'slavenames': ['bot1'],
-             'builddir': 'b1', 'factory': f1},
-            ]
-        """)
+class Initialization(Mixin, unittest.TestCase):
 
     def setUp(self):
         # we don't want to parse the config file yet.  That's really the test
         # (see testInitialization below)
-        RunMixin.setUp(self)
+        self.boto_setUp1()
 
     def tearDown(self):
+        self.boto_setUp2()
         return Mixin.tearDown(self)
 
-    def testInitialization(self):
+    def testDefaultSeparateFile(self):
         # set up .ec2/aws_id
         home = os.environ['HOME']
         fake_home = os.path.join(os.getcwd(), 'basedir') # see RunMixin.setUp
@@ -381,12 +363,130 @@ class SeparateKeyFileConfig(Mixin, unittest.TestCase):
         f = open(os.path.join(dir, 'aws_id'), 'w')
         f.write('publickey\nprivatekey')
         f.close()
-        # parse the file.  The Connection checks the file, so if the secret
-        # file is not parsed correctly, *this* is where it would fail.  This
-        # is the real test.
-        self.boto_setUp()
+        # The Connection checks the file, so if the secret file is not parsed
+        # correctly, *this* is where it would fail. This is the real test.
+        from buildbot.ec2buildslave import EC2LatentBuildSlave
+        bot1 = EC2LatentBuildSlave('bot1', 'sekrit', 'm1.large',
+                                   'ami-12345')
         # for completeness, we'll show that the connection actually exists.
-        self.assertIsInstance(self.bot1.conn, Connection)
+        self.assertIsInstance(bot1.conn, Connection)
         # clean up.
         os.environ['HOME'] = home
         self.rmtree(dir)
+
+    def testCustomSeparateFile(self):
+        # set up .ec2/aws_id
+        file_path = os.path.join(os.getcwd(), 'basedir', 'custom_aws_id')
+        f = open(file_path, 'w')
+        f.write('publickey\nprivatekey')
+        f.close()
+        # The Connection checks the file, so if the secret file is not parsed
+        # correctly, *this* is where it would fail. This is the real test.
+        from buildbot.ec2buildslave import EC2LatentBuildSlave
+        bot1 = EC2LatentBuildSlave('bot1', 'sekrit', 'm1.large',
+                                   'ami-12345', aws_id_file_path=file_path)
+        # for completeness, we'll show that the connection actually exists.
+        self.assertIsInstance(bot1.conn, Connection)
+
+    def testNoAMIBroken(self):
+        # you must specify an AMI, or at least one of valid_ami_owners or
+        # valid_ami_location_regex
+        from buildbot.ec2buildslave import EC2LatentBuildSlave
+        self.assertRaises(ValueError, EC2LatentBuildSlave, 'bot1', 'sekrit',
+                          'm1.large', identifier='publickey',
+                          secret_identifier='privatekey')
+
+    def testAMIOwnerFilter(self):
+        # if you only specify an owner, you get the image owned by any of the
+        # owners that sorts last by the AMI's location.
+        from buildbot.ec2buildslave import EC2LatentBuildSlave
+        bot1 = EC2LatentBuildSlave('bot1', 'sekrit', 'm1.large',
+                                   valid_ami_owners=[11111111111],
+                                   identifier='publickey',
+                                   secret_identifier='privatekey'
+                                   )
+        self.assertEqual(bot1.get_image().location,
+                         'test-f0a/image.manifest.xml')
+        bot1 = EC2LatentBuildSlave('bot1', 'sekrit', 'm1.large',
+                                   valid_ami_owners=[11111111111,
+                                                     22222222222],
+                                   identifier='publickey',
+                                   secret_identifier='privatekey'
+                                   )
+        self.assertEqual(bot1.get_image().location,
+                         'test-f0a/image.manifest.xml')
+        bot1 = EC2LatentBuildSlave('bot1', 'sekrit', 'm1.large',
+                                   valid_ami_owners=[22222222222],
+                                   identifier='publickey',
+                                   secret_identifier='privatekey'
+                                   )
+        self.assertEqual(bot1.get_image().location,
+                         'test-e1b/image.manifest.xml')
+        bot1 = EC2LatentBuildSlave('bot1', 'sekrit', 'm1.large',
+                                   valid_ami_owners=12345667890,
+                                   identifier='publickey',
+                                   secret_identifier='privatekey'
+                                   )
+        self.assertEqual(bot1.get_image().location,
+                         'test-xx/image.manifest.xml')
+
+    def testAMISimpleRegexFilter(self):
+        from buildbot.ec2buildslave import EC2LatentBuildSlave
+        bot1 = EC2LatentBuildSlave(
+            'bot1', 'sekrit', 'm1.large',
+            valid_ami_location_regex=r'test\-[a-z]\w+/image.manifest.xml',
+            identifier='publickey', secret_identifier='privatekey')
+        self.assertEqual(bot1.get_image().location,
+                         'test-xx/image.manifest.xml')
+        bot1 = EC2LatentBuildSlave(
+            'bot1', 'sekrit', 'm1.large',
+            valid_ami_location_regex=r'test\-[a-z]\d+\w/image.manifest.xml',
+            identifier='publickey', secret_identifier='privatekey')
+        self.assertEqual(bot1.get_image().location,
+                         'test-f0a/image.manifest.xml')
+        bot1 = EC2LatentBuildSlave(
+            'bot1', 'sekrit', 'm1.large', valid_ami_owners=[22222222222],
+            valid_ami_location_regex=r'test\-[a-z]\d+\w/image.manifest.xml',
+            identifier='publickey', secret_identifier='privatekey')
+        self.assertEqual(bot1.get_image().location,
+                         'test-e1b/image.manifest.xml')
+
+    def testAMIRegexAlphaSortFilter(self):
+        from buildbot.ec2buildslave import EC2LatentBuildSlave
+        bot1 = EC2LatentBuildSlave(
+            'bot1', 'sekrit', 'm1.large',
+            valid_ami_owners=[11111111111, 22222222222],
+            valid_ami_location_regex=r'test\-[a-z]\d+([a-z])/image.manifest.xml',
+            identifier='publickey', secret_identifier='privatekey')
+        self.assertEqual(bot1.get_image().location,
+                         'test-a5f/image.manifest.xml')
+
+    def testAMIRegexIntSortFilter(self):
+        from buildbot.ec2buildslave import EC2LatentBuildSlave
+        bot1 = EC2LatentBuildSlave(
+            'bot1', 'sekrit', 'm1.large',
+            valid_ami_owners=[11111111111, 22222222222],
+            valid_ami_location_regex=r'test\-[a-z](\d+)[a-z]/image.manifest.xml',
+            identifier='publickey', secret_identifier='privatekey')
+        self.assertEqual(bot1.get_image().location,
+                         'test-c30d/image.manifest.xml')
+
+    def testNewSecurityGroup(self):
+        from buildbot.ec2buildslave import EC2LatentBuildSlave
+        bot1 = EC2LatentBuildSlave(
+            'bot1', 'sekrit', 'm1.large', 'ami-12345',
+            identifier='publickey', secret_identifier='privatekey',
+            security_name='custom_security_name')
+        self.assertEqual(
+            self.boto.security_groups['custom_security_name'].value,
+            'custom_security_name')
+        self.assertEqual(bot1.security_name, 'custom_security_name')
+
+    def testNewKeypairName(self):
+        from buildbot.ec2buildslave import EC2LatentBuildSlave
+        bot1 = EC2LatentBuildSlave(
+            'bot1', 'sekrit', 'm1.large', 'ami-12345',
+            identifier='publickey', secret_identifier='privatekey',
+            keypair_name='custom_keypair_name')
+        self.assertIn('custom_keypair_name', self.boto.keys)
+        self.assertEqual(bot1.keypair_name, 'custom_keypair_name')
