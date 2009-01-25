@@ -7090,6 +7090,61 @@ mn = MailNotifier(fromaddr="buildbot@@example.org",
                   extraRecipients=['listaddr@@example.org'])
 @end example
 
+In some cases it is desirable to have different information then what
+is provided in a standard MailNotifier message. For this purpose 
+MailNotifier provides the argument customMesg (a function) which allows 
+for the creation of messages with unique content.
+
+For example it can be useful to display the last few lines of a log file 
+and recent changes when a builder fails:
+
+@example
+def message(attrs):
+    logLines = 10
+    text = list()
+    text.append("STATUS: %s" % attrs['result'].title())
+    text.append("")
+    text.extend([c.asText() for c in attrs['changes']])
+    text.append("")
+    name, url, lines = attrs['logs'][-1]
+    text.append("Last %d lines of '%s':" % (logLines, name))
+    text.extend(["\t%s\n" % line for line in lines[len(lines)-logLines:]])
+    text.append("")
+    text.append("-buildbot")
+    return ("\n".join(text), 'plain')
+
+mn = MailNotifier(fromaddr="buildbot@@example.org",
+                  sendToInterestedUsers=False,
+                  mode='problem',
+                  extraRecipients=['listaddr@@example.org'],
+                  customMesg=message)
+@end example
+
+A customMesg function takes a single dict argument (see below) and returns a 
+tuple of strings. The first string is the complete text of the message and the
+second is the message type ('plain' or 'html'). The 'html' type should be used
+when generating an HTML message: 
+
+@example
+def message(attrs):
+    logLines = 10
+    text = list()
+    text.append('<h4>Build status %s.</h4>' % (attrs['result'].title()))
+    if attrs['changes']:
+        text.append('<h4>Recent Changes:</h4>')
+        text.extend([c.asHTML() for c in attrs['changes']])
+    name, url, lines = attrs['logs'][-1]
+    text.append('<h4>Last %d lines of "%s":</h4>' % (logLines, name))
+    text.append('<p>')
+    text.append('<br>'.join([line for line in lines[len(lines)-logLines:]]))
+    text.append('</p>')
+    text.append('<br><br>')
+    text.append('Full log at: %s' % url)
+    text.append('<br><br>')
+    text.append('<b>-buildbot</b>')
+    return ('\n'.join(text), 'html')
+@end example 
+
 @heading MailNotifier arguments
 
 @table @code
@@ -7156,8 +7211,66 @@ lookup='twistedmatrix.com' will allow mail to be sent to all
 developers whose SVN usernames match their twistedmatrix.com account
 names. See buildbot/status/mail.py for more details.
 
-@end table
+@item customMesg
+This is a optional function that can be used to generate a custom mail 
+message. The customMesg function takes a single dict and must return a 
+tuple containing the message text and type ('html' or 'plain'). Below is a list 
+of availale keys in the dict passed to customMesg:
 
+@table @code
+@item builderName 
+(str) Name of the builder that generated this event.
+@item projectName 
+(str) Name of the project.
+@item mode 
+(str) Mode set in MailNotifier. (failing, passing, problem).
+@item result 
+(str) Builder result as a string. 'success', 'warnings', 'failure', 'skipped', or 'exception'
+@item buildURL 
+(str) URL to build page.
+@item buildbotURL 
+(str) URL to buildbot main page.
+@item buildText 
+(str) Build text from build.getText().
+@item slavename 
+(str) Slavename.
+@item reason 
+(str) Build reason from build.getReason().
+@item responsibleUsers 
+(List of str) List of responsible users.
+@item branch 
+(str) Name of branch used. If no SourceStamp exists branch
+is an empty string.
+@item revision 
+(str) Name of revision used. If no SourceStamp exists revision
+is an empty string.
+@item patch 
+(str) Name of patch used. If no SourceStamp exists patch
+is an empty string.
+@item changes
+(list of objs) List of change objects from SourceStamp. A change
+object has the following useful information:
+@table @code
+@item who
+(str) who made this change
+@item revision 
+(str) what VC revision is this change
+@item branch 
+(str) on what branch did this change occur
+@item when 
+(str) when did this change occur
+@item files 
+(list of str) what files were affected in this change
+@item comments 
+(str) comments reguarding the change.
+@end table
+The functions asText and asHTML return a list of strings with
+the above information formatted. 
+@item logs
+(List of Tuples) List of tuples where each tuple contains the log name, log url,
+and log contents as a list of strings.
+@end table
+@end table
 
 @node IRC Bot, PBListener, MailNotifier, Status Delivery
 @section IRC Bot

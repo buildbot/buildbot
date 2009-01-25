@@ -125,6 +125,36 @@ class MyLookup:
             d.callback(user + "@" + "dev.com")
         return d
 
+def customTextMailMessage(attrs):
+    logLines = 3
+    text = list()
+    text.append("STATUS: %s" % attrs['result'].title())
+    text.append("")
+    text.extend([c.asText() for c in attrs['changes']])
+    text.append("")
+    name, url, lines = attrs['logs'][-1]
+    text.append("Last %d lines of '%s':" % (logLines, name))
+    text.extend(["\t%s\n" % line for line in lines[len(lines)-logLines:]])
+    text.append("")
+    text.append("-buildbot")
+    return ("\n".join(text), 'plain')
+
+def customHTMLMailMessage(attrs):
+    logLines = 3
+    text = list()
+    text.append("<h3>STATUS <a href='%s'>%s</a>:</h3>" % (attrs['buildURL'],
+                                                          attrs['result'].title()))
+    text.append("<h4>Recent Changes:</h4>")
+    text.extend([c.asHTML() for c in attrs['changes']])
+    name, url, lines = attrs['logs'][-1]
+    text.append("<h4>Last %d lines of '%s':</h4>" % (logLines, name))
+    text.append("<p>")
+    text.append("<br>".join([line for line in lines[len(lines)-logLines:]]))
+    text.append("</p>")
+    text.append("<br>")
+    text.append("<b>-<a href='%s'>buildbot</a></b>" % attrs['buildbotURL'])
+    return ("\n".join(text), 'html')
+
 class Mail(unittest.TestCase):
 
     def setUp(self):
@@ -271,6 +301,71 @@ class Mail(unittest.TestCase):
         self.messages = []
         mailer3.buildFinished("builder2", b2, b2.results)
         self.failUnlessEqual(len(self.messages), 1)
+
+    def testCustomTextMessage(self):
+        basedir = "test_custom_text_mesg"
+        os.mkdir(basedir)
+        mailer = MyMailer(fromaddr="buildbot@example.com", mode="problem",
+                          extraRecipients=["recip@example.com",
+                                           "recip2@example.com"],
+                          lookup=MyLookup(),
+                          customMesg=customTextMailMessage)
+        mailer.parent = self
+        mailer.status = self
+        self.messages = []
+
+        b1 = self.makeBuild(4, builder.FAILURE)
+        b1.setText(["snarkleack", "polarization", "failed"])
+        b1.blamelist = ["dev3", "dev3", "dev3", "dev4",
+                        "Thomas_Walters"]
+        b1.source.changes = (Change(who = 'author1', files = ['file1'], comments = 'comment1', revision = 123),
+                             Change(who = 'author2', files = ['file2'], comments = 'comment2', revision = 456))
+        b1.testlogs = [MyLog(basedir, 'compile', "Compile log here\n"),
+                       MyLog(basedir, 'test', "Test log here\nTest 1 failed\nTest 2 failed\nTest 3 failed\nTest 4 failed\n")]
+
+        mailer.buildFinished("builder1", b1, b1.results)
+        m,r = self.messages.pop()
+        t = m.as_string()
+        #
+        # Uncomment to review custom message
+        #
+        #self.fail(t)
+        self.failUnlessIn("comment1", t)
+        self.failUnlessIn("comment2", t)
+        self.failUnlessIn("Test 4 failed", t)
+
+
+    def testCustomHTMLMessage(self):
+        basedir = "test_custom_HTML_mesg"
+        os.mkdir(basedir)
+        mailer = MyMailer(fromaddr="buildbot@example.com", mode="problem",
+                          extraRecipients=["recip@example.com",
+                                           "recip2@example.com"],
+                          lookup=MyLookup(),
+                          customMesg=customHTMLMailMessage)
+        mailer.parent = self
+        mailer.status = self
+        self.messages = []
+
+        b1 = self.makeBuild(4, builder.FAILURE)
+        b1.setText(["snarkleack", "polarization", "failed"])
+        b1.blamelist = ["dev3", "dev3", "dev3", "dev4",
+                        "Thomas_Walters"]
+        b1.source.changes = (Change(who = 'author1', files = ['file1'], comments = 'comment1', revision = 123),
+                             Change(who = 'author2', files = ['file2'], comments = 'comment2', revision = 456))
+        b1.testlogs = [MyLog(basedir, 'compile', "Compile log here\n"),
+                       MyLog(basedir, 'test', "Test log here\nTest 1 failed\nTest 2 failed\nTest 3 failed\nTest 4 failed\n")]
+
+        mailer.buildFinished("builder1", b1, b1.results)
+        m,r = self.messages.pop()
+        t = m.as_string()
+        #
+        # Uncomment to review custom message
+        #
+        #self.fail(t)
+        self.failUnlessIn("<h4>Last 3 lines of 'step.test':</h4>", t)
+        self.failUnlessIn("<p>Changed by: <b>author2</b><br />", t)
+        self.failUnlessIn("Test 3 failed", t)
 
     def testFailure(self):
         mailer = MyMailer(fromaddr="buildbot@example.com", mode="problem",
