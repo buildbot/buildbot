@@ -82,9 +82,9 @@ def grab_commit_info(c, rev):
             files.append(m.group(1))
             continue
 
-        m = re.match(r"^Commit:\s+(.+)$", line)
+        m = re.match(r"^Author:\s+(.+)$", line)
         if m:
-            logging.debug("Got committer: %s" % m.group(1))
+            logging.debug("Got author: %s" % m.group(1))
             c['who'] = m.group(1)
 
         if re.match(r"^Merge: .*$", line):
