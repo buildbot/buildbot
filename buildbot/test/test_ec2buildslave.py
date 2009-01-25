@@ -1,4 +1,4 @@
-
+import os
 import sys
 import StringIO
 import textwrap
@@ -204,8 +204,8 @@ class Boto:
                      'test-a5/image.manifest.xml')
 
     def connect_ec2(self, identifier, secret_identifier):
-        assert identifier == 'publickey'
-        assert secret_identifier == 'privatekey'
+        assert identifier == 'publickey', identifier
+        assert secret_identifier == 'privatekey', secret_identifier
         return Connection(self)
 
     exception = Stub(EC2ResponseError=EC2ResponseError)
@@ -233,6 +233,8 @@ class Mixin(RunMixin):
         if not loaded:
             sys.modules['boto'] = boto
             sys.modules['boto.exception'] = boto.exception
+        if 'buildbot.ec2buildslave' in sys.modules:
+            sys.modules['buildbot.ec2buildslave'].boto = boto
         self.master.loadConfig(self.config)
         sys.modules['buildbot.ec2buildslave'].boto = boto
         if not loaded:
@@ -338,33 +340,53 @@ class BasicConfig(Mixin, unittest.TestCase):
 
 # class AMILocationPatternConfig
 
-#class SecretFileConfig(Mixin, unittest.TestCase):
-#    config = textwrap.dedent("""\
-#        from buildbot.process import factory
-#        from buildbot.steps import dummy
-#        from buildbot.ec2buildslave import EC2LatentBuildSlave
-#        s = factory.s
-#
-#        BuildmasterConfig = c = {}
-#        c['slaves'] = [EC2LatentBuildSlave('bot1', 'sekrit', 'm1.large',
-#                                           'ami-12345'
-#                                           )]
-#        c['schedulers'] = []
-#        c['slavePortnum'] = 0
-#        c['schedulers'] = []
-#
-#        f1 = factory.BuildFactory([s(dummy.RemoteDummy, timeout=1)])
-#
-#        c['builders'] = [
-#            {'name': 'b1', 'slavenames': ['bot1'],
-#             'builddir': 'b1', 'factory': f1},
-#            ]
-#        """)
-#
-#    def setUp(self):
-#        RunMixin.setUp(self)
-#        # set up .ec2/aws_id
-#        self.boto_setUp()
-#
-#    def testInitialization(self):
-#        # show that secret file has been parsed
+class SeparateKeyFileConfig(Mixin, unittest.TestCase):
+    config = textwrap.dedent("""\
+        from buildbot.process import factory
+        from buildbot.steps import dummy
+        from buildbot.ec2buildslave import EC2LatentBuildSlave
+        s = factory.s
+
+        BuildmasterConfig = c = {}
+        c['slaves'] = [EC2LatentBuildSlave('bot1', 'sekrit', 'm1.large',
+                                           'ami-12345'
+                                           )]
+        c['schedulers'] = []
+        c['slavePortnum'] = 0
+        c['schedulers'] = []
+
+        f1 = factory.BuildFactory([s(dummy.RemoteDummy, timeout=1)])
+
+        c['builders'] = [
+            {'name': 'b1', 'slavenames': ['bot1'],
+             'builddir': 'b1', 'factory': f1},
+            ]
+        """)
+
+    def setUp(self):
+        # we don't want to parse the config file yet.  That's really the test
+        # (see testInitialization below)
+        RunMixin.setUp(self)
+
+    def tearDown(self):
+        return Mixin.tearDown(self)
+
+    def testInitialization(self):
+        # set up .ec2/aws_id
+        home = os.environ['HOME']
+        fake_home = os.path.join(os.getcwd(), 'basedir') # see RunMixin.setUp
+        os.environ['HOME'] = fake_home
+        dir = os.path.join(fake_home, '.ec2')
+        os.mkdir(dir)
+        f = open(os.path.join(dir, 'aws_id'), 'w')
+        f.write('publickey\nprivatekey')
+        f.close()
+        # parse the file.  The Connection checks the file, so if the secret
+        # file is not parsed correctly, *this* is where it would fail.  This
+        # is the real test.
+        self.boto_setUp()
+        # for completeness, we'll show that the connection actually exists.
+        self.assertIsInstance(self.bot1.conn, Connection)
+        # clean up.
+        os.environ['HOME'] = home
+        self.rmtree(dir)
