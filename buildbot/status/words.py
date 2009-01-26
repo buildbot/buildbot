@@ -70,6 +70,7 @@ class Contact:
         self.channel = channel
         self.notify_events = {}
         self.subscribed = 0
+	self.add_notification_events(channel.notify_events)
 
     silly = {
         "What happen ?": "Somebody set up us the bomb.",
@@ -657,7 +658,7 @@ class IrcStatusBot(irc.IRCClient):
     """
     implements(IChannel)
 
-    def __init__(self, nickname, password, channels, status, categories):
+    def __init__(self, nickname, password, channels, status, categories, notify_events):
         """
         @type  nickname: string
         @param nickname: the nickname by which this bot should be known
@@ -674,6 +675,7 @@ class IrcStatusBot(irc.IRCClient):
         self.password = password
         self.status = status
         self.categories = categories
+        self.notify_events = notify_events
         self.counter = 0
         self.hasQuit = 0
         self.contacts = {}
@@ -768,13 +770,14 @@ class IrcStatusFactory(ThrottledClientFactory):
     shuttingDown = False
     p = None
 
-    def __init__(self, nickname, password, channels, categories):
+    def __init__(self, nickname, password, channels, categories, notify_events):
         #ThrottledClientFactory.__init__(self) # doesn't exist
         self.status = None
         self.nickname = nickname
         self.password = password
         self.channels = channels
         self.categories = categories
+	self.notify_events = notify_events
 
     def __getstate__(self):
         d = self.__dict__.copy()
@@ -789,7 +792,7 @@ class IrcStatusFactory(ThrottledClientFactory):
     def buildProtocol(self, address):
         p = self.protocol(self.nickname, self.password,
                           self.channels, self.status,
-                          self.categories)
+                          self.categories, self.notify_events)
         p.factory = self
         p.status = self.status
         p.control = self.control
@@ -822,7 +825,7 @@ class IRC(base.StatusReceiverMultiService):
                      "categories"]
 
     def __init__(self, host, nick, channels, port=6667, allowForce=True,
-                 categories=None, password=None):
+                 categories=None, password=None, notify_events={}):
         base.StatusReceiverMultiService.__init__(self)
 
         assert allowForce in (True, False) # TODO: implement others
@@ -835,10 +838,11 @@ class IRC(base.StatusReceiverMultiService):
         self.password = password
         self.allowForce = allowForce
         self.categories = categories
+	self.notify_events = notify_events
 
         # need to stash the factory so we can give it the status object
         self.f = IrcStatusFactory(self.nick, self.password,
-                                  self.channels, self.categories)
+                                  self.channels, self.categories, self.notify_events)
 
         c = internet.TCPClient(host, port, self.f)
         c.setServiceParent(self)
