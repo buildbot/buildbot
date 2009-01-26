@@ -1,6 +1,6 @@
 """A LatentSlave that uses EC2 to instantiate the slaves on demand.
 
-Tested with Python boto 1.5c and paramiko 1.7.4.
+Tested with Python boto 1.5c
 """
 
 import cStringIO
