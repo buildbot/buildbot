@@ -3,7 +3,6 @@ import sys
 import StringIO
 import textwrap
 
-import paramiko
 from twisted.trial import unittest
 from twisted.internet import defer, reactor
 
@@ -152,11 +151,13 @@ class Connection:
 
 class Key:
 
-    def __init__(self):
-        self.raw = paramiko.RSAKey.generate(256)
-        f = StringIO.StringIO()
-        self.raw.write_private_key(f)
-        self.material = f.getvalue()
+    # this is what we would need to do if we actually needed a real key.
+    # We don't right now.
+    #def __init__(self):
+    #    self.raw = paramiko.RSAKey.generate(256)
+    #    f = StringIO.StringIO()
+    #    self.raw.write_private_key(f)
+    #    self.material = f.getvalue()
 
     @classmethod
     def create(klass, name, keys):
@@ -291,8 +292,9 @@ class BasicConfig(Mixin, unittest.TestCase):
         self.assertEqual(self.bot1.instance_type, 'm1.large')
         self.assertEqual(self.bot1.keypair_name, 'latent_buildbot_slave')
         self.assertEqual(self.bot1.security_name, 'latent_buildbot_slave')
-        self.assertNotEqual(self.boto.keys['latent_buildbot_slave'],
-                            self.boto.original_keys['latent_buildbot_slave'])
+        # this would be appropriate if we were recreating keys.
+        #self.assertNotEqual(self.boto.keys['latent_buildbot_slave'],
+        #                    self.boto.original_keys['latent_buildbot_slave'])
         self.assertIsInstance(self.bot1.get_image(), Image)
         self.assertEqual(self.bot1.get_image().id, 'ami-12345')
         self.assertIdentical(self.bot1.elastic_ip, None)
@@ -345,8 +347,6 @@ class BasicConfig(Mixin, unittest.TestCase):
 class Initialization(Mixin, unittest.TestCase):
 
     def setUp(self):
-        # we don't want to parse the config file yet.  That's really the test
-        # (see testInitialization below)
         self.boto_setUp1()
 
     def tearDown(self):

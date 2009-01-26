@@ -11,7 +11,6 @@ import urllib
 
 import boto
 import boto.exception
-import paramiko
 from twisted.internet import defer, threads
 from twisted.python import log
 
@@ -89,15 +88,17 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
         # Make the EC2 connection.
         self.conn = boto.connect_ec2(identifier, secret_identifier)
 
-        # Delete previously used keypair, if it exists.
+        # Make a keypair
         #
-        # We always recreate the keypairs because there is no way to
+        # We currently discard the keypair data because we don't need it.
+        # If we do need it in the future, we will always recreate the keypairs
+        # because there is no way to
         # programmatically retrieve the private key component, unless we
         # generate it and store it on the filesystem, which is an unnecessary
         # usage requirement.
         try:
             key_pair = self.conn.get_all_key_pairs(keypair_name)[0]
-            key_pair.delete()
+            # key_pair.delete() # would be used to recreate
         except boto.exception.EC2ResponseError, e:
             if e.code != 'InvalidKeyPair.NotFound':
                 if e.code == 'AuthFailure':
@@ -107,10 +108,10 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
                            'account?\n'
                            'Please doublecheck before reporting a problem.\n')
                 raise
-        # make a new one
-        self.key_pair = self.conn.create_key_pair(keypair_name)
-        self.private_key = paramiko.RSAKey.from_private_key(
-            cStringIO.StringIO(self.key_pair.material.encode('ascii')))
+            # make one; we would always do this, and stash the result, if we
+            # needed the key (for instance, to SSH to the box).  We'd then
+            # use paramiko to use the key to connect.
+            self.conn.create_key_pair(keypair_name)
 
         # create security group
         try:
@@ -121,7 +122,7 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
                     security_name,
                     'Authorization to access the buildbot instance.')
                 # Authorize the master as necessary
-                # XXX this is where we'd open the hole to do the reverse pb
+                # TODO this is where we'd open the hole to do the reverse pb
                 # connect to the buildbot
                 # ip = urllib.urlopen(
                 #     'http://checkip.amazonaws.com').read().strip()
