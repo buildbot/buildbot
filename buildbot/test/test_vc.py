@@ -2607,7 +2607,8 @@ class MercurialInRepoHelper(MercurialHelper):
             rmdirRecursive(workdir)
         w = self.dovc(self.hg_base, ['clone', self.repo, workdir])
         yield w; w.getResult()
-        w = self.dovc(workdir, ['update', '--clean', '--rev', branch if branch else 'default'])
+        if not branch: branch = "default"
+        w = self.dovc(workdir, ['update', '--clean', '--rev', branch ])
         yield w; w.getResult()
             
         try_c_filename = os.path.join(workdir, "subdir", "subdir.c")
