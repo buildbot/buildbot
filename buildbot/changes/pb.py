@@ -48,7 +48,7 @@ class PBChangeSource(base.ChangeSource):
         share a TCP listening port with the buildslaves.
 
         The 'buildbot sendchange' command, the contrib/svn_buildbot.py tool,
-        and the contrib/bzr_buildbot.pt tool know how to send changes to me.
+        and the contrib/bzr_buildbot.py tool know how to send changes to me.
 
         @type prefix: string (or None)
         @param prefix: if set, I will ignore any filenames that do not start
