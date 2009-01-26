@@ -2738,24 +2738,31 @@ class GitHelper(BaseHelper):
         return d
 
     def _capable(self, v, vcexe):
-        m = re.search(r'\b([\d\.]+)\b', v)
-        if not m:
+        try:
+            m = re.search(r'\b(\d+)\.(\d+)', v)
+                            
+            if not m:
+                raise Exception, 'no regex match'
+            
+            ver = tuple([int(num) for num in m.groups()])
+
+            # git-1.1.3 (as shipped with Dapper) doesn't understand 'git
+            # init' (it wants 'git init-db'), and fails unit tests that
+            # involve branches. git-1.5.3.6 (on my debian/unstable system)
+            # works. I don't know where the dividing point is: if someone can
+            # figure it out (or figure out how to make buildbot support more
+            # versions), please update this check.
+            if ver < (1, 2):
+                return (False, "Found git (%s) but it is older than 1.2.x" % vcexe)
+
+        except Exception, e:
             log.msg("couldn't identify git version number in output:")
             log.msg("'''%s'''" % v)
+            log.msg("because: %s" % e)
             log.msg("skipping tests")
             return (False,
-                    "Found git (%s) but couldn't identify its version" % vcexe)
-        ver_s = m.group(1)
-        ver = tuple([int(num) for num in ver_s.split(".")])
+                    "Found git (%s) but couldn't identify its version from '%s'" % (vcexe, v))            
 
-        # git-1.1.3 (as shipped with Dapper) doesn't understand 'git
-        # init' (it wants 'git init-db'), and fails unit tests that
-        # involve branches. git-1.5.3.6 (on my debian/unstable system)
-        # works. I don't know where the dividing point is: if someone can
-        # figure it out (or figure out how to make buildbot support more
-        # versions), please update this check.
-        if ver < (1,2):
-            return (False, "Found git (%s) but it is older than 1.2.x" % vcexe)
         self.vcexe = vcexe
         return (True, None)
 
