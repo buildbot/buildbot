@@ -513,17 +513,17 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
     def _soft_disconnect(self):
         d = AbstractBuildSlave.disconnect(self)
         if self.slave is not None:
-            # XXX this could be called when the slave needs to shut down,
-            # such as in BotMaster.removeSlave, *or* when a new slave requests
-            # a connection when we already have a slave. It's not clear what
-            # to do in the second case: this shouldn't happen, and if it
+            # this could be called when the slave needs to shut down, such as
+            # in BotMaster.removeSlave, *or* when a new slave requests a
+            # connection when we already have a slave. It's not clear what to
+            # do in the second case: this shouldn't happen, and if it
             # does...if it's a latent slave, shutting down will probably kill
             # something we want...but we can't know what the status is. So,
             # here, we just do what should be appropriate for the first case,
             # and put our heads in the sand for the second, at least for now.
             # The best solution to the odd situation is removing it as a
             # possibilty: make the master in charge of connecting to the
-            # slave, rather than vice versa.  TODO.
+            # slave, rather than vice versa. TODO.
             d = defer.DeferredList([d, self.insubstantiate()])
         else:
             if self.substantiation_deferred is not None:
