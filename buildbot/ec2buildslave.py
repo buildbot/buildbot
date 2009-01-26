@@ -17,6 +17,11 @@ from twisted.python import log
 from buildbot.buildslave import AbstractLatentBuildSlave
 from buildbot import interfaces
 
+PENDING = 'pending'
+RUNNING = 'running'
+SHUTTINGDOWN = 'shutting-down'
+TERMINATED = 'terminated'
+
 class EC2LatentBuildSlave(AbstractLatentBuildSlave):
 
     instance = image = None
@@ -206,7 +211,7 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
                 (self.__class__.__name__, self.slavename, self.instance.id))
         duration = 0
         interval = self._poll_resolution
-        while self.instance.state == 'pending':
+        while self.instance.state == PENDING:
             time.sleep(interval)
             duration += interval
             if duration % 60 == 0:
@@ -214,7 +219,7 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
                         (self.__class__.__name__, self.slavename, duration//60,
                          self.instance.id))
             self.instance.update()
-        if self.instance.state == 'running':
+        if self.instance.state == RUNNING:
             self.output = self.instance.get_console_output()
             minutes = duration//60
             seconds = duration%60
@@ -235,7 +240,7 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
             raise interfaces.LatentBuildSlaveFailedToSubstantiate(
                 self.instance.id, self.instance.state)
 
-    def stop_instance(self):
+    def stop_instance(self, fast=False):
         if self.instance is None:
             # be gentle.  Something may just be trying to alert us that an
             # instance never attached, and it's because, somehow, we never
@@ -244,33 +249,33 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
         instance = self.instance
         self.output = self.instance = None
         return threads.deferToThread(
-            self._stop_instance, instance)
+            self._stop_instance, instance, fast)
 
-    def _stop_instance(self, instance):
+    def _stop_instance(self, instance, fast):
         if self.elastic_ip is not None:
             self.conn.disassociate_address(self.elastic_ip.public_ip)
         instance.update()
-        if instance.state not in ('shutting-down', 'terminated'):
-            instance.stop()
-            log.msg('%s %s terminating instance %s' %
-                    (self.__class__.__name__, self.slavename, instance.id))
-        instance.update()
-        if instance.state not in ('shutting-down', 'terminated'):
+        if instance.state not in (SHUTTINGDOWN, TERMINATED):
             instance.stop()
             log.msg('%s %s terminating instance %s' %
                     (self.__class__.__name__, self.slavename, instance.id))
         duration = 0
         interval = self._poll_resolution
-        while instance.state != 'terminated':
+        if fast:
+            goal = (SHUTTINGDOWN, TERMINATED)
+            instance.update()
+        else:
+            goal = (TERMINATED,)
+        while instance.state not in goal:
             time.sleep(interval)
             duration += interval
             if duration % 60 == 0:
                 log.msg(
-                    '%s %s has waited %d minutes for instance %s to terminate' %
+                    '%s %s has waited %d minutes for instance %s to end' %
                     (self.__class__.__name__, self.slavename, duration//60,
                      instance.id))
             instance.update()
-        log.msg('%s %s instance %s terminated '
-                'in about %d minutes %d seconds' %
+        log.msg('%s %s instance %s %s '
+                'after about %d minutes %d seconds' %
                 (self.__class__.__name__, self.slavename,
-                 instance.id, duration//60, duration%60))
+                 instance.id, goal, duration//60, duration%60))

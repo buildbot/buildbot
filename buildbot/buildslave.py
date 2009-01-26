@@ -392,7 +392,7 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
     substantiated = False
     substantiation_deferred = None
     build_wait_timer = None
-    _start_result = None
+    _start_result = _shutdown_callback_handle = None
 
     def __init__(self, name, password, max_builds=None,
                  notify_on_missing=[], missing_timeout=60*20,
@@ -410,7 +410,7 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
         # errback.
         raise NotImplementedError
 
-    def stop_instance(self):
+    def stop_instance(self, fast=False):
         # responsible for shutting down instance.
         raise NotImplementedError
 
@@ -433,13 +433,20 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
         return self.substantiation_deferred
 
     def _substantiate(self):
+        # register event trigger
         d = self.start_instance()
+        self._shutdown_callback_handle = reactor.addSystemEventTrigger(
+            'before', 'shutdown', self._soft_disconnect, fast=True)
         def stash_reply(result):
             self._start_result = result
         def clean_up(failure):
-            if not success and self.missing_timer is not None:
+            if self.missing_timer is not None:
                 self.missing_timer.cancel()
-                self._substantiation_failed(failure) # XXX make this better
+                self._substantiation_failed(failure)
+            if self._shutdown_callback_handle is not None:
+                handle = self._shutdown_callback_handle
+                del self._shutdown_callback_handle
+                reactor.removeSystemEventTrigger(handle)
             return failure
         d.addCallbacks(stash_reply, clean_up)
         return d
@@ -503,14 +510,18 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
         self.build_wait_timer = reactor.callLater(
             self.build_wait_timeout, self._soft_disconnect)
 
-    def insubstantiate(self):
+    def insubstantiate(self, fast=False):
         self._clearBuildWaitTimer()
-        d = self.stop_instance()
+        d = self.stop_instance(fast)
+        if self._shutdown_callback_handle is not None:
+            handle = self._shutdown_callback_handle
+            del self._shutdown_callback_handle
+            reactor.removeSystemEventTrigger(handle)
         self.substantiated = False
         self.building.clear() # just to be sure
         return d
 
-    def _soft_disconnect(self):
+    def _soft_disconnect(self, fast=False):
         d = AbstractBuildSlave.disconnect(self)
         if self.slave is not None:
             # this could be called when the slave needs to shut down, such as
@@ -524,7 +535,7 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
             # The best solution to the odd situation is removing it as a
             # possibilty: make the master in charge of connecting to the
             # slave, rather than vice versa. TODO.
-            d = defer.DeferredList([d, self.insubstantiate()])
+            d = defer.DeferredList([d, self.insubstantiate(fast)])
         else:
             if self.substantiation_deferred is not None:
                 # unlike the previous block, we don't expect this situation when

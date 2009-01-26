@@ -221,12 +221,13 @@ class FakeLatentBuildSlave(AbstractLatentBuildSlave):
         self.testcase.connectOneSlave(self.slavename)
         d.callback(self.start_message)
 
-    def stop_instance(self):
+    def stop_instance(self, fast=False):
         # responsible for shutting down instance
         # we're going to emulate dropping off the net.
 
         # simulate this by replacing the slave Broker's .dataReceived method
         # with one that just throws away all data.
+        self.fast_stop_request = fast
         if self.slavename not in self.testcase.slaves:
             assert self.testing_substantiation_timeout
             self.stopped = True
