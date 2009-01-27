@@ -19,7 +19,7 @@ try:
 except ImportError:
     pass
 from buildbot.status import progress, client # NEEDS COVERAGE
-from buildbot.test.runutils import RunMixin
+from buildbot.test.runutils import RunMixin, setupBuildStepStatus
 
 class MyStep:
     build = None
@@ -734,6 +734,35 @@ class Log(unittest.TestCase):
         # however self.transport is None
         return d
     testLargeSummary.timeout = 5
+
+
+class CompressLog(unittest.TestCase):
+    def testCompressLogs(self):
+        bss = setupBuildStepStatus("test-compress")
+        bss.build.builder.setLogCompressionLimit(1024)
+        l = bss.addLog('not-compress')
+        l.addStdout('a' * 512)
+        l.finish()
+        lc = bss.addLog('to-compress')
+        lc.addStdout('b' * 1024)
+        lc.finish()
+        d = bss.stepFinished(builder.SUCCESS)
+        self.failUnless(d is not None)
+        d.addCallback(self._verifyCompression, bss)
+        return d
+
+    def _verifyCompression(self, result, bss):
+        self.failUnless(len(bss.getLogs()), 2)
+        (ncl, cl) = bss.getLogs() # not compressed, compressed log
+        self.failUnless(os.path.isfile(ncl.getFilename()))
+        self.failIf(os.path.isfile(ncl.getFilename() + ".bz2"))
+        self.failIf(os.path.isfile(cl.getFilename()))
+        self.failUnless(os.path.isfile(cl.getFilename() + ".bz2"))
+        content = ncl.getText()
+        self.failUnless(len(content), 512)
+        content = cl.getText()
+        self.failUnless(len(content), 1024)
+        pass
 
 config_base = """
 from buildbot.process import factory

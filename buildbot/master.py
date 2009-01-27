@@ -511,9 +511,9 @@ class BuildMaster(service.MultiService, styles.Versioned):
         known_keys = ("bots", "slaves",
                       "sources", "change_source",
                       "schedulers", "builders",
-                      "slavePortnum", "debugPassword", "manhole",
-                      "status", "projectName", "projectURL", "buildbotURL",
-                      "properties"
+                      "slavePortnum", "debugPassword", "logSizeLimit",
+                      "manhole", "status", "projectName", "projectURL",
+                      "buildbotURL", "properties"
                       )
         for k in config.keys():
             if k not in known_keys:
@@ -542,6 +542,10 @@ class BuildMaster(service.MultiService, styles.Versioned):
             projectURL = config.get('projectURL')
             buildbotURL = config.get('buildbotURL')
             properties = config.get('properties', {})
+            logCompressionLimit = config.get('logCompressionLimit')
+            if logCompressionLimit is not None and not \
+                    isinstance(logCompressionLimit, int):
+                raise ValueError("logCompressionLimit needs to be bool or int")
 
         except KeyError, e:
             log.msg("config dictionary is missing a required parameter")
@@ -697,6 +701,8 @@ class BuildMaster(service.MultiService, styles.Versioned):
         
         self.properties = Properties()
         self.properties.update(properties, self.configFileName)
+        if logCompressionLimit is not None:
+            self.status.logCompressionLimit = logCompressionLimit
 
         # self.slaves: Disconnect any that were attached and removed from the
         # list. Update self.checker with the new list of passwords, including
