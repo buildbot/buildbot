@@ -69,6 +69,8 @@ class Instance:
         return self.output
 
     def use_ip(self, elastic_ip):
+        if isinstance(elastic_ip, Stub):
+            elastic_ip = elastic_ip.public_ip
         if self.data.addresses[elastic_ip] is not None:
             raise ValueError('elastic ip already used')
         self.data.addresses[elastic_ip] = self
@@ -343,6 +345,62 @@ class BasicConfig(Mixin, unittest.TestCase):
         self.assertIdentical(self.bot1.instance, None)
         self.assertEqual(self.instance.state, TERMINATED)
         del self.instance
+
+class ElasticIP(Mixin, unittest.TestCase):
+    config = textwrap.dedent("""\
+        from buildbot.process import factory
+        from buildbot.steps import dummy
+        from buildbot.ec2buildslave import EC2LatentBuildSlave
+        s = factory.s
+
+        BuildmasterConfig = c = {}
+        c['slaves'] = [EC2LatentBuildSlave('bot1', 'sekrit', 'm1.large',
+                                           'ami-12345',
+                                           identifier='publickey',
+                                           secret_identifier='privatekey',
+                                           elastic_ip='127.0.0.1'
+                                           )]
+        c['schedulers'] = []
+        c['slavePortnum'] = 0
+        c['schedulers'] = []
+
+        f1 = factory.BuildFactory([s(dummy.RemoteDummy, timeout=1)])
+
+        c['builders'] = [
+            {'name': 'b1', 'slavenames': ['bot1'],
+             'builddir': 'b1', 'factory': f1},
+            ]
+        """)
+
+    def testSequence(self):
+        self.assertEqual(self.bot1.elastic_ip.public_ip, '127.0.0.1')
+        self.assertIdentical(self.boto.addresses['127.0.0.1'], None)
+        # let's start a build...
+        d = self.doBuild()
+        d.addCallback(self._testSequence_1)
+        return d
+    def _testSequence_1(self, res):
+        # build was a success!
+        self.failUnlessEqual(res.getResults(), SUCCESS)
+        self.failUnlessEqual(res.getSlavename(), "bot1")
+        # we have our address
+        self.assertIdentical(self.boto.addresses['127.0.0.1'],
+                             self.bot1.instance)
+        # Let's let it shut down.  We'll set the build_wait_timer to fire
+        # sooner, and wait for it to fire.
+        self.bot1.build_wait_timer.reset(0)
+        d = defer.Deferred()
+        reactor.callLater(0.5, d.callback, None)
+        d.addCallback(self._testSequence_2)
+        return d
+    def _testSequence_2(self, res):
+        # slave is insubstantiated
+        self.assertIdentical(self.bot1.slave, None)
+        self.failIf(self.bot1.substantiated)
+        self.assertIdentical(self.bot1.instance, None)
+        # the address is free again
+        self.assertIdentical(self.boto.addresses['127.0.0.1'], None)
+
 
 class Initialization(Mixin, unittest.TestCase):
 
