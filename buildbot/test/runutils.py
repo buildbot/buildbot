@@ -145,7 +145,7 @@ class RunMixin:
     def requestBuild(self, builder):
         # returns a Deferred that fires with an IBuildStatus object when the
         # build is finished
-        req = BuildRequest("forced build", SourceStamp())
+        req = BuildRequest("forced build", SourceStamp(), 'test_builder')
         self.control.getBuilder(builder).requestBuild(req)
         return req.waitUntilFinished()
 
@@ -290,7 +290,7 @@ def makeBuildStep(basedir, step_class=BuildStep, **kwargs):
              'builddir': "builddir", 'factory': None}
     b0 = Builder(setup, bss.getBuild().getBuilder())
     b0.botmaster = FakeBotMaster()
-    br = BuildRequest("reason", ss)
+    br = BuildRequest("reason", ss, 'test_builder')
     b = Build([br])
     b.setBuilder(b0)
     s = step_class(**kwargs)

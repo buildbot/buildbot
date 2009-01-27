@@ -435,7 +435,7 @@ class VCBase(SignalMixin):
         if ss is None:
             ss = SourceStamp()
         #print "doBuild(ss: b=%s rev=%s)" % (ss.branch, ss.revision)
-        req = base.BuildRequest("test_vc forced build", ss)
+        req = base.BuildRequest("test_vc forced build", ss, 'test_builder')
         d = req.waitUntilFinished()
         c.getBuilder("vc").requestBuild(req)
         d.addCallback(self._doBuild_1, shouldSucceed)
@@ -2906,7 +2906,7 @@ class Sources(unittest.TestCase):
         return changes.Change("fred", [], "", when=when, revision=revision)
 
     def testCVS1(self):
-        r = base.BuildRequest("forced build", SourceStamp())
+        r = base.BuildRequest("forced build", SourceStamp(), 'test_builder')
         b = base.Build([r])
         s = source.CVS(cvsroot=None, cvsmodule=None)
         s.setBuild(b)
@@ -2917,7 +2917,7 @@ class Sources(unittest.TestCase):
         c.append(self.makeChange("Wed, 08 Sep 2004 09:00:00 -0700"))
         c.append(self.makeChange("Wed, 08 Sep 2004 09:01:00 -0700"))
         c.append(self.makeChange("Wed, 08 Sep 2004 09:02:00 -0700"))
-        r = base.BuildRequest("forced", SourceStamp(changes=c))
+        r = base.BuildRequest("forced", SourceStamp(changes=c), 'test_builder')
         submitted = "Wed, 08 Sep 2004 09:04:00 -0700"
         r.submittedAt = mktime_tz(parsedate_tz(submitted))
         b = base.Build([r])
@@ -2931,7 +2931,7 @@ class Sources(unittest.TestCase):
         c.append(self.makeChange("Wed, 08 Sep 2004 09:00:00 -0700"))
         c.append(self.makeChange("Wed, 08 Sep 2004 09:01:00 -0700"))
         c.append(self.makeChange("Wed, 08 Sep 2004 09:02:00 -0700"))
-        r = base.BuildRequest("forced", SourceStamp(changes=c))
+        r = base.BuildRequest("forced", SourceStamp(changes=c), 'test_builder')
         submitted = "Wed, 08 Sep 2004 09:04:00 -0700"
         r.submittedAt = mktime_tz(parsedate_tz(submitted))
         b = base.Build([r])
@@ -2945,13 +2945,13 @@ class Sources(unittest.TestCase):
         c.append(self.makeChange("Wed, 08 Sep 2004 09:00:00 -0700"))
         c.append(self.makeChange("Wed, 08 Sep 2004 09:01:00 -0700"))
         c.append(self.makeChange("Wed, 08 Sep 2004 09:02:00 -0700"))
-        r1 = base.BuildRequest("forced", SourceStamp(changes=c))
+        r1 = base.BuildRequest("forced", SourceStamp(changes=c), 'test_builder')
         submitted = "Wed, 08 Sep 2004 09:04:00 -0700"
         r1.submittedAt = mktime_tz(parsedate_tz(submitted))
 
         c = []
         c.append(self.makeChange("Wed, 08 Sep 2004 09:05:00 -0700"))
-        r2 = base.BuildRequest("forced", SourceStamp(changes=c))
+        r2 = base.BuildRequest("forced", SourceStamp(changes=c), 'test_builder')
         submitted = "Wed, 08 Sep 2004 09:07:00 -0700"
         r2.submittedAt = mktime_tz(parsedate_tz(submitted))
 
@@ -2962,7 +2962,7 @@ class Sources(unittest.TestCase):
                              "Wed, 08 Sep 2004 16:06:00 -0000")
 
     def testSVN1(self):
-        r = base.BuildRequest("forced", SourceStamp())
+        r = base.BuildRequest("forced", SourceStamp(), 'test_builder')
         b = base.Build([r])
         s = source.SVN(svnurl="dummy")
         s.setBuild(b)
@@ -2973,7 +2973,7 @@ class Sources(unittest.TestCase):
         c.append(self.makeChange(revision=4))
         c.append(self.makeChange(revision=10))
         c.append(self.makeChange(revision=67))
-        r = base.BuildRequest("forced", SourceStamp(changes=c))
+        r = base.BuildRequest("forced", SourceStamp(changes=c), 'test_builder')
         b = base.Build([r])
         s = source.SVN(svnurl="dummy")
         s.setBuild(b)

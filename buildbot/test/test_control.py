@@ -80,7 +80,7 @@ class Force(unittest.TestCase):
         return d
     def _testRequest_1(self, res):
         c = interfaces.IControl(self.master)
-        req = base.BuildRequest("I was bored", SourceStamp())
+        req = base.BuildRequest("I was bored", SourceStamp(), 'test_builder')
         builder_control = c.getBuilder("force")
         d = defer.Deferred()
         req.subscribe(d.callback)

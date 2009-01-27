@@ -317,7 +317,7 @@ class Disconnect(RunMixin, unittest.TestCase):
         # longer available and will be re-queued. Wait 5 seconds, then check
         # to make sure the build is still in the 'waiting for a slave' queue.
         self.control.getBuilder("dummy").original.START_BUILD_TIMEOUT = 1
-        req = BuildRequest("forced build", SourceStamp())
+        req = BuildRequest("forced build", SourceStamp(), "test_builder")
         self.failUnlessEqual(req.startCount, 0)
         self.control.getBuilder("dummy").requestBuild(req)
         # this should ping the slave, which doesn't respond, and then give up
@@ -1012,7 +1012,7 @@ class BuildPrioritization(RunMixin, unittest.TestCase):
         ss.canBeMergedWith = lambda x: False
 
         # Send one request to tie up the slave before sending future requests
-        req0 = BuildRequest("reason", ss)
+        req0 = BuildRequest("reason", ss, "test_builder")
         self.master.botmaster.builders['quick1'].submitBuildRequest(req0)
 
         # Send 10 requests to alternating builders
@@ -1022,7 +1022,7 @@ class BuildPrioritization(RunMixin, unittest.TestCase):
         reqs = []
         self.finish_order = []
         for i in range(10):
-            req = BuildRequest(str(i), ss)
+            req = BuildRequest(str(i), ss, "test_builder")
             j = i % 2 + 1
             self.master.botmaster.builders['quick%i' % j].submitBuildRequest(req)
             req.submittedAt = i

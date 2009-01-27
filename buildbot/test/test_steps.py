@@ -75,7 +75,7 @@ class BuildStep(unittest.TestCase):
         self.builder_status.nextBuildNumber = 0
         os.mkdir(self.builder_status.basedir)
         self.build_status = self.builder_status.newBuild()
-        req = base.BuildRequest("reason", SourceStamp())
+        req = base.BuildRequest("reason", SourceStamp(), 'test_builder')
         self.build = base.Build([req])
         self.build.build_status = self.build_status # fake it
         self.build.builder = self.builder
@@ -196,7 +196,7 @@ class Steps(unittest.TestCase):
             (shell.Test, {'command': "make testharder"}),
             ]
         f = factory.ConfigurableBuildFactory(steps)
-        req = base.BuildRequest("reason", SourceStamp())
+        req = base.BuildRequest("reason", SourceStamp(), 'test_builder')
         b = f.newBuild([req])
         #for s in b.steps: print s.name
 
@@ -364,7 +364,7 @@ class SlaveVersion(RunMixin, unittest.TestCase):
         return d
 
     def doBuild(self, buildername):
-        br = base.BuildRequest("forced", SourceStamp())
+        br = base.BuildRequest("forced", SourceStamp(), 'test_builder')
         d = br.waitUntilFinished()
         self.control.getBuilder(buildername).requestBuild(br)
         return d

@@ -387,12 +387,13 @@ c['builders'] = [b1a, b1b, b1c, b1d, b2a, b2b]
 
 class Locks(RunMixin, unittest.TestCase):
     def setUp(self):
+        N = 'test_builder'
         RunMixin.setUp(self)
-        self.req1 = req1 = BuildRequest("forced build", SourceStamp())
+        self.req1 = req1 = BuildRequest("forced build", SourceStamp(), N)
         req1.number = 1
-        self.req2 = req2 = BuildRequest("forced build", SourceStamp())
+        self.req2 = req2 = BuildRequest("forced build", SourceStamp(), N)
         req2.number = 2
-        self.req3 = req3 = BuildRequest("forced build", SourceStamp())
+        self.req3 = req3 = BuildRequest("forced build", SourceStamp(), N)
         req3.number = 3
         req1.events = req2.events = req3.events = self.events = []
         d = self.master.loadConfig(config_1)

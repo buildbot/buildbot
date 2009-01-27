@@ -145,6 +145,7 @@ class BuildProperties(unittest.TestCase):
         self.build_status = self.builder_status.newBuild()
         req = base.BuildRequest("reason", 
                     SourceStamp(branch="branch2", revision="1234"),
+                    'test_builder',
                     properties=Properties(scheduler="fakescheduler"))
         self.build = base.Build([req])
         self.build.build_status = self.build_status
