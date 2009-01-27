@@ -502,7 +502,7 @@ class RemoteShellCommand(LoggedRemoteCommand):
         return LoggedRemoteCommand.start(self)
 
     def __repr__(self):
-        return "<RemoteShellCommand '%s'>" % self.command
+        return "<RemoteShellCommand '%s'>" % repr(self.command)
 
 class BuildStep:
     """

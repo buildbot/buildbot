@@ -132,3 +132,13 @@ class LogLineObserver(ObserverTestCase):
 
         self._assertStdout([chunk*4 + "12345"])
         self._assertStderr([])
+
+class RemoteShellTest(unittest.TestCase):
+    def testRepr(self):
+        # Test for #352
+        rsc = buildstep.RemoteShellCommand('.', ('sh', 'make'))
+        testval = repr(rsc)
+        rsc = buildstep.RemoteShellCommand('.', ['sh', 'make'])
+        testval = repr(rsc)
+        rsc = buildstep.RemoteShellCommand('.', 'make')
+        testval = repr(rsc)
