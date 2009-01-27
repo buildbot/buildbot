@@ -67,6 +67,8 @@ c['schedulers'] = []
 c['builders'] = [{'name': 'vc', 'slavename': 'bot1',
                   'builddir': 'vc-dir', 'factory': f1}]
 c['slavePortnum'] = 0
+# do not compress logs in tests
+c['logCompressionLimit'] = False
 BuildmasterConfig = c
 """
 

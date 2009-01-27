@@ -463,8 +463,10 @@ BuildmasterConfig = {
         log5.addEntry(5, "non-standard content on channel 5")
         log5.addStderr(" and some trailing stderr")
 
-        step1.step_status.stepFinished(builder.SUCCESS)
+        d = defer.maybeDeferred(step1.step_status.stepFinished,
+                                builder.SUCCESS)
         bs.buildFinished()
+        return d
 
     def getLogPath(self, stepname, logname):
         return ("/builders/builder1/builds/0/steps/%s/logs/%s" %
