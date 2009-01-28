@@ -2206,6 +2206,14 @@ or problem that they are being notified about. It will also be made
 available to queriers (over IRC) who want to find out where to get
 more information about this buildbot.
 
+@bcindex c['logCompressionLimit']
+The @code{logCompressionLimit} enables bz2-compression of build logs on
+disk for logs that are bigger than the given size, or disables that
+completely if given @code{False}. The default value is 4k, which should
+be a reasonable default on most file systems. This setting has no impact
+on status plugins, and merely affects the required disk space on the
+master for build logs.
+
 
 @node Change Sources and Schedulers, Setting the slaveport, Defining the Project, Configuration
 @section Change Sources and Schedulers

@@ -3,13 +3,14 @@
 from zope.interface import implements
 from twisted.python import log
 from twisted.persisted import styles
-from twisted.internet import reactor, defer
+from twisted.internet import reactor, defer, threads
 from twisted.protocols import basic
 from buildbot.process.properties import Properties
 
 import os, shutil, sys, re, urllib, itertools
 from cPickle import load, dump
 from cStringIO import StringIO
+from bz2 import BZ2File
 
 # sibling imports
 from buildbot import interfaces, util, sourcestamp
@@ -184,6 +185,22 @@ class LogFileProducer:
             self.consumer.finish()
             self.consumer = None
 
+def _tryremove(filename, timeout, retries):
+    """Try to remove a file, and if failed, try again in timeout.
+    Increases the timeout by a factor of 4, and only keeps trying for
+    another retries-amount of times.
+
+    """
+    try:
+        os.unlink(filename)
+    except OSError:
+        if retries > 0:
+            reactor.callLater(timeout, _tryremove, filename, timeout * 4, 
+                              retries - 1)
+        else:
+            log.msg("giving up on removing %s after over %d seconds" %
+                    (filename, timeout))
+
 class LogFile:
     """A LogFile keeps all of its contents on disk, in a non-pickle format to
     which new entries can easily be appended. The file on disk has a name
@@ -237,7 +254,8 @@ class LogFile:
         return os.path.join(self.step.build.builder.basedir, self.filename)
 
     def hasContents(self):
-        return os.path.exists(self.getFilename())
+        return os.path.exists(self.getFilename() + '.bz2') or \
+            os.path.exists(self.getFilename())
 
     def getName(self):
         return self.name
@@ -261,6 +279,11 @@ class LogFile:
             # don't close it!
             return self.openfile
         # otherwise they get their own read-only handle
+        # try a compressed log first
+        try:
+            return BZ2File(self.getFilename() + ".bz2", "r")
+        except IOError:
+            pass
         return open(self.getFilename(), "r")
 
     def getText(self):
@@ -407,6 +430,7 @@ class LogFile:
             # filehandle will be released and automatically closed. We will
             # do a sync, however, to make sure the log gets saved in case of
             # a crash.
+            self.openfile.flush()
             os.fsync(self.openfile.fileno())
             del self.openfile
         self.finished = True
@@ -415,6 +439,41 @@ class LogFile:
         for w in watchers:
             w.callback(self)
         self.watchers = []
+
+
+    def compressLog(self):
+        compressed = self.getFilename() + ".bz2.tmp"
+        d = threads.deferToThread(self._compressLog, compressed)
+        d.addCallback(self._renameCompressedLog, compressed)
+        d.addErrback(self._cleanupFailedCompress, compressed)
+        return d
+
+    def _compressLog(self, compressed):
+        infile = self.getFile()
+        cf = BZ2File(compressed, 'w')
+        bufsize = 1024*1024
+        while True:
+            buf = infile.read(bufsize)
+            cf.write(buf)
+            if len(buf) < bufsize:
+                break
+        cf.close()
+    def _renameCompressedLog(self, rv, compressed):
+        filename = self.getFilename() + '.bz2'
+        if sys.platform == 'win32':
+            # windows cannot rename a file on top of an existing one, so
+            # fall back to delete-first. There are ways this can fail and
+            # lose the builder's history, so we avoid using it in the
+            # general (non-windows) case
+            if os.path.exists(filename):
+                os.unlink(filename)
+        os.rename(compressed, filename)
+        _tryremove(self.getFilename(), 1, 5)
+    def _cleanupFailedCompress(self, failure, compressed):
+        log.msg("failed to compress %s" % self.getFilename())
+        if os.path.exists(compressed):
+            _tryremove(compressed, 1, 5)
+        failure.trap() # reraise the failure
 
     # persistence stuff
     def __getstate__(self):
@@ -877,9 +936,17 @@ class BuildStepStatus(styles.Versioned):
     def stepFinished(self, results):
         self.finished = util.now()
         self.results = results
+        cld = [] # deferreds for log compression
+        logCompressionLimit = self.build.builder.logCompressionLimit
         for loog in self.logs:
             if not loog.isFinished():
                 loog.finish()
+            # if log compression is on, and it's a real LogFile,
+            # HTMLLogFiles aren't files
+            if logCompressionLimit is not False and \
+                    isinstance(loog, LogFile):
+                if os.path.getsize(loog.getFilename()) > logCompressionLimit:
+                    cld.append(loog.compressLog())
 
         for r in self.updates.keys():
             if self.updates[r] is not None:
@@ -890,6 +957,8 @@ class BuildStepStatus(styles.Versioned):
         self.finishedWatchers = []
         for w in watchers:
             w.callback(self)
+        if cld:
+            return defer.DeferredList(cld)
 
     # persistence
 
@@ -1374,6 +1443,7 @@ class BuilderStatus(styles.Versioned):
         self.nextBuild = None
         self.watchers = []
         self.buildCache = [] # TODO: age builds out of the cache
+        self.logCompressionLimit = False # default to no compression for tests
 
     # persistence
 
@@ -1428,6 +1498,9 @@ class BuilderStatus(styles.Versioned):
             self.nextBuildNumber = max(existing_builds) + 1
         else:
             self.nextBuildNumber = 0
+
+    def setLogCompressionLimit(self, lowerLimit):
+        self.logCompressionLimit = lowerLimit
 
     def saveYourself(self):
         for b in self.buildCache:
@@ -1845,6 +1918,8 @@ class Status:
         self.watchers = []
         self.activeBuildSets = []
         assert os.path.isdir(basedir)
+        # compress logs bigger than 4k, a good default on linux
+        self.logCompressionLimit = 4*1024
 
 
     # methods called by our clients
@@ -2057,6 +2132,7 @@ class Status:
         builder_status.determineNextBuildNumber()
 
         builder_status.setBigState("offline")
+        builder_status.setLogCompressionLimit(self.logCompressionLimit)
 
         for t in self.watchers:
             self.announceNewBuilder(t, name, builder_status)
