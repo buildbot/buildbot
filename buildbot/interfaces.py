@@ -4,7 +4,7 @@
 Define the interfaces that are implemented by various buildbot classes.
 """
 
-from zope.interface import Interface
+from zope.interface import Interface, Attribute
 
 # exceptions that can be raised while trying to start a build
 class NoSlaveError(Exception):
@@ -12,6 +12,8 @@ class NoSlaveError(Exception):
 class BuilderInUseError(Exception):
     pass
 class BuildSlaveTooOldError(Exception):
+    pass
+class LatentBuildSlaveFailedToSubstantiate(Exception):
     pass
 
 # other exceptions
@@ -43,7 +45,7 @@ class IScheduler(Interface):
     """I watch for Changes in the source tree and decide when to trigger
     Builds. I create BuildSet objects and submit them to the BuildMaster. I
     am a service, and the BuildMaster is always my parent.
-    
+
     @ivar properties: properties to be applied to all builds started by this
     scheduler
     @type properties: L<buildbot.process.properties.Properties>
@@ -454,7 +456,7 @@ class IBuildStatus(Interface):
     def getBuilder():
         """
         Return the BuilderStatus that owns this build.
-        
+
         @rtype: implementor of L{IBuilderStatus}
         """
 
@@ -1094,3 +1096,32 @@ class ILogObserver(Interface):
 class IBuildSlave(Interface):
     # this is a marker interface for the BuildSlave class
     pass
+
+class ILatentBuildSlave(IBuildSlave):
+    """A build slave that is not always running, but can run when requested.
+    """
+    substantiated = Attribute('Substantiated',
+                              'Whether the latent build slave is currently '
+                              'substantiated with a real instance.')
+
+    def substantiate():
+        """Request that the slave substantiate with a real instance.
+
+        Returns a deferred that will callback when a real instance has
+        attached."""
+
+    # there is an insubstantiate too, but that is not used externally ATM.
+
+    def buildStarted(sb):
+        """Inform the latent build slave that a build has started.
+
+        ``sb`` is a LatentSlaveBuilder as defined in buildslave.py.  The sb
+        is the one for whom the build started.
+        """
+
+    def buildFinished(sb):
+        """Inform the latent build slave that a build has finished.
+
+        ``sb`` is a LatentSlaveBuilder as defined in buildslave.py.  The sb
+        is the one for whom the build finished.
+        """
