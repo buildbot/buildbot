@@ -511,7 +511,7 @@ class BuildMaster(service.MultiService, styles.Versioned):
         known_keys = ("bots", "slaves",
                       "sources", "change_source",
                       "schedulers", "builders",
-                      "slavePortnum", "debugPassword", "logSizeLimit",
+                      "slavePortnum", "debugPassword", "logCompressionLimit",
                       "manhole", "status", "projectName", "projectURL",
                       "buildbotURL", "properties"
                       )
