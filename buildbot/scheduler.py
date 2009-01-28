@@ -660,17 +660,20 @@ class Try_Jobdir(TryBase):
             log.msg("%s reports a bad jobfile in %s" % (self, filename))
             log.err()
             return
-        # compare builderNames against self.builderNames
-        # TODO: think about this some more.. why bother restricting it?
-        # perhaps self.builderNames should be used as the default list
-        # instead of being used as a restriction?
-        for b in builderNames:
-            if not b in self.builderNames:
-                log.msg("%s got jobfile %s with builder %s" % (self,
-                                                               filename, b))
-                log.msg(" but that wasn't in our list: %s"
-                        % (self.builderNames,))
-                return
+        # self.builderNames is the configured list of builders
+        # available for try.  If the user supplies a list of builders,
+        # it must be restricted to the configured list.  If not, build
+        # on all of the configured builders.
+        if builderNames:
+            for b in builderNames:
+                if not b in self.builderNames:
+                    log.msg("%s got jobfile %s with builder %s" % (self,
+                                                                   filename, b))
+                    log.msg(" but that wasn't in our list: %s"
+                            % (self.builderNames,))
+                    return
+        else:
+            builderNames = self.builderNames
 
         reason = "'try' job"
         bs = buildset.BuildSet(builderNames, ss, reason=reason, 
@@ -715,12 +718,21 @@ class Try_Userpass_Perspective(pbutil.NewCredPerspective):
     def perspective_try(self, branch, revision, patch, builderNames, properties={}):
         log.msg("user %s requesting build on builders %s" % (self.username,
                                                              builderNames))
-        for b in builderNames:
-            if not b in self.parent.builderNames:
-                log.msg("%s got job with builder %s" % (self, b))
-                log.msg(" but that wasn't in our list: %s"
-                        % (self.parent.builderNames,))
-                return
+        # self.builderNames is the configured list of builders
+        # available for try.  If the user supplies a list of builders,
+        # it must be restricted to the configured list.  If not, build
+        # on all of the configured builders.
+        # TODO:  This code should be refactored as it's almost identical
+        # to the ssh case.
+        if builderNames:
+            for b in builderNames:
+                if not b in self.parent.builderNames:
+                    log.msg("%s got job with builder %s" % (self, b))
+                    log.msg(" but that wasn't in our list: %s"
+                            % (self.parent.builderNames,))
+                    return
+        else:
+            builderNames = self.parent.builderNames
         ss = SourceStamp(branch, revision, patch)
         reason = "'try' job from user %s" % self.username
 

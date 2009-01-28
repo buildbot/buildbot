@@ -372,8 +372,6 @@ class Try(pb.Referenceable):
         self.connect = self.getopt('connect', 'try_connect')
         assert self.connect, "you must specify a connect style: ssh or pb"
         self.builderNames = self.getopt('builders', 'try_builders')
-        assert self.builderNames, "no builders! use --builder or " \
-               "try_builders=[names..] in .buildbot/options"
 
     def getopt(self, config_name, options_name, default=None):
         value = self.config.get(config_name)
