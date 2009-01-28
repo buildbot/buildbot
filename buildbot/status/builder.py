@@ -471,7 +471,8 @@ class LogFile:
         _tryremove(self.getFilename(), 1, 5)
     def _cleanupFailedCompress(self, failure, compressed):
         log.msg("failed to compress %s" % self.getFilename())
-        _tryremove(compressed, 1, 5)
+        if os.path.exists(compressed):
+            _tryremove(compressed, 1, 5)
         failure.trap() # reraise the failure
 
     # persistence stuff
