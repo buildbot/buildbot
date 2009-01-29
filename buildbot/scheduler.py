@@ -436,15 +436,24 @@ class Nightly(BaseUpstreamScheduler):
     either of them. All time values are compared against the tuple returned
     by time.localtime(), so month and dayOfMonth numbers start at 1, not
     zero. dayOfWeek=0 is Monday, dayOfWeek=6 is Sunday.
+
+    onlyIfChanged functionality
+    s = Nightly('nightly', ['builder1', 'builder2'],
+                hour=3, minute=0, onlyIfChanged=True)
+    When the flag is True (False by default), the build is trigged if
+    the date matches and if the branch has changed
+
+    fileIsImportant parameter is implemented as defined in class Scheduler
     """
 
     compare_attrs = ('name', 'builderNames',
                      'minute', 'hour', 'dayOfMonth', 'month',
-                     'dayOfWeek', 'branch', 'properties')
+                     'dayOfWeek', 'branch', 'onlyIfChanged',
+                     'fileIsImportant', 'properties')
 
     def __init__(self, name, builderNames, minute=0, hour='*',
                  dayOfMonth='*', month='*', dayOfWeek='*',
-                 branch=None, properties={}):
+                 branch=None, fileIsImportant=None, onlyIfChanged=False, properties={}):
         # Setting minute=0 really makes this an 'Hourly' scheduler. This
         # seemed like a better default than minute='*', which would result in
         # a build every 60 seconds.
@@ -456,10 +465,18 @@ class Nightly(BaseUpstreamScheduler):
         self.month = month
         self.dayOfWeek = dayOfWeek
         self.branch = branch
+        self.onlyIfChanged = onlyIfChanged
         self.delayedRun = None
         self.nextRunTime = None
         self.reason = ("The Nightly scheduler named '%s' triggered this build"
                        % name)
+
+        self.importantChanges   = [] 
+        self.unimportantChanges = [] 
+        self.fileIsImportant    = None 
+        if fileIsImportant: 
+            assert callable(fileIsImportant) 
+            self.fileIsImportant = fileIsImportant 
 
     def addTime(self, timetuple, secs):
         return time.localtime(time.mktime(timetuple)+secs)
@@ -550,16 +567,51 @@ class Nightly(BaseUpstreamScheduler):
         # Schedule the next run
         self.setTimer()
 
-        # And trigger a build
-        bs = buildset.BuildSet(self.builderNames,
-                               SourceStamp(branch=self.branch),
-                               self.reason,
-                               properties=self.properties)
-        self.submitBuildSet(bs)
+        if  self.onlyIfChanged:
+            if len(self.importantChanges) > 0: 
+                changes = self.importantChanges + self.unimportantChanges 
+                # And trigger a build 
+                log.msg("Nightly Scheduler <%s>: triggering build" % self.name) 
+                bs = buildset.BuildSet(self.builderNames,
+                                       SourceStamp(changes=changes),
+                                       self.reason,
+                                       properties=self.properties)
+                self.submitBuildSet(bs)
+                # Reset the change lists 
+                self.importantChanges = [] 
+                self.unimportantChanges = []
+            else: 
+                log.msg("Nightly Scheduler <%s>: skipping build - No important change" % self.name)
+        else:
+            # And trigger a build
+            bs = buildset.BuildSet(self.builderNames,
+                                   SourceStamp(branch=self.branch),
+                                   self.reason,
+                                   properties=self.properties)
+            self.submitBuildSet(bs) 
 
     def addChange(self, change):
-        pass
-
+        if  self.onlyIfChanged:
+            if change.branch != self.branch: 
+                log.msg("Nightly Scheduler <%s>: ignoring change %d on off-branch %s" % (self.name, change.revision, change.branch)) 
+                return 
+            if not self.fileIsImportant:
+                self.addImportantChange(change) 
+            elif self.fileIsImportant(change): 
+                self.addImportantChange(change) 
+            else: 
+                self.addUnimportantChange(change)
+        else:
+            log.msg("Nightly Scheduler <%s>: no add change" % self.name)
+            pass
+ 
+    def addImportantChange(self, change):
+        log.msg("Nightly Scheduler <%s>: change %s from %s is important, adding it" % (self.name, change.revision, change.who)) 
+        self.importantChanges.append(change) 
+ 
+    def addUnimportantChange(self, change):
+        log.msg("Nightly Scheduler <%s>: change %s from %s is not important, adding it" % (self.name, change.revision, change.who)) 
+        self.unimportantChanges.append(change) 
 
 
 class TryBase(BaseScheduler):
