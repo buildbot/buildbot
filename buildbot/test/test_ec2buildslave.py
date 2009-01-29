@@ -297,7 +297,7 @@ class BasicConfig(Mixin, unittest.TestCase):
         # this would be appropriate if we were recreating keys.
         #self.assertNotEqual(self.boto.keys['latent_buildbot_slave'],
         #                    self.boto.original_keys['latent_buildbot_slave'])
-        self.assertIsInstance(self.bot1.get_image(), Image)
+        self.failUnless(isinstance(self.bot1.get_image(), Image))
         self.assertEqual(self.bot1.get_image().id, 'ami-12345')
         self.assertIdentical(self.bot1.elastic_ip, None)
         self.assertIdentical(self.bot1.instance, None)
@@ -311,7 +311,7 @@ class BasicConfig(Mixin, unittest.TestCase):
         # bot 1 is substantiated.
         self.assertNotIdentical(self.bot1.slave, None)
         self.failUnless(self.bot1.substantiated)
-        self.assertIsInstance(self.bot1.instance, Instance)
+        self.failUnless(isinstance(self.bot1.instance, Instance))
         self.assertEqual(self.bot1.instance.id, 'ami-12345')
         self.assertEqual(self.bot1.instance.state, RUNNING)
         self.assertEqual(self.bot1.instance.key_name, 'latent_buildbot_slave')
@@ -427,7 +427,7 @@ class Initialization(Mixin, unittest.TestCase):
         bot1 = EC2LatentBuildSlave('bot1', 'sekrit', 'm1.large',
                                    'ami-12345')
         # for completeness, we'll show that the connection actually exists.
-        self.assertIsInstance(bot1.conn, Connection)
+        self.failUnless(isinstance(bot1.conn, Connection))
         # clean up.
         os.environ['HOME'] = home
         self.rmtree(dir)
@@ -444,7 +444,7 @@ class Initialization(Mixin, unittest.TestCase):
         bot1 = EC2LatentBuildSlave('bot1', 'sekrit', 'm1.large',
                                    'ami-12345', aws_id_file_path=file_path)
         # for completeness, we'll show that the connection actually exists.
-        self.assertIsInstance(bot1.conn, Connection)
+        self.failUnless(isinstance(bot1.conn, Connection))
 
     def testNoAMIBroken(self):
         # you must specify an AMI, or at least one of valid_ami_owners or
