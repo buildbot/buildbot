@@ -2550,6 +2550,10 @@ to *, meaning every month.
 @item dayOfWeek
 The day of the week to start a build, with Monday = 0.  This defauls
 to *, meaning every day of the week.
+
+@item onlyIfChanged
+If this is true, then builds will not be scheduled at the designated time
+unless the source has changed since the previous build.
 @end table
 
 For example, the following master.cfg clause will cause a build to be
@@ -2563,14 +2567,15 @@ s = scheduler.Nightly(name='nightly',
 @end example
 
 This scheduler will perform a build each monday morning at 6:23am and
-again at 8:23am:
+again at 8:23am, but only if someone has committed code in the interim:
 
 @example
 s = scheduler.Nightly(name='BeforeWork',
          builderNames=['builder1'],
          dayOfWeek=0,
          hour=[6,8],
-         minute=23)
+         minute=23,
+         onlyIfChanged=True)
 @end example
 
 The following runs a build every two hours, using Python's @code{range}
