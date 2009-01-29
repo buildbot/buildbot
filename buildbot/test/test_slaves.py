@@ -240,21 +240,25 @@ class FakeLatentBuildSlave(AbstractLatentBuildSlave):
         return d
 
     def _stop_instance(self, d):
-        def discard(data):
+        try:
+            s = self.testcase.slaves.pop(self.slavename)
+        except KeyError:
             pass
-        s = self.testcase.slaves.pop(self.slavename)
-        bot = s.getServiceNamed("bot")
-        for buildername in self.slavebuilders:
-            remote = bot.builders[buildername].remote
-            if remote is None:
-                continue
-            broker = remote.broker
-            broker.dataReceived = discard # seal its ears
-            broker.transport.write = discard # and take away its voice
-        # also discourage it from reconnecting once the connection goes away
-        s.bf.continueTrying = False
-        # stop the service for cleanliness
-        s.stopService()
+        else:
+            def discard(data):
+                pass
+            bot = s.getServiceNamed("bot")
+            for buildername in self.slavebuilders:
+                remote = bot.builders[buildername].remote
+                if remote is None:
+                    continue
+                broker = remote.broker
+                broker.dataReceived = discard # seal its ears
+                broker.transport.write = discard # and take away its voice
+            # also discourage it from reconnecting once the connection goes away
+            s.bf.continueTrying = False
+            # stop the service for cleanliness
+            s.stopService()
         d.callback(None)
 
 latent_config = """
@@ -499,7 +503,7 @@ class LatentSlave(RunMixin, unittest.TestCase):
         # ok, we failed.
         self.assertIdentical(self.bot1.slave, None)
         self.failIf(self.bot1.substantiated)
-        self.assertIsInstance(res, failure.Failure)
+        self.failUnless(isinstance(res, failure.Failure))
         self.assertIdentical(self.bot1.substantiation_deferred, None)
         # our event informs us of this
         e1 = self.b1.builder_status.getEvent(-3)
