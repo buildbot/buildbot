@@ -431,6 +431,18 @@ class Try(pb.Referenceable):
                                          patchlevel, diff,
                                          self.builderNames)
 
+    def fakeDeliverJob(self):
+        # Display the job to be delivered, but don't perform delivery.
+        ss = self.sourcestamp
+        print ("Job:\n\tBranch: %s\n\tRevision: %s\n\tBuilders: %s\n%s"
+               % (ss.branch,
+                  ss.revision,
+                  self.builderNames,
+                  ss.patch[1]))
+        d = defer.Deferred()
+        d.callback(True)
+        return d
+
     def deliverJob(self):
         # returns a Deferred that fires when the job has been delivered
         opts = self.opts
@@ -656,7 +668,10 @@ class Try(pb.Referenceable):
         d = defer.Deferred()
         d.addCallback(lambda res: self.createJob())
         d.addCallback(lambda res: self.announce("job created"))
-        d.addCallback(lambda res: self.deliverJob())
+        deliver = self.deliverJob
+        if bool(self.config.get("dryrun")):
+            deliver = self.fakeDeliverJob
+        d.addCallback(lambda res: deliver())
         d.addCallback(lambda res: self.announce("job has been delivered"))
         d.addCallback(lambda res: self.getStatus())
         d.addErrback(log.err)
