@@ -61,10 +61,10 @@ def makeChange(p):
     # encode them into ascii, which will blow up early if there's anything we
     # can't get to the far side. When we move to something that *can* handle
     # unicode (like newpb), remove this.
-    author = author.encode("ascii")
-    comments = comments.encode("ascii")
-    files = [f.encode("ascii") for f in files]
-    revision = revision.encode("ascii")
+    author = author.encode("ascii", "replace")
+    comments = comments.encode("ascii", "replace")
+    files = [f.encode("ascii", "replace") for f in files]
+    revision = revision.encode("ascii", "replace")
 
     change = {
         # note: this is more likely to be a full email address, which would
