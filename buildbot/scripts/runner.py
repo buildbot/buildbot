@@ -823,6 +823,7 @@ class TryOptions(usage.Options):
 
     optFlags = [
         ["wait", None, "wait until the builds have finished"],
+        ["dryrun", 'n', "Gather info, but don't actually submit."],
         ]
 
     def __init__(self):

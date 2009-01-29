@@ -67,6 +67,8 @@ c['schedulers'] = []
 c['builders'] = [{'name': 'vc', 'slavename': 'bot1',
                   'builddir': 'vc-dir', 'factory': f1}]
 c['slavePortnum'] = 0
+# do not compress logs in tests
+c['logCompressionLimit'] = False
 BuildmasterConfig = c
 """
 
@@ -1111,7 +1113,7 @@ class CVSHelper(BaseHelper):
         yield w; w.getResult() # we must getResult() to raise any exceptions
 
         self.populate(tmp)
-        cmd = ['-d',  self.cvsrep,  'import', 
+        cmd = ['-d',  self.cvsrep,  'import',
                 '-m', 'sample_project_files', 'sample',  'vendortag',  'start']
         w = self.dovc(tmp, cmd)
         yield w; w.getResult()
@@ -1198,7 +1200,7 @@ class CVS(VCBase, unittest.TestCase):
     def testCheckoutBranch(self):
         d = self.do_branch()
         return d
-        
+
     def testTry(self):
         d = self.do_getpatch(doBranch=False)
         return d
@@ -1384,7 +1386,12 @@ class P4Helper(BaseHelper):
         def outReceived(self, data):
             # When it says starting, it has bound to the socket.
             if self.started:
-                if data.startswith('Perforce Server starting...'):
+                #
+                # Make sure p4d has started. Newer versions of p4d
+                # have more verbose messaging when db files don't exist, so
+                # we use re.search instead of startswith.
+                #
+                if re.search('Perforce Server starting...', data):
                     self.started.callback(None)
                 else:
                     print "p4d said %r" % data
@@ -1492,6 +1499,7 @@ class P4(VCBase, unittest.TestCase):
     metadir = None
     vctype = "source.P4"
     vc_name = "p4"
+    has_got_revision = True
 
     def tearDownClass(self):
         if self.helper:
@@ -1649,7 +1657,7 @@ class Darcs(VCBase, unittest.TestCase):
         self.helper.vcargs =  { 'repourl': repourl }
         d = self.do_vctest(testRetry=False)
         return d
-        
+
     def testTry(self):
         self.helper.vcargs = { 'baseURL': self.helper.darcs_base + "/",
                                'defaultBranch': "trunk" }
@@ -2058,7 +2066,7 @@ class Bazaar(Arch):
         # and arrange to fix it again in 5 seconds, while the test is
         # running.
         self.fixtimer = reactor.callLater(5, self.fixRepository)
-        
+
         url = "http://localhost:%d/Baz-Repository" % self.httpPort
         self.helper.vcargs = { 'url': url,
                                'archive': self.helper.archname,
@@ -2406,11 +2414,18 @@ class MercurialHelper(BaseHelper):
         rmdirRecursive(workdir)
 
 class MercurialServerPP(protocol.ProcessProtocol):
+    def __init__(self):
+        self.wait = defer.Deferred()
+
     def outReceived(self, data):
         log.msg("hg-serve-stdout: %s" % (data,))
     def errReceived(self, data):
         print "HG-SERVE-STDERR:", data
         log.msg("hg-serve-stderr: %s" % (data,))
+    def processEnded(self, reason):
+        log.msg("hg-serve ended: %s" % reason)
+        self.wait.callback(None)
+
 
 class Mercurial(VCBase, unittest.TestCase):
     vc_name = "hg"
@@ -2422,6 +2437,7 @@ class Mercurial(VCBase, unittest.TestCase):
     has_got_revision = True
     _hg_server = None
     _wait_for_server_poller = None
+    _pp = None
 
     def testCheckout(self):
         self.helper.vcargs = { 'repourl': self.helper.rep_trunk }
@@ -2462,10 +2478,11 @@ class Mercurial(VCBase, unittest.TestCase):
         # "listening at" message to know when it's safe to start the test.
         # Instead, poll every second until a getPage works.
 
-        pp = MercurialServerPP() # logs+discards everything
+        self._pp = MercurialServerPP() # logs+discards everything
+
         # this serves one tree at a time, so we serve trunk. TODO: test hg's
         # in-repo branches, for which a single tree will hold all branches.
-        self._hg_server = reactor.spawnProcess(pp, self.helper.vcexe, args,
+        self._hg_server = reactor.spawnProcess(self._pp, self.helper.vcexe, args,
                                                os.environ,
                                                self.helper.rep_trunk)
         log.msg("waiting for hg serve to start")
@@ -2490,12 +2507,17 @@ class Mercurial(VCBase, unittest.TestCase):
             if self._wait_for_server_poller.running:
                 self._wait_for_server_poller.stop()
         if self._hg_server:
+            self._hg_server.loseConnection()
             try:
                 self._hg_server.signalProcess("KILL")
             except error.ProcessExitedAlready:
                 pass
             self._hg_server = None
         return VCBase.tearDown(self)
+
+    def tearDown2(self):
+        if self._pp:
+            return self._pp.wait
 
     def testCheckoutHTTP(self):
         d = self.serveHTTP()
@@ -2514,6 +2536,197 @@ class Mercurial(VCBase, unittest.TestCase):
 
 VCS.registerVC(Mercurial.vc_name, MercurialHelper())
 
+class MercurialInRepoHelper(MercurialHelper):
+    branchname = "the_branch"
+    try_branchname = "the_branch"
+
+
+    def createRepository(self):
+        self.createBasedir()
+        self.hg_base = os.path.join(self.repbase, "Mercurial-Repository")
+        self.repo = os.path.join(self.hg_base, "inrepobranch")
+        tmp = os.path.join(self.hg_base, "hgtmp")
+
+        os.makedirs(self.repo)
+        w = self.dovc(self.repo, "init")
+        yield w; w.getResult()
+
+        self.populate(tmp)
+        w = self.dovc(tmp, "init")
+        yield w; w.getResult()
+        w = self.dovc(tmp, "add")
+        yield w; w.getResult()
+        w = self.dovc(tmp, ['commit', '-m', 'initial_import'])
+        yield w; w.getResult()
+        w = self.dovc(tmp, ['push', self.repo])
+        # note that hg-push does not actually update the working directory
+        yield w; w.getResult()
+        w = self.dovc(tmp, "identify")
+        yield w; out = w.getResult()
+        self.addTrunkRev(self.extract_id(out))
+
+        self.populate_branch(tmp)
+        w = self.dovc(tmp, ['branch', self.branchname])
+        yield w; w.getResult()
+        w = self.dovc(tmp, ['commit', '-m', 'commit_on_branch'])
+        yield w; w.getResult()
+        w = self.dovc(tmp, ['push', '-f', self.repo])
+        yield w; w.getResult()
+        w = self.dovc(tmp, "identify")
+        yield w; out = w.getResult()
+        self.addBranchRev(self.extract_id(out))
+        rmdirRecursive(tmp)
+    createRepository = deferredGenerator(createRepository)
+
+    def vc_revise(self):
+        tmp = os.path.join(self.hg_base, "hgtmp2")
+        w = self.dovc(self.hg_base, ['clone', self.repo, tmp])
+        yield w; w.getResult()
+        w = self.dovc(tmp, ['update', '--clean', '--rev', 'default'])
+        yield w; w.getResult()
+
+        self.version += 1
+        version_c = VERSION_C % self.version
+        version_c_filename = os.path.join(tmp, "version.c")
+        open(version_c_filename, "w").write(version_c)
+        # hg uses timestamps to distinguish files which have changed, so we
+        # force the mtime forward a little bit
+        future = time.time() + 2*self.version
+        os.utime(version_c_filename, (future, future))
+        w = self.dovc(tmp, ['commit', '-m', 'revised_to_%d' % self.version])
+        yield w; w.getResult()
+        w = self.dovc(tmp, ['push', '--force', self.repo])
+        yield w; w.getResult()
+        w = self.dovc(tmp, "identify")
+        yield w; out = w.getResult()
+        self.addTrunkRev(self.extract_id(out))
+        rmdirRecursive(tmp)
+    vc_revise = deferredGenerator(vc_revise)
+
+    def vc_try_checkout(self, workdir, rev, branch=None):
+        assert os.path.abspath(workdir) == workdir
+        if os.path.exists(workdir):
+            rmdirRecursive(workdir)
+        w = self.dovc(self.hg_base, ['clone', self.repo, workdir])
+        yield w; w.getResult()
+        if not branch: branch = "default"
+        w = self.dovc(workdir, ['update', '--clean', '--rev', branch ])
+        yield w; w.getResult()
+
+        try_c_filename = os.path.join(workdir, "subdir", "subdir.c")
+        open(try_c_filename, "w").write(TRY_C)
+        future = time.time() + 2*self.version
+        os.utime(try_c_filename, (future, future))
+    vc_try_checkout = deferredGenerator(vc_try_checkout)
+
+    def vc_try_finish(self, workdir):
+        rmdirRecursive(workdir)
+        pass
+
+
+class MercurialInRepo(Mercurial):
+    vc_name = 'MercurialInRepo'
+
+    def default_args(self):
+        return  { 'repourl': self.helper.repo,
+                  'branchType': 'inrepo',
+                  'defaultBranch': 'default' }
+
+    def testCheckout(self):
+        self.helper.vcargs = self.default_args()
+        d = self.do_vctest(testRetry=False)
+
+        # TODO: testRetry has the same problem with Mercurial as it does for
+        # Arch
+        return d
+
+    def testPatch(self):
+        self.helper.vcargs = self.default_args()
+        d = self.do_patch()
+        return d
+
+    def testCheckoutBranch(self):
+        self.helper.vcargs = self.default_args()
+        d = self.do_branch()
+        return d
+
+    def serveHTTP(self):
+        # the easiest way to publish hg over HTTP is by running 'hg serve' as
+        # a child process while the test is running. (you can also use a CGI
+        # script, which sounds difficult, or you can publish the files
+        # directly, which isn't well documented).
+
+        # grr.. 'hg serve' doesn't let you use --port=0 to mean "pick a free
+        # port", instead it uses it as a signal to use the default (port
+        # 8000). This means there is no way to make it choose a free port, so
+        # we are forced to make it use a statically-defined one, making it
+        # harder to avoid collisions.
+        self.httpPort = 8300 + (os.getpid() % 200)
+        args = [self.helper.vcexe,
+                "serve", "--port", str(self.httpPort), "--verbose"]
+
+        # in addition, hg doesn't flush its stdout, so we can't wait for the
+        # "listening at" message to know when it's safe to start the test.
+        # Instead, poll every second until a getPage works.
+
+        self._pp = MercurialServerPP() # logs+discards everything
+        # this serves one tree at a time, so we serve trunk. TODO: test hg's
+        # in-repo branches, for which a single tree will hold all branches.
+        self._hg_server = reactor.spawnProcess(self._pp, self.helper.vcexe, args,
+                                               os.environ,
+                                               self.helper.repo)
+        log.msg("waiting for hg serve to start")
+        done_d = defer.Deferred()
+        def poll():
+            d = client.getPage("http://localhost:%d/" % self.httpPort)
+            def success(res):
+                log.msg("hg serve appears to have started")
+                self._wait_for_server_poller.stop()
+                done_d.callback(None)
+            def ignore_connection_refused(f):
+                f.trap(error.ConnectionRefusedError)
+            d.addCallbacks(success, ignore_connection_refused)
+            d.addErrback(done_d.errback)
+            return d
+        self._wait_for_server_poller = task.LoopingCall(poll)
+        self._wait_for_server_poller.start(0.5, True)
+        return done_d
+
+    def tearDown(self):
+        if self._wait_for_server_poller:
+            if self._wait_for_server_poller.running:
+                self._wait_for_server_poller.stop()
+        if self._hg_server:
+            self._hg_server.loseConnection()
+            try:
+                self._hg_server.signalProcess("KILL")
+            except error.ProcessExitedAlready:
+                pass
+            self._hg_server = None
+        return VCBase.tearDown(self)
+
+    def tearDown2(self):
+        if self._pp:
+            return self._pp.wait
+
+    def testCheckoutHTTP(self):
+        d = self.serveHTTP()
+        def _started(res):
+            repourl = "http://localhost:%d/" % self.httpPort
+            self.helper.vcargs = self.default_args()
+            self.helper.vcargs['repourl'] = repourl
+            return self.do_vctest(testRetry=False)
+        d.addCallback(_started)
+        return d
+
+    def testTry(self):
+        self.helper.vcargs = self.default_args()
+        d = self.do_getpatch()
+        return d
+
+VCS.registerVC(MercurialInRepo.vc_name, MercurialInRepoHelper())
+
+
 class GitHelper(BaseHelper):
     branchname = "branch"
     try_branchname = "branch"
@@ -2527,24 +2740,31 @@ class GitHelper(BaseHelper):
         return d
 
     def _capable(self, v, vcexe):
-        m = re.search(r'\b([\d\.]+)\b', v)
-        if not m:
+        try:
+            m = re.search(r'\b(\d+)\.(\d+)', v)
+
+            if not m:
+                raise Exception, 'no regex match'
+
+            ver = tuple([int(num) for num in m.groups()])
+
+            # git-1.1.3 (as shipped with Dapper) doesn't understand 'git
+            # init' (it wants 'git init-db'), and fails unit tests that
+            # involve branches. git-1.5.3.6 (on my debian/unstable system)
+            # works. I don't know where the dividing point is: if someone can
+            # figure it out (or figure out how to make buildbot support more
+            # versions), please update this check.
+            if ver < (1, 2):
+                return (False, "Found git (%s) but it is older than 1.2.x" % vcexe)
+
+        except Exception, e:
             log.msg("couldn't identify git version number in output:")
             log.msg("'''%s'''" % v)
+            log.msg("because: %s" % e)
             log.msg("skipping tests")
             return (False,
-                    "Found git (%s) but couldn't identify its version" % vcexe)
-        ver_s = m.group(1)
-        ver = tuple([int(num) for num in ver_s.split(".")])
+                    "Found git (%s) but couldn't identify its version from '%s'" % (vcexe, v))
 
-        # git-1.1.3 (as shipped with Dapper) doesn't understand 'git
-        # init' (it wants 'git init-db'), and fails unit tests that
-        # involve branches. git-1.5.3.6 (on my debian/unstable system)
-        # works. I don't know where the dividing point is: if someone can
-        # figure it out (or figure out how to make buildbot support more
-        # versions), please update this check.
-        if ver < (1,2):
-            return (False, "Found git (%s) but it is older than 1.2.x" % vcexe)
         self.vcexe = vcexe
         return (True, None)
 

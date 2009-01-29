@@ -19,7 +19,7 @@ try:
 except ImportError:
     pass
 from buildbot.status import progress, client # NEEDS COVERAGE
-from buildbot.test.runutils import RunMixin
+from buildbot.test.runutils import RunMixin, setupBuildStepStatus
 
 class MyStep:
     build = None
@@ -124,6 +124,36 @@ class MyLookup:
         else:
             d.callback(user + "@" + "dev.com")
         return d
+
+def customTextMailMessage(attrs):
+    logLines = 3
+    text = list()
+    text.append("STATUS: %s" % attrs['result'].title())
+    text.append("")
+    text.extend([c.asText() for c in attrs['changes']])
+    text.append("")
+    name, url, lines = attrs['logs'][-1]
+    text.append("Last %d lines of '%s':" % (logLines, name))
+    text.extend(["\t%s\n" % line for line in lines[len(lines)-logLines:]])
+    text.append("")
+    text.append("-buildbot")
+    return ("\n".join(text), 'plain')
+
+def customHTMLMailMessage(attrs):
+    logLines = 3
+    text = list()
+    text.append("<h3>STATUS <a href='%s'>%s</a>:</h3>" % (attrs['buildURL'],
+                                                          attrs['result'].title()))
+    text.append("<h4>Recent Changes:</h4>")
+    text.extend([c.asHTML() for c in attrs['changes']])
+    name, url, lines = attrs['logs'][-1]
+    text.append("<h4>Last %d lines of '%s':</h4>" % (logLines, name))
+    text.append("<p>")
+    text.append("<br>".join([line for line in lines[len(lines)-logLines:]]))
+    text.append("</p>")
+    text.append("<br>")
+    text.append("<b>-<a href='%s'>buildbot</a></b>" % attrs['buildbotURL'])
+    return ("\n".join(text), 'html')
 
 class Mail(unittest.TestCase):
 
@@ -271,6 +301,71 @@ class Mail(unittest.TestCase):
         self.messages = []
         mailer3.buildFinished("builder2", b2, b2.results)
         self.failUnlessEqual(len(self.messages), 1)
+
+    def testCustomTextMessage(self):
+        basedir = "test_custom_text_mesg"
+        os.mkdir(basedir)
+        mailer = MyMailer(fromaddr="buildbot@example.com", mode="problem",
+                          extraRecipients=["recip@example.com",
+                                           "recip2@example.com"],
+                          lookup=MyLookup(),
+                          customMesg=customTextMailMessage)
+        mailer.parent = self
+        mailer.status = self
+        self.messages = []
+
+        b1 = self.makeBuild(4, builder.FAILURE)
+        b1.setText(["snarkleack", "polarization", "failed"])
+        b1.blamelist = ["dev3", "dev3", "dev3", "dev4",
+                        "Thomas_Walters"]
+        b1.source.changes = (Change(who = 'author1', files = ['file1'], comments = 'comment1', revision = 123),
+                             Change(who = 'author2', files = ['file2'], comments = 'comment2', revision = 456))
+        b1.testlogs = [MyLog(basedir, 'compile', "Compile log here\n"),
+                       MyLog(basedir, 'test', "Test log here\nTest 1 failed\nTest 2 failed\nTest 3 failed\nTest 4 failed\n")]
+
+        mailer.buildFinished("builder1", b1, b1.results)
+        m,r = self.messages.pop()
+        t = m.as_string()
+        #
+        # Uncomment to review custom message
+        #
+        #self.fail(t)
+        self.failUnlessIn("comment1", t)
+        self.failUnlessIn("comment2", t)
+        self.failUnlessIn("Test 4 failed", t)
+
+
+    def testCustomHTMLMessage(self):
+        basedir = "test_custom_HTML_mesg"
+        os.mkdir(basedir)
+        mailer = MyMailer(fromaddr="buildbot@example.com", mode="problem",
+                          extraRecipients=["recip@example.com",
+                                           "recip2@example.com"],
+                          lookup=MyLookup(),
+                          customMesg=customHTMLMailMessage)
+        mailer.parent = self
+        mailer.status = self
+        self.messages = []
+
+        b1 = self.makeBuild(4, builder.FAILURE)
+        b1.setText(["snarkleack", "polarization", "failed"])
+        b1.blamelist = ["dev3", "dev3", "dev3", "dev4",
+                        "Thomas_Walters"]
+        b1.source.changes = (Change(who = 'author1', files = ['file1'], comments = 'comment1', revision = 123),
+                             Change(who = 'author2', files = ['file2'], comments = 'comment2', revision = 456))
+        b1.testlogs = [MyLog(basedir, 'compile', "Compile log here\n"),
+                       MyLog(basedir, 'test', "Test log here\nTest 1 failed\nTest 2 failed\nTest 3 failed\nTest 4 failed\n")]
+
+        mailer.buildFinished("builder1", b1, b1.results)
+        m,r = self.messages.pop()
+        t = m.as_string()
+        #
+        # Uncomment to review custom message
+        #
+        #self.fail(t)
+        self.failUnlessIn("<h4>Last 3 lines of 'step.test':</h4>", t)
+        self.failUnlessIn("<p>Changed by: <b>author2</b><br />", t)
+        self.failUnlessIn("Test 3 failed", t)
 
     def testFailure(self):
         mailer = MyMailer(fromaddr="buildbot@example.com", mode="problem",
@@ -428,7 +523,10 @@ class Log(unittest.TestCase):
         self.failUnlessEqual(len(list(l.getChunks())), 4)
 
         self.failUnless(l.hasContents())
-        os.unlink(l.getFilename())
+        try:
+            os.unlink(l.getFilename())
+        except OSError:
+            os.unlink(l.getFilename() + ".bz2")
         self.failIf(l.hasContents())
 
     def TODO_testDuplicate(self):
@@ -493,7 +591,7 @@ class Log(unittest.TestCase):
         self.failUnlessEqual(l.getText(), 160*"a")
 
     def testReadlines(self):
-        l = MyLog(self.basedir, "chunks")
+        l = MyLog(self.basedir, "chunks1")
         l.addHeader("HEADER\n") # should be ignored
         l.addStdout("Some text\n")
         l.addStdout("Some More Text\nAnd Some More\n")
@@ -519,7 +617,7 @@ class Log(unittest.TestCase):
 
 
     def testChunks(self):
-        l = MyLog(self.basedir, "chunks")
+        l = MyLog(self.basedir, "chunks2")
         c1 = l.getChunks()
         l.addHeader("HEADER\n")
         l.addStdout("Some text\n")
@@ -560,7 +658,10 @@ class Log(unittest.TestCase):
         # now doctor it to look like a 0.6.4-era non-upgraded logfile
         l.entries = list(l.getChunks())
         del l.filename
-        os.unlink(l.getFilename())
+        try:
+            os.unlink(l.getFilename() + ".bz2")
+        except OSError:
+            os.unlink(l.getFilename())
         # now make sure we can upgrade it
         l.upgrade("upgrade")
         self.failUnlessEqual(l.getText(),
@@ -728,6 +829,35 @@ class Log(unittest.TestCase):
         # however self.transport is None
         return d
     testLargeSummary.timeout = 5
+
+
+class CompressLog(unittest.TestCase):
+    def testCompressLogs(self):
+        bss = setupBuildStepStatus("test-compress")
+        bss.build.builder.setLogCompressionLimit(1024)
+        l = bss.addLog('not-compress')
+        l.addStdout('a' * 512)
+        l.finish()
+        lc = bss.addLog('to-compress')
+        lc.addStdout('b' * 1024)
+        lc.finish()
+        d = bss.stepFinished(builder.SUCCESS)
+        self.failUnless(d is not None)
+        d.addCallback(self._verifyCompression, bss)
+        return d
+
+    def _verifyCompression(self, result, bss):
+        self.failUnless(len(bss.getLogs()), 2)
+        (ncl, cl) = bss.getLogs() # not compressed, compressed log
+        self.failUnless(os.path.isfile(ncl.getFilename()))
+        self.failIf(os.path.isfile(ncl.getFilename() + ".bz2"))
+        self.failIf(os.path.isfile(cl.getFilename()))
+        self.failUnless(os.path.isfile(cl.getFilename() + ".bz2"))
+        content = ncl.getText()
+        self.failUnless(len(content), 512)
+        content = cl.getText()
+        self.failUnless(len(content), 1024)
+        pass
 
 config_base = """
 from buildbot.process import factory

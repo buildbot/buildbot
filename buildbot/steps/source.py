@@ -846,33 +846,44 @@ class Mercurial(Source):
     name = "hg"
 
     def __init__(self, repourl=None, baseURL=None, defaultBranch=None,
-                 **kwargs):
+                 branchType='dirname', **kwargs):
         """
         @type  repourl: string
         @param repourl: the URL which points at the Mercurial repository.
-                        This is used as the default branch. Using C{repourl}
-                        does not enable builds of alternate branches: use
-                        C{baseURL} to enable this. Use either C{repourl} or
-                        C{baseURL}, not both.
+                        This uses the 'default' branch unless defaultBranch is
+                        specified below and the C{branchType} is set to
+                        'inrepo'.  It is an error to specify a branch without
+                        setting the C{branchType} to 'inrepo'.
 
-        @param baseURL: if branches are enabled, this is the base URL to
-                        which a branch name will be appended. It should
-                        probably end in a slash. Use exactly one of
-                        C{repourl} and C{baseURL}.
+        @param baseURL: if 'dirname' branches are enabled, this is the base URL
+                        to which a branch name will be appended. It should
+                        probably end in a slash.  Use exactly one of C{repourl}
+                        and C{baseURL}.
 
         @param defaultBranch: if branches are enabled, this is the branch
                               to use if the Build does not specify one
-                              explicitly. It will simply be appended to
-                              C{baseURL} and the result handed to the
-                              'hg clone' command.
+                              explicitly.
+                              For 'dirname' branches, It will simply be
+                              appended to C{baseURL} and the result handed to
+                              the 'hg update' command.
+                              For 'inrepo' branches, this specifies the named
+                              revision to which the tree will update after a
+                              clone.
+
+        @param branchType: either 'dirname' or 'inrepo' depending on whether
+                           the branch name should be appended to the C{baseURL}
+                           or the branch is a mercurial named branch and can be
+                           found within the C{repourl}
         """
         self.repourl = repourl
         self.baseURL = baseURL
         self.branch = defaultBranch
+        self.branchType = branchType
         Source.__init__(self, **kwargs)
         self.addFactoryArguments(repourl=repourl,
                                  baseURL=baseURL,
                                  defaultBranch=defaultBranch,
+                                 branchType=branchType,
                                  )
         if (not repourl and not baseURL) or (repourl and baseURL):
             raise ValueError("you must provide exactly one of repourl and"
@@ -885,8 +896,11 @@ class Mercurial(Source):
                                         "about hg")
 
         if self.repourl:
-            assert not branch # we need baseURL= to use branches
+            # we need baseURL= to use dirname branches
+            assert self.branchType == 'inrepo' or not branch
             self.args['repourl'] = self.repourl
+            if branch:
+                self.args['branch'] = branch
         else:
             self.args['repourl'] = self.baseURL + branch
         self.args['revision'] = revision

@@ -282,6 +282,7 @@ if DEFINE_POLLER:
                 branch, blame_merge_author=self.blame_merge_author)
             if (self.last_revision is None or
                 change['revision'] > self.last_revision):
+                change['branch'] = branch_name
                 changes.append(change)
                 if self.last_revision is not None:
                     while self.last_revision + 1 < change['revision']:
