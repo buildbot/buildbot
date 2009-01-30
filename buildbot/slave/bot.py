@@ -357,14 +357,19 @@ class BotFactory(ReconnectingPBClientFactory):
     # link might put the request at the wrong end of a large build message.
     keepaliveTimeout = 30 # how long we will go without a response
 
+    # 'maxDelay' determines the maximum amount of time the slave will wait
+    # between connection retries
+    maxDelay = 300
+
     keepaliveTimer = None
     activityTimer = None
     lastActivity = 0
     unsafeTracebacks = 1
     perspective = None
 
-    def __init__(self, keepaliveInterval, keepaliveTimeout):
+    def __init__(self, keepaliveInterval, keepaliveTimeout, maxDelay):
         ReconnectingPBClientFactory.__init__(self)
+        self.maxDelay = maxDelay
         self.keepaliveInterval = keepaliveInterval
         self.keepaliveTimeout = keepaliveTimeout
 
@@ -466,7 +471,7 @@ class BuildSlave(service.MultiService):
 
     def __init__(self, buildmaster_host, port, name, passwd, basedir,
                  keepalive, usePTY, keepaliveTimeout=30, umask=None,
-                 debugOpts={}):
+                 maxdelay=300, debugOpts={}):
         log.msg("Creating BuildSlave -- buildbot.version: %s" % buildbot.version)
         service.MultiService.__init__(self)
         self.debugOpts = debugOpts.copy()
@@ -476,7 +481,7 @@ class BuildSlave(service.MultiService):
         if keepalive == 0:
             keepalive = None
         self.umask = umask
-        bf = self.bf = BotFactory(keepalive, keepaliveTimeout)
+        bf = self.bf = BotFactory(keepalive, keepaliveTimeout, maxdelay)
         bf.startLogin(credentials.UsernamePassword(name, passwd), client=bot)
         self.connection = c = internet.TCPClient(buildmaster_host, port, bf)
         c.setServiceParent(self)
