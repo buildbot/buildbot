@@ -2687,15 +2687,10 @@ f.addStep(trigger.Trigger('package', schedulers=['package-all-platforms'],
 @node Merging BuildRequests, Setting the slaveport, Change Sources and Schedulers, Configuration
 @section Merging BuildRequests
 
-@bcindex c['mergeMatchingRequests']
-@bcindex c['mergeMatchingReasons']
-@bcindex c['mergeMatchingProperties']
-@bcindex c['loadMaster']
+@bcindex c['mergeRequests']
 
 By default, buildbot merges BuildRequests that have the compatible
-SourceStamps. Starting with 0.7.10, this behaviour can be customized to,
-for example, only merge when the reasons match as well, or if the build
-properties don't differ.
+SourceStamps. Starting with 0.7.10, this behaviour can be customized.
 
 @quotation Note
 This feature is experimental, please provide feedback in the mailing
@@ -2704,34 +2699,13 @@ functionality is exposed, too.
 @end quotation
 
 The default behaviour to merge BuildRequests with matching SourceStamps
-can be overwritten by setting
+can be overwritten by:
 
 @example
-c['mergeMatchingRequests'] = False
-@end example
-
-Be cautious when doing that, as most VC steps will exhibit unexpected
-behaviour when given Changes with mismatching branches.
-
-To customize the behaviour such that only BuildRequests with the same
-reason get merged, set
-@example
-c['mergeMatchingReasons'] = True
-@end example
-
-Another criteria on which merging can be controlled are build
-properties, to switch those on set
-@example
-c['mergeMatchingProperties'] = True
-@end example
-
-These settings can be combined to only merge BuildRequests with matching
-SourceStamps @emph{and} matching build properties. All settings are
-taking effect on all builders. If you need a higher level of
-customization, you can specify your own class instance,
-
-@example
-c['loadMaster'] = MyLoadMaster()
+def mergeRequests(builder, req1, req2):
+    """Don't merge buildrequest at all, for example"""
+    return False
+c['mergeRequests'] = mergeRequests
 @end example
 
 @node Setting the slaveport, Buildslave Specifiers, Merging BuildRequests, Configuration

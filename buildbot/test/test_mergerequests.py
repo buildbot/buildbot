@@ -9,15 +9,13 @@ from buildbot.changes.changes import Change
 
 from buildbot.test.runutils import RunMixin
 
-"""Testcases for master.LoadMaster.
+"""Testcases for master.botmaster.shouldMergeRequests.
 
 """
 
 master_cfg = """from buildbot.process import factory
 from buildbot.steps import dummy
 from buildbot.buildslave import BuildSlave
-
-from buildbot.master import LoadMaster
 
 f = factory.BuildFactory([
    dummy.Dummy(timeout=0),
@@ -31,11 +29,12 @@ c['builders'].append({'name':'dummy', 'slavename':'bot1',
                       'builddir': 'dummy', 'factory': f})
 c['slavePortnum'] = 0
 
-c['%s'] = %s
+%s
+c['mergeRequests'] = mergeRequests
 """
 
-class LoadMasterTest(RunMixin, unittest.TestCase):
-    def do_test(self, param, value, results, reqs = None):
+class MergeRequestsTest(RunMixin, unittest.TestCase):
+    def do_test(self, mergefun, results, reqs = None):
         R = BuildRequest
         S = SourceStamp
         c1 = Change("alice", [], "changed stuff", branch="branch1")
@@ -56,7 +55,7 @@ class LoadMasterTest(RunMixin, unittest.TestCase):
                     )
 
         m = self.master
-        m.loadConfig(master_cfg % (param, value))
+        m.loadConfig(master_cfg % mergefun)
         m.readConfig = True
         m.startService()
         builder = self.control.getBuilder('dummy')
@@ -88,7 +87,7 @@ class LoadMasterTest(RunMixin, unittest.TestCase):
             # print b.getReason(), ss.branch, len(ss.changes), ss.revision
 
     def testDefault(self):
-        return self.do_test('mergeMatchingRequests', 'True',
+        return self.do_test('mergeRequests = None',
                             ({'reason': 'why',
                               'branch': 'branch1',
                               'changecount': 0},
@@ -110,7 +109,10 @@ class LoadMasterTest(RunMixin, unittest.TestCase):
                              ))
 
     def testNoMerges(self):
-        return self.do_test('mergeMatchingRequests', 'False',
+        mergefun = """def mergeRequests(builder, req1, req2):
+    return False
+"""
+        return self.do_test(mergefun,
                             ({'reason': 'why',
                               'branch': 'branch1',
                               'changecount': 0},
@@ -138,7 +140,10 @@ class LoadMasterTest(RunMixin, unittest.TestCase):
                              ))
 
     def testReasons(self):
-        return self.do_test('mergeMatchingReasons', 'True',
+        mergefun = """def mergeRequests(builder, req1, req2):
+    return req1.reason == req2.reason
+"""
+        return self.do_test(mergefun,
                             ({'reason': 'why',
                               'branch': 'branch1',
                               'changecount': 0},
@@ -164,6 +169,9 @@ class LoadMasterTest(RunMixin, unittest.TestCase):
 
 
     def testProperties(self):
+        mergefun = """def mergeRequests(builder, req1, req2):
+    return req1.properties == req2.properties
+"""
         R = BuildRequest
         S = SourceStamp
         p1 = Properties(first="value")
@@ -177,7 +185,7 @@ class LoadMasterTest(RunMixin, unittest.TestCase):
                 R("why", S("branch1", None, None, None),
                   properties = p2),
                 )
-        return self.do_test('mergeMatchingProperties', 'True',
+        return self.do_test(mergefun,
                             ({'reason': 'why',
                               'branch': 'branch1',
                               'changecount': 0},
@@ -186,25 +194,3 @@ class LoadMasterTest(RunMixin, unittest.TestCase):
                               'changecount': 0},
                              ),
                             reqs=reqs)
-
-    def testCustomLoadMaster(self):
-        return self.do_test('loadMaster', 'LoadMaster()',
-                            ({'reason': 'why',
-                              'branch': 'branch1',
-                              'changecount': 0},
-                             {'reason': 'why2, why not',
-                              'branch': 'branch1',
-                              'changecount': 0},
-                             {'reason': 'why3',
-                              'branch': 'branch1',
-                              'changecount': 0},
-                             {'reason': 'why4',
-                              'branch': 'branch2',
-                              'changecount': 0},
-                             {'reason': 'why5',
-                              'branch': 'branch1',
-                              'changecount': 0},
-                             {'reason': 'changes',
-                              'branch': 'branch1',
-                              'changecount': 6},
-                             ))

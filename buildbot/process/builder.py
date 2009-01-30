@@ -676,9 +676,9 @@ class Builder(pb.Referenceable):
         req = self.buildable.pop(0)
         self.builder_status.removeBuildRequest(req.status)
         mergers = []
-        loadmaster = self.botmaster.parent.loadmaster
+        botmaster = self.botmaster
         for br in self.buildable[:]:
-            if loadmaster.shouldMergeRequests(self, req, br):
+            if botmaster.shouldMergeRequests(self, req, br):
                 self.buildable.remove(br)
                 self.builder_status.removeBuildRequest(br.status)
                 mergers.append(br)

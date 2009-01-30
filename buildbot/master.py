@@ -62,6 +62,10 @@ class BotMaster(service.MultiService):
         # self.locks holds the real Lock instances
         self.locks = {}
 
+        # self.mergeRequests is the callable override for merging build
+        # requests
+        self.mergeRequests = None
+
     # these four are convenience functions for testing
 
     def waitUntilBuilderAttached(self, name):
@@ -204,6 +208,15 @@ class BotMaster(service.MultiService):
         for b in builders:
             b.maybeStartBuild()
 
+    def shouldMergeRequests(self, builder, req1, req2):
+        """Determine whether two BuildRequests should be merged for
+        the given builder.
+
+        """
+        if self.mergeRequests is not None:
+            return self.mergeRequests(builder, req1, req2)
+        return req1.canBeMergedWith(req2)
+
     def getPerspective(self, slavename):
         return self.slaves[slavename]
 
@@ -231,46 +244,6 @@ class BotMaster(service.MultiService):
         # that this requires that MasterLock and SlaveLock (marker) instances
         # be hashable and that they should compare properly.
         return self.locks[lockid]
-
-########################################
-
-
-
-class LoadMaster(service.MultiService):
-    """Class to manage how we distribute load, and how much load we take.
-    """
-
-    mergeOnRequests = True
-    mergeOnReasons = False
-    mergeOnProperties = False
-    default = True
-
-    def __init__(self):
-        service.MultiService.__init__(self)
-
-    def loadConfig_LoadMaster(self, config):
-        self.mergeOnRequests = bool(config.get('mergeMatchingRequests', True))
-        self.mergeOnReasons = bool(config.get('mergeMatchingReasons', False))
-        self.mergeOnProperties = bool(config.get('mergeMatchingProperties',
-                                                 False))
-        self.default = self.mergeOnRequests or self.mergeOnReasons or \
-            self.mergeOnProperties
-        pass
-
-    def shouldMergeRequests(self, builder, req1, req2):
-        """Determine whether two BuildRequests should be merged for
-        the given builder.
-
-        """
-        if self.mergeOnRequests and not req1.canBeMergedWith(req2):
-            return False
-        if (self.mergeOnReasons and 
-            req1.reason != req2.reason):
-            return False
-        if (self.mergeOnProperties and
-            req1.properties !=  req2.properties):
-            return False
-        return self.default
 
 ########################################
 
@@ -425,10 +398,6 @@ class BuildMaster(service.MultiService, styles.Versioned):
         self.botmaster.setServiceParent(self)
         dispatcher.botmaster = self.botmaster
 
-        self.loadmaster = LoadMaster()
-        self.loadmaster.setName("loadmaster")
-        self.loadmaster.setServiceParent(self)
-
         self.status = Status(self.botmaster, self.basedir)
 
         self.statusTargets = []
@@ -554,7 +523,7 @@ class BuildMaster(service.MultiService, styles.Versioned):
 
         known_keys = ("bots", "slaves",
                       "sources", "change_source",
-                      "schedulers", "builders",
+                      "schedulers", "builders", "mergeRequests", 
                       "slavePortnum", "debugPassword", "logCompressionLimit",
                       "manhole", "status", "projectName", "projectURL",
                       "buildbotURL", "properties"
@@ -590,6 +559,9 @@ class BuildMaster(service.MultiService, styles.Versioned):
             if logCompressionLimit is not None and not \
                     isinstance(logCompressionLimit, int):
                 raise ValueError("logCompressionLimit needs to be bool or int")
+            mergeRequests = config.get('mergeRequests')
+            if mergeRequests is not None and not callable(mergeRequests):
+                raise ValueError("mergeRequests must be a callable")
 
         except KeyError, e:
             log.msg("config dictionary is missing a required parameter")
@@ -748,6 +720,8 @@ class BuildMaster(service.MultiService, styles.Versioned):
         self.properties.update(properties, self.configFileName)
         if logCompressionLimit is not None:
             self.status.logCompressionLimit = logCompressionLimit
+        if mergeRequests is not None:
+            self.botmaster.mergeRequests = mergeRequests
 
         # self.slaves: Disconnect any that were attached and removed from the
         # list. Update self.checker with the new list of passwords, including
@@ -778,8 +752,6 @@ class BuildMaster(service.MultiService, styles.Versioned):
         # add/remove self.botmaster.builders to match builders. The
         # botmaster will handle startup/shutdown issues.
         d.addCallback(lambda res: self.loadConfig_Builders(builders))
-
-        d.addCallback(lambda res: self.loadConfig_LoadMaster(config))
 
         d.addCallback(lambda res: self.loadConfig_status(status))
 
@@ -861,21 +833,6 @@ class BuildMaster(service.MultiService, styles.Versioned):
                     if interfaces.IDownstreamScheduler.providedBy(s):
                         s.checkUpstreamScheduler()
             d.addCallback(updateDownstreams)
-        return d
-
-    def loadConfig_LoadMaster(self, config):
-        if "loadMaster" in config:
-            d = defer.maybeDeferred(self.loadmaster.disownServiceParent)
-            loadmaster = config["loadMaster"]
-            def newLoadMaster(res):
-                self.loadmaster = loadmaster
-                self.loadmaster.setName("loadmaster")
-                self.loadmaster.setServiceParent(self)
-                return True
-            d.addCallback(newLoadMaster)
-        else:
-            d = defer.succeed(None)
-            self.loadmaster.loadConfig_LoadMaster(config)
         return d
 
     def loadConfig_Builders(self, newBuilderData):
