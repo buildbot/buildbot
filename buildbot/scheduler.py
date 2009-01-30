@@ -172,7 +172,7 @@ class Scheduler(BaseUpstreamScheduler):
                 (self, time.strftime("%H:%M:%S", time.localtime(when))))
         now = util.now()
         if when < now:
-            when = now + 1
+            when = now
         if self.timer:
             self.timer.cancel()
         self.timer = reactor.callLater(when - now, self.fireTimer)
