@@ -1,7 +1,6 @@
 #! /usr/bin/env python
 
-# This script is meant to run from hooks/post-receive in the git
-# repository. It expects one line for each new revision on the form
+# This script expects one line for each new revision on the form
 #   <oldrev> <newrev> <refname>
 #
 # For example:
@@ -11,6 +10,16 @@
 # Each of these changes will be passed to the buildbot server along
 # with any other change information we manage to extract from the
 # repository.
+#
+# This script is meant to be run from hooks/post-receive in the git
+# repository. It can also be run at client side with hooks/post-merge
+# after using this wrapper:
+
+#!/bin/sh
+# PRE=$(git rev-parse 'HEAD@{1}')
+# POST=$(git rev-parse HEAD)
+# SYMNAME=$(git rev-parse --symbolic-full-name HEAD)
+# echo "$PRE $POST $SYMNAME" | git_buildbot.py
 #
 # Largely based on contrib/hooks/post-receive-email from git.
 
