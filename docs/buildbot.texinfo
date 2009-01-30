@@ -1017,6 +1017,12 @@ this happens, the buildmaster will think that the buildslave has
 disappeared, and builds will time out. Meanwhile the buildslave will
 not realize than anything is wrong.
 
+@item --maxdelay
+This is a number that indicates the maximum amount of time the
+buildslave will wait between connection attempts, expressed in
+seconds. The default (300) causes the buildslave to wait at most 5
+minutes before trying to connect to the buildmaster again.
+
 @item --log-size
 This is the size in bytes when to rotate the Twisted log files.
 
