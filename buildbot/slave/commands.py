@@ -1417,6 +1417,10 @@ class SourceBase(Command):
         fromdir = os.path.join(self.builder.basedir, self.srcdir)
         todir = os.path.join(self.builder.basedir, self.workdir)
         if runtime.platformType != "posix":
+            self.sendStatus({'header': "Since we're on a non-POSIX platform, "
+            "we're not going to try to execute cp in a subprocess, but instead "
+            "use shutil.copytree(), which will block until it is complete.  "
+            "fromdir: %s, todir: %s\n" % (fromdir, todir)})
             shutil.copytree(fromdir, todir)
             return defer.succeed(0)
         command = ['cp', '-R', '-P', '-p', fromdir, todir]
