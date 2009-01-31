@@ -5977,6 +5977,7 @@ To connect this parser into the @code{Trial} BuildStep,
         # this counter will feed Progress along the 'test cases' metric
         counter = TrialTestCaseCounter()
         self.addLogObserver('stdio', counter)
+        self.progressMetrics += ('tests',)
 @end example
 
 This creates a TrialTestCaseCounter and tells the step that the
@@ -6030,7 +6031,8 @@ class Framboozle(ShellCommand):
     def __init__(self, **kwargs):
         ShellCommand.__init__(self, **kwargs)   # always upcall!
         counter = FNURRRGHCounter())
-        self.addLogObserver(counter)
+        self.addLogObserver('stdio', counter)
+        self.progressMetrics += ('tests',)
 # FINISH
 @end example
 
