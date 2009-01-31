@@ -511,9 +511,9 @@ class BuildMaster(service.MultiService, styles.Versioned):
         known_keys = ("bots", "slaves",
                       "sources", "change_source",
                       "schedulers", "builders",
-                      "slavePortnum", "debugPassword", "manhole",
-                      "status", "projectName", "projectURL", "buildbotURL",
-                      "properties"
+                      "slavePortnum", "debugPassword", "logCompressionLimit",
+                      "manhole", "status", "projectName", "projectURL",
+                      "buildbotURL", "properties"
                       )
         for k in config.keys():
             if k not in known_keys:
@@ -542,6 +542,10 @@ class BuildMaster(service.MultiService, styles.Versioned):
             projectURL = config.get('projectURL')
             buildbotURL = config.get('buildbotURL')
             properties = config.get('properties', {})
+            logCompressionLimit = config.get('logCompressionLimit')
+            if logCompressionLimit is not None and not \
+                    isinstance(logCompressionLimit, int):
+                raise ValueError("logCompressionLimit needs to be bool or int")
 
         except KeyError, e:
             log.msg("config dictionary is missing a required parameter")
@@ -583,9 +587,10 @@ class BuildMaster(service.MultiService, styles.Versioned):
 
         # do some validation first
         for s in slaves:
-            assert isinstance(s, BuildSlave)
+            assert interfaces.IBuildSlave.providedBy(s)
             if s.slavename in ("debug", "change", "status"):
-                raise KeyError, "reserved name '%s' used for a bot" % s.slavename
+                raise KeyError(
+                    "reserved name '%s' used for a bot" % s.slavename)
         if config.has_key('interlocks'):
             raise KeyError("c['interlocks'] is no longer accepted")
 
@@ -694,9 +699,11 @@ class BuildMaster(service.MultiService, styles.Versioned):
         self.projectName = projectName
         self.projectURL = projectURL
         self.buildbotURL = buildbotURL
-        
+
         self.properties = Properties()
         self.properties.update(properties, self.configFileName)
+        if logCompressionLimit is not None:
+            self.status.logCompressionLimit = logCompressionLimit
 
         # self.slaves: Disconnect any that were attached and removed from the
         # list. Update self.checker with the new list of passwords, including
@@ -938,4 +945,3 @@ components.registerAdapter(Control, BuildMaster, interfaces.IControl)
 
 # so anybody who can get a handle on the BuildMaster can cause a build with:
 #  IControl(master).getBuilder("full-2.3").requestBuild(buildrequest)
-

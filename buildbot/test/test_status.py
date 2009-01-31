@@ -19,7 +19,7 @@ try:
 except ImportError:
     pass
 from buildbot.status import progress, client # NEEDS COVERAGE
-from buildbot.test.runutils import RunMixin
+from buildbot.test.runutils import RunMixin, setupBuildStepStatus
 
 class MyStep:
     build = None
@@ -523,7 +523,10 @@ class Log(unittest.TestCase):
         self.failUnlessEqual(len(list(l.getChunks())), 4)
 
         self.failUnless(l.hasContents())
-        os.unlink(l.getFilename())
+        try:
+            os.unlink(l.getFilename())
+        except OSError:
+            os.unlink(l.getFilename() + ".bz2")
         self.failIf(l.hasContents())
 
     def TODO_testDuplicate(self):
@@ -588,7 +591,7 @@ class Log(unittest.TestCase):
         self.failUnlessEqual(l.getText(), 160*"a")
 
     def testReadlines(self):
-        l = MyLog(self.basedir, "chunks")
+        l = MyLog(self.basedir, "chunks1")
         l.addHeader("HEADER\n") # should be ignored
         l.addStdout("Some text\n")
         l.addStdout("Some More Text\nAnd Some More\n")
@@ -614,7 +617,7 @@ class Log(unittest.TestCase):
 
 
     def testChunks(self):
-        l = MyLog(self.basedir, "chunks")
+        l = MyLog(self.basedir, "chunks2")
         c1 = l.getChunks()
         l.addHeader("HEADER\n")
         l.addStdout("Some text\n")
@@ -655,7 +658,10 @@ class Log(unittest.TestCase):
         # now doctor it to look like a 0.6.4-era non-upgraded logfile
         l.entries = list(l.getChunks())
         del l.filename
-        os.unlink(l.getFilename())
+        try:
+            os.unlink(l.getFilename() + ".bz2")
+        except OSError:
+            os.unlink(l.getFilename())
         # now make sure we can upgrade it
         l.upgrade("upgrade")
         self.failUnlessEqual(l.getText(),
@@ -823,6 +829,35 @@ class Log(unittest.TestCase):
         # however self.transport is None
         return d
     testLargeSummary.timeout = 5
+
+
+class CompressLog(unittest.TestCase):
+    def testCompressLogs(self):
+        bss = setupBuildStepStatus("test-compress")
+        bss.build.builder.setLogCompressionLimit(1024)
+        l = bss.addLog('not-compress')
+        l.addStdout('a' * 512)
+        l.finish()
+        lc = bss.addLog('to-compress')
+        lc.addStdout('b' * 1024)
+        lc.finish()
+        d = bss.stepFinished(builder.SUCCESS)
+        self.failUnless(d is not None)
+        d.addCallback(self._verifyCompression, bss)
+        return d
+
+    def _verifyCompression(self, result, bss):
+        self.failUnless(len(bss.getLogs()), 2)
+        (ncl, cl) = bss.getLogs() # not compressed, compressed log
+        self.failUnless(os.path.isfile(ncl.getFilename()))
+        self.failIf(os.path.isfile(ncl.getFilename() + ".bz2"))
+        self.failIf(os.path.isfile(cl.getFilename()))
+        self.failUnless(os.path.isfile(cl.getFilename() + ".bz2"))
+        content = ncl.getText()
+        self.failUnless(len(content), 512)
+        content = cl.getText()
+        self.failUnless(len(content), 1024)
+        pass
 
 config_base = """
 from buildbot.process import factory

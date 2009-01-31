@@ -67,6 +67,8 @@ c['schedulers'] = []
 c['builders'] = [{'name': 'vc', 'slavename': 'bot1',
                   'builddir': 'vc-dir', 'factory': f1}]
 c['slavePortnum'] = 0
+# do not compress logs in tests
+c['logCompressionLimit'] = False
 BuildmasterConfig = c
 """
 
@@ -1111,7 +1113,7 @@ class CVSHelper(BaseHelper):
         yield w; w.getResult() # we must getResult() to raise any exceptions
 
         self.populate(tmp)
-        cmd = ['-d',  self.cvsrep,  'import', 
+        cmd = ['-d',  self.cvsrep,  'import',
                 '-m', 'sample_project_files', 'sample',  'vendortag',  'start']
         w = self.dovc(tmp, cmd)
         yield w; w.getResult()
@@ -1198,7 +1200,7 @@ class CVS(VCBase, unittest.TestCase):
     def testCheckoutBranch(self):
         d = self.do_branch()
         return d
-        
+
     def testTry(self):
         d = self.do_getpatch(doBranch=False)
         return d
@@ -1498,7 +1500,7 @@ class P4(VCBase, unittest.TestCase):
     vctype = "source.P4"
     vc_name = "p4"
     has_got_revision = True
-    
+
     def tearDownClass(self):
         if self.helper:
             return self.helper.shutdown_p4d()
@@ -1655,7 +1657,7 @@ class Darcs(VCBase, unittest.TestCase):
         self.helper.vcargs =  { 'repourl': repourl }
         d = self.do_vctest(testRetry=False)
         return d
-        
+
     def testTry(self):
         self.helper.vcargs = { 'baseURL': self.helper.darcs_base + "/",
                                'defaultBranch': "trunk" }
@@ -2064,7 +2066,7 @@ class Bazaar(Arch):
         # and arrange to fix it again in 5 seconds, while the test is
         # running.
         self.fixtimer = reactor.callLater(5, self.fixRepository)
-        
+
         url = "http://localhost:%d/Baz-Repository" % self.httpPort
         self.helper.vcargs = { 'url': url,
                                'archive': self.helper.archname,
@@ -2414,7 +2416,7 @@ class MercurialHelper(BaseHelper):
 class MercurialServerPP(protocol.ProcessProtocol):
     def __init__(self):
         self.wait = defer.Deferred()
-    
+
     def outReceived(self, data):
         log.msg("hg-serve-stdout: %s" % (data,))
     def errReceived(self, data):
@@ -2423,7 +2425,7 @@ class MercurialServerPP(protocol.ProcessProtocol):
     def processEnded(self, reason):
         log.msg("hg-serve ended: %s" % reason)
         self.wait.callback(None)
-        
+
 
 class Mercurial(VCBase, unittest.TestCase):
     vc_name = "hg"
@@ -2477,7 +2479,7 @@ class Mercurial(VCBase, unittest.TestCase):
         # Instead, poll every second until a getPage works.
 
         self._pp = MercurialServerPP() # logs+discards everything
-        
+
         # this serves one tree at a time, so we serve trunk. TODO: test hg's
         # in-repo branches, for which a single tree will hold all branches.
         self._hg_server = reactor.spawnProcess(self._pp, self.helper.vcexe, args,
@@ -2512,7 +2514,7 @@ class Mercurial(VCBase, unittest.TestCase):
                 pass
             self._hg_server = None
         return VCBase.tearDown(self)
-    
+
     def tearDown2(self):
         if self._pp:
             return self._pp.wait
@@ -2581,7 +2583,7 @@ class MercurialInRepoHelper(MercurialHelper):
         w = self.dovc(self.hg_base, ['clone', self.repo, tmp])
         yield w; w.getResult()
         w = self.dovc(tmp, ['update', '--clean', '--rev', 'default'])
-        yield w; w.getResult()  
+        yield w; w.getResult()
 
         self.version += 1
         version_c = VERSION_C % self.version
@@ -2607,9 +2609,10 @@ class MercurialInRepoHelper(MercurialHelper):
             rmdirRecursive(workdir)
         w = self.dovc(self.hg_base, ['clone', self.repo, workdir])
         yield w; w.getResult()
-        w = self.dovc(workdir, ['update', '--clean', '--rev', branch if branch else 'default'])
+        if not branch: branch = "default"
+        w = self.dovc(workdir, ['update', '--clean', '--rev', branch ])
         yield w; w.getResult()
-            
+
         try_c_filename = os.path.join(workdir, "subdir", "subdir.c")
         open(try_c_filename, "w").write(TRY_C)
         future = time.time() + 2*self.version
@@ -2623,12 +2626,12 @@ class MercurialInRepoHelper(MercurialHelper):
 
 class MercurialInRepo(Mercurial):
     vc_name = 'MercurialInRepo'
-    
-    def default_args(self): 
+
+    def default_args(self):
         return  { 'repourl': self.helper.repo,
                   'branchType': 'inrepo',
                   'defaultBranch': 'default' }
-    
+
     def testCheckout(self):
         self.helper.vcargs = self.default_args()
         d = self.do_vctest(testRetry=False)
@@ -2638,7 +2641,7 @@ class MercurialInRepo(Mercurial):
         return d
 
     def testPatch(self):
-        self.helper.vcargs = self.default_args() 
+        self.helper.vcargs = self.default_args()
         d = self.do_patch()
         return d
 
@@ -2673,7 +2676,7 @@ class MercurialInRepo(Mercurial):
                                                os.environ,
                                                self.helper.repo)
         log.msg("waiting for hg serve to start")
-        done_d = defer.Deferred()        
+        done_d = defer.Deferred()
         def poll():
             d = client.getPage("http://localhost:%d/" % self.httpPort)
             def success(res):
@@ -2701,7 +2704,7 @@ class MercurialInRepo(Mercurial):
                 pass
             self._hg_server = None
         return VCBase.tearDown(self)
-    
+
     def tearDown2(self):
         if self._pp:
             return self._pp.wait
@@ -2711,7 +2714,7 @@ class MercurialInRepo(Mercurial):
         def _started(res):
             repourl = "http://localhost:%d/" % self.httpPort
             self.helper.vcargs = self.default_args()
-            self.helper.vcargs['repourl'] = repourl 
+            self.helper.vcargs['repourl'] = repourl
             return self.do_vctest(testRetry=False)
         d.addCallback(_started)
         return d
@@ -2737,24 +2740,31 @@ class GitHelper(BaseHelper):
         return d
 
     def _capable(self, v, vcexe):
-        m = re.search(r'\b([\d\.]+)\b', v)
-        if not m:
+        try:
+            m = re.search(r'\b(\d+)\.(\d+)', v)
+
+            if not m:
+                raise Exception, 'no regex match'
+
+            ver = tuple([int(num) for num in m.groups()])
+
+            # git-1.1.3 (as shipped with Dapper) doesn't understand 'git
+            # init' (it wants 'git init-db'), and fails unit tests that
+            # involve branches. git-1.5.3.6 (on my debian/unstable system)
+            # works. I don't know where the dividing point is: if someone can
+            # figure it out (or figure out how to make buildbot support more
+            # versions), please update this check.
+            if ver < (1, 2):
+                return (False, "Found git (%s) but it is older than 1.2.x" % vcexe)
+
+        except Exception, e:
             log.msg("couldn't identify git version number in output:")
             log.msg("'''%s'''" % v)
+            log.msg("because: %s" % e)
             log.msg("skipping tests")
             return (False,
-                    "Found git (%s) but couldn't identify its version" % vcexe)
-        ver_s = m.group(1)
-        ver = tuple([int(num) for num in ver_s.split(".")])
+                    "Found git (%s) but couldn't identify its version from '%s'" % (vcexe, v))
 
-        # git-1.1.3 (as shipped with Dapper) doesn't understand 'git
-        # init' (it wants 'git init-db'), and fails unit tests that
-        # involve branches. git-1.5.3.6 (on my debian/unstable system)
-        # works. I don't know where the dividing point is: if someone can
-        # figure it out (or figure out how to make buildbot support more
-        # versions), please update this check.
-        if ver < (1,2):
-            return (False, "Found git (%s) but it is older than 1.2.x" % vcexe)
         self.vcexe = vcexe
         return (True, None)
 

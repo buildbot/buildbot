@@ -403,6 +403,8 @@ class SlaveOptions(MakerBase):
          "(1 or 0) child processes should be run in a pty"],
         ["umask", None, "None",
          "controls permissions of generated files. Use --umask=022 to be world-readable"],
+        ["maxdelay", None, 300,
+         "Maximum time between connection attempts"],
         ["log-size", "s", "1000000",
          "size at which to rotate twisted log files"],
         ["log-count", "l", "None",
@@ -436,6 +438,7 @@ class SlaveOptions(MakerBase):
         MakerBase.postOptions(self)
         self['usepty'] = int(self['usepty'])
         self['keepalive'] = int(self['keepalive'])
+        self['maxdelay'] = int(self['maxdelay'])
         if self['master'].find(":") == -1:
             raise usage.UsageError("--master must be in the form host:portnum")
         if not re.match('^\d+$', self['log-size']):
@@ -457,6 +460,7 @@ passwd = '%(passwd)s'
 keepalive = %(keepalive)d
 usepty = %(usepty)d
 umask = %(umask)s
+maxdelay = %(maxdelay)d
 rotateLength = %(log-size)s
 maxRotatedFiles = %(log-count)s
 
@@ -471,7 +475,7 @@ except ImportError:
   # probably not yet twisted 8.2.0 and beyond, can't set log yet
   pass
 s = BuildSlave(buildmaster_host, port, slavename, passwd, basedir,
-               keepalive, usepty, umask=umask)
+               keepalive, usepty, umask=umask, maxdelay=maxdelay)
 s.setServiceParent(application)
 
 """
@@ -823,6 +827,7 @@ class TryOptions(usage.Options):
 
     optFlags = [
         ["wait", None, "wait until the builds have finished"],
+        ["dryrun", 'n', "Gather info, but don't actually submit."],
         ]
 
     def __init__(self):

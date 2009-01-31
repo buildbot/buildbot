@@ -243,9 +243,21 @@ class GitExtractor(SourceStampExtractor):
         # Branch names may contain pretty much anything but whitespace.
         m = re.search(r'^\* (\S+)\s+([0-9a-f]{40})', res, re.MULTILINE)
         if m:
-            self.branch = m.group(1)
             self.baserev = m.group(2)
-            return self.readConfig()
+            # If a branch is specified, parse out the rev it points to
+            # and extract the local name (assuming it has a slash).
+            # This may break if someone specifies the name of a local
+            # branch that has a slash in it and has no corresponding
+            # remote branch (or something similarly contrived).
+            if self.branch:
+                d = self.dovc(["rev-parse", self.branch])
+                if '/' in self.branch:
+                    self.branch = self.branch.split('/', 1)[1]
+                d.addCallback(self.override_baserev)
+                return d
+            else:
+                self.branch = m.group(1)
+                return self.readConfig()
         raise IndexError("Could not find current GIT branch: %s" % res)
 
     def getPatch(self, res):
@@ -372,8 +384,6 @@ class Try(pb.Referenceable):
         self.connect = self.getopt('connect', 'try_connect')
         assert self.connect, "you must specify a connect style: ssh or pb"
         self.builderNames = self.getopt('builders', 'try_builders')
-        assert self.builderNames, "no builders! use --builder or " \
-               "try_builders=[names..] in .buildbot/options"
 
     def getopt(self, config_name, options_name, default=None):
         value = self.config.get(config_name)
@@ -432,6 +442,18 @@ class Try(pb.Referenceable):
                                          ss.branch or "", revspec,
                                          patchlevel, diff,
                                          self.builderNames)
+
+    def fakeDeliverJob(self):
+        # Display the job to be delivered, but don't perform delivery.
+        ss = self.sourcestamp
+        print ("Job:\n\tBranch: %s\n\tRevision: %s\n\tBuilders: %s\n%s"
+               % (ss.branch,
+                  ss.revision,
+                  self.builderNames,
+                  ss.patch[1]))
+        d = defer.Deferred()
+        d.callback(True)
+        return d
 
     def deliverJob(self):
         # returns a Deferred that fires when the job has been delivered
@@ -658,7 +680,10 @@ class Try(pb.Referenceable):
         d = defer.Deferred()
         d.addCallback(lambda res: self.createJob())
         d.addCallback(lambda res: self.announce("job created"))
-        d.addCallback(lambda res: self.deliverJob())
+        deliver = self.deliverJob
+        if bool(self.config.get("dryrun")):
+            deliver = self.fakeDeliverJob
+        d.addCallback(lambda res: deliver())
         d.addCallback(lambda res: self.announce("job has been delivered"))
         d.addCallback(lambda res: self.getStatus())
         d.addErrback(log.err)
