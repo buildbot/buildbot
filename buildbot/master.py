@@ -62,6 +62,10 @@ class BotMaster(service.MultiService):
         # self.locks holds the real Lock instances
         self.locks = {}
 
+        # self.mergeRequests is the callable override for merging build
+        # requests
+        self.mergeRequests = None
+
     # these four are convenience functions for testing
 
     def waitUntilBuilderAttached(self, name):
@@ -203,6 +207,15 @@ class BotMaster(service.MultiService):
         builders.sort(cmp=_sortfunc)
         for b in builders:
             b.maybeStartBuild()
+
+    def shouldMergeRequests(self, builder, req1, req2):
+        """Determine whether two BuildRequests should be merged for
+        the given builder.
+
+        """
+        if self.mergeRequests is not None:
+            return self.mergeRequests(builder, req1, req2)
+        return req1.canBeMergedWith(req2)
 
     def getPerspective(self, slavename):
         return self.slaves[slavename]
@@ -510,7 +523,7 @@ class BuildMaster(service.MultiService, styles.Versioned):
 
         known_keys = ("bots", "slaves",
                       "sources", "change_source",
-                      "schedulers", "builders",
+                      "schedulers", "builders", "mergeRequests", 
                       "slavePortnum", "debugPassword", "logCompressionLimit",
                       "manhole", "status", "projectName", "projectURL",
                       "buildbotURL", "properties"
@@ -546,6 +559,9 @@ class BuildMaster(service.MultiService, styles.Versioned):
             if logCompressionLimit is not None and not \
                     isinstance(logCompressionLimit, int):
                 raise ValueError("logCompressionLimit needs to be bool or int")
+            mergeRequests = config.get('mergeRequests')
+            if mergeRequests is not None and not callable(mergeRequests):
+                raise ValueError("mergeRequests must be a callable")
 
         except KeyError, e:
             log.msg("config dictionary is missing a required parameter")
@@ -704,6 +720,8 @@ class BuildMaster(service.MultiService, styles.Versioned):
         self.properties.update(properties, self.configFileName)
         if logCompressionLimit is not None:
             self.status.logCompressionLimit = logCompressionLimit
+        if mergeRequests is not None:
+            self.botmaster.mergeRequests = mergeRequests
 
         # self.slaves: Disconnect any that were attached and removed from the
         # list. Update self.checker with the new list of passwords, including

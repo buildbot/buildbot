@@ -525,6 +525,8 @@ SourceStamp that describes what exact version of the source code
 should be used for the build. The Build is then randomly assigned to a
 free SlaveBuilder and the build begins.
 
+Beginning with version 0.7.10, the behaviour when BuildRequests are
+merged can be customized, @pxref{Merging BuildRequests}.
 
 @node Status Delivery Architecture,  , Buildmaster Architecture, System Architecture
 @subsection Status Delivery Architecture
@@ -2040,6 +2042,7 @@ understand how to fill in each section properly.
 * Testing the Config File::
 * Defining the Project::
 * Change Sources and Schedulers::
+* Merging BuildRequests::
 * Setting the slaveport::
 * Buildslave Specifiers::
 * On-Demand ("Latent") Buildslaves::
@@ -2235,7 +2238,7 @@ on status plugins, and merely affects the required disk space on the
 master for build logs.
 
 
-@node Change Sources and Schedulers, Setting the slaveport, Defining the Project, Configuration
+@node Change Sources and Schedulers, Merging BuildRequests, Defining the Project, Configuration
 @section Change Sources and Schedulers
 
 @bcindex c['sources']
@@ -2687,7 +2690,31 @@ f.addStep(trigger.Trigger('package', schedulers=['package-all-platforms'],
                                      waitForFinish=True)
 @end example
 
-@node Setting the slaveport, Buildslave Specifiers, Change Sources and Schedulers, Configuration
+@node Merging BuildRequests, Setting the slaveport, Change Sources and Schedulers, Configuration
+@section Merging BuildRequests
+
+@bcindex c['mergeRequests']
+
+By default, buildbot merges BuildRequests that have the compatible
+SourceStamps. Starting with 0.7.10, this behaviour can be customized.
+
+@quotation Note
+This feature is experimental, please provide feedback in the mailing
+list on this. Future versions of buildbot might change the way this
+functionality is exposed, too.
+@end quotation
+
+The default behaviour to merge BuildRequests with matching SourceStamps
+can be overwritten by:
+
+@example
+def mergeRequests(builder, req1, req2):
+    """Don't merge buildrequest at all, for example"""
+    return False
+c['mergeRequests'] = mergeRequests
+@end example
+
+@node Setting the slaveport, Buildslave Specifiers, Merging BuildRequests, Configuration
 @section Setting the slaveport
 
 @bcindex c['slavePortnum']
