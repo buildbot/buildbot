@@ -525,8 +525,8 @@ SourceStamp that describes what exact version of the source code
 should be used for the build. The Build is then randomly assigned to a
 free SlaveBuilder and the build begins.
 
-Beginning with version 0.7.10, the behaviour when BuildRequests are
-merged can be customized, @pxref{Merging BuildRequests}.
+The behaviour when BuildRequests are merged can be customized, @pxref{Merging
+BuildRequests}.
 
 @node Status Delivery Architecture,  , Buildmaster Architecture, System Architecture
 @subsection Status Delivery Architecture
@@ -2696,20 +2696,27 @@ f.addStep(trigger.Trigger('package', schedulers=['package-all-platforms'],
 @bcindex c['mergeRequests']
 
 By default, buildbot merges BuildRequests that have the compatible
-SourceStamps. Starting with 0.7.10, this behaviour can be customized.
-
-@quotation Note
-This feature is experimental, please provide feedback in the mailing
-list on this. Future versions of buildbot might change the way this
-functionality is exposed, too.
-@end quotation
-
-The default behaviour to merge BuildRequests with matching SourceStamps
-can be overwritten by:
+SourceStamps. This behaviour can be customized with the
+@code{c['mergeRequests']} configuration key.  This key specifies a function
+which is caleld with three arguments: a @code{Builder} and two
+@code{BuildRequest} objects.  It should return true if the requests can be
+merged.  For example:
 
 @example
 def mergeRequests(builder, req1, req2):
-    """Don't merge buildrequest at all, for example"""
+    """Don't merge buildrequest at all"""
+    return False
+c['mergeRequests'] = mergeRequests
+@end example
+
+In many cases, the details of the SourceStamps and BuildRequests are important.
+In this example, only BuildRequests with the same "reason" are merged; thus
+developers forcing builds for different reasons will see distinct builds.
+
+@example
+def mergeRequests(builder, req1, req2):
+    if req1.source.canBeMergedWith(req2.source) and  req1.reason == req2.reason:
+       return True
     return False
 c['mergeRequests'] = mergeRequests
 @end example
