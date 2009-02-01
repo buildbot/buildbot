@@ -354,7 +354,7 @@ class OneLineMixin:
         except KeyError:
             rev = "??"
         rev = str(rev)
-        if len(rev) > 20:
+        if len(rev) > 40:
             rev = "version is too-long"
         root = self.path_to_root(req)
         css_class = css_classes.get(results, "")
