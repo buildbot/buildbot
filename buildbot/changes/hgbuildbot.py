@@ -90,6 +90,8 @@ def hook(ui, repo, hooktype, node=None, source=None, **kwargs):
             node = repo.changelog.node(rev)
             manifest, user, (time, timezone), files, desc, extra = repo.changelog.read(node)
             parents = filter(lambda p: not p == nullid, repo.changelog.parents(node))
+            if branchtype == 'inrepo':
+                branch = extra['branch']
             # merges don't always contain files, but at least one file is required by buildbot
             if len(parents) > 1 and not files:
                 files = ["merge"]
