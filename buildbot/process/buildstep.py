@@ -602,11 +602,11 @@ class BuildStep:
         self.buildslave = buildslave
 
     def setDefaultWorkdir(self, workdir):
-        # the Build calls this just after __init__ and setDefaultWorkdir.
-        # ShellCommand and variants use a slave-side workdir, but some other
-        # steps do not. Subclasses which use a workdir should use the value
-        # set by this method unless they were constructed with something more
-        # specific.
+        # The Build calls this just after __init__().  ShellCommand
+        # and variants use a slave-side workdir, but some other steps
+        # do not. Subclasses which use a workdir should use the value
+        # set by this method unless they were constructed with
+        # something more specific.
         pass
 
     def addFactoryArguments(self, **kwargs):

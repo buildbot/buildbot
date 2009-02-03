@@ -92,10 +92,12 @@ class FileUpload(BuildStep):
 
     """
 
+    DEFAULT_WORKDIR = "build"           # is this redundant?
+
     name = 'upload'
 
     def __init__(self, slavesrc, masterdest,
-                 workdir="build", maxsize=None, blocksize=16*1024, mode=None,
+                 workdir=None, maxsize=None, blocksize=16*1024, mode=None,
                  **buildstep_kwargs):
         BuildStep.__init__(self, **buildstep_kwargs)
         self.addFactoryArguments(slavesrc=slavesrc,
@@ -113,6 +115,10 @@ class FileUpload(BuildStep):
         self.blocksize = blocksize
         assert isinstance(mode, (int, type(None)))
         self.mode = mode
+
+    def setDefaultWorkdir(self, workdir):
+        if self.workdir is None:
+            self.workdir = workdir
 
     def start(self):
         version = self.slaveVersion("uploadFile")
@@ -141,7 +147,7 @@ class FileUpload(BuildStep):
         # default arguments
         args = {
             'slavesrc': source,
-            'workdir': self.workdir,
+            'workdir': self.workdir or self.DEFAULT_WORKDIR,
             'writer': fileWriter,
             'maxsize': self.maxsize,
             'blocksize': self.blocksize,
@@ -221,10 +227,12 @@ class FileDownload(BuildStep):
 
     """
 
+    DEFAULT_WORKDIR = "build"           # is this redundant? 
+
     name = 'download'
 
     def __init__(self, mastersrc, slavedest,
-                 workdir="build", maxsize=None, blocksize=16*1024, mode=None,
+                 workdir=None, maxsize=None, blocksize=16*1024, mode=None,
                  **buildstep_kwargs):
         BuildStep.__init__(self, **buildstep_kwargs)
         self.addFactoryArguments(mastersrc=mastersrc,
@@ -242,6 +250,10 @@ class FileDownload(BuildStep):
         self.blocksize = blocksize
         assert isinstance(mode, (int, type(None)))
         self.mode = mode
+
+    def setDefaultWorkdir(self, workdir):
+        if self.workdir is None:
+            self.workdir = workdir
 
     def start(self):
         properties = self.build.getProperties()
@@ -281,7 +293,7 @@ class FileDownload(BuildStep):
             'maxsize': self.maxsize,
             'reader': fileReader,
             'blocksize': self.blocksize,
-            'workdir': self.workdir,
+            'workdir': self.workdir or self.DEFAULT_WORKDIR,
             'mode': self.mode,
             }
 
