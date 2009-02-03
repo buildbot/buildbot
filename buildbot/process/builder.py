@@ -403,9 +403,9 @@ class Builder(pb.Referenceable):
         if setup['factory'] != self.buildFactory: # compare objects
             diffs.append('factory changed')
         oldlocks = [(lock.__class__, lock.name)
-                    for lock in setup.get('locks',[])]
-        newlocks = [(lock.__class__, lock.name)
                     for lock in self.locks]
+        newlocks = [(lock.__class__, lock.name)
+                    for lock in setup.get('locks',[])]
         if oldlocks != newlocks:
             diffs.append('locks changed from %s to %s' % (oldlocks, newlocks))
         return diffs
