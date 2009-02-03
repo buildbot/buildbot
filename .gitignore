@@ -4,6 +4,8 @@
 *$py.class
 *.swp
 *.patch
+*.orig
+*.rej
 *#
 *~
 MANIFEST
