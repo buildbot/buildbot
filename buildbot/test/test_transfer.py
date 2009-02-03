@@ -3,6 +3,7 @@
 import os
 from stat import ST_MODE
 from twisted.trial import unittest
+from buildbot.process.buildstep import WithProperties
 from buildbot.steps.transfer import FileUpload, FileDownload
 from buildbot.test.runutils import StepTester
 from buildbot.status.builder import SUCCESS, FAILURE
@@ -225,6 +226,18 @@ class Upload(StepTester, unittest.TestCase):
         d.addCallback(_checkUpload)
         return d
 
+    def testWithProperties(self):
+        # test that workdir can be a WithProperties object
+        self.slavebase = "Upload.testWithProperties.slave"
+        self.masterbase = "Upload.testWithProperties.master"
+        sb = self.makeSlaveBuilder()
+
+        step = self.makeStep(FileUpload,
+                             slavesrc="src.txt",
+                             masterdest="dest.txt")
+        step.workdir = WithProperties("build.%s", "buildnumber")
+
+        self.failUnlessEqual(step._getWorkdir(), "build.1")
 
 class Download(StepTester, unittest.TestCase):
 
@@ -403,6 +416,20 @@ class Download(StepTester, unittest.TestCase):
                              mastersrc="foo",
                              slavedest="foo")
         self.failUnlessEqual(step.workdir, self.workdir)
+
+    def testWithProperties(self):
+        # test that workdir can be a WithProperties object
+        self.slavebase = "Download.testWithProperties.slave"
+        self.masterbase = "Download.testWithProperties.master"
+        sb = self.makeSlaveBuilder()
+
+        step = self.makeStep(FileDownload,
+                             mastersrc="src.txt",
+                             slavedest="dest.txt")
+        step.workdir = WithProperties("build.%s", "buildnumber")
+
+        self.failUnlessEqual(step._getWorkdir(), "build.1")
+
         
 
 # TODO:

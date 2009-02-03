@@ -85,10 +85,12 @@ class _TransferBuildStep(BuildStep):
             self.workdir = workdir
 
     def _getWorkdir(self):
+        properties = self.build.getProperties()
         if self.workdir is None:
-            return self.DEFAULT_WORKDIR
+            workdir = self.DEFAULT_WORKDIR
         else:
-            return self.workdir
+            workdir = self.workdir
+        return properties.render(workdir)
 
 
 class FileUpload(_TransferBuildStep):
