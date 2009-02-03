@@ -317,6 +317,11 @@ class BaseHelper:
         # specify.
         if type(command) not in (list, tuple):
             command = command.split(" ")
+
+        # execute scripts through cmd.exe on windows, to avoid space in path issues
+        if sys.platform == 'win32' and command[0].lower().endswith('.cmd'):
+            command = [which('cmd.exe')[0], '/c', 'call'] + command        
+
         DEBUG = False
         if DEBUG:
             print "do %s" % command
