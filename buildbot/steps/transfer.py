@@ -73,8 +73,25 @@ class StatusRemoteCommand(RemoteCommand):
         if 'stderr' in update:
             self.stderr = self.stderr + update['stderr'] + '\n'
 
+class _TransferBuildStep(BuildStep):
+    """
+    Base class for FileUpload and FileDownload to factor out common
+    functionality.
+    """
+    DEFAULT_WORKDIR = "build"           # is this redundant?
 
-class FileUpload(BuildStep):
+    def setDefaultWorkdir(self, workdir):
+        if self.workdir is None:
+            self.workdir = workdir
+
+    def _getWorkdir(self):
+        if self.workdir is None:
+            return self.DEFAULT_WORKDIR
+        else:
+            return self.workdir
+
+
+class FileUpload(_TransferBuildStep):
     """
     Build step to transfer a file from the slave to the master.
 
@@ -91,8 +108,6 @@ class FileUpload(BuildStep):
                      the buildmaster process.
 
     """
-
-    DEFAULT_WORKDIR = "build"           # is this redundant?
 
     name = 'upload'
 
@@ -115,10 +130,6 @@ class FileUpload(BuildStep):
         self.blocksize = blocksize
         assert isinstance(mode, (int, type(None)))
         self.mode = mode
-
-    def setDefaultWorkdir(self, workdir):
-        if self.workdir is None:
-            self.workdir = workdir
 
     def start(self):
         version = self.slaveVersion("uploadFile")
@@ -147,7 +158,7 @@ class FileUpload(BuildStep):
         # default arguments
         args = {
             'slavesrc': source,
-            'workdir': self.workdir or self.DEFAULT_WORKDIR,
+            'workdir': self._getWorkdir(),
             'writer': fileWriter,
             'maxsize': self.maxsize,
             'blocksize': self.blocksize,
@@ -204,7 +215,7 @@ class _FileReader(pb.Referenceable):
             self.fp = None
 
 
-class FileDownload(BuildStep):
+class FileDownload(_TransferBuildStep):
     """
     Download the first 'maxsize' bytes of a file, from the buildmaster to the
     buildslave. Set the mode of the file
@@ -226,9 +237,6 @@ class FileDownload(BuildStep):
                    the buildslave process.
 
     """
-
-    DEFAULT_WORKDIR = "build"           # is this redundant? 
-
     name = 'download'
 
     def __init__(self, mastersrc, slavedest,
@@ -250,10 +258,6 @@ class FileDownload(BuildStep):
         self.blocksize = blocksize
         assert isinstance(mode, (int, type(None)))
         self.mode = mode
-
-    def setDefaultWorkdir(self, workdir):
-        if self.workdir is None:
-            self.workdir = workdir
 
     def start(self):
         properties = self.build.getProperties()
@@ -293,7 +297,7 @@ class FileDownload(BuildStep):
             'maxsize': self.maxsize,
             'reader': fileReader,
             'blocksize': self.blocksize,
-            'workdir': self.workdir or self.DEFAULT_WORKDIR,
+            'workdir': self._getWorkdir(),
             'mode': self.mode,
             }
 
