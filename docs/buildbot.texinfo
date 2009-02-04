@@ -2851,7 +2851,7 @@ provide a list of addresses instead of a single one:
 c['slaves'] = [BuildSlave('bot-solaris', 'solarispasswd',
                           notify_on_missing=["bob@@example.com",
                                              "alice@@example.org"],
-                          missing_timeout=300, # notify after 10 minutes
+                          missing_timeout=300, # notify after 5 minutes
                           ),
               ]
 @end example
@@ -3978,6 +3978,11 @@ The Perforce user.
 
 @item @code{p4passwd}
 The Perforce password.
+
+@item @code{p4bin}
+Specify the location of the perforce command line binary (p4).  You only
+need to do this if the perforce binary is not in the path of the buildbot
+user.
 
 @item @code{split_file}
 A function that maps a pathname, without the leading @code{p4base}, to a
