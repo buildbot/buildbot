@@ -3980,9 +3980,9 @@ The Perforce user.
 The Perforce password.
 
 @item @code{p4bin}
-Specify the location of the perforce command line binary (p4).  You only
-need to do this if the perforce binary is not in the path of the buildbot
-user.
+An optional string parameter. Specify the location of the perforce command 
+line binary (p4).  You only need to do this if the perforce binary is not 
+in the path of the buildbot user.  Defaults to ``p4''.
 
 @item @code{split_file}
 A function that maps a pathname, without the leading @code{p4base}, to a
