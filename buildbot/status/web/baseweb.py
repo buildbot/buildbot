@@ -13,6 +13,8 @@ from buildbot.interfaces import IControl, IStatusReceiver
 from buildbot.status.web.base import HtmlResource, Box, \
      build_get_class, ICurrentBox, OneLineMixin, map_branches, \
      make_stop_form, make_force_build_form
+from buildbot.status.web.feeds import Rss20StatusResource, \
+     Atom10StatusResource
 from buildbot.status.web.waterfall import WaterfallStatusResource
 from buildbot.status.web.grid import GridStatusResource
 from buildbot.status.web.changes import ChangesResource
@@ -285,6 +287,12 @@ class WebStatus(service.MultiService):
                   to individual changes, builders, builds, steps, and logs.
                   A number of query-arguments can be added to influence
                   the display.
+     /rss : a rss feed summarizing all failed builds. The same
+            query-arguments used by 'waterfall' can be added to
+            influence the feed output.
+     /atom : an atom feed summarizing all failed builds. The same
+             query-arguments used by 'waterfall' can be added to
+             influence the feed output.
      /grid : another summary display that shows a grid of builds, with
              sourcestamps on the x axis, and builders on the y.  Query 
              arguments similar to those for the waterfall can be added.
@@ -497,6 +505,10 @@ class WebStatus(service.MultiService):
         for name, child_resource in self.childrenToBeAdded.iteritems():
             root.putChild(name, child_resource)
 
+        status = self.getStatus()
+        root.putChild("rss", Rss20StatusResource(status))
+        root.putChild("atom", Atom10StatusResource(status))
+
         self.site.resource = root
 
     def putChild(self, name, child_resource):
@@ -518,6 +530,7 @@ class WebStatus(service.MultiService):
 
     def getStatus(self):
         return self.parent.getStatus()
+
     def getControl(self):
         if self.allowForce:
             return IControl(self.parent)

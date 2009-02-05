@@ -7242,6 +7242,18 @@ of the URL space: @file{/builders} for access to individual builds,
 @file{/changes} for access to information about source code changes,
 etc.
 
+@item /rss
+
+This provides a rss feed summarizing all failed builds. The same
+query-arguments used by 'waterfall' can be added to filter the
+feed output.
+
+@item /atom
+
+This provides an atom feed summarizing all failed builds. The same
+query-arguments used by 'waterfall' can be added to filter the feed
+output.
+
 @item /builders/$BUILDERNAME
 
 This describes the given Builder, and provides buttons to force a build.
