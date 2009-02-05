@@ -7,11 +7,7 @@ from buildbot.status import builder
 class BadStepError(Exception):
     """Raised by Blocker when it is passed an upstream step that cannot
     be found or is in a bad state."""
-    def __init__(self, message):
-        self.message = message
-
-    def __str__(self):
-        return self.message
+    pass
 
 class Blocker(BuildStep):
     """
