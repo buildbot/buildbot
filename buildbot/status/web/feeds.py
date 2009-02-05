@@ -1,10 +1,33 @@
+# This module enables ATOM and RSS feeds from webstatus.
+#
+# It is based on "feeder.py" which was part of the Buildbot
+# configuration for the Subversion project. The original file was
+# created by Lieven Gobaerts and later adjusted by API
+# (apinheiro@igalia.coma) and also here
+# http://code.google.com/p/pybots/source/browse/trunk/master/Feeder.py
+#
+# All subsequent changes to feeder.py where made by Chandan-Dutta
+# Chowdhury <chandan-dutta.chowdhury @ hp.com> and Gareth Armstrong
+# <gareth.armstrong @ hp.com>.
+#
+# Those modifications are as follows:
+# 1) the feeds are usable from baseweb.WebStatus
+# 2) feeds are fully validated ATOM 1.0 and RSS 2.0 feeds, verified
+#    with code from http://feedvalidator.org
+# 3) nicer xml output
+# 4) feeds can be filtered as per the /waterfall display with the
+#    builder and category filters
+# 5) cleaned up white space and imports
+#
+# Finally, the code was directly integrated into these two files,
+# buildbot/status/web/feeds.py (you're reading it, ;-)) and
+# buildbot/status/web/baseweb.py.
 
 import os
 import re
 import sys
 import time
 from twisted.web import resource
-#from buildbot.status import builder
 from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE, EXCEPTION
 
 class XmlResource(resource.Resource):
