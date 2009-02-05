@@ -33,17 +33,17 @@ class XmlResource(resource.Resource):
         return ''
 
 class FeedResource(XmlResource):
-    title = 'Dummy'
+    title = None
     link = 'http://dummylink'
     language = 'en-us'
     description = 'Dummy rss'
     status = None
 
-    def __init__(self, status, categories=None):
+    def __init__(self, status, categories=None, title=None):
         self.status = status
         self.categories = categories
+        self.title = title
         self.link = self.status.getBuildbotURL()
-        self.title = 'Build status of ' + status.getProjectName()
         self.description = 'List of FAILED builds'
         self.pubdate = time.gmtime(int(time.time()))
 
@@ -202,16 +202,19 @@ class FeedResource(XmlResource):
         """Generates xml for one item in the feed."""
 
 class Rss20StatusResource(FeedResource):
-    def __init__(self, status, categories=None):
-        FeedResource.__init__(self, status, categories)
+    def __init__(self, status, categories=None, title=None):
+        FeedResource.__init__(self, status, categories, title)
         contentType = 'application/rss+xml'
 
     def header(self, request):
         data = FeedResource.header(self, request)
         data += ('<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">\n')
         data += ('  <channel>\n')
-        if self.title is not None:
-            data += ('    <title>%s</title>\n' % self.title)
+        if self.title is None:
+            title = 'Build status of ' + status.getProjectName()
+        else:
+            title = self.title
+        data += ('    <title>%s</title>\n' % title)
         if self.link is not None:
             data += ('    <link>%s</link>\n' % self.link)
         link = re.sub(r'/index.html', '', self.link)
@@ -264,16 +267,19 @@ class Rss20StatusResource(FeedResource):
         return data
 
 class Atom10StatusResource(FeedResource):
-    def __init__(self, status, categories=None):
-        FeedResource.__init__(self, status, categories)
+    def __init__(self, status, categories=None, title=None):
+        FeedResource.__init__(self, status, categories, title)
         contentType = 'application/atom+xml'
 
     def header(self, request):
         data = FeedResource.header(self, request)
         data += '<feed xmlns="http://www.w3.org/2005/Atom">\n'
         data += ('  <id>%s</id>\n' % self.status.getBuildbotURL())
-        if self.title is not None:
-            data += ('  <title>%s</title>\n' % self.title)
+        if self.title is None:
+            title = 'Build status of ' + status.getProjectName()
+        else:
+            title = self.title
+        data += ('  <title>%s</title>\n' % title)
         if self.link is not None:
             link = re.sub(r'/index.html', '', self.link)
             data += ('  <link rel="self" href="%s/atom"/>\n' % link)
