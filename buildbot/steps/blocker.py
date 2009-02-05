@@ -36,7 +36,7 @@ class Blocker(BuildStep):
 
     flunkOnFailure = True               # override BuildStep's default
     upstreamSteps = None
-    idlePolicy = "error"
+    idlePolicy = "block"
     timeout = None
 
     VALID_IDLE_POLICIES = ("error", "ignore", "block")
@@ -114,7 +114,7 @@ class Blocker(BuildStep):
         if matchingBuild is None:
             msg = "no matching builds found in builder %r" % builderName
             if self.idlePolicy == "error":
-                raise BadStepError(msg)
+                raise BadStepError(msg + " (is it idle?)")
             elif self.idlePolicy == "ignore":
                 # don't hang around waiting (assume the build has finished)
                 self._log(msg + ": skipping it")
