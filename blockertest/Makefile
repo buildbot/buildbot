@@ -1,0 +1,51 @@
+pwd := $(shell pwd)
+export PYTHONPATH := $(pwd)/..
+
+PYTHON   := /usr/bin/python
+BUILDBOT := $(PYTHON) ../bin/buildbot
+
+.PHONY: default start stop wipelogs hard-stop hard-restart
+
+default:
+	@echo "No default target here.  Choices: 'start', 'stop', 'hard-stop', 'hard-restart'." 2>&1
+
+start: master slaves
+	$(BUILDBOT) start master
+	$(BUILDBOT) start -q slaveA
+	$(BUILDBOT) start -q slaveB
+
+stop:
+	-$(BUILDBOT) stop -q master
+	-$(BUILDBOT) stop -q slaveA
+	-$(BUILDBOT) stop -q slaveB
+
+wipelogs:
+	rm -rf master/builder[0-9][AB]
+	cat /dev/null > master/twistd.log
+
+hard-stop: stop wipelogs
+
+hard-restart: stop wipelogs start
+
+master: master/.stamp
+
+master/.stamp:
+	$(BUILDBOT) create-master master
+	(cd master && ln -s ../master.cfg . && rm -f *.sample)
+	touch master/twistd.log
+	touch $@
+
+slaves: slaveA/.stamp slaveB/.stamp
+
+slaveA/.stamp:
+	$(BUILDBOT) create-slave slaveA localhost:9989 slaveA slaveA
+	rm slaveA/*.sample
+	touch $@
+
+slaveB/.stamp:
+	$(BUILDBOT) create-slave slaveB localhost:9989 slaveB slaveB
+	rm slaveB/*.sample
+	touch $@
+
+clean:
+	rm -rf master slaveA slaveB .*stamp
