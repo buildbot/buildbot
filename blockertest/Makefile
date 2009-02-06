@@ -5,6 +5,7 @@ PYTHON   := /usr/bin/python
 BUILDBOT := $(PYTHON) ../bin/buildbot
 
 .PHONY: default start stop wipelogs hard-stop hard-restart
+.PHONY: setup master slaves clean
 
 default:
 	@echo "No default target here.  Choices: 'start', 'stop', 'hard-stop', 'hard-restart'." 2>&1
@@ -27,6 +28,8 @@ hard-stop: stop wipelogs
 
 hard-restart: stop wipelogs start
 
+setup: master slaves
+
 master: master/.stamp
 
 master/.stamp:
@@ -47,5 +50,14 @@ slaveB/.stamp:
 	rm slaveB/*.sample
 	touch $@
 
-clean:
+clean: check-stopped force-clean
+
+check-stopped:
+	@[ ! -f master/twistd.pid -a ! -f slaveA/twistd.pid -a ! -f slaveB/twistd.pid ] || \
+	  ( echo -e \
+	      "error: at least one daemon seems to be running still" \
+	      "\n(use 'make stop' to stop them, or 'make force-clean' if you know what you are doing)" >&2 ; \
+	    false )
+
+force-clean:
 	rm -rf master slaveA slaveB .*stamp
