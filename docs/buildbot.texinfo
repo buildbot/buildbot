@@ -5784,7 +5784,7 @@ running.
 
 While it is a good idea to keep your build process self-contained in
 the source code tree, sometimes it is convenient to put more
-intelligence into your Buildbot configuration. One was to do this is
+intelligence into your Buildbot configuration. One way to do this is
 to write a custom BuildStep. Once written, this Step can be used in
 the @file{master.cfg} file.
 
@@ -6782,7 +6782,7 @@ projects.
 Arguments:
 @table @code
 @item source
-(required): A step specification tuple, that that used by GNUAutoconf.
+(required): A step specification tuple, like that used by GNUAutoconf.
 
 @item perl
 A string which specifies the @code{perl} executable to use. Defaults
@@ -6807,8 +6807,8 @@ like:
 
 Unfortunately, although Python provides a standard unit-test framework
 named @code{unittest}, to the best of my knowledge @code{distutils}
-does not provide a standardized target to run such unit tests. (please
-let me know if I'm wrong, and I will update this factory).
+does not provide a standardized target to run such unit tests. (Please
+let me know if I'm wrong, and I will update this factory.)
 
 The @code{Distutils} factory provides support for running the build
 part of this process. It accepts the same @code{source=} parameter as
@@ -6818,7 +6818,7 @@ the other build factories.
 Arguments:
 @table @code
 @item source
-(required): A step specification tuple, that that used by GNUAutoconf.
+(required): A step specification tuple, like that used by GNUAutoconf.
 
 @item python
 A string which specifies the @code{python} executable to use. Defaults
