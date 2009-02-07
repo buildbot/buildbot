@@ -27,6 +27,8 @@ wipelogs:
 reconfig:
 	$(BUILDBOT) reconfig master
 
+restart: stop start
+
 hard-stop: stop wipelogs
 
 hard-restart: stop wipelogs start
