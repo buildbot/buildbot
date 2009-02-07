@@ -24,6 +24,9 @@ wipelogs:
 	rm -rf master/builder[0-9][AB]
 	cat /dev/null > master/twistd.log
 
+reconfig:
+	$(BUILDBOT) reconfig master
+
 hard-stop: stop wipelogs
 
 hard-restart: stop wipelogs start
