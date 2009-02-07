@@ -35,9 +35,9 @@ Here's how it works:
   - run "./startpair 1" to run the test case 1: this starts two builds
     running concurrently under builder1A (slaveA) and builder1B (slaveB)
 
-  - hit http://localhost:9980/waterfall in your browser, and inspect
-    the outcome of the builds to ensure that it meets the expected
-    outcome for test case 1 (see below)
+  - hit http://localhost:9980/waterfall in your browser, and inspect the
+    outcome of the two builds (builder1A and builder1B) to ensure that it
+    meets the expected outcome for test case 1 (see below)
 
   - repeat for all other test cases
 
@@ -73,8 +73,7 @@ EXPECTED OUTCOME:
   - both builders: success
   - step 'block' has status text "upstream success after 3.0 sec"
   - steps builder2A.date and builder2B.date both print the same time
-    (possibly differing by a few milliseconds, of course, so no
-    guarantee that it'll be the same second)
+    (possibly differing by tens of milliseconds)
 
 
 TEST 3: ping-pong blockers
@@ -89,7 +88,8 @@ EXPECTED OUTCOME:
     (because 'setupA' takes 3 sec to run)
   - 'blockA' success with status text "upstream success after 3.0 sec"
     (because 'buildB' takes 3 sec longer than 'buildA')
-  - 'finishA' and 'finishB' print the same time (again, to within a few msec)
+  - 'finishA' and 'finishB' print the same time (again, to within a few
+    tens of milliseconds)
 
 
 TEST 4: Blocker that doesn't block
