@@ -1440,7 +1440,6 @@ class ContactTester(unittest.TestCase):
 
 
 
-
     def test_notification_exceptionToFailure(self):
         self.do_x_to_y_notification_test(notify="exceptionToFailure", previous_result=builder.EXCEPTION, new_result=builder.FAILURE,
                                          expected_msg="build #862 of builder834 is complete: Failure [step1 step2]  Build details are at http://myserver/mypath?build=765" )
@@ -1480,6 +1479,18 @@ class ContactTester(unittest.TestCase):
         self.do_x_to_y_notification_test(notify="exceptionToSuccess", previous_result=builder.EXCEPTION, new_result=builder.WARNINGS,
                                          expected_msg = "" )
 
+    def test_notification_set_in_config(self):
+        irc = MyContact(channel = MyChannel(notify_events = {'success': 1}))
+
+        my_builder = MyBuilder("builder834")
+        my_build = MyIrcBuild(my_builder, 862, builder.SUCCESS)
+        my_build.changes = (
+            Change(who = 'author1', files = ['file1'], comments = 'comment1', revision = 943),
+            )
+
+        irc.message = ""
+        irc.buildFinished(my_builder.getName(), my_build, None)
+        self.failUnlessEqual(irc.message, "build #862 of builder834 is complete: Success [step1 step2]  Build details are at http://myserver/mypath?build=765", "Finish notification generated on success with notify_events=['success']")
 
 class MyIrcBuild(builder.BuildStatus):
     results = None
@@ -1508,9 +1519,10 @@ class URLProducer:
 class MyChannel:
     categories = None
     status = URLProducer()
+    notify_events = {}
 
-    def __init__(self):
-        pass
+    def __init__(self, notify_events = {}):
+        self.notify_events = notify_events
 
 class MyContact(words.Contact):
     message = ""

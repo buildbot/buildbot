@@ -7616,7 +7616,12 @@ told to shut up.
 from buildbot.status import words
 irc = words.IRC("irc.example.org", "botnickname",
                 channels=["channel1", "channel2"],
-                password="mysecretpassword")
+                password="mysecretpassword",
+                notify_events={
+                  'exception': 1,
+                  'successToFailure': 1,
+                  'failureToSuccess': 1,
+                })
 c['status'].append(irc)
 @end example
 
@@ -7681,6 +7686,9 @@ Announce the URL of the Buildbot's home page.
 @item version
 Announce the version of this Buildbot.
 @end table
+
+Additionally, the config file may specify default notification options
+as shown in the example earlier.
 
 If the @code{allowForce=True} option was used, some addtional commands
 will be available:
