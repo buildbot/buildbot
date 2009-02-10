@@ -31,6 +31,7 @@ class ConfigLoader(master.BuildMaster):
             self.loadConfig(configFile)
         except:
             os.chdir(dir)
+            configFile.close()
             rmtree(tempdir)
             raise
         os.chdir(dir)
