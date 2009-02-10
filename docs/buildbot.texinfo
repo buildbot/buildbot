@@ -1673,7 +1673,7 @@ attention to several dozen private user branches.
 
 When the setup has multiple sources of Changes the @code{category}
 can be used for @code{Scheduler} objects to filter out a subset
-of the Changes.
+of the Changes.  Note that not all change sources can attach a category.
 
 Some Schedulers may trigger builds for other reasons, other than
 recent Changes. For example, a Scheduler subclass could connect to a
@@ -2357,6 +2357,11 @@ A callable which takes one argument, a Change instance, and returns
 it is not.  Unimportant Changes are accumulated until the build is
 triggered by an important change.  The default value of None means
 that all Changes are important.
+
+@item categories
+A list of categories of changes that this scheduler will respond to.  If this
+is specified, then any non-matching changes are ignored.
+
 @end table
 
 Example:
