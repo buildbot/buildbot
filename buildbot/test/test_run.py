@@ -978,7 +978,10 @@ from buildbot.steps import dummy
 from buildbot.buildslave import BuildSlave
 s = factory.s
 
-f1 = factory.QuickBuildFactory('fakerep', 'cvsmodule', configure=None)
+from buildbot.steps.shell import ShellCommand
+f1 = factory.BuildFactory([
+    s(ShellCommand, command="sleep 3", env={'blah':'blah'})
+    ])
 
 BuildmasterConfig = c = {}
 c['slaves'] = [BuildSlave('bot1', 'sekrit', max_builds=1)]

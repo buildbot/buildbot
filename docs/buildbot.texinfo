@@ -7678,7 +7678,12 @@ told to shut up.
 from buildbot.status import words
 irc = words.IRC("irc.example.org", "botnickname",
                 channels=["channel1", "channel2"],
-                password="mysecretpassword")
+                password="mysecretpassword",
+                notify_events={
+                  'exception': 1,
+                  'successToFailure': 1,
+                  'failureToSuccess': 1,
+                })
 c['status'].append(irc)
 @end example
 
@@ -7728,10 +7733,11 @@ A build finished successfully
 A build failed
 @item exception
 A build generated and exception
-@item successToFailed
-The previous build was successful, but this one failed
-@item failedToSuccess
-The previous build failed, but this one was successful
+@item xToY
+The previous build was x, but this one is Y, where x and Y are each
+one of success, warnings, failure, exception (except Y is
+capitalized).  For example: successToFailure will notify if the
+previous build was successful, but this one failed
 @end table
 
 @item help COMMAND
@@ -7742,6 +7748,9 @@ Announce the URL of the Buildbot's home page.
 @item version
 Announce the version of this Buildbot.
 @end table
+
+Additionally, the config file may specify default notification options
+as shown in the example earlier.
 
 If the @code{allowForce=True} option was used, some addtional commands
 will be available:
