@@ -186,12 +186,6 @@ class Trial(ShellCommand):
     do the importing and running. The 'tests' parameter controls which tests
     trial will run: it can be a string or a list of strings.
 
-    You can also use a higher-level module name and pass the --recursive flag
-    to trial: this will search recursively within the named module to find
-    all test cases. For large multiple-test-directory projects like Twisted,
-    this means you can avoid specifying all the test directories explicitly.
-    Something like 'trial --recursive twisted' will pick up everything.
-
     To find these test cases, you must set a PYTHONPATH that allows something
     like 'import petmail.test' to work. For packages that don't use a
     separate top-level 'lib' directory, PYTHONPATH=. will work, and will use
