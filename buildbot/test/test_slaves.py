@@ -65,7 +65,7 @@ class Slave(RunMixin, unittest.TestCase):
         return d
 
     def doBuild(self, buildername):
-        br = BuildRequest("forced", SourceStamp())
+        br = BuildRequest("forced", SourceStamp(), 'test_builder')
         d = br.waitUntilFinished()
         self.control.getBuilder(buildername).requestBuild(br)
         return d
@@ -172,7 +172,7 @@ class Slave(RunMixin, unittest.TestCase):
         # outright).
         timers = []
         self.slaves['bot1'].debugOpts["stallPings"] = (10, timers)
-        br = BuildRequest("forced", SourceStamp())
+        br = BuildRequest("forced", SourceStamp(), 'test_builder')
         d1 = br.waitUntilFinished()
         self.master.botmaster.builders["b1"].CHOOSE_SLAVES_RANDOMLY = False
         self.control.getBuilder("b1").requestBuild(br)
@@ -581,7 +581,7 @@ class SlaveBusyness(RunMixin, unittest.TestCase):
         return d
 
     def doBuild(self, buildername):
-        br = BuildRequest("forced", SourceStamp())
+        br = BuildRequest("forced", SourceStamp(), 'test_builder')
         d = br.waitUntilFinished()
         self.control.getBuilder(buildername).requestBuild(br)
         return d
@@ -737,11 +737,11 @@ class Reconfig(RunMixin, unittest.TestCase):
         waitCommandRegistry[("three","build3")] = self._three_started
 
         # use different branches to make sure these cannot be merged
-        br1 = BuildRequest("build1", SourceStamp(branch="1"))
+        br1 = BuildRequest("build1", SourceStamp(branch="1"), 'test_builder')
         b1.submitBuildRequest(br1)
-        br2 = BuildRequest("build2", SourceStamp(branch="2"))
+        br2 = BuildRequest("build2", SourceStamp(branch="2"), 'test_builder')
         b1.submitBuildRequest(br2)
-        br3 = BuildRequest("build3", SourceStamp(branch="3"))
+        br3 = BuildRequest("build3", SourceStamp(branch="3"), 'test_builder')
         b1.submitBuildRequest(br3)
         self.requests = (br1, br2, br3)
         # all three are now in the queue
@@ -856,7 +856,8 @@ class Slave2(RunMixin, unittest.TestCase):
         # ignored because our build process does not have a source checkout
         # step.
         self.revision += 1
-        br = BuildRequest(reason, SourceStamp(revision=self.revision))
+        br = BuildRequest(reason, SourceStamp(revision=self.revision),
+                                                            'test_builder')
         d = br.waitUntilFinished()
         self.control.getBuilder(buildername).requestBuild(br)
         return d

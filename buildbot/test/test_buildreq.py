@@ -11,20 +11,21 @@ class Request(unittest.TestCase):
     def testMerge(self):
         R = base.BuildRequest
         S = sourcestamp.SourceStamp
-        b1 =  R("why", S("branch1", None, None, None))
-        b1r1 = R("why2", S("branch1", "rev1", None, None))
-        b1r1a = R("why not", S("branch1", "rev1", None, None))
-        b1r2 = R("why3", S("branch1", "rev2", None, None))
-        b2r2 = R("why4", S("branch2", "rev2", None, None))
-        b1r1p1 = R("why5", S("branch1", "rev1", (3, "diff"), None))
+        N = 'test_builder'
+        b1 =  R("why", S("branch1", None, None, None), N)
+        b1r1 = R("why2", S("branch1", "rev1", None, None), N)
+        b1r1a = R("why not", S("branch1", "rev1", None, None), N)
+        b1r2 = R("why3", S("branch1", "rev2", None, None), N)
+        b2r2 = R("why4", S("branch2", "rev2", None, None), N)
+        b1r1p1 = R("why5", S("branch1", "rev1", (3, "diff"), None), N)
         c1 = Change("alice", [], "changed stuff", branch="branch1")
         c2 = Change("alice", [], "changed stuff", branch="branch1")
         c3 = Change("alice", [], "changed stuff", branch="branch1")
         c4 = Change("alice", [], "changed stuff", branch="branch1")
         c5 = Change("alice", [], "changed stuff", branch="branch1")
         c6 = Change("alice", [], "changed stuff", branch="branch1")
-        b1c1 = R("changes", S("branch1", None, None, [c1,c2,c3]))
-        b1c2 = R("changes", S("branch1", None, None, [c4,c5,c6]))
+        b1c1 = R("changes", S("branch1", None, None, [c1,c2,c3]), N)
+        b1c2 = R("changes", S("branch1", None, None, [c4,c5,c6]), N)
 
         self.failUnless(b1.canBeMergedWith(b1))
         self.failIf(b1.canBeMergedWith(b1r1))
