@@ -2658,6 +2658,7 @@ Here is a fully-worked example:
 
 @example
 from buildbot import scheduler
+from buildbot.process import factory
 from buildbot.steps import trigger
 
 checkin = scheduler.Scheduler(name="checkin",
@@ -2682,20 +2683,20 @@ c['schedulers'] = [checkin, nightly, build, test, package]
 
 # on checkin, make a tarball, build it, and test it
 checkin_factory = factory.BuildFactory()
-f.addStep(trigger.Trigger('mktarball', schedulers=['mktarball'],
+checkin_factory.addStep(trigger.Trigger('mktarball', schedulers=['mktarball'],
                                        waitForFinish=True)
-f.addStep(trigger.Trigger('build', schedulers=['build-all-platforms'],
+checkin_factory.addStep(trigger.Trigger('build', schedulers=['build-all-platforms'],
                                    waitForFinish=True)
-f.addStep(trigger.Trigger('test', schedulers=['distributed-test'],
+checkin_factory.addStep(trigger.Trigger('test', schedulers=['distributed-test'],
                                   waitForFinish=True)
 
 # and every night, make a tarball, build it, and package it
 nightly_factory = factory.BuildFactory()
-f.addStep(trigger.Trigger('mktarball', schedulers=['mktarball'],
+checkin_factory.addStep(trigger.Trigger('mktarball', schedulers=['mktarball'],
                                        waitForFinish=True)
-f.addStep(trigger.Trigger('build', schedulers=['build-all-platforms'],
+checkin_factory.addStep(trigger.Trigger('build', schedulers=['build-all-platforms'],
                                    waitForFinish=True)
-f.addStep(trigger.Trigger('package', schedulers=['package-all-platforms'],
+checkin_factory.addStep(trigger.Trigger('package', schedulers=['package-all-platforms'],
                                      waitForFinish=True)
 @end example
 
