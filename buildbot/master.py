@@ -24,7 +24,7 @@ from buildbot.pbutil import NewCredPerspective
 from buildbot.process.builder import Builder, IDLE
 from buildbot.process.base import BuildRequest
 from buildbot.status.builder import Status
-from buildbot.changes.changes import Change, ChangeMaster
+from buildbot.changes.changes import Change, ChangeMaster, TestChangeMaster
 from buildbot.sourcestamp import SourceStamp
 from buildbot.buildslave import BuildSlave
 from buildbot import interfaces, locks
@@ -405,7 +405,7 @@ class BuildMaster(service.MultiService, styles.Versioned):
         # this ChangeMaster is a dummy, only used by tests. In the real
         # buildmaster, where the BuildMaster instance is activated
         # (startService is called) by twistd, this attribute is overwritten.
-        self.useChanges(ChangeMaster())
+        self.useChanges(TestChangeMaster())
 
         self.readConfig = False
 

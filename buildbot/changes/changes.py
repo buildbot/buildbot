@@ -279,3 +279,8 @@ class ChangeMaster(service.MultiService):
     def stopService(self):
         self.saveYourself()
         return service.MultiService.stopService(self)
+
+class TestChangeMaster(ChangeMaster):
+    """A ChangeMaster for use in tests that does not save itself"""
+    def stopService(self):
+        return service.MultiService.stopService(self)
