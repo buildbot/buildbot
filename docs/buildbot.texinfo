@@ -2683,21 +2683,21 @@ c['schedulers'] = [checkin, nightly, build, test, package]
 
 # on checkin, make a tarball, build it, and test it
 checkin_factory = factory.BuildFactory()
-checkin_factory.addStep(trigger.Trigger('mktarball', schedulers=['mktarball'],
-                                       waitForFinish=True)
-checkin_factory.addStep(trigger.Trigger('build', schedulers=['build-all-platforms'],
-                                   waitForFinish=True)
-checkin_factory.addStep(trigger.Trigger('test', schedulers=['distributed-test'],
-                                  waitForFinish=True)
+checkin_factory.addStep(trigger.Trigger(schedulerNames=['mktarball'],
+                                       waitForFinish=True))
+checkin_factory.addStep(trigger.Trigger(schedulerNames=['build-all-platforms'],
+                                   waitForFinish=True))
+checkin_factory.addStep(trigger.Trigger(schedulerNames=['distributed-test'],
+                                  waitForFinish=True))
 
 # and every night, make a tarball, build it, and package it
 nightly_factory = factory.BuildFactory()
-nightly_factory.addStep(trigger.Trigger('mktarball', schedulers=['mktarball'],
-                                       waitForFinish=True)
-nightly_factory.addStep(trigger.Trigger('build', schedulers=['build-all-platforms'],
-                                   waitForFinish=True)
-nightly_factory.addStep(trigger.Trigger('package', schedulers=['package-all-platforms'],
-                                     waitForFinish=True)
+nightly_factory.addStep(trigger.Trigger(schedulerNames=['mktarball'],
+                                       waitForFinish=True))
+nightly_factory.addStep(trigger.Trigger(schedulerNames=['build-all-platforms'],
+                                   waitForFinish=True))
+nightly_factory.addStep(trigger.Trigger(schedulerNames=['package-all-platforms'],
+                                     waitForFinish=True))
 @end example
 
 @node Merging BuildRequests, Setting the slaveport, Change Sources and Schedulers, Configuration
