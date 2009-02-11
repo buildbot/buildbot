@@ -339,14 +339,18 @@ class ShellCommand:
 
         if type(self.command) in types.StringTypes:
             if runtime.platformType  == 'win32':
-                argv = [os.environ['COMSPEC'], '/c', self.command]
+                argv = os.environ['COMSPEC'].split() # allow %COMSPEC% to have args
+                if '/c' not in argv: argv += ['/c'] 
+                argv += [self.command]
             else:
                 # for posix, use /bin/sh. for other non-posix, well, doesn't
                 # hurt to try
                 argv = ['/bin/sh', '-c', self.command]
         else:
             if runtime.platformType  == 'win32':
-                argv = [os.environ['COMSPEC'], '/c'] + list(self.command)
+                argv = os.environ['COMSPEC'].split() # allow %COMSPEC% to have args
+                if '/c' not in argv: argv += ['/c'] 
+                argv += list(self.command)
             else:
                 argv = self.command
 
