@@ -66,7 +66,7 @@ shutil.copy(servicemanager.__file__, msg_file)
 
 data_files = [
     ["", [msg_file]],
-    ["", [join(bb_root_dir, "buildbot", "status", "classic.css")]],
+    ["", [join(bb_root_dir, "buildbot", "status", "web", "classic.css")]],
     ["", [join(bb_root_dir, "buildbot", "buildbot.png")]],
 ]
 
