@@ -13,7 +13,7 @@ td.box {
 
 /* Activity states */
 .offline { 
-        background-color: red;
+        background-color: gray;
 }
 .idle {
 	background-color: white;
