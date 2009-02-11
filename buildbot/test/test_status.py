@@ -1009,7 +1009,7 @@ class Subscription(RunMixin, unittest.TestCase):
         t1.events = []
 
         c = interfaces.IControl(self.master)
-        req = BuildRequest("forced build for testing", SourceStamp())
+        req = BuildRequest("forced build for testing", SourceStamp(), 'test_builder')
         c.getBuilder("dummy").requestBuild(req)
         d = req.waitUntilFinished()
         d2 = self.master.botmaster.waitUntilBuilderIdle("dummy")
@@ -1097,7 +1097,7 @@ class Subscription(RunMixin, unittest.TestCase):
         self.t4 = t4 = STarget(["builder", "build", "eta"])
         self.master.getStatus().subscribe(t4)
         c = interfaces.IControl(self.master)
-        req = BuildRequest("forced build for testing", SourceStamp())
+        req = BuildRequest("forced build for testing", SourceStamp(), 'test_builder')
         c.getBuilder("dummy").requestBuild(req)
         d = req.waitUntilFinished()
         d2 = self.master.botmaster.waitUntilBuilderIdle("dummy")

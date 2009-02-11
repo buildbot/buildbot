@@ -308,7 +308,7 @@ class LatentSlave(RunMixin, unittest.TestCase):
         self.b1 = self.master.botmaster.builders['b1']
 
     def doBuild(self, buildername):
-        br = BuildRequest("forced", SourceStamp())
+        br = BuildRequest("forced", SourceStamp(), 'test_builder')
         d = br.waitUntilFinished()
         self.control.getBuilder(buildername).requestBuild(br)
         return d

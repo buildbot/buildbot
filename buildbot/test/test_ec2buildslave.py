@@ -217,7 +217,7 @@ class Boto:
 class Mixin(RunMixin):
 
     def doBuild(self):
-        br = BuildRequest("forced", SourceStamp())
+        br = BuildRequest("forced", SourceStamp(), 'test_builder')
         d = br.waitUntilFinished()
         self.control.getBuilder('b1').requestBuild(br)
         return d

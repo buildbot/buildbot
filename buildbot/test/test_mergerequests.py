@@ -44,14 +44,14 @@ class MergeRequestsTest(RunMixin, unittest.TestCase):
         c5 = Change("alice", [], "changed stuff", branch="branch1")
         c6 = Change("alice", [], "changed stuff", branch="branch1")
         if reqs is None:
-            reqs = (R("why", S("branch1", None, None, None)),
-                    R("why2", S("branch1", "rev1", None, None)),
-                    R("why not", S("branch1", "rev1", None, None)),
-                    R("why3", S("branch1", "rev2", None, None)),
-                    R("why4", S("branch2", "rev2", None, None)),
-                    R("why5", S("branch1", "rev1", (3, "diff"), None)),
-                    R("changes", S("branch1", None, None, [c1,c2,c3])),
-                    R("changes", S("branch1", None, None, [c4,c5,c6])),
+            reqs = (R("why", S("branch1", None, None, None), 'test_builder'),
+                    R("why2", S("branch1", "rev1", None, None), 'test_builder'),
+                    R("why not", S("branch1", "rev1", None, None), 'test_builder'),
+                    R("why3", S("branch1", "rev2", None, None), 'test_builder'),
+                    R("why4", S("branch2", "rev2", None, None), 'test_builder'),
+                    R("why5", S("branch1", "rev1", (3, "diff"), None), 'test_builder'),
+                    R("changes", S("branch1", None, None, [c1,c2,c3]), 'test_builder'),
+                    R("changes", S("branch1", None, None, [c4,c5,c6]), 'test_builder'),
                     )
 
         m = self.master
@@ -176,13 +176,13 @@ class MergeRequestsTest(RunMixin, unittest.TestCase):
         S = SourceStamp
         p1 = Properties(first="value")
         p2 = Properties(first="other value")
-        reqs = (R("why", S("branch1", None, None, None),
+        reqs = (R("why", S("branch1", None, None, None), 'test_builder',
                   properties = p1),
-                R("why", S("branch1", None, None, None),
+                R("why", S("branch1", None, None, None), 'test_builder',
                   properties = p1),
-                R("why", S("branch1", None, None, None),
+                R("why", S("branch1", None, None, None), 'test_builder',
                   properties = p2),
-                R("why", S("branch1", None, None, None),
+                R("why", S("branch1", None, None, None), 'test_builder',
                   properties = p2),
                 )
         return self.do_test(mergefun,

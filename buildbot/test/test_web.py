@@ -342,7 +342,7 @@ class GetURL(RunMixin, unittest.TestCase):
         return RunMixin.tearDown(self)
 
     def doBuild(self, buildername):
-        br = base.BuildRequest("forced", sourcestamp.SourceStamp())
+        br = base.BuildRequest("forced", sourcestamp.SourceStamp(), 'test_builder')
         d = br.waitUntilFinished()
         self.control.getBuilder(buildername).requestBuild(br)
         return d
@@ -428,7 +428,7 @@ BuildmasterConfig = {
         self.port = port
         # insert an event
 
-        req = base.BuildRequest("reason", sourcestamp.SourceStamp())
+        req = base.BuildRequest("reason", sourcestamp.SourceStamp(), 'test_builder')
         build1 = base.Build([req])
         bs = m.status.getBuilder("builder1").newBuild()
         bs.setReason("reason")
