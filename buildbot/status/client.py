@@ -430,6 +430,10 @@ class StatusClientPerspective(base.StatusReceiverPerspective):
         s = self.status.getSlave(name)
         return IRemote(s)
 
+    def perspective_ping(self):
+        """Ping method to allow pb clients to validate their connections."""
+        return "pong"
+
     # IStatusReceiver methods, invoked if we've subscribed
 
     # mode >= builder
