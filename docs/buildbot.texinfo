@@ -2692,11 +2692,11 @@ checkin_factory.addStep(trigger.Trigger('test', schedulers=['distributed-test'],
 
 # and every night, make a tarball, build it, and package it
 nightly_factory = factory.BuildFactory()
-checkin_factory.addStep(trigger.Trigger('mktarball', schedulers=['mktarball'],
+nightly_factory.addStep(trigger.Trigger('mktarball', schedulers=['mktarball'],
                                        waitForFinish=True)
-checkin_factory.addStep(trigger.Trigger('build', schedulers=['build-all-platforms'],
+nightly_factory.addStep(trigger.Trigger('build', schedulers=['build-all-platforms'],
                                    waitForFinish=True)
-checkin_factory.addStep(trigger.Trigger('package', schedulers=['package-all-platforms'],
+nightly_factory.addStep(trigger.Trigger('package', schedulers=['package-all-platforms'],
                                      waitForFinish=True)
 @end example
 
