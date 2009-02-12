@@ -515,7 +515,6 @@ class Build:
             if step.flunkOnFailure:
                 self.result = FAILURE
             if step.haltOnFailure:
-                self.result = FAILURE
                 terminate = True
         elif result == WARNINGS:
             if step.warnOnWarnings:
