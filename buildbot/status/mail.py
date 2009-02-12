@@ -453,7 +453,7 @@ class MailNotifier(base.StatusReceiverMultiService):
         # m['To'] is added later
 
         if attrs['patch']:
-            a = MIMEText(attrs['patch'])
+            a = MIMEText(attrs['patch'][1])
             a.add_header('Content-Disposition', "attachment",
                          filename="source patch")
             m.attach(a)
