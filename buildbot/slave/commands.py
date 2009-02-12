@@ -1857,6 +1857,23 @@ class Git(SourceBase):
             return False
         return os.path.isdir(os.path.join(self._fullSrcdir(), ".git"))
 
+    def readSourcedata(self):
+        return open(self.sourcedatafile, "r").read()
+
+    # If the repourl matches the sourcedata file, then
+    # we can say that the sourcedata matches.  We can
+    # ignore branch changes, since Git can work with
+    # many branches fetched, and we deal with it properly
+    # in doVCUpdate.
+    def sourcedataMatches(self):
+        try:
+            olddata = self.readSourcedata()
+            if not olddata.startswith(self.repourl+' '):
+                return False
+        except IOError:
+            return False
+        return True
+
     def _didFetch(self, res):
         if self.revision:
             head = self.revision
@@ -1869,7 +1886,28 @@ class Git(SourceBase):
         self.command = c
         return c.start()
 
+    # Update first runs "git clean", removing local changes,
+    # if the branch to be checked out has changed.  This, combined
+    # with the later "git reset" equates clobbering the repo,
+    # but it's much more efficient.
     def doVCUpdate(self):
+        try:
+            # Check to see if our branch has changed
+            diffbranch = self.sourcedata != self.readSourcedata()
+        except IOError:
+            diffbranch = False
+        if diffbranch:
+            command = ['git', 'clean', '-f', '-d']
+            c = ShellCommand(self.builder, command, self._fullSrcdir(),
+                             sendRC=False, timeout=self.timeout)
+            self.command = c
+            d = c.start()
+            d.addCallback(self._abandonOnFailure)
+            d.addCallback(self._didClean)
+            return d
+        return self._didClean(None)
+
+    def _didClean(self, dummy):
         command = ['git', 'fetch', self.repourl, self.branch]
         self.sendStatus({"header": "fetching branch %s from %s\n"
                                         % (self.branch, self.repourl)})
