@@ -4606,8 +4606,11 @@ used to give a name to any LogFiles created by this step.
 
 @item haltOnFailure
 if True, a FAILURE of this build step will cause the build to halt
-immediately with an overall result of FAILURE. Steps with
-@code{alwaysRun=True} are still run.
+immediately. Steps with @code{alwaysRun=True} are still run. Generally
+speaking, haltOnFailure implies flunkOnFailure (the default for most
+BuildSteps). In some cases, particularly series of tests, it makes sense
+to haltOnFailure if something fails early on but not flunkOnFailure.
+This can be achieved with haltOnFailure=True, flunkOnFailure=False.
 
 @item flunkOnWarnings
 when True, a WARNINGS or FAILURE of this build step will mark the
