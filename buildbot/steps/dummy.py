@@ -12,6 +12,7 @@ class Dummy(BuildStep):
     """
 
     haltOnFailure = True
+    flunkOnFailure = True
     name = "dummy"
 
     def __init__(self, timeout=5, **kwargs):
@@ -63,6 +64,7 @@ class RemoteDummy(LoggingBuildStep):
     """
 
     haltOnFailure = True
+    flunkOnFailure = True
     name = "remote dummy"
 
     def __init__(self, timeout=5, **kwargs):

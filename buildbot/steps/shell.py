@@ -275,6 +275,7 @@ class Configure(ShellCommand):
 
     name = "configure"
     haltOnFailure = 1
+    flunkOnFailure = 1
     description = ["configuring"]
     descriptionDone = ["configure"]
     command = ["./configure"]
@@ -349,6 +350,7 @@ class Compile(WarningCountingShellCommand):
 
     name = "compile"
     haltOnFailure = 1
+    flunkOnFailure = 1
     description = ["compiling"]
     descriptionDone = ["compile"]
     command = ["make", "all"]

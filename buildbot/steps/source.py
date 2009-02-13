@@ -18,6 +18,7 @@ class Source(LoggingBuildStep):
 
     # if the checkout fails, there's no point in doing anything else
     haltOnFailure = True
+    flunkOnFailure = True
     notReally = False
 
     branch = None # the default branch, should be set in __init__

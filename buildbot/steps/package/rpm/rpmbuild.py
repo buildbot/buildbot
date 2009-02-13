@@ -24,6 +24,7 @@ class RpmBuild(ShellCommand):
 
     name = "rpmbuilder"
     haltOnFailure = 1
+    flunkOnFailure = 1
     description = ["RPMBUILD"]
     descriptionDone = ["RPMBUILD"]
 
