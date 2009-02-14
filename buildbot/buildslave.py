@@ -6,6 +6,7 @@ from zope.interface import implements
 from twisted.python import log
 from twisted.internet import defer, reactor
 from twisted.application import service
+import twisted.spread.pb
 
 from buildbot.pbutil import NewCredPerspective
 from buildbot.status.builder import SlaveStatus
@@ -46,6 +47,7 @@ class AbstractBuildSlave(NewCredPerspective, service.MultiService):
         self.password = password
         self.botmaster = None # no buildmaster yet
         self.slave_status = SlaveStatus(name)
+        self.slave_status.addGracefulWatcher(self._gracefulChanged)
         self.slave = None # a RemoteReference to the Bot, when connected
         self.slave_commands = None
         self.slavebuilders = {}
@@ -136,6 +138,9 @@ class AbstractBuildSlave(NewCredPerspective, service.MultiService):
         # we accumulate slave information in this 'state' dictionary, then
         # set it atomically if we make it far enough through the process
         state = {}
+
+        # Reset graceful status
+        self.slave_status.setGraceful(False)
 
         def _log_attachment_on_slave(res):
             d1 = bot.callRemote("print", "attached")
@@ -292,6 +297,11 @@ class AbstractBuildSlave(NewCredPerspective, service.MultiService):
         can start a build.  This function can be used to limit overall
         concurrency on the buildslave.
         """
+        # If we're waiting to shutdown gracefully, then we shouldn't
+        # accept any new jobs.
+        if self.slave_status.graceful_shutdown:
+            return False
+
         if self.max_builds:
             active_builders = [sb for sb in self.slavebuilders.values()
                                if sb.isBusy()]
@@ -324,6 +334,36 @@ class AbstractBuildSlave(NewCredPerspective, service.MultiService):
         # return the Deferred for testing purposes
         return d
 
+    def _gracefulChanged(self, graceful):
+        """This is changed when our graceful shutdown setting changes"""
+        if graceful:
+            active_builders = [sb for sb in self.slavebuilders.values()
+                               if sb.isBusy()]
+            if len(active_builders) == 0:
+                # Shut down!
+                self.shutdown()
+
+    def shutdown(self):
+        d = None
+        for b in self.slavebuilders.values():
+            if b.remote:
+                d = b.remote.callRemote("shutdown")
+                break
+
+        if d:
+            log.msg("Shutting down slave: %s" % self.slavename)
+            def _errback(why):
+                try:
+                    if why.type is twisted.spread.pb.PBConnectionLost:
+                        log.msg("Lost connection to %s" % self.slavename)
+                        return
+                except:
+                    pass
+                log.err("Unexpected error when trying to shutdown %s" % self.slavename)
+            d.addErrback(_errback)
+            return d
+        log.err("Couldn't find remote builder to shut down slave")
+        return defer.succeed(None)
 
 class BuildSlave(AbstractBuildSlave):
 
@@ -377,6 +417,14 @@ class BuildSlave(AbstractBuildSlave):
         subject = "Buildbot: buildslave %s was lost" % self.slavename
         return self._mail_missing_message(subject, text)
 
+    def buildFinished(self, sb):
+        if self.slave_status.graceful_shutdown:
+            active_builders = [sb for sb in self.slavebuilders.values()
+                               if sb.isBusy()]
+            if len(active_builders) == 0:
+                # Shut down!
+                return self.shutdown()
+        return defer.succeed(None)
 
 class AbstractLatentBuildSlave(AbstractBuildSlave):
     """A build slave that will start up a slave instance when needed.

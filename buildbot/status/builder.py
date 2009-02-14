@@ -1860,11 +1860,13 @@ class SlaveStatus:
     admin = None
     host = None
     connected = False
+    graceful_shutdown = False
 
     def __init__(self, name):
         self.name = name
         self._lastMessageReceived = 0
         self.runningBuilds = []
+        self.graceful_callbacks = []
 
     def getName(self):
         return self.name
@@ -1892,6 +1894,19 @@ class SlaveStatus:
         self.runningBuilds.append(build)
     def buildFinished(self, build):
         self.runningBuilds.remove(build)
+
+    def getGraceful(self):
+        return self.graceful_shutdown
+    def setGraceful(self, graceful):
+        self.graceful_shutdown = graceful
+        for cb in self.graceful_callbacks:
+            reactor.callLater(0, cb, graceful)
+    def addGracefulWatcher(self, watcher):
+        if not watcher in self.graceful_callbacks:
+            self.graceful_callbacks.append(watcher)
+    def remoteGracefulWatcher(self, watcher):
+        if watcher in self.graceful_callbacks:
+            self.graceful_callbacks.remove(watcher)
 
 class Status:
     """

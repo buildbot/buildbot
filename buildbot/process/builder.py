@@ -70,7 +70,11 @@ class AbstractSlaveBuilder(pb.Referenceable):
 
     def buildFinished(self):
         self.state = IDLE
-        reactor.callLater(0, self.builder.botmaster.maybeStartAllBuilds)
+        if self.slave:
+            d = self.slave.buildFinished(self)
+            d.addCallback(lambda x:self.builder.botmaster.maybeStartAllBuilds())
+        else:
+            self.builder.botmaster.maybeStartAllBuilds()
 
     def attached(self, slave, remote, commands):
         """
@@ -113,6 +117,15 @@ class AbstractSlaveBuilder(pb.Referenceable):
         log.msg(where)
         log.err(why)
         return why
+
+    def detached(self):
+        log.msg("Buildslave %s detached from %s" % (self.slave.slavename,
+                                                    self.builder_name))
+        if self.slave:
+            self.slave.removeSlaveBuilder(self)
+        self.slave = None
+        self.remote = None
+        self.remoteCommands = None
 
     def ping(self, timeout, status=None):
         """Ping the slave to make sure it is still there. Returns a Deferred
