@@ -365,8 +365,11 @@ class SVNPoller(base.ChangeSource, util.ComparableMixin):
 
 
     def _get_text(self, element, tag_name):
-        child_nodes = element.getElementsByTagName(tag_name)[0].childNodes
-        text = "".join([t.data for t in child_nodes])
+        try:
+            child_nodes = element.getElementsByTagName(tag_name)[0].childNodes
+            text = "".join([t.data for t in child_nodes])
+        except:
+            text = "<unknown>"
         return text
 
     def _transform_path(self, path):
