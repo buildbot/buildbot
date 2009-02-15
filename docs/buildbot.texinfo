@@ -5680,6 +5680,7 @@ f.addStep(PyFlakes(command=["pyflakes", "src"]))
 @cindex File Transfer
 @bsindex buildbot.steps.transfer.FileUpload
 @bsindex buildbot.steps.transfer.FileDownload
+@bsindex buildbot.steps.transfer.DirectoryUpload
 
 Most of the work involved in a build will take place on the
 buildslave. But occasionally it is useful to do some work on the
@@ -5758,6 +5759,29 @@ default to whatever the umask of the writing process is. The default
 umask tends to be fairly restrictive, but at least on the buildslave
 you can make it less restrictive with a --umask command-line option at
 creation time (@pxref{Buildslave Options}).
+
+@subheading Transfering Directories
+
+To transfer complete directories from the buildslave to the master, there
+is a BuildStep named @code{DirectoryUpload}. It works like @code{FileUpload},
+just for directories. However it does not support the @code{maxsize},
+@code{blocksize} and @code{mode} arguments. As an example, let's assume an
+generated project documentation, which consists of many files (like the output
+of doxygen or epydoc). We want to move the entire documentation to the
+buildmaster, into a @code{~/public_html/docs} directory. On the slave-side
+the directory can be found under @code{docs}:
+
+@example
+from buildbot.steps.shell import ShellCommand
+from buildbot.steps.transfer import DirectoryUpload
+
+f.addStep(ShellCommand(command=["make", "docs"]))
+f.addStep(DirectoryUpload(slavesrc="docs",
+				masterdest="~/public_html/docs"))
+@end example
+
+The DirectoryUpload step will create all necessary directories and
+transfers empty directories, too.
 
 
 @node Triggering Schedulers, Writing New BuildSteps, Transferring Files, Build Steps

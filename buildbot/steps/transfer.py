@@ -59,6 +59,74 @@ class _FileWriter(pb.Referenceable):
             os.unlink(self.destfile)
 
 
+class _DirectoryWriter(pb.Referenceable):
+    """
+    Helper class that acts as a directory-object with write access
+    """
+
+    def __init__(self, destroot, maxsize, mode):
+        self.destroot = destroot
+	# Create missing directories.
+        self.destroot = os.path.abspath(self.destroot)
+        if not os.path.exists(self.destroot):
+            os.makedirs(self.destroot)
+	
+	self.fp = None
+	self.mode = mode
+	self.maxsize = maxsize
+
+    def remote_createdir(self, dirname):
+	# This function is needed to transfer empty directories.
+	dirname = os.path.join(self.destroot, dirname)
+	dirname = os.path.abspath(dirname)
+	if not os.path.exists(dirname):
+            os.makedirs(dirname)
+
+    def remote_open(self, destfile):
+	# Create missing directories.
+	destfile = os.path.join(self.destroot, destfile)
+        destfile = os.path.abspath(destfile)
+        dirname = os.path.dirname(destfile)
+        if not os.path.exists(dirname):
+            os.makedirs(dirname)
+
+        self.fp = open(destfile, "wb")
+        if self.mode is not None:
+            os.chmod(destfile, self.mode)
+	self.remaining = self.maxsize
+
+    def remote_write(self, data):
+	"""
+	Called from remote slave to write L{data} to L{fp} within boundaries
+	of L{maxsize}
+
+	@type  data: C{string}
+	@param data: String of data to write
+	"""
+        if self.remaining is not None:
+            if len(data) > self.remaining:
+                data = data[:self.remaining]
+            self.fp.write(data)
+            self.remaining = self.remaining - len(data)
+        else:
+            self.fp.write(data)
+
+    def remote_close(self):
+        """
+        Called by remote slave to state that no more data will be transfered
+        """
+	if self.fp:
+	    self.fp.close()
+    	    self.fp = None
+
+    def __del__(self):
+        # unclean shutdown, the file is probably truncated, so delete it
+        # altogether rather than deliver a corrupted file
+        fp = getattr(self, "fp", None)
+        if fp:
+            fp.close()
+
+
 class StatusRemoteCommand(RemoteCommand):
     def __init__(self, remote_command, args):
         RemoteCommand.__init__(self, remote_command, args)
@@ -180,6 +248,93 @@ class FileUpload(_TransferBuildStep):
         self.step_status.setColor('red')
         return BuildStep.finished(self, FAILURE)
 
+
+class DirectoryUpload(BuildStep):
+    """
+    Build step to transfer a directory from the slave to the master.
+
+    arguments:
+
+    - ['slavesrc']   name of source directory at slave, relative to workdir
+    - ['masterdest'] name of destination directory at master
+    - ['workdir']    string with slave working directory relative to builder
+                     base dir, default 'build'
+    - ['maxsize']    maximum size of each file, default None (=unlimited)
+    - ['blocksize']  maximum size of each block being transfered
+    - ['mode']       file access mode for the resulting master-side file.
+                     The default (=None) is to leave it up to the umask of
+                     the buildmaster process.
+
+    """
+
+    name = 'upload'
+
+    def __init__(self, slavesrc, masterdest,
+                 workdir="build", maxsize=None, blocksize=16*1024, mode=None,
+                 **buildstep_kwargs):
+        BuildStep.__init__(self, **buildstep_kwargs)
+        self.addFactoryArguments(slavesrc=slavesrc,
+                                 masterdest=masterdest,
+                                 workdir=workdir,
+                                 maxsize=maxsize,
+                                 blocksize=blocksize,
+                                 mode=mode,
+                                 )
+
+        self.slavesrc = slavesrc
+        self.masterdest = masterdest
+        self.workdir = workdir
+        self.maxsize = maxsize
+        self.blocksize = blocksize
+        assert isinstance(mode, (int, type(None)))
+        self.mode = mode
+
+    def start(self):
+        version = self.slaveVersion("uploadDirectory")
+        properties = self.build.getProperties()
+
+        if not version:
+            m = "slave is too old, does not know about uploadDirectory"
+            raise BuildSlaveTooOldError(m)
+
+        source = properties.render(self.slavesrc)
+        masterdest = properties.render(self.masterdest)
+        # we rely upon the fact that the buildmaster runs chdir'ed into its
+        # basedir to make sure that relative paths in masterdest are expanded
+        # properly. TODO: maybe pass the master's basedir all the way down
+        # into the BuildStep so we can do this better.
+        masterdest = os.path.expanduser(masterdest)
+        log.msg("DirectoryUpload started, from slave %r to master %r"
+                % (source, masterdest))
+
+        self.step_status.setColor('yellow')
+        self.step_status.setText(['uploading', os.path.basename(source)])
+	
+        # we use maxsize to limit the amount of data on both sides
+        dirWriter = _DirectoryWriter(masterdest, self.maxsize, self.mode)
+
+        # default arguments
+        args = {
+            'slavesrc': source,
+            'workdir': self.workdir,
+            'writer': dirWriter,
+            'maxsize': self.maxsize,
+            'blocksize': self.blocksize,
+            }
+
+        self.cmd = StatusRemoteCommand('uploadDirectory', args)
+        d = self.runCommand(self.cmd)
+        d.addCallback(self.finished).addErrback(self.failed)
+
+    def finished(self, result):
+        if self.cmd.stderr != '':
+            self.addCompleteLog('stderr', self.cmd.stderr)
+
+        if self.cmd.rc is None or self.cmd.rc == 0:
+            self.step_status.setColor('green')
+            return BuildStep.finished(self, SUCCESS)
+        self.step_status.setColor('red')
+        return BuildStep.finished(self, FAILURE)
 
 
 

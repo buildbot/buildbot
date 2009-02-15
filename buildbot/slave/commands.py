@@ -15,7 +15,7 @@ from buildbot.slave.registry import registerSlaveCommand
 # this used to be a CVS $-style "Revision" auto-updated keyword, but since I
 # moved to Darcs as the primary repository, this is updated manually each
 # time this file is changed. The last cvs_ver that was here was 1.51 .
-command_version = "2.5"
+command_version = "2.6"
 
 # version history:
 #  >=1.17: commands are interruptable
@@ -37,6 +37,7 @@ command_version = "2.5"
 #  >= 2.3: added bzr (release 0.7.6)
 #  >= 2.4: Git understands 'revision' and branches
 #  >= 2.5: workaround added for remote 'hg clone --rev REV' when hg<0.9.2
+#  >= 2.6: added uploadDirectory
 
 class CommandInterrupted(Exception):
     pass
@@ -862,6 +863,99 @@ class SlaveFileUploadCommand(Command):
         return res
 
 registerSlaveCommand("uploadFile", SlaveFileUploadCommand, command_version)
+
+
+class SlaveDirectoryUploadCommand(Command):
+    """
+    Upload a directory from slave to build master
+    Arguments:
+
+        - ['workdir']:   base directory to use
+        - ['slavesrc']:  name of the slave-side directory to read from
+        - ['writer']:    RemoteReference to a transfer._DirectoryWriter object
+        - ['maxsize']:   max size (in bytes) of file to write
+        - ['blocksize']: max size for each data block
+    """
+    debug = True
+
+    def setup(self, args):
+        self.workdir = args['workdir']
+        self.dirname = args['slavesrc']
+        self.writer = args['writer']
+        self.remaining = args['maxsize']
+        self.blocksize = args['blocksize']
+        self.stderr = None
+        self.rc = 0
+
+    def start(self):
+        if self.debug:
+            log.msg('SlaveDirectoryUploadCommand started')
+
+	# create some lists with all files and directories
+	foundFiles = []
+	foundDirs = []
+
+	self.baseRoot = os.path.join(self.builder.basedir,
+                                     self.workdir,
+                        	     os.path.expanduser(self.dirname))
+	if self.debug:
+	    log.msg("baseRoot: %r" % self.baseRoot)
+
+	for root, dirs, files in os.walk(self.baseRoot):
+	    tempRoot = root
+	    relRoot = ''
+	    while (tempRoot != self.baseRoot):
+	        tempRoot, tempRelRoot = os.path.split(tempRoot)
+	        relRoot = os.path.join(tempRelRoot, relRoot)
+	    for name in files:
+	        foundFiles.append(os.path.join(relRoot, name))
+	    for directory in dirs:
+	        foundDirs.append(os.path.join(relRoot, directory))
+
+	if self.debug:
+	    log.msg("foundDirs: %s" % (str(foundDirs)))
+	    log.msg("foundFiles: %s" % (str(foundFiles)))
+	
+	# create all directories on the master, to catch also empty ones
+	for dirname in foundDirs:
+	    self.writer.callRemote("createdir", dirname)
+
+	for filename in foundFiles:
+	    self._writeFile(filename)
+
+	return None
+
+    def _writeFile(self, filename):
+        """Write a file to the remote writer"""
+
+        log.msg("_writeFile: %r" % (filename))
+	self.writer.callRemote('open', filename)
+	data = open(os.path.join(self.baseRoot, filename), "r").read()
+	self.writer.callRemote('write', data)
+	self.writer.callRemote('close')
+        return None
+
+    def interrupt(self):
+        if self.debug:
+            log.msg('interrupted')
+        if self.interrupted:
+            return
+        if self.stderr is None:
+            self.stderr = 'Upload of %r interrupted' % self.path
+            self.rc = 1
+        self.interrupted = True
+        # the next _writeBlock call will notice the .interrupted flag
+
+    def finished(self, res):
+        if self.debug:
+            log.msg('finished: stderr=%r, rc=%r' % (self.stderr, self.rc))
+        if self.stderr is None:
+            self.sendStatus({'rc': self.rc})
+        else:
+            self.sendStatus({'stderr': self.stderr, 'rc': self.rc})
+        return res
+
+registerSlaveCommand("uploadDirectory", SlaveDirectoryUploadCommand, command_version)
 
 
 class SlaveFileDownloadCommand(Command):
