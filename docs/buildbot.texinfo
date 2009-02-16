@@ -1552,11 +1552,20 @@ address, an IRC handle, etc.
 
 It also has a list of @code{files}, which are just the tree-relative
 filenames of any files that were added, deleted, or modified for this
-Change. These filenames are used by the @code{isFileImportant}
+Change. These filenames are used by the @code{fileIsImportant}
 function (in the Scheduler) to decide whether it is worth triggering a
-new build or not, e.g. the function could use
-@code{filename.endswith(".c")} to only run a build if a C file were
-checked in. Certain BuildSteps can also use the list of changed files
+new build or not, e.g. the function could use the following function
+to only run a build if a C file were checked in:
+
+@example
+def has_C_files(change):
+    for name in change.files:
+        if name.endswith(".c"):
+            return True
+    return False
+@end example
+
+Certain BuildSteps can also use the list of changed files
 to run a more targeted series of tests, e.g. the
 @code{python_twisted.Trial} step can run just the unit tests that
 provide coverage for the modified .py files instead of running the
@@ -1581,7 +1590,7 @@ consumed by the @code{computeSourceRevision} method in the appropriate
 @item CVS
 @code{revision} is an int, seconds since the epoch
 @item SVN
-@code{revision} is an int, a transation number (r%d)
+@code{revision} is an int, the changeset number (r%d)
 @item Darcs
 @code{revision} is a large string, the output of @code{darcs changes --context}
 @item Mercurial
@@ -1662,7 +1671,7 @@ would have a longer tree-stable-timer, maybe 30 minutes, and would
 feed multiple Builders (with a @code{mode=} of @code{'copy'},
 @code{'clobber'}, or @code{'export'}).
 
-The @code{tree-stable-timer} and @code{isFileImportant} decisions are
+The @code{tree-stable-timer} and @code{fileIsImportant} decisions are
 made by the Scheduler. Dependencies are also implemented here.
 Periodic builds (those which are run every N seconds rather than after
 new Changes arrive) are triggered by a special @code{Periodic}
