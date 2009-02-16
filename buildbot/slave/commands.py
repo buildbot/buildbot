@@ -2002,7 +2002,7 @@ class Git(SourceBase):
         return self._didClean(None)
 
     def _didClean(self, dummy):
-        command = ['git', 'fetch', self.repourl, self.branch]
+        command = ['git', 'fetch', '-t', self.repourl, self.branch]
         self.sendStatus({"header": "fetching branch %s from %s\n"
                                         % (self.branch, self.repourl)})
         c = ShellCommand(self.builder, command, self._fullSrcdir(),
