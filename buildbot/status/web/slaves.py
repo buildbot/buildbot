@@ -54,7 +54,7 @@ class OneBuildSlaveResource(HtmlResource, OneLineMixin):
 
         if not slave.isConnected():
             data.append("<h2>NOT CONNECTED</h2>\n")
-        elif not slave.graceful_shutdown:
+        elif not slave.getGraceful():
             data.append('''<form method="POST" action="%s">
 <input type="submit" value="Gracefully Shutdown">
 </form>''' % shutdown_url)

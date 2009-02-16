@@ -299,7 +299,7 @@ class AbstractBuildSlave(NewCredPerspective, service.MultiService):
         """
         # If we're waiting to shutdown gracefully, then we shouldn't
         # accept any new jobs.
-        if self.slave_status.graceful_shutdown:
+        if self.slave_status.getGraceful():
             return False
 
         if self.max_builds:
@@ -418,7 +418,7 @@ class BuildSlave(AbstractBuildSlave):
         return self._mail_missing_message(subject, text)
 
     def buildFinished(self, sb):
-        if self.slave_status.graceful_shutdown:
+        if self.slave_status.getGraceful():
             active_builders = [sb for sb in self.slavebuilders.values()
                                if sb.isBusy()]
             if len(active_builders) == 0:
