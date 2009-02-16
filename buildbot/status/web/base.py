@@ -3,7 +3,7 @@ import urlparse, urllib, time
 from zope.interface import Interface
 from twisted.web import html, resource
 from buildbot.status import builder
-from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE, EXCEPTION
+from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE, SKIPPED, EXCEPTION
 
 
 class ITopBox(Interface):
@@ -32,6 +32,7 @@ class IHTMLLog(Interface):
 css_classes = {SUCCESS: "success",
                WARNINGS: "warnings",
                FAILURE: "failure",
+               SKIPPED: "skipped",
                EXCEPTION: "exception",
                }
 
