@@ -66,8 +66,14 @@ class Blocker(BuildStep):
 
         self._timer = None              # object returned by reactor.callLater()
 
+    def __str__(self):
+        return self.name
+
+    def __repr__(self):
+        return "<%s %x: %s>" % (self.__class__.__name__, id(self), self.name)
+
     def _log(self, message, *args):
-        log.msg("Blocker:" + self.name + ": " + (message % args))
+        log.msg(repr(self) + ": " + (message % args))
 
     def buildsMatch(self, buildStatus1, buildStatus2):
         """
