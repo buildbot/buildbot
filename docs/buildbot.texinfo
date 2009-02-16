@@ -7734,11 +7734,11 @@ from buildbot.status import words
 irc = words.IRC("irc.example.org", "botnickname",
                 channels=["channel1", "channel2"],
                 password="mysecretpassword",
-                notify_events={
+                notify_events=@{
                   'exception': 1,
                   'successToFailure': 1,
                   'failureToSuccess': 1,
-                })
+                @})
 c['status'].append(irc)
 @end example
 
