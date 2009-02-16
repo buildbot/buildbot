@@ -74,7 +74,7 @@ class AbstractSlaveBuilder(pb.Referenceable):
             d = self.slave.buildFinished(self)
             d.addCallback(lambda x:self.builder.botmaster.maybeStartAllBuilds())
         else:
-            self.builder.botmaster.maybeStartAllBuilds()
+            reactor.callLater(0, self.builder.botmaster.maybeStartAllBuilds)
 
     def attached(self, slave, remote, commands):
         """
