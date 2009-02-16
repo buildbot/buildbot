@@ -22,7 +22,7 @@ from twisted.internet import reactor, defer
 from buildbot.sourcestamp import SourceStamp
 from buildbot.process import buildstep, base, factory
 from buildbot.buildslave import BuildSlave
-from buildbot.steps import shell, source, python
+from buildbot.steps import shell, source, python, master
 from buildbot.status import builder
 from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE
 from buildbot.test.runutils import RunMixin, rmtree
@@ -744,3 +744,44 @@ Result: FAIL
         self.failUnlessEqual(ss.getStatistic('tests-failed'), 287)
         self.failUnlessEqual(ss.getStatistic('tests-total'), 264809)
         self.failUnlessEqual(ss.getStatistic('tests-passed'), 264522)
+
+class MasterShellCommand(StepTester, unittest.TestCase):
+    def testMasterShellCommand(self):
+        self.slavebase = "testMasterShellCommand.slave"
+        self.masterbase = "testMasterShellCommand.master"
+        sb = self.makeSlaveBuilder()
+        step = self.makeStep(master.MasterShellCommand, command=['echo', 'hi'])
+
+        # we can't invoke runStep until the reactor is started .. hence this
+        # little dance
+        d = defer.Deferred()
+        def _dotest(_):
+            return self.runStep(step)
+        d.addCallback(_dotest)
+
+        def _check(results):
+            self.failUnlessEqual(results, SUCCESS)
+            logtxt = step.getLog("stdio").getText()
+            self.failUnlessEqual(logtxt.strip(), "hi")
+        d.addCallback(_check)
+        reactor.callLater(0, d.callback, None)
+        return d
+
+    def testMasterShellCommand_badexit(self):
+        self.slavebase = "testMasterShellCommand_badexit.slave"
+        self.masterbase = "testMasterShellCommand_badexit.master"
+        sb = self.makeSlaveBuilder()
+        step = self.makeStep(master.MasterShellCommand, command="exit 1")
+
+        # we can't invoke runStep until the reactor is started .. hence this
+        # little dance
+        d = defer.Deferred()
+        def _dotest(_):
+            return self.runStep(step)
+        d.addCallback(_dotest)
+
+        def _check(results):
+            self.failUnlessEqual(results, FAILURE)
+        d.addCallback(_check)
+        reactor.callLater(0, d.callback, None)
+        return d

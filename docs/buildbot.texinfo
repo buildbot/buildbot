@@ -200,6 +200,7 @@ Build Steps
 * Simple ShellCommand Subclasses::
 * Python BuildSteps::
 * Transferring Files::
+* Steps That Run on the Master::
 * Triggering Schedulers::
 * Writing New BuildSteps::
 
@@ -4579,6 +4580,7 @@ control each.
 * Simple ShellCommand Subclasses::
 * Python BuildSteps::
 * Transferring Files::
+* Steps That Run on the Master::
 * Triggering Schedulers::
 * Writing New BuildSteps::
 @end menu
@@ -5674,7 +5676,7 @@ f.addStep(PyFlakes(command=["pyflakes", "src"]))
 @end example
 
 
-@node Transferring Files, Triggering Schedulers, Python BuildSteps, Build Steps
+@node Transferring Files
 @subsection Transferring Files
 
 @cindex File Transfer
@@ -5783,8 +5785,33 @@ f.addStep(DirectoryUpload(slavesrc="docs",
 The DirectoryUpload step will create all necessary directories and
 transfers empty directories, too.
 
+@node Steps That Run on the Master
+@subsection Steps That Run on the Master
 
-@node Triggering Schedulers, Writing New BuildSteps, Transferring Files, Build Steps
+Occasionally, it is useful to execute some task on the master, for example to
+create a directory, deploy a build result, or trigger some other centralized
+processing.  This is possible, in a limited fashion, with the
+@code{MasterShellCommand} step.
+
+This step operates similarly to a regular @code{ShellCommand}, but executes on
+the master, instead of the slave.  To be clear, the enclosing @code{Build}
+object must still have a slave object, just as for any other step -- only, in
+this step, the slave does not do anything.
+
+In this example, the step renames a tarball based on the day of the week.
+
+@example
+from buildbot.steps.transfer import FileUpload
+from buildbot.steps.master import MasterShellCommand
+
+f.addStep(FileUpload(slavesrc="widgetsoft.tar.gz",
+                     masterdest="/var/buildoutputs/widgetsoft-new.tar.gz"))
+f.addStep(MasterShellCommand(command="""
+    cd /var/buildoutputs;
+    mv widgetsoft-new.tar.gz widgetsoft-`date +%a`.tar.gz"""))
+@end example
+
+@node Triggering Schedulers
 @subsection Triggering Schedulers
 
 The counterpart to the Triggerable described in section
@@ -5816,7 +5843,7 @@ useful to ensure that all of the builds use exactly the same
 SourceStamp, even if other Changes have occurred while the build was
 running.
 
-@node Writing New BuildSteps,  , Triggering Schedulers, Build Steps
+@node Writing New BuildSteps
 @subsection Writing New BuildSteps
 
 While it is a good idea to keep your build process self-contained in
