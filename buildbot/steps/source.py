@@ -185,10 +185,10 @@ class Source(LoggingBuildStep):
         self.startVC(branch, revision, patch)
 
     def commandComplete(self, cmd):
-        got_revision = None
         if cmd.updates.has_key("got_revision"):
-            got_revision = str(cmd.updates["got_revision"][-1])
-        self.setProperty("got_revision", got_revision, "Source")
+            got_revision = cmd.updates["got_revision"][-1]
+            if got_revision is not None:
+                self.setProperty("got_revision", str(got_revision), "Source")
 
 
 

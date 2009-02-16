@@ -4764,18 +4764,17 @@ system being used.
 
 @item revision
 
-This also comes from the SourceStamp, and is the revision of the
-source code tree that was requested from the VC system. When a build
-is requested of a specific revision (as is generally the case when
-the build is triggered by Changes), this will contain the revision
-specification. The syntax depends upon the VC system in use: for SVN
-it is an integer, for Mercurial it is a short string, for Darcs it
-is a rather large string, etc.
+This also comes from the SourceStamp, and is the revision of the source code
+tree that was requested from the VC system. When a build is requested of a
+specific revision (as is generally the case when the build is triggered by
+Changes), this will contain the revision specification. This is always a
+string, although the syntax depends upon the VC system in use: for SVN it is an
+integer, for Mercurial it is a short string, for Darcs it is a rather large
+string, etc.
 
-If the ``force build'' button was pressed, the revision will be
-@code{None}, which means to use the most recent revision available.
-This is a ``trunk build''. This will be interpolated as an empty
-string.
+If the ``force build'' button was pressed, the revision will be @code{None},
+which means to use the most recent revision available.  This is a ``trunk
+build''. This will be interpolated as an empty string.
 
 @item got_revision
 
