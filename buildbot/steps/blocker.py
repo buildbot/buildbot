@@ -227,6 +227,13 @@ class Blocker(BuildStep):
         d.addCallback(self._upstreamStepFinished)
 
     def _timeoutExpired(self):
+        # Hmmm: this step has failed.  But it is still subscribed to
+        # various upstream events, so if they happen despite this
+        # timeout, various callbacks in this object will still be
+        # called.  This could be confusing and is definitely a bit
+        # untidy: probably we should unsubscribe from all those various
+        # events.  Even better if we had a test case to ensure that we
+        # really do.
         self._log("timeout (%.1f sec) expired", self.timeout)
         self.step_status.setColor("red")
         self.step_status.setText(self._getTimeoutStatusText())
