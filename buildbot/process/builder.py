@@ -70,6 +70,9 @@ class AbstractSlaveBuilder(pb.Referenceable):
 
     def buildFinished(self):
         self.state = IDLE
+        # Call the slave's buildFinished if we can; the slave may be waiting
+        # to do a graceful shutdown and needs to know when it's idle.
+        # After, we check to see if we can start other builds.
         if self.slave:
             d = self.slave.buildFinished(self)
             d.addCallback(lambda x:self.builder.botmaster.maybeStartAllBuilds())
@@ -117,15 +120,6 @@ class AbstractSlaveBuilder(pb.Referenceable):
         log.msg(where)
         log.err(why)
         return why
-
-    def detached(self):
-        log.msg("Buildslave %s detached from %s" % (self.slave.slavename,
-                                                    self.builder_name))
-        if self.slave:
-            self.slave.removeSlaveBuilder(self)
-        self.slave = None
-        self.remote = None
-        self.remoteCommands = None
 
     def ping(self, timeout, status=None):
         """Ping the slave to make sure it is still there. Returns a Deferred

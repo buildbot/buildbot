@@ -1896,15 +1896,21 @@ class SlaveStatus:
         self.runningBuilds.remove(build)
 
     def getGraceful(self):
+        """Return the graceful shutdown flag"""
         return self.graceful_shutdown
     def setGraceful(self, graceful):
+        """Set the graceful shutdown flag, and notify all the watchers"""
         self.graceful_shutdown = graceful
         for cb in self.graceful_callbacks:
             reactor.callLater(0, cb, graceful)
     def addGracefulWatcher(self, watcher):
+        """Add watcher to the list of watchers to be notified when the
+        graceful shutdown flag is changed."""
         if not watcher in self.graceful_callbacks:
             self.graceful_callbacks.append(watcher)
-    def remoteGracefulWatcher(self, watcher):
+    def removeGracefulWatcher(self, watcher):
+        """Remove watcher from the list of watchers to be notified when the
+        graceful shutdown flag is changed."""
         if watcher in self.graceful_callbacks:
             self.graceful_callbacks.remove(watcher)
 

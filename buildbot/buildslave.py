@@ -47,7 +47,6 @@ class AbstractBuildSlave(NewCredPerspective, service.MultiService):
         self.password = password
         self.botmaster = None # no buildmaster yet
         self.slave_status = SlaveStatus(name)
-        self.slave_status.addGracefulWatcher(self._gracefulChanged)
         self.slave = None # a RemoteReference to the Bot, when connected
         self.slave_commands = None
         self.slavebuilders = {}
@@ -139,8 +138,10 @@ class AbstractBuildSlave(NewCredPerspective, service.MultiService):
         # set it atomically if we make it far enough through the process
         state = {}
 
-        # Reset graceful status
+        # Reset graceful shutdown status
         self.slave_status.setGraceful(False)
+        # We want to know when the graceful shutdown flag changes
+        self.slave_status.addGracefulWatcher(self._gracefulChanged)
 
         def _log_attachment_on_slave(res):
             d1 = bot.callRemote("print", "attached")
@@ -204,6 +205,7 @@ class AbstractBuildSlave(NewCredPerspective, service.MultiService):
 
     def detached(self, mind):
         self.slave = None
+        self.slave_status.removeGracefulWatcher(self._gracefulChanged)
         self.slave_status.setConnected(False)
         log.msg("BuildSlave.detached(%s)" % self.slavename)
 
@@ -335,7 +337,7 @@ class AbstractBuildSlave(NewCredPerspective, service.MultiService):
         return d
 
     def _gracefulChanged(self, graceful):
-        """This is changed when our graceful shutdown setting changes"""
+        """This is called when our graceful shutdown setting changes"""
         if graceful:
             active_builders = [sb for sb in self.slavebuilders.values()
                                if sb.isBusy()]
@@ -344,6 +346,10 @@ class AbstractBuildSlave(NewCredPerspective, service.MultiService):
                 self.shutdown()
 
     def shutdown(self):
+        """Shutdown the slave"""
+        # Look for a builder with a remote reference to the client side
+        # slave.  If we can find one, then call "shutdown" on the remote
+        # builder, which will cause the slave buildbot process to exit.
         d = None
         for b in self.slavebuilders.values():
             if b.remote:
@@ -352,6 +358,12 @@ class AbstractBuildSlave(NewCredPerspective, service.MultiService):
 
         if d:
             log.msg("Shutting down slave: %s" % self.slavename)
+            # The remote shutdown call will not complete successfully since the
+            # buildbot process exits almost immediately after getting the
+            # shutdown request.
+            # Here we look at the reason why the remote call failed, and if
+            # it's because the connection was lost, that means the slave
+            # shutdown as expected.
             def _errback(why):
                 try:
                     if why.type is twisted.spread.pb.PBConnectionLost:
@@ -418,6 +430,9 @@ class BuildSlave(AbstractBuildSlave):
         return self._mail_missing_message(subject, text)
 
     def buildFinished(self, sb):
+        """This is called when a build on this slave is finished."""
+        # If we're gracefully shutting down, and we have no more active
+        # builders, then it's safe to disconnect
         if self.slave_status.getGraceful():
             active_builders = [sb for sb in self.slavebuilders.values()
                                if sb.isBusy()]
