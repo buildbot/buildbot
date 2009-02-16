@@ -5474,6 +5474,11 @@ f.addStep(ShellCommand(command=["make", "test"],
                        descriptionDone=["tests"]))
 @end example
 
+@item logEnviron
+If this option is true (the default), then the step's logfile will describe the
+environment variables on the slave.  In situations where the environment is not
+relevant and is long, it may be easier to set @code{logEnviron=False}.
+
 @end table
 
 @node Simple ShellCommand Subclasses, Python BuildSteps, ShellCommand, Build Steps
