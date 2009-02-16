@@ -1,1 +1,1 @@
-@%~dp0\..\python %~dp0\buildbot %*
+@"%~dp0..\python" "%~dp0buildbot" %*
