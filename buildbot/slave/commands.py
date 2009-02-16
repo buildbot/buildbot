@@ -237,7 +237,7 @@ class ShellCommand:
                  workdir, environ=None,
                  sendStdout=True, sendStderr=True, sendRC=True,
                  timeout=None, initialStdin=None, keepStdinOpen=False,
-                 keepStdout=False, keepStderr=False,
+                 keepStdout=False, keepStderr=False, logEnviron=True,
                  logfiles={}):
         """
 
@@ -279,6 +279,7 @@ class ShellCommand:
             self.environ.update(environ)
         self.initialStdin = initialStdin
         self.keepStdinOpen = keepStdinOpen
+        self.logEnviron = logEnviron
         self.timeout = timeout
         self.timer = None
         self.keepStdout = keepStdout
@@ -386,13 +387,14 @@ class ShellCommand:
         self.sendStatus({'header': msg+"\n"})
 
         # then the environment, since it sometimes causes problems
-        msg = " environment:\n"
-        env_names = self.environ.keys()
-        env_names.sort()
-        for name in env_names:
-            msg += "  %s=%s\n" % (name, self.environ[name])
-        log.msg(" environment: %s" % (self.environ,))
-        self.sendStatus({'header': msg})
+        if self.logEnviron:
+            msg = " environment:\n"
+            env_names = self.environ.keys()
+            env_names.sort()
+            for name in env_names:
+                msg += "  %s=%s\n" % (name, self.environ[name])
+            log.msg(" environment: %s" % (self.environ,))
+            self.sendStatus({'header': msg})
 
         if self.initialStdin:
             msg = " writing %d bytes to stdin" % len(self.initialStdin)
