@@ -229,6 +229,7 @@ Python BuildSteps
 
 * BuildEPYDoc::
 * PyFlakes::
+* PyLint::
 
 Writing New BuildSteps
 
@@ -5622,9 +5623,10 @@ implemented in Python.
 @menu
 * BuildEPYDoc::
 * PyFlakes::
+* PyLint::
 @end menu
 
-@node BuildEPYDoc, PyFlakes, Python BuildSteps, Python BuildSteps
+@node BuildEPYDoc
 @subsubsection BuildEPYDoc
 
 @bsindex buildbot.steps.python.BuildEPYDoc
@@ -5662,7 +5664,7 @@ f.addStep(BuildEPYDoc(command=["epydoc", "-o", "apiref", "source/mypkg"]))
 @end example
 
 
-@node PyFlakes,  , BuildEPYDoc, Python BuildSteps
+@node PyFlakes
 @subsubsection PyFlakes
 
 @bsindex buildbot.steps.python.PyFlakes
@@ -5686,6 +5688,23 @@ from buildbot.steps.python import PyFlakes
 
 ...
 f.addStep(PyFlakes(command=["pyflakes", "src"]))
+@end example
+
+@node PyLint
+@subsubsection PyLint
+
+@bsindex buildbot.steps.python.PyLint
+
+Similarly, the @code{buildbot.steps.python.PyLint} step will run pylint and
+analyze the results.
+
+You must supply the command line to be used. There is no default.
+
+@example
+from buildbot.steps.python import PyLint
+
+...
+f.addStep(PyLint(command=["pylint", "src"]))
 @end example
 
 
