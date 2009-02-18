@@ -1046,3 +1046,154 @@ class BuildPrioritization(RunMixin, unittest.TestCase):
     def _all_finished(self, *args):
         # The builds should have finished in proper order
         self.failUnlessEqual([int(b.reason) for b in self.finish_order], range(10))
+
+# Test graceful shutdown when no builds are active, as well as
+# canStartBuild after graceful shutdown is initiated
+config_graceful_shutdown_idle = config_base
+class GracefulShutdownIdle(RunMixin, unittest.TestCase):
+    def testShutdown(self):
+        self.rmtree("basedir")
+        os.mkdir("basedir")
+        self.master.loadConfig(config_graceful_shutdown_idle)
+        self.master.readConfig = True
+        self.master.startService()
+        d = self.connectSlave(builders=['quick'])
+        d.addCallback(self._do_shutdown)
+        return d
+
+    def _do_shutdown(self, res):
+        bs = self.master.botmaster.builders['quick'].slaves[0]
+        # Check that the slave is accepting builds once it's connected
+        self.assertEquals(bs.slave.canStartBuild(), True)
+
+        # Monkeypatch the slave's shutdown routine since the real shutdown
+        # interrupts the test harness
+        self.did_shutdown = False
+        def _shutdown():
+            self.did_shutdown = True
+        bs.slave.shutdown = _shutdown
+
+        # Start a graceful shutdown
+        bs.slave.slave_status.setGraceful(True)
+        # Check that the slave isn't accepting builds any more
+        self.assertEquals(bs.slave.canStartBuild(), False)
+
+        # Wait a little bit and then check that we (pretended to) shut down
+        d = defer.Deferred()
+        d.addCallback(self._check_shutdown)
+        reactor.callLater(0.5, d.callback, None)
+        return d
+
+    def _check_shutdown(self, res):
+        self.assertEquals(self.did_shutdown, True)
+
+# Test graceful shutdown when two builds are active
+config_graceful_shutdown_busy = config_base + """
+from buildbot.buildslave import BuildSlave
+c['slaves'] = [ BuildSlave('bot1', 'sekrit', max_builds=2) ]
+
+from buildbot.scheduler import Scheduler
+c['schedulers'] = [Scheduler('dummy', None, 0.1, ['dummy', 'dummy2'])]
+
+c['builders'].append({'name': 'dummy', 'slavename': 'bot1',
+                      'builddir': 'dummy', 'factory': f2})
+c['builders'].append({'name': 'dummy2', 'slavename': 'bot1',
+                      'builddir': 'dummy2', 'factory': f2})
+"""
+class GracefulShutdownBusy(RunMixin, unittest.TestCase):
+    def testShutdown(self):
+        self.rmtree("basedir")
+        os.mkdir("basedir")
+        d = self.master.loadConfig(config_graceful_shutdown_busy)
+        d.addCallback(lambda res: self.master.startService())
+        d.addCallback(lambda res: self.connectSlave())
+
+        def _send(res):
+            # send a change. This will trigger both builders at the same
+            # time, but since they share a slave, the max_builds=1 setting
+            # will insure that only one of the two builds gets to run.
+            cm = self.master.change_svc
+            c = changes.Change("bob", ["Makefile", "foo/bar.c"],
+                               "changed stuff")
+            cm.addChange(c)
+        d.addCallback(_send)
+
+        def _delay(res):
+            d1 = defer.Deferred()
+            reactor.callLater(0.5, d1.callback, None)
+            # this test depends upon this 0.5s delay landing us in the middle
+            # of one of the builds.
+            return d1
+        d.addCallback(_delay)
+
+        # Start a graceful shutdown.  We should be in the middle of two builds
+        def _shutdown(res):
+            bs = self.master.botmaster.builders['dummy'].slaves[0]
+            # Monkeypatch the slave's shutdown routine since the real shutdown
+            # interrupts the test harness
+            self.did_shutdown = False
+            def _shutdown():
+                self.did_shutdown = True
+                return defer.succeed(None)
+            bs.slave.shutdown = _shutdown
+            # Start a graceful shutdown
+            bs.slave.slave_status.setGraceful(True)
+
+            builders = [ self.master.botmaster.builders[bn]
+                         for bn in ('dummy', 'dummy2') ]
+            for builder in builders:
+                self.failUnless(len(builder.slaves) == 1)
+            from buildbot.process.builder import BUILDING
+            building_bs = [ builder
+                            for builder in builders
+                            if builder.slaves[0].state == BUILDING ]
+            # assert that both builds are running right now.
+            self.failUnlessEqual(len(building_bs), 2)
+
+        d.addCallback(_shutdown)
+
+        # Wait a little bit again, and then make sure that we are still running
+        # the two builds, and haven't shutdown yet
+        d.addCallback(_delay)
+        def _check(res):
+            self.assertEquals(self.did_shutdown, False)
+            builders = [ self.master.botmaster.builders[bn]
+                         for bn in ('dummy', 'dummy2') ]
+            for builder in builders:
+                self.failUnless(len(builder.slaves) == 1)
+            from buildbot.process.builder import BUILDING
+            building_bs = [ builder
+                            for builder in builders
+                            if builder.slaves[0].state == BUILDING ]
+            # assert that both builds are running right now.
+            self.failUnlessEqual(len(building_bs), 2)
+        d.addCallback(_check)
+
+        # Wait for all the builds to finish
+        def _wait_finish(res):
+            builders = [ self.master.botmaster.builders[bn]
+                         for bn in ('dummy', 'dummy2') ]
+            builds = []
+            for builder in builders:
+                builds.append(builder.builder_status.currentBuilds[0].waitUntilFinished())
+            dl = defer.DeferredList(builds)
+            return dl
+        d.addCallback(_wait_finish)
+
+        # Wait a little bit after the builds finish, and then
+        # check that the slave has shutdown
+        d.addCallback(_delay)
+        def _check_shutdown(res):
+            # assert that we shutdown the slave
+            self.assertEquals(self.did_shutdown, True)
+            builders = [ self.master.botmaster.builders[bn]
+                         for bn in ('dummy', 'dummy2') ]
+            from buildbot.process.builder import BUILDING
+            building_bs = [ builder
+                            for builder in builders
+                            if builder.slaves[0].state == BUILDING ]
+            # assert that no builds are running right now.
+            self.failUnlessEqual(len(building_bs), 0)
+        d.addCallback(_check_shutdown)
+
+        return d

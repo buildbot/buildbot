@@ -365,13 +365,10 @@ class AbstractBuildSlave(NewCredPerspective, service.MultiService):
             # it's because the connection was lost, that means the slave
             # shutdown as expected.
             def _errback(why):
-                try:
-                    if why.type is twisted.spread.pb.PBConnectionLost:
-                        log.msg("Lost connection to %s" % self.slavename)
-                        return
-                except:
-                    pass
-                log.err("Unexpected error when trying to shutdown %s" % self.slavename)
+                if why.check(twisted.spread.pb.PBConnectionLost):
+                    log.msg("Lost connection to %s" % self.slavename)
+                else:
+                    log.err("Unexpected error when trying to shutdown %s" % self.slavename)
             d.addErrback(_errback)
             return d
         log.err("Couldn't find remote builder to shut down slave")

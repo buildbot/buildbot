@@ -70,14 +70,7 @@ class AbstractSlaveBuilder(pb.Referenceable):
 
     def buildFinished(self):
         self.state = IDLE
-        # Call the slave's buildFinished if we can; the slave may be waiting
-        # to do a graceful shutdown and needs to know when it's idle.
-        # After, we check to see if we can start other builds.
-        if self.slave:
-            d = self.slave.buildFinished(self)
-            d.addCallback(lambda x:self.builder.botmaster.maybeStartAllBuilds())
-        else:
-            reactor.callLater(0, self.builder.botmaster.maybeStartAllBuilds)
+        reactor.callLater(0, self.builder.botmaster.maybeStartAllBuilds)
 
     def attached(self, slave, remote, commands):
         """
@@ -238,6 +231,17 @@ class SlaveBuilder(AbstractSlaveBuilder):
             self.slave.removeSlaveBuilder(self)
         self.slave = None
         self.state = ATTACHING
+
+    def buildFinished(self):
+        # Call the slave's buildFinished if we can; the slave may be waiting
+        # to do a graceful shutdown and needs to know when it's idle.
+        # After, we check to see if we can start other builds.
+        self.state = IDLE
+        if self.slave:
+            d = self.slave.buildFinished(self)
+            d.addCallback(lambda x: reactor.callLater(0, self.builder.botmaster.maybeStartAllBuilds))
+        else:
+            reactor.callLater(0, self.builder.botmaster.maybeStartAllBuilds)
 
 
 class LatentSlaveBuilder(AbstractSlaveBuilder):
