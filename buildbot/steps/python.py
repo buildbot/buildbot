@@ -1,6 +1,7 @@
 
 from buildbot.status.builder import SUCCESS, FAILURE, WARNINGS
 from buildbot.steps.shell import ShellCommand
+import re
 
 try:
     import cStringIO
@@ -107,6 +108,80 @@ class PyFlakes(ShellCommand):
             if self.getProperty("pyflakes-%s" % m):
                 return FAILURE
         if self.getProperty("pyflakes-total"):
+            return WARNINGS
+        return SUCCESS
+
+class PyLint(ShellCommand):
+    '''A command that knows about pylint output.
+    It's a good idea to add --output-format=parseable to your
+    command, since it includes the filename in the message.
+    '''
+    name = "pylint"
+    description = ["running", "pylint"]
+    descriptionDone = ["pylint"]
+
+    # Using the default text output, the message format is :
+    # MESSAGE_TYPE: LINE_NUM:[OBJECT:] MESSAGE
+    # with --output-format=parseable it is: (the outer brackets are literal)
+    # FILE_NAME:LINE_NUM: [MESSAGE_TYPE[, OBJECT]] MESSAGE
+    # message type consists of the type char and 4 digits
+    # The message types:
+
+    MESSAGES = {
+            'C': "convention", # for programming standard violation
+            'R': "refactor", # for bad code smell
+            'W': "warning", # for python specific problems
+            'E': "error", # for much probably bugs in the code
+            'F': "fatal", # error prevented pylint from further processing.
+            'I': "info",
+        }
+
+    flunkingIssues = ["F", "E"] # msg categories that cause FAILURE
+
+    _re_groupname = 'errtype'
+    _msgtypes_re_str = '(?P<%s>[%s])' % (_re_groupname, ''.join(MESSAGES.keys()))
+    _default_line_re = re.compile(r'%s\d{4}: *\d+:.+' % _msgtypes_re_str)
+    _parseable_line_re = re.compile(r'[^:]+:\d+: \[%s\d{4}[,\]] .+' % _msgtypes_re_str)
+
+    def createSummary(self, log):
+        counts = {}
+        summaries = {}
+        for m in self.MESSAGES:
+            counts[m] = 0
+            summaries[m] = []
+
+        line_re = None # decide after first match
+        for line in StringIO(log.getText()).readlines():
+            if not line_re:
+                # need to test both and then decide on one
+                if self._parseable_line_re.match(line):
+                    line_re = self._parseable_line_re
+                elif self._default_line_re.match(line):
+                    line_re = self._default_line_re
+                else: # no match yet
+                    continue
+            mo = line_re.match(line)
+            if mo:
+                msgtype = mo.group(self._re_groupname)
+                assert msgtype in self.MESSAGES
+            summaries[msgtype].append(line)
+            counts[msgtype] += 1
+
+        self.descriptionDone = self.descriptionDone[:]
+        for msg, fullmsg in self.MESSAGES.items():
+            if counts[msg]:
+                self.descriptionDone.append("%s=%d" % (fullmsg, counts[msg]))
+                self.addCompleteLog(fullmsg, "".join(summaries[msg]))
+            self.setProperty("pylint-%s" % fullmsg, counts[msg])
+        self.setProperty("pylint-total", sum(counts.values()))
+
+    def evaluateCommand(self, cmd):
+        if cmd.rc != 0:
+            return FAILURE
+        for msg in self.flunkingIssues:
+            if self.getProperty("pylint-%s" % self.MESSAGES[msg]):
+                return FAILURE
+        if self.getProperty("pylint-total"):
             return WARNINGS
         return SUCCESS
 
