@@ -346,7 +346,6 @@ class LatentSlave(RunMixin, unittest.TestCase):
         # now there's an event waiting for the slave to substantiate.
         e = self.b1.builder_status.getEvent(-1)
         self.assertEqual(e.text, ['substantiating'])
-        self.assertEqual(e.color, 'yellow')
         # the substantiation_deferred is an internal stash of a deferred
         # that we'll grab so we can find the point at which the slave is
         # substantiated but the build has not yet started.
@@ -361,7 +360,6 @@ class LatentSlave(RunMixin, unittest.TestCase):
         # the event has announced it's success
         e = self.b1.builder_status.getEvent(-1)
         self.assertEqual(e.text, ['substantiate', 'success'])
-        self.assertEqual(e.color, 'green')
         self.assertNotIdentical(e.finished, None)
         # now we'll wait for the build to complete
         d = self.build_deferred
@@ -425,7 +423,6 @@ class LatentSlave(RunMixin, unittest.TestCase):
         # here's our event again:
         self.e = self.b1.builder_status.getEvent(-1)
         self.assertEqual(self.e.text, ['substantiating'])
-        self.assertEqual(self.e.color, 'yellow')
         d.addCallback(self._testSequence_6)
         return d
     def _testSequence_6(self, res):
@@ -440,7 +437,6 @@ class LatentSlave(RunMixin, unittest.TestCase):
         self.assertEqual(
             e.text,
             ['substantiate', 'success', '[instance id]', '[start-up time]'])
-        self.assertEqual(e.color, 'green')
         # Now we need to clean up the timer.  We could just cancel it, but
         # we'll go through the full dance once more time to show we can.
         # We'll set the timer to fire sooner, and wait for it to fire.
@@ -486,7 +482,6 @@ class LatentSlave(RunMixin, unittest.TestCase):
         # the event tells us we are instantiating, as usual
         e = self.b1.builder_status.getEvent(-1)
         self.assertEqual(e.text, ['substantiating'])
-        self.assertEqual(e.color, 'yellow')
         # we'll see in a moment that the test flag we have to show that the
         # bot was told to insubstantiate has been fired.  Here, we just verify
         # that it is ready to be fired.
@@ -508,7 +503,6 @@ class LatentSlave(RunMixin, unittest.TestCase):
         # our event informs us of this
         e1 = self.b1.builder_status.getEvent(-3)
         self.assertEqual(e1.text, ['substantiate', 'failed'])
-        self.assertEqual(e1.color, 'red')
         self.assertNotIdentical(e1.finished, None)
         # the slave is no longer available to build.  The events show it...
         e2 = self.b1.builder_status.getEvent(-2)

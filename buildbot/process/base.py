@@ -351,8 +351,7 @@ class Build:
             log.msg("Build.setupBuild failed")
             log.err(Failure())
             self.builder.builder_status.addPointEvent(["setupBuild",
-                                                       "exception"],
-                                                      color="purple")
+                                                       "exception"])
             self.finished = True
             self.results = FAILURE
             self.deferred = None
@@ -558,37 +557,32 @@ class Build:
                 # XXX: really .fail or something
                 self.currentStep.progress.finish()
             text = ["stopped", reason]
-            self.buildFinished(text, "red", FAILURE)
+            self.buildFinished(text, FAILURE)
 
     def allStepsDone(self):
         if self.result == FAILURE:
-            color = "red"
             text = ["failed"]
         elif self.result == WARNINGS:
-            color = "orange"
             text = ["warnings"]
         elif self.result == EXCEPTION:
-            color = "purple"
             text = ["exception"]
         else:
-            color = "green"
             text = ["build", "successful"]
         text.extend(self.text)
-        return self.buildFinished(text, color, self.result)
+        return self.buildFinished(text, self.result)
 
     def buildException(self, why):
         log.msg("%s.buildException" % self)
         log.err(why)
-        self.buildFinished(["build", "exception"], "purple", FAILURE)
+        self.buildFinished(["build", "exception"], FAILURE)
 
-    def buildFinished(self, text, color, results):
+    def buildFinished(self, text, results):
         """This method must be called when the last Step has completed. It
         marks the Build as complete and returns the Builder to the 'idle'
         state.
 
-        It takes three arguments which describe the overall build status:
-        text, color, results. 'results' is one of SUCCESS, WARNINGS, or
-        FAILURE.
+        It takes two arguments which describe the overall build status:
+        text, results. 'results' is one of SUCCESS, WARNINGS, or FAILURE.
 
         If 'results' is SUCCESS or WARNINGS, we will permit any dependant
         builds to start. If it is 'FAILURE', those builds will be
@@ -601,7 +595,6 @@ class Build:
 
         log.msg(" %s: build finished" % self)
         self.build_status.setText(text)
-        self.build_status.setColor(color)
         self.build_status.setResults(results)
         self.build_status.buildFinished()
         if self.progress:

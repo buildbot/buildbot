@@ -1060,7 +1060,6 @@ class Subscription(RunMixin, unittest.TestCase):
         self.failUnlessEqual(b.getResponsibleUsers(), [])
         self.failUnless(b.isFinished())
         self.failUnlessEqual(b.getText(), ['build', 'successful'])
-        self.failUnlessEqual(b.getColor(), "green")
         self.failUnlessEqual(b.getResults(), builder.SUCCESS)
 
         steps = b.getSteps()

@@ -160,7 +160,6 @@ class Source(LoggingBuildStep):
     def start(self):
         if self.notReally:
             log.msg("faking %s checkout/update" % self.name)
-            self.step_status.setColor("green")
             self.step_status.setText(["fake", self.name, "successful"])
             self.addCompleteLog("log",
                                 "Faked %s checkout/update 'successful'\n" \

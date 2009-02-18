@@ -561,15 +561,12 @@ class Event:
     started = None
     finished = None
     text = []
-    color = None
 
     # IStatusEvent methods
     def getTimes(self):
         return (self.started, self.finished)
     def getText(self):
         return self.text
-    def getColor(self):
-        return self.color
     def getLogs(self):
         return []
 
@@ -705,11 +702,6 @@ class BuildStepStatus(styles.Versioned):
     tests might gather statistics about the number of passed, failed,
     or skipped tests.
 
-    @type color: string
-    @cvar color: color that this step feels best represents its
-                 current mood. yellow,green,red,orange are the
-                 most likely choices, although purple indicates
-                 an exception
     @type progress: L{buildbot.status.progress.StepProgress}
     @cvar progress: tracks ETA for the step
     @type text: list of strings
@@ -730,7 +722,6 @@ class BuildStepStatus(styles.Versioned):
     finished = None
     progress = None
     text = []
-    color = None
     results = (None, [])
     text2 = []
     watchers = []
@@ -809,12 +800,6 @@ class BuildStepStatus(styles.Versioned):
         available, the caller should join them together with spaces before
         presenting them to the user."""
         return self.text
-
-    def getColor(self):
-        """Returns a single string with the color that should be used to
-        display this step. 'green', 'orange', 'red', 'yellow' and 'purple'
-        are the most likely ones."""
-        return self.color
 
     def getResults(self):
         """Return a tuple describing the results of the step.
@@ -917,8 +902,6 @@ class BuildStepStatus(styles.Versioned):
     def addURL(self, name, url):
         self.urls[name] = url
 
-    def setColor(self, color):
-        self.color = color
     def setText(self, text):
         self.text = text
         for w in self.watchers:
@@ -1000,7 +983,6 @@ class BuildStatus(styles.Versioned):
     finished = None
     currentStep = None
     text = []
-    color = None
     results = None
     slavename = "???"
 
@@ -1132,9 +1114,6 @@ class BuildStatus(styles.Versioned):
             text.extend(s.text2)
         return text
 
-    def getColor(self):
-        return self.color
-
     def getResults(self):
         return self.results
 
@@ -1227,8 +1206,6 @@ class BuildStatus(styles.Versioned):
     def setText(self, text):
         assert isinstance(text, (list, tuple))
         self.text = text
-    def setColor(self, color):
-        self.color = color
     def setResults(self, results):
         self.results = results
 
@@ -1681,24 +1658,22 @@ class BuilderStatus(styles.Versioned):
     def setSlavenames(self, names):
         self.slavenames = names
 
-    def addEvent(self, text=[], color=None):
+    def addEvent(self, text=[]):
         # this adds a duration event. When it is done, the user should call
-        # e.finish(). They can also mangle it by modifying .text and .color
+        # e.finish(). They can also mangle it by modifying .text
         e = Event()
         e.started = util.now()
         e.text = text
-        e.color = color
         self.events.append(e)
         return e # they are free to mangle it further
 
-    def addPointEvent(self, text=[], color=None):
+    def addPointEvent(self, text=[]):
         # this adds a point event, one which occurs as a single atomic
         # instant of time.
         e = Event()
         e.started = util.now()
         e.finished = 0
         e.text = text
-        e.color = color
         self.events.append(e)
         return e # for consistency, but they really shouldn't touch it
 

@@ -219,7 +219,6 @@ class FileUpload(_TransferBuildStep):
         log.msg("FileUpload started, from slave %r to master %r"
                 % (source, masterdest))
 
-        self.step_status.setColor('yellow')
         self.step_status.setText(['uploading', os.path.basename(source)])
 
         # we use maxsize to limit the amount of data on both sides
@@ -243,9 +242,7 @@ class FileUpload(_TransferBuildStep):
             self.addCompleteLog('stderr', self.cmd.stderr)
 
         if self.cmd.rc is None or self.cmd.rc == 0:
-            self.step_status.setColor('green')
             return BuildStep.finished(self, SUCCESS)
-        self.step_status.setColor('red')
         return BuildStep.finished(self, FAILURE)
 
 
@@ -307,7 +304,6 @@ class DirectoryUpload(BuildStep):
         log.msg("DirectoryUpload started, from slave %r to master %r"
                 % (source, masterdest))
 
-        self.step_status.setColor('yellow')
         self.step_status.setText(['uploading', os.path.basename(source)])
 	
         # we use maxsize to limit the amount of data on both sides
@@ -331,9 +327,7 @@ class DirectoryUpload(BuildStep):
             self.addCompleteLog('stderr', self.cmd.stderr)
 
         if self.cmd.rc is None or self.cmd.rc == 0:
-            self.step_status.setColor('green')
             return BuildStep.finished(self, SUCCESS)
-        self.step_status.setColor('red')
         return BuildStep.finished(self, FAILURE)
 
 
@@ -431,7 +425,6 @@ class FileDownload(_TransferBuildStep):
         log.msg("FileDownload started, from master %r to slave %r" %
                 (source, slavedest))
 
-        self.step_status.setColor('yellow')
         self.step_status.setText(['downloading', "to",
                                   os.path.basename(slavedest)])
 
@@ -467,8 +460,6 @@ class FileDownload(_TransferBuildStep):
             self.addCompleteLog('stderr', self.cmd.stderr)
 
         if self.cmd.rc is None or self.cmd.rc == 0:
-            self.step_status.setColor('green')
             return BuildStep.finished(self, SUCCESS)
-        self.step_status.setColor('red')
         return BuildStep.finished(self, FAILURE)
 

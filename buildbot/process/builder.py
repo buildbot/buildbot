@@ -127,7 +127,7 @@ class AbstractSlaveBuilder(pb.Referenceable):
         self.ping_watchers.append(d)
         if newping:
             if status:
-                event = status.addEvent(["pinging"], "yellow")
+                event = status.addEvent(["pinging"])
                 d2 = defer.Deferred()
                 d2.addCallback(self._pong_status, event)
                 self.ping_watchers.insert(0, d2)
@@ -145,10 +145,8 @@ class AbstractSlaveBuilder(pb.Referenceable):
     def _pong_status(self, res, event):
         if res:
             event.text = ["ping", "success"]
-            event.color = "green"
         else:
             event.text = ["ping", "failed"]
-            event.color = "red"
         event.finish()
 
     def detached(self):
@@ -247,7 +245,7 @@ class LatentSlaveBuilder(AbstractSlaveBuilder):
         d = self.slave.substantiate(self)
         if not self.slave.substantiated:
             event = self.builder.builder_status.addEvent(
-                ["substantiating"], "yellow")
+                ["substantiating"])
             def substantiated(res):
                 msg = ["substantiate", "success"]
                 if isinstance(res, basestring):
@@ -255,12 +253,10 @@ class LatentSlaveBuilder(AbstractSlaveBuilder):
                 elif isinstance(res, (tuple, list)):
                     msg.extend(res)
                 event.text = msg
-                event.color = "green"
                 event.finish()
                 return res
             def substantiation_failed(res):
                 event.text = ["substantiate", "failed"]
-                event.color = "red"
                 # TODO add log of traceback to event
                 event.finish()
                 return res
@@ -286,7 +282,7 @@ class LatentSlaveBuilder(AbstractSlaveBuilder):
     def ping(self, timeout, status=None):
         if not self.slave.substantiated:
             if status:
-                status.addEvent(["ping", "latent"], "green").finish()
+                status.addEvent(["ping", "latent"]).finish()
             return defer.succeed(True)
         return AbstractSlaveBuilder.ping(self, timeout, status)
 
@@ -843,8 +839,7 @@ class BuilderControl(components.Adapter):
 
     def ping(self, timeout=30):
         if not self.original.slaves:
-            self.original.builder_status.addPointEvent(["ping", "no slave"],
-                                                       "red")
+            self.original.builder_status.addPointEvent(["ping", "no slave"])
             return defer.succeed(False) # interfaces.NoSlaveError
         dl = []
         for s in self.original.slaves:

@@ -26,7 +26,6 @@ class Dummy(BuildStep):
         self.timer = None
 
     def start(self):
-        self.step_status.setColor("yellow")
         self.step_status.setText(["delay", "%s secs" % self.timeout])
         self.timer = reactor.callLater(self.timeout, self.done)
 
@@ -34,12 +33,10 @@ class Dummy(BuildStep):
         if self.timer:
             self.timer.cancel()
             self.timer = None
-            self.step_status.setColor("red")
             self.step_status.setText(["delay", "interrupted"])
             self.finished(FAILURE)
 
     def done(self):
-        self.step_status.setColor("green")
         self.finished(SUCCESS)
 
 class FailingDummy(Dummy):
@@ -49,12 +46,10 @@ class FailingDummy(Dummy):
     name = "failing dummy"
 
     def start(self):
-        self.step_status.setColor("yellow")
         self.step_status.setText(["boom", "%s secs" % self.timeout])
         self.timer = reactor.callLater(self.timeout, self.done)
 
     def done(self):
-        self.step_status.setColor("red")
         self.finished(FAILURE)
 
 class RemoteDummy(LoggingBuildStep):

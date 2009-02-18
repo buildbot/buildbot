@@ -6,6 +6,9 @@ import urllib
 from buildbot import util
 from buildbot import version
 from buildbot.status.web.base import HtmlResource
+#from buildbot.status.web.base import Box, HtmlResource, IBox, ICurrentBox, \
+#     ITopBox, td, build_get_class, path_to_build, path_to_step, map_branches
+from buildbot.status.web.base import build_get_class
 
 # set grid_css to the full pathname of the css file
 if hasattr(sys, "frozen"):
@@ -79,15 +82,11 @@ class GridStatusResource(HtmlResource):
             return '<td class="build">&nbsp;</td>\n'
 
         if build.isFinished():
-            color = build.getColor()
-            if color == 'green': color = '#72ff75' # the "Buildbot Green"
-
             # get the text and annotate the first line with a link
             text = build.getText()
             if not text: text = [ "(no information)" ]
             if text == [ "build", "successful" ]: text = [ "OK" ]
         else:
-            color = 'yellow' # to match the yellow of the builder
             text = [ 'building' ]
 
         name = build.getBuilder().getName()
@@ -95,8 +94,9 @@ class GridStatusResource(HtmlResource):
         url = "builders/%s/builds/%d" % (name, number)
         text[0] = '<a href="%s">%s</a>' % (url, text[0])
         text = '<br />\n'.join(text)
+        class_ = build_get_class(build)
 
-        return '<td class="build" bgcolor="%s">%s</td>\n' % (color, text)
+        return '<td class="build %s">%s</td>\n' % (class_, text)
 
     def builder_td(self, request, builder):
         state, builds = builder.getState()
@@ -114,17 +114,6 @@ class GridStatusResource(HtmlResource):
         if state == "idle" and upcoming:
             state = "waiting"
 
-        if state == "building":
-            color = "yellow"
-        elif state == "offline":
-            color = "red"
-        elif state == "idle":
-            color = "white"
-        elif state == "waiting":
-            color = "yellow"
-        else:
-            color = "white"
-
         # TODO: for now, this pending/upcoming stuff is in the "current
         # activity" box, but really it should go into a "next activity" row
         # instead. The only times it should show up in "current activity" is
@@ -140,8 +129,8 @@ class GridStatusResource(HtmlResource):
             else:
                 text += "<br />(%s)" % state
 
-        return  '<td valign="center" bgcolor="%s" class="builder">%s</td>\n' % \
-            (color, text)
+        return  '<td valign="center" class="builder %s">%s</td>\n' % \
+            (state, text)
 
     def stamp_td(self, stamp):
         text = stamp.getText()
