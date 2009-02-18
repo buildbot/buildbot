@@ -550,11 +550,6 @@ class IBuildStatus(Interface):
         available, the caller should join them together with spaces before
         presenting them to the user."""
 
-    def getColor():
-        """Returns a single string with the color that should be used to
-        display the build. 'green', 'orange', or 'red' are the most likely
-        ones."""
-
     def getResults():
         """Return a constant describing the results of the build: one of the
         constants in buildbot.status.builder: SUCCESS, WARNINGS, or
@@ -675,11 +670,6 @@ class IBuildStepStatus(Interface):
         available, the caller should join them together with spaces before
         presenting them to the user."""
 
-    def getColor():
-        """Returns a single string with the color that should be used to
-        display this step. 'green', 'orange', 'red' and 'yellow' are the
-        most likely ones."""
-
     def getResults():
         """Return a tuple describing the results of the step: (result,
         strings). 'result' is one of the constants in
@@ -717,10 +707,6 @@ class IStatusEvent(Interface):
         intended to be displayed in a narrow column. If more space is
         available, the caller should join them together with spaces before
         presenting them to the user."""
-
-    def getColor():
-        """Returns a single string with the color that should be used to
-        display this event. 'red' and 'yellow' are the most likely ones."""
 
 
 LOG_CHANNEL_STDOUT = 0

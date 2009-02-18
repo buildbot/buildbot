@@ -90,17 +90,12 @@ def make_force_build_form(forceURL, on_all=False):
                  "<input type='text' name='revision' />")
       + '<input type="submit" value="Force Build" /></form>\n')
 
-colormap = {
-    'green': '#72ff75',
-    }
 def td(text="", parms={}, **props):
     data = ""
     data += "  "
     #if not props.has_key("border"):
     #    props["border"] = 1
     props.update(parms)
-    if props.has_key("bgcolor"):
-        props["bgcolor"] = colormap.get(props["bgcolor"], props["bgcolor"])
     comment = props.get("comment", None)
     if comment:
         data += "<!-- %s -->" % comment
@@ -108,7 +103,7 @@ def td(text="", parms={}, **props):
     class_ = props.get('class_', None)
     if class_:
         props["class"] = class_
-    for prop in ("align", "bgcolor", "colspan", "rowspan", "border",
+    for prop in ("align", "colspan", "rowspan", "border",
                  "valign", "halign", "class"):
         p = props.get(prop, None)
         if p != None:
@@ -181,10 +176,9 @@ class Box:
     # lack, and it has a base URL to which each File's name is relative.
     # Events don't know about HTML.
     spacer = False
-    def __init__(self, text=[], color=None, class_=None, urlbase=None,
+    def __init__(self, text=[], class_=None, urlbase=None,
                  **parms):
         self.text = text
-        self.color = color
         self.class_ = class_
         self.urlbase = urlbase
         self.show_idle = 0
@@ -201,7 +195,7 @@ class Box:
         text = self.text
         if not text and self.show_idle:
             text = ["[idle]"]
-        return td(text, props, bgcolor=self.color, class_=self.class_)
+        return td(text, props, class_=self.class_)
 
 
 class HtmlResource(resource.Resource):

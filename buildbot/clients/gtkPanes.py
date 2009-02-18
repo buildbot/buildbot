@@ -15,6 +15,8 @@ from twisted.spread import pb
 from buildbot.clients.base import TextClient
 from buildbot.util import now
 
+from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE, EXCEPTION
+
 '''
 class Pane:
     def __init__(self):
@@ -328,12 +330,19 @@ class ThreeRowBuilder:
     def gotLastBuild(self, build):
         if build:
             build.callRemote("getText").addCallback(self.gotLastText)
-            build.callRemote("getColor").addCallback(self.gotLastColor)
+            build.callRemote("getResults").addCallback(self.gotLastResult)
 
     def gotLastText(self, text):
+        print "Got text", text
         self.last.setText("\n".join(text))
-    def gotLastColor(self, color):
-        self.last.setColor(color)
+
+    def gotLastResult(self, result):
+        colormap = {SUCCESS: 'green',
+                    FAILURE: 'red',
+                    WARNINGS: 'orange',
+                    EXCEPTION: 'purple',
+                    }
+        self.last.setColor(colormap[result])
 
     def getState(self):
         self.ref.callRemote("getState").addCallback(self.gotState)

@@ -36,6 +36,6 @@ class ChangeBox(components.Adapter):
     def getBox(self, req):
         url = req.childLink("../changes/%d" % self.original.number)
         text = self.original.get_HTML_box(url)
-        return Box([text], color="white", class_="Change")
+        return Box([text], class_="Change")
 components.registerAdapter(ChangeBox, Change, IBox)
 

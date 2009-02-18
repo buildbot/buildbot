@@ -728,7 +728,6 @@ class BuildStep:
         As the step runs, it should send status information to the
         BuildStepStatus::
 
-          self.step_status.setColor('red')
           self.step_status.setText(['compile', 'failed'])
           self.step_status.setText2(['4', 'warnings'])
 
@@ -801,7 +800,6 @@ class BuildStep:
             self.addHTMLLog("err.html", formatFailure(why))
             self.addCompleteLog("err.text", why.getTraceback())
             # could use why.getDetailedTraceback() for more information
-            self.step_status.setColor("purple")
             self.step_status.setText([self.name, "exception"])
             self.step_status.setText2([self.name])
             self.step_status.stepFinished(EXCEPTION)
@@ -955,7 +953,6 @@ class LoggingBuildStep(BuildStep):
         """
         log.msg("ShellCommand.startCommand(cmd=%s)", (cmd,))
         self.cmd = cmd # so we can interrupt it
-        self.step_status.setColor("yellow")
         self.step_status.setText(self.describe(False))
 
         # stdio is the first log
@@ -1000,7 +997,6 @@ class LoggingBuildStep(BuildStep):
 
     def checkDisconnect(self, f):
         f.trap(error.ConnectionLost)
-        self.step_status.setColor("red")
         self.step_status.setText(self.describe(True) +
                                  ["failed", "slave", "lost"])
         self.step_status.setText2(["failed", "slave", "lost"])
@@ -1085,19 +1081,9 @@ class LoggingBuildStep(BuildStep):
                 return self.getText2(cmd, results)
         return []
 
-    def getColor(self, cmd, results):
-        assert results in (SUCCESS, WARNINGS, FAILURE)
-        if results == SUCCESS:
-            return "green"
-        elif results == WARNINGS:
-            return "orange"
-        else:
-            return "red"
-
     def setStatus(self, cmd, results):
         # this is good enough for most steps, but it can be overridden to
         # get more control over the displayed text
-        self.step_status.setColor(self.getColor(cmd, results))
         self.step_status.setText(self.getText(cmd, results))
         self.step_status.setText2(self.maybeGetText2(cmd, results))
 

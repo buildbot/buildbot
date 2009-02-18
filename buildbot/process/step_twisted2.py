@@ -141,7 +141,6 @@ class RunUnitTestsJelly(RunUnitTests):
     def finishStatus(self, result):
         total = self.results.countTests()
         count = self.results.countFailures()
-        color = "green"
         text = []
         if count == 0:
             text.extend(["%d %s" % \
@@ -153,8 +152,7 @@ class RunUnitTestsJelly(RunUnitTests):
             text.append("%d %s" % \
                         (count,
                          count == 1 and "failure" or "failures"))
-            color = "red"
-        self.updateCurrentActivity(color=color, text=text)
+        self.updateCurrentActivity(text=text)
         self.addFileToCurrentActivity("tests", self.results)
         #self.finishStatusSummary()
         self.finishCurrentActivity()

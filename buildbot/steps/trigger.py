@@ -56,7 +56,6 @@ class Trigger(LoggingBuildStep):
     def interrupt(self, reason):
         # TODO: this doesn't actually do anything.
         if self.running:
-            self.step_status.setColor("red")
             self.step_status.setText(["interrupted"])
 
     def start(self):
@@ -95,16 +94,11 @@ class Trigger(LoggingBuildStep):
                 unknown_schedulers.append(scheduler)
 
         if unknown_schedulers:
-            self.step_status.setColor("red")
             self.step_status.setText(['no scheduler:'] + unknown_schedulers)
             rc = FAILURE
         else:
             rc = SUCCESS
             self.step_status.setText(['triggered'] + triggered_schedulers)
-            if self.waitForFinish:
-                self.step_status.setColor("yellow")
-            else:
-                self.step_status.setColor("green")
 
         if self.waitForFinish:
             d = defer.DeferredList(dl, consumeErrors=1)

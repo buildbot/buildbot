@@ -132,8 +132,6 @@ class Change:
 
     def getText(self):
         return [html.escape(self.who)]
-    def getColor(self):
-        return "white"
     def getLogs(self):
         return {}
 

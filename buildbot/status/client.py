@@ -175,9 +175,6 @@ class RemoteBuild(pb.Referenceable):
     def remote_getText(self):
         return self.b.getText()
 
-    def remote_getColor(self):
-        return self.b.getColor()
-
     def remote_getResults(self):
         return self.b.getResults()
 
@@ -267,9 +264,6 @@ class RemoteBuildStep(pb.Referenceable):
     def remote_getText(self):
         return self.s.getText()
 
-    def remote_getColor(self):
-        return self.s.getColor()
-
     def remote_getResults(self):
         return self.s.getResults()
 
@@ -300,8 +294,6 @@ class RemoteEvent:
         return self.s.getTimes()
     def remote_getText(self):
         return self.s.getText()
-    def remote_getColor(self):
-        return self.s.getColor()
 
 components.registerAdapter(RemoteEvent,
                            interfaces.IStatusEvent, IRemote)

@@ -56,24 +56,19 @@ class CurrentBox(components.Adapter):
             state = "waiting"
 
         if state == "building":
-            color = "yellow"
             text = ["building"]
             if builds:
                 for b in builds:
                     eta = b.getETA()
                     text.extend(self.formatETA("ETA in", eta))
         elif state == "offline":
-            color = "red"
             text = ["offline"]
         elif state == "idle":
-            color = "white"
             text = ["idle"]
         elif state == "waiting":
-            color = "yellow"
             text = ["waiting"]
         else:
             # just in case I add a state and forget to update this
-            color = "white"
             text = [state]
 
         # TODO: for now, this pending/upcoming stuff is in the "current
@@ -88,7 +83,7 @@ class CurrentBox(components.Adapter):
         for t in upcoming:
             eta = t - util.now()
             text.extend(self.formatETA("next in", eta))
-        return Box(text, color=color, class_="Activity " + state)
+        return Box(text, class_="Activity " + state)
 
 components.registerAdapter(CurrentBox, builder.BuilderStatus, ICurrentBox)
 
@@ -105,7 +100,7 @@ class BuildTopBox(components.Adapter):
         builds = list(builder.generateFinishedBuilds(map_branches(branches),
                                                      num_builds=1))
         if not builds:
-            return Box(["none"], "white", class_="LastBuild")
+            return Box(["none"], class_="LastBuild")
         b = builds[0]
         name = b.getBuilder().getName()
         number = b.getNumber()
@@ -115,9 +110,8 @@ class BuildTopBox(components.Adapter):
         if tests_failed: text.extend(["Failed tests: %d" % tests_failed])
         # TODO: maybe add logs?
         # TODO: add link to the per-build page at 'url'
-        c = b.getColor()
         class_ = build_get_class(b)
-        return Box(text, c, class_="LastBuild %s" % class_)
+        return Box(text, class_="LastBuild %s" % class_)
 components.registerAdapter(BuildTopBox, builder.BuilderStatus, ITopBox)
 
 class BuildBox(components.Adapter):
@@ -131,15 +125,12 @@ class BuildBox(components.Adapter):
         reason = b.getReason()
         text = ('<a title="Reason: %s" href="%s">Build %d</a>'
                 % (html.escape(reason), url, number))
-        color = "yellow"
         class_ = "start"
         if b.isFinished() and not b.getSteps():
             # the steps have been pruned, so there won't be any indication
-            # of whether it succeeded or failed. Color the box red or green
-            # to show its status
-            color = b.getColor()
+            # of whether it succeeded or failed.
             class_ = build_get_class(b)
-        return Box([text], color=color, class_="BuildStep " + class_)
+        return Box([text], class_="BuildStep " + class_)
 components.registerAdapter(BuildBox, builder.BuildStatus, IBox)
 
 class StepBox(components.Adapter):
@@ -165,9 +156,8 @@ class StepBox(components.Adapter):
         for name, target in urls.items():
             text.append('[<a href="%s" class="%s">%s</a>]' %
                         (target, ex_url_class, html.escape(name)))
-        color = self.original.getColor()
         class_ = "BuildStep " + build_get_class(self.original)
-        return Box(text, color, class_=class_)
+        return Box(text, class_=class_)
 components.registerAdapter(StepBox, builder.BuildStepStatus, IBox)
 
 
@@ -176,11 +166,8 @@ class EventBox(components.Adapter):
 
     def getBox(self, req):
         text = self.original.getText()
-        color = self.original.getColor()
         class_ = "Event"
-        if color:
-            class_ += " " + color
-        return Box(text, color, class_=class_)
+        return Box(text, class_=class_)
 components.registerAdapter(EventBox, builder.Event, IBox)
         
 
@@ -195,8 +182,6 @@ class Spacer:
         return (self.started, self.finished)
     def getText(self):
         return []
-    def getColor(self):
-        return None
 
 class SpacerBox(components.Adapter):
     implements(IBox)
@@ -612,14 +597,12 @@ class WaterfallStatusResource(HtmlResource):
         data += td("", colspan=2)
         for b in builders:
             text = ""
-            color = "#ca88f7"
             state, builds = b.getState()
             if state != "offline":
                 text += "%s<br />\n" % state #b.getCurrentBig().text[0]
             else:
                 text += "OFFLINE<br />\n"
-                color = "#ffe0e0"
-            data += td(text, align="center", bgcolor=color)
+            data += td(text, align="center")
 
         # the next row has the column headers: time, changes, builder names
         data += " <tr>\n"
@@ -636,7 +619,7 @@ class WaterfallStatusResource(HtmlResource):
         data += td("04:00", align="bottom")
         data += td("fred", align="center")
         for name in names:
-            data += td("stuff", align="center", bgcolor="red")
+            data += td("stuff", align="center")
         data += " </tr>\n"
 
         data += "</table>\n"
@@ -794,9 +777,8 @@ class WaterfallStatusResource(HtmlResource):
                     for e in row[c]:
                         log.msg("Event", r, c, sourceNames[c], e.getText())
                         lognames = [loog.getName() for loog in e.getLogs()]
-                        data += "%s: %s: %s %s<br />" % (e.getText(),
+                        data += "%s: %s: %s<br />" % (e.getText(),
                                                          e.getTimes()[0],
-                                                         e.getColor(),
                                                          lognames)
                 else:
                     data += "<b>%s</b> [none]<br />\n" % sourceNames[c]

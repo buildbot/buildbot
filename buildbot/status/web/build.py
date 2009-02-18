@@ -34,7 +34,6 @@ class StatusResourceBuild(HtmlResource):
         projectName = status.getProjectName()
         data = ('<div class="title"><a href="%s">%s</a></div>\n'
                 % (self.path_to_root(req), projectName))
-        # the color in the following line gives python-mode trouble
         builder_name = b.getBuilder().getName()
         data += ("<h1><a href=\"%s\">Builder %s</a>: Build #%d</h1>\n"
                  % (path_to_builder(req, b.getBuilder()),

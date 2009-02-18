@@ -34,12 +34,10 @@ class MaxQ(ShellCommand):
 
     def finishStatus(self, result):
         if self.failures:
-            color = "red"
             text = ["maxq", "failed"]
         else:
-            color = "green"
             text = ['maxq', 'tests']
-        self.updateCurrentActivity(color=color, text=text)
+        self.updateCurrentActivity(text=text)
         self.finishStatusSummary()
         self.finishCurrentActivity()
 
