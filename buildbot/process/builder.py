@@ -230,6 +230,17 @@ class SlaveBuilder(AbstractSlaveBuilder):
         self.slave = None
         self.state = ATTACHING
 
+    def buildFinished(self):
+        # Call the slave's buildFinished if we can; the slave may be waiting
+        # to do a graceful shutdown and needs to know when it's idle.
+        # After, we check to see if we can start other builds.
+        self.state = IDLE
+        if self.slave:
+            d = self.slave.buildFinished(self)
+            d.addCallback(lambda x: reactor.callLater(0, self.builder.botmaster.maybeStartAllBuilds))
+        else:
+            reactor.callLater(0, self.builder.botmaster.maybeStartAllBuilds)
+
 
 class LatentSlaveBuilder(AbstractSlaveBuilder):
     def __init__(self, slave, builder):

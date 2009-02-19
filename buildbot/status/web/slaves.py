@@ -2,20 +2,31 @@
 import time, urllib
 from twisted.python import log
 from twisted.web import html
+from twisted.web.util import Redirect
 
-from buildbot.status.web.base import HtmlResource, abbreviate_age, OneLineMixin
+from buildbot.status.web.base import HtmlResource, abbreviate_age, OneLineMixin, path_to_slave
 from buildbot import version, util
 
 # /buildslaves/$slavename
 class OneBuildSlaveResource(HtmlResource, OneLineMixin):
+    addSlash = False
     def __init__(self, slavename):
+        HtmlResource.__init__(self)
         self.slavename = slavename
 
     def getTitle(self, req):
         return "Buildbot: %s" % html.escape(self.slavename)
 
+    def getChild(self, path, req):
+        if path == "shutdown":
+            s = self.getStatus(req)
+            slave = s.getSlave(self.slavename)
+            slave.setGraceful(True)
+        return Redirect(path_to_slave(req, slave))
+
     def body(self, req):
         s = self.getStatus(req)
+        slave = s.getSlave(self.slavename)
         my_builders = []
         for bname in s.getBuilderNames():
             b = s.getBuilder(bname)
@@ -39,6 +50,17 @@ class OneBuildSlaveResource(HtmlResource, OneLineMixin):
 
         data.append("<h1>Build Slave: %s</h1>\n" % self.slavename)
 
+        shutdown_url = req.childLink("shutdown")
+
+        if not slave.isConnected():
+            data.append("<h2>NOT CONNECTED</h2>\n")
+        elif not slave.getGraceful():
+            data.append('''<form method="POST" action="%s">
+<input type="submit" value="Gracefully Shutdown">
+</form>''' % shutdown_url)
+        else:
+            data.append("Gracefully shutting down...\n")
+
         if current_builds:
             data.append("<h2>Currently building:</h2>\n")
             data.append("<ul>\n")
@@ -48,7 +70,6 @@ class OneBuildSlaveResource(HtmlResource, OneLineMixin):
 
         else:
             data.append("<h2>no current builds</h2>\n")
-
 
         # Recent builds
         data.append("<h2>Recent builds:</h2>\n")

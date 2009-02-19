@@ -6,6 +6,7 @@ from zope.interface import implements
 from twisted.python import log
 from twisted.internet import defer, reactor
 from twisted.application import service
+import twisted.spread.pb
 
 from buildbot.pbutil import NewCredPerspective
 from buildbot.status.builder import SlaveStatus
@@ -137,6 +138,11 @@ class AbstractBuildSlave(NewCredPerspective, service.MultiService):
         # set it atomically if we make it far enough through the process
         state = {}
 
+        # Reset graceful shutdown status
+        self.slave_status.setGraceful(False)
+        # We want to know when the graceful shutdown flag changes
+        self.slave_status.addGracefulWatcher(self._gracefulChanged)
+
         def _log_attachment_on_slave(res):
             d1 = bot.callRemote("print", "attached")
             d1.addErrback(lambda why: None)
@@ -199,6 +205,7 @@ class AbstractBuildSlave(NewCredPerspective, service.MultiService):
 
     def detached(self, mind):
         self.slave = None
+        self.slave_status.removeGracefulWatcher(self._gracefulChanged)
         self.slave_status.setConnected(False)
         log.msg("BuildSlave.detached(%s)" % self.slavename)
 
@@ -292,6 +299,11 @@ class AbstractBuildSlave(NewCredPerspective, service.MultiService):
         can start a build.  This function can be used to limit overall
         concurrency on the buildslave.
         """
+        # If we're waiting to shutdown gracefully, then we shouldn't
+        # accept any new jobs.
+        if self.slave_status.getGraceful():
+            return False
+
         if self.max_builds:
             active_builders = [sb for sb in self.slavebuilders.values()
                                if sb.isBusy()]
@@ -324,6 +336,43 @@ class AbstractBuildSlave(NewCredPerspective, service.MultiService):
         # return the Deferred for testing purposes
         return d
 
+    def _gracefulChanged(self, graceful):
+        """This is called when our graceful shutdown setting changes"""
+        if graceful:
+            active_builders = [sb for sb in self.slavebuilders.values()
+                               if sb.isBusy()]
+            if len(active_builders) == 0:
+                # Shut down!
+                self.shutdown()
+
+    def shutdown(self):
+        """Shutdown the slave"""
+        # Look for a builder with a remote reference to the client side
+        # slave.  If we can find one, then call "shutdown" on the remote
+        # builder, which will cause the slave buildbot process to exit.
+        d = None
+        for b in self.slavebuilders.values():
+            if b.remote:
+                d = b.remote.callRemote("shutdown")
+                break
+
+        if d:
+            log.msg("Shutting down slave: %s" % self.slavename)
+            # The remote shutdown call will not complete successfully since the
+            # buildbot process exits almost immediately after getting the
+            # shutdown request.
+            # Here we look at the reason why the remote call failed, and if
+            # it's because the connection was lost, that means the slave
+            # shutdown as expected.
+            def _errback(why):
+                if why.check(twisted.spread.pb.PBConnectionLost):
+                    log.msg("Lost connection to %s" % self.slavename)
+                else:
+                    log.err("Unexpected error when trying to shutdown %s" % self.slavename)
+            d.addErrback(_errback)
+            return d
+        log.err("Couldn't find remote builder to shut down slave")
+        return defer.succeed(None)
 
 class BuildSlave(AbstractBuildSlave):
 
@@ -377,6 +426,17 @@ class BuildSlave(AbstractBuildSlave):
         subject = "Buildbot: buildslave %s was lost" % self.slavename
         return self._mail_missing_message(subject, text)
 
+    def buildFinished(self, sb):
+        """This is called when a build on this slave is finished."""
+        # If we're gracefully shutting down, and we have no more active
+        # builders, then it's safe to disconnect
+        if self.slave_status.getGraceful():
+            active_builders = [sb for sb in self.slavebuilders.values()
+                               if sb.isBusy()]
+            if len(active_builders) == 0:
+                # Shut down!
+                return self.shutdown()
+        return defer.succeed(None)
 
 class AbstractLatentBuildSlave(AbstractBuildSlave):
     """A build slave that will start up a slave instance when needed.
