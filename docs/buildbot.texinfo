@@ -5896,16 +5896,72 @@ been run, how many passed and how many failed, and then report more
 detailed information than a simple @code{rc==0} -based ``good/bad''
 decision.
 
-TODO: add more description of BuildSteps.
-
 @menu
+* Writing BuildStep Constructors::
 * BuildStep LogFiles::
 * Reading Logfiles::
 * Adding LogObservers::
 * BuildStep URLs::
 @end menu
 
-@node BuildStep LogFiles, Reading Logfiles, Writing New BuildSteps, Writing New BuildSteps
+@node Writing BuildStep Constructors
+@subsubsection Writing BuildStep Constructors
+
+BuildStep classes have some extra equipment, because they are their own
+factories.  Consider the use of a BuildStep in @file{master.cfg}:
+
+@example
+f.addStep(MyStep(someopt="stuff", anotheropt=1))
+@end example
+
+This creates a single instance of class @code{MyStep}.  However, Buildbot needs
+a new object each time the step is executed.  this is accomplished by storing
+the information required to instantiate a new object in the @code{factory}
+attribute.  When the time comes to construct a new Build, BuildFactory consults
+this attribute (via @code{getStepFactory}) and instantiates a new step object.
+
+When writing a new step class, then, keep in mind are that you cannot do
+anything "interesting" in the constructor -- limit yourself to checking and
+storing arguments.  To ensure that these arguments are provided to any new
+objects, call @code{self.addFactoryArguments} with any keyword arguments your
+constructor needs.
+
+Keep a @code{**kwargs} argument on the end of your options, and pass that up to
+the parent class's constructor.
+
+The whole thing looks like this:
+
+@example
+class Frobinfy(LoggingBuildStep):
+    def __init__(self,
+            frob_what="frobee",
+            frob_how_many=None,
+            frob_how=None,
+            **kwargs)
+
+        # check
+        if frob_how_many is None:
+            raise TypeError("Frobinfy argument how_many is required")
+
+        # call parent
+        LoggingBuildStep.__init__(self, **kwargs)
+
+        # and record arguments for later
+        self.addFactoryArguments(
+            frob_what=frob_what,
+            frob_how_many=frob_how_many,
+            frob_how=frob_how)
+
+class FastFrobnify(Frobnify):
+    def __init__(self,
+            speed=5,
+            **kwargs)
+        Frobnify.__init__(self, **kwargs)
+        self.addFactoryArguments(
+            speed=speed)
+@end example
+
+@node BuildStep LogFiles
 @subsubsection BuildStep LogFiles
 
 Each BuildStep has a collection of ``logfiles''. Each one has a short
@@ -5995,7 +6051,7 @@ back to the BuildStep. These additions will be added to the LogFile by
 calling @code{addStdout}. These secondary LogFiles can be used as the
 source of a LogObserver just like the normal ``stdio'' LogFile.
 
-@node Reading Logfiles, Adding LogObservers, BuildStep LogFiles, Writing New BuildSteps
+@node Reading Logfiles
 @subsubsection Reading Logfiles
 
 Once a LogFile has been added to a BuildStep with @code{addLog()},

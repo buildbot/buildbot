@@ -683,12 +683,6 @@ class ProcessDocs(ShellCommand):
         @type    workdir: string
         @keyword workdir: the workdir to start from: must be the base of the
                           Twisted tree
-
-        @type    results: triple of (int, int, string)
-        @keyword results: [rc, warnings, output]
-                          - rc==0 if all files were converted successfully.
-                          - warnings is a count of hlint warnings. 
-                          - output is the verbose output of the command.
         """
         ShellCommand.__init__(self, **kwargs)
 
@@ -752,10 +746,6 @@ class BuildDebs(ShellCommand):
         @type    workdir: string
         @keyword workdir: the workdir to start from (must be the base of the
                           Twisted tree)
-        @type    results: double of [int, string]
-        @keyword results: [rc, output].
-                          - rc == 0 if all .debs were created successfully
-                          - output: string with any errors or warnings
         """
         ShellCommand.__init__(self, **kwargs)
 

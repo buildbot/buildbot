@@ -284,21 +284,16 @@ class WarningCountingShellCommand(ShellCommand):
     warnCount = 0
     warningPattern = '.*warning[: ].*'
 
-    def __init__(self, **kwargs):
+    def __init__(self, warningPattern=None, **kwargs):
         # See if we've been given a regular expression to use to match
         # warnings. If not, use a default that assumes any line with "warning"
         # present is a warning. This may lead to false positives in some cases.
-        wp = None
-        if kwargs.has_key('warningPattern'):
-            wp = kwargs['warningPattern']
-            del kwargs['warningPattern']
-            self.warningPattern = wp
+        self.warningPattern = warningPattern
 
         # And upcall to let the base class do its work
         ShellCommand.__init__(self, **kwargs)
 
-        if wp:
-            self.addFactoryArguments(warningPattern=wp)
+        self.addFactoryArguments(warningPattern=warningPattern)
 
     def createSummary(self, log):
         self.warnCount = 0

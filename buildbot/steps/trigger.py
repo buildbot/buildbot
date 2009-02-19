@@ -51,7 +51,7 @@ class Trigger(LoggingBuildStep):
         self.addFactoryArguments(schedulerNames=schedulerNames,
                                  updateSourceStamp=updateSourceStamp,
                                  waitForFinish=waitForFinish,
-				 set_properties=set_properties)
+				                 set_properties=set_properties)
 
     def interrupt(self, reason):
         # TODO: this doesn't actually do anything.
