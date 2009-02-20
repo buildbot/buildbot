@@ -9,9 +9,11 @@ from twisted.trial import unittest
 
 from buildbot import interfaces
 from buildbot.sourcestamp import SourceStamp
-from buildbot.process.base import BuildRequest
-from buildbot.status import builder, base, words
+from buildbot.process.base import BuildRequest, Build
+from buildbot.status import builder, base, words, progress
 from buildbot.changes.changes import Change
+from buildbot.process.builder import Builder
+from time import sleep
 
 mail = None
 try:
@@ -1571,3 +1573,50 @@ class StepStatistics(unittest.TestCase):
         self.failUnlessEqual(
             status.getSummaryStatistic('test-prop', operator.add, 13), 20,
             'Sum property across the build with initial value')
+
+class BuildExpectation(unittest.TestCase):
+    class MyBuilderStatus():
+        implements(interfaces.IBuilderStatus)
+
+        def setSlavenames(self, slaveName):
+            pass
+
+    class MyBuilder(Builder):
+        def __init__(self, name):
+            Builder.__init__(self, {
+                    'name': name,
+                    'builddir': '/tmp/somewhere',
+                    'factory': 'aFactory'
+                    }, BuildExpectation.MyBuilderStatus())
+
+    class MyBuild(Build):
+        def __init__(self, b):
+            self.builder = b
+            self.remote = None
+
+            step1_progress = progress.StepProgress('step1', ['elapsed'])
+            self.progress = progress.BuildProgress([step1_progress])
+            step1_progress.setBuildProgress(self.progress)
+
+            step1_progress.start()
+            sleep(1);
+            step1_progress.finish()
+
+            self.deferred = defer.Deferred()
+            self.locks = []
+            self.build_status = builder.BuildStatus(b.builder_status, 1)
+
+
+    def testBuildExpectation_BuildSuccess(self):
+        b = BuildExpectation.MyBuilder("builder1")
+        build = BuildExpectation.MyBuild(b)
+
+        build.buildFinished(['sometext'], builder.SUCCESS)
+        self.failIfEqual(b.expectations.expectedBuildTime(), 0, 'Non-Zero expectation for a failed build')
+
+    def testBuildExpectation_BuildFailure(self):
+        b = BuildExpectation.MyBuilder("builder1")
+        build = BuildExpectation.MyBuild(b)
+
+        build.buildFinished(['sometext'], builder.FAILURE)
+        self.failUnlessEqual(b.expectations, None, 'Zero expectation for a failed build')
