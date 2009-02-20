@@ -597,7 +597,7 @@ class Build:
         self.build_status.setText(text)
         self.build_status.setResults(results)
         self.build_status.buildFinished()
-        if self.progress:
+        if self.progress and results == SUCCESS:
             # XXX: also test a 'timing consistent' flag?
             log.msg(" setting expectations for next time")
             self.builder.setExpectations(self.progress)
