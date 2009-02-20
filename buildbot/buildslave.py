@@ -1,3 +1,4 @@
+# Portions copyright Canonical Ltd. 2009
 
 import time
 from email.Message import Message

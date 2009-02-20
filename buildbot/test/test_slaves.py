@@ -1,5 +1,7 @@
 # -*- test-case-name: buildbot.test.test_slaves -*-
 
+# Portions copyright Canonical Ltd. 2009
+
 from twisted.trial import unittest
 from twisted.internet import defer, reactor
 from twisted.python import log, runtime, failure

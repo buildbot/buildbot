@@ -3,6 +3,8 @@
 Tested with Python boto 1.5c
 """
 
+# Portions copyright Canonical Ltd. 2009
+
 import cStringIO
 import os
 import re

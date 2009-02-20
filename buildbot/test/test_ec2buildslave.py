@@ -1,3 +1,5 @@
+# Portions copyright Canonical Ltd. 2009
+
 import os
 import sys
 import StringIO
