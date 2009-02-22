@@ -1575,7 +1575,7 @@ class StepStatistics(unittest.TestCase):
             'Sum property across the build with initial value')
 
 class BuildExpectation(unittest.TestCase):
-    class MyBuilderStatus():
+    class MyBuilderStatus:
         implements(interfaces.IBuilderStatus)
 
         def setSlavenames(self, slaveName):
