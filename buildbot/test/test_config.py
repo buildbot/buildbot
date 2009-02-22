@@ -1187,6 +1187,7 @@ class Factories(unittest.TestCase):
                                'description': None,
                                'workdir': None,
                                'logfiles': {},
+                               'usePTY': "slave-config",
                                })
         shell_args.update(kwargs)
         self.failUnlessIdentical(factory[0], ShellCommand)

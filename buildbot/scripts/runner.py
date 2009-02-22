@@ -399,8 +399,8 @@ class SlaveOptions(MakerBase):
 
         ["keepalive", "k", 600,
          "Interval at which keepalives should be sent (in seconds)"],
-        ["usepty", None, 1,
-         "(1 or 0) child processes should be run in a pty"],
+        ["usepty", None, 0,
+         "(1 or 0) child processes should be run in a pty (default 0)"],
         ["umask", None, "None",
          "controls permissions of generated files. Use --umask=022 to be world-readable"],
         ["maxdelay", None, 300,

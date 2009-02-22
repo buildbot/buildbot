@@ -56,6 +56,7 @@ class ShellCommand(LoggingBuildStep):
     def __init__(self, workdir=None,
                  description=None, descriptionDone=None,
                  command=None,
+                 usePTY="slave-config",
                  **kwargs):
         # most of our arguments get passed through to the RemoteShellCommand
         # that we create, but first strip out the ones that we pass to
@@ -71,7 +72,7 @@ class ShellCommand(LoggingBuildStep):
         if isinstance(self.descriptionDone, str):
             self.descriptionDone = [self.descriptionDone]
         if command:
-            self.command = command
+            self.setCommand(command)
 
         # pull out the ones that LoggingBuildStep wants, then upcall
         buildstep_kwargs = {}
@@ -87,6 +88,7 @@ class ShellCommand(LoggingBuildStep):
 
         # everything left over goes to the RemoteShellCommand
         kwargs['workdir'] = workdir # including a copy of 'workdir'
+        kwargs['usePTY'] = usePTY
         self.remote_kwargs = kwargs
         # we need to stash the RemoteShellCommand's args too
         self.addFactoryArguments(**kwargs)
@@ -180,15 +182,24 @@ class ShellCommand(LoggingBuildStep):
         # the Source subclasses) can just skip straight to startCommand()
         properties = self.build.getProperties()
 
+        warnings = []
+
         # create the actual RemoteShellCommand instance now
         kwargs = properties.render(self.remote_kwargs)
         kwargs['command'] = properties.render(self.command)
         kwargs['logfiles'] = self.logfiles
+
+        # check for the usePTY flag
+        if kwargs.has_key('usePTY') and kwargs['usePTY'] != 'slave_config':
+            slavever = self.slaveVersion("shell", "old")
+            if self.slaveVersionIsOlderThan("svn", "2.7"):
+                warnings.append("NOTE: slave does not allow master to override usePTY\n")
+
         cmd = RemoteShellCommand(**kwargs)
         self.setupEnvironment(cmd)
         self.checkForOldSlaveAndLogfiles()
 
-        self.startCommand(cmd)
+        self.startCommand(cmd, warnings)
 
 
 

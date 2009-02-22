@@ -981,19 +981,10 @@ buildbot create-slave --umask=022 ~/buildslave buildmaster.example.org:42012 mys
 
 @table @code
 @item --usepty
-This is a boolean flag that tells the buildslave whether to launch
-child processes in a PTY (the default) or with regular pipes. The
-advantage of using a PTY is that ``grandchild'' processes are more
-likely to be cleaned up if the build is interrupted or times out
-(since it enables the use of a ``process group'' in which all child
-processes will be placed). The disadvantages: some forms of Unix have
-problems with PTYs, some of your unit tests may behave differently
-when run under a PTY (generally those which check to see if they are
-being run interactively), and PTYs will merge the stdout and stderr
-streams into a single output stream (which means the red-vs-black
-coloring in the logfiles will be lost). If you encounter problems, you
-can add @code{--usepty=0} to disable the use of PTYs. Note that
-windows buildslaves never use PTYs.
+This is a boolean flag that tells the buildslave whether to launch child
+processes in a PTY or with regular pipes (the default) when the master does not
+specify.  This option is deprecated, as this particular parameter is better
+specified on the master.
 
 @item --umask
 This is a string (generally an octal representation of an integer)
@@ -5426,6 +5417,20 @@ sent to the buildmaster for inclusion in the step's LogFile.
 like @code{want_stdout} but for stderr. Note that commands run through
 a PTY do not have separate stdout/stderr streams: both are merged into
 stdout.
+
+@item usePTY
+Should this command be run in a @code{pty}?  The default is to observe the
+configuration of the client (@pxref{Buildslave Options}), but specifying
+@code{True} or @code{False} here will override the default.
+
+The advantage of using a PTY is that ``grandchild'' processes are more likely
+to be cleaned up if the build is interrupted or times out (since it enables the
+use of a ``process group'' in which all child processes will be placed). The
+disadvantages: some forms of Unix have problems with PTYs, some of your unit
+tests may behave differently when run under a PTY (generally those which check
+to see if they are being run interactively), and PTYs will merge the stdout and
+stderr streams into a single output stream (which means the red-vs-black
+coloring in the logfiles will be lost).
 
 @item logfiles
 Sometimes commands will log interesting data to a local file, rather

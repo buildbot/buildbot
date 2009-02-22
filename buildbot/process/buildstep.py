@@ -433,7 +433,7 @@ class RemoteShellCommand(LoggedRemoteCommand):
 
     def __init__(self, workdir, command, env=None, 
                  want_stdout=1, want_stderr=1,
-                 timeout=20*60, logfiles={}, **kwargs):
+                 timeout=20*60, logfiles={}, usePTY="slave-config"):
         """
         @type  workdir: string
         @param workdir: directory where the command ought to run,
@@ -486,6 +486,7 @@ class RemoteShellCommand(LoggedRemoteCommand):
                 'want_stderr': want_stderr,
                 'logfiles': logfiles,
                 'timeout': timeout,
+                'usePTY': usePTY,
                 }
         LoggedRemoteCommand.__init__(self, "shell", args)
 
