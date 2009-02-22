@@ -951,7 +951,8 @@ class LoggingBuildStep(BuildStep):
         @param cmd: a suitable RemoteCommand which will be launched, with
                     all output being put into our self.stdio_log LogFile
         """
-        log.msg("ShellCommand.startCommand(cmd=%s)", (cmd,))
+        log.msg("ShellCommand.startCommand(cmd=%s)" % (cmd,))
+        log.msg("  cmd.args = %r" % (cmd.args))
         self.cmd = cmd # so we can interrupt it
         self.step_status.setText(self.describe(False))
 
