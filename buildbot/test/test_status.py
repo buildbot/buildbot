@@ -369,6 +369,15 @@ class Mail(unittest.TestCase):
         self.failUnlessIn("<p>Changed by: <b>author2</b><br />", t)
         self.failUnlessIn("Test 3 failed", t)
 
+    def testShouldAttachLog(self):
+        mailer = mail.MailNotifier(fromaddr="buildbot@example.com", addLogs=True)
+        self.assertTrue(mailer._shouldAttachLog('anything'))
+        mailer = mail.MailNotifier(fromaddr="buildbot@example.com", addLogs=False)
+        self.assertFalse(mailer._shouldAttachLog('anything'))
+        mailer = mail.MailNotifier(fromaddr="buildbot@example.com", addLogs=['something'])
+        self.assertFalse(mailer._shouldAttachLog('anything'))
+        self.assertTrue(mailer._shouldAttachLog('something'))
+
     def testFailure(self):
         mailer = MyMailer(fromaddr="buildbot@example.com", mode="problem",
                           extraRecipients=["recip@example.com",

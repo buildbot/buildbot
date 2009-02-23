@@ -461,10 +461,11 @@ class MailNotifier(base.StatusReceiverMultiService):
             for log in build.getLogs():
                 name = "%s.%s" % (log.getStep().getName(),
                                   log.getName())
-                a = MIMEText(log.getText())
-                a.add_header('Content-Disposition', "attachment",
-                             filename=name)
-                m.attach(a)
+                if self._shouldAttachLog(log.getName()) or self._shouldAttachLog(name):
+                    a = MIMEText(log.getText())
+                    a.add_header('Content-Disposition', "attachment",
+                                 filename=name)
+                    m.attach(a)
 
         # now, who is this message going to?
         dl = []
@@ -477,6 +478,11 @@ class MailNotifier(base.StatusReceiverMultiService):
         d = defer.DeferredList(dl)
         d.addCallback(self._gotRecipients, recipients, m)
         return d
+
+    def _shouldAttachLog(self, logname):
+        if type(self.addLogs) is bool:
+            return self.addLogs
+        return logname in self.addLogs
 
     def _gotRecipients(self, res, rlist, m):
         recipients = set()
