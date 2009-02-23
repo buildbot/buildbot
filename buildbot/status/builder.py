@@ -1691,7 +1691,11 @@ class BuilderStatus(styles.Versioned):
             target.builderChangedState(self.name, state)
             return
         for w in self.watchers:
-            w.builderChangedState(self.name, state)
+            try:
+                w.builderChangedState(self.name, state)
+            except:
+                log.msg("Exception caught publishing state to %r" % w)
+                log.err()
 
     def newBuild(self):
         """The Builder has decided to start a build, but the Build object is
@@ -1727,15 +1731,18 @@ class BuilderStatus(styles.Versioned):
         # announce the new build to all our watchers
 
         for w in self.watchers: # TODO: maybe do this later? callLater(0)?
-            receiver = w.buildStarted(self.getName(), s)
-            if receiver:
-                if type(receiver) == type(()):
-                    s.subscribe(receiver[0], receiver[1])
-                else:
-                    s.subscribe(receiver)
-                d = s.waitUntilFinished()
-                d.addCallback(lambda s: s.unsubscribe(receiver))
-
+            try:
+                receiver = w.buildStarted(self.getName(), s)
+                if receiver:
+                    if type(receiver) == type(()):
+                        s.subscribe(receiver[0], receiver[1])
+                    else:
+                        s.subscribe(receiver)
+                    d = s.waitUntilFinished()
+                    d.addCallback(lambda s: s.unsubscribe(receiver))
+            except:
+                log.msg("Exception caught notifying %r of buildStarted event" % w)
+                log.err()
 
     def _buildFinished(self, s):
         assert s in self.currentBuilds
@@ -1745,7 +1752,11 @@ class BuilderStatus(styles.Versioned):
         name = self.getName()
         results = s.getResults()
         for w in self.watchers:
-            w.buildFinished(name, s, results)
+            try:
+                w.buildFinished(name, s, results)
+            except:
+                log.msg("Exception caught notifying %r of buildFinished event" % w)
+                log.err()
 
         self.prune() # conserve disk
 
