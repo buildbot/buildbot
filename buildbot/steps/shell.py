@@ -299,7 +299,8 @@ class WarningCountingShellCommand(ShellCommand):
         # See if we've been given a regular expression to use to match
         # warnings. If not, use a default that assumes any line with "warning"
         # present is a warning. This may lead to false positives in some cases.
-        self.warningPattern = warningPattern
+        if warningPattern:
+            self.warningPattern = warningPattern
 
         # And upcall to let the base class do its work
         ShellCommand.__init__(self, **kwargs)
@@ -365,11 +366,10 @@ class Compile(WarningCountingShellCommand):
     # things to track: number of files compiled, number of directories
     # traversed (assuming 'make' is being used)
 
-    def createSummary(self, cmd):
+    def createSummary(self, log):
         # TODO: grep for the characteristic GCC error lines and
         # assemble them into a pair of buffers
-        WarningCountingShellCommand.createSummary(self, cmd)
-        pass
+        WarningCountingShellCommand.createSummary(self, log)
 
 class Test(WarningCountingShellCommand):
 
