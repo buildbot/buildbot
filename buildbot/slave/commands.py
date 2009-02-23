@@ -1530,6 +1530,13 @@ class SourceBase(Command):
             "fromdir: %s, todir: %s\n" % (fromdir, todir)})
             shutil.copytree(fromdir, todir)
             return defer.succeed(0)
+
+        if not os.path.exists(os.path.dirname(todir)):
+            os.makedirs(os.path.dirname(todir))
+        if os.path.exists(todir):
+            # I don't think this happens, but just in case..
+            log.msg("cp target '%s' already exists -- cp will not do what you think!" % todir)
+
         command = ['cp', '-R', '-P', '-p', fromdir, todir]
         c = ShellCommand(self.builder, command, self.builder.basedir,
                          sendRC=False, timeout=self.timeout, usePTY=False)
