@@ -190,7 +190,7 @@ class ShellCommand(LoggingBuildStep):
         kwargs['logfiles'] = self.logfiles
 
         # check for the usePTY flag
-        if kwargs.has_key('usePTY') and kwargs['usePTY'] != 'slave_config':
+        if kwargs.has_key('usePTY') and kwargs['usePTY'] != 'slave-config':
             slavever = self.slaveVersion("shell", "old")
             if self.slaveVersionIsOlderThan("svn", "2.7"):
                 warnings.append("NOTE: slave does not allow master to override usePTY\n")
