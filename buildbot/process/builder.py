@@ -121,6 +121,7 @@ class AbstractSlaveBuilder(pb.Referenceable):
         @param status: if you point this at a BuilderStatus, a 'pinging'
                        event will be pushed.
         """
+        oldstate = self.state
         self.state = PINGING
         newping = not self.ping_watchers
         d = defer.Deferred()
@@ -135,6 +136,11 @@ class AbstractSlaveBuilder(pb.Referenceable):
                 # is updated before the ping completes
             Ping().ping(self.remote, timeout).addCallback(self._pong)
 
+        def reset_state(res):
+            if self.state == PINGING:
+                self.state = oldstate
+            return res
+        d.addCallback(reset_state)
         return d
 
     def _pong(self, res):
