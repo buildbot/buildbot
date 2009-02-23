@@ -196,13 +196,22 @@ class Contact:
             self.validate_notification_event(event)
             self.notify_events[event] = 1
 
+            if not self.subscribed:
+                self.subscribe_to_build_events()
+
     def remove_notification_events(self, events):
         for event in events:
             self.validate_notification_event(event)
             del self.notify_events[event]
 
+            if len(self.notify_events) == 0 and self.subscribed:
+                self.unsubscribe_from_build_events()
+
     def remove_all_notification_events(self):
         self.notify_events = {}
+
+        if self.subscribed:
+            self.unsubscribe_from_build_events()
 
     def command_NOTIFY(self, args, who):
         args = args.split()
@@ -232,12 +241,6 @@ class Contact:
 
         else:
             raise UsageError("try 'notify on|off <EVENT>'")
-
-        if len(self.notify_events) > 0 and not self.subscribed:
-            self.subscribe_to_build_events()
-
-        elif len(self.notify_events) == 0 and self.subscribed:
-            self.unsubscribe_from_build_events()
 
     command_NOTIFY.usage = "notify on|off|list [<EVENT>] ... - Notify me about build events.  event should be one or more of: 'started', 'finished', 'failure', 'success', 'exception' or 'xToY' (where x and Y are one of success, warnings, failure, exception, but Y is capitalized)"
 
