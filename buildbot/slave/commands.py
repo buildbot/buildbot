@@ -1316,7 +1316,7 @@ class SourceBase(Command):
         # command output will be in whatever the buildslave's native language
         # has been set to.
         self.env = os.environ.copy()
-        self.env['LC_ALL'] = "C"
+        self.env['LC_MESSAGES'] = "C"
 
         self.workdir = args['workdir']
         self.mode = args.get('mode', "update")
