@@ -2135,7 +2135,7 @@ class Status:
         builder_status.status = self
 
         if not os.path.isdir(builder_status.basedir):
-            os.mkdir(builder_status.basedir)
+            os.makedirs(builder_status.basedir)
         builder_status.determineNextBuildNumber()
 
         builder_status.setBigState("offline")
