@@ -670,6 +670,7 @@ class BuildRequestStatus:
         self.builderName = builderName
         self.builds = [] # list of BuildStatus objects
         self.observers = []
+        self.submittedAt = None
 
     def buildStarted(self, build):
         self.builds.append(build)
@@ -690,6 +691,11 @@ class BuildRequestStatus:
             observer(b)
     def unsubscribe(self, observer):
         self.observers.remove(observer)
+
+    def getSubmitTime(self):
+        return self.submittedAt
+    def setSubmitTime(self, t):
+        self.submittedAt = t
 
 
 class BuildStepStatus(styles.Versioned):
@@ -978,6 +984,7 @@ class BuildStatus(styles.Versioned):
     reason = None
     changes = []
     blamelist = []
+    requests = []
     progress = None
     started = None
     finished = None
@@ -1041,6 +1048,9 @@ class BuildStatus(styles.Versioned):
 
     def getChanges(self):
         return self.changes
+
+    def getRequests(self):
+        return self.requests
 
     def getResponsibleUsers(self):
         return self.blamelist
@@ -1183,6 +1193,9 @@ class BuildStatus(styles.Versioned):
     def setSourceStamp(self, sourceStamp):
         self.source = sourceStamp
         self.changes = self.source.changes
+
+    def setRequests(self, requests):
+        self.requests = requests
 
     def setReason(self, reason):
         self.reason = reason
@@ -1713,6 +1726,9 @@ class BuilderStatus(styles.Versioned):
 
     def addBuildRequest(self, brstatus):
         self.pendingBuilds.append(brstatus)
+        for w in self.watchers:
+            w.requestSubmitted(brstatus)
+
     def removeBuildRequest(self, brstatus):
         self.pendingBuilds.remove(brstatus)
 
