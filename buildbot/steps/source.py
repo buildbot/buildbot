@@ -351,7 +351,7 @@ class SVN(Source):
     name = 'svn'
 
     def __init__(self, svnurl=None, baseURL=None, defaultBranch=None,
-                 directory=None, **kwargs):
+                 directory=None, username=None, password=None, **kwargs):
         """
         @type  svnurl: string
         @param svnurl: the URL which points to the Subversion server,
@@ -372,6 +372,9 @@ class SVN(Source):
                               explicitly. It will simply be appended
                               to C{baseURL} and the result handed to
                               the SVN command.
+
+        @param username: username to pass to svn's --username
+        @param password: username to pass to svn's --password
         """
 
         if not kwargs.has_key('workdir') and directory is not None:
@@ -382,12 +385,16 @@ class SVN(Source):
         self.svnurl = svnurl
         self.baseURL = baseURL
         self.branch = defaultBranch
+        self.username = username
+        self.password = password
 
         Source.__init__(self, **kwargs)
         self.addFactoryArguments(svnurl=svnurl,
                                  baseURL=baseURL,
                                  defaultBranch=defaultBranch,
                                  directory=directory,
+                                 username=username,
+                                 password=password,
                                  )
 
         if not svnurl and not baseURL:
@@ -458,6 +465,16 @@ class SVN(Source):
             self.args['svnurl'] = self.baseURL + branch
         self.args['revision'] = revision
         self.args['patch'] = patch
+
+        if self.username is not None or self.password is not None:
+            if self.slaveVersionIsOlderThan("svn", "2.8"):
+                m = ("This buildslave (%s) does not support svn usernames "
+                     "and passwords.  "
+                     "Refusing to build. Please upgrade the buildslave to "
+                     "buildbot-0.7.10 or newer." % (self.build.slavename,))
+                raise BuildSlaveTooOldError(m)
+            if self.username is not None: self.args['username'] = self.username
+            if self.password is not None: self.args['password'] = self.password
 
         revstuff = []
         if branch is not None and branch != self.branch:

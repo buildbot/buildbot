@@ -5018,6 +5018,16 @@ this specifies the name of the branch to use when a Build does not
 provide one of its own. This will be appended to @code{baseURL} to
 create the string that will be passed to the @code{svn checkout}
 command.
+
+@item username
+if specified, this will be passed to the @code{svn} binary with a
+@code{--username} option.
+
+@item password
+if specified, this will be passed to the @code{svn} binary with a
+@code{--password} option.  The password itself will be suitably obfuscated in
+the logs.
+
 @end table
 
 If you are using branches, you must also make sure your

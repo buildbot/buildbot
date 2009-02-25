@@ -15,7 +15,7 @@ from buildbot.slave.registry import registerSlaveCommand
 # this used to be a CVS $-style "Revision" auto-updated keyword, but since I
 # moved to Darcs as the primary repository, this is updated manually each
 # time this file is changed. The last cvs_ver that was here was 1.51 .
-command_version = "2.7"
+command_version = "2.8"
 
 # version history:
 #  >=1.17: commands are interruptable
@@ -39,6 +39,7 @@ command_version = "2.7"
 #  >= 2.5: workaround added for remote 'hg clone --rev REV' when hg<0.9.2
 #  >= 2.6: added uploadDirectory
 #  >= 2.7: added usePTY option to SlaveShellCommand
+#  >= 2.8: added username and password args to SVN class
 
 class CommandInterrupted(Exception):
     pass
@@ -1696,6 +1697,8 @@ class SVN(SourceBase):
     handled by SourceBase, this command reads the following keys:
 
     ['svnurl'] (required): the SVN repository string
+    ['username']    Username passed to the svn command
+    ['password']    Password passed to the svn command
     """
 
     header = "svn operation"
@@ -1705,6 +1708,12 @@ class SVN(SourceBase):
         self.vcexe = getCommand("svn")
         self.svnurl = args['svnurl']
         self.sourcedata = "%s\n" % self.svnurl
+
+        self.extra_args = []
+        if args.has_key('username'):
+            self.extra_args.extend(["--username", args['username']])
+        if args.has_key('password'):
+            self.extra_args.extend(["--password", Obfuscated(args['password'], "XXXX")])
 
     def sourcedirIsUpdateable(self):
         if os.path.exists(os.path.join(self.builder.basedir,
@@ -1717,7 +1726,9 @@ class SVN(SourceBase):
         revision = self.args['revision'] or 'HEAD'
         # update: possible for mode in ('copy', 'update')
         d = os.path.join(self.builder.basedir, self.srcdir)
-        command = [self.vcexe, 'update', '--revision', str(revision),
+        command = [self.vcexe, 'update'] + \
+                    self.extra_args + \
+                    ['--revision', str(revision),
                    '--non-interactive', '--no-auth-cache']
         c = ShellCommand(self.builder, command, d,
                          sendRC=False, timeout=self.timeout,
@@ -1729,14 +1740,18 @@ class SVN(SourceBase):
         revision = self.args['revision'] or 'HEAD'
         d = self.builder.basedir
         if self.mode == "export":
-            command = [self.vcexe, 'export', '--revision', str(revision),
-                       '--non-interactive', '--no-auth-cache',
-                       self.svnurl, self.srcdir]
+            command = [self.vcexe, 'export'] + \
+                        self.extra_args + \
+                        ['--revision', str(revision),
+                        '--non-interactive', '--no-auth-cache',
+                        self.svnurl, self.srcdir]
         else:
             # mode=='clobber', or copy/update on a broken workspace
-            command = [self.vcexe, 'checkout', '--revision', str(revision),
-                       '--non-interactive', '--no-auth-cache',
-                       self.svnurl, self.srcdir]
+            command = [self.vcexe, 'checkout'] + \
+                        self.extra_args + \
+                        ['--revision', str(revision),
+                        '--non-interactive', '--no-auth-cache',
+                        self.svnurl, self.srcdir]
         c = ShellCommand(self.builder, command, d,
                          sendRC=False, timeout=self.timeout,
                          keepStdout=True, usePTY=False)

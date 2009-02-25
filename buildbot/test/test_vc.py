@@ -1363,6 +1363,9 @@ class SVN(VCBase, unittest.TestCase):
         d = self.do_getpatch()
         return d
 
+    ## can't test the username= and password= options, because we do not have an
+    ## svn repository that requires authentication.
+
 VCS.registerVC(SVN.vc_name, SVNHelper())
 
 
