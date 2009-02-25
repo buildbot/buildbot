@@ -1312,6 +1312,7 @@ class BuildStatus(styles.Versioned):
         del d['builder'] # filled in by our parent when loading
         del d['watchers']
         del d['updates']
+        del d['requests']
         del d['finishedWatchers']
         return d
 
