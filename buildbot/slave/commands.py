@@ -45,6 +45,42 @@ class CommandInterrupted(Exception):
 class TimeoutError(Exception):
     pass
 
+class Obfuscated:
+    """An obfuscated string in a command"""
+    def __init__(self, real, fake):
+        self.real = real
+        self.fake = fake
+
+    def __str__(self):
+        return self.fake
+
+    def __repr__(self):
+        return `self.fake`
+
+    def get_real(command):
+        rv = command
+        if type(command) == types.ListType:
+            rv = []
+            for elt in command:
+                if isinstance(elt, Obfuscated):
+                    rv.append(elt.real)
+                else:
+                    rv.append(elt)
+        return rv
+    get_real = staticmethod(get_real)
+
+    def get_fake(command):
+        rv = command
+        if type(command) == types.ListType:
+            rv = []
+            for elt in command:
+                if isinstance(elt, Obfuscated):
+                    rv.append(elt.fake)
+                else:
+                    rv.append(elt)
+        return rv
+    get_fake = staticmethod(get_fake)
+
 class AbandonChain(Exception):
     """A series of chained steps can raise this exception to indicate that
     one of the intermediate ShellCommands has failed, such that there is no
@@ -253,7 +289,8 @@ class ShellCommand:
         """
 
         self.builder = builder
-        self.command = command
+        self.command = Obfuscated.get_real(command)
+        self.fake_command = Obfuscated.get_fake(command)
         self.sendStdout = sendStdout
         self.sendStderr = sendStderr
         self.sendRC = sendRC
@@ -310,7 +347,7 @@ class ShellCommand:
             self.logFileWatchers.append(w)
 
     def __repr__(self):
-        return "<slavecommand.ShellCommand '%s'>" % self.command
+        return "<slavecommand.ShellCommand '%s'>" % self.fake_command
 
     def sendStatus(self, status):
         self.builder.sendUpdate(status)
@@ -339,7 +376,7 @@ class ShellCommand:
         log.msg("ShellCommand._startCommand")
         if self.notreally:
             self.sendStatus({'header': "command '%s' in dir %s" % \
-                             (self.command, self.workdir)})
+                             (self.fake_command, self.workdir)})
             self.sendStatus({'header': "(not really)\n"})
             self.finished(None, 0)
             return
@@ -355,6 +392,7 @@ class ShellCommand:
                 # for posix, use /bin/sh. for other non-posix, well, doesn't
                 # hurt to try
                 argv = ['/bin/sh', '-c', self.command]
+            display = self.fake_command
         else:
             if runtime.platformType  == 'win32':
                 argv = os.environ['COMSPEC'].split() # allow %COMSPEC% to have args
@@ -362,6 +400,7 @@ class ShellCommand:
                 argv += list(self.command)
             else:
                 argv = self.command
+            display = " ".join(self.fake_command)
 
         # $PWD usually indicates the current directory; spawnProcess may not
         # update this value, though, so we set it explicitly here.
@@ -373,9 +412,8 @@ class ShellCommand:
         # spaces. You should be able to cut-and-paste this into a shell to
         # obtain the same results. If there are spaces in the arguments, too
         # bad.
-        msg = " ".join(argv)
-        log.msg(" " + msg)
-        self.sendStatus({'header': msg+"\n"})
+        log.msg(" " + display)
+        self.sendStatus({'header': display+"\n"})
 
         # then comes the secondary information
         msg = " in dir %s" % (self.workdir,)
@@ -388,8 +426,8 @@ class ShellCommand:
         log.msg(" " + msg)
         self.sendStatus({'header': msg+"\n"})
 
-        # then the argv array for resolving unambiguity
-        msg = " argv: %s" % (argv,)
+        # then the obfuscated command array for resolving unambiguity
+        msg = " argv: %s" % (self.fake_command,)
         log.msg(" " + msg)
         self.sendStatus({'header': msg+"\n"})
 
