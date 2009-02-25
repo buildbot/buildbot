@@ -431,12 +431,12 @@ class Builder(pb.Referenceable):
 
         If there are no build requests, None is returned."""
         if self.buildable:
-            return self.buildable[0].submittedAt
+            return self.buildable[0].getSubmitTime()
         else:
             return None
 
     def submitBuildRequest(self, req):
-        req.submittedAt = now()
+        req.setSubmitTime(now())
         self.buildable.append(req)
         req.requestSubmitted(self)
         self.builder_status.addBuildRequest(req.status)

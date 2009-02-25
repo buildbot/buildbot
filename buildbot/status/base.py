@@ -8,6 +8,9 @@ from buildbot import util, pbutil
 class StatusReceiver:
     implements(IStatusReceiver)
 
+    def requestSubmitted(self, request):
+        pass
+
     def buildsetSubmitted(self, buildset):
         pass
 

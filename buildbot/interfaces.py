@@ -305,6 +305,10 @@ class IBuildRequestStatus(Interface):
         be called once for each of these Builds, both old and new."""
     def unsubscribe(observer):
         """Unregister the callable that was registered with subscribe()."""
+    def getSubmitTime():
+        """Return the time when this request was submitted"""
+    def setSubmitTime(t):
+        """Sets the time when this request was submitted"""
 
 
 class ISlaveStatus(Interface):
@@ -870,6 +874,12 @@ class IStatusReceiver(Interface):
         """A new BuildSet has been submitted to the buildmaster.
 
         @type buildset: implementor of L{IBuildSetStatus}
+        """
+
+    def requestSubmitted(request):
+        """A new BuildRequest has been submitted to the buildmaster.
+
+        @type request: implementor of L{IBuildRequestStatus}
         """
 
     def builderAdded(builderName, builder):

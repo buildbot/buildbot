@@ -140,6 +140,13 @@ class BuildRequest:
             return self.builder.cancelBuildRequest(self)
         return False
 
+    def setSubmitTime(self, t):
+        self.submittedAt = t
+        self.status.setSubmitTime(t)
+
+    def getSubmitTime(self):
+        return self.submittedAt
+
 
 class Build:
     """I represent a single build by a single slave. Specialized Builders can
@@ -441,6 +448,7 @@ class Build:
 
         # we are now ready to set up our BuildStatus.
         self.build_status.setSourceStamp(self.source)
+        self.build_status.setRequests([req.status for req in self.requests])
         self.build_status.setReason(self.reason)
         self.build_status.setBlamelist(self.blamelist())
         self.build_status.setProgress(self.progress)
