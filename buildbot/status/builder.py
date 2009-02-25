@@ -865,6 +865,9 @@ class BuildStepStatus(styles.Versioned):
     def setName(self, stepname):
         self.name = stepname
 
+    def setColor(self, color):
+        log.msg("BuildStepStatus.setColor is no longer supported -- ignoring color %s" % (color,))
+
     def setProgress(self, stepprogress):
         self.progress = stepprogress
 
