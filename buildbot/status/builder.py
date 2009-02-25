@@ -1018,6 +1018,7 @@ class BuildStatus(styles.Versioned):
         self.steps = []
         self.testResults = {}
         self.properties = Properties()
+        self.requests = []
 
     # IBuildStatus
 
