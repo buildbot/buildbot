@@ -6371,10 +6371,9 @@ to be root to write to one of those standard include directories.
 
 Option 4: Submit the code for inclusion in the Buildbot distribution
 
-Contribute the code in an Enhancement Request on SourceForge, via
-http://buildbot.sf.net . Lobby, convince, coerce, bribe, badger,
-harass, threaten, or otherwise encourage the author to accept the
-patch. This lets you do something like:
+Make a fork of buildbot on http://github.com/djmitche/buildbot or post a patch
+in a bug at http://buildbot.net.  In either case, post a note about your patch
+to the mailing list, so others can provide feedback and, eventually, commit it.
 
 @example
 from buildbot.steps import framboozle
