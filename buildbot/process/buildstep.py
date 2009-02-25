@@ -709,8 +709,9 @@ class BuildStep:
         try:
             skip = self.start()
             if skip == SKIPPED:
-                reactor.callLater(0, self.releaseLocks)
-                reactor.callLater(0, self.deferred.callback, SKIPPED)
+                # this return value from self.start is a shortcut
+                # to finishing the step immediately
+                reactor.callLater(0, self.finished, SKIPPED)
         except:
             log.msg("BuildStep.startStep exception in .start")
             self.failed(Failure())
