@@ -44,7 +44,7 @@ class GridStatusResource(HtmlResource):
 
     def getChangemaster(self, request):
         # TODO: this wants to go away, access it through IStatus
-        return request.site.buildbot_service.parent.change_svc
+        return request.site.buildbot_service.getChangeSvc()
 
     # handle reloads through an http header
     # TODO: send this as a real header, rather than a tag

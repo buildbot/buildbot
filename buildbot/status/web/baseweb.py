@@ -485,12 +485,19 @@ class WebStatus(service.MultiService):
 
     def setServiceParent(self, parent):
         service.MultiService.setServiceParent(self, parent)
+
+        # this class keeps a *separate* link to the buildmaster, rather than
+        # just using self.parent, so that when we are "disowned" (and thus
+        # parent=None), any remaining HTTP clients of this WebStatus will still
+        # be able to get reasonable results.
+        self.master = parent
+
         self.setupSite()
 
     def setupSite(self):
         # this is responsible for creating the root resource. It isn't done
         # at __init__ time because we need to reference the parent's basedir.
-        htmldir = os.path.abspath(os.path.join(self.parent.basedir, self.public_html))
+        htmldir = os.path.abspath(os.path.join(self.master.basedir, self.public_html))
         if os.path.isdir(htmldir):
             log.msg("WebStatus using (%s)" % htmldir)
         else:
@@ -529,13 +536,15 @@ class WebStatus(service.MultiService):
         return service.MultiService.stopService(self)
 
     def getStatus(self):
-        return self.parent.getStatus()
+        return self.master.getStatus()
 
     def getControl(self):
         if self.allowForce:
-            return IControl(self.parent)
+            return IControl(self.master)
         return None
 
+    def getChangeSvc(self):
+        return self.master.change_svc
     def getPortnum(self):
         # this is for the benefit of unit tests
         s = list(self)[0]

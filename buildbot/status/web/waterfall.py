@@ -410,7 +410,7 @@ class WaterfallStatusResource(HtmlResource):
 
     def getChangemaster(self, request):
         # TODO: this wants to go away, access it through IStatus
-        return request.site.buildbot_service.parent.change_svc
+        return request.site.buildbot_service.getChangeSvc()
 
     def get_reload_time(self, request):
         if "reload" in request.args:

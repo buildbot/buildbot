@@ -258,7 +258,7 @@ class HtmlResource(resource.Resource):
         return request.site.buildbot_service.getControl()
 
     def getChangemaster(self, request):
-        return request.site.buildbot_service.parent.change_svc
+        return request.site.buildbot_service.getChangeSvc()
 
     def path_to_root(self, request):
         return path_to_root(request)
