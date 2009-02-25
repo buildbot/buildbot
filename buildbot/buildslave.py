@@ -91,6 +91,43 @@ class AbstractBuildSlave(NewCredPerspective, service.MultiService):
     def setBotmaster(self, botmaster):
         assert not self.botmaster, "BuildSlave already has a botmaster"
         self.botmaster = botmaster
+        self.startMissingTimer()
+
+    def stopMissingTimer(self):
+        if self.missing_timer:
+            self.missing_timer.cancel()
+            self.missing_timer = None
+
+    def startMissingTimer(self):
+        if self.notify_on_missing and self.missing_timeout and self.parent:
+            self.stopMissingTimer() # in case it's already running
+            self.missing_timer = reactor.callLater(self.missing_timeout,
+                                                   self._missing_timer_fired)
+
+    def _missing_timer_fired(self):
+        self.missing_timer = None
+        # notify people, but only if we're still in the config
+        if not self.parent:
+            return
+
+        buildmaster = self.botmaster.parent
+        status = buildmaster.getStatus()
+        text = "The Buildbot working for '%s'\n" % status.getProjectName()
+        text += ("has noticed that the buildslave named %s went away\n" %
+                 self.slavename)
+        text += "\n"
+        text += ("It last disconnected at %s (buildmaster-local time)\n" %
+                 time.ctime(time.time() - self.missing_timeout)) # approx
+        text += "\n"
+        text += "The admin on record (as reported by BUILDSLAVE:info/admin)\n"
+        text += "was '%s'.\n" % self.slave_status.getAdmin()
+        text += "\n"
+        text += "Sincerely,\n"
+        text += " The Buildbot\n"
+        text += " %s\n" % status.getProjectURL()
+        subject = "Buildbot: buildslave %s was lost" % self.slavename
+        return self._mail_missing_message(subject, text)
+
 
     def updateSlave(self):
         """Called to add or remove builders after the slave has connected.
@@ -187,9 +224,7 @@ class AbstractBuildSlave(NewCredPerspective, service.MultiService):
             self.slave = bot
             log.msg("bot attached")
             self.messageReceivedFromSlave()
-            if self.missing_timer:
-                self.missing_timer.cancel()
-                self.missing_timer = None
+            self.stopMissingTimer()
 
             return self.updateSlave()
         d.addCallback(_accept_slave)
@@ -399,33 +434,7 @@ class BuildSlave(AbstractBuildSlave):
     def detached(self, mind):
         AbstractBuildSlave.detached(self, mind)
         self.botmaster.slaveLost(self)
-        if self.notify_on_missing and self.parent and not self.missing_timer:
-            self.missing_timer = reactor.callLater(self.missing_timeout,
-                                                   self._missing_timer_fired)
-
-    def _missing_timer_fired(self):
-        self.missing_timer = None
-        # notify people, but only if we're still in the config
-        if not self.parent:
-            return
-
-        buildmaster = self.botmaster.parent
-        status = buildmaster.getStatus()
-        text = "The Buildbot working for '%s'\n" % status.getProjectName()
-        text += ("has noticed that the buildslave named %s went away\n" %
-                 self.slavename)
-        text += "\n"
-        text += ("It last disconnected at %s (buildmaster-local time)\n" %
-                 time.ctime(time.time() - self.missing_timeout)) # approx
-        text += "\n"
-        text += "The admin on record (as reported by BUILDSLAVE:info/admin)\n"
-        text += "was '%s'.\n" % self.slave_status.getAdmin()
-        text += "\n"
-        text += "Sincerely,\n"
-        text += " The Buildbot\n"
-        text += " %s\n" % status.getProjectURL()
-        subject = "Buildbot: buildslave %s was lost" % self.slavename
-        return self._mail_missing_message(subject, text)
+        self.startMissingTimer()
 
     def buildFinished(self, sb):
         """This is called when a build on this slave is finished."""
