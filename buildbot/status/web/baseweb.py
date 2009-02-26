@@ -602,7 +602,7 @@ class Waterfall(WebStatus):
                 pass
             else:
                 data = open(css, "rb").read()
-                self.putChild("buildbot.css", static.Data(data, "text/plain"))
+                self.putChild("buildbot.css", static.Data(data, "text/css"))
         self.favicon = favicon
         self.robots_txt = robots_txt
         if favicon:
