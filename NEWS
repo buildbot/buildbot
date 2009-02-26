@@ -91,7 +91,7 @@ Passwords are suitably obfuscated in logfiles.
 This step uploads an entire directory to the master, and can be useful when a
 build creates several products (e.g., a client and server package).
 
-*** MasterShelCommand
+*** MasterShellCommand
 
 This step runs a shell command on the server, and can be useful for
 post-processing build products, or performing other maintenance tasks on the
