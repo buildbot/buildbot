@@ -1,0 +1,1814 @@
+commit 3f82bdf779ab16857667f450f11f0dc84049c015
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Wed Feb 25 13:35:37 2009 -0500
+
+    set BuildStatus.requests to an empty value in constructor
+
+commit 48a0947ad8e829963f9564ab27848a66230f381a
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Wed Feb 25 13:22:05 2009 -0500
+
+    (refs #176) use buildmaster_service.master, not ..parent, so that cached web connections can still get reasonable info
+
+commit cc9abfe46e718a3f91fec51c7091c8698f6f41bf
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Wed Feb 25 13:10:39 2009 -0500
+
+    (fixes #435) stub out BuildStepStatus.setColor
+
+commit 5fc70886bef753aae96dbfa065e481017ee9b82a
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Wed Feb 25 12:55:30 2009 -0500
+
+    (refs #390) properly handle a return value of SKIPPED from step.start()
+
+commit 865abf5d98dda8ee71d64b6b700a5f5f0601f62d
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Wed Feb 25 12:23:54 2009 -0500
+
+    (refs #302) start the missing-slave timer when buildbot starts up, so that we hear about slaves missing at startup, too
+
+commit 9fd150f60ac717757273caaaddaebc9b8de46d31
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Wed Feb 25 13:02:11 2009 -0500
+
+    don't pickle BuildStatus.requests
+
+commit 73c9a5df3b61e9d2743a9ffcdd8f4a6075cda7df
+Merge: 1476fa7... 0f6a0f0...
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Wed Feb 25 11:51:27 2009 -0500
+
+    Merge commit 'catlee/request_status'
+
+commit 1476fa7bba8fb80d24be94d6325d1394b0af2ed9
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Wed Feb 25 11:35:38 2009 -0500
+
+    remove refs to sf.net
+
+commit d7f085e7e7a31824e268c0464a7b3da79fe3ecbf
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Wed Feb 25 11:21:30 2009 -0500
+
+    (refs #41) add ability to send username and password to the svn command
+
+commit 2fcf745a96bfef89ac886b50e4ea0c8d6fdc692d
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Tue Feb 24 19:49:39 2009 -0500
+
+    (refs #41) add ability to obfuscate a ShellCommand argument on the slave side
+
+commit 3738c26455bc8a25bee78672d3e51eb7313c83a1
+Author: Neil Hemingway <neil.hemingway@greyhavens.org.uk>
+Date:   Tue Feb 24 22:09:34 2009 +0000
+
+    Resolve #379 - Use makedirs rather than mkdir to create intermediate directories
+
+commit 0f6a0f019f2259a00cfa7c8f87a7734ce3da504a
+Author: Chris AtLee <catlee@mozilla.com>
+Date:   Tue Feb 24 15:46:16 2009 -0500
+
+    Allow access to build requests from build status.
+    
+    Also, allow status plugins to get notified when new build requsts
+    arrive.
+
+commit 9c4712b11e05fef06796af5eacffd7648b943143
+Author: Chris AtLee <catlee@mozilla.com>
+Date:   Tue Feb 24 15:11:08 2009 -0500
+
+    Fix status where change object's comments field is None
+    
+    Signed-off-by: Dustin J. Mitchell <dustin@zmanda.com>
+
+commit c42b681aad38bed2ae7ae952c5a465a9f70c62bf
+Merge: 4ae3012... 436c2a6...
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Mon Feb 23 16:57:21 2009 -0500
+
+    Merge branch 'bug388' of git://github.com/nhemingway/buildbot
+
+commit 436c2a6cca8ef4943798cdaf6b0a4125c231fa5f
+Author: Neil Hemingway <neil.hemingway@googlemail.com>
+Date:   Mon Feb 23 21:54:06 2009 +0000
+
+    Resolve  #388
+    
+    builder events now have an exception firewall between them and the status plugins they call
+
+commit 0f8c4061603bce5904f3192cfddb7134636a071f
+Author: Neil Hemingway <neil.hemingway@googlemail.com>
+Date:   Mon Feb 23 21:28:08 2009 +0000
+
+    Don't just subscribe when told via IRC - do so when configured via config file
+
+commit 4ae30126d58ea6f0690a9bc482f65078c29adf32
+Author: Scott Lawrence <scott.lawrence@nortel.com>
+Date:   Mon Feb 23 15:11:04 2009 -0500
+
+    (refs #376) prettify the ETA in the waterfall
+
+commit 2ee1e9f05b0f89c599eb3417b656f2445426e9a7
+Author: John Saxton <spiff@sonic.net>
+Date:   Mon Feb 23 14:55:28 2009 -0500
+
+    (fixes #170) add addLogs=[list] to MailNotifier
+
+commit b79fbb8dad3dbc0f061dd08cb79ae641af86ca24
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Mon Feb 23 14:22:42 2009 -0500
+
+    (refs #349, #85) reset a builder's status after a ping is done
+
+commit 419470c07038cb55ed06faf07bc9d1f3eb7ac69c
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Mon Feb 23 11:53:00 2009 -0500
+
+    (fixes #160) create parent dirs before invoking 'cp'
+
+commit b9610e17915a69c7e7462a849035c2449702c0aa
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Mon Feb 23 10:00:58 2009 -0500
+
+    fix typo
+
+commit ca9fb9a865475c39039bfd01cb048f7051a5dd68
+Author: Robin Eckert <eckert@ive.uni-hannover.de>
+Date:   Sun Feb 22 20:02:12 2009 -0500
+
+    (refs #312) only set LC_MESSAGES for source steps
+
+commit 99a18de59ae61cf2198dac52a37d8e9606c269bf
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Sun Feb 22 19:08:31 2009 -0500
+
+    fix broken argument parsing
+
+commit 35f44b1c2a14d1f20193f0357087501e2ee4def6
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Sun Feb 22 18:59:53 2009 -0500
+
+    fix non-2.4 syntax
+
+commit 071564761f46ea7089bbd6301589eeb466c3ec31
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Sun Feb 22 13:23:53 2009 -0500
+
+    (refs #158) make usePTY a step parameter; change default to no
+    
+    The default for --usepty becomes 0 (no), and by default, ShellCommands
+    obey that setting.  Shell commands run from Source subclasses set this
+    to False, as it's seldom necessary to use a PTY for these commands.
+    
+    Add a new command_version, 2.7, indicating slave support for this flag
+
+commit bf24d16f1f163d386d0470e41fc2d0f954b9daf8
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Sun Feb 22 12:08:16 2009 -0500
+
+    (tweak) better debugging output
+
+commit 5bd3d78c613ac9fff056e7e2c12783fc1fe9bd82
+Merge: 6dab63a... 71c3097...
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Sun Feb 22 08:53:09 2009 -0500
+
+    Merge branch 'bug420' of git://github.com/nhemingway/buildbot
+
+commit 71c309759447f7619779080c5848542e7c76e9af
+Author: Neil Hemingway <neil.hemingway@googlemail.com>
+Date:   Sat Feb 21 21:11:36 2009 +0000
+
+    Resolve #420 - urlencode builder names
+
+commit 6dab63af9fc97d78f8968c92b9bdbc47a40aaa5c
+Merge: 56cb1e4... f0ea815...
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Fri Feb 20 17:05:27 2009 -0500
+
+    Merge branch 'bug314' of git://github.com/nhemingway/buildbot
+
+commit f0ea815bf83b1c3d6daf0568f70ad7f1c9ba2f55
+Author: Neil Hemingway <neil.hemingway@googlemail.com>
+Date:   Fri Feb 20 21:44:16 2009 +0000
+
+    Resolve #314 by not setting expectations unless the build was successful
+
+commit 56cb1e4dc77ab17c6854cbcd0f14ded3470d5792
+Author: Gary Poster <gary@imposter.local>
+Date:   Fri Feb 20 13:37:15 2009 -0500
+
+    add Canonical copyright messages, per discussion with Dustin.
+
+commit a362a5b7788f7339e0aa1e8f7fdad64f7819a4dc
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Thu Feb 19 00:03:27 2009 -0500
+
+    (fixes #279) document and clean up step argument parsing
+
+commit 9879e94d540ea216debcfeac1c5dab0b72c077b1
+Merge: cdefef4... 2335e76...
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Wed Feb 18 22:51:11 2009 -0500
+
+    Merge branch 'graceful' of http://atlee.ca/software/buildbot
+
+commit 2335e76c1c2b34b84de015af6b667d9067c3a64b
+Author: Chris AtLee <catlee@mozilla.com>
+Date:   Wed Feb 18 15:24:10 2009 -0500
+
+    Making error handling clearer on the error callback from remote
+    shutdown.
+    
+    Adding test cases.
+    
+    Moving buildFinished from AbstractSlaveBuilder to SlaveBuilder.
+    
+    remote shutdown callback needs to call reactor.callLater(0,
+    maybeStartAllBuilds) in order to get unittests to pass.
+
+commit cdefef4eebd45cf6bc17b58f605cb24987ab619d
+Merge: 620c248... d1190bd...
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Wed Feb 18 16:26:26 2009 -0500
+
+    Merge branch 'bug251' of git://github.com/nhemingway/buildbot
+
+commit 620c2487bddc693a52368d4c9dcb5fd37e995a6c
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Wed Feb 18 16:23:29 2009 -0500
+
+    (refs #259) add docs for PyLint step
+
+commit da4954b47a89a95ace7a6896c259ad4f812e568c
+Author: strank <list-ener@strank.info>
+Date:   Wed Feb 18 16:21:04 2009 -0500
+
+    (refs #259) PyLink command, similar to PyFlakes
+
+commit d1190bd358845fe38204e89d8399f95a83309334
+Author: Neil Hemingway <neil.hemingway@googlemail.com>
+Date:   Wed Feb 18 21:14:36 2009 +0000
+
+    Resolve #251 by removing colour setting from the internals of buildbot
+    
+    Colour is now controlled with CSS for all areas of buildbot
+    presentation with the sole exception of the statusgui
+
+commit 38810ee44a3169bfe801ae8036226b37bd22c471
+Merge: 2f4c3f6... aa3a5bc...
+Author: Chris AtLee <catlee@mozilla.com>
+Date:   Tue Feb 17 08:51:58 2009 -0500
+
+    Merge branch 'master' into graceful
+
+commit 2f4c3f6408cc2b2822ac24623039ddd991687aee
+Author: Chris AtLee <catlee@mozilla.com>
+Date:   Mon Feb 16 09:18:30 2009 -0500
+
+    Adding some documentation for graceful shutdown.
+    
+    Also having the slave object add itself as a watcher of the graceful
+    status when the slave is attached, and removing itself as a watcher when
+    the slave is detached.
+
+commit 25023479d910bdc9184d68a6cb4d0cb185608ebe
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Mon Feb 16 10:32:25 2009 -0500
+
+    Revert "(refs #218) point buildbot.bat to the right python"
+    This reverts commit aa3a5bc6ee13859022b4ad13283b34f7ccf78781.
+
+commit aa3a5bc6ee13859022b4ad13283b34f7ccf78781
+Author: Marcus Lindblom <macke@yar.nu>
+Date:   Mon Feb 16 10:04:33 2009 -0500
+
+    (refs #218) point buildbot.bat to the right python
+
+commit 18876cf80207769ff180dc0a0964921a117e1536
+Author: Chris AtLee <catlee@mozilla.com>
+Date:   Mon Feb 16 08:54:21 2009 -0500
+
+    Restored call to maybeStartAllBuilds into a reactor.callLater call.
+
+commit c4096f3e06d01167c860487068067c26bf1fbb07
+Author: Chris AtLee <catlee@mozilla.com>
+Date:   Sun Feb 15 19:15:56 2009 -0500
+
+    Use getGraceful() instead of slave.graceful_shutdown where appropriate
+
+commit 350632aa2276350494b0b65107acbdfc4f6c63b2
+Author: Chris AtLee <catlee@mozilla.com>
+Date:   Fri Feb 13 23:44:32 2009 -0500
+
+    Adding graceful shutdown support for slaves.
+
+commit fd47ba60dcdfdab2cdb70b62c30d8f130fe13d5b
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Sun Feb 15 23:44:24 2009 -0500
+
+    (refs #361) add docs
+
+commit b97fd526c4b19d411fbcea6fc0b7520d339afc40
+Author: Chad S Metcalf <cmetcalf@archrock.com>
+Date:   Sun Feb 15 23:37:41 2009 -0500
+
+    (refs #361) add a logEnviron parameter to ShellCommand
+
+commit cc8a6401f4eb5aa0b0ec632210c5ffcc25d6f69f
+Author: Jeremy Gill <jeremy.gill@gmail.com>
+Date:   Sun Feb 15 23:34:04 2009 -0500
+
+    (refs #327) fetch git tags, too
+
+commit 03b635a8d25efd63921d607fde30772b75f58f4d
+Author: Christian Lins <christian.lins@sun.com>
+Date:   Sun Feb 15 23:18:05 2009 -0500
+
+    (fixes #345) add CSS class for SKIPPED
+
+commit cd6a16c614b8de9af7c6a2b978f48e64fa8cde20
+Author: Charles Lepple <clepple@gmail.com>
+Date:   Sun Feb 15 22:00:07 2009 -0500
+
+    (refs #362) docs changes (fileIsImportant)
+
+commit 5d057803fd13cc4e6bf43ae22347a355e2a9e611
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Sun Feb 15 20:54:10 2009 -0500
+
+    (fixes #353) revision and got_revision are strings; if no revision is gotten, don't set the property
+
+commit 67b00c8459c1a6846f51a0dcb2ec007b39b3eb4a
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Sun Feb 15 20:10:36 2009 -0500
+
+    fix docs typo
+
+commit 77b386426c2ee498e43185553b756224db74fea8
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Sun Feb 15 20:05:32 2009 -0500
+
+    Add MasterShellCommand
+
+commit 4573cc224e7f8fc9df144e5c5ca33f86cc935cdf
+Author: René Müller <rene.mueller@tracetronic.de>
+Date:   Sun Feb 15 18:14:45 2009 -0500
+
+    (refs #393) add DirectoryUpload
+
+commit 242e5836cc9fa35142d98e1a3904f494a322a10b
+Author: Shimizukawa <shimizukawa+buildbot@gmail.com>
+Date:   Sun Feb 15 18:01:57 2009 -0500
+
+    (refs #307) allow missing svn author
+
+commit 3bbab2da2597ae2537be3a6d17ef9be0f6ff5af3
+Author: Ben Hearsum <bhearsum@bitters-2.local>
+Date:   Fri Feb 13 10:27:28 2009 -0500
+
+    Update documentation for real this time
+
+commit f461caf049311f49354e0b87dc4e6f1639cb7e87
+Author: Ben Hearsum <bhearsum@bitters-2.local>
+Date:   Fri Feb 13 10:17:01 2009 -0500
+
+    Updated documentation for new haltOnFailure behaviour; update existing BuildSteps that haltOnFailure to explictly flunkOnFailure.
+
+commit b04b9f22eed91e64b018f49ecfe722ba6203051c
+Author: Ben Hearsum <bhearsum@bitters-2.local>
+Date:   Thu Feb 12 17:48:25 2009 -0500
+
+    haltOnFailure shouldn't imply flunkOnFailure (ticket #425)
+
+commit 4517900fe039fe64cb736a41e7bca5e5a94c6384
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Thu Feb 12 17:08:41 2009 -0500
+
+    only attach the text of a patch, not the level
+
+commit 999ba134b2a4847615ce0c45cffe93bca8e5afc0
+Author: Gerard Escalante <gescalante@dev-int.wordstream.com>
+Date:   Thu Feb 12 02:51:21 2009 -0800
+
+    Changed Git VC operations class to clobber less frequently.
+    
+    Git now clobbers the repo only if the repourl changes.
+    As a part of doVCUpdate, it runs "git clean" if the branch has
+    changed (but not the repourl), which, combined with "git reset",
+    does effectively does the same thing as clobbering the repo.
+
+commit addafaaa66c5fd040c6daad636cd50453a7ab700
+Merge: ee1f1c8... c1ab365...
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Wed Feb 11 12:53:08 2009 -0500
+
+    Merge branch 'master' of git://github.com/dustin/buildbot
+
+commit ee1f1c8dee8a446809fa6b9123f643350bfa9ab8
+Author: Albert Hofkamp <a.t.hofkamp@tue.nl>
+Date:   Tue Feb 10 23:37:19 2009 -0500
+
+    (refs #306) fix trigger documentation
+
+commit 36438a46b808b9e83f09e54970c9bfa7e1186ab3
+Author: Marcus Lindblom <macke@yar.nu>
+Date:   Tue Feb 10 23:25:54 2009 -0500
+
+    (refs #272) use correct path to classic.css for windows setup
+
+commit 894bb2a9f50949f8d97f496b27bb99cbfba3f261
+Author: Julien Boeuf <julien.boeuf@gmail.com>
+Date:   Tue Feb 10 23:17:00 2009 -0500
+
+    (refs #256) allow COMSPEC to have spaces
+
+commit 18f6700d42153501d22936045931757d0a49bb6a
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Tue Feb 10 22:58:30 2009 -0500
+
+    (refs #207) offline is now gray
+
+commit 1213ad89fd88ac9219aba9a860d1999466143e67
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Tue Feb 10 22:51:47 2009 -0500
+
+    (fixes #202) don't save changes from a test ChangeMaster
+
+commit 77d2abaaadce968db730871769ee7e17e2407ca0
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Tue Feb 10 21:34:40 2009 -0500
+
+    (fixes #165) remove references to --recursive from python_twisted docstrings
+
+commit 44046f8d851d54c8dcd0325774e841f368362243
+Merge: 7e3cc24... 1b42980...
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Tue Feb 10 21:27:32 2009 -0500
+
+    Merge branch 'master' of git://github.com/gward/buildbot
+
+commit 7e3cc24c66e48b1cdd124459ca33d2fe76b754f7
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Tue Feb 10 21:21:01 2009 -0500
+
+    update rbosetti's patch to cover patches added since then
+
+commit c1ab365b6ed986396831849e7bf37c53ee35526f
+Author: Dustin Sallings <dustin@spy.net>
+Date:   Fri Feb 6 20:32:45 2009 -0800
+
+    Added ping method to stats builders.
+    
+    I had a lot of network instabilities that would cause my status client
+    to believe it was connected and functioning properly when it wasn't.
+    I started sending pings across periodically and flagging the
+    connection on the (error) result.  That wasn't a big deal, but it ends
+    up dumping a bunch of stuff into logs.
+    
+    This makes a simple ping possible without error.
+
+commit e1479500f378f1793098f244ecde75c604257ca3
+Merge: 7fb7fa4... 0a488bf...
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Tue Feb 10 19:11:14 2009 -0500
+
+    Merge branch 'master' of git://github.com/rbosetti/buildbot
+
+commit 7fb7fa4210d1c9eff86c4f63835dc95ea6c5e937
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Tue Feb 10 19:05:27 2009 -0500
+
+    (refs #421) 'nightly_factory' instead of 'checkin_factory'
+
+commit 37bae4efa8fd084201f0cb0cf2a7395a89df12aa
+Merge: d5b417f... ee5c7b6...
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Tue Feb 10 19:04:02 2009 -0500
+
+    Merge branch 'bug421' of git://github.com/ashcrow/buildbot
+
+commit d5b417f04710187250593c2698d0100c1c3fb8d9
+Merge: be3c8d5... 36fc85c...
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Tue Feb 10 18:44:59 2009 -0500
+
+    Merge branch 'bug368' of git://github.com/nhemingway/buildbot
+
+commit be3c8d5327796047d31204e645fe9ce3996e9212
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Tue Feb 10 18:43:08 2009 -0500
+
+    (refs #329) close the test config file before removing the temporary directory
+
+commit 6d20b06f1e8af8025586be03a9714f277ef780a6
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Tue Feb 10 18:40:10 2009 -0500
+
+    (refs #182) documentation tweaks
+
+commit 589b39c0708aecfaa1677dbc8fbc6fa8b73cd642
+Author: Daniel Svensson <daniel.svensson@purplescout.se>
+Date:   Sun Jan 11 22:20:22 2009 +0100
+
+    (closes #182) Add category support to Schedulers and Changes.
+    
+    Signed-off-by: Dustin J. Mitchell <dustin@zmanda.com>
+
+commit ee5c7b61e6efc8dbbec841f740b924a4f492cfac
+Author: Steve 'Ashcrow' Milner <smilner+buildbot@redhat.com>
+Date:   Tue Feb 10 15:29:32 2009 -0500
+
+    fix for http://buildbot.net/trac/ticket/421 where documentation is missing code information
+
+commit 36fc85cd80599a3d04a9a344dcd133d6a553d3f6
+Author: Neil Hemingway <neil.hemingway@googlemail.com>
+Date:   Tue Feb 10 19:37:05 2009 +0000
+
+    Add a test and a doc-tweak for bug368
+
+commit 6a59c18982b6581b598fc7cf3489313906755011
+Author: Neil Hemingway <neil.hemingway@googlemail.com>
+Date:   Tue Feb 10 17:47:29 2009 +0000
+
+    BuildPrioritization tests failed unless CVS was installed
+
+commit a0930b69ac2a8ba75fb1690e68b7df3a6af9dc72
+Author: Greg Ward <gerg.ward+buildbot@gmail.com>
+Date:   Fri Feb 6 18:21:28 2009 -0500
+
+    Fix some typos in the manual.
+    
+    Signed-off-by: Dustin J. Mitchell <dustin@zmanda.com>
+
+commit 1b42980f33b57bf333dbe423e94dc914581f209d
+Author: Greg Ward <gerg.ward+buildbot@gmail.com>
+Date:   Fri Feb 6 18:21:28 2009 -0500
+
+    Fix some typos in the manual.
+
+commit 57cccfd1edf2813c2c8083dac8ff7731f55d8d67
+Merge: f03f8d1... cbdacb4...
+Author: Greg Ward <gerg.ward+buildbot@gmail.com>
+Date:   Fri Feb 6 18:09:18 2009 -0500
+
+    Merge branch 'master' of git://github.com/djmitche/buildbot
+
+commit cbdacb41fcf892587251c6e39e08958fc4a49f59
+Author: Greg Ward <gerg.ward+buildbot@gmail.com>
+Date:   Thu Feb 5 11:02:19 2009 -0500
+
+    sample.cfg: fix out-of-date comments and typos.
+    
+    Signed-off-by: Dustin J. Mitchell <dustin@zmanda.com>
+
+commit f03f8d105824ee89bac21490ab2dcfd0de3a074d
+Author: Greg Ward <gerg.ward+buildbot@gmail.com>
+Date:   Thu Feb 5 11:02:19 2009 -0500
+
+    sample.cfg: fix out-of-date comments and typos.
+
+commit 6edd056d6b81183c8f4692c964942eb66c58ba92
+Author: Gareth Armstrong <gareth.armstrong@hp.com>
+Date:   Thu Feb 5 15:27:13 2009 +0100
+
+    Add provenance header to feeds.py
+
+commit 82da60b668335080640bf2d0417eac703ef4506d
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Thu Feb 5 08:46:56 2009 -0500
+
+    fix test_web failures where no projectName is specified
+
+commit 0d12fff51af47503720840321054fb2408fdb2bc
+Author: Gareth Armstrong <gareth.armstrong@hp.com>
+Date:   Thu Feb 5 10:48:47 2009 +0100
+
+    (refs #382) Add ATOM and RSS feeds to webstatus
+    
+    The addtion of ATOM and RSS feeds to webstatus is based on "feeder.py" which
+    was part of the Buildbot configuration for the Subversion project. The original
+    file was created by Lieven Gobaerts and
+    later adjusted by API (apinheiro@igalia.coma) and also here
+    http://code.google.com/p/pybots/source/browse/trunk/master/Feeder.py
+    
+    All subsequent changes to feeder.py where made by Chandan-Dutta Chowdhury
+    <chandan-dutta.chowdhury@hp.com> and Gareth Armstrong <gareth.armstrong@hp.com>.
+    
+    Those modifications are as follows:
+    1) the feeds are now based on baseweb.WebStatus
+    2) feeds are fully validated ATOM 1.0 and RSS 2.0 feeds, verified with code from
+       http://feedvalidator.org
+    3) nicer xml output
+    4) feeds can be filtered as per the /waterfall display with the builder and category filters
+    5) cleaned up white space and imports
+    
+    Finally, the code was directly integrated into the status/web/base.py and
+    status/web/baseweb.py.
+
+commit e9f180c167a9e1ba8e1f8442b056eb48796d2599
+Author: jpittman <jpittman@qali14.moleflow.com>
+Date:   Wed Feb 4 12:14:08 2009 -0800
+
+    Updated p4bin documentation to indicate that it's optional and what it defaults to.
+
+commit 2249b70cdbcfbbf9117752a0a5aa52fbc86a9dd6
+Author: jpittman <jpittman@qali14.moleflow.com>
+Date:   Wed Feb 4 12:06:48 2009 -0800
+
+    Fixed a comment in an example to represent the correct amount of time for a given variable.
+    
+    Added documentation for an argument found in p4poller.
+
+commit 966747f09029f8bbc267cff5e9b35d3853de855a
+Author: Darragh Bailey <dbailey@hp.com>
+Date:   Tue Feb 3 15:10:13 2009 -0500
+
+    (fixes #39) patch to print the correct order
+
+commit 265265830c19967b545cea2193195af1759add6d
+Author: Greg Ward <gerg.ward+buildbot@gmail.com>
+Date:   Tue Feb 3 11:06:25 2009 -0500
+
+    (refs #210) render properties to FileUpload and FileDownload's workdir (patch updated by djmitche)
+
+commit d554bff93efb780f6ad09c559bad2402fa1fd217
+Author: Greg Ward <gerg.ward+buildbot@gmail.com>
+Date:   Tue Feb 3 10:42:37 2009 -0500
+
+    (refs #209) patch 3/3: factor out _TransferBuildStep for common workdir logic.
+
+commit 4210d6c33a31df925a75b1903f5435a833243e9d
+Author: Greg Ward <gerg.ward+buildbot@gmail.com>
+Date:   Tue Feb 3 10:41:35 2009 -0500
+
+    (refs #209) patch 2/3: add tests to ensure that calling setDefaultWorkdir() actually affects 'workdir' of FileUpload and FileDownload objects
+
+commit 5a42c47726a91efec0fad46c91865f02bc7c9d45
+Author: Greg Ward <gerg.ward+buildbot@gmail.com>
+Date:   Tue Feb 3 10:38:12 2009 -0500
+
+    (refs #209) patch 1/3: fix FileUpload and FileDownload to support setDefaultWorkdir()
+
+commit 1ad3d25decd1cc4e563cd0fc82bd0aacbc8bee2a
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Tue Feb 3 10:36:28 2009 -0500
+
+    add .orig and .rej to .gitignore
+
+commit bab759f199c583d669975d5410e02a89a58e570f
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Tue Feb 3 09:22:31 2009 -0500
+
+    (fixes #417) use 'call' with *.cmd on windows
+
+commit 42eececea1158fbc525c0f0404bf04b183c616a4
+Author: Marcus Lindblom <macke@yar.nu>
+Date:   Mon Feb 2 10:17:56 2009 -0500
+
+    (fixes #185) (MercurialInRepo) send the branch from the changeset, not the working directory
+
+commit 42d86154cbcb5e7e1c1faf1680aafa8ae3075e86
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Sun Feb 1 13:39:42 2009 -0500
+
+    fix version length check - 40 bytes lets git revisions appear, but nothing longer
+
+commit 2825dbf3380732c0300a0934b9842783b80971aa
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Sun Feb 1 12:13:46 2009 -0500
+
+    (fixes #415) doc tweaks to Pike's patch
+
+commit 38e7a00e1e4f1a6520a88abb89a444c51352e2e8
+Merge: 6240a8f... a811624...
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Sun Feb 1 11:46:24 2009 -0500
+
+    Merge branch 'bug415' of git://github.com/Pike/buildbot into bug415
+
+commit 6240a8f30fdd178f4331e63e1caa38982994721f
+Author: Zooko Wilcox-O'Hearn <zooko@zooko.com>
+Date:   Sat Jan 31 17:57:39 2009 -0500
+
+    (fixes #215) log the usage of shutil.copytree() instead of a cp subprocess
+
+commit 7f49a7b1cf5812f43befdef902821ec1770d6bb3
+Author: Sergey Lipnevich <sergey+buildbot@optimaltec.com>
+Date:   Sat Jan 31 17:41:56 2009 -0500
+
+    (refs #146) doc fixes
+
+commit 7e348bc48c3d32c475f0daf7242b3a2535853079
+Merge: 3aed3fe... 1649957...
+Author: Neil Hemingway <neil.hemingway@googlemail.com>
+Date:   Sat Jan 31 10:42:41 2009 +0000
+
+    Merge branch 'master' of git://github.com/djmitche/buildbot into bug368
+
+commit 16499575e6777012e77b6cab6494c15efc97dd36
+Merge: 80fac85... d2d57ef...
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Fri Jan 30 20:56:17 2009 -0500
+
+    Merge branch 'master' of git://github.com/ashcrow/buildbot
+
+commit a811624c1fcd4b06298016cead6533fc22fa5214
+Author: Axel Hecht <axel@pike.org>
+Date:   Sat Jan 31 00:16:12 2009 +0100
+
+    (fixes ticket #415) moving over to a configurable function on botmaster from the loadmaster concept
+
+commit 80fac85380bdd98aaafe93bfc821449d3328e8d1
+Author: Arkadiusz Miskiewicz <arekm@maven.pl>
+Date:   Fri Jan 30 22:39:19 2009 +0100
+
+    Example on how to run it from post-merge hook
+    
+    Signed-off-by: Arkadiusz Miskiewicz <arekm@maven.pl>
+    Signed-off-by: Dustin J. Mitchell <dustin@zmanda.com>
+
+commit d2d57ef70fd5a95ebbbcde2bb92948f5b995d2a7
+Author: Steve 'Ashcrow' Milner <smilner+buildbot@redhat.com>
+Date:   Fri Jan 30 14:43:01 2009 -0500
+
+    Added a package module as well as rpm steps and a tests.
+
+commit 46d08a75a263eb9d886195e21ad1b5a52a290d13
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Fri Jan 30 13:12:14 2009 -0500
+
+    allow a treeStableTimer < 1 second
+
+commit 77a6cbeb32200e5fddba2a6a1d8c90e874facc37
+Author: Chris AtLee <catlee@mozilla.com>
+Date:   Fri Jan 30 11:34:57 2009 -0500
+
+    Adding docs for --maxdelay
+    
+    Signed-off-by: Dustin J. Mitchell <dustin@zmanda.com>
+
+commit 73f2ee55f2f3cfdf104860e7021c278b8bb1bb46
+Author: Chris AtLee <catlee@mozilla.com>
+Date:   Fri Jan 30 11:11:52 2009 -0500
+
+    Make maximum delay between slave retries configurable
+    
+    Signed-off-by: Dustin J. Mitchell <dustin@zmanda.com>
+
+commit 1e7ac29a4aac4ed896c40f0c353e11af000a6d56
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Thu Jan 29 18:27:22 2009 -0500
+
+    (refs #407) encode unicode strings to ASCII using 'replace', so that any invalid characters don't cause the script to crash
+
+commit 19cd2f50422e2c59d3741cdbd5e0d35abd8d2602
+Merge: 5262a02... b34e5cb...
+Author: Axel Hecht <axel@pike.org>
+Date:   Thu Jan 29 23:49:44 2009 +0100
+
+    Merge branch 'master' of git://github.com/djmitche/buildbot into bug415
+
+commit b34e5cb43d2d24ce443cecabce6198d32bdefdca
+Author: Gary Poster <gary@imposter.home>
+Date:   Thu Jan 29 15:58:49 2009 -0500
+
+    fixes for running latent slave tests on mac
+
+commit a8148a25469e6572838a564186e33573de36f2e8
+Author: Gary Poster <gary@imposter.home>
+Date:   Thu Jan 29 15:48:41 2009 -0500
+
+    add my name to the list of glory
+
+commit 5262a02e88d4a4b63149eb7aad01e591814d9be7
+Merge: 1954bae... dfb18e6...
+Author: Axel Hecht <axel@pike.org>
+Date:   Thu Jan 29 18:07:06 2009 +0100
+
+    Merge branch 'master' of git@github.com:Pike/buildbot into bug415
+
+commit fb2c1c6d745deadec357e4eda17629d5fcf344a0
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Thu Jan 29 00:14:38 2009 -0500
+
+    document onlyIfChanged
+
+commit a8a4dfea8eafcb34b19760c62dd1f0aea5caff80
+Author: claude vittoria <vittoric@wanadoo.fr>
+Date:   Thu Jan 29 00:14:28 2009 -0500
+
+    add onlyIfChanged support to the Nightly scheduler
+
+commit dfb18e6c177d490da9dcab29e431eff22cfedfec
+Author: Dustin Sallings <dustin@spy.net>
+Date:   Wed Jan 28 20:26:00 2009 -0800
+
+    Allow users to specify the remote git branch.
+    
+    This allows for a case where someone has a repository that tracks
+    someone else's repository, has arbitrary local branches, but wants to
+    run tries with the delta from the reference repository (i.e. the one
+    the master knows about) to the local changes.
+    
+    Without this, it's likely the reference repository will not have the
+    necessary objects to pull down a base revision to be able to apply
+    patches for the try to succeed.
+    
+    This also ensures that the current client's view of the reference
+    repository is honored.  That is, if the reference repository has moved
+    forward, the trier's current tip of the remote is used to compute the
+    delta, and that's sent along as the baserev.
+
+commit 38a9c7fc719b44e2cdfa47884182da7128b369d2
+Author: Dustin Sallings <dustin@spy.net>
+Date:   Wed Jan 28 16:30:08 2009 -0800
+
+    Added --dry-run (-n) support to buildbot try.
+    
+    Need to be able to try try when I just want to know what it's even
+    going to consider doing.
+
+commit f43143835cba3ca5963e07874da17c1416a031c2
+Author: Dustin Sallings <dustin@spy.net>
+Date:   Wed Jan 28 08:34:04 2009 -0800
+
+    Refactored try buildName validation for reuse.
+
+commit a88238cae5000c3481877aa354e3c76fc45770b8
+Author: Dustin Sallings <dustin@spy.net>
+Date:   Wed Jan 28 08:25:52 2009 -0800
+
+    Don't require a list of builders for buildbot try.
+    
+    This maintains the current restrictions around builder lists that
+    prevent one from trying a build that isn't in the list, but allows the
+    user to delegate the selection to the server by not listing the
+    builders at all.
+    
+    I want my users to always try their builds on every build
+    configuration, but I don't want to be sending out buildbot options all
+    the time.
+
+commit 5d0baa29aaa7dfd1344074fc72e214a8d10a8902
+Merge: bd30ff1... deca9f4...
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Wed Jan 28 14:08:07 2009 -0500
+
+    Merge branch 'latentslaves' of git://github.com/garyposter/buildbot
+
+commit bd30ff18d29a839f333a88cdea9b4ba9d55403dd
+Merge: 7c37a7a... 12af51c...
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Wed Jan 28 14:02:56 2009 -0500
+
+    Merge branch 'master' of git://github.com/bhearsum/buildbot
+
+commit 7c37a7a2b388f012fa9f59b2db0d2b35c4adf40b
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Wed Jan 28 14:00:58 2009 -0500
+
+    spell logCompressionLimit right
+
+commit ad871a197c0a5ad93706249b0e9a5fca935e6f1c
+Merge: 1754c3f... 3fa61ba...
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Wed Jan 28 13:15:48 2009 -0500
+
+    Merge branch 'bug26' of git://github.com/Pike/buildbot
+
+commit 12af51c23e84f760627d362b3c027cadf8b8dc5f
+Author: Ben Hearsum <bhearsum@bitters-2.local>
+Date:   Wed Jan 28 11:29:33 2009 -0500
+
+    Bump max steps-with-same-name to 1000, handle that failure better.
+
+commit 3fa61ba3d9b00fd5c4be6ddcba92ae8d083e7b73
+Author: Axel Hecht <axel@pike.org>
+Date:   Wed Jan 28 13:12:57 2009 +0100
+
+    (ticket #26) only try to remove compressed log on failure if it's actually there
+
+commit deca9f41a08692ae194372c38fb46a92673e1b41
+Merge: b3ad016... 1754c3f...
+Author: Gary Poster <gary@gary-ubuntu.(none)>
+Date:   Tue Jan 27 14:30:16 2009 -0500
+
+    merge from upstream master
+
+commit b3ad016e13e2ef0c46f5085e3f3489c16363ef5d
+Author: Gary Poster <gary@gary-ubuntu.(none)>
+Date:   Tue Jan 27 14:17:03 2009 -0500
+
+    docs now render properly
+
+commit 1095c1cc7729dd3775baf1259d7ea09961ad58f5
+Author: Gary Poster <gary@gary-ubuntu.(none)>
+Date:   Tue Jan 27 13:39:36 2009 -0500
+
+    texinfo is not formatting correctly in the ToC, but I do not want to lose the work while I try to fix it, so committing.
+
+commit 2936e491ec11ead88de7a508b6f0864913198286
+Author: Gary Poster <gary@gary-ubuntu.(none)>
+Date:   Tue Jan 27 12:35:49 2009 -0500
+
+    add test for elastic ips
+
+commit 5d0675d2e163818813022271b6c9a5d0b9980872
+Author: Axel Hecht <axel@pike.org>
+Date:   Tue Jan 27 13:59:15 2009 +0100
+
+    (update to ticket #26) fix testcases to not use log compression, or to wait for compressed logs, otherwise reactors can close unlcean
+
+commit ec51679762093a98b0adea472f713ad55ab2abc3
+Author: Axel Hecht <axel@pike.org>
+Date:   Tue Jan 27 12:02:53 2009 +0100
+
+    (fixes #26) add bz2 log compression for LogFiles, triggered from stepFinished, by default for logs bigger than 4k. Configurable via logCompressionLimit in master.cfg
+
+commit 0a488bf26aeb085a5ad2fa151b919b3b17574096
+Author: rlb <rbosetti+gh@gmail.com>
+Date:   Mon Jan 26 22:45:00 2009 -0800
+
+    Removed name=None from BuildRequest.
+    
+    All tests have been cleaned up. All tests pass
+
+commit 155e6f5d58b44a803a4b36287b8cdff19529c26f
+Author: rlb <rbosetti+gh@gmail.com>
+Date:   Mon Jan 26 21:06:18 2009 -0800
+
+    Fix repr for RemoteShellCommand. fixes #352
+    
+    New testcase in test_buildstep.py, runs each case for repr
+
+commit f93732c3aa0d8b5b28e52cccc033d5b4a2cb6ef4
+Author: Gary Poster <gary@gary-ubuntu.(none)>
+Date:   Mon Jan 26 16:41:45 2009 -0500
+
+    bugfix for bzr_buildbot poller: branch_name was not honored for initial branch in a given poll.
+
+commit e29f183fa6945b068b3e4c14072798613dbaf285
+Author: Gary Poster <gary@gary-ubuntu.(none)>
+Date:   Mon Jan 26 15:22:07 2009 -0500
+
+    shut down ec2 instances when the reactor shuts down.  at the same time, use constants for ec2 instance states.
+
+commit c8334e7ea0010dd0e86cacebccc9124110ce9ea2
+Author: Gary Poster <gary@gary-ubuntu.(none)>
+Date:   Mon Jan 26 15:20:20 2009 -0500
+
+    fix typo
+
+commit 53e44cefbae4d5c71024db9624623c743c19a2f1
+Author: Gary Poster <gary@gary-ubuntu.(none)>
+Date:   Mon Jan 26 15:19:12 2009 -0500
+
+    make the test not rely on Python 2.5 (and my editor did some whitespace cleanup).
+
+commit 67f08a4addae5c9f4fef38473e000b4d512328f0
+Author: Gary Poster <gary@gary-ubuntu.(none)>
+Date:   Mon Jan 26 14:51:43 2009 -0500
+
+    add mention of bzr_buildbot.py to PBChangeSource doc string.
+
+commit 1754c3fdc5f412c94046aca1d9257d1a184432e0
+Author: Marcus Lindblom <macke@yar.nu>
+Date:   Mon Jan 26 13:38:18 2009 -0500
+
+    (fixes #418) correctly handle git versions that have hashes in them
+
+commit 00bcee2a9899c6da06fbbe6de8d5b1ac3808dbe5
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Mon Jan 26 13:19:24 2009 -0500
+
+    remove unnecessary python-2.5 syntax
+
+commit 3aed3fe9bdd73bf64b2c3e7dc3bed5f82d2ad28b
+Author: Neil Hemingway <neil.hemingway@greyhavens.org.uk>
+Date:   Mon Jan 26 09:45:45 2009 +0000
+
+    Resolve #368 - Enable IRC notification setup from the config file
+    
+    This patch allows the config file to specify which events the
+    IrcStatusBot will notify you about.  You can now have a notify_events
+    parameter to the constructor to IRC:
+    
+    c['status'].append(words.IRC(
+            host="somehost.test.com",
+            nick="BobTheBuilder",
+            channels=["#buildbot"],
+    	notify_events={
+                'exception': 1,
+                'successToFailure': 1,
+                'failureToSuccess': 1,
+                },
+            ))
+
+commit 1252f2e13dde53c52d3b2df0af0669305dc6c222
+Author: Neil Hemingway <neil.hemingway@googlemail.com>
+Date:   Sat Jan 24 12:30:35 2009 +0000
+
+    Add IRC notification on transitions between the other two result states
+    
+    Previously, we could only notify on transitions between success and failure.
+    Warnings and exceptions were ignored.  No longer.
+    Also the spelling of failed has gone back to failure (as that is what the
+    state is called).  Dittoish for warnings.
+
+commit c7f45657516e304f0b15b8e9d1082f94ce42d0d0
+Author: Gary Poster <gary@gary-ubuntu.(none)>
+Date:   Mon Jan 26 10:02:34 2009 -0500
+
+    remove a docstring reference to paramiko
+
+commit 71ab027cd57db4800c453eeb956a2b6212f2a7d0
+Author: Gary Poster <gary@gary-ubuntu.(none)>
+Date:   Mon Jan 26 09:58:53 2009 -0500
+
+    remove XXX in favor of TODO
+
+commit f4e1ac528c1f620e65ff2820ebf447ce5ae4d719
+Author: Gary Poster <gary@gary-ubuntu.(none)>
+Date:   Mon Jan 26 09:12:52 2009 -0500
+
+    remove dependency on paramiko.  It is not necessary ATM.
+
+commit ba4fddbdf0bcbe4946202cc4d46d5cad4188ed8f
+Author: Gary Poster <gary@gary-ubuntu.(none)>
+Date:   Sun Jan 25 16:10:45 2009 -0500
+
+    tests and fixes for ec2 slave initialization
+
+commit 8aa0c9bb5f4e9a5879b686fa829ae3d8b0453be2
+Merge: 99240ad... 28b77b9...
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Sun Jan 25 14:22:57 2009 -0500
+
+    Merge branch 'customMesg' of git://github.com/jgraff/buildbot
+
+commit 99240ada38677a143971fe390beb714c3017c20b
+Author: Dustin Sallings <dustin@spy.net>
+Date:   Sun Jan 25 10:47:57 2009 -0800
+
+    git_buildbot should show the author, not the committer
+    
+    When I'm looking at my waterfall, I'd like to see the names of the
+    people who wrote code, not just mine because I happened to have
+    cherry-picked or am'd a bunch of changes.
+
+commit 28b77b98aec06d7816721e368ea58a5954d2f35d
+Author: gollum <gollum@staticfoo-2.local>
+Date:   Sat Jan 24 19:05:23 2009 -0800
+
+    Added the ability to create custom messages in MailNotifier using the
+    customMesg argument. A customMesg function can be used to solve issues:
+    
+    Documentation (MailNotifier section) and unit tests (test_status.py)
+    were added for this feature.
+
+commit acfd9a07270adeeeb962687a013288609f0f8180
+Author: Gary Poster <gary@gary-ubuntu.(none)>
+Date:   Sat Jan 24 20:19:59 2009 -0500
+
+    add a test of the separate key file
+
+commit 5510acaea5d1fdcd9b6683ec0b69279de9dd2cda
+Author: Gary Poster <gary@gary-ubuntu.(none)>
+Date:   Sat Jan 24 15:52:49 2009 -0500
+
+    add initial tests for EC2 latent slave, with resulting fixes.
+
+commit 57d2aa1fc0a91083cced6970a98724f8278a3c60
+Merge: 61cef05... 901fb73...
+Author: Gary Poster <gary@gary-ubuntu.(none)>
+Date:   Fri Jan 23 21:07:09 2009 -0500
+
+    Merge branch 'master' of git://github.com/djmitche/buildbot into latentslaves
+
+commit 61cef05037f26cd025391d8272b0321c1981e137
+Author: Gary Poster <gary@gary-ubuntu.(none)>
+Date:   Fri Jan 23 21:04:09 2009 -0500
+
+    add status messages to latent slaves; handle error conditions more carefully; add features to ec2 implementation to be able to specify a set of slaves.  ec2 version still needs tests.
+
+commit 901fb739488ea5de5fded3acbd5cfcedf53480a0
+Merge: d8e0dda... ab61561...
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Fri Jan 23 11:54:08 2009 -0500
+
+    Merge branch 'myfixes' of git://github.com/jgraff/buildbot
+
+commit d8e0dda3eec2840a9f37639aa0374904425756af
+Merge: 8bcf3d1... a735db8...
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Fri Jan 23 11:53:55 2009 -0500
+
+    Merge branch 'issue_392' of git://github.com/jgraff/buildbot
+
+commit 8bcf3d1e40d38536eb75fc262482317fec0b085e
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Fri Jan 23 11:12:41 2009 -0500
+
+    (fixes #190) add docs for using 'call' when running batch files
+
+commit 25db279eea689e34b400a925ad0c6bee0ee07639
+Merge: 36ea32f... 9c78973...
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Thu Jan 22 23:59:39 2009 -0500
+
+    Merge branch 'bug187' of git://github.com/marcusl/buildbot
+
+commit 36ea32f4c2a9515037921f7a618ff5d00a6a6e3d
+Author: Chris AtLee <catlee@mozilla.com>
+Date:   Thu Jan 22 17:12:49 2009 -0500
+
+    (refs #334) prioritize builds submitted first, and add a unit test to
+    verify
+    
+    Signed-off-by: Dustin J. Mitchell <dustin@zmanda.com>
+
+commit a735db87befa0f5980623ab2131e38d1e5dd98c9
+Author: gollum <gollum@staticfoo-2.local>
+Date:   Thu Jan 22 14:23:04 2009 -0800
+
+    Fix for #392. Triggered builders now inherit set_properties.
+
+commit ab61561c9bc98d69b64db2b3bdb5c05dce969264
+Author: gollum <gollum@staticfoo-2.local>
+Date:   Thu Jan 22 13:09:43 2009 -0800
+
+    Fix for issue #127. The "got_revision" property in perforce is now set after a P4 source
+    step. This fix consists of the patch in issue #229 (with cleanup) and adjustments to
+    the p4 tests (test_vc.py). p4 tests now support newer versions of p4d and check the
+    "got_revision" value via (has_got_revision = True)
+
+commit 2c6865d83e967ca135acd3810e08af2dfab727b3
+Author: Dustin Sallings <dustin@spy.net>
+Date:   Wed Jan 21 20:23:35 2009 -0800
+
+    Look at the remote tracking branch in git for buildbot try.
+    
+    This allows us to try committed, but not pushed code.
+
+commit a079d84d4056dbf5ab3489cb7f2f8f0e20d91b87
+Author: Dustin Sallings <dustin@spy.net>
+Date:   Thu Jan 22 09:59:59 2009 -0800
+
+    Try to reclobber on retry.
+    
+    On a failed git update in clobber mode, I was getting the following
+    error on the second try:
+    
+    exceptions.OSError: [Errno 17] File exists: '/path/to/build'
+    
+    It seems that the clobber only occurs once, and any error that happens
+    during the checkout should redo the clobber.
+
+commit 9c789732b84c631861189a337003d3d5fa776cb8
+Author: marcusl <macke@yar.nu>
+Date:   Thu Jan 22 19:27:14 2009 +0100
+
+    Fix testCheckoutHTTP for Mercurial and MercurialInRepo, see #187
+    
+    Added extra callback at MercurialServerPP.processEnded()
+
+commit 1954bae871290df636b4a0b7936329ab506cecee
+Author: Axel Hecht <axel@pike.org>
+Date:   Thu Jan 22 19:10:47 2009 +0100
+
+    (working on ticket #415) Make merging of buildrequests configurable, with code ready to only merge on matching source stamps, reasons, and properties
+
+commit 4ac626cbc44be973f2a2f7a606923d571159a696
+Author: Axel Hecht <axel@pike.org>
+Date:   Thu Jan 22 19:08:48 2009 +0100
+
+    backout http://github.com/djmitche/buildbot/commit/86f5cab0fc5a4c4ef79886901bbe2913c63d6d55, that conflicts with what the tests intend to do, even though they hardly do it. Going back to previous behaviour and making this a configurable option
+
+commit 273cbd2866de94920ce15079749a2e0968134686
+Author: Gary Poster <gary@gary-ubuntu.(none)>
+Date:   Tue Jan 20 20:36:38 2009 -0500
+
+    ignore generated doc files
+
+commit e863275f5142f178f28b5c5338c0ba083a4d03ca
+Author: Gary Poster <gary@gary-ubuntu.(none)>
+Date:   Tue Jan 20 20:33:18 2009 -0500
+
+    merge from master
+
+commit 02a501b455721d9a991f8c605bfd066b15d54587
+Merge: 4473348... 32a0182...
+Author: Gary Poster <gary@gary-ubuntu.(none)>
+Date:   Tue Jan 20 16:59:41 2009 -0500
+
+    Merge branch 'master' of git://github.com/djmitche/buildbot into latentslaves
+
+commit 4473348bb839b63d020ba407a0c8789349568c88
+Author: Gary Poster <gary@gary-ubuntu.(none)>
+Date:   Tue Jan 20 16:58:08 2009 -0500
+
+    add docs for another example of a latent build slave subclass
+
+commit 8ed8e5e8421d1fd826a750a4347723d212093045
+Author: Axel Hecht <axel@pike.org>
+Date:   Tue Jan 20 16:17:35 2009 +0100
+
+    (working on #26) compress logs after the fact with bz2, sporadic test failures in buildbot.test.test_slavecommand.ShellPTY.testInterrupt1 on twisted 2.5.0, no specific tests for mixing compressed and uncompressed logs
+
+commit 32a01826fbc560e431546f404c65a6a6389d1d57
+Author: Marc-Antoine Ruel <maruel@chromium.org>
+Date:   Sun Jan 18 21:04:21 2009 -0500
+
+    (fixes #405) Permit mixed mode user names/email addresses for buildbot.status.mail.Domain
+
+commit e75b4e1eaf905992f136033cd4523b0e45bd9c38
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Sun Jan 18 20:55:56 2009 -0500
+
+    (refs #411) convert messages to ASCII, stripping unrepresentable characters, when sending to IRC
+
+commit 35857686646c6ca66759ee32574447b52b52c31e
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Sun Jan 18 20:49:52 2009 -0500
+
+    (fixes #413) don't suggest automatically purging BASEDIR/public_html
+
+commit 0ba158a65ce98783b31fe663886d3fb5e6cc6143
+Author: Chris AtLee <catlee@mozilla.com>
+Date:   Sun Jan 18 20:33:49 2009 -0500
+
+    (fixes #416) sort buildslave in web display
+
+commit 762902ceced304ac97feda93600ad1dbed894436
+Author: Marcus Lindblom <macke@yar.nu>
+Date:   Sun Jan 18 14:11:16 2009 -0500
+
+    (fixes #250) use 'tail -f' instead of 'tail -F'
+
+commit 261f0d79498f75fae57b87099463500e084d4994
+Author: Thijs Triemstra <info@collab.nl>
+Date:   Sun Jan 18 14:08:02 2009 -0500
+
+    (fixes #280) use convertTime in IRC conversations
+
+commit 06ce8e7e79b2ffa1a301ac45c7155899d6a0e6da
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Sat Jan 17 20:54:32 2009 -0500
+
+    (refs #35) fix up re-parenting of dependent schedulers to not depend on sched.running (fixes broken unit tests)
+
+commit 7ee5afcb94e506e2e38173945ccb6e7dcc8d695d
+Merge: 799dc13... 8881c3f...
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Sat Jan 17 19:52:29 2009 -0500
+
+    Merge branch 'bug35' of git://github.com/Pike/buildbot
+
+commit 799dc135357b3cea8abb0756ca9881a7ac2bc240
+Merge: 7c2ee0b... ebb7c93...
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Sat Jan 17 15:19:51 2009 -0500
+
+    Merge branch 'master' of git://github.com/rbosetti/buildbot
+
+commit ebb7c938a871e48289ff2b853de2eb9134e43acc
+Author: rlb <rbosetti+gh@gmail.com>
+Date:   Sat Jan 17 11:40:35 2009 -0800
+
+    Reverted some changes for backwards compatibilty.
+    
+     * XML-RPC methods attempt to return '' instead of None
+     * New Trac plugin added to contrib/
+       * Adds builds to the Timeline
+       * Extends Etienne's summary
+       * Uses XML-RPC to allow for private BuildBot masters
+
+commit 7c2ee0b490e602a7c5518e14456829612f952b5b
+Author: Neil Hemingway <neil.hemingway@googlemail.com>
+Date:   Sat Jan 17 19:18:29 2009 +0000
+
+    Resolve #381.  Standardize on successToFailed and failedToSuccess
+
+commit 0a5194f1af8911d4c9c4dcccb7d6d9fadb6a5e0a
+Author: Neil Hemingway <neil.hemingway@googlemail.com>
+Date:   Sat Jan 17 17:02:26 2009 +0000
+
+    buildbot needs to be executable
+
+commit b65abd888cefe6ce4a4009bb876de9d480e669b3
+Author: Gary Poster <gary@gary-ubuntu.(none)>
+Date:   Fri Jan 16 16:23:58 2009 -0500
+
+    fix code to work with existing tests, and add tests and fixes for the latent slaves.
+
+commit 8881c3f174927e5d1c349d1be481c98ba64b793c
+Author: Axel Hecht <axel@pike.org>
+Date:   Fri Jan 16 17:51:00 2009 +0100
+
+    (fixes #35) add IDownstreamScheduler to mark up schedulers that need to learn about other schedulers starting or stopping during reconfig. Use that to make Dependent scheduler robust on reconfigs
+
+commit b1a49d8e3591b3f94e70cf0b2b0ad169598bc4fc
+Merge: e81b4e0... a6b3d23...
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Fri Jan 16 11:12:21 2009 -0500
+
+    Merge branch 'bug108' of git://github.com/Pike/buildbot
+
+commit 932d76060852bce9900bf3d1d7cc239c2fd04e8e
+Author: Axel Hecht <axel@pike.org>
+Date:   Fri Jan 16 16:41:58 2009 +0100
+
+    testcase for #35, dependent schedulers lost on reconfig; reconfigure without changes, when changing upstream, and when changing dependent
+
+commit c2e84cb080eb310151cb6a5b942a5619ff947fb6
+Author: Axel Hecht <axel@pike.org>
+Date:   Fri Jan 16 16:40:23 2009 +0100
+
+    fixing silly bugs when comparing schedulers, add logging to see them get changed on reconfig in the log
+
+commit e81b4e0f0aec5e1c432279196ab335b7c2cc6adc
+Author: Neil Hemingway <neil.hemingway@greyhavens.org.uk>
+Date:   Fri Jan 16 13:59:15 2009 +0000
+
+    Resolve #378 and #384
+    
+    Watched builds use watchedBuildFinished wheras notified ones use
+    buildFinished.
+    
+    Signed-off-by: Dustin J. Mitchell <dustin@zmanda.com>
+
+commit a6b3d232b6aa9222bf877b8414c1affa909ae6f5
+Author: Axel Hecht <axel@pike.org>
+Date:   Fri Jan 16 13:55:56 2009 +0100
+
+    follow up for #108, skip the test if buildbot script can't be found
+
+commit e070b9a918d00c53697bae0d21edb3faa48cfc96
+Author: Chris AtLee <catlee@mozilla.com>
+Date:   Thu Jan 15 22:41:19 2009 -0500
+
+    (fixes #334) Prioritize build requests based on the time they were submitted
+
+commit 5f5d928d1881d88e1adf41367980d5e3e89aec8c
+Author: Chris AtLee <catlee@mozilla.com>
+Date:   Thu Jan 15 16:07:43 2009 -0500
+
+    (refs #414) docs for alwaysRun flag
+
+commit 1f0a149b067a67b44b8a7f9954d480ba48012ef9
+Author: Chris AtLee <catlee@mozilla.com>
+Date:   Thu Jan 15 16:06:47 2009 -0500
+
+    (refs #414) implement alwaysRun flag
+
+commit c56935133ac342cda66d9e65f12c4eda3ed729e8
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Thu Jan 15 16:03:55 2009 -0500
+
+    don't create the 'owners' property unless it has some values
+
+commit 138fb858b6172782e9e148a39b4350061ca75e61
+Merge: 86f5cab... 2143ddf...
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Thu Jan 15 15:15:00 2009 -0500
+
+    Merge branch 'buildowners2' of git://github.com/nobrowser/buildbot
+
+commit 2143ddf36cd0f68180e8594ba8ef046a9a5f0ea2
+Author: Ian Zimmerman <itz@dell-itz.office.sproutsys.com>
+Date:   Thu Jan 15 11:51:24 2009 -0800
+
+    BuildRequest is created with optional Properties.  Make one
+    of these, 'owner', collected by the resultant Build and
+    added to the set of *interested users* to which status
+    notifications will be sent, depending on the configuration for each
+    status object.
+
+commit 0a9ca9decf6c513f72e1f11dc5661a59030782d2
+Author: Gary Poster <gary@gary-ubuntu.(none)>
+Date:   Thu Jan 15 08:56:33 2009 -0500
+
+    initial working sketch
+
+commit 68803aa6338097c3c48a52ee0125eaeab3c3c4eb
+Merge: 45ae4ba... 8aa4bde...
+Author: rlb <rbosetti+gh@gmail.com>
+Date:   Thu Jan 15 03:26:13 2009 -0800
+
+    Merge branch 'master' of git://github.com/nobrowser/buildbot
+
+commit 86f5cab0fc5a4c4ef79886901bbe2913c63d6d55
+Author: Ian Zimmerman <itz@dell-itz.office.sproutsys.com>
+Date:   Wed Jan 14 16:19:28 2009 -0800
+
+    We have schedulers that schedule repeated builds of the same source,
+    triggered by a maildir mechanism similar to Try_Jobdir.
+    For that to work, this patch must be in place or all the requests
+    will be merged.
+
+commit 45ae4ba5646ad8aac09247f9cebc7be3583f448e
+Author: rbosetti <randall@alyosha.(none)>
+Date:   Mon Jan 12 19:41:16 2009 -0800
+
+    Modified xmlrpc_getBuild to return '' instead of None.
+    
+    None is not serializable, apparently
+
+commit 8aa4bde9dc1f9dedc264c433c1d6b5aae820e3a8
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Mon Jan 12 16:33:19 2009 -0500
+
+    (refs #110) add /buildslave/$slavename to web status
+
+commit 26fb369dbab279e9a76237781b58b9f9dccd845e
+Merge: 5b95b97... 4a18471...
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Mon Jan 12 11:48:07 2009 -0500
+
+    Merge branch 'bug108' of git://github.com/Pike/buildbot
+
+commit 4a18471b24cfdd0a8323624c4eee43101f9f6fd3
+Author: Axel Hecht <axel@pike.org>
+Date:   Mon Jan 12 16:36:38 2009 +0100
+
+    address Dustin's review comment, make new parameters variables in the .tac files (re #108)
+
+commit 803a610b08f81c8d15c4d91b689396950caeb81b
+Author: Randall Bosetti <randall@alyosha.(none)>
+Date:   Mon Jan 12 03:31:41 2009 -0800
+
+    modified the xmlrpc getBuild(...) call to return the branch, revision, and build number
+
+commit 5b95b97adf714c152c04d3a711f366c7326e4ff1
+Merge: 7c8ea99... 2eaafd5...
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Wed Jan 7 18:04:36 2009 -0500
+
+    Merge branch 'badtests'
+
+commit 2eaafd591a4df5ceed5b7451861f9b844ab25a82
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Wed Jan 7 18:04:26 2009 -0500
+
+    (refs #402) fix tests to correspond
+
+commit 7c8ea9996df12d58111f8fc372fb60f327059d44
+Merge: a3c7af3... 0da7664...
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Wed Jan 7 11:12:25 2009 -0500
+
+    Merge branch 'bzr' of git://github.com/garyposter/buildbot
+
+commit 0da76648effcfbf8e82100b349871b992f02216e
+Author: Gary Poster <gary@gary-ubuntu.(none)>
+Date:   Tue Jan 6 23:15:12 2009 -0500
+
+    initial additions of bzr hooks and poller.
+
+commit a3c7af35410d2ed4aa4a238f653ebf51197f7760
+Author: Brian Warner <warner-buildbot@lothar.com>
+Date:   Tue Jan 6 11:49:18 2009 -0500
+
+    (closes #347) I removed the append ("no test results") call because a lot of installations use the Test step without a test parser, and "no test results" is not really adding a lot of information.
+
+commit a756ff37f07227f986e7f7a78a6ea976dab92172
+Author: Axel Hecht <axel@pike.org>
+Date:   Mon Jan 5 19:50:13 2009 +0100
+
+    add support for twisted 8.2.0's log limits to both create-master and create-slave, includes test for master side and some documentation markup fixes (fixes #108)
+
+commit c88c9fbf79555ad46617cba07e85f37f5e1be753
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Thu Jan 1 14:48:32 2009 -0500
+
+    add buildbot.egg-info to .gitignore
+
+commit 95811cca698a64382eb99c4c7866b6f043b486e9
+Merge: 688ada7... 531cdd7...
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Thu Jan 1 14:47:27 2009 -0500
+
+    Merge branch 'master' of git://github.com/ashcrow/buildbot
+
+commit 688ada73888c526ede24f7482fb8a0150fb4835b
+Author: Mark A. Grondona <mgrondona@llnl.gov>
+Date:   Thu Jan 1 14:44:28 2009 -0500
+
+    The scheduler properties should be copied to the "branch" scheduler
+    instance in AnyBranchScheduler->addChange()
+    
+    Signed-off-by: Dustin J. Mitchell <dustin@zmanda.com>
+
+commit c223f877090fe41f9c300b3f9e24949a2316697b
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Thu Jan 1 14:37:35 2009 -0500
+
+    failing test case replicating bug discovered by Mark A. Grondona <mgrondona@llnl.gov>, with fix
+
+commit 37c24a94a3f2d7151ffa3f8504190ce682305c83
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Thu Jan 1 12:27:46 2009 -0500
+
+    (refs #402) sort changed files for easier display
+
+commit 226d12fcdb5f0cace71f481fa06d0544be7121ff
+Author: Marcus Lindblom <macke@yar.nu>
+Date:   Thu Jan 1 11:42:15 2009 -0500
+
+    (closes #401) contrib/windowsbuildbot.bat that is python-version agnostic
+
+commit 9a4feaf985d37d55f1b9bba0a6d21337bf63bf9b
+Author: marcusl <macke@yar.nu>
+Date:   Thu Jan 1 14:15:00 2009 +0100
+
+    Allow spaces in vcexe path (fixes #398)
+
+commit b5c072c66c311589ea08c948b7d93fb9e8647755
+Author: marcusl <macke@yar.nu>
+Date:   Thu Jan 1 13:43:07 2009 +0100
+
+    Remove accidentally left comment from cleanup step in MercurialInRepo test
+
+commit 1023a7e60f67c103dd96072852b83863936a634b
+Author: marcusl <macke@yar.nu>
+Date:   Thu Jan 1 13:32:35 2009 +0100
+
+    Add MercurialInRepo-branch support + testcase (fixes #187) and support spaces in vcexe-path (fixes #398)
+
+commit 531cdd76f8b9a18514bc0493c7dfe351cd3f8bac
+Author: Steve 'Ashcrow' Milner <smilner+buildbot@redhat.com>
+Date:   Wed Dec 31 17:51:59 2008 -0500
+
+    created a simple contrib script called generate_changelog.py to help in generating changelog entries.
+
+commit f2338d4a2c12bfba965d921374f65d121f7949fd
+Author: Steve 'Ashcrow' Milner <smilner+buildbot@redhat.com>
+Date:   Wed Dec 31 17:14:12 2008 -0500
+
+    made setup,py executable by default
+
+commit f5067523dfae9c7cdefc828721ec593ac7be62db
+Author: Steve 'Ashcrow' Milner <smilner+buildbot@redhat.com>
+Date:   Wed Dec 31 17:08:52 2008 -0500
+
+    Updated CREDITS matching it against git log --pretty="format:%an" | sort | uniq
+
+commit 13e65d4cf521c087166056ecf4ed06828fb6e718
+Author: Steve 'Ashcrow' Milner <smilner+buildbot@redhat.com>
+Date:   Wed Dec 31 16:59:00 2008 -0500
+
+    added a .gitignore to avoid checkin of commonly generated files
+
+commit 43af8ef199bdb30c0a786e3ae88f7bfee0051a4d
+Author: Steve "Ashcrow" Milner <smilner@redhat.com>
+Date:   Wed Dec 31 16:08:23 2008 -0500
+
+    Align contrib/*.py to PEP8
+
+commit 436bc550968c8bb69a75f69e9e8f75c698c8ba65
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Wed Dec 31 13:14:30 2008 -0500
+
+    (trivial) fix buildbot.test.test_status.testMail
+
+commit 4f3a0905bfbc0b2b8f2b672078266648b37befca
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Wed Dec 31 13:12:24 2008 -0500
+
+    (refs #178) fix tests to correspond to Chad's changes
+
+commit ba76ffcc532110e6d41856e3c6ce77786b3200c7
+Merge: a6f799c... 947a6a3...
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Wed Dec 31 12:51:23 2008 -0500
+
+    Merge branch 'bug410' of git://github.com/Pike/buildbot
+
+commit a6f799c5eda000c5ceaf04f8a4daf00f4ca7eb0d
+Merge: 50312db... 3ad2fb9...
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Wed Dec 31 12:47:26 2008 -0500
+
+    Merge branch 'bug409' of git://github.com/Pike/buildbot
+
+commit 50312db3d30c23dfaba276e487ac6754e8d35081
+Merge: a949400... fabc4c6...
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Wed Dec 31 12:39:19 2008 -0500
+
+    Merge branch 'minorfixes' of git://github.com/metcalfc/buildbot into metcalfc/minorfixes
+
+commit 947a6a3ffb74a1df479fe7437fa06f252f1825c7
+Author: Axel Hecht <axel@pike.org>
+Date:   Wed Dec 31 16:42:43 2008 +0100
+
+    Add hooks for StepStatus.text and test2 to IStatusReceiver and test that they're called (fixed #410)
+
+commit 3ad2fb926a649accce9ce369dd733b7d5a49da51
+Author: Axel Hecht <axel@pike.org>
+Date:   Wed Dec 31 15:28:21 2008 +0100
+
+    follow up fix, add comment to parser subclass
+
+commit f3b4f43b8a03937ec2103084abf02652a9ce7fab
+Author: Axel Hecht <axel@pike.org>
+Date:   Wed Dec 31 14:59:40 2008 +0100
+
+    Don't display non-std channels in logfiles (fixed #409)
+
+commit fabc4c6c70928ce18d80ecb66717cdd59e4278aa
+Author: Chad Metcalf <cmetcalf@archrock.com>
+Date:   Tue Dec 30 15:17:57 2008 -0800
+
+    Handle an odd email from git
+
+commit f633bf556791f3774916af3fd17c322b0e711ede
+Author: Chad Metcalf <cmetcalf@archrock.com>
+Date:   Tue Dec 30 15:15:10 2008 -0800
+
+    (implements #178): extraRecipients in CC not TO
+
+commit fe78fa182ebe0b9c4bf04265fc1ae50c36e0d406
+Author: Chad Metcalf <cmetcalf@archrock.com>
+Date:   Tue Dec 30 15:03:30 2008 -0800
+
+    (addresses #373) Validate emails
+
+commit 97240c6cdd527f5414e98336274e0652368cce3b
+Author: Chad Metcalf <cmetcalf@archrock.com>
+Date:   Tue Dec 30 14:56:37 2008 -0800
+
+    (addresses: #255) rm commands can't use usePTY
+    
+    Just fixes one instance of the problem as discussed in http://buildbot.net/trac/ticket/255
+
+commit a9494007ed2f225b81d3054ebf45cc781fb4878d
+Merge: 6c36579... 529740e...
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Tue Dec 30 17:32:59 2008 -0500
+
+    Merge branch 'bug181'
+
+commit 6c36579a63b58bc986ec56e0272362038be08112
+Author: Dustin Sallings <dustin@spy.net>
+Date:   Wed Nov 19 04:56:38 2008 +0800
+
+    Get rid of git- commands in git_buildbot.
+    
+    Signed-off-by: Dustin J. Mitchell <dustin@zmanda.com>
+
+commit ac70a83fa05c2b1b31dd9411ffc28876fb9e9f20
+Author: Dustin Sallings <dustin@spy.net>
+Date:   Sat Apr 19 08:40:20 2008 +0800
+
+    Send merge changes from git.
+    
+    Signed-off-by: Dustin J. Mitchell <dustin@zmanda.com>
+
+commit 1a1fa349572b9d4bbb2e4b147138bed9691fbf57
+Merge: b2632e1... b9f17e3...
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Tue Dec 30 16:42:26 2008 -0500
+
+    Merge commit 'github/dustin-changes' into dustin
+
+commit b9f17e310430d9841c58be76b2f252ed7a92da47
+Author: Dustin Sallings <dustin@spy.net>
+Date:   Wed Nov 19 04:56:38 2008 +0800
+
+    Get rid of git- commands in git_buildbot.
+    
+    Signed-off-by: Dustin J. Mitchell <dustin@zmanda.com>
+
+commit 7898e903f36b39b9ea20abcfbcaf367e41237476
+Author: Dustin Sallings <dustin@spy.net>
+Date:   Sat Apr 19 08:40:20 2008 +0800
+
+    Send merge changes from git.
+    
+    Signed-off-by: Dustin J. Mitchell <dustin@zmanda.com>
+
+commit 529740e0cb4d8641317397f550fa6cf94f869f90
+Author: Dustin J. Mitchell <dustin@v.igoro.us>
+Date:   Wed Dec 31 04:32:45 2008 +0800
+
+    from paulegan's patch on bug 181
+    
+    Signed-off-by: Dustin J. Mitchell <dustin@cs.uchicago.edu>
+
+commit b2632e170180e071db77b5d82abb4bfbaa7a77f6
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Tue Dec 30 16:02:42 2008 -0500
+
+    Revert "(fixes #277) fix mercurial checkouts with a revision"
+    This reverts commit a9306037e46335ff9c097c5187c0dfb1053c1fa9.
+
+commit 0c76275c417d5e684ba16211fa25c151bc0c1ade
+Author: Dustin J. Mitchell <dustin@v.igoro.us>
+Date:   Wed Dec 31 04:32:45 2008 +0800
+
+    from paulegan's patch on bug 181
+    
+    Signed-off-by: Dustin J. Mitchell <dustin@cs.uchicago.edu>
+
+commit a9306037e46335ff9c097c5187c0dfb1053c1fa9
+Author: Ben Hearsum <bhearsum@mozilla.com>
+Date:   Mon Dec 29 00:32:31 2008 -0500
+
+    (fixes #277) fix mercurial checkouts with a revision
+    (patch fixed by Benjamin Smedberg <bsmedberg@mozilla.com>)
+
+commit fb9fecdf30ea10116a5f73257edff0bbe1c6e0cb
+Author: Igor Slepchin <igor@roundbox.com>
+Date:   Mon Dec 29 00:12:41 2008 -0500
+
+    (refs #315) remove unnecessary loop in MailNotifier
+
+commit 98a9a7e8b0035253ff4d1a7c5f96352ccf10de50
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Sat Aug 30 18:16:54 2008 -0400
+
+    (close #179) artificially set $PWD correctly in child environment
+
+commit 9be879f9b48189effc2ee3e956fd9448182e0af0
+Author: Steve "Ashcrow" Milner <smilner@redhat.com>
+Date:   Mon Dec 29 00:02:58 2008 -0500
+
+    (closes #154) allowing for more control over the site object by
+    providing an optional site argument. This allows a person to define
+    their own site object and pass it in rather than using the default one.
+
+commit 4aa4a65aedf3c9269dd59abe2919710c3c36eb57
+Author: Marcus Lindblom <macke@yar.nu>
+Date:   Sun Dec 28 23:57:27 2008 -0500
+
+    (refs #186) Non-throwing key-in-dict checks for Mercurial + use
+    'default' as branch if none set
+
+commit dbf2790433efc82838944a65fd741ed01b8913ac
+Author: Dustin Sallings <dustin@spy.net>
+Date:   Sun Dec 28 23:55:08 2008 -0500
+
+    (refs #186) Mercurial:  Separate clone and update to ensure we end up
+    with the correct revision.
+
+commit a1ea47119b805ab8a681567b3fe8bb7d1639d50b
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Sun Dec 28 22:47:49 2008 -0500
+
+    (closes #317) add a factory.addSteps([..]) method
+
+commit 2c22a9d47fc54444e4757de1cc610c09f820092c
+Author: Neil Hemingway <neil.hemingway@googlemail.com>
+Date:   Fri Sep 26 20:35:28 2008 +0100
+
+    Refs #346; Pick up the correct total number of tests run
+    
+    The "Tests: 999" part of the line reporting the results for each failing
+    test is the number of tests run *by that test*, it is not the total
+    number of tests run by the entire test run.  *That* is reported by the
+    line immediately before the PASS|FAIL line
+
+commit 7438ebd891bff32b500d70f8f92b7720cfe4877a
+Author: Neil Hemingway <neil.hemingway@googlemail.com>
+Date:   Wed Sep 24 22:38:27 2008 +0100
+
+    and tests for #330 and #357
+    
+    this also highlighted that typos aren't going away any time soon
+
+commit 6cc47c1f179a740091c4f0b9058e2a88f3707d06
+Author: Neil Hemingway <neil.hemingway@googlemail.com>
+Date:   Wed Sep 24 21:23:55 2008 +0100
+
+    Resolve #330 and #357 (both trivial changes to the IRC bot)
+
+commit 9ac9609420e013fd96bee2a1f9651799b7abfbc8
+Author: Neil Hemingway <neil.hemingway@googlemail.com>
+Date:   Thu Sep 18 13:30:24 2008 +0100
+
+    Resolve #346
+    
+    Look for output matching the latest version of Test::Harness.  Failing
+    that assume the older version.  Either way, try to pick out the relevant
+    values.
+
+commit 8c7a1cc7d28a45be84e3ed27203d085898444977
+Author: Steve "Ashcrow" Milner <smilner@redhat.com>
+Date:   Sun Dec 28 21:44:35 2008 -0500
+
+    (closes #370) Update setup.py to follow pep8
+
+commit e952c40d2b916e71b1a497d3902bdd1faae6438a
+Author: A. T. Hofkamp <a.t.hofkamp@tue.nl>
+Date:   Sat Dec 6 17:44:18 2008 -0500
+
+    (fixes #313) update documentation for locks
+
+commit fa908fee3f8ceac913646f4133321db998ef27e1
+Author: Ben Hearsum <bhearsum@mozilla.com>
+Date:   Sat Dec 6 17:54:01 2008 -0500
+
+    (closes #100) add ability to specify environment variables at the builder level
