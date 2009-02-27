@@ -84,6 +84,8 @@ setup_args = {
               "buildbot.status", "buildbot.status.web",
               "buildbot.changes",
               "buildbot.steps",
+              "buildbot.steps.package",
+              "buildbot.steps.package.rpm",
               "buildbot.process",
               "buildbot.clients",
               "buildbot.slave",
