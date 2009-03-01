@@ -277,6 +277,10 @@ class Contact:
     def builderChangedState(self, builderName, state):
         log.msg('[Contact] Builder %s changed state to %s' % (builderName, state))
 
+    def requestSubmitted(self, brstatus):
+        log.msg('[Contact] BuildRequest for %s submiitted to Builder %s' % 
+            (brstatus.getSourceStamp(), brstatus.builderName))
+
     def builderRemoved(self, builderName):
         log.msg('[Contact] Builder %s removed' % (builderName))
 
