@@ -67,11 +67,13 @@ setup_args = {
     'long_description': long_description,
     'author': "Brian Warner",
     'author_email': "warner-buildbot@lothar.com",
+    'maintainer': "Dustin J. Mitchell",
+    'maintainer_email': "dustin@v.igoro.us",
     'url': "http://buildbot.net/",
     'license': "GNU GPL",
     # does this classifiers= mean that this can't be installed on 2.2/2.3?
     'classifiers': [
-        'Development Status :: 4 - Beta',
+        'Development Status :: 5 - Production/Stable',
         'Environment :: No Input/Output (Daemon)',
         'Environment :: Web Environment',
         'Intended Audience :: Developers',
