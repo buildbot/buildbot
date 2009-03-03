@@ -1,5 +1,15 @@
 User visible changes in Buildbot.             -*- outline -*-
 
+* Release 0.7.10p1 (2 Mar 2009)
+
+This is a bugfix release for 0.7.10, fixing a few minor bugs:
+
+** Bugs Fixed
+
+*** add a missing method to the IRC status plugin
+
+*** add RPM-related buildsteps to setup.py
+
 * Release 0.7.10 (25 Feb 2009)
 
 This release is mainly a collection of user-submitted patches since

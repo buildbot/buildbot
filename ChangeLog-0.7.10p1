@@ -1,3 +1,23 @@
+commit f7e8eecc06c52f2c44359f9c1e0a7e377fec407a
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Sun Mar 1 14:11:37 2009 -0500
+
+    add missing requestSubmitted method
+    
+    (this method is a newly-added callback for BuilderStatus watchers)
+
+commit 0d545e0e47a85b0586334e81590b936c8a385332
+Author: Steve 'Ashcrow' Milner <smilner+buildbot@redhat.com>
+Date:   Thu Feb 26 22:19:51 2009 -0500
+
+    setup.py needs a reference to the rpm steps
+
+commit 456ea8a04fa474b385b3f103e8388667a8f2d863
+Author: Åukasz JernaÅ <deejay1@srem.org>
+Date:   Thu Feb 26 19:06:37 2009 +0100
+
+    Fix typo.
+
 commit 3f82bdf779ab16857667f450f11f0dc84049c015
 Author: Dustin J. Mitchell <dustin@zmanda.com>
 Date:   Wed Feb 25 13:35:37 2009 -0500
