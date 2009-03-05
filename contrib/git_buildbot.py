@@ -280,6 +280,8 @@ try:
         logging.getLogger().addHandler(logfile)
 
     process_changes()
+except SystemExit:
+    pass
 except:
     logging.exception("Unhandled exception")
     sys.exit(1)
