@@ -101,18 +101,16 @@ def message(attrs):
     #
     # No source stamp
     #
+    source = ""
     if attrs['branch']:
-        source = "unavailable"
+        source += "[branch %s] " % attrs['branch']
+    if attrs['revision']:
+        source += attrs['revision']
     else:
-        source = ""
-        if attrs['branch']:
-            source += "[branch %s] " % attrs['branch']
-        if attrs['revision']:
-            source += attrs['revision']
-        else:
-            source += "HEAD"
-        if attrs['patch']:
-            source += " (plus patch)"
+        source += "HEAD"
+    if attrs['patch']:
+        source += " (plus patch)"
+
     text += "Build Source Stamp: %s\n" % source
 
     text += "Blamelist: %s\n" % ",".join(attrs['responsibleUsers'])
