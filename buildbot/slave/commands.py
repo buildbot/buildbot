@@ -2475,16 +2475,12 @@ class Mercurial(SourceBase):
 
     def doVCFull(self):
         d = os.path.join(self.builder.basedir, self.srcdir)
-        command = [self.vcexe, 'init', d]
+        command = [self.vcexe, 'clone', '--verbose', '--noupdate', self.repourl, d]
         c = ShellCommand(self.builder, command, self.builder.basedir,
                          sendRC=False, timeout=self.timeout, usePTY=False)
         self.command = c
         cmd1 = c.start()
-
-        def _vcupdate(res):
-            return self.doVCUpdate()
-        
-        cmd1.addCallback(_vcupdate)
+        cmd1.addCallback(self._update)
         return cmd1
 
     def _update(self, res):
