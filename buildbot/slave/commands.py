@@ -1,6 +1,6 @@
 # -*- test-case-name: buildbot.test.test_slavecommand -*-
 
-import os, re, signal, shutil, types, time
+import os, sys, re, signal, shutil, types, time
 from stat import ST_CTIME, ST_MTIME, ST_SIZE
 
 from zope.interface import implements
@@ -2496,7 +2496,9 @@ class Mercurial(SourceBase):
                            sendStdout=False, sendStderr=False,
                            keepStdout=True, keepStderr=True, usePTY=False)
         
-        def _parse(res):
+        self.clobber = False
+        
+        def _parseIdentify(res):
             if res != 0:
                 msg = "'hg identify' failed: %s\n%s" % (cmd.stdout, cmd.stderr)
                 self.sendStatus({'header': msg + "\n"})
@@ -2512,12 +2514,63 @@ class Mercurial(SourceBase):
             current_branch = match.group(2)
             
             if rev == '-1':
-                msg = "Fresh hg repo, don't worry about branch"
+                msg = "Fresh hg repo, don't worry about in-repo branch name"
                 log.msg(msg)
                         
             elif self.update_branch != current_branch:
-                msg = "Working dir is on branch '%s' and build needs '%s'. Clobbering." % (current_branch, self.update_branch)
+                msg = "Working dir is on in-repo branch '%s' and build needs '%s'. Clobbering." % (current_branch, self.update_branch)
                 self.sendStatus({'header': msg + "\n"})
+                log.msg(msg)
+                
+                self.clobber = True
+                
+            else:
+                msg = "Working dir on same in-repo branch as build (%s)." % (current_branch)
+                log.msg(msg)
+                        
+            return 0            
+        
+        def _checkRepoURL(res):
+            parentscmd = [self.vcexe, 'paths', 'default']
+            cmd2 = ShellCommand(self.builder, parentscmd, d,
+                               sendStdout=False, sendStderr=False,
+                               keepStdout=True, keepStderr=True, usePTY=False)
+                        
+            def _parseRepoURL(res):
+                if res == 1:
+                    if "not found!" == cmd2.stderr.strip():
+                        msg = "hg default path not set. Not checking repo url for clobber test"
+                        log.msg(msg)
+                        return 0
+                    else:
+                        msg = "'hg paths default' failed: %s\n%s" % (cmd2.stdout, cmd2.stderr)
+                        log.msg(msg)
+                        return 1
+                        
+                oldurl = cmd2.stdout.strip() 
+        
+                log.msg("Repo cloned from: '%s'" % oldurl)
+                
+                if sys.platform == "win32":
+                    oldurl = oldurl.lower().replace('\\', '/')
+                    repourl = self.repourl.lower().replace('\\', '/')
+                else:
+                    repourl = self.repourl
+                
+                if oldurl != repourl:
+                    self.clobber = True
+                    msg = "RepoURL changed from '%s' in wc to '%s' in update. Clobbering" % (oldurl, repourl)
+                    log.msg(msg)
+                    
+                return 0
+            
+            c = cmd2.start()
+            c.addCallback(_parseRepoURL)
+            return c
+        
+        def _maybeClobber(res):
+            if self.clobber:
+                msg = "Clobber flag set. Doing clobbering"
                 log.msg(msg)
                 
                 def _vcfull(res):
@@ -2526,15 +2579,13 @@ class Mercurial(SourceBase):
                 d = self.doClobber(None, self.srcdir)                
                 d.addCallback(_vcfull)
                 return d
-                
-            else:
-                msg = "Working dir on same branch as build (%s)." % (current_branch)
-                log.msg(msg)
-                        
+            
             return 0            
         
         c = cmd.start()                
-        c.addCallback(_parse)
+        c.addCallback(_parseIdentify)
+        c.addCallback(_checkRepoURL)            
+        c.addCallback(_maybeClobber)
         c.addCallback(self._update2)
         return c
         
