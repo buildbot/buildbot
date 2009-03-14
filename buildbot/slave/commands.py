@@ -2444,10 +2444,7 @@ class Mercurial(SourceBase):
         if os.path.exists(os.path.join(self.builder.basedir,
                                        self.srcdir, ".buildbot-patched")):
             return False
-        # like Darcs, to check out a specific (old) revision, we have to do a
-        # full checkout. TODO: I think 'hg pull' plus 'hg update' might work
-        if self.revision:
-            return False
+
         return os.path.isdir(os.path.join(self.builder.basedir,
                                           self.srcdir, ".hg"))
 
