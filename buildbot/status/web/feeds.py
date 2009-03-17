@@ -66,6 +66,7 @@ class FeedResource(XmlResource):
         self.status = status
         self.categories = categories
         self.title = title
+        self.projectName = self.status.getProjectName()
         self.link = self.status.getBuildbotURL()
         self.description = 'List of FAILED builds'
         self.pubdate = time.gmtime(int(time.time()))
@@ -151,7 +152,6 @@ class FeedResource(XmlResource):
         for build in builds:
             start, finished = build.getTimes()
             finishedTime = time.gmtime(int(finished))
-            projectName = self.status.getProjectName()
             link = re.sub(r'index.html', "", self.status.getURLForThing(build))
 
             # title: trunk r22191 (plus patch) failed on 'i686-debian-sarge1 shared gcc-3.3.5'
@@ -202,7 +202,7 @@ class FeedResource(XmlResource):
                             time.strftime("%a, %d %b %Y %H:%M:%S GMT",
                                           finishedTime))
             description += ('Full details available here: <a href="%s">%s</a><br/>' %
-                            (self.link, projectName))
+                            (self.link, self.projectName))
             builder_summary_link = ('%s/builders/%s' %
                                     (re.sub(r'/index.html', '', self.link),
                                      build.getBuilder().getName()))
@@ -210,7 +210,7 @@ class FeedResource(XmlResource):
                             (builder_summary_link,
                              build.getBuilder().getName()))
             description += ('Build details: <a href="%s">%s</a><br/><br/>' %
-                            (link, self.link + link[1:]))
+                            (link, link)
             description += ('Author list: <b>%s</b><br/><br/>' %
                             ",".join(build.getResponsibleUsers()))
             description += ('Failed step: <b>%s</b><br/><br/>' % laststep)
@@ -234,7 +234,7 @@ class Rss20StatusResource(FeedResource):
         data += ('<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">\n')
         data += ('  <channel>\n')
         if self.title is None:
-            title = 'Build status of ' + status.getProjectName()
+            title = 'Build status of ' + self.projectName
         else:
             title = self.title
         data += ('    <title>%s</title>\n' % title)
@@ -297,9 +297,9 @@ class Atom10StatusResource(FeedResource):
     def header(self, request):
         data = FeedResource.header(self, request)
         data += '<feed xmlns="http://www.w3.org/2005/Atom">\n'
-        data += ('  <id>%s</id>\n' % self.status.getBuildbotURL())
+        data += ('  <id>%s</id>\n' % self.link)
         if self.title is None:
-            title = 'Build status of ' + status.getProjectName()
+            title = 'Build status of ' + self.projectName
         else:
             title = self.title
         data += ('  <title>%s</title>\n' % title)
