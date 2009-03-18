@@ -7,6 +7,7 @@ from twisted.internet import reactor, defer, threads
 from twisted.protocols import basic
 from buildbot.process.properties import Properties
 
+import weakref
 import os, shutil, sys, re, urllib, itertools
 from cPickle import load, dump
 from cStringIO import StringIO
@@ -1414,7 +1415,7 @@ class BuilderStatus(styles.Versioned):
     # these limit the amount of memory we consume, as well as the size of the
     # main Builder pickle. The Build and LogFile pickles on disk must be
     # handled separately.
-    buildCacheSize = 30
+    buildCacheSize = 15
     buildHorizon = 100 # forget builds beyond this
     stepHorizon = 50 # forget steps in builds beyond this
     eventHorizon = 50 # forget events beyond this
@@ -1438,7 +1439,8 @@ class BuilderStatus(styles.Versioned):
         self.pendingBuilds = []
         self.nextBuild = None
         self.watchers = []
-        self.buildCache = [] # TODO: age builds out of the cache
+        self.buildCache = weakref.WeakValueDictionary()
+        self.buildCache_LRU = []
         self.logCompressionLimit = False # default to no compression for tests
 
     # persistence
@@ -1451,6 +1453,7 @@ class BuilderStatus(styles.Versioned):
         d = styles.Versioned.__getstate__(self)
         d['watchers'] = []
         del d['buildCache']
+        del d['buildCache_LRU']
         for b in self.currentBuilds:
             b.saveYourself()
             # TODO: push a 'hey, build was interrupted' event
@@ -1466,7 +1469,8 @@ class BuilderStatus(styles.Versioned):
         # when loading, re-initialize the transient stuff. Remember that
         # upgradeToVersion1 and such will be called after this finishes.
         styles.Versioned.__setstate__(self, d)
-        self.buildCache = []
+        self.buildCache = weakref.WeakValueDictionary()
+        self.buildCache_LRU = []
         self.currentBuilds = []
         self.pendingBuilds = []
         self.watchers = []
@@ -1499,7 +1503,7 @@ class BuilderStatus(styles.Versioned):
         self.logCompressionLimit = lowerLimit
 
     def saveYourself(self):
-        for b in self.buildCache:
+        for b in self.currentBuilds:
             if not b.isFinished:
                 # interrupted build, need to save it anyway.
                 # BuildStatus.saveYourself will mark it as interrupted.
@@ -1520,29 +1524,34 @@ class BuilderStatus(styles.Versioned):
 
     # build cache management
 
-    def addBuildToCache(self, build):
-        if build in self.buildCache:
-            return
-        self.buildCache.append(build)
-        while len(self.buildCache) > self.buildCacheSize:
-            self.buildCache.pop(0)
+    def touchBuildCache(self, build):
+        self.buildCache[build.number] = build
+        if build in self.buildCache_LRU:
+            self.buildCache_LRU.remove(build)
+        self.buildCache_LRU = self.buildCache_LRU[-(self.buildCacheSize-1):] + [ build ]
+        return build
 
     def getBuildByNumber(self, number):
+        # first look in currentBuilds
         for b in self.currentBuilds:
             if b.number == number:
-                return b
-        for build in self.buildCache:
-            if build.number == number:
-                return build
+                return self.touchBuildCache(b)
+
+        # then in the buildCache
+        if number in self.buildCache:
+            return self.touchBuildCache(self.buildCache[number])
+
+        # then fall back to loading it from disk
         filename = os.path.join(self.basedir, "%d" % number)
         try:
+            log.msg("Loading builder %s's build %d from on-disk pickle"
+                % (self.name, number))
             build = load(open(filename, "rb"))
             styles.doUpgrade()
             build.builder = self
             # handle LogFiles from after 0.5.0 and before 0.6.5
             build.upgradeLogfiles()
-            self.addBuildToCache(build)
-            return build
+            return self.touchBuildCache(build)
         except IOError:
             raise IndexError("no such build %d" % number)
         except EOFError:
@@ -1752,7 +1761,7 @@ class BuilderStatus(styles.Versioned):
         assert s.number == self.nextBuildNumber - 1
         assert s not in self.currentBuilds
         self.currentBuilds.append(s)
-        self.addBuildToCache(s)
+        self.touchBuildCache(s)
 
         # now that the BuildStatus is prepared to answer queries, we can
         # announce the new build to all our watchers
