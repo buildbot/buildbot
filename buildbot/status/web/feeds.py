@@ -210,7 +210,7 @@ class FeedResource(XmlResource):
                             (builder_summary_link,
                              build.getBuilder().getName()))
             description += ('Build details: <a href="%s">%s</a><br/><br/>' %
-                            (link, link)
+                            (link, link))
             description += ('Author list: <b>%s</b><br/><br/>' %
                             ",".join(build.getResponsibleUsers()))
             description += ('Failed step: <b>%s</b><br/><br/>' % laststep)
