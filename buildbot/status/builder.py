@@ -1021,6 +1021,9 @@ class BuildStatus(styles.Versioned):
         self.properties = Properties()
         self.requests = []
 
+    def __repr__(self):
+        return "<%s #%s>" % (self.__class__.__name__, self.number)
+
     # IBuildStatus
 
     def getBuilder(self):
