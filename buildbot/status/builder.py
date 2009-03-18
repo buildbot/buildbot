@@ -1417,6 +1417,7 @@ class BuilderStatus(styles.Versioned):
     buildCacheSize = 30
     buildHorizon = 100 # forget builds beyond this
     stepHorizon = 50 # forget steps in builds beyond this
+    eventHorizon = 50 # forget events beyond this
 
     category = None
     currentBigState = "offline" # or idle/waiting/interlocked/building
@@ -1555,6 +1556,9 @@ class BuilderStatus(styles.Versioned):
         for b in self.builds[0:-self.stepHorizon]:
             b.pruneSteps()
 
+    def pruneEvents(self):
+        self.events = self.events[-self.eventHorizon:]
+
     # IBuilderStatus methods
     def getName(self):
         return self.name
@@ -1683,6 +1687,7 @@ class BuilderStatus(styles.Versioned):
         e.started = util.now()
         e.text = text
         self.events.append(e)
+        self.pruneEvents()
         return e # they are free to mangle it further
 
     def addPointEvent(self, text=[]):
@@ -1693,6 +1698,7 @@ class BuilderStatus(styles.Versioned):
         e.finished = 0
         e.text = text
         self.events.append(e)
+        self.pruneEvents()
         return e # for consistency, but they really shouldn't touch it
 
     def setBigState(self, state):
