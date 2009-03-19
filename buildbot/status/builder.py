@@ -9,6 +9,7 @@ from buildbot.process.properties import Properties
 
 import weakref
 import os, shutil, sys, re, urllib, itertools
+import gc
 from cPickle import load, dump
 from cStringIO import StringIO
 from bz2 import BZ2File
@@ -273,6 +274,13 @@ class LogFile:
             d = defer.Deferred()
             self.finishedWatchers.append(d)
         return d
+
+    def logfileExists(self):
+        if self.openfile: return True
+        fn = self.getFilename()
+        for f in (fn, fn + ".bz2"):
+            if os.path.exists(f): return True
+        return False
 
     def getFile(self):
         if self.openfile:
@@ -953,6 +961,10 @@ class BuildStepStatus(styles.Versioned):
         if cld:
             return defer.DeferredList(cld)
 
+    def checkLogfiles(self):
+        # filter out logs that have been deleted
+        self.logs = [ l for l in self.logs if l.logfileExists() ]
+
     # persistence
 
     def __getstate__(self):
@@ -968,6 +980,8 @@ class BuildStepStatus(styles.Versioned):
     def __setstate__(self, d):
         styles.Versioned.__setstate__(self, d)
         # self.build must be filled in by our parent
+
+        # point the logs to this object
         for loog in self.logs:
             loog.step = self
 
@@ -1268,12 +1282,6 @@ class BuildStatus(styles.Versioned):
 
     # methods called by our BuilderStatus parent
 
-    def pruneLogs(self):
-        # this build is somewhat old: remove the build logs to save space
-        # TODO: delete logs visible through IBuildStatus.getLogs
-        for s in self.steps:
-            s.pruneLogs()
-
     def pruneSteps(self):
         # this build is very old: remove the build steps too
         self.steps = []
@@ -1317,11 +1325,8 @@ class BuildStatus(styles.Versioned):
             # was interrupted. The builder will have a 'shutdown' event, but
             # someone looking at just this build will be confused as to why
             # the last log is truncated.
-        del d['builder'] # filled in by our parent when loading
-        del d['watchers']
-        del d['updates']
-        del d['requests']
-        del d['finishedWatchers']
+        for k in 'builder', 'watchers', 'updates', 'requests', 'finishedWatchers':
+            if k in d: del d[k]
         return d
 
     def __setstate__(self, d):
@@ -1369,6 +1374,12 @@ class BuildStatus(styles.Versioned):
                     # let the logfile update its .filename pointer,
                     # transferring its contents onto disk if necessary
                     l.upgrade(logfilename)
+
+    def checkLogfiles(self):
+        # check that all logfiles exist, and remove references to any that
+        # have been deleted (e.g., by purge())
+        for s in self.steps:
+            s.checkLogfiles()
 
     def saveYourself(self):
         filename = os.path.join(self.builder.basedir, "%d" % self.number)
@@ -1419,9 +1430,11 @@ class BuilderStatus(styles.Versioned):
     # main Builder pickle. The Build and LogFile pickles on disk must be
     # handled separately.
     buildCacheSize = 15
-    buildHorizon = 100 # forget builds beyond this
-    stepHorizon = 50 # forget steps in builds beyond this
     eventHorizon = 50 # forget events beyond this
+
+    # these limit on-disk storage
+    logHorizon = 40 # forget logs in steps in builds beyond this
+    buildHorizon = 100 # forget builds beyond this
 
     category = None
     currentBigState = "offline" # or idle/waiting/interlocked/building
@@ -1527,6 +1540,9 @@ class BuilderStatus(styles.Versioned):
 
     # build cache management
 
+    def makeBuildFilename(self, number):
+        return os.path.join(self.basedir, "%d" % number)
+
     def touchBuildCache(self, build):
         self.buildCache[build.number] = build
         if build in self.buildCache_LRU:
@@ -1545,7 +1561,7 @@ class BuilderStatus(styles.Versioned):
             return self.touchBuildCache(self.buildCache[number])
 
         # then fall back to loading it from disk
-        filename = os.path.join(self.basedir, "%d" % number)
+        filename = self.makeBuildFilename(number)
         try:
             log.msg("Loading builder %s's build %d from on-disk pickle"
                 % (self.name, number))
@@ -1554,6 +1570,8 @@ class BuilderStatus(styles.Versioned):
             build.builder = self
             # handle LogFiles from after 0.5.0 and before 0.6.5
             build.upgradeLogfiles()
+            # check that logfiles exist
+            build.checkLogfiles()
             return self.touchBuildCache(build)
         except IOError:
             raise IndexError("no such build %d" % number)
@@ -1561,15 +1579,51 @@ class BuilderStatus(styles.Versioned):
             raise IndexError("corrupted build pickle %d" % number)
 
     def prune(self):
-        return # TODO: change this to walk through the filesystem
-        # first, blow away all builds beyond our build horizon
-        self.builds = self.builds[-self.buildHorizon:]
-        # then prune steps in builds past the step horizon
-        for b in self.builds[0:-self.stepHorizon]:
-            b.pruneSteps()
+        gc.collect()
 
-    def pruneEvents(self):
+        # begin by pruning our own events
         self.events = self.events[-self.eventHorizon:]
+
+        # get the horizons straight
+        if self.buildHorizon:
+            earliest_build = self.nextBuildNumber - self.buildHorizon
+        else:
+            earliest_build = 0
+
+        if self.logHorizon:
+            earliest_log = self.nextBuildNumber - self.logHorizon
+        else:
+            earliest_log = 0
+
+        if earliest_log < earliest_build:
+            earliest_log = earliest_build
+
+        if earliest_build == 0:
+            return
+
+        # skim the directory and delete anything that shouldn't be there anymore
+        build_re = re.compile(r"^([0-9]+)$")
+        build_log_re = re.compile(r"^([0-9]+)-.*$")
+        for filename in os.listdir(self.basedir):
+            num = None
+            mo = build_re.match(filename)
+            is_logfile = False
+            if mo:
+                num = int(mo.group(1))
+            else:
+                mo = build_log_re.match(filename)
+                if mo:
+                    num = int(mo.group(1))
+                    is_logfile = True
+
+            if not num: continue
+            if num in self.buildCache: continue
+
+            if (is_logfile and num < earliest_log) or num < earliest_build:
+                pathname = os.path.join(self.basedir, filename)
+                log.msg("pruning '%s'" % pathname)
+                try: os.unlink(pathname)
+                except OSError: pass
 
     # IBuilderStatus methods
     def getName(self):
@@ -1699,7 +1753,6 @@ class BuilderStatus(styles.Versioned):
         e.started = util.now()
         e.text = text
         self.events.append(e)
-        self.pruneEvents()
         return e # they are free to mangle it further
 
     def addPointEvent(self, text=[]):
@@ -1710,7 +1763,6 @@ class BuilderStatus(styles.Versioned):
         e.finished = 0
         e.text = text
         self.events.append(e)
-        self.pruneEvents()
         return e # for consistency, but they really shouldn't touch it
 
     def setBigState(self, state):
@@ -2188,10 +2240,6 @@ class Status:
     def builderRemoved(self, name):
         for t in self.watchers:
             t.builderRemoved(name)
-
-    def prune(self):
-        for b in self.botmaster.builders.values():
-            b.builder_status.prune()
 
     def buildsetSubmitted(self, bss):
         self.activeBuildSets.append(bss)

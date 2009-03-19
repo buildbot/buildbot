@@ -21,7 +21,7 @@ try:
 except ImportError:
     pass
 from buildbot.status import progress, client # NEEDS COVERAGE
-from buildbot.test.runutils import RunMixin, setupBuildStepStatus
+from buildbot.test.runutils import RunMixin, setupBuildStepStatus, rmtree
 
 class MyStep:
     build = None
@@ -1629,3 +1629,47 @@ class BuildExpectation(unittest.TestCase):
 
         build.buildFinished(['sometext'], builder.FAILURE)
         self.failUnlessEqual(b.expectations, None, 'Zero expectation for a failed build')
+
+class Pruning(unittest.TestCase):
+    def runTest(self, files, buildHorizon, logHorizon):
+        bstat = builder.BuilderStatus("foo")
+        bstat.buildHorizon = buildHorizon
+        bstat.logHorizon = logHorizon
+        bstat.basedir = "prune-test"
+
+        rmtree(bstat.basedir)
+        os.mkdir(bstat.basedir)
+        for filename in files:
+            open(os.path.join(bstat.basedir, filename), "w").write("TEST")
+        bstat.determineNextBuildNumber()
+
+        bstat.prune()
+
+        remaining = os.listdir(bstat.basedir)
+        remaining.sort()
+        return remaining
+
+    files_base = [
+        '10',
+        '11',
+        '12', '12-log-bar', '12-log-foo',
+        '13', '13-log-foo',
+        '14', '14-log-bar', '14-log-foo',
+    ]
+
+    def test_rmlogs(self):
+        remaining = self.runTest(self.files_base, 5, 2)
+        self.failUnlessEqual(remaining, [
+            '10',
+            '11',
+            '12',
+            '13', '13-log-foo',
+            '14', '14-log-bar', '14-log-foo',
+        ])
+
+    def test_rmbuilds(self):
+        remaining = self.runTest(self.files_base, 2, 0)
+        self.failUnlessEqual(remaining, [
+            '13', '13-log-foo',
+            '14', '14-log-bar', '14-log-foo',
+        ])

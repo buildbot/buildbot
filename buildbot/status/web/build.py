@@ -103,26 +103,25 @@ class StatusResourceBuild(HtmlResource):
 #        for name, target in urls.items():
 #            text.append('[<a href="%s" class="%s">%s</a>]' %
 #                        (target, ex_url_class, html.escape(name)))
-        if b.getLogs():
-            data += "<ol>\n"
-            for s in b.getSteps():
-                name = s.getName()
-                data += (" <li><a href=\"%s\">%s</a> [%s]\n"
-                         % (req.childLink("steps/%s" % urllib.quote(name)),
-                            name,
-                            " ".join(s.getText())))
-                if s.getLogs():
-                    data += "  <ol>\n"
-                    for logfile in s.getLogs():
-                        logname = logfile.getName()
-                        logurl = req.childLink("steps/%s/logs/%s" %
-                                               (urllib.quote(name),
-                                                urllib.quote(logname)))
-                        data += ("   <li><a href=\"%s\">%s</a></li>\n" %
-                                 (logurl, logfile.getName()))
-                    data += "  </ol>\n"
-                data += " </li>\n"
-            data += "</ol>\n"
+        data += "<ol>\n"
+        for s in b.getSteps():
+            name = s.getName()
+            data += (" <li><a href=\"%s\">%s</a> [%s]\n"
+                     % (req.childLink("steps/%s" % urllib.quote(name)),
+                        name,
+                        " ".join(s.getText())))
+            if s.getLogs():
+                data += "  <ol>\n"
+                for logfile in s.getLogs():
+                    logname = logfile.getName()
+                    logurl = req.childLink("steps/%s/logs/%s" %
+                                           (urllib.quote(name),
+                                            urllib.quote(logname)))
+                    data += ("   <li><a href=\"%s\">%s</a></li>\n" %
+                             (logurl, logfile.getName()))
+                data += "  </ol>\n"
+            data += " </li>\n"
+        data += "</ol>\n"
 
         data += "<h2>Build Properties:</h2>\n"
         data += "<table><tr><th valign=\"left\">Name</th><th valign=\"left\">Value</th><th valign=\"left\">Source</th></tr>\n"
