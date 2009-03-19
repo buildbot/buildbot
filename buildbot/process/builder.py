@@ -368,6 +368,7 @@ class Builder(pb.Referenceable):
             self.slavenames.extend(setup['slavenames'])
         self.builddir = setup['builddir']
         self.buildFactory = setup['factory']
+        self.nextSlave = setup.get('nextSlave')
         self.locks = setup.get("locks", [])
         self.env = setup.get('env', {})
         assert isinstance(self.env, dict)
@@ -375,6 +376,7 @@ class Builder(pb.Referenceable):
             raise ValueError("periodicBuildTime can no longer be defined as"
                              " part of the Builder: use scheduler.Periodic"
                              " instead")
+        self.buildOrder = setup.get('buildOrder', None)
 
         # build/wannabuild slots: Build objects move along this sequence
         self.buildable = []
@@ -676,8 +678,9 @@ class Builder(pb.Referenceable):
                     % self)
             self.updateBigStatus()
             return
-        if self.CHOOSE_SLAVES_RANDOMLY:
-            # TODO prefer idle over latent? maybe other sorting preferences?
+        if self.nextSlave:
+            sb = self.nextSlave(available_slaves)
+        elif self.CHOOSE_SLAVES_RANDOMLY:
             sb = random.choice(available_slaves)
         else:
             sb = available_slaves[0]
@@ -685,7 +688,11 @@ class Builder(pb.Referenceable):
         # there is something to build, and there is a slave on which to build
         # it. Grab the oldest request, see if we can merge it with anything
         # else.
-        req = self.buildable.pop(0)
+        if not self.buildOrder:
+            req = self.buildable.pop(0)
+        else:
+            req = self.buildOrder(self.buildable)
+            self.buildable.remove(req)
         self.builder_status.removeBuildRequest(req.status)
         mergers = []
         botmaster = self.botmaster

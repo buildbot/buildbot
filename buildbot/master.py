@@ -66,6 +66,10 @@ class BotMaster(service.MultiService):
         # requests
         self.mergeRequests = None
 
+        # self.builderOrder is the callable override for builder order
+        # traversal
+        self.builderOrder = None
+
     # these four are convenience functions for testing
 
     def waitUntilBuilderAttached(self, name):
@@ -204,7 +208,10 @@ class BotMaster(service.MultiService):
             if t2 is None:
                 return -1
             return cmp(t1, t2)
-        builders.sort(cmp=_sortfunc)
+        if self.builderOrder is not None:
+            builders = self.builderOrder(builders)
+        else:
+            builders.sort(cmp=_sortfunc)
         for b in builders:
             b.maybeStartBuild()
 
@@ -526,7 +533,7 @@ class BuildMaster(service.MultiService, styles.Versioned):
                       "schedulers", "builders", "mergeRequests", 
                       "slavePortnum", "debugPassword", "logCompressionLimit",
                       "manhole", "status", "projectName", "projectURL",
-                      "buildbotURL", "properties"
+                      "buildbotURL", "properties", "builderOrder",
                       )
         for k in config.keys():
             if k not in known_keys:
@@ -562,6 +569,9 @@ class BuildMaster(service.MultiService, styles.Versioned):
             mergeRequests = config.get('mergeRequests')
             if mergeRequests is not None and not callable(mergeRequests):
                 raise ValueError("mergeRequests must be a callable")
+            builderOrder = config.get('builderOrder')
+            if builderOrder is not None and not callable(builderOrder):
+                raise ValueError("builderOrder must be callable")
 
         except KeyError, e:
             log.msg("config dictionary is missing a required parameter")
@@ -722,6 +732,8 @@ class BuildMaster(service.MultiService, styles.Versioned):
             self.status.logCompressionLimit = logCompressionLimit
         if mergeRequests is not None:
             self.botmaster.mergeRequests = mergeRequests
+        if builderOrder is not None:
+            self.botmaster.builderOrder = builderOrder
 
         # self.slaves: Disconnect any that were attached and removed from the
         # list. Update self.checker with the new list of passwords, including
