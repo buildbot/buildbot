@@ -275,13 +275,6 @@ class LogFile:
             self.finishedWatchers.append(d)
         return d
 
-    def logfileExists(self):
-        if self.openfile: return True
-        fn = self.getFilename()
-        for f in (fn, fn + ".bz2"):
-            if os.path.exists(f): return True
-        return False
-
     def getFile(self):
         if self.openfile:
             # this is the filehandle we're using to write to the log, so
@@ -963,7 +956,7 @@ class BuildStepStatus(styles.Versioned):
 
     def checkLogfiles(self):
         # filter out logs that have been deleted
-        self.logs = [ l for l in self.logs if l.logfileExists() ]
+        self.logs = [ l for l in self.logs if l.hasContents() ]
 
     # persistence
 
