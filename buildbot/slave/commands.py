@@ -2515,11 +2515,12 @@ class Mercurial(SourceBase):
                 log.msg(msg)
                         
             elif self.update_branch != current_branch:
-                msg = "Working dir is on in-repo branch '%s' and build needs '%s'. Clobbering." % (current_branch, self.update_branch)
+                msg = "Working dir is on in-repo branch '%s' and build needs '%s'. Updating." % (current_branch, self.update_branch)
                 self.sendStatus({'header': msg + "\n"})
                 log.msg(msg)
                 
-                self.clobber = True
+                # don't clobber, takes too much time.
+                # self.clobber = True
                 
             else:
                 msg = "Working dir on same in-repo branch as build (%s)." % (current_branch)
