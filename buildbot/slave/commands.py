@@ -2442,10 +2442,6 @@ class Mercurial(SourceBase):
         self.stderr = ""
 
     def sourcedirIsUpdateable(self):
-        if os.path.exists(os.path.join(self.builder.basedir,
-                                       self.srcdir, ".buildbot-patched")):
-            return False
-
         return os.path.isdir(os.path.join(self.builder.basedir,
                                           self.srcdir, ".hg"))
 
@@ -2501,14 +2497,10 @@ class Mercurial(SourceBase):
             if res != 0:
                 # purge failed, we need to switch to a classic clobber
                 msg = "'hg purge' failed: %s\n%s. Clobbering." % (purgeCmd.stdout, purgeCmd.stderr)
+                self.sendStatus({'header': msg + "\n"})
+                log.msg(msg)
 
-                def _vcfull(res):
-                    return self.doVCFull()
-
-                clobber = self.doClobber(dummy, dirname)
-                clobber.addCallback(_vcfull)
-
-                return clobber
+                return self._clobber(dummy, dirname)
 
             # Purge was a success, then we need to update
             return self._update2(res)
@@ -2551,6 +2543,10 @@ class Mercurial(SourceBase):
                 msg = "Fresh hg repo, don't worry about in-repo branch name"
                 log.msg(msg)
                         
+            elif os.path.exists(os.path.join(self.builder.basedir,
+                                             self.srcdir, ".buildbot-patched")):
+                self.clobber = self._purge
+
             elif self.update_branch != current_branch:
                 msg = "Working dir is on in-repo branch '%s' and build needs '%s'." % (current_branch, self.update_branch)
                 if self.clobberOnBranchChange:
