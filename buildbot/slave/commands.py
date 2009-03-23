@@ -2481,6 +2481,42 @@ class Mercurial(SourceBase):
         cmd1.addCallback(self._update)
         return cmd1
 
+    def _clobber(self, dummy, dirname):
+        def _vcfull(res):
+            return self.doVCFull()
+        
+        c = self.doClobber(dummy, dirname)
+        c.addCallback(_vcfull)
+
+        return c
+
+    def _purge(self, dummy, dirname):
+        d = os.path.join(self.builder.basedir, self.srcdir)
+        purge = [self.vcexe, 'purge', '--all']
+        purgeCmd = ShellCommand(self.builder, purge, d,
+                                sendStdout=False, sendStderr=False,
+                                keepStdout=True, keepStderr=True, usePTY=False)
+
+        def _clobber(res):
+            if res != 0:
+                # purge failed, we need to switch to a classic clobber
+                msg = "'hg purge' failed: %s\n%s. Clobbering." % (purgeCmd.stdout, purgeCmd.stderr)
+
+                def _vcfull(res):
+                    return self.doVCFull()
+
+                clobber = self.doClobber(dummy, dirname)
+                clobber.addCallback(_vcfull)
+
+                return clobber
+
+            # Purge was a success, then we need to update
+            return self._update2(res)
+
+        p = purgeCmd.start()
+        p.addCallback(_clobber)
+        return p
+
     def _update(self, res):
         if res != 0:
             return res
@@ -2494,7 +2530,7 @@ class Mercurial(SourceBase):
                            sendStdout=False, sendStderr=False,
                            keepStdout=True, keepStderr=True, usePTY=False)
         
-        self.clobber = False
+        self.clobber = None
         
         def _parseIdentify(res):
             if res != 0:
@@ -2526,7 +2562,8 @@ class Mercurial(SourceBase):
                 log.msg(msg)
                 
                 # Clobbers only if clobberOnBranchChange is set
-                self.clobber = self.clobberOnBranchChange
+                if self.clobberOnBranchChange:
+                    self.clobber = self._purge
                 
             else:
                 msg = "Working dir on same in-repo branch as build (%s)." % (current_branch)
@@ -2562,7 +2599,7 @@ class Mercurial(SourceBase):
                     repourl = self.repourl
                 
                 if oldurl != repourl:
-                    self.clobber = True
+                    self.clobber = self._clobber
                     msg = "RepoURL changed from '%s' in wc to '%s' in update. Clobbering" % (oldurl, repourl)
                     log.msg(msg)
                     
@@ -2580,9 +2617,7 @@ class Mercurial(SourceBase):
                 def _vcfull(res):
                     return self.doVCFull()
                 
-                d = self.doClobber(None, self.srcdir)                
-                d.addCallback(_vcfull)
-                return d
+                return self.clobber(None, self.srcdir)                
             
             return 0            
         
