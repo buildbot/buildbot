@@ -907,6 +907,7 @@ class Mercurial(Source):
                                  baseURL=baseURL,
                                  defaultBranch=defaultBranch,
                                  branchType=branchType,
+                                 clobberOnBranchChange=clobberOnBranchChange,
                                  )
         if (not repourl and not baseURL) or (repourl and baseURL):
             raise ValueError("you must provide exactly one of repourl and"
