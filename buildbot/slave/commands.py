@@ -2436,6 +2436,7 @@ class Mercurial(SourceBase):
         SourceBase.setup(self, args)
         self.vcexe = getCommand("hg")
         self.repourl = args['repourl']
+        self.clobberOnBranchChange = args['clobberOnBranchChange']
         self.sourcedata = "%s\n" % self.repourl
         self.stdout = ""
         self.stderr = ""
@@ -2515,12 +2516,17 @@ class Mercurial(SourceBase):
                 log.msg(msg)
                         
             elif self.update_branch != current_branch:
-                msg = "Working dir is on in-repo branch '%s' and build needs '%s'. Updating." % (current_branch, self.update_branch)
+                msg = "Working dir is on in-repo branch '%s' and build needs '%s'." % (current_branch, self.update_branch)
+                if self.clobberOnBranchChange:
+                    msg += ' Cloberring.'
+                else:
+                    msg += ' Updating.'
+
                 self.sendStatus({'header': msg + "\n"})
                 log.msg(msg)
                 
-                # don't clobber, takes too much time.
-                # self.clobber = True
+                # Clobbers only if clobberOnBranchChange is set
+                self.clobber = self.clobberOnBranchChange
                 
             else:
                 msg = "Working dir on same in-repo branch as build (%s)." % (current_branch)

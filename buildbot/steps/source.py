@@ -863,7 +863,7 @@ class Mercurial(Source):
     name = "hg"
 
     def __init__(self, repourl=None, baseURL=None, defaultBranch=None,
-                 branchType='dirname', **kwargs):
+                 branchType='dirname', clobberOnBranchChange=True, **kwargs):
         """
         @type  repourl: string
         @param repourl: the URL which points at the Mercurial repository.
@@ -891,11 +891,17 @@ class Mercurial(Source):
                            the branch name should be appended to the C{baseURL}
                            or the branch is a mercurial named branch and can be
                            found within the C{repourl}
+
+        @param clobberOnBranchChange: boolean, defaults to True. If set and
+                                      using inrepos branches, clobber the tree
+                                      at each branch change. Otherwise, just
+                                      update to the branch.
         """
         self.repourl = repourl
         self.baseURL = baseURL
         self.branch = defaultBranch
         self.branchType = branchType
+        self.clobberOnBranchChange = clobberOnBranchChange
         Source.__init__(self, **kwargs)
         self.addFactoryArguments(repourl=repourl,
                                  baseURL=baseURL,
@@ -922,6 +928,7 @@ class Mercurial(Source):
             self.args['repourl'] = self.baseURL + branch
         self.args['revision'] = revision
         self.args['patch'] = patch
+        self.args['clobberOnBranchChange'] = self.clobberOnBranchChange
 
         revstuff = []
         if branch is not None and branch != self.branch:
