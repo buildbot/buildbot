@@ -2013,9 +2013,6 @@ class Git(SourceBase):
         return self.branch
 
     def sourcedirIsUpdateable(self):
-        if os.path.exists(os.path.join(self._fullSrcdir(),
-                                       ".buildbot-patched")):
-            return False
         return os.path.isdir(os.path.join(self._fullSrcdir(), ".git"))
 
     def readSourcedata(self):
