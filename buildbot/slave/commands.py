@@ -2044,26 +2044,18 @@ class Git(SourceBase):
         self.command = c
         return c.start()
 
-    # Update first runs "git clean", removing local changes,
-    # if the branch to be checked out has changed.  This, combined
-    # with the later "git reset" equates clobbering the repo,
+    # Update first runs "git clean", removing local changes, This,
+    # combined with the later "git reset" equates clobbering the repo,
     # but it's much more efficient.
     def doVCUpdate(self):
-        try:
-            # Check to see if our branch has changed
-            diffbranch = self.sourcedata != self.readSourcedata()
-        except IOError:
-            diffbranch = False
-        if diffbranch:
-            command = ['git', 'clean', '-f', '-d', '-x']
-            c = ShellCommand(self.builder, command, self._fullSrcdir(),
-                             sendRC=False, timeout=self.timeout, usePTY=False)
-            self.command = c
-            d = c.start()
-            d.addCallback(self._abandonOnFailure)
-            d.addCallback(self._didClean)
-            return d
-        return self._didClean(None)
+        command = ['git', 'clean', '-f', '-d', '-x']
+        c = ShellCommand(self.builder, command, self._fullSrcdir(),
+                         sendRC=False, timeout=self.timeout, usePTY=False)
+        self.command = c
+        d = c.start()
+        d.addCallback(self._abandonOnFailure)
+        d.addCallback(self._didClean)
+        return d
 
     def _didClean(self, dummy):
         command = ['git', 'fetch', '-t', self.repourl, self.branch]
