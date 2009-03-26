@@ -2058,7 +2058,7 @@ class Git(SourceBase):
         except IOError:
             diffbranch = False
         if diffbranch:
-            command = ['git', 'clean', '-f', '-d']
+            command = ['git', 'clean', '-f', '-d', '-x']
             c = ShellCommand(self.builder, command, self._fullSrcdir(),
                              sendRC=False, timeout=self.timeout, usePTY=False)
             self.command = c
