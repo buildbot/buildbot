@@ -7427,7 +7427,9 @@ output.
 
 @item /builders/$BUILDERNAME
 
-This describes the given Builder, and provides buttons to force a build.
+This describes the given Builder, and provides buttons to force a
+build.  A @code{numbuilds=} argument will control how many build lines
+are displayed (5 by default).
 
 @item /builders/$BUILDERNAME/builds/$BUILDNUM
 

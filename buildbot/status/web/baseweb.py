@@ -89,7 +89,7 @@ class OneLinePerBuild(HtmlResource, OneLineMixin):
     def getChild(self, path, req):
         status = self.getStatus(req)
         builder = status.getBuilder(path)
-        return OneLinePerBuildOneBuilder(builder)
+        return OneLinePerBuildOneBuilder(builder, numbuilds=self.numbuilds)
 
     def body(self, req):
         status = self.getStatus(req)
@@ -99,7 +99,7 @@ class OneLinePerBuild(HtmlResource, OneLineMixin):
         branches = [b for b in req.args.get("branch", []) if b]
 
         g = status.generateFinishedBuilds(builders, map_branches(branches),
-                                          numbuilds)
+                                          numbuilds, max_search=numbuilds)
 
         data = ""
 
@@ -368,7 +368,7 @@ class WebStatus(service.MultiService):
     # all the changes).
 
     def __init__(self, http_port=None, distrib_port=None, allowForce=False,
-                       public_html="public_html", site=None):
+                 public_html="public_html", site=None, numbuilds=20):
         """Run a web server that provides Buildbot status.
 
         @type  http_port: int or L{twisted.application.strports} string
@@ -412,6 +412,12 @@ class WebStatus(service.MultiService):
         @type site: None or L{twisted.web.server.Site}
         @param site: Use this if you want to define your own object instead of
                      using the default.`
+
+        @type numbuilds: int
+        @param numbuilds: Default number of entries in lists at the /one_line_per_build
+        and /builders/FOO URLs.  This default can be overriden both programatically ---
+        by passing the equally named argument to constructors of OneLinePerBuildOneBuilder
+        and OneLinePerBuild --- and via the UI, by tacking ?numbuilds=xy onto the URL.
         """
 
         service.MultiService.__init__(self)
@@ -437,7 +443,7 @@ class WebStatus(service.MultiService):
             self.site = server.Site(root)
         self.childrenToBeAdded = {}
 
-        self.setupUsualPages()
+        self.setupUsualPages(numbuilds=numbuilds)
 
         # the following items are accessed by HtmlResource when it renders
         # each page.
@@ -460,7 +466,7 @@ class WebStatus(service.MultiService):
             s = strports.service(self.distrib_port, f)
             s.setServiceParent(self)
 
-    def setupUsualPages(self):
+    def setupUsualPages(self, numbuilds):
         #self.putChild("", IndexOrWaterfallRedirection())
         self.putChild("waterfall", WaterfallStatusResource())
         self.putChild("grid", GridStatusResource())
@@ -468,7 +474,8 @@ class WebStatus(service.MultiService):
         self.putChild("changes", ChangesResource())
         self.putChild("buildslaves", BuildSlavesResource())
         #self.putChild("schedulers", SchedulersResource())
-        self.putChild("one_line_per_build", OneLinePerBuild())
+        self.putChild("one_line_per_build",
+                      OneLinePerBuild(numbuilds=numbuilds))
         self.putChild("one_box_per_builder", OneBoxPerBuilder())
         self.putChild("xmlrpc", XMLRPCServer())
         self.putChild("about", AboutBuildbot())
