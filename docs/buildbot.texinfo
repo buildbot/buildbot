@@ -7660,7 +7660,7 @@ def message(attrs):
     text.append("")
     text.extend([c.asText() for c in attrs['changes']])
     text.append("")
-    name, url, lines = attrs['logs'][-1]
+    name, url, lines, logstatus = attrs['logs'][-1]
     text.append("Last %d lines of '%s':" % (logLines, name))
     text.extend(["\t%s\n" % line for line in lines[len(lines)-logLines:]])
     text.append("")
@@ -7687,7 +7687,7 @@ def message(attrs):
     if attrs['changes']:
         text.append('<h4>Recent Changes:</h4>')
         text.extend([c.asHTML() for c in attrs['changes']])
-    name, url, lines = attrs['logs'][-1]
+    name, url, lines, logstatus = attrs['logs'][-1]
     text.append('<h4>Last %d lines of "%s":</h4>' % (logLines, name))
     text.append('<p>')
     text.append('<br>'.join([line for line in lines[len(lines)-logLines:]]))
@@ -7822,7 +7822,8 @@ The functions asText and asHTML return a list of strings with
 the above information formatted. 
 @item logs
 (List of Tuples) List of tuples where each tuple contains the log name, log url,
-and log contents as a list of strings.
+log contents as a list of strings, and the status of the corresponding build step,
+i.e. SUCCESS, WARNING, or FAILURE.
 @end table
 @end table
 

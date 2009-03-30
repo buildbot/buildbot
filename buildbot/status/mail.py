@@ -392,12 +392,14 @@ class MailNotifier(base.StatusReceiverMultiService):
         # name, log url, and the log contents as a list of strings.
         #
         logs = list()
-        for log in build.getLogs():
-            stepName = log.getStep().getName()
-            logName = log.getName()
+        for logf in build.getLogs():
+            logStep = logf.getStep()
+            stepName = logStep.getName()
+            logStatus, dummy = logStep.getResults()
+            logName = logf.getName()
             logs.append(('%s.%s' % (stepName, logName),
                          '%s/steps/%s/logs/%s' % (self.status.getURLForThing(build), stepName, logName),
-                         log.getText().splitlines()))
+                         logf.getText().splitlines(), logStatus))
                 
         attrs = {'builderName': name,
                  'projectName': self.status.getProjectName(),
