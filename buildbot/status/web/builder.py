@@ -82,7 +82,7 @@ class StatusResourceBuilder(HtmlResource, OneLineMixin):
         data += "<h2>Recent Builds:</h2>\n"
         data += "<ul>\n"
         numbuilds = req.args.get('numbuilds', ['5'])[0]
-        for i,build in enumerate(b.generateFinishedBuilds(numbuilds=int(numbuilds))):
+        for i,build in enumerate(b.generateFinishedBuilds(num_builds=int(numbuilds))):
             data += " <li>" + self.make_line(req, build, False) + "</li>\n"
             if i == 0:
                 data += "<br />\n" # separator
