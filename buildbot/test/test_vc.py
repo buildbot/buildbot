@@ -2447,12 +2447,19 @@ class Mercurial(VCBase, unittest.TestCase):
     _wait_for_server_poller = None
     _pp = None
 
+    # make sure we can identify source repo via default path
+    def _testSourceURLPresent(self, rc):
+        d = self.helper.dovc(self.workdir, ['paths', 'default'])
+        yield d; d.getResult()
+    _testSourceURLPresent = deferredGenerator(_testSourceURLPresent)
+
     def testCheckout(self):
         self.helper.vcargs = { 'repourl': self.helper.rep_trunk }
         d = self.do_vctest(testRetry=False)
-
+        
         # TODO: testRetry has the same problem with Mercurial as it does for
         # Arch
+        d.addCallback(self._testSourceURLPresent)
         return d
 
     def testPatch(self):
@@ -2464,8 +2471,10 @@ class Mercurial(VCBase, unittest.TestCase):
     def testCheckoutBranch(self):
         self.helper.vcargs = { 'baseURL': self.helper.hg_base + "/",
                                'defaultBranch': "trunk" }
-        d = self.do_branch()
-        return d
+        
+        d = self.do_branch()        
+        d.addCallback(self._testSourceURLPresent)    
+        return d        
 
     def serveHTTP(self):
         # the easiest way to publish hg over HTTP is by running 'hg serve' as
@@ -2534,6 +2543,7 @@ class Mercurial(VCBase, unittest.TestCase):
             self.helper.vcargs =  { 'repourl': repourl }
             return self.do_vctest(testRetry=False)
         d.addCallback(_started)
+        d.addCallback(self._testSourceURLPresent)
         return d
 
     def testTry(self):
@@ -2646,6 +2656,7 @@ class MercurialInRepo(Mercurial):
 
         # TODO: testRetry has the same problem with Mercurial as it does for
         # Arch
+        d.addCallback(self._testSourceURLPresent)
         return d
 
     def testPatch(self):
@@ -2656,6 +2667,7 @@ class MercurialInRepo(Mercurial):
     def testCheckoutBranch(self):
         self.helper.vcargs = self.default_args()
         d = self.do_branch()
+        d.addCallback(self._testSourceURLPresent)
         return d
 
     def serveHTTP(self):
@@ -2725,6 +2737,7 @@ class MercurialInRepo(Mercurial):
             self.helper.vcargs['repourl'] = repourl
             return self.do_vctest(testRetry=False)
         d.addCallback(_started)
+        d.addCallback(self._testSourceURLPresent)
         return d
 
     def testTry(self):
