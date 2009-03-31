@@ -7,6 +7,7 @@ import twisted
 from twisted.python.versions import Version
 from twisted.python.procutils import which
 from twisted.python import log, logfile
+from buildbot.test.runutils import SignalMixin
 import os
 
 '''Testcases to verify that the --log-size and --log-count options to
@@ -40,16 +41,20 @@ c['slavePortnum'] = 0
 
 from twisted.python import log
 for i in xrange(100):
-  log.msg("this is a mighty long string and I'm going to write it into the log often")
+  log.msg('this is a mighty long string and I am going to write it into the log often')
 """
 
-class MasterLogs(unittest.TestCase):
+class MasterLogs(unittest.TestCase, SignalMixin):
     '''Limit master log size and count.'''
 
     def setUp(self):
         if twisted.version < Version("twisted", 8, 2, 0):
             self.skip = True
             raise unittest.SkipTest("Twisted 8.2.0 or higher required")
+        self.setUpSignalHandler()
+
+    def tearDown(self):
+        self.tearDownSignalHandler()
 
     def testLog(self):
         exes = which('buildbot')
@@ -82,7 +87,7 @@ class MasterLogs(unittest.TestCase):
         self.failUnlessEqual(lf.listLogs(), [1,2])
         lr = lf.getLog(1)
         firstline = lr.readLines()[0]
-        self.failUnless(firstline.endswith("this is a mighty long string and I'm going to write it into the log often\n"))
+        self.failUnless(firstline.endswith("this is a mighty long string and I am going to write it into the log often\n"))
 
     def _stop_master(self):
         d = getProcessOutput(self.buildbotexe,
