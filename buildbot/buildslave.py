@@ -544,6 +544,7 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
         if not self.parent or not self.notify_on_missing:
             return
 
+        buildmaster = self.botmaster.parent
         status = buildmaster.getStatus()
         text = "The Buildbot working for '%s'\n" % status.getProjectName()
         text += ("has noticed that the latent buildslave named %s \n" %
