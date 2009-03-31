@@ -91,4 +91,4 @@ class MasterLogs(unittest.TestCase):
         return d
 
     def _master_stopped(self, res):
-        print "master stopped"
+        log.msg("master stopped")
