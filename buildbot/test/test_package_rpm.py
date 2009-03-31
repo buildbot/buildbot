@@ -2,7 +2,6 @@
 
 from twisted.trial import unittest
 
-from buildbot.test.runutils import SlaveCommandTestBase
 from buildbot.steps.package.rpm import RpmBuild, RpmLint, RpmSpec
 
 

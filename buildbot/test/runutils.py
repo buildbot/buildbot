@@ -309,7 +309,7 @@ def findDir():
 class SignalMixin:
     sigchldHandler = None
     
-    def setUpClass(self):
+    def setUpSignalHandler(self):
         # make sure SIGCHLD handler is installed, as it should be on
         # reactor.run(). problem is reactor may not have been run when this
         # test runs.
@@ -317,7 +317,7 @@ class SignalMixin:
             self.sigchldHandler = signal.signal(signal.SIGCHLD,
                                                 reactor._handleSigchld)
 
-    def tearDownClass(self):
+    def tearDownSignalHandler(self):
         if self.sigchldHandler:
             signal.signal(signal.SIGCHLD, self.sigchldHandler)
 
@@ -338,6 +338,12 @@ class FakeSlaveBuilder:
 
 class SlaveCommandTestBase(SignalMixin):
     usePTY = False
+
+    def setUp(self):
+        self.setUpSignalHandler()
+
+    def tearDown(self):
+        self.tearDownSignalHandler()
 
     def setUpBuilder(self, basedir):
         if not os.path.exists(basedir):
