@@ -52,6 +52,7 @@ class StatusResourceBuild(HtmlResource):
                 data += make_stop_form(stopURL)
 
         if b.isFinished():
+	    # Results map loosely to css_classes
             results = b.getResults()
             data += "<h2>Results:</h2>\n"
             text = " ".join(b.getText())
@@ -106,8 +107,15 @@ class StatusResourceBuild(HtmlResource):
         data += "<ol>\n"
         for s in b.getSteps():
             name = s.getName()
-            data += (" <li><a href=\"%s\">%s</a> [%s]\n"
-                     % (req.childLink("steps/%s" % urllib.quote(name)),
+	    if s.isFinished():
+		css_class = css_classes[s.getResults()[0]]
+	    elif s.isStarted():
+		css_class = "running"
+	    else:
+		css_class = ""
+            data += (' <li><span class="%s"><a href=\"%s\">%s</a> [%s]</span>\n'
+                     % (css_class, 
+			req.childLink("steps/%s" % urllib.quote(name)),
                         name,
                         " ".join(s.getText())))
             if s.getLogs():
