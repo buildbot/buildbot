@@ -902,10 +902,13 @@ class CheckConfigOptions(usage.Options):
 
 def doCheckConfig(config):
     quiet = config.get('quiet')
-    configFile = config.get('configFile')
+    configFileName = config.get('configFile')
     try:
         from buildbot.scripts.checkconfig import ConfigLoader
-        ConfigLoader(configFile)
+        if os.path.isdir(configFileName):
+            ConfigLoader(basedir=configFileName)
+        else:
+            ConfigLoader(configFileName=configFileName)
     except:
         if not quiet:
             # Print out the traceback in a nice format

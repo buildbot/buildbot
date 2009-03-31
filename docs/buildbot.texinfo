@@ -2163,11 +2163,15 @@ which get queued after the reconfig) will use the new process.
 @node Testing the Config File, Defining the Project, Loading the Config File, Configuration
 @section Testing the Config File
 
-To verify that the config file is well-formed and contains no
-deprecated or invalid elements, use the ``checkconfig'' command:
+To verify that the config file is well-formed and contains no deprecated or
+invalid elements, use the ``checkconfig'' command, passing it either a master
+directory or a config file.
 
 @example
 % buildbot checkconfig master.cfg
+Config file is good!
+# or
+% buildbot checkconfig /tmp/masterdir
 Config file is good!
 @end example
 

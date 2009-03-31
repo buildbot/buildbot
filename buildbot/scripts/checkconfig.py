@@ -8,8 +8,9 @@ import traceback
 from buildbot import master
 
 class ConfigLoader(master.BuildMaster):
-    def __init__(self, configFileName="master.cfg"):
-        master.BuildMaster.__init__(self, ".", configFileName)
+    def __init__(self, basedir=os.getcwd(), configFileName="master.cfg"):
+        master.BuildMaster.__init__(self, basedir, configFileName)
+        configFileName = os.path.join(basedir, configFileName)
         dir = os.getcwd()
         # Use a temporary directory since loadConfig() creates a bunch of
         # directories and compiles .py files
@@ -40,7 +41,12 @@ class ConfigLoader(master.BuildMaster):
 if __name__ == '__main__':
     try:
         if len(sys.argv) > 1:
-            c = ConfigLoader(sys.argv[1])
+            if os.path.isdir(sys.argv[1]):
+                print "using dir"
+                c = ConfigLoader(basedir=sys.argv[1])
+            else:
+                print "using file"
+                c = ConfigLoader(configFileName=sys.argv[1])
         else:
             c = ConfigLoader()
     except IOError:
