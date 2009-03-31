@@ -5182,7 +5182,7 @@ The @code{Mercurial} build step performs a
 @uref{http://selenic.com/mercurial, Mercurial} (aka ``hg'') checkout
 or update.
 
-Branches are available in two modes: ''dirname'' like like @xref{Darcs} or
+Branches are available in two modes: ''dirname'' like @xref{Darcs} or
 ''inrepo'', which uses the repository internal branches. Make sure this 
 setting matches your changehook, if you have that installed.
 
