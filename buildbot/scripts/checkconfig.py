@@ -37,23 +37,3 @@ class ConfigLoader(master.BuildMaster):
             raise
         os.chdir(dir)
         rmtree(tempdir)
-
-if __name__ == '__main__':
-    try:
-        if len(sys.argv) > 1:
-            if os.path.isdir(sys.argv[1]):
-                print "using dir"
-                c = ConfigLoader(basedir=sys.argv[1])
-            else:
-                print "using file"
-                c = ConfigLoader(configFileName=sys.argv[1])
-        else:
-            c = ConfigLoader()
-    except IOError:
-        print >> sys.stderr, "Could not open config file"
-        sys.exit(2)
-    except:
-        print >> sys.stderr, "Error in config file:"
-        t, v, tb = sys.exc_info()
-        print >> sys.stderr, traceback.print_exception(t, v, tb)
-        sys.exit(1)
