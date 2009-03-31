@@ -5182,7 +5182,9 @@ The @code{Mercurial} build step performs a
 @uref{http://selenic.com/mercurial, Mercurial} (aka ``hg'') checkout
 or update.
 
-Branches are handled just like @xref{Darcs}.
+Branches are available in two modes: ''dirname'' like like @xref{Darcs} or
+''inrepo'', which uses the repository internal branches. Make sure this 
+setting matches your changehook, if you have that installed.
 
 The Mercurial step takes the following arguments:
 
@@ -5201,6 +5203,19 @@ slash.
 the name of the branch to use when a Build does not provide one of its
 own. This will be appended to @code{baseURL} to create the string that
 will be passed to the @code{hg clone} command.
+
+@item branchType
+either 'dirname' (default) or 'inrepo' depending on whether
+the branch name should be appended to the @code{baseURL}
+or the branch is a mercurial named branch and can be
+found within the @code{repourl}.
+
+@item clobberOnBranchChange
+boolean, defaults to True. If set and
+using inrepos branches, clobber the tree
+at each branch change. Otherwise, just
+update to the branch.
+
 @end table
 
 
