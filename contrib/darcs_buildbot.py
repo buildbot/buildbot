@@ -144,15 +144,25 @@ def sendChanges(master):
 
     if not changes:
         print "darcs_buildbot.py: weird, no changes to send"
+        return
     elif len(changes) == 1:
         print "sending 1 change to buildmaster:"
     else:
         print "sending %d changes to buildmaster:" % len(changes)
 
+    # the Darcs Source class expects revision to be a context, not a
+    # hash of a patch (which is what we have in c['revision']).  For
+    # the moment, we send None for everything but the most recent, because getting
+    # contexts is Hard.
+
+    # get the context for the most recent change
+    latestcontext = commands.getoutput("darcs changes --context")
+    changes[-1]['context'] = latestcontext
+
     def _send(res, c):
         branch = None
         print " %s" % c['revision']
-        return s.send(branch, c['revision'], c['comments'], c['files'],
+        return s.send(branch, c.get('context'), c['comments'], c['files'],
                       c['username'])
     for c in changes:
         d.addCallback(_send, c)
