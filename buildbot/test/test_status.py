@@ -27,6 +27,8 @@ class MyStep:
     build = None
     def getName(self):
         return "step"
+    def getResults(self):
+        return (builder.SUCCESS, "yay")
 
 class MyLogFileProducer(builder.LogFileProducer):
     # The reactor.callLater(0) in LogFileProducer.resumeProducing is a bit of
@@ -134,7 +136,7 @@ def customTextMailMessage(attrs):
     text.append("")
     text.extend([c.asText() for c in attrs['changes']])
     text.append("")
-    name, url, lines = attrs['logs'][-1]
+    name, url, lines, status = attrs['logs'][-1]
     text.append("Last %d lines of '%s':" % (logLines, name))
     text.extend(["\t%s\n" % line for line in lines[len(lines)-logLines:]])
     text.append("")
@@ -148,7 +150,7 @@ def customHTMLMailMessage(attrs):
                                                           attrs['result'].title()))
     text.append("<h4>Recent Changes:</h4>")
     text.extend([c.asHTML() for c in attrs['changes']])
-    name, url, lines = attrs['logs'][-1]
+    name, url, lines, status = attrs['logs'][-1]
     text.append("<h4>Last %d lines of '%s':</h4>" % (logLines, name))
     text.append("<p>")
     text.append("<br>".join([line for line in lines[len(lines)-logLines:]]))

@@ -399,7 +399,8 @@ class MailNotifier(base.StatusReceiverMultiService):
             logName = logf.getName()
             logs.append(('%s.%s' % (stepName, logName),
                          '%s/steps/%s/logs/%s' % (self.status.getURLForThing(build), stepName, logName),
-                         logf.getText().splitlines(), logStatus))
+                         logf.getText().splitlines(),
+                         logStatus))
                 
         attrs = {'builderName': name,
                  'projectName': self.status.getProjectName(),
