@@ -55,6 +55,7 @@ class Utilities(unittest.TestCase):
 class ShellBase(SignalMixin):
 
     def setUp(self):
+        self.setUpSignalHandler()
         self.basedir = "test_slavecommand"
         if not os.path.isdir(self.basedir):
             os.mkdir(self.basedir)
@@ -66,6 +67,9 @@ class ShellBase(SignalMixin):
         self.subemitcmd = os.path.join(util.sibpath(__file__, "subdir"),
                                        "emit.py")
         self.sleepcmd = util.sibpath(__file__, "sleep.py")
+
+    def tearDown(self):
+        self.tearDownSignalHandler()
 
     def failUnlessIn(self, substring, string):
         self.failUnless(string.find(substring) != -1,

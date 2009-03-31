@@ -1,6 +1,7 @@
 # -*- test-case-name: buildbot.test.test_web -*-
 
 import os, time, shutil
+import warnings
 from HTMLParser import HTMLParser
 from twisted.python import components
 
@@ -204,6 +205,13 @@ class Ports(BaseWeb, unittest.TestCase):
 
 
 class Waterfall(BaseWeb, unittest.TestCase):
+    def setUp(self):
+        warnings.filterwarnings("ignore", category=DeprecationWarning)
+
+    def tearDown(self):
+        BaseWeb.tearDown(self)
+        warnings.resetwarnings()
+
     def test_waterfall(self):
         os.mkdir("test_web4")
         os.mkdir("my-maildir"); os.mkdir("my-maildir/new")
@@ -329,8 +337,8 @@ c['buildbotURL'] = 'http://dummy.example.org:8010/'
 """
 
 class GetURL(RunMixin, unittest.TestCase):
-
     def setUp(self):
+        warnings.filterwarnings("ignore", category=DeprecationWarning)
         RunMixin.setUp(self)
         self.master.loadConfig(geturl_config)
         self.master.startService()
@@ -339,6 +347,7 @@ class GetURL(RunMixin, unittest.TestCase):
 
     def tearDown(self):
         stopHTTPLog()
+        warnings.resetwarnings()
         return RunMixin.tearDown(self)
 
     def doBuild(self, buildername):

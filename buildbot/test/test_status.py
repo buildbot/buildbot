@@ -513,9 +513,15 @@ class Results(unittest.TestCase):
         self.failUnlessEqual(t.getLogs(), {'output': ""})
 
 class Log(unittest.TestCase):
-    def setUpClass(self):
-        self.basedir = "status_log_add"
+    basedir = "status_log_add"
+
+    def setUp(self):
+        self.tearDown()
         os.mkdir(self.basedir)
+
+    def tearDown(self):
+        if os.path.exists(self.basedir):
+            rmtree(self.basedir)
 
     def testAdd(self):
         l = MyLog(self.basedir, "compile", step=13)

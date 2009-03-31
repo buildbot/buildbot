@@ -389,6 +389,7 @@ class VCBase(SignalMixin):
         self.failUnless(string.find(substring) != -1, msg)
 
     def setUp(self):
+        self.setUpSignalHandler()
         d = VCS.skipIfNotCapable(self.vc_name)
         d.addCallback(self._setUp1)
         return d
@@ -1046,6 +1047,7 @@ class VCBase(SignalMixin):
 
 
     def tearDown(self):
+        self.tearDownSignalHandler()
         d = defer.succeed(None)
         if self.slave:
             d2 = self.master.botmaster.waitUntilBuilderDetached("vc")
