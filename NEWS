@@ -4,7 +4,9 @@ User visible changes in Buildbot.             -*- outline -*-
 
 It is now possible to require authentication to force build and stop via the
 WebStatus interface. To use this, set the 'auth' field of WebStatus to a valid
-IAuth implementation, currently only BasicAuth with a list of user/passwords.
+IAuth implementation. Current implementations are:
+	BasicAuth with a list of user/passwords
+	HTPasswdAuth with an .htpasswd file
 By default, the unauthenticated behavior will occur.
 
 * Release 0.7.10 (25 Feb 2009)
