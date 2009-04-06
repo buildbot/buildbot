@@ -1,5 +1,12 @@
 User visible changes in Buildbot.             -*- outline -*-
 
+*** Password Protection for Force Build and Stop actions
+
+It is now possible to require authentication to force build and stop via the
+WebStatus interface. To use this, set the 'auth' field of WebStatus to a valid
+IAuth implementation, currently only BasicAuth with a list of user/passwords.
+By default, the unauthenticated behavior will occur.
+
 * Release 0.7.10 (25 Feb 2009)
 
 This release is mainly a collection of user-submitted patches since

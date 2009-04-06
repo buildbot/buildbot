@@ -54,7 +54,22 @@ def make_row(label, field):
     label = html.escape(label)
     return ROW_TEMPLATE % {"label": label, "field": field}
 
-def make_stop_form(stopURL, on_all=False, label="Build"):
+def make_name_user_passwd_form(useUserPasswd):
+    """helper function to create HTML prompt for 'name' when
+    C{useUserPasswd} is C{False} or 'username' / 'password' prompt
+    when C{True}."""
+
+    if useUserPasswd:
+	label = "Your username:"
+    else:
+        label = "Your name:"
+    data = make_row(label, '<input type="text" name="username" />')
+    if useUserPasswd:
+	data += make_row("Your password:",
+			 '<input type="password" name="passwd" />')
+    return data
+
+def make_stop_form(stopURL, useUserPasswd, on_all=False, label="Build"):
     if on_all:
         data = """<form action="%s" class='command stopbuild'>
           <p>To stop all builds, fill out the following fields and
@@ -63,14 +78,13 @@ def make_stop_form(stopURL, on_all=False, label="Build"):
         data = """<form action="%s" class='command stopbuild'>
           <p>To stop this build, fill out the following fields and
           push the 'Stop' button</p>\n""" % stopURL
-    data += make_row("Your name:",
-                     "<input type='text' name='username' />")
+    data += make_name_user_passwd_form(useUserPasswd)
     data += make_row("Reason for stopping build:",
                      "<input type='text' name='comments' />")
     data += '<input type="submit" value="Stop %s" /></form>\n' % label
     return data
 
-def make_force_build_form(forceURL, on_all=False):
+def make_force_build_form(forceURL, useUserPasswd, on_all=False):
     if on_all:
         data = """<form action="%s" class="command forcebuild">
           <p>To force a build on all Builders, fill out the following fields
@@ -80,8 +94,7 @@ def make_force_build_form(forceURL, on_all=False):
           <p>To force a build, fill out the following fields and
           push the 'Force Build' button</p>""" % forceURL
     return (data
-      + make_row("Your name:",
-                 "<input type='text' name='username' />")
+      + make_name_user_passwd_form(useUserPasswd)
       + make_row("Reason for build:",
                  "<input type='text' name='comments' />")
       + make_row("Branch to build:",
@@ -254,8 +267,19 @@ class HtmlResource(resource.Resource):
 
     def getStatus(self, request):
         return request.site.buildbot_service.getStatus()
+
     def getControl(self, request):
         return request.site.buildbot_service.getControl()
+
+    def isUsingUserPasswd(self, request):
+	return request.site.buildbot_service.isUsingUserPasswd()
+
+    def authUser(self, request):
+	user = request.args.get("username", ["<unknown>"])[0]
+	passwd = request.args.get("passwd", ["<no-password>"])[0]
+	if user == "<unknown>" or passwd == "<no-password>":
+	    return False
+        return request.site.buildbot_service.authUser(user, passwd)
 
     def getChangemaster(self, request):
         return request.site.buildbot_service.getChangeSvc()
