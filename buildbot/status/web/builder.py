@@ -50,6 +50,16 @@ class StatusResourceBuilder(HtmlResource, OneLineMixin):
 </form>''' % stopURL
         return data
 
+    def request_line(self, build_request, req):
+        when = time.strftime("%b %d %H:%M:%S", time.localtime(build_request.getSubmitTime()))
+        if build_request.source.changes:
+            reason = "<br/>\n".join(c.asHTML() for c in build_request.source.changes)
+        elif build_request.source.revision:
+            reason = build_request.source.revision
+        else:
+            reason = "no changes specified"
+        return "<font size=\"-1\">(%s)</font> %s" % (when, reason)
+
     def body(self, req):
         b = self.builder_status
         control = self.builder_control
@@ -75,6 +85,16 @@ class StatusResourceBuilder(HtmlResource, OneLineMixin):
             data += "</ul>\n"
         else:
             data += "<h2>no current builds</h2>\n"
+
+        pending = b.getPendingBuilds()
+        if pending:
+            data += "<h2>Pending Builds:</h2>\n"
+            data += "<ul>\n"
+            for request in pending:
+                data += " <li>" + self.request_line(request, req) + "</li>\n"
+            data += "</ul>\n"
+        else:
+            data += "<h2>no pending builds</h2>\n"
 
         # Then a section with the last 5 builds, with the most recent build
         # distinguished from the rest.

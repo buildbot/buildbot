@@ -4,7 +4,8 @@ from twisted.python import log
 from twisted.web import html
 from twisted.web.util import Redirect
 
-from buildbot.status.web.base import HtmlResource, abbreviate_age, OneLineMixin, path_to_slave
+from buildbot.status.web.base import HtmlResource, abbreviate_age, \
+        OneLineMixin, path_to_slave, path_to_build
 from buildbot import version, util
 
 # /buildslaves/$slavename
@@ -64,8 +65,17 @@ class OneBuildSlaveResource(HtmlResource, OneLineMixin):
         if current_builds:
             data.append("<h2>Currently building:</h2>\n")
             data.append("<ul>\n")
+            thisURL = "../../../" + path_to_slave(req, slave)
             for build in current_builds:
-                data.append("<li>%s</li>\n" % self.make_line(req, build, True))
+                stopURL = path_to_build(req, build) + '/stop'
+                stop_form = '''
+    <form action="%s" class="command stopbuild" style="display:inline">
+      <input type="submit" value="Stop Build" />
+      <input type="hidden" name="url" value="%s" />
+    </form>''' % (stopURL, thisURL)
+
+                data.append("<li>%s %s</li>\n" % (self.make_line(req, build, True),
+                        stop_form))
             data.append("</ul>\n")
 
         else:
