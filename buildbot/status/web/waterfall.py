@@ -949,6 +949,8 @@ class WaterfallStatusResource(HtmlResource):
         # third pass: render the HTML table
         for i in range(gridlen):
             data += " <tr>\n";
+            # convert data to a unicode string, whacking any non-ASCII characters it might contain
+            data = data.decode("ascii", "replace")
             for strip in grid:
                 b = strip[i]
                 if b:
