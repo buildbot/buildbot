@@ -160,6 +160,19 @@ class _TransferBuildStep(BuildStep):
             workdir = self.workdir
         return properties.render(workdir)
 
+    def finished(self, result):
+        # Subclasses may choose to skip a transfer. In those cases, self.cmd
+        # will be None, and we should just let BuildStep.finished() handle
+        # the rest
+        if result == SKIPPED:
+            return BuildStep.finished(self, SKIPPED)
+        if self.cmd.stderr != '':
+            self.addCompleteLog('stderr', self.cmd.stderr)
+
+        if self.cmd.rc is None or self.cmd.rc == 0:
+            return BuildStep.finished(self, SUCCESS)
+        return BuildStep.finished(self, FAILURE)
+
 
 class FileUpload(_TransferBuildStep):
     """
@@ -236,14 +249,6 @@ class FileUpload(_TransferBuildStep):
         self.cmd = StatusRemoteCommand('uploadFile', args)
         d = self.runCommand(self.cmd)
         d.addCallback(self.finished).addErrback(self.failed)
-
-    def finished(self, result):
-        if self.cmd.stderr != '':
-            self.addCompleteLog('stderr', self.cmd.stderr)
-
-        if self.cmd.rc is None or self.cmd.rc == 0:
-            return BuildStep.finished(self, SUCCESS)
-        return BuildStep.finished(self, FAILURE)
 
 
 class DirectoryUpload(BuildStep):
@@ -323,6 +328,11 @@ class DirectoryUpload(BuildStep):
         d.addCallback(self.finished).addErrback(self.failed)
 
     def finished(self, result):
+        # Subclasses may choose to skip a transfer. In those cases, self.cmd
+        # will be None, and we should just let BuildStep.finished() handle
+        # the rest
+        if result == SKIPPED:
+            return BuildStep.finished(self, SKIPPED)
         if self.cmd.stderr != '':
             self.addCompleteLog('stderr', self.cmd.stderr)
 
@@ -454,12 +464,4 @@ class FileDownload(_TransferBuildStep):
         self.cmd = StatusRemoteCommand('downloadFile', args)
         d = self.runCommand(self.cmd)
         d.addCallback(self.finished).addErrback(self.failed)
-
-    def finished(self, result):
-        if self.cmd.stderr != '':
-            self.addCompleteLog('stderr', self.cmd.stderr)
-
-        if self.cmd.rc is None or self.cmd.rc == 0:
-            return BuildStep.finished(self, SUCCESS)
-        return BuildStep.finished(self, FAILURE)
 
