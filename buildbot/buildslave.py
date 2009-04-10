@@ -228,6 +228,7 @@ class AbstractBuildSlave(NewCredPerspective, service.MultiService):
 
             return self.updateSlave()
         d.addCallback(_accept_slave)
+        d.addCallback(lambda res: self.botmaster.maybeStartAllBuilds())
 
         # Finally, the slave gets a reference to this BuildSlave. They
         # receive this later, after we've started using them.
