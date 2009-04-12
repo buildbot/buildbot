@@ -1174,15 +1174,19 @@ class CVSHelper(BaseHelper):
 
     def vc_try_checkout(self, workdir, rev, branch=None):
         # 'workdir' is an absolute path
+
+        # get rid of timezone info, which might not be parsed 
+        rev =  re.sub("[^0-9 :-]","",rev) 
+        rev =  re.sub("  ","",rev)         
         assert os.path.abspath(workdir) == workdir
-        cmd = [self.vcexe, "-d", self.cvsrep, "checkout",
+        cmd = ["-d", self.cvsrep, "checkout",
                "-d", workdir,
                "-D", rev]
         if branch is not None:
             cmd.append("-r")
             cmd.append(branch)
         cmd.append("sample")
-        w = self.do(self.repbase, cmd)
+        w = self.dovc(self.repbase, cmd)
         yield w; w.getResult()
         open(os.path.join(workdir, "subdir", "subdir.c"), "w").write(TRY_C)
     vc_try_checkout = deferredGenerator(vc_try_checkout)
