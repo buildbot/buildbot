@@ -2591,6 +2591,8 @@ class Mercurial(SourceBase):
                 if sys.platform == "win32":
                     oldurl = oldurl.lower().replace('\\', '/')
                     repourl = self.repourl.lower().replace('\\', '/')
+                    if repourl.startswith('file://'):
+                        repourl = repourl.split('file://')[1]
                 else:
                     repourl = self.repourl
                 
