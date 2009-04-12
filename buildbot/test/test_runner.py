@@ -14,7 +14,8 @@ class Options(unittest.TestCase):
     def make(self, d, key):
         # we use a wacky filename here in case the test code discovers the
         # user's real ~/.buildbot/ directory
-        os.makedirs(os.sep.join(d + [".buildbot"]))
+        if not os.path.isdir(os.sep.join(d + [".buildbot"])):
+            os.makedirs(os.sep.join(d + [".buildbot"]))
         f = open(os.sep.join(d + [".buildbot", self.optionsFile]), "w")
         f.write("key = '%s'\n" % key)
         f.close()
@@ -39,7 +40,8 @@ class Options(unittest.TestCase):
         self.check(["home", "dir1"], "home")
 
         self.home = os.path.abspath("nothome")
-        os.makedirs(os.sep.join(["nothome", "dir1"]))
+        if not os.path.isdir(os.sep.join(["nothome", "dir1"])):
+            os.makedirs(os.sep.join(["nothome", "dir1"]))
         self.check(["nothome", "dir1"], None)
 
     def doForce(self, args, expected):
