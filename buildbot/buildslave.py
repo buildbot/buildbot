@@ -524,10 +524,11 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
 
     def attached(self, bot):
         if self.substantiation_deferred is None:
-            log.msg('Slave %s received connection while not trying to '
-                    'substantiate.  Disconnecting.' % (self.slavename,))
+            msg = 'Slave %s received connection while not trying to ' \
+                    'substantiate.  Disconnecting.' % (self.slavename,)
+            log.msg(msg)
             self._disconnect(bot)
-            return defer.fail()
+            return defer.fail(RuntimeError(msg))
         return AbstractBuildSlave.attached(self, bot)
 
     def detached(self, mind):
