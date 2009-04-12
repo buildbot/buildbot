@@ -395,7 +395,7 @@ class ShellCommand:
                 argv = ['/bin/sh', '-c', self.command]
             display = self.fake_command
         else:
-            if runtime.platformType  == 'win32':
+            if runtime.platformType  == 'win32' and not self.command[0].lower().endswith(".exe"):
                 argv = os.environ['COMSPEC'].split() # allow %COMSPEC% to have args
                 if '/c' not in argv: argv += ['/c'] 
                 argv += list(self.command)
@@ -428,7 +428,7 @@ class ShellCommand:
         self.sendStatus({'header': msg+"\n"})
 
         # then the obfuscated command array for resolving unambiguity
-        msg = " argv: %s" % (self.fake_command,)
+        msg = " argv: %s" % (self.fake_command,)    
         log.msg(" " + msg)
         self.sendStatus({'header': msg+"\n"})
 
@@ -475,6 +475,7 @@ class ShellCommand:
         # were called, then kill() would blow up).
         self.process = None
         self.startTime = time.time()
+        
         p = reactor.spawnProcess(self.pp, argv[0], argv,
                                  self.environ,
                                  self.workdir,
