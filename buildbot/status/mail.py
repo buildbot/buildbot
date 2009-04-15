@@ -506,11 +506,15 @@ class MailNotifier(base.StatusReceiverMultiService):
         # list so they can tell if they are also interested in the change
         # unless there are no interested users
         if self.sendToInterestedUsers and len(recipients):
-            m['CC'] = ", ".join(sorted(self.extraRecipients[:]))
+            extra_recips = self.extraRecipients[:]
+            extra_recips.sort()
+            m['CC'] = ", ".join(extra_recips)
         else:
             [recipients.add(r) for r in self.extraRecipients[:]]
 
-        m['To'] = ", ".join(sorted(recipients))
+        rlist = list(recipients)
+        rlist.sort()
+        m['To'] = ", ".join(rlist)
 
         # The extras weren't part of the TO list so add them now
         if self.sendToInterestedUsers:

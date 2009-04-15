@@ -980,15 +980,16 @@ s = factory.s
 
 from buildbot.steps.shell import ShellCommand
 f1 = factory.BuildFactory([
-    s(ShellCommand, command="sleep 3", env={'blah':'blah'})
+    s(ShellCommand, command="sleep 1", env={'blah':'blah'})
     ])
 
 BuildmasterConfig = c = {}
-c['slaves'] = [BuildSlave('bot1', 'sekrit', max_builds=1)]
+slavenames = ['bot%i' % i for i in range(5)]
+c['slaves'] = [BuildSlave(name, 'sekrit', max_builds=1) for name in slavenames]
 c['schedulers'] = []
 c['builders'] = []
-c['builders'].append({'name':'quick1', 'slavename':'bot1', 'builddir': 'quickdir1', 'factory': f1})
-c['builders'].append({'name':'quick2', 'slavename':'bot1', 'builddir': 'quickdir2', 'factory': f1})
+c['builders'].append({'name':'quick1', 'slavenames':slavenames, 'builddir': 'quickdir1', 'factory': f1})
+c['builders'].append({'name':'quick2', 'slavenames':slavenames, 'builddir': 'quickdir2', 'factory': f1})
 c['slavePortnum'] = 0
 """
 
@@ -1003,49 +1004,54 @@ class BuildPrioritization(RunMixin, unittest.TestCase):
         self.master.readConfig = True
         self.master.startService()
 
-        d = self.connectSlave(builders=['quick1', 'quick2'])
-        d.addCallback(self._connected)
-
-        return d
-
-    def _connected(self, *args):
         # Our fake source stamp
         # we override canBeMergedWith so that our requests don't get merged together
         ss = SourceStamp()
         ss.canBeMergedWith = lambda x: False
-
-        # Send one request to tie up the slave before sending future requests
-        req0 = BuildRequest("reason", ss, "test_builder")
-        self.master.botmaster.builders['quick1'].submitBuildRequest(req0)
 
         # Send 10 requests to alternating builders
         # We fudge the submittedAt field after submitting since they're all
         # getting submitted so close together according to time.time()
         # and all we care about is what order they're run in.
         reqs = []
-        self.finish_order = []
+        self.start_order = []
         for i in range(10):
             req = BuildRequest(str(i), ss, "test_builder")
             j = i % 2 + 1
             self.master.botmaster.builders['quick%i' % j].submitBuildRequest(req)
             req.submittedAt = i
-            # Keep track of what order the builds finished in
-            def append(item, arg):
-                self.finish_order.append(item)
-            req.waitUntilFinished().addCallback(append, req)
+            # Keep track of what order the builds start in
+            def append(build):
+                self.start_order.append(int(build.reason))
+            req.subscribe(append)
             reqs.append(req.waitUntilFinished())
 
         dl = defer.DeferredList(reqs)
         dl.addCallback(self._all_finished)
 
-        # After our first build finishes, we should wait for the rest to finish
-        d = req0.waitUntilFinished()
+        def _delay(res):
+            d1 = defer.Deferred()
+            reactor.callLater(0.5, d1.callback, None)
+            # this test depends upon this 0.5s delay landing us in the middle
+            # of one of the builds.
+            return d1
+
+        def _connect(res, i):
+            return self.connectSlave(slavename="bot%i" % i, builders=["quick1", "quick2"])
+
+        # Now add the slaves
+        d = self.connectSlave(slavename="bot0", builders=["quick1", "quick2"])
+        for i in range(1,5):
+            d.addCallback(_delay)
+            d.addCallback(_connect, i)
+
         d.addCallback(lambda x: dl)
+
         return d
 
     def _all_finished(self, *args):
         # The builds should have finished in proper order
-        self.failUnlessEqual([int(b.reason) for b in self.finish_order], range(10))
+        self.failUnlessEqual(self.start_order, range(10))
 
 # Test graceful shutdown when no builds are active, as well as
 # canStartBuild after graceful shutdown is initiated

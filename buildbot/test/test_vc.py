@@ -163,6 +163,11 @@ main(int argc, const char *argv[])
 }
 '''
 
+def _makedirsif(dir):
+    absdir = os.path.abspath(dir)
+    if not os.path.isdir(absdir):
+        os.makedirs(absdir)
+
 def qw(s):
     return s.split()
 
@@ -281,17 +286,16 @@ class BaseHelper:
         # you must call this from createRepository
         self.repbase = os.path.abspath(os.path.join("test_vc",
                                                     "repositories"))
-        if not os.path.isdir(self.repbase):
-            os.makedirs(self.repbase)
-
+        _makedirsif(self.repbase)
+            
     def createRepository(self):
         # this will only be called once per process
         raise NotImplementedError
 
     def populate(self, basedir):
-        if not os.path.exists(basedir):
-            os.makedirs(basedir)
-        os.makedirs(os.path.join(basedir, "subdir"))
+        _makedirsif(basedir)
+        _makedirsif(os.path.join(basedir, "subdir"))       
+        
         open(os.path.join(basedir, "main.c"), "w").write(MAIN_C)
         self.version = 1
         version_c = VERSION_C % self.version
@@ -1088,7 +1092,9 @@ class CVSHelper(BaseHelper):
         return d
 
     def _capable(self, v, vcexe):
-        m = re.search(r'\(CVS\) ([\d\.]+) ', v)
+        # Consider also CVS for NT which announces itself like 
+        # Concurrent Versions System (CVSNT) 2.0.51d (client/server) 
+        m = re.search(r'\(CVS[NT]*\) ([\d.]+)', v) 
         if not m:
             log.msg("couldn't identify CVS version number in output:")
             log.msg("'''%s'''" % v)
@@ -1168,15 +1174,19 @@ class CVSHelper(BaseHelper):
 
     def vc_try_checkout(self, workdir, rev, branch=None):
         # 'workdir' is an absolute path
+
+        # get rid of timezone info, which might not be parsed 
+        rev =  re.sub("[^0-9 :-]","",rev) 
+        rev =  re.sub("  ","",rev)         
         assert os.path.abspath(workdir) == workdir
-        cmd = [self.vcexe, "-d", self.cvsrep, "checkout",
+        cmd = ["-d", self.cvsrep, "checkout",
                "-d", workdir,
                "-D", rev]
         if branch is not None:
             cmd.append("-r")
             cmd.append(branch)
         cmd.append("sample")
-        w = self.do(self.repbase, cmd)
+        w = self.dovc(self.repbase, cmd)
         yield w; w.getResult()
         open(os.path.join(workdir, "subdir", "subdir.c"), "w").write(TRY_C)
     vc_try_checkout = deferredGenerator(vc_try_checkout)
@@ -1559,10 +1569,10 @@ class DarcsHelper(BaseHelper):
         self.rep_branch = os.path.join(self.darcs_base, "branch")
         tmp = os.path.join(self.repbase, "darcstmp")
 
-        os.makedirs(self.rep_trunk)
+        _makedirsif(self.rep_trunk)
         w = self.dovc(self.rep_trunk, ["initialize"])
         yield w; w.getResult()
-        os.makedirs(self.rep_branch)
+        _makedirsif(self.rep_branch)
         w = self.dovc(self.rep_branch, ["initialize"])
         yield w; w.getResult()
 
@@ -1592,7 +1602,7 @@ class DarcsHelper(BaseHelper):
 
     def vc_revise(self):
         tmp = os.path.join(self.repbase, "darcstmp")
-        os.makedirs(tmp)
+        _makedirsif(tmp)
         w = self.dovc(tmp, qw("initialize"))
         yield w; w.getResult()
         w = self.dovc(tmp, ["pull", "-a", self.rep_trunk])
@@ -1615,7 +1625,7 @@ class DarcsHelper(BaseHelper):
         assert os.path.abspath(workdir) == workdir
         if os.path.exists(workdir):
             rmdirRecursive(workdir)
-        os.makedirs(workdir)
+        _makedirsif(workdir)
         w = self.dovc(workdir, qw("initialize"))
         yield w; w.getResult()
         if not branch:
@@ -2158,7 +2168,7 @@ class BzrHelper(BaseHelper):
         tmp = os.path.join(self.repbase, "bzrtmp")
         btmp = os.path.join(self.repbase, "bzrtmp-branch")
 
-        os.makedirs(self.rep_trunk)
+        _makedirsif(self.rep_trunk)
         w = self.dovc(self.rep_trunk, ["init"])
         yield w; w.getResult()
         w = self.dovc(self.bzr_base,
@@ -2215,7 +2225,7 @@ class BzrHelper(BaseHelper):
         assert os.path.abspath(workdir) == workdir
         if os.path.exists(workdir):
             rmdirRecursive(workdir)
-        #os.makedirs(workdir)
+        #_makedirsif(workdir)
         if not branch:
             rep = self.rep_trunk
         else:
@@ -2349,10 +2359,10 @@ class MercurialHelper(BaseHelper):
         self.rep_branch = os.path.join(self.hg_base, "branch")
         tmp = os.path.join(self.hg_base, "hgtmp")
 
-        os.makedirs(self.rep_trunk)
+        _makedirsif(self.rep_trunk)
         w = self.dovc(self.rep_trunk, "init")
         yield w; w.getResult()
-        os.makedirs(self.rep_branch)
+        _makedirsif(self.rep_branch)
         w = self.dovc(self.rep_branch, "init")
         yield w; w.getResult()
 
@@ -2567,7 +2577,7 @@ class MercurialInRepoHelper(MercurialHelper):
         self.repo = os.path.join(self.hg_base, "inrepobranch")
         tmp = os.path.join(self.hg_base, "hgtmp")
 
-        os.makedirs(self.repo)
+        _makedirsif(self.repo)
         w = self.dovc(self.repo, "init")
         yield w; w.getResult()
 
@@ -2918,6 +2928,45 @@ class Git(VCBase, unittest.TestCase):
         self.helper.vcargs = { 'repourl': self.helper.gitrepo,
                                'branch': "master" }
         d = self.do_getpatch()
+        return d
+
+    # The git tests override parts of the test sequence to demonstrate
+    # different update behavior.  In the git cases, we always
+    # effectively have a clobbered tree.
+
+    def _do_vctest_update_3(self, bs):
+        log.msg("_do_vctest_update_3")
+        self.shouldExist(self.workdir, "main.c")
+        self.shouldExist(self.workdir, "version.c")
+        self.shouldContain(self.workdir, "version.c",
+                           "version=%d" % self.helper.version)
+        self.failUnlessEqual(bs.getProperty("revision"), None)
+        self.checkGotRevisionIsLatest(bs)
+
+        # now "update" to an older revision
+        d = self.doBuild(ss=SourceStamp(revision=self.helper.trunk[-2]))
+        d.addCallback(self._do_vctest_update_4)
+        return d
+
+    def _do_vctest_copy_2(self, bs):
+        log.msg("_do_vctest_copy 3")
+        if self.metadir:
+            self.shouldExist(self.workdir, self.metadir)
+        self.shouldNotExist(self.workdir, "newfile")
+        self.failUnlessEqual(bs.getProperty("revision"), None)
+        self.checkGotRevisionIsLatest(bs)
+        self.touch(self.workdir, "newfile")
+
+    def _doBranch_3(self, bs):
+        log.msg("_doBranch_3")
+        # make sure it is still on the branch
+        main_c = os.path.join(self.slavebase, "vc-dir", "build", "main.c")
+        data = open(main_c, "r").read()
+        self.failUnlessIn("Hello branch.", data)
+
+        # now make sure that a non-branch checkout clobbers the tree
+        d = self.doBuild(ss=SourceStamp())
+        d.addCallback(self._doBranch_4)
         return d
 
 VCS.registerVC(Git.vc_name, GitHelper())

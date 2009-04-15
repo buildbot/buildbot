@@ -192,11 +192,11 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
             raise ValueError('no available images match constraints')
         return options[-1][-1]
 
-    @property
     def dns(self):
         if self.instance is None:
             return None
         return self.instance.public_dns_name
+    dns = property(dns)
 
     def start_instance(self):
         if self.instance is not None:

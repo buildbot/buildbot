@@ -24,7 +24,7 @@ from buildbot.process import buildstep, base, factory
 from buildbot.buildslave import BuildSlave
 from buildbot.steps import shell, source, python, master
 from buildbot.status import builder
-from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE
+from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE, SKIPPED
 from buildbot.test.runutils import RunMixin, rmtree
 from buildbot.test.runutils import makeBuildStep, StepTester
 from buildbot.slave import commands, registry
@@ -786,3 +786,53 @@ class MasterShellCommand(StepTester, unittest.TestCase):
         d.addCallback(_check)
         reactor.callLater(0, d.callback, None)
         return d
+
+class SuccessStep(buildstep.BuildStep):
+    def start(self):
+        self.finished(buildstep.SUCCESS)
+
+class ConditionalStepTest(StepTester, unittest.TestCase):
+    def testNotSkipped(self):
+        self.slavebase = "testNotSkipped.slave"
+        self.masterbase = "testNotSkipped.master"
+        sb = self.makeSlaveBuilder()
+        step = self.makeStep(SuccessStep)
+        d = self.runStep(step)
+        def _checkResults(results):
+            self.failUnlessEqual(SUCCESS, results)
+        d.addCallback(_checkResults)
+        return d
+
+    def testSkipped(self):
+        self.slavebase = "testSkipped.slave"
+        self.masterbase = "testSkipped.master"
+        sb = self.makeSlaveBuilder()
+        step = self.makeStep(SuccessStep, doStepIf=False)
+        d = self.runStep(step)
+        def _checkResults(results):
+            self.failUnlessEqual(SKIPPED, results)
+        d.addCallback(_checkResults)
+        return d
+
+    def testNotSkippedFunc(self):
+        self.slavebase = "testNotSkippedFunc.slave"
+        self.masterbase = "testNotSkippedFunc.master"
+        sb = self.makeSlaveBuilder()
+        step = self.makeStep(SuccessStep, doStepIf=lambda s: True)
+        d = self.runStep(step)
+        def _checkResults(results):
+            self.failUnlessEqual(SUCCESS, results)
+        d.addCallback(_checkResults)
+        return d
+
+    def testSkippedFunc(self):
+        self.slavebase = "testSkippedFunc.slave"
+        self.masterbase = "testSkippedFunc.master"
+        sb = self.makeSlaveBuilder()
+        step = self.makeStep(SuccessStep, doStepIf=lambda s: False)
+        d = self.runStep(step)
+        def _checkResults(results):
+            self.failUnlessEqual(SKIPPED, results)
+        d.addCallback(_checkResults)
+        return d
+

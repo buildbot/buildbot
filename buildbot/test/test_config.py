@@ -1179,6 +1179,19 @@ c['builders'] = [{'name':'builder1', 'slavename':'bot1',
 """
 
 class Factories(unittest.TestCase):
+    def printExpecting(self, factory, args):
+        factory_keys = factory[1].keys()
+        factory_keys.sort()
+        args_keys = args.keys()
+        args_keys.sort()
+
+        print
+        print "factory had:"
+        for k in factory_keys:
+            print k
+        print "but we were expecting:"
+        for k in args_keys:
+            print k
 
     def failUnlessExpectedShell(self, factory, defaults=True, **kwargs):
         shell_args = {}
@@ -1192,13 +1205,7 @@ class Factories(unittest.TestCase):
         shell_args.update(kwargs)
         self.failUnlessIdentical(factory[0], ShellCommand)
         if factory[1] != shell_args:
-            print
-            print "factory had:"
-            for k in sorted(factory[1].keys()):
-                print k
-            print "but we were expecting:"
-            for k in sorted(shell_args.keys()):
-                print k
+            self.printExpecting(factory, shell_args)
         self.failUnlessEqual(factory[1], shell_args)
 
     def failUnlessExpectedDarcs(self, factory, **kwargs):
@@ -1214,13 +1221,7 @@ class Factories(unittest.TestCase):
         darcs_args.update(kwargs)
         self.failUnlessIdentical(factory[0], Darcs)
         if factory[1] != darcs_args:
-            print
-            print "factory had:"
-            for k in sorted(factory[1].keys()):
-                print k
-            print "but we were expecting:"
-            for k in sorted(darcs_args.keys()):
-                print k
+            self.printExpecting(factory, darcs_args)
         self.failUnlessEqual(factory[1], darcs_args)
 
     def testSteps(self):

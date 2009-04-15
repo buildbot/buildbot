@@ -569,6 +569,7 @@ class BuildStep:
              'warnOnFailure',
              'alwaysRun',
              'progressMetrics',
+             'doStepIf',
              ]
 
     name = "generic"
@@ -578,6 +579,8 @@ class BuildStep:
     build = None
     step_status = None
     progress = None
+    # doStepIf can be False, True, or a function that returns False or True
+    doStepIf = True
 
     def __init__(self, **kwargs):
         self.factory = (self.__class__, dict(kwargs))
@@ -707,7 +710,16 @@ class BuildStep:
             self.progress.start()
         self.step_status.stepStarted()
         try:
-            skip = self.start()
+            skip = None
+            if isinstance(self.doStepIf, bool):
+                if not self.doStepIf:
+                    skip = SKIPPED
+            elif not self.doStepIf(self):
+                skip = SKIPPED
+
+            if skip is None:
+                skip = self.start()
+
             if skip == SKIPPED:
                 # this return value from self.start is a shortcut
                 # to finishing the step immediately
@@ -765,7 +777,15 @@ class BuildStep:
         If the step decides it does not need to be run, start() can return
         the constant SKIPPED. This fires the callback immediately: it is not
         necessary to call .finished yourself. This can also indicate to the
-        status-reporting mechanism that this step should not be displayed."""
+        status-reporting mechanism that this step should not be displayed.
+
+        A step can be configured to only run under certain conditions.  To
+        do this, set the step's doStepIf to a boolean value, or to a function
+        that returns a boolean value.  If the value or function result is
+        False, then the step will return SKIPPED without doing anything,
+        otherwise the step will be executed normally.  If you set doStepIf
+        to a function, that function should accept one parameter, which will
+        be the Step object itself."""
         
         raise NotImplementedError("your subclass must implement this method")
 
