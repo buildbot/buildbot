@@ -198,19 +198,19 @@ class BotMaster(service.MultiService):
 
     def maybeStartAllBuilds(self):
         builders = self.builders.values()
-        def _sortfunc(b1, b2):
-            t1 = b1.getOldestRequestTime()
-            t2 = b2.getOldestRequestTime()
-            # If t1 or t2 is None, then there are no build requests,
-            # so sort it at the end
-            if t1 is None:
-                return 1
-            if t2 is None:
-                return -1
-            return cmp(t1, t2)
         if self.builderOrder is not None:
             builders = self.builderOrder(builders)
         else:
+            def _sortfunc(b1, b2):
+                t1 = b1.getOldestRequestTime()
+                t2 = b2.getOldestRequestTime()
+                # If t1 or t2 is None, then there are no build requests,
+                # so sort it at the end
+                if t1 is None:
+                    return 1
+                if t2 is None:
+                    return -1
+                return cmp(t1, t2)
             builders.sort(cmp=_sortfunc)
         for b in builders:
             b.maybeStartBuild()

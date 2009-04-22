@@ -376,7 +376,9 @@ class Builder(pb.Referenceable):
             raise ValueError("periodicBuildTime can no longer be defined as"
                              " part of the Builder: use scheduler.Periodic"
                              " instead")
-        self.buildOrder = setup.get('buildOrder', None)
+        self.nextBuild = setup.get('nextBuild')
+        if self.nextBuild is not None and not callable(self.nextBuild):
+            raise ValueError("nextBuild must be callable")
 
         # build/wannabuild slots: Build objects move along this sequence
         self.buildable = []
@@ -680,6 +682,11 @@ class Builder(pb.Referenceable):
             return
         if self.nextSlave:
             sb = self.nextSlave(available_slaves)
+            if not sb:
+                log.msg("%s: want to start build, but we don't have a remote"
+                        % self)
+                self.updateBigStatus()
+                return
         elif self.CHOOSE_SLAVES_RANDOMLY:
             sb = random.choice(available_slaves)
         else:
@@ -688,10 +695,10 @@ class Builder(pb.Referenceable):
         # there is something to build, and there is a slave on which to build
         # it. Grab the oldest request, see if we can merge it with anything
         # else.
-        if not self.buildOrder:
+        if not self.nextBuild:
             req = self.buildable.pop(0)
         else:
-            req = self.buildOrder(self.buildable)
+            req = self.nextBuild(self.buildable)
             self.buildable.remove(req)
         self.builder_status.removeBuildRequest(req.status)
         mergers = []
