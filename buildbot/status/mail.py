@@ -46,6 +46,8 @@ def message(attrs):
       buildbotURL - (str) URL to buildbot main page.
       
       buildText - (str) Build text from build.getText().
+
+      buildProperties - (Properties) Mapping of property names to values
       
       slavename - (str) Slavename.
       
@@ -264,6 +266,9 @@ class MailNotifier(base.StatusReceiverMultiService):
                            buildbotURL - (str) URL to buildbot main page.
       
                            buildText - (str) Build text from build.getText().
+
+                           buildProperties - (Properties instance) Mapping of
+                                             property names to values
       
                            slavename - (str) Slavename.
       
@@ -409,6 +414,7 @@ class MailNotifier(base.StatusReceiverMultiService):
                  'buildURL': self.status.getURLForThing(build),
                  'buildbotURL': self.status.getBuildbotURL(),
                  'buildText': build.getText(),
+                 'buildProperties': build.getProperties(),
                  'slavename': build.getSlavename(),
                  'reason':  build.getReason(),
                  'responsibleUsers': build.getResponsibleUsers(),
