@@ -70,8 +70,15 @@ class FeedResource(XmlResource):
         self.link = self.status.getBuildbotURL()
         self.description = 'List of FAILED builds'
         self.pubdate = time.gmtime(int(time.time()))
-        self.user = os.environ.get('USER') or os.environ['USERNAME']
-        self.hostname = os.environ.get('HOSTNAME') or os.environ['COMPUTERNAME']
+        self.user = self.getEnv(['USER', 'USERNAME'], 'buildmaster')
+        self.hostname = self.getEnv(['HOSTNAME', 'COMPUTERNAME'],
+                                    'buildmaster')
+
+    def getEnv(self, keys, fallback):
+        for key in keys:
+            if key in os.environ:
+                return os.environ[key]
+        return fallback
 
     def getBuilds(self, request):
         builds = []
