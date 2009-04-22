@@ -70,6 +70,8 @@ class FeedResource(XmlResource):
         self.link = self.status.getBuildbotURL()
         self.description = 'List of FAILED builds'
         self.pubdate = time.gmtime(int(time.time()))
+        self.user = os.environ.get('USER') or os.environ['USERNAME']
+        self.hostname = os.environ.get('HOSTNAME') or os.environ['COMPUTERNAME']
 
     def getBuilds(self, request):
         builds = []
@@ -275,8 +277,7 @@ class Rss20StatusResource(FeedResource):
                                           pubDate)
             data += ('        <pubDate>%s</pubDate>\n' % rfc822pubDate)
             # Every RSS item must have a globally unique ID
-            guid = ('tag:%s@%s,%s:%s' % (os.environ['USER'],
-                                         os.environ['HOSTNAME'],
+            guid = ('tag:%s@%s,%s:%s' % (self.user, self.hostname,
                                          time.strftime("%Y-%m-%d", pubDate),
                                          time.strftime("%Y%m%d%H%M%S",
                                                        pubDate)))
@@ -342,8 +343,7 @@ class Atom10StatusResource(FeedResource):
             data += ('    <updated>%s</updated>\n' % rfc3339pubDate)
             # Every Atom entry must have a globally unique ID
             # http://diveintomark.org/archives/2004/05/28/howto-atom-id
-            guid = ('tag:%s@%s,%s:%s' % (os.environ['USER'],
-                                         os.environ['HOSTNAME'],
+            guid = ('tag:%s@%s,%s:%s' % (self.user, self.hostname,
                                          time.strftime("%Y-%m-%d", pubDate),
                                          time.strftime("%Y%m%d%H%M%S",
                                                        pubDate)))
