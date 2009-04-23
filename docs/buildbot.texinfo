@@ -7805,6 +7805,8 @@ of availale keys in the dict passed to customMesg:
 (str) URL to buildbot main page.
 @item buildText 
 (str) Build text from build.getText().
+@item buildProperties
+(Properties instance) Mapping of property names to values.
 @item slavename 
 (str) Slavename.
 @item reason 
