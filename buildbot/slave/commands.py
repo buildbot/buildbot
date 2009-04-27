@@ -1995,6 +1995,8 @@ class Git(SourceBase):
     ['repourl'] (required): the upstream GIT repository string
     ['branch'] (optional): which version (i.e. branch or tag) to
                            retrieve. Default: "master".
+    ['submodules'] (optional): whether to initialize and update
+                           submodules. Default: False.
     """
 
     header = "git operation"
@@ -2006,6 +2008,7 @@ class Git(SourceBase):
         if not self.branch:
             self.branch = "master"
         self.sourcedata = "%s %s\n" % (self.repourl, self.branch)
+        self.submodules = args.get('submodules')
 
     def _fullSrcdir(self):
         return os.path.join(self.builder.basedir, self.srcdir)
@@ -2035,6 +2038,13 @@ class Git(SourceBase):
             return False
         return True
 
+    def _didSubmodules(self, res):
+        command = ['git', 'submodule', 'update', '--init']
+        c = ShellCommand(self.builder, command, self._fullSrcdir(),
+                         sendRC=False, timeout=self.timeout, usePTY=False)
+        self.command = c
+        return c.start()
+
     def _didFetch(self, res):
         if self.revision:
             head = self.revision
@@ -2045,7 +2055,11 @@ class Git(SourceBase):
         c = ShellCommand(self.builder, command, self._fullSrcdir(),
                          sendRC=False, timeout=self.timeout, usePTY=False)
         self.command = c
-        return c.start()
+        d = c.start()
+        if self.submodules:
+            d.addCallback(self._abandonOnFailure)
+            d.addCallback(self._didSubmodules)
+        return d
 
     # Update first runs "git clean", removing local changes, This,
     # combined with the later "git reset" equates clobbering the repo,
