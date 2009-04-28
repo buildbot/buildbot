@@ -724,6 +724,7 @@ class SendChangeOptions(usage.Options):
         ("comments", "m", None, "log message"),
         ("logfile", "F", None,
          "Read the log messages from this file (- for stdin)"),
+        ("when", "w", None, "timestamp to use as the change time"),
         ]
     def getSynopsis(self):
         return "Usage:    buildbot sendchange [options] filenames.."
@@ -742,6 +743,10 @@ def sendchange(config, runReactor=False):
     branch = config.get('branch', opts.get('branch'))
     category = config.get('category', opts.get('category'))
     revision = config.get('revision')
+    if config.get('when'):
+        when = float(config.get('when'))
+    else:
+        when = None
     # SVN and P4 use numeric revisions
     if config.get("revision_number"):
         revision = int(config['revision_number'])
@@ -764,7 +769,7 @@ def sendchange(config, runReactor=False):
     assert master, "you must provide the master location"
 
     s = Sender(master, user)
-    d = s.send(branch, revision, comments, files, category=category)
+    d = s.send(branch, revision, comments, files, category=category, when=when)
     if runReactor:
         d.addCallbacks(s.printSuccess, s.printFailure)
         d.addBoth(s.stop)

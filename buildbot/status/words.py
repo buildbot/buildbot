@@ -320,9 +320,6 @@ class Contact:
         # only notify about builders we are interested in
         log.msg('[Contact] builder %r in category %s finished' % (builder, builder.category))
 
-        if self.notify_for('started'):
-            return
-
         if (self.channel.categories != None and
             builder.category not in self.channel.categories):
             return

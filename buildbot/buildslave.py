@@ -228,6 +228,7 @@ class AbstractBuildSlave(NewCredPerspective, service.MultiService):
 
             return self.updateSlave()
         d.addCallback(_accept_slave)
+        d.addCallback(lambda res: self.botmaster.maybeStartAllBuilds())
 
         # Finally, the slave gets a reference to this BuildSlave. They
         # receive this later, after we've started using them.
@@ -523,10 +524,11 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
 
     def attached(self, bot):
         if self.substantiation_deferred is None:
-            log.msg('Slave %s received connection while not trying to '
-                    'substantiate.  Disconnecting.' % (self.slavename,))
+            msg = 'Slave %s received connection while not trying to ' \
+                    'substantiate.  Disconnecting.' % (self.slavename,)
+            log.msg(msg)
             self._disconnect(bot)
-            return defer.fail()
+            return defer.fail(RuntimeError(msg))
         return AbstractBuildSlave.attached(self, bot)
 
     def detached(self, mind):

@@ -319,7 +319,9 @@ class LatentSlave(RunMixin, unittest.TestCase):
         # make sure both slaves appear in the builder.  This is automatically,
         # without any attaching.
         self.assertEqual(len(self.b1.slaves), 2)
-        self.assertEqual(sorted(sb.slave.slavename for sb in self.b1.slaves),
+        slavenames = [sb.slave.slavename for sb in self.b1.slaves]
+        slavenames.sort()
+        self.assertEqual(slavenames,
                          ['bot1', 'bot2'])
         # These have not substantiated
         self.assertEqual([sb.slave.substantiated for sb in self.b1.slaves],
@@ -334,7 +336,9 @@ class LatentSlave(RunMixin, unittest.TestCase):
     def _testSequence_1(self, res):
         # now we have all three slaves.  Two are latent slaves, and one is a
         # standard slave.
-        self.assertEqual(sorted(sb.slave.slavename for sb in self.b1.slaves),
+        slavenames = [sb.slave.slavename for sb in self.b1.slaves]
+        slavenames.sort()
+        self.assertEqual(slavenames,
                          ['bot1', 'bot2', 'bot3'])
         # Now it's time to try a build on one of the latent slaves,
         # substantiating it.
@@ -552,7 +556,9 @@ class LatentSlave(RunMixin, unittest.TestCase):
         d.addCallback(self._testPing_1)
         return d
     def _testPing_1(self, res):
-        self.assertEqual(sorted(sb.slave.slavename for sb in self.b1.slaves),
+        slavenames = [sb.slave.slavename for sb in self.b1.slaves]
+        slavenames.sort()
+        self.assertEqual(slavenames,
                          ['bot1', 'bot2', 'bot3'])
         d = self.control.getBuilder('b1').ping()
         d.addCallback(self._testPing_2)

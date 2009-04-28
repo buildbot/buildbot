@@ -395,7 +395,7 @@ class ShellCommand:
                 argv = ['/bin/sh', '-c', self.command]
             display = self.fake_command
         else:
-            if runtime.platformType  == 'win32':
+            if runtime.platformType  == 'win32' and not self.command[0].lower().endswith(".exe"):
                 argv = os.environ['COMSPEC'].split() # allow %COMSPEC% to have args
                 if '/c' not in argv: argv += ['/c'] 
                 argv += list(self.command)
@@ -428,7 +428,7 @@ class ShellCommand:
         self.sendStatus({'header': msg+"\n"})
 
         # then the obfuscated command array for resolving unambiguity
-        msg = " argv: %s" % (self.fake_command,)
+        msg = " argv: %s" % (self.fake_command,)    
         log.msg(" " + msg)
         self.sendStatus({'header': msg+"\n"})
 
@@ -475,6 +475,7 @@ class ShellCommand:
         # were called, then kill() would blow up).
         self.process = None
         self.startTime = time.time()
+        
         p = reactor.spawnProcess(self.pp, argv[0], argv,
                                  self.environ,
                                  self.workdir,
@@ -2013,9 +2014,6 @@ class Git(SourceBase):
         return self.branch
 
     def sourcedirIsUpdateable(self):
-        if os.path.exists(os.path.join(self._fullSrcdir(),
-                                       ".buildbot-patched")):
-            return False
         return os.path.isdir(os.path.join(self._fullSrcdir(), ".git"))
 
     def readSourcedata(self):
@@ -2047,26 +2045,18 @@ class Git(SourceBase):
         self.command = c
         return c.start()
 
-    # Update first runs "git clean", removing local changes,
-    # if the branch to be checked out has changed.  This, combined
-    # with the later "git reset" equates clobbering the repo,
+    # Update first runs "git clean", removing local changes, This,
+    # combined with the later "git reset" equates clobbering the repo,
     # but it's much more efficient.
     def doVCUpdate(self):
-        try:
-            # Check to see if our branch has changed
-            diffbranch = self.sourcedata != self.readSourcedata()
-        except IOError:
-            diffbranch = False
-        if diffbranch:
-            command = ['git', 'clean', '-f', '-d']
-            c = ShellCommand(self.builder, command, self._fullSrcdir(),
-                             sendRC=False, timeout=self.timeout, usePTY=False)
-            self.command = c
-            d = c.start()
-            d.addCallback(self._abandonOnFailure)
-            d.addCallback(self._didClean)
-            return d
-        return self._didClean(None)
+        command = ['git', 'clean', '-f', '-d', '-x']
+        c = ShellCommand(self.builder, command, self._fullSrcdir(),
+                         sendRC=False, timeout=self.timeout, usePTY=False)
+        self.command = c
+        d = c.start()
+        d.addCallback(self._abandonOnFailure)
+        d.addCallback(self._didClean)
+        return d
 
     def _didClean(self, dummy):
         command = ['git', 'fetch', '-t', self.repourl, self.branch]
@@ -2591,6 +2581,8 @@ class Mercurial(SourceBase):
                 if sys.platform == "win32":
                     oldurl = oldurl.lower().replace('\\', '/')
                     repourl = self.repourl.lower().replace('\\', '/')
+                    if repourl.startswith('file://'):
+                        repourl = repourl.split('file://')[1]
                 else:
                     repourl = self.repourl
                 

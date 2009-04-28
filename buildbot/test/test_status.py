@@ -140,6 +140,8 @@ def customTextMailMessage(attrs):
     text.append("Last %d lines of '%s':" % (logLines, name))
     text.extend(["\t%s\n" % line for line in lines[len(lines)-logLines:]])
     text.append("")
+    text.append("Build number was: %s" % attrs['buildProperties']['buildnumber'])
+    text.append("")
     text.append("-buildbot")
     return ("\n".join(text), 'plain')
 
@@ -155,6 +157,7 @@ def customHTMLMailMessage(attrs):
     text.append("<p>")
     text.append("<br>".join([line for line in lines[len(lines)-logLines:]]))
     text.append("</p>")
+    text.append("<p>Build number was: %s</p>" % attrs['buildProperties']['buildnumber'])
     text.append("<br>")
     text.append("<b>-<a href='%s'>buildbot</a></b>" % attrs['buildbotURL'])
     return ("\n".join(text), 'html')
@@ -319,6 +322,7 @@ class Mail(unittest.TestCase):
         self.messages = []
 
         b1 = self.makeBuild(4, builder.FAILURE)
+        b1.setProperty('buildnumber', 1, 'Build')
         b1.setText(["snarkleack", "polarization", "failed"])
         b1.blamelist = ["dev3", "dev3", "dev3", "dev4",
                         "Thomas_Walters"]
@@ -337,6 +341,7 @@ class Mail(unittest.TestCase):
         self.failUnlessIn("comment1", t)
         self.failUnlessIn("comment2", t)
         self.failUnlessIn("Test 4 failed", t)
+        self.failUnlessIn("number was: 1", t)
 
 
     def testCustomHTMLMessage(self):
@@ -352,6 +357,7 @@ class Mail(unittest.TestCase):
         self.messages = []
 
         b1 = self.makeBuild(4, builder.FAILURE)
+        b1.setProperty('buildnumber', 1, 'Build')
         b1.setText(["snarkleack", "polarization", "failed"])
         b1.blamelist = ["dev3", "dev3", "dev3", "dev4",
                         "Thomas_Walters"]
@@ -370,6 +376,7 @@ class Mail(unittest.TestCase):
         self.failUnlessIn("<h4>Last 3 lines of 'step.test':</h4>", t)
         self.failUnlessIn("<p>Changed by: <b>author2</b><br />", t)
         self.failUnlessIn("Test 3 failed", t)
+        self.failUnlessIn("number was: 1", t)
 
     def testShouldAttachLog(self):
         mailer = mail.MailNotifier(fromaddr="buildbot@example.com", addLogs=True)

@@ -1612,7 +1612,7 @@ class BuilderStatus(styles.Versioned):
                     num = int(mo.group(1))
                     is_logfile = True
 
-            if not num: continue
+            if num is None: continue
             if num in self.buildCache: continue
 
             if (is_logfile and num < earliest_log) or num < earliest_build:

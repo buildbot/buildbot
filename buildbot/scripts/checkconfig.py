@@ -19,7 +19,7 @@ class ConfigLoader(master.BuildMaster):
             copy(configFileName, tempdir)
             for entry in os.listdir("."):
                 # Any code in a subdirectory will _not_ be copied! This is a bug
-                if isfile(entry):
+                if isfile(entry) and not entry.startswith("twistd.log"):
                     copy(entry, tempdir)
         except:
             raise

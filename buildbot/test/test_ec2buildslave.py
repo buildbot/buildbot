@@ -92,12 +92,12 @@ class Image:
         return Stub(name='reservation',
                     instances=[Instance(self.data, self.id, **kwargs)])
 
-    @classmethod
     def create(klass, data, ami, owner, location):
         assert ami not in data.images
         self = klass(data, ami, owner, location)
         data.images[ami] = self
         return self
+    create = classmethod(create)
 
 
 class Connection:
@@ -163,7 +163,6 @@ class Key:
     #    self.raw.write_private_key(f)
     #    self.material = f.getvalue()
 
-    @classmethod
     def create(klass, name, keys):
         self = klass()
         self.name = name
@@ -171,6 +170,7 @@ class Key:
         assert name not in keys
         keys[name] = self
         return self
+    create = classmethod(create)
 
     def delete(self):
         del self.keys[self.name]
@@ -185,8 +185,9 @@ class Boto:
         self.keys = {}
         Key.create('latent_buildbot_slave', self.keys)
         Key.create('buildbot_slave', self.keys)
-        assert sorted(self.keys.keys()) == ['buildbot_slave',
-                                            'latent_buildbot_slave']
+        kk = self.keys.keys()
+        kk.sort()
+        assert kk == ['buildbot_slave', 'latent_buildbot_slave']
         self.original_keys = dict(self.keys)
         self.security_groups = {
             'latent_buildbot_slave': Stub(name='security_group',
