@@ -387,7 +387,7 @@ class ShellCommand:
         if type(self.command) in types.StringTypes:
             if runtime.platformType  == 'win32':
                 argv = os.environ['COMSPEC'].split() # allow %COMSPEC% to have args
-                if '/c' not in argv: argv += ['/c'] 
+                if '/c' not in argv: argv += ['/c']
                 argv += [self.command]
             else:
                 # for posix, use /bin/sh. for other non-posix, well, doesn't
@@ -397,7 +397,7 @@ class ShellCommand:
         else:
             if runtime.platformType  == 'win32' and not self.command[0].lower().endswith(".exe"):
                 argv = os.environ['COMSPEC'].split() # allow %COMSPEC% to have args
-                if '/c' not in argv: argv += ['/c'] 
+                if '/c' not in argv: argv += ['/c']
                 argv += list(self.command)
             else:
                 argv = self.command
@@ -428,7 +428,7 @@ class ShellCommand:
         self.sendStatus({'header': msg+"\n"})
 
         # then the obfuscated command array for resolving unambiguity
-        msg = " argv: %s" % (self.fake_command,)    
+        msg = " argv: %s" % (self.fake_command,)
         log.msg(" " + msg)
         self.sendStatus({'header': msg+"\n"})
 
@@ -475,7 +475,7 @@ class ShellCommand:
         # were called, then kill() would blow up).
         self.process = None
         self.startTime = time.time()
-        
+
         p = reactor.spawnProcess(self.pp, argv[0], argv,
                                  self.environ,
                                  self.workdir,
@@ -940,48 +940,48 @@ class SlaveDirectoryUploadCommand(Command):
         if self.debug:
             log.msg('SlaveDirectoryUploadCommand started')
 
-	# create some lists with all files and directories
-	foundFiles = []
-	foundDirs = []
+        # create some lists with all files and directories
+        foundFiles = []
+        foundDirs = []
 
-	self.baseRoot = os.path.join(self.builder.basedir,
+        self.baseRoot = os.path.join(self.builder.basedir,
                                      self.workdir,
-                        	     os.path.expanduser(self.dirname))
-	if self.debug:
-	    log.msg("baseRoot: %r" % self.baseRoot)
+                                     os.path.expanduser(self.dirname))
+        if self.debug:
+            log.msg("baseRoot: %r" % self.baseRoot)
 
-	for root, dirs, files in os.walk(self.baseRoot):
-	    tempRoot = root
-	    relRoot = ''
-	    while (tempRoot != self.baseRoot):
-	        tempRoot, tempRelRoot = os.path.split(tempRoot)
-	        relRoot = os.path.join(tempRelRoot, relRoot)
-	    for name in files:
-	        foundFiles.append(os.path.join(relRoot, name))
-	    for directory in dirs:
-	        foundDirs.append(os.path.join(relRoot, directory))
+        for root, dirs, files in os.walk(self.baseRoot):
+            tempRoot = root
+            relRoot = ''
+            while (tempRoot != self.baseRoot):
+                tempRoot, tempRelRoot = os.path.split(tempRoot)
+                relRoot = os.path.join(tempRelRoot, relRoot)
+            for name in files:
+                foundFiles.append(os.path.join(relRoot, name))
+            for directory in dirs:
+                foundDirs.append(os.path.join(relRoot, directory))
 
-	if self.debug:
-	    log.msg("foundDirs: %s" % (str(foundDirs)))
-	    log.msg("foundFiles: %s" % (str(foundFiles)))
-	
-	# create all directories on the master, to catch also empty ones
-	for dirname in foundDirs:
-	    self.writer.callRemote("createdir", dirname)
+        if self.debug:
+            log.msg("foundDirs: %s" % (str(foundDirs)))
+            log.msg("foundFiles: %s" % (str(foundFiles)))
 
-	for filename in foundFiles:
-	    self._writeFile(filename)
+        # create all directories on the master, to catch also empty ones
+        for dirname in foundDirs:
+            self.writer.callRemote("createdir", dirname)
 
-	return None
+        for filename in foundFiles:
+            self._writeFile(filename)
+
+        return None
 
     def _writeFile(self, filename):
         """Write a file to the remote writer"""
 
         log.msg("_writeFile: %r" % (filename))
-	self.writer.callRemote('open', filename)
-	data = open(os.path.join(self.baseRoot, filename), "r").read()
-	self.writer.callRemote('write', data)
-	self.writer.callRemote('close')
+        self.writer.callRemote('open', filename)
+        data = open(os.path.join(self.baseRoot, filename), "r").read()
+        self.writer.callRemote('write', data)
+        self.writer.callRemote('close')
         return None
 
     def interrupt(self):
@@ -1231,7 +1231,7 @@ class DummyCommand(Command):
     I am a dummy no-op command that by default takes 5 seconds to complete.
     See L{buildbot.steps.dummy.RemoteDummy}
     """
-    
+
     def start(self):
         self.d = defer.Deferred()
         log.msg("  starting dummy command [%s]" % self.stepId)
@@ -1273,7 +1273,7 @@ class WaitCommand(Command):
     I am a dummy command used by the buildbot unit test suite. I want for the
     unit test to tell us to finish. See L{buildbot.steps.dummy.Wait}
     """
-    
+
     def start(self):
         self.d = defer.Deferred()
         log.msg("  starting wait command [%s]" % self.stepId)
@@ -2470,7 +2470,7 @@ class Mercurial(SourceBase):
     def _clobber(self, dummy, dirname):
         def _vcfull(res):
             return self.doVCFull()
-        
+
         c = self.doClobber(dummy, dirname)
         c.addCallback(_vcfull)
 
@@ -2502,7 +2502,7 @@ class Mercurial(SourceBase):
     def _update(self, res):
         if res != 0:
             return res
-                
+
         # compare current branch to update
         self.update_branch = self.args.get('branch',  'default')
 
@@ -2511,28 +2511,28 @@ class Mercurial(SourceBase):
         cmd = ShellCommand(self.builder, parentscmd, d,
                            sendStdout=False, sendStderr=False,
                            keepStdout=True, keepStderr=True, usePTY=False)
-        
+
         self.clobber = None
-        
+
         def _parseIdentify(res):
             if res != 0:
                 msg = "'hg identify' failed: %s\n%s" % (cmd.stdout, cmd.stderr)
                 self.sendStatus({'header': msg + "\n"})
                 log.msg(msg)
                 return res
-            
+
             log.msg('Output: %s' % cmd.stdout)
-                        
+
             match = re.search(r'^(.+) (.+)$', cmd.stdout)
             assert match
-            
+
             rev = match.group(1)
             current_branch = match.group(2)
-            
+
             if rev == '-1':
                 msg = "Fresh hg repo, don't worry about in-repo branch name"
                 log.msg(msg)
-                        
+
             elif os.path.exists(os.path.join(self.builder.basedir,
                                              self.srcdir, ".buildbot-patched")):
                 self.clobber = self._purge
@@ -2546,23 +2546,23 @@ class Mercurial(SourceBase):
 
                 self.sendStatus({'header': msg + "\n"})
                 log.msg(msg)
-                
+
                 # Clobbers only if clobberOnBranchChange is set
                 if self.clobberOnBranchChange:
                     self.clobber = self._purge
-                
+
             else:
                 msg = "Working dir on same in-repo branch as build (%s)." % (current_branch)
                 log.msg(msg)
-                        
-            return 0            
-        
+
+            return 0
+
         def _checkRepoURL(res):
             parentscmd = [self.vcexe, 'paths', 'default']
             cmd2 = ShellCommand(self.builder, parentscmd, d,
                                sendStdout=False, sendStderr=False,
                                keepStdout=True, keepStderr=True, usePTY=False)
-                        
+
             def _parseRepoURL(res):
                 if res == 1:
                     if "not found!" == cmd2.stderr.strip():
@@ -2573,11 +2573,11 @@ class Mercurial(SourceBase):
                         msg = "'hg paths default' failed: %s\n%s" % (cmd2.stdout, cmd2.stderr)
                         log.msg(msg)
                         return 1
-                        
-                oldurl = cmd2.stdout.strip() 
-        
+
+                oldurl = cmd2.stdout.strip()
+
                 log.msg("Repo cloned from: '%s'" % oldurl)
-                
+
                 if sys.platform == "win32":
                     oldurl = oldurl.lower().replace('\\', '/')
                     repourl = self.repourl.lower().replace('\\', '/')
@@ -2585,38 +2585,38 @@ class Mercurial(SourceBase):
                         repourl = repourl.split('file://')[1]
                 else:
                     repourl = self.repourl
-                
+
                 if oldurl != repourl:
                     self.clobber = self._clobber
                     msg = "RepoURL changed from '%s' in wc to '%s' in update. Clobbering" % (oldurl, repourl)
                     log.msg(msg)
-                    
+
                 return 0
-            
+
             c = cmd2.start()
             c.addCallback(_parseRepoURL)
             return c
-        
+
         def _maybeClobber(res):
             if self.clobber:
                 msg = "Clobber flag set. Doing clobbering"
                 log.msg(msg)
-                
+
                 def _vcfull(res):
                     return self.doVCFull()
-                
-                return self.clobber(None, self.srcdir)                
-            
-            return 0            
-        
-        c = cmd.start()                
+
+                return self.clobber(None, self.srcdir)
+
+            return 0
+
+        c = cmd.start()
         c.addCallback(_parseIdentify)
-        c.addCallback(_checkRepoURL)            
+        c.addCallback(_checkRepoURL)
         c.addCallback(_maybeClobber)
         c.addCallback(self._update2)
         return c
-        
-    def _update2(self, res):                        
+
+    def _update2(self, res):
         d = os.path.join(self.builder.basedir, self.srcdir)
 
         updatecmd=[self.vcexe, 'update', '--clean', '--repository', d]
