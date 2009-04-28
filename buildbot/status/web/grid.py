@@ -22,18 +22,7 @@ else:
 
 class ANYBRANCH: pass # a flag value, used below
 
-class GridStatusResource(HtmlResource):
-    # TODO: docs
-    status = None
-    control = None
-    changemaster = None
-
-    def __init__(self, allowForce=True, css=None):
-        HtmlResource.__init__(self)
-
-        self.allowForce = allowForce
-        self.css = css or grid_css
-
+class GridStatusMixin(object):
     def getTitle(self, request):
         status = self.getStatus(request)
         p = status.getProjectName()
@@ -137,6 +126,52 @@ class GridStatusResource(HtmlResource):
         return '<td valign="bottom" class="sourcestamp">%s</td>\n' % \
             "<br />".join(text)
 
+    def getRecentSourcestamps(self, status, numBuilds, categories, branch):
+        """
+        get a list of the most recent NUMBUILDS SourceStamp tuples, sorted
+        by the earliest start we've seen for them
+        """
+        # TODO: use baseweb's getLastNBuilds?
+        sourcestamps = { } # { ss-tuple : earliest time }
+        for bn in status.getBuilderNames():
+            builder = status.getBuilder(bn)
+            if categories and builder.category not in categories:
+                continue
+            build = builder.getBuild(-1)
+            while build:
+                ss = build.getSourceStamp(absolute=True)
+                start = build.getTimes()[0]
+                build = build.getPreviousBuild()
+
+                # skip un-started builds
+                if not start: continue
+
+                # skip non-matching branches
+                if branch != ANYBRANCH and ss.branch != branch: continue
+
+                sourcestamps[ss] = min(sourcestamps.get(ss, sys.maxint), start)
+
+        # now sort those and take the NUMBUILDS most recent
+        sourcestamps = sourcestamps.items()
+        sourcestamps.sort(lambda x, y: cmp(x[1], y[1]))
+        sourcestamps = map(lambda tup : tup[0], sourcestamps)
+        sourcestamps = sourcestamps[-numBuilds:]
+
+        return sourcestamps
+
+class GridStatusResource(HtmlResource, GridStatusMixin):
+    # TODO: docs
+    status = None
+    control = None
+    changemaster = None
+
+    def __init__(self, allowForce=True, css=None):
+        HtmlResource.__init__(self)
+
+        self.allowForce = allowForce
+        self.css = css or grid_css
+
+
     def body(self, request):
         "This method builds the main waterfall display."
 
@@ -217,36 +252,96 @@ class GridStatusResource(HtmlResource):
         data += '</div>\n'
         return data
 
-    def getRecentSourcestamps(self, status, numBuilds, categories, branch):
-        """
-        get a list of the most recent NUMBUILDS SourceStamp tuples, sorted
-        by the earliest start we've seen for them
-        """
-        # TODO: use baseweb's getLastNBuilds?
-        sourcestamps = { } # { ss-tuple : earliest time }
-        for bn in status.getBuilderNames():
+class TransposedGridStatusResource(HtmlResource, GridStatusMixin):
+    # TODO: docs
+    status = None
+    control = None
+    changemaster = None
+
+    def __init__(self, allowForce=True, css=None):
+        HtmlResource.__init__(self)
+
+        self.allowForce = allowForce
+        self.css = css or grid_css
+
+
+    def body(self, request):
+        "This method builds the main waterfall display."
+
+        # get url parameters
+        numBuilds = int(request.args.get("width", [5])[0])
+        categories = request.args.get("category", [])
+        branch = request.args.get("branch", [ANYBRANCH])[0]
+        if branch == 'trunk': branch = None
+
+        # and the data we want to render
+        status = self.getStatus(request)
+        stamps = self.getRecentSourcestamps(status, numBuilds, categories, branch)
+
+        projectURL = status.getProjectURL()
+        projectName = status.getProjectName()
+
+        data = '<table class="Grid" border="0" cellspacing="0">\n'
+        data += '<tr>\n'
+        data += '<td class="title"><a href="%s">%s</a>' % (projectURL, projectName)
+        if categories:
+            if len(categories) > 1:
+                data += '\n<br /><b>Categories:</b><br/>%s' % ('<br/>'.join(categories))
+            else:
+                data += '\n<br /><b>Category:</b> %s' % categories[0]
+        if branch != ANYBRANCH:
+            data += '\n<br /><b>Branch:</b> %s' % (branch or 'trunk')
+        data += '</td>\n'
+        for stamp in stamps:
+            data += self.stamp_td(stamp)
+        data += '</tr>\n'
+
+        sortedBuilderNames = status.getBuilderNames()[:]
+        sortedBuilderNames.sort()
+        for bn in sortedBuilderNames:
+            builds = [None] * len(stamps)
+
             builder = status.getBuilder(bn)
             if categories and builder.category not in categories:
                 continue
+
             build = builder.getBuild(-1)
-            while build:
+            while build and None in builds:
                 ss = build.getSourceStamp(absolute=True)
-                start = build.getTimes()[0]
+                for i in range(len(stamps)):
+                    if ss == stamps[i] and builds[i] is None:
+                        builds[i] = build
                 build = build.getPreviousBuild()
 
-                # skip un-started builds
-                if not start: continue
+            data += '<tr>\n'
+            data += self.builder_td(request, builder)
+            for build in builds:
+                data += self.build_td(request, build)
+            data += '</tr>\n'
 
-                # skip non-matching branches
-                if branch != ANYBRANCH and ss.branch != branch: continue
+        data += '</table>\n'
 
-                sourcestamps[ss] = min(sourcestamps.get(ss, sys.maxint), start)
+        # TODO: this stuff should be generated by a template of some sort
+        data += '<hr /><div class="footer">\n'
 
-        # now sort those and take the NUMBUILDS most recent
-        sourcestamps = sourcestamps.items()
-        sourcestamps.sort(lambda x, y: cmp(x[1], y[1]))
-        sourcestamps = map(lambda tup : tup[0], sourcestamps)
-        sourcestamps = sourcestamps[-numBuilds:]
+        welcomeurl = self.path_to_root(request) + "index.html"
+        data += '[<a href="%s">welcome</a>]\n' % welcomeurl
+        data += "<br />\n"
 
-        return sourcestamps
+        data += '<a href="http://buildbot.sourceforge.net/">Buildbot</a>'
+        data += "-%s " % version
+        if projectName:
+            data += "working for the "
+            if projectURL:
+                data += "<a href=\"%s\">%s</a> project." % (projectURL,
+                                                            projectName)
+            else:
+                data += "%s project." % projectName
+        data += "<br />\n"
+        data += ("Page built: " +
+                 time.strftime("%a %d %b %Y %H:%M:%S",
+                               time.localtime(util.now()))
+                 + "\n")
+        data += '</div>\n'
+        return data
 
