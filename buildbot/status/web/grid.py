@@ -66,7 +66,7 @@ class GridStatusMixin(object):
 #        if p:
 #            self.title = "BuildBot: %s" % p
 #
-    def build_td(self, request, build):
+    def build_td(self, request, build, extra=''):
         if not build:
             return '<td class="build">&nbsp;</td>\n'
 
@@ -85,7 +85,9 @@ class GridStatusMixin(object):
         text = '<br />\n'.join(text)
         class_ = build_get_class(build)
 
-        return '<td class="build %s">%s</td>\n' % (class_, text)
+        if extra:
+            extra = '<br/>' + extra
+        return '<td class="build %s">%s%s</td>\n' % (class_, text, extra)
 
     def builder_td(self, request, builder):
         state, builds = builder.getState()
@@ -173,7 +175,9 @@ class GridStatusResource(HtmlResource, GridStatusMixin):
 
 
     def body(self, request):
-        "This method builds the main waterfall display."
+        """This method builds the regular grid display.
+        That is, build stamps across the top, build hosts down the left side
+        """
 
         # get url parameters
         numBuilds = int(request.args.get("width", [5])[0])
@@ -266,10 +270,12 @@ class TransposedGridStatusResource(HtmlResource, GridStatusMixin):
 
 
     def body(self, request):
-        "This method builds the main waterfall display."
+        """This method builds the transposed grid display.
+        That is, build hosts across the top, ebuild stamps down the left side
+        """
 
         # get url parameters
-        numBuilds = int(request.args.get("width", [5])[0])
+        numBuilds = int(request.args.get("length", [5])[0])
         categories = request.args.get("category", [])
         branch = request.args.get("branch", [ANYBRANCH])[0]
         if branch == 'trunk': branch = None
@@ -292,12 +298,12 @@ class TransposedGridStatusResource(HtmlResource, GridStatusMixin):
         if branch != ANYBRANCH:
             data += '\n<br /><b>Branch:</b> %s' % (branch or 'trunk')
         data += '</td>\n'
-        for stamp in stamps:
-            data += self.stamp_td(stamp)
-        data += '</tr>\n'
 
         sortedBuilderNames = status.getBuilderNames()[:]
         sortedBuilderNames.sort()
+
+        builder_builds = {}
+
         for bn in sortedBuilderNames:
             builds = [None] * len(stamps)
 
@@ -313,10 +319,20 @@ class TransposedGridStatusResource(HtmlResource, GridStatusMixin):
                         builds[i] = build
                 build = build.getPreviousBuild()
 
-            data += '<tr>\n'
             data += self.builder_td(request, builder)
-            for build in builds:
-                data += self.build_td(request, build)
+            builder_builds[bn] = builds
+
+        data += '</tr>\n'
+
+        for i in range(len(stamps)):
+            data += '<tr>\n'
+            data += self.stamp_td(stamps[i])
+            for bn in sortedBuilderNames:
+                if stamps[i].branch:
+                    extra = 'on ' + str(stamps[i].branch)
+                else:
+                    extra = ''
+                data += self.build_td(request, builder_builds[bn][i], extra)
             data += '</tr>\n'
 
         data += '</table>\n'
