@@ -808,6 +808,7 @@ class Bzr(Source):
     name = "bzr"
 
     def __init__(self, repourl=None, baseURL=None, defaultBranch=None,
+                 forceSharedRepo=None,
                  **kwargs):
         """
         @type  repourl: string
@@ -827,6 +828,15 @@ class Bzr(Source):
                               explicitly. It will simply be appended to
                               C{baseURL} and the result handed to the
                               'bzr checkout pull' command.
+
+
+        @param forceSharedRepo: Boolean, defaults to False. If set to True,
+                                the working directory will be made into a
+                                bzr shared repository if it is not already.
+                                Shared repository greatly reduces the amount
+                                of history data that needs to be downloaded
+                                if not using update/copy mode, or if using
+                                update/copy mode with multiple branches.
         """
         self.repourl = repourl
         self.baseURL = baseURL
@@ -835,7 +845,9 @@ class Bzr(Source):
         self.addFactoryArguments(repourl=repourl,
                                  baseURL=baseURL,
                                  defaultBranch=defaultBranch,
+                                 forceSharedRepo=forceSharedRepo
                                  )
+        self.args.update({'forceSharedRepo': forceSharedRepo})
         if (not repourl and not baseURL) or (repourl and baseURL):
             raise ValueError("you must provide exactly one of repourl and"
                              " baseURL")
@@ -862,7 +874,9 @@ class Bzr(Source):
 
         revstuff = []
         if branch is not None and branch != self.branch:
-            revstuff.append("[branch]")
+            revstuff.append("[" + branch + "]")
+        if revision is not None:
+            revstuff.append("r%s" % revision)
         self.description.extend(revstuff)
         self.descriptionDone.extend(revstuff)
 

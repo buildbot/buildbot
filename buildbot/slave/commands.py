@@ -2324,6 +2324,7 @@ class Bzr(SourceBase):
         self.repourl = args['repourl']
         self.sourcedata = "%s\n" % self.repourl
         self.revision = self.args.get('revision')
+        self.forceSharedRepo = args.get('forceSharedRepo')
 
     def sourcedirIsUpdateable(self):
         if os.path.exists(os.path.join(self.builder.basedir,
@@ -2334,6 +2335,18 @@ class Bzr(SourceBase):
             return False
         return os.path.isdir(os.path.join(self.builder.basedir,
                                           self.srcdir, ".bzr"))
+
+    def start(self):
+        def cont(res):
+            # Continue with start() method in superclass.
+            return SourceBase.start(self)
+
+        if self.forceSharedRepo:
+            d = self.doForceSharedRepo();
+            d.addCallback(cont)
+            return d
+        else:
+            return cont(None)
 
     def doVCUpdate(self):
         assert not self.revision
@@ -2394,6 +2407,28 @@ class Bzr(SourceBase):
             self.command = c
             return c.start()
         d.addCallback(_export)
+        return d
+
+    def doForceSharedRepo(self):
+        # Don't send stderr. When there is no shared repo, this might confuse
+        # users, as they will see a bzr error message. But having no shared
+        # repo is not an error, just an indication that we need to make one.
+        c = ShellCommand(self.builder, [self.vcexe, 'info', '.'],
+                         self.builder.basedir,
+                         sendStderr=False, sendRC=False, usePTY=False)
+        d = c.start()
+        def afterCheckSharedRepo(res):
+            if type(res) is int and res != 0:
+                log.msg("No shared repo found, creating it")
+                # bzr info fails, try to create shared repo.
+                c = ShellCommand(self.builder, [self.vcexe, 'init-repo', '.'],
+                                 self.builder.basedir,
+                                 sendRC=False, usePTY=False)
+                self.command = c
+                return c.start()
+            else:
+                return defer.succeed(res)
+        d.addCallback(afterCheckSharedRepo)
         return d
 
     def get_revision_number(self, out):

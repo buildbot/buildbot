@@ -5276,7 +5276,7 @@ ourselves).
 as simply ``Bazaar''. The repository-vs-workspace model is similar to
 Darcs, but it uses a strictly linear sequence of revisions (one
 history per branch) like Arch. Branches are put in subdirectories.
-This makes it look very much like Mercurial, so it takes the same
+This makes it look very much like Mercurial. It takes the following
 arguments:
 
 @table @code
@@ -5295,6 +5295,13 @@ slash.
 the name of the branch to use when a Build does not provide one of its
 own. This will be appended to @code{baseURL} to create the string that
 will be passed to the @code{bzr checkout} command.
+
+@item forceSharedRepo
+(boolean, optional, defaults to False): If set to True, the working directory
+will be made into a bzr shared repository if it is not already. Shared
+repository greatly reduces the amount of history data that needs to be
+downloaded if not using update/copy mode, or if using update/copy mode with
+multiple branches.
 @end table
 
 

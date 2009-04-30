@@ -2247,8 +2247,14 @@ class Bzr(VCBase, unittest.TestCase):
     has_got_revision = True
 
     def testCheckout(self):
-        self.helper.vcargs = { 'repourl': self.helper.rep_trunk }
+        self.helper.vcargs = { 'repourl': self.helper.rep_trunk,
+                               'forceSharedRepo': True}
         d = self.do_vctest(testRetry=False)
+        # Check that the shared repository was created.
+        def checkSharedRepo(res):
+            shared_repo_path = os.path.join(self.slavebase, "vc-dir", ".bzr")
+            assert os.path.exists(shared_repo_path)
+        d.addCallback(checkSharedRepo)
 
         # TODO: testRetry has the same problem with Bzr as it does for
         # Arch
