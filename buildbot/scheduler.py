@@ -598,7 +598,7 @@ class Nightly(BaseUpstreamScheduler):
     def addChange(self, change):
         if  self.onlyIfChanged:
             if change.branch != self.branch: 
-                log.msg("Nightly Scheduler <%s>: ignoring change %d on off-branch %s" % (self.name, change.revision, change.branch)) 
+                log.msg("Nightly Scheduler <%s>: ignoring change %s on off-branch %s" % (self.name, change.revision, change.branch)) 
                 return 
             if not self.fileIsImportant:
                 self.addImportantChange(change) 
