@@ -404,8 +404,10 @@ class ShellCommand:
             display = " ".join(self.fake_command)
 
         # $PWD usually indicates the current directory; spawnProcess may not
-        # update this value, though, so we set it explicitly here.
-        self.environ['PWD'] = os.path.abspath(self.workdir)
+        # update this value, though, so we set it explicitly here.  This causes
+        # weird problems (bug #456) on msys, though..
+        if not self.environ.get('MACHTYPE', None) == 'i686-pc-msys':
+            self.environ['PWD'] = os.path.abspath(self.workdir)
 
         # self.stdin is handled in ShellCommandPP.connectionMade
 
