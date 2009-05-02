@@ -37,6 +37,9 @@ class Properties(util.ComparableMixin):
         self.__dict__ = d
         self.pmap = PropertyMap(self)
 
+    def __contains__(self, name):
+        return name in self.properties
+
     def __getitem__(self, name):
         """Just get the value for this property."""
         rv = self.properties[name][0]

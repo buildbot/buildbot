@@ -12,7 +12,7 @@ class Trigger(LoggingBuildStep):
     flunkOnFailure = True
 
     def __init__(self, schedulerNames=[], updateSourceStamp=True,
-                 waitForFinish=False, set_properties={}, **kwargs):
+                 waitForFinish=False, set_properties={}, copy_properties=[], **kwargs):
         """
         Trigger the given schedulers when this step is executed.
 
@@ -35,10 +35,12 @@ class Trigger(LoggingBuildStep):
                               builds.
 
         @param set_properties: A dictionary of properties to set for any
-                               builds resulting from this trigger.  To copy
-                               existing properties, use WithProperties.  These
+                               builds resulting from this trigger.  These
                                properties will override properties set in the
                                Triggered scheduler's constructor.
+
+        @param copy_properties: a list of property names to copy verbatim
+                                into any builds resulting from this trigger.
 
         """
         assert schedulerNames, "You must specify a scheduler to trigger"
@@ -46,12 +48,14 @@ class Trigger(LoggingBuildStep):
         self.updateSourceStamp = updateSourceStamp
         self.waitForFinish = waitForFinish
         self.set_properties = set_properties
+        self.copy_properties = copy_properties
         self.running = False
         LoggingBuildStep.__init__(self, **kwargs)
         self.addFactoryArguments(schedulerNames=schedulerNames,
                                  updateSourceStamp=updateSourceStamp,
                                  waitForFinish=waitForFinish,
-				                 set_properties=set_properties)
+				                 set_properties=set_properties,
+                                 copy_properties=copy_properties)
 
     def interrupt(self, reason):
         # TODO: this doesn't actually do anything.
@@ -65,6 +69,11 @@ class Trigger(LoggingBuildStep):
         # properties object
         props_to_set = Properties()
         props_to_set.update(properties.render(self.set_properties), "Trigger")
+        for p in self.copy_properties:
+            if p not in properties:
+                raise RuntimeError("copy_property '%s' is not set in the triggering build" % p)
+            props_to_set.setProperty(p, properties[p],
+                        "%s (in triggering build)" % properties.getPropertySource(p))
 
         self.running = True
         ss = self.build.getSourceStamp()

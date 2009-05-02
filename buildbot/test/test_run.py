@@ -634,8 +634,9 @@ from buildbot.scheduler import Triggerable, Scheduler
 from buildbot.steps.trigger import Trigger
 from buildbot.steps.dummy import Dummy
 from buildbot.test.runutils import SetTestFlagStep
+from buildbot.process.properties import WithProperties
 c['schedulers'] = [
-    Scheduler('triggerer', None, 0.1, ['triggerer']),
+    Scheduler('triggerer', None, 0.1, ['triggerer'], properties={'dyn':'dyn'}),
     Triggerable('triggeree', ['triggeree'])
 ]
 triggerer = factory.BuildFactory()
@@ -699,6 +700,20 @@ c['builders'] = [{'name': 'triggerer', 'slavename': 'bot1',
         self.failIfFlagNotSet('triggeree_started')
         self.failIfFlagSet('triggeree_finished')
         self.failIfFlagSet('triggerer_finished')
+
+    def testProperties(self):
+        return self.setupTest("""
+                schedulerNames=['triggeree'],
+                set_properties={'lit' : 'lit'},
+                copy_properties=['dyn']
+            """, """
+                SetTestFlagStep, flagname='props',
+                    value=WithProperties('%(lit:-MISSING)s:%(dyn:-MISSING)s')
+            """,
+                self._checkProperties)
+
+    def _checkProperties(self, res):
+        self.assertEqual(self.getFlag("props"), "lit:dyn")
 
 class PropertyPropagation(RunMixin, TestFlagMixin, unittest.TestCase):
     def setupTest(self, config, builders, checkFn):

@@ -5892,7 +5892,9 @@ The counterpart to the Triggerable described in section
 from buildbot.steps.trigger import Trigger
 f.addStep(Trigger(schedulerNames=['build-prep'],
                   waitForFinish=True,
-                  updateSourceStamp=True))
+                  updateSourceStamp=True,
+                  set_properties={ 'quick' : False },
+                  copy_properties=[ 'release_code_name' ]))
 @end example
 
 The @code{schedulerNames=} argument lists the Triggerables
@@ -5913,6 +5915,13 @@ the SourceStamp given to the Triggerables to include
 useful to ensure that all of the builds use exactly the same
 SourceStamp, even if other Changes have occurred while the build was
 running.
+
+Two parameters allow control of the properties that are passed to the triggered
+scheduler.  To simply copy properties verbatim, list them in the
+@code{copy_properties} parameter.  To set properties explicitly, use the more
+sophisticated @code{set_properties}, which takes a dictionary mapping property
+names to values.  You may use @code{WithProperties} here to dynamically
+construct new property values.
 
 @node Writing New BuildSteps
 @subsection Writing New BuildSteps
