@@ -392,7 +392,7 @@ class Build:
         # add a count to the loser until it is unique.
         self.steps = []
         self.stepStatuses = {}
-        stepnames = []
+        stepnames = {}
         sps = []
 
         for factory, args in self.stepFactories:
@@ -407,17 +407,14 @@ class Build:
             step.setBuildSlave(self.slavebuilder.slave)
             step.setDefaultWorkdir(self.workdir)
             name = step.name
-            count = 1
-            while name in stepnames and count < 1000:
+            if stepnames.has_key(name):
+                count = stepnames[name]
                 count += 1
+                stepnames[name] = count
                 name = step.name + "_%d" % count
-            if count == 1000:
-                raise RuntimeError("reached 1000 steps with base name" + \
-                                   "%s, bailing" % step.name)
-            elif name in stepnames:
-                raise RuntimeError("duplicate step '%s'" % step.name)
+            else:
+                stepnames[name] = 0
             step.name = name
-            stepnames.append(name)
             self.steps.append(step)
 
             # tell the BuildStatus about the step. This will create a
