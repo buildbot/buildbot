@@ -969,7 +969,7 @@ class SlaveDirectoryUploadCommand(Command):
 
         # create all directories on the master, to catch also empty ones
         for dirname in foundDirs:
-            dirname = os.path.split(dirname)
+            dirname = dirname.split(os.path.sep)
             self.writer.callRemote("createdir", dirname)
 
         for filename in foundFiles:
@@ -981,7 +981,7 @@ class SlaveDirectoryUploadCommand(Command):
         """Write a file to the remote writer"""
 
         log.msg("_writeFile: %r" % (filename))
-        self.writer.callRemote('open', os.path.split(filename))
+        self.writer.callRemote('open', filename.split(os.path.sep))
         data = open(os.path.join(self.baseRoot, filename), "r").read()
         self.writer.callRemote('write', data)
         self.writer.callRemote('close')
