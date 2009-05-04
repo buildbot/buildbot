@@ -158,8 +158,7 @@ class StatusResourceBuilder(HtmlResource, OneLineMixin):
 
         if self.isUsingUserPasswd(req):
             if not self.authUser(req):
-                # TODO: tell the user that their request was denied
-                return Redirect("..")
+                return Redirect("../../authfail")
 
         # keep weird stuff out of the branch and revision strings. TODO:
         # centralize this somewhere.
@@ -177,10 +176,10 @@ class StatusResourceBuilder(HtmlResource, OneLineMixin):
         # TODO: if we can authenticate that a particular User pushed the
         # button, use their name instead of None, so they'll be informed of
         # the results.
-	# TODO2: we can authenticate that a particular User pushed the button
-	# now, so someone can write this support. but it requires a
-	# buildbot.changes.changes.Change instance which is tedious at this
-	# stage to compute
+        # TODO2: we can authenticate that a particular User pushed the button
+        # now, so someone can write this support. but it requires a
+        # buildbot.changes.changes.Change instance which is tedious at this
+        # stage to compute
         s = SourceStamp(branch=branch, revision=revision)
         req = BuildRequest(r, s, builderName=self.builder_status.getName())
         try:

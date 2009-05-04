@@ -22,7 +22,7 @@ from buildbot.status.web.builder import BuildersResource
 from buildbot.status.web.slaves import BuildSlavesResource
 from buildbot.status.web.xmlrpc import XMLRPCServer
 from buildbot.status.web.about import AboutBuildbot
-from buildbot.status.web.auth import IAuth
+from buildbot.status.web.auth import IAuth, AuthFailResource
 
 # this class contains the status services (WebStatus and the older Waterfall)
 # which can be put in c['status']. It also contains some of the resources
@@ -499,6 +499,7 @@ class WebStatus(service.MultiService):
         self.putChild("one_box_per_builder", OneBoxPerBuilder())
         self.putChild("xmlrpc", XMLRPCServer())
         self.putChild("about", AboutBuildbot())
+        self.putChild("authfail", AuthFailResource())
 
     def __repr__(self):
         if self.http_port is None:
@@ -592,7 +593,7 @@ class WebStatus(service.MultiService):
             return False
         if self.auth.authenticate(user, passwd):
             return True
-        log.msg("Authentication failed for '%s': $s" % (user,
+        log.msg("Authentication failed for '%s': %s" % (user,
                                                         self.auth.errmsg()))
         return False
 

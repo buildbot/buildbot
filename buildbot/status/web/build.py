@@ -224,8 +224,7 @@ class StatusResourceBuild(HtmlResource):
     def stop(self, req):
         if self.isUsingUserPasswd(req):
             if not self.authUser(req):
-                # TODO: tell the web user that their request was denied
-                return Redirect("../..")
+                return Redirect("../../../authfailed")
         b = self.build_status
         c = self.build_control
         log.msg("web stopBuild of build %s:%s" % \
@@ -245,8 +244,7 @@ class StatusResourceBuild(HtmlResource):
     def rebuild(self, req):
         if self.isUsingUserPasswd(req):
             if not self.authUser(req):
-                # TODO: tell the web user that their request was denied
-                return Redirect("../..")
+                return Redirect("../../../authfailed")
         b = self.build_status
         bc = self.builder_control
         builder_name = b.getBuilder().getName()

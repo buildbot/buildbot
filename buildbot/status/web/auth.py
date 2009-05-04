@@ -1,6 +1,7 @@
 
 import os
 from zope.interface import Interface, implements
+from buildbot.status.web.base import HtmlResource
 
 class IAuth(Interface):
     """Represent an authentication method."""
@@ -81,3 +82,14 @@ class HTPasswdAuth(AuthBase):
         else:
             self.err = "Invalid user/passwd"
         return res
+
+class AuthFailResource(HtmlResource):
+    title = "Authentication Failed"
+
+    def body(self, request):
+        data = ''
+        data += '<h1>Authentication Failed</h1>\n'
+        data += '<p>The username or password you entered were not correct.  Please go back and try again.</p>\n'
+
+        return data
+
