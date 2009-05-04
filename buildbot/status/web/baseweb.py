@@ -22,6 +22,7 @@ from buildbot.status.web.builder import BuildersResource
 from buildbot.status.web.slaves import BuildSlavesResource
 from buildbot.status.web.xmlrpc import XMLRPCServer
 from buildbot.status.web.about import AboutBuildbot
+from buildbot.status.web.auth import IAuth, AuthFailResource
 
 # this class contains the status services (WebStatus and the older Waterfall)
 # which can be put in c['status']. It also contains some of the resources
@@ -128,10 +129,12 @@ class OneLinePerBuild(HtmlResource, OneLineMixin):
         if control is not None:
             if building:
                 stopURL = "builders/_all/stop"
-                data += make_stop_form(stopURL, True, "Builds")
+                data += make_stop_form(stopURL, self.isUsingUserPasswd(req),
+                                       True, "Builds")
             if online:
                 forceURL = "builders/_all/force"
-                data += make_force_build_form(forceURL, True)
+                data += make_force_build_form(forceURL,
+                                              self.isUsingUserPasswd(req), True)
 
         return data
 
@@ -239,10 +242,12 @@ class OneBoxPerBuilder(HtmlResource):
         if control is not None:
             if building:
                 stopURL = "builders/_all/stop"
-                data += make_stop_form(stopURL, True, "Builds")
+                data += make_stop_form(stopURL, self.isUsingUserPasswd(req),
+                                       True, "Builds")
             if online:
                 forceURL = "builders/_all/force"
-                data += make_force_build_form(forceURL, True)
+                data += make_force_build_form(forceURL,
+                                              self.isUsingUserPasswd(req), True)
 
         return data
 
@@ -368,7 +373,7 @@ class WebStatus(service.MultiService):
     # all the changes).
 
     def __init__(self, http_port=None, distrib_port=None, allowForce=False,
-                 public_html="public_html", site=None, numbuilds=20):
+                 public_html="public_html", site=None, numbuilds=20, auth=None):
         """Run a web server that provides Buildbot status.
 
         @type  http_port: int or L{twisted.application.strports} string
@@ -418,6 +423,12 @@ class WebStatus(service.MultiService):
         and /builders/FOO URLs.  This default can be overriden both programatically ---
         by passing the equally named argument to constructors of OneLinePerBuildOneBuilder
         and OneLinePerBuild --- and via the UI, by tacking ?numbuilds=xy onto the URL.
+
+        @type auth: a L{status.web.auth.IAuth} or C{None}
+        @param auth: an object that performs authentication to restrict access
+                     to the C{allowForce} features. Ignored if C{allowForce}
+                     is not C{True}. If C{auth} is C{None}, people can force or
+                     stop builds without auth.
         """
 
         service.MultiService.__init__(self)
@@ -432,6 +443,15 @@ class WebStatus(service.MultiService):
         self.distrib_port = distrib_port
         self.allowForce = allowForce
         self.public_html = public_html
+
+        if self.allowForce and auth:
+            assert IAuth.providedBy(auth)
+            self.auth = auth
+        else:
+            if auth:
+                log.msg("Warning: Ignoring authentication. allowForce must be"
+                        " set to True use this")
+            self.auth = None
 
         # If we were given a site object, go ahead and use it.
         if site:
@@ -479,6 +499,7 @@ class WebStatus(service.MultiService):
         self.putChild("one_box_per_builder", OneBoxPerBuilder())
         self.putChild("xmlrpc", XMLRPCServer())
         self.putChild("about", AboutBuildbot())
+        self.putChild("authfail", AuthFailResource())
 
     def __repr__(self):
         if self.http_port is None:
@@ -552,10 +573,29 @@ class WebStatus(service.MultiService):
 
     def getChangeSvc(self):
         return self.master.change_svc
+
     def getPortnum(self):
         # this is for the benefit of unit tests
         s = list(self)[0]
         return s._port.getHost().port
+
+    def isUsingUserPasswd(self):
+        """Returns boolean to indicate if this WebStatus uses authentication"""
+        if self.auth:
+            return True
+        return False
+
+    def authUser(self, user, passwd):
+        """Check that user/passwd is a valid user/pass tuple and can should be
+        allowed to perform the action. If this WebStatus is not password
+        protected, this function returns False."""
+        if not self.isUsingUserPasswd():
+            return False
+        if self.auth.authenticate(user, passwd):
+            return True
+        log.msg("Authentication failed for '%s': %s" % (user,
+                                                        self.auth.errmsg()))
+        return False
 
 # resources can get access to the IStatus by calling
 # request.site.buildbot_service.getStatus()

@@ -109,7 +109,7 @@ class StatusResourceBuilder(HtmlResource, OneLineMixin):
 
         if control is not None and connected_slaves:
             forceURL = path_to_builder(req, b) + '/force'
-            data += make_force_build_form(forceURL)
+            data += make_force_build_form(forceURL, self.isUsingUserPasswd(req))
         elif control is not None:
             data += """
             <p>All buildslaves appear to be offline, so it's not possible
@@ -148,12 +148,17 @@ class StatusResourceBuilder(HtmlResource, OneLineMixin):
         r = "The web-page 'force build' button was pressed by '%s': %s\n" \
             % (name, reason)
         log.msg("web forcebuild of builder '%s', branch='%s', revision='%s'"
-                % (self.builder_status.getName(), branch, revision))
+                " by user '%s'" % (self.builder_status.getName(), branch,
+                                   revision, name))
 
         if not self.builder_control:
             # TODO: tell the web user that their request was denied
             log.msg("but builder control is disabled")
             return Redirect("..")
+
+        if self.isUsingUserPasswd(req):
+            if not self.authUser(req):
+                return Redirect("../../authfail")
 
         # keep weird stuff out of the branch and revision strings. TODO:
         # centralize this somewhere.
@@ -171,6 +176,10 @@ class StatusResourceBuilder(HtmlResource, OneLineMixin):
         # TODO: if we can authenticate that a particular User pushed the
         # button, use their name instead of None, so they'll be informed of
         # the results.
+        # TODO2: we can authenticate that a particular User pushed the button
+        # now, so someone can write this support. but it requires a
+        # buildbot.changes.changes.Change instance which is tedious at this
+        # stage to compute
         s = SourceStamp(branch=branch, revision=revision)
         req = BuildRequest(r, s, builderName=self.builder_status.getName())
         try:

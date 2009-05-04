@@ -7354,10 +7354,26 @@ True, then the web page will provide a ``Force Build'' button that
 allows visitors to manually trigger builds. This is useful for
 developers to re-run builds that have failed because of intermittent
 problems in the test suite, or because of libraries that were not
-installed at the time of the previous build. You may not wish to allow
-strangers to cause a build to run: in that case, set this to False to
-remove these buttons. The default value is False.
+installed at the time of the previous build. The default value is False.
 
+You may not wish to allow strangers to cause a build to run or to stop
+current builds, in that case you can pass an instance of
+@code{status.web.authentication.IAuth} as a @code{auth} keyword argument.
+The class @code{BasicAuth} implements a basic authentication mechanism
+using a list of user/password tuples provided from the configuration file.
+The class @code{HTPasswdAuth} implements an authentication against an
+@file{.htpasswd} file.
+
+@example
+from buildbot.status.html import WebStatus
+from buildbot.status.web.authentication import BasicAuth
+users = [('bob', 'secret-pass'), ('jill', 'super-pass')]
+c['status'].append(WebStatus(http_port=8080, auth=BasicAuth(users)))
+
+from buildbot.status.web.authentication import HTPasswdAuth
+file = '/path/to/file'
+c['status'].append(WebStatus(http_port=8080, auth=(HTPasswdAuth(file))))
+@end example
 
 
 @node Buildbot Web Resources, XMLRPC server, WebStatus Configuration Parameters, WebStatus

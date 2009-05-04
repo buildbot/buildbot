@@ -6,7 +6,7 @@ from twisted.internet import defer, reactor
 import urllib, time
 from twisted.python import log
 from buildbot.status.web.base import HtmlResource, make_row, make_stop_form, \
-     css_classes, path_to_builder, path_to_slave
+     css_classes, path_to_builder, path_to_slave, make_name_user_passwd_form
 
 from buildbot.status.web.tests import TestsResource
 from buildbot.status.web.step import StepsResource
@@ -49,7 +49,7 @@ class StatusResourceBuild(HtmlResource):
 
             if self.build_control is not None:
                 stopURL = urllib.quote(req.childLink("stop"))
-                data += make_stop_form(stopURL)
+                data += make_stop_form(stopURL, self.isUsingUserPasswd(req))
 
         if b.isFinished():
 	    # Results map loosely to css_classes
@@ -190,8 +190,7 @@ class StatusResourceBuild(HtmlResource):
             rebuildURL = urllib.quote(req.childLink("rebuild"))
             data += ('<form action="%s" class="command rebuild">\n'
                      % rebuildURL)
-            data += make_row("Your name:",
-                             "<input type='text' name='username' />")
+            data += make_name_user_passwd_form(self.isUsingUserPasswd(req))
             data += make_row("Reason for re-running build:",
                              "<input type='text' name='comments' />")
             data += '<input type="submit" value="Rebuild" />\n'
@@ -223,6 +222,9 @@ class StatusResourceBuild(HtmlResource):
         return data
 
     def stop(self, req):
+        if self.isUsingUserPasswd(req):
+            if not self.authUser(req):
+                return Redirect("../../../authfailed")
         b = self.build_status
         c = self.build_control
         log.msg("web stopBuild of build %s:%s" % \
@@ -240,6 +242,9 @@ class StatusResourceBuild(HtmlResource):
         return DeferredResource(d)
 
     def rebuild(self, req):
+        if self.isUsingUserPasswd(req):
+            if not self.authUser(req):
+                return Redirect("../../../authfailed")
         b = self.build_status
         bc = self.builder_control
         builder_name = b.getBuilder().getName()
