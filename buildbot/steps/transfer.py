@@ -77,6 +77,7 @@ class _DirectoryWriter(pb.Referenceable):
 
     def remote_createdir(self, dirname):
 	# This function is needed to transfer empty directories.
+	dirname = os.path.sep.join(dirname)
 	dirname = os.path.join(self.destroot, dirname)
 	dirname = os.path.abspath(dirname)
 	if not os.path.exists(dirname):
@@ -84,6 +85,7 @@ class _DirectoryWriter(pb.Referenceable):
 
     def remote_open(self, destfile):
 	# Create missing directories.
+	destfile = os.path.sep.join(destfile)
 	destfile = os.path.join(self.destroot, destfile)
         destfile = os.path.abspath(destfile)
         dirname = os.path.dirname(destfile)
