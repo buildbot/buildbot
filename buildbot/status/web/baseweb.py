@@ -296,6 +296,8 @@ class WebStatus(service.MultiService):
      /grid : another summary display that shows a grid of builds, with
              sourcestamps on the x axis, and builders on the y.  Query
              arguments similar to those for the waterfall can be added.
+     /tgrid : similar to the grid display, but the commits are down the
+              left side, and the build hosts are across the top.
      /builders/BUILDERNAME: a page summarizing the builder. This includes
                             references to the Schedulers that feed it,
                             any builds currently in the queue, which

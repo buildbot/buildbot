@@ -66,7 +66,7 @@ class GridStatusMixin(object):
 #        if p:
 #            self.title = "BuildBot: %s" % p
 #
-    def build_td(self, request, build, extra=''):
+    def build_td(self, request, build):
         if not build:
             return '<td class="build">&nbsp;</td>\n'
 
@@ -85,9 +85,7 @@ class GridStatusMixin(object):
         text = '<br />\n'.join(text)
         class_ = build_get_class(build)
 
-        if extra:
-            extra = '<br/>' + extra
-        return '<td class="build %s">%s%s</td>\n' % (class_, text, extra)
+        return '<td class="build %s">%s</td>\n' % (class_, text)
 
     def builder_td(self, request, builder):
         state, builds = builder.getState()
@@ -328,11 +326,7 @@ class TransposedGridStatusResource(HtmlResource, GridStatusMixin):
             data += '<tr>\n'
             data += self.stamp_td(stamps[i])
             for bn in sortedBuilderNames:
-                if stamps[i].branch:
-                    extra = 'on ' + str(stamps[i].branch)
-                else:
-                    extra = ''
-                data += self.build_td(request, builder_builds[bn][i], extra)
+                data += self.build_td(request, builder_builds[bn][i])
             data += '</tr>\n'
 
         data += '</table>\n'

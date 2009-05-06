@@ -4001,8 +4001,8 @@ The Perforce user.
 The Perforce password.
 
 @item @code{p4bin}
-An optional string parameter. Specify the location of the perforce command 
-line binary (p4).  You only need to do this if the perforce binary is not 
+An optional string parameter. Specify the location of the perforce command
+line binary (p4).  You only need to do this if the perforce binary is not
 in the path of the buildbot user.  Defaults to ``p4''.
 
 @item @code{split_file}
@@ -5183,7 +5183,7 @@ The @code{Mercurial} build step performs a
 or update.
 
 Branches are available in two modes: ''dirname'' like @xref{Darcs} or
-''inrepo'', which uses the repository internal branches. Make sure this 
+''inrepo'', which uses the repository internal branches. Make sure this
 setting matches your changehook, if you have that installed.
 
 The Mercurial step takes the following arguments:
@@ -7432,6 +7432,29 @@ of the URL space: @file{/builders} for access to individual builds,
 @file{/changes} for access to information about source code changes,
 etc.
 
+@item /grid
+
+This provides a chronologically oriented display of builders, by
+revision.  The builders are listed down the left side of the page,
+and the revisions are listed across the top.
+
+By adding one ore more ``category='' arguments the grid will be
+restricted to revisions in those categories.
+
+A ``width=N'' argument will limit the number of revisiosn shown to N,
+defaulting to 5.
+
+A ``branch=BRANCHNAME'' argument will limit the grid to revisiosn on
+branch BRANCHNAME.
+
+@item /tgrid
+
+The Transposed Grid is similar to the standard grid, but, as the name
+implies, transposes the grid: the revisions are listed down the left side
+of the page, and the build hosts are listed across the top.  It accepts
+the same query arguments. The exception being that instead of ``width''
+the argument is named ``length.''
+
 @item /rss
 
 This provides a rss feed summarizing all failed builds. The same
@@ -7664,11 +7687,11 @@ mn = MailNotifier(fromaddr="buildbot@@example.org",
 @end example
 
 In some cases it is desirable to have different information then what
-is provided in a standard MailNotifier message. For this purpose 
-MailNotifier provides the argument customMesg (a function) which allows 
+is provided in a standard MailNotifier message. For this purpose
+MailNotifier provides the argument customMesg (a function) which allows
 for the creation of messages with unique content.
 
-For example it can be useful to display the last few lines of a log file 
+For example it can be useful to display the last few lines of a log file
 and recent changes when a builder fails:
 
 @example
@@ -7693,10 +7716,10 @@ mn = MailNotifier(fromaddr="buildbot@@example.org",
                   customMesg=message)
 @end example
 
-A customMesg function takes a single dict argument (see below) and returns a 
+A customMesg function takes a single dict argument (see below) and returns a
 tuple of strings. The first string is the complete text of the message and the
 second is the message type ('plain' or 'html'). The 'html' type should be used
-when generating an HTML message: 
+when generating an HTML message:
 
 @example
 def message(attrs):
@@ -7716,7 +7739,7 @@ def message(attrs):
     text.append('<br><br>')
     text.append('<b>-buildbot</b>')
     return ('\n'.join(text), 'html')
-@end example 
+@end example
 
 @heading MailNotifier arguments
 
@@ -7785,41 +7808,41 @@ developers whose SVN usernames match their twistedmatrix.com account
 names. See buildbot/status/mail.py for more details.
 
 @item customMesg
-This is a optional function that can be used to generate a custom mail 
-message. The customMesg function takes a single dict and must return a 
-tuple containing the message text and type ('html' or 'plain'). Below is a list 
+This is a optional function that can be used to generate a custom mail
+message. The customMesg function takes a single dict and must return a
+tuple containing the message text and type ('html' or 'plain'). Below is a list
 of availale keys in the dict passed to customMesg:
 
 @table @code
-@item builderName 
+@item builderName
 (str) Name of the builder that generated this event.
-@item projectName 
+@item projectName
 (str) Name of the project.
-@item mode 
+@item mode
 (str) Mode set in MailNotifier. (failing, passing, problem).
-@item result 
+@item result
 (str) Builder result as a string. 'success', 'warnings', 'failure', 'skipped', or 'exception'
-@item buildURL 
+@item buildURL
 (str) URL to build page.
-@item buildbotURL 
+@item buildbotURL
 (str) URL to buildbot main page.
-@item buildText 
+@item buildText
 (str) Build text from build.getText().
 @item buildProperties
 (Properties instance) Mapping of property names to values.
-@item slavename 
+@item slavename
 (str) Slavename.
-@item reason 
+@item reason
 (str) Build reason from build.getReason().
-@item responsibleUsers 
+@item responsibleUsers
 (List of str) List of responsible users.
-@item branch 
+@item branch
 (str) Name of branch used. If no SourceStamp exists branch
 is an empty string.
-@item revision 
+@item revision
 (str) Name of revision used. If no SourceStamp exists revision
 is an empty string.
-@item patch 
+@item patch
 (str) Name of patch used. If no SourceStamp exists patch
 is an empty string.
 @item changes
@@ -7828,19 +7851,19 @@ object has the following useful information:
 @table @code
 @item who
 (str) who made this change
-@item revision 
+@item revision
 (str) what VC revision is this change
-@item branch 
+@item branch
 (str) on what branch did this change occur
-@item when 
+@item when
 (str) when did this change occur
-@item files 
+@item files
 (list of str) what files were affected in this change
-@item comments 
+@item comments
 (str) comments reguarding the change.
 @end table
 The functions asText and asHTML return a list of strings with
-the above information formatted. 
+the above information formatted.
 @item logs
 (List of Tuples) List of tuples where each tuple contains the log name, log url,
 log contents as a list of strings, and the status of the corresponding build step,
