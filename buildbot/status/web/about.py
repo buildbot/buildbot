@@ -15,5 +15,4 @@ class AboutBuildbot(HtmlResource):
                                twisted=twisted.__version__,
                                jinja=jinja2.__version__, 
                                python=sys.version,
-                               platform=sys.platform);
-
+                               platform=sys.platform)
