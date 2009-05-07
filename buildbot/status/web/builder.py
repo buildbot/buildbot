@@ -126,7 +126,7 @@ class StatusResourceBuilder(HtmlResource, OneLineMixin):
             </form>
             """ % pingURL
 
-        data += self.footer(status, req)
+        data += self.footer(req)
 
         return data
 
@@ -301,7 +301,7 @@ class BuildersResource(HtmlResource):
                       bname))
         data += "</ol>\n"
 
-        data += self.footer(s, req)
+        data += self.footer(req)
 
         return data
 

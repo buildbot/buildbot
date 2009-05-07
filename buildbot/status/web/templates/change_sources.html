@@ -1,0 +1,11 @@
+Change sources:
+
+{% if sources %}
+  <ol>
+  {% for s in sources %}
+     <li>{{ s.describe() }}</li>
+  {% endfor %}
+  </ol>
+{% else %}
+  none (push only)
+{% endif %}

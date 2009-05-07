@@ -111,7 +111,7 @@ class OneBuildSlaveResource(HtmlResource, OneLineMixin):
                  + "\n")
         data.append("</div>\n")
 
-        return "".join(data)
+        return "".join(data) + self.footer(req)
 
 # /buildslaves
 class BuildSlavesResource(HtmlResource):
@@ -174,6 +174,7 @@ class BuildSlavesResource(HtmlResource):
             data += "\n"
 
         data += "</ol>\n"
+        data += self.footer(req)
 
         return data
 

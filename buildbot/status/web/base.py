@@ -5,9 +5,14 @@ from twisted.web import html, resource
 from buildbot.status import builder
 from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE, SKIPPED, EXCEPTION
 from buildbot import version, util
-
 from jinja2 import Environment, PackageLoader
-env = Environment(loader=PackageLoader('buildbot.status.web', 'templates'))
+import sys
+
+if hasattr(sys, 'frozen'):
+    assert False, 'Frozen config not supported with jinja (yet)'
+else:
+    #todo: rename env to jinjaenv or something more suitable
+    env = Environment(loader=PackageLoader('buildbot.status.web', 'templates'))
 
 class ITopBox(Interface):
     """I represent a box in the top row of the waterfall display: the one
@@ -290,10 +295,11 @@ class HtmlResource(resource.Resource):
     def path_to_root(self, request):
         return path_to_root(request)
 
-    def footer(self, s, req):
+    def footer(self, req):
+        status = self.getStatus(req)
         template = env.get_template("footer.html")
-        return template.render(projectURL = s.getProjectURL(),
-                               projectName = s.getProjectName(),
+        return template.render(projectURL = status.getProjectURL(),
+                               projectName = status.getProjectName(),
                                welcomeurl = self.path_to_root(req) + "index.html",
                                version = version,
                                time = time.strftime("%a %d %b %Y %H:%M:%S",

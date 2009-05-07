@@ -136,6 +136,7 @@ class OneLinePerBuild(HtmlResource, OneLineMixin):
                 data += make_force_build_form(forceURL,
                                               self.isUsingUserPasswd(req), True)
 
+        data += self.footer(req)
         return data
 
 
@@ -171,6 +172,7 @@ class OneLinePerBuildOneBuilder(HtmlResource, OneLineMixin):
         if not got:
             data += " <li>No matching builds found</li>\n"
         data += "</ul>\n"
+        data += self.footer(req)
 
         return data
 
@@ -248,6 +250,8 @@ class OneBoxPerBuilder(HtmlResource):
                 forceURL = "builders/_all/force"
                 data += make_force_build_form(forceURL,
                                               self.isUsingUserPasswd(req), True)
+
+        data += self.footer(req)
 
         return data
 

@@ -562,23 +562,7 @@ class WaterfallStatusResource(HtmlResource):
 
         data += "<br />\n"
 
-
-        bburl = "http://buildbot.net/?bb-ver=%s" % urllib.quote(version)
-        data += '<a href="%s">Buildbot-%s</a> ' % (bburl, version)
-        if projectName:
-            data += "working for the "
-            if projectURL:
-                data += '<a href="%s">%s</a> project.' % (projectURL,
-                                                            projectName)
-            else:
-                data += "%s project." % projectName
-        data += "<br />\n"
-        # TODO: push this to the right edge, if possible
-        data += ("Page built: " +
-                 time.strftime("%a %d %b %Y %H:%M:%S",
-                               time.localtime(util.now()))
-                 + "\n")
-        data += '</div>\n'
+        data += self.footer(request)
         return data
 
     def body0(self, request, builders):
