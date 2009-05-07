@@ -6,6 +6,9 @@ from buildbot.status import builder
 from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE, SKIPPED, EXCEPTION
 from buildbot import version, util
 
+from jinja2 import Environment, PackageLoader
+env = Environment(loader=PackageLoader('buildbot.status.web', 'templates'))
+
 class ITopBox(Interface):
     """I represent a box in the top row of the waterfall display: the one
     which shows the status of the last build for each builder."""
