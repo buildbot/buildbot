@@ -5803,7 +5803,7 @@ side:
 
 @example
 from buildbot.steps.shell import ShellCommand
-from buildbot.steps.transfer import FileUpload
+from buildbot.steps.transfer import FileDownload
 
 f.addStep(FileDownload(mastersrc="~/todays_build_config.txt",
                        slavedest="build_config.txt"))
