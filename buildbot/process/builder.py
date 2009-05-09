@@ -712,6 +712,10 @@ class Builder(pb.Referenceable):
         else:
             try:
                 req = self.nextBuild(self, self.buildable)
+                if not req:
+                    # Nothing to do
+                    self.updateBigStatus()
+                    return
                 self.buildable.remove(req)
             except:
                 log.err(None, "Exception choosing next build")
