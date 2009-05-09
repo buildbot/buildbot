@@ -5182,7 +5182,7 @@ The @code{Mercurial} build step performs a
 @uref{http://selenic.com/mercurial, Mercurial} (aka ``hg'') checkout
 or update.
 
-Branches are available in two modes: ''dirname'' like @xref{Darcs} or
+Branches are available in two modes: ''dirname'' like @xref{Darcs}, or
 ''inrepo'', which uses the repository internal branches. Make sure this
 setting matches your changehook, if you have that installed.
 
@@ -5900,7 +5900,7 @@ from buildbot.steps.trigger import Trigger
 f.addStep(Trigger(schedulerNames=['build-prep'],
                   waitForFinish=True,
                   updateSourceStamp=True,
-                  set_properties={ 'quick' : False },
+                  set_properties=@{ 'quick' : False @},
                   copy_properties=[ 'release_code_name' ]))
 @end example
 
