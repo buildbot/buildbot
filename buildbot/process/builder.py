@@ -681,7 +681,12 @@ class Builder(pb.Referenceable):
             self.updateBigStatus()
             return
         if self.nextSlave:
-            sb = self.nextSlave(available_slaves)
+            sb = None
+            try:
+                sb = self.nextSlave(available_slaves)
+            except:
+                log.err(None, "Exception choosing next slave")
+
             if not sb:
                 log.msg("%s: want to start build, but we don't have a remote"
                         % self)
