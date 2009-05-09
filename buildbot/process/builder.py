@@ -369,6 +369,8 @@ class Builder(pb.Referenceable):
         self.builddir = setup['builddir']
         self.buildFactory = setup['factory']
         self.nextSlave = setup.get('nextSlave')
+        if self.nextSlave is not None and not callable(self.nextSlave):
+            raise ValueError("nextSlave must be callable")
         self.locks = setup.get("locks", [])
         self.env = setup.get('env', {})
         assert isinstance(self.env, dict)
