@@ -66,9 +66,9 @@ class BotMaster(service.MultiService):
         # requests
         self.mergeRequests = None
 
-        # self.builderOrder is the callable override for builder order
+        # self.prioritizeBuilders is the callable override for builder order
         # traversal
-        self.builderOrder = None
+        self.prioritizeBuilders = None
 
     # these four are convenience functions for testing
 
@@ -198,8 +198,12 @@ class BotMaster(service.MultiService):
 
     def maybeStartAllBuilds(self):
         builders = self.builders.values()
-        if self.builderOrder is not None:
-            builders = self.builderOrder(builders)
+        if self.prioritizeBuilders is not None:
+            try:
+                builders = self.prioritizeBuilders(self.parent, builders)
+            except:
+                log.err(None, "Exception prioritizing builders")
+                return
         else:
             def _sortfunc(b1, b2):
                 t1 = b1.getOldestRequestTime()
@@ -212,8 +216,11 @@ class BotMaster(service.MultiService):
                     return -1
                 return cmp(t1, t2)
             builders.sort(cmp=_sortfunc)
-        for b in builders:
-            b.maybeStartBuild()
+        try:
+            for b in builders:
+                b.maybeStartBuild()
+        except:
+            log.err(None, "Exception starting builds")
 
     def shouldMergeRequests(self, builder, req1, req2):
         """Determine whether two BuildRequests should be merged for
@@ -530,10 +537,10 @@ class BuildMaster(service.MultiService, styles.Versioned):
 
         known_keys = ("bots", "slaves",
                       "sources", "change_source",
-                      "schedulers", "builders", "mergeRequests", 
+                      "schedulers", "builders", "mergeRequests",
                       "slavePortnum", "debugPassword", "logCompressionLimit",
                       "manhole", "status", "projectName", "projectURL",
-                      "buildbotURL", "properties", "builderOrder",
+                      "buildbotURL", "properties", "prioritizeBuilders",
                       )
         for k in config.keys():
             if k not in known_keys:
@@ -569,9 +576,9 @@ class BuildMaster(service.MultiService, styles.Versioned):
             mergeRequests = config.get('mergeRequests')
             if mergeRequests is not None and not callable(mergeRequests):
                 raise ValueError("mergeRequests must be a callable")
-            builderOrder = config.get('builderOrder')
-            if builderOrder is not None and not callable(builderOrder):
-                raise ValueError("builderOrder must be callable")
+            prioritizeBuilders = config.get('prioritizeBuilders')
+            if prioritizeBuilders is not None and not callable(prioritizeBuilders):
+                raise ValueError("prioritizeBuilders must be callable")
 
         except KeyError, e:
             log.msg("config dictionary is missing a required parameter")
@@ -732,8 +739,8 @@ class BuildMaster(service.MultiService, styles.Versioned):
             self.status.logCompressionLimit = logCompressionLimit
         if mergeRequests is not None:
             self.botmaster.mergeRequests = mergeRequests
-        if builderOrder is not None:
-            self.botmaster.builderOrder = builderOrder
+        if prioritizeBuilders is not None:
+            self.botmaster.prioritizeBuilders = prioritizeBuilders
 
         # self.slaves: Disconnect any that were attached and removed from the
         # list. Update self.checker with the new list of passwords, including
