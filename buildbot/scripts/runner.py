@@ -516,7 +516,12 @@ def stop(config, signame="TERM", wait=False):
     pid = int(f.read().strip())
     signum = getattr(signal, "SIG"+signame)
     timer = 0
-    os.kill(pid, signum)
+    try:
+        os.kill(pid, signum)
+    except OSError, e:
+        if e.errno != 3:
+            raise
+
     if not wait:
         if not quiet:
             print "sent SIG%s to process" % signame
