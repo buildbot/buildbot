@@ -7901,6 +7901,11 @@ the above information formatted.
 log contents as a list of strings, and the status of the corresponding build step,
 i.e. SUCCESS, WARNING, or FAILURE.
 @end table
+
+@item extraHeaders
+(dictionary) A dictionary containing key/value pairs of extra headers to add
+to sent e-mails. Both the keys and the values may be a WithProperties instance.
+
 @end table
 
 @node IRC Bot, PBListener, MailNotifier, Status Delivery
