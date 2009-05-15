@@ -2,6 +2,7 @@
 import random, weakref
 from zope.interface import implements
 from twisted.python import log, components
+from twisted.python.failure import Failure
 from twisted.spread import pb
 from twisted.internet import reactor, defer
 
@@ -450,7 +451,6 @@ class Builder(pb.Referenceable):
         self.buildable.append(req)
         req.requestSubmitted(self)
         self.builder_status.addBuildRequest(req.status)
-        #self.maybeStartBuild()
         self.botmaster.maybeStartAllBuilds()
 
     def cancelBuildRequest(self, req):
@@ -692,7 +692,8 @@ class Builder(pb.Referenceable):
             try:
                 sb = self.nextSlave(self, available_slaves)
             except:
-                log.err(None, "Exception choosing next slave")
+                log.msg("Exception choosing next slave")
+                log.err(Failure())
 
             if not sb:
                 log.msg("%s: want to start build, but we don't have a remote"
@@ -718,7 +719,8 @@ class Builder(pb.Referenceable):
                     return
                 self.buildable.remove(req)
             except:
-                log.err(None, "Exception choosing next build")
+                log.msg("Exception choosing next build")
+                log.err(Failure())
                 self.updateBigStatus()
                 return
         self.builder_status.removeBuildRequest(req.status)
