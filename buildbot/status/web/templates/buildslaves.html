@@ -1,0 +1,44 @@
+<h1>Build Slaves</h1>
+
+<ol>
+{% for s in slaves %}
+  <li><a href="{{ s.link }}">{{ s.name }}</a>:
+  <ul>
+  
+  {% if s.builders %}
+    <li>Used by builders: 
+    {% set comma = joiner(", ") %}    
+    {% for b in s.builders %}
+      {{ comma() }}<a href="{{ b.link }}">{{ b.name }}</a>
+    {% endfor %}
+    </li>
+  {% else %}
+    <li>Not used by any Builders</li>
+  {% endif %}
+ 
+  {% if s.connected %}
+    <li>Slave is currently connected</li>
+    
+    {% if s.admin %}
+      <li>Admin: {{ s.admin|replace('@', '-at-') }}</li>
+    {% endif %}
+    
+    {% if s.last_heard_from_age %}
+      <li>Last heard from {{ s.last_heard_from_age }}
+          <font size="-1">{{ s.last_heard_from_time }}</font></li>          
+      {% if s.running_builds %}
+        <li>Slave is currently running {{ s.running_builds }} build(s).</li>
+      {% else %}
+        <li>Slave is idle.</li>
+      {% endif %}
+    {% endif %}
+    
+  {% else %}
+    <li><b>Slave is NOT currently connected</b></li>
+  {% endif %}
+  
+  </ul>
+  </li>
+{% endfor %}
+</ol>  
+  

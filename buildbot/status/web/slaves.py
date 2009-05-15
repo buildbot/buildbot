@@ -4,7 +4,7 @@ from twisted.python import log
 from twisted.web import html
 from twisted.web.util import Redirect
 
-from buildbot.status.web.base import HtmlResource, abbreviate_age, OneLineMixin, path_to_slave
+from buildbot.status.web.base import HtmlResource, abbreviate_age, OneLineMixin, path_to_slave, env
 from buildbot import version, util
 
 # /buildslaves/$slavename
@@ -87,30 +87,6 @@ class OneBuildSlaveResource(HtmlResource, OneLineMixin):
                     break
         data.append("</ul>\n")
 
-        projectURL = s.getProjectURL()
-        projectName = s.getProjectName()
-        data.append('<hr /><div class="footer">\n')
-
-        welcomeurl = self.path_to_root(req) + "index.html"
-        data.append("[<a href=\"%s\">welcome</a>]\n" % welcomeurl)
-        data.append("<br />\n")
-
-        data.append('<a href="http://buildbot.sourceforge.net/">Buildbot</a>')
-        data.append("-%s " % version)
-        if projectName:
-            data.append("working for the ")
-            if projectURL:
-                data.append("<a href=\"%s\">%s</a> project." % (projectURL,
-                                                            projectName))
-            else:
-                data.append("%s project." % projectName)
-        data.append("<br />\n")
-        data.append("Page built: " +
-                 time.strftime("%a %d %b %Y %H:%M:%S",
-                               time.localtime(util.now()))
-                 + "\n")
-        data.append("</div>\n")
-
         return "".join(data) + self.footer(req)
 
 # /buildslaves
@@ -120,8 +96,6 @@ class BuildSlavesResource(HtmlResource):
 
     def body(self, req):
         s = self.getStatus(req)
-        data = ""
-        data += "<h1>Build Slaves</h1>\n"
 
         used_by_builder = {}
         for bname in s.getBuilderNames():
@@ -132,50 +106,31 @@ class BuildSlavesResource(HtmlResource):
                     used_by_builder[slavename] = []
                 used_by_builder[slavename].append(bname)
 
-        data += "<ol>\n"
+        slaves = []
         for name in util.naturalSort(s.getSlaveNames()):
+            info = {}
+            slaves.append(info)
             slave = s.getSlave(name)
             slave_status = s.botmaster.slaves[name].slave_status
-            isBusy = len(slave_status.getRunningBuilds())
-            data += " <li><a href=\"%s\">%s</a>:\n" % (req.childLink(urllib.quote(name,'')), name)
-            data += " <ul>\n"
-            builder_links = ['<a href="%s">%s</a>'
-                             % (req.childLink("../builders/%s" % bname),bname)
-                             for bname in used_by_builder.get(name, [])]
-            if builder_links:
-                data += ("  <li>Used by Builders: %s</li>\n" %
-                         ", ".join(builder_links))
-            else:
-                data += "  <li>Not used by any Builders</li>\n"
+            info['running_builds'] = len(slave_status.getRunningBuilds())
+            info['link'] = req.childLink(urllib.quote(name,''))
+            info['name'] = name
+            info['builders'] = [{'link': req.childLink("../builders/%s" % bname), 'name': bname}
+                                for bname in used_by_builder.get(name, [])]
+            info['connected'] = slave.isConnected()
+            
             if slave.isConnected():
-                data += "  <li>Slave is currently connected</li>\n"
-                admin = slave.getAdmin()
-                if admin:
-                    # munge it to avoid feeding the spambot harvesters
-                    admin = admin.replace("@", " -at- ")
-                    data += "  <li>Admin: %s</li>\n" % admin
+                info['admin'] = slave.getAdmin()
                 last = slave.lastMessageReceived()
                 if last:
-                    lt = time.strftime("%Y-%b-%d %H:%M:%S",
-                                       time.localtime(last))
-                    age = abbreviate_age(time.time() - last)
-                    data += "  <li>Last heard from: %s " % age
-                    data += '<font size="-1">(%s)</font>' % lt
-                    data += "</li>\n"
-                    if isBusy:
-                        data += "<li>Slave is currently building.</li>"
-                    else:
-                        data += "<li>Slave is idle.</li>"
-            else:
-                data += "  <li><b>Slave is NOT currently connected</b></li>\n"
+                    info['last_heard_from_age'] = abbreviate_age(time.time() - last)
+                    info['last_heard_from_time'] = time.strftime("%Y-%b-%d %H:%M:%S",
+                                                                time.localtime(last))
 
-            data += " </ul>\n"
-            data += " </li>\n"
-            data += "\n"
-
-        data += "</ol>\n"
+        template = env.get_template("buildslaves.html");
+        template.autoescape = True
+        data = template.render(slaves=slaves)
         data += self.footer(req)
-
         return data
 
     def getChild(self, path, req):
