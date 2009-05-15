@@ -26,12 +26,10 @@ class OneBuildSlaveResource(HtmlResource, OneLineMixin):
 
     def body(self, req):
         s = self.getStatus(req)
-        slave = s.getSlave(self.slavename)
         my_builders = []
         for bname in s.getBuilderNames():
             b = s.getBuilder(bname)
             for bs in b.getSlaves():
-                slavename = bs.getName()
                 if bs.getName() == self.slavename:
                     my_builders.append(b)
 
@@ -40,54 +38,30 @@ class OneBuildSlaveResource(HtmlResource, OneLineMixin):
         for b in my_builders:
             for cb in b.getCurrentBuilds():
                 if cb.getSlavename() == self.slavename:
-                    current_builds.append(cb)
-
-        data = []
-
-        projectName = s.getProjectName()
-
-        data.append("<a href=\"%s\">%s</a>\n" % (self.path_to_root(req), projectName))
-
-        data.append("<h1>Build Slave: %s</h1>\n" % self.slavename)
-
-        shutdown_url = req.childLink("shutdown")
-
-        if not slave.isConnected():
-            data.append("<h2>NOT CONNECTED</h2>\n")
-        elif not slave.getGraceful():
-            data.append('''<form method="POST" action="%s">
-<input type="submit" value="Gracefully Shutdown">
-</form>''' % shutdown_url)
-        else:
-            data.append("Gracefully shutting down...\n")
-
-        if current_builds:
-            data.append("<h2>Currently building:</h2>\n")
-            data.append("<ul>\n")
-            for build in current_builds:
-                data.append("<li>%s</li>\n" % self.make_line(req, build, True))
-            data.append("</ul>\n")
-
-        else:
-            data.append("<h2>no current builds</h2>\n")
-
-        # Recent builds
-        data.append("<h2>Recent builds:</h2>\n")
-        data.append("<ul>\n")
-        n = 0
+                    current_builds.append(self.get_line_values(req, cb))
+        
         try:
             max_builds = int(req.args.get('builds')[0])
         except:
             max_builds = 10
-        for build in s.generateFinishedBuilds(builders=[b.getName() for b in my_builders]):
-            if build.getSlavename() == self.slavename:
+           
+        recent_builds = []    
+            
+        n = 0
+        for rb in s.generateFinishedBuilds(builders=[b.getName() for b in my_builders]):
+            if rb.getSlavename() == self.slavename:
                 n += 1
-                data.append("<li>%s</li>\n" % self.make_line(req, build, True))
+                recent_builds.append(self.get_line_values(req, rb))
                 if n > max_builds:
                     break
-        data.append("</ul>\n")
 
-        return "".join(data) + self.footer(req)
+        template = env.get_template("buildslave.html");
+        data = template.render(slave = self, 
+                               current = current_builds, 
+                               recent = recent_builds, 
+                               shutdown_url = req.childLink("shutdown"))
+        data += self.footer(req)
+        return data
 
 # /buildslaves
 class BuildSlavesResource(HtmlResource):
@@ -128,7 +102,6 @@ class BuildSlavesResource(HtmlResource):
                                                                 time.localtime(last))
 
         template = env.get_template("buildslaves.html");
-        template.autoescape = True
         data = template.render(slaves=slaves)
         data += self.footer(req)
         return data

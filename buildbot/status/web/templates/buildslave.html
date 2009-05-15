@@ -1,0 +1,42 @@
+<h1>Build Slave: {{ slave.slavname }}</h1>
+
+{% if not slave.isConnected %}
+  <h2>NOT CONNECTED</h2>
+{% elif not slave.getGraceFul %}
+  <form method="POST" action="{{ shutdown_url }}">
+    <input type="submit" value="Gracefully Shutdown">
+  </form>
+{% else %}
+  <p>Gracefully shutting down...</p>
+{% endif %}
+
+{% macro build(b, include_builder = True) -%}
+  <font size="-1">({{ b.time }})</font> 
+  rev=[{{ b.rev }}]
+  <span class="{{b.class}}">{{ b.results}}</span>
+  {% if include_builder %}
+    <a href="{{ b.builderurl }}">{{ b.builder_name }}</a>
+  {% endif %}
+  <a href="{{ b.buildurl }}">#{{ b.buildnum }}</a>
+  {{ b.text }}
+{%- endmacro %}
+
+
+{% if current %}
+  <h2>Currently building:</h2>
+  <ul>
+  {% for b in current %}
+   <li>{{ build(b, True) }}</li>
+  {% endfor %}
+  </ul>
+{% else %}
+  <h2>No current builds</h2>
+{% endif %}
+
+<h2>Recent builds</h2>
+<ul>
+{% for b in recent %}
+   <li>{{ build(b, True) }}</li>
+{% endfor %}
+</ul>
+  
