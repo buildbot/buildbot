@@ -176,13 +176,15 @@ class MailNotifier(base.StatusReceiverMultiService):
 
     compare_attrs = ["extraRecipients", "lookup", "fromaddr", "mode",
                      "categories", "builders", "addLogs", "relayhost",
-                     "subject", "sendToInterestedUsers", "customMesg"]
+                     "subject", "sendToInterestedUsers", "customMesg",
+                     "extraHeaders"]
 
     def __init__(self, fromaddr, mode="all", categories=None, builders=None,
                  addLogs=False, relayhost="localhost",
                  subject="buildbot %(result)s in %(projectName)s on %(builder)s",
                  lookup=None, extraRecipients=[],
-                 sendToInterestedUsers=True, customMesg=message):
+                 sendToInterestedUsers=True, customMesg=message,
+                 extraHeaders=None):
         """
         @type  fromaddr: string
         @param fromaddr: the email address to be used in the 'From' header.
@@ -300,7 +302,11 @@ class MailNotifier(base.StatusReceiverMultiService):
 
                            logs - (List of Tuples) List of tuples that contain the log name, log url,
                                   and log contents as a list of strings.
-
+        @type  extraHeaders: dict
+        @param extraHeaders: A dict of extra headers to add to the mail. It's
+                             best to avoid putting 'To', 'From', 'Date',
+                             'Subject', or 'CC' in here. Both the names and
+                             values may be WithProperties instances.
         """
 
         base.StatusReceiverMultiService.__init__(self)
@@ -324,6 +330,9 @@ class MailNotifier(base.StatusReceiverMultiService):
             assert interfaces.IEmailLookup.providedBy(lookup)
         self.lookup = lookup
         self.customMesg = customMesg
+        if extraHeaders:
+            assert isinstance(extraHeaders, dict)
+        self.extraHeaders = extraHeaders
         self.watched = []
         self.status = None
 
@@ -406,6 +415,8 @@ class MailNotifier(base.StatusReceiverMultiService):
                          '%s/steps/%s/logs/%s' % (self.status.getURLForThing(build), stepName, logName),
                          logf.getText().splitlines(),
                          logStatus))
+
+        properties = build.getProperties()
                 
         attrs = {'builderName': name,
                  'projectName': self.status.getProjectName(),
@@ -414,7 +425,7 @@ class MailNotifier(base.StatusReceiverMultiService):
                  'buildURL': self.status.getURLForThing(build),
                  'buildbotURL': self.status.getBuildbotURL(),
                  'buildText': build.getText(),
-                 'buildProperties': build.getProperties(),
+                 'buildProperties': properties,
                  'slavename': build.getSlavename(),
                  'reason':  build.getReason(),
                  'responsibleUsers': build.getResponsibleUsers(),
@@ -473,6 +484,18 @@ class MailNotifier(base.StatusReceiverMultiService):
                     a.add_header('Content-Disposition', "attachment",
                                  filename=name)
                     m.attach(a)
+
+        # Add any extra headers that were requested, doing WithProperties
+        # interpolation if necessary
+        if self.extraHeaders:
+            for k,v in self.extraHeaders:
+                k = properties.render(k)
+                if k in m:
+                    twlog("Warning: Got header " + k + " in self.extraHeaders "
+                          "but it already exists in the Message - "
+                          "not adding it.")
+                    continue
+                m[k] = properties.render(v)
 
         # now, who is this message going to?
         dl = []

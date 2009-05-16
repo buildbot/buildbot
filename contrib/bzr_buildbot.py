@@ -225,15 +225,29 @@ if DEFINE_POLLER:
         def startService(self):
             twisted.python.log.msg("BzrPoller(%s) starting" % self.url)
             buildbot.changes.base.ChangeSource.startService(self)
-            twisted.internet.reactor.callWhenRunning(
-                self.loop.start, self.poll_interval)
+            if self.branch_name is FULL:
+                ourbranch = self.url
+            elif self.branch_name is SHORT:
+                # We are in a bit of trouble, as we cannot really know what our
+                # branch is until we have polled new changes.
+                # Seems we would have to wait until we polled the first time,
+                # and only then do the filtering, grabbing the branch name from
+                # whatever we polled.
+                # For now, leave it as it was previously (compare against
+                # self.url); at least now things work when specifying the
+                # branch name explicitly.
+                ourbranch = self.url
+            else:
+                ourbranch = self.branch_name
             for change in reversed(self.parent.changes):
-                if change.branch == self.url:
+                if change.branch == ourbranch:
                     self.last_revision = change.revision
                     break
             else:
                 self.last_revision = None
             self.polling = False
+            twisted.internet.reactor.callWhenRunning(
+                self.loop.start, self.poll_interval)
 
         def stopService(self):
             twisted.python.log.msg("BzrPoller(%s) shutting down" % self.url)

@@ -2054,6 +2054,7 @@ understand how to fill in each section properly.
 * Defining the Project::
 * Change Sources and Schedulers::
 * Merging BuildRequests::
+* Prioritizing Builders::
 * Setting the slaveport::
 * Buildslave Specifiers::
 * On-Demand ("Latent") Buildslaves::
@@ -2711,7 +2712,7 @@ nightly_factory.addStep(trigger.Trigger(schedulerNames=['package-all-platforms']
                                      waitForFinish=True))
 @end example
 
-@node Merging BuildRequests, Setting the slaveport, Change Sources and Schedulers, Configuration
+@node Merging BuildRequests, Prioritizing Builders, Change Sources and Schedulers, Configuration
 @section Merging BuildRequests
 
 @bcindex c['mergeRequests']
@@ -2719,7 +2720,7 @@ nightly_factory.addStep(trigger.Trigger(schedulerNames=['package-all-platforms']
 By default, buildbot merges BuildRequests that have the compatible
 SourceStamps. This behaviour can be customized with the
 @code{c['mergeRequests']} configuration key.  This key specifies a function
-which is caleld with three arguments: a @code{Builder} and two
+which is called with three arguments: a @code{Builder} and two
 @code{BuildRequest} objects.  It should return true if the requests can be
 merged.  For example:
 
@@ -2742,7 +2743,38 @@ def mergeRequests(builder, req1, req2):
 c['mergeRequests'] = mergeRequests
 @end example
 
-@node Setting the slaveport, Buildslave Specifiers, Merging BuildRequests, Configuration
+@node Prioritizing Builders, Setting the slaveport, Merging BuildRequests, Configuration
+@section Prioritizing Builders
+
+@bcindex c['prioritizeBuilders']
+
+By default, buildbot will attempt to start builds on builders in order from the
+builder with the oldest pending request to the newest. This behaviour can be
+customized with the @code{c['prioritizeBuilders']} configuration key.
+This key specifies a function which is called with two arguments: a
+@code{BuildMaster} and a list of @code{Builder} objects. It
+should return a list of @code{Builder} objects in the desired order.
+It may also remove items from the list if builds should not be started
+on those builders.
+
+@example
+def prioritizeBuilders(buildmaster, builders):
+    """Prioritize builders.  'finalRelease' builds have the highest
+    priority, so they should be built before running tests, or
+    creating builds."""
+    builderPriorities = @{
+        "finalRelease": 0,
+        "test": 1,
+        "build": 2,
+    @}
+    builders.sort(key=lambda b: builderPriorities.get(b.name, 0))
+    return builders
+
+c['prioritizeBuilders'] = prioritizeBuilders
+@end example
+            
+
+@node Setting the slaveport, Buildslave Specifiers, Prioritizing Builders, Configuration
 @section Setting the slaveport
 
 @bcindex c['slavePortnum']
@@ -3281,6 +3313,22 @@ the active builders. You can put these new builders in a test
 category, make your main status clients ignore them, and have only
 private status clients pick them up. As soon as they work, you can
 move them over to the active category.
+
+@item nextSlave
+If provided, this is a function that controls which slave will be assigned
+future jobs. The function is passed two arguments, the @code{Builder}
+object which is assigning a new job, and a list of @code{BuildSlave}
+objects. The function should return one of the @code{BuildSlave}
+objects, or @code{None} if none of the available slaves should be
+used.
+
+@item nextBuild
+If provided, this is a function that controls which build request will be
+handled next. The function is passed two arguments, the @code{Builder}
+object which is assigning a new job, and a list of @code{BuildRequest}
+objects of pending builds. The function should return one of the
+@code{BuildRequest} objects, or @code{None} if none of the pending
+builds should be started.
 
 @end table
 
@@ -5182,7 +5230,7 @@ The @code{Mercurial} build step performs a
 @uref{http://selenic.com/mercurial, Mercurial} (aka ``hg'') checkout
 or update.
 
-Branches are available in two modes: ''dirname'' like @xref{Darcs} or
+Branches are available in two modes: ''dirname'' like @xref{Darcs}, or
 ''inrepo'', which uses the repository internal branches. Make sure this
 setting matches your changehook, if you have that installed.
 
@@ -5803,7 +5851,7 @@ side:
 
 @example
 from buildbot.steps.shell import ShellCommand
-from buildbot.steps.transfer import FileUpload
+from buildbot.steps.transfer import FileDownload
 
 f.addStep(FileDownload(mastersrc="~/todays_build_config.txt",
                        slavedest="build_config.txt"))
@@ -5900,7 +5948,7 @@ from buildbot.steps.trigger import Trigger
 f.addStep(Trigger(schedulerNames=['build-prep'],
                   waitForFinish=True,
                   updateSourceStamp=True,
-                  set_properties={ 'quick' : False },
+                  set_properties=@{ 'quick' : False @},
                   copy_properties=[ 'release_code_name' ]))
 @end example
 
@@ -7901,6 +7949,11 @@ the above information formatted.
 log contents as a list of strings, and the status of the corresponding build step,
 i.e. SUCCESS, WARNING, or FAILURE.
 @end table
+
+@item extraHeaders
+(dictionary) A dictionary containing key/value pairs of extra headers to add
+to sent e-mails. Both the keys and the values may be a WithProperties instance.
+
 @end table
 
 @node IRC Bot, PBListener, MailNotifier, Status Delivery
