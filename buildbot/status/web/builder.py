@@ -7,7 +7,7 @@ import re, urllib, time
 from twisted.python import log
 from buildbot import interfaces
 from buildbot.status.web.base import HtmlResource, make_row, \
-     make_force_build_form, OneLineMixin, path_to_build, path_to_slave, path_to_builder
+     make_force_build_form, OneLineMixin, path_to_build, path_to_slave, path_to_builder, env
 from buildbot.process.base import BuildRequest
 from buildbot.sourcestamp import SourceStamp
 
@@ -288,19 +288,18 @@ class BuildersResource(HtmlResource):
 
     def body(self, req):
         s = self.getStatus(req)
-        data = ""
-        data += "<h1>Builders</h1>\n"
 
         # TODO: this is really basic. It should be expanded to include a
         # brief one-line summary of the builder (perhaps with whatever the
         # builder is currently doing)
-        data += "<ol>\n"
-        for bname in s.getBuilderNames():
-            data += (' <li><a href="%s">%s</a></li>\n' %
-                     (req.childLink(urllib.quote(bname, safe='')),
-                      bname))
-        data += "</ol>\n"
 
+        builders = []
+        for bname in s.getBuilderNames():
+            builders.append({'link' : req.childLink(urllib.quote(bname, safe='')),
+                             'name' : bname})
+                      
+        template = env.get_template('builders.html')
+        data = template.render(builders = builders)
         data += self.footer(req)
 
         return data

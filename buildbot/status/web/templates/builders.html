@@ -1,0 +1,7 @@
+<h1>Builders</h1>
+
+<ol>
+{% for b in builders %}
+  <li><a href="{{ b.link }}">{{ b.name|e }}</a></li>
+{% endfor %}
+</ol>
