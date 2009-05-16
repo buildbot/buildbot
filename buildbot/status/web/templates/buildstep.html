@@ -1,0 +1,48 @@
+                
+<h1>BuildStep 
+    <a href="{{ builder_link }}">{{ b.getBuilder().getName() }}</a> 
+    <a href="{{ build_link }}">{{ b.getNumber() }}</a>: {{ s.getName() }}
+</h1>
+
+{% if s.isFinished() %}
+  <h2>Finished</h2>
+  <p>  
+  {% for l in s.getText() %}
+    {{ l|e }}
+  {% endfor %}
+  </p>  
+{% else %}
+  <h2>Not Finished</h2>
+  <p>ETA {{ s.getETA()|e }} seconds</p>
+{% endif %}
+
+{% set exp = s.getExpectations() %}
+{% if exp %}
+  <h2>Expectations</h2>
+  <ul>
+  {% for e in exp %}
+    <li>{{ e[0]|e }}: current={{ e[1] }}, target={{ e[2] }}
+  {% endfor %}
+  </ul>
+{% endif %}
+
+<h2>Timing</h2>
+<table>
+  <tr><td>Start</td><td>{{ start }}</td></tr>
+  {% if end %}
+    <tr><td>End</td><td>{{ end }}</td></tr>
+    <tr><td>Elapsed</td><td>{{ elapsed }}</td></tr>
+  {% endif %}
+</table>
+  
+<h2>Logs</h2>
+<ul>
+{% for l in logs %}
+  {% if l.log.hasContents() %}
+    <li><a href="{{ l.link|e }}">{{ l.log.getName()|e }}</a></li>
+  {% else %}
+    <li>{{ l.log.getName()|e }}</li>
+  {% endif %}
+{% endfor %}
+</ul>
+  

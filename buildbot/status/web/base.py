@@ -405,6 +405,7 @@ class OneLineMixin:
                   'rev': rev,
                   'time': time.strftime(self.LINE_TIME_FORMAT,
                                         time.localtime(build.getTimes()[0])),
+                  'text': text,
                   }
         return values
 
