@@ -2469,7 +2469,7 @@ class Mercurial(SourceBase):
     """Mercurial specific VC operation. In addition to the arguments
     handled by SourceBase, this command reads the following keys:
 
-    ['repourl'] (required): the Cogito repository string
+    ['repourl'] (required): the Mercurial repository string
     """
 
     header = "mercurial operation"
@@ -2480,6 +2480,7 @@ class Mercurial(SourceBase):
         self.repourl = args['repourl']
         self.clobberOnBranchChange = args['clobberOnBranchChange']
         self.sourcedata = "%s\n" % self.repourl
+        self.branchType = args['branchType']
         self.stdout = ""
         self.stderr = ""
 
@@ -2511,7 +2512,14 @@ class Mercurial(SourceBase):
 
     def doVCFull(self):
         d = os.path.join(self.builder.basedir, self.srcdir)
-        command = [self.vcexe, 'clone', '--verbose', '--noupdate', self.repourl, d]
+        command = [self.vcexe, 'clone', '--verbose', '--noupdate']
+
+        # if got revision, clobbering and in dirname, only clone to specific revision 
+        # (otherwise, do full clone to re-use .hg dir for subsequent byuilds) 
+        if self.args.get('revision') and self.mode == 'clobber' and self.branchType == 'dirname': 
+            command.extend(['--rev', self.args.get('revision')]) 
+        command.extend([self.repourl, d])
+        
         c = ShellCommand(self.builder, command, self.builder.basedir,
                          sendRC=False, timeout=self.timeout, usePTY=False)
         self.command = c

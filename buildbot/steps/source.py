@@ -957,6 +957,7 @@ class Mercurial(Source):
         self.args['revision'] = revision
         self.args['patch'] = patch
         self.args['clobberOnBranchChange'] = self.clobberOnBranchChange
+        self.args['branchType'] = self.branchType
 
         revstuff = []
         if branch is not None and branch != self.branch:
