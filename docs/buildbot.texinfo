@@ -3849,6 +3849,12 @@ http://opensource.perlig.de/en/svnmailer/
 @ref{SVNCommitEmailMaildirSource}
 @end table
 
+@item Bzr
+@table @samp
+@item Launchpad
+@ref{BzrLaunchpadEmailMaildirSource}
+@end table
+
 @item Mercurial
 @table @samp
 @item NotifyExtension
@@ -3882,6 +3888,7 @@ done. Thus the prefix usually ends with a slash.
 * SyncmailMaildirSource::
 * BonsaiMaildirSource::
 * SVNCommitEmailMaildirSource::
+* BzrLaunchpadEmailMaildirSource::
 @end menu
 
 @node FCMaildirSource, SyncmailMaildirSource, Parsing Email Change Messages, Parsing Email Change Messages
@@ -3939,7 +3946,7 @@ from buildbot.changes.mail import BonsaiMaildirSource
 c['change_source'] = BonsaiMaildirSource("~/maildir-buildbot")
 @end example
 
-@node SVNCommitEmailMaildirSource,  , BonsaiMaildirSource, Parsing Email Change Messages
+@node SVNCommitEmailMaildirSource, BzrLaunchpadEmailMaildirSource, BonsaiMaildirSource, Parsing Email Change Messages
 @subsubsection SVNCommitEmailMaildirSource
 
 @csindex buildbot.changes.mail.SVNCommitEmailMaildirSource
@@ -3955,6 +3962,41 @@ it creates will be associated with the default (i.e. trunk) branch.
 from buildbot.changes.mail import SVNCommitEmailMaildirSource
 c['change_source'] = SVNCommitEmailMaildirSource("~/maildir-buildbot")
 @end example
+
+@node BzrLaunchpadEmailMaildirSource, , SVNCommitEmailMaildirSource, Parsing Email Change Messages
+@subsubsection BzrLaunchpadEmailMaildirSource
+
+@csindex buildbot.changes.mail.BzrLaunchpadEmailMaildirSource
+
+@code{BzrLaunchpadEmailMaildirSource} parses the mails that are sent to
+addresses that subscribe to branch revision notifications for a bzr branch
+hosted on Launchpad.
+
+The branch name defaults to @code{lp:<Launchpad path>}. For example
+@code{lp:~maria-captains/maria/5.1}.
+
+If only a single branch is used, the default branch name can be changed by
+setting @code{defaultBranch}.
+
+For multiple branches, pass a dictionary as the value of the @code{branchMap}
+option to map specific repository paths to specific branch names (see example
+below). The leading @code{lp:} prefix of the path is optional.
+
+The @code{prefix} option is not supported (it is silently ignored). Use the
+@code{branchMap} and @code{defaultBranch} instead to assign changes to
+branches (and just do not subscribe the buildbot to branches that are not of
+interest).
+
+The revision number is obtained from the email text. The bzr revision id is
+not available in the mails sent by Launchpad. However, it is possible to set
+the bzr @code{append_revisions_only} option for public shared repositories to
+avoid new pushes of merges changing the meaning of old revision numbers.
+
+@verbatim
+from buildbot.changes.mail import BzrLaunchpadEmailMaildirSource
+bm = { 'lp:~maria-captains/maria/5.1' : '5.1', 'lp:~maria-captains/maria/6.0' : '6.0' }
+c['change_source'] = BzrLaunchpadEmailMaildirSource("~/maildir-buildbot", branchMap = bm)
+@end verbatim
 
 
 @node PBChangeSource, P4Source, Mail-parsing ChangeSources, Getting Source Code Changes
