@@ -1,3 +1,4 @@
+
 from twisted.python import log
 from twisted.web import xmlrpc
 from buildbot.status.builder import Results
@@ -38,7 +39,7 @@ class XMLRPCServer(xmlrpc.XMLRPC):
         log.msg("getLastBuilds: %s - %d" % (builder_name, num_builds))
         builder = self.status.getBuilder(builder_name)
         all_builds = []
-        while len(all_builds) < num_builds:
+        for build_number in range(1, num_builds+1):
             build = builder.getBuild(-build_number)
             if not build:
                 break
