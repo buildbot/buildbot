@@ -49,15 +49,16 @@ class Change:
 
     number = None
 
-    links = []
     branch = None
     revision = None # used to create a source-stamp
 
-    def __init__(self, who, files, comments, isdir=0, links=[],
+    def __init__(self, who, files, comments, isdir=0, links=None,
                  revision=None, when=None, branch=None, category=None):
         self.who = who
         self.comments = comments
         self.isdir = isdir
+        if links is None:
+            links = []
         self.links = links
         self.revision = revision
         if when is None:
