@@ -1,6 +1,7 @@
 # -*- test-case-name: buildbot.test.test_mailparse -*-
 
 import time
+import os
 from twisted.trial import unittest
 from twisted.python import util
 from buildbot.changes import mail
@@ -296,6 +297,8 @@ class TestBzrLaunchpadEmail(unittest.TestCase):
     def get(self, msg, **kwargs):
         msg = util.sibpath(__file__, "mail/" + msg)
         s = mail.BzrLaunchpadEmailMaildirSource(None, None, **kwargs)
+        if not os.path.exists(msg):
+            raise unittest.SkipTest("'%s' not found" % msg)
         return s.parse_file(open(msg, "r"))
 
     # Modified file
