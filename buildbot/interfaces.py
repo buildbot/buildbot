@@ -556,8 +556,8 @@ class IBuildStatus(Interface):
 
     def getResults():
         """Return a constant describing the results of the build: one of the
-        constants in buildbot.status.builder: SUCCESS, WARNINGS, or
-        FAILURE."""
+        constants in buildbot.status.builder: SUCCESS, WARNINGS,
+        FAILURE, SKIPPED or EXCEPTION."""
 
     def getLogs():
         """Return a list of logs that describe the build as a whole. Some
