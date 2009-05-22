@@ -953,7 +953,7 @@ class Mercurial(Source):
             if branch:
                 self.args['branch'] = branch
         else:
-            self.args['repourl'] = self.baseURL + branch
+            self.args['repourl'] = self.baseURL + (branch or '')
         self.args['revision'] = revision
         self.args['patch'] = patch
         self.args['clobberOnBranchChange'] = self.clobberOnBranchChange

@@ -36,7 +36,9 @@ class SourceStamp(util.ComparableMixin):
         self.patch = patch
         if changes:
             self.changes = tuple(changes)
-            self.branch = changes[0].branch
+            # set branch and revision to most recent change
+            self.branch = changes[-1].branch
+            self.revision = changes[-1].revision
 
     def canBeMergedWith(self, other):
         if other.branch != self.branch:
