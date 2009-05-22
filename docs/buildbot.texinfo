@@ -5528,15 +5528,31 @@ their contents afterwards.
 The @code{logfiles=} argument allows you to collect data from these
 secondary logfiles in near-real-time, as the step is running. It
 accepts a dictionary which maps from a local Log name (which is how
-the log data is presented in the build results) to a remote filename
-(interpreted relative to the build's working directory). Each named
-file will be polled on a regular basis (every couple of seconds) as
-the build runs, and any new text will be sent over to the buildmaster.
+the log data is presented in the build results) to either a remote filename
+(interpreted relative to the build's working directory), or a dictionary
+of options. Each named file will be polled on a regular basis (every couple
+of seconds) as the build runs, and any new text will be sent over to the
+buildmaster.
+
+If you provide a dictionary of options instead of a string, you must specify
+the @code{filename} key. You can optionally provide a @code{follow} key which
+is a boolean controlling whether a logfile is followed or concatenated in its
+entirety.  Following is appropriate for logfiles to which the build step will
+append, where the pre-existing contents are not interesting.  The default value
+for @code{follow} is @code{False}, which gives the same behavior as just
+providing a string filename.
 
 @example
 f.addStep(ShellCommand(
               command=["make", "test"],
               logfiles=@{"triallog": "_trial_temp/test.log"@}))
+@end example
+
+@example
+f.addStep(ShellCommand(
+              command=["make", "test"],
+              logfiles=@{"triallog": @{"filename": "_trial_temp/test.log",
+			       "follow": True,@}@}))
 @end example
 
 

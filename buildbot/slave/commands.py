@@ -199,16 +199,21 @@ class ShellCommandPP(ProcessProtocol):
 class LogFileWatcher:
     POLL_INTERVAL = 2
 
-    def __init__(self, command, name, logfile):
+    def __init__(self, command, name, logfile, follow=False):
         self.command = command
         self.name = name
         self.logfile = logfile
+
         log.msg("LogFileWatcher created to watch %s" % logfile)
         # we are created before the ShellCommand starts. If the logfile we're
         # supposed to be watching already exists, record its size and
         # ctime/mtime so we can tell when it starts to change.
         self.old_logfile_stats = self.statFile()
         self.started = False
+
+        # follow the file, only sending back lines
+        # added since we started watching
+        self.follow = follow
 
         # every 2 seconds we check on the file again
         self.poller = task.LoopingCall(self.poll)
@@ -245,6 +250,11 @@ class LogFileWatcher:
                 self.old_logfile_stats = None
                 return # no file to work with
             self.f = open(self.logfile, "rb")
+            # if we only want new lines, seek to
+            # where we stat'd so we only find new
+            # lines
+            if self.follow:
+                self.f.seek(s[2], 0)
             self.started = True
         self.f.seek(self.f.tell(), 0)
         while True:
@@ -342,9 +352,19 @@ class ShellCommand:
             self.usePTY = False
 
         self.logFileWatchers = []
-        for name,filename in self.logfiles.items():
+        for name,filevalue in self.logfiles.items():
+            filename = filevalue
+            follow = False
+
+            # check for a dictionary of options
+            # filename is required, others are optional
+            if type(filevalue) == dict:
+                filename = filevalue['filename']
+                follow = filevalue.get('follow', False)
+
             w = LogFileWatcher(self, name,
-                               os.path.join(self.workdir, filename))
+                               os.path.join(self.workdir, filename),
+                               follow=follow)
             self.logFileWatchers.append(w)
 
     def __repr__(self):
