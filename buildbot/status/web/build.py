@@ -166,6 +166,9 @@ class StatusResourceBuild(HtmlResource):
         if end:
             data += "<tr><td>End</td><td>%s</td></tr>\n" % time.ctime(end)
             data += "<tr><td>Elapsed</td><td>%s</td></tr>\n" % util.formatInterval(end - start)
+        else:
+            now = util.now()
+            data += "<tr><td>Elapsed</td><td>%s</td></tr>\n" % util.formatInterval(now - start)
         data += "</table>\n"
 
         if ss.changes:
