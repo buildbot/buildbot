@@ -577,8 +577,8 @@ class ShellCommand:
         if self.timer:
             self.timer.cancel()
             self.timer = None
-        if hasattr(self.process, "pid"):
-            msg += ", killing pid %d" % self.process.pid
+        if hasattr(self.process, "pid") and self.process.pid is not None:
+            msg += ", killing pid %s" % self.process.pid
         log.msg(msg)
         self.sendStatus({'header': "\n" + msg + "\n"})
 
@@ -604,6 +604,8 @@ class ShellCommand:
                     log.msg("signal module is missing SIG%s" % self.KILL)
                 elif not hasattr(os, "kill"):
                     log.msg("os module is missing the 'kill' function")
+                elif not hasattr(self.process, "pid") or self.process.pid is None:
+                    log.msg("self.process has no pid")
                 else:
                     log.msg("trying os.kill(-pid, %d)" % (sig,))
                     # TODO: maybe use os.killpg instead of a negative pid?
