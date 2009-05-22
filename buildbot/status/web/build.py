@@ -107,17 +107,22 @@ class StatusResourceBuild(HtmlResource):
         data += "<ol>\n"
         for s in b.getSteps():
             name = s.getName()
+            time_to_run = 0
+            (start, end) = s.getTimes()
+            if start and end:
+              time_to_run = end - start
             if s.isFinished():
                 css_class = css_classes[s.getResults()[0]]
             elif s.isStarted():
                 css_class = "running"
             else:
                 css_class = ""
-            data += (' <li><span class="%s"><a href=\"%s\">%s</a> [%s]</span>\n'
+            data += (' <li><span class="%s"><a href=\"%s\">%s</a> [%s] [%d seconds]</span>\n'
                      % (css_class, 
                         req.childLink("steps/%s" % urllib.quote(name)),
                         name,
-                        " ".join(s.getText())))
+                        " ".join(s.getText()),
+                        time_to_run))
             if s.getLogs():
                 data += "  <ol>\n"
                 for logfile in s.getLogs():
