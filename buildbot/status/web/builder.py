@@ -12,6 +12,7 @@ from buildbot.process.base import BuildRequest
 from buildbot.sourcestamp import SourceStamp
 
 from buildbot.status.web.build import BuildsResource, StatusResourceBuild
+from buildbot import util
 
 # /builders/$builder
 class StatusResourceBuilder(HtmlResource, OneLineMixin):
@@ -52,13 +53,24 @@ class StatusResourceBuilder(HtmlResource, OneLineMixin):
 
     def request_line(self, build_request, req):
         when = time.strftime("%b %d %H:%M:%S", time.localtime(build_request.getSubmitTime()))
+        delay = util.formatInterval(util.now() - build_request.getSubmitTime())
         if build_request.source.changes:
             reason = "<br/>\n".join(c.asHTML() for c in build_request.source.changes)
         elif build_request.source.revision:
             reason = build_request.source.revision
         else:
             reason = "no changes specified"
-        return "<font size=\"-1\">(%s)</font> %s" % (when, reason)
+
+        if self.builder_control is not None:
+            cancelURL = path_to_builder(req, self.builder_status) + '/cancelbuild'
+            cancelButton = '''
+<form action="%s" class="command cancelbuild" style="display:inline" method="post">
+  <input type="hidden" name="id" value="%s" />
+  <input type="submit" value="Cancel Build" />
+</form>''' % (cancelURL, id(build_request))
+        else:
+            cancelButton = ""
+        return "<font size=\"-1\">(%s, waiting %s)</font>%s%s" % (when, delay, cancelButton, reason)
 
     def body(self, req):
         b = self.builder_status
@@ -218,6 +230,19 @@ class StatusResourceBuilder(HtmlResource, OneLineMixin):
         # send the user back to the builder page
         return Redirect(".")
 
+    def cancel(self, req):
+        try:
+            request_id = int(req.args.get("id", [None])[0])
+        except:
+            request_id = None
+        if request_id:
+            for build_req in self.builder_control.getPendingBuilds():
+                if id(build_req.original_request.status) == request_id:
+                    log.msg("Cancelling %s" % build_req)
+                    build_req.cancel()
+                    break
+        return Redirect(".")
+
     def getChild(self, path, req):
         if path == "force":
             return self.force(req)
@@ -243,6 +268,8 @@ class StatusResourceBuilder(HtmlResource, OneLineMixin):
                     return static.Data(file, "text/html")
                 return static.Data(file, "text/plain")
             return file
+        if path == "cancelbuild":
+            return self.cancel(req)
         if path == "builds":
             return BuildsResource(self.builder_status, self.builder_control)
 
