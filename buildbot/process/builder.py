@@ -921,10 +921,10 @@ class BuildRequestControl:
         self.original_request = request
 
     def subscribe(self, observer):
-        pass
+        raise NotImplementedError
 
     def unsubscribe(self, observer):
-        pass
+        raise NotImplementedError
 
     def cancel(self):
         self.original_builder.cancelBuildRequest(self.original_request)
