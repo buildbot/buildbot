@@ -7,7 +7,8 @@ import re, urllib, time
 from twisted.python import log
 from buildbot import interfaces
 from buildbot.status.web.base import HtmlResource, make_row, \
-     make_force_build_form, OneLineMixin, path_to_build, path_to_slave, path_to_builder
+     make_force_build_form, OneLineMixin, path_to_build, path_to_slave, \
+     path_to_builder, path_to_change
 from buildbot.process.base import BuildRequest
 from buildbot.sourcestamp import SourceStamp
 
@@ -54,8 +55,15 @@ class StatusResourceBuilder(HtmlResource, OneLineMixin):
     def request_line(self, build_request, req):
         when = time.strftime("%b %d %H:%M:%S", time.localtime(build_request.getSubmitTime()))
         delay = util.formatInterval(util.now() - build_request.getSubmitTime())
-        if build_request.source.changes:
-            reason = "<br/>\n".join(c.asHTML() for c in build_request.source.changes)
+        changes = build_request.source.changes
+        if changes:
+            change_strings = []
+            for c in changes:
+                change_strings.append("<a href=\"%s\">%s</a>" % (path_to_change(req, c), c.who))
+            if len(change_strings) == 1:
+                reason = "change by %s" % change_strings[0]
+            else:
+                reason = "changes by %s" % ", ".join(change_strings)
         elif build_request.source.revision:
             reason = build_request.source.revision
         else:
