@@ -66,7 +66,7 @@ class Obfuscated:
                 if isinstance(elt, Obfuscated):
                     rv.append(elt.real)
                 else:
-                    rv.append(elt)
+                    rv.append(str(elt))
         return rv
     get_real = staticmethod(get_real)
 
@@ -78,7 +78,7 @@ class Obfuscated:
                 if isinstance(elt, Obfuscated):
                     rv.append(elt.fake)
                 else:
-                    rv.append(elt)
+                    rv.append(str(elt))
         return rv
     get_fake = staticmethod(get_fake)
 
