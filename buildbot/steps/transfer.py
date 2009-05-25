@@ -1,6 +1,6 @@
 # -*- test-case-name: buildbot.test.test_transfer -*-
 
-import os.path
+import os.path, tarfile, tempfile
 from twisted.internet import reactor
 from twisted.spread import pb
 from twisted.python import log
@@ -25,16 +25,16 @@ class _FileWriter(pb.Referenceable):
         self.fp = open(destfile, "wb")
         if mode is not None:
             os.chmod(destfile, mode)
-	self.remaining = maxsize
+        self.remaining = maxsize
 
     def remote_write(self, data):
-	"""
-	Called from remote slave to write L{data} to L{fp} within boundaries
-	of L{maxsize}
+        """
+        Called from remote slave to write L{data} to L{fp} within boundaries
+        of L{maxsize}
 
-	@type  data: C{string}
-	@param data: String of data to write
-	"""
+        @type  data: C{string}
+        @param data: String of data to write
+        """
         if self.remaining is not None:
             if len(data) > self.remaining:
                 data = data[:self.remaining]
@@ -59,74 +59,30 @@ class _FileWriter(pb.Referenceable):
             os.unlink(self.destfile)
 
 
-class _DirectoryWriter(pb.Referenceable):
+class _DirectoryWriter(_FileWriter):
     """
-    Helper class that acts as a directory-object with write access
+    A DirectoryWriter is implemented as a FileWriter, with an added post-processing
+    step to unpack the archive, once the transfer has completed.
     """
 
     def __init__(self, destroot, maxsize, mode):
         self.destroot = destroot
-	# Create missing directories.
-        self.destroot = os.path.abspath(self.destroot)
-        if not os.path.exists(self.destroot):
-            os.makedirs(self.destroot)
-	
-	self.fp = None
-	self.mode = mode
-	self.maxsize = maxsize
 
-    def remote_createdir(self, dirname):
-	# This function is needed to transfer empty directories.
-	dirname = os.path.sep.join(dirname)
-	dirname = os.path.join(self.destroot, dirname)
-	dirname = os.path.abspath(dirname)
-	if not os.path.exists(dirname):
-            os.makedirs(dirname)
+        self.fd, self.tarname = tempfile.mkstemp()
 
-    def remote_open(self, destfile):
-	# Create missing directories.
-	destfile = os.path.sep.join(destfile)
-	destfile = os.path.join(self.destroot, destfile)
-        destfile = os.path.abspath(destfile)
-        dirname = os.path.dirname(destfile)
-        if not os.path.exists(dirname):
-            os.makedirs(dirname)
+        _FileWriter.__init__(self, self.tarname, maxsize, mode)
 
-        self.fp = open(destfile, "wb")
-        if self.mode is not None:
-            os.chmod(destfile, self.mode)
-	self.remaining = self.maxsize
-
-    def remote_write(self, data):
-	"""
-	Called from remote slave to write L{data} to L{fp} within boundaries
-	of L{maxsize}
-
-	@type  data: C{string}
-	@param data: String of data to write
-	"""
-        if self.remaining is not None:
-            if len(data) > self.remaining:
-                data = data[:self.remaining]
-            self.fp.write(data)
-            self.remaining = self.remaining - len(data)
-        else:
-            self.fp.write(data)
-
-    def remote_close(self):
+    def remote_unpack(self):
         """
         Called by remote slave to state that no more data will be transfered
         """
-	if self.fp:
-	    self.fp.close()
-    	    self.fp = None
-
-    def __del__(self):
-        # unclean shutdown, the file is probably truncated, so delete it
-        # altogether rather than deliver a corrupted file
-        fp = getattr(self, "fp", None)
-        if fp:
-            fp.close()
+        if self.fp:
+            self.fp.close()
+                self.fp = None
+        fileobj = os.fdopen(self.fd, 'r')
+        archive = tarfile.open(name=self.tarname, mode="r|bz2", fileobj=fileobj)
+        archive.extractall(path=self.destroot)
+        os.remove(self.tarname)
 
 
 class StatusRemoteCommand(RemoteCommand):
@@ -312,7 +268,7 @@ class DirectoryUpload(BuildStep):
                 % (source, masterdest))
 
         self.step_status.setText(['uploading', os.path.basename(source)])
-	
+        
         # we use maxsize to limit the amount of data on both sides
         dirWriter = _DirectoryWriter(masterdest, self.maxsize, self.mode)
 
@@ -354,15 +310,15 @@ class _FileReader(pb.Referenceable):
         self.fp = fp
 
     def remote_read(self, maxlength):
-	"""
-	Called from remote slave to read at most L{maxlength} bytes of data
+        """
+        Called from remote slave to read at most L{maxlength} bytes of data
 
-	@type  maxlength: C{integer}
-	@param maxlength: Maximum number of data bytes that can be returned
+        @type  maxlength: C{integer}
+        @param maxlength: Maximum number of data bytes that can be returned
 
         @return: Data read from L{fp}
         @rtype: C{string} of bytes read from file
-	"""
+        """
         if self.fp is None:
             return ''
 

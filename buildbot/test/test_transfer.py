@@ -469,7 +469,7 @@ class UploadDirectory(StepTester, unittest.TestCase):
 		curdir = os.path.join("d%i" % (i), "e%i" % (j))
 		os.mkdir(os.path.join(slavesrc, curdir))
 		for h in range(3):
-		    open(os.path.join(slavesrc, curdir, "file%i" % (h)), "w").write(content[h])
+                    open(os.path.join(slavesrc, curdir, "file%i" % (h)), "w").write(content[h])
 	    for j in range(dircount):
 		#empty dirs, must be uploaded too
 		curdir = os.path.join("d%i" % (i), "f%i" % (j))
@@ -709,6 +709,39 @@ class UploadDirectory(StepTester, unittest.TestCase):
 			for l in range(filecount):
 			    masterdest_contents = open(os.path.join(masterdest, "d%i" % (i), "e%i" % (j), "srcfile%i_%i" % (k, l)), "r").read()
 			    self.failUnlessEqual(masterdest_contents, content[k])
+        d.addCallback(_checkUpload)
+        return d
+
+
+    def testBigFile(self):
+        self.slavebase = "UploadDirectory.testBigFile.slave"
+        self.masterbase = "UploadDirectory.testBigFile.master"
+        sb = self.makeSlaveBuilder()
+        os.mkdir(os.path.join(self.slavebase, self.slavebuilderbase,
+                              "build"))
+        # the buildmaster normally runs chdir'ed into masterbase, so uploaded
+        # files will appear there. Under trial, we're chdir'ed into
+        # _trial_temp instead, so use a different masterdest= to keep the
+        # uploaded file in a test-local directory
+        masterdest = os.path.join(self.masterbase, "dest_dir")
+        step = self.makeStep(DirectoryUpload,
+                             slavesrc="source_dir",
+                             masterdest=masterdest)
+        slavesrc = os.path.join(self.slavebase,
+                                self.slavebuilderbase,
+                                "build",
+                                "source_dir")
+	content = 'x' * 1024*1024*8
+        os.mkdir(slavesrc)
+        open(os.path.join(slavesrc, "file"), "w").write(content)
+
+        d = self.runStep(step)
+        def _checkUpload(results):
+            step_status = step.step_status
+            self.failUnlessEqual(results, SUCCESS)
+	    self.failUnless(os.path.exists(masterdest))
+            masterdest_contents = open(os.path.join(masterdest, "file"), "r").read()
+            self.failUnlessEqual(masterdest_contents, content)
         d.addCallback(_checkUpload)
         return d
 
