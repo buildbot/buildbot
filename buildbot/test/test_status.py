@@ -417,6 +417,45 @@ class Mail(unittest.TestCase):
         self.failUnlessEqual(set(r), set(["dev3@dev.com", "dev4@dev.com",
                                  "recip2@example.com", "recip@example.com"]))
 
+    
+    def testChange(self):
+        raise unittest.SkipTest("TODO: Fix Build/Builder mock objects to support getPrevBuild()")
+    
+        mailer = MyMailer(fromaddr="buildbot@example.com", mode="change",
+                          extraRecipients=["bah@bah.bah"],
+                          lookup=MyLookup())
+        mailer.parent = self
+        mailer.status = self
+        self.messages = []
+        
+        b1 = self.makeBuild(1, builder.SUCCESS)
+        b2 = self.makeBuild(2, builder.SUCCESS)
+        b3 = self.makeBuild(3, builder.FAILURE)
+        b4 = self.makeBuild(4, builder.FAILURE)
+        b5 = self.makeBuild(5, builder.SUCCESS)
+        b6 = self.makeBuild(6, builder.SUCCESS)
+        
+        # no message on first or repetetive success
+        mailer.buildFinished("builder1", b1, b1.results)
+        self.failIf(self.messages)
+        mailer.buildFinished("builder1", b2, b2.results)
+        self.failIf(self.messages)
+        
+        # message on first fail only
+        mailer.buildFinished("builder1", b3, b3.results)
+        self.failUnless(len(self.messages) == 1)
+        self.messages.pop()
+        mailer.buildFinished("builder1", b4, b4.results)
+        self.failIf(self.messages)
+
+        # message on first following success
+        mailer.buildFinished("builder1", b5, b5.results)
+        self.failUnless(len(self.messages) == 1)
+        self.messages.pop()
+        mailer.buildFinished("builder1", b6, b6.results)
+        self.failIf(self.messages)
+
+
     def testLogs(self):
         basedir = "test_status_logs"
         os.mkdir(basedir)
