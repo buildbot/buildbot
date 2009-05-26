@@ -11,6 +11,7 @@ from twisted.python.procutils import which
 
 from buildbot.slave.interfaces import ISlaveCommand
 from buildbot.slave.registry import registerSlaveCommand
+from buildbot.util import to_text
 
 # this used to be a CVS $-style "Revision" auto-updated keyword, but since I
 # moved to Darcs as the primary repository, this is updated manually each
@@ -66,7 +67,7 @@ class Obfuscated:
                 if isinstance(elt, Obfuscated):
                     rv.append(elt.real)
                 else:
-                    rv.append(str(elt))
+                    rv.append(to_text(elt))
         return rv
     get_real = staticmethod(get_real)
 
@@ -78,7 +79,7 @@ class Obfuscated:
                 if isinstance(elt, Obfuscated):
                     rv.append(elt.fake)
                 else:
-                    rv.append(str(elt))
+                    rv.append(to_text(elt))
         return rv
     get_fake = staticmethod(get_fake)
 

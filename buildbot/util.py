@@ -100,3 +100,9 @@ class ComparableMixin:
         self_list= [getattr(self, name, _None) for name in self.compare_attrs]
         them_list= [getattr(them, name, _None) for name in self.compare_attrs]
         return cmp(self_list, them_list)
+
+def to_text(s):
+    if isinstance(s, (str, unicode)):
+        return s
+    else:
+        return str(s)
