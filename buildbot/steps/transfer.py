@@ -78,7 +78,7 @@ class _DirectoryWriter(_FileWriter):
         """
         if self.fp:
             self.fp.close()
-                self.fp = None
+            self.fp = None
         fileobj = os.fdopen(self.fd, 'r')
         archive = tarfile.open(name=self.tarname, mode="r|bz2", fileobj=fileobj)
         archive.extractall(path=self.destroot)
