@@ -1,3 +1,0 @@
-From:  <>
-
-Only clone the necessary changesets when a revision is specified
