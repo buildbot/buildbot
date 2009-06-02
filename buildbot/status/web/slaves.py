@@ -3,6 +3,7 @@ import time, urllib
 from twisted.python import log
 from twisted.web import html
 from twisted.web.util import Redirect
+from twisted.web.error import NoResource
 
 from buildbot.status.web.base import HtmlResource, abbreviate_age, \
         OneLineMixin, path_to_slave, path_to_build
@@ -207,4 +208,8 @@ class BuildSlavesResource(HtmlResource):
         return data
 
     def getChild(self, path, req):
-        return OneBuildSlaveResource(path)
+        try:
+            slave = self.getStatus(req).getSlave(path)
+            return OneBuildSlaveResource(path)
+        except KeyError:
+            return NoResource("No such slave '%s'" % path)
