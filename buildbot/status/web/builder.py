@@ -113,6 +113,13 @@ class StatusResourceBuilder(HtmlResource, OneLineMixin):
             for request in pending:
                 data += " <li>" + self.request_line(request, req) + "</li>\n"
             data += "</ul>\n"
+
+            cancelURL = path_to_builder(req, self.builder_status) + '/cancelbuild'
+            data += '''
+<form action="%s" class="command cancelbuild" style="display:inline" method="post">
+  <input type="hidden" name="id" value="all" />
+  <input type="submit" value="Cancel All" />
+</form>''' % cancelURL
         else:
             data += "<h2>no pending builds</h2>\n"
 
@@ -240,15 +247,21 @@ class StatusResourceBuilder(HtmlResource, OneLineMixin):
 
     def cancel(self, req):
         try:
-            request_id = int(req.args.get("id", [None])[0])
+            request_id = req.args.get("id", [None])[0]
+            if request_id == "all":
+                cancel_all = True
+            else:
+                cancel_all = False
+                request_id = int(request_id)
         except:
             request_id = None
         if request_id:
             for build_req in self.builder_control.getPendingBuilds():
-                if id(build_req.original_request.status) == request_id:
+                if cancel_all or id(build_req.original_request.status) == request_id:
                     log.msg("Cancelling %s" % build_req)
                     build_req.cancel()
-                    break
+                    if not cancel_all:
+                        break
         return Redirect(".")
 
     def getChild(self, path, req):
