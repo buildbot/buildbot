@@ -193,7 +193,7 @@ class StatusResourceBuild(HtmlResource):
                          "after this build was started <b>will</b> be \n"
                          "included in a rebuild.</p>\n")
             rebuildURL = urllib.quote(req.childLink("rebuild"))
-            data += ('<form action="%s" class="command rebuild">\n'
+            data += ('<form method="post" action="%s" class="command rebuild">\n'
                      % rebuildURL)
             data += make_name_user_passwd_form(self.isUsingUserPasswd(req))
             data += make_row("Reason for re-running build:",

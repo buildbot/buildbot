@@ -71,11 +71,11 @@ def make_name_user_passwd_form(useUserPasswd):
 
 def make_stop_form(stopURL, useUserPasswd, on_all=False, label="Build"):
     if on_all:
-        data = """<form action="%s" class='command stopbuild'>
+        data = """<form method="post" action="%s" class='command stopbuild'>
           <p>To stop all builds, fill out the following fields and
           push the 'Stop' button</p>\n""" % stopURL
     else:
-        data = """<form action="%s" class='command stopbuild'>
+        data = """<form method="post" action="%s" class='command stopbuild'>
           <p>To stop this build, fill out the following fields and
           push the 'Stop' button</p>\n""" % stopURL
     data += make_name_user_passwd_form(useUserPasswd)
@@ -86,11 +86,11 @@ def make_stop_form(stopURL, useUserPasswd, on_all=False, label="Build"):
 
 def make_force_build_form(forceURL, useUserPasswd, on_all=False):
     if on_all:
-        data = """<form action="%s" class="command forcebuild">
+        data = """<form method="post" action="%s" class="command forcebuild">
           <p>To force a build on all Builders, fill out the following fields
           and push the 'Force Build' button</p>""" % forceURL
     else:
-        data = """<form action="%s" class="command forcebuild">
+        data = """<form method="post" action="%s" class="command forcebuild">
           <p>To force a build, fill out the following fields and
           push the 'Force Build' button</p>""" % forceURL
     return (data

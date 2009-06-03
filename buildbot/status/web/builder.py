@@ -45,7 +45,7 @@ class StatusResourceBuilder(HtmlResource, OneLineMixin):
         if self.builder_control is not None:
             stopURL = path_to_build(req, build) + '/stop'
             data += '''
-<form action="%s" class="command stopbuild" style="display:inline">
+<form method="post" action="%s" class="command stopbuild" style="display:inline">
   <input type="submit" value="Stop Build" />
 </form>''' % stopURL
         return data
@@ -120,7 +120,7 @@ class StatusResourceBuilder(HtmlResource, OneLineMixin):
         if control is not None:
             pingURL = path_to_builder(req, b) + '/ping'
             data += """
-            <form action="%s" class='command pingbuilder'>
+            <form method="post" action="%s" class='command pingbuilder'>
             <p>To ping the buildslave(s), push the 'Ping' button</p>
 
             <input type="submit" value="Ping Builder" />
