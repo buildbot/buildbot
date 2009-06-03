@@ -13,6 +13,7 @@ from buildbot.changes import base
 from buildbot.changes.changes import Change
 
 import xml.dom.minidom
+import urllib
 
 def _assert(condition, msg):
     if condition:
@@ -57,7 +58,7 @@ class SVNPoller(base.ChangeSource, util.ComparableMixin):
     def __init__(self, svnurl, split_file=None,
                  svnuser=None, svnpasswd=None,
                  pollinterval=10*60, histmax=100,
-                 svnbin='svn'):
+                 svnbin='svn', revlinktmpl=''):
         """
         @type  svnurl: string
         @param svnurl: the SVN URL that describes the repository and
@@ -163,6 +164,13 @@ class SVNPoller(base.ChangeSource, util.ComparableMixin):
         @param svnbin:       path to svn binary, defaults to just 'svn'. Use
                              this if your subversion command lives in an
                              unusual location.
+	
+	@type  revlinktmpl:  string
+	@param revlinktmpl:  A format string to use for hyperlinks to revision
+			     information. For example, setting this to
+			     "http://reposerver/websvn/revision.php?rev=%s"
+			     would create suitable links on the build pages
+			     to information in websvn on each revision.
         """
 
         if svnurl.endswith("/"):
@@ -171,6 +179,8 @@ class SVNPoller(base.ChangeSource, util.ComparableMixin):
         self.split_file_function = split_file or split_file_alwaystrunk
         self.svnuser = svnuser
         self.svnpasswd = svnpasswd
+
+	self.revlinktmpl = revlinktmpl
 
         self.svnbin = svnbin
         self.pollinterval = pollinterval
@@ -389,6 +399,13 @@ class SVNPoller(base.ChangeSource, util.ComparableMixin):
         for el in new_logentries:
             branch_files = [] # get oldest change first
             revision = str(el.getAttribute("revision"))
+
+	    revlink=''
+
+	    if self.revlinktmpl:
+		if revision:
+		    revlink = self.revlinktmpl % urllib.quote_plus(revision)
+
             dbgMsg("Adding change revision %s" % (revision,))
             # TODO: the rest of buildbot may not be ready for unicode 'who'
             # values
@@ -439,7 +456,8 @@ class SVNPoller(base.ChangeSource, util.ComparableMixin):
                                files=files,
                                comments=comments,
                                revision=revision,
-                               branch=branch)
+                               branch=branch,
+			       revlink=revlink)
                     changes.append(c)
 
         return changes
