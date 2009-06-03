@@ -54,7 +54,8 @@ class Change:
     revision = None # used to create a source-stamp
 
     def __init__(self, who, files, comments, isdir=0, links=[],
-                 revision=None, when=None, branch=None, category=None):
+                 revision=None, when=None, branch=None, category=None,
+		 revlink=''):
         self.who = who
         self.comments = comments
         self.isdir = isdir
@@ -65,6 +66,7 @@ class Change:
         self.when = when
         self.branch = branch
         self.category = category
+	self.revlink = revlink
 
         # keep a sorted list of the files, for easier display
         self.files = files[:]
@@ -87,9 +89,14 @@ class Change:
                 links.append('<a href="%s"><b>%s</b></a>' % (link[0], file))
             else:
                 links.append('<b>%s</b>' % file)
-        revision = ""
+        revlink = ""
         if self.revision:
-            revision = "Revision: <b>%s</b><br />\n" % self.revision
+	    if getattr(self, 'revlink', ""):
+		revision = 'Revision: <a href="%s"><b>%s</b></a>\n' % (
+			self.revlink, self.revision)
+	    else:
+		revision = "Revision: <b>%s</b><br />\n" % self.revision
+
         branch = ""
         if self.branch:
             branch = "Branch: <b>%s</b><br />\n" % self.branch
