@@ -429,6 +429,8 @@ class SlaveOptions(MakerBase):
         if len(args) < 4:
             raise usage.UsageError("command needs more arguments")
         basedir, master, name, passwd = args
+        if master[:5] == "http:":
+            raise usage.UsageError("<master> is not a URL - do not use URL")
         self['basedir'] = basedir
         self['master'] = master
         self['name'] = name
