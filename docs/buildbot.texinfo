@@ -4216,6 +4216,15 @@ buildmaster's @code{$PATH}), use this to tell @code{SVNPoller} where
 to find it. The default value of ``svn'' will almost always be
 sufficient.
 
+@item revlinktmpl
+This parameter allows a link to be provided for each revision (for example,
+to websvn or viewvc).  These links appear anywhere changes are shown, such
+as on build or change pages.  The proper form for this parameter is an URL
+with the portion that will substitute for a revision number replaced by
+''%s''.  For example, @code{'http://myserver/websvn/revision.php?rev=%s'}
+could be used to cause revision links to be created to a websvn repository
+viewer.
+
 @end table
 
 @heading Branches
