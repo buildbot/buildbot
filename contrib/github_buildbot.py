@@ -50,15 +50,16 @@ class GitHubBuildBot(resource.Resource):
 	
 	isLeaf = True
 	def render_POST(self, request):
-		self.payload = json.loads(request.args['payload'][0])
+		payload = json.loads(request.args['payload'][0])
 		try:
-			self.process_change()
+			self.process_change(payload)
 		except:
+			logging.error("Could not process change")
 			raise()
 	
-	def process_change(self):
-		update_git_dir(self.payload['repository']['owner']['name'] , self.payload['repository']['name'])
-		[oldrev, newrev, refname] = self.payload['before'], self.payload['after'], self.payload['ref']
+	def process_change(self,payload):
+		update_git_dir(payload['repository']['owner']['name'] , payload['repository']['name'])
+		[oldrev, newrev, refname] = payload['before'], payload['after'], payload['ref']
 		
 		# We only care about regular heads, i.e. branches
 		m = re.match(r"^refs\/heads\/(.+)$", refname)
