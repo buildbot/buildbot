@@ -308,6 +308,8 @@ class ShellCommand:
         self.sendRC = sendRC
         self.logfiles = logfiles
         self.workdir = workdir
+        if not os.path.exists(workdir):
+            os.makedirs(workdir)
         self.environ = os.environ.copy()
         if environ:
             if environ.has_key('PYTHONPATH'):
