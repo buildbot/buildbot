@@ -80,7 +80,7 @@ class StatusResourceBuilder(HtmlResource, OneLineMixin):
         # distinguished from the rest.
 
         data += "<h2>Recent Builds:</h2>\n"
-        data += "(<a href=\"%s\">view in waterfall</a>)\n" % (buildbotURL+"?show="+html.escape(b.getName()))
+        data += "(<a href=\"%s\">view in waterfall</a>)\n" % (self.path_to_root(req)+"waterfall?show="+html.escape(b.getName()))
         data += "<ul>\n"
         numbuilds = req.args.get('numbuilds', ['5'])[0]
         for i,build in enumerate(b.generateFinishedBuilds(num_builds=int(numbuilds))):
