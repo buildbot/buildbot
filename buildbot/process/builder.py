@@ -456,7 +456,7 @@ class Builder(pb.Referenceable):
     def cancelBuildRequest(self, req):
         if req in self.buildable:
             self.buildable.remove(req)
-            self.builder_status.removeBuildRequest(req.status)
+            self.builder_status.removeBuildRequest(req.status, cancelled=True)
             return True
         return False
 
