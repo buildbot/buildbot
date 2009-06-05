@@ -44,6 +44,10 @@ github = 'github.com'
 
 master = "localhost:9989"
 
+remote = "origin"
+
+branch = "master"
+
 changes = []
 
 class GitHubBuildBot(resource.Resource):
@@ -58,7 +62,7 @@ class GitHubBuildBot(resource.Resource):
 			raise()
 	
 	def process_change(self,payload):
-		update_git_dir(payload['repository']['owner']['name'] , payload['repository']['name'])
+		update_git_dir(payload['repository']['owner']['name'] , payload['repository']['name'],remote,branch)
 		[oldrev, newrev, refname] = payload['before'], payload['after'], payload['ref']
 		
 		# We only care about regular heads, i.e. branches
@@ -239,12 +243,12 @@ def gen_update_branch_changes(oldrev, newrev, refname, branch):
         if status:
             logging.warning("git rev-list exited with status %d" % status)
 
-def update_git_dir(user, repo):
+def update_git_dir(user, repo, rem, brh):
 	tempdir = tempfile.gettempdir()
 	repodir = tempdir+"/"+repo
 	if os.path.exists(repodir):
 		os.chdir(repodir)
-		subprocess.call(['git','pull'])
+		subprocess.call(['git','pull',rem,brh])
 	else:
 		os.chdir(tempdir)
 		subprocess.call(['git','clone', 'git@'+ github+':'+user+'/'+repo+'.git'])
