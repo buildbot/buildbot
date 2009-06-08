@@ -1677,7 +1677,7 @@ class CVS(SourceBase):
             verb = "checkout"
         command = ([self.vcexe, '-d', self.cvsroot, '-z3'] +
                    self.global_options +
-                   [verb, '-d', self.srcdir])
+                   [verb, '-d', self.srcdir,'-N'])
         if self.branch:
             command += ['-r', self.branch]
         if self.revision:
