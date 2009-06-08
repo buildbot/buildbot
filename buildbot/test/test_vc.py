@@ -1269,7 +1269,8 @@ class CVSHelper_checkout_options(CVSHelper):
 
 class CVS_checkout_options(CVS):
     """
-    Specialized CVS_checkout_options class to use with CVSHelper_checkout_options
+    Specialized CVS_checkout_options class to use with 
+    CVSHelper_checkout_options
     set checkout_options to verify that it works
     """
     vc_name = "cvs"

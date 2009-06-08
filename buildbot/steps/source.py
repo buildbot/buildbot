@@ -282,6 +282,7 @@ class CVS(Source):
         self.addFactoryArguments(cvsroot=cvsroot,
                                  cvsmodule=cvsmodule,
                                  global_options=global_options,
+                                 checkout_options=checkout_options,
                                  branch=branch,
                                  checkoutDelay=checkoutDelay,
                                  login=login,
@@ -290,6 +291,7 @@ class CVS(Source):
         self.args.update({'cvsroot': cvsroot,
                           'cvsmodule': cvsmodule,
                           'global_options': global_options,
+                          'checkout_options':checkout_options,
                           'login': login,
                           })
 
