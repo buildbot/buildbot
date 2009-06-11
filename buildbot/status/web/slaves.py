@@ -18,9 +18,9 @@ class OneBuildSlaveResource(HtmlResource, OneLineMixin):
         return "Buildbot: %s" % html.escape(self.slavename)
 
     def getChild(self, path, req):
-        if path == "shutdown":
-            s = self.getStatus(req)
-            slave = s.getSlave(self.slavename)
+        s = self.getStatus(req)
+        slave = s.getSlave(self.slavename)
+        if path == "shutdown" and self.getControl(req):
             slave.setGraceful(True)
         return Redirect(path_to_slave(req, slave))
 
@@ -54,12 +54,13 @@ class OneBuildSlaveResource(HtmlResource, OneLineMixin):
 
         if not slave.isConnected():
             data.append("<h2>NOT CONNECTED</h2>\n")
-        elif not slave.getGraceful():
-            data.append('''<form method="POST" action="%s">
-<input type="submit" value="Gracefully Shutdown">
-</form>''' % shutdown_url)
-        else:
-            data.append("Gracefully shutting down...\n")
+        elif self.getControl(req):
+            if not slave.getGraceful():
+                data.append('''<form method="POST" action="%s">
+    <input type="submit" value="Gracefully Shutdown">
+    </form>''' % shutdown_url)
+            else:
+                data.append("Gracefully shutting down...\n")
 
         if current_builds:
             data.append("<h2>Currently building:</h2>\n")

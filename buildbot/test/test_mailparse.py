@@ -374,3 +374,36 @@ class TestBzrLaunchpadEmail(unittest.TestCase):
         self.failUnlessEqual(set(c.files),
                              set(["renamed with => tricky <= name RENAMED better_name.txt",
                                   "better_name.txt MODIFIED"]))
+
+    # Test equality comparison (for working config reload).
+    def test_bzr_mail_reload(self):
+        s0 = mail.BzrLaunchpadEmailMaildirSource("/dir1")
+        s1 = mail.BzrLaunchpadEmailMaildirSource("/dir2")
+        self.failIfEqual(s0,s1)
+        s2 = mail.BzrLaunchpadEmailMaildirSource("/dir1", prefix = "lp:")
+        self.failIfEqual(s0,s2)
+        s3 = mail.BzrLaunchpadEmailMaildirSource("/dir1", prefix = "pl:")
+        self.failIfEqual(s2,s3)
+        s4 = mail.BzrLaunchpadEmailMaildirSource("/dir1",
+                                                 branchMap = { "a" : "A" })
+        self.failIfEqual(s0,s4)
+        s5 = mail.BzrLaunchpadEmailMaildirSource("/dir1",
+                                                 branchMap = { "a" : "A", "b" : "B" })
+        self.failIfEqual(s4,s5)
+        s6 = mail.BzrLaunchpadEmailMaildirSource("/dir1",
+                                                 defaultBranch = "b1")
+        self.failIfEqual(s0,s6)
+        s7 = mail.BzrLaunchpadEmailMaildirSource("/dir1",
+                                                 defaultBranch = "b2")
+        self.failIfEqual(s6,s7)
+        s8 = mail.BzrLaunchpadEmailMaildirSource("/dir1",
+                                                 prefix = "lp",
+                                                 branchMap = { "c" : "C" },
+                                                 defaultBranch = "b3")
+        self.failIfEqual(s6,s8)
+        s9 = mail.BzrLaunchpadEmailMaildirSource("/dir1",
+                                                 prefix = "lp",
+                                                 branchMap = { "c" : "C" },
+                                                 defaultBranch = "b3")
+        s9.dummy = 42
+        self.assertEqual(s8,s9)
