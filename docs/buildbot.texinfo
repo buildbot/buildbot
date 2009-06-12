@@ -7380,6 +7380,11 @@ logs and source changes. By simply reloading this page on a regular
 basis, you will see a complete description of everything the buildbot
 is currently working on.
 
+A similar, but more developer-oriented display is the "Grid" display.  This
+arranges builds by SourceStamp (horizontal axis) and builder (vertical axis),
+and can provide quick information as to which revisions are passing or failing
+on which builders.
+
 There are also pages with more specialized information. For example,
 there is a page which shows the last 20 builds performed by the
 buildbot, one line each. Each line is a link to detailed information
@@ -7433,12 +7438,13 @@ they provide.
 
 @menu
 * WebStatus Configuration Parameters::
+* Enabling the "Force Build" Button::
 * Buildbot Web Resources::
 * XMLRPC server::
 * HTML Waterfall::
 @end menu
 
-@node WebStatus Configuration Parameters, Buildbot Web Resources, WebStatus, WebStatus
+@node WebStatus Configuration Parameters
 @subsection WebStatus Configuration Parameters
 
 The most common way to run a @code{WebStatus} is on a regular TCP
@@ -7480,20 +7486,23 @@ configuration will make the HTML status page available at
 appear at @code{http://host/buildbot/}, and the right virtual host
 setup can even place it at @code{http://buildbot.host/} .
 
-The other @code{WebStatus} argument is @code{allowForce}. If set to
-True, then the web page will provide a ``Force Build'' button that
-allows visitors to manually trigger builds. This is useful for
-developers to re-run builds that have failed because of intermittent
-problems in the test suite, or because of libraries that were not
-installed at the time of the previous build. The default value is False.
+@node Enabling the "Force Build" Button
+@subsection Enabling the "Force Build" Button
 
-You may not wish to allow strangers to cause a build to run or to stop
-current builds, in that case you can pass an instance of
-@code{status.web.authentication.IAuth} as a @code{auth} keyword argument.
-The class @code{BasicAuth} implements a basic authentication mechanism
-using a list of user/password tuples provided from the configuration file.
-The class @code{HTPasswdAuth} implements an authentication against an
-@file{.htpasswd} file.
+An important @code{WebStatus} argument is @code{allowForce}. If set to True,
+then the web page will provide a ``Force Build'' button that allows visitors to
+manually trigger builds. This is useful for developers to re-run builds that
+have failed because of intermittent problems in the test suite, or because of
+libraries that were not installed at the time of the previous build. The
+default value is False, since it also allows anyone with a web browser to burn
+waste computing resources forcing unnecessary builds.
+
+If you do not wish to allow strangers to cause a build to run or to stop
+current builds, pass an instance of @code{status.web.authentication.IAuth} as a
+@code{auth} keyword argument to @code{WebStatus}.  The class @code{BasicAuth}
+implements a basic authentication mechanism using a list of user/password
+tuples provided from the configuration file.  The class @code{HTPasswdAuth}
+implements an authentication against an @file{.htpasswd} file.
 
 @example
 from buildbot.status.html import WebStatus
@@ -7506,8 +7515,7 @@ file = '/path/to/file'
 c['status'].append(WebStatus(http_port=8080, auth=(HTPasswdAuth(file))))
 @end example
 
-
-@node Buildbot Web Resources, XMLRPC server, WebStatus Configuration Parameters, WebStatus
+@node Buildbot Web Resources
 @subsection Buildbot Web Resources
 
 Certain URLs are ``magic'', and the pages they serve are created by
@@ -8916,7 +8924,7 @@ command to wait for the requested build to complete.
 @node Resources, Developer's Appendix, Command-line tool, Top
 @chapter Resources
 
-The Buildbot's home page is at @uref{http://buildbot.sourceforge.net/}
+The Buildbot home page is @uref{http://buildbot.net/}.
 
 For configuration questions and general discussion, please use the
 @code{buildbot-devel} mailing list. The subscription instructions and

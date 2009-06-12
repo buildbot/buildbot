@@ -515,7 +515,7 @@ class VCBase(SignalMixin):
             s += ", %s=%s" % (k, repr(v))
         s += ")"
         config = config_vc % s
-
+        
         m.loadConfig(config % 'clobber')
         m.readConfig = True
         m.startService()
@@ -1223,6 +1223,68 @@ class CVS(VCBase, unittest.TestCase):
         return d
 
 VCS.registerVC(CVS.vc_name, CVSHelper())
+
+class CVSHelper_checkout_options(CVSHelper):
+    """
+    Specialized CVSHelper to set checkout_options to verify that it works
+    """
+    def createRepository(self):
+        self.createBasedir()
+        self.cvsrep = cvsrep = os.path.join(self.repbase, "CVS-Repository")
+        tmp = os.path.join(self.repbase, "cvstmp")
+
+        w = self.dovc(self.repbase, ['-d',  cvsrep,  'init'])
+        yield w; w.getResult() # we must getResult() to raise any exceptions
+
+        self.populate(tmp)
+        cmd = ['-d',  self.cvsrep,  'import',
+                '-m', 'sample_project_files', 'sample',  'vendortag',  'start']
+        w = self.dovc(tmp, cmd)
+        yield w; w.getResult()
+        rmdirRecursive(tmp)
+        # take a timestamp as the first revision number
+        time.sleep(2)
+        self.addTrunkRev(self.getdate())
+        time.sleep(2)
+
+        w = self.dovc(self.repbase,
+                      ['-d',  self.cvsrep, 'checkout', '-d',  'cvstmp',  'sample'])
+        yield w; w.getResult()
+
+        w = self.dovc(tmp, ['tag',  '-b', self.branchname])
+        yield w; w.getResult()
+        self.populate_branch(tmp)
+        w = self.dovc(tmp,
+                      ['commit',  '-m',  'commit_on_branch',  '-r', self.branchname])
+        yield w; w.getResult()
+        rmdirRecursive(tmp)
+        time.sleep(2)
+        self.addBranchRev(self.getdate())
+        time.sleep(2)
+        self.vcargs = { 'cvsroot': self.cvsrep, 
+                        'cvsmodule': "sample",
+                        'checkout_options':["-P"] }
+    createRepository = deferredGenerator(createRepository)
+
+
+class CVS_checkout_options(CVS):
+    """
+    Specialized CVS_checkout_options class to use with 
+    CVSHelper_checkout_options
+    set checkout_options to verify that it works
+    """
+    vc_name = "cvs"
+
+    metadir = "CVS"
+    vctype = "source.CVS"
+    vctype_try = "cvs"
+    # CVS gives us got_revision, but it is based entirely upon the local
+    # clock, which means it is unlikely to match the timestamp taken earlier.
+    # This might be enough for common use, but won't be good enough for our
+    # tests to accept, so pretend it doesn't have got_revision at all.
+    has_got_revision = False
+
+VCS.registerVC(CVS_checkout_options.vc_name, CVSHelper_checkout_options())
 
 
 class SVNHelper(BaseHelper):

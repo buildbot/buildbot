@@ -16,7 +16,8 @@ from buildbot.process import base
  PINGING, # build about to start, making sure it is still alive
  BUILDING, # build is running
  LATENT, # latent slave is not substantiated; similar to idle
- ) = range(5)
+ SUBSTANTIATING,
+ ) = range(6)
 
 
 class AbstractSlaveBuilder(pb.Referenceable):
@@ -260,6 +261,7 @@ class LatentSlaveBuilder(AbstractSlaveBuilder):
                                                          self.builder_name))
 
     def substantiate(self, build):
+        self.state = SUBSTANTIATING
         d = self.slave.substantiate(self)
         if not self.slave.substantiated:
             event = self.builder.builder_status.addEvent(
@@ -456,7 +458,7 @@ class Builder(pb.Referenceable):
     def cancelBuildRequest(self, req):
         if req in self.buildable:
             self.buildable.remove(req)
-            self.builder_status.removeBuildRequest(req.status)
+            self.builder_status.removeBuildRequest(req.status, cancelled=True)
             return True
         return False
 
@@ -885,7 +887,11 @@ class BuilderControl(components.Adapter):
 
     def getPendingBuilds(self):
         # return IBuildRequestControl objects
-        raise NotImplementedError
+        retval = []
+        for r in self.original.buildable:
+            retval.append(BuildRequestControl(self.original, r))
+
+        return retval
 
     def getBuild(self, number):
         return self.original.getBuild(number)
@@ -908,3 +914,21 @@ class BuilderControl(components.Adapter):
         return True
 
 components.registerAdapter(BuilderControl, Builder, interfaces.IBuilderControl)
+
+class BuildRequestControl:
+    implements(interfaces.IBuildRequestControl)
+
+    def __init__(self, builder, request):
+        self.original_builder = builder
+        self.original_request = request
+
+    def subscribe(self, observer):
+        raise NotImplementedError
+
+    def unsubscribe(self, observer):
+        raise NotImplementedError
+
+    def cancel(self):
+        self.original_builder.cancelBuildRequest(self.original_request)
+
+

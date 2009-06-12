@@ -17,7 +17,7 @@
 # repository for the user who initiated github_buildbot.py
 #
 
-import tempfile, logging, re, os, sys, commands, subprocess
+import tempfile, logging, re, os, sys, commands
 from twisted.web import server, resource
 from twisted.internet import reactor
 from twisted.spread import pb
@@ -55,14 +55,13 @@ class GitHubBuildBot(resource.Resource):
 	isLeaf = True
 	def render_POST(self, request):
 		payload = json.loads(request.args['payload'][0])
-		try:
+		#logging.debug(payload)
+		result = update_git_dir(payload['repository']['owner']['name'] , payload['repository']['name'])
+		if result:
 			self.process_change(payload)
-		except:
-			logging.error("Could not process change")
-			raise()
-	
+
 	def process_change(self,payload):
-		update_git_dir(payload['repository']['owner']['name'] , payload['repository']['name'],remote,branch)
+		
 		[oldrev, newrev, refname] = payload['before'], payload['after'], payload['ref']
 		
 		# We only care about regular heads, i.e. branches
@@ -243,18 +242,30 @@ def gen_update_branch_changes(oldrev, newrev, refname, branch):
         if status:
             logging.warning("git rev-list exited with status %d" % status)
 
-def update_git_dir(user, repo, rem, brh):
+def update_git_dir(user, repo):
 	tempdir = tempfile.gettempdir()
 	repodir = tempdir+"/"+repo
 	if os.path.exists(repodir):
 		os.chdir(repodir)
-		subprocess.call(['git','pull',rem,brh])
+		logging.info("Updating existing git repository: " + repodir)
+		cmd = 'git pull '+remote+' '+branch
+		logging.debug("Git command: "+ cmd)
+		(result,output) = commands.getstatusoutput(cmd)
 	else:
 		os.chdir(tempdir)
-		subprocess.call(['git','clone', 'git@'+ github+':'+user+'/'+repo+'.git'])
-		os.chdir(repodir)
+		cmd = 'git clone git@'+github+':'+user+'/'+repo+'.git'
+		logging.info("Attempting to create new repository location: "+ cmd)
+		(result,output) = commands.getstatusoutput(cmd)
+		if result == 0:
+			os.chdir(repodir)
+		else:
+			logging.error(output)
+	if result == 0:
+		return True
 
 if __name__ == '__main__':
+	FORMAT = "%(asctime)s - %(levelname)s - %(message)s" 
+	logging.basicConfig(format=FORMAT,level=logging.WARNING,)
 	site = server.Site(GitHubBuildBot())
 	reactor.listenTCP(port, site)
 	reactor.run()
