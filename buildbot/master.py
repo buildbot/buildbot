@@ -545,6 +545,7 @@ class BuildMaster(service.MultiService, styles.Versioned):
                       "manhole", "status", "projectName", "projectURL",
                       "buildbotURL", "properties", "prioritizeBuilders",
                       "eventHorizon", "buildCacheSize", "logHorizon", "buildHorizon",
+                      "changeHorizon",
                       )
         for k in config.keys():
             if k not in known_keys:
@@ -587,6 +588,9 @@ class BuildMaster(service.MultiService, styles.Versioned):
             prioritizeBuilders = config.get('prioritizeBuilders')
             if prioritizeBuilders is not None and not callable(prioritizeBuilders):
                 raise ValueError("prioritizeBuilders must be callable")
+            changeHorizon = config.get("changeHorizon")
+            if changeHorizon is not None and not isinstance(changeHorizon, int):
+                raise ValueError("changeHorizon needs to be an int")
 
         except KeyError, e:
             log.msg("config dictionary is missing a required parameter")
@@ -612,6 +616,9 @@ class BuildMaster(service.MultiService, styles.Versioned):
 
         #if "sources" in config:
         #    raise KeyError("c['sources'] is no longer accepted")
+
+        if changeHorizon is not None:
+            self.change_svc.changeHorizon = changeHorizon
 
         change_source = config.get('change_source', [])
         if isinstance(change_source, (list, tuple)):

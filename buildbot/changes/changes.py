@@ -198,6 +198,8 @@ class ChangeMaster(service.MultiService):
     debug = False
     # todo: use Maildir class to watch for changes arriving by mail
 
+    changeHorizon = 0
+
     def __init__(self):
         service.MultiService.__init__(self)
         self.changes = []
@@ -229,10 +231,12 @@ class ChangeMaster(service.MultiService):
         self.nextNumber += 1
         self.changes.append(change)
         self.parent.addChange(change)
-        # TODO: call pruneChanges after a while
+        self.pruneChanges()
 
     def pruneChanges(self):
-        self.changes = self.changes[-100:] # or something
+        if self.changeHorizon and len(self.changes) > self.changeHorizon:
+            log.msg("pruning %i changes" % (len(self.changes) - self.changeHorizon))
+            self.changes = self.changes[-self.changeHorizon:]
 
     def eventGenerator(self, branches=[]):
         for i in range(len(self.changes)-1, -1, -1):
