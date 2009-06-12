@@ -8916,7 +8916,7 @@ command to wait for the requested build to complete.
 @node Resources, Developer's Appendix, Command-line tool, Top
 @chapter Resources
 
-The Buildbot's home page is at @uref{http://buildbot.sourceforge.net/}
+The Buildbot home page is @uref{http://buildbot.net/}.
 
 For configuration questions and general discussion, please use the
 @code{buildbot-devel} mailing list. The subscription instructions and
