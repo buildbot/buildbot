@@ -1436,7 +1436,7 @@ class BuilderStatus(styles.Versioned):
     currentBigState = "offline" # or idle/waiting/interlocked/building
     basedir = None # filled in by our parent
 
-    def __init__(self, buildername, category=None, buildmaster=None):
+    def __init__(self, buildername, category=None):
         self.name = buildername
         self.category = category
 
@@ -1454,19 +1454,6 @@ class BuilderStatus(styles.Versioned):
         self.buildCache = weakref.WeakValueDictionary()
         self.buildCache_LRU = []
         self.logCompressionLimit = False # default to no compression for tests
-
-        # use the settings from the buildmaster, if present; otherwise, use the
-        # defaults from this class.  Note that we do not hang onto the buildmaster,
-        # since this object gets pickled and unpickled.
-        if buildmaster:
-            if buildmaster.buildCacheSize:
-                self.buildCacheSize = buildmaster.buildCacheSize
-            if buildmaster.eventHorizon:
-                self.eventHorizon = buildmaster.eventHorizon
-            if buildmaster.logHorizon:
-                self.logHorizon = buildmaster.logHorizon
-            if buildmaster.buildHorizon:
-                self.buildHorizon = buildmaster.buildHorizon
 
     # persistence
 
@@ -1502,6 +1489,18 @@ class BuilderStatus(styles.Versioned):
         self.slavenames = []
         # self.basedir must be filled in by our parent
         # self.status must be filled in by our parent
+
+    def reconfigFromBuildmaster(self, buildmaster):
+        # Note that we do not hang onto the buildmaster, since this object
+        # gets pickled and unpickled.
+        if buildmaster.buildCacheSize:
+            self.buildCacheSize = buildmaster.buildCacheSize
+        if buildmaster.eventHorizon:
+            self.eventHorizon = buildmaster.eventHorizon
+        if buildmaster.logHorizon:
+            self.logHorizon = buildmaster.logHorizon
+        if buildmaster.buildHorizon:
+            self.buildHorizon = buildmaster.buildHorizon
 
     def upgradeToVersion1(self):
         if hasattr(self, 'slavename'):
@@ -2227,7 +2226,7 @@ class Status:
             log.msg("error follows:")
             log.err()
         if not builder_status:
-            builder_status = BuilderStatus(name, category, self.botmaster.parent)
+            builder_status = BuilderStatus(name, category)
             builder_status.addPointEvent(["builder", "created"])
         log.msg("added builder %s in category %s" % (name, category))
         # an unpickled object might not have category set from before,

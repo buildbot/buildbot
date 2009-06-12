@@ -927,6 +927,12 @@ class BuildMaster(service.MultiService, styles.Versioned):
                 log.msg("builder %s is unchanged" % name)
                 pass
 
+        # regardless of whether anything changed, get each builder status
+        # to update its config
+        for builder in allBuilders.values():
+            builder.builder_status.reconfigFromBuildmaster(self)
+
+        # and then tell the botmaster if anything's changed
         if somethingChanged:
             sortedAllBuilders = [allBuilders[name] for name in newBuilderNames]
             d = self.botmaster.setBuilders(sortedAllBuilders)
