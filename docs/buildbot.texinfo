@@ -7494,8 +7494,8 @@ then the web page will provide a ``Force Build'' button that allows visitors to
 manually trigger builds. This is useful for developers to re-run builds that
 have failed because of intermittent problems in the test suite, or because of
 libraries that were not installed at the time of the previous build. The
-default value is False, since it also allows anyone with a web browser to burn
-waste computing resources forcing unnecessary builds.
+default value is False, since it also allows anyone with a web browser to waste
+computing resources forcing unnecessary builds.
 
 If you do not wish to allow strangers to cause a build to run or to stop
 current builds, pass an instance of @code{status.web.authentication.IAuth} as a
