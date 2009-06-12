@@ -7380,6 +7380,11 @@ logs and source changes. By simply reloading this page on a regular
 basis, you will see a complete description of everything the buildbot
 is currently working on.
 
+A similar, but more developer-oriented display is the "Grid" display.  This
+arranges builds by SourceStamp (horizontal axis) and builder (vertical axis),
+and can provide quick information as to which revisions are passing or failing
+on which builders.
+
 There are also pages with more specialized information. For example,
 there is a page which shows the last 20 builds performed by the
 buildbot, one line each. Each line is a link to detailed information
