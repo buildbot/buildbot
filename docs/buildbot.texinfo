@@ -2276,16 +2276,17 @@ from buildbot.changes.pb import PBChangeSource
 c['change_source'] = PBChangeSource()
 @end example
 
+(note: in buildbot-0.7.5 and earlier, this key was named
+@code{c['sources']}, and required a list. @code{c['sources']} is
+deprecated as of buildbot-0.7.6 and is scheduled to be removed in a
+future release).
+
 @bcindex c['changeHorizon']
 
 The @code{c['changeHorizon']} key determines how many changes the master will
 keep a record of. One place these changes are displayed is on the waterfall
 page.  This parameter defaults to 0, which means keep all changes indefinitely.
 
-(note: in buildbot-0.7.5 and earlier, this key was named
-@code{c['sources']}, and required a list. @code{c['sources']} is
-deprecated as of buildbot-0.7.6 and is scheduled to be removed in a
-future release).
 
 @bcindex c['schedulers']
 @code{c['schedulers']} is a list of Scheduler instances, each
