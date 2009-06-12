@@ -55,7 +55,7 @@ class Change:
 
     def __init__(self, who, files, comments, isdir=0, links=[],
                  revision=None, when=None, branch=None, category=None,
-		 revlink=''):
+                 revlink=''):
         self.who = who
         self.comments = comments
         self.isdir = isdir
@@ -66,7 +66,7 @@ class Change:
         self.when = when
         self.branch = branch
         self.category = category
-	self.revlink = revlink
+        self.revlink = revlink
 
         # keep a sorted list of the files, for easier display
         self.files = files[:]
@@ -74,7 +74,7 @@ class Change:
 
     def asText(self):
         data = ""
-        data += self.getFileContents() 
+        data += self.getFileContents()
         data += "At: %s\n" % self.getTime()
         data += "Changed By: %s\n" % self.who
         data += "Comments: %s\n\n" % self.comments
@@ -91,11 +91,11 @@ class Change:
                 links.append('<b>%s</b>' % file)
         revlink = ""
         if self.revision:
-	    if getattr(self, 'revlink', ""):
-		revision = 'Revision: <a href="%s"><b>%s</b></a>\n' % (
-			self.revlink, self.revision)
-	    else:
-		revision = "Revision: <b>%s</b><br />\n" % self.revision
+            if getattr(self, 'revlink', ""):
+                revision = 'Revision: <a href="%s"><b>%s</b></a>\n' % (
+                        self.revlink, self.revision)
+            else:
+                revision = "Revision: <b>%s</b><br />\n" % self.revision
 
         branch = ""
         if self.branch:
