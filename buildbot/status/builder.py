@@ -1800,8 +1800,11 @@ class BuilderStatus(styles.Versioned):
         for w in self.watchers:
             w.requestSubmitted(brstatus)
 
-    def removeBuildRequest(self, brstatus):
+    def removeBuildRequest(self, brstatus, cancelled=False):
         self.pendingBuilds.remove(brstatus)
+        if cancelled:
+            for w in self.watchers:
+                w.requestCancelled(self, brstatus)
 
     # buildStarted is called by our child BuildStatus instances
     def buildStarted(self, s):

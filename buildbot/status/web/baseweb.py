@@ -71,7 +71,7 @@ def getLastNBuilds(status, numbuilds, builders=[], branches=[]):
 
 
 # /one_line_per_build
-#  accepts builder=, branch=, numbuilds=
+#  accepts builder=, branch=, numbuilds=, reload=
 class OneLinePerBuild(HtmlResource, OneLineMixin):
     """This shows one line per build, combining all builders together. Useful
     query arguments:
@@ -79,6 +79,7 @@ class OneLinePerBuild(HtmlResource, OneLineMixin):
     numbuilds=: how many lines to display
     builder=: show only builds for this builder. Multiple builder= arguments
               can be used to see builds from any builder in the set.
+    reload=: reload the page after this many seconds
     """
 
     title = "Recent Builds"
@@ -91,6 +92,22 @@ class OneLinePerBuild(HtmlResource, OneLineMixin):
         status = self.getStatus(req)
         builder = status.getBuilder(path)
         return OneLinePerBuildOneBuilder(builder, numbuilds=self.numbuilds)
+
+    def get_reload_time(self, request):
+        if "reload" in request.args:
+            try:
+                reload_time = int(request.args["reload"][0])
+                return max(reload_time, 15)
+            except ValueError:
+                pass
+        return None
+
+    def head(self, request):
+        head = ''
+        reload_time = self.get_reload_time(request)
+        if reload_time is not None:
+            head += '<meta http-equiv="refresh" content="%d">\n' % reload_time
+        return head
 
     def body(self, req):
         status = self.getStatus(req)
