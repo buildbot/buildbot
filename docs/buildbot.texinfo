@@ -2061,6 +2061,7 @@ understand how to fill in each section properly.
 * Defining Global Properties::
 * Defining Builders::
 * Defining Status Targets::
+* Limiting Memory and Disk Usage::
 * Debug options::
 @end menu
 
@@ -3237,7 +3238,7 @@ c['properties'] = @{
 @}
 @end example
 
-@node Defining Builders, Defining Status Targets, Defining Global Properties, Configuration
+@node Defining Builders
 @section Defining Builders
 
 @bcindex c['builders']
@@ -3333,7 +3334,7 @@ builds should be started.
 @end table
 
 
-@node Defining Status Targets, Debug options, Defining Builders, Configuration
+@node Defining Status Targets
 @section Defining Status Targets
 
 The Buildmaster has a variety of ways to present build status to
@@ -3363,8 +3364,43 @@ c['status'].append(words.IRC(host="irc.example.com", nick="bb",
 Status delivery has its own chapter, @xref{Status Delivery}, in which
 all the built-in status targets are documented.
 
+@node Limiting Memory and Disk Usage::
+@section Limiting Memory and Disk Usage::
 
-@node Debug options,  , Defining Status Targets, Configuration
+Buildbot stores historical information on disk in the form of "Pickle" files
+and compressed logfiles.  In a large installation, these can quickly consume
+disk space, yet in many cases developers never consult this historical
+information.  Four configuration parameters control the "pruning" of various
+data, shown here with their default values:
+
+@bcindex c['buildHorizon']
+@bcindex c['eventHorizon']
+@bcindex c['logHorizon']
+@bcindex c['buildCacheSize']
+@example
+c['buildHorizon'] = 100
+c['eventHorizon'] = 50
+c['logHorizon'] = 40
+
+c['buildCacheSize'] = 15
+@end example
+
+The @code{buildHorizon} specifies the minimum number of builds for each builder
+which should be kept on disk.  The @code{eventHorizon} specifies the minumum
+number of events to keep -- events mostly describe connections and
+disconnections of slaves, and are seldom helpful to developers.  The
+@code{logHorizon} gives the minimum number of builds for which logs should be
+maintained; this parameter must be less than @code{buildHorizon}. Builds older
+than @code{logHorizon} but not older than @code{buildHorizon} will maintain
+their overall status and the status of each step, but the logfiles will be
+deleted.
+
+Finally, the @code{buildCacheSize} gives the number of builds for each builder
+which are cached in memory.  This number should be larger than the number of
+builds required for commonly-used status displays (the waterfall or grid
+views), so that those displays do not miss the cache on a refresh.
+
+@node Debug options
 @section Debug options
 
 

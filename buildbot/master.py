@@ -544,6 +544,7 @@ class BuildMaster(service.MultiService, styles.Versioned):
                       "slavePortnum", "debugPassword", "logCompressionLimit",
                       "manhole", "status", "projectName", "projectURL",
                       "buildbotURL", "properties", "prioritizeBuilders",
+                      "eventHorizon", "buildCacheSize", "logHorizon", "buildHorizon",
                       )
         for k in config.keys():
             if k not in known_keys:
@@ -572,6 +573,10 @@ class BuildMaster(service.MultiService, styles.Versioned):
             projectURL = config.get('projectURL')
             buildbotURL = config.get('buildbotURL')
             properties = config.get('properties', {})
+            buildCacheSize = config.get('buildCacheSize', None)
+            eventHorizon = config.get('eventHorizon', None)
+            logHorizon = config.get('logHorizon', None)
+            buildHorizon = config.get('buildHorizon', None)
             logCompressionLimit = config.get('logCompressionLimit')
             if logCompressionLimit is not None and not \
                     isinstance(logCompressionLimit, int):
@@ -745,6 +750,11 @@ class BuildMaster(service.MultiService, styles.Versioned):
         if prioritizeBuilders is not None:
             self.botmaster.prioritizeBuilders = prioritizeBuilders
 
+        self.buildCacheSize = buildCacheSize
+        self.eventHorizon = eventHorizon
+        self.logHorizon = logHorizon
+        self.buildHorizon = buildHorizon
+
         # self.slaves: Disconnect any that were attached and removed from the
         # list. Update self.checker with the new list of passwords, including
         # debug/change/status.
@@ -917,6 +927,12 @@ class BuildMaster(service.MultiService, styles.Versioned):
                 log.msg("builder %s is unchanged" % name)
                 pass
 
+        # regardless of whether anything changed, get each builder status
+        # to update its config
+        for builder in allBuilders.values():
+            builder.builder_status.reconfigFromBuildmaster(self)
+
+        # and then tell the botmaster if anything's changed
         if somethingChanged:
             sortedAllBuilders = [allBuilders[name] for name in newBuilderNames]
             d = self.botmaster.setBuilders(sortedAllBuilders)
