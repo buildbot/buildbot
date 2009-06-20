@@ -278,7 +278,7 @@ class Contact:
         log.msg('[Contact] Builder %s changed state to %s' % (builderName, state))
 
     def requestSubmitted(self, brstatus):
-        log.msg('[Contact] BuildRequest for %s submiitted to Builder %s' % 
+        log.msg('[Contact] BuildRequest for %s submitted to Builder %s' %
             (brstatus.getSourceStamp(), brstatus.builderName))
 
     def builderRemoved(self, builderName):
@@ -385,7 +385,7 @@ class Contact:
             raise UsageError("try 'force build WHICH <REASON>'")
         opts = ForceOptions()
         opts.parseOptions(args)
-        
+
         which = opts['builder']
         branch = opts['branch']
         revision = opts['revision']
@@ -842,7 +842,7 @@ class IRC(base.StatusReceiverMultiService):
         self.password = password
         self.allowForce = allowForce
         self.categories = categories
-	self.notify_events = notify_events
+        self.notify_events = notify_events
 
         # need to stash the factory so we can give it the status object
         self.f = IrcStatusFactory(self.nick, self.password,
@@ -870,3 +870,4 @@ class IRC(base.StatusReceiverMultiService):
 ## buildbot: status full-2.3
 ##  building, not, % complete, ETA
 ## buildbot: force build full-2.3 "reason"
+
