@@ -1490,6 +1490,18 @@ class BuilderStatus(styles.Versioned):
         # self.basedir must be filled in by our parent
         # self.status must be filled in by our parent
 
+    def reconfigFromBuildmaster(self, buildmaster):
+        # Note that we do not hang onto the buildmaster, since this object
+        # gets pickled and unpickled.
+        if buildmaster.buildCacheSize:
+            self.buildCacheSize = buildmaster.buildCacheSize
+        if buildmaster.eventHorizon:
+            self.eventHorizon = buildmaster.eventHorizon
+        if buildmaster.logHorizon:
+            self.logHorizon = buildmaster.logHorizon
+        if buildmaster.buildHorizon:
+            self.buildHorizon = buildmaster.buildHorizon
+
     def upgradeToVersion1(self):
         if hasattr(self, 'slavename'):
             self.slavenames = [self.slavename]
@@ -1800,8 +1812,11 @@ class BuilderStatus(styles.Versioned):
         for w in self.watchers:
             w.requestSubmitted(brstatus)
 
-    def removeBuildRequest(self, brstatus):
+    def removeBuildRequest(self, brstatus, cancelled=False):
         self.pendingBuilds.remove(brstatus)
+        if cancelled:
+            for w in self.watchers:
+                w.requestCancelled(self, brstatus)
 
     # buildStarted is called by our child BuildStatus instances
     def buildStarted(self, s):

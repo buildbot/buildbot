@@ -214,6 +214,7 @@ class CVS(Source):
 
     def __init__(self, cvsroot, cvsmodule,
                  global_options=[], branch=None, checkoutDelay=None,
+                 checkout_options=[],
                  login=None,
                  **kwargs):
 
@@ -266,7 +267,13 @@ class CVS(Source):
                                '-R'] will also assume the repository is
                                read-only (I assume this means it won't
                                use locks to insure atomic access to the
-                               ,v files)."""
+                               ,v files).
+                               
+        @type  checkout_options: list of strings
+        @param checkout_options: these arguments are inserted in the cvs
+                               command line, after 'checkout' but before
+                               branch or revision specifiers.
+                               """
 
         self.checkoutDelay = checkoutDelay
         self.branch = branch
@@ -275,6 +282,7 @@ class CVS(Source):
         self.addFactoryArguments(cvsroot=cvsroot,
                                  cvsmodule=cvsmodule,
                                  global_options=global_options,
+                                 checkout_options=checkout_options,
                                  branch=branch,
                                  checkoutDelay=checkoutDelay,
                                  login=login,
@@ -283,6 +291,7 @@ class CVS(Source):
         self.args.update({'cvsroot': cvsroot,
                           'cvsmodule': cvsmodule,
                           'global_options': global_options,
+                          'checkout_options':checkout_options,
                           'login': login,
                           })
 
