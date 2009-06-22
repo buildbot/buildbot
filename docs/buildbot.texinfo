@@ -1246,16 +1246,17 @@ speed up the process.
 @node Forcing Builds,  , Connecting to the buildmaster, Troubleshooting
 @subsection Forcing Builds
 
-From the buildmaster's main status web page, you can force a build to
-be run on your build slave. Figure out which column is for a builder
-that runs on your slave, click on that builder's name, and the page
-that comes up will have a ``Force Build'' button. Fill in the form,
-hit the button, and a moment later you should see your slave's
-@file{twistd.log} filling with commands being run. Using @code{pstree}
-or @code{top} should also reveal the cvs/make/gcc/etc processes being
-run by the buildslave. Note that the same web page should also show
-the @file{admin} and @file{host} information files that you configured
-earlier.
+From the buildmaster's main status web page, you can force a build to be run on
+your build slave if you set the option @code{allowForce=True} in your
+@code{master.cfg} file @pxref{Enabling the "Force Build" Button}.
+
+Figure out which column is for a builder that runs on your slave, click on that
+builder's name, and the page that comes up will have a "Force Build" button.
+Fill in the form, hit the button, and a moment later you should see your
+slave's @file{twistd.log} filling with commands being run. Using @code{pstree}
+or @code{top} should also reveal the cvs/make/gcc/etc processes being run by
+the buildslave. Note that the same web page should also show the @file{admin}
+and @file{host} information files that you configured earlier.
 
 @node Concepts, Configuration, Installation, Top
 @chapter Concepts
