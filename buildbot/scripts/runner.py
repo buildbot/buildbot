@@ -518,6 +518,12 @@ def stop(config, signame="TERM", wait=False):
     pid = int(f.read().strip())
     signum = getattr(signal, "SIG"+signame)
     timer = 0
+    try:
+        os.kill(pid, 0)
+    except OSError:
+        if not quiet:
+            print "buildbot process %d is dead" % pid
+        return
     os.kill(pid, signum)
     if not wait:
         if not quiet:
