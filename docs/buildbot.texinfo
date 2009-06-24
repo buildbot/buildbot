@@ -7640,10 +7640,10 @@ and the revisions are listed across the top.
 By adding one ore more ``category='' arguments the grid will be
 restricted to revisions in those categories.
 
-A ``width=N'' argument will limit the number of revisiosn shown to N,
+A ``width=N'' argument will limit the number of revisions shown to N,
 defaulting to 5.
 
-A ``branch=BRANCHNAME'' argument will limit the grid to revisiosn on
+A ``branch=BRANCHNAME'' argument will limit the grid to revisions on
 branch BRANCHNAME.
 
 @item /tgrid
@@ -7665,6 +7665,11 @@ feed output.
 This provides an atom feed summarizing all failed builds. The same
 query-arguments used by 'waterfall' can be added to filter the feed
 output.
+
+@item /buildstatus?builder=$BUILDERNAME&number=$BUILDNUM
+
+This displays a waterfall-like chronologically-oriented view of all the
+steps for a given build number on a given builder.
 
 @item /builders/$BUILDERNAME
 
