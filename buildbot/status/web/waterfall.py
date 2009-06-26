@@ -269,6 +269,15 @@ appear in-between the actual builds.</p>
 
 %(show_events_input)s
 
+<h2>Showing only the Builders with failures</h2>
+
+<p>By adding the <tt>failures_only=true</tt> argument, the display will be limited
+to showing builders that are currently failing. A builder is considered
+failing if the last finished build was not successful, a step in the current
+build(s) failed, or if the builder is offline.
+
+%(failures_only_input)s
+
 <h2>Showing only Certain Branches</h2>
 
 <p>If you provide one or more <tt>branch=</tt> arguments, the display will be
@@ -325,6 +334,16 @@ class WaterfallHelp(HtmlResource):
                              'Hide non-Build events'
                              '</p>\n'
                              ) % showEvents_checked
+
+        failuresOnly_checked = ''
+        if request.args.get("failures_only", ["false"])[0].lower() == "true":
+            failuresOnly_checked = 'checked="checked"'
+        failures_only_input = ('<p>'
+                               '<input type="checkbox" name="failures_only" '
+                               'value="true" %s>'
+                               'Show failures only'
+                               '</p>\n'
+                               ) % failuresOnly_checked
 
         branches = [b
                     for b in request.args.get("branch", [])
@@ -387,6 +406,7 @@ class WaterfallHelp(HtmlResource):
                   "show_branches_input": show_branches_input,
                   "show_builders_input": show_builders_input,
                   "show_reload_input": show_reload_input,
+                  "failures_only_input": failures_only_input,
                   }
         data += HELP % fields
         return data
@@ -428,6 +448,34 @@ class WaterfallStatusResource(HtmlResource):
             head += '<meta http-equiv="refresh" content="%d">\n' % reload_time
         return head
 
+    def isSuccess(self, builderStatus):
+        # Helper function to return True if the builder is not failing.
+        # The function will return false if the current state is "offline",
+        # the last build was not successful, or if a step from the current
+        # build(s) failed.
+
+        # Make sure the builder is online.
+        if builderStatus.getState()[0] == 'offline':
+            return False
+
+        # Look at the last finished build to see if it was success or not.
+        lastBuild = builderStatus.getLastFinishedBuild()
+        if lastBuild and lastBuild.getResults() != builder.SUCCESS:
+            return False
+
+        # Check all the current builds to see if one step is already
+        # failing.
+        currentBuilds = builderStatus.getCurrentBuilds()
+        if currentBuilds:
+            for build in currentBuilds:
+                for step in build.getSteps():
+                    if step.getResults()[0] == builder.FAILURE:
+                        return False
+
+        # The last finished build was successful, and all the current builds
+        # don't have any failed steps.
+        return True
+
     def body(self, request):
         "This method builds the main waterfall display."
 
@@ -461,6 +509,13 @@ class WaterfallStatusResource(HtmlResource):
         showCategories = request.args.get("category", [])
         if showCategories:
             builders = [b for b in builders if b.category in showCategories]
+
+        # If the URL has the failures_only=true argument, we remove all the
+        # builders that are not currently red or won't be turning red at the end
+        # of their current run.
+        failuresOnly = request.args.get("failures_only", ["false"])[0]
+        if failuresOnly.lower() == "true":
+            builders = [b for b in builders if not self.isSuccess(b)]
 
         builderNames = [b.name for b in builders]
 

@@ -7620,6 +7620,12 @@ non-Build events, like slaves attaching and detaching, as well as
 reconfiguration events. 'show_events=false' hides these events. The
 default is to show them.
 
+By adding the 'failures_only=true' query argument, the Waterfall is
+restricted to only showing information about the builders that
+are currently failing. A builder is considered failing if the
+last finished build was not successful, a step in the current
+build(s) is failing, or if the builder is offline.
+
 The @code{last_time=}, @code{first_time=}, and @code{show_time=}
 arguments will control what interval of time is displayed. The default
 is to show the latest events, but these can be used to look at earlier
