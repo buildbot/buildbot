@@ -342,6 +342,9 @@ class IBuilderStatus(Interface):
     def getName():
         """Return the name of this Builder (a string)."""
 
+    def getCategory():
+        """Return the category of this builder (a string)."""
+
     def getState():
         # TODO: this isn't nearly as meaningful as it used to be
         """Return a tuple (state, builds) for this Builder. 'state' is the

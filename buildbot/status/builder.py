@@ -1655,6 +1655,9 @@ class BuilderStatus(styles.Versioned):
             b = self.getBuild(-2)
         return b
 
+    def getCategory(self):
+        return self.category
+
     def getBuild(self, number):
         if number < 0:
             number = self.nextBuildNumber + number
