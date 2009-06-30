@@ -5175,6 +5175,10 @@ if specified, this will be passed to the @code{svn} binary with a
 @code{--password} option.  The password itself will be suitably obfuscated in
 the logs.
 
+@item extra_args
+if specified, an array of strings that will be passed as extra
+arguments to the @code{svn} binary.
+
 @end table
 
 If you are using branches, you must also make sure your

@@ -1734,6 +1734,8 @@ class SVN(SourceBase):
             self.extra_args.extend(["--username", args['username']])
         if args.has_key('password'):
             self.extra_args.extend(["--password", Obfuscated(args['password'], "XXXX")])
+        if args.get('extra_args', None) is not None:
+            self.extra_args.extend(args['extra_args'])
 
     def sourcedirIsUpdateable(self):
         if os.path.exists(os.path.join(self.builder.basedir,
