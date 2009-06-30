@@ -1729,13 +1729,13 @@ class SVN(SourceBase):
         self.svnurl = args['svnurl']
         self.sourcedata = "%s\n" % self.svnurl
 
-        self.extra_args = []
+        self.svn_args = []
         if args.has_key('username'):
-            self.extra_args.extend(["--username", args['username']])
+            self.svn_args.extend(["--username", args['username']])
         if args.has_key('password'):
-            self.extra_args.extend(["--password", Obfuscated(args['password'], "XXXX")])
+            self.svn_args.extend(["--password", Obfuscated(args['password'], "XXXX")])
         if args.get('extra_args', None) is not None:
-            self.extra_args.extend(args['extra_args'])
+            self.svn_args.extend(args['extra_args'])
 
     def sourcedirIsUpdateable(self):
         if os.path.exists(os.path.join(self.builder.basedir,
@@ -1749,7 +1749,7 @@ class SVN(SourceBase):
         # update: possible for mode in ('copy', 'update')
         d = os.path.join(self.builder.basedir, self.srcdir)
         command = [self.vcexe, 'update'] + \
-                    self.extra_args + \
+                    self.svn_args + \
                     ['--revision', str(revision),
                    '--non-interactive', '--no-auth-cache']
         c = ShellCommand(self.builder, command, d,
@@ -1763,14 +1763,14 @@ class SVN(SourceBase):
         d = self.builder.basedir
         if self.mode == "export":
             command = [self.vcexe, 'export'] + \
-                        self.extra_args + \
+                        self.svn_args + \
                         ['--revision', str(revision),
                         '--non-interactive', '--no-auth-cache',
                         self.svnurl, self.srcdir]
         else:
             # mode=='clobber', or copy/update on a broken workspace
             command = [self.vcexe, 'checkout'] + \
-                        self.extra_args + \
+                        self.svn_args + \
                         ['--revision', str(revision),
                         '--non-interactive', '--no-auth-cache',
                         self.svnurl, self.srcdir]
