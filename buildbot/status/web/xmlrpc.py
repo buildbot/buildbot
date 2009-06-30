@@ -28,10 +28,11 @@ class XMLRPCServer(xmlrpc.XMLRPC):
         lastbuild = builder.getBuild(-1)
         return Results[lastbuild.getResults()]
     
-    def xmlrpc_getAllLastBuilds(self, num_builds):
+    def xmlrpc_getLastBuildsAllBuilders(self, num_builds):
         """Return the last N completed builds for all builders.
         
-        'num_builds' is the number of builds to return
+        'num_builds' is the number of builds for each builder to
+            return
 
         """
         all_builds = []
