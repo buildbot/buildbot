@@ -686,6 +686,7 @@ class WaterfallStatusResource(HtmlResource):
         showEvents = False
         if request.args.get("show_events", ["true"])[0].lower() == "true":
             showEvents = True
+        filterCategories = request.args.get('category', [])
         filterBranches = [b for b in request.args.get("branch", []) if b]
         filterBranches = map_branches(filterBranches)
         maxTime = int(request.args.get("last_time", [util.now()])[0])
@@ -732,7 +733,7 @@ class WaterfallStatusResource(HtmlResource):
             return event
 
         for s in sources:
-            gen = insertGaps(s.eventGenerator(filterBranches), lastEventTime)
+            gen = insertGaps(s.eventGenerator(filterBranches, filterCategories), lastEventTime)
             sourceGenerators.append(gen)
             # get the first event
             sourceEvents.append(get_event_from(gen))

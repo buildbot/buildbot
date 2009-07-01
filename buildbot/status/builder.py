@@ -1707,7 +1707,7 @@ class BuilderStatus(styles.Versioned):
                 if got >= num_builds:
                     return
 
-    def eventGenerator(self, branches=[]):
+    def eventGenerator(self, branches=[], categories=[]):
         """This function creates a generator which will provide all of this
         Builder's status events, starting with the most recent and
         progressing backwards in time. """
@@ -1728,6 +1728,8 @@ class BuilderStatus(styles.Versioned):
             if not b:
                 break
             if branches and not b.getSourceStamp().branch in branches:
+                continue
+            if categories and not b.getBuilder().getCategory() in categories:
                 continue
             steps = b.getSteps()
             for Ns in range(1, len(steps)+1):

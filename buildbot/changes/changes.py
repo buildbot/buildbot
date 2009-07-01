@@ -51,6 +51,7 @@ class Change:
 
     links = []
     branch = None
+    category = None
     revision = None # used to create a source-stamp
 
     def __init__(self, who, files, comments, isdir=0, links=[],
@@ -238,10 +239,11 @@ class ChangeMaster(service.MultiService):
             log.msg("pruning %i changes" % (len(self.changes) - self.changeHorizon))
             self.changes = self.changes[-self.changeHorizon:]
 
-    def eventGenerator(self, branches=[]):
+    def eventGenerator(self, branches=[], categories=[]):
         for i in range(len(self.changes)-1, -1, -1):
             c = self.changes[i]
-            if not branches or c.branch in branches:
+            if (not branches or c.branch in branches) and (
+                not categories or c.category in categories):
                 yield c
 
     def getChangeNumbered(self, num):
