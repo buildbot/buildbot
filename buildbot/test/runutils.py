@@ -180,8 +180,6 @@ class RunMixin:
         if self.master:
             return defer.maybeDeferred(self.master.stopService)
     def _tearDown_2(self, res):
-#        for k in dir(self.master.botmaster.builders['dummy']):
-#            print k, getattr(self.master.botmaster.builders['dummy'], k)
         self.master = None
         log.msg("tearDown done")
         
@@ -198,7 +196,7 @@ class RunMixin:
         dl = []
         for slave in self.slaves.values():
             slave.stopService()
-            dl.append(sld = slave.waitUntilDisconnected())
+            dl.append(slave.waitUntilDisconnected())
         d = defer.DeferredList(dl)
         d.addCallback(self._shutdownAllSlavesDone)
         return d
