@@ -2886,6 +2886,12 @@ class P4(P4Base):
         d.addCallback(lambda _: self._doP4Sync(force=True))
         return d
 
+    def parseGotRevision(self):
+        rv = None
+        if self.revision:
+            rv = str(self.revision)
+        return rv
+
 registerSlaveCommand("p4", P4, command_version)
 
 
@@ -2936,5 +2942,11 @@ class P4Sync(P4Base):
 
     def doVCFull(self):
         return self._doVC(force=True)
+
+    def parseGotRevision(self):
+        rv = None
+        if self.revision:
+            rv = str(self.revision)
+        return rv
 
 registerSlaveCommand("p4sync", P4Sync, command_version)
