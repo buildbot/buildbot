@@ -1582,7 +1582,7 @@ to get a tree with a specific state: a tree which includes this Change
 information is unavailable, the @code{.revision} attribute will be
 @code{None}. These revisions are provided by the ChangeSource, and
 consumed by the @code{computeSourceRevision} method in the appropriate
-@code{step.Source} class.
+@code{source.Source} class.
 
 @table @samp
 @item CVS
@@ -7079,7 +7079,7 @@ Example:
 
 @example
 # use the s() convenience function defined earlier
-f = factory.GNUAutoconf(source=s(step.SVN, svnurl=URL, mode="copy"),
+f = factory.GNUAutoconf(source=s(source.SVN, svnurl=URL, mode="copy"),
                         flags=["--disable-nls"])
 @end example
 
@@ -8643,7 +8643,7 @@ SHA1 hash of the current revision's contents), which is used as the
 base revision. @code{hg diff} then provides the patch relative to that
 revision. For @command{try} to work, your working directory must only
 have patches that are available from the same remotely-available
-repository that the build process' @code{step.Mercurial} will use.
+repository that the build process' @code{source.Mercurial} will use.
 
 @item Git
 @code{git branch -v} lists all the branches available in the local
