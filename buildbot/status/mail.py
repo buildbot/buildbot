@@ -22,6 +22,10 @@ from buildbot import interfaces, util
 from buildbot.status import base
 from buildbot.status.builder import FAILURE, SUCCESS, WARNINGS, Results
 
+import sys
+if sys.version_info[:3] < (2,4,0):
+    from sets import Set as set
+
 VALID_EMAIL = re.compile("[a-zA-Z0-9\.\_\%\-\+]+@[a-zA-Z0-9\.\_\%\-]+.[a-zA-Z]{2,6}")
 
 def message(attrs):

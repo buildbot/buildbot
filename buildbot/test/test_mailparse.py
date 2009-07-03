@@ -6,6 +6,10 @@ from twisted.trial import unittest
 from twisted.python import util
 from buildbot.changes import mail
 
+import sys
+if sys.version_info[:3] < (2,4,0):
+    from sets import Set as set
+
 class TestFreshCVS(unittest.TestCase):
 
     def get(self, msg):
