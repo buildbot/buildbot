@@ -61,22 +61,27 @@ class WebHookTransmitter(status.base.StatusReceiverMultiService):
                        {'builder': builderName,
                         'category': builder.getCategory()})
 
-
     def buildStarted(self, builderName, build):
         build.subscribe(self)
-        self._transmit('buildStarted',
-                       {'builder': builderName,
-                        'category': build.getBuilder().getCategory(),
-                        'reason': build.getReason(),
-                        'sourceStamp': ' '.join(build.getSourceStamp().getText()),
-                        'buildNumber': build.getNumber()})
+
+        args = {'builder': builderName,
+                'category': build.getBuilder().getCategory(),
+                'reason': build.getReason(),
+                'revision': build.getSourceStamp().revision,
+                'buildNumber': build.getNumber()}
+
+        if build.getSourceStamp().patch:
+            args['patch'] = build.getSourceStamp().patch[1]
+
+        self._transmit('buildStarted', args)
 
     def buildFinished(self, builderName, build, results):
         self._transmit('buildFinished',
                        {'builder': builderName,
                         'category': build.getBuilder().getCategory(),
                         'result': status.builder.Results[results],
-                        'sourceStamp': ' '.join(build.getSourceStamp().getText()),
+                        'revision': build.getSourceStamp().revision,
+                        'had_patch': bool(build.getSourceStamp().patch),
                         'buildNumber': build.getNumber()})
 
     def stepStarted(self, build, step):
