@@ -2097,11 +2097,11 @@ class Status:
                     break
             else:
                 return None
-            return prefix + "builders/%s/builds/%d/steps/%s/logs/%d" % (
+            return prefix + "builders/%s/builds/%d/steps/%s/logs/%s" % (
                 urllib.quote(builder.getName(), safe=''),
                 build.getNumber(),
                 urllib.quote(step.getName(), safe=''),
-                lognum)
+                urllib.quote(log.getName()))
 
     def getChangeSources(self):
         return list(self.botmaster.parent.change_svc)
