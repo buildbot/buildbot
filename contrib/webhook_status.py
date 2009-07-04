@@ -7,6 +7,30 @@ from twisted.application import service
 from buildbot import status
 
 class WebHookTransmitter(status.base.StatusReceiverMultiService):
+    """
+    A webhook status listener for buildbot.
+
+    WebHookTransmitter listens for build events and sends the events
+    as http POSTs to one or more webhook URLs.
+
+    The easiest way to deploy this is to place it next to your
+    master.cfg and do something like this (assuming you've got a
+    postbin URL for purposes of demonstration):
+
+      from webhook_status import WebHookTransmitter
+      c['status'].append(WebHookTransmitter('http://www.postbin.org/xxxxxxx'))
+
+    Alternatively, you may provide a list of URLs and each one will
+    receive information on every event.
+
+    The following optional parameters influence when and what data is
+    transmitted:
+
+    categories:    If provided, only events belonging to one of the
+                   categories listed will be transmitted.
+
+    extra_params:  Additional parameters to be supplied with every request.
+    """
 
     agent = 'buildbot webhook'
 
