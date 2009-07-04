@@ -12,7 +12,10 @@ class WebHookTransmitter(status.base.StatusReceiverMultiService):
 
     def __init__(self, url, categories=None, extra_params={}):
         status.base.StatusReceiverMultiService.__init__(self)
-        self.url = url
+        if isinstance(url, basestring):
+            self.urls = [url]
+        else:
+            self.urls = url
         self.categories = categories
         self.extra_params = extra_params
 
@@ -23,13 +26,15 @@ class WebHookTransmitter(status.base.StatusReceiverMultiService):
             new_params.extend(params.items())
         else:
             new_params.extend(params)
+        encoded_params = urllib.urlencode(new_params)
+
         log.msg("WebHookTransmitter announcing a %s event" % event)
-        d = client.getPage(self.url, method='POST', agent=self.agent,
-                           postdata=urllib.urlencode(new_params),
-                           followRedirect=0)
-        d.addErrback(lambda x: x.trap(error.PageRedirect))
-        d.addCallback(lambda x: log.msg("Completed %s event hook" % event))
-        d.addErrback(log.err)
+        for u in self.urls:
+            d = client.getPage(u, method='POST', agent=self.agent,
+                               postdata=encoded_params, followRedirect=0)
+            d.addErrback(lambda x: x.trap(error.PageRedirect))
+            d.addCallback(lambda x: log.msg("Completed %s event hook" % event))
+            d.addErrback(log.err)
 
     def builderAdded(self, builderName, builder):
         builder.subscribe(self)
