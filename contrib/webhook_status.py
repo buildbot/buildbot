@@ -28,11 +28,19 @@ class WebHookTransmitter(status.base.StatusReceiverMultiService):
             new_params.extend(params)
         encoded_params = urllib.urlencode(new_params)
 
+        def _trap_status(x, *acceptable):
+            x.trap(error.Error)
+            if int(x.value.status) in acceptable:
+                return None
+            else:
+                return x
+
         log.msg("WebHookTransmitter announcing a %s event" % event)
         for u in self.urls:
             d = client.getPage(u, method='POST', agent=self.agent,
                                postdata=encoded_params, followRedirect=0)
             d.addErrback(lambda x: x.trap(error.PageRedirect))
+            d.addErrback(_trap_status, 204)
             d.addCallback(lambda x: log.msg("Completed %s event hook" % event))
             d.addErrback(log.err)
 
