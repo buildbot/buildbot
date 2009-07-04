@@ -20,6 +20,12 @@ class WebHookTransmitter(status.base.StatusReceiverMultiService):
         self.extra_params = extra_params
 
     def _transmit(self, event, params={}):
+
+        cat = dict(params).get('category', None)
+        if (cat and self.categories) and cat not in self.categories:
+            log.msg("Ignoring request for unhandled category:  %s" % cat)
+            return
+
         new_params = [('event', event)]
         new_params.extend(list(self.extra_params.items()))
         if hasattr(params, "items"):
