@@ -70,6 +70,9 @@ class RemoteBuilder(pb.Referenceable):
     def remote_getName(self):
         return self.b.getName()
 
+    def remote_getCategory(self):
+        return self.b.getCategory()
+
     def remote_getState(self):
         state, builds = self.b.getState()
         return (state,
