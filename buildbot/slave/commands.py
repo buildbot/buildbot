@@ -1007,6 +1007,7 @@ class SlaveDirectoryUploadCommand(SlaveFileUploadCommand):
         return d
 
     def finished(self, res):
+        self.fp.close()
         os.remove(self.tarname)
         if self.debug:
             log.msg('finished: stderr=%r, rc=%r' % (self.stderr, self.rc))
