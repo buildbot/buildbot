@@ -1,10 +1,14 @@
 import urllib
 
 from twisted.python import log
+from twisted.internet import reactor
 from twisted.web import client, error
 from twisted.application import service
 
 from buildbot import status
+
+MAX_ATTEMPTS     = 5
+RETRY_MULTIPLIER = 5
 
 class WebHookTransmitter(status.base.StatusReceiverMultiService):
     """
@@ -67,12 +71,26 @@ class WebHookTransmitter(status.base.StatusReceiverMultiService):
 
         log.msg("WebHookTransmitter announcing a %s event" % event)
         for u in self.urls:
-            d = client.getPage(u, method='POST', agent=self.agent,
-                               postdata=encoded_params, followRedirect=0)
-            d.addErrback(lambda x: x.trap(error.PageRedirect))
-            d.addErrback(_trap_status, 204)
-            d.addCallback(lambda x: log.msg("Completed %s event hook" % event))
-            d.addErrback(log.err)
+            self._retrying_fetch(u, encoded_params, event, 0)
+
+    def _retrying_fetch(self, u, data, event, attempt):
+        d = client.getPage(u, method='POST', agent=self.agent,
+                           postdata=data, followRedirect=0)
+
+        def _maybe_retry(e):
+            log.err()
+            if attempt < MAX_ATTEMPTS:
+                reactor.callLater(attempt * RETRY_MULTIPLIER,
+                                  self._retrying_fetch, u, data, event, attempt + 1)
+            else:
+                return e
+
+        d.addErrback(lambda x: x.trap(error.PageRedirect))
+        d.addErrback(_trap_status, 204)
+        d.addCallback(lambda x: log.msg("Completed %s event hook on attempt %d" %
+                                        (event, attempt+1)))
+        d.addErrback(_maybe_retry)
+        d.addErrback(lambda e: log.err("Giving up delivering %s to %s" % (event, u)))
 
     def builderAdded(self, builderName, builder):
         builder.subscribe(self)
