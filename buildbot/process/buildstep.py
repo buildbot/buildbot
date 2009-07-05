@@ -433,7 +433,8 @@ class RemoteShellCommand(LoggedRemoteCommand):
 
     def __init__(self, workdir, command, env=None, 
                  want_stdout=1, want_stderr=1,
-                 timeout=20*60, logfiles={}, usePTY="slave-config"):
+                 timeout=20*60, logfiles={}, usePTY="slave-config",
+                 logEnviron=True):
         """
         @type  workdir: string
         @param workdir: directory where the command ought to run,
@@ -472,6 +473,8 @@ class RemoteShellCommand(LoggedRemoteCommand):
                         produce any output for this number of seconds,
                         the command is hung and should be killed. Use
                         None to disable the timeout.
+
+        @param logEnviron: whether to log env vars on the slave side
         """
 
         self.command = command # stash .command, set it later
@@ -487,6 +490,7 @@ class RemoteShellCommand(LoggedRemoteCommand):
                 'logfiles': logfiles,
                 'timeout': timeout,
                 'usePTY': usePTY,
+                'logEnviron': logEnviron,
                 }
         LoggedRemoteCommand.__init__(self, "shell", args)
 
