@@ -7,7 +7,7 @@ from twisted.application import service
 
 from buildbot import status
 
-MAX_ATTEMPTS     = 5
+MAX_ATTEMPTS     = 10
 RETRY_MULTIPLIER = 5
 
 class WebHookTransmitter(status.base.StatusReceiverMultiService):
@@ -30,15 +30,22 @@ class WebHookTransmitter(status.base.StatusReceiverMultiService):
     The following optional parameters influence when and what data is
     transmitted:
 
-    categories:    If provided, only events belonging to one of the
-                   categories listed will be transmitted.
+    categories:       If provided, only events belonging to one of the
+                      categories listed will be transmitted.
 
-    extra_params:  Additional parameters to be supplied with every request.
+    extra_params:     Additional parameters to be supplied with every request.
+
+    max_attempts:     The maximum number of times to retry transmission
+                      on failure.          Default: 10
+
+    retry_multiplier: A value multiplied by the retry number to wait before
+                      attempting a retry.  Default 5
     """
 
     agent = 'buildbot webhook'
 
-    def __init__(self, url, categories=None, extra_params={}):
+    def __init__(self, url, categories=None, extra_params={},
+                 max_attempts=MAX_ATTEMPTS, retry_multiplier=RETRY_MULTIPLIER):
         status.base.StatusReceiverMultiService.__init__(self)
         if isinstance(url, basestring):
             self.urls = [url]
@@ -46,6 +53,8 @@ class WebHookTransmitter(status.base.StatusReceiverMultiService):
             self.urls = url
         self.categories = categories
         self.extra_params = extra_params
+        self.max_attempts = max_attempts
+        self.retry_multiplier = retry_multiplier
 
     def _transmit(self, event, params={}):
 
@@ -62,13 +71,6 @@ class WebHookTransmitter(status.base.StatusReceiverMultiService):
             new_params.extend(params)
         encoded_params = urllib.urlencode(new_params)
 
-        def _trap_status(x, *acceptable):
-            x.trap(error.Error)
-            if int(x.value.status) in acceptable:
-                return None
-            else:
-                return x
-
         log.msg("WebHookTransmitter announcing a %s event" % event)
         for u in self.urls:
             self._retrying_fetch(u, encoded_params, event, 0)
@@ -79,14 +81,34 @@ class WebHookTransmitter(status.base.StatusReceiverMultiService):
 
         def _maybe_retry(e):
             log.err()
-            if attempt < MAX_ATTEMPTS:
-                reactor.callLater(attempt * RETRY_MULTIPLIER,
+            if attempt < self.max_attempts:
+                reactor.callLater(attempt * self.retry_multiplier,
                                   self._retrying_fetch, u, data, event, attempt + 1)
             else:
                 return e
 
+        def _trap_status(x, *acceptable):
+            x.trap(error.Error)
+            if int(x.value.status) in acceptable:
+                log.msg("Terminating retries of event %s with a %s response"
+                        % (event, x.value.status))
+                return None
+            else:
+                return x
+
+        # Any sort of redirect is considered success
         d.addErrback(lambda x: x.trap(error.PageRedirect))
-        d.addErrback(_trap_status, 204)
+
+        # Any of these status values are considered delivered, or at
+        # least not something that should be retried.
+        d.addErrback(_trap_status,
+                     # These are all actually successes
+                     201, 202, 204,
+                     # These tell me I'm sending stuff it doesn't want.
+                     400, 401, 403, 405, 406, 407, 410, 413, 414, 415,
+                     # This tells me the server can't deal with what I sent
+                     501)
+
         d.addCallback(lambda x: log.msg("Completed %s event hook on attempt %d" %
                                         (event, attempt+1)))
         d.addErrback(_maybe_retry)
