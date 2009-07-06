@@ -265,7 +265,7 @@ event. You can add a <tt>num_events=</tt> argument to override this this.</p>
 
 <h2>Hiding non-Build events</h2>
 
-<p>By passing <tt>show_events=false</tt>, you can remove the "buildslave
+<p>By passing <tt>show_events=true</tt>, you can add the "buildslave
 attached", "buildslave detached", and "builder reconfigured" events that
 appear in-between the actual builds.</p>
 
@@ -328,11 +328,11 @@ class WaterfallHelp(HtmlResource):
         status = self.getStatus(request)
 
         showEvents_checked = 'checked="checked"'
-        if request.args.get("show_events", ["true"])[0].lower() == "true":
+        if request.args.get("show_events", ["false"])[0].lower() == "true":
             showEvents_checked = ''
         show_events_input = ('<p>'
                              '<input type="checkbox" name="show_events" '
-                             'value="false" %s>'
+                             'value="true" %s>'
                              'Hide non-Build events'
                              '</p>\n'
                              ) % showEvents_checked
@@ -686,7 +686,7 @@ class WaterfallStatusResource(HtmlResource):
         # TODO: see if we can use a cached copy
 
         showEvents = False
-        if request.args.get("show_events", ["true"])[0].lower() == "true":
+        if request.args.get("show_events", ["false"])[0].lower() == "true":
             showEvents = True
         filterCategories = request.args.get('category', [])
         filterBranches = [b for b in request.args.get("branch", []) if b]
