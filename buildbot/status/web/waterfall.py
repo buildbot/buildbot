@@ -191,8 +191,8 @@ class SpacerBox(components.Adapter):
         b.spacer = True
         return b
 components.registerAdapter(SpacerBox, Spacer, IBox)
-    
-def insertGaps(g, lastEventTime, idleGap=2):
+
+def insertGaps(g, showEvents, lastEventTime, idleGap=2):
     debug = False
 
     e = g.next()
@@ -212,6 +212,8 @@ def insertGaps(g, lastEventTime, idleGap=2):
 
     while 1:
         e = g.next()
+        if not showEvents and isinstance(e, builder.Event):
+            continue
         starts, finishes = e.getTimes()
         if debug: log.msg("E2", starts, finishes)
         if finishes == 0:
@@ -733,7 +735,10 @@ class WaterfallStatusResource(HtmlResource):
             return event
 
         for s in sources:
-            gen = insertGaps(s.eventGenerator(filterBranches, filterCategories), lastEventTime)
+            gen = insertGaps(s.eventGenerator(filterBranches,
+                                              filterCategories),
+                             showEvents,
+                             lastEventTime)
             sourceGenerators.append(gen)
             # get the first event
             sourceEvents.append(get_event_from(gen))
