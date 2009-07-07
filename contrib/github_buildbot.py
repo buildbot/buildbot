@@ -49,11 +49,11 @@ class GitHubBuildBot(resource.Resource):
         user = payload['repository']['owner']['name']
         repo = payload['repository']['name']
         logging.debug("Payload: " + str(payload))
-        self.github_sync(self.local_dir, user, repo, self.github)
         try:
+            self.github_sync(self.local_dir, user, repo, self.github)
             self.process_change(payload)
         except:
-            raise
+            logging.error("Encountered an exception")
 
     def process_change(self, payload):
         """
