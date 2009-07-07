@@ -52,8 +52,8 @@ class GitHubBuildBot(resource.Resource):
         try:
             self.github_sync(self.local_dir, user, repo, self.github)
             self.process_change(payload)
-        except:
-            logging.error("Encountered an exception")
+        except Exception, e:
+            logging.error("Encountered an exception: %s" % (e,))
 
     def process_change(self, payload):
         """
