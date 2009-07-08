@@ -328,7 +328,7 @@ class Dependent(BaseUpstreamScheduler):
 
     def getPendingBuildTimes(self):
         # report the upstream's value
-        return self.getUpstreamScheduler().getPendingBuildTimes()
+        return self.findUpstreamScheduler().getPendingBuildTimes()
 
     def startService(self):
         service.MultiService.startService(self)
