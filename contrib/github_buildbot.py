@@ -13,7 +13,9 @@ import tempfile
 import logging
 import re
 import os
+import sys
 import commands
+import traceback
 from twisted.web import server, resource
 from twisted.internet import reactor
 from twisted.spread import pb
@@ -36,6 +38,7 @@ class GitHubBuildBot(resource.Resource):
     master = None
     local_dir = None
     port = None
+    private = False
     
     def render_POST(self, request):
         """
@@ -52,8 +55,10 @@ class GitHubBuildBot(resource.Resource):
         try:
             self.github_sync(self.local_dir, user, repo, self.github)
             self.process_change(payload)
-        except Exception, e:
-            logging.error("Encountered an exception: %s" % (e,))
+        except Exception:
+            logging.error("Encountered an exception:")
+            for l in traceback.format_exception(*sys.exc_info()):
+                logging.error(l.strip())
 
     def process_change(self, payload):
         """
@@ -148,6 +153,8 @@ class GitHubBuildBot(resource.Resource):
         """
         Syncs the github repository to the server which hosts the buildmaster.
         """
+        if not os.path.exists(tmp):
+            raise RuntimeError("temporary directory %s does not exist; please create it" % tmp)
         repodir = tmp + "/" + repo + ".git"
         if os.path.exists(repodir):
             os.chdir(repodir)
@@ -165,47 +172,37 @@ class GitHubBuildBot(resource.Resource):
         (result, output) = commands.getstatusoutput(cmd)
         if result != 0:
             logging.error(output)
-            raise UserWarning("Unable to fetch remote changes")
+            raise RuntimeError("Unable to fetch remote changes")
 
     
     def create_repo(self, tmp, user, repo, github_url = 'github.com'):
         """
-        Initializes the bare repository that is a clone of the github 
-        repository on this server.
+        Clones the github repository as a bare repo on the local server, and adds
+        an 'origin' remote to it
         """
-        try:
-            os.chdir(tmp)
-            self.clone_bare_repo(user, repo, github_url)
-            os.chdir(tmp + "/" + repo + ".git")
-            self.add_origin(user, repo, github_url)
-        except UserWarning:
-            raise
+        if self.private:
+            url = 'git@' + github_url + ':' + user + '/' + repo + '.git'
+        else:
+            url = 'git://' + github_url + '/' + user + '/' + repo + '.git'
+        repodir = tmp + "/" + repo + ".git"
 
-    def add_origin(self, user, repo, github_url = 'github.com'):
-        """
-        Adds the origin to the cloned bare repository based on the github 
-        repository.
-        """
-        url = 'git@' + github_url + ':' + user + '/' + repo + '.git'
+        # clone the repo
+        os.chdir(tmp)
+        cmd = "git clone --bare %s %s" % (url, repodir)
+        logging.info("Clone bare repository: %s" % cmd)
+        (result, output) = commands.getstatusoutput(cmd)
+        if result != 0:
+            logging.error(output)
+            raise RuntimeError("Unable to initalize bare repository")
+
+        # now add the origin remote
+        os.chdir(tmp + "/" + repo + ".git")
         cmd = 'git remote add origin ' + url
-        logging.info("Set remote origin as: " + url)
+        logging.info("Set remote origin as: %s: %s" % (url, cmd))
         (result, output) = commands.getstatusoutput(cmd)
         if result != 0:
             logging.error(output)
-            raise UserWarning("Unable to add GitHub origin")
-
-
-    def clone_bare_repo(self, user, repo, github_url = 'github.com'):
-        """
-        Clones the github repository as a bare repo on the local server.
-        """
-        url = 'git@' + github_url + ':' + user + '/' + repo + '.git'
-        cmd = 'git clone --bare ' + url
-        logging.info("Clone bare repository")
-        (result, output) = commands.getstatusoutput(cmd)
-        if result != 0:
-            logging.error(output)
-            raise UserWarning("Unable to initalize bare repository")
+            raise RuntimeError("Unable to add GitHub origin")
 
 def main():
     """
@@ -221,6 +218,10 @@ def main():
     parser.add_option("-p", "--port", 
         help="Port the HTTP server listens to for the GitHub Service Hook"
             + " [default: %default]", default=4000, dest="port")
+        
+    parser.add_option("--private", 
+        help="Use a private github URL (you must have SSH keys set up for this to work)"
+            + " [default: %default]", default=False, action="store_true", dest="private")
         
     parser.add_option("-m", "--buildmaster",
         help="Buildbot Master host and port. ie: localhost:9989 [default:" 
@@ -259,6 +260,7 @@ def main():
     github_bot.github = options.github
     github_bot.master = options.buildmaster
     github_bot.local_dir = options.dir
+    github_bot.private = options.private
     
     site = server.Site(github_bot)
     reactor.listenTCP(options.port, site)
