@@ -118,7 +118,7 @@ class GitHubBuildBot(resource.Resource):
 
     def connectFailed(self, error):
         """
-        Event if connection is failed.  Logs the error.
+        If connection is failed.  Logs the error.
         """
         logging.error("Could not connect to master: %s"
                 % error.getErrorMessage())
