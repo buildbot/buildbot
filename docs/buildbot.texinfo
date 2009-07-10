@@ -5655,6 +5655,12 @@ f.addStep(ShellCommand(
 @end example
 
 
+@item lazylogfiles
+If set to @code{True}, logfiles will be tracked lazily, meaning that they will
+only be added when and if something is written to them. This can be used to
+suppress the display of empty or missing log files. The default is @code{False}.
+
+
 @item timeout
 if the command fails to produce any output for this many seconds, it
 is assumed to be locked up and will be killed.

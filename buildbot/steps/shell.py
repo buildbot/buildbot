@@ -39,6 +39,12 @@ class ShellCommand(LoggingBuildStep):
                     something approximating real-time. (note that logfiles=
                     is actually handled by our parent class LoggingBuildStep)
 
+    @ivar lazylogfiles: Defaults to False. If True, logfiles will be tracked
+                        `lazily', meaning they will only be added when and if
+                        they are written to. Empty or nonexistent logfiles
+                        will be omitted. (Also handled by class
+                        LoggingBuildStep.)
+
     """
 
     name = "shell"
