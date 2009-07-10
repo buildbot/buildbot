@@ -88,11 +88,11 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
             finally:
                 aws_file.close()
         else:
-            assert (aws_id_file_path is None,
-                    'if you supply the identifier and secret_identifier, '
-                    'do not specify the aws_id_file_path')
-            assert (secret_identifier is not None,
-                    'supply both or neither of identifier, secret_identifier')
+            assert aws_id_file_path is None, \
+                    'if you supply the identifier and secret_identifier, ' \
+                    'do not specify the aws_id_file_path'
+            assert secret_identifier is not None, \
+                    'supply both or neither of identifier, secret_identifier'
         # Make the EC2 connection.
         self.conn = boto.connect_ec2(identifier, secret_identifier)
 
