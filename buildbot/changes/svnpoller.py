@@ -164,13 +164,13 @@ class SVNPoller(base.ChangeSource, util.ComparableMixin):
         @param svnbin:       path to svn binary, defaults to just 'svn'. Use
                              this if your subversion command lives in an
                              unusual location.
-	
-	@type  revlinktmpl:  string
-	@param revlinktmpl:  A format string to use for hyperlinks to revision
-			     information. For example, setting this to
-			     "http://reposerver/websvn/revision.php?rev=%s"
-			     would create suitable links on the build pages
-			     to information in websvn on each revision.
+        
+        @type  revlinktmpl:  string
+        @param revlinktmpl:  A format string to use for hyperlinks to revision
+                             information. For example, setting this to
+                             "http://reposerver/websvn/revision.php?rev=%s"
+                             would create suitable links on the build pages
+                             to information in websvn on each revision.
         """
 
         if svnurl.endswith("/"):
@@ -180,7 +180,7 @@ class SVNPoller(base.ChangeSource, util.ComparableMixin):
         self.svnuser = svnuser
         self.svnpasswd = svnpasswd
 
-	self.revlinktmpl = revlinktmpl
+        self.revlinktmpl = revlinktmpl
 
         self.svnbin = svnbin
         self.pollinterval = pollinterval
@@ -400,11 +400,11 @@ class SVNPoller(base.ChangeSource, util.ComparableMixin):
             branch_files = [] # get oldest change first
             revision = str(el.getAttribute("revision"))
 
-	    revlink=''
+            revlink=''
 
-	    if self.revlinktmpl:
-		if revision:
-		    revlink = self.revlinktmpl % urllib.quote_plus(revision)
+            if self.revlinktmpl:
+                if revision:
+                    revlink = self.revlinktmpl % urllib.quote_plus(revision)
 
             dbgMsg("Adding change revision %s" % (revision,))
             # TODO: the rest of buildbot may not be ready for unicode 'who'
@@ -457,7 +457,7 @@ class SVNPoller(base.ChangeSource, util.ComparableMixin):
                                comments=comments,
                                revision=revision,
                                branch=branch,
-			       revlink=revlink)
+                               revlink=revlink)
                     changes.append(c)
 
         return changes
