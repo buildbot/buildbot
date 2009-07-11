@@ -70,7 +70,7 @@ class Contact:
         self.channel = channel
         self.notify_events = {}
         self.subscribed = 0
-	self.add_notification_events(channel.notify_events)
+        self.add_notification_events(channel.notify_events)
 
     silly = {
         "What happen ?": "Somebody set up us the bomb.",
@@ -781,7 +781,7 @@ class IrcStatusFactory(ThrottledClientFactory):
         self.password = password
         self.channels = channels
         self.categories = categories
-	self.notify_events = notify_events
+        self.notify_events = notify_events
 
     def __getstate__(self):
         d = self.__dict__.copy()

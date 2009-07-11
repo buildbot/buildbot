@@ -38,12 +38,12 @@ class BonsaiResult:
               or len(self.nodes[i].files) != len(other.nodes[i].files):
                 return -1
 
-	        for j in range(len(self.nodes[i].files)):
-	            if self.nodes[i].files[j].revision \
-	              != other.nodes[i].files[j].revision \
-	              or self.nodes[i].files[j].filename \
-	              != other.nodes[i].files[j].filename:
-	                return -1
+                for j in range(len(self.nodes[i].files)):
+                    if self.nodes[i].files[j].revision \
+                      != other.nodes[i].files[j].revision \
+                      or self.nodes[i].files[j].filename \
+                      != other.nodes[i].files[j].filename:
+                        return -1
 
         return 0
 

@@ -458,22 +458,22 @@ class UploadDirectory(StepTester, unittest.TestCase):
                                 "build",
                                 "source_dir")
         dircount = 5
-	content = []
-	content.append("this is one source file\n" * 1000)
-	content.append("this is a second source file\n" * 978)
-	content.append("this is a third source file\n" * 473)
+        content = []
+        content.append("this is one source file\n" * 1000)
+        content.append("this is a second source file\n" * 978)
+        content.append("this is a third source file\n" * 473)
         os.mkdir(slavesrc)
-	for i in range(dircount):
-	    os.mkdir(os.path.join(slavesrc, "d%i" % (i)))
-	    for j in range(dircount):
-		curdir = os.path.join("d%i" % (i), "e%i" % (j))
-		os.mkdir(os.path.join(slavesrc, curdir))
-		for h in range(3):
+        for i in range(dircount):
+            os.mkdir(os.path.join(slavesrc, "d%i" % (i)))
+            for j in range(dircount):
+                curdir = os.path.join("d%i" % (i), "e%i" % (j))
+                os.mkdir(os.path.join(slavesrc, curdir))
+                for h in range(3):
                     open(os.path.join(slavesrc, curdir, "file%i" % (h)), "w").write(content[h])
-	    for j in range(dircount):
-		#empty dirs, must be uploaded too
-		curdir = os.path.join("d%i" % (i), "f%i" % (j))
-		os.mkdir(os.path.join(slavesrc, curdir))
+            for j in range(dircount):
+                #empty dirs, must be uploaded too
+                curdir = os.path.join("d%i" % (i), "f%i" % (j))
+                os.mkdir(os.path.join(slavesrc, curdir))
 
         d = self.runStep(step)
         def _checkUpload(results):
@@ -483,17 +483,17 @@ class UploadDirectory(StepTester, unittest.TestCase):
             #    logtext = l[0].getText()
             #    print logtext
             self.failUnlessEqual(results, SUCCESS)
-	    self.failUnless(os.path.exists(masterdest))
+            self.failUnless(os.path.exists(masterdest))
             for i in range(dircount):
-		for j in range(dircount):
-		    curdir = os.path.join("d%i" % (i), "e%i" % (j))
-		    self.failUnless(os.path.exists(os.path.join(masterdest, curdir)))
-		    for h in range(3):
-        		masterdest_contents = open(os.path.join(masterdest, curdir, "file%i" % (h)), "r").read()
-        		self.failUnlessEqual(masterdest_contents, content[h])
-		for j in range(dircount):
-		    curdir = os.path.join("d%i" % (i), "f%i" % (j))
-		    self.failUnless(os.path.exists(os.path.join(masterdest, curdir)))
+                for j in range(dircount):
+                    curdir = os.path.join("d%i" % (i), "e%i" % (j))
+                    self.failUnless(os.path.exists(os.path.join(masterdest, curdir)))
+                    for h in range(3):
+                        masterdest_contents = open(os.path.join(masterdest, curdir, "file%i" % (h)), "r").read()
+                        self.failUnlessEqual(masterdest_contents, content[h])
+                for j in range(dircount):
+                    curdir = os.path.join("d%i" % (i), "f%i" % (j))
+                    self.failUnless(os.path.exists(os.path.join(masterdest, curdir)))
         d.addCallback(_checkUpload)
         return d
 
@@ -525,7 +525,7 @@ class UploadDirectory(StepTester, unittest.TestCase):
             #    logtext = l[0].getText()
             #    print logtext
             self.failUnlessEqual(results, SUCCESS)
-	    self.failUnless(os.path.exists(masterdest))
+            self.failUnless(os.path.exists(masterdest))
         d.addCallback(_checkUpload)
         return d
 
@@ -548,14 +548,14 @@ class UploadDirectory(StepTester, unittest.TestCase):
                                 "build",
                                 "source_dir")
         dircount = 25
-	os.mkdir(slavesrc)
-	for i in range(dircount):
-	    os.mkdir(os.path.join(slavesrc, "d%i" % (i)))
-	    for j in range(dircount):
-		curdir = os.path.join("d%i" % (i), "e%i" % (j))
-		os.mkdir(os.path.join(slavesrc, curdir))
-		curdir = os.path.join("d%i" % (i), "f%i" % (j))
-		os.mkdir(os.path.join(slavesrc, curdir))
+        os.mkdir(slavesrc)
+        for i in range(dircount):
+            os.mkdir(os.path.join(slavesrc, "d%i" % (i)))
+            for j in range(dircount):
+                curdir = os.path.join("d%i" % (i), "e%i" % (j))
+                os.mkdir(os.path.join(slavesrc, curdir))
+                curdir = os.path.join("d%i" % (i), "f%i" % (j))
+                os.mkdir(os.path.join(slavesrc, curdir))
 
         d = self.runStep(step)
         def _checkUpload(results):
@@ -565,13 +565,13 @@ class UploadDirectory(StepTester, unittest.TestCase):
             #    logtext = l[0].getText()
             #    print logtext
             self.failUnlessEqual(results, SUCCESS)
-	    self.failUnless(os.path.exists(masterdest))
-	    for i in range(dircount):
-		for j in range(dircount):
-		    curdir = os.path.join("d%i" % (i), "e%i" % (j))
-		    self.failUnless(os.path.exists(os.path.join(masterdest, curdir)))
-		    curdir = os.path.join("d%i" % (i), "f%i" % (j))
-		    self.failUnless(os.path.exists(os.path.join(masterdest, curdir)))
+            self.failUnless(os.path.exists(masterdest))
+            for i in range(dircount):
+                for j in range(dircount):
+                    curdir = os.path.join("d%i" % (i), "e%i" % (j))
+                    self.failUnless(os.path.exists(os.path.join(masterdest, curdir)))
+                    curdir = os.path.join("d%i" % (i), "f%i" % (j))
+                    self.failUnless(os.path.exists(os.path.join(masterdest, curdir)))
         d.addCallback(_checkUpload)
         return d
 
@@ -594,8 +594,8 @@ class UploadDirectory(StepTester, unittest.TestCase):
                                 "build",
                                 "source_dir")
         os.mkdir(slavesrc)
-	content = "this is one source file\n" * 1000
-	open(os.path.join(slavesrc, "srcfile"), "w").write(content)
+        content = "this is one source file\n" * 1000
+        open(os.path.join(slavesrc, "srcfile"), "w").write(content)
 
         d = self.runStep(step)
         def _checkUpload(results):
@@ -605,9 +605,9 @@ class UploadDirectory(StepTester, unittest.TestCase):
             #    logtext = l[0].getText()
             #    print logtext
             self.failUnlessEqual(results, SUCCESS)
-	    self.failUnless(os.path.exists(masterdest))
-	    masterdest_contents = open(os.path.join(masterdest, "srcfile"), "r").read()
-	    self.failUnlessEqual(masterdest_contents, content)
+            self.failUnless(os.path.exists(masterdest))
+            masterdest_contents = open(os.path.join(masterdest, "srcfile"), "r").read()
+            self.failUnlessEqual(masterdest_contents, content)
         d.addCallback(_checkUpload)
         return d
 
@@ -630,14 +630,14 @@ class UploadDirectory(StepTester, unittest.TestCase):
                                 "build",
                                 "source_dir")
         filecount = 20
-	os.mkdir(slavesrc)
-	content = []
-	content.append("this is one source file\n" * 1000)
-	content.append("this is a second source file\n" * 978)
-	content.append("this is a third source file\n" * 473)
-	for i in range(3):
-	    for j in range(filecount):
-		open(os.path.join(slavesrc, "srcfile%i_%i" % (i, j)), "w").write(content[i])
+        os.mkdir(slavesrc)
+        content = []
+        content.append("this is one source file\n" * 1000)
+        content.append("this is a second source file\n" * 978)
+        content.append("this is a third source file\n" * 473)
+        for i in range(3):
+            for j in range(filecount):
+                open(os.path.join(slavesrc, "srcfile%i_%i" % (i, j)), "w").write(content[i])
 
         d = self.runStep(step)
         def _checkUpload(results):
@@ -647,11 +647,11 @@ class UploadDirectory(StepTester, unittest.TestCase):
             #    logtext = l[0].getText()
             #    print logtext
             self.failUnlessEqual(results, SUCCESS)
-	    self.failUnless(os.path.exists(masterdest))
-	    for i in range(3):
-		for j in range(filecount):
-		    masterdest_contents = open(os.path.join(masterdest, "srcfile%i_%i" % (i, j)), "r").read()
-		    self.failUnlessEqual(masterdest_contents, content[i])
+            self.failUnless(os.path.exists(masterdest))
+            for i in range(3):
+                for j in range(filecount):
+                    masterdest_contents = open(os.path.join(masterdest, "srcfile%i_%i" % (i, j)), "r").read()
+                    self.failUnlessEqual(masterdest_contents, content[i])
         d.addCallback(_checkUpload)
         return d
 
@@ -673,26 +673,26 @@ class UploadDirectory(StepTester, unittest.TestCase):
                                 self.slavebuilderbase,
                                 "build",
                                 "source_dir")
-	dircount = 10
-	os.mkdir(slavesrc)
-	for i in range(dircount):
-	    os.mkdir(os.path.join(slavesrc, "d%i" % (i)))
-	    for j in range(dircount):
-		curdir = os.path.join("d%i" % (i), "e%i" % (j))
-		os.mkdir(os.path.join(slavesrc, curdir))
-		curdir = os.path.join("d%i" % (i), "f%i" % (j))
-		os.mkdir(os.path.join(slavesrc, curdir))
+        dircount = 10
+        os.mkdir(slavesrc)
+        for i in range(dircount):
+            os.mkdir(os.path.join(slavesrc, "d%i" % (i)))
+            for j in range(dircount):
+                curdir = os.path.join("d%i" % (i), "e%i" % (j))
+                os.mkdir(os.path.join(slavesrc, curdir))
+                curdir = os.path.join("d%i" % (i), "f%i" % (j))
+                os.mkdir(os.path.join(slavesrc, curdir))
 
-	filecount = 5
-	content = []
-	content.append("this is one source file\n" * 1000)
-	content.append("this is a second source file\n" * 978)
-	content.append("this is a third source file\n" * 473)
-	for i in range(dircount):
-	    for j in range(dircount):
-		for k in range(3):
-		    for l in range(filecount):
-			open(os.path.join(slavesrc, "d%i" % (i), "e%i" % (j), "srcfile%i_%i" % (k, l)), "w").write(content[k])
+        filecount = 5
+        content = []
+        content.append("this is one source file\n" * 1000)
+        content.append("this is a second source file\n" * 978)
+        content.append("this is a third source file\n" * 473)
+        for i in range(dircount):
+            for j in range(dircount):
+                for k in range(3):
+                    for l in range(filecount):
+                        open(os.path.join(slavesrc, "d%i" % (i), "e%i" % (j), "srcfile%i_%i" % (k, l)), "w").write(content[k])
 
         d = self.runStep(step)
         def _checkUpload(results):
@@ -702,13 +702,13 @@ class UploadDirectory(StepTester, unittest.TestCase):
             #    logtext = l[0].getText()
             #    print logtext
             self.failUnlessEqual(results, SUCCESS)
-	    self.failUnless(os.path.exists(masterdest))
-	    for i in range(dircount):
-		for j in range(dircount):
-		    for k in range(3):
-			for l in range(filecount):
-			    masterdest_contents = open(os.path.join(masterdest, "d%i" % (i), "e%i" % (j), "srcfile%i_%i" % (k, l)), "r").read()
-			    self.failUnlessEqual(masterdest_contents, content[k])
+            self.failUnless(os.path.exists(masterdest))
+            for i in range(dircount):
+                for j in range(dircount):
+                    for k in range(3):
+                        for l in range(filecount):
+                            masterdest_contents = open(os.path.join(masterdest, "d%i" % (i), "e%i" % (j), "srcfile%i_%i" % (k, l)), "r").read()
+                            self.failUnlessEqual(masterdest_contents, content[k])
         d.addCallback(_checkUpload)
         return d
 
@@ -731,7 +731,7 @@ class UploadDirectory(StepTester, unittest.TestCase):
                                 self.slavebuilderbase,
                                 "build",
                                 "source_dir")
-	content = 'x' * 1024*1024*8
+        content = 'x' * 1024*1024*8
         os.mkdir(slavesrc)
         open(os.path.join(slavesrc, "file"), "w").write(content)
 
@@ -739,7 +739,7 @@ class UploadDirectory(StepTester, unittest.TestCase):
         def _checkUpload(results):
             step_status = step.step_status
             self.failUnlessEqual(results, SUCCESS)
-	    self.failUnless(os.path.exists(masterdest))
+            self.failUnless(os.path.exists(masterdest))
             masterdest_contents = open(os.path.join(masterdest, "file"), "r").read()
             self.failUnlessEqual(masterdest_contents, content)
         d.addCallback(_checkUpload)
