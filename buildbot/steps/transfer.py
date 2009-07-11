@@ -59,6 +59,42 @@ class _FileWriter(pb.Referenceable):
             os.unlink(self.destfile)
 
 
+def _extractall(self, path=".", members=None):
+    """Fallback extractall method for TarFile, in case it doesn't have its own."""
+
+    import copy
+    import operator
+
+    directories = []
+
+    if members is None:
+        members = self
+
+    for tarinfo in members:
+        if tarinfo.isdir():
+            # Extract directories with a safe mode.
+            directories.append(tarinfo)
+            tarinfo = copy.copy(tarinfo)
+            tarinfo.mode = 0700
+        self.extract(tarinfo, path)
+
+    # Reverse sort directories.
+    directories.sort(lambda a, b: cmp(a.name, b.name))
+    directories.reverse()
+
+    # Set correct owner, mtime and filemode on directories.
+    for tarinfo in directories:
+        dirpath = os.path.join(path, tarinfo.name)
+        try:
+            self.chown(tarinfo, dirpath)
+            self.utime(tarinfo, dirpath)
+            self.chmod(tarinfo, dirpath)
+        except tarfile.ExtractError, e:
+            if self.errorlevel > 1:
+                raise
+            else:
+                self._dbg(1, "tarfile: %s" % e)
+
 class _DirectoryWriter(_FileWriter):
     """
     A DirectoryWriter is implemented as a FileWriter, with an added post-processing
@@ -86,6 +122,8 @@ class _DirectoryWriter(_FileWriter):
             mode='r|gz'
         else:
             mode = 'r'
+        if not hasattr(tarfile.TarFile, 'extractall'):
+            tarfile.TarFile.extractall = _extractall
         archive = tarfile.open(name=self.tarname, mode=mode, fileobj=fileobj)
         archive.extractall(path=self.destroot)
         os.remove(self.tarname)
