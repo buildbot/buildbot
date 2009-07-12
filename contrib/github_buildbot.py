@@ -195,15 +195,6 @@ class GitHubBuildBot(resource.Resource):
             logging.error(output)
             raise RuntimeError("Unable to initalize bare repository")
 
-        # now add the origin remote
-        os.chdir(tmp + "/" + repo + ".git")
-        cmd = 'git remote add origin ' + url
-        logging.info("Set remote origin as: %s: %s" % (url, cmd))
-        (result, output) = commands.getstatusoutput(cmd)
-        if result != 0:
-            logging.error(output)
-            raise RuntimeError("Unable to add GitHub origin")
-
 def main():
     """
     The main event loop that starts the server and configures it.
