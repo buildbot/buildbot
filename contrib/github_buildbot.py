@@ -188,7 +188,7 @@ class GitHubBuildBot(resource.Resource):
 
         # clone the repo
         os.chdir(tmp)
-        cmd = "git clone --bare %s %s" % (url, repodir)
+        cmd = "git clone --mirror %s %s" % (url, repodir)
         logging.info("Clone bare repository: %s" % cmd)
         (result, output) = commands.getstatusoutput(cmd)
         if result != 0:
