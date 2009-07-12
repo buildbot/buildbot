@@ -129,7 +129,6 @@ class BuildStep(unittest.TestCase):
                                "shell",
                                 {'command': "argle bargle",
                                  'workdir': "murkle",
-                                 'logEnviron' : True,
                                  'want_stdout': 1,
                                  'want_stderr': 1,
                                  'logfiles': {},
