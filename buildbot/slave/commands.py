@@ -2499,7 +2499,7 @@ class Mercurial(SourceBase):
         self.repourl = args['repourl']
         self.clobberOnBranchChange = args.get('clobberOnBranchChange', True)
         self.sourcedata = "%s\n" % self.repourl
-        self.branchType = args['branchType']
+        self.branchType = args.get('branchType', 'dirname')
         self.stdout = ""
         self.stderr = ""
 
