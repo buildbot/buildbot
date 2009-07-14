@@ -52,7 +52,7 @@ class GitHubBuildBot(resource.Resource):
             payload = json.loads(request.args['payload'][0])
             user = payload['repository']['owner']['name']
             repo = payload['repository']['name']
-            self.private = payload['repository']['Private']
+            self.private = payload['repository']['private']
             logging.debug("Payload: " + str(payload))
             self.github_sync(self.local_dir, user, repo, self.github)
             self.process_change(payload)
