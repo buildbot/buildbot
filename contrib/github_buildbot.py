@@ -48,12 +48,12 @@ class GitHubBuildBot(resource.Resource):
             request
                 the http request object
         """
-        payload = json.loads(request.args['payload'][0])
-        user = payload['repository']['owner']['name']
-        repo = payload['repository']['name']
-        self.private = payload['repository']['Private']
-        logging.debug("Payload: " + str(payload))
         try:
+            payload = json.loads(request.args['payload'][0])
+            user = payload['repository']['owner']['name']
+            repo = payload['repository']['name']
+            self.private = payload['repository']['Private']
+            logging.debug("Payload: " + str(payload))
             self.github_sync(self.local_dir, user, repo, self.github)
             self.process_change(payload)
         except Exception:
