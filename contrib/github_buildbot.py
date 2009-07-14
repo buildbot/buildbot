@@ -51,14 +51,15 @@ class GitHubBuildBot(resource.Resource):
         payload = json.loads(request.args['payload'][0])
         user = payload['repository']['owner']['name']
         repo = payload['repository']['name']
+        self.private = payload['repository']['Private']
         logging.debug("Payload: " + str(payload))
         try:
             self.github_sync(self.local_dir, user, repo, self.github)
             self.process_change(payload)
         except Exception:
             logging.error("Encountered an exception:")
-            for l in traceback.format_exception(*sys.exc_info()):
-                logging.error(l.strip())
+            for msg in traceback.format_exception(*sys.exc_info()):
+                logging.error(msg.strip())
 
     def process_change(self, payload):
         """
@@ -154,7 +155,8 @@ class GitHubBuildBot(resource.Resource):
         Syncs the github repository to the server which hosts the buildmaster.
         """
         if not os.path.exists(tmp):
-            raise RuntimeError("temporary directory %s does not exist; please create it" % tmp)
+            raise RuntimeError("temporary directory %s does not exist; \
+                                please create it" % tmp)
         repodir = tmp + "/" + repo + ".git"
         if os.path.exists(repodir):
             os.chdir(repodir)
@@ -210,10 +212,6 @@ def main():
         help="Port the HTTP server listens to for the GitHub Service Hook"
             + " [default: %default]", default=4000, dest="port")
         
-    parser.add_option("--private", 
-        help="Use a private github URL (you must have SSH keys set up for this to work)"
-            + " [default: %default]", default=False, action="store_true", dest="private")
-        
     parser.add_option("-m", "--buildmaster",
         help="Buildbot Master host and port. ie: localhost:9989 [default:" 
             + " %default]", default="localhost:9989", dest="buildmaster")
@@ -251,7 +249,6 @@ def main():
     github_bot.github = options.github
     github_bot.master = options.buildmaster
     github_bot.local_dir = options.dir
-    github_bot.private = options.private
     
     site = server.Site(github_bot)
     reactor.listenTCP(options.port, site)
