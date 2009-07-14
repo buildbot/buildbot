@@ -179,8 +179,7 @@ class GitHubBuildBot(resource.Resource):
     
     def create_repo(self, tmp, user, repo, github_url = 'github.com'):
         """
-        Clones the github repository as a bare repo on the local server, and adds
-        an 'origin' remote to it
+        Clones the github repository as a mirror repo on the local server
         """
         if self.private:
             url = 'git@' + github_url + ':' + user + '/' + repo + '.git'
