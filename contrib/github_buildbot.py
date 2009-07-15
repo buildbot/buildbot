@@ -106,7 +106,6 @@ class GitHubBuildBot(resource.Resource):
         deferred = factory.login(credentials.UsernamePassword("change",
                                                                 "changepw"))
         reactor.connectTCP(host, port, factory)
-
         deferred.addErrback(self.connectFailed)
         deferred.addCallback(self.connected, changes)
 
@@ -191,7 +190,6 @@ def main():
     github_bot = GitHubBuildBot()
     github_bot.github = options.github
     github_bot.master = options.buildmaster
-    github_bot.local_dir = options.dir
     
     site = server.Site(github_bot)
     reactor.listenTCP(options.port, site)
