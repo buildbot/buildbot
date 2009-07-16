@@ -338,7 +338,7 @@ class HtmlResource(resource.Resource):
         data += "<head>\n"
         for he in s.head_elements:
             data += " " + self.fillTemplate(he, request) + "\n"
-            data += self.head(request)
+        data += self.head(request)
         data += "</head>\n\n"
 
         data += '<body %s>\n' % " ".join(['%s="%s"' % (k,v)
