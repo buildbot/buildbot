@@ -2321,6 +2321,8 @@ class Bzr(VCBase, unittest.TestCase):
         # TODO: testRetry has the same problem with Bzr as it does for
         # Arch
         return d
+    # Bzr is *slow*, and the testCheckout step takes a *very* long time
+    testCheckout.timeout = 480
 
     def testPatch(self):
         self.helper.vcargs = { 'baseURL': self.helper.bzr_base + "/",
