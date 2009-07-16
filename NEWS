@@ -1,6 +1,11 @@
 User visible changes in Buildbot.             -*- outline -*-
 
-* Release 0.7.11 (XXX)
+* Release 0.7.11p (July 16, 2009)
+
+Fixes a few test failures in 0.7.11, and gives a default value for branchType
+if it is not specified by the master.
+
+* Release 0.7.11 (July 5, 2009)
 
 Developers too numerous to mention contributed to this release.  Buildbot has
 truly become a community-maintained application.  Much hard work is not
