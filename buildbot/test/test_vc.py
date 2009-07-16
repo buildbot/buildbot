@@ -2880,8 +2880,9 @@ class GitHelper(BaseHelper):
         w = self.dovc(self.repbase, "init", env=env)
         yield w; w.getResult()
 
-        # NetBSD uses templates that stupidly enable the update hook, requiring a
-        # non-default description.  This is broken, but easily worked around.
+        # NetBSD pkgsrc uses templates that stupidly enable the update hook, requiring
+        # a non-default description.  This is broken, but easily worked around.
+        # http://www.netbsd.org/cgi-bin/query-pr-single.pl?number=41683
         descrfile = os.path.join(self.gitrepo, "description")
         open(descrfile, "w").write("NetBSD workaround")
 
