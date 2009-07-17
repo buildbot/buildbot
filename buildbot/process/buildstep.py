@@ -431,10 +431,10 @@ class RemoteShellCommand(LoggedRemoteCommand):
     command is finished, it will fire a Deferred. You can then check the
     results of the command and parse the output however you like."""
 
-    def __init__(self, workdir, command, env=None, 
+    def __init__(self, workdir, command, env=None,
                  want_stdout=1, want_stderr=1,
-                 timeout=20*60, logfiles={}, usePTY="slave-config",
-                 logEnviron=True):
+                 timeout=20*60, maxTime=None, logfiles={},
+                 usePTY="slave-config", logEnviron=True):
         """
         @type  workdir: string
         @param workdir: directory where the command ought to run,
@@ -475,6 +475,11 @@ class RemoteShellCommand(LoggedRemoteCommand):
                         None to disable the timeout.
 
         @param logEnviron: whether to log env vars on the slave side
+
+        @type  maxTime: int
+        @param maxTime: tell the remote that if the command fails to complete
+                        in this number of seconds, the command should be
+                        killed.  Use None to disable maxTime.
         """
 
         self.command = command # stash .command, set it later
@@ -489,6 +494,7 @@ class RemoteShellCommand(LoggedRemoteCommand):
                 'want_stderr': want_stderr,
                 'logfiles': logfiles,
                 'timeout': timeout,
+                'maxTime': maxTime,
                 'usePTY': usePTY,
                 'logEnviron': logEnviron,
                 }
