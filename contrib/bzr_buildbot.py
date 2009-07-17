@@ -209,7 +209,7 @@ if DEFINE_POLLER:
         compare_attrs = ['url']
 
         def __init__(self, url, poll_interval=10*60, blame_merge_author=False,
-                     branch_name=None):
+                     branch_name=None, category=None):
             # poll_interval is in seconds, so default poll_interval is 10
             # minutes.
             # bzr+ssh://bazaar.launchpad.net/~launchpad-pqm/launchpad/devel/
@@ -221,6 +221,7 @@ if DEFINE_POLLER:
             self.loop = twisted.internet.task.LoopingCall(self.poll)
             self.blame_merge_author = blame_merge_author
             self.branch_name = branch_name
+            self.category = category
 
         def startService(self):
             twisted.python.log.msg("BzrPoller(%s) starting" % self.url)
@@ -297,6 +298,7 @@ if DEFINE_POLLER:
             if (self.last_revision is None or
                 change['revision'] > self.last_revision):
                 change['branch'] = branch_name
+                change['category'] = self.category
                 changes.append(change)
                 if self.last_revision is not None:
                     while self.last_revision + 1 < change['revision']:

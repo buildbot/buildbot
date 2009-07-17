@@ -15,6 +15,9 @@ from buildbot.status.mail import MailNotifier
 from buildbot.interfaces import IBuildSlave, ILatentBuildSlave
 from buildbot.process.properties import Properties
 
+import sys
+if sys.version_info[:3] < (2,4,0):
+    from sets import Set as set
 
 class AbstractBuildSlave(NewCredPerspective, service.MultiService):
     """This is the master-side representative for a remote buildbot slave.

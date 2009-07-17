@@ -777,7 +777,7 @@ class BuildStepStatus(styles.Versioned):
         return self.urls.copy()
 
     def isStarted(self):
-	return (self.started is not None)
+        return (self.started is not None)
 
     def isFinished(self):
         return (self.finished is not None)
@@ -1655,6 +1655,9 @@ class BuilderStatus(styles.Versioned):
             b = self.getBuild(-2)
         return b
 
+    def getCategory(self):
+        return self.category
+
     def getBuild(self, number):
         if number < 0:
             number = self.nextBuildNumber + number
@@ -1704,7 +1707,7 @@ class BuilderStatus(styles.Versioned):
                 if got >= num_builds:
                     return
 
-    def eventGenerator(self, branches=[]):
+    def eventGenerator(self, branches=[], categories=[]):
         """This function creates a generator which will provide all of this
         Builder's status events, starting with the most recent and
         progressing backwards in time. """
@@ -1725,6 +1728,8 @@ class BuilderStatus(styles.Versioned):
             if not b:
                 break
             if branches and not b.getSourceStamp().branch in branches:
+                continue
+            if categories and not b.getBuilder().getCategory() in categories:
                 continue
             steps = b.getSteps()
             for Ns in range(1, len(steps)+1):
@@ -2092,11 +2097,11 @@ class Status:
                     break
             else:
                 return None
-            return prefix + "builders/%s/builds/%d/steps/%s/logs/%d" % (
+            return prefix + "builders/%s/builds/%d/steps/%s/logs/%s" % (
                 urllib.quote(builder.getName(), safe=''),
                 build.getNumber(),
                 urllib.quote(step.getName(), safe=''),
-                lognum)
+                urllib.quote(log.getName()))
 
     def getChangeSources(self):
         return list(self.botmaster.parent.change_svc)

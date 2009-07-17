@@ -48,7 +48,7 @@ class OneBuildSlaveResource(HtmlResource, OneLineMixin):
         if builder_control is not None:
             stopURL = path_to_build(req, build) + '/stop'
             data += '''
-<form action="%s" class="command stopbuild" style="display:inline">
+<form action="%s" class="command stopbuild" style="display:inline" method="post">
   <input type="submit" value="Stop Build" />
 </form>''' % stopURL
         return data

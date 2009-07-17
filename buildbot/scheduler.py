@@ -19,7 +19,7 @@ from buildbot.process.properties import Properties
 
 class BaseScheduler(service.MultiService, util.ComparableMixin):
     """
-    A Schduler creates BuildSets and submits them to the BuildMaster.
+    A Scheduler creates BuildSets and submits them to the BuildMaster.
 
     @ivar name: name of the scheduler
 
@@ -81,7 +81,7 @@ class BaseUpstreamScheduler(BaseScheduler):
 class Scheduler(BaseUpstreamScheduler):
     """The default Scheduler class will run a build after some period of time
     called the C{treeStableTimer}, on a given set of Builders. It only pays
-    attention to a single branch. You you can provide a C{fileIsImportant}
+    attention to a single branch. You can provide a C{fileIsImportant}
     function which will evaluate each Change to decide whether or not it
     should trigger a new build.
     """
@@ -95,11 +95,11 @@ class Scheduler(BaseUpstreamScheduler):
         """
         @param name: the name of this Scheduler
         @param branch: The branch name that the Scheduler should pay
-                       attention to. Any Change that is not on this branch
+                       attention to. Any Change that is not in this branch
                        will be ignored. It can be set to None to only pay
                        attention to the default branch.
         @param treeStableTimer: the duration, in seconds, for which the tree
-                                must remain unchanged before a build will be
+                                must remain unchanged before a build is
                                 triggered. This is intended to avoid builds
                                 of partially-committed fixes.
         @param builderNames: a list of Builder names. When this Scheduler
@@ -222,14 +222,14 @@ class AnyBranchScheduler(BaseUpstreamScheduler):
         """
         @param name: the name of this Scheduler
         @param branches: The branch names that the Scheduler should pay
-                         attention to. Any Change that is not on one of these
+                         attention to. Any Change that is not in one of these
                          branches will be ignored. It can be set to None to
                          accept changes from any branch. Don't use [] (an
                          empty list), because that means we don't pay
                          attention to *any* branches, so we'll never build
                          anything.
         @param treeStableTimer: the duration, in seconds, for which the tree
-                                must remain unchanged before a build will be
+                                must remain unchanged before a build is
                                 triggered. This is intended to avoid builds
                                 of partially-committed fixes.
         @param builderNames: a list of Builder names. When this Scheduler
@@ -319,7 +319,8 @@ class Dependent(BaseUpstreamScheduler):
     def __init__(self, name, upstream, builderNames, properties={}):
         assert interfaces.IUpstreamScheduler.providedBy(upstream)
         BaseUpstreamScheduler.__init__(self, name, properties)
-        self.upstream = upstream
+        self.upstream_name = upstream.name
+        self.upstream = None
         self.builderNames = builderNames
 
     def listBuilderNames(self):
@@ -327,15 +328,17 @@ class Dependent(BaseUpstreamScheduler):
 
     def getPendingBuildTimes(self):
         # report the upstream's value
-        return self.upstream.getPendingBuildTimes()
+        return self.findUpstreamScheduler().getPendingBuildTimes()
 
     def startService(self):
         service.MultiService.startService(self)
+        self.upstream = self.findUpstreamScheduler()
         self.upstream.subscribeToSuccessfulBuilds(self.upstreamBuilt)
 
     def stopService(self):
         d = service.MultiService.stopService(self)
         self.upstream.unsubscribeToSuccessfulBuilds(self.upstreamBuilt)
+        self.upstream = None
         return d
 
     def upstreamBuilt(self, ss):
@@ -343,16 +346,23 @@ class Dependent(BaseUpstreamScheduler):
                     properties=self.properties)
         self.submitBuildSet(bs)
 
-    def checkUpstreamScheduler(self):
+    def findUpstreamScheduler(self):
         # find our *active* upstream scheduler (which may not be self.upstream!) by name
-        up_name = self.upstream.name
         upstream = None
         for s in self.parent.allSchedulers():
-            if s.name == up_name and interfaces.IUpstreamScheduler.providedBy(s):
+            if s.name == self.upstream_name and interfaces.IUpstreamScheduler.providedBy(s):
                 upstream = s
         if not upstream:
             log.msg("ERROR: Couldn't find upstream scheduler of name <%s>" %
-                up_name)
+                self.upstream_name)
+        return upstream
+
+    def checkUpstreamScheduler(self):
+        # if we don't already have an upstream, then there's nothing to worry about
+        if not self.upstream:
+            return
+
+        upstream = self.findUpstreamScheduler()
 
         # if it's already correct, we're good to go
         if upstream is self.upstream:

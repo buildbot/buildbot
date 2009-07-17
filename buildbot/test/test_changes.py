@@ -7,6 +7,10 @@ from buildbot import master
 from buildbot.changes import pb
 from buildbot.scripts import runner
 
+import sys
+if sys.version_info[:3] < (2,4,0):
+    from sets import Set as set
+
 d1 = {'files': ["Project/foo.c", "Project/bar/boo.c"],
       'who': "marvin",
       'comments': "Some changes in Project"}

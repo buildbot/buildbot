@@ -195,8 +195,8 @@ class RunMixin:
         log.msg("doing shutdownAllSlaves")
         dl = []
         for slave in self.slaves.values():
+            slave.stopService()
             dl.append(slave.waitUntilDisconnected())
-            dl.append(defer.maybeDeferred(slave.stopService))
         d = defer.DeferredList(dl)
         d.addCallback(self._shutdownAllSlavesDone)
         return d

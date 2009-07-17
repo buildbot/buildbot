@@ -19,6 +19,7 @@ from buildbot.status.web.waterfall import WaterfallStatusResource
 from buildbot.status.web.grid import GridStatusResource, TransposedGridStatusResource
 from buildbot.status.web.changes import ChangesResource
 from buildbot.status.web.builder import BuildersResource
+from buildbot.status.web.buildstatus import BuildStatusStatusResource 
 from buildbot.status.web.slaves import BuildSlavesResource
 from buildbot.status.web.xmlrpc import XMLRPCServer
 from buildbot.status.web.about import AboutBuildbot
@@ -513,6 +514,7 @@ class WebStatus(service.MultiService):
         self.putChild("builders", BuildersResource()) # has builds/steps/logs
         self.putChild("changes", ChangesResource())
         self.putChild("buildslaves", BuildSlavesResource())
+        self.putChild("buildstatus", BuildStatusStatusResource())
         #self.putChild("schedulers", SchedulersResource())
         self.putChild("one_line_per_build",
                       OneLinePerBuild(numbuilds=numbuilds))

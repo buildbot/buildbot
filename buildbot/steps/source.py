@@ -360,7 +360,8 @@ class SVN(Source):
     name = 'svn'
 
     def __init__(self, svnurl=None, baseURL=None, defaultBranch=None,
-                 directory=None, username=None, password=None, **kwargs):
+                 directory=None, username=None, password=None,
+                 extra_args=None, **kwargs):
         """
         @type  svnurl: string
         @param svnurl: the URL which points to the Subversion server,
@@ -396,6 +397,7 @@ class SVN(Source):
         self.branch = defaultBranch
         self.username = username
         self.password = password
+        self.extra_args = extra_args
 
         Source.__init__(self, **kwargs)
         self.addFactoryArguments(svnurl=svnurl,
@@ -404,6 +406,7 @@ class SVN(Source):
                                  directory=directory,
                                  username=username,
                                  password=password,
+                                 extra_args=extra_args,
                                  )
 
         if not svnurl and not baseURL:
@@ -484,6 +487,9 @@ class SVN(Source):
                 raise BuildSlaveTooOldError(m)
             if self.username is not None: self.args['username'] = self.username
             if self.password is not None: self.args['password'] = self.password
+
+        if self.extra_args is not None:
+            self.args['extra_args'] = self.extra_args
 
         revstuff = []
         if branch is not None and branch != self.branch:

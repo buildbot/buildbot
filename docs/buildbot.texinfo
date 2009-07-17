@@ -1,7 +1,7 @@
 \input texinfo @c -*-texinfo-*-
 @c %**start of header
 @setfilename buildbot.info
-@settitle BuildBot Manual 0.7.10
+@settitle BuildBot Manual 0.7.11
 @defcodeindex cs
 @defcodeindex sl
 @defcodeindex bf
@@ -811,7 +811,7 @@ buildbot upgrade-master @var{basedir}
 @end example
 
 This command will also scan your @file{master.cfg} file for
-incompatbilities (by loading it and printing any errors or deprecation
+incompatibilities (by loading it and printing any errors or deprecation
 warnings that occur). Each buildbot release tries to be compatible
 with configurations that worked cleanly (i.e. without deprecation
 warnings) on the previous release: any functions or classes that are
@@ -1582,7 +1582,7 @@ to get a tree with a specific state: a tree which includes this Change
 information is unavailable, the @code{.revision} attribute will be
 @code{None}. These revisions are provided by the ChangeSource, and
 consumed by the @code{computeSourceRevision} method in the appropriate
-@code{step.Source} class.
+@code{source.Source} class.
 
 @table @samp
 @item CVS
@@ -3372,8 +3372,8 @@ c['status'].append(words.IRC(host="irc.example.com", nick="bb",
 Status delivery has its own chapter, @xref{Status Delivery}, in which
 all the built-in status targets are documented.
 
-@node Limiting Memory and Disk Usage::
-@section Limiting Memory and Disk Usage::
+@node Limiting Memory and Disk Usage
+@section Limiting Memory and Disk Usage
 
 Buildbot stores historical information on disk in the form of "Pickle" files
 and compressed logfiles.  In a large installation, these can quickly consume
@@ -5174,6 +5174,10 @@ if specified, this will be passed to the @code{svn} binary with a
 if specified, this will be passed to the @code{svn} binary with a
 @code{--password} option.  The password itself will be suitably obfuscated in
 the logs.
+
+@item extra_args
+if specified, an array of strings that will be passed as extra
+arguments to the @code{svn} binary.
 
 @end table
 
@@ -7075,7 +7079,7 @@ Example:
 
 @example
 # use the s() convenience function defined earlier
-f = factory.GNUAutoconf(source=s(step.SVN, svnurl=URL, mode="copy"),
+f = factory.GNUAutoconf(source=s(source.SVN, svnurl=URL, mode="copy"),
                         flags=["--disable-nls"])
 @end example
 
@@ -7254,17 +7258,6 @@ changed functionality.
 
 Arguments:
 @table @code
-@item source
-(required): A step specification tuple, like that used by GNUAutoconf.
-
-@item buildpython
-A list (argv array) of strings which specifies the @code{python}
-executable to use when building the package. Defaults to just
-@code{['python']}. It may be useful to add flags here, to supress
-warnings during compilation of extension modules. This list is
-extended with @code{['./setup.py', 'build']} and then executed in a
-ShellCommand.
-
 @item testpath
 Provides a directory to add to @code{PYTHONPATH} when running the unit
 tests, if tests are being run. Defaults to @code{.} to include the
@@ -7272,15 +7265,14 @@ project files in-place. The generated build library is frequently
 architecture-dependent, but may simply be @file{build/lib} for
 pure-python modules.
 
-@item trialpython
-Another list of strings used to build the command that actually runs
-trial. This is prepended to the contents of the @code{trial} argument
-below. It may be useful to add @code{-W} flags here to supress
-warnings that occur while tests are being run. Defaults to an empty
-list, meaning @code{trial} will be run without an explicit
-interpreter, which is generally what you want if you're using
-@file{/usr/bin/trial} instead of, say, the @file{./bin/trial} that
-lives in the Twisted source tree.
+@item python
+which python executable to use. This list will form the start of
+the argv array that will launch trial. If you use this,
+you should set @code{trial} to an explicit path (like
+@code{/usr/bin/trial} or @code{./bin/trial}). The parameter defaults to @code{None}, which
+leaves it out entirely (running @code{trial args} instead of
+@code{python ./bin/trial args}). Likely values are @code{['python']},
+@code{['python2.2']}, or @code{['python', '-Wall']}.
 
 @item trial
 provides the name of the @code{trial} command. It is occasionally
@@ -7288,83 +7280,46 @@ useful to use an alternate executable, such as @code{trial2.2} which
 might run the tests under an older version of Python. Defaults to
 @code{trial}.
 
+@item trialMode
+a list of arguments to pass to trial, specifically to set the reporting mode.
+This defaults to @code{['--reporter=bwverbose']}, which only works for
+Twisted-2.1.0 and later.
+
+@item trialArgs
+a list of arguments to pass to trial, available to turn on any extra flags you
+like. Defaults to @code{[]}.
+
 @item tests
 Provides a module name or names which contain the unit tests for this
 project. Accepts a string, typically @code{PROJECTNAME.test}, or a
 list of strings. Defaults to None, indicating that no tests should be
-run. You must either set this or @code{useTestCaseNames} to do anyting
-useful with the Trial factory.
+run. You must either set this or @code{testChanges}.
 
-@item useTestCaseNames
-Tells the Step to provide the names of all changed .py files to trial,
-so it can look for test-case-name tags and run just the matching test
-cases. Suitable for use in quick builds. Defaults to False.
+@item testChanges
+if True, ignore the @code{tests} parameter and instead ask the Build for all
+the files that make up the Changes going into this build. Pass these filenames
+to trial and ask it to look for test-case-name tags, running just the tests
+necessary to cover the changes.
+
+@item recurse
+If @code{True}, tells Trial (with the @code{--recurse} argument) to look in all
+subdirectories for additional test cases. 
+
+@item reactor
+which reactor to use, like 'gtk' or 'java'. If not provided, the Twisted's
+usual platform-dependent default is used.
 
 @item randomly
 If @code{True}, tells Trial (with the @code{--random=0} argument) to
 run the test cases in random order, which sometimes catches subtle
 inter-test dependency bugs. Defaults to @code{False}.
-
-@item recurse
-If @code{True}, tells Trial (with the @code{--recurse} argument) to
-look in all subdirectories for additional test cases. It isn't clear
-to me how this works, but it may be useful to deal with the
-unknown-PROJECTNAME problem described above, and is currently used in
-the Twisted buildbot to accomodate the fact that test cases are now
-distributed through multiple twisted.SUBPROJECT.test directories.
-
 @end table
 
-Unless one of @code{trialModule} or @code{useTestCaseNames}
-are set, no tests will be run.
+The step can also take any of the @code{ShellCommand} arguments, e.g.,
+@code{haltOnFailure}.
 
-Some quick examples follow. Most of these examples assume that the
-target python code (the ``code under test'') can be reached directly
-from the root of the target tree, rather than being in a @file{lib/}
-subdirectory.
-
-@example
-#  Trial(source, tests="toplevel.test") does:
-#   python ./setup.py build
-#   PYTHONPATH=. trial -to toplevel.test
-
-#  Trial(source, tests=["toplevel.test", "other.test"]) does:
-#   python ./setup.py build
-#   PYTHONPATH=. trial -to toplevel.test other.test
-
-#  Trial(source, useTestCaseNames=True) does:
-#   python ./setup.py build
-#   PYTHONPATH=. trial -to --testmodule=foo/bar.py..  (from Changes)
-
-#  Trial(source, buildpython=["python2.3", "-Wall"], tests="foo.tests"):
-#   python2.3 -Wall ./setup.py build
-#   PYTHONPATH=. trial -to foo.tests
-
-#  Trial(source, trialpython="python2.3", trial="/usr/bin/trial",
-#        tests="foo.tests") does:
-#   python2.3 -Wall ./setup.py build
-#   PYTHONPATH=. python2.3 /usr/bin/trial -to foo.tests
-
-# For running trial out of the tree being tested (only useful when the
-# tree being built is Twisted itself):
-#  Trial(source, trialpython=["python2.3", "-Wall"], trial="./bin/trial",
-#        tests="foo.tests") does:
-#   python2.3 -Wall ./setup.py build
-#   PYTHONPATH=. python2.3 -Wall ./bin/trial -to foo.tests
-@end example
-
-If the output directory of @code{./setup.py build} is known, you can
-pull the python code from the built location instead of the source
-directories. This should be able to handle variations in where the
-source comes from, as well as accomodating binary extension modules:
-
-@example
-# Trial(source,tests="toplevel.test",testpath='build/lib.linux-i686-2.3')
-# does:
-#  python ./setup.py build
-#  PYTHONPATH=build/lib.linux-i686-2.3 trial -to toplevel.test
-@end example
-
+Unless one of @code{tests} or @code{testChanges} are set, the step will
+generate an exception.
 
 @node Status Delivery, Command-line tool, Build Process, Top
 @chapter Status Delivery
@@ -7620,6 +7575,12 @@ non-Build events, like slaves attaching and detaching, as well as
 reconfiguration events. 'show_events=false' hides these events. The
 default is to show them.
 
+By adding the 'failures_only=true' query argument, the Waterfall is
+restricted to only showing information about the builders that
+are currently failing. A builder is considered failing if the
+last finished build was not successful, a step in the current
+build(s) is failing, or if the builder is offline.
+
 The @code{last_time=}, @code{first_time=}, and @code{show_time=}
 arguments will control what interval of time is displayed. The default
 is to show the latest events, but these can be used to look at earlier
@@ -7640,10 +7601,10 @@ and the revisions are listed across the top.
 By adding one ore more ``category='' arguments the grid will be
 restricted to revisions in those categories.
 
-A ``width=N'' argument will limit the number of revisiosn shown to N,
+A ``width=N'' argument will limit the number of revisions shown to N,
 defaulting to 5.
 
-A ``branch=BRANCHNAME'' argument will limit the grid to revisiosn on
+A ``branch=BRANCHNAME'' argument will limit the grid to revisions on
 branch BRANCHNAME.
 
 @item /tgrid
@@ -7665,6 +7626,11 @@ feed output.
 This provides an atom feed summarizing all failed builds. The same
 query-arguments used by 'waterfall' can be added to filter the feed
 output.
+
+@item /buildstatus?builder=$BUILDERNAME&number=$BUILDNUM
+
+This displays a waterfall-like chronologically-oriented view of all the
+steps for a given build number on a given builder.
 
 @item /builders/$BUILDERNAME
 
@@ -8677,7 +8643,7 @@ SHA1 hash of the current revision's contents), which is used as the
 base revision. @code{hg diff} then provides the patch relative to that
 revision. For @command{try} to work, your working directory must only
 have patches that are available from the same remotely-available
-repository that the build process' @code{step.Mercurial} will use.
+repository that the build process' @code{source.Mercurial} will use.
 
 @item Git
 @code{git branch -v} lists all the branches available in the local

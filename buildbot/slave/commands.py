@@ -1007,6 +1007,7 @@ class SlaveDirectoryUploadCommand(SlaveFileUploadCommand):
         return d
 
     def finished(self, res):
+        self.fp.close()
         os.remove(self.tarname)
         if self.debug:
             log.msg('finished: stderr=%r, rc=%r' % (self.stderr, self.rc))
@@ -1195,6 +1196,7 @@ class SlaveShellCommand(Command):
                         filename of a local log file. This local file will be
                         watched just like 'tail -f', and all changes will be
                         written to 'log' status updates.
+        - ['logEnviron']: False to not log the environment variables on the slave
 
     ShellCommand creates the following status messages:
         - {'stdout': data} : when stdout data is available
@@ -1220,6 +1222,7 @@ class SlaveShellCommand(Command):
                          keepStdinOpen=args.get('keep_stdin_open'),
                          logfiles=args.get('logfiles', {}),
                          usePTY=args.get('usePTY', "slave-config"),
+                         logEnviron=args.get('logEnviron', True),
                          )
         self.command = c
         d = self.command.start()
@@ -1729,11 +1732,13 @@ class SVN(SourceBase):
         self.svnurl = args['svnurl']
         self.sourcedata = "%s\n" % self.svnurl
 
-        self.extra_args = []
+        self.svn_args = []
         if args.has_key('username'):
-            self.extra_args.extend(["--username", args['username']])
+            self.svn_args.extend(["--username", args['username']])
         if args.has_key('password'):
-            self.extra_args.extend(["--password", Obfuscated(args['password'], "XXXX")])
+            self.svn_args.extend(["--password", Obfuscated(args['password'], "XXXX")])
+        if args.get('extra_args', None) is not None:
+            self.svn_args.extend(args['extra_args'])
 
     def sourcedirIsUpdateable(self):
         if os.path.exists(os.path.join(self.builder.basedir,
@@ -1747,7 +1752,7 @@ class SVN(SourceBase):
         # update: possible for mode in ('copy', 'update')
         d = os.path.join(self.builder.basedir, self.srcdir)
         command = [self.vcexe, 'update'] + \
-                    self.extra_args + \
+                    self.svn_args + \
                     ['--revision', str(revision),
                    '--non-interactive', '--no-auth-cache']
         c = ShellCommand(self.builder, command, d,
@@ -1761,14 +1766,14 @@ class SVN(SourceBase):
         d = self.builder.basedir
         if self.mode == "export":
             command = [self.vcexe, 'export'] + \
-                        self.extra_args + \
+                        self.svn_args + \
                         ['--revision', str(revision),
                         '--non-interactive', '--no-auth-cache',
                         self.svnurl, self.srcdir]
         else:
             # mode=='clobber', or copy/update on a broken workspace
             command = [self.vcexe, 'checkout'] + \
-                        self.extra_args + \
+                        self.svn_args + \
                         ['--revision', str(revision),
                         '--non-interactive', '--no-auth-cache',
                         self.svnurl, self.srcdir]
@@ -2494,9 +2499,9 @@ class Mercurial(SourceBase):
         SourceBase.setup(self, args)
         self.vcexe = getCommand("hg")
         self.repourl = args['repourl']
-        self.clobberOnBranchChange = args['clobberOnBranchChange']
+        self.clobberOnBranchChange = args.get('clobberOnBranchChange', True)
         self.sourcedata = "%s\n" % self.repourl
-        self.branchType = args['branchType']
+        self.branchType = args.get('branchType', 'dirname')
         self.stdout = ""
         self.stderr = ""
 
@@ -2884,6 +2889,12 @@ class P4(P4Base):
         d.addCallback(lambda _: self._doP4Sync(force=True))
         return d
 
+    def parseGotRevision(self):
+        rv = None
+        if self.revision:
+            rv = str(self.revision)
+        return rv
+
 registerSlaveCommand("p4", P4, command_version)
 
 
@@ -2934,5 +2945,11 @@ class P4Sync(P4Base):
 
     def doVCFull(self):
         return self._doVC(force=True)
+
+    def parseGotRevision(self):
+        rv = None
+        if self.revision:
+            rv = str(self.revision)
+        return rv
 
 registerSlaveCommand("p4sync", P4Sync, command_version)

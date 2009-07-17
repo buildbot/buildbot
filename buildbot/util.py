@@ -18,7 +18,10 @@ def naturalSort(l):
             return s
     def key_func(item):
         return [try_int(s) for s in re.split('(\d+)', item)]
-    l.sort(key=key_func)
+    # prepend integer keys to each element, sort them, then strip the keys
+    keyed_l = [ (key_func(i), i) for i in l ]
+    keyed_l.sort()
+    l = [ i[1] for i in keyed_l ]
     return l
 
 def now():
