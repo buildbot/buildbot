@@ -1007,6 +1007,12 @@ class IStatusReceiver(Interface):
     def builderRemoved(builderName):
         """The Builder has been removed."""
 
+    def slaveConnected(slaveName):
+        """The slave has connected."""
+
+    def slaveDisconnected(slaveName):
+        """The slave has disconnected."""
+
 class IControl(Interface):
     def addChange(change):
         """Add a change to all builders. Each Builder will decide for

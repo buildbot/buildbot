@@ -2372,6 +2372,14 @@ class Status:
         for t in self.watchers:
             t.builderRemoved(name)
 
+    def slaveConnected(self, name):
+        for t in self.watchers:
+            t.slaveConnected(name)
+
+    def slaveDisconnected(self, name):
+        for t in self.watchers:
+            t.slaveDisconnected(name)
+
     def buildsetSubmitted(self, bss):
         self.activeBuildSets.append(bss)
         bss.waitUntilFinished().addCallback(self.activeBuildSets.remove)

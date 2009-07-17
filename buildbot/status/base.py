@@ -62,6 +62,12 @@ class StatusReceiver:
     def builderRemoved(self, builderName):
         pass
 
+    def slaveConnected(self, slaveName):
+        pass
+
+    def slaveDisconnected(self, slaveName):
+        pass
+
 class StatusReceiverMultiService(StatusReceiver, service.MultiService,
                                  util.ComparableMixin):
     implements(IStatusReceiver)

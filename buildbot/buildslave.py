@@ -242,6 +242,7 @@ class AbstractBuildSlave(NewCredPerspective, service.MultiService):
             log.msg("bot attached")
             self.messageReceivedFromSlave()
             self.stopMissingTimer()
+            self.botmaster.parent.status.slaveConnected(self.slavename)
 
             return self.updateSlave()
         d.addCallback(_accept_slave)
@@ -262,6 +263,7 @@ class AbstractBuildSlave(NewCredPerspective, service.MultiService):
         self.slave_status.removeGracefulWatcher(self._gracefulChanged)
         self.slave_status.setConnected(False)
         log.msg("BuildSlave.detached(%s)" % self.slavename)
+        self.botmaster.parent.status.slaveDisconnected(self.slavename)
 
     def disconnect(self):
         """Forcibly disconnect the slave.
