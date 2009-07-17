@@ -7770,6 +7770,40 @@ of the page, and the build hosts are listed across the top.  It accepts
 the same query arguments. The exception being that instead of ``width''
 the argument is named ``length.''
 
+@item /console
+
+EXPERIMENTAL: This provides a developer-oriented display of the the last
+changes and how they affected the builders.
+
+It allows a developer to quickly see the status of each builder for the
+first build including his or her change. A green box means that the change
+succeeded for all the steps for a given builder. A red box means that
+the changed introduced a new regression on a builder. An orange box
+means that at least one of the test failed, but it was also failing
+in the previous build, so it is not possible to see if there was any
+regressions from this change. Finally a yellow box means that the test
+is in progress.
+
+By adding one or more ``builder='' query arguments, the Console view is
+restricted to only showing information about the given Builders. By
+adding one or more ``branch='' query arguments, the display is
+restricted to showing information about the given branches. In
+addition, adding one or more ``category='' query arguments to the URL
+will limit the display to Builders that were defined with one of the
+given categories.
+
+By adding one or more ``name='' query arguments, the console view is
+restricted to only showing changes made by the given users.
+
+NOTE: To use this page, your buildbot.css file in public_html
+must be the one found in buildbot/status/web/extended.css.
+
+The console view is still in development. At this moment it supports
+only the source control managers that have an integer based revision id,
+like svn. It also has some issues with displaying multiple braches at the
+same time. If you do have multiple branches, you should use the
+``branch='' query argument.
+
 @item /rss
 
 This provides a rss feed summarizing all failed builds. The same

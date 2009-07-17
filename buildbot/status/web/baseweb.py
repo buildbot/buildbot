@@ -16,6 +16,7 @@ from buildbot.status.web.base import HtmlResource, Box, \
 from buildbot.status.web.feeds import Rss20StatusResource, \
      Atom10StatusResource
 from buildbot.status.web.waterfall import WaterfallStatusResource
+from buildbot.status.web.console import ConsoleStatusResource
 from buildbot.status.web.grid import GridStatusResource, TransposedGridStatusResource
 from buildbot.status.web.changes import ChangesResource
 from buildbot.status.web.builder import BuildersResource
@@ -514,6 +515,7 @@ class WebStatus(service.MultiService):
         #self.putChild("", IndexOrWaterfallRedirection())
         self.putChild("waterfall", WaterfallStatusResource())
         self.putChild("grid", GridStatusResource())
+        self.putChild("console", ConsoleStatusResource())
         self.putChild("tgrid", TransposedGridStatusResource())
         self.putChild("builders", BuildersResource()) # has builds/steps/logs
         self.putChild("changes", ChangesResource())
