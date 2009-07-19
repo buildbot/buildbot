@@ -186,22 +186,6 @@ class FeedResource(XmlResource):
             title = ('%s failed on "%s"' %
                      (source, build.getBuilder().getName()))
 
-            # get name of the failed step and the last 30 lines of its log.
-            if build.getLogs():
-                log = build.getLogs()[-1]
-                laststep = log.getStep().getName()
-                try:
-                    lastlog = log.getText()
-                except IOError:
-                    # Probably the log file has been removed
-                    lastlog='<b>log file not available</b>'
-
-            lines = re.split('\n', lastlog)
-            lastlog = ''
-            for logline in lines[max(0, len(lines)-30):]:
-                lastlog = lastlog + logline + '<br/>'
-            lastlog = lastlog.replace('\n', '<br/>')
-
             description = ''
             description += ('Date: %s<br/><br/>' %
                             time.strftime("%a, %d %b %Y %H:%M:%S GMT",
@@ -218,8 +202,26 @@ class FeedResource(XmlResource):
                             (link, link))
             description += ('Author list: <b>%s</b><br/><br/>' %
                             ",".join(build.getResponsibleUsers()))
-            description += ('Failed step: <b>%s</b><br/><br/>' % laststep)
-            description += 'Last lines of the build log:<br/>'
+
+            # Add information about the failing steps.
+            lastlog = ''
+            for s in build.getSteps():
+                if s.getResults()[0] == FAILURE:
+                    description += ('Failed step: <b>%s</b><br/>' % s.getName())
+
+                    # Add the last 30 lines of each log.
+                    for log in s.getLogs():
+                        lastlog += ('Last lines of build log "%s":<br/>' % log.getName())
+                        try:
+                            logdata = log.getText()
+                        except IOError:
+                            # Probably the log file has been removed
+                            logdata ='<b>log file not available</b>'
+
+                        lastlines = logdata.split('\n')[-30:]
+                        lastlog += '<br/>'.join(lastlines)
+                        lastlog += '<br/>'
+            description += '<br/>'
 
             data += self.item(title, description=description, lastlog=lastlog,
                               link=link, pubDate=finishedTime)
