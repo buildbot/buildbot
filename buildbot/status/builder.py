@@ -952,7 +952,9 @@ class BuildStepStatus(styles.Versioned):
             if logCompressionLimit is not False and \
                     isinstance(loog, LogFile):
                 if os.path.getsize(loog.getFilename()) > logCompressionLimit:
-                    cld.append(loog.compressLog())
+                    loog_deferred = loog.compressLog()
+                    if loog_deferred:
+                        cld.append(loog_deferred)
 
         for r in self.updates.keys():
             if self.updates[r] is not None:
