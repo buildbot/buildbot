@@ -46,11 +46,12 @@ class ANYBRANCH: pass # a flag value, used below
 class DevRevision:
     """Helper class that contains all the information we need for a revision."""
 
-    def __init__(self, revision, who, comments, date):
+    def __init__(self, revision, who, comments, date, revlink):
         self.revision = revision
         self.comments = comments
         self.who = who
         self.date = date
+        self.revlink = revlink
 
 
 class DevBuild:
@@ -235,8 +236,10 @@ class ConsoleStatusResource(HtmlResource):
             change = allChanges[i]
             if branch == ANYBRANCH or branch == change.branch:
                 if not devName or change.who in devName:
+                    
                     rev = DevRevision(change.revision, change.who,
-                                      change.comments, change.getTime())
+                                      change.comments, change.getTime(),
+                                      getattr(change, 'revlink', None))
                     revisions.append(rev)
 
         return revisions
@@ -656,6 +659,12 @@ class ConsoleStatusResource(HtmlResource):
 
             # Fill the dictionnary with these new information
             subs["revision"] = revision.revision
+            if revision.revlink:
+                subs["revision_link"] = ("<a href=\"%s\">%s</a>" 
+                                         % (revision.revlink,
+                                            revision.revision))
+            else:
+                subs["revision_link"] = revision.revision
             subs["who"] = revision.who
             subs["date"] = revision.date
             comment = revision.comments or ""

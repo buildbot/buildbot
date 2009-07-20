@@ -95,7 +95,7 @@ main_line_category_footer = Template('''
 main_line_info = Template('''
     <tr>
       <td class='DevRev $alt' width="1%">
-        $revision
+        $revision_link
       </td>
       <td class='DevName $alt' width="1%">
         $who
