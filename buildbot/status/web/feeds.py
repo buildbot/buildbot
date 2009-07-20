@@ -27,7 +27,7 @@ import os
 import re
 import sys
 import time
-from twisted.web import resource
+from twisted.web import resource, html
 from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE, EXCEPTION
 
 class XmlResource(resource.Resource):
@@ -265,12 +265,8 @@ class Rss20StatusResource(FeedResource):
         if link is not None:
             data += ('        <link>%s</link>\n' % link)
         if (description is not None and lastlog is not None):
-            lastlog = re.sub(r'<br/>', "\n", lastlog)
-            lastlog = re.sub(r'&', "&amp;", lastlog)
-            lastlog = re.sub(r"'", "&apos;", lastlog)
-            lastlog = re.sub(r'"', "&quot;", lastlog)
-            lastlog = re.sub(r'<', '&lt;', lastlog)
-            lastlog = re.sub(r'>', '&gt;', lastlog)
+            lastlog = lastlog.replace('<br/>', '\n')
+            lastlog = html.escape(lastlog)
             lastlog = lastlog.replace('\n', '<br/>')
             content = '<![CDATA['
             content += description
@@ -330,12 +326,9 @@ class Atom10StatusResource(FeedResource):
         if link is not None:
             data += ('    <link href="%s"/>\n' % link)
         if (description is not None and lastlog is not None):
-            lastlog = re.sub(r'<br/>', "\n", lastlog)
-            lastlog = re.sub(r'&', "&amp;", lastlog)
-            lastlog = re.sub(r"'", "&apos;", lastlog)
-            lastlog = re.sub(r'"', "&quot;", lastlog)
-            lastlog = re.sub(r'<', '&lt;', lastlog)
-            lastlog = re.sub(r'>', '&gt;', lastlog)
+            lastlog = lastlog.replace('<br/>', '\n')
+            lastlog = html.escape(lastlog)
+            lastlog = lastlog.replace('\n', '<br/>')
             data += ('    <content type="xhtml">\n')
             data += ('      <div xmlns="http://www.w3.org/1999/xhtml">\n')
             data += ('        %s\n' % description)
