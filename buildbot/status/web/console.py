@@ -295,12 +295,20 @@ class ConsoleStatusResource(HtmlResource):
             got_rev = -1
             try:
                 got_rev = build.getProperty("got_revision")
+                try:
+                    got_rev = int(got_rev)
+                except:
+                    got_rev = -1
             except KeyError:
                 pass
 
             try:
                 if got_rev == -1:
                    got_rev = build.getProperty("revision")
+                try:
+                    got_rev = int(got_rev)
+                except:
+                    got_rev = -1
             except:
                 pass
 
