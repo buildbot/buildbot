@@ -901,6 +901,12 @@ class Log(unittest.TestCase):
 
 
 class CompressLog(unittest.TestCase):
+    # compression is not supported unless bz2 is installed
+    try:
+        import bz2
+    except:
+        skip = "compression not supported (no bz2 module available)"
+
     def testCompressLogs(self):
         bss = setupBuildStepStatus("test-compress")
         bss.build.builder.setLogCompressionLimit(1024)
