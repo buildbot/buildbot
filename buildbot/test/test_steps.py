@@ -749,16 +749,13 @@ Result: FAIL
         self.failUnlessEqual(ss.getStatistic('tests-passed'), 264522)
 
 class MasterShellCommand(StepTester, unittest.TestCase):
-    def setUp(self):
-        self.props = Properties()
-
     def testMasterShellCommand(self):
         self.slavebase = "testMasterShellCommand.slave"
         self.masterbase = "testMasterShellCommand.master"
-        self.props.setProperty("other", "foo", "test")
         sb = self.makeSlaveBuilder()
         step = self.makeStep(master.MasterShellCommand, command=['echo',
                                    WithProperties("hi build-%(other)s.tar.gz")])
+        step.build.setProperty("other", "foo", "test")
 
         # we can't invoke runStep until the reactor is started .. hence this
         # little dance
@@ -770,8 +767,7 @@ class MasterShellCommand(StepTester, unittest.TestCase):
         def _check(results):
             self.failUnlessEqual(results, SUCCESS)
             logtxt = step.getLog("stdio").getText()
-            self.failUnlessEqual(self.props.render(logtxt.strip()),
-                                                          "hi build-foo.tar.gz")
+            self.failUnlessEqual(logtxt.strip(), "hi build-foo.tar.gz")
         d.addCallback(_check)
         reactor.callLater(0, d.callback, None)
         return d
