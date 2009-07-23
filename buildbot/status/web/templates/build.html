@@ -1,0 +1,178 @@
+<div class="title"><a href="{{ path_to_root }}">{{ project_name }}</a></div>
+
+<h1>
+<a href="{{ path_to_builder }}">Builder {{ b.getBuilder().getName() }}</a>
+Build #{{ b.getNumber() }}
+</h1>
+
+{% if not b.isFinished() %}
+  <h2>Build In Progress</h2>
+
+  {% if when_time %}
+    <div>ETA: {{ when }}s ({{ when_time }})</div>
+  {% endif %}
+  
+  {% if stop_url %} 
+    {{ stop_form(stop_url, is_using_user_passwd) }}
+  {% endif %}
+{% else %}
+  <h2>Results</h2>
+
+  <span class="{{ result_css }}">   
+  {% for t in b.getText() %}
+    {{ t }}
+  {% endfor %}  
+  </span>
+   
+  {% if b.getTestResults() %}
+    <h3><a href="{{ tests_link }}"/></h3>
+  {% endif %}
+{% endif %}
+
+<h2>SourceStamp:</h2>
+<ul>
+
+{% if ss.branch %}
+  <li>Branch: {{ ss.branch|e }}</li>
+{% endif %}
+
+{% if ss.revision %}
+  <li>Revision: {{ ss.revision|e }}</li>
+{% endif %}
+
+{% if ss.pathch%}
+  <li>Patch: YES </li>
+{% endif %}
+
+{% if ss.changes %}
+  <li>Changes: see below</li>
+{% endif %}
+
+{% if most_recent_rev_build %}
+   <li>build of most recent revision</li>
+{% endif %}
+    
+{% if got_revision %}
+    <li>Got Revision: {{ got_revision }}</li>
+{% endif %}
+
+</ul>
+
+{#
+ # TODO: turn this into a table, or some other sort of definition-list
+ # that doesn't take up quite so much vertical space
+ #}
+   
+<h2>BuildSlave:</h2>
+  
+{% if slave_url %}  
+  <a href="{{ slave_url|e }}">{{ b.getSlavename()|e }}</a>
+{% else %}
+  {{ b.getSlavename()|e }} 
+{% endif %}
+
+<h2>Reason:</h2>
+{{ b.getReason()|e }}
+
+<h2>Steps and Logfiles:</h2>
+
+{#
+ # TODO:
+ #       urls = self.original.getURLs()
+ #       ex_url_class = "BuildStep external"
+ #       for name, target in urls.items():
+ #           text.append('[<a href="%s" class="%s">%s</a>]' %
+ #                       (target, ex_url_class, html.escape(name)))
+ #}
+
+<ol>
+{% for s in steps %}
+  <li><span class="{{ s.css_class }}"><a href="{{ s.link }}">{{ s.name }}</a> {{ s.text }}</span>
+
+  {% if s.logs %}
+    <ol>
+    {% for l in s.logs %}
+      <li><a href="{{ l.link }}">{{ l.name }}</a></li>
+    {% endfor %}
+    </ol>
+  {% endif %}
+ 
+  </li>
+{% endfor %}
+</ol>
+
+<h2>Build Properties:</h2>
+
+<table>
+<tr><th>Name</th><th>Value</th><th>Source</th></tr>
+
+{% for p in properties %}
+  <tr><td>{{ p.name|e }}</td>
+  {% if p.short_value %}
+    <td>{{ p.short_value|e }} .. [property value too long]</td>
+  {% else %}
+    <td>{{ p.value|e }}</td>
+  {% endif %}
+  <td>{{ p.source|e }}</td></tr>
+{% endfor %}
+
+</table>
+
+<h2>Blamelist:</h2>
+
+{% if responsible_users %}
+  <ol>
+  {% for user in responsible_users %}
+     <li>{{ user|e }}</li>
+  {% endfor %}
+  </ol>
+{% else %}
+  <div>no responsible users</div>
+{% endif %}
+
+
+<h2>Timing</h2>
+<table>
+<tr><td>Start</td><td>{{ start }}</td></tr>
+{% if end %}
+  <tr><td>End</td><td>{{ end }}</td></tr>
+  <tr><td>Elapsed</td><td>{{ elapsed }} </td></tr>
+{% endif %}
+</table>
+
+{% if ss.changes %}
+  <h2>All Changes:</h2>
+  <ol>
+  {% for c in ss.changes %}
+    <li>{{ c.asHTML() }}</li>
+  {% endfor %}  
+  </ol>
+
+{# TODO:
+ # <pre>{{ b.changesText()|e }}</pre>
+ #} 
+
+  {% if resubmit %}
+    <h3>Resubmit Build:</h3>
+  
+    {% if exactly %}
+      <p>This tree was built from a specific set of
+          source files, and can be rebuilt exactly</p>
+    {% else %}
+      <p>This tree was built from the most recent revision
+      {% if ss.branch %}
+        (along some branch)
+      {% endif %}      
+      and thus it might not be possible to rebuild it \n"
+      exactly. Any changes that have been committed \n"
+      after this build was started <b>will</b> be \n"
+      included in a rebuild.</p>
+    {% endif %}
+
+    <form action="{{ rebuild_url }}" class="command rebuild">      
+      {{ name_user_password_form }}
+      {{ reason_row }}
+      <input type="submit" value="Rebuild" />
+    </form>
+  {% endif %}
+{% endif %}

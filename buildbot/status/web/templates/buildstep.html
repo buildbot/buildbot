@@ -1,7 +1,6 @@
-                
 <h1>BuildStep 
-    <a href="{{ builder_link }}">{{ b.getBuilder().getName() }}</a> 
-    <a href="{{ build_link }}">{{ b.getNumber() }}</a>: {{ s.getName() }}
+  <a href="{{ builder_link }}">{{ b.getBuilder().getName() }}</a> 
+  <a href="{{ build_link }}">{{ b.getNumber() }}</a>: {{ s.getName() }}
 </h1>
 
 {% if s.isFinished() %}

@@ -6,7 +6,7 @@ from twisted.internet import defer, reactor
 import urllib, time
 from twisted.python import log
 from buildbot.status.web.base import HtmlResource, make_row, make_stop_form, \
-     css_classes, path_to_builder, path_to_slave, make_name_user_passwd_form
+     css_classes, path_to_builder, path_to_slave, make_name_user_passwd_form, env
 
 from buildbot.status.web.tests import TestsResource
 from buildbot.status.web.step import StepsResource
@@ -30,52 +30,37 @@ class StatusResourceBuild(HtmlResource):
     def body(self, req):
         b = self.build_status
         status = self.getStatus(req)
-        projectURL = status.getProjectURL()
         projectName = status.getProjectName()
-        data = ('<div class="title"><a href="%s">%s</a></div>\n'
-                % (self.path_to_root(req), projectName))
-        builder_name = b.getBuilder().getName()
-        data += ("<h1><a href=\"%s\">Builder %s</a>: Build #%d</h1>\n"
-                 % (path_to_builder(req, b.getBuilder()),
-                    builder_name, b.getNumber()))
 
+        cxt = {}
+        cxt['path_to_root'] = self.path_to_root(req)
+        cxt['project_name'] = projectName
+        cxt['b'] = b
+        cxt['path_to_builder'] = path_to_builder(req, b.getBuilder())
+        
         if not b.isFinished():
-            data += "<h2>Build In Progress</h2>"
             when = b.getETA()
             if when is not None:
-                when_time = time.strftime("%H:%M:%S",
-                                          time.localtime(time.time() + when))
-                data += "<div>ETA %ds (%s)</div>\n" % (when, when_time)
-
+                cxt['when'] = when
+                cxt['when_time'] = time.strftime("%H:%M:%S",
+                                                time.localtime(time.time() + when))
+                
+               
             if self.build_control is not None:
-                stopURL = urllib.quote(req.childLink("stop"))
-                data += make_stop_form(stopURL, self.isUsingUserPasswd(req))
-
-        if b.isFinished():
-	    # Results map loosely to css_classes
-            results = b.getResults()
-            data += "<h2>Results:</h2>\n"
-            text = " ".join(b.getText())
-            data += '<span class="%s">%s</span>\n' % (css_classes[results],
-                                                      text)
+                cxt['stop_url'] = urllib.quote(req.childLink("stop")) 
+                cxt['is_using_user_passwd'] = self.isUsingUserPasswd(req)
+                # data += make_stop_form(stopURL, self.isUsingUserPasswd(req))
+        else: 
+            cxt['result_css'] = css_classes[b.getResults()]
             if b.getTestResults():
-                url = req.childLink("tests")
-                data += "<h3><a href=\"%s\">test results</a></h3>\n" % url
-
-        ss = b.getSourceStamp()
-        data += "<h2>SourceStamp:</h2>\n"
-        data += " <ul>\n"
-        if ss.branch:
-            data += "  <li>Branch: %s</li>\n" % html.escape(ss.branch)
-        if ss.revision:
-            data += "  <li>Revision: %s</li>\n" % html.escape(str(ss.revision))
-        if ss.patch:
-            data += "  <li>Patch: YES</li>\n" # TODO: provide link to .diff
-        if ss.changes:
-            data += "  <li>Changes: see below</li>\n"
-        if (ss.branch is None and ss.revision is None and ss.patch is None
-            and not ss.changes):
-            data += "  <li>build of most recent revision</li>\n"
+                cxt['tests_link'] = req.childLink("tests")
+                
+        ss = cxt['ss'] = b.getSourceStamp()
+        
+        if ss.branch is None and ss.revision is None and ss.patch is None and not ss.changes:
+            cxt['most_recent_rev_build'] = True
+            
+        
         got_revision = None
         try:
             got_revision = b.getProperty("got_revision")
@@ -85,119 +70,60 @@ class StatusResourceBuild(HtmlResource):
             got_revision = str(got_revision)
             if len(got_revision) > 40:
                 got_revision = "[revision string too long]"
-            data += "  <li>Got Revision: %s</li>\n" % got_revision
-        data += " </ul>\n"
+            cxt['got_revision'] = got_revision
 
-        # TODO: turn this into a table, or some other sort of definition-list
-        # that doesn't take up quite so much vertical space
         try:
-            slaveurl = path_to_slave(req, status.getSlave(b.getSlavename()))
-            data += "<h2>Buildslave:</h2>\n <a href=\"%s\">%s</a>\n" % (html.escape(slaveurl), html.escape(b.getSlavename()))
+            cxt['slave_url'] = path_to_slave(req, status.getSlave(b.getSlavename()))
         except KeyError:
-            data += "<h2>Buildslave:</h2>\n %s\n" % html.escape(b.getSlavename())
-        data += "<h2>Reason:</h2>\n%s\n" % html.escape(b.getReason())
+            pass
 
-        data += "<h2>Steps and Logfiles:</h2>\n"
-        # TODO:
-#        urls = self.original.getURLs()
-#        ex_url_class = "BuildStep external"
-#        for name, target in urls.items():
-#            text.append('[<a href="%s" class="%s">%s</a>]' %
-#                        (target, ex_url_class, html.escape(name)))
-        data += "<ol>\n"
+        cxt['steps'] = []
+
         for s in b.getSteps():
-            name = s.getName()
-	    if s.isFinished():
-		css_class = css_classes[s.getResults()[0]]
-	    elif s.isStarted():
-		css_class = "running"
-	    else:
-		css_class = ""
-            data += (' <li><span class="%s"><a href=\"%s\">%s</a> [%s]</span>\n'
-                     % (css_class, 
-			req.childLink("steps/%s" % urllib.quote(name)),
-                        name,
-                        " ".join(s.getText())))
-            if s.getLogs():
-                data += "  <ol>\n"
-                for logfile in s.getLogs():
-                    logname = logfile.getName()
-                    logurl = req.childLink("steps/%s/logs/%s" %
-                                           (urllib.quote(name),
-                                            urllib.quote(logname)))
-                    data += ("   <li><a href=\"%s\">%s</a></li>\n" %
-                             (logurl, logfile.getName()))
-                data += "  </ol>\n"
-            data += " </li>\n"
-        data += "</ol>\n"
+            step = {'name': s.getName() }
+            cxt['steps'].append(step)
+            
+            if s.isFinished():
+                step['css_class'] = css_classes[s.getResults()[0]]
+            elif s.isStarted():
+                step['css_class'] = "running"
 
-        data += "<h2>Build Properties:</h2>\n"
-        data += "<table><tr><th valign=\"left\">Name</th><th valign=\"left\">Value</th><th valign=\"left\">Source</th></tr>\n"
+            step['link'] = req.childLink("steps/%s" % urllib.quote(s.getName()))
+            step['text'] = " ".join(s.getText())
+
+            step['logs']= []
+            for l in s.getLogs():
+                logname = l.getName()
+                step['logs'].append({ 'link': req.childLink("steps/%s/logs/%s" %
+                                           (urllib.quote(s.getName()),
+                                            urllib.quote(logname))), 
+                                      'name': logname })
+
+        ps = cxt['properties'] = []
         for name, value, source in b.getProperties().asList():
-            value = str(value)
-            if len(value) > 500:
-                value = value[:500] + " .. [property value too long]"
-            data += "<tr>"
-            data += "<td>%s</td>" % html.escape(name)
-            data += "<td>%s</td>" % html.escape(value)
-            data += "<td>%s</td>" % html.escape(source)
-            data += "</tr>\n"
-        data += "</table>"
+            p = { 'name': name, 'value': value, 'source': source }
+            ps.append(p)
 
-        data += "<h2>Blamelist:</h2>\n"
-        if list(b.getResponsibleUsers()):
-            data += " <ol>\n"
-            for who in b.getResponsibleUsers():
-                data += "  <li>%s</li>\n" % html.escape(who)
-            data += " </ol>\n"
-        else:
-            data += "<div>no responsible users</div>\n"
-
+        
+        cxt['responsible_users'] = list(b.getResponsibleUsers())
 
         (start, end) = b.getTimes()
-        data += "<h2>Timing</h2>\n"
-        data += "<table>\n"
-        data += "<tr><td>Start</td><td>%s</td></tr>\n" % time.ctime(start)
+        cxt['start'] = time.ctime(start)
         if end:
-            data += "<tr><td>End</td><td>%s</td></tr>\n" % time.ctime(end)
-            data += "<tr><td>Elapsed</td><td>%s</td></tr>\n" % util.formatInterval(end - start)
-        data += "</table>\n"
-
-        if ss.changes:
-            data += "<h2>All Changes</h2>\n"
-            data += "<ol>\n"
-            for c in ss.changes:
-                data += "<li>" + c.asHTML() + "</li>\n"
-            data += "</ol>\n"
-            #data += html.PRE(b.changesText()) # TODO
-
-        if b.isFinished() and self.builder_control is not None:
-            data += "<h3>Resubmit Build:</h3>\n"
-            # can we rebuild it exactly?
-            exactly = (ss.revision is not None) or b.getChanges()
-            if exactly:
-                data += ("<p>This tree was built from a specific set of \n"
-                         "source files, and can be rebuilt exactly</p>\n")
-            else:
-                data += ("<p>This tree was built from the most recent "
-                         "revision")
-                if ss.branch:
-                    data += " (along some branch)"
-                data += (" and thus it might not be possible to rebuild it \n"
-                         "exactly. Any changes that have been committed \n"
-                         "after this build was started <b>will</b> be \n"
-                         "included in a rebuild.</p>\n")
-            rebuildURL = urllib.quote(req.childLink("rebuild"))
-            data += ('<form action="%s" class="command rebuild">\n'
-                     % rebuildURL)
-            data += make_name_user_passwd_form(self.isUsingUserPasswd(req))
-            data += make_row("Reason for re-running build:",
-                             "<input type='text' name='comments' />")
-            data += '<input type="submit" value="Rebuild" />\n'
-            data += '</form>\n'
-
+            cxt['end'] = time.ctime(end)
+            cxt['elapsed'] = util.formatInterval(end - start)
+            
+        cxt['resubmit'] = b.isFinished() and self.builder_control is not None     
+        if cxt['resubmit']:               
+            cxt['exactly'] = (ss.revision is not None) or b.getChanges()
+            cxt['rebuild_url'] = urllib.quote(req.childLink("rebuild"))
+            cxt['name_user_passwd_form'] = make_name_user_passwd_form(self.isUsingUserPasswd(req))
+            cxt['reason_row'] = make_row("Reason for re-running build:",
+                                         "<input type='text' name='comments' />")
+            
+        template = env.get_template("build.html");
+        data = template.render(**cxt)
         data += self.footer(req)
-
         return data
 
     def stop(self, req):
