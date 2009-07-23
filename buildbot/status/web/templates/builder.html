@@ -1,0 +1,69 @@
+<a href="{{ path_to_root }}">{{ project_name }}</a>
+
+<h1>Builder: {{ name }}</h1>
+
+<h2>Currently Building:</h2>
+<ul>
+{% for b in current %}
+  <li><a href="{{ b.link }}>{{ b.num }}</a>
+  {% if b.when %}
+    ETA: {{ b.when_time }} [{{ b.when }}s]
+  {% endif %}
+
+  {{ b.current_step }}
+
+  {% if b.stop_url %}
+    <form action="{{ stop_url}}" class="command stopbuild" style="display:inline">
+      <input type="submit" value="Stop Build" />
+    </form>
+  {% endif %}    
+  </li>
+{% else %}
+  <li>No current builds</li>
+{% endfor %}
+</ul>
+ 
+<h2>Recent Builds:</h2>
+<ul>
+{% for b in recent %}
+  <li>{{ b }}</li>
+  {% if loop.first %}
+    <br/>
+  {% endif %}
+{% endfor %}
+</ul>
+
+<h2>Buildslaves:</h2>
+<ol>
+{% for s in slaves %}
+  <li><b><a href="{{ s.link|e }}">{{ s.name|e }}</a>
+  {% if s.connected %}
+    CONNECTED
+    {% if s.admin %}
+       Admin: {{ s.admin }}
+    {% endif %}
+    {% if s.host %}
+      <span class='label'>Host info:</span>
+      <pre>{{ s.host }}</pre>
+    {% endif %}
+  {% else %}
+    NOT CONNECTED 
+  {% endif %}
+  </li>
+</ol>
+{% endfor %}
+
+{{ force_form }}
+
+{% if all_slaves_offline %}
+  <p>All buildslaves appear to be offline, so it's not possible
+  to force this build to execute at this time.</p>
+{% endif %}
+
+{% if ping_url %}
+  <form action="{{ ping_url }}" class="command pingbuilder">
+    <p>To ping the buildslave(s), push the 'Ping' button</p>
+    <input type="submit" value="Ping Builder" />
+  </form>
+{% endif %}
+

@@ -26,29 +26,27 @@ class StatusResourceBuilder(HtmlResource, OneLineMixin):
         return "Buildbot: %s" % html.escape(self.builder_status.getName())
 
     def build_line(self, build, req):
-        buildnum = build.getNumber()
-        buildurl = path_to_build(req, build)
-        data = '<a href="%s">#%d</a> ' % (buildurl, buildnum)
+        b = {}
 
-        when = build.getETA()
+        b['num'] = build.getNumber()
+        b['link'] = path_to_build(req, build)
+
+        when = b['when'] = build.getETA()
         if when is not None:
-            when_time = time.strftime("%H:%M:%S",
+            b['when_time'] = time.strftime("%H:%M:%S",
                                       time.localtime(time.time() + when))
-            data += "ETA %ds (%s) " % (when, when_time)
+                    
         step = build.getCurrentStep()
         if step:
-            data += "[%s]" % step.getName()
+            b['current_step'] = step.getName()
         else:
-            data += "[waiting for Lock]"
+            b['current_step'] = "[waiting for Lock]"
             # TODO: is this necessarily the case?
 
         if self.builder_control is not None:
-            stopURL = path_to_build(req, build) + '/stop'
-            data += '''
-<form action="%s" class="command stopbuild" style="display:inline">
-  <input type="submit" value="Stop Build" />
-</form>''' % stopURL
-        return data
+            b['stop_url'] = path_to_build(req, build) + '/stop'
+
+        return b
 
     def body(self, req):
         b = self.builder_status
@@ -59,75 +57,44 @@ class StatusResourceBuilder(HtmlResource, OneLineMixin):
         connected_slaves = [s for s in slaves if s.isConnected()]
 
         projectName = status.getProjectName()
+        
+        cxt = {}
+        cxt['path_to_root'] = self.path_to_root(req)
+        cxt['project_name'] = projectName        
+        cxt['name'] = b.getName()
 
-        data = '<a href="%s">%s</a>\n' % (self.path_to_root(req), projectName)
+        cxt['current'] = map(lambda x: self.build_line(x, req), b.getCurrentBuilds())            
 
-        data += "<h1>Builder: %s</h1>\n" % html.escape(b.getName())
-
-        # the first section shows builds which are currently running, if any.
-
-        current = b.getCurrentBuilds()
-        if current:
-            data += "<h2>Currently Building:</h2>\n"
-            data += "<ul>\n"
-            for build in current:
-                data += " <li>" + self.build_line(build, req) + "</li>\n"
-            data += "</ul>\n"
-        else:
-            data += "<h2>no current builds</h2>\n"
-
-        # Then a section with the last 5 builds, with the most recent build
-        # distinguished from the rest.
-
-        data += "<h2>Recent Builds:</h2>\n"
-        data += "<ul>\n"
         numbuilds = req.args.get('numbuilds', ['5'])[0]
-        for i,build in enumerate(b.generateFinishedBuilds(num_builds=int(numbuilds))):
-            data += " <li>" + self.make_line(req, build, False) + "</li>\n"
-            if i == 0:
-                data += "<br />\n" # separator
-                # TODO: or empty list?
-        data += "</ul>\n"
+        recent = cxt['recent'] = []
+        for build in b.generateFinishedBuilds(num_builds=int(numbuilds)):
+            recent.append(self.make_line(req, build, False))
 
 
-        data += "<h2>Buildslaves:</h2>\n"
-        data += "<ol>\n"
+        sl = cxt['slaves'] = []
         for slave in slaves:
-            slaveurl = path_to_slave(req, slave)
-            data += "<li><b><a href=\"%s\">%s</a></b>: " % (html.escape(slaveurl), html.escape(slave.getName()))
-            if slave.isConnected():
-                data += "CONNECTED\n"
-                if slave.getAdmin():
-                    data += make_row("Admin:", html.escape(slave.getAdmin()))
-                if slave.getHost():
-                    data += "<span class='label'>Host info:</span>\n"
-                    data += html.PRE(slave.getHost())
-            else:
-                data += ("NOT CONNECTED\n")
-            data += "</li>\n"
-        data += "</ol>\n"
+            s = {}
+            sl.append(s)
+            s['link'] = path_to_slave(req, slave)
+            s['name'] = slave.getName()
+            c = s['connected'] = slave.isConnected()
+            if c:
+                s['admin'] = slave.getAdmin()
+                s['host'] = slave.getHost()
 
         if control is not None and connected_slaves:
-            forceURL = path_to_builder(req, b) + '/force'
-            data += make_force_build_form(forceURL, self.isUsingUserPasswd(req))
+            force_url = cxt['force_url'] = path_to_builder(req, b) + '/force'
+            cxt['force_form'] = make_force_build_form(force_url, self.isUsingUserPasswd(req))
         elif control is not None:
-            data += """
-            <p>All buildslaves appear to be offline, so it's not possible
-            to force this build to execute at this time.</p>
-            """
+            cxt['all_slaves_offline'] = True
 
         if control is not None:
-            pingURL = path_to_builder(req, b) + '/ping'
-            data += """
-            <form action="%s" class='command pingbuilder'>
-            <p>To ping the buildslave(s), push the 'Ping' button</p>
+            cxt['ping_url'] = path_to_builder(req, b) + '/ping'
 
-            <input type="submit" value="Ping Builder" />
-            </form>
-            """ % pingURL
 
+        template = env.get_template("builder.html");
+        data = template.render(**cxt)
         data += self.footer(req)
-
         return data
 
     def force(self, req):
