@@ -12,7 +12,7 @@ from buildbot.interfaces import IControl, IStatusReceiver
 
 from buildbot.status.web.base import HtmlResource, Box, \
      build_get_class, ICurrentBox, OneLineMixin, map_branches, \
-     make_stop_form, make_force_build_form
+     make_stop_form, make_force_build_form, env
 from buildbot.status.web.feeds import Rss20StatusResource, \
      Atom10StatusResource
 from buildbot.status.web.waterfall import WaterfallStatusResource
@@ -197,40 +197,37 @@ class OneBoxPerBuilder(HtmlResource):
         builders = req.args.get("builder", status.getBuilderNames())
         branches = [b for b in req.args.get("branch", []) if b]
 
-        data = ""
-
-        data += "<h2>Latest builds: %s</h2>\n" % ", ".join(branches)
-        data += "<table>\n"
-
+        cxt = {}
+        cxt['branches'] = " ".join(branches)
+        bs = cxt['builders'] = []
+        
         building = False
         online = 0
         base_builders_url = self.path_to_root(req) + "builders/"
         for bn in builders:
-            base_builder_url = base_builders_url + urllib.quote(bn, safe='')
+            bld = { 'link': base_builders_url + urllib.quote(bn, safe=''),
+                    'name': bn }
+            bs.append(bld)
+
             builder = status.getBuilder(bn)
-            data += "<tr>\n"
-            data += '<td class="box"><a href="%s">%s</a></td>\n' \
-                  % (base_builder_url, html.escape(bn))
             builds = list(builder.generateFinishedBuilds(map_branches(branches),
                                                          num_builds=1))
             if builds:
                 b = builds[0]
-                url = (base_builder_url + "/builds/%d" % b.getNumber())
+                bld['build_url'] = (bld['link'] + "/builds/%d" % b.getNumber())
                 try:
                     label = b.getProperty("got_revision")
                 except KeyError:
                     label = None
                 if not label or len(str(label)) > 20:
                     label = "#%d" % b.getNumber()
-                text = ['<a href="%s">%s</a>' % (url, label)]
-                text.extend(b.getText())
-                box = Box(text,
-                          class_="LastBuild box %s" % build_get_class(b))
-                data += box.td(align="center")
-            else:
-                data += '<td class="LastBuild box" >no build</td>\n'
+                
+                bld['build_label'] = label
+                bld['build_text'] = " ".join(b.getText())
+                bld['build_css_class'] = build_get_class(b)
+
             current_box = ICurrentBox(builder).getBox(status)
-            data += current_box.td(align="center")
+            bld['current_box'] = current_box.td()
 
             builder_status = builder.getState()[0]
             if builder_status == "building":
@@ -239,20 +236,19 @@ class OneBoxPerBuilder(HtmlResource):
             elif builder_status != "offline":
                 online += 1
 
-        data += "</table>\n"
-
         if control is not None:
             if building:
-                stopURL = "builders/_all/stop"
-                data += make_stop_form(stopURL, self.isUsingUserPasswd(req),
+                stopURL = cxt['stop_url'] = "builders/_all/stop"
+                cxt['stop_form'] = make_stop_form(stopURL, self.isUsingUserPasswd(req),
                                        True, "Builds")
             if online:
-                forceURL = "builders/_all/force"
-                data += make_force_build_form(forceURL,
+                forceURL = cxt['force_url'] = "builders/_all/force"
+                cxt['force_form'] = make_force_build_form(forceURL,
                                               self.isUsingUserPasswd(req), True)
 
+        template = env.get_template("oneboxperbuilder.html")
+        data = template.render(**cxt)
         data += self.footer(req)
-
         return data
 
 

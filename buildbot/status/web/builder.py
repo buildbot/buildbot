@@ -92,7 +92,7 @@ class StatusResourceBuilder(HtmlResource, OneLineMixin):
             cxt['ping_url'] = path_to_builder(req, b) + '/ping'
 
 
-        template = env.get_template("builder.html");
+        template = env.get_template("builder.html")
         data = template.render(**cxt)
         data += self.footer(req)
         return data

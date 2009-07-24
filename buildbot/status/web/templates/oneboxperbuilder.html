@@ -1,0 +1,21 @@
+<h2>Latest builds: {{ branches }}</h2>
+
+<table>
+{% for b in builders %}
+  <tr>
+  <td class="box"><a href="{{ b.link }}">{{ b.name|e }}</a></td>
+  {% if b.build_url %}
+    <td class="LastBuild box {{ b.build_css_class }}">
+        <a href="{{ b.build_url}}">{{ b.build_label }}</a>
+        <br/>{{ b.build_text }}
+    </td>
+  {% else %}
+    <td class="LastBuild box">no build</td>
+  {% endif %}  
+  {{ b.current_box }}
+{% endfor %}
+</table>
+
+{{ stop_form }}
+
+{{ force_form }}
