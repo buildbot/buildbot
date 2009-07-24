@@ -127,6 +127,18 @@ class ConsoleStatusResource(HtmlResource):
     ## Data gathering functions
     ##
 
+    def getHeadBuild(self, builder):
+        """Get the most recent build for the given builder.
+        """
+        build = builder.getBuild(-1)
+
+        # HACK: Work around #601, the head build may be None if it is
+        # locked.
+        if build is None:
+            build = builder.getBuild(-2)
+
+        return build
+
     def fetchChangesFromHistory(self, status, max_depth, max_builds, debugInfo):
         """Look at the history of the builders and try to fetch as many changes
         as possible. We need this when the main source does not contain enough
@@ -147,7 +159,7 @@ class ConsoleStatusResource(HtmlResource):
                 break
             
             builder = status.getBuilder(builderName)
-            build = builder.getBuild(-1)
+            build = self.getHeadBuild(builder)
             depth = 0
             while build and depth < max_depth and build_count < max_builds:
                 depth += 1
@@ -268,7 +280,7 @@ class ConsoleStatusResource(HtmlResource):
         revision = lastRevision 
 
         builds = []
-        build = builder.getBuild(-1)
+        build = self.getHeadBuild(builder)
         number = 0
         while build and number < numBuilds:
             debugInfo["builds_scanned"] += 1
@@ -461,7 +473,7 @@ class ConsoleStatusResource(HtmlResource):
               else:
                   # If not offline, then display the result of the last
                   # finished build.
-                  build = status.getBuilder(builder).getBuild(-1)
+                  build = self.getHeadBuild(status.getBuilder(builder))
                   while build and not build.isFinished():
                       build = build.getPreviousBuild()
 
