@@ -1114,7 +1114,7 @@ class LoggingBuildStep(BuildStep):
         self.step_status.setText(self.getText(cmd, results))
         self.step_status.setText2(self.maybeGetText2(cmd, results))
 
-# (WithProeprties used to be available in this module)
+# (WithProperties used to be available in this module)
 from buildbot.process.properties import WithProperties
 _hush_pyflakes = [WithProperties]
 del _hush_pyflakes
