@@ -98,6 +98,8 @@ class Change:
                         self.revlink, self.revision)
             else:
                 revision = "Revision: <b>%s</b><br />\n" % self.revision
+        else:
+            revision = None
 
         branch = ""
         if self.branch:
