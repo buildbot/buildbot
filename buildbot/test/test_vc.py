@@ -286,7 +286,8 @@ class BaseHelper:
         # you must call this from createRepository
         self.repbase = os.path.abspath(os.path.join("test_vc",
                                                     "repositories"))
-        _makedirsif(self.repbase)
+        rmdirRecursive(self.repbase)
+        os.makedirs(self.repbase)
             
     def createRepository(self):
         # this will only be called once per process
