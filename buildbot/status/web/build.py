@@ -123,8 +123,8 @@ class StatusResourceBuild(HtmlResource):
                         name,
                         " ".join(s.getText()),
                         time_to_run))
+			data += "  <ol>\n"
             if s.getLogs():
-                data += "  <ol>\n"
                 for logfile in s.getLogs():
                     logname = logfile.getName()
                     logurl = req.childLink("steps/%s/logs/%s" %
@@ -132,8 +132,15 @@ class StatusResourceBuild(HtmlResource):
                                             urllib.quote(logname)))
                     data += ("   <li><a href=\"%s\">%s</a></li>\n" %
                              (logurl, logfile.getName()))
-                data += "  </ol>\n"
-            data += " </li>\n"
+            if s.getURLs():
+                for url in s.getURLs().items():
+                    logname = url[0]
+                    logurl = url[1]
+                    data += ('   <li><a href="%s">%s</a></li>\n' %
+                             (logurl, html.escape(logname)))
+			data += "</ol>\n"
+			data += " </li>\n"
+
         data += "</ol>\n"
 
         data += "<h2>Build Properties:</h2>\n"
