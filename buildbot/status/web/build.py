@@ -123,7 +123,7 @@ class StatusResourceBuild(HtmlResource):
                         name,
                         " ".join(s.getText()),
                         time_to_run))
-			data += "  <ol>\n"
+            data += "  <ol>\n"
             if s.getLogs():
                 for logfile in s.getLogs():
                     logname = logfile.getName()
@@ -138,8 +138,8 @@ class StatusResourceBuild(HtmlResource):
                     logurl = url[1]
                     data += ('   <li><a href="%s">%s</a></li>\n' %
                              (logurl, html.escape(logname)))
-			data += "</ol>\n"
-			data += " </li>\n"
+            data += "</ol>\n"
+            data += " </li>\n"
 
         data += "</ol>\n"
 
