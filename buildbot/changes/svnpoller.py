@@ -48,7 +48,7 @@ class SVNPoller(base.ChangeSource, util.ComparableMixin):
     compare_attrs = ["svnurl", "split_file_function",
                      "svnuser", "svnpasswd",
                      "pollinterval", "histmax",
-                     "svnbin"]
+                     "svnbin", "category"]
 
     parent = None # filled in when we're added
     last_change = None
@@ -171,6 +171,11 @@ class SVNPoller(base.ChangeSource, util.ComparableMixin):
                              "http://reposerver/websvn/revision.php?rev=%s"
                              would create suitable links on the build pages
                              to information in websvn on each revision.
+
+        @type  category:     string
+        @param category:     A single category associated with the changes that
+                             could be used by schedulers watch for branches of a
+                             certain name AND category.
         """
 
         if svnurl.endswith("/"):
@@ -188,6 +193,7 @@ class SVNPoller(base.ChangeSource, util.ComparableMixin):
         self._prefix = None
         self.overrun_counter = 0
         self.loop = LoopingCall(self.checksvn)
+        self.category = category
 
     def split_file(self, path):
         # use getattr() to avoid turning this function into a bound method,
