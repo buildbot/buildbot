@@ -58,7 +58,7 @@ class SVNPoller(base.ChangeSource, util.ComparableMixin):
     def __init__(self, svnurl, split_file=None,
                  svnuser=None, svnpasswd=None,
                  pollinterval=10*60, histmax=100,
-                 svnbin='svn', revlinktmpl=''):
+                 svnbin='svn', revlinktmpl='', category=None):
         """
         @type  svnurl: string
         @param svnurl: the SVN URL that describes the repository and
@@ -457,7 +457,8 @@ class SVNPoller(base.ChangeSource, util.ComparableMixin):
                                comments=comments,
                                revision=revision,
                                branch=branch,
-                               revlink=revlink)
+                               revlink=revlink,
+                               category=self.category)
                     changes.append(c)
 
         return changes
