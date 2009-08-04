@@ -181,6 +181,8 @@ class Source(LoggingBuildStep):
         if patch:
             self.addCompleteLog("patch", patch[1])
 
+        if self.alwaysUseLatest:
+            revision = None
         self.startVC(branch, revision, patch)
 
     def commandComplete(self, cmd):
