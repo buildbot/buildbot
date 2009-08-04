@@ -108,7 +108,7 @@ class Scheduling(unittest.TestCase):
         s.addChange(c3)
         
         self.failUnlessEqual(s.importantChanges, [c1,c3])
-        self.failUnlessEqual(s.unimportantChanges, [c2])
+        self.failUnlessEqual(s.allChanges, [c1,c2,c3])
         self.failUnless(s.timer)
 
         d = defer.Deferred()

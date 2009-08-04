@@ -286,7 +286,8 @@ class BaseHelper:
         # you must call this from createRepository
         self.repbase = os.path.abspath(os.path.join("test_vc",
                                                     "repositories"))
-        _makedirsif(self.repbase)
+        rmdirRecursive(self.repbase)
+        os.makedirs(self.repbase)
             
     def createRepository(self):
         # this will only be called once per process
@@ -2441,7 +2442,7 @@ class MercurialHelper(BaseHelper):
         yield w; w.getResult()
         w = self.dovc(tmp, "add")
         yield w; w.getResult()
-        w = self.dovc(tmp, ['commit', '-m', 'initial_import'])
+        w = self.dovc(tmp, ['commit', '-m', 'initial_import', '--user' ,'bbtests@localhost' ])
         yield w; w.getResult()
         w = self.dovc(tmp, ['push', self.rep_trunk])
         # note that hg-push does not actually update the working directory
@@ -2451,7 +2452,7 @@ class MercurialHelper(BaseHelper):
         self.addTrunkRev(self.extract_id(out))
 
         self.populate_branch(tmp)
-        w = self.dovc(tmp, ['commit', '-m', 'commit_on_branch'])
+        w = self.dovc(tmp, ['commit', '-m', 'commit_on_branch', '--user' ,'bbtests@localhost' ])
         yield w; w.getResult()
         w = self.dovc(tmp, ['push', self.rep_branch])
         yield w; w.getResult()
@@ -2474,7 +2475,7 @@ class MercurialHelper(BaseHelper):
         # force the mtime forward a little bit
         future = time.time() + 2*self.version
         os.utime(version_c_filename, (future, future))
-        w = self.dovc(tmp, ['commit', '-m', 'revised_to_%d' % self.version])
+        w = self.dovc(tmp, ['commit', '-m', 'revised_to_%d' % self.version, '--user' ,'bbtests@localhost' ])
         yield w; w.getResult()
         w = self.dovc(tmp, ['push', self.rep_trunk])
         yield w; w.getResult()

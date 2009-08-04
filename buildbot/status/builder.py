@@ -12,7 +12,11 @@ import os, shutil, sys, re, urllib, itertools
 import gc
 from cPickle import load, dump
 from cStringIO import StringIO
-from bz2 import BZ2File
+
+try: # bz2 is not available on py23
+    from bz2 import BZ2File
+except ImportError:
+    BZ2File = None
 
 # sibling imports
 from buildbot import interfaces, util, sourcestamp
@@ -282,10 +286,11 @@ class LogFile:
             return self.openfile
         # otherwise they get their own read-only handle
         # try a compressed log first
-        try:
-            return BZ2File(self.getFilename() + ".bz2", "r")
-        except IOError:
-            pass
+        if BZ2File is not None:
+            try:
+                return BZ2File(self.getFilename() + ".bz2", "r")
+            except IOError:
+                pass
         return open(self.getFilename(), "r")
 
     def getText(self):
@@ -444,6 +449,10 @@ class LogFile:
 
 
     def compressLog(self):
+        # bail out if there's no compression support
+        if BZ2File is None:
+            return
+
         compressed = self.getFilename() + ".bz2.tmp"
         d = threads.deferToThread(self._compressLog, compressed)
         d.addCallback(self._renameCompressedLog, compressed)
@@ -943,7 +952,9 @@ class BuildStepStatus(styles.Versioned):
             if logCompressionLimit is not False and \
                     isinstance(loog, LogFile):
                 if os.path.getsize(loog.getFilename()) > logCompressionLimit:
-                    cld.append(loog.compressLog())
+                    loog_deferred = loog.compressLog()
+                    if loog_deferred:
+                        cld.append(loog_deferred)
 
         for r in self.updates.keys():
             if self.updates[r] is not None:
@@ -1726,6 +1737,11 @@ class BuilderStatus(styles.Versioned):
         for Nb in range(1, self.nextBuildNumber+1):
             b = self.getBuild(-Nb)
             if not b:
+                # HACK: If this is the first build we are looking at, it is
+                # possible it's in progress but locked before it has written a
+                # pickle; in this case keep looking.
+                if Nb == 1:
+                    continue
                 break
             if branches and not b.getSourceStamp().branch in branches:
                 continue

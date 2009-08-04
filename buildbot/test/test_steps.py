@@ -21,6 +21,7 @@ from twisted.internet import reactor, defer
 
 from buildbot.sourcestamp import SourceStamp
 from buildbot.process import buildstep, base, factory
+from buildbot.process.properties import Properties, WithProperties
 from buildbot.buildslave import BuildSlave
 from buildbot.steps import shell, source, python, master
 from buildbot.status import builder
@@ -752,7 +753,9 @@ class MasterShellCommand(StepTester, unittest.TestCase):
         self.slavebase = "testMasterShellCommand.slave"
         self.masterbase = "testMasterShellCommand.master"
         sb = self.makeSlaveBuilder()
-        step = self.makeStep(master.MasterShellCommand, command=['echo', 'hi'])
+        step = self.makeStep(master.MasterShellCommand, command=['echo',
+                                   WithProperties("hi build-%(other)s.tar.gz")])
+        step.build.setProperty("other", "foo", "test")
 
         # we can't invoke runStep until the reactor is started .. hence this
         # little dance
@@ -764,7 +767,7 @@ class MasterShellCommand(StepTester, unittest.TestCase):
         def _check(results):
             self.failUnlessEqual(results, SUCCESS)
             logtxt = step.getLog("stdio").getText()
-            self.failUnlessEqual(logtxt.strip(), "hi")
+            self.failUnlessEqual(logtxt.strip(), "hi build-foo.tar.gz")
         d.addCallback(_check)
         reactor.callLater(0, d.callback, None)
         return d

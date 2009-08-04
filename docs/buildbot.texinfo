@@ -2482,7 +2482,7 @@ build, then those changes will be included in the downstream build.
 See the @pxref{Triggerable Scheduler} for a more flexible dependency
 mechanism that can avoid this problem.
 
-The arguments to this scheduler are:
+The keyword arguments to this scheduler are:
 
 @table @code
 @item name
@@ -2502,9 +2502,9 @@ Example:
 from buildbot import scheduler
 tests = scheduler.Scheduler("just-tests", None, 5*60,
                             ["full-linux", "full-netbsd", "full-OSX"])
-package = scheduler.Dependent("build-package",
-                              tests, # upstream scheduler -- no quotes!
-                              ["make-tarball", "make-deb", "make-rpm"])
+package = scheduler.Dependent(name="build-package",
+                              upstream=tests, # <- no quotes!
+                              builderNames=["make-tarball", "make-deb", "make-rpm"])
 c['schedulers'] = [tests, package]
 @end example
 

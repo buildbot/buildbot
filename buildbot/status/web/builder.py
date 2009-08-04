@@ -115,7 +115,8 @@ class StatusResourceBuilder(HtmlResource, OneLineMixin):
             data += "</ul>\n"
 
             cancelURL = path_to_builder(req, self.builder_status) + '/cancelbuild'
-            data += '''
+            if self.builder_control is not None:
+                data += '''
 <form action="%s" class="command cancelbuild" style="display:inline" method="post">
   <input type="hidden" name="id" value="all" />
   <input type="submit" value="Cancel All" />
