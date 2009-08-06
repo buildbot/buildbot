@@ -1231,6 +1231,7 @@ class Factories(unittest.TestCase):
                                'description': None,
                                'workdir': None,
                                'logfiles': {},
+                               'lazylogfiles': False,
                                'usePTY': "slave-config",
                                })
         shell_args.update(kwargs)
@@ -1248,6 +1249,7 @@ class Factories(unittest.TestCase):
                       'baseURL': None,
                       'defaultBranch': None,
                       'logfiles': {},
+                      'lazylogfiles' : False,
                       }
         darcs_args.update(kwargs)
         self.failUnlessIdentical(factory[0], Darcs)

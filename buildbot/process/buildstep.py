@@ -256,6 +256,7 @@ class LoggedRemoteCommand(RemoteCommand):
 
     def __init__(self, *args, **kwargs):
         self.logs = {}
+        self.delayedLogs = {}
         self._closeWhenFinished = {}
         RemoteCommand.__init__(self, *args, **kwargs)
 
@@ -290,8 +291,14 @@ class LoggedRemoteCommand(RemoteCommand):
         if not logfileName:
             logfileName = loog.getName()
         assert logfileName not in self.logs
+        assert logfileName not in self.delayedLogs
         self.logs[logfileName] = loog
         self._closeWhenFinished[logfileName] = closeWhenFinished
+
+    def useLogDelayed(self, logfileName, activateCallBack, closeWhenFinished=False):
+        assert logfileName not in self.logs
+        assert logfileName not in self.delayedLogs
+        self.delayedLogs[logfileName] = (activateCallBack, closeWhenFinished)
 
     def start(self):
         log.msg("LoggedRemoteCommand.start")
@@ -313,6 +320,14 @@ class LoggedRemoteCommand(RemoteCommand):
             self.logs['stdio'].addHeader(data)
 
     def addToLog(self, logname, data):
+        # Activate delayed logs on first data.
+        if logname in self.delayedLogs:
+            (activateCallBack, closeWhenFinished) = self.delayedLogs[logname]
+            del self.delayedLogs[logname]
+            loog = activateCallBack(self)
+            self.logs[logname] = loog
+            self._closeWhenFinished[logname] = closeWhenFinished
+
         if logname in self.logs:
             self.logs[logname].addStdout(data)
         else:
@@ -964,15 +979,17 @@ class LoggingBuildStep(BuildStep):
     progressMetrics = ('output',)
     logfiles = {}
 
-    parms = BuildStep.parms + ['logfiles']
+    parms = BuildStep.parms + ['logfiles', 'lazylogfiles']
 
-    def __init__(self, logfiles={}, *args, **kwargs):
+    def __init__(self, logfiles={}, lazylogfiles=False, *args, **kwargs):
         BuildStep.__init__(self, *args, **kwargs)
-        self.addFactoryArguments(logfiles=logfiles)
+        self.addFactoryArguments(logfiles=logfiles,
+                                 lazylogfiles=lazylogfiles)
         # merge a class-level 'logfiles' attribute with one passed in as an
         # argument
         self.logfiles = self.logfiles.copy()
         self.logfiles.update(logfiles)
+        self.lazylogfiles = lazylogfiles
         self.addLogObserver('stdio', OutputProgressObserver("output"))
 
     def describe(self, done=False):
@@ -1015,10 +1032,20 @@ class LoggingBuildStep(BuildStep):
         """Set up any additional logfiles= logs.
         """
         for logname,remotefilename in logfiles.items():
-            # tell the BuildStepStatus to add a LogFile
-            newlog = self.addLog(logname)
-            # and tell the LoggedRemoteCommand to feed it
-            cmd.useLog(newlog, True)
+            if self.lazylogfiles:
+                # Ask LoggedRemoteCommand to watch a logfile, but only add
+                # it when/if we see any data.
+                #
+                # The dummy default argument local_logname is a work-around for
+                # Python name binding; default values are bound by value, but
+                # captured variables in the body are bound by name.
+                callback = lambda cmd_arg, local_logname=logname: self.addLog(local_logname)
+                cmd.useLogDelayed(logname, callback, True)
+            else:
+                # tell the BuildStepStatus to add a LogFile
+                newlog = self.addLog(logname)
+                # and tell the LoggedRemoteCommand to feed it
+                cmd.useLog(newlog, True)
 
     def interrupt(self, reason):
         # TODO: consider adding an INTERRUPTED or STOPPED status to use
