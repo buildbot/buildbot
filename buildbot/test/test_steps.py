@@ -135,6 +135,7 @@ class BuildStep(unittest.TestCase):
                                  'want_stderr': 1,
                                  'logfiles': {},
                                  'timeout': 10,
+                                 'maxTime': None,
                                  'usePTY': 'slave-config',
                                  'env': None}) ] )
         self.assertEqual(self.remote.events, self.expectedEvents)

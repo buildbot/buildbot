@@ -5659,6 +5659,9 @@ f.addStep(ShellCommand(
 if the command fails to produce any output for this many seconds, it
 is assumed to be locked up and will be killed.
 
+@item maxTime
+if the command takes longer than this many seconds, it will be killed.
+
 @item description
 This will be used to describe the command (on the Waterfall display)
 while the command is still running. It should be a single
