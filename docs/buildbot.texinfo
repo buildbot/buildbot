@@ -2701,7 +2701,7 @@ test = scheduler.Triggerable(name="distributed-test",
 package = scheduler.Triggerable(name="package-all-platforms",
                 builderNames=["package-all-platforms"])
 
-c['schedulers'] = [checkin, nightly, build, test, package]
+c['schedulers'] = [mktarball, checkin, nightly, build, test, package]
 
 # on checkin, make a tarball, build it, and test it
 checkin_factory = factory.BuildFactory()
