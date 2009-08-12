@@ -263,7 +263,7 @@ be displayed that occurred <b>before</b> this timestamp. Instead of providing
 given interval, where each timestamp on the left hand edge counts as a single
 event. You can add a <tt>num_events=</tt> argument to override this this.</p>
 
-<h2>Hiding non-Build events</h2>
+<h2>Showing non-Build events</h2>
 
 <p>By passing <tt>show_events=true</tt>, you can add the "buildslave
 attached", "buildslave detached", and "builder reconfigured" events that
@@ -327,13 +327,13 @@ class WaterfallHelp(HtmlResource):
         data = ''
         status = self.getStatus(request)
 
-        showEvents_checked = 'checked="checked"'
+        showEvents_checked = ''
         if request.args.get("show_events", ["false"])[0].lower() == "true":
-            showEvents_checked = ''
+            showEvents_checked = 'checked="checked"'
         show_events_input = ('<p>'
                              '<input type="checkbox" name="show_events" '
                              'value="true" %s>'
-                             'Hide non-Build events'
+                             'Show non-Build events'
                              '</p>\n'
                              ) % showEvents_checked
 
