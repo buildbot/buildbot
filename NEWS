@@ -1,6 +1,11 @@
 User visible changes in Buildbot.             -*- outline -*-
 
-* Release 0.7.11p (July 16, 2009)
+* Release 0.7.11p2 (August 12, 2009)
+
+Fix a cross-site scripting vulnerability reported by Nicolas Sylvain
+<nsylvain@google.com>.
+
+* Release 0.7.11p1 (July 16, 2009)
 
 Fixes a few test failures in 0.7.11, and gives a default value for branchType
 if it is not specified by the master.
