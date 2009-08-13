@@ -77,7 +77,7 @@ class OneBuildSlaveResource(HtmlResource, OneLineMixin):
 
         data.append("<a href=\"%s\">%s</a>\n" % (self.path_to_root(req), projectName))
 
-        data.append("<h1>Build Slave: %s</h1>\n" % self.slavename)
+        data.append("<h1>Build Slave: %s</h1>\n" % html.escape(self.slavename))
 
         shutdown_url = req.childLink("shutdown")
 
@@ -213,4 +213,4 @@ class BuildSlavesResource(HtmlResource):
             slave = self.getStatus(req).getSlave(path)
             return OneBuildSlaveResource(path)
         except KeyError:
-            return NoResource("No such slave '%s'" % path)
+            return NoResource("No such slave '%s'" % html.escape(path))
