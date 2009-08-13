@@ -129,7 +129,7 @@ class StatusResourceBuilder(HtmlResource, OneLineMixin):
         data += "<h2>Recent Builds:</h2>\n"
         data += "(<a href=\"%s\">view in waterfall</a>)\n" % (self.path_to_root(req)+"waterfall?show="+html.escape(b.getName()))
         data += "<ul>\n"
-        numbuilds = req.args.get('numbuilds', ['5'])[0]
+        numbuilds = int(req.args.get('numbuilds', ['5'])[0])
         for i,build in enumerate(b.generateFinishedBuilds(num_builds=int(numbuilds))):
             data += " <li>" + self.make_line(req, build, False) + "</li>\n"
             if i == 0:
@@ -194,7 +194,7 @@ class StatusResourceBuilder(HtmlResource, OneLineMixin):
         revision = req.args.get("revision", [""])[0]
 
         r = "The web-page 'force build' button was pressed by '%s': %s\n" \
-            % (name, reason)
+            % (html.escape(name), html.escape(reason))
         log.msg("web forcebuild of builder '%s', branch='%s', revision='%s'"
                 " by user '%s'" % (self.builder_status.getName(), branch,
                                    revision, name))
