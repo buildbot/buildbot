@@ -61,4 +61,4 @@ class TestsResource(HtmlResource):
             result = self.test_results[name]
             return TestResult(name, result)
         except KeyError:
-            return NoResource("No such test name '%s'" % path)
+            return NoResource("No such test name '%s'" % html.escape(path))
