@@ -219,7 +219,7 @@ class OneBoxPerBuilder(HtmlResource):
         data = ""
 
         html_branches = map(html.escape, branches)
-        data += "<h2>Latest builds: %s</h2>\n" % ", ".join(branches)
+        data += "<h2>Latest builds: %s</h2>\n" % ", ".join(html_branches)
         data += "<table>\n"
 
         building = False
