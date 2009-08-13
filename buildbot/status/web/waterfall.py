@@ -399,7 +399,7 @@ class WaterfallHelp(HtmlResource):
                                   '<td><input type="radio" name="reload" '
                                   'value="%s" %s></td> '
                                   '<td>%s</td></tr>\n'
-                                  ) % (value, checked, name)
+                                  ) % (html.escape(value), checked, html.escape(name))
         show_reload_input += '</table>\n'
 
         fields = {"show_events_input": show_events_input,
