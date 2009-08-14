@@ -1,5 +1,10 @@
 User visible changes in Buildbot.             -*- outline -*-
 
+* Release 0.7.11p3 (August 14, 2009)
+
+Fix additional cross-site scripting vulnerabilities discovered by Dustin J.
+Mitchell, Nicolas Sylvain <nsylvain@google.com>, and Nicolas Alvarez.
+
 * Release 0.7.11p2 (August 12, 2009)
 
 Fix a cross-site scripting vulnerability reported by Nicolas Sylvain
