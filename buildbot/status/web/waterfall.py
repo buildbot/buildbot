@@ -337,7 +337,7 @@ class WaterfallHelp(HtmlResource):
                                     '<input type="text" name="branch" '
                                     'value="%s">'
                                     '</td></tr>\n'
-                                    ) % (b,)
+                                    ) % (html.escape(b),)
         show_branches_input += '</table>\n'
 
         # this has a set of toggle-buttons to let the user choose the
@@ -380,7 +380,7 @@ class WaterfallHelp(HtmlResource):
                                   '<td><input type="radio" name="reload" '
                                   'value="%s" %s></td> '
                                   '<td>%s</td></tr>\n'
-                                  ) % (value, checked, name)
+                                  ) % (html.escape(value), checked, html.escape(name))
         show_reload_input += '</table>\n'
 
         fields = {"show_events_input": show_events_input,
@@ -529,7 +529,7 @@ class WaterfallStatusResource(HtmlResource):
                     newargs[k].append(v)
                 else:
                     newargs[k] = [v]
-            newquery = "&".join(["%s=%s" % (k, v)
+            newquery = "&".join(["%s=%s" % (urllib.quote(k), urllib.quote(v))
                                  for k in newargs
                                  for v in newargs[k]
                                  ])
