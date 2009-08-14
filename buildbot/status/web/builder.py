@@ -133,7 +133,7 @@ class StatusResourceBuilder(HtmlResource, OneLineMixin):
         revision = req.args.get("revision", [""])[0]
 
         r = "The web-page 'force build' button was pressed by '%s': %s\n" \
-            % (name, reason)
+            % (html.escape(name), html.escape(reason))
         log.msg("web forcebuild of builder '%s', branch='%s', revision='%s'"
                 % (self.builder_status.getName(), branch, revision))
 
