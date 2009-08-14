@@ -209,8 +209,9 @@ class StatusResourceBuild(HtmlResource):
                 (b.getBuilder().getName(), b.getNumber()))
         name = req.args.get("username", ["<unknown>"])[0]
         comments = req.args.get("comments", ["<no reason specified>"])[0]
+        # html-quote both the username and comments, just to be safe
         reason = ("The web-page 'stop build' button was pressed by "
-                  "'%s': %s\n" % (name, comments))
+                  "'%s': %s\n" % (html.escape(name), html.escape(comments)))
         c.stopBuild(reason)
         # we're at http://localhost:8080/svn-hello/builds/5/stop?[args] and
         # we want to go to: http://localhost:8080/svn-hello
@@ -227,7 +228,7 @@ class StatusResourceBuild(HtmlResource):
         name = req.args.get("username", ["<unknown>"])[0]
         comments = req.args.get("comments", ["<no reason specified>"])[0]
         reason = ("The web-page 'rebuild' button was pressed by "
-                  "'%s': %s\n" % (name, comments))
+                  "'%s': %s\n" % (html.escape(name), html.escape(comments)))
         if not bc or not b.isFinished():
             log.msg("could not rebuild: bc=%s, isFinished=%s"
                     % (bc, b.isFinished()))
