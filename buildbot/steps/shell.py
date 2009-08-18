@@ -2,7 +2,9 @@
 
 import re
 from twisted.python import log
+from twisted.spread import pb
 from buildbot.process.buildstep import LoggingBuildStep, RemoteShellCommand
+from buildbot.process.buildstep import RemoteCommand
 from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE, STDOUT, STDERR
 
 # for existing configurations that import WithProperties from here.  We like
@@ -302,21 +304,189 @@ class Configure(ShellCommand):
     descriptionDone = ["configure"]
     command = ["./configure"]
 
+class StringFileWriter(pb.Referenceable):
+    """
+    FileWriter class that just puts received data into a buffer.
+
+    Used to upload a file from slave for inline processing rather than
+    writing into a file on master.
+    """
+    def __init__(self):
+        self.buffer = ""
+
+    def remote_write(self, data):
+        self.buffer += data
+
+    def remote_close(self):
+        pass
+
+class SilentRemoteCommand(RemoteCommand):
+    """
+    Remote command subclass used to run an internal file upload command on the
+    slave. We do not need any progress updates from such command, so override
+    remoteUpdate() with an empty method.
+    """
+    def remoteUpdate(self, update):
+        pass
+
 class WarningCountingShellCommand(ShellCommand):
     warnCount = 0
     warningPattern = '.*warning[: ].*'
+    # The defaults work for GNU Make.
+    directoryEnterPattern = "make.*: Entering directory [\"`'](.*)['`\"]"
+    directoryLeavePattern = "make.*: Leaving directory"
+    suppressionFile = None
 
-    def __init__(self, warningPattern=None, **kwargs):
+    commentEmptyLineRe = re.compile(r"^\s*(\#.*)?$")
+    suppressionLineRe = re.compile(r"^\s*(.+?)\s*:\s*(.+?)\s*(?:[:]\s*([0-9]+)(?:-([0-9]+))?\s*)?$")
+
+    def __init__(self, workdir=None,
+                 warningPattern=None, warningExtractor=None,
+                 directoryEnterPattern=None, directoryLeavePattern=None,
+                 suppressionFile=None, **kwargs):
+        self.workdir = workdir
         # See if we've been given a regular expression to use to match
         # warnings. If not, use a default that assumes any line with "warning"
         # present is a warning. This may lead to false positives in some cases.
         if warningPattern:
             self.warningPattern = warningPattern
+        if directoryEnterPattern:
+            self.directoryEnterPattern = directoryEnterPattern
+        if directoryLeavePattern:
+            self.directoryLeavePattern = directoryLeavePattern
+        if suppressionFile:
+            self.suppressionFile = suppressionFile
+        if warningExtractor:
+            self.warningExtractor = warningExtractor
+        else:
+            self.warningExtractor = WarningCountingShellCommand.warnExtractWholeLine
 
         # And upcall to let the base class do its work
-        ShellCommand.__init__(self, **kwargs)
+        ShellCommand.__init__(self, workdir=workdir, **kwargs)
 
-        self.addFactoryArguments(warningPattern=warningPattern)
+        self.addFactoryArguments(warningPattern=warningPattern,
+                                 directoryEnterPattern=directoryEnterPattern,
+                                 directoryLeavePattern=directoryLeavePattern,
+                                 warningExtractor=warningExtractor,
+                                 suppressionFile=suppressionFile)
+        self.suppressions = []
+        self.directoryStack = []
+
+    def setDefaultWorkdir(self, workdir):
+        if self.workdir is None:
+            self.workdir = workdir
+        ShellCommand.setDefaultWorkdir(self, workdir)
+
+    def addSuppression(self, suppressionList):
+        """
+        This method can be used to add patters of warnings that should
+        not be counted.
+
+        It takes a single argument, a list of patterns.
+
+        Each pattern is a 4-tuple (FILE-RE, WARN-RE, START, END).
+
+        FILE-RE is a regular expression (string or compiled regexp), or None.
+        If None, the pattern matches all files, else only files matching the
+        regexp. If directoryEnterPattern is specified in the class constructor,
+        matching is against the full path name, eg. src/main.c.
+
+        WARN-RE is similarly a regular expression matched against the
+        text of the warning, or None to match all warnings.
+
+        START and END form an inclusive line number range to match against. If
+        START is None, there is no lower bound, similarly if END is none there
+        is no upper bound."""
+
+        for fileRe, warnRe, start, end in suppressionList:
+            if fileRe != None and isinstance(fileRe, str):
+                fileRe = re.compile(fileRe)
+            if warnRe != None and isinstance(warnRe, str):
+                warnRe = re.compile(warnRe)
+            self.suppressions.append((fileRe, warnRe, start, end))
+
+    def warnExtractWholeLine(self, line, match):
+        """
+        Extract warning text as the whole line.
+        No file names or line numbers."""
+        return (None, None, line)
+
+    def warnExtractFromRegexpGroups(self, line, match):
+        """
+        Extract file name, line number, and warning text as groups (1,2,3)
+        of warningPattern match."""
+        file = match.group(1)
+        lineNo = match.group(2)
+        if lineNo != None:
+            lineNo = int(lineNo)
+        text = match.group(3)
+        return (file, lineNo, text)
+
+    def maybeAddWarning(self, warnings, line, match):
+        if self.suppressions:
+            (file, lineNo, text) = self.warningExtractor(self, line, match)
+
+            if file != None and file != "" and self.directoryStack:
+                currentDirectory = self.directoryStack[-1]
+                if currentDirectory != None and currentDirectory != "":
+                    file = "%s/%s" % (currentDirectory, file)
+
+            # Skip adding the warning if any suppression matches.
+            for fileRe, warnRe, start, end in self.suppressions:
+                if ( (file == None or fileRe == None or fileRe.search(file)) and
+                     (warnRe == None or  warnRe.search(text)) and
+                     lineNo != None and
+                     (start == None or start <= lineNo) and
+                     (end == None or end >= lineNo) ):
+                    return
+
+        warnings.append(line)
+        self.warnCount += 1
+
+    def start(self):
+        if self.suppressionFile == None:
+            return ShellCommand.start(self)
+
+        version = self.slaveVersion("uploadFile")
+        if not version:
+            m = "Slave is too old, does not know about uploadFile"
+            raise BuildSlaveTooOldError(m)
+
+        self.myFileWriter = StringFileWriter()
+
+        args = {
+            'slavesrc': self.suppressionFile,
+            'workdir': self.workdir,
+            'writer': self.myFileWriter,
+            'maxsize': None,
+            'blocksize': 32*1024,
+            }
+        cmd = SilentRemoteCommand('uploadFile', args)
+        d = self.runCommand(cmd)
+        d.addCallback(self.uploadDone)
+        d.addErrback(self.failed)
+
+    def uploadDone(self, dummy):
+        lines = self.myFileWriter.buffer.split("\n")
+        del(self.myFileWriter)
+
+        list = []
+        for line in lines:
+            if self.commentEmptyLineRe.match(line):
+                continue
+            match = self.suppressionLineRe.match(line)
+            if (match):
+                file, test, start, end = match.groups()
+                if (end != None):
+                    end = int(end)
+                if (start != None):
+                    start = int(start)
+                    if end == None:
+                        end = start
+                list.append((file, test, start, end))
+
+        self.addSuppression(list)
+        return ShellCommand.start(self)
 
     def createSummary(self, log):
         self.warnCount = 0
@@ -330,6 +500,14 @@ class WarningCountingShellCommand(ShellCommand):
         if isinstance(wre, str):
             wre = re.compile(wre)
 
+        directoryEnterRe = self.directoryEnterPattern
+        if directoryEnterRe != None and isinstance(directoryEnterRe, str):
+            directoryEnterRe = re.compile(directoryEnterRe)
+
+        directoryLeaveRe = self.directoryLeavePattern
+        if directoryLeaveRe != None and isinstance(directoryLeaveRe, str):
+            directoryLeaveRe = re.compile(directoryLeaveRe)
+
         # Check if each line in the output from this command matched our
         # warnings regular expressions. If did, bump the warnings count and
         # add the line to the collection of lines with warnings
@@ -337,9 +515,18 @@ class WarningCountingShellCommand(ShellCommand):
         # TODO: use log.readlines(), except we need to decide about stdout vs
         # stderr
         for line in log.getText().split("\n"):
-            if wre.match(line):
-                warnings.append(line)
-                self.warnCount += 1
+            if directoryEnterRe:
+                match = directoryEnterRe.match(line)
+                if match:
+                    self.directoryStack.append(match.group(1))
+                if (directoryLeaveRe and
+                    self.directoryStack and
+                    directoryLeaveRe.match(line)):
+                        self.directoryStack.pop()
+
+            match = wre.match(line)
+            if match:
+                self.maybeAddWarning(warnings, line, match)
 
         # If there were any warnings, make the log if lines with warnings
         # available

@@ -1,5 +1,11 @@
 User visible changes in Buildbot.             -*- outline -*-
 
+** Suppression of selected compiler warnings
+
+The WarningCountingShellCommand class has been extended with the ability to
+upload from the slave a file contain warnings to be ignored. See the
+documentation of the suppressionFile argument to the Compile build step.
+
 ** New buildstep `MTR'
 
 A new class buildbot.process.mtrlogobserver.MTR was added. This buildstep is
