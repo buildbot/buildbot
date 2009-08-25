@@ -14,17 +14,17 @@ class HeldBuilds(StatusReceiver):
        """
 
     def __init__(self):
-        self.held = []
+        self.held = {}
         self.observers = []
 
     def getHeldBuilds(self):
         self.clearFinishedBuilds()
-        return self.held
+        return self.held.values()
 
     def clearFinishedBuilds(self):
-        for hold in self.held:
+        for id, hold in self.held.items():
             if (hold.build.getStatus().isFinished()):
-                self.held.remove(hold)
+                self.held.pop(id)
 
     def subscribe(self, observer):
         """ observer needs to implement this method:
@@ -39,20 +39,17 @@ class HeldBuilds(StatusReceiver):
 
     def add(self, hold_step):
         log.msg('Adding hold step %s' % hold_step.id())
-        self.held.append(hold_step)
+        self.held[hold_step.id()] = hold_step
         hold_step.step_status.subscribe(self)
         for observer in self.observers:
             observer.buildHeld(hold_step)
 
     def getById(self, id):
-        for hold in self.getHeldBuilds():
-            if hold.id() == id:
-                return hold
-        return None
+        return self.held[id]
 
     def stepFinished(self, build, step, results):
         log.msg('Removing hold step %s' % hold_step.id())
-        self.held.remove(step)
+        self.held.pop(step.id())
         hold_step.step_status.unsubscribe(self)
 
 _held_builds = HeldBuilds()
@@ -187,10 +184,11 @@ class IRCContactWithHold(IRCContact):
                 self.buildHeld(hold)
 
     def command_FREE(self, hold_step_id, who):
-        holdStep = self._findHoldStep(hold_step_id)
-        if holdStep:
-            holdStep.free();
-            self.send('Releasing held build %s' % hold_step_id)
+        if len(hold_step_id) > 0:
+            holdStep = self._findHoldStep(hold_step_id)
+            if holdStep:
+                holdStep.free();
+                self.send('Releasing held build %s' % hold_step_id)
 
     command_FREE.usage = "free <build step> ... - Free the build allowing it to go immediately to the next build step."
 
