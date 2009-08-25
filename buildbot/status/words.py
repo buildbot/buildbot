@@ -832,7 +832,7 @@ class IRC(base.StatusReceiverMultiService):
                      "categories"]
 
     def __init__(self, host, nick, channels, port=6667, allowForce=True,
-                 categories=None, password=None, notify_events={}, statusFactory=None):
+                 categories=None, password=None, notify_events={}):
         base.StatusReceiverMultiService.__init__(self)
 
         assert allowForce in (True, False) # TODO: implement others
@@ -847,11 +847,8 @@ class IRC(base.StatusReceiverMultiService):
         self.categories = categories
         self.notify_events = notify_events
         log.msg('Notify events %s' % notify_events)
-        if (statusFactory is None):
-            self.f = IrcStatusFactory(self.nick, self.password,
+        self.f = IrcStatusFactory(self.nick, self.password,
                                   self.channels, self.categories, self.notify_events)
-        else:
-            self.f = statusFactory
         c = internet.TCPClient(self.host, self.port, self.f)
         c.setServiceParent(self)
 
