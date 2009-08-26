@@ -516,12 +516,12 @@ class WarningCountingShellCommand(ShellCommand):
         # stderr
         for line in log.getText().split("\n"):
             if directoryEnterRe:
-                match = directoryEnterRe.match(line)
+                match = directoryEnterRe.search(line)
                 if match:
                     self.directoryStack.append(match.group(1))
                 if (directoryLeaveRe and
                     self.directoryStack and
-                    directoryLeaveRe.match(line)):
+                    directoryLeaveRe.search(line)):
                         self.directoryStack.pop()
 
             match = wre.match(line)
