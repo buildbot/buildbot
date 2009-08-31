@@ -291,6 +291,10 @@ class Build:
         for rq in self.requests:
             props.updateFromProperties(rq.properties)
 
+        # and finally, from the SourceStamp, which has properties via Change
+        for change in self.source.changes:
+            props.updateFromProperties(change.properties)
+
         # now set some properties of our own, corresponding to the
         # build itself
         props.setProperty("buildername", self.builder.name, "Build")

@@ -9,6 +9,7 @@ from twisted.application import service
 from twisted.web import html
 
 from buildbot import interfaces, util
+from buildbot.process.properties import Properties
 
 html_tmpl = """
 <p>Changed by: <b>%(who)s</b><br />
@@ -22,6 +23,9 @@ Changed files:
 
 Comments:
 %(comments)s
+
+Properties:
+%(properties)s
 </p>
 """
 
@@ -55,7 +59,7 @@ class Change:
 
     def __init__(self, who, files, comments, isdir=0, links=None,
                  revision=None, when=None, branch=None, category=None,
-                 revlink=''):
+                 revlink='', properties={}):
         self.who = who
         self.comments = comments
         self.isdir = isdir
@@ -69,6 +73,8 @@ class Change:
         self.branch = branch
         self.category = category
         self.revlink = revlink
+        self.properties = Properties()
+        self.properties.update(properties, "Change")
 
         # keep a sorted list of the files, for easier display
         self.files = files[:]
@@ -80,6 +86,7 @@ class Change:
         data += "At: %s\n" % self.getTime()
         data += "Changed By: %s\n" % self.who
         data += "Comments: %s\n\n" % self.comments
+        data += "Properties: %s\n" % self.getProperties()
         return data
 
     def asHTML(self):
@@ -105,12 +112,17 @@ class Change:
         if self.branch:
             branch = "Branch: <b>%s</b><br />\n" % self.branch
 
-        kwargs = { 'who'     : html.escape(self.who),
-                   'at'      : self.getTime(),
-                   'files'   : html.UL(links) + '\n',
-                   'revision': revision,
-                   'branch'  : branch,
-                   'comments': html.PRE(self.comments) }
+        properties = []
+        for prop in self.properties.asList():
+            properties.append("%s: %s<br />" % (prop[0], prop[1]))
+
+        kwargs = { 'who'       : html.escape(self.who),
+                   'at'        : self.getTime(),
+                   'files'     : html.UL(links) + '\n',
+                   'revision'  : revision,
+                   'branch'    : branch,
+                   'comments'  : html.PRE(self.comments),
+                   'properties': html.UL(properties) + '\n' }
         return html_tmpl % kwargs
 
     def get_HTML_box(self, url):
@@ -163,6 +175,11 @@ class Change:
                 data += " %s\n" % f
         return data
         
+    def getProperties(self):
+        data = ""
+        for prop in self.properties.asList():
+            data += "  %s: %s" % (prop[0], prop[1])
+
 class ChangeMaster(service.MultiService):
 
     """This is the master-side service which receives file change

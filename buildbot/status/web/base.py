@@ -101,6 +101,15 @@ def make_force_build_form(forceURL, useUserPasswd, on_all=False):
                  "<input type='text' name='branch' />")
       + make_row("Revision to build:",
                  "<input type='text' name='revision' />")
+      + make_row("Property 1, ",
+                 "Name: <input type='text' name='prop1name' /> " + \
+                 "Value: <input type='text' name='prop1value' />")
+      + make_row("Property 2, ",
+                 "Name: <input type='text' name='prop2name' /> " + \
+                 "Value: <input type='text' name='prop2value' />")
+      + make_row("Property 3, ",
+                 "Name: <input type='text' name='prop3name' /> " + \
+                 "Value: <input type='text' name='prop3value' />")
       + '<input type="submit" value="Force Build" /></form>\n')
 
 def td(text="", parms={}, **props):
