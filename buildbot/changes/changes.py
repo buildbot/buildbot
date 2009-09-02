@@ -85,8 +85,8 @@ class Change:
         data += self.getFileContents()
         data += "At: %s\n" % self.getTime()
         data += "Changed By: %s\n" % self.who
-        data += "Comments: %s\n\n" % self.comments
-        data += "Properties: %s\n" % self.getProperties()
+        data += "Comments: %s" % self.comments
+        data += "Properties: \n%s\n\n" % self.getProperties()
         return data
 
     def asHTML(self):
@@ -179,6 +179,7 @@ class Change:
         data = ""
         for prop in self.properties.asList():
             data += "  %s: %s" % (prop[0], prop[1])
+        return data
 
 class ChangeMaster(service.MultiService):
 
