@@ -2105,7 +2105,10 @@ class Git(SourceBase):
         return self._dovccmd(['submodule', 'update'], self._cleanSubmodules)
 
     def _initSubmodules(self, res):
-        return self._dovccmd(['submodule', 'init'], self._updateSubmodules)
+        if self.submodules:
+            return self._dovccmd(['submodule', 'init'], self._updateSubmodules)
+        else:
+            return defer.succeed(0)
 
     def _didFetch(self, res):
         if self.revision:
@@ -2114,11 +2117,7 @@ class Git(SourceBase):
             head = 'FETCH_HEAD'
 
         command = ['reset', '--hard', head]
-        d = self._dovccmd(command)
-        if self.submodules:
-            d.addCallback(self._abandonOnFailure)
-            d.addCallback(self._initSubmodules)
-        return d
+        return self._dovccmd(command, self._initSubmodules)
 
     # Update first runs "git clean", removing local changes, This,
     # combined with the later "git reset" equates clobbering the repo,
