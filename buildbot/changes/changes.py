@@ -97,7 +97,6 @@ class Change:
                 links.append('<a href="%s"><b>%s</b></a>' % (link[0], file))
             else:
                 links.append('<b>%s</b>' % file)
-        revlink = ""
         if self.revision:
             if getattr(self, 'revlink', ""):
                 revision = 'Revision: <a href="%s"><b>%s</b></a>\n' % (
@@ -105,7 +104,7 @@ class Change:
             else:
                 revision = "Revision: <b>%s</b><br />\n" % self.revision
         else:
-            revision = None
+            revision = ''
 
         branch = ""
         if self.branch:
