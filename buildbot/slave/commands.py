@@ -2127,11 +2127,25 @@ class Git(SourceBase):
         command = ['clean', '-f', '-d', '-x']
         return self._dovccmd(command, self._didClean)
 
-    def _didClean(self, dummy):
+    def _doFetch(self, dummy):
         command = ['fetch', '-t', self.repourl, self.branch]
         self.sendStatus({"header": "fetching branch %s from %s\n"
                                         % (self.branch, self.repourl)})
         return self._dovccmd(command, self._didFetch)
+
+    def _didClean(self, dummy):
+        # After a clean, try to use the given revision if we have one.
+        if self.revision:
+            # We know what revision we want.  See if we have it.
+            d = self._dovccmd(['reset', '--hard', self.revision],
+                              self._initSubmodules)
+            # If we are unable to reset to the specified version, we
+            # must do a fetch first and retry.
+            d.addErrback(self._doFetch)
+            return d
+        else:
+            # No known revision, go grab the latest.
+            return self._doFetch(None)
 
     def _didInit(self, res):
         return self.doVCUpdate()
