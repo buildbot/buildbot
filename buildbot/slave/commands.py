@@ -2051,6 +2051,7 @@ class Git(SourceBase):
 
     def setup(self, args):
         SourceBase.setup(self, args)
+        self.vcexe = getCommand("git")
         self.repourl = args['repourl']
         self.branch = args.get('branch')
         if not self.branch:
@@ -2073,7 +2074,7 @@ class Git(SourceBase):
         return open(self.sourcedatafile, "r").read()
 
     def _dovccmd(self, command, cb=None, **kwargs):
-        c = ShellCommand(self.builder, command, self._fullSrcdir(),
+        c = ShellCommand(self.builder, [self.vcexe] + command, self._fullSrcdir(),
                          sendRC=False, timeout=self.timeout,
                          maxTime=self.maxTime, usePTY=False, **kwargs)
         self.command = c
@@ -2098,7 +2099,7 @@ class Git(SourceBase):
         return True
 
     def _didSubmodules(self, res):
-        command = ['git', 'submodule', 'update', '--init']
+        command = ['submodule', 'update', '--init']
         return self._dovccmd(command)
 
     def _didFetch(self, res):
@@ -2107,7 +2108,7 @@ class Git(SourceBase):
         else:
             head = 'FETCH_HEAD'
 
-        command = ['git', 'reset', '--hard', head]
+        command = ['reset', '--hard', head]
         d = self._dovccmd(command)
         if self.submodules:
             d.addCallback(self._abandonOnFailure)
@@ -2118,11 +2119,11 @@ class Git(SourceBase):
     # combined with the later "git reset" equates clobbering the repo,
     # but it's much more efficient.
     def doVCUpdate(self):
-        command = ['git', 'clean', '-f', '-d', '-x']
+        command = ['clean', '-f', '-d', '-x']
         return self._dovccmd(command, self._didClean)
 
     def _didClean(self, dummy):
-        command = ['git', 'fetch', '-t', self.repourl, self.branch]
+        command = ['fetch', '-t', self.repourl, self.branch]
         self.sendStatus({"header": "fetching branch %s from %s\n"
                                         % (self.branch, self.repourl)})
         return self._dovccmd(command, self._didFetch)
@@ -2132,10 +2133,10 @@ class Git(SourceBase):
 
     def doVCFull(self):
         os.mkdir(self._fullSrcdir())
-        return self._dovccmd(['git', 'init'], self._didInit)
+        return self._dovccmd(['init'], self._didInit)
 
     def parseGotRevision(self):
-        command = ['git', 'rev-parse', 'HEAD']
+        command = ['rev-parse', 'HEAD']
         def _parse(res):
             hash = self.command.stdout.strip()
             if len(hash) != 40:
