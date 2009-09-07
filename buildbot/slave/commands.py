@@ -2098,9 +2098,14 @@ class Git(SourceBase):
             return False
         return True
 
-    def _didSubmodules(self, res):
-        command = ['submodule', 'update', '--init']
-        return self._dovccmd(command)
+    def _cleanSubmodules(self, res):
+        return self._dovccmd(['submodule', 'foreach', 'git', 'clean', '-dfx'])
+
+    def _updateSubmodules(self, res):
+        return self._dovccmd(['submodule', 'update'], self._cleanSubmodules)
+
+    def _initSubmodules(self, res):
+        return self._dovccmd(['submodule', 'init'], self._updateSubmodules)
 
     def _didFetch(self, res):
         if self.revision:
@@ -2112,7 +2117,7 @@ class Git(SourceBase):
         d = self._dovccmd(command)
         if self.submodules:
             d.addCallback(self._abandonOnFailure)
-            d.addCallback(self._didSubmodules)
+            d.addCallback(self._initSubmodules)
         return d
 
     # Update first runs "git clean", removing local changes, This,
