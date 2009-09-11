@@ -39,40 +39,25 @@ c['builders'] = [b1, b2]
 class ConsoleTest(unittest.TestCase):
     # Test for console.getResultsClass
     def testgetResultsClass(self):
-        self.failUnless(console.getResultsClass(None, None, True) == "running")
-        self.failUnless(console.getResultsClass(None, builder.SUCCESS, False) == "notstarted")
-        self.failUnless(console.getResultsClass(builder.SUCCESS, builder.SUCCESS, False) == "success")
-        self.failUnless(console.getResultsClass(builder.SUCCESS, builder.FAILURE, False) == "success")
-        self.failUnless(console.getResultsClass(builder.FAILURE, builder.FAILURE, False) == "warnings")
-        self.failUnless(console.getResultsClass(builder.FAILURE, builder.SUCCESS, False) == "failure")
-        self.failUnless(console.getResultsClass(builder.FAILURE, None, False) == "failure")
-        self.failUnless(console.getResultsClass(builder.FAILURE, builder.EXCEPTION, False) == "failure")
-        self.failUnless(console.getResultsClass(builder.FAILURE, builder.FAILURE, True) == "running")
-        self.failUnless(console.getResultsClass(builder.EXCEPTION, builder.FAILURE, False) == "exception")
+        self.assertEqual(console.getResultsClass(None, None, True), "running")
+        self.assertEqual(console.getResultsClass(None, builder.SUCCESS, False), "notstarted")
+        self.assertEqual(console.getResultsClass(builder.SUCCESS, builder.SUCCESS, False), "success")
+        self.assertEqual(console.getResultsClass(builder.SUCCESS, builder.FAILURE, False), "success")
+        self.assertEqual(console.getResultsClass(builder.FAILURE, builder.FAILURE, False), "warnings")
+        self.assertEqual(console.getResultsClass(builder.FAILURE, builder.SUCCESS, False), "failure")
+        self.assertEqual(console.getResultsClass(builder.FAILURE, None, False), "failure")
+        self.assertEqual(console.getResultsClass(builder.FAILURE, builder.EXCEPTION, False), "failure")
+        self.assertEqual(console.getResultsClass(builder.FAILURE, builder.FAILURE, True), "running")
+        self.assertEqual(console.getResultsClass(builder.EXCEPTION, builder.FAILURE, False), "exception")
 
 # Helper class to mock a request. We define only what we really need.
 class MockRequest(object):
-  def childLink(self, link):
-    return link
+    def childLink(self, link):
+        return link
 
 # Class to test the method getBuildDetails in ConsoleStatusResource.
 class GetBuildDetailsTests(RunMixin, unittest.TestCase):
-    # Make sure the build details returned is an  empty string to signify that everything
-    # was ok.
-    def expectSuccess(self, bs):
-        console_status = console.ConsoleStatusResource()
-        results = console_status.getBuildDetails(MockRequest(), "buildername", bs);
-        self.failUnless(results == "")
-
-    # Make sure the build details returned contained the expected error.
-    def expectFailure(self, bs):
-        expected_details = """<li> buildername : 'ls -WillFail' failed. 
-[ <a href="../builders/buildername/builds/0/steps/shell/logs/stdio">stdio</a> ]"""
-
-        console_status = console.ConsoleStatusResource()
-        results = console_status.getBuildDetails(MockRequest(), "buildername", bs);
-        self.failUnless(results == expected_details)
-
+    # Test ConsoleStatusResource.getBuildDetails with a success and a failure case.
     def testgetBuildDetails(self):
         # run an actual build with a step that will succeed, then another build with
         # a step that will fail, then make sure the build details generated contains
@@ -81,8 +66,25 @@ class GetBuildDetailsTests(RunMixin, unittest.TestCase):
         d.addCallback(lambda res: self.master.startService())
         d.addCallback(lambda res: self.connectOneSlave("bot1"))
         d.addCallback(lambda res: self.requestBuild("full1"))
-        d.addCallback(self.expectSuccess)
+
+        # Make sure the build details returned is an  empty string to signify that
+        # everything was ok
+        def expectSuccess(bs):
+            console_status = console.ConsoleStatusResource()
+            results = console_status.getBuildDetails(MockRequest(), "buildername", bs);
+            self.assertEqual(results, "")
+        d.addCallback(expectSuccess)
+
         d.addCallback(lambda res: self.requestBuild("full2"))
-        d.addCallback(self.expectFailure)
+
+        # Make sure the build details returned contained the expected error.
+        def expectFailure(bs):
+            expected_details = """<li> buildername : 'ls -WillFail' failed. 
+[ <a href="../builders/buildername/builds/0/steps/shell/logs/stdio">stdio</a> ]"""
+            console_status = console.ConsoleStatusResource()
+            results = console_status.getBuildDetails(MockRequest(), "buildername", bs);
+            self.assertEqual(results, expected_details)
+
+        d.addCallback(expectFailure)
         return d
 
