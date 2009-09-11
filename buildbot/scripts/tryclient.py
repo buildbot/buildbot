@@ -415,7 +415,7 @@ class Try(pb.Referenceable):
             vc = self.getopt("vc", "try_vc")
             if vc in ("cvs", "svn"):
                 # we need to find the tree-top
-                topdir = self.getopt("try_topdir", "try_topdir")
+                topdir = self.getopt("try-topdir", "try_topdir")
                 if topdir:
                     treedir = os.path.expanduser(topdir)
                 else:

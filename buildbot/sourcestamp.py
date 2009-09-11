@@ -1,4 +1,3 @@
-
 from zope.interface import implements
 from buildbot import util, interfaces
 

@@ -719,6 +719,10 @@ def statusgui(config):
     c.run()
 
 class SendChangeOptions(usage.Options):
+    def __init__(self):
+        usage.Options.__init__(self)
+        self['properties'] = {}
+
     optParameters = [
         ("master", "m", None,
          "Location of the buildmaster's PBListener (host:port)"),
@@ -728,6 +732,8 @@ class SendChangeOptions(usage.Options):
         ("revision", "r", None, "Revision specifier (string)"),
         ("revision_number", "n", None, "Revision specifier (integer)"),
         ("revision_file", None, None, "Filename containing revision spec"),
+        ("property", "p", None,
+         "A property for the change, in the format: name:value"),
         ("comments", "m", None, "log message"),
         ("logfile", "F", None,
          "Read the log messages from this file (- for stdin)"),
@@ -737,6 +743,9 @@ class SendChangeOptions(usage.Options):
         return "Usage:    buildbot sendchange [options] filenames.."
     def parseArgs(self, *args):
         self['files'] = args
+    def opt_property(self, property):
+        name,value = property.split(':')
+        self['properties'][name] = value
 
 
 def sendchange(config, runReactor=False):
@@ -750,6 +759,7 @@ def sendchange(config, runReactor=False):
     branch = config.get('branch', opts.get('branch'))
     category = config.get('category', opts.get('category'))
     revision = config.get('revision')
+    properties = config.get('properties', {})
     if config.get('when'):
         when = float(config.get('when'))
     else:
@@ -776,7 +786,8 @@ def sendchange(config, runReactor=False):
     assert master, "you must provide the master location"
 
     s = Sender(master, user)
-    d = s.send(branch, revision, comments, files, category=category, when=when)
+    d = s.send(branch, revision, comments, files, category=category, when=when,
+               properties=properties)
     if runReactor:
         d.addCallbacks(s.printSuccess, s.printFailure)
         d.addBoth(s.stop)
@@ -837,6 +848,12 @@ class TryOptions(usage.Options):
          "Run the trial build on this Builder. Can be used multiple times."],
         ["properties", None, None,
          "A set of properties made available in the build environment, format:prop=value,propb=valueb..."],
+
+        ["try-topfile", None, None,
+         "Name of a file at the top of the tree, used to find the top. Only needed for SVN and CVS."],
+        ["try-topdir", None, None,
+         "Path to the top of the working copy. Only needed for SVN and CVS."],
+
         ]
 
     optFlags = [
