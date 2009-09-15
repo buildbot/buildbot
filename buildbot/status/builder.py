@@ -226,6 +226,8 @@ class LogFile:
     length = 0
     chunkSize = 10*1000
     runLength = 0
+    maxLength = None
+    maxLengthExceeded = False
     runEntries = [] # provided so old pickled builds will getChunks() ok
     entries = None
     BUFFERSIZE = 2048
@@ -409,6 +411,17 @@ class LogFile:
 
     def addEntry(self, channel, text):
         assert not self.finished
+
+        if channel != HEADER:
+            # Truncate the log if it's more than maxLength bytes
+            if self.maxLength and self.length > self.maxLength:
+                if not self.maxLengthExceeded:
+                    # Add a message about what's going on
+                    self.addEntry(HEADER,
+                            "\noutput exceeded %i bytes, remaining output has been truncated\n" % self.maxLength)
+                    self.maxLengthExceeded = True
+                return
+
         # we only add to .runEntries here. merge() is responsible for adding
         # merged chunks to .entries
         if self.runEntries and channel != self.runEntries[0][0]:
@@ -894,6 +907,7 @@ class BuildStepStatus(styles.Versioned):
         assert self.started # addLog before stepStarted won't notify watchers
         logfilename = self.build.generateLogfileName(self.name, name)
         log = LogFile(self, name, logfilename)
+        log.maxLength = self.build.builder.logMaxSize
         self.logs.append(log)
         for w in self.watchers:
             receiver = w.logStarted(self.build, self, log)
@@ -1537,6 +1551,9 @@ class BuilderStatus(styles.Versioned):
     def setLogCompressionLimit(self, lowerLimit):
         self.logCompressionLimit = lowerLimit
 
+    def setLogMaxSize(self, upperLimit):
+        self.logMaxSize = upperLimit
+
     def saveYourself(self):
         for b in self.currentBuilds:
             if not b.isFinished:
@@ -2050,6 +2067,8 @@ class Status:
         assert os.path.isdir(basedir)
         # compress logs bigger than 4k, a good default on linux
         self.logCompressionLimit = 4*1024
+        # No default limit to the log size
+        self.logMaxSize = None
 
 
     # methods called by our clients
@@ -2263,6 +2282,7 @@ class Status:
 
         builder_status.setBigState("offline")
         builder_status.setLogCompressionLimit(self.logCompressionLimit)
+        builder_status.setLogMaxSize(self.logMaxSize)
 
         for t in self.watchers:
             self.announceNewBuilder(t, name, builder_status)

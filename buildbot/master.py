@@ -545,7 +545,7 @@ class BuildMaster(service.MultiService, styles.Versioned):
                       "manhole", "status", "projectName", "projectURL",
                       "buildbotURL", "properties", "prioritizeBuilders",
                       "eventHorizon", "buildCacheSize", "logHorizon", "buildHorizon",
-                      "changeHorizon",
+                      "changeHorizon", "logMaxSize",
                       )
         for k in config.keys():
             if k not in known_keys:
@@ -582,6 +582,10 @@ class BuildMaster(service.MultiService, styles.Versioned):
             if logCompressionLimit is not None and not \
                     isinstance(logCompressionLimit, int):
                 raise ValueError("logCompressionLimit needs to be bool or int")
+            logMaxSize = config.get('logMaxSize')
+            if logMaxSize is not None and not \
+                    isinstance(logMaxSize, int):
+                raise ValueError("logMaxSize needs to be None or int")
             mergeRequests = config.get('mergeRequests')
             if mergeRequests is not None and not callable(mergeRequests):
                 raise ValueError("mergeRequests must be a callable")
@@ -752,6 +756,8 @@ class BuildMaster(service.MultiService, styles.Versioned):
         self.properties.update(properties, self.configFileName)
         if logCompressionLimit is not None:
             self.status.logCompressionLimit = logCompressionLimit
+        if logMaxSize is not None:
+            self.status.logMaxSize = logMaxSize
         if mergeRequests is not None:
             self.botmaster.mergeRequests = mergeRequests
         if prioritizeBuilders is not None:
