@@ -250,7 +250,9 @@ class MTR(Test):
 
     def __init__(self, dbpool=None, test_type="mysql-test-run", test_info="",
                  autoCreateTables=False, textLimit=5, testNameLimit=16,
-                 parallel=4, logfiles = {}, lazylogfiles = True, **kwargs):
+                 parallel=4, logfiles = {}, lazylogfiles = True,
+                 warningPattern="MTR's internal check of the test case '.*' failed",
+                 **kwargs):
 
         # Add mysql server logfiles.
         for mtr in range(0, parallel+1):
@@ -262,7 +264,8 @@ class MTR(Test):
                     logname = "mysqld.%d.err.%d" % (mysqld, mtr)
                     filename = "mysql-test/var/%d/log/mysqld.%d.err" % (mtr, mysqld)
                 logfiles[logname] = filename
-        Test.__init__(self, logfiles=logfiles, lazylogfiles=lazylogfiles, **kwargs)
+        Test.__init__(self, logfiles=logfiles, lazylogfiles=lazylogfiles,
+                      warningPattern=warningPattern, **kwargs)
         self.dbpool = dbpool
         self.test_type = test_type
         self.test_info = test_info
