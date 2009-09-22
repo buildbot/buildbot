@@ -578,7 +578,7 @@ class BuildMaster(service.MultiService, styles.Versioned):
             eventHorizon = config.get('eventHorizon', None)
             logHorizon = config.get('logHorizon', None)
             buildHorizon = config.get('buildHorizon', None)
-            logCompressionLimit = config.get('logCompressionLimit')
+            logCompressionLimit = config.get('logCompressionLimit', 4*1024)
             if logCompressionLimit is not None and not \
                     isinstance(logCompressionLimit, int):
                 raise ValueError("logCompressionLimit needs to be bool or int")
@@ -754,10 +754,21 @@ class BuildMaster(service.MultiService, styles.Versioned):
 
         self.properties = Properties()
         self.properties.update(properties, self.configFileName)
-        if logCompressionLimit is not None:
-            self.status.logCompressionLimit = logCompressionLimit
-        if logMaxSize is not None:
-            self.status.logMaxSize = logMaxSize
+
+        self.status.logCompressionLimit = logCompressionLimit
+        # Update any of our existing builders with the current logCompressionLimit.
+        # This is required so that the new value is picked up after a
+        # reconfig.
+        for builder in self.botmaster.builders.values():
+            builder.builder_status.setLogCompressionLimit(logCompressionLimit)
+
+        self.status.logMaxSize = logMaxSize
+        # Update any of our existing builders with the current logMaxSize.
+        # This is required so that the new value is picked up after a
+        # reconfig.
+        for builder in self.botmaster.builders.values():
+            builder.builder_status.setLogMaxSize(logMaxSize)
+
         if mergeRequests is not None:
             self.botmaster.mergeRequests = mergeRequests
         if prioritizeBuilders is not None:
