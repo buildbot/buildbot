@@ -435,24 +435,12 @@ class LogFile:
                     # Update the tail buffer
                     self.tailBuffer.append((channel, text))
                     self.tailLength += len(text)
-                    to_trim = self.tailLength - self.logMaxTailSize
-                    while to_trim > 0:
+                    while self.tailLength > self.logMaxTailSize:
                         # Drop some stuff off the beginning of the buffer
                         c,t = self.tailBuffer.pop(0)
                         n = len(t)
-                        if n <= to_trim:
-                            # If this chunk isn't big enough to bring our tail
-                            # buffer under logMaxTailSize, then remove the whole
-                            # chunk
-                            to_trim -= n
-                            self.tailLength -= n
-                        else:
-                            # Otherwise remove the first to_trim characters of
-                            # the chunk
-                            t = t[-to_trim:]
-                            self.tailLength -= to_trim
-                            self.tailBuffer.insert(0, (c, t))
-                            break
+                        self.tailLength -= n
+                        assert self.tailLength >= 0
                 return
 
             self.nonHeaderLength += len(text)
