@@ -545,7 +545,7 @@ class BuildMaster(service.MultiService, styles.Versioned):
                       "manhole", "status", "projectName", "projectURL",
                       "buildbotURL", "properties", "prioritizeBuilders",
                       "eventHorizon", "buildCacheSize", "logHorizon", "buildHorizon",
-                      "changeHorizon", "logMaxSize",
+                      "changeHorizon", "logMaxSize", "logMaxTailSize",
                       )
         for k in config.keys():
             if k not in known_keys:
@@ -586,6 +586,10 @@ class BuildMaster(service.MultiService, styles.Versioned):
             if logMaxSize is not None and not \
                     isinstance(logMaxSize, int):
                 raise ValueError("logMaxSize needs to be None or int")
+            logMaxTailSize = config.get('logMaxTailSize')
+            if logMaxTailSize is not None and not \
+                    isinstance(logMaxTailSize, int):
+                raise ValueError("logMaxTailSize needs to be None or int")
             mergeRequests = config.get('mergeRequests')
             if mergeRequests is not None and not callable(mergeRequests):
                 raise ValueError("mergeRequests must be a callable")
@@ -756,18 +760,15 @@ class BuildMaster(service.MultiService, styles.Versioned):
         self.properties.update(properties, self.configFileName)
 
         self.status.logCompressionLimit = logCompressionLimit
-        # Update any of our existing builders with the current logCompressionLimit.
+        self.status.logMaxSize = logMaxSize
+        self.status.logMaxTailSize = logMaxTailSize
+        # Update any of our existing builders with the current log parameters.
         # This is required so that the new value is picked up after a
         # reconfig.
         for builder in self.botmaster.builders.values():
             builder.builder_status.setLogCompressionLimit(logCompressionLimit)
-
-        self.status.logMaxSize = logMaxSize
-        # Update any of our existing builders with the current logMaxSize.
-        # This is required so that the new value is picked up after a
-        # reconfig.
-        for builder in self.botmaster.builders.values():
             builder.builder_status.setLogMaxSize(logMaxSize)
+            builder.builder_status.setLogMaxTailSize(logMaxTailSize)
 
         if mergeRequests is not None:
             self.botmaster.mergeRequests = mergeRequests
