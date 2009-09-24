@@ -421,15 +421,12 @@ class LogFile:
         if channel != HEADER:
             # Truncate the log if it's more than logMaxSize bytes
             if self.logMaxSize and self.nonHeaderLength > self.logMaxSize:
+                # Add a message about what's going on
                 if not self.maxLengthExceeded:
-                    # Add a message about what's going on
-                    if self.logMaxTailSize:
-                        msg = "\nOutput exceeded %i bytes, some output has been deleted.  Final %i bytes follow below:\n" % (self.logMaxSize, self.logMaxTailSize)
-                    else:
-                        msg = "\nOutput exceeded %i bytes, remaining output has been truncated\n" % self.logMaxSize
+                    msg = "\nOutput exceeded %i bytes, remaining output has been truncated\n" % self.logMaxSize
                     self.addEntry(HEADER, msg)
-                    self.maxLengthExceeded = True
                     self.merge()
+                    self.maxLengthExceeded = True
 
                 if self.logMaxTailSize:
                     # Update the tail buffer
@@ -467,7 +464,10 @@ class LogFile:
 
     def finish(self):
         if self.tailBuffer:
+            msg = "\nFinal %i bytes follow below:\n" % self.tailLength
             tmp = self.runEntries
+            self.runEntries = [(HEADER, msg)]
+            self.merge()
             self.runEntries = self.tailBuffer
             self.merge()
             self.runEntries = tmp
