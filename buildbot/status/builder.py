@@ -1512,6 +1512,8 @@ class BuilderStatus(styles.Versioned):
         self.buildCache = weakref.WeakValueDictionary()
         self.buildCache_LRU = []
         self.logCompressionLimit = False # default to no compression for tests
+        self.logMaxSize = None # No default limit
+        self.logMaxTailSize = None # No tail buffering
 
     # persistence
 
