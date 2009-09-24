@@ -2261,12 +2261,17 @@ available to queriers (over IRC) who want to find out where to get
 more information about this buildbot.
 
 @bcindex c['logCompressionLimit']
-The @code{logCompressionLimit} enables bz2-compression of build logs on
+The @code{logCompressionLimit} enables compression of build logs on
 disk for logs that are bigger than the given size, or disables that
 completely if given @code{False}. The default value is 4k, which should
 be a reasonable default on most file systems. This setting has no impact
 on status plugins, and merely affects the required disk space on the
 master for build logs.
+
+@bcindex c['logCompressionMethod']
+The @code{logCompressionMethod} controls what type of compression is used for
+build logs.  The default is 'bz2', the other valid option is 'gz'.  'bz2'
+offers better compression at the expense of more CPU time.
 
 @bcindex c['logMaxSize']
 The @code{logMaxSize} parameter sets an upper limit (in bytes) to how large
