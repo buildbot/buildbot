@@ -202,7 +202,7 @@ class GridStatusResource(HtmlResource, GridStatusMixin):
             else:
                 data += '\n<br /><b>Category:</b> %s' % html_categories[0]
         if branch != ANYBRANCH:
-            data += '\n<br /><b>Branch:</b> %s' % (html.escape(branch) or 'trunk')
+            data += '\n<br /><b>Branch:</b> %s' % (html.escape(branch or 'trunk'))
         data += '</td>\n'
         for stamp in stamps:
             data += self.stamp_td(stamp)
@@ -298,7 +298,7 @@ class TransposedGridStatusResource(HtmlResource, GridStatusMixin):
             else:
                 data += '\n<br /><b>Category:</b> %s' % html_categories[0]
         if branch != ANYBRANCH:
-            data += '\n<br /><b>Branch:</b> %s' % (html.escape(branch) or 'trunk')
+            data += '\n<br /><b>Branch:</b> %s' % (html.escape(branch or 'trunk'))
         data += '</td>\n'
 
         sortedBuilderNames = status.getBuilderNames()[:]
