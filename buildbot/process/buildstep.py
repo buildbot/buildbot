@@ -1003,6 +1003,13 @@ class LoggingBuildStep(BuildStep):
     def describe(self, done=False):
         raise NotImplementedError("implement this in a subclass")
 
+    def addLogFile(self, logname, filename):
+        """
+        This allows to add logfiles after construction, but before calling
+        startCommand().
+        """
+        self.logfiles[logname] = filename
+
     def startCommand(self, cmd, errorMessages=[]):
         """
         @param cmd: a suitable RemoteCommand which will be launched, with

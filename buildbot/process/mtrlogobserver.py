@@ -252,18 +252,8 @@ class MTR(Test):
                  autoCreateTables=False, textLimit=5, testNameLimit=16,
                  parallel=4, logfiles = {}, lazylogfiles = True,
                  warningPattern="MTR's internal check of the test case '.*' failed",
-                 **kwargs):
+                 mtr_subdir="mysql-test", **kwargs):
 
-        # Add mysql server logfiles.
-        for mtr in range(0, parallel+1):
-            for mysqld in range(1, 4+1):
-                if mtr == 0:
-                    logname = "mysqld.%d.err" % mysqld
-                    filename = "mysql-test/var/log/mysqld.%d.err" % mysqld
-                else:
-                    logname = "mysqld.%d.err.%d" % (mysqld, mtr)
-                    filename = "mysql-test/var/%d/log/mysqld.%d.err" % (mtr, mysqld)
-                logfiles[logname] = filename
         Test.__init__(self, logfiles=logfiles, lazylogfiles=lazylogfiles,
                       warningPattern=warningPattern, **kwargs)
         self.dbpool = dbpool
@@ -273,6 +263,7 @@ class MTR(Test):
         self.textLimit = textLimit
         self.testNameLimit = testNameLimit
         self.parallel = parallel
+        self.mtr_subdir = mtr_subdir
         self.progressMetrics += ('tests',)
 
         self.addFactoryArguments(dbpool=self.dbpool,
@@ -281,9 +272,24 @@ class MTR(Test):
                                  autoCreateTables=self.autoCreateTables,
                                  textLimit=self.textLimit,
                                  testNameLimit=self.testNameLimit,
-                                 parallel=self.parallel)
+                                 parallel=self.parallel,
+                                 mtr_subdir=self.mtr_subdir)
 
     def start(self):
+        properties = self.build.getProperties()
+        subdir = properties.render(self.mtr_subdir)
+
+        # Add mysql server logfiles.
+        for mtr in range(0, self.parallel+1):
+            for mysqld in range(1, 4+1):
+                if mtr == 0:
+                    logname = "mysqld.%d.err" % mysqld
+                    filename = "var/log/mysqld.%d.err" % mysqld
+                else:
+                    logname = "mysqld.%d.err.%d" % (mysqld, mtr)
+                    filename = "var/%d/log/mysqld.%d.err" % (mtr, mysqld)
+                self.addLogFile(logname, subdir + "/" + filename)
+
         self.myMtr = self.MyMtrLogObserver(textLimit=self.textLimit,
                                            testNameLimit=self.testNameLimit)
         self.addLogObserver("stdio", self.myMtr)
