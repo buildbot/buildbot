@@ -454,8 +454,10 @@ class WarningCountingShellCommand(ShellCommand):
 
         self.myFileWriter = StringFileWriter()
 
+        properties = self.build.getProperties()
+
         args = {
-            'slavesrc': self.suppressionFile,
+            'slavesrc': properties.render(self.suppressionFile),
             'workdir': self.workdir,
             'writer': self.myFileWriter,
             'maxsize': None,
