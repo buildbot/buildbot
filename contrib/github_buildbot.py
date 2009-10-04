@@ -55,13 +55,13 @@ class GitHubBuildBot(resource.Resource):
             self.private = payload['repository']['private']
             logging.debug("Payload: " + str(payload))
             self.github_sync(self.local_dir, user, repo, self.github)
-            self.process_change(payload)
+            self.process_change(payload, user, repo, self.github)
         except Exception:
             logging.error("Encountered an exception:")
             for msg in traceback.format_exception(*sys.exc_info()):
                 logging.error(msg.strip())
 
-    def process_change(self, payload):
+    def process_change(self, payload, user, repo, github_url):
         """
         Consumes the JSON as a python object and actually starts the build.
         
@@ -91,12 +91,15 @@ class GitHubBuildBot(resource.Resource):
                 files.extend(commit['modified'])
                 files.extend(commit['removed'])
                 change = {'revision': commit['id'],
+                     'revlink': commit['url'],
                      'comments': commit['message'],
                      'branch': branch,
                      'who': commit['author']['name'] 
                             + " <" + commit['author']['email'] + ">",
                      'files': files,
                      'links': [commit['url']],
+                     'properties': {'repository':
+                                    self.repo_url(user, repo, github_url)},
                 }
                 changes.append(change)
         
@@ -176,15 +179,17 @@ class GitHubBuildBot(resource.Resource):
             logging.error(output)
             raise RuntimeError("Unable to fetch remote changes")
 
+    def repo_url(self, user, repo, github_url='github.com'):
+        if self.private:
+            return 'git@' + github_url + ':' + user + '/' + repo + '.git'
+        else:
+            return 'git://' + github_url + '/' + user + '/' + repo + '.git'
     
     def create_repo(self, tmp, user, repo, github_url = 'github.com'):
         """
         Clones the github repository as a mirror repo on the local server
         """
-        if self.private:
-            url = 'git@' + github_url + ':' + user + '/' + repo + '.git'
-        else:
-            url = 'git://' + github_url + '/' + user + '/' + repo + '.git'
+        url = self.repo_url(user, repo, github_url)
         repodir = tmp + "/" + repo + ".git"
 
         # clone the repo
