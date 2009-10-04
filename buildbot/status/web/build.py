@@ -32,7 +32,6 @@ class StatusResourceBuild(HtmlResource):
     def body(self, req):
         b = self.build_status
         status = self.getStatus(req)
-        projectURL = status.getProjectURL()
         projectName = status.getProjectName()
         data = ('<div class="title"><a href="%s">%s</a></div>\n'
                 % (self.path_to_root(req), projectName))
