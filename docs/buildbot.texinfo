@@ -5955,6 +5955,10 @@ Descriptive string that will be inserted into the database in the row for the te
 run. Defaults to the empty string, but can be specified as a user-readable
 description of this particular test run.
 
+@item mtr_subdir
+The subdirectory in which to look for server error log files. Defaults to
+``mysql-test'', which is usually correct. WithProperties is supported.
+
 @end table
 
 
