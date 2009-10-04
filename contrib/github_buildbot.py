@@ -209,7 +209,7 @@ def main():
         
     parser.add_option("-p", "--port", 
         help="Port the HTTP server listens to for the GitHub Service Hook"
-            + " [default: %default]", default=4000, dest="port")
+            + " [default: %default]", default=4000, type=int, dest="port")
         
     parser.add_option("-m", "--buildmaster",
         help="Buildbot Master host and port. ie: localhost:9989 [default:" 
