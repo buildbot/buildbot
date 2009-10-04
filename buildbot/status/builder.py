@@ -2023,6 +2023,7 @@ class SlaveStatus:
 
     admin = None
     host = None
+    version = None
     connected = False
     graceful_shutdown = False
 
