@@ -6,7 +6,9 @@ from twisted.internet import defer, reactor
 import urllib, time
 from twisted.python import log
 from buildbot.status.web.base import HtmlResource, make_row, make_stop_form, \
-     css_classes, path_to_builder, path_to_slave, make_name_user_passwd_form
+     make_extra_property_row, css_classes, path_to_builder, path_to_slave, \
+     make_name_user_passwd_form
+
 
 from buildbot.status.web.tests import TestsResource
 from buildbot.status.web.step import StepsResource
@@ -206,6 +208,9 @@ class StatusResourceBuild(HtmlResource):
             data += ('<form method="post" action="%s" class="command rebuild">\n'
                      % rebuildURL)
             data += make_name_user_passwd_form(self.isUsingUserPasswd(req))
+            data += make_extra_property_row(1)
+            data += make_extra_property_row(2)
+            data += make_extra_property_row(3)
             data += make_row("Reason for re-running build:",
                              "<input type='text' name='comments' />")
             data += '<input type="submit" value="Rebuild" />\n'
