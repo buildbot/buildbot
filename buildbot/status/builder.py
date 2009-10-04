@@ -2038,6 +2038,8 @@ class SlaveStatus:
         return self.admin
     def getHost(self):
         return self.host
+    def getVersion(self):
+        return self.version
     def isConnected(self):
         return self.connected
     def lastMessageReceived(self):
@@ -2049,6 +2051,8 @@ class SlaveStatus:
         self.admin = admin
     def setHost(self, host):
         self.host = host
+    def setVersion(self, version):
+        self.version = version
     def setConnected(self, isConnected):
         self.connected = isConnected
     def setLastMessageReceived(self, when):

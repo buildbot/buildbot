@@ -170,6 +170,8 @@ class BuildSlavesResource(HtmlResource):
             isBusy = len(slave_status.getRunningBuilds())
             data += " <li><a href=\"%s\">%s</a>:\n" % (req.childLink(urllib.quote(name,'')), name)
             data += " <ul>\n"
+            version = slave.getVersion()
+            data += "<li>Running Buildbot version: %s" % version
             builder_links = ['<a href="%s">%s</a>'
                              % (req.childLink("../builders/%s" % bname),bname)
                              for bname in used_by_builder.get(name, [])]
