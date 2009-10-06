@@ -320,16 +320,10 @@ class DebugPerspective(NewCredPerspective):
     def perspective_print(self, msg):
         print "debug", msg
 
-class Dispatcher(styles.Versioned):
+class Dispatcher:
     implements(portal.IRealm)
-    persistenceVersion = 2
 
     def __init__(self):
-        self.names = {}
-
-    def upgradeToVersion1(self):
-        self.master = self.botmaster.parent
-    def upgradeToVersion2(self):
         self.names = {}
 
     def register(self, name, afactory):
@@ -377,9 +371,8 @@ class Dispatcher(styles.Versioned):
 #   UNIXServer(ResourcePublisher(self.site))
 
 
-class BuildMaster(service.MultiService, styles.Versioned):
+class BuildMaster(service.MultiService):
     debug = 0
-    persistenceVersion = 3
     manhole = None
     debugPassword = None
     projectName = "(unspecified)"
@@ -425,23 +418,6 @@ class BuildMaster(service.MultiService, styles.Versioned):
         self.useChanges(TestChangeMaster())
 
         self.readConfig = False
-
-    def upgradeToVersion1(self):
-        self.dispatcher = self.slaveFactory.root.portal.realm
-
-    def upgradeToVersion2(self): # post-0.4.3
-        self.webServer = self.webTCPPort
-        del self.webTCPPort
-        self.webDistribServer = self.webUNIXPort
-        del self.webUNIXPort
-        self.configFileName = "master.cfg"
-
-    def upgradeToVersion3(self):
-        # post 0.6.3, solely to deal with the 0.6.3 breakage. Starting with
-        # 0.6.5 I intend to do away with .tap files altogether
-        self.services = []
-        self.namedServices = {}
-        del self.change_svc
 
     def startService(self):
         service.MultiService.startService(self)
