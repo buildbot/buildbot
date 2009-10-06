@@ -335,11 +335,6 @@ class Builder(pb.Referenceable):
     I also manage forced builds, progress expectation (ETA) management, and
     some status delivery chores.
 
-    I am persisted in C{BASEDIR/BUILDERNAME/builder}, so I can remember how
-    long a build usually takes to run (in my C{expectations} attribute). This
-    pickle also includes the L{buildbot.status.builder.BuilderStatus} object,
-    which remembers the set of historic builds.
-
     @type buildable: list of L{buildbot.process.base.BuildRequest}
     @ivar buildable: BuildRequests that are ready to build, but which are
                      waiting for a buildslave to be available.
@@ -461,18 +456,6 @@ class Builder(pb.Referenceable):
             self.builder_status.removeBuildRequest(req.status, cancelled=True)
             return True
         return False
-
-    def __getstate__(self):
-        d = self.__dict__.copy()
-        # TODO: note that d['buildable'] can contain Deferreds
-        del d['building'] # TODO: move these back to .buildable?
-        del d['slaves']
-        return d
-
-    def __setstate__(self, d):
-        self.__dict__ = d
-        self.building = []
-        self.slaves = []
 
     def consumeTheSoulOfYourPredecessor(self, old):
         """Suck the brain out of an old Builder.

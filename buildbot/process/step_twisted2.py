@@ -77,13 +77,6 @@ class RunUnitTestsJelly(RunUnitTests):
                  ResultTypes.SUCCESS: tests.SUCCESS,
                  }
 
-    def __getstate__(self):
-        #d = RunUnitTests.__getstate__(self)
-        d = self.__dict__.copy()
-        # Banana subclasses are Ephemeral
-        if d.has_key("decoder"):
-            del d['decoder']
-        return d
     def start(self):
         self.decoder = remote.DecodeReport(self)
         # don't accept anything unpleasant from the (untrusted) build slave
