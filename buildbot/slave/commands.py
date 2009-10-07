@@ -2159,7 +2159,7 @@ class Git(SourceBase):
         return self.doVCUpdate()
 
     def doVCFull(self):
-        os.mkdir(self._fullSrcdir())
+        os.makedirs(self._fullSrcdir())
         return self._dovccmd(['init'], self._didInit)
 
     def parseGotRevision(self):
