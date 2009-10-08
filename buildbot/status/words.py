@@ -335,6 +335,9 @@ class Contact:
         if buildurl:
             r += "  Build details are at %s" % buildurl
 
+        if build.getResults() != SUCCESS:
+            r += '  blamelist: ' + ', '.join([c.who for c in build.changes])
+
         self.send(r)
 
     def notify_for_finished(self, build):
