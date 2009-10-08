@@ -116,6 +116,9 @@ class AbstractSlaveBuilder(pb.Referenceable):
         log.err(why)
         return why
 
+    def prepare(self, builder_status):
+        return defer.succeed(None)
+
     def ping(self, timeout, status=None):
         """Ping the slave to make sure it is still there. Returns a Deferred
         that fires with True if it is.
@@ -260,7 +263,19 @@ class LatentSlaveBuilder(AbstractSlaveBuilder):
         log.msg("Latent buildslave %s attached to %s" % (slave.slavename,
                                                          self.builder_name))
 
-    def substantiate(self, build):
+    def prepare(self, builder_status):
+        log.msg("substantiating slave %s" % (self,))
+        d = self.substantiate()
+        def substantiation_failed(f):
+            builder_status.addPointEvent(['removing', 'latent',
+                                          self.slave.slavename])
+            self.slave.disconnect()
+            # TODO: should failover to a new Build
+            return f
+        d.addErrback(substantiation_failed)
+        return d
+
+    def substantiate(self):
         self.state = SUBSTANTIATING
         d = self.slave.substantiate(self)
         if not self.slave.substantiated:
@@ -741,27 +756,17 @@ class Builder(pb.Referenceable):
 
         self.building.append(build)
         self.updateBigStatus()
-        if isinstance(sb, LatentSlaveBuilder):
-            log.msg("starting build %s.. substantiating the slave %s" %
-                    (build, sb))
-            d = sb.substantiate(build)
-            def substantiated(res):
-                return sb.ping(self.START_BUILD_TIMEOUT)
-            def substantiation_failed(res):
-                self.builder_status.addPointEvent(
-                    ['removing', 'latent', sb.slave.slavename])
-                sb.slave.disconnect()
-                # TODO: should failover to a new Build
-                #self.retryBuild(sb.build)
-            d.addCallbacks(substantiated, substantiation_failed)
-        else:
+        log.msg("starting build %s using slave %s" % (build, sb))
+        d = sb.prepare(self.builder_status)
+        def _ping(ign):
+            # ping the slave to make sure they're still there. If they're
+            # fallen off the map (due to a NAT timeout or something), this
+            # will fail in a couple of minutes, depending upon the TCP
+            # timeout. TODO: consider making this time out faster, or at
+            # least characterize the likely duration.
             log.msg("starting build %s.. pinging the slave %s" % (build, sb))
-            d = sb.ping(self.START_BUILD_TIMEOUT)
-        # ping the slave to make sure they're still there. If they're fallen
-        # off the map (due to a NAT timeout or something), this will fail in
-        # a couple of minutes, depending upon the TCP timeout. TODO: consider
-        # making this time out faster, or at least characterize the likely
-        # duration.
+            return sb.ping(self.START_BUILD_TIMEOUT)
+        d.addCallback(_ping)
         d.addCallback(self._startBuild_1, build, sb)
         return d
 
