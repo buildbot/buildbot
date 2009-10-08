@@ -1626,6 +1626,17 @@ class MyContact(words.Contact):
     def send(self, msg):
         self.message += msg
 
+class MyIRCChannel(MyChannel):
+    pass
+
+class IRCContactTester(unittest.TestCase):
+    def testOnChannel(self):
+        contact = words.IRCContact(MyIRCChannel(), 'alice')
+        self.failUnlessEqual(contact.onChannel(), False)
+
+        contact = words.IRCContact(MyIRCChannel(), '#somewhere')
+        self.failUnlessEqual(contact.onChannel(), True)
+
 class StepStatistics(unittest.TestCase):
     def testStepStatistics(self):
         status = builder.BuildStatus(builder.BuilderStatus("test"), 123)

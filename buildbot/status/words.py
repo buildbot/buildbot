@@ -579,8 +579,11 @@ class IRCContact(Contact):
         # username.
         self.dest = dest
 
+    def onChannel(self):
+        return self.dest[0] == '#'
+
     def describeUser(self, user):
-        if self.dest[0] == "#":
+        if self.onChannel():
             return "IRC user <%s> on channel %s" % (user, self.dest)
         return "IRC user <%s> (privmsg)" % user
 
