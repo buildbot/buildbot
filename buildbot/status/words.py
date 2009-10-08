@@ -306,15 +306,15 @@ class Contact:
 
         self.send(r)
 
+    results_descriptions = {
+        SUCCESS: "Success",
+        WARNINGS: "Warnings",
+        FAILURE: "Failure",
+        EXCEPTION: "Exception",
+        }
+
     def buildFinished(self, builderName, build, results):
         builder = build.getBuilder()
-
-        results_descriptions = {
-            SUCCESS: "Success",
-            WARNINGS: "Warnings",
-            FAILURE: "Failure",
-            EXCEPTION: "Exception",
-            }
 
         # only notify about builders we are interested in
         log.msg('[Contact] builder %r in category %s finished' % (builder, builder.category))
@@ -328,13 +328,13 @@ class Contact:
         r = "build #%d of %s is complete: %s" % \
             (build.getNumber(),
              builder.getName(),
-             results_descriptions.get(results, "??"))
+             self.results_descriptions.get(results, "??"))
         r += " [%s]" % " ".join(build.getText())
         buildurl = self.channel.status.getURLForThing(build)
         if buildurl:
             r += "  Build details are at %s" % buildurl
 
-        if self.notify_for('finished') or self.notify_for(lower(results_descriptions.get(results))):
+        if self.notify_for('finished') or self.notify_for(lower(self.results_descriptions.get(results))):
             self.send(r)
             return
 
@@ -342,20 +342,15 @@ class Contact:
         if prevBuild:
             prevResult = prevBuild.getResults()
 
-            required_notification_control_string = join((lower(results_descriptions.get(prevResult)), \
+            required_notification_control_string = join((lower(self.results_descriptions.get(prevResult)), \
                                                              'To', \
-                                                             capitalize(results_descriptions.get(results))), \
+                                                             capitalize(self.results_descriptions.get(results))), \
                                                             '')
 
             if (self.notify_for(required_notification_control_string)):
                 self.send(r)
 
     def watchedBuildFinished(self, b):
-        results = {SUCCESS: "Success",
-                   WARNINGS: "Warnings",
-                   FAILURE: "Failure",
-                   EXCEPTION: "Exception",
-                   }
 
         # only notify about builders we are interested in
         builder = b.getBuilder()
@@ -368,7 +363,7 @@ class Contact:
         r = "Hey! build %s #%d is complete: %s" % \
             (b.getBuilder().getName(),
              b.getNumber(),
-             results.get(b.getResults(), "??"))
+             self.results_descriptions.get(b.getResults(), "??"))
         r += " [%s]" % " ".join(b.getText())
         self.send(r)
         buildurl = self.channel.status.getURLForThing(b)
