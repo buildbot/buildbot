@@ -323,32 +323,42 @@ class Contact:
             builder.category not in self.channel.categories):
             return
 
-        results = build.getResults()
+        if not self.notify_for_finished(build):
+            return
 
         r = "build #%d of %s is complete: %s" % \
             (build.getNumber(),
              builder.getName(),
-             self.results_descriptions.get(results, "??"))
+             self.results_descriptions.get(build.getResults(), "??"))
         r += " [%s]" % " ".join(build.getText())
         buildurl = self.channel.status.getURLForThing(build)
         if buildurl:
             r += "  Build details are at %s" % buildurl
 
-        if self.notify_for('finished') or self.notify_for(lower(self.results_descriptions.get(results))):
-            self.send(r)
-            return
+        self.send(r)
+
+    def notify_for_finished(self, build):
+        results = build.getResults()
+
+        if self.notify_for('finished'):
+            return True
+
+        if self.notify_for(lower(self.results_descriptions.get(results))):
+            return True
 
         prevBuild = build.getPreviousBuild()
         if prevBuild:
             prevResult = prevBuild.getResults()
 
-            required_notification_control_string = join((lower(self.results_descriptions.get(prevResult)), \
-                                                             'To', \
-                                                             capitalize(self.results_descriptions.get(results))), \
-                                                            '')
+            event = join((lower(self.results_descriptions.get(prevResult)), \
+                              'To', \
+                              capitalize(self.results_descriptions.get(results))), \
+                             '')
 
-            if (self.notify_for(required_notification_control_string)):
-                self.send(r)
+            if (self.notify_for(event)):
+                return True
+
+        return False
 
     def watchedBuildFinished(self, b):
 
