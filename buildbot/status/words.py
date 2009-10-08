@@ -590,7 +590,10 @@ class IRCContact(Contact):
     # userJoined(self, user, channel)
 
     def send(self, message):
-        self.channel.msg(self.dest, message.encode("ascii", "replace"))
+        if self.onChannel():
+            self.channel.notice(self.dest, message.encode("ascii", "replace"))
+        else:
+            self.channel.msg(self.dest, message.encode("ascii", "replace"))
     def act(self, action):
         self.channel.me(self.dest, action.encode("ascii", "replace"))
 

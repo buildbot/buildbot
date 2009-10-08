@@ -1627,7 +1627,14 @@ class MyContact(words.Contact):
         self.message += msg
 
 class MyIRCChannel(MyChannel):
-    pass
+    def __init__(self):
+        self.called = []
+
+    def __getattr__(self, name):
+        def f(*args, **kwargs):
+            self.called += [name]
+            pass
+        return f
 
 class IRCContactTester(unittest.TestCase):
     def testOnChannel(self):
@@ -1636,6 +1643,19 @@ class IRCContactTester(unittest.TestCase):
 
         contact = words.IRCContact(MyIRCChannel(), '#somewhere')
         self.failUnlessEqual(contact.onChannel(), True)
+
+    def testSendToUser(self):
+        ch = MyIRCChannel()
+        contact = words.IRCContact(ch, 'alice')
+        contact.send('hello')
+        self.failUnlessEqual(ch.called, ['msg'])
+
+    def testSendToChannel(self):
+        ch = MyIRCChannel()
+        contact = words.IRCContact(ch, '#somewhere')
+        contact.send('hi')
+        self.failUnlessEqual(ch.called, ['notice'])
+
 
 class StepStatistics(unittest.TestCase):
     def testStepStatistics(self):
