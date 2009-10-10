@@ -1,0 +1,58 @@
+<table border="0" cellspacing="0">
+
+{% if projectName and projectURL %}
+  <a href="{{ projectURL }}">{{ projectName }}</a><br />
+{% endif %}
+
+<tr class="LastBuild">
+
+<td align="right" colspan="2" class="Project">
+ last build
+</td>
+
+{% for b in builders %}  
+  <td align="center" class="{{ b.top_class }}">
+    <a href="{{ b.url }}">{{ b.name }}<br/>
+    {{ " ".join(b.top) }}
+  </td>
+{% endfor %}
+</tr>
+
+<tr class="Activity">
+<td align="right" colspan="2">current activity</td>
+
+{% for b in builders %}  
+  <td align="center" class="{{ b.status_class }}">
+    {{ "<br/>".join(b.status) }}
+  </td>
+{% endfor %}
+</tr>
+
+<tr>
+<td align="center" class="Time">{{ TZ }}</td>
+<td align="center" class="Change"><a href="{{ changesURL }}">changes</a></td>
+
+{% for b in builderNames %}
+ <td align="center" class="Builder"><a href="{{ b.url }}">{{ b.name }}</a></td>
+{% endfor %}
+</tr>
+
+{{ waterfall }}
+
+</table>
+
+<hr/>
+
+<div class="footer">
+{% if nextpage %}
+ <a href="{{ nextpage }}">next page</a>
+{% endif %}
+
+<a href="{{ helppage }}">help</a>
+<a href="{{ welcomeurl }}">welcome</a>
+
+{% if no_reload_page %}
+ <a href="{{ no_reload_page }}">Stop Reloading</a> 
+{% endif %}
+
+<br/>

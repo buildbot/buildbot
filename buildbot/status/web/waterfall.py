@@ -13,7 +13,7 @@ from buildbot import version
 from buildbot.status import builder
 
 from buildbot.status.web.base import Box, HtmlResource, IBox, ICurrentBox, \
-     ITopBox, td, build_get_class, path_to_build, path_to_step, map_branches
+     ITopBox, td, build_get_class, path_to_build, path_to_step, map_branches, env
 
 
 
@@ -228,83 +228,6 @@ def insertGaps(g, lastEventTime, idleGap=2):
         followingEventStarts = starts
         if debug: log.msg(" fES1", starts)
 
-HELP = '''
-<form action="../waterfall" method="GET">
-
-<h1>The Waterfall Display</h1>
-
-<p>The Waterfall display can be controlled by adding query arguments to the
-URL. For example, if your Waterfall is accessed via the URL
-<tt>http://buildbot.example.org:8080</tt>, then you could add a
-<tt>branch=</tt> argument (described below) by going to
-<tt>http://buildbot.example.org:8080?branch=beta4</tt> instead. Remember that
-query arguments are separated from each other with ampersands, but they are
-separated from the main URL with a question mark, so to add a
-<tt>branch=</tt> and two <tt>builder=</tt> arguments, you would use
-<tt>http://buildbot.example.org:8080?branch=beta4&amp;builder=unix&amp;builder=macos</tt>.</p>
-
-<h2>Limiting the Displayed Interval</h2>
-
-<p>The <tt>last_time=</tt> argument is a unix timestamp (seconds since the
-start of 1970) that will be used as an upper bound on the interval of events
-displayed: nothing will be shown that is more recent than the given time.
-When no argument is provided, all events up to and including the most recent
-steps are included.</p>
-
-<p>The <tt>first_time=</tt> argument provides the lower bound. No events will
-be displayed that occurred <b>before</b> this timestamp. Instead of providing
-<tt>first_time=</tt>, you can provide <tt>show_time=</tt>: in this case,
-<tt>first_time</tt> will be set equal to <tt>last_time</tt> minus
-<tt>show_time</tt>. <tt>show_time</tt> overrides <tt>first_time</tt>.</p>
-
-<p>The display normally shows the latest 200 events that occurred in the
-given interval, where each timestamp on the left hand edge counts as a single
-event. You can add a <tt>num_events=</tt> argument to override this this.</p>
-
-<h2>Hiding non-Build events</h2>
-
-<p>By passing <tt>show_events=false</tt>, you can remove the "buildslave
-attached", "buildslave detached", and "builder reconfigured" events that
-appear in-between the actual builds.</p>
-
-%(show_events_input)s
-
-<h2>Showing only Certain Branches</h2>
-
-<p>If you provide one or more <tt>branch=</tt> arguments, the display will be
-limited to builds that used one of the given branches. If no <tt>branch=</tt>
-arguments are given, builds from all branches will be displayed.</p>
-
-Erase the text from these "Show Branch:" boxes to remove that branch filter.
-
-%(show_branches_input)s
-
-<h2>Limiting the Builders that are Displayed</h2>
-
-<p>By adding one or more <tt>builder=</tt> arguments, the display will be
-limited to showing builds that ran on the given builders. This serves to
-limit the display to the specific named columns. If no <tt>builder=</tt>
-arguments are provided, all Builders will be displayed.</p>
-
-<p>To view a Waterfall page with only a subset of Builders displayed, select
-the Builders you are interested in here.</p>
-
-%(show_builders_input)s
-
-
-<h2>Auto-reloading the Page</h2>
-
-<p>Adding a <tt>reload=</tt> argument will cause the page to automatically
-reload itself after that many seconds.</p>
-
-%(show_reload_input)s
-
-<h2>Reload Waterfall Page</h2>
-
-<input type="submit" value="View Waterfall" />
-</form>
-'''
-
 class WaterfallHelp(HtmlResource):
     title = "Waterfall Help"
 
@@ -313,55 +236,21 @@ class WaterfallHelp(HtmlResource):
         self.categories = categories
 
     def body(self, request):
-        data = ''
         status = self.getStatus(request)
 
-        showEvents_checked = 'checked="checked"'
-        if request.args.get("show_events", ["true"])[0].lower() == "true":
-            showEvents_checked = ''
-        show_events_input = ('<p>'
-                             '<input type="checkbox" name="show_events" '
-                             'value="false" %s>'
-                             'Hide non-Build events'
-                             '</p>\n'
-                             ) % showEvents_checked
-
-        branches = [b
-                    for b in request.args.get("branch", [])
-                    if b]
-        branches.append('')
-        show_branches_input = '<table>\n'
-        for b in branches:
-            show_branches_input += ('<tr>'
-                                    '<td>Show Branch: '
-                                    '<input type="text" name="branch" '
-                                    'value="%s">'
-                                    '</td></tr>\n'
-                                    ) % (b,)
-        show_branches_input += '</table>\n'
+        cxt = {}
+        cxt['showEvents_checked'] = request.args.get("show_events", ["true"])[0].lower() == "true"
+        cxt['branches'] = [b for b in request.args.get("branch", []) if b]
 
         # this has a set of toggle-buttons to let the user choose the
         # builders
         showBuilders = request.args.get("show", [])
         showBuilders.extend(request.args.get("builder", []))
-        allBuilders = status.getBuilderNames(categories=self.categories)
-
-        show_builders_input = '<table>\n'
-        for bn in allBuilders:
-            checked = ""
-            if bn in showBuilders:
-                checked = 'checked="checked"'
-            show_builders_input += ('<tr>'
-                                    '<td><input type="checkbox"'
-                                    ' name="builder" '
-                                    'value="%s" %s></td> '
-                                    '<td>%s</td></tr>\n'
-                                    ) % (bn, checked, bn)
-        show_builders_input += '</table>\n'
+        cxt['showBuilders'] = showBuilders
+        cxt['allBuilders'] = status.getBuilderNames(categories=self.categories)
 
         # a couple of radio-button selectors for refresh time will appear
         # just after that text
-        show_reload_input = '<table>\n'
         times = [("none", "None"),
                  ("60", "60 seconds"),
                  ("300", "5 minutes"),
@@ -372,24 +261,12 @@ class WaterfallHelp(HtmlResource):
             current_reload_time = current_reload_time[0]
         if current_reload_time not in [t[0] for t in times]:
             times.insert(0, (current_reload_time, current_reload_time) )
-        for value, name in times:
-            checked = ""
-            if value == current_reload_time:
-                checked = 'checked="checked"'
-            show_reload_input += ('<tr>'
-                                  '<td><input type="radio" name="reload" '
-                                  'value="%s" %s></td> '
-                                  '<td>%s</td></tr>\n'
-                                  ) % (value, checked, name)
-        show_reload_input += '</table>\n'
 
-        fields = {"show_events_input": show_events_input,
-                  "show_branches_input": show_branches_input,
-                  "show_builders_input": show_builders_input,
-                  "show_reload_input": show_reload_input,
-                  }
-        data += HELP % fields
-        return data
+        cxt['times'] = times
+        cxt['current_reload_time'] = current_reload_time        
+
+        template = env.get_template("waterfallhelp.html");
+        return template.render(**cxt)
 
 class WaterfallStatusResource(HtmlResource):
     """This builds the main status page, with the waterfall display, and
@@ -432,13 +309,9 @@ class WaterfallStatusResource(HtmlResource):
         "This method builds the main waterfall display."
 
         status = self.getStatus(request)
-        data = ''
 
         projectName = status.getProjectName()
         projectURL = status.getProjectURL()
-
-        phase = request.args.get("phase",["2"])
-        phase = int(phase[0])
 
         # we start with all Builders available to this Waterfall: this is
         # limited by the config-file -time categories= argument, and defaults
@@ -461,61 +334,31 @@ class WaterfallStatusResource(HtmlResource):
         showCategories = request.args.get("category", [])
         if showCategories:
             builders = [b for b in builders if b.category in showCategories]
-
-        builderNames = [b.name for b in builders]
-
-        if phase == -1:
-            return self.body0(request, builders)
-        (changeNames, builderNames, timestamps, eventGrid, sourceEvents) = \
-                      self.buildGrid(request, builders)
-        if phase == 0:
-            return self.phase0(request, (changeNames + builderNames),
-                               timestamps, eventGrid)
-        # start the table: top-header material
-        data += '<table border="0" cellspacing="0">\n'
-
-        if projectName and projectURL:
-            # TODO: this is going to look really ugly
-            topleft = '<a href="%s">%s</a><br />last build' % \
-                      (projectURL, projectName)
-        else:
-            topleft = "last build"
-        data += ' <tr class="LastBuild">\n'
-        data += td(topleft, align="right", colspan=2, class_="Project")
-        for b in builders:
-            box = ITopBox(b).getBox(request)
-            data += box.td(align="center")
-        data += " </tr>\n"
-
-        data += ' <tr class="Activity">\n'
-        data += td('current activity', align='right', colspan=2)
-        for b in builders:
-            box = ICurrentBox(b).getBox(status)
-            data += box.td(align="center")
-        data += " </tr>\n"
         
-        data += " <tr>\n"
-        TZ = time.tzname[time.localtime()[-1]]
-        data += td("time (%s)" % TZ, align="center", class_="Time")
-        data += td('<a href="%s">changes</a>' % request.childLink("../changes"),
-                   align="center", class_="Change")
-        for name in builderNames:
-            safename = urllib.quote(name, safe='')
-            data += td('<a href="%s">%s</a>' %
-                       (request.childLink("../builders/%s" % safename), name),
-                       align="center", class_="Builder")
-        data += " </tr>\n"
+        (changeNames, builderNames, timestamps, eventGrid, sourceEvents) = \
+                      self.buildGrid(request, builders)            
+            
+        # start the table: top-header material
+        cxt = { 'projectName': projectName,
+                'projectURL': projectURL,
+                'builders': builders } 
 
-        if phase == 1:
-            f = self.phase1
-        else:
-            f = self.phase2
-        data += f(request, changeNames + builderNames, timestamps, eventGrid,
+        cxt['TZ'] = time.tzname[time.localtime()[-1]]
+        cxt['changesURL'] = request.childLink("../changes")
+        
+        bn = cxt['builders'] = []
+                
+        for name in builderNames:            
+            bn.append({'name': name,
+                       'url': request.childLink("../builders/%s" % urllib.quote(name, safe='')), 
+                       'top': ITopBox(b).getBox(request).text, 
+                       'top_class': ITopBox(b).getBox(request).class_,
+                       'status': ICurrentBox(b).getBox(status).text,
+                       'status_class': ICurrentBox(b).getBox(status).class_,                       
+                        })
+
+        cxt['waterfall'] = self.phase2(request, changeNames + builderNames, timestamps, eventGrid,
                   sourceEvents)
-
-        data += "</table>\n"
-
-        data += '<hr /><div class="footer">\n'
 
         def with_args(req, remove_args=[], new_args=[], new_path=None):
             # sigh, nevow makes this sort of manipulation easier
@@ -545,67 +388,20 @@ class WaterfallStatusResource(HtmlResource):
 
         if timestamps:
             bottom = timestamps[-1]
-            nextpage = with_args(request, ["last_time"],
+            cxt['nexpage'] = with_args(request, ["last_time"],
                                  [("last_time", str(int(bottom)))])
-            data += '[<a href="%s">next page</a>]\n' % nextpage
+
 
         helpurl = self.path_to_root(request) + "waterfall/help"
-        helppage = with_args(request, new_path=helpurl)
-        data += '[<a href="%s">help</a>]\n' % helppage
-
-        welcomeurl = self.path_to_root(request) + "index.html"
-        data += '[<a href="%s">welcome</a>]\n' % welcomeurl
+        cxt['helppage'] = with_args(request, new_path=helpurl)
+        cxt['welcomeurl'] = self.path_to_root(request) + "index.html"
 
         if self.get_reload_time(request) is not None:
-            no_reload_page = with_args(request, remove_args=["reload"])
-            data += '[<a href="%s">Stop Reloading</a>]\n' % no_reload_page
+            cxt['no_reload_page'] = with_args(request, remove_args=["reload"])
 
-        data += "<br />\n"
-
+        template = env.get_template("waterfall.html")        
+        data = template.render(**cxt)
         data += self.footer(request)
-        return data
-
-    def body0(self, request, builders):
-        # build the waterfall display
-        data = ""
-        data += "<h2>Basic display</h2>\n"
-        data += '<p>See <a href="%s">here</a>' % request.childLink("../waterfall")
-        data += " for the waterfall display</p>\n"
-                
-        data += '<table border="0" cellspacing="0">\n'
-        names = map(lambda builder: builder.name, builders)
-
-        # the top row is two blank spaces, then the top-level status boxes
-        data += " <tr>\n"
-        data += td("", colspan=2)
-        for b in builders:
-            text = ""
-            state, builds = b.getState()
-            if state != "offline":
-                text += "%s<br />\n" % state #b.getCurrentBig().text[0]
-            else:
-                text += "OFFLINE<br />\n"
-            data += td(text, align="center")
-
-        # the next row has the column headers: time, changes, builder names
-        data += " <tr>\n"
-        data += td("Time", align="center")
-        data += td("Changes", align="center")
-        for name in names:
-            data += td('<a href="%s">%s</a>' %
-                       (request.childLink("../" + urllib.quote(name)), name),
-                       align="center")
-        data += " </tr>\n"
-
-        # all further rows involve timestamps, commit events, and build events
-        data += " <tr>\n"
-        data += td("04:00", align="bottom")
-        data += td("fred", align="center")
-        for name in names:
-            data += td("stuff", align="center")
-        data += " </tr>\n"
-
-        data += "</table>\n"
         return data
     
     def buildGrid(self, request, builders):
@@ -743,77 +539,6 @@ class WaterfallStatusResource(HtmlResource):
         if debugGather: log.msg("finished loop")
         assert(len(timestamps) == len(eventGrid))
         return (changeNames, builderNames, timestamps, eventGrid, sourceEvents)
-    
-    def phase0(self, request, sourceNames, timestamps, eventGrid):
-        # phase0 rendering
-        if not timestamps:
-            return "no events"
-        data = ""
-        for r in range(0, len(timestamps)):
-            data += "<p>\n"
-            data += "[%s]<br />" % timestamps[r]
-            row = eventGrid[r]
-            assert(len(row) == len(sourceNames))
-            for c in range(0, len(row)):
-                if row[c]:
-                    data += "<b>%s</b><br />\n" % sourceNames[c]
-                    for e in row[c]:
-                        log.msg("Event", r, c, sourceNames[c], e.getText())
-                        lognames = [loog.getName() for loog in e.getLogs()]
-                        data += "%s: %s: %s<br />" % (e.getText(),
-                                                         e.getTimes()[0],
-                                                         lognames)
-                else:
-                    data += "<b>%s</b> [none]<br />\n" % sourceNames[c]
-        return data
-    
-    def phase1(self, request, sourceNames, timestamps, eventGrid,
-               sourceEvents):
-        # phase1 rendering: table, but boxes do not overlap
-        data = ""
-        if not timestamps:
-            return data
-        lastDate = None
-        for r in range(0, len(timestamps)):
-            chunkstrip = eventGrid[r]
-            # chunkstrip is a horizontal strip of event blocks. Each block
-            # is a vertical list of events, all for the same source.
-            assert(len(chunkstrip) == len(sourceNames))
-            maxRows = reduce(lambda x,y: max(x,y),
-                             map(lambda x: len(x), chunkstrip))
-            for i in range(maxRows):
-                data += " <tr>\n";
-                if i == 0:
-                    stuff = []
-                    # add the date at the beginning, and each time it changes
-                    today = time.strftime("<b>%d %b %Y</b>",
-                                          time.localtime(timestamps[r]))
-                    todayday = time.strftime("<b>%a</b>",
-                                             time.localtime(timestamps[r]))
-                    if today != lastDate:
-                        stuff.append(todayday)
-                        stuff.append(today)
-                        lastDate = today
-                    stuff.append(
-                        time.strftime("%H:%M:%S",
-                                      time.localtime(timestamps[r])))
-                    data += td(stuff, valign="bottom", align="center",
-                               rowspan=maxRows, class_="Time")
-                for c in range(0, len(chunkstrip)):
-                    block = chunkstrip[c]
-                    assert(block != None) # should be [] instead
-                    # bottom-justify
-                    offset = maxRows - len(block)
-                    if i < offset:
-                        data += td("")
-                    else:
-                        e = block[i-offset]
-                        box = IBox(e).getBox(request)
-                        box.parms["show_idle"] = 1
-                        data += box.td(valign="top", align="center")
-                data += " </tr>\n"
-        
-        return data
     
     def phase2(self, request, sourceNames, timestamps, eventGrid,
                sourceEvents):
