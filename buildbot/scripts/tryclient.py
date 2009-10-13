@@ -408,7 +408,10 @@ class Try(pb.Referenceable):
                 diff = sys.stdin.read()
             else:
                 diff = open(difffile,"r").read()
-            patch = (self.config['patchlevel'], diff)
+            patch = [self.config['patchlevel'], diff]
+            root_dir = self.getopt("root", "try_root_dir")
+            if root_dir:
+              patch.append(root_dir)
             ss = SourceStamp(branch, baserev, patch)
             d = defer.succeed(ss)
         else:
@@ -442,11 +445,13 @@ class Try(pb.Referenceable):
     def fakeDeliverJob(self):
         # Display the job to be delivered, but don't perform delivery.
         ss = self.sourcestamp
-        print ("Job:\n\tBranch: %s\n\tRevision: %s\n\tBuilders: %s\n%s"
+        print ("Job:\n\tBranch: %s\n\tRevision: %s\n\tBuilders: %s"
                % (ss.branch,
                   ss.revision,
-                  self.builderNames,
-                  ss.patch[1]))
+                  self.builderNames))
+        if len(ss.patch) >= 3:
+          print "\tRoot dir: %s" % self.patch[2]
+        print "%s" % ss.patch[1]
         d = defer.Deferred()
         d.callback(True)
         return d
@@ -698,6 +703,3 @@ class Try(pb.Referenceable):
     def cleanup(self, res=None):
         if self.buildsetStatus:
             self.buildsetStatus.broker.transport.loseConnection()
-
-
-    
