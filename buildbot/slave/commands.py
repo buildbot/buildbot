@@ -1627,11 +1627,29 @@ class SourceBase(Command):
         return d
 
     def doPatch(self, res):
-        patchlevel, diff = self.patch
-        command = [getCommand("patch"), '-p%d' % patchlevel]
+        patchlevel = self.patch[0]
+        diff = self.patch[1]
+        root = None
+        if len(self.patch) >= 3:
+            root = self.patch[2]
+        command = [
+            getCommand("patch"),
+            '-p%d' % patchlevel,
+            '--remove-empty-files',
+            '--force',
+            '--forward',
+        ]
         dir = os.path.join(self.builder.basedir, self.workdir)
         # mark the directory so we don't try to update it later
         open(os.path.join(dir, ".buildbot-patched"), "w").write("patched\n")
+
+        # Update 'dir' with the 'root' option. Make sure it is a subdirectory
+        # of dir.
+        if (root and
+            os.path.abspath(os.path.join(dir, root)
+                            ).startswith(os.path.abspath(dir))):
+            dir = os.path.join(dir, root)
+
         # now apply the patch
         c = ShellCommand(self.builder, command, dir,
                          sendRC=False, timeout=self.timeout,
