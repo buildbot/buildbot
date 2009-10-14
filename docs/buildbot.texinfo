@@ -2466,6 +2466,11 @@ A callable which takes one argument, a Change instance, and returns
 it is not.  Unimportant Changes are accumulated until the build is
 triggered by an important change.  The default value of None means
 that all Changes are important.
+
+@item categories
+A list of categories of changes that this scheduler will respond to.  If this
+is specified, then any non-matching changes are ignored.
+
 @end table
 
 @node Dependent Scheduler, Periodic Scheduler, AnyBranchScheduler, Change Sources and Schedulers
