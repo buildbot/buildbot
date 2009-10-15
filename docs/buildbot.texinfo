@@ -1753,11 +1753,13 @@ SourceStamp, which will result in same behavior as this.
 This builds the most recent code on the given BRANCH. Again, this is
 generally triggered by a user request or Periodic build.
 
-@item (revision=REV, changes=None, patch=(LEVEL, DIFF))
+@item (revision=REV, changes=None, patch=(LEVEL, DIFF, SUBDIR_ROOT))
 This checks out the tree at the given revision REV, then applies a
-patch (using @code{patch -pLEVEL <DIFF}). The @ref{try} feature uses
-this kind of @code{SourceStamp}. If @code{patch} is None, the patching
-step is bypassed.
+patch (using @code{patch -pLEVEL <DIFF}) from inside the relative
+directory SUBDIR_ROOT. Item SUBDIR_ROOT is optional and defaults to the
+builder working directory. The @ref{try} feature uses this kind of
+@code{SourceStamp}. If @code{patch} is None, the patching step is
+bypassed.
 
 @end table
 
