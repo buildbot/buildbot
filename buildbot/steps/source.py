@@ -42,7 +42,10 @@ class Source(LoggingBuildStep):
              files are deleted but generated files can influence test
              behavior (e.g. python's .pyc files), or when source
              directories are deleted but generated files prevent CVS from
-             removing them.
+             removing them. When used with a patched checkout, from a
+             previous buildbot try for instance, it will try to "revert"
+             the changes first and will do a clobber if it is unable to
+             get a clean checkout. The behavior is SCM-dependent.
 
            - 'copy': specifies that the source-controlled workspace
              should be maintained in a separate directory (called the
@@ -1157,4 +1160,3 @@ class Monotone(Source):
         assert slavever, "slave is too old, does not know about monotone"
         cmd = LoggedRemoteCommand("monotone", self.args)
         self.startCommand(cmd)
-
