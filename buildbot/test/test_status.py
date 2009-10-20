@@ -1323,7 +1323,7 @@ class ContactTester(unittest.TestCase):
         self.failUnlessEqual(irc.message, "", "No finish notification generated on exception with notify_events=['success']")
 
     def test_notification_failed(self):
-        irc = MyContact()
+        irc = MyContact(showBlameList = True)
 
         my_builder = MyBuilder("builder834")
         my_build = MyIrcBuild(my_builder, 862, builder.FAILURE)
@@ -1368,6 +1368,11 @@ class ContactTester(unittest.TestCase):
 
         irc.message = ""
         irc.buildFinished(my_builder.getName(), my_build, None)
+        self.failUnlessEqual(irc.message, "build #862 of builder834 is complete: Exception [step1 step2]  Build details are at http://myserver/mypath?build=765", "Finish notification generated on failure with notify_events=['exception']")
+
+        irc.message = ""
+        irc.showBlameList = True
+        irc.buildFinished(my_builder.getName(), my_build, None)
         self.failUnlessEqual(irc.message, "build #862 of builder834 is complete: Exception [step1 step2]  Build details are at http://myserver/mypath?build=765  blamelist: author1", "Finish notification generated on failure with notify_events=['exception']")
 
         irc.message = ""
@@ -1398,9 +1403,15 @@ class ContactTester(unittest.TestCase):
         irc.buildFinished(my_builder.getName(), my_build, None)
         self.failUnlessEqual(irc.message, expected_msg, "Finish notification generated on failure with notify_events=['successToFailure']")
 
+        if expected_msg != '' and new_result != builder.SUCCESS:
+            irc.message = ''
+            irc.showBlameList = True
+            irc.buildFinished(my_builder.getName(), my_build, None)
+            self.failUnlessEqual(irc.message, expected_msg + '  blamelist: author1', "Finish notification generated on failure with notify_events=['successToFailure']")
+
     def test_notification_successToFailure(self):
         self.do_x_to_y_notification_test(notify="successToFailure", previous_result=builder.SUCCESS, new_result=builder.FAILURE,
-                                         expected_msg="build #862 of builder834 is complete: Failure [step1 step2]  Build details are at http://myserver/mypath?build=765  blamelist: author1" )
+                                         expected_msg="build #862 of builder834 is complete: Failure [step1 step2]  Build details are at http://myserver/mypath?build=765" )
 
         self.do_x_to_y_notification_test(notify="successToFailure", previous_result=builder.SUCCESS, new_result=builder.SUCCESS,
                                          expected_msg = "" )
@@ -1413,7 +1424,7 @@ class ContactTester(unittest.TestCase):
 
     def test_notification_successToWarnings(self):
         self.do_x_to_y_notification_test(notify="successToWarnings", previous_result=builder.SUCCESS, new_result=builder.WARNINGS,
-                                         expected_msg="build #862 of builder834 is complete: Warnings [step1 step2]  Build details are at http://myserver/mypath?build=765  blamelist: author1" )
+                                         expected_msg="build #862 of builder834 is complete: Warnings [step1 step2]  Build details are at http://myserver/mypath?build=765" )
 
         self.do_x_to_y_notification_test(notify="successToWarnings", previous_result=builder.SUCCESS, new_result=builder.SUCCESS,
                                          expected_msg = "" )
@@ -1426,7 +1437,7 @@ class ContactTester(unittest.TestCase):
 
     def test_notification_successToException(self):
         self.do_x_to_y_notification_test(notify="successToException", previous_result=builder.SUCCESS, new_result=builder.EXCEPTION,
-                                         expected_msg="build #862 of builder834 is complete: Exception [step1 step2]  Build details are at http://myserver/mypath?build=765  blamelist: author1" )
+                                         expected_msg="build #862 of builder834 is complete: Exception [step1 step2]  Build details are at http://myserver/mypath?build=765" )
 
         self.do_x_to_y_notification_test(notify="successToException", previous_result=builder.SUCCESS, new_result=builder.SUCCESS,
                                          expected_msg = "" )
@@ -1456,7 +1467,7 @@ class ContactTester(unittest.TestCase):
 
     def test_notification_failureToWarnings(self):
         self.do_x_to_y_notification_test(notify="failureToWarnings", previous_result=builder.FAILURE, new_result=builder.WARNINGS,
-                                         expected_msg="build #862 of builder834 is complete: Warnings [step1 step2]  Build details are at http://myserver/mypath?build=765  blamelist: author1" )
+                                         expected_msg="build #862 of builder834 is complete: Warnings [step1 step2]  Build details are at http://myserver/mypath?build=765" )
 
         self.do_x_to_y_notification_test(notify="failureToWarnings", previous_result=builder.FAILURE, new_result=builder.SUCCESS,
                                          expected_msg = "" )
@@ -1469,7 +1480,7 @@ class ContactTester(unittest.TestCase):
 
     def test_notification_failureToException(self):
         self.do_x_to_y_notification_test(notify="failureToException", previous_result=builder.FAILURE, new_result=builder.EXCEPTION,
-                                         expected_msg="build #862 of builder834 is complete: Exception [step1 step2]  Build details are at http://myserver/mypath?build=765  blamelist: author1" )
+                                         expected_msg="build #862 of builder834 is complete: Exception [step1 step2]  Build details are at http://myserver/mypath?build=765" )
 
         self.do_x_to_y_notification_test(notify="failureToException", previous_result=builder.FAILURE, new_result=builder.SUCCESS,
                                          expected_msg = "" )
@@ -1486,7 +1497,7 @@ class ContactTester(unittest.TestCase):
 
     def test_notification_warningsToFailure(self):
         self.do_x_to_y_notification_test(notify="warningsToFailure", previous_result=builder.WARNINGS, new_result=builder.FAILURE,
-                                         expected_msg="build #862 of builder834 is complete: Failure [step1 step2]  Build details are at http://myserver/mypath?build=765  blamelist: author1" )
+                                         expected_msg="build #862 of builder834 is complete: Failure [step1 step2]  Build details are at http://myserver/mypath?build=765" )
 
         self.do_x_to_y_notification_test(notify="warningsToFailure", previous_result=builder.WARNINGS, new_result=builder.SUCCESS,
                                          expected_msg = "" )
@@ -1512,7 +1523,7 @@ class ContactTester(unittest.TestCase):
 
     def test_notification_warningsToException(self):
         self.do_x_to_y_notification_test(notify="warningsToException", previous_result=builder.WARNINGS, new_result=builder.EXCEPTION,
-                                         expected_msg="build #862 of builder834 is complete: Exception [step1 step2]  Build details are at http://myserver/mypath?build=765  blamelist: author1" )
+                                         expected_msg="build #862 of builder834 is complete: Exception [step1 step2]  Build details are at http://myserver/mypath?build=765" )
 
         self.do_x_to_y_notification_test(notify="warningsToException", previous_result=builder.WARNINGS, new_result=builder.SUCCESS,
                                          expected_msg = "" )
@@ -1528,7 +1539,7 @@ class ContactTester(unittest.TestCase):
 
     def test_notification_exceptionToFailure(self):
         self.do_x_to_y_notification_test(notify="exceptionToFailure", previous_result=builder.EXCEPTION, new_result=builder.FAILURE,
-                                         expected_msg="build #862 of builder834 is complete: Failure [step1 step2]  Build details are at http://myserver/mypath?build=765  blamelist: author1" )
+                                         expected_msg="build #862 of builder834 is complete: Failure [step1 step2]  Build details are at http://myserver/mypath?build=765" )
 
         self.do_x_to_y_notification_test(notify="exceptionToFailure", previous_result=builder.EXCEPTION, new_result=builder.SUCCESS,
                                          expected_msg = "" )
@@ -1541,7 +1552,7 @@ class ContactTester(unittest.TestCase):
 
     def test_notification_exceptionToWarnings(self):
         self.do_x_to_y_notification_test(notify="exceptionToWarnings", previous_result=builder.EXCEPTION, new_result=builder.WARNINGS,
-                                         expected_msg="build #862 of builder834 is complete: Warnings [step1 step2]  Build details are at http://myserver/mypath?build=765  blamelist: author1" )
+                                         expected_msg="build #862 of builder834 is complete: Warnings [step1 step2]  Build details are at http://myserver/mypath?build=765" )
 
         self.do_x_to_y_notification_test(notify="exceptionToWarnings", previous_result=builder.EXCEPTION, new_result=builder.SUCCESS,
                                          expected_msg = "" )
@@ -1613,8 +1624,8 @@ class MyChannel:
 class MyContact(words.Contact):
     message = ""
 
-    def __init__(self, channel = MyChannel()):
-        words.Contact.__init__(self, channel)
+    def __init__(self, channel = MyChannel(), showBlameList = False):
+        words.Contact.__init__(self, channel, showBlameList)
         self.message = ""
 
     def subscribe_to_build_events(self):
@@ -1652,10 +1663,14 @@ class IRCContactTester(unittest.TestCase):
 
     def testSendToChannel(self):
         ch = MyIRCChannel()
-        contact = words.IRCContact(ch, '#somewhere')
+        contact = words.IRCContact(ch, '#somewhere', noticeOnChannel = True)
         contact.send('hi')
         self.failUnlessEqual(ch.called, ['notice'])
 
+        ch = MyIRCChannel()
+        contact = words.IRCContact(ch, '#somewhere')
+        contact.send('hi')
+        self.failUnlessEqual(ch.called, ['msg'])
 
 class StepStatistics(unittest.TestCase):
     def testStepStatistics(self):

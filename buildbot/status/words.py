@@ -65,11 +65,12 @@ class Contact:
     'broadcast contact' (chat rooms, IRC channels as a whole).
     """
 
-    def __init__(self, channel):
+    def __init__(self, channel, showBlameList = False):
         self.channel = channel
         self.notify_events = {}
         self.subscribed = 0
         self.add_notification_events(channel.notify_events)
+        self.showBlameList = showBlameList
 
     silly = {
         "What happen ?": "Somebody set up us the bomb.",
@@ -335,7 +336,7 @@ class Contact:
         if buildurl:
             r += "  Build details are at %s" % buildurl
 
-        if build.getResults() != SUCCESS:
+        if build.getResults() != SUCCESS and self.showBlameList:
             r += '  blamelist: ' + ', '.join([c.who for c in build.changes])
 
         self.send(r)
@@ -579,13 +580,15 @@ class Contact:
 class IRCContact(Contact):
     # this is the IRC-specific subclass of Contact
 
-    def __init__(self, channel, dest):
-        Contact.__init__(self, channel)
+    def __init__(self, channel, dest,
+                 noticeOnChannel = False, showBlameList = False):
+        Contact.__init__(self, channel, True)
         # when people send us public messages ("buildbot: command"),
         # self.dest is the name of the channel ("#twisted"). When they send
         # us private messages (/msg buildbot command), self.dest is their
         # username.
         self.dest = dest
+        self.noticeOnChannel = noticeOnChannel
 
     def onChannel(self):
         return self.dest[0] == '#'
@@ -598,7 +601,7 @@ class IRCContact(Contact):
     # userJoined(self, user, channel)
 
     def send(self, message):
-        if self.onChannel():
+        if self.onChannel() and self.noticeOnChannel:
             self.channel.notice(self.dest, message.encode("ascii", "replace"))
         else:
             self.channel.msg(self.dest, message.encode("ascii", "replace"))
@@ -676,7 +679,7 @@ class IrcStatusBot(irc.IRCClient):
     implements(IChannel)
     contactClass = IRCContact
 
-    def __init__(self, nickname, password, channels, status, categories, notify_events):
+    def __init__(self, nickname, password, channels, status, categories, notify_events, noticeOnChannel = False, showBlameList = False):
         """
         @type  nickname: string
         @param nickname: the nickname by which this bot should be known
@@ -697,6 +700,8 @@ class IrcStatusBot(irc.IRCClient):
         self.counter = 0
         self.hasQuit = 0
         self.contacts = {}
+        self.noticeOnChannel = noticeOnChannel
+        self.showBlameList = showBlameList
 
     def addContact(self, name, contact):
         self.contacts[name] = contact
@@ -704,7 +709,9 @@ class IrcStatusBot(irc.IRCClient):
     def getContact(self, name):
         if name in self.contacts:
             return self.contacts[name]
-        new_contact = self.contactClass(self, name)
+        new_contact = self.contactClass(self, name,
+                                        noticeOnChannel = self.noticeOnChannel,
+                                        showBlameList = self.showBlameList)
         self.contacts[name] = new_contact
         return new_contact
 
@@ -791,7 +798,7 @@ class IrcStatusFactory(ThrottledClientFactory):
     shuttingDown = False
     p = None
 
-    def __init__(self, nickname, password, channels, categories, notify_events):
+    def __init__(self, nickname, password, channels, categories, notify_events, noticeOnChannel = False, showBlameList = False):
         #ThrottledClientFactory.__init__(self) # doesn't exist
         self.status = None
         self.nickname = nickname
@@ -799,6 +806,8 @@ class IrcStatusFactory(ThrottledClientFactory):
         self.channels = channels
         self.categories = categories
         self.notify_events = notify_events
+        self.noticeOnChannel = noticeOnChannel
+        self.showBlameList = showBlameList
 
     def __getstate__(self):
         d = self.__dict__.copy()
@@ -813,7 +822,9 @@ class IrcStatusFactory(ThrottledClientFactory):
     def buildProtocol(self, address):
         p = self.protocol(self.nickname, self.password,
                           self.channels, self.status,
-                          self.categories, self.notify_events)
+                          self.categories, self.notify_events,
+                          noticeOnChannel = self.noticeOnChannel,
+                          showBlameList = self.showBlameList)
         p.factory = self
         p.status = self.status
         p.control = self.control
@@ -846,7 +857,8 @@ class IRC(base.StatusReceiverMultiService):
                      "categories"]
 
     def __init__(self, host, nick, channels, port=6667, allowForce=True,
-                 categories=None, password=None, notify_events={}):
+                 categories=None, password=None, notify_events={},
+                 noticeOnChannel = False, showBlameList = True):
         base.StatusReceiverMultiService.__init__(self)
 
         assert allowForce in (True, False) # TODO: implement others
@@ -862,7 +874,9 @@ class IRC(base.StatusReceiverMultiService):
         self.notify_events = notify_events
         log.msg('Notify events %s' % notify_events)
         self.f = IrcStatusFactory(self.nick, self.password,
-                                  self.channels, self.categories, self.notify_events)
+                                  self.channels, self.categories, self.notify_events,
+                                  noticeOnChannel = noticeOnChannel,
+                                  showBlameList = showBlameList)
         c = internet.TCPClient(self.host, self.port, self.f)
         c.setServiceParent(self)
 
