@@ -216,10 +216,10 @@ class AnyBranchScheduler(BaseUpstreamScheduler):
     fileIsImportant = None
 
     compare_attrs = ('name', 'branches', 'treeStableTimer', 'builderNames',
-                     'fileIsImportant', 'properties')
+                     'fileIsImportant', 'properties', 'categories')
 
     def __init__(self, name, branches, treeStableTimer, builderNames,
-                 fileIsImportant=None, properties={}):
+                 fileIsImportant=None, properties={}, categories=None):
         """
         @param name: the name of this Scheduler
         @param branches: The branch names that the Scheduler should pay
@@ -247,6 +247,7 @@ class AnyBranchScheduler(BaseUpstreamScheduler):
 
         @param properties: properties to apply to all builds started from this 
                            scheduler
+        @param categories: A list of categories of changes to accept 
         """
 
         BaseUpstreamScheduler.__init__(self, name, properties)
@@ -267,6 +268,7 @@ class AnyBranchScheduler(BaseUpstreamScheduler):
             assert callable(fileIsImportant)
             self.fileIsImportant = fileIsImportant
         self.schedulers = {} # one per branch
+        self.categories = categories
 
     def __repr__(self):
         return "<AnyBranchScheduler '%s'>" % self.name
@@ -290,6 +292,9 @@ class AnyBranchScheduler(BaseUpstreamScheduler):
         branch = change.branch
         if self.branches is not None and branch not in self.branches:
             log.msg("%s ignoring off-branch %s" % (self, change))
+            return
+        if self.categories is not None and change.category not in self.categories:
+            log.msg("%s ignoring non-matching categories %s" % (self, change))
             return
         s = self.schedulers.get(branch)
         if not s:
