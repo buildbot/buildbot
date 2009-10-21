@@ -65,12 +65,11 @@ class Contact:
     'broadcast contact' (chat rooms, IRC channels as a whole).
     """
 
-    def __init__(self, channel, showBlameList = False):
+    def __init__(self, channel):
         self.channel = channel
         self.notify_events = {}
         self.subscribed = 0
         self.add_notification_events(channel.notify_events)
-        self.showBlameList = showBlameList
 
     silly = {
         "What happen ?": "Somebody set up us the bomb.",
@@ -336,7 +335,7 @@ class Contact:
         if buildurl:
             r += "  Build details are at %s" % buildurl
 
-        if build.getResults() != SUCCESS and self.showBlameList:
+        if self.channel.showBlameList and build.getResults() != SUCCESS and len(build.changes) != 0:
             r += '  blamelist: ' + ', '.join([c.who for c in build.changes])
 
         self.send(r)
@@ -580,15 +579,13 @@ class Contact:
 class IRCContact(Contact):
     # this is the IRC-specific subclass of Contact
 
-    def __init__(self, channel, dest,
-                 noticeOnChannel = False, showBlameList = False):
-        Contact.__init__(self, channel, True)
+    def __init__(self, channel, dest):
+        Contact.__init__(self, channel)
         # when people send us public messages ("buildbot: command"),
         # self.dest is the name of the channel ("#twisted"). When they send
         # us private messages (/msg buildbot command), self.dest is their
         # username.
         self.dest = dest
-        self.noticeOnChannel = noticeOnChannel
 
     def onChannel(self):
         return self.dest[0] == '#'
@@ -601,10 +598,8 @@ class IRCContact(Contact):
     # userJoined(self, user, channel)
 
     def send(self, message):
-        if self.onChannel() and self.noticeOnChannel:
-            self.channel.notice(self.dest, message.encode("ascii", "replace"))
-        else:
-            self.channel.msg(self.dest, message.encode("ascii", "replace"))
+        self.channel.msgOrNotice(self.dest, message.encode("ascii", "replace"))
+
     def act(self, action):
         self.channel.me(self.dest, action.encode("ascii", "replace"))
 
@@ -703,15 +698,19 @@ class IrcStatusBot(irc.IRCClient):
         self.noticeOnChannel = noticeOnChannel
         self.showBlameList = showBlameList
 
+    def msgOrNotice(self, dest, message):
+        if self.noticeOnChannel and dest[0] == '#':
+            self.notice(dest, message)
+        else:
+            self.msg(dest, message)
+
     def addContact(self, name, contact):
         self.contacts[name] = contact
 
     def getContact(self, name):
         if name in self.contacts:
             return self.contacts[name]
-        new_contact = self.contactClass(self, name,
-                                        noticeOnChannel = self.noticeOnChannel,
-                                        showBlameList = self.showBlameList)
+        new_contact = self.contactClass(self, name)
         self.contacts[name] = new_contact
         return new_contact
 
