@@ -353,12 +353,12 @@ class Contact:
         if prevBuild:
             prevResult = prevBuild.getResults()
 
-            event = join((lower(self.results_descriptions.get(prevResult)), \
-                              'To', \
-                              capitalize(self.results_descriptions.get(results))), \
-                             '')
+            required_notification_control_string = join((lower(self.results_descriptions.get(prevResult)), \
+                                                             'To', \
+                                                             capitalize(self.results_descriptions.get(results))), \
+                                                            '')
 
-            if (self.notify_for(event)):
+            if (self.notify_for(required_notification_control_string)):
                 return True
 
         return False
@@ -587,11 +587,8 @@ class IRCContact(Contact):
         # username.
         self.dest = dest
 
-    def onChannel(self):
-        return self.dest[0] == '#'
-
     def describeUser(self, user):
-        if self.onChannel():
+        if self.dest[0] == '#':
             return "IRC user <%s> on channel %s" % (user, self.dest)
         return "IRC user <%s> (privmsg)" % user
 
