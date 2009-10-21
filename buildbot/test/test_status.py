@@ -1660,14 +1660,6 @@ class IrcStatusBotTester(unittest.TestCase):
         channel.msgOrNotice('#here', 'hello')
         self.failUnlessEqual(channel.message, ['notice', '#here', 'hello'])
 
-class IRCContactTester(unittest.TestCase):
-    def testOnChannel(self):
-        contact = words.IRCContact(MyChannel(), 'alice')
-        self.failUnlessEqual(contact.onChannel(), False)
-
-        contact = words.IRCContact(MyChannel(), '#somewhere')
-        self.failUnlessEqual(contact.onChannel(), True)
-
 class StepStatistics(unittest.TestCase):
     def testStepStatistics(self):
         status = builder.BuildStatus(builder.BuilderStatus("test"), 123)
