@@ -12,6 +12,19 @@ def s(steptype, **kwargs):
     # specification tuples
     return (steptype, kwargs)
 
+class ArgumentsInTheWrongPlace(Exception):
+    """When calling BuildFactory.addStep(stepinstance), addStep() only takes
+    one argument. You passed extra arguments to addStep(), which you probably
+    intended to pass to your BuildStep constructor instead. For example, you
+    should do::
+
+     f.addStep(ShellCommand(command=['echo','stuff'], haltOnFailure=True))
+
+    instead of::
+
+     f.addStep(ShellCommand(command=['echo','stuff']), haltOnFailure=True)
+    """
+
 class BuildFactory(util.ComparableMixin):
     """
     @cvar  buildClass: class to use when creating builds
@@ -42,6 +55,8 @@ class BuildFactory(util.ComparableMixin):
 
     def addStep(self, step_or_factory, **kwargs):
         if isinstance(step_or_factory, BuildStep):
+            if kwargs:
+                raise ArgumentsInTheWrongPlace()
             s = step_or_factory.getStepFactory()
         else:
             s = (step_or_factory, dict(kwargs))
