@@ -1338,8 +1338,10 @@ class ContactTester(unittest.TestCase):
         self.failUnlessEqual(irc.message, "", "No started notification with notify_events=['failed']")
 
         irc.message = ""
+        irc.channel.showBlameList = True
         irc.buildFinished(my_builder.getName(), my_build, None)
-        self.failUnlessEqual(irc.message, "build #862 of builder834 is complete: Failure [step1 step2]  Build details are at http://myserver/mypath?build=765", "Finish notification generated on failure with notify_events=['failed']")
+        self.failUnlessEqual(irc.message, "build #862 of builder834 is complete: Failure [step1 step2]  Build details are at http://myserver/mypath?build=765  blamelist: author1", "Finish notification generated on failure with notify_events=['failed']")
+        irc.channel.showBlameList = False
 
         irc.message = ""
         my_build.results = builder.SUCCESS
@@ -1369,6 +1371,12 @@ class ContactTester(unittest.TestCase):
         irc.message = ""
         irc.buildFinished(my_builder.getName(), my_build, None)
         self.failUnlessEqual(irc.message, "build #862 of builder834 is complete: Exception [step1 step2]  Build details are at http://myserver/mypath?build=765", "Finish notification generated on failure with notify_events=['exception']")
+
+        irc.message = ""
+        irc.channel.showBlameList = True
+        irc.buildFinished(my_builder.getName(), my_build, None)
+        self.failUnlessEqual(irc.message, "build #862 of builder834 is complete: Exception [step1 step2]  Build details are at http://myserver/mypath?build=765  blamelist: author1", "Finish notification generated on failure with notify_events=['exception']")
+        irc.channel.showBlameList = False
 
         irc.message = ""
         my_build.results = builder.SUCCESS
@@ -1609,6 +1617,7 @@ class MyChannel:
 
     def __init__(self, notify_events = {}):
         self.notify_events = notify_events
+        self.showBlameList = False
 
 class MyContact(words.Contact):
     message = ""
@@ -1625,6 +1634,31 @@ class MyContact(words.Contact):
 
     def send(self, msg):
         self.message += msg
+
+class MyIrcStatusBot(words.IrcStatusBot):
+    def msg(self, dest, message):
+        self.message = ['msg', dest, message]
+
+    def notice(self, dest, message):
+        self.message = ['notice', dest, message]
+
+class IrcStatusBotTester(unittest.TestCase):
+    def testMsgOrNotice(self):
+        channel = MyIrcStatusBot('alice', 'pa55w0od', ['#here'],
+                                 builder.SUCCESS, None, {})
+        channel.msgOrNotice('bob', 'hello')
+        self.failUnlessEqual(channel.message, ['msg', 'bob', 'hello'])
+
+        channel.msgOrNotice('#here', 'hello')
+        self.failUnlessEqual(channel.message, ['msg', '#here', 'hello'])
+
+        channel.noticeOnChannel = True
+
+        channel.msgOrNotice('bob', 'hello')
+        self.failUnlessEqual(channel.message, ['msg', 'bob', 'hello'])
+
+        channel.msgOrNotice('#here', 'hello')
+        self.failUnlessEqual(channel.message, ['notice', '#here', 'hello'])
 
 class StepStatistics(unittest.TestCase):
     def testStepStatistics(self):
