@@ -34,6 +34,7 @@ css_classes = {SUCCESS: "success",
                FAILURE: "failure",
                SKIPPED: "skipped",
                EXCEPTION: "exception",
+               None: "",
                }
 
 ROW_TEMPLATE = '''
