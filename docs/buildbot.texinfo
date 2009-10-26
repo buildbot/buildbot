@@ -6847,7 +6847,7 @@ build number.
 @example
 class TestWithCodeCoverage(BuildStep):
     command = ["make", "test",
-               WithProperties("buildnum=%s" % "buildnumber")]
+               WithProperties("buildnum=%s", "buildnumber")]
 
     def createSummary(self, log):
         buildnumber = self.getProperty("buildnumber")
@@ -6861,7 +6861,7 @@ output by the build process itself:
 @example
 class TestWithCodeCoverage(BuildStep):
     command = ["make", "test",
-               WithProperties("buildnum=%s" % "buildnumber")]
+               WithProperties("buildnum=%s", "buildnumber")]
 
     def createSummary(self, log):
         output = StringIO(log.getText())
