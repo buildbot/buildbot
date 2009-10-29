@@ -348,13 +348,16 @@ class WaterfallStatusResource(HtmlResource):
         
         bn = cxt['builders'] = []
                 
-        for name in builderNames:            
+        for name in builderNames:
+            builder = status.getBuilder(name)
+            top_box = ITopBox(builder).getBox(request)
+            current_box = ICurrentBox(builder).getBox(status)
             bn.append({'name': name,
                        'url': request.childLink("../builders/%s" % urllib.quote(name, safe='')), 
-                       'top': ITopBox(b).getBox(request).text, 
-                       'top_class': ITopBox(b).getBox(request).class_,
-                       'status': ICurrentBox(b).getBox(status).text,
-                       'status_class': ICurrentBox(b).getBox(status).class_,                       
+                       'top': top_box.text, 
+                       'top_class': top_box.class_,
+                       'status': current_box.text,
+                       'status_class': current_box.class_,                       
                         })
 
         cxt['waterfall'] = self.phase2(request, changeNames + builderNames, timestamps, eventGrid,
