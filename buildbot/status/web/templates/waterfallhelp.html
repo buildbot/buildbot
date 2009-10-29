@@ -1,3 +1,5 @@
+{% extends "layout.html" %}
+{% block content %}
 
 <form action="../waterfall" method="GET">
 
@@ -39,7 +41,7 @@ appear in-between the actual builds.</p>
 
 <p>
 <input type="checkbox" name="show_events" value="false" 
-{% if showEvents_checked %} checked="checked" {% endif %} >
+{% if show_events_checked %} checked="checked" {% endif %} >
 Hide non-Build events
 </p>
 
@@ -70,10 +72,10 @@ arguments are provided, all Builders will be displayed.</p>
 the Builders you are interested in here.</p>
        
 <table>
-{% for bn in allBuilders %}
- <tr><td><input type="checkbox" name="builder" value="{ bn }"
-  {% if bn in showBuilders %}checked="checked"{% endif %} >
- </td><td>{ bn }</td></tr>
+{% for bn in all_builders %}
+ <tr><td><input type="checkbox" name="builder" value="{{bn}}"
+  {% if bn in show_builders %}checked="checked"{% endif %} >
+ </td><td>{{bn}}</td></tr>
 {% endfor %}
 </table>
 
@@ -84,9 +86,9 @@ reload itself after that many seconds.</p>
 
 <table>
 {% for value, name in times %}
- <tr><td><input type="radio" name="reload" value="{ value }"
+ <tr><td><input type="radio" name="reload" value="{{value}}"
   {% if value == current_reload_time %}checked="checked"{% endif %} >
- </td><td>{ name }</td></tr>
+ </td><td>{{name}}</td></tr>
 {% endfor %}
 </table>
 
@@ -95,3 +97,4 @@ reload itself after that many seconds.</p>
 
 <input type="submit" value="View Waterfall" />
 </form>
+{% endblock %}

@@ -235,19 +235,20 @@ class WaterfallHelp(HtmlResource):
         HtmlResource.__init__(self)
         self.categories = categories
 
-    def body(self, request):
+    def content(self, request, context):
+
         status = self.getStatus(request)
 
         cxt = {}
-        cxt['showEvents_checked'] = request.args.get("show_events", ["true"])[0].lower() == "true"
+        cxt['show_events_checked'] = request.args.get("show_events", ["true"])[0].lower() == "true"
         cxt['branches'] = [b for b in request.args.get("branch", []) if b]
 
         # this has a set of toggle-buttons to let the user choose the
         # builders
-        showBuilders = request.args.get("show", [])
-        showBuilders.extend(request.args.get("builder", []))
-        cxt['showBuilders'] = showBuilders
-        cxt['allBuilders'] = status.getBuilderNames(categories=self.categories)
+        show_builders = request.args.get("show", [])
+        show_builders.extend(request.args.get("builder", []))
+        cxt['show_builders'] = show_builders
+        cxt['all_builders'] = status.getBuilderNames(categories=self.categories)
 
         # a couple of radio-button selectors for refresh time will appear
         # just after that text
@@ -265,8 +266,9 @@ class WaterfallHelp(HtmlResource):
         cxt['times'] = times
         cxt['current_reload_time'] = current_reload_time        
 
-        template = self.templates.get_template("waterfallhelp.html");
+        template = self.templates.get_template("waterfallhelp.html")
         return template.render(**cxt)
+
 
 class WaterfallStatusResource(HtmlResource):
     """This builds the main status page, with the waterfall display, and

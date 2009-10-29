@@ -213,23 +213,20 @@ class Box:
         return td(text, props, class_=self.class_)
 
 
+if hasattr(sys, "frozen"):
+    assert False, 'Frozen config not supported with jinja (yet)'
+default_loader = jinja2.PackageLoader('buildbot.status.web', 'templates')
+root = os.path.join(os.getcwd(), 'templates')
+loader = jinja2.ChoiceLoader([jinja2.FileSystemLoader(root),
+                              default_loader])
+
 class HtmlResource(resource.Resource):
     # this is a cheap sort of template thingy
     contentType = "text/html; charset=UTF-8"
     title = "Buildbot"
     addSlash = False # adapted from Nevow
 
-    def __init__(self):
-
-        if hasattr(sys, "frozen"):
-            assert False, 'Frozen config not supported with jinja (yet)'
-            
-        resource.Resource.__init__(self)
-        default_loader = jinja2.PackageLoader('buildbot.status.web', 'templates')
-        root = os.path.join(os.getcwd(), 'templates')
-        loader = jinja2.ChoiceLoader([jinja2.FileSystemLoader(root),
-                                      default_loader])
-        self.templates = jinja2.Environment(loader=loader)
+    templates = jinja2.Environment(loader=loader)
 
     def getChild(self, path, request):
         if self.addSlash and path == "" and len(request.postpath) == 0:
@@ -270,7 +267,15 @@ class HtmlResource(resource.Resource):
             request.redirect(new_url)
             return ''
 
-        data = self.content(request)
+        status = self.getStatus(request)
+        ctx = dict(project_url = status.getProjectURL(),
+                   project_name = status.getProjectName(),
+                   home = self.path_to_root(request) + "index.html",
+                   version = version,
+                   time = time.strftime("%a %d %b %Y %H:%M:%S",
+                                        time.localtime(util.now())))
+
+        data = self.content(request, ctx)
         if isinstance(data, unicode):
             data = data.encode("utf-8")
         request.setHeader("content-type", self.contentType)
@@ -323,7 +328,10 @@ class HtmlResource(resource.Resource):
         values['title'] = self.getTitle(request)
         return template % values
 
-    def content(self, request):
+    def content(self, request, context=None):
+        # This method is obsolete.
+        # Override in subclasses.
+
         s = request.site.buildbot_service
         data = ""
         data += self.fillTemplate(s.header, request)
