@@ -13,6 +13,7 @@ Standard setup script.
 import sys
 import os
 import re
+import glob
 
 from distutils.core import setup, Command
 from buildbot import version
@@ -20,6 +21,13 @@ from buildbot import version
 # Path: twisted!cvstoys!buildbot
 from distutils.command.install_data import install_data
 
+def include(d, e):
+    """Generate a pair of (directory, file-list) for installation.
+
+    'd' -- A directory
+    'e' -- A glob pattern"""
+    
+    return (d, [f for f in glob.glob('%s/%s'%(d, e)) if os.path.isfile(f)])
 
 class _SetupBuildCommand(Command):
     """
@@ -203,6 +211,7 @@ setup_args = {
                   "buildbot/status/web/index.html",
                   "buildbot/status/web/robots.txt",
                   ]),
+                include("buildbot/status/web/templates", '*.html'),
                 ("buildbot/scripts", ["buildbot/scripts/sample.cfg"]),
                 ("buildbot/test/mail", testmsgs),
                 ("buildbot/test/subdir", ["buildbot/test/subdir/emit.py"]),
