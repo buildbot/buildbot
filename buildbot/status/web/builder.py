@@ -7,7 +7,7 @@ import re, urllib, time
 from twisted.python import log
 from buildbot import interfaces
 from buildbot.status.web.base import HtmlResource, make_row, \
-     make_force_build_form, OneLineMixin, path_to_build, path_to_slave, path_to_builder, env
+     make_force_build_form, OneLineMixin, path_to_build, path_to_slave, path_to_builder
 from buildbot.process.base import BuildRequest
 from buildbot.sourcestamp import SourceStamp
 
@@ -92,7 +92,7 @@ class StatusResourceBuilder(HtmlResource, OneLineMixin):
             cxt['ping_url'] = path_to_builder(req, b) + '/ping'
 
 
-        template = env.get_template("builder.html")
+        template = self.templates.get_template("builder.html")
         data = template.render(**cxt)
         data += self.footer(req)
         return data
@@ -265,7 +265,7 @@ class BuildersResource(HtmlResource):
             builders.append({'link' : req.childLink(urllib.quote(bname, safe='')),
                              'name' : bname})
                       
-        template = env.get_template('builders.html')
+        template = self.templates.get_template('builders.html')
         data = template.render(builders = builders)
         data += self.footer(req)
 

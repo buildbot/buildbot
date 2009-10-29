@@ -1,7 +1,7 @@
 
 import urllib
 from buildbot.status.web.base import HtmlResource, path_to_builder, \
-     path_to_build, env
+     path_to_build
 from buildbot.status.web.logs import LogsResource
 from buildbot import util
 from time import ctime
@@ -37,7 +37,7 @@ class StatusResourceBuildStep(HtmlResource):
             dict['end'] = ctime(end)
         start = ctime(start)
         
-        template = env.get_template("buildstep.html");        
+        template = self.templates.get_template("buildstep.html");        
         data = template.render(builder_link = path_to_builder(req, b.getBuilder()),
                                build_link = path_to_build(req, b),
                                b = b,

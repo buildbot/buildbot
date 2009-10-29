@@ -12,7 +12,7 @@ from buildbot.interfaces import IControl, IStatusReceiver
 
 from buildbot.status.web.base import HtmlResource, Box, \
      build_get_class, ICurrentBox, OneLineMixin, map_branches, \
-     make_stop_form, make_force_build_form, env
+     make_stop_form, make_force_build_form
 from buildbot.status.web.feeds import Rss20StatusResource, \
      Atom10StatusResource
 from buildbot.status.web.waterfall import WaterfallStatusResource
@@ -246,7 +246,7 @@ class OneBoxPerBuilder(HtmlResource):
                 cxt['force_form'] = make_force_build_form(forceURL,
                                               self.isUsingUserPasswd(req), True)
 
-        template = env.get_template("oneboxperbuilder.html")
+        template = self.templates.get_template("oneboxperbuilder.html")
         data = template.render(**cxt)
         data += self.footer(req)
         return data

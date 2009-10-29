@@ -5,14 +5,8 @@ from twisted.web import html, resource
 from buildbot.status import builder
 from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE, SKIPPED, EXCEPTION
 from buildbot import version, util
-from jinja2 import Environment, PackageLoader
-import sys
-
-if hasattr(sys, 'frozen'):
-    assert False, 'Frozen config not supported with jinja (yet)'
-else:
-    #todo: rename env to jinjaenv or something more suitable
-    env = Environment(loader=PackageLoader('buildbot.status.web', 'templates'))
+import jinja2
+import sys, os
 
 class ITopBox(Interface):
     """I represent a box in the top row of the waterfall display: the one
@@ -225,6 +219,18 @@ class HtmlResource(resource.Resource):
     title = "Buildbot"
     addSlash = False # adapted from Nevow
 
+    def __init__(self):
+
+        if hasattr(sys, "frozen"):
+            assert False, 'Frozen config not supported with jinja (yet)'
+            
+        resource.Resource.__init__(self)
+        default_loader = jinja2.PackageLoader('buildbot.status.web', 'templates')
+        root = os.path.join(os.getcwd(), 'templates')
+        loader = jinja2.ChoiceLoader([jinja2.FileSystemLoader(root),
+                                      default_loader])
+        self.templates = jinja2.Environment(loader=loader)
+
     def getChild(self, path, request):
         if self.addSlash and path == "" and len(request.postpath) == 0:
             return self
@@ -297,7 +303,7 @@ class HtmlResource(resource.Resource):
 
     def footer(self, req):
         status = self.getStatus(req)
-        template = env.get_template("footer.html")
+        template = self.templates.get_template("footer.html")
         return template.render(projectURL = status.getProjectURL(),
                                projectName = status.getProjectName(),
                                welcomeurl = self.path_to_root(req) + "index.html",

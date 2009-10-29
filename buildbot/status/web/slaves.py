@@ -4,7 +4,7 @@ from twisted.python import log
 from twisted.web import html
 from twisted.web.util import Redirect
 
-from buildbot.status.web.base import HtmlResource, abbreviate_age, OneLineMixin, path_to_slave, env
+from buildbot.status.web.base import HtmlResource, abbreviate_age, OneLineMixin, path_to_slave
 from buildbot import version, util
 
 # /buildslaves/$slavename
@@ -55,7 +55,7 @@ class OneBuildSlaveResource(HtmlResource, OneLineMixin):
                 if n > max_builds:
                     break
 
-        template = env.get_template("buildslave.html");
+        template = self.templates.get_template("buildslave.html");
         data = template.render(slave = self, 
                                current = current_builds, 
                                recent = recent_builds, 
@@ -101,7 +101,7 @@ class BuildSlavesResource(HtmlResource):
                     info['last_heard_from_time'] = time.strftime("%Y-%b-%d %H:%M:%S",
                                                                 time.localtime(last))
 
-        template = env.get_template("buildslaves.html");
+        template = self.templates.get_template("buildslaves.html");
         data = template.render(slaves=slaves)
         data += self.footer(req)
         return data

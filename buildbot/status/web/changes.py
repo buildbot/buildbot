@@ -4,13 +4,13 @@ from twisted.python import components
 from twisted.web.error import NoResource
 
 from buildbot.changes.changes import Change
-from buildbot.status.web.base import HtmlResource, StaticHTML, IBox, Box, env
+from buildbot.status.web.base import HtmlResource, StaticHTML, IBox, Box
 
 # /changes/NN
 class ChangesResource(HtmlResource):
 
     def body(self, req):
-        template = env.get_template("change_sources.html")
+        template = self.templates.get_template("change_sources.html")
         return template.render(sources = self.getStatus(req).getChangeSources()) + self.footer(req)
 
     def getChild(self, path, req):

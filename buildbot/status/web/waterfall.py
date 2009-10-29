@@ -13,7 +13,7 @@ from buildbot import version
 from buildbot.status import builder
 
 from buildbot.status.web.base import Box, HtmlResource, IBox, ICurrentBox, \
-     ITopBox, td, build_get_class, path_to_build, path_to_step, map_branches, env
+     ITopBox, td, build_get_class, path_to_build, path_to_step, map_branches
 
 
 
@@ -265,7 +265,7 @@ class WaterfallHelp(HtmlResource):
         cxt['times'] = times
         cxt['current_reload_time'] = current_reload_time        
 
-        template = env.get_template("waterfallhelp.html");
+        template = self.templates.get_template("waterfallhelp.html");
         return template.render(**cxt)
 
 class WaterfallStatusResource(HtmlResource):
@@ -402,7 +402,7 @@ class WaterfallStatusResource(HtmlResource):
         if self.get_reload_time(request) is not None:
             cxt['no_reload_page'] = with_args(request, remove_args=["reload"])
 
-        template = env.get_template("waterfall.html")        
+        template = self.templates.get_template("waterfall.html")        
         data = template.render(**cxt)
         data += self.footer(request)
         return data

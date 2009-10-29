@@ -6,7 +6,7 @@ from twisted.internet import defer, reactor
 import urllib, time
 from twisted.python import log
 from buildbot.status.web.base import HtmlResource, make_row, make_stop_form, \
-     css_classes, path_to_builder, path_to_slave, make_name_user_passwd_form, env
+     css_classes, path_to_builder, path_to_slave, make_name_user_passwd_form
 
 from buildbot.status.web.tests import TestsResource
 from buildbot.status.web.step import StepsResource
@@ -124,7 +124,7 @@ class StatusResourceBuild(HtmlResource):
             cxt['reason_row'] = make_row("Reason for re-running build:",
                                          "<input type='text' name='comments' />")
             
-        template = env.get_template("build.html");
+        template = self.templates.get_template("build.html");
         data = template.render(**cxt)
         data += self.footer(req)
         return data
