@@ -23,6 +23,7 @@ from buildbot.status.web.slaves import BuildSlavesResource
 from buildbot.status.web.xmlrpc import XMLRPCServer
 from buildbot.status.web.about import AboutBuildbot
 from buildbot.status.web.auth import IAuth, AuthFailResource
+import jinja2
 
 # this class contains the status services (WebStatus and the older Waterfall)
 # which can be put in c['status']. It also contains some of the resources
@@ -475,6 +476,15 @@ class WebStatus(service.MultiService):
         self.body_attrs = BODY_ATTRS.copy()
         self.footer = FOOTER
         self.template_values = {}
+
+        # Set up the jinja templating engine.
+        if hasattr(sys, "frozen"):
+            assert False, 'Frozen config not supported with jinja (yet)'
+        default_loader = jinja2.PackageLoader('buildbot.status.web', 'templates')
+        root = os.path.join(os.getcwd(), 'templates')
+        loader = jinja2.ChoiceLoader([jinja2.FileSystemLoader(root),
+                                      default_loader])
+        self.templates = jinja2.Environment(loader=loader)
 
         # keep track of cached connections so we can break them when we shut
         # down. See ticket #102 for more details.

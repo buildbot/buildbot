@@ -5,7 +5,6 @@ from twisted.web import html, resource
 from buildbot.status import builder
 from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE, SKIPPED, EXCEPTION
 from buildbot import version, util
-import jinja2
 import sys, os
 
 class ITopBox(Interface):
@@ -213,20 +212,11 @@ class Box:
         return td(text, props, class_=self.class_)
 
 
-if hasattr(sys, "frozen"):
-    assert False, 'Frozen config not supported with jinja (yet)'
-default_loader = jinja2.PackageLoader('buildbot.status.web', 'templates')
-root = os.path.join(os.getcwd(), 'templates')
-loader = jinja2.ChoiceLoader([jinja2.FileSystemLoader(root),
-                              default_loader])
-
 class HtmlResource(resource.Resource):
     # this is a cheap sort of template thingy
     contentType = "text/html; charset=UTF-8"
     title = "Buildbot"
     addSlash = False # adapted from Nevow
-
-    templates = jinja2.Environment(loader=loader)
 
     def getChild(self, path, request):
         if self.addSlash and path == "" and len(request.postpath) == 0:
@@ -308,7 +298,7 @@ class HtmlResource(resource.Resource):
 
     def footer(self, req):
         status = self.getStatus(req)
-        template = self.templates.get_template("footer.html")
+        template = req.templates.get_template("footer.html")
         return template.render(projectURL = status.getProjectURL(),
                                projectName = status.getProjectName(),
                                welcomeurl = self.path_to_root(req) + "index.html",
