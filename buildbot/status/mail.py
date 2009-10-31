@@ -190,7 +190,7 @@ class MailNotifier(base.StatusReceiverMultiService):
                  subject="buildbot %(result)s in %(projectName)s on %(builder)s",
                  lookup=None, extraRecipients=[],
                  sendToInterestedUsers=True, customMesg=message,
-                 extraHeaders=None):
+                 extraHeaders=None, addPatch=True):
         """
         @type  fromaddr: string
         @param fromaddr: the email address to be used in the 'From' header.
@@ -233,11 +233,15 @@ class MailNotifier(base.StatusReceiverMultiService):
                            categories). Use either builders or categories,
                            but not both.
 
-        @type  addLogs: boolean.
+        @type  addLogs: boolean
         @param addLogs: if True, include all build logs as attachments to the
                         messages.  These can be quite large. This can also be
                         set to a list of log names, to send a subset of the
                         logs. Defaults to False.
+
+        @type  addPatch: boolean
+        @param addPatch: if True, include the patch when the source stamp
+                         includes one.
 
         @type  relayhost: string
         @param relayhost: the host to which the outbound SMTP connection
@@ -340,6 +344,7 @@ class MailNotifier(base.StatusReceiverMultiService):
         if extraHeaders:
             assert isinstance(extraHeaders, dict)
         self.extraHeaders = extraHeaders
+        self.addPatch = addPatch
         self.watched = []
         self.status = None
 
@@ -461,7 +466,7 @@ class MailNotifier(base.StatusReceiverMultiService):
         assert type in ('plain', 'html'), "'%s' message type must be 'plain' or 'html'." % type
 
         haveAttachments = False
-        if attrs['patch'] or self.addLogs:
+        if (attrs['patch'] and self.addPatch) or self.addLogs:
             haveAttachments = True
             if not canDoAttachments:
                 twlog.msg("warning: I want to send mail with attachments, "
@@ -485,7 +490,7 @@ class MailNotifier(base.StatusReceiverMultiService):
         m['From'] = self.fromaddr
         # m['To'] is added later
 
-        if attrs['patch']:
+        if attrs['patch'] and self.addPatch:
             a = MIMEText(attrs['patch'][1])
             a.add_header('Content-Disposition', "attachment",
                          filename="source patch")

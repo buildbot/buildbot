@@ -8196,6 +8196,11 @@ builders or categories, but not both.
 messages. These can be quite large. This can also be set to a list of
 log names, to send a subset of the logs. Defaults to False.
 
+@item addPatch
+(boolean). If True, include the patch content if a patch was present.
+Patches are usually used on a Try server.
+Defaults to True.
+
 @item relayhost
 (string). The host to which the outbound SMTP connection should be
 made. Defaults to 'localhost'
