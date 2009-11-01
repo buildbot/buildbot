@@ -484,7 +484,9 @@ class WebStatus(service.MultiService):
         root = os.path.join(os.getcwd(), 'templates')
         loader = jinja2.ChoiceLoader([jinja2.FileSystemLoader(root),
                                       default_loader])
-        self.templates = jinja2.Environment(loader=loader)
+        self.templates = jinja2.Environment(loader=loader,
+                                            extensions=['jinja2.ext.i18n'],
+                                            trim_blocks=True)
 
         # keep track of cached connections so we can break them when we shut
         # down. See ticket #102 for more details.
