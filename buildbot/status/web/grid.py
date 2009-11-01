@@ -53,22 +53,9 @@ class GridStatusMixin(object):
             head += '<meta http-equiv="refresh" content="%d">\n' % reload_time
         return head
 
-#    def setBuildmaster(self, buildmaster):
-#        self.status = buildmaster.getStatus()
-#        if self.allowForce:
-#            self.control = interfaces.IControl(buildmaster)
-#        else:
-#            self.control = None
-#        self.changemaster = buildmaster.change_svc
-#
-#        # try to set the page title
-#        p = self.status.getProjectName()
-#        if p:
-#            self.title = "BuildBot: %s" % p
-#
-    def build_td(self, request, build):
+    def build_cxt(self, request, build):
         if not build:
-            return '<td class="build">&nbsp;</td>\n'
+            return {}
 
         if build.isFinished():
             # get the text and annotate the first line with a link
@@ -80,14 +67,15 @@ class GridStatusMixin(object):
 
         name = build.getBuilder().getName()
         number = build.getNumber()
-        url = "builders/%s/builds/%d" % (name, number)
-        text[0] = '<a href="%s">%s</a>' % (url, text[0])
-        text = '<br />\n'.join(text)
-        class_ = build_get_class(build)
 
-        return '<td class="build %s">%s</td>\n' % (class_, text)
+        cxt = {}
+        cxt['name'] = name
+        cxt['url'] = "builders/%s/builds/%d" % (name, number)
+        cxt['text'] = text
+        cxt['class'] = build_get_class(build)
+        return cxt
 
-    def builder_td(self, request, builder):
+    def builder_cxt(self, request, builder):
         state, builds = builder.getState()
 
         # look for upcoming builds. We say the state is "waiting" if the
@@ -108,23 +96,12 @@ class GridStatusMixin(object):
         # instead. The only times it should show up in "current activity" is
         # when the builder is otherwise idle.
 
-        # are any builds pending? (waiting for a slave to be free)
-        url = 'builders/%s/' % urllib.quote(builder.getName(), safe='')
-        text = '<a href="%s">%s</a>' % (url, builder.getName())
-        pbs = builder.getPendingBuilds()
-        if state != 'idle' or pbs:
-            if pbs:
-                text += "<br />(%s with %d pending)" % (state, len(pbs))
-            else:
-                text += "<br />(%s)" % state
+        cxt = { 'url': urllib.quote(builder.getName(), safe=''),
+                'name': builder.getName(),
+                'state': state,
+                'n_pending': len(builder.getPendingBuilds()) }
 
-        return  '<td valign="center" class="builder %s">%s</td>\n' % \
-            (state, text)
-
-    def stamp_td(self, stamp):
-        text = stamp.getText()
-        return '<td valign="bottom" class="sourcestamp">%s</td>\n' % \
-            "<br />".join(text)
+        return cxt
 
     def getRecentSourcestamps(self, status, numBuilds, categories, branch):
         """
@@ -187,26 +164,19 @@ class GridStatusResource(HtmlResource, GridStatusMixin):
         status = self.getStatus(request)
         stamps = self.getRecentSourcestamps(status, numBuilds, categories, branch)
 
-        projectURL = status.getProjectURL()
-        projectName = status.getProjectName()
-
-        data = '<table class="Grid" border="0" cellspacing="0">\n'
-        data += '<tr>\n'
-        data += '<td class="title"><a href="%s">%s</a>' % (projectURL, projectName)
-        if categories:
-            if len(categories) > 1:
-                data += '\n<br /><b>Categories:</b><br/>%s' % ('<br/>'.join(categories))
-            else:
-                data += '\n<br /><b>Category:</b> %s' % categories[0]
-        if branch != ANYBRANCH:
-            data += '\n<br /><b>Branch:</b> %s' % (branch or 'trunk')
-        data += '</td>\n'
-        for stamp in stamps:
-            data += self.stamp_td(stamp)
-        data += '</tr>\n'
-
+        cxt = {'project_url': status.getProjectURL(),
+               'project_name': status.getProjectName(),
+               'categories': categories,
+               'branch': branch,
+               'ANYBRANCH': ANYBRANCH,
+               'stamps': stamps,
+              }  
+        
         sortedBuilderNames = status.getBuilderNames()[:]
         sortedBuilderNames.sort()
+        
+        cxt['builders'] = []
+
         for bn in sortedBuilderNames:
             builds = [None] * len(stamps)
 
@@ -222,15 +192,16 @@ class GridStatusResource(HtmlResource, GridStatusMixin):
                         builds[i] = build
                 build = build.getPreviousBuild()
 
-            data += '<tr>\n'
-            data += self.builder_td(request, builder)
+            b = self.builder_cxt(request, builder)
+            b['builds'] = []
             for build in builds:
-                data += self.build_td(request, build)
-            data += '</tr>\n'
+                b['builds'].append(self.build_cxt(request, build))
 
-        data += '</table>\n'
+            cxt['builders'].append(b)
 
-        data += self.footer(request)
+        template = request.site.buildbot_service.templates.get_template("grid.html")
+        data = template.render(**cxt)
+        data += self.footer(request)        
         return data
 
 class TransposedGridStatusResource(HtmlResource, GridStatusMixin):
@@ -248,7 +219,7 @@ class TransposedGridStatusResource(HtmlResource, GridStatusMixin):
 
     def body(self, request):
         """This method builds the transposed grid display.
-        That is, build hosts across the top, ebuild stamps down the left side
+        That is, build hosts across the top, build stamps down the left side
         """
 
         # get url parameters
@@ -261,25 +232,21 @@ class TransposedGridStatusResource(HtmlResource, GridStatusMixin):
         status = self.getStatus(request)
         stamps = self.getRecentSourcestamps(status, numBuilds, categories, branch)
 
-        projectURL = status.getProjectURL()
-        projectName = status.getProjectName()
-
-        data = '<table class="Grid" border="0" cellspacing="0">\n'
-        data += '<tr>\n'
-        data += '<td class="title"><a href="%s">%s</a>' % (projectURL, projectName)
-        if categories:
-            if len(categories) > 1:
-                data += '\n<br /><b>Categories:</b><br/>%s' % ('<br/>'.join(categories))
-            else:
-                data += '\n<br /><b>Category:</b> %s' % categories[0]
-        if branch != ANYBRANCH:
-            data += '\n<br /><b>Branch:</b> %s' % (branch or 'trunk')
-        data += '</td>\n'
+        cxt = {'project_url': status.getProjectURL(),
+               'project_name': status.getProjectName(),
+               'categories': categories,
+               'branch': branch,
+               'ANYBRANCH': ANYBRANCH,
+               'stamps': stamps,
+              }          
 
         sortedBuilderNames = status.getBuilderNames()[:]
         sortedBuilderNames.sort()
-
-        builder_builds = {}
+        
+        cxt['sorted_builder_names'] = sortedBuilderNames
+        cxt['builder_builds'] = builder_builds = {}
+        cxt['builders'] = builders = []
+        cxt['range'] = range(len(stamps))
 
         for bn in sortedBuilderNames:
             builds = [None] * len(stamps)
@@ -296,41 +263,11 @@ class TransposedGridStatusResource(HtmlResource, GridStatusMixin):
                         builds[i] = build
                 build = build.getPreviousBuild()
 
-            data += self.builder_td(request, builder)
-            builder_builds[bn] = builds
+            builders.append(self.builder_cxt(request, builder))
+            builder_builds[bn] = map(lambda b: self.build_cxt(request, b), builds)
 
-        data += '</tr>\n'
-
-        for i in range(len(stamps)):
-            data += '<tr>\n'
-            data += self.stamp_td(stamps[i])
-            for bn in sortedBuilderNames:
-                data += self.build_td(request, builder_builds[bn][i])
-            data += '</tr>\n'
-
-        data += '</table>\n'
-
-        # TODO: this stuff should be generated by a template of some sort
-        data += '<hr /><div class="footer">\n'
-
-        welcomeurl = self.path_to_root(request) + "index.html"
-        data += '[<a href="%s">welcome</a>]\n' % welcomeurl
-        data += "<br />\n"
-
-        data += '<a href="http://buildbot.sourceforge.net/">Buildbot</a>'
-        data += "-%s " % version
-        if projectName:
-            data += "working for the "
-            if projectURL:
-                data += "<a href=\"%s\">%s</a> project." % (projectURL,
-                                                            projectName)
-            else:
-                data += "%s project." % projectName
-        data += "<br />\n"
-        data += ("Page built: " +
-                 time.strftime("%a %d %b %Y %H:%M:%S",
-                               time.localtime(util.now()))
-                 + "\n")
-        data += '</div>\n'
+        template = request.site.buildbot_service.templates.get_template('grid_transposed.html')
+        data = template.render(**cxt)
+        data += self.footer(request)        
         return data
 

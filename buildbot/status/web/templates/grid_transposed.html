@@ -1,0 +1,23 @@
+{% import 'grid_macros.html' as grid with context %}
+
+<table class="Grid" border="0" cellspacing="0">
+
+<tr>
+ <td class="title"><a href="{{ project_url }}">{{ project_name }}</a>
+  {{ grid.category_title() }}
+ </td>
+ {% for builder in builders %}
+  {{ grid.builder_td(builder) }}
+ {% endfor %}
+</tr>
+
+{% for i in range %}
+ <tr>
+ {{ grid.stamp_td(stamps[i]) }}
+ {% for bn in sorted_builder_names %}
+   {{ grid.build_td(builder_builds[bn][i]) }}
+ {% endfor %}
+ </tr>
+{% endfor %}
+
+</table>
