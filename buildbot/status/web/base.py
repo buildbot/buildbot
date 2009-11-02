@@ -298,7 +298,7 @@ class HtmlResource(resource.Resource):
 
     def footer(self, req):
         status = self.getStatus(req)
-        template = req.templates.get_template("footer.html")
+        template = req.site.buildbot_service.templates.get_template("footer.html")
         return template.render(projectURL = status.getProjectURL(),
                                projectName = status.getProjectName(),
                                welcomeurl = self.path_to_root(req) + "index.html",

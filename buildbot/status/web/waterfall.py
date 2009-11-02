@@ -266,7 +266,7 @@ class WaterfallHelp(HtmlResource):
         cxt['times'] = times
         cxt['current_reload_time'] = current_reload_time        
 
-        template = request.templates.get_template("waterfallhelp.html")
+        template = request.site.buildbot_service.templates.get_template("waterfallhelp.html")
         return template.render(**cxt)
 
 
@@ -404,7 +404,7 @@ class WaterfallStatusResource(HtmlResource):
         if self.get_reload_time(request) is not None:
             cxt['no_reload_page'] = with_args(request, remove_args=["reload"])
 
-        template = request.templates.get_template("waterfall.html")        
+        template = request.site.buildbot_service.templates.get_template("waterfall.html")
         data = template.render(**cxt)
         data += self.footer(request)
         return data
