@@ -370,7 +370,7 @@ class Builder(pb.Referenceable):
         @type  setup: dict
         @param setup: builder setup data, as stored in
                       BuildmasterConfig['builders'].  Contains name,
-                      slavename(s), builddir, factory, locks.
+                      slavename(s), builddir, slavebuilddir, factory, locks.
         @type  builder_status: L{buildbot.status.builder.BuilderStatus}
         """
         self.name = setup['name']
@@ -380,6 +380,7 @@ class Builder(pb.Referenceable):
         if setup.has_key('slavenames'):
             self.slavenames.extend(setup['slavenames'])
         self.builddir = setup['builddir']
+        self.slavebuilddir = setup['slavebuilddir']
         self.buildFactory = setup['factory']
         self.nextSlave = setup.get('nextSlave')
         if self.nextSlave is not None and not callable(self.nextSlave):
@@ -432,6 +433,9 @@ class Builder(pb.Referenceable):
         if setup['builddir'] != self.builddir:
             diffs.append('builddir changed from %s to %s' \
                          % (self.builddir, setup['builddir']))
+        if setup['slavebuilddir'] != self.slavebuilddir:
+            diffs.append('slavebuilddir changed from %s to %s' \
+                         % (self.slavebuilddir, setup['slavebuilddir']))
         if setup['factory'] != self.buildFactory: # compare objects
             diffs.append('factory changed')
         oldlocks = [(lock.__class__, lock.name)
@@ -919,5 +923,3 @@ class BuildRequestControl:
 
     def cancel(self):
         self.original_builder.cancelBuildRequest(self.original_request)
-
-

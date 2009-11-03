@@ -321,7 +321,7 @@ class AbstractBuildSlave(NewCredPerspective, service.MultiService):
 
     def sendBuilderList(self):
         our_builders = self.botmaster.getBuildersForSlave(self.slavename)
-        blist = [(b.name, b.builddir) for b in our_builders]
+        blist = [(b.name, b.slavebuilddir) for b in our_builders]
         d = self.slave.callRemote("setBuilderList", blist)
         return d
 

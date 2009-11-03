@@ -1846,7 +1846,7 @@ f.addStep(Compile())
 c['builders'] = [
   @{'name': 'test', 'slavenames': ['slave1', 'slave2', 'slave3', 'slave4',
                                    'slave5', 'slave6'],
-    'builddir': 'test', 'factory': f',
+    'builddir': 'test', 'factory': f', 'slavebuilddir': 'test',
     'env': @{'PATH': '/opt/local/bin:/opt/app/bin:/usr/local/bin:/usr/bin'@}@}
 
 @end example
@@ -3325,12 +3325,6 @@ occurs on some of the buildslaves and not the others. Different
 platforms, operating systems, versions of major programs or libraries,
 all these things mean you should use separate Builders.
 
-@item builddir
-This specifies the name of a subdirectory (under the base directory)
-in which everything related to this builder will be placed. On the
-buildmaster, this holds build status information. On the buildslave,
-this is where checkouts, compiles, and tests are run.
-
 @item factory
 This is a @code{buildbot.process.factory.BuildFactory} instance which
 controls how the build is performed. Full details appear in their own
@@ -3343,6 +3337,18 @@ generally provided as arguments to the factory's constructor.
 Other optional keys may be set on each Builder:
 
 @table @code
+
+@item builddir
+Specifies the name of a subdirectory (under the base directory) in which
+everything related to this builder will be placed on the buildmaster.
+This holds build status information. If not set, defaults to @code{name}
+with some characters escaped.
+
+@item slavebuilddir
+Specifies the name of a subdirectory (under the base directory) in which
+everything related to this builder will be placed on the buildslave.
+This is where checkouts, compiles, and tests are run. If not set,
+defaults to @code{builddir}.
 
 @item category
 If provided, this is a string that identifies a category for the
