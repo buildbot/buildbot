@@ -3342,13 +3342,17 @@ Other optional keys may be set on each Builder:
 Specifies the name of a subdirectory (under the base directory) in which
 everything related to this builder will be placed on the buildmaster.
 This holds build status information. If not set, defaults to @code{name}
-with some characters escaped.
+with some characters escaped. Each builder must have a unique build
+directory.
 
 @item slavebuilddir
 Specifies the name of a subdirectory (under the base directory) in which
 everything related to this builder will be placed on the buildslave.
 This is where checkouts, compiles, and tests are run. If not set,
-defaults to @code{builddir}.
+defaults to @code{builddir}. If a slave is connected to multiple builders
+that shares the same @code{slavebuilddir}, make sure the slave is set to
+run one build at a time or ensure this is fine to run multiple builds from
+the same directory simultaneously.
 
 @item category
 If provided, this is a string that identifies a category for the
