@@ -13,7 +13,7 @@ from twisted.spread import pb
 from twisted.web.server import Site
 from twisted.web.distrib import ResourcePublisher
 from buildbot.process.builder import Builder
-from buildbot.process.factory import BasicBuildFactory
+from buildbot.process.factory import BasicBuildFactory, ArgumentsInTheWrongPlace
 from buildbot.changes.pb import PBChangeSource
 from buildbot.changes.mail import SyncmailMaildirSource
 from buildbot.steps.source import CVS, Darcs
@@ -1209,6 +1209,28 @@ c['builders'] = [{'name':'builder1', 'slavename':'bot1',
                   'builddir':'workdir', 'factory':f1}]
 """
 
+cfg1_bad = \
+"""
+from buildbot.process.factory import BuildFactory, s
+from buildbot.steps.shell import ShellCommand
+from buildbot.steps.source import Darcs
+from buildbot.buildslave import BuildSlave
+BuildmasterConfig = c = {}
+c['slaves'] = [BuildSlave('bot1', 'pw1')]
+c['schedulers'] = []
+c['slavePortnum'] = 9999
+f1 = BuildFactory([ShellCommand(command='echo yes'),
+                   s(ShellCommand, command='old-style'),
+                   ])
+# it should be this:
+#f1.addStep(ShellCommand(command='echo args'))
+# but an easy mistake is to do this:
+f1.addStep(ShellCommand(), command='echo args')
+# this test makes sure this error doesn't get ignored
+c['builders'] = [{'name':'builder1', 'slavename':'bot1',
+                  'builddir':'workdir', 'factory':f1}]
+"""
+
 class Factories(unittest.TestCase):
     def printExpecting(self, factory, args):
         factory_keys = factory[1].keys()
@@ -1231,6 +1253,7 @@ class Factories(unittest.TestCase):
                                'description': None,
                                'workdir': None,
                                'logfiles': {},
+                               'lazylogfiles': False,
                                'usePTY': "slave-config",
                                })
         shell_args.update(kwargs)
@@ -1248,6 +1271,7 @@ class Factories(unittest.TestCase):
                       'baseURL': None,
                       'defaultBranch': None,
                       'logfiles': {},
+                      'lazylogfiles' : False,
                       }
         darcs_args.update(kwargs)
         self.failUnlessIdentical(factory[0], Darcs)
@@ -1269,6 +1293,10 @@ class Factories(unittest.TestCase):
                                      repourl="http://buildbot.net/repos/trunk")
         self.failUnlessExpectedShell(steps[3], defaults=False,
                                      command="echo old-style")
+
+    def testBadAddStepArguments(self):
+        m = BuildMaster(".")
+        self.failUnlessRaises(ArgumentsInTheWrongPlace, m.loadConfig, cfg1_bad)
 
     def _loop(self, orig):
         step_class, kwargs = orig.getStepFactory()

@@ -391,6 +391,48 @@ class Mail(unittest.TestCase):
         self.assertFalse(mailer._shouldAttachLog('anything'))
         self.assertTrue(mailer._shouldAttachLog('something'))
 
+    def testShouldAttachPatches(self):
+        basedir = "test_should_attach_patches"
+        os.mkdir(basedir)
+        b1 = self.makeBuild(4, builder.FAILURE)
+        b1.setProperty('buildnumber', 1, 'Build')
+        b1.setText(["snarkleack", "polarization", "failed"])
+        b1.blamelist = ["dev3", "dev3", "dev3", "dev4",
+                        "Thomas_Walters"]
+        b1.source.changes = (Change(who = 'author1', files = ['file1'], comments = 'comment1', revision = 123),
+                             Change(who = 'author2', files = ['file2'], comments = 'comment2', revision = 456))
+        b1.testlogs = [MyLog(basedir, 'compile', "Compile log here\n"),
+                       MyLog(basedir, 'test', "Test log here\nTest 1 failed\nTest 2 failed\nTest 3 failed\nTest 4 failed\n")]
+        b1.source.patch = (0, '--- /dev/null\n+++ a_file\n', None)
+
+        mailer = MyMailer(fromaddr="buildbot@example.com", addPatch=True)
+        mailer.parent = self
+        mailer.status = self
+        self.messages = []
+        mailer.buildFinished("builder1", b1, b1.results)
+        m,r = self.messages.pop()
+        self.assertTrue(m.is_multipart())
+        self.assertEqual(len([True for i in m.walk()]), 3)
+
+        mailer = MyMailer(fromaddr="buildbot@example.com", addPatch=False)
+        mailer.parent = self
+        mailer.status = self
+        self.messages = []
+        mailer.buildFinished("builder1", b1, b1.results)
+        m,r = self.messages.pop()
+        self.assertFalse(m.is_multipart())
+        self.assertEqual(len([True for i in m.walk()]), 1)
+
+        mailer = MyMailer(fromaddr="buildbot@example.com")
+        mailer.parent = self
+        mailer.status = self
+        self.messages = []
+        mailer.buildFinished("builder1", b1, b1.results)
+        m,r = self.messages.pop()
+        self.assertTrue(m.is_multipart())
+        self.assertEqual(len([True for i in m.walk()]), 3)
+
+
     def testFailure(self):
         mailer = MyMailer(fromaddr="buildbot@example.com", mode="problem",
                           extraRecipients=["recip@example.com",
@@ -899,8 +941,26 @@ class Log(unittest.TestCase):
         return d
     testLargeSummary.timeout = 5
 
+    def testLimit(self):
+        l = MyLog(self.basedir, "limit")
+        l.logMaxSize = 150
+        for i in range(1000):
+            l.addStdout("Some data")
+        l.finish()
+        t = l.getText()
+        # Compare against 175 since we truncate logs based on chunks, so we may
+        # go slightly over the limit
+        self.failIf(len(t) > 175, "Text too long (%i)" % len(t))
+        self.failUnless("truncated" in l.getTextWithHeaders(),
+                "No truncated message found")
 
 class CompressLog(unittest.TestCase):
+    # compression is not supported unless bz2 is installed
+    try:
+        import bz2
+    except:
+        skip = "compression not supported (no bz2 module available)"
+
     def testCompressLogs(self):
         bss = setupBuildStepStatus("test-compress")
         bss.build.builder.setLogCompressionLimit(1024)
@@ -1320,8 +1380,10 @@ class ContactTester(unittest.TestCase):
         self.failUnlessEqual(irc.message, "", "No started notification with notify_events=['failed']")
 
         irc.message = ""
+        irc.channel.showBlameList = True
         irc.buildFinished(my_builder.getName(), my_build, None)
-        self.failUnlessEqual(irc.message, "build #862 of builder834 is complete: Failure [step1 step2]  Build details are at http://myserver/mypath?build=765", "Finish notification generated on failure with notify_events=['failed']")
+        self.failUnlessEqual(irc.message, "build #862 of builder834 is complete: Failure [step1 step2]  Build details are at http://myserver/mypath?build=765  blamelist: author1", "Finish notification generated on failure with notify_events=['failed']")
+        irc.channel.showBlameList = False
 
         irc.message = ""
         my_build.results = builder.SUCCESS
@@ -1351,6 +1413,12 @@ class ContactTester(unittest.TestCase):
         irc.message = ""
         irc.buildFinished(my_builder.getName(), my_build, None)
         self.failUnlessEqual(irc.message, "build #862 of builder834 is complete: Exception [step1 step2]  Build details are at http://myserver/mypath?build=765", "Finish notification generated on failure with notify_events=['exception']")
+
+        irc.message = ""
+        irc.channel.showBlameList = True
+        irc.buildFinished(my_builder.getName(), my_build, None)
+        self.failUnlessEqual(irc.message, "build #862 of builder834 is complete: Exception [step1 step2]  Build details are at http://myserver/mypath?build=765  blamelist: author1", "Finish notification generated on failure with notify_events=['exception']")
+        irc.channel.showBlameList = False
 
         irc.message = ""
         my_build.results = builder.SUCCESS
@@ -1591,6 +1659,7 @@ class MyChannel:
 
     def __init__(self, notify_events = {}):
         self.notify_events = notify_events
+        self.showBlameList = False
 
 class MyContact(words.Contact):
     message = ""
@@ -1607,6 +1676,31 @@ class MyContact(words.Contact):
 
     def send(self, msg):
         self.message += msg
+
+class MyIrcStatusBot(words.IrcStatusBot):
+    def msg(self, dest, message):
+        self.message = ['msg', dest, message]
+
+    def notice(self, dest, message):
+        self.message = ['notice', dest, message]
+
+class IrcStatusBotTester(unittest.TestCase):
+    def testMsgOrNotice(self):
+        channel = MyIrcStatusBot('alice', 'pa55w0od', ['#here'],
+                                 builder.SUCCESS, None, {})
+        channel.msgOrNotice('bob', 'hello')
+        self.failUnlessEqual(channel.message, ['msg', 'bob', 'hello'])
+
+        channel.msgOrNotice('#here', 'hello')
+        self.failUnlessEqual(channel.message, ['msg', '#here', 'hello'])
+
+        channel.noticeOnChannel = True
+
+        channel.msgOrNotice('bob', 'hello')
+        self.failUnlessEqual(channel.message, ['msg', 'bob', 'hello'])
+
+        channel.msgOrNotice('#here', 'hello')
+        self.failUnlessEqual(channel.message, ['notice', '#here', 'hello'])
 
 class StepStatistics(unittest.TestCase):
     def testStepStatistics(self):

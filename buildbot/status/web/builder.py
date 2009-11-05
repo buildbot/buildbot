@@ -10,6 +10,7 @@ from buildbot.status.web.base import HtmlResource, make_row, \
      make_force_build_form, OneLineMixin, path_to_build, path_to_slave, \
      path_to_builder, path_to_change
 from buildbot.process.base import BuildRequest
+from buildbot.process.properties import Properties
 from buildbot.sourcestamp import SourceStamp
 
 from buildbot.status.web.build import BuildsResource, StatusResourceBuild
@@ -115,7 +116,8 @@ class StatusResourceBuilder(HtmlResource, OneLineMixin):
             data += "</ul>\n"
 
             cancelURL = path_to_builder(req, self.builder_status) + '/cancelbuild'
-            data += '''
+            if self.builder_control is not None:
+                data += '''
 <form action="%s" class="command cancelbuild" style="display:inline" method="post">
   <input type="hidden" name="id" value="all" />
   <input type="submit" value="Cancel All" />
@@ -129,7 +131,7 @@ class StatusResourceBuilder(HtmlResource, OneLineMixin):
         data += "<h2>Recent Builds:</h2>\n"
         data += "(<a href=\"%s\">view in waterfall</a>)\n" % (self.path_to_root(req)+"waterfall?show="+html.escape(b.getName()))
         data += "<ul>\n"
-        numbuilds = req.args.get('numbuilds', ['5'])[0]
+        numbuilds = int(req.args.get('numbuilds', ['5'])[0])
         for i,build in enumerate(b.generateFinishedBuilds(num_builds=int(numbuilds))):
             data += " <li>" + self.make_line(req, build, False) + "</li>\n"
             if i == 0:
@@ -192,9 +194,15 @@ class StatusResourceBuilder(HtmlResource, OneLineMixin):
         reason = req.args.get("comments", ["<no reason specified>"])[0]
         branch = req.args.get("branch", [""])[0]
         revision = req.args.get("revision", [""])[0]
+        properties = Properties()
+        for i in (1,2,3):
+            pname = req.args.get("prop%dname" % i, [""])[0]
+            pvalue = req.args.get("prop%dvalue" % i, [""])[0]
+            if pname and pvalue:
+                properties.setProperty(pname, pvalue, "Force Build Form")
 
         r = "The web-page 'force build' button was pressed by '%s': %s\n" \
-            % (name, reason)
+            % (html.escape(name), html.escape(reason))
         log.msg("web forcebuild of builder '%s', branch='%s', revision='%s'"
                 " by user '%s'" % (self.builder_status.getName(), branch,
                                    revision, name))
@@ -208,14 +216,21 @@ class StatusResourceBuilder(HtmlResource, OneLineMixin):
             if not self.authUser(req):
                 return Redirect("../../authfail")
 
-        # keep weird stuff out of the branch and revision strings. TODO:
-        # centralize this somewhere.
+        # keep weird stuff out of the branch revision, and property strings.
+        # TODO: centralize this somewhere.
         if not re.match(r'^[\w\.\-\/]*$', branch):
             log.msg("bad branch '%s'" % branch)
             return Redirect("..")
         if not re.match(r'^[\w\.\-\/]*$', revision):
             log.msg("bad revision '%s'" % revision)
             return Redirect("..")
+        for p in properties.asList():
+            key = p[0]
+            value = p[1]
+            if not re.match(r'^[\w\.\-\/]*$', key) \
+              or not re.match(r'^[\w\.\-\/]*$', value):
+                log.msg("bad property name='%s', value='%s'" % (key, value))
+                return Redirect("..")
         if not branch:
             branch = None
         if not revision:
@@ -229,7 +244,8 @@ class StatusResourceBuilder(HtmlResource, OneLineMixin):
         # buildbot.changes.changes.Change instance which is tedious at this
         # stage to compute
         s = SourceStamp(branch=branch, revision=revision)
-        req = BuildRequest(r, s, builderName=self.builder_status.getName())
+        req = BuildRequest(r, s, builderName=self.builder_status.getName(),
+                           properties=properties)
         try:
             self.builder_control.requestBuildSoon(req)
         except interfaces.NoSlaveError:

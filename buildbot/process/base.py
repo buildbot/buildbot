@@ -240,12 +240,6 @@ class Build:
     def __repr__(self):
         return "<Build %s>" % (self.builder.name,)
 
-    def __getstate__(self):
-        d = self.__dict__.copy()
-        if d.has_key('remote'):
-            del d['remote']
-        return d
-
     def blamelist(self):
         blamelist = []
         for c in self.allChanges():
@@ -290,6 +284,10 @@ class Build:
         # which schedulers will send us properties)
         for rq in self.requests:
             props.updateFromProperties(rq.properties)
+
+        # and finally, from the SourceStamp, which has properties via Change
+        for change in self.source.changes:
+            props.updateFromProperties(change.properties)
 
         # now set some properties of our own, corresponding to the
         # build itself

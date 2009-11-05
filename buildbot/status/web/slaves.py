@@ -77,7 +77,7 @@ class OneBuildSlaveResource(HtmlResource, OneLineMixin):
 
         data.append("<a href=\"%s\">%s</a>\n" % (self.path_to_root(req), projectName))
 
-        data.append("<h1>Build Slave: %s</h1>\n" % self.slavename)
+        data.append("<h1>Build Slave: %s</h1>\n" % html.escape(self.slavename))
 
         shutdown_url = req.childLink("shutdown")
 
@@ -170,6 +170,8 @@ class BuildSlavesResource(HtmlResource):
             isBusy = len(slave_status.getRunningBuilds())
             data += " <li><a href=\"%s\">%s</a>:\n" % (req.childLink(urllib.quote(name,'')), name)
             data += " <ul>\n"
+            version = slave.getVersion()
+            data += "<li>Running Buildbot version: %s" % version
             builder_links = ['<a href="%s">%s</a>'
                              % (req.childLink("../builders/%s" % bname),bname)
                              for bname in used_by_builder.get(name, [])]
@@ -213,4 +215,4 @@ class BuildSlavesResource(HtmlResource):
             slave = self.getStatus(req).getSlave(path)
             return OneBuildSlaveResource(path)
         except KeyError:
-            return NoResource("No such slave '%s'" % path)
+            return NoResource("No such slave '%s'" % html.escape(path))

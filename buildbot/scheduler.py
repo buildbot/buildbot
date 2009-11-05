@@ -134,7 +134,7 @@ class Scheduler(BaseUpstreamScheduler):
             self.fileIsImportant = fileIsImportant
 
         self.importantChanges = []
-        self.unimportantChanges = []
+        self.allChanges = []
         self.nextBuildTime = None
         self.timer = None
         self.categories = categories
@@ -164,13 +164,14 @@ class Scheduler(BaseUpstreamScheduler):
     def addImportantChange(self, change):
         log.msg("%s: change is important, adding %s" % (self, change))
         self.importantChanges.append(change)
+        self.allChanges.append(change)
         self.nextBuildTime = max(self.nextBuildTime,
                                  change.when + self.treeStableTimer)
         self.setTimer(self.nextBuildTime)
 
     def addUnimportantChange(self, change):
         log.msg("%s: change is not important, adding %s" % (self, change))
-        self.unimportantChanges.append(change)
+        self.allChanges.append(change)
 
     def setTimer(self, when):
         log.msg("%s: setting timer to %s" %
@@ -191,9 +192,9 @@ class Scheduler(BaseUpstreamScheduler):
         # clear out our state
         self.timer = None
         self.nextBuildTime = None
-        changes = self.importantChanges + self.unimportantChanges
+        changes = self.allChanges
         self.importantChanges = []
-        self.unimportantChanges = []
+        self.allChanges = []
 
         # create a BuildSet, submit it to the BuildMaster
         bs = buildset.BuildSet(self.builderNames,
@@ -215,10 +216,10 @@ class AnyBranchScheduler(BaseUpstreamScheduler):
     fileIsImportant = None
 
     compare_attrs = ('name', 'branches', 'treeStableTimer', 'builderNames',
-                     'fileIsImportant', 'properties')
+                     'fileIsImportant', 'properties', 'categories')
 
     def __init__(self, name, branches, treeStableTimer, builderNames,
-                 fileIsImportant=None, properties={}):
+                 fileIsImportant=None, properties={}, categories=None):
         """
         @param name: the name of this Scheduler
         @param branches: The branch names that the Scheduler should pay
@@ -246,6 +247,7 @@ class AnyBranchScheduler(BaseUpstreamScheduler):
 
         @param properties: properties to apply to all builds started from this 
                            scheduler
+        @param categories: A list of categories of changes to accept 
         """
 
         BaseUpstreamScheduler.__init__(self, name, properties)
@@ -266,6 +268,7 @@ class AnyBranchScheduler(BaseUpstreamScheduler):
             assert callable(fileIsImportant)
             self.fileIsImportant = fileIsImportant
         self.schedulers = {} # one per branch
+        self.categories = categories
 
     def __repr__(self):
         return "<AnyBranchScheduler '%s'>" % self.name
@@ -289,6 +292,9 @@ class AnyBranchScheduler(BaseUpstreamScheduler):
         branch = change.branch
         if self.branches is not None and branch not in self.branches:
             log.msg("%s ignoring off-branch %s" % (self, change))
+            return
+        if self.categories is not None and change.category not in self.categories:
+            log.msg("%s ignoring non-matching categories %s" % (self, change))
             return
         s = self.schedulers.get(branch)
         if not s:
@@ -487,7 +493,7 @@ class Nightly(BaseUpstreamScheduler):
                        % name)
 
         self.importantChanges   = [] 
-        self.unimportantChanges = [] 
+        self.allChanges = [] 
         self.fileIsImportant    = None 
         if fileIsImportant: 
             assert callable(fileIsImportant) 
@@ -584,7 +590,7 @@ class Nightly(BaseUpstreamScheduler):
 
         if  self.onlyIfChanged:
             if len(self.importantChanges) > 0: 
-                changes = self.importantChanges + self.unimportantChanges 
+                changes = self.allChanges 
                 # And trigger a build 
                 log.msg("Nightly Scheduler <%s>: triggering build" % self.name) 
                 bs = buildset.BuildSet(self.builderNames,
@@ -594,7 +600,7 @@ class Nightly(BaseUpstreamScheduler):
                 self.submitBuildSet(bs)
                 # Reset the change lists 
                 self.importantChanges = [] 
-                self.unimportantChanges = []
+                self.allChanges = []
             else: 
                 log.msg("Nightly Scheduler <%s>: skipping build - No important change" % self.name)
         else:
@@ -622,11 +628,12 @@ class Nightly(BaseUpstreamScheduler):
  
     def addImportantChange(self, change):
         log.msg("Nightly Scheduler <%s>: change %s from %s is important, adding it" % (self.name, change.revision, change.who)) 
+        self.allChanges.append(change) 
         self.importantChanges.append(change) 
  
     def addUnimportantChange(self, change):
         log.msg("Nightly Scheduler <%s>: change %s from %s is not important, adding it" % (self.name, change.revision, change.who)) 
-        self.unimportantChanges.append(change) 
+        self.allChanges.append(change) 
 
 
 class TryBase(BaseScheduler):

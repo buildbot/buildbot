@@ -3,6 +3,8 @@ from __future__ import generators
 import sys, time, os.path
 import urllib
 
+from twisted.web import html, resource
+
 from buildbot import util
 from buildbot import version
 from buildbot.status.web.base import HtmlResource
@@ -194,12 +196,13 @@ class GridStatusResource(HtmlResource, GridStatusMixin):
         data += '<tr>\n'
         data += '<td class="title"><a href="%s">%s</a>' % (projectURL, projectName)
         if categories:
+            html_categories = map(html.escape(categories))
             if len(categories) > 1:
-                data += '\n<br /><b>Categories:</b><br/>%s' % ('<br/>'.join(categories))
+                data += '\n<br /><b>Categories:</b><br/>%s' % ('<br/>'.join(html_categories))
             else:
-                data += '\n<br /><b>Category:</b> %s' % categories[0]
+                data += '\n<br /><b>Category:</b> %s' % html_categories[0]
         if branch != ANYBRANCH:
-            data += '\n<br /><b>Branch:</b> %s' % (branch or 'trunk')
+            data += '\n<br /><b>Branch:</b> %s' % (html.escape(branch or 'trunk'))
         data += '</td>\n'
         for stamp in stamps:
             data += self.stamp_td(stamp)
@@ -289,12 +292,13 @@ class TransposedGridStatusResource(HtmlResource, GridStatusMixin):
         data += '<tr>\n'
         data += '<td class="title"><a href="%s">%s</a>' % (projectURL, projectName)
         if categories:
+            html_categories = map(html.escape(categories))
             if len(categories) > 1:
-                data += '\n<br /><b>Categories:</b><br/>%s' % ('<br/>'.join(categories))
+                data += '\n<br /><b>Categories:</b><br/>%s' % ('<br/>'.join(html_categories))
             else:
-                data += '\n<br /><b>Category:</b> %s' % categories[0]
+                data += '\n<br /><b>Category:</b> %s' % html_categories[0]
         if branch != ANYBRANCH:
-            data += '\n<br /><b>Branch:</b> %s' % (branch or 'trunk')
+            data += '\n<br /><b>Branch:</b> %s' % (html.escape(branch or 'trunk'))
         data += '</td>\n'
 
         sortedBuilderNames = status.getBuilderNames()[:]

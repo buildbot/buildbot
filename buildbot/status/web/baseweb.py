@@ -16,6 +16,7 @@ from buildbot.status.web.base import HtmlResource, Box, \
 from buildbot.status.web.feeds import Rss20StatusResource, \
      Atom10StatusResource
 from buildbot.status.web.waterfall import WaterfallStatusResource
+from buildbot.status.web.console import ConsoleStatusResource
 from buildbot.status.web.grid import GridStatusResource, TransposedGridStatusResource
 from buildbot.status.web.changes import ChangesResource
 from buildbot.status.web.builder import BuildersResource
@@ -123,10 +124,12 @@ class OneLinePerBuild(HtmlResource, OneLineMixin):
         data = ""
 
         # really this is "up to %d builds"
+        html_branches = map(html.escape, branches)
         data += "<h1>Last %d finished builds: %s</h1>\n" % \
-                (numbuilds, ", ".join(branches))
+                (numbuilds, ", ".join(html_branches))
         if builders:
-            data += ("<p>of builders: %s</p>\n" % (", ".join(builders)))
+            html_builders = map(html.escape, builders)
+            data += ("<p>of builders: %s</p>\n" % (", ".join(html_builders)))
         data += "<ul>\n"
         got = 0
         building = False
@@ -179,8 +182,9 @@ class OneLinePerBuildOneBuilder(HtmlResource, OneLineMixin):
                                                 numbuilds)
 
         data = ""
+        html_branches = map(html.escape, branches)
         data += ("<h1>Last %d builds of builder %s: %s</h1>\n" %
-                 (numbuilds, self.builder_name, ", ".join(branches)))
+                 (numbuilds, self.builder_name, ", ".join(html_branches)))
         data += "<ul>\n"
         got = 0
         for build in g:
@@ -215,7 +219,8 @@ class OneBoxPerBuilder(HtmlResource):
 
         data = ""
 
-        data += "<h2>Latest builds: %s</h2>\n" % ", ".join(branches)
+        html_branches = map(html.escape, branches)
+        data += "<h2>Latest builds: %s</h2>\n" % ", ".join(html_branches)
         data += "<table>\n"
 
         building = False
@@ -510,6 +515,7 @@ class WebStatus(service.MultiService):
         #self.putChild("", IndexOrWaterfallRedirection())
         self.putChild("waterfall", WaterfallStatusResource())
         self.putChild("grid", GridStatusResource())
+        self.putChild("console", ConsoleStatusResource())
         self.putChild("tgrid", TransposedGridStatusResource())
         self.putChild("builders", BuildersResource()) # has builds/steps/logs
         self.putChild("changes", ChangesResource())

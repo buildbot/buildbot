@@ -1,4 +1,3 @@
-
 import sys, os, time
 from cPickle import dump
 
@@ -9,6 +8,7 @@ from twisted.application import service
 from twisted.web import html
 
 from buildbot import interfaces, util
+from buildbot.process.properties import Properties
 
 html_tmpl = """
 <p>Changed by: <b>%(who)s</b><br />
@@ -22,6 +22,9 @@ Changed files:
 
 Comments:
 %(comments)s
+
+Properties:
+%(properties)s
 </p>
 """
 
@@ -55,7 +58,7 @@ class Change:
 
     def __init__(self, who, files, comments, isdir=0, links=None,
                  revision=None, when=None, branch=None, category=None,
-                 revlink=''):
+                 revlink='', properties={}):
         self.who = who
         self.comments = comments
         self.isdir = isdir
@@ -69,17 +72,26 @@ class Change:
         self.branch = branch
         self.category = category
         self.revlink = revlink
+        self.properties = Properties()
+        self.properties.update(properties, "Change")
 
         # keep a sorted list of the files, for easier display
         self.files = files[:]
         self.files.sort()
+
+    def __setstate__(self, dict):
+        self.__dict__ = dict
+        # Older Changes won't have a 'properties' attribute in them
+        if not hasattr(self, 'properties'):
+            self.properties = Properties()
 
     def asText(self):
         data = ""
         data += self.getFileContents()
         data += "At: %s\n" % self.getTime()
         data += "Changed By: %s\n" % self.who
-        data += "Comments: %s\n\n" % self.comments
+        data += "Comments: %s" % self.comments
+        data += "Properties: \n%s\n\n" % self.getProperties()
         return data
 
     def asHTML(self):
@@ -91,24 +103,30 @@ class Change:
                 links.append('<a href="%s"><b>%s</b></a>' % (link[0], file))
             else:
                 links.append('<b>%s</b>' % file)
-        revlink = ""
         if self.revision:
             if getattr(self, 'revlink', ""):
                 revision = 'Revision: <a href="%s"><b>%s</b></a>\n' % (
                         self.revlink, self.revision)
             else:
                 revision = "Revision: <b>%s</b><br />\n" % self.revision
+        else:
+            revision = ''
 
         branch = ""
         if self.branch:
             branch = "Branch: <b>%s</b><br />\n" % self.branch
 
-        kwargs = { 'who'     : html.escape(self.who),
-                   'at'      : self.getTime(),
-                   'files'   : html.UL(links) + '\n',
-                   'revision': revision,
-                   'branch'  : branch,
-                   'comments': html.PRE(self.comments) }
+        properties = []
+        for prop in self.properties.asList():
+            properties.append("%s: %s<br />" % (prop[0], prop[1]))
+
+        kwargs = { 'who'       : html.escape(self.who),
+                   'at'        : self.getTime(),
+                   'files'     : html.UL(links) + '\n',
+                   'revision'  : revision,
+                   'branch'    : branch,
+                   'comments'  : html.PRE(self.comments),
+                   'properties': html.UL(properties) + '\n' }
         return html_tmpl % kwargs
 
     def get_HTML_box(self, url):
@@ -161,6 +179,12 @@ class Change:
                 data += " %s\n" % f
         return data
         
+    def getProperties(self):
+        data = ""
+        for prop in self.properties.asList():
+            data += "  %s: %s" % (prop[0], prop[1])
+        return data
+
 class ChangeMaster(service.MultiService):
 
     """This is the master-side service which receives file change

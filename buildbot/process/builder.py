@@ -116,6 +116,9 @@ class AbstractSlaveBuilder(pb.Referenceable):
         log.err(why)
         return why
 
+    def prepare(self, builder_status):
+        return defer.succeed(None)
+
     def ping(self, timeout, status=None):
         """Ping the slave to make sure it is still there. Returns a Deferred
         that fires with True if it is.
@@ -260,7 +263,19 @@ class LatentSlaveBuilder(AbstractSlaveBuilder):
         log.msg("Latent buildslave %s attached to %s" % (slave.slavename,
                                                          self.builder_name))
 
-    def substantiate(self, build):
+    def prepare(self, builder_status):
+        log.msg("substantiating slave %s" % (self,))
+        d = self.substantiate()
+        def substantiation_failed(f):
+            builder_status.addPointEvent(['removing', 'latent',
+                                          self.slave.slavename])
+            self.slave.disconnect()
+            # TODO: should failover to a new Build
+            return f
+        d.addErrback(substantiation_failed)
+        return d
+
+    def substantiate(self):
         self.state = SUBSTANTIATING
         d = self.slave.substantiate(self)
         if not self.slave.substantiated:
@@ -335,11 +350,6 @@ class Builder(pb.Referenceable):
     I also manage forced builds, progress expectation (ETA) management, and
     some status delivery chores.
 
-    I am persisted in C{BASEDIR/BUILDERNAME/builder}, so I can remember how
-    long a build usually takes to run (in my C{expectations} attribute). This
-    pickle also includes the L{buildbot.status.builder.BuilderStatus} object,
-    which remembers the set of historic builds.
-
     @type buildable: list of L{buildbot.process.base.BuildRequest}
     @ivar buildable: BuildRequests that are ready to build, but which are
                      waiting for a buildslave to be available.
@@ -360,7 +370,7 @@ class Builder(pb.Referenceable):
         @type  setup: dict
         @param setup: builder setup data, as stored in
                       BuildmasterConfig['builders'].  Contains name,
-                      slavename(s), builddir, factory, locks.
+                      slavename(s), builddir, slavebuilddir, factory, locks.
         @type  builder_status: L{buildbot.status.builder.BuilderStatus}
         """
         self.name = setup['name']
@@ -370,6 +380,7 @@ class Builder(pb.Referenceable):
         if setup.has_key('slavenames'):
             self.slavenames.extend(setup['slavenames'])
         self.builddir = setup['builddir']
+        self.slavebuilddir = setup['slavebuilddir']
         self.buildFactory = setup['factory']
         self.nextSlave = setup.get('nextSlave')
         if self.nextSlave is not None and not callable(self.nextSlave):
@@ -422,6 +433,9 @@ class Builder(pb.Referenceable):
         if setup['builddir'] != self.builddir:
             diffs.append('builddir changed from %s to %s' \
                          % (self.builddir, setup['builddir']))
+        if setup['slavebuilddir'] != self.slavebuilddir:
+            diffs.append('slavebuilddir changed from %s to %s' \
+                         % (self.slavebuilddir, setup['slavebuilddir']))
         if setup['factory'] != self.buildFactory: # compare objects
             diffs.append('factory changed')
         oldlocks = [(lock.__class__, lock.name)
@@ -461,18 +475,6 @@ class Builder(pb.Referenceable):
             self.builder_status.removeBuildRequest(req.status, cancelled=True)
             return True
         return False
-
-    def __getstate__(self):
-        d = self.__dict__.copy()
-        # TODO: note that d['buildable'] can contain Deferreds
-        del d['building'] # TODO: move these back to .buildable?
-        del d['slaves']
-        return d
-
-    def __setstate__(self, d):
-        self.__dict__ = d
-        self.building = []
-        self.slaves = []
 
     def consumeTheSoulOfYourPredecessor(self, old):
         """Suck the brain out of an old Builder.
@@ -758,27 +760,17 @@ class Builder(pb.Referenceable):
 
         self.building.append(build)
         self.updateBigStatus()
-        if isinstance(sb, LatentSlaveBuilder):
-            log.msg("starting build %s.. substantiating the slave %s" %
-                    (build, sb))
-            d = sb.substantiate(build)
-            def substantiated(res):
-                return sb.ping(self.START_BUILD_TIMEOUT)
-            def substantiation_failed(res):
-                self.builder_status.addPointEvent(
-                    ['removing', 'latent', sb.slave.slavename])
-                sb.slave.disconnect()
-                # TODO: should failover to a new Build
-                #self.retryBuild(sb.build)
-            d.addCallbacks(substantiated, substantiation_failed)
-        else:
+        log.msg("starting build %s using slave %s" % (build, sb))
+        d = sb.prepare(self.builder_status)
+        def _ping(ign):
+            # ping the slave to make sure they're still there. If they're
+            # fallen off the map (due to a NAT timeout or something), this
+            # will fail in a couple of minutes, depending upon the TCP
+            # timeout. TODO: consider making this time out faster, or at
+            # least characterize the likely duration.
             log.msg("starting build %s.. pinging the slave %s" % (build, sb))
-            d = sb.ping(self.START_BUILD_TIMEOUT)
-        # ping the slave to make sure they're still there. If they're fallen
-        # off the map (due to a NAT timeout or something), this will fail in
-        # a couple of minutes, depending upon the TCP timeout. TODO: consider
-        # making this time out faster, or at least characterize the likely
-        # duration.
+            return sb.ping(self.START_BUILD_TIMEOUT)
+        d.addCallback(_ping)
         d.addCallback(self._startBuild_1, build, sb)
         return d
 
@@ -882,7 +874,8 @@ class BuilderControl(components.Adapter):
             return
 
         ss = bs.getSourceStamp(absolute=True)
-        req = base.BuildRequest(reason, ss, self.original.name)
+        req = base.BuildRequest(reason, ss, self.original.name,
+                                properties=bs.getProperties())
         self.requestBuild(req)
 
     def getPendingBuilds(self):
@@ -930,5 +923,3 @@ class BuildRequestControl:
 
     def cancel(self):
         self.original_builder.cancelBuildRequest(self.original_request)
-
-

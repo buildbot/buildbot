@@ -339,6 +339,12 @@ class Bot(pb.Referenceable, service.MultiService):
                 files[f] = open(filename, "r").read()
         return files
 
+    def remote_getVersion(self):
+        """Send our version back to the Master"""
+        return buildbot.version
+
+
+
 class BotFactory(ReconnectingPBClientFactory):
     # 'keepaliveInterval' serves two purposes. The first is to keep the
     # connection alive: it guarantees that there will be at least some

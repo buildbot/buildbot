@@ -6,6 +6,7 @@ try:
     import signal
 except ImportError:
     pass
+import string
 from cPickle import load
 import warnings
 
@@ -320,16 +321,10 @@ class DebugPerspective(NewCredPerspective):
     def perspective_print(self, msg):
         print "debug", msg
 
-class Dispatcher(styles.Versioned):
+class Dispatcher:
     implements(portal.IRealm)
-    persistenceVersion = 2
 
     def __init__(self):
-        self.names = {}
-
-    def upgradeToVersion1(self):
-        self.master = self.botmaster.parent
-    def upgradeToVersion2(self):
         self.names = {}
 
     def register(self, name, afactory):
@@ -377,9 +372,8 @@ class Dispatcher(styles.Versioned):
 #   UNIXServer(ResourcePublisher(self.site))
 
 
-class BuildMaster(service.MultiService, styles.Versioned):
+class BuildMaster(service.MultiService):
     debug = 0
-    persistenceVersion = 3
     manhole = None
     debugPassword = None
     projectName = "(unspecified)"
@@ -425,23 +419,6 @@ class BuildMaster(service.MultiService, styles.Versioned):
         self.useChanges(TestChangeMaster())
 
         self.readConfig = False
-
-    def upgradeToVersion1(self):
-        self.dispatcher = self.slaveFactory.root.portal.realm
-
-    def upgradeToVersion2(self): # post-0.4.3
-        self.webServer = self.webTCPPort
-        del self.webTCPPort
-        self.webDistribServer = self.webUNIXPort
-        del self.webUNIXPort
-        self.configFileName = "master.cfg"
-
-    def upgradeToVersion3(self):
-        # post 0.6.3, solely to deal with the 0.6.3 breakage. Starting with
-        # 0.6.5 I intend to do away with .tap files altogether
-        self.services = []
-        self.namedServices = {}
-        del self.change_svc
 
     def startService(self):
         service.MultiService.startService(self)
@@ -545,7 +522,7 @@ class BuildMaster(service.MultiService, styles.Versioned):
                       "manhole", "status", "projectName", "projectURL",
                       "buildbotURL", "properties", "prioritizeBuilders",
                       "eventHorizon", "buildCacheSize", "logHorizon", "buildHorizon",
-                      "changeHorizon",
+                      "changeHorizon", "logMaxSize", "logMaxTailSize",
                       )
         for k in config.keys():
             if k not in known_keys:
@@ -578,10 +555,18 @@ class BuildMaster(service.MultiService, styles.Versioned):
             eventHorizon = config.get('eventHorizon', None)
             logHorizon = config.get('logHorizon', None)
             buildHorizon = config.get('buildHorizon', None)
-            logCompressionLimit = config.get('logCompressionLimit')
+            logCompressionLimit = config.get('logCompressionLimit', 4*1024)
             if logCompressionLimit is not None and not \
                     isinstance(logCompressionLimit, int):
                 raise ValueError("logCompressionLimit needs to be bool or int")
+            logMaxSize = config.get('logMaxSize')
+            if logMaxSize is not None and not \
+                    isinstance(logMaxSize, int):
+                raise ValueError("logMaxSize needs to be None or int")
+            logMaxTailSize = config.get('logMaxTailSize')
+            if logMaxTailSize is not None and not \
+                    isinstance(logMaxTailSize, int):
+                raise ValueError("logMaxTailSize needs to be None or int")
             mergeRequests = config.get('mergeRequests')
             if mergeRequests is not None and not callable(mergeRequests):
                 raise ValueError("mergeRequests must be a callable")
@@ -658,6 +643,8 @@ class BuildMaster(service.MultiService, styles.Versioned):
         slavenames = [s.slavename for s in slaves]
         buildernames = []
         dirnames = []
+        badchars_map = string.maketrans("\t !#$%&'()*+,./:;<=>?@[\\]^{|}~",
+                                        "______________________________")
         for b in builders:
             if type(b) is tuple:
                 raise ValueError("builder %s must be defined with a dict, "
@@ -673,6 +660,10 @@ class BuildMaster(service.MultiService, styles.Versioned):
                 raise ValueError("duplicate builder name %s"
                                  % b['name'])
             buildernames.append(b['name'])
+
+            # Fix the dictionnary with default values.
+            b.setdefault('builddir', b['name'].translate(badchars_map))
+            b.setdefault('slavebuilddir', b['builddir'])
             if b['builddir'] in dirnames:
                 raise ValueError("builder %s reuses builddir %s"
                                  % (b['name'], b['builddir']))
@@ -750,8 +741,18 @@ class BuildMaster(service.MultiService, styles.Versioned):
 
         self.properties = Properties()
         self.properties.update(properties, self.configFileName)
-        if logCompressionLimit is not None:
-            self.status.logCompressionLimit = logCompressionLimit
+
+        self.status.logCompressionLimit = logCompressionLimit
+        self.status.logMaxSize = logMaxSize
+        self.status.logMaxTailSize = logMaxTailSize
+        # Update any of our existing builders with the current log parameters.
+        # This is required so that the new value is picked up after a
+        # reconfig.
+        for builder in self.botmaster.builders.values():
+            builder.builder_status.setLogCompressionLimit(logCompressionLimit)
+            builder.builder_status.setLogMaxSize(logMaxSize)
+            builder.builder_status.setLogMaxTailSize(logMaxTailSize)
+
         if mergeRequests is not None:
             self.botmaster.mergeRequests = mergeRequests
         if prioritizeBuilders is not None:
@@ -898,7 +899,7 @@ class BuildMaster(service.MultiService, styles.Versioned):
         # everything in newList is either unchanged, changed, or new
         for name, data in newList.items():
             old = self.botmaster.builders.get(name)
-            basedir = data['builddir'] # used on both master and slave
+            basedir = data['builddir']
             #name, slave, builddir, factory = data
             if not old: # new
                 # category added after 0.6.2

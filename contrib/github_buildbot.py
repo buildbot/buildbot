@@ -5,7 +5,7 @@ github_buildbot.py is based on git_buildbot.py
 github_buildbot.py will determine the repository information from the JSON 
 HTTP POST it receives from github.com and build the appropriate repository.
 If your github repository is private, you must add a ssh key to the github
-repository for the user who initiated the buildslave.
+repository for the user who initiated the build on the buildslave.
 
 """
 
@@ -55,7 +55,7 @@ class GitHubBuildBot(resource.Resource):
             for msg in traceback.format_exception(*sys.exc_info()):
                 logging.error(msg.strip())
 
-    def process_change(self, payload):
+    def process_change(self, payload, user, repo, github_url):
         """
         Consumes the JSON as a python object and actually starts the build.
         
@@ -85,12 +85,15 @@ class GitHubBuildBot(resource.Resource):
                 files.extend(commit['modified'])
                 files.extend(commit['removed'])
                 change = {'revision': commit['id'],
+                     'revlink': commit['url'],
                      'comments': commit['message'],
                      'branch': branch,
                      'who': commit['author']['name'] 
                             + " <" + commit['author']['email'] + ">",
                      'files': files,
                      'links': [commit['url']],
+                     'properties': {'repository':
+                                    self.repo_url(user, repo, github_url)},
                 }
                 changes.append(change)
         
@@ -152,7 +155,7 @@ def main():
         
     parser.add_option("-p", "--port", 
         help="Port the HTTP server listens to for the GitHub Service Hook"
-            + " [default: %default]", default=4000, dest="port")
+            + " [default: %default]", default=4000, type=int, dest="port")
         
     parser.add_option("-m", "--buildmaster",
         help="Buildbot Master host and port. ie: localhost:9989 [default:" 
@@ -169,7 +172,9 @@ def main():
             + " %default]", default='warn', dest="level")
         
     parser.add_option("-g", "--github", 
-        help="The github serve [default: %default]", default='github.com',
+        help="The github server.  Changing this is useful if you've specified"      
+            + "  a specific HOST handle in ~/.ssh/config for github "   
+            + "[default: %default]", default='github.com',
         dest="github")
         
     (options, _) = parser.parse_args()

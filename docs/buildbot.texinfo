@@ -223,7 +223,9 @@ Simple ShellCommand Subclasses
 * Test::
 * TreeSize::
 * PerlModuleTest::
+* Testing with mysql-test-run::
 * SetProperty::
+* SubunitShellCommand::
 
 Python BuildSteps
 
@@ -1633,6 +1635,12 @@ branch='buildbot--usebranches--0', files=['buildbot/master.py']
 branch='warner-newfeature', files=['src/foo.c']
 @end table
 
+@heading Build Properties
+
+A Change may have one or more properties attached to it, usually specified
+through the Force Build form or @pxref{sendchange}. Properties are discussed
+in detail in the @pxref{Build Properties} section.
+
 @heading Links
 
 @c TODO: who is using 'links'? how is it being used?
@@ -1746,11 +1754,13 @@ SourceStamp, which will result in same behavior as this.
 This builds the most recent code on the given BRANCH. Again, this is
 generally triggered by a user request or Periodic build.
 
-@item (revision=REV, changes=None, patch=(LEVEL, DIFF))
+@item (revision=REV, changes=None, patch=(LEVEL, DIFF, SUBDIR_ROOT))
 This checks out the tree at the given revision REV, then applies a
-patch (using @code{patch -pLEVEL <DIFF}). The @ref{try} feature uses
-this kind of @code{SourceStamp}. If @code{patch} is None, the patching
-step is bypassed.
+patch (using @code{patch -pLEVEL <DIFF}) from inside the relative
+directory SUBDIR_ROOT. Item SUBDIR_ROOT is optional and defaults to the
+builder working directory. The @ref{try} feature uses this kind of
+@code{SourceStamp}. If @code{patch} is None, the patching step is
+bypassed.
 
 @end table
 
@@ -1836,7 +1846,7 @@ f.addStep(Compile())
 c['builders'] = [
   @{'name': 'test', 'slavenames': ['slave1', 'slave2', 'slave3', 'slave4',
                                    'slave5', 'slave6'],
-    'builddir': 'test', 'factory': f',
+    'builddir': 'test', 'factory': f', 'slavebuilddir': 'test',
     'env': @{'PATH': '/opt/local/bin:/opt/app/bin:/usr/local/bin:/usr/bin'@}@}
 
 @end example
@@ -1998,6 +2008,9 @@ These properties apply to all builds.
 @item schedulers --
 A scheduler can specify properties available to all the builds it
 starts.
+@item changes --
+A change can have properties attached to it. These are usually specified
+through Force Build or sendchange.
 @item buildslaves --
 A buildslave can pass properties on to the builds it performs.
 @item builds --
@@ -2255,6 +2268,20 @@ be a reasonable default on most file systems. This setting has no impact
 on status plugins, and merely affects the required disk space on the
 master for build logs.
 
+@bcindex c['logMaxSize']
+The @code{logMaxSize} parameter sets an upper limit (in bytes) to how large
+logs from an individual build step can be.  The default value is None, meaning
+no upper limit to the log size.  Any output exceeding @code{logMaxSize} will be
+truncated, and a message to this effect will be added to the log's HEADER
+channel.
+
+@bcindex c['logMaxTailSize']
+If @code{logMaxSize} is set, and the output from a step exceeds the maximum,
+the @code{logMaxTailSize} parameter controls how much of the end of the build
+log will be kept.  The effect of setting this parameter is that the log will
+contain the first @code{logMaxSize} bytes and the last @code{logMaxTailSize}
+bytes of output.  Don't set this value too high, as the the tail of the log is
+kept in memory.
 
 @node Change Sources and Schedulers, Merging BuildRequests, Defining the Project, Configuration
 @section Change Sources and Schedulers
@@ -2442,6 +2469,11 @@ A callable which takes one argument, a Change instance, and returns
 it is not.  Unimportant Changes are accumulated until the build is
 triggered by an important change.  The default value of None means
 that all Changes are important.
+
+@item categories
+A list of categories of changes that this scheduler will respond to.  If this
+is specified, then any non-matching changes are ignored.
+
 @end table
 
 @node Dependent Scheduler, Periodic Scheduler, AnyBranchScheduler, Change Sources and Schedulers
@@ -2482,7 +2514,7 @@ build, then those changes will be included in the downstream build.
 See the @pxref{Triggerable Scheduler} for a more flexible dependency
 mechanism that can avoid this problem.
 
-The arguments to this scheduler are:
+The keyword arguments to this scheduler are:
 
 @table @code
 @item name
@@ -2502,9 +2534,9 @@ Example:
 from buildbot import scheduler
 tests = scheduler.Scheduler("just-tests", None, 5*60,
                             ["full-linux", "full-netbsd", "full-OSX"])
-package = scheduler.Dependent("build-package",
-                              tests, # upstream scheduler -- no quotes!
-                              ["make-tarball", "make-deb", "make-rpm"])
+package = scheduler.Dependent(name="build-package",
+                              upstream=tests, # <- no quotes!
+                              builderNames=["make-tarball", "make-deb", "make-rpm"])
 c['schedulers'] = [tests, package]
 @end example
 
@@ -2700,7 +2732,7 @@ test = scheduler.Triggerable(name="distributed-test",
 package = scheduler.Triggerable(name="package-all-platforms",
                 builderNames=["package-all-platforms"])
 
-c['schedulers'] = [checkin, nightly, build, test, package]
+c['schedulers'] = [mktarball, checkin, nightly, build, test, package]
 
 # on checkin, make a tarball, build it, and test it
 checkin_factory = factory.BuildFactory()
@@ -3293,12 +3325,6 @@ occurs on some of the buildslaves and not the others. Different
 platforms, operating systems, versions of major programs or libraries,
 all these things mean you should use separate Builders.
 
-@item builddir
-This specifies the name of a subdirectory (under the base directory)
-in which everything related to this builder will be placed. On the
-buildmaster, this holds build status information. On the buildslave,
-this is where checkouts, compiles, and tests are run.
-
 @item factory
 This is a @code{buildbot.process.factory.BuildFactory} instance which
 controls how the build is performed. Full details appear in their own
@@ -3311,6 +3337,22 @@ generally provided as arguments to the factory's constructor.
 Other optional keys may be set on each Builder:
 
 @table @code
+
+@item builddir
+Specifies the name of a subdirectory (under the base directory) in which
+everything related to this builder will be placed on the buildmaster.
+This holds build status information. If not set, defaults to @code{name}
+with some characters escaped. Each builder must have a unique build
+directory.
+
+@item slavebuilddir
+Specifies the name of a subdirectory (under the base directory) in which
+everything related to this builder will be placed on the buildslave.
+This is where checkouts, compiles, and tests are run. If not set,
+defaults to @code{builddir}. If a slave is connected to multiple builders
+that shares the same @code{slavebuilddir}, make sure the slave is set to
+run one build at a time or ensure this is fine to run multiple builds from
+the same directory simultaneously.
 
 @item category
 If provided, this is a string that identifies a category for the
@@ -5655,9 +5697,18 @@ f.addStep(ShellCommand(
 @end example
 
 
+@item lazylogfiles
+If set to @code{True}, logfiles will be tracked lazily, meaning that they will
+only be added when and if something is written to them. This can be used to
+suppress the display of empty or missing log files. The default is @code{False}.
+
+
 @item timeout
 if the command fails to produce any output for this many seconds, it
 is assumed to be locked up and will be killed.
+
+@item maxTime
+if the command takes longer than this many seconds, it will be killed.
 
 @item description
 This will be used to describe the command (on the Waterfall display)
@@ -5705,7 +5756,9 @@ file less verbose.
 * Test::
 * TreeSize::
 * PerlModuleTest::
+* Testing with mysql-test-run::
 * SetProperty::
+* SubunitShellCommand::
 @end menu
 
 @node Configure, Compile, Simple ShellCommand Subclasses, Simple ShellCommand Subclasses
@@ -5748,6 +5801,66 @@ The @code{warningPattern=} can also be a pre-compiled python regexp
 object: this makes it possible to add flags like @code{re.I} (to use
 case-insensitive matching).
 
+The @code{suppressionFile=} argument can be specified as the (relative) path
+of a file inside the workdir defining warnings to be suppressed from the
+warning counting and log file. The file will be uploaded to the master from
+the slave before compiling, and any warning matched by a line in the
+suppression file will be ignored. This is useful to accept certain warnings
+(eg. in some special module of the source tree or in cases where the compiler
+is being particularly stupid), yet still be able to easily detect and fix the
+introduction of new warnings.
+
+The file must contain one line per pattern of warnings to ignore. Empty lines
+and lines beginning with @code{#} are ignored. Other lines must consist of a
+regexp matching the file name, followed by a colon (@code{:}), followed by a
+regexp matching the text of the warning. Optionally this may be followed by
+another colon and a line number range. For example:
+
+@example
+# Sample warning suppression file
+
+mi_packrec.c : .*result of 32-bit shift implicitly converted to 64 bits.* : 560-600
+DictTabInfo.cpp : .*invalid access to non-static.*
+kernel_types.h : .*only defines private constructors and has no friends.* : 51
+@end example
+
+If no line number range is specified, the pattern matches the whole file; if
+only one number is given it matches only on that line.
+
+The default warningPattern regexp only matches the warning text, so line
+numbers and file names are ignored. To enable line number and file name
+matching, privide a different regexp and provide a function (callable) as the
+argument of @code{warningExtractor=}. The function is called with three
+arguments: the BuildStep object, the line in the log file with the warning,
+and the @code{SRE_Match} object of the regexp search for @code{warningPattern}. It
+should return a tuple @code{(filename, linenumber, warning_test)}. For
+example:
+
+@example
+f.addStep(Compile(command=["make"],
+                  warningPattern="^(.*?):([0-9]+): [Ww]arning: (.*)$",
+                  warningExtractor=Compile.warnExtractFromRegexpGroups,
+                  suppressionFile="support-files/compiler_warnings.supp"))
+@end example
+
+(@code{Compile.warnExtractFromRegexpGroups} is a pre-defined function that
+returns the filename, linenumber, and text from groups (1,2,3) of the regexp
+match).
+
+In projects with source files in multiple directories, it is possible to get
+full path names for file names matched in the suppression file, as long as the
+build command outputs the names of directories as they are entered into and
+left again. For this, specify regexps for the arguments
+@code{directoryEnterPattern=} and @code{directoryLeavePattern=}. The
+@code{directoryEnterPattern=} regexp should return the name of the directory
+entered into in the first matched group. The defaults, which are suitable for
+GNU Make, are these:
+
+@example
+directoryEnterPattern = "make.*: Entering directory [\"`'](.*)['`\"]"
+directoryLeavePattern = "make.*: Leaving directory"
+@end example
+
 (TODO: this step needs to be extended to look for GCC error messages
 as well, and collect them into a separate logfile, along with the
 source code filenames involved).
@@ -5771,7 +5884,7 @@ of the code tree. It puts the size (as a count of 1024-byte blocks,
 aka 'KiB' or 'kibibytes') on the step's status text, and sets a build
 property named 'tree-size-KiB' with the same value.
 
-@node PerlModuleTest, SetProperty, TreeSize, Simple ShellCommand Subclasses
+@node PerlModuleTest, Testing with mysql-test-run, TreeSize, Simple ShellCommand Subclasses
 @subsubsection PerlModuleTest
 
 @bsindex buildbot.steps.shell.PerlModuleTest
@@ -5780,7 +5893,95 @@ This is a simple command that knows how to run tests of perl modules.
 It parses the output to determine the number of tests passed and
 failed and total number executed, saving the results for later query.
 
-@node SetProperty,  , PerlModuleTest, Simple ShellCommand Subclasses
+@node Testing with mysql-test-run, SetProperty, PerlModuleTest, Simple ShellCommand Subclasses
+@subsection Testing with mysql-test-run
+
+The @code{process.mtrlogobserver.MTR} class is a subclass of @code{Test}
+(@ref{Test}). It is used to run test suites using the mysql-test-run program,
+as used in MySQL, Drizzle, MariaDB, and MySQL storage engine plugins.
+
+The shell command to run the test suite is specified in the same way as for
+the Test class. The MTR class will parse the output of running the test suite,
+and use the count of tests executed so far to provide more accurate completion
+time estimates. Any test failures that occur during the test are summarized on
+the Waterfall Display.
+
+Server error logs are added as additional log files, useful to debug test
+failures.
+
+Optionally, data about the test run and any test failures can be inserted into
+a database for further analysis and report generation. To use this facility,
+create an instance of @code{twisted.enterprise.adbapi.ConnectionPool} with
+connections to the database. The necessary tables can be created automatically
+by setting @code{autoCreateTables} to @code{True}, or manually using the SQL
+found in the @file{mtrlogobserver.py} source file.
+
+One problem with specifying a database is that each reload of the
+configuration will get a new instance of @code{ConnectionPool} (even if the
+connection parameters are the same). To avoid that Buildbot thinks the builder
+configuration has changed because of this, use the
+@code{process.mtrlogobserver.EqConnectionPool} subclass of
+@code{ConnectionPool}, which implements an equiality operation that avoids
+this problem.
+
+Example use:
+
+@example
+from buildbot.process.mtrlogobserver import MTR, EqConnectionPool
+myPool = EqConnectionPool("MySQLdb", "host", "buildbot", "password", "db")
+myFactory.addStep(MTR(workdir="mysql-test", dbpool=myPool,
+                      command=["perl", "mysql-test-run.pl", "--force"]))
+@end example
+
+@code{MTR} arguments:
+
+@table @code
+
+@item textLimit
+Maximum number of test failures to show on the waterfall page (to not flood
+the page in case of a large number of test failures. Defaults to 5.
+
+@item testNameLimit
+Maximum length of test names to show unabbreviated in the waterfall page, to
+avoid excessive column width. Defaults to 16.
+
+@item parallel
+Value of @code{--parallel} option used for mysql-test-run.pl (number of processes
+used to run the test suite in parallel). Defaults to 4. This is used to
+determine the number of server error log files to download from the
+slave. Specifying a too high value does not hurt (as nonexisting error logs
+will be ignored), however if using @code{--parallel} value greater than the default
+it needs to be specified, or some server error logs will be missing.
+
+@item dbpool
+An instance of twisted.enterprise.adbapi.ConnectionPool, or None.  Defaults to
+None. If specified, results are inserted into the database using the
+ConnectionPool.
+
+@item autoCreateTables
+Boolean, defaults to False. If True (and @code{dbpool} is specified), the
+necessary database tables will be created automatically if they do not exist
+already. Alternatively, the tables can be created manually from the SQL
+statements found in the mtrlogobserver.py source file.
+
+@item test_type
+Short string that will be inserted into the database in the row for the test
+run. Defaults to the empty string, but can be specified to identify different
+types of test runs.
+
+@item test_info
+Descriptive string that will be inserted into the database in the row for the test
+run. Defaults to the empty string, but can be specified as a user-readable
+description of this particular test run.
+
+@item mtr_subdir
+The subdirectory in which to look for server error log files. Defaults to
+``mysql-test'', which is usually correct. WithProperties is supported.
+
+@end table
+
+
+@node SetProperty, SubunitShellCommand , Testing with mysql-test-run, Simple ShellCommand Subclasses
 @subsubsection SetProperty
 
 @bsindex buildbot.steps.shell.SetProperty
@@ -5822,6 +6023,21 @@ f.addStep(SetProperty(
 
 Then @code{my_extract} will see @code{stdout="output1\noutput2\n"}
 and @code{stderr="error\n"}.
+
+@node SubunitShellCommand,  , SetProperty, Simple ShellCommand Subclasses
+@subsubsection SubunitShellCommand
+
+@bsindex buildbot.process.subunitlogger.SubunitShellCommand
+
+This buildstep is similar to ShellCommand, except that it runs the log content
+through a subunit filter to extract test and failure counts.
+
+@example
+f.addStep(SubunitShellCommand(command="make test"))
+@end example
+
+This runs @code{make test} and filters it through subunit. The 'tests' and
+'test failed' progress metrics will now accumulate test data from the test run.
 
 @node Python BuildSteps, Transferring Files, Simple ShellCommand Subclasses, Build Steps
 @subsection Python BuildSteps
@@ -6641,7 +6857,7 @@ build number.
 @example
 class TestWithCodeCoverage(BuildStep):
     command = ["make", "test",
-               WithProperties("buildnum=%s" % "buildnumber")]
+               WithProperties("buildnum=%s", "buildnumber")]
 
     def createSummary(self, log):
         buildnumber = self.getProperty("buildnumber")
@@ -6655,7 +6871,7 @@ output by the build process itself:
 @example
 class TestWithCodeCoverage(BuildStep):
     command = ["make", "test",
-               WithProperties("buildnum=%s" % "buildnumber")]
+               WithProperties("buildnum=%s", "buildnumber")]
 
     def createSummary(self, log):
         output = StringIO(log.getText())
@@ -7615,6 +7831,40 @@ of the page, and the build hosts are listed across the top.  It accepts
 the same query arguments. The exception being that instead of ``width''
 the argument is named ``length.''
 
+@item /console
+
+EXPERIMENTAL: This provides a developer-oriented display of the the last
+changes and how they affected the builders.
+
+It allows a developer to quickly see the status of each builder for the
+first build including his or her change. A green box means that the change
+succeeded for all the steps for a given builder. A red box means that
+the changed introduced a new regression on a builder. An orange box
+means that at least one of the test failed, but it was also failing
+in the previous build, so it is not possible to see if there was any
+regressions from this change. Finally a yellow box means that the test
+is in progress.
+
+By adding one or more ``builder='' query arguments, the Console view is
+restricted to only showing information about the given Builders. By
+adding one or more ``branch='' query arguments, the display is
+restricted to showing information about the given branches. In
+addition, adding one or more ``category='' query arguments to the URL
+will limit the display to Builders that were defined with one of the
+given categories.
+
+By adding one or more ``name='' query arguments, the console view is
+restricted to only showing changes made by the given users.
+
+NOTE: To use this page, your buildbot.css file in public_html
+must be the one found in buildbot/status/web/extended.css.
+
+The console view is still in development. At this moment it supports
+only the source control managers that have an integer based revision id,
+like svn. It also has some issues with displaying multiple braches at the
+same time. If you do have multiple branches, you should use the
+``branch='' query argument.
+
 @item /rss
 
 This provides a rss feed summarizing all failed builds. The same
@@ -7955,6 +8205,11 @@ builders or categories, but not both.
 (boolean). If True, include all build logs as attachments to the
 messages. These can be quite large. This can also be set to a list of
 log names, to send a subset of the logs. Defaults to False.
+
+@item addPatch
+(boolean). If True, include the patch content if a patch was present.
+Patches are usually used on a Try server.
+Defaults to True.
 
 @item relayhost
 (string). The host to which the outbound SMTP connection should be
@@ -8766,6 +9021,11 @@ output of @command{darcs changes --context} as a revision specifier.
 This context file can be a couple of kilobytes long, spanning a couple
 lines per patch, and would be a hassle to pass as a command-line
 argument.
+
+@item --property
+This parameter is used to set a property on the Change generated by sendchange.
+Properties are specified as a name:value pair, separated by a colon. You may
+specify many properties by passing this parameter multiple times.
 
 @item --comments
 This provides the change comments as a single argument. You may want

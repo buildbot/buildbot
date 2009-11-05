@@ -12,7 +12,11 @@ import os, shutil, sys, re, urllib, itertools
 import gc
 from cPickle import load, dump
 from cStringIO import StringIO
-from bz2 import BZ2File
+
+try: # bz2 is not available on py23
+    from bz2 import BZ2File
+except ImportError:
+    BZ2File = None
 
 # sibling imports
 from buildbot import interfaces, util, sourcestamp
@@ -220,8 +224,15 @@ class LogFile:
 
     finished = False
     length = 0
+    nonHeaderLength = 0
+    tailLength = 0
     chunkSize = 10*1000
     runLength = 0
+    # No max size by default
+    logMaxSize = None
+    # Don't keep a tail buffer by default
+    logMaxTailSize = None
+    maxLengthExceeded = False
     runEntries = [] # provided so old pickled builds will getChunks() ok
     entries = None
     BUFFERSIZE = 2048
@@ -251,6 +262,7 @@ class LogFile:
         self.runEntries = []
         self.watchers = []
         self.finishedWatchers = []
+        self.tailBuffer = []
 
     def getFilename(self):
         return os.path.join(self.step.build.builder.basedir, self.filename)
@@ -282,10 +294,11 @@ class LogFile:
             return self.openfile
         # otherwise they get their own read-only handle
         # try a compressed log first
-        try:
-            return BZ2File(self.getFilename() + ".bz2", "r")
-        except IOError:
-            pass
+        if BZ2File is not None:
+            try:
+                return BZ2File(self.getFilename() + ".bz2", "r")
+            except IOError:
+                pass
         return open(self.getFilename(), "r")
 
     def getText(self):
@@ -404,6 +417,31 @@ class LogFile:
 
     def addEntry(self, channel, text):
         assert not self.finished
+
+        if channel != HEADER:
+            # Truncate the log if it's more than logMaxSize bytes
+            if self.logMaxSize and self.nonHeaderLength > self.logMaxSize:
+                # Add a message about what's going on
+                if not self.maxLengthExceeded:
+                    msg = "\nOutput exceeded %i bytes, remaining output has been truncated\n" % self.logMaxSize
+                    self.addEntry(HEADER, msg)
+                    self.merge()
+                    self.maxLengthExceeded = True
+
+                if self.logMaxTailSize:
+                    # Update the tail buffer
+                    self.tailBuffer.append((channel, text))
+                    self.tailLength += len(text)
+                    while self.tailLength > self.logMaxTailSize:
+                        # Drop some stuff off the beginning of the buffer
+                        c,t = self.tailBuffer.pop(0)
+                        n = len(t)
+                        self.tailLength -= n
+                        assert self.tailLength >= 0
+                return
+
+            self.nonHeaderLength += len(text)
+
         # we only add to .runEntries here. merge() is responsible for adding
         # merged chunks to .entries
         if self.runEntries and channel != self.runEntries[0][0]:
@@ -425,7 +463,19 @@ class LogFile:
         self.addEntry(HEADER, text)
 
     def finish(self):
-        self.merge()
+        if self.tailBuffer:
+            msg = "\nFinal %i bytes follow below:\n" % self.tailLength
+            tmp = self.runEntries
+            self.runEntries = [(HEADER, msg)]
+            self.merge()
+            self.runEntries = self.tailBuffer
+            self.merge()
+            self.runEntries = tmp
+            self.merge()
+            self.tailBuffer = []
+        else:
+            self.merge()
+
         if self.openfile:
             # we don't do an explicit close, because there might be readers
             # shareing the filehandle. As soon as they stop reading, the
@@ -444,6 +494,10 @@ class LogFile:
 
 
     def compressLog(self):
+        # bail out if there's no compression support
+        if BZ2File is None:
+            return
+
         compressed = self.getFilename() + ".bz2.tmp"
         d = threads.deferToThread(self._compressLog, compressed)
         d.addCallback(self._renameCompressedLog, compressed)
@@ -885,6 +939,8 @@ class BuildStepStatus(styles.Versioned):
         assert self.started # addLog before stepStarted won't notify watchers
         logfilename = self.build.generateLogfileName(self.name, name)
         log = LogFile(self, name, logfilename)
+        log.logMaxSize = self.build.builder.logMaxSize
+        log.logMaxTailSize = self.build.builder.logMaxTailSize
         self.logs.append(log)
         for w in self.watchers:
             receiver = w.logStarted(self.build, self, log)
@@ -943,7 +999,9 @@ class BuildStepStatus(styles.Versioned):
             if logCompressionLimit is not False and \
                     isinstance(loog, LogFile):
                 if os.path.getsize(loog.getFilename()) > logCompressionLimit:
-                    cld.append(loog.compressLog())
+                    loog_deferred = loog.compressLog()
+                    if loog_deferred:
+                        cld.append(loog_deferred)
 
         for r in self.updates.keys():
             if self.updates[r] is not None:
@@ -1454,6 +1512,8 @@ class BuilderStatus(styles.Versioned):
         self.buildCache = weakref.WeakValueDictionary()
         self.buildCache_LRU = []
         self.logCompressionLimit = False # default to no compression for tests
+        self.logMaxSize = None # No default limit
+        self.logMaxTailSize = None # No tail buffering
 
     # persistence
 
@@ -1525,6 +1585,12 @@ class BuilderStatus(styles.Versioned):
 
     def setLogCompressionLimit(self, lowerLimit):
         self.logCompressionLimit = lowerLimit
+
+    def setLogMaxSize(self, upperLimit):
+        self.logMaxSize = upperLimit
+
+    def setLogMaxTailSize(self, tailSize):
+        self.logMaxTailSize = tailSize
 
     def saveYourself(self):
         for b in self.currentBuilds:
@@ -1726,6 +1792,11 @@ class BuilderStatus(styles.Versioned):
         for Nb in range(1, self.nextBuildNumber+1):
             b = self.getBuild(-Nb)
             if not b:
+                # HACK: If this is the first build we are looking at, it is
+                # possible it's in progress but locked before it has written a
+                # pickle; in this case keep looking.
+                if Nb == 1:
+                    continue
                 break
             if branches and not b.getSourceStamp().branch in branches:
                 continue
@@ -1952,6 +2023,7 @@ class SlaveStatus:
 
     admin = None
     host = None
+    version = None
     connected = False
     graceful_shutdown = False
 
@@ -1967,6 +2039,8 @@ class SlaveStatus:
         return self.admin
     def getHost(self):
         return self.host
+    def getVersion(self):
+        return self.version
     def isConnected(self):
         return self.connected
     def lastMessageReceived(self):
@@ -1978,6 +2052,8 @@ class SlaveStatus:
         self.admin = admin
     def setHost(self, host):
         self.host = host
+    def setVersion(self, version):
+        self.version = version
     def setConnected(self, isConnected):
         self.connected = isConnected
     def setLastMessageReceived(self, when):
@@ -2034,6 +2110,9 @@ class Status:
         assert os.path.isdir(basedir)
         # compress logs bigger than 4k, a good default on linux
         self.logCompressionLimit = 4*1024
+        # No default limit to the log size
+        self.logMaxSize = None
+        self.logMaxTailSize = None
 
 
     # methods called by our clients
@@ -2247,6 +2326,8 @@ class Status:
 
         builder_status.setBigState("offline")
         builder_status.setLogCompressionLimit(self.logCompressionLimit)
+        builder_status.setLogMaxSize(self.logMaxSize)
+        builder_status.setLogMaxTailSize(self.logMaxTailSize)
 
         for t in self.watchers:
             self.announceNewBuilder(t, name, builder_status)

@@ -162,7 +162,7 @@ class ChangeSender:
         who = commands.getoutput('svnlook author %s "%s"' % (rev_arg, repo))
         revision = opts.get('revision')
         if revision is not None:
-            revision = int(revision)
+            revision = str(int(revision))
 
         # see if we even need to notify buildbot by looking at filters first
         changestring = '\n'.join(changed)

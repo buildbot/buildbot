@@ -62,14 +62,6 @@ class RemoteCommand(pb.Referenceable):
         self.remote_command = remote_command
         self.args = args
 
-    def __getstate__(self):
-        dict = self.__dict__.copy()
-        # Remove the remote ref: if necessary (only for resumed builds), it
-        # will be reattached at resume time
-        if dict.has_key("remote"):
-            del dict["remote"]
-        return dict
-
     def run(self, step, remote):
         self.active = True
         self.step = step
@@ -103,12 +95,20 @@ class RemoteCommand(pb.Referenceable):
         @returns: a deferred that will fire when the remote command is
                   done (with None as the result)
         """
+
+        # Allow use of WithProperties in logfile path names.
+        cmd_args = self.args
+        if cmd_args.has_key("logfiles") and cmd_args["logfiles"]:
+            cmd_args = cmd_args.copy()
+            properties = self.step.build.getProperties()
+            cmd_args["logfiles"] = properties.render(cmd_args["logfiles"])
+
         # This method only initiates the remote command.
         # We will receive remote_update messages as the command runs.
         # We will get a single remote_complete when it finishes.
         # We should fire self.deferred when the command is done.
         d = self.remote.callRemote("startCommand", self, self.commandID,
-                                   self.remote_command, self.args)
+                                   self.remote_command, cmd_args)
         return d
 
     def interrupt(self, why):
@@ -256,6 +256,7 @@ class LoggedRemoteCommand(RemoteCommand):
 
     def __init__(self, *args, **kwargs):
         self.logs = {}
+        self.delayedLogs = {}
         self._closeWhenFinished = {}
         RemoteCommand.__init__(self, *args, **kwargs)
 
@@ -290,8 +291,14 @@ class LoggedRemoteCommand(RemoteCommand):
         if not logfileName:
             logfileName = loog.getName()
         assert logfileName not in self.logs
+        assert logfileName not in self.delayedLogs
         self.logs[logfileName] = loog
         self._closeWhenFinished[logfileName] = closeWhenFinished
+
+    def useLogDelayed(self, logfileName, activateCallBack, closeWhenFinished=False):
+        assert logfileName not in self.logs
+        assert logfileName not in self.delayedLogs
+        self.delayedLogs[logfileName] = (activateCallBack, closeWhenFinished)
 
     def start(self):
         log.msg("LoggedRemoteCommand.start")
@@ -313,6 +320,14 @@ class LoggedRemoteCommand(RemoteCommand):
             self.logs['stdio'].addHeader(data)
 
     def addToLog(self, logname, data):
+        # Activate delayed logs on first data.
+        if logname in self.delayedLogs:
+            (activateCallBack, closeWhenFinished) = self.delayedLogs[logname]
+            del self.delayedLogs[logname]
+            loog = activateCallBack(self)
+            self.logs[logname] = loog
+            self._closeWhenFinished[logname] = closeWhenFinished
+
         if logname in self.logs:
             self.logs[logname].addStdout(data)
         else:
@@ -431,10 +446,10 @@ class RemoteShellCommand(LoggedRemoteCommand):
     command is finished, it will fire a Deferred. You can then check the
     results of the command and parse the output however you like."""
 
-    def __init__(self, workdir, command, env=None, 
+    def __init__(self, workdir, command, env=None,
                  want_stdout=1, want_stderr=1,
-                 timeout=20*60, logfiles={}, usePTY="slave-config",
-                 logEnviron=True):
+                 timeout=20*60, maxTime=None, logfiles={},
+                 usePTY="slave-config", logEnviron=True):
         """
         @type  workdir: string
         @param workdir: directory where the command ought to run,
@@ -475,6 +490,11 @@ class RemoteShellCommand(LoggedRemoteCommand):
                         None to disable the timeout.
 
         @param logEnviron: whether to log env vars on the slave side
+
+        @type  maxTime: int
+        @param maxTime: tell the remote that if the command fails to complete
+                        in this number of seconds, the command should be
+                        killed.  Use None to disable maxTime.
         """
 
         self.command = command # stash .command, set it later
@@ -489,6 +509,7 @@ class RemoteShellCommand(LoggedRemoteCommand):
                 'want_stderr': want_stderr,
                 'logfiles': logfiles,
                 'timeout': timeout,
+                'maxTime': maxTime,
                 'usePTY': usePTY,
                 'logEnviron': logEnviron,
                 }
@@ -958,19 +979,28 @@ class LoggingBuildStep(BuildStep):
     progressMetrics = ('output',)
     logfiles = {}
 
-    parms = BuildStep.parms + ['logfiles']
+    parms = BuildStep.parms + ['logfiles', 'lazylogfiles']
 
-    def __init__(self, logfiles={}, *args, **kwargs):
+    def __init__(self, logfiles={}, lazylogfiles=False, *args, **kwargs):
         BuildStep.__init__(self, *args, **kwargs)
-        self.addFactoryArguments(logfiles=logfiles)
+        self.addFactoryArguments(logfiles=logfiles,
+                                 lazylogfiles=lazylogfiles)
         # merge a class-level 'logfiles' attribute with one passed in as an
         # argument
         self.logfiles = self.logfiles.copy()
         self.logfiles.update(logfiles)
+        self.lazylogfiles = lazylogfiles
         self.addLogObserver('stdio', OutputProgressObserver("output"))
 
     def describe(self, done=False):
         raise NotImplementedError("implement this in a subclass")
+
+    def addLogFile(self, logname, filename):
+        """
+        This allows to add logfiles after construction, but before calling
+        startCommand().
+        """
+        self.logfiles[logname] = filename
 
     def startCommand(self, cmd, errorMessages=[]):
         """
@@ -1009,10 +1039,20 @@ class LoggingBuildStep(BuildStep):
         """Set up any additional logfiles= logs.
         """
         for logname,remotefilename in logfiles.items():
-            # tell the BuildStepStatus to add a LogFile
-            newlog = self.addLog(logname)
-            # and tell the LoggedRemoteCommand to feed it
-            cmd.useLog(newlog, True)
+            if self.lazylogfiles:
+                # Ask LoggedRemoteCommand to watch a logfile, but only add
+                # it when/if we see any data.
+                #
+                # The dummy default argument local_logname is a work-around for
+                # Python name binding; default values are bound by value, but
+                # captured variables in the body are bound by name.
+                callback = lambda cmd_arg, local_logname=logname: self.addLog(local_logname)
+                cmd.useLogDelayed(logname, callback, True)
+            else:
+                # tell the BuildStepStatus to add a LogFile
+                newlog = self.addLog(logname)
+                # and tell the LoggedRemoteCommand to feed it
+                cmd.useLog(newlog, True)
 
     def interrupt(self, reason):
         # TODO: consider adding an INTERRUPTED or STOPPED status to use
@@ -1114,7 +1154,7 @@ class LoggingBuildStep(BuildStep):
         self.step_status.setText(self.getText(cmd, results))
         self.step_status.setText2(self.maybeGetText2(cmd, results))
 
-# (WithProeprties used to be available in this module)
+# (WithProperties used to be available in this module)
 from buildbot.process.properties import WithProperties
 _hush_pyflakes = [WithProperties]
 del _hush_pyflakes

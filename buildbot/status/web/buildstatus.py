@@ -1,3 +1,4 @@
+from twisted.web import html, resource
 from buildbot.status.web.base import Box
 from buildbot.status.web.base import HtmlResource
 from buildbot.status.web.base import IBox
@@ -22,6 +23,7 @@ class BuildStatusStatusResource(HtmlResource):
         number = request.args.get("number", [None])[0]
         if not name or not number:
             return "builder and number parameter missing"
+        number = int(number)
 
         # Main table for the build status.
         data += '<table>\n'
