@@ -1,10 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
-<id>{{ link }}%s</id>
-<title>{{ title }}</title>
-{% if self.link %}
-  <link rel="self" href="{{ link }}/atom"/>
-  <link rel="alternate" href="{{ link }}"/>
-{% endif %}
-{% if description %}<subtitle>{{ description }}</subtitle>{% endif %}
-{% if rfc3339_pubdate %}<updated>{{ rfc3339_pubdate }}</updated>{% endif %}
-<author>BuildBot</author>
+ <id>{{ link }}%s</id>
+ <title>{{ title }}</title>
+ {% if self.link %}
+   <link rel="self" href="{{ link }}/atom"/>
+   <link rel="alternate" href="{{ link }}"/>
+ {% endif %}
+ {% if description %}<subtitle>{{ description }}</subtitle>{% endif %}
+ {% if rfc3339_pubdate %}<updated>{{ rfc3339_pubdate }}</updated>{% endif %}
+ <author>BuildBot</author>
