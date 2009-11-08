@@ -8,7 +8,6 @@ from twisted.python import log
 from buildbot.status.web.base import HtmlResource, make_row, make_stop_form, \
      css_classes, path_to_builder, path_to_slave, make_name_user_passwd_form
 
-from buildbot.status.web.tests import TestsResource
 from buildbot.status.web.step import StepsResource
 from buildbot import version, util
 
@@ -190,8 +189,6 @@ class StatusResourceBuild(HtmlResource):
             return self.rebuild(req)
         if path == "steps":
             return StepsResource(self.build_status)
-        if path == "tests":
-            return TestsResource(self.build_status)
 
         return HtmlResource.getChild(self, path, req)
 
