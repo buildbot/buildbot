@@ -295,63 +295,37 @@ class Atom10StatusResource(FeedResource):
 
     def header(self, request):
         data = FeedResource.header(self, request)
-        data += '<feed xmlns="http://www.w3.org/2005/Atom">\n'
-        data += ('  <id>%s</id>\n' % self.link)
-        if self.title is None:
-            title = 'Build status of ' + self.projectName
-        else:
-            title = self.title
-        data += ('  <title>%s</title>\n' % title)
-        if self.link is not None:
-            link = re.sub(r'/index.html', '', self.link)
-            data += ('  <link rel="self" href="%s/atom"/>\n' % link)
-            data += ('  <link rel="alternate" href="%s/"/>\n' % link)
-        if self.description is not None:
-            data += ('  <subtitle>%s</subtitle>\n' % self.description)
+        cxt = {}
+        cxt['link'] = self.link
+        cxt['title'] = self.title if self.title else 'Build status of ' + self.projectName
+        cxt['description'] = self.description
         if self.pubdate is not None:
-            rfc3339_pubdate = time.strftime("%Y-%m-%dT%H:%M:%SZ",
-                                            self.pubdate)
-            data += ('  <updated>%s</updated>\n' % rfc3339_pubdate)
-        data += ('  <author>\n')
-        data += ('    <name>Build Bot</name>\n')
-        data += ('  </author>\n')
+            cxt['rfc3339_pubdate'] = time.strftime("%Y-%m-%dT%H:%M:%SZ",
+                                                   self.pubdate)
+
+        # allow item() to access templates
+        self.templates = request.site.buildbot_service.templates
+        template = self.templates.get_template('feed_atom10_header.xml')
+        data += template.render(**cxt)
         return data
 
     def item(self, title='', link='', description='', lastlog='', pubDate=''):
-        data = ('  <entry>\n')
-        data += ('    <title>%s</title>\n' % title)
-        if link is not None:
-            data += ('    <link href="%s"/>\n' % link)
+
+        cxt = {'title': title, 'link': link }
+        
         if (description is not None and lastlog is not None):
-            lastlog = re.sub(r'<br/>', "\n", lastlog)
-            lastlog = re.sub(r'&', "&amp;", lastlog)
-            lastlog = re.sub(r"'", "&apos;", lastlog)
-            lastlog = re.sub(r'"', "&quot;", lastlog)
-            lastlog = re.sub(r'<', '&lt;', lastlog)
-            lastlog = re.sub(r'>', '&gt;', lastlog)
-            data += ('    <content type="xhtml">\n')
-            data += ('      <div xmlns="http://www.w3.org/1999/xhtml">\n')
-            data += ('        %s\n' % description)
-            data += ('        <pre xml:space="preserve">%s</pre>\n' % lastlog)
-            data += ('      </div>\n')
-            data += ('    </content>\n')
+            cxt['lastlog'] = re.sub(r'<br/>', "\n", lastlog)
+            cxt['description'] = description
         if pubDate is not None:
-            rfc3339pubDate = time.strftime("%Y-%m-%dT%H:%M:%SZ",
+            cxt['rfc3339_pubdate'] = time.strftime("%Y-%m-%dT%H:%M:%SZ",
                                            pubDate)
-            data += ('    <updated>%s</updated>\n' % rfc3339pubDate)
-            # Every Atom entry must have a globally unique ID
-            # http://diveintomark.org/archives/2004/05/28/howto-atom-id
-            guid = ('tag:%s@%s,%s:%s' % (self.user, self.hostname,
+            cxt['guid'] = ('tag:%s@%s,%s:%s' % (self.user, self.hostname,
                                          time.strftime("%Y-%m-%d", pubDate),
                                          time.strftime("%Y%m%d%H%M%S",
                                                        pubDate)))
-            data += ('    <id>%s</id>\n' % guid)
-        data += ('    <author>\n')
-        data += ('      <name>Build Bot</name>\n')
-        data += ('    </author>\n')
-        data += ('  </entry>\n')
-        return data
+        template = self.templates.get_template('feed_atom10_item.xml')        
+        return template.render(**cxt)
 
     def footer(self, request):
-        data = ('</feed>')
-        return data
+        template = self.templates.get_template('feed_atom10_footer.xml')        
+        return template.render()
