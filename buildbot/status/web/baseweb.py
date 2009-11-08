@@ -312,8 +312,6 @@ class WebStatus(service.MultiService):
      /builders/BUILDERNAME/builds/NUM: a page describing a single Build
      /builders/BUILDERNAME/builds/NUM/steps/STEPNAME: describes a single step
      /builders/BUILDERNAME/builds/NUM/steps/STEPNAME/logs/LOGNAME: a StatusLog
-     /builders/BUILDERNAME/builds/NUM/tests : summarize test results
-     /builders/BUILDERNAME/builds/NUM/tests/TEST.NAME: results of one test
      /builders/_all/{force,stop}: force a build/stop building on all builders.
      /changes : summarize all ChangeSources
      /changes/CHANGENUM: a page describing a single Change
