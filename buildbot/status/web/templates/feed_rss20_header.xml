@@ -1,0 +1,8 @@
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<channel>
+<title>{{ title }}</title>
+{% if link %}<link>{{ link }}</link>{% endif %}
+<atom:link href="{{ rootlink }}/rss" rel="self" type="application/rss+xml"/>
+{% if language %}<language>{{ language }}</language>{% endif %}
+{% if description %}<description>{{ description }}</description>{% endif %}
+{% if pub_date %}<pubDate>{{ pub_date }}</pubDate>{% endif %}
