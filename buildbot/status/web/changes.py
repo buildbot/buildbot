@@ -10,7 +10,7 @@ from buildbot.status.web.base import HtmlResource, StaticHTML, IBox, Box
 class ChangesResource(HtmlResource):
 
     def body(self, req):
-        template = self.templates.get_template("change_sources.html")
+        template = req.site.buildbot_service.templates.get_template("change_sources.html")
         return template.render(sources = self.getStatus(req).getChangeSources()) + self.footer(req)
 
     def getChild(self, path, req):

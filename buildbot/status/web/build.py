@@ -124,7 +124,7 @@ class StatusResourceBuild(HtmlResource):
             cxt['reason_row'] = make_row("Reason for re-running build:",
                                          "<input type='text' name='comments' />")
             
-        template = self.templates.get_template("build.html");
+        template = req.site.buildbot_service.templates.get_template("build.html")
         data = template.render(**cxt)
         data += self.footer(req)
         return data

@@ -9,7 +9,7 @@ class AboutBuildbot(HtmlResource):
     title = "About this Buildbot"
 
     def body(self, request):
-        template = self.templates.get_template("about.html")
+        template = request.site.buildbot_service.templates.get_template("about.html")
         template.autoescape = True
         return template.render(buildbot=buildbot.version, 
                                twisted=twisted.__version__,

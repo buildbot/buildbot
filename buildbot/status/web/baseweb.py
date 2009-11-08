@@ -247,7 +247,7 @@ class OneBoxPerBuilder(HtmlResource):
                 cxt['force_form'] = make_force_build_form(forceURL,
                                               self.isUsingUserPasswd(req), True)
 
-        template = self.templates.get_template("oneboxperbuilder.html")
+        template = req.site.buildbot_service.templates.get_template("oneboxperbuilder.html")
         data = template.render(**cxt)
         data += self.footer(req)
         return data

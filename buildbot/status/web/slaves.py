@@ -55,7 +55,7 @@ class OneBuildSlaveResource(HtmlResource, OneLineMixin):
                 if n > max_builds:
                     break
 
-        template = self.templates.get_template("buildslave.html");
+        template = req.site.buildbot_service.templates.get_template("buildslave.html");
         data = template.render(slave = self, 
                                current = current_builds, 
                                recent = recent_builds, 
@@ -101,7 +101,7 @@ class BuildSlavesResource(HtmlResource):
                     info['last_heard_from_time'] = time.strftime("%Y-%b-%d %H:%M:%S",
                                                                 time.localtime(last))
 
-        template = self.templates.get_template("buildslaves.html");
+        template = req.site.buildbot_service.templates.get_template("buildslaves.html");
         data = template.render(slaves=slaves)
         data += self.footer(req)
         return data

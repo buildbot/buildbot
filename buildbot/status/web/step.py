@@ -37,7 +37,7 @@ class StatusResourceBuildStep(HtmlResource):
             dict['end'] = ctime(end)
         start = ctime(start)
         
-        template = self.templates.get_template("buildstep.html");        
+        template = req.site.buildbot_service.templates.get_template("buildstep.html");        
         data = template.render(builder_link = path_to_builder(req, b.getBuilder()),
                                build_link = path_to_build(req, b),
                                b = b,

@@ -92,7 +92,7 @@ class StatusResourceBuilder(HtmlResource, OneLineMixin):
             cxt['ping_url'] = path_to_builder(req, b) + '/ping'
 
 
-        template = self.templates.get_template("builder.html")
+        template = req.site.buildbot_service.templates.get_template("builder.html")
         data = template.render(**cxt)
         data += self.footer(req)
         return data
@@ -265,7 +265,7 @@ class BuildersResource(HtmlResource):
             builders.append({'link' : req.childLink(urllib.quote(bname, safe='')),
                              'name' : bname})
                       
-        template = self.templates.get_template('builders.html')
+        template = req.site.buildbot_service.templates.get_template('builders.html')
         data = template.render(builders = builders)
         data += self.footer(req)
 
