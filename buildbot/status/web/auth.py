@@ -87,9 +87,6 @@ class AuthFailResource(HtmlResource):
     title = "Authentication Failed"
 
     def body(self, request):
-        data = ''
-        data += '<h1>Authentication Failed</h1>\n'
-        data += '<p>The username or password you entered were not correct.  Please go back and try again.</p>\n'
-
-        return data
-
+        template = request.site.buildbot_service.templates.get_template("authfail.html")
+        return template.render()
+    
