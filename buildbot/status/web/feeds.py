@@ -46,7 +46,7 @@ class XmlResource(resource.Resource):
         return data
 
     def header (self, request):
-        data = ('<?xml version="1.0" encoding="utf-8"?>\n')
+        data = ''
         return data
     def footer(self, request):
         data = ''
@@ -67,7 +67,7 @@ class FeedResource(XmlResource):
     description = 'Dummy rss'
     status = None
 
-    def __init__(self, status, categories=None, title=None):
+    def __init__(self, status, categories, title, id):
         self.status = status
         self.categories = categories
         self.title = title
@@ -79,6 +79,7 @@ class FeedResource(XmlResource):
         self.hostname = self.getEnv(['HOSTNAME', 'COMPUTERNAME'],
                                     'buildmaster')
         self.children = {}
+        self.id = id # template id
 
     def getEnv(self, keys, fallback):
         for key in keys:
@@ -233,17 +234,7 @@ class FeedResource(XmlResource):
 
         return data
 
-    def item(self, title='', link='', description='', pubDate=''):
-        """Generates xml for one item in the feed."""
-
-class Rss20StatusResource(FeedResource):
-    def __init__(self, status, categories=None, title=None):
-        FeedResource.__init__(self, status, categories, title)
-        contentType = 'application/rss+xml'
-
-    def header(self, request):
-        data = FeedResource.header(self, request)
-        
+    def header(self, request):        
         cxt = {}
         cxt['title'] = self.title if self.title else ('Build status of ' + self.projectName)
         cxt['link'] = self.link
@@ -251,16 +242,15 @@ class Rss20StatusResource(FeedResource):
         cxt['language'] = self.language
         cxt['description'] = self.description
         if self.pubdate is not None:
-            rfc822_pubdate = time.strftime("%a, %d %b %Y %H:%M:%S GMT",
+            cxt['rfc822_pubdate'] = time.strftime("%a, %d %b %Y %H:%M:%S GMT",
                                            self.pubdate)
-            cxt['rfc822_pubdate'] = rfc822_pubdate
+            cxt['rfc3339_pubdate'] = time.strftime("%Y-%m-%dT%H:%M:%SZ",
+                                                   self.pubdate)
 
         # store templates here as we don't have access to the request in item() 
         self.templates = request.site.buildbot_service.templates
-        template = self.templates.get_template('feed_rss20_header.xml')
-        data += template.render(**cxt)
-        
-        return data
+        template = self.templates.get_template('feed_%s_header.xml' % self.id)
+        return template.render(**cxt)
 
     def item(self, title='', link='', description='', lastlog='', pubDate=''):
         cxt = {}
@@ -271,9 +261,10 @@ class Rss20StatusResource(FeedResource):
             cxt['lastlog'] = re.sub(r'<br/>', "\n", lastlog)
 
         if pubDate is not None:
-            rfc822pubDate = time.strftime("%a, %d %b %Y %H:%M:%S GMT",
+            cxt['rfc822_pubdate'] = time.strftime("%a, %d %b %Y %H:%M:%S GMT",
                                           pubDate)
-            cxt['pub_date'] = rfc822pubDate
+            cxt['rfc3339_pubdate'] = time.strftime("%Y-%m-%dT%H:%M:%SZ",
+                                           pubDate)
             
             # Every RSS item must have a globally unique ID
             guid = ('tag:%s@%s,%s:%s' % (self.user, self.hostname,
@@ -282,50 +273,20 @@ class Rss20StatusResource(FeedResource):
                                                        pubDate)))
             cxt['guid'] = guid
 
-        template = self.templates.get_template('feed_rss20_item.xml')
+        template = self.templates.get_template('feed_%s_item.xml' % self.id)
         return template.render(**cxt)
-        
+
     def footer(self, request):
-        return self.templates.get_template('feed_rss20_footer.xml').render()
+        template = self.templates.get_template('feed_%s_footer.xml' % self.id)
+        return template.render()
+
+class Rss20StatusResource(FeedResource):
+    def __init__(self, status, categories=None, title=None):
+        FeedResource.__init__(self, status, categories, title, id='rss20')
+        contentType = 'application/rss+xml'
 
 class Atom10StatusResource(FeedResource):
     def __init__(self, status, categories=None, title=None):
-        FeedResource.__init__(self, status, categories, title)
+        FeedResource.__init__(self, status, categories, title, id='atom10')
         contentType = 'application/atom+xml'
 
-    def header(self, request):
-        data = FeedResource.header(self, request)
-        cxt = {}
-        cxt['link'] = self.link
-        cxt['title'] = self.title if self.title else 'Build status of ' + self.projectName
-        cxt['description'] = self.description
-        if self.pubdate is not None:
-            cxt['rfc3339_pubdate'] = time.strftime("%Y-%m-%dT%H:%M:%SZ",
-                                                   self.pubdate)
-
-        # allow item() to access templates
-        self.templates = request.site.buildbot_service.templates
-        template = self.templates.get_template('feed_atom10_header.xml')
-        data += template.render(**cxt)
-        return data
-
-    def item(self, title='', link='', description='', lastlog='', pubDate=''):
-
-        cxt = {'title': title, 'link': link }
-        
-        if (description is not None and lastlog is not None):
-            cxt['lastlog'] = re.sub(r'<br/>', "\n", lastlog)
-            cxt['description'] = description
-        if pubDate is not None:
-            cxt['rfc3339_pubdate'] = time.strftime("%Y-%m-%dT%H:%M:%SZ",
-                                           pubDate)
-            cxt['guid'] = ('tag:%s@%s,%s:%s' % (self.user, self.hostname,
-                                         time.strftime("%Y-%m-%d", pubDate),
-                                         time.strftime("%Y%m%d%H%M%S",
-                                                       pubDate)))
-        template = self.templates.get_template('feed_atom10_item.xml')        
-        return template.render(**cxt)
-
-    def footer(self, request):
-        template = self.templates.get_template('feed_atom10_footer.xml')        
-        return template.render()
