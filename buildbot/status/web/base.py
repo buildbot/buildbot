@@ -311,7 +311,7 @@ def abbreviate_age(age):
     return "a long time ago"
 
 
-class OneLineMixin:
+class BuildLineMixin:
     LINE_TIME_FORMAT = "%b %d %H:%M"
 
     def get_line_values(self, req, build, include_builder=True):

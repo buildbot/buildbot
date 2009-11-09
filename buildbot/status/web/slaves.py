@@ -4,11 +4,11 @@ from twisted.python import log
 from twisted.web import html
 from twisted.web.util import Redirect
 
-from buildbot.status.web.base import HtmlResource, abbreviate_age, OneLineMixin, path_to_slave
+from buildbot.status.web.base import HtmlResource, abbreviate_age, BuildLineMixin, path_to_slave
 from buildbot import version, util
 
 # /buildslaves/$slavename
-class OneBuildSlaveResource(HtmlResource, OneLineMixin):
+class OneBuildSlaveResource(HtmlResource, BuildLineMixin):
     addSlash = False
     def __init__(self, slavename):
         HtmlResource.__init__(self)

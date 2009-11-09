@@ -6,14 +6,14 @@ from twisted.web.util import Redirect
 import re, urllib, time
 from twisted.python import log
 from buildbot import interfaces
-from buildbot.status.web.base import HtmlResource, OneLineMixin, path_to_build, path_to_slave, path_to_builder
+from buildbot.status.web.base import HtmlResource, BuildLineMixin, path_to_build, path_to_slave, path_to_builder
 from buildbot.process.base import BuildRequest
 from buildbot.sourcestamp import SourceStamp
 
 from buildbot.status.web.build import BuildsResource, StatusResourceBuild
 
 # /builders/$builder
-class StatusResourceBuilder(HtmlResource, OneLineMixin):
+class StatusResourceBuilder(HtmlResource, BuildLineMixin):
     addSlash = True
 
     def __init__(self, builder_status, builder_control):
@@ -195,7 +195,7 @@ class StatusResourceBuilder(HtmlResource, OneLineMixin):
 
 
 # /builders/_all
-class StatusResourceAllBuilders(HtmlResource, OneLineMixin):
+class StatusResourceAllBuilders(HtmlResource, BuildLineMixin):
 
     def __init__(self, status, control):
         HtmlResource.__init__(self)

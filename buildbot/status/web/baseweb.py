@@ -11,7 +11,7 @@ from twisted.spread import pb
 from buildbot.interfaces import IControl, IStatusReceiver
 
 from buildbot.status.web.base import HtmlResource, Box, \
-     build_get_class, ICurrentBox, OneLineMixin, map_branches
+     build_get_class, ICurrentBox, BuildLineMixin, map_branches
 from buildbot.status.web.feeds import Rss20StatusResource, \
      Atom10StatusResource
 from buildbot.status.web.waterfall import WaterfallStatusResource
@@ -72,7 +72,7 @@ def getLastNBuilds(status, numbuilds, builders=[], branches=[]):
 
 # /one_line_per_build
 #  accepts builder=, branch=, numbuilds=
-class OneLinePerBuild(HtmlResource, OneLineMixin):
+class OneLinePerBuild(HtmlResource, BuildLineMixin):
     """This shows one line per build, combining all builders together. Useful
     query arguments:
 
@@ -139,7 +139,7 @@ class OneLinePerBuild(HtmlResource, OneLineMixin):
 # /one_line_per_build/$BUILDERNAME
 #  accepts branch=, numbuilds=
 
-class OneLinePerBuildOneBuilder(HtmlResource, OneLineMixin):
+class OneLinePerBuildOneBuilder(HtmlResource, BuildLineMixin):
     def __init__(self, builder, numbuilds=20):
         HtmlResource.__init__(self)
         self.builder = builder
