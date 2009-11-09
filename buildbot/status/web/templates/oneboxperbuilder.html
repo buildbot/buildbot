@@ -1,4 +1,6 @@
-<h2>Latest builds: {{ branches }}</h2>
+{% import 'forms.html' as forms %}
+
+<h1>Latest builds: {{ branches }}</h1>
 
 <table>
 {% for b in builders %}
@@ -16,6 +18,5 @@
 {% endfor %}
 </table>
 
-{{ stop_form }}
-
-{{ force_form }}
+{% if stop_url %}{{ forms.stop(stop_url, use_user_passwd, True, 'Builds') }}{% endif %}
+{% if force_url %}{{ forms.force_build(force_url, use_user_passwd, True) }}{% endif %}

@@ -56,7 +56,8 @@ class OneBuildSlaveResource(HtmlResource, OneLineMixin):
                     break
 
         template = req.site.buildbot_service.templates.get_template("buildslave.html");
-        data = template.render(slave = self, 
+        data = template.render(slave = s.getSlave(self.slavename),
+                               slavename = self.slavename,  
                                current = current_builds, 
                                recent = recent_builds, 
                                shutdown_url = req.childLink("shutdown"))

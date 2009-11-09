@@ -5,8 +5,8 @@ from twisted.internet import defer, reactor
 
 import urllib, time
 from twisted.python import log
-from buildbot.status.web.base import HtmlResource, make_row, make_stop_form, \
-     css_classes, path_to_builder, path_to_slave, make_name_user_passwd_form
+from buildbot.status.web.base import HtmlResource, \
+     css_classes, path_to_builder, path_to_slave
 
 from buildbot.status.web.step import StepsResource
 from buildbot import version, util
@@ -47,8 +47,7 @@ class StatusResourceBuild(HtmlResource):
                
             if self.build_control is not None:
                 cxt['stop_url'] = urllib.quote(req.childLink("stop")) 
-                cxt['is_using_user_passwd'] = self.isUsingUserPasswd(req)
-                # data += make_stop_form(stopURL, self.isUsingUserPasswd(req))
+                cxt['using_user_passwd'] = self.isUsingUserPasswd(req)
         else: 
             cxt['result_css'] = css_classes[b.getResults()]
             if b.getTestResults():
@@ -120,10 +119,8 @@ class StatusResourceBuild(HtmlResource):
         if cxt['resubmit']:               
             cxt['exactly'] = (ss.revision is not None) or b.getChanges()
             cxt['rebuild_url'] = urllib.quote(req.childLink("rebuild"))
-            cxt['name_user_passwd_form'] = make_name_user_passwd_form(self.isUsingUserPasswd(req))
-            cxt['reason_row'] = make_row("Reason for re-running build:",
-                                         "<input type='text' name='comments' />")
-            
+            cxt['using_user_passwd'] = self.isUsingUserPasswd(req)
+
         template = req.site.buildbot_service.templates.get_template("build.html")
         data = template.render(**cxt)
         data += self.footer(req)

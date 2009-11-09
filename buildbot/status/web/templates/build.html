@@ -1,3 +1,5 @@
+{% import 'forms.html' as forms %}
+
 <div class="title"><a href="{{ path_to_root }}">{{ project_name }}</a></div>
 
 <h1>
@@ -13,7 +15,7 @@ Build #{{ b.getNumber() }}
   {% endif %}
   
   {% if stop_url %} 
-    {{ stop_form(stop_url, is_using_user_passwd) }}
+    {{ forms.stop(stop_url, using_user_passwd, on_all=False) }}
   {% endif %}
 {% else %}
   <h2>Results</h2>
@@ -170,8 +172,11 @@ Build #{{ b.getNumber() }}
     {% endif %}
 
     <form action="{{ rebuild_url }}" class="command rebuild">      
-      {{ name_user_password_form }}
-      {{ reason_row }}
+      {{ forms.name_user_passwd(using_user_passwd) }}
+      <div class="row">
+        <span class="label">Reason for re-running build:</span>
+        <input type='text' name='comments' />
+      </div>       
       <input type="submit" value="Rebuild" />
     </form>
   {% endif %}

@@ -1,4 +1,5 @@
 {% from 'build_line.html' import build_line %}
+{% import 'forms.html' as forms %}
 
 <h1>Last {{ num_builds }} finished builds: {{ branches|join(', ') }}</h1>
 
@@ -16,5 +17,5 @@
 
 <p>{{ online_count }} builder(s) online.</p>
 
-{{ stop_form }}
-{{ force_build_form }}
+{% if stop_url %}{{ forms.stop(stop_url, use_user_passwd, True, 'Builds') }}{% endif %}
+{% if force_url %}{{ forms.force_build(force_url, use_user_passwd, True) }}{% endif %}

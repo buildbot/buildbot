@@ -1,4 +1,5 @@
 {% from 'build_line.html' import build_line %}
+{% import 'forms.html' as forms %}
 
 <a href="{{ path_to_root }}">{{ project_name }}</a>
 
@@ -55,7 +56,7 @@
 </ol>
 {% endfor %}
 
-{{ force_form }}
+{{ forms.force_build(force_url, use_user_passwd) }}
 
 {% if all_slaves_offline %}
   <p>All buildslaves appear to be offline, so it's not possible

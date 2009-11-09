@@ -11,8 +11,7 @@ from twisted.spread import pb
 from buildbot.interfaces import IControl, IStatusReceiver
 
 from buildbot.status.web.base import HtmlResource, Box, \
-     build_get_class, ICurrentBox, OneLineMixin, map_branches, \
-     make_stop_form, make_force_build_form
+     build_get_class, ICurrentBox, OneLineMixin, map_branches
 from buildbot.status.web.feeds import Rss20StatusResource, \
      Atom10StatusResource
 from buildbot.status.web.waterfall import WaterfallStatusResource
@@ -124,14 +123,11 @@ class OneLinePerBuild(HtmlResource, OneLineMixin):
                 online += 1
 
         if control is not None:
+            cxt['use_user_passwd'] = self.isUsingUserPasswd(req)
             if building:
-                stopURL = "builders/_all/stop"
-                cxt['stop_form'] = make_stop_form(stopURL, self.isUsingUserPasswd(req),
-                                       True, "Builds")
+                cxt['stop_url'] = "builders/_all/stop"
             if online:
-                forceURL = "builders/_all/force"
-                cxt['force_build_form'] = make_force_build_form(forceURL,
-                                              self.isUsingUserPasswd(req), True)
+                cxt['force_url'] = "builders/_all/force"
 
         template = req.site.buildbot_service.templates.get_template('onelineperbuild.html')
         data = template.render(**cxt)
@@ -229,16 +225,13 @@ class OneBoxPerBuilder(HtmlResource):
                 online += 1
             elif builder_status != "offline":
                 online += 1
-
+                
         if control is not None:
+            cxt['use_user_passwd'] = self.isUsingUserPasswd(req)
             if building:
-                stopURL = cxt['stop_url'] = "builders/_all/stop"
-                cxt['stop_form'] = make_stop_form(stopURL, self.isUsingUserPasswd(req),
-                                       True, "Builds")
+                cxt['stop_url'] = "builders/_all/stop"
             if online:
-                forceURL = cxt['force_url'] = "builders/_all/force"
-                cxt['force_form'] = make_force_build_form(forceURL,
-                                              self.isUsingUserPasswd(req), True)
+                cxt['force_url'] = "builders/_all/force"                
 
         template = req.site.buildbot_service.templates.get_template("oneboxperbuilder.html")
         data = template.render(**cxt)

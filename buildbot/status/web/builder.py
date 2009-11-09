@@ -6,8 +6,7 @@ from twisted.web.util import Redirect
 import re, urllib, time
 from twisted.python import log
 from buildbot import interfaces
-from buildbot.status.web.base import HtmlResource, make_row, \
-     make_force_build_form, OneLineMixin, path_to_build, path_to_slave, path_to_builder
+from buildbot.status.web.base import HtmlResource, OneLineMixin, path_to_build, path_to_slave, path_to_builder
 from buildbot.process.base import BuildRequest
 from buildbot.sourcestamp import SourceStamp
 
@@ -83,8 +82,8 @@ class StatusResourceBuilder(HtmlResource, OneLineMixin):
                 s['host'] = slave.getHost()
 
         if control is not None and connected_slaves:
-            force_url = cxt['force_url'] = path_to_builder(req, b) + '/force'
-            cxt['force_form'] = make_force_build_form(force_url, self.isUsingUserPasswd(req))
+            cxt['force_url'] = path_to_builder(req, b) + '/force'
+            cxt['use_user_passwd'] = self.isUsingUserPasswd(req)
         elif control is not None:
             cxt['all_slaves_offline'] = True
 

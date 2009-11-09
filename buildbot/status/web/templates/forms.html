@@ -1,0 +1,72 @@
+{% macro name_user_passwd(use_user_passwd) %}
+  <div class="row">
+    <span class="label">
+      {%- if use_user_passwd -%} 
+        Your username:
+      {%- else -%}
+        Your name:
+      {%- endif -%}
+    </span>
+    <input type="text" name="comments"/>
+  </div>
+  
+  {%- if use_user_passwd -%} 
+    <div class="row">
+      <span class="label">Your password:</span>
+      <input type="password" name="passwd"/>
+    </div>
+  {%- endif %}
+  
+{% endmacro %}
+
+{% macro stop(stop_url, use_user_passwd, on_all, label="Build") %}
+  <form action="{{ stop_url }}" class='command stopbuild'>
+  
+    {% if on_all %}
+      <p>To stop all builds, fill out the following fields and
+        push the 'Stop' button</p>
+    {% else %}
+      <p>To stop this build, fill out the following fields and
+        push the 'Stop' button</p>
+    {% endif %}
+    
+    {{ name_user_passwd(use_user_passwd) }}
+    
+    <div class="row">
+      <span class="label">Reason for stopping build:"</span>
+      <input type="text" name="comments"/>
+    </div>
+
+    <input type="submit" value="Stop {{ label }}" />
+  </form>
+{% endmacro %}
+
+{% macro force_build(force_url, use_user_passwd, on_all=False) %}
+ <form action="{{ force_url }}" class="command forcebuild">
+ 
+  {% if on_all %}
+     <p>To force a build on all Builders, fill out the following fields
+          and push the 'Force Build' button</p>
+  {% else %}
+     <p>To force a build, fill out the following fields and
+        push the 'Force Build' button</p>
+  {% endif %}
+  
+  {{ name_user_passwd(use_user_passwd) }}
+  
+  <div class="row">
+     <span class="label">Reason for build:</span>
+     <input type='text' name='comments' />
+  </div>
+  <div class="row">
+     <span class="label">Branch to build:</span>
+     <input type='text' name='branch' />
+  </div>
+  <div class="row">
+     <span class="label">Revision to build:</span>
+     <input type='text' name='revision' />
+  </div>
+  
+  <input type="submit" value="Force Build" /> 
+ </form>
+{% endmacro %}
