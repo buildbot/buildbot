@@ -7,35 +7,6 @@
 
 <body>
 
-<h1>Welcome to the Buildbot!</h1>
-
-<div class="menu">
-
-<ul>
-  <li>the <a href="waterfall">Waterfall Display</a> will give you a
-  time-oriented summary of recent buildbot activity.</li>
-
-  <li>the <a href="grid">Grid Display</a> will give you a
-  developer-oriented summary of recent buildbot activity.</li>
-
-  <li>the <a href="tgrid">Transposed Grid Display</a> presents
-  the same information as the grid, but lists the revisions down the side.</li>
-
-  <li>The <a href="one_box_per_builder">Latest Build</a> for each builder is
-  here.</li>
-
-  <li><a href="one_line_per_build">Recent Builds</a> are summarized here, one
-  per line.</li>
-
-  <li><a href="buildslaves">Buildslave</a> information</li>
-  <li><a href="changes">ChangeSource</a> information.</li>
-
-  <br />
-  <li><a href="about">About this Buildbot</a></li>
-</ul>
-
-</div>
-
 <div class="content">
 {% block content %}
 {% endblock %}
@@ -46,17 +17,17 @@
 <div class="footer">
 {% block footer %}
 
-<a href="{{ welcomeurl }}">Welcome Page</a>
+<a href="{{ home }}">Main Page</a>
 <br />
 
 <a href="http://buildbot.sourceforge.net/">Buildbot</a>-{{ version }}
 
 {% if projectName %}
   working for the
-  {% if projectURL %}
-    <a href="{{ projectURL }}>{{ projectName }}</a>
+  {% if project_url %}
+    <a href="{{ project_url }}>{{ project_name }}</a>
   {% else %}
-    {{ projectName }}
+    {{ project_name }}
   {% endif %}
   project
 {% endif %}

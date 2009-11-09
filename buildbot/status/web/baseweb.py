@@ -22,6 +22,7 @@ from buildbot.status.web.slaves import BuildSlavesResource
 from buildbot.status.web.xmlrpc import XMLRPCServer
 from buildbot.status.web.about import AboutBuildbot
 from buildbot.status.web.auth import IAuth, AuthFailResource
+from buildbot.status.web.root import RootPage
 import jinja2
 
 # this class contains the status services (WebStatus and the older Waterfall)
@@ -534,6 +535,7 @@ class WebStatus(service.MultiService):
             # populate this directory. Create the directory, though, since
             # otherwise we get internal server errors instead of 404s.
             os.mkdir(htmldir)
+            
         root = static.File(htmldir)
 
         for name, child_resource in self.childrenToBeAdded.iteritems():
