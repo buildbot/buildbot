@@ -19,7 +19,7 @@
   <content type="xhtml">
     <div xmlns="http://www.w3.org/1999/xhtml">
       {{ item_desc(b, project_url, project_name)|indent(6) }}
-      <pre xml:space="preserve">{{ b.lastlog|e|replace('\n', '<br/>') }}</pre>
+      <pre xml:space="preserve">{{ b.lastlog|e }}</pre>
     </div>      
    </content>
   {% if b.rfc3339_pubdate %}
