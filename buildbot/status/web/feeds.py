@@ -45,21 +45,6 @@ class XmlResource(resource.Resource):
             return ''
         return data
 
-    def header (self, request):
-        data = ''
-        return data
-    def footer(self, request):
-        data = ''
-        return data
-    def content(self, request):
-        data = self.docType
-        data += self.header(request)
-        data += self.body(request)
-        data += self.footer(request)
-        return data.encode( "utf-8" )
-    def body(self, request):
-        return ''
-
 class FeedResource(XmlResource):
     title = None
     link = 'http://dummylink'
@@ -67,7 +52,7 @@ class FeedResource(XmlResource):
     description = 'Dummy rss'
     status = None
 
-    def __init__(self, status, categories, title, id):
+    def __init__(self, status, categories = None, title = None):
         self.status = status
         self.categories = categories
         self.title = title
@@ -79,7 +64,6 @@ class FeedResource(XmlResource):
         self.hostname = self.getEnv(['HOSTNAME', 'COMPUTERNAME'],
                                     'buildmaster')
         self.children = {}
-        self.id = id # template id
 
     def getEnv(self, keys, fallback):
         for key in keys:
@@ -161,9 +145,10 @@ class FeedResource(XmlResource):
             builds = builds[:min(len(builds), maxFeeds)]
         return builds
 
-    def body (self, request):
-        data = ''
+    def content(self, request):
         builds = self.getBuilds(request)
+        
+        build_cxts = []
 
         for build in builds:
             start, finished = build.getTimes()
@@ -210,35 +195,40 @@ class FeedResource(XmlResource):
             lines = re.split('\n', lastlog)
             lastlog = ''
             for logline in lines[max(0, len(lines)-30):]:
-                lastlog = lastlog + logline + '<br/>'
-            lastlog = lastlog.replace('\n', '<br/>')
+                lastlog += logline + '\n'
+
+            bc = {}
+            bc['date'] = time.strftime("%a, %d %b %Y %H:%M:%S GMT", finishedTime)
+            bc['summary_link'] = ('%sbuilders/%s' %
+                                  (self.link,
+                                   build.getBuilder().getName()))            
+            bc['name'] = build.getBuilder().getName()
+            bc['number'] = build.getNumber()
+            bc['responsible_users'] = build.getResponsibleUsers()
+            bc['last_step'] = laststep            
+            bc['title'] = title
+            bc['link'] = link
+            bc['lastlog'] = lastlog
+    
+            if finishedTime is not None:
+                bc['rfc822_pubdate'] = time.strftime("%a, %d %b %Y %H:%M:%S GMT",
+                                              finishedTime)
+                bc['rfc3339_pubdate'] = time.strftime("%Y-%m-%dT%H:%M:%SZ",
+                                               finishedTime)
+                
+                # Every RSS/Atom item must have a globally unique ID
+                guid = ('tag:%s@%s,%s:%s' % (self.user, self.hostname,
+                                             time.strftime("%Y-%m-%d", finishedTime),
+                                             time.strftime("%Y%m%d%H%M%S", finishedTime)))
+                bc['guid'] = guid            
             
-            cxt = {}
-            cxt['date'] = time.strftime("%a, %d %b %Y %H:%M:%S GMT", finishedTime)
-            cxt['project_url'] = self.link
-            cxt['project_name'] = self.projectName
-            cxt['builder_summary_link'] = ('%sbuilders/%s' %
-                                           (self.link,
-                                            build.getBuilder().getName()))            
-            cxt['builder_name'] = build.getBuilder().getName()
-            cxt['build_url'] = link
-            cxt['build_number'] = build.getNumber()
-            cxt['responsible_users'] = build.getResponsibleUsers()
-            cxt['last_step'] = laststep
-            
-            template = request.site.buildbot_service.templates.get_template('feed_description.html')
-            description = template.render(**cxt)
+            build_cxts.append(bc)
 
-            data += self.item(title, description=description, lastlog=lastlog,
-                              link=link, pubDate=finishedTime)
-
-        return data
-
-    def header(self, request):        
         cxt = {}
+
         cxt['title'] = self.title if self.title else ('Build status of ' + self.projectName)
-        cxt['link'] = self.link
-        cxt['root_link'] = re.sub(r'/index.html', '', self.link)
+        cxt['project_url'] = self.link
+        cxt['project_name'] = self.projectName
         cxt['language'] = self.language
         cxt['description'] = self.description
         if self.pubdate is not None:
@@ -246,47 +236,22 @@ class FeedResource(XmlResource):
                                            self.pubdate)
             cxt['rfc3339_pubdate'] = time.strftime("%Y-%m-%dT%H:%M:%SZ",
                                                    self.pubdate)
-
-        # store templates here as we don't have access to the request in item() 
-        self.templates = request.site.buildbot_service.templates
-        template = self.templates.get_template('feed_%s_header.xml' % self.id)
-        return template.render(**cxt)
-
-    def item(self, title='', link='', description='', lastlog='', pubDate=''):
-        cxt = {}
-        cxt['title'] = title
-        cxt['link'] = link
-        if (description is not None and lastlog is not None):
-            cxt['description'] = description
-            cxt['lastlog'] = re.sub(r'<br/>', "\n", lastlog)
-
-        if pubDate is not None:
-            cxt['rfc822_pubdate'] = time.strftime("%a, %d %b %Y %H:%M:%S GMT",
-                                          pubDate)
-            cxt['rfc3339_pubdate'] = time.strftime("%Y-%m-%dT%H:%M:%SZ",
-                                           pubDate)
-            
-            # Every RSS item must have a globally unique ID
-            guid = ('tag:%s@%s,%s:%s' % (self.user, self.hostname,
-                                         time.strftime("%Y-%m-%d", pubDate),
-                                         time.strftime("%Y%m%d%H%M%S",
-                                                       pubDate)))
-            cxt['guid'] = guid
-
-        template = self.templates.get_template('feed_%s_item.xml' % self.id)
-        return template.render(**cxt)
-
-    def footer(self, request):
-        template = self.templates.get_template('feed_%s_footer.xml' % self.id)
-        return template.render()
+        
+        cxt['builds'] = build_cxts
+        template = request.site.buildbot_service.templates.get_template(self.template_file)
+        return template.render(**cxt).encode('utf-8').strip()
 
 class Rss20StatusResource(FeedResource):
+    # contentType = 'application/rss+xml' (browser dependent)
+    template_file = 'feed_rss20.xml'
+
     def __init__(self, status, categories=None, title=None):
-        FeedResource.__init__(self, status, categories, title, id='rss20')
-        contentType = 'application/rss+xml'
+        FeedResource.__init__(self, status, categories, title)
 
 class Atom10StatusResource(FeedResource):
+    # contentType = 'application/atom+xml' (browser dependent)
+    template_file = 'feed_atom10.xml'
+
     def __init__(self, status, categories=None, title=None):
-        FeedResource.__init__(self, status, categories, title, id='atom10')
-        contentType = 'application/atom+xml'
+        FeedResource.__init__(self, status, categories, title)
 

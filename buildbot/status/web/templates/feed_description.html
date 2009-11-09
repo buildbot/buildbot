@@ -1,9 +1,13 @@
+{% macro item_desc(b, project_url, project_name ) %}
 <p>
-Date: {{ date }}<br/>
-Project home: <a href="{{ project_url }}">{{ project_name }}</a><br/>
-Builder summary: <a href="{{ builder_summary_link }}">{{ builder_name }}</a><br/>
-Build details: <a href="{{ build_url }}">Build {{ build_number }}</a><br/>
-Author list: <b>{{ responsible_users|join(', ') }}</b><br/>
-Failed step: <b>{{ last_step }}</b><br/>
+  Date: {{ b.date }}<br/>
+  Project home: <a href="{{ project_url }}">{{ project_name }}</a><br/>
+  Builder summary: <a href="{{ b.summary_link }}">{{ b.name }}</a><br/>
+  Build details: <a href="{{ b.link }}">Build {{ b.number }}</a><br/>
+  Author list: <b>{{ b.responsible_users|join(', ') }}</b><br/>
+  Failed step: <b>{{ b.last_step }}</b><br/>
 </p>
-Last lines of the build log:<br/>
+<p><i>
+  Last lines of the build log:
+</i></p>
+{% endmacro %}
