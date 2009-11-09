@@ -1,9 +1,9 @@
-{% macro build_line(b) %}
+{% macro build_line(b, include_builder=False) %}
   <font size="-1">({{ b.time }})</font>
   Rev: {{ b.rev }}
   <span class="{{ b.class }}">{{ b.results }}</span>
   {% if include_builder %}
-    <a href="{{ b.builderurl }}">{{ b.builder_name }}}</a>
+    <a href="{{ b.builderurl }}">{{ b.builder_name }}</a>
   {% endif %}
   <a href="{{ b.buildurl }}">#{{ b.buildnum }}</a> - 
   {{ b.text|capitalize }}

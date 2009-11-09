@@ -1,3 +1,5 @@
+{% from 'build_line.html' import build_line %}
+
 <h1>Build Slave: {{ slavename }}</h1>
 
 {% if not slave.isConnected %}
@@ -10,23 +12,11 @@
   <p>Gracefully shutting down...</p>
 {% endif %}
 
-{% macro build(b, include_builder = True) -%}
-  <font size="-1">({{ b.time }})</font> 
-  rev=[{{ b.rev }}]
-  <span class="{{b.class}}">{{ b.results}}</span>
-  {% if include_builder %}
-    <a href="{{ b.builderurl }}">{{ b.builder_name }}</a>
-  {% endif %}
-  <a href="{{ b.buildurl }}">#{{ b.buildnum }}</a>
-  {{ b.text }}
-{%- endmacro %}
-
-
 {% if current %}
   <h2>Currently building:</h2>
   <ul>
   {% for b in current %}
-   <li>{{ build(b, True) }}</li>
+   <li>{{ build_line(b, True) }}</li>
   {% endfor %}
   </ul>
 {% else %}
@@ -36,7 +26,7 @@
 <h2>Recent builds</h2>
 <ul>
 {% for b in recent %}
-   <li>{{ build(b, True) }}</li>
+   <li>{{ build_line(b, True) }}</li>
 {% endfor %}
 </ul>
   
