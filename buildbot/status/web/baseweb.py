@@ -103,40 +103,38 @@ class OneLinePerBuild(HtmlResource, OneLineMixin):
         g = status.generateFinishedBuilds(builders, map_branches(branches),
                                           numbuilds, max_search=numbuilds)
 
-        data = ""
-
-        # really this is "up to %d builds"
-        data += "<h1>Last %d finished builds: %s</h1>\n" % \
-                (numbuilds, ", ".join(branches))
-        if builders:
-            data += ("<p>of builders: %s</p>\n" % (", ".join(builders)))
-        data += "<ul>\n"
+        cxt = {}
+        cxt['num_builds'] = numbuilds
+        cxt['branches'] =  branches
+        cxt['builders'] = builders
+        
         got = 0
         building = False
-        online = 0
+        online = cxt['online_count'] = 0
+
+        builders = cxt['builds'] = []
         for build in g:
             got += 1
-            data += " <li>" + self.make_line(req, build) + "</li>\n"
+            builders.append(self.get_line_values(req, build))
             builder_status = build.getBuilder().getState()[0]
             if builder_status == "building":
                 building = True
                 online += 1
             elif builder_status != "offline":
                 online += 1
-        if not got:
-            data += " <li>No matching builds found</li>\n"
-        data += "</ul>\n"
 
         if control is not None:
             if building:
                 stopURL = "builders/_all/stop"
-                data += make_stop_form(stopURL, self.isUsingUserPasswd(req),
+                cxt['stop_form'] = make_stop_form(stopURL, self.isUsingUserPasswd(req),
                                        True, "Builds")
             if online:
                 forceURL = "builders/_all/force"
-                data += make_force_build_form(forceURL,
+                cxt['force_build_form'] = make_force_build_form(forceURL,
                                               self.isUsingUserPasswd(req), True)
 
+        template = req.site.buildbot_service.templates.get_template('onelineperbuild.html')
+        data = template.render(**cxt)
         data += self.footer(req)
         return data
 
@@ -154,7 +152,6 @@ class OneLinePerBuildOneBuilder(HtmlResource, OneLineMixin):
         self.title = "Recent Builds of %s" % self.builder_name
 
     def body(self, req):
-        status = self.getStatus(req)
         numbuilds = int(req.args.get("numbuilds", [self.numbuilds])[0])
         branches = [b for b in req.args.get("branch", []) if b]
 
@@ -162,19 +159,15 @@ class OneLinePerBuildOneBuilder(HtmlResource, OneLineMixin):
         g = self.builder.generateFinishedBuilds(map_branches(branches),
                                                 numbuilds)
 
-        data = ""
-        data += ("<h1>Last %d builds of builder %s: %s</h1>\n" %
-                 (numbuilds, self.builder_name, ", ".join(branches)))
-        data += "<ul>\n"
-        got = 0
-        for build in g:
-            got += 1
-            data += " <li>" + self.make_line(req, build) + "</li>\n"
-        if not got:
-            data += " <li>No matching builds found</li>\n"
-        data += "</ul>\n"
-        data += self.footer(req)
+        builds = map(lambda b: self.get_line_values(req, b), g)
 
+        template = req.site.buildbot_service.templates.get_template('onelineperbuildonebuilder.html')
+        data = template.render(num_builds=numbuilds,
+                               builder_name=self.builder_name,
+                               branches=branches,
+                               builds=builds)
+
+        data += self.footer(req)
         return data
 
 # /one_box_per_builder

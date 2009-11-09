@@ -1,3 +1,5 @@
+{% from 'build_line.html' import build_line %}
+
 <a href="{{ path_to_root }}">{{ project_name }}</a>
 
 <h1>Builder: {{ name }}</h1>
@@ -26,7 +28,7 @@
 <h2>Recent Builds:</h2>
 <ul>
 {% for b in recent %}
-  <li>{{ b }}</li>
+  <li>{{ build_line(b) }}</li>
   {% if loop.first %}
     <br/>
   {% endif %}

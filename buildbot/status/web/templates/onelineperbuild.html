@@ -1,0 +1,20 @@
+{% from 'build_line.html' import build_line %}
+
+<h1>Last {{ num_builds }} finished builds: {{ branches|join(', ') }}</h1>
+
+{% if builders %}
+  <p>of builders: {{ builders|join(", ") }}</p>
+{% endif %}
+ 
+<ul>
+  {% for b in builds %}
+    <li>{{ build_line(b) }}</li>
+  {% else %}
+    <li>No matching builds found</li>
+  {% endfor %}
+</ul>
+
+<p>{{ online_count }} builder(s) online.</p>
+
+{{ stop_form }}
+{{ force_build_form }}

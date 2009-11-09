@@ -381,7 +381,7 @@ def abbreviate_age(age):
 class OneLineMixin:
     LINE_TIME_FORMAT = "%b %d %H:%M"
 
-    def get_line_values(self, req, build):
+    def get_line_values(self, req, build, include_builder=True):
         '''
         Collect the data needed for each line display
         '''
@@ -396,7 +396,7 @@ class OneLineMixin:
             rev = "??"
         rev = str(rev)
         if len(rev) > 40:
-            rev = "version is too-long"
+            rev = rev[0:40] + "..."
         root = self.path_to_root(req)
         css_class = css_classes.get(results, "")
         values = {'class': css_class,
@@ -409,25 +409,10 @@ class OneLineMixin:
                   'rev': rev,
                   'time': time.strftime(self.LINE_TIME_FORMAT,
                                         time.localtime(build.getTimes()[0])),
-                  'text': text,
+                  'text': text if type(text) == str else " ".join(text), 
+                  'include_builder': include_builder
                   }
         return values
-
-    def make_line(self, req, build, include_builder=True):
-        '''
-        Format and render a single line into HTML
-        '''
-        values = self.get_line_values(req, build)
-        fmt_pieces = ['<font size="-1">(%(time)s)</font>',
-                      'rev=[%(rev)s]',
-                      '<span class="%(class)s">%(results)s</span>',
-                      ]
-        if include_builder:
-            fmt_pieces.append('<a href="%(builderurl)s">%(builder_name)s</a>')
-        fmt_pieces.append('<a href="%(buildurl)s">#%(buildnum)d</a>:')
-        fmt_pieces.append('%(text)s')
-        data = " ".join(fmt_pieces) % values
-        return data
 
 def map_branches(branches):
     # when the query args say "trunk", present that to things like

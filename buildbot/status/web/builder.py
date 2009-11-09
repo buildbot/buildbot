@@ -68,7 +68,7 @@ class StatusResourceBuilder(HtmlResource, OneLineMixin):
         numbuilds = req.args.get('numbuilds', ['5'])[0]
         recent = cxt['recent'] = []
         for build in b.generateFinishedBuilds(num_builds=int(numbuilds)):
-            recent.append(self.make_line(req, build, False))
+            recent.append(self.get_line_values(req, build, False))
 
 
         sl = cxt['slaves'] = []
