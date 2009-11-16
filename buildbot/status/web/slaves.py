@@ -24,8 +24,9 @@ class OneBuildSlaveResource(HtmlResource, OneLineMixin):
             slave.setGraceful(True)
         return Redirect(path_to_slave(req, slave))
 
-    def body(self, req):
-        s = self.getStatus(req)
+    def content(self, request, ctx):
+        
+        s = self.getStatus(request)
         my_builders = []
         for bname in s.getBuilderNames():
             b = s.getBuilder(bname)
@@ -38,10 +39,10 @@ class OneBuildSlaveResource(HtmlResource, OneLineMixin):
         for b in my_builders:
             for cb in b.getCurrentBuilds():
                 if cb.getSlavename() == self.slavename:
-                    current_builds.append(self.get_line_values(req, cb))
+                    current_builds.append(self.get_line_values(request, cb))
         
         try:
-            max_builds = int(req.args.get('builds')[0])
+            max_builds = int(request.args.get('builds')[0])
         except:
             max_builds = 10
            
@@ -51,16 +52,15 @@ class OneBuildSlaveResource(HtmlResource, OneLineMixin):
         for rb in s.generateFinishedBuilds(builders=[b.getName() for b in my_builders]):
             if rb.getSlavename() == self.slavename:
                 n += 1
-                recent_builds.append(self.get_line_values(req, rb))
+                recent_builds.append(self.get_line_values(request, rb))
                 if n > max_builds:
                     break
 
-        template = self.templates.get_template("buildslave.html");
+        template = request.site.buildbot_service.templates.get_template("buildslave.html")
         data = template.render(slave = self, 
                                current = current_builds, 
                                recent = recent_builds, 
-                               shutdown_url = req.childLink("shutdown"))
-        data += self.footer(req)
+                               shutdown_url = request.childLink("shutdown"))
         return data
 
 # /buildslaves
@@ -68,8 +68,8 @@ class BuildSlavesResource(HtmlResource):
     title = "BuildSlaves"
     addSlash = True
 
-    def body(self, req):
-        s = self.getStatus(req)
+    def content(self, request, ctx):
+        s = self.getStatus(request)
 
         used_by_builder = {}
         for bname in s.getBuilderNames():
@@ -87,9 +87,9 @@ class BuildSlavesResource(HtmlResource):
             slave = s.getSlave(name)
             slave_status = s.botmaster.slaves[name].slave_status
             info['running_builds'] = len(slave_status.getRunningBuilds())
-            info['link'] = req.childLink(urllib.quote(name,''))
+            info['link'] = request.childLink(urllib.quote(name,''))
             info['name'] = name
-            info['builders'] = [{'link': req.childLink("../builders/%s" % bname), 'name': bname}
+            info['builders'] = [{'link': request.childLink("../builders/%s" % bname), 'name': bname}
                                 for bname in used_by_builder.get(name, [])]
             info['connected'] = slave.isConnected()
             
@@ -101,9 +101,8 @@ class BuildSlavesResource(HtmlResource):
                     info['last_heard_from_time'] = time.strftime("%Y-%b-%d %H:%M:%S",
                                                                 time.localtime(last))
 
-        template = self.templates.get_template("buildslaves.html");
+        template = request.site.buildbot_service.templates.get_template("buildslaves.html")
         data = template.render(slaves=slaves)
-        data += self.footer(req)
         return data
 
     def getChild(self, path, req):
