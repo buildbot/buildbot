@@ -4,18 +4,21 @@
 {%- endblock %}
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
+    {%- block head %}
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     {{ metatags }}
     <title>{{ title }}</title>
-    <link rel="stylesheet" href="buildbot.css" type="text/css" />
+    <link rel="stylesheet" href="{{ stylesheet }}" type="text/css" />
+    {% endblock %}
   </head>
   <body>
-    {%- block header %} {% endblock %}
+    {%- block header %}
+    <div class="header">
+    </div>
+    {% endblock %}
     {%- block content %} {% endblock %}
     {%- block footer %} 
     <div class="footer">
-      <a href="{{home}}">Welcome Page</a>
-      <br />
       <a href="http://buildbot.net/">Buildbot</a> {{version}}
       {% if project_name %}
         working for the
