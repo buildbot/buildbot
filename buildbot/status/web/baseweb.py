@@ -12,7 +12,7 @@ from buildbot.interfaces import IControl, IStatusReceiver
 
 from buildbot.status.web.base import HtmlResource, Box, \
      build_get_class, ICurrentBox, OneLineMixin, map_branches, \
-     make_stop_form, make_force_build_form
+     make_stop_form, make_force_build_form, StaticFile
 from buildbot.status.web.feeds import Rss20StatusResource, \
      Atom10StatusResource
 from buildbot.status.web.waterfall import WaterfallStatusResource
@@ -548,7 +548,7 @@ class WebStatus(service.MultiService):
             # populate this directory. Create the directory, though, since
             # otherwise we get internal server errors instead of 404s.
             os.mkdir(htmldir)
-        root = static.File(htmldir)
+        root = StaticFile(htmldir)
 
         for name, child_resource in self.childrenToBeAdded.iteritems():
             root.putChild(name, child_resource)

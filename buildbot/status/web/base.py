@@ -1,11 +1,11 @@
 
 import urlparse, urllib, time
 from zope.interface import Interface
-from twisted.web import html, resource
+from twisted.web import html, resource, static
 from buildbot.status import builder
 from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE, SKIPPED, EXCEPTION
 from buildbot import version, util
-import sys, os
+import sys, os, cgi
 
 class ITopBox(Interface):
     """I represent a box in the top row of the waterfall display: the one
@@ -260,7 +260,7 @@ class HtmlResource(resource.Resource):
         status = self.getStatus(request)
         ctx = dict(project_url = status.getProjectURL(),
                    project_name = status.getProjectName(),
-                   home = self.path_to_root(request) + "index.html",
+                   stylesheet = self.path_to_root(request) + 'buildbot.css',
                    version = version,
                    time = time.strftime("%a %d %b %Y %H:%M:%S",
                                         time.localtime(util.now())))
@@ -351,6 +351,52 @@ class StaticHTML(HtmlResource):
         self.title = title
     def body(self, request):
         return self.bodyHTML
+
+class DirectoryLister(static.DirectoryLister):
+    """This variant of the static.DirectoryLister uses a template
+    for rendering."""
+
+    def render(self, request):
+
+        status = request.site.buildbot_service.getStatus()
+
+        cxt = dict(project_url = status.getProjectURL(),
+                   project_name = status.getProjectName(),
+                   stylesheet = path_to_root(request) + 'buildbot.css',
+                   version = version,
+                   time = time.strftime("%a %d %b %Y %H:%M:%S",
+                                        time.localtime(util.now())))
+
+
+        if self.dirs is None:
+            directory = os.listdir(self.path)
+            directory.sort()
+        else:
+            directory = self.dirs
+
+        dirs, files = self._getFilesAndDirectories(directory)
+
+        cxt['path'] = cgi.escape(urllib.unquote(request.uri))
+        cxt['directories'] = dirs
+        cxt['files'] = files
+        template = request.site.buildbot_service.templates.get_template("directory.html")
+        data = template.render(**cxt)
+        if isinstance(data, unicode):
+            data = data.encode("utf-8")
+        return data
+        
+
+class StaticFile(static.File):
+    """This class adds support for templated directory
+    views."""
+
+    def directoryListing(self):
+        return DirectoryLister(self.path,
+                               self.listNames(),
+                               self.contentTypes,
+                               self.contentEncodings,
+                               self.defaultType)
+        
 
 MINUTE = 60
 HOUR = 60*MINUTE

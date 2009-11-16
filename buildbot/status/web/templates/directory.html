@@ -1,0 +1,32 @@
+{% extends "layout.html" %}
+{% block head %}
+  {{ super() }}
+  <style type="text/css">
+    .even { background-color: #eeeeee}
+    .odd { background-color: #dedede}
+  </style>
+{% endblock %}
+
+{% block content %}
+<h1>Directory listing for {{ path }}</h1>
+{% set row_class = cycler('odd', 'even') %}
+<table>
+{% for d in directories %}  
+  <tr class="directory {{ row_class.next() }}">
+    <td><a href="{{d['href']}}">{{d['text']}}</a></td>
+    <td>{{d['size']}}</td>
+    <td>{{d['type']}}</td>
+    <td>{{d['encoding']}}</td>
+  </tr>
+{% endfor %}
+{% for f in files %}
+  <tr class="file {{ row_class.next() }}">
+    <td><a href="{{f['href']}}">{{f['text']}}</a></td>
+    <td>{{f['size']}}</td>
+    <td>{{f['type']}}</td>
+    <td>{{f['encoding']}}</td>
+  </tr>
+</table>
+{% endfor %}
+
+{% endblock %}
