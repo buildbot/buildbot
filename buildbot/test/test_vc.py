@@ -567,6 +567,9 @@ class VCBase(SignalMixin):
         self.failUnlessEqual(bs.getProperty("branch"), None)
         self.checkGotRevisionIsLatest(bs)
 
+        # Check that we can handle unfriendly permissions.
+        os.chmod(os.path.join(self.workdir, "subdir"), 0)
+        # Check that clobber really clobbers any old stuff.
         self.touch(self.workdir, "newfile")
         self.shouldExist(self.workdir, "newfile")
         d = self.doBuild() # rebuild clobbers workdir

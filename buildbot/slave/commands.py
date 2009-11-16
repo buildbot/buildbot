@@ -1573,7 +1573,7 @@ class SourceBase(Command):
                 return d
         return res
 
-    def doClobber(self, dummy, dirname):
+    def doClobber(self, dummy, dirname, chmodDone=False):
         # TODO: remove the old tree in the background
 ##         workdir = os.path.join(self.builder.basedir, self.workdir)
 ##         deaddir = self.workdir + ".deleting"
@@ -1608,7 +1608,29 @@ class SourceBase(Command):
         # master, but not the rc=0 when it finishes. That job is left to
         # _sendRC
         d = c.start()
+        # The rm -rf may fail if there is a left-over subdir with chmod 000
+        # permissions. So if we get a failure, we attempt to chmod suitable
+        # permissions and re-try the rm -rf.
+        if chmodDone:
+            d.addCallback(self._abandonOnFailure)
+        else:
+            d.addCallback(lambda rc: self.doClobberTryChmodIfFail(rc, dirname))
+        return d
+
+    def doClobberTryChmodIfFail(self, rc, dirname):
+        assert isinstance(rc, int)
+        if rc == 0:
+            return defer.succeed(0)
+        # Attempt a recursive chmod and re-try the rm -rf after.
+        command = ["chmod", "-R", "u+rwx", os.path.join(self.builder.basedir, dirname)]
+        c = ShellCommand(self.builder, command, self.builder.basedir,
+                         sendRC=0, timeout=self.timeout, maxTime=self.maxTime,
+                         usePTY=False)
+
+        self.command = c
+        d = c.start()
         d.addCallback(self._abandonOnFailure)
+        d.addCallback(lambda dummy: self.doClobber(dummy, dirname, True))
         return d
 
     def doCopy(self, res):
