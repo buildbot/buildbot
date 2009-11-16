@@ -1747,6 +1747,7 @@ class BuildExpectation(unittest.TestCase):
             Builder.__init__(self, {
                     'name': name,
                     'builddir': '/tmp/somewhere',
+                    'slavebuilddir': '/tmp/somewhere_else',
                     'factory': 'aFactory'
                     }, BuildExpectation.MyBuilderStatus())
 
