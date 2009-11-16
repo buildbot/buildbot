@@ -1,3 +1,10 @@
+{% extends "layout.html" %}
+{% block head %}
+  {{ super() }}
+  <meta http-equiv="refresh" content="{{refresh}}"/>
+{% endblock %}
+
+{% block content %}
 <table border="0" cellspacing="0">
 
 {% if projectName and projectURL %}
@@ -55,4 +62,4 @@
  <a href="{{ no_reload_page }}">Stop Reloading</a> 
 {% endif %}
 
-<br/>
+{% endblock %}

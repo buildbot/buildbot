@@ -1,6 +1,9 @@
 {% from 'build_line.html' import build_line %}
 {% import 'forms.html' as forms %}
 
+{% extends "layout.html" %}
+{% block content %}
+
 <a href="{{ path_to_root }}">{{ project_name }}</a>
 
 <h1>Builder: {{ name }}</h1>
@@ -70,3 +73,4 @@
   </form>
 {% endif %}
 
+{% endblock %}

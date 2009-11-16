@@ -300,20 +300,10 @@ class WaterfallStatusResource(HtmlResource):
                 pass
         return None
 
-    def head(self, request):
-        head = ''
-        reload_time = self.get_reload_time(request)
-        if reload_time is not None:
-            head += '<meta http-equiv="refresh" content="%d">\n' % reload_time
-        return head
-
-    def body(self, request):
-        "This method builds the main waterfall display."
+    def content(self, request, ctx):
 
         status = self.getStatus(request)
-
-        projectName = status.getProjectName()
-        projectURL = status.getProjectURL()
+        ctx['refresh'] = self.get_reload_time(request)
 
         # we start with all Builders available to this Waterfall: this is
         # limited by the config-file -time categories= argument, and defaults
@@ -341,14 +331,10 @@ class WaterfallStatusResource(HtmlResource):
                       self.buildGrid(request, builders)            
             
         # start the table: top-header material
-        cxt = { 'projectName': projectName,
-                'projectURL': projectURL,
-                'builders': builders } 
-
-        cxt['TZ'] = time.tzname[time.localtime()[-1]]
-        cxt['changesURL'] = request.childLink("../changes")
+        ctx['timezone'] = time.tzname[time.localtime()[-1]]
+        ctx['changesURL'] = request.childLink("../changes")
         
-        bn = cxt['builders'] = []
+        bn = ctx['builders'] = []
                 
         for name in builderNames:
             builder = status.getBuilder(name)
@@ -362,7 +348,7 @@ class WaterfallStatusResource(HtmlResource):
                        'status_class': current_box.class_,                       
                         })
 
-        cxt['waterfall'] = self.phase2(request, changeNames + builderNames, timestamps, eventGrid,
+        ctx['waterfall'] = self.phase2(request, changeNames + builderNames, timestamps, eventGrid,
                   sourceEvents)
 
         def with_args(req, remove_args=[], new_args=[], new_path=None):
@@ -393,20 +379,18 @@ class WaterfallStatusResource(HtmlResource):
 
         if timestamps:
             bottom = timestamps[-1]
-            cxt['nexpage'] = with_args(request, ["last_time"],
+            ctx['nexpage'] = with_args(request, ["last_time"],
                                  [("last_time", str(int(bottom)))])
 
 
         helpurl = self.path_to_root(request) + "waterfall/help"
-        cxt['helppage'] = with_args(request, new_path=helpurl)
-        cxt['welcomeurl'] = self.path_to_root(request) + "index.html"
+        ctx['helppage'] = with_args(request, new_path=helpurl)
 
         if self.get_reload_time(request) is not None:
-            cxt['no_reload_page'] = with_args(request, remove_args=["reload"])
+            ctx['no_reload_page'] = with_args(request, remove_args=["reload"])
 
         template = request.site.buildbot_service.templates.get_template("waterfall.html")
-        data = template.render(**cxt)
-        data += self.footer(request)
+        data = template.render(**ctx)
         return data
     
     def buildGrid(self, request, builders):

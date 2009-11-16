@@ -24,7 +24,7 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
     def getTitle(self, request):
         return "Buildbot: %s" % html.escape(self.builder_status.getName())
 
-    def build_line(self, build, req):
+    def builder(self, build, req):
         b = {}
 
         b['num'] = build.getNumber()
@@ -47,7 +47,7 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
 
         return b
 
-    def body(self, req):
+    def content(self, req, cxt):
         b = self.builder_status
         control = self.builder_control
         status = self.getStatus(req)
@@ -55,20 +55,11 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
         slaves = b.getSlaves()
         connected_slaves = [s for s in slaves if s.isConnected()]
 
-        projectName = status.getProjectName()
-        
-        cxt = {}
-        cxt['path_to_root'] = self.path_to_root(req)
-        cxt['project_name'] = projectName        
-        cxt['name'] = b.getName()
-
-        cxt['current'] = map(lambda x: self.build_line(x, req), b.getCurrentBuilds())            
-
+        cxt['current'] = [self.builder(x, req) for x in b.getCurrentBuilds()]
         numbuilds = req.args.get('numbuilds', ['5'])[0]
         recent = cxt['recent'] = []
         for build in b.generateFinishedBuilds(num_builds=int(numbuilds)):
             recent.append(self.get_line_values(req, build, False))
-
 
         sl = cxt['slaves'] = []
         for slave in slaves:
@@ -92,9 +83,7 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
 
 
         template = req.site.buildbot_service.templates.get_template("builder.html")
-        data = template.render(**cxt)
-        data += self.footer(req)
-        return data
+        return template.render(**cxt)
 
     def force(self, req):
         """
@@ -252,23 +241,16 @@ class BuildersResource(HtmlResource):
     title = "Builders"
     addSlash = True
 
-    def body(self, req):
+    def content(self, req, ctx):
         s = self.getStatus(req)
 
-        # TODO: this is really basic. It should be expanded to include a
-        # brief one-line summary of the builder (perhaps with whatever the
-        # builder is currently doing)
-
-        builders = []
+        ctx['builders'] = builders = []
         for bname in s.getBuilderNames():
             builders.append({'link' : req.childLink(urllib.quote(bname, safe='')),
                              'name' : bname})
                       
         template = req.site.buildbot_service.templates.get_template('builders.html')
-        data = template.render(builders = builders)
-        data += self.footer(req)
-
-        return data
+        return template.render(ctx)
 
     def getChild(self, path, req):
         s = self.getStatus(req)

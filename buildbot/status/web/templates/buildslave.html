@@ -1,5 +1,7 @@
 {% from 'build_line.html' import build_line %}
 
+{% extends "layout.html" %}
+{% block content %}
 <h1>Build Slave: {{ slavename }}</h1>
 
 {% if not slave.isConnected %}
@@ -30,3 +32,4 @@
 {% endfor %}
 </ul>
   
+{% endblock %}
