@@ -196,7 +196,7 @@ class GridStatusResource(HtmlResource, GridStatusMixin):
         data += '<tr>\n'
         data += '<td class="title"><a href="%s">%s</a>' % (projectURL, projectName)
         if categories:
-            html_categories = map(html.escape(categories))
+            html_categories = map(html.escape, categories)
             if len(categories) > 1:
                 data += '\n<br /><b>Categories:</b><br/>%s' % ('<br/>'.join(html_categories))
             else:
@@ -292,7 +292,7 @@ class TransposedGridStatusResource(HtmlResource, GridStatusMixin):
         data += '<tr>\n'
         data += '<td class="title"><a href="%s">%s</a>' % (projectURL, projectName)
         if categories:
-            html_categories = map(html.escape(categories))
+            html_categories = map(html.escape, categories)
             if len(categories) > 1:
                 data += '\n<br /><b>Categories:</b><br/>%s' % ('<br/>'.join(html_categories))
             else:
