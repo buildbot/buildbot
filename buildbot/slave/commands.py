@@ -1469,6 +1469,11 @@ class SourceBase(Command):
             return False
         return True
 
+    def sourcedirIsPatched(self):
+        return os.path.exists(os.path.join(self.builder.basedir,
+                                           self.srcdir,
+                                           ".buildbot-patched"))
+
     def _handleGotRevision(self, res):
         d = defer.maybeDeferred(self.parseGotRevision)
         d.addCallback(lambda got_revision:
@@ -1496,12 +1501,15 @@ class SourceBase(Command):
         return res
 
     def sourcedirIsUpdateable(self):
+        """Returns True if the tree can be updated."""
         raise NotImplementedError("this must be implemented in a subclass")
 
     def doVCUpdate(self):
+        """Returns a deferred with the steps to update a checkout."""
         raise NotImplementedError("this must be implemented in a subclass")
 
     def doVCFull(self):
+        """Returns a deferred with the steps to do a fresh checkout."""
         raise NotImplementedError("this must be implemented in a subclass")
 
     def maybeDoVCFallback(self, rc):
@@ -1688,11 +1696,9 @@ class CVS(SourceBase):
                                             self.branch)
 
     def sourcedirIsUpdateable(self):
-        if os.path.exists(os.path.join(self.builder.basedir,
-                                       self.srcdir, ".buildbot-patched")):
-            return False
-        return os.path.isdir(os.path.join(self.builder.basedir,
-                                          self.srcdir, "CVS"))
+        return (not self.sourcedirIsPatched() and
+                os.path.isdir(os.path.join(self.builder.basedir,
+                                           self.srcdir, "CVS")))
 
     def start(self):
         if self.login is not None:
@@ -1746,7 +1752,7 @@ class CVS(SourceBase):
         if self.revision:
             command += ['-D', self.revision]
         command += [self.cvsmodule]
-        
+
         c = ShellCommand(self.builder, command, d,
                          sendRC=False, timeout=self.timeout,
                          maxTime=self.maxTime, usePTY=False)
@@ -1788,11 +1794,9 @@ class SVN(SourceBase):
             self.svn_args.extend(args['extra_args'])
 
     def sourcedirIsUpdateable(self):
-        if os.path.exists(os.path.join(self.builder.basedir,
-                                       self.srcdir, ".buildbot-patched")):
-            return False
-        return os.path.isdir(os.path.join(self.builder.basedir,
-                                          self.srcdir, ".svn"))
+        return (not self.sourcedirIsPatched() and
+                os.path.isfile(os.path.join(self.builder.basedir,
+                                            self.srcdir, ".svn", "format")))
 
     def doVCUpdate(self):
         revision = self.args['revision'] or 'HEAD'
@@ -1890,14 +1894,11 @@ class Darcs(SourceBase):
         self.revision = self.args.get('revision')
 
     def sourcedirIsUpdateable(self):
-        if os.path.exists(os.path.join(self.builder.basedir,
-                                       self.srcdir, ".buildbot-patched")):
-            return False
-        if self.revision:
-            # checking out a specific revision requires a full 'darcs get'
-            return False
-        return os.path.isdir(os.path.join(self.builder.basedir,
-                                          self.srcdir, "_darcs"))
+        # checking out a specific revision requires a full 'darcs get'
+        return (not self.revision and
+                not self.sourcedirIsPatched() and
+                os.path.isdir(os.path.join(self.builder.basedir,
+                                           self.srcdir, "_darcs")))
 
     def doVCUpdate(self):
         assert not self.revision
@@ -1985,11 +1986,9 @@ class Monotone(SourceBase):
 
     def sourcedirIsUpdateable(self):
         self._makefulls()
-        if os.path.exists(os.path.join(self.full_srcdir,
-                                       ".buildbot_patched")):
-            return False
-        return (os.path.isfile(self.full_db_path)
-                and os.path.isdir(os.path.join(self.full_srcdir, "MT")))
+        return (not self.sourcedirIsPatched() and
+                os.path.isfile(self.full_db_path) and
+                os.path.isdir(os.path.join(self.full_srcdir, "MT")))
 
     def doVCUpdate(self):
         return self._withFreshDb(self._doUpdate)
@@ -2217,18 +2216,15 @@ class Arch(SourceBase):
                                             self.buildconfig)
 
     def sourcedirIsUpdateable(self):
-        if self.revision:
-            # Arch cannot roll a directory backwards, so if they ask for a
-            # specific revision, clobber the directory. Technically this
-            # could be limited to the cases where the requested revision is
-            # later than our current one, but it's too hard to extract the
-            # current revision from the tree.
-            return False
-        if os.path.exists(os.path.join(self.builder.basedir,
-                                       self.srcdir, ".buildbot-patched")):
-            return False
-        return os.path.isdir(os.path.join(self.builder.basedir,
-                                          self.srcdir, "{arch}"))
+        # Arch cannot roll a directory backwards, so if they ask for a
+        # specific revision, clobber the directory. Technically this
+        # could be limited to the cases where the requested revision is
+        # later than our current one, but it's too hard to extract the
+        # current revision from the tree.
+        return (not self.revision and
+                not self.sourcedirIsPatched() and
+                os.path.isdir(os.path.join(self.builder.basedir,
+                                           self.srcdir, "{arch}")))
 
     def doVCUpdate(self):
         # update: possible for mode in ('copy', 'update')
@@ -2407,14 +2403,11 @@ class Bzr(SourceBase):
         self.forceSharedRepo = args.get('forceSharedRepo')
 
     def sourcedirIsUpdateable(self):
-        if os.path.exists(os.path.join(self.builder.basedir,
-                                       self.srcdir, ".buildbot-patched")):
-            return False
-        if self.revision:
-            # checking out a specific revision requires a full 'bzr checkout'
-            return False
-        return os.path.isdir(os.path.join(self.builder.basedir,
-                                          self.srcdir, ".bzr"))
+        # checking out a specific revision requires a full 'bzr checkout'
+        return (not self.revision and
+                not self.sourcedirIsPatched() and
+                os.path.isdir(os.path.join(self.builder.basedir,
+                                           self.srcdir, ".bzr")))
 
     def start(self):
         def cont(res):
@@ -2879,14 +2872,12 @@ class P4(P4Base):
 
 
     def sourcedirIsUpdateable(self):
-        if os.path.exists(os.path.join(self.builder.basedir,
-                                       self.srcdir, ".buildbot-patched")):
-            return False
         # We assume our client spec is still around.
         # We just say we aren't updateable if the dir doesn't exist so we
         # don't get ENOENT checking the sourcedata.
-        return os.path.isdir(os.path.join(self.builder.basedir,
-                                          self.srcdir))
+        return (not self.sourcedirIsPatched() and
+                os.path.isdir(os.path.join(self.builder.basedir,
+                                           self.srcdir)))
 
     def doVCUpdate(self):
         return self._doP4Sync(force=False)
