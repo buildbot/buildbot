@@ -46,15 +46,22 @@ class StatusResourceBuildStep(HtmlResource):
             data += "</ul>\n"
 
         (start, end) = s.getTimes()
+        if not start:
+            start_text = end_text = elapsed = "Not Started"
+        else:
+            start_text = ctime(start)
+            if end:
+                end_text = ctime(end)
+                elapsed = util.formatInterval(end - start)
+            else:
+                end_text = "Not Finished"
+                elapsed = util.formatInterval(util.now() - start)
+
         data += "<h2>Timing</h2>\n"
         data += "<table>\n"
-        data += "<tr><td>Start</td><td>%s</td></tr>\n" % ctime(start)
-        if end:
-            data += "<tr><td>End</td><td>%s</td></tr>\n" % ctime(end)
-            data += "<tr><td>Elapsed</td><td>%s</td></tr>\n" % util.formatInterval(end - start)
-        else:
-            now = util.now()
-            data += "<tr><td>Elapsed</td><td>%s</td></tr>\n" % util.formatInterval(now - start)
+        data += "<tr><td>Start</td><td>%s</td></tr>\n" % start_text
+        data += "<tr><td>End</td><td>%s</td></tr>\n" % end_text
+        data += "<tr><td>Elapsed</td><td>%s</td></tr>\n" % elapsed
         data += "</table>\n"
 
         logs = s.getLogs()
