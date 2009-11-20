@@ -1471,7 +1471,7 @@ class SourceBase(Command):
 
     def sourcedirIsPatched(self):
         return os.path.exists(os.path.join(self.builder.basedir,
-                                           self.srcdir,
+                                           self.workdir,
                                            ".buildbot-patched"))
 
     def _handleGotRevision(self, res):
@@ -1649,7 +1649,9 @@ class SourceBase(Command):
         ]
         dir = os.path.join(self.builder.basedir, self.workdir)
         # mark the directory so we don't try to update it later
-        open(os.path.join(dir, ".buildbot-patched"), "w").write("patched\n")
+        marker = open(os.path.join(dir, ".buildbot-patched"), "w")
+        marker.write("patched\n")
+        marker.close()
 
         # Update 'dir' with the 'root' option. Make sure it is a subdirectory
         # of dir.
@@ -2671,8 +2673,7 @@ class Mercurial(SourceBase):
                 msg = "Fresh hg repo, don't worry about in-repo branch name"
                 log.msg(msg)
 
-            elif os.path.exists(os.path.join(self.builder.basedir,
-                                             self.srcdir, ".buildbot-patched")):
+            elif self.sourcedirIsPatched():
                 self.clobber = self._purge
 
             elif self.update_branch != current_branch:
