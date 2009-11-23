@@ -417,9 +417,11 @@ class WaterfallStatusResource(HtmlResource):
     """This builds the main status page, with the waterfall display, and
     all child pages."""
 
-    def __init__(self, categories=None):
+    def __init__(self, categories=None, num_events=200, num_events_max=None):
         HtmlResource.__init__(self)
         self.categories = categories
+        self.num_events=num_events
+        self.num_events_max=num_events_max
         self.putChild("help", WaterfallHelp(categories))
 
     def getTitle(self, request):
@@ -699,7 +701,11 @@ class WaterfallStatusResource(HtmlResource):
         else:
             minTime = None
         spanLength = 10  # ten-second chunks
-        maxPageLen = int(request.args.get("num_events", [200])[0])
+        req_events=int(request.args.get("num_events", [self.num_events])[0])
+        if self.num_events_max and req_events > self.num_events_max:
+            maxPageLen = self.num_events_max
+        else:
+            maxPageLen = req_events
 
         # first step is to walk backwards in time, asking each column
         # (commit, all builders) if they have any events there. Build up the
