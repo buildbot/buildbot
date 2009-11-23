@@ -196,7 +196,7 @@ class GridStatusResource(HtmlResource, GridStatusMixin):
         data += '<tr>\n'
         data += '<td class="title"><a href="%s">%s</a>' % (projectURL, projectName)
         if categories:
-            html_categories = map(html.escape(categories))
+            html_categories = map(html.escape, categories)
             if len(categories) > 1:
                 data += '\n<br /><b>Categories:</b><br/>%s' % ('<br/>'.join(html_categories))
             else:
@@ -292,7 +292,7 @@ class TransposedGridStatusResource(HtmlResource, GridStatusMixin):
         data += '<tr>\n'
         data += '<td class="title"><a href="%s">%s</a>' % (projectURL, projectName)
         if categories:
-            html_categories = map(html.escape(categories))
+            html_categories = map(html.escape, categories)
             if len(categories) > 1:
                 data += '\n<br /><b>Categories:</b><br/>%s' % ('<br/>'.join(html_categories))
             else:
@@ -304,7 +304,7 @@ class TransposedGridStatusResource(HtmlResource, GridStatusMixin):
         sortedBuilderNames = status.getBuilderNames()[:]
         sortedBuilderNames.sort()
 
-        builder_builds = {}
+        builder_builds = []
 
         for bn in sortedBuilderNames:
             builds = [None] * len(stamps)
@@ -322,15 +322,15 @@ class TransposedGridStatusResource(HtmlResource, GridStatusMixin):
                 build = build.getPreviousBuild()
 
             data += self.builder_td(request, builder)
-            builder_builds[bn] = builds
+            builder_builds.append(builds)
 
         data += '</tr>\n'
 
         for i in range(len(stamps)):
             data += '<tr>\n'
             data += self.stamp_td(stamps[i])
-            for bn in sortedBuilderNames:
-                data += self.build_td(request, builder_builds[bn][i])
+            for builds in builder_builds:
+                data += self.build_td(request, builds[i])
             data += '</tr>\n'
 
         data += '</table>\n'

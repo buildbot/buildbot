@@ -356,7 +356,9 @@ f1 = factory.BuildFactory([
 c['slaves'] = [BuildSlave('bot1', 'sekrit')]
 c['schedulers'] = []
 c['builders'] = [{'name':'quick', 'slavename':'bot1',
-                  'builddir': 'quickdir', 'factory': f1}]
+                  'builddir': 'quickdir',
+                  'slavebuilddir': 'quickslavedir',
+                  'factory': f1}]
 c['slavePortnum'] = 0
 """
 
@@ -947,4 +949,3 @@ class ConditionalStepTest(StepTester, unittest.TestCase):
             self.failUnlessEqual(SKIPPED, results)
         d.addCallback(_checkResults)
         return d
-

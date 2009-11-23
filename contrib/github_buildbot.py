@@ -5,7 +5,7 @@ github_buildbot.py is based on git_buildbot.py
 github_buildbot.py will determine the repository information from the JSON 
 HTTP POST it receives from github.com and build the appropriate repository.
 If your github repository is private, you must add a ssh key to the github
-repository for the user who initiated github_buildbot.py
+repository for the user who initiated the build on the buildslave.
 
 """
 
@@ -36,9 +36,7 @@ class GitHubBuildBot(resource.Resource):
     isLeaf = True
     github = None
     master = None
-    local_dir = None
     port = None
-    private = False
     
     def render_POST(self, request):
         """
@@ -50,12 +48,8 @@ class GitHubBuildBot(resource.Resource):
         """
         try:
             payload = json.loads(request.args['payload'][0])
-            user = payload['repository']['owner']['name']
-            repo = payload['repository']['name']
-            self.private = payload['repository']['private']
             logging.debug("Payload: " + str(payload))
-            self.github_sync(self.local_dir, user, repo, self.github)
-            self.process_change(payload, user, repo, self.github)
+            self.process_change(payload)
         except Exception:
             logging.error("Encountered an exception:")
             for msg in traceback.format_exception(*sys.exc_info()):
@@ -115,7 +109,6 @@ class GitHubBuildBot(resource.Resource):
         deferred = factory.login(credentials.UsernamePassword("change",
                                                                 "changepw"))
         reactor.connectTCP(host, port, factory)
-
         deferred.addErrback(self.connectFailed)
         deferred.addCallback(self.connected, changes)
 
@@ -153,64 +146,12 @@ class GitHubBuildBot(resource.Resource):
         """
         return self.addChange(None, remote, changes.__iter__())
 
-    def github_sync(self, tmp, user, repo, github_url = 'github.com'):
-        """
-        Syncs the github repository to the server which hosts the buildmaster.
-        """
-        if not os.path.exists(tmp):
-            raise RuntimeError("temporary directory %s does not exist; \
-                                please create it" % tmp)
-        repodir = tmp + "/" + repo + ".git"
-        if os.path.exists(repodir):
-            os.chdir(repodir)
-            self.fetch(repodir)
-        else:
-            self.create_repo(tmp, user, repo, github_url)
-
-    def fetch(self, repo_dir):
-        """
-        Updates the bare repository that mirrors the github server
-        """
-        os.chdir(repo_dir)
-        cmd = 'git fetch'
-        logging.info("Fetching changes from github to: " + repo_dir)
-        (result, output) = commands.getstatusoutput(cmd)
-        if result != 0:
-            logging.error(output)
-            raise RuntimeError("Unable to fetch remote changes")
-
-    def repo_url(self, user, repo, github_url='github.com'):
-        if self.private:
-            return 'git@' + github_url + ':' + user + '/' + repo + '.git'
-        else:
-            return 'git://' + github_url + '/' + user + '/' + repo + '.git'
-    
-    def create_repo(self, tmp, user, repo, github_url = 'github.com'):
-        """
-        Clones the github repository as a mirror repo on the local server
-        """
-        url = self.repo_url(user, repo, github_url)
-        repodir = tmp + "/" + repo + ".git"
-
-        # clone the repo
-        os.chdir(tmp)
-        cmd = "git clone --mirror %s %s" % (url, repodir)
-        logging.info("Clone bare repository: %s" % cmd)
-        (result, output) = commands.getstatusoutput(cmd)
-        if result != 0:
-            logging.error(output)
-            raise RuntimeError("Unable to initalize bare repository")
-
 def main():
     """
     The main event loop that starts the server and configures it.
     """
     usage = "usage: %prog [options]"
     parser = OptionParser(usage)
-    parser.add_option("-d", "--dir",
-        help="The dir in which the repositories will"
-            + "be stored [default: %default]", default=tempfile.gettempdir(),
-            dest="dir")
         
     parser.add_option("-p", "--port", 
         help="Port the HTTP server listens to for the GitHub Service Hook"
@@ -231,7 +172,9 @@ def main():
             + " %default]", default='warn', dest="level")
         
     parser.add_option("-g", "--github", 
-        help="The github serve [default: %default]", default='github.com',
+        help="The github server.  Changing this is useful if you've specified"      
+            + "  a specific HOST handle in ~/.ssh/config for github "   
+            + "[default: %default]", default='github.com',
         dest="github")
         
     (options, _) = parser.parse_args()
@@ -252,7 +195,6 @@ def main():
     github_bot = GitHubBuildBot()
     github_bot.github = options.github
     github_bot.master = options.buildmaster
-    github_bot.local_dir = options.dir
     
     site = server.Site(github_bot)
     reactor.listenTCP(options.port, site)
