@@ -491,11 +491,8 @@ class LogFile:
         if self.openfile:
             # we don't do an explicit close, because there might be readers
             # shareing the filehandle. As soon as they stop reading, the
-            # filehandle will be released and automatically closed. We will
-            # do a sync, however, to make sure the log gets saved in case of
-            # a crash.
+            # filehandle will be released and automatically closed.
             self.openfile.flush()
-            os.fsync(self.openfile.fileno())
             del self.openfile
         self.finished = True
         watchers = self.finishedWatchers
