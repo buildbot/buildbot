@@ -274,7 +274,7 @@ class CVS(Source):
                                read-only (I assume this means it won't
                                use locks to insure atomic access to the
                                ,v files).
-                               
+
         @type  checkout_options: list of strings
         @param checkout_options: these arguments are inserted in the cvs
                                command line, after 'checkout' but before
@@ -367,7 +367,8 @@ class SVN(Source):
 
     def __init__(self, svnurl=None, baseURL=None, defaultBranch=None,
                  directory=None, username=None, password=None,
-                 extra_args=None, **kwargs):
+                 extra_args=None, keep_on_purge=None, ignore_ignores=None,
+                 always_purge=None, **kwargs):
         """
         @type  svnurl: string
         @param svnurl: the URL which points to the Subversion server,
@@ -404,6 +405,9 @@ class SVN(Source):
         self.username = username
         self.password = password
         self.extra_args = extra_args
+        self.keep_on_purge = keep_on_purge
+        self.ignore_ignores = ignore_ignores
+        self.always_purge = always_purge
 
         Source.__init__(self, **kwargs)
         self.addFactoryArguments(svnurl=svnurl,
@@ -413,6 +417,9 @@ class SVN(Source):
                                  username=username,
                                  password=password,
                                  extra_args=extra_args,
+                                 keep_on_purge=keep_on_purge,
+                                 ignore_ignores=ignore_ignores,
+                                 always_purge=always_purge,
                                  )
 
         if not svnurl and not baseURL:
@@ -611,6 +618,7 @@ class Git(Source):
     def __init__(self, repourl,
                  branch="master",
                  submodules=False,
+                 ignore_ignores=None,
                  **kwargs):
         """
         @type  repourl: string
@@ -630,10 +638,12 @@ class Git(Source):
         self.addFactoryArguments(repourl=repourl,
                                  branch=branch,
                                  submodules=submodules,
+                                 ignore_ignores=ignore_ignores,
                                  )
         self.args.update({'repourl': repourl,
                           'branch': branch,
-                          'submodules' : submodules,
+                          'submodules': submodules,
+                          'ignore_ignores': ignore_ignores,
                           })
 
     def computeSourceRevision(self, changes):
