@@ -1,1 +1,1 @@
-cd .. && python docs/epyrun -o docs/reference
+cd .. && python docs/epyrun -o docs/reference  --exclude="buildbot\\.test"
