@@ -636,7 +636,6 @@ class Builder(pb.Referenceable):
 
     def detached(self, slave):
         """This is called when the connection to the bot is lost."""
-        log.msg("%s.detached" % self, slave.slavename)
         for sb in self.attaching_slaves + self.slaves:
             if sb.slave == slave:
                 break

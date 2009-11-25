@@ -331,12 +331,6 @@ class AbstractBuildSlave(NewCredPerspective, service.MultiService):
         pass
 
     def addSlaveBuilder(self, sb):
-        if sb.builder_name not in self.slavebuilders:
-            log.msg("%s adding %s" % (self, sb))
-        elif sb is not self.slavebuilders[sb.builder_name]:
-            log.msg("%s replacing %s" % (self, sb))
-        else:
-            return
         self.slavebuilders[sb.builder_name] = sb
 
     def removeSlaveBuilder(self, sb):
@@ -344,8 +338,6 @@ class AbstractBuildSlave(NewCredPerspective, service.MultiService):
             del self.slavebuilders[sb.builder_name]
         except KeyError:
             pass
-        else:
-            log.msg("%s removed %s" % (self, sb))
 
     def canStartBuild(self):
         """
