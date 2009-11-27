@@ -79,6 +79,10 @@ class OneBuildSlaveResource(HtmlResource, OneLineMixin):
 
         data.append("<h1>Build Slave: %s</h1>\n" % html.escape(self.slavename))
 
+        access_uri = slave.getAccessURI()
+        if access_uri:
+            data.append("<a href=\"%s\">Click to Access Slave</a>" % html.escape(access_uri))
+
         shutdown_url = req.childLink("shutdown")
 
         if not slave.isConnected():
