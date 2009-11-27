@@ -151,7 +151,7 @@ class StatusResourceBuilder(HtmlResource, OneLineMixin):
                     data += make_row("Admin:", html.escape(slave.getAdmin()))
                 if slave.getHost():
                     data += "<span class='label'>Host info:</span>\n"
-                    data += html.PRE(slave.getHost())
+                    data += html.PRE(html.escape(slave.getHost()))
             else:
                 data += ("NOT CONNECTED\n")
             data += "</li>\n"
