@@ -647,8 +647,16 @@ class BuildMaster(service.MultiService):
         slavenames = [s.slavename for s in slaves]
         buildernames = []
         dirnames = []
+
+        # Remove potentially harmful characters from builder name if it is to be
+        # used as the build dir.
         badchars_map = string.maketrans("\t !#$%&'()*+,./:;<=>?@[\\]^{|}~",
                                         "______________________________")
+        def safeTranslate(str):
+            if isinstance(str, unicode):
+                str = str.encode('utf8')
+            return str.translate(badchars_map)
+
         for b in builders:
             if type(b) is tuple:
                 raise ValueError("builder %s must be defined with a dict, "
@@ -666,7 +674,7 @@ class BuildMaster(service.MultiService):
             buildernames.append(b['name'])
 
             # Fix the dictionnary with default values.
-            b.setdefault('builddir', b['name'].translate(badchars_map))
+            b.setdefault('builddir', safeTranslate(b['name']))
             b.setdefault('slavebuilddir', b['builddir'])
             if b['builddir'] in dirnames:
                 raise ValueError("builder %s reuses builddir %s"
