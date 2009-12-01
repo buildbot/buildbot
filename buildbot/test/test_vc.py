@@ -86,7 +86,7 @@ diff -u -r1.1.1.1 subdir.c
  main(int argc, const char *argv[])
  {
 -    printf("Hello subdir.\n");
-+    printf("Hello patched subdir.\n");
++    printf("HellÒ patched subdir.\n");
      return 0;
  }
 """
@@ -108,7 +108,7 @@ TRY_PATCH = '''
  main(int argc, const char *argv[])
  {
 -    printf("Hello subdir.\\n");
-+    printf("Hello try.\\n");
++    printf("HÉllo try.\\n");
      return 0;
  }
 '''
@@ -775,7 +775,7 @@ class VCBase(SignalMixin):
         subdir_c = os.path.join(self.slavebase, "vc-dir", "build",
                                 "subdir", "subdir.c")
         data = open(subdir_c, "r").read()
-        self.failUnlessIn("Hello patched subdir.\\n", data)
+        self.failUnlessIn("HellÒ patched subdir.\\n", data)
         self.failUnlessEqual(bs.getProperty("revision"),
                              self.helper.trunk[-1] or None)
         self.checkGotRevision(bs, self.helper.trunk[-1])
@@ -814,7 +814,7 @@ class VCBase(SignalMixin):
         subdir_c = os.path.join(self.slavebase, "vc-dir", "build",
                                 "subdir", "subdir.c")
         data = open(subdir_c, "r").read()
-        self.failUnlessIn("Hello patched subdir.\\n", data)
+        self.failUnlessIn("HellÒ patched subdir.\\n", data)
         self.failUnlessEqual(bs.getProperty("revision"),
                              self.helper.trunk[-2] or None)
         self.checkGotRevision(bs, self.helper.trunk[-2])
@@ -833,7 +833,7 @@ class VCBase(SignalMixin):
         subdir_c = os.path.join(self.slavebase, "vc-dir", "build",
                                 "subdir", "subdir.c")
         data = open(subdir_c, "r").read()
-        self.failUnlessIn("Hello patched subdir.\\n", data)
+        self.failUnlessIn("HellÒ patched subdir.\\n", data)
         self.failUnlessEqual(bs.getProperty("revision"),
                              self.helper.branch[-1] or None)
         self.failUnlessEqual(bs.getProperty("branch"), self.helper.branchname or None)
@@ -3307,4 +3307,4 @@ class Patch(VCBase, unittest.TestCase):
         # make sure the file actually got patched
         subdir_c = os.path.join(self.workdir, "subdir", "subdir.c")
         data = open(subdir_c, "r").read()
-        self.failUnlessIn("Hello patched subdir.\\n", data)
+        self.failUnlessIn("HellÒ patched subdir.\\n", data)
