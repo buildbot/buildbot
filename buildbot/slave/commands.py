@@ -126,7 +126,8 @@ def rmdirRecursive(dir):
         if os.path.isdir(full_name):
             rmdirRecursive(full_name)
         else:
-            os.chmod(full_name, 0700)
+            if os.path.isfile(full_name):
+                os.chmod(full_name, 0700)
             os.remove(full_name)
     os.rmdir(dir)
 
