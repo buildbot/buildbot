@@ -1876,7 +1876,7 @@ class SVN(SourceBase):
         args = ['--xml']
         if self.ignore_ignores:
           args.append('--no-ignore')
-        return self._dovccmd('status', args, keepStdout=True,
+        return self._dovccmd('status', args, keepStdout=True, sendStdout=False,
                              cb=self._purgeAndUpdate2)
 
     def _purgeAndUpdate2(self, res):
@@ -1888,6 +1888,7 @@ class SVN(SourceBase):
                 continue
             filepath = os.path.join(self.builder.basedir, self.workdir,
                                     filename)
+            self.sendStatus({'stdout': "%s\n" % filepath})
             if os.path.isfile(filepath):
                 os.chmod(filepath, 0700)
                 os.remove(filepath)
