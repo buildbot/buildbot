@@ -546,7 +546,7 @@ class BuildMaster(service.MultiService):
             buildbotURL = config.get('buildbotURL')
             properties = config.get('properties', {})
             buildCacheSize = config.get('buildCacheSize', None)
-            eventHorizon = config.get('eventHorizon', None)
+            eventHorizon = config.get('eventHorizon', 50)
             logHorizon = config.get('logHorizon', None)
             buildHorizon = config.get('buildHorizon', None)
             logCompressionLimit = config.get('logCompressionLimit', 4*1024)
@@ -676,7 +676,9 @@ class BuildMaster(service.MultiService):
             # specified with a BuilderConfig object (which sets the same defaults)
             b.setdefault('builddir', safeTranslate(b['name']))
             b.setdefault('slavebuilddir', b['builddir'])
-
+            b.setdefault('buildHorizon', buildHorizon)
+            b.setdefault('logHorizon', logHorizon)
+            b.setdefault('eventHorizon', eventHorizon)
             if b['builddir'] in dirnames:
                 raise ValueError("builder %s reuses builddir %s"
                                  % (b['name'], b['builddir']))
