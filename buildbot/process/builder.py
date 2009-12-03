@@ -368,6 +368,9 @@ class Builder(pb.Referenceable):
         self.nextBuild = setup.get('nextBuild')
         if self.nextBuild is not None and not callable(self.nextBuild):
             raise ValueError("nextBuild must be callable")
+        self.buildHorizon = setup.get('buildHorizon')
+        self.logHorizon = setup.get('logHorizon')
+        self.eventHorizon = setup.get('eventHorizon')
 
         # build/wannabuild slots: Build objects move along this sequence
         self.buildable = []
@@ -386,6 +389,9 @@ class Builder(pb.Referenceable):
 
         self.builder_status = builder_status
         self.builder_status.setSlavenames(self.slavenames)
+        self.builder_status.buildHorizon = self.buildHorizon
+        self.builder_status.logHorizon = self.logHorizon
+        self.builder_status.eventHorizon = self.eventHorizon
 
         # for testing, to help synchronize tests
         self.watchers = {'attach': [], 'detach': [], 'detach_all': [],
@@ -417,6 +423,12 @@ class Builder(pb.Referenceable):
             diffs.append('nextSlave changed from %s to %s' % (self.nextSlave, setup['nextSlave']))
         if setup.get('nextBuild') != self.nextBuild:
             diffs.append('nextBuild changed from %s to %s' % (self.nextBuild, setup['nextBuild']))
+        if setup['buildHorizon'] != self.buildHorizon:
+            diffs.append('buildHorizon changed from %s to %s' % (self.buildHorizon, setup['buildHorizon']))
+        if setup['logHorizon'] != self.logHorizon:
+            diffs.append('logHorizon changed from %s to %s' % (self.logHorizon, setup['logHorizon']))
+        if setup['eventHorizon'] != self.eventHorizon:
+            diffs.append('eventHorizon changed from %s to %s' % (self.eventHorizon, setup['eventHorizon']))
         return diffs
 
     def __repr__(self):

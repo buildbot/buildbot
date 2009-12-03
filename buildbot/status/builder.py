@@ -1592,12 +1592,6 @@ class BuilderStatus(styles.Versioned):
         # gets pickled and unpickled.
         if buildmaster.buildCacheSize:
             self.buildCacheSize = buildmaster.buildCacheSize
-        if buildmaster.eventHorizon:
-            self.eventHorizon = buildmaster.eventHorizon
-        if buildmaster.logHorizon:
-            self.logHorizon = buildmaster.logHorizon
-        if buildmaster.buildHorizon:
-            self.buildHorizon = buildmaster.buildHorizon
 
     def upgradeToVersion1(self):
         if hasattr(self, 'slavename'):

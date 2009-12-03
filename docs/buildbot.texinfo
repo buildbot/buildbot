@@ -3458,6 +3458,10 @@ c['eventHorizon'] = 50
 c['logHorizon'] = 40
 
 c['buildCacheSize'] = 15
+
+c['builders'] = [
+  @{'name': 'test1', 'builddir': 'test1', 'factory': f, 'buildHorizon': 150@}
+]
 @end example
 
 The @code{buildHorizon} specifies the minimum number of builds for each builder
