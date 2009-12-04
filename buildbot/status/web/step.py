@@ -69,13 +69,13 @@ class StatusResourceBuildStep(HtmlResource):
             data += ("<h2>Logs</h2>\n"
                      "<ul>\n")
             for logfile in logs:
+                logname = logfile.getName()
                 if logfile.hasContents():
                     # FIXME: If the step name has a / in it, this is broken
                     # either way.  If we quote it but say '/'s are safe,
                     # it chops up the step name.  If we quote it and '/'s
                     # are not safe, it escapes the / that separates the
                     # step name from the log number.
-                    logname = logfile.getName()
                     logurl = req.childLink("logs/%s" % urllib.quote(logname))
                     data += ('<li><a href="%s">%s</a></li>\n' % 
                              (logurl, html.escape(logname)))
