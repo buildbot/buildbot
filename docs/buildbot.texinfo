@@ -418,11 +418,10 @@ decision making, where the overhead of sending a lot of commands back
 and forth would be inappropriate, but in general the buildmaster is
 responsible for everything).
 
-The buildmaster is usually fed @code{Changes} by some sort of version
-control system (@pxref{Change Sources}), which may cause builds to be
-run. As the builds are performed, various status messages are
-produced, which are then sent to any registered Status Targets
-(@pxref{Status Delivery}).
+The buildmaster is usually fed @code{Changes} by some sort of version control
+system (@pxref{Change Sources}), which may cause builds to be run. As the
+builds are performed, various status messages are produced, which are then sent
+to any registered Status Targets (@pxref{Status Delivery}).
 
 @c @image{FILENAME, WIDTH, HEIGHT, ALTTEXT, EXTENSION}
 @image{images/overview,,,Overview Diagram,}
