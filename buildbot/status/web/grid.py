@@ -128,6 +128,14 @@ class GridStatusMixin(object):
         return '<td valign="bottom" class="sourcestamp">%s</td>\n' % \
             "<br />".join(text)
 
+    def getSourceStampKey(self, ss):
+        """Given two source stamps, we want to assign them to the same row if
+        they are the same version of code, even if they differ in minor detail.
+
+        This function returns an appropriate comparison key for that.
+        """
+        return (ss.branch, ss.revision, ss.patch)
+
     def getRecentSourcestamps(self, status, numBuilds, categories, branch):
         """
         get a list of the most recent NUMBUILDS SourceStamp tuples, sorted
@@ -151,10 +159,12 @@ class GridStatusMixin(object):
                 # skip non-matching branches
                 if branch != ANYBRANCH and ss.branch != branch: continue
 
-                sourcestamps[ss] = min(sourcestamps.get(ss, sys.maxint), start)
+                key= self.getSourceStampKey(ss)
+                if key not in sourcestamps or sourcestamps[key][1] > start:
+                    sourcestamps[key] = (ss, start)
 
         # now sort those and take the NUMBUILDS most recent
-        sourcestamps = sourcestamps.items()
+        sourcestamps = sourcestamps.values()
         sourcestamps.sort(lambda x, y: cmp(x[1], y[1]))
         sourcestamps = map(lambda tup : tup[0], sourcestamps)
         sourcestamps = sourcestamps[-numBuilds:]
@@ -220,8 +230,9 @@ class GridStatusResource(HtmlResource, GridStatusMixin):
             build = builder.getBuild(-1)
             while build and None in builds:
                 ss = build.getSourceStamp(absolute=True)
+                key= self.getSourceStampKey(ss)
                 for i in range(len(stamps)):
-                    if ss == stamps[i] and builds[i] is None:
+                    if key == self.getSourceStampKey(stamps[i]) and builds[i] is None:
                         builds[i] = build
                 build = build.getPreviousBuild()
 
@@ -316,8 +327,9 @@ class TransposedGridStatusResource(HtmlResource, GridStatusMixin):
             build = builder.getBuild(-1)
             while build and None in builds:
                 ss = build.getSourceStamp(absolute=True)
+                key = self.getSourceStampKey(ss)
                 for i in range(len(stamps)):
-                    if ss == stamps[i] and builds[i] is None:
+                    if key == self.getSourceStampKey(stamps[i]) and builds[i] is None:
                         builds[i] = build
                 build = build.getPreviousBuild()
 
