@@ -1,10 +1,12 @@
 
-import urlparse, urllib, time
+import urlparse, urllib, time, re
 from zope.interface import Interface
+from twisted.python import log
 from twisted.web import html, resource
 from buildbot.status import builder
 from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE, SKIPPED, EXCEPTION
 from buildbot import version, util
+from buildbot.process.properties import Properties
 
 class ITopBox(Interface):
     """I represent a box in the top row of the waterfall display: the one
@@ -122,6 +124,25 @@ def make_force_build_form(forceURL, useUserPasswd, on_all=False):
       + make_extra_property_row(2)
       + make_extra_property_row(3)
       + '<input type="submit" value="Force Build" /></form>\n')
+
+def getAndCheckProperties(req):
+    """
+Fetch custom build properties from the HTTP request of a "Force build" or
+"Resubmit build" HTML form.
+Check the names for valid strings, and return None if a problem is found.
+Return a new Properties object containing each property found in req.
+"""
+    properties = Properties()
+    for i in (1,2,3):
+        pname = req.args.get("property%dname" % i, [""])[0]
+        pvalue = req.args.get("property%dvalue" % i, [""])[0]
+        if pname and pvalue:
+            if not re.match(r'^[\w\.\-\/\~:]*$', pname) \
+                    or not re.match(r'^[\w\.\-\/\~:]*$', pvalue):
+                log.msg("bad property name='%s', value='%s'" % (pname, pvalue))
+                return None
+            properties.setProperty(pname, pvalue, "Force Build Form")
+    return properties
 
 def td(text="", parms={}, **props):
     data = ""

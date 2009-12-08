@@ -8,7 +8,7 @@ from twisted.python import log
 from buildbot import interfaces
 from buildbot.status.web.base import HtmlResource, make_row, \
      make_force_build_form, OneLineMixin, path_to_build, path_to_slave, \
-     path_to_builder, path_to_change
+     path_to_builder, path_to_change, getAndCheckProperties
 from buildbot.process.base import BuildRequest
 from buildbot.process.properties import Properties
 from buildbot.sourcestamp import SourceStamp
@@ -194,12 +194,6 @@ class StatusResourceBuilder(HtmlResource, OneLineMixin):
         reason = req.args.get("comments", ["<no reason specified>"])[0]
         branch = req.args.get("branch", [""])[0]
         revision = req.args.get("revision", [""])[0]
-        properties = Properties()
-        for i in (1,2,3):
-            pname = req.args.get("prop%dname" % i, [""])[0]
-            pvalue = req.args.get("prop%dvalue" % i, [""])[0]
-            if pname and pvalue:
-                properties.setProperty(pname, pvalue, "Force Build Form")
 
         r = "The web-page 'force build' button was pressed by '%s': %s\n" \
             % (html.escape(name), html.escape(reason))
@@ -224,13 +218,9 @@ class StatusResourceBuilder(HtmlResource, OneLineMixin):
         if not re.match(r'^[\w\.\-\/]*$', revision):
             log.msg("bad revision '%s'" % revision)
             return Redirect("..")
-        for p in properties.asList():
-            key = p[0]
-            value = p[1]
-            if not re.match(r'^[\w\.\-\/]*$', key) \
-              or not re.match(r'^[\w\.\-\/]*$', value):
-                log.msg("bad property name='%s', value='%s'" % (key, value))
-                return Redirect("..")
+        properties = getAndCheckProperties(req)
+        if properties is None:
+            return Redirect("..")
         if not branch:
             branch = None
         if not revision:

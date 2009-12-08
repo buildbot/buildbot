@@ -10,6 +10,7 @@ from buildbot import interfaces
 from buildbot.status.progress import Expectations
 from buildbot.util import now
 from buildbot.process import base
+from buildbot.process.properties import Properties
 
 (ATTACHING, # slave attached, still checking hostinfo/etc
  IDLE, # idle, available for use
@@ -869,13 +870,20 @@ class BuilderControl(components.Adapter):
             raise interfaces.NoSlaveError
         self.requestBuild(req)
 
-    def resubmitBuild(self, bs, reason="<rebuild, no reason given>"):
+    def resubmitBuild(self, bs, reason="<rebuild, no reason given>", extraProperties=None):
         if not bs.isFinished():
             return
 
         ss = bs.getSourceStamp(absolute=True)
+        if extraProperties is None:
+            properties = bs.getProperties()
+        else:
+            # Make a copy so as not to modify the original build.
+            properties = Properties()
+            properties.updateFromProperties(bs.getProperties())
+            properties.updateFromProperties(extraProperties)
         req = base.BuildRequest(reason, ss, self.original.name,
-                                properties=bs.getProperties())
+                                properties=properties)
         self.requestBuild(req)
 
     def getPendingBuilds(self):

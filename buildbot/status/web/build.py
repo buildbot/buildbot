@@ -7,7 +7,7 @@ import urllib, time
 from twisted.python import log
 from buildbot.status.web.base import HtmlResource, make_row, make_stop_form, \
      make_extra_property_row, css_classes, path_to_builder, path_to_slave, \
-     make_name_user_passwd_form
+     make_name_user_passwd_form, getAndCheckProperties
 
 
 from buildbot.status.web.tests import TestsResource
@@ -275,12 +275,13 @@ class StatusResourceBuild(HtmlResource):
         comments = req.args.get("comments", ["<no reason specified>"])[0]
         reason = ("The web-page 'rebuild' button was pressed by "
                   "'%s': %s\n" % (html.escape(name), html.escape(comments)))
-        if not bc or not b.isFinished():
+        extraProperties = getAndCheckProperties(req)
+        if not bc or not b.isFinished() or extraProperties is None:
             log.msg("could not rebuild: bc=%s, isFinished=%s"
                     % (bc, b.isFinished()))
             # TODO: indicate an error
         else:
-            bc.resubmitBuild(b, reason)
+            bc.resubmitBuild(b, reason, extraProperties)
         # we're at
         # http://localhost:8080/builders/NAME/builds/5/rebuild?[args]
         # Where should we send them?
