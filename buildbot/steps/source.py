@@ -494,7 +494,7 @@ class SVN(Source):
         self.args['patch'] = patch
 
 	#Set up depth if specified
-	self.args['depth'] = depth
+	self.args['depth'] = self.depth
 
         if self.username is not None or self.password is not None:
             if self.slaveVersionIsOlderThan("svn", "2.8"):
