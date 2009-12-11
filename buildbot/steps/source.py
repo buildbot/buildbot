@@ -493,6 +493,9 @@ class SVN(Source):
         self.args['revision'] = revision
         self.args['patch'] = patch
 
+	#Set up depth if specified
+	self.args['depth'] = depth
+
         if self.username is not None or self.password is not None:
             if self.slaveVersionIsOlderThan("svn", "2.8"):
                 m = ("This buildslave (%s) does not support svn usernames "
