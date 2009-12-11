@@ -1808,6 +1808,7 @@ class SVN(SourceBase):
     ['keep_on_purge']:     Files and directories to keep between updates
     ['ignore_ignores']:    Ignore ignores when purging changes
     ['always_purge']:      Always purge local changes after each build
+    ['depth']:     	   Pass depth argument to subversion 1.5+ 
     """
 
     header = "svn operation"
@@ -1829,6 +1830,9 @@ class SVN(SourceBase):
             self.svn_args.extend(["--password", Obfuscated(args['password'], "XXXX")])
         if args.get('extra_args', None) is not None:
             self.svn_args.extend(args['extra_args'])
+
+	if args.has_key('depth'):
+	    self.svn_args.extend(["--depth",args['depth']])
 
     def _dovccmd(self, command, args, rootdir=None, cb=None, **kwargs):
         if rootdir is None:
