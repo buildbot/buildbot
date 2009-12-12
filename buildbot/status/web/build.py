@@ -146,10 +146,12 @@ class StatusResourceBuild(HtmlResource):
         comments = req.args.get("comments", ["<no reason specified>"])[0]
         reason = ("The web-page 'stop build' button was pressed by "
                   "'%s': %s\n" % (name, comments))
-        c.stopBuild(reason)
+        if c:
+            c.stopBuild(reason)
         # we're at http://localhost:8080/svn-hello/builds/5/stop?[args] and
         # we want to go to: http://localhost:8080/svn-hello
-        r = Redirect("../..")
+        url = req.args.get('url', ['../..'])[0]
+        r = Redirect(url)
         d = defer.Deferred()
         reactor.callLater(1, d.callback, r)
         return DeferredResource(d)

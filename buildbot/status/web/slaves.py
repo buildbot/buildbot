@@ -4,7 +4,8 @@ from twisted.python import log
 from twisted.web import html
 from twisted.web.util import Redirect
 
-from buildbot.status.web.base import HtmlResource, abbreviate_age, BuildLineMixin, path_to_slave
+from buildbot.status.web.base import HtmlResource, abbreviate_age, \
+    BuildLineMixin, path_to_slave, path_to_build
 from buildbot import version, util
 
 # /buildslaves/$slavename
@@ -24,9 +25,10 @@ class OneBuildSlaveResource(HtmlResource, BuildLineMixin):
             slave.setGraceful(True)
         return Redirect(path_to_slave(req, slave))
 
-    def content(self, request, ctx):
-        
+    def content(self, request, ctx):        
         s = self.getStatus(request)
+        slave = s.getSlave(self.slavename)
+        
         my_builders = []
         for bname in s.getBuilderNames():
             b = s.getBuilder(bname)
@@ -38,16 +40,15 @@ class OneBuildSlaveResource(HtmlResource, BuildLineMixin):
         current_builds = []
         for b in my_builders:
             for cb in b.getCurrentBuilds():
-                if cb.getSlavename() == self.slavename:
+                if cb.getSlavename() == self.slavename:                    
                     current_builds.append(self.get_line_values(request, cb))
-        
+
         try:
             max_builds = int(request.args.get('builds')[0])
         except:
             max_builds = 10
            
         recent_builds = []    
-            
         n = 0
         for rb in s.generateFinishedBuilds(builders=[b.getName() for b in my_builders]):
             if rb.getSlavename() == self.slavename:
@@ -62,7 +63,9 @@ class OneBuildSlaveResource(HtmlResource, BuildLineMixin):
                                current = current_builds, 
                                recent = recent_builds, 
                                shutdown_url = request.childLink("shutdown"),
-                               control = self.getControl(request))
+                               control = self.getControl(request),
+                               this_url = "../../../" + path_to_slave(request, slave))
+
         return data
 
 # /buildslaves

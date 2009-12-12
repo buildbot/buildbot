@@ -47,6 +47,8 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
 
         return b
 
+   
+
     def content(self, req, cxt):
         b = self.builder_status
         control = self.builder_control
@@ -59,6 +61,18 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
 
         cxt['current'] = [self.builder(x, req) for x in b.getCurrentBuilds()]        
 
+        pnd = cxt['pending'] = []
+        
+        for pb in b.getPendingBuilds():
+            if build_request.source.changes:
+                reason = "<br/>\n".join(c.asHTML() for c in build_request.source.changes)
+            elif build_request.source.revision:
+                reason = build_request.source.revision
+            else:
+                reason = "no changes specified"
+            pnd.append({'when': time.strftime("%b %d %H:%M:%S", time.localtime(build_request.getSubmitTime())),
+                        'reason': reason})
+                        
         numbuilds = req.args.get('numbuilds', ['5'])[0]
         recent = cxt['recent'] = []
         for build in b.generateFinishedBuilds(num_builds=int(numbuilds)):

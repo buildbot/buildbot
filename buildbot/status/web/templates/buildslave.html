@@ -20,7 +20,12 @@
   <h2>Currently building:</h2>
   <ul>
   {% for b in current %}
-   <li>{{ build_line(b, True) }}</li>
+   <li>{{ build_line(b, True) }}
+     <form method="post" action="{{ b.buildurl }}/stop" class="command stopbuild" style="display:inline">
+       <input type="submit" value="Stop Build" />
+       <input type="hidden" name="url" value="{{ this_url }}" />
+     </form>
+   </li>
   {% endfor %}
   </ul>
 {% else %}
