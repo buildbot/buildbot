@@ -196,7 +196,8 @@ class HtmlResource(resource.Resource):
                    stylesheet = self.path_to_root(request) + 'buildbot.css',
                    version = version,
                    time = time.strftime("%a %d %b %Y %H:%M:%S",
-                                        time.localtime(util.now())))
+                                        time.localtime(util.now())),
+                   tz = time.tzname[time.localtime()[-1]])
 
         data = self.content(request, ctx)
         if isinstance(data, unicode):

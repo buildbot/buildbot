@@ -193,7 +193,7 @@ class Ports(BaseWeb, unittest.TestCase):
 
         d = client.getPage("http://localhost:%d/remote/waterfall" % p.portnum)
         def _check(page):
-            self.failUnlessIn("BuildBot", page)
+            self.failUnlessIn("http://buildbot.net", page)
         d.addCallback(_check)
         def _done(res):
             d1 = p.shutdown()
@@ -242,7 +242,7 @@ c['status'] = [html.Waterfall(http_port=0, robots_txt=%s)]
             self.failUnlessIn("current activity", page)
             self.failUnlessIn("<html", page)
             TZ = time.tzname[time.localtime()[-1]]
-            self.failUnlessIn("time (%s)" % TZ, page)
+            self.failUnlessIn("(%s)" % TZ, page)
 
             # phase=0 is really for debugging the waterfall layout
             return client.getPage("http://localhost:%d/?phase=0" % self.port)
@@ -263,6 +263,8 @@ c['status'] = [html.Waterfall(http_port=0, robots_txt=%s)]
         d.addCallback(_check3)
 
         def _check4(robotstxt):
+            # needed on win32
+            robotstxt = robotstxt.replace('\r\n', '\n')
             self.failUnless(robotstxt == self.robots_txt_contents)
         d.addCallback(_check4)
 
