@@ -1,6 +1,6 @@
 # -*- test-case-name: buildbot.test.test_slavecommand -*-
 
-import os, sys, re, signal, shutil, types, time
+import os, sys, re, signal, shutil, types, time, tarfile, tempfile
 from stat import ST_CTIME, ST_MTIME, ST_SIZE
 
 from zope.interface import implements
@@ -11,6 +11,7 @@ from twisted.python.procutils import which
 
 from buildbot.slave.interfaces import ISlaveCommand
 from buildbot.slave.registry import registerSlaveCommand
+from buildbot.util import to_text
 
 # this used to be a CVS $-style "Revision" auto-updated keyword, but since I
 # moved to Darcs as the primary repository, this is updated manually each
@@ -66,7 +67,7 @@ class Obfuscated:
                 if isinstance(elt, Obfuscated):
                     rv.append(elt.real)
                 else:
-                    rv.append(elt)
+                    rv.append(to_text(elt))
         return rv
     get_real = staticmethod(get_real)
 
@@ -78,7 +79,7 @@ class Obfuscated:
                 if isinstance(elt, Obfuscated):
                     rv.append(elt.fake)
                 else:
-                    rv.append(elt)
+                    rv.append(to_text(elt))
         return rv
     get_fake = staticmethod(get_fake)
 
@@ -307,6 +308,8 @@ class ShellCommand:
         self.sendRC = sendRC
         self.logfiles = logfiles
         self.workdir = workdir
+        if not os.path.exists(workdir):
+            os.makedirs(workdir)
         self.environ = os.environ.copy()
         if environ:
             if environ.has_key('PYTHONPATH'):
@@ -938,7 +941,7 @@ class SlaveFileUploadCommand(Command):
 registerSlaveCommand("uploadFile", SlaveFileUploadCommand, command_version)
 
 
-class SlaveDirectoryUploadCommand(Command):
+class SlaveDirectoryUploadCommand(SlaveFileUploadCommand):
     """
     Upload a directory from slave to build master
     Arguments:
@@ -964,63 +967,39 @@ class SlaveDirectoryUploadCommand(Command):
         if self.debug:
             log.msg('SlaveDirectoryUploadCommand started')
 
-        # create some lists with all files and directories
-        foundFiles = []
-        foundDirs = []
-
-        self.baseRoot = os.path.join(self.builder.basedir,
-                                     self.workdir,
-                                     os.path.expanduser(self.dirname))
+        self.path = os.path.join(self.builder.basedir,
+                                 self.workdir,
+                                 os.path.expanduser(self.dirname))
         if self.debug:
-            log.msg("baseRoot: %r" % self.baseRoot)
+            log.msg("path: %r" % self.path)
 
-        for root, dirs, files in os.walk(self.baseRoot):
-            tempRoot = root
-            relRoot = ''
-            while (tempRoot != self.baseRoot):
-                tempRoot, tempRelRoot = os.path.split(tempRoot)
-                relRoot = os.path.join(tempRelRoot, relRoot)
-            for name in files:
-                foundFiles.append(os.path.join(relRoot, name))
-            for directory in dirs:
-                foundDirs.append(os.path.join(relRoot, directory))
+        # Create temporary archive
+        fd, self.tarname = tempfile.mkstemp()
+        fileobj = os.fdopen(fd, 'w')
+        archive = tarfile.open(name=self.tarname, mode="w|bz2", fileobj=fileobj)
+        archive.add(self.path, '')
+        archive.close()
+        fileobj.close()
 
-        if self.debug:
-            log.msg("foundDirs: %s" % (str(foundDirs)))
-            log.msg("foundFiles: %s" % (str(foundFiles)))
+        # Transfer it
+        self.fp = open(self.tarname, 'rb')
 
-        # create all directories on the master, to catch also empty ones
-        for dirname in foundDirs:
-            dirname = dirname.split(os.path.sep)
-            self.writer.callRemote("createdir", dirname)
+        self.sendStatus({'header': "sending %s" % self.path})
 
-        for filename in foundFiles:
-            self._writeFile(filename)
-
-        return None
-
-    def _writeFile(self, filename):
-        """Write a file to the remote writer"""
-
-        log.msg("_writeFile: %r" % (filename))
-        self.writer.callRemote('open', filename.split(os.path.sep))
-        data = open(os.path.join(self.baseRoot, filename), "r").read()
-        self.writer.callRemote('write', data)
-        self.writer.callRemote('close')
-        return None
-
-    def interrupt(self):
-        if self.debug:
-            log.msg('interrupted')
-        if self.interrupted:
-            return
-        if self.stderr is None:
-            self.stderr = 'Upload of %r interrupted' % self.path
-            self.rc = 1
-        self.interrupted = True
-        # the next _writeBlock call will notice the .interrupted flag
+        d = defer.Deferred()
+        reactor.callLater(0, self._loop, d)
+        def unpack(res):
+            # unpack the archive, but pass through any errors from _loop
+            d1 = self.writer.callRemote("unpack")
+            d1.addErrback(log.err)
+            d1.addCallback(lambda ignored: res)
+            return d1
+        d.addCallback(unpack)
+        d.addBoth(self.finished)
+        return d
 
     def finished(self, res):
+        os.remove(self.tarname)
         if self.debug:
             log.msg('finished: stderr=%r, rc=%r' % (self.stderr, self.rc))
         if self.stderr is None:

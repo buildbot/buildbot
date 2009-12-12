@@ -57,8 +57,8 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
         slaves = b.getSlaves()
         connected_slaves = [s for s in slaves if s.isConnected()]
 
-        cxt['current'] = [self.builder(x, req) for x in b.getCurrentBuilds()]
-        
+        cxt['current'] = [self.builder(x, req) for x in b.getCurrentBuilds()]        
+
         numbuilds = req.args.get('numbuilds', ['5'])[0]
         recent = cxt['recent'] = []
         for build in b.generateFinishedBuilds(num_builds=int(numbuilds)):

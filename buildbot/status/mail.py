@@ -36,7 +36,7 @@ def message(attrs):
       
       projectName - (str) Name of the project.
       
-      mode - (str) Mode set in MailNotifier. (failing, passing, problem).
+      mode - (str) Mode set in MailNotifier. (failing, passing, problem, change).
       
       result - (str) Builder result as a string. 'success', 'warnings',
                'failure', 'skipped', or 'exception'
@@ -87,7 +87,9 @@ def message(attrs):
         text += "The Buildbot has detected a failed build"
     elif attrs['mode'] == "passing":
         text += "The Buildbot has detected a passing build"
-    else:
+    elif attrs['mode'] == "change" and attrs['result'] == 'success':
+        text += "The Buildbot has detected a restored build"
+    else:    
         text += "The Buildbot has detected a new failure"
     text += " of %s on %s.\n" % (attrs['builderName'], attrs['projectName'])
     if attrs['buildURL']:
@@ -214,6 +216,7 @@ class MailNotifier(base.StatusReceiverMultiService):
                      - 'passing': only send mail about builds which succeed
                      - 'problem': only send mail about a build which failed
                      when the previous build passed
+                     - 'change': only send mail about builds who change status
 
         @type  builders: list of strings
         @param builders: a list of builder names for which mail should be
@@ -258,7 +261,7 @@ class MailNotifier(base.StatusReceiverMultiService):
       
                            projectName - (str) Name of the project.
                            
-                           mode - (str) Mode set in MailNotifier. (failing, passing, problem).
+                           mode - (str) Mode set in MailNotifier. (failing, passing, problem, change).
       
                            result - (str) Builder result as a string. 'success', 'warnings',
                                     'failure', 'skipped', or 'exception'
@@ -317,7 +320,7 @@ class MailNotifier(base.StatusReceiverMultiService):
         self.extraRecipients = extraRecipients
         self.sendToInterestedUsers = sendToInterestedUsers
         self.fromaddr = fromaddr
-        assert mode in ('all', 'failing', 'problem')
+        assert mode in ('all', 'failing', 'problem', 'change')
         self.mode = mode
         self.categories = categories
         self.builders = builders
@@ -391,6 +394,11 @@ class MailNotifier(base.StatusReceiverMultiService):
                 return
             prev = build.getPreviousBuild()
             if prev and prev.getResults() == FAILURE:
+                return
+        if self.mode == "change":
+            prev = build.getPreviousBuild()
+            if not prev or prev.getResults() == results:
+                print prev.getResults() if prev else "no prev"
                 return
         # for testing purposes, buildMessage returns a Deferred that fires
         # when the mail has been sent. To help unit tests, we return that
