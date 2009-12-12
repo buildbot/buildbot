@@ -22,7 +22,7 @@ class MaildirSource(MaildirService, util.ComparableMixin):
     """
     implements(IChangeSource)
 
-    compare_attrs = ["basedir", "pollinterval"]
+    compare_attrs = ["basedir", "pollinterval", "prefix"]
     name = None
 
     def __init__(self, maildir, prefix=None):
@@ -486,6 +486,8 @@ class SVNCommitEmailMaildirSource(MaildirSource):
 
 class BzrLaunchpadEmailMaildirSource(MaildirSource):
     name = "Launchpad"
+
+    compare_attrs = MaildirSource.compare_attrs + ["branchMap", "defaultBranch"]
 
     def __init__(self, maildir, prefix=None, branchMap=None, defaultBranch=None, **kwargs):
         self.branchMap = branchMap

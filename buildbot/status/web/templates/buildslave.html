@@ -6,12 +6,14 @@
 
 {% if not slave.isConnected %}
   <h2>NOT CONNECTED</h2>
-{% elif not slave.getGraceFul %}
-  <form method="POST" action="{{ shutdown_url }}">
-    <input type="submit" value="Gracefully Shutdown">
-  </form>
-{% else %}
-  <p>Gracefully shutting down...</p>
+{% elif control %}
+  {% if not slave.getGraceFul %}
+    <form method="POST" action="{{ shutdown_url }}">
+      <input type="submit" value="Gracefully Shutdown">
+    </form>
+  {% else %}
+    <p>Gracefully shutting down...</p>
+  {% endif %}
 {% endif %}
 
 {% if current %}

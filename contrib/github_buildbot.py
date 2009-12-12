@@ -44,21 +44,26 @@ github = 'github.com'
 
 master = "localhost:9989"
 
+remote = "origin"
+
+branch = "master"
+
 changes = []
 
 class GitHubBuildBot(resource.Resource):
 	
 	isLeaf = True
 	def render_POST(self, request):
-		self.payload = json.loads(request.args['payload'][0])
+		payload = json.loads(request.args['payload'][0])
 		try:
-			self.process_change()
+			self.process_change(payload)
 		except:
+			logging.error("Could not process change")
 			raise()
 	
-	def process_change(self):
-		update_git_dir(self.payload['repository']['owner']['name'] , self.payload['repository']['name'])
-		[oldrev, newrev, refname] = self.payload['before'], self.payload['after'], self.payload['ref']
+	def process_change(self,payload):
+		update_git_dir(payload['repository']['owner']['name'] , payload['repository']['name'],remote,branch)
+		[oldrev, newrev, refname] = payload['before'], payload['after'], payload['ref']
 		
 		# We only care about regular heads, i.e. branches
 		m = re.match(r"^refs\/heads\/(.+)$", refname)
@@ -238,12 +243,12 @@ def gen_update_branch_changes(oldrev, newrev, refname, branch):
         if status:
             logging.warning("git rev-list exited with status %d" % status)
 
-def update_git_dir(user, repo):
+def update_git_dir(user, repo, rem, brh):
 	tempdir = tempfile.gettempdir()
 	repodir = tempdir+"/"+repo
 	if os.path.exists(repodir):
 		os.chdir(repodir)
-		subprocess.call(['git','pull'])
+		subprocess.call(['git','pull',rem,brh])
 	else:
 		os.chdir(tempdir)
 		subprocess.call(['git','clone', 'git@'+ github+':'+user+'/'+repo+'.git'])

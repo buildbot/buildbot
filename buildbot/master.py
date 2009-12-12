@@ -822,6 +822,8 @@ class BuildMaster(service.MultiService, styles.Versioned):
         # shut down any that were removed, start any that were added
         deleted_sources = [s for s in self.change_svc if s not in sources]
         added_sources = [s for s in sources if s not in self.change_svc]
+        log.msg("adding %d new changesources, removing %d" %
+                (len(added_sources), len(deleted_sources)))
         dl = [self.change_svc.removeSource(s) for s in deleted_sources]
         def addNewOnes(res):
             [self.change_svc.addSource(s) for s in added_sources]

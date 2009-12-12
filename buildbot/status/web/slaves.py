@@ -18,9 +18,9 @@ class OneBuildSlaveResource(HtmlResource, BuildLineMixin):
         return "Buildbot: %s" % html.escape(self.slavename)
 
     def getChild(self, path, req):
-        if path == "shutdown":
-            s = self.getStatus(req)
-            slave = s.getSlave(self.slavename)
+        s = self.getStatus(req)
+        slave = s.getSlave(self.slavename)
+        if path == "shutdown" and self.getControl(req):
             slave.setGraceful(True)
         return Redirect(path_to_slave(req, slave))
 
@@ -61,7 +61,8 @@ class OneBuildSlaveResource(HtmlResource, BuildLineMixin):
                                slavename = self.slavename,  
                                current = current_builds, 
                                recent = recent_builds, 
-                               shutdown_url = request.childLink("shutdown"))
+                               shutdown_url = request.childLink("shutdown"),
+                               control = self.getControl(request))
         return data
 
 # /buildslaves
