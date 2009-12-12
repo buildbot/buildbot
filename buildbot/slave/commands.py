@@ -17,7 +17,7 @@ from buildbot.util import to_text
 # this used to be a CVS $-style "Revision" auto-updated keyword, but since I
 # moved to Darcs as the primary repository, this is updated manually each
 # time this file is changed. The last cvs_ver that was here was 1.51 .
-command_version = "2.8"
+command_version = "2.9"
 
 # version history:
 #  >=1.17: commands are interruptable

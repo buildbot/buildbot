@@ -494,8 +494,15 @@ class SVN(Source):
         self.args['patch'] = patch
 
 	#Set up depth if specified
-	if (not self.slaveVersionIsOlderThan("svn","1.5")) and self.depth is not None:
-		self.args['depth'] = self.depth
+	if self.depth is not None:
+		if self.slaveVersionIsOlderThan("svn","2.9")):
+			m = ("This buildslave (%s) does not support svn depth "
+			     "arguments.  "
+			     "Refusing to build. "
+			     "Please upgrade the buildslave." % (self.build.slavename,))
+                	raise BuildSlaveTooOldError(m)
+		else: 
+			self.args['depth'] = self.depth
 
         if self.username is not None or self.password is not None:
             if self.slaveVersionIsOlderThan("svn", "2.8"):
