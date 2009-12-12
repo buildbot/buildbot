@@ -19,7 +19,7 @@
   {{ b.current_step }}
 
   {% if b.stop_url %}
-    <form action="{{ stop_url}}" class="command stopbuild" style="display:inline">
+    <form method="post" action="{{ stop_url }}" class="command stopbuild" style="display:inline">
       <input type="submit" value="Stop Build" />
     </form>
   {% endif %}    
@@ -69,7 +69,7 @@
 {% endif %}
 
 {% if ping_url %}
-  <form action="{{ ping_url }}" class="command pingbuilder">
+  <form method="post" action="{{ ping_url }}" class="command pingbuilder">
     <p>To ping the buildslave(s), push the 'Ping' button</p>
     <input type="submit" value="Ping Builder" />
   </form>

@@ -171,7 +171,7 @@ Build #{{ b.getNumber() }}
       included in a rebuild.</p>
     {% endif %}
 
-    <form action="{{ rebuild_url }}" class="command rebuild">      
+    <form method="post" action="{{ rebuild_url }}" class="command rebuild">      
       {{ forms.name_user_passwd(using_user_passwd) }}
       <div class="row">
         <span class="label">Reason for re-running build:</span>

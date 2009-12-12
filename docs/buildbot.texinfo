@@ -4118,7 +4118,7 @@ branch name is simply the next path component, and the file is all path
 components after.
 
 @example
-import buildbot.changes.p4poller
+from buildbot.changes import p4poller
 s = p4poller.P4Source(p4base='//depot/project/',
                       split_file=lambda branchfile: branchfile.split('/',1),
                      )
