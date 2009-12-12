@@ -89,7 +89,11 @@ Build #{{ b.getNumber() }}
 
 <ol>
 {% for s in steps %}
-  <li><span class="{{ s.css_class }}"><a href="{{ s.link }}">{{ s.name }}</a> {{ s.text }} ({{ s.time_to_run }} s)</span>
+  <li>
+    <span class="{{ s.css_class }}">
+      <a href="{{ s.link }}">{{ s.name }}</a> 
+      {{ s.text }} ({{ s.time_to_run }} s)
+     </span>
 
   {% if s.logs %}
     <ol>
@@ -135,11 +139,12 @@ Build #{{ b.getNumber() }}
 
 <h2>Timing</h2>
 <table>
-<tr><td>Start</td><td>{{ start }}</td></tr>
-{% if end %}
-  <tr><td>End</td><td>{{ end }}</td></tr>
-  <tr><td>Elapsed</td><td>{{ elapsed }} </td></tr>
-{% endif %}
+<tr>
+  <td>Start</td><td>{{ start }}</td></tr>
+  {% if end %}
+    <tr><td>End</td><td>{{ end }}</td></tr>
+  {% endif %}
+  <tr><td>Elapsed</td><td>{{ elapsed }}</td></tr>
 </table>
 
 {% if ss.changes %}

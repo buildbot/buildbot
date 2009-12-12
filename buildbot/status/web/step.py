@@ -35,6 +35,10 @@ class StatusResourceBuildStep(HtmlResource):
         if end:
             dict['elapsed'] = util.formatInterval(end - start)
             dict['end'] = ctime(end)
+        else:
+            now = util.now()
+            dict['elapsed'] = util.formatInterval(now - start)
+
         start = ctime(start)
         
         template = req.site.buildbot_service.templates.get_template("buildstep.html");        

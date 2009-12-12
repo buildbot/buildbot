@@ -122,6 +122,9 @@ class StatusResourceBuild(HtmlResource):
         if end:
             cxt['end'] = time.ctime(end)
             cxt['elapsed'] = util.formatInterval(end - start)
+        else:
+            now = util.now()
+            cxt['elapsed'] = util.formatInterval(now - start)
             
         cxt['resubmit'] = b.isFinished() and self.builder_control is not None     
         if cxt['resubmit']:               
