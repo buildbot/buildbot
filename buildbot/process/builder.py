@@ -885,7 +885,11 @@ class BuilderControl(components.Adapter):
 
     def getPendingBuilds(self):
         # return IBuildRequestControl objects
-        raise NotImplementedError
+        retval = []
+        for r in self.original.buildable:
+            retval.append(BuildRequestControl(self.original, r))
+
+        return retval
 
     def getBuild(self, number):
         return self.original.getBuild(number)
@@ -908,3 +912,21 @@ class BuilderControl(components.Adapter):
         return True
 
 components.registerAdapter(BuilderControl, Builder, interfaces.IBuilderControl)
+
+class BuildRequestControl:
+    implements(interfaces.IBuildRequestControl)
+
+    def __init__(self, builder, request):
+        self.original_builder = builder
+        self.original_request = request
+
+    def subscribe(self, observer):
+        pass
+
+    def unsubscribe(self, observer):
+        pass
+
+    def cancel(self):
+        self.original_builder.cancelBuildRequest(self.original_request)
+
+

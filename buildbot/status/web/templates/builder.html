@@ -35,8 +35,14 @@
   <h2>Pending builds:</h2>
   <ul>
   {% for b in pending %}
-    <li><font size="-1">({{ b.when }})</font> {{ b.reason }}</li>
-  {% else %}
+    <li><font size="-1">({{ b.when }})</font> {{ b.reason }}
+    {% if b.cancel_url %}
+      <form method="post" action="{{ b.cancel_url }}" class="command cancelbuild" style="display:inline">
+        <input type="hidden" name="id" value="{{ b.id }}" />
+        <input type="submit" value="Cancel Build" />
+      </form>
+    {% endif %}    
+    </li>
   {% endfor %}
   </ul>     
 {% else %}

@@ -11,6 +11,7 @@ from buildbot.process.base import BuildRequest
 from buildbot.sourcestamp import SourceStamp
 
 from buildbot.status.web.build import BuildsResource, StatusResourceBuild
+from buildbot import util
 
 # /builders/$builder
 class StatusResourceBuilder(HtmlResource, BuildLineMixin):
@@ -46,7 +47,6 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
             b['stop_url'] = path_to_build(req, build) + '/stop'
 
         return b
-
    
 
     def content(self, req, cxt):
@@ -61,17 +61,26 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
 
         cxt['current'] = [self.builder(x, req) for x in b.getCurrentBuilds()]        
 
-        pnd = cxt['pending'] = []
-        
+        cxt['pending'] = []        
         for pb in b.getPendingBuilds():
-            if build_request.source.changes:
-                reason = "<br/>\n".join(c.asHTML() for c in build_request.source.changes)
-            elif build_request.source.revision:
-                reason = build_request.source.revision
+            if pb.source.changes:
+                reason = "<br/>\n".join(c.asHTML() for c in pb.source.changes)
+            elif pb.source.revision:
+                reason = pb.source.revision
             else:
                 reason = "no changes specified"
-            pnd.append({'when': time.strftime("%b %d %H:%M:%S", time.localtime(build_request.getSubmitTime())),
-                        'reason': reason})
+            
+            if self.builder_control is not None:
+                cancel_url = path_to_builder(req, self.builder.status) + '/cancelbuild'     
+            else:
+                cancel_url = None
+                    
+            cxt['pending'].append({
+                'when': time.strftime("%b %d %H:%M:%S", time.localtime(pb.getSubmitTime())),
+                'reason': reason,
+                'cancel_url': cancel_url,
+                'id': id(pb)
+                })
                         
         numbuilds = req.args.get('numbuilds', ['5'])[0]
         recent = cxt['recent'] = []
@@ -169,6 +178,19 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
         # send the user back to the builder page
         return Redirect(".")
 
+    def cancel(self, req):
+        try:
+            request_id = int(req.args.get("id", [None])[0])
+        except:
+            request_id = None
+        if request_id:
+            for build_req in self.builder_control.getPendingBuilds():
+                if id(build_req.original_request.status) == request_id:
+                    log.msg("Cancelling %s" % build_req)
+                    build_req.cancel()
+                    break
+        return Redirect(".")
+
     def getChild(self, path, req):
         if path == "force":
             return self.force(req)
@@ -194,6 +216,8 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
                     return static.Data(file, "text/html")
                 return static.Data(file, "text/plain")
             return file
+        if path == "cancelbuild":
+            return self.cancel(req)
         if path == "builds":
             return BuildsResource(self.builder_status, self.builder_control)
 
