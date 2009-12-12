@@ -9,7 +9,7 @@
 *#
 *~
 MANIFEST
-_trial_temp
+_trial_temp*
 dist
 build
 .build
