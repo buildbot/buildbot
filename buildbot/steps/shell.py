@@ -168,7 +168,12 @@ class ShellCommand(LoggingBuildStep):
                % self.getSlaveName())
         msg2 = "You will have to pull this logfile (%s) manually."
         log.msg(msg1)
-        for logname,remotefilename in self.logfiles.items():
+        for logname,remotefilevalue in self.logfiles.items():
+            remotefilename = remotefilevalue
+            # check for a dictionary of options
+            if type(remotefilevalue) == dict:
+                remotefilename = remotefilevalue['filename']
+
             newlog = self.addLog(logname)
             newlog.addHeader(msg1 + "\n")
             newlog.addHeader(msg2 % remotefilename + "\n")

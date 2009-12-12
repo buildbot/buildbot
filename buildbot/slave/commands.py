@@ -199,16 +199,21 @@ class ShellCommandPP(ProcessProtocol):
 class LogFileWatcher:
     POLL_INTERVAL = 2
 
-    def __init__(self, command, name, logfile):
+    def __init__(self, command, name, logfile, follow=False):
         self.command = command
         self.name = name
         self.logfile = logfile
+
         log.msg("LogFileWatcher created to watch %s" % logfile)
         # we are created before the ShellCommand starts. If the logfile we're
         # supposed to be watching already exists, record its size and
         # ctime/mtime so we can tell when it starts to change.
         self.old_logfile_stats = self.statFile()
         self.started = False
+
+        # follow the file, only sending back lines
+        # added since we started watching
+        self.follow = follow
 
         # every 2 seconds we check on the file again
         self.poller = task.LoopingCall(self.poll)
@@ -245,6 +250,11 @@ class LogFileWatcher:
                 self.old_logfile_stats = None
                 return # no file to work with
             self.f = open(self.logfile, "rb")
+            # if we only want new lines, seek to
+            # where we stat'd so we only find new
+            # lines
+            if self.follow:
+                self.f.seek(s[2], 0)
             self.started = True
         self.f.seek(self.f.tell(), 0)
         while True:
@@ -342,9 +352,19 @@ class ShellCommand:
             self.usePTY = False
 
         self.logFileWatchers = []
-        for name,filename in self.logfiles.items():
+        for name,filevalue in self.logfiles.items():
+            filename = filevalue
+            follow = False
+
+            # check for a dictionary of options
+            # filename is required, others are optional
+            if type(filevalue) == dict:
+                filename = filevalue['filename']
+                follow = filevalue.get('follow', False)
+
             w = LogFileWatcher(self, name,
-                               os.path.join(self.workdir, filename))
+                               os.path.join(self.workdir, filename),
+                               follow=follow)
             self.logFileWatchers.append(w)
 
     def __repr__(self):
@@ -577,8 +597,8 @@ class ShellCommand:
         if self.timer:
             self.timer.cancel()
             self.timer = None
-        if hasattr(self.process, "pid"):
-            msg += ", killing pid %d" % self.process.pid
+        if hasattr(self.process, "pid") and self.process.pid is not None:
+            msg += ", killing pid %s" % self.process.pid
         log.msg(msg)
         self.sendStatus({'header': "\n" + msg + "\n"})
 
@@ -604,6 +624,8 @@ class ShellCommand:
                     log.msg("signal module is missing SIG%s" % self.KILL)
                 elif not hasattr(os, "kill"):
                     log.msg("os module is missing the 'kill' function")
+                elif not hasattr(self.process, "pid") or self.process.pid is None:
+                    log.msg("self.process has no pid")
                 else:
                     log.msg("trying os.kill(-pid, %d)" % (sig,))
                     # TODO: maybe use os.killpg instead of a negative pid?
@@ -2469,7 +2491,7 @@ class Mercurial(SourceBase):
     """Mercurial specific VC operation. In addition to the arguments
     handled by SourceBase, this command reads the following keys:
 
-    ['repourl'] (required): the Cogito repository string
+    ['repourl'] (required): the Mercurial repository string
     """
 
     header = "mercurial operation"
@@ -2480,6 +2502,7 @@ class Mercurial(SourceBase):
         self.repourl = args['repourl']
         self.clobberOnBranchChange = args['clobberOnBranchChange']
         self.sourcedata = "%s\n" % self.repourl
+        self.branchType = args['branchType']
         self.stdout = ""
         self.stderr = ""
 
@@ -2511,7 +2534,14 @@ class Mercurial(SourceBase):
 
     def doVCFull(self):
         d = os.path.join(self.builder.basedir, self.srcdir)
-        command = [self.vcexe, 'clone', '--verbose', '--noupdate', self.repourl, d]
+        command = [self.vcexe, 'clone', '--verbose', '--noupdate']
+
+        # if got revision, clobbering and in dirname, only clone to specific revision 
+        # (otherwise, do full clone to re-use .hg dir for subsequent byuilds) 
+        if self.args.get('revision') and self.mode == 'clobber' and self.branchType == 'dirname': 
+            command.extend(['--rev', self.args.get('revision')]) 
+        command.extend([self.repourl, d])
+        
         c = ShellCommand(self.builder, command, self.builder.basedir,
                          sendRC=False, timeout=self.timeout, usePTY=False)
         self.command = c

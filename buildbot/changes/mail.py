@@ -4,6 +4,7 @@
 Parse various kinds of 'CVS notify' email.
 """
 import os, re
+import time, calendar
 from email import message_from_file
 from email.Utils import parseaddr
 from email.Iterators import body_line_iterator
@@ -456,3 +457,137 @@ class SVNCommitEmailMaildirSource(MaildirSource):
 
         return changes.Change(who, files, comments, when=when, revision=rev)
 
+# bzr Launchpad branch subscription mails. Sample mail:
+#
+#   From: noreply@launchpad.net
+#   Subject: [Branch ~knielsen/maria/tmp-buildbot-test] Rev 2701: test add file
+#   To: Joe <joe@acme.com>
+#   ...
+#   
+#   ------------------------------------------------------------
+#   revno: 2701
+#   committer: Joe <joe@acme.com>
+#   branch nick: tmpbb
+#   timestamp: Fri 2009-05-15 10:35:43 +0200
+#   message:
+#     test add file
+#   added:
+#     test-add-file
+#   
+#   
+#   --
+#   
+#   https://code.launchpad.net/~knielsen/maria/tmp-buildbot-test
+#   
+#   You are subscribed to branch lp:~knielsen/maria/tmp-buildbot-test.
+#   To unsubscribe from this branch go to https://code.launchpad.net/~knielsen/maria/tmp-buildbot-test/+edit-subscription.
+# 
+# [end of mail]
+
+class BzrLaunchpadEmailMaildirSource(MaildirSource):
+    name = "Launchpad"
+
+    def __init__(self, maildir, prefix=None, branchMap=None, defaultBranch=None, **kwargs):
+        self.branchMap = branchMap
+        self.defaultBranch = defaultBranch
+        MaildirSource.__init__(self, maildir, prefix, **kwargs)
+
+    def parse(self, m, prefix=None):
+        """Parse branch notification messages sent by Launchpad.
+        """
+
+        subject = m["subject"]
+        match = re.search(r"^\s*\[Branch\s+([^]]+)\]", subject)
+        if match:
+            repository = match.group(1)
+        else:
+            repository = None
+
+        # Put these into a dictionary, otherwise we cannot assign them
+        # from nested function definitions.
+        d = { 'files': [], 'comments': "" }
+        gobbler = None
+        rev = None
+        who = None
+        when = util.now()
+        def gobble_comment(s):
+            d['comments'] += s + "\n"
+        def gobble_removed(s):
+            d['files'].append('%s REMOVED' % s)
+        def gobble_added(s):
+            d['files'].append('%s ADDED' % s)
+        def gobble_modified(s):
+            d['files'].append('%s MODIFIED' % s)
+        def gobble_renamed(s):
+            match = re.search(r"^(.+) => (.+)$", s)
+            if match:
+                d['files'].append('%s RENAMED %s' % (match.group(1), match.group(2)))
+            else:
+                d['files'].append('%s RENAMED' % s)
+
+        lines = list(body_line_iterator(m, True))
+        rev = None
+        while lines:
+            line = lines.pop(0)
+
+            # revno: 101
+            match = re.search(r"^revno: ([0-9.]+)", line)
+            if match:
+                rev = match.group(1)
+
+            # committer: Joe <joe@acme.com>
+            match = re.search(r"^committer: (.*)$", line)
+            if match:
+                who = match.group(1)
+
+            # timestamp: Fri 2009-05-15 10:35:43 +0200
+            # datetime.strptime() is supposed to support %z for time zone, but
+            # it does not seem to work. So handle the time zone manually.
+            match = re.search(r"^timestamp: [a-zA-Z]{3} (\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}) ([-+])(\d{2})(\d{2})$", line)
+            if match:
+                datestr = match.group(1)
+                tz_sign = match.group(2)
+                tz_hours = match.group(3)
+                tz_minutes = match.group(4)
+                when = parseLaunchpadDate(datestr, tz_sign, tz_hours, tz_minutes)
+
+            if re.search(r"^message:\s*$", line):
+                gobbler = gobble_comment
+            elif re.search(r"^removed:\s*$", line):
+                gobbler = gobble_removed
+            elif re.search(r"^added:\s*$", line):
+                gobbler = gobble_added
+            elif re.search(r"^renamed:\s*$", line):
+                gobbler = gobble_renamed
+            elif re.search(r"^modified:\s*$", line):
+                gobbler = gobble_modified
+            elif re.search(r"^  ", line) and gobbler:
+                gobbler(line[2:-1]) # Use :-1 to gobble trailing newline
+
+        # Determine the name of the branch.
+        branch = None
+        if self.branchMap and repository:
+            if self.branchMap.has_key(repository):
+                branch = self.branchMap[repository]
+            elif self.branchMap.has_key('lp:' + repository):
+                branch = self.branchMap['lp:' + repository]
+        if not branch:
+            if self.defaultBranch:
+                branch = self.defaultBranch
+            else:
+                if repository:
+                    branch = 'lp:' + repository
+                else:
+                    branch = None
+
+        #log.msg("parse(): rev=%s who=%s files=%s comments='%s' when=%s branch=%s" % (rev, who, d['files'], d['comments'], time.asctime(time.localtime(when)), branch))
+        if rev and who:
+            return changes.Change(who, d['files'], d['comments'],
+                                  when=when, revision=rev, branch=branch)
+        else:
+            return None
+
+def parseLaunchpadDate(datestr, tz_sign, tz_hours, tz_minutes):
+    time_no_tz = calendar.timegm(time.strptime(datestr, "%Y-%m-%d %H:%M:%S"))
+    tz_delta = 60 * 60 * int(tz_sign + tz_hours) + 60 * int(tz_minutes)
+    return time_no_tz - tz_delta

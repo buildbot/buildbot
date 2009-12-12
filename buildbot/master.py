@@ -11,6 +11,7 @@ import warnings
 
 from zope.interface import implements
 from twisted.python import log, components
+from twisted.python.failure import Failure
 from twisted.internet import defer, reactor
 from twisted.spread import pb
 from twisted.cred import portal, checkers
@@ -202,7 +203,8 @@ class BotMaster(service.MultiService):
             try:
                 builders = self.prioritizeBuilders(self.parent, builders)
             except:
-                log.err(None, "Exception prioritizing builders")
+                log.msg("Exception prioritizing builders")
+                log.err(Failure())
                 return
         else:
             def _sortfunc(b1, b2):
@@ -220,7 +222,8 @@ class BotMaster(service.MultiService):
             for b in builders:
                 b.maybeStartBuild()
         except:
-            log.err(None, "Exception starting builds")
+            log.msg("Exception starting builds")
+            log.err(Failure())
 
     def shouldMergeRequests(self, builder, req1, req2):
         """Determine whether two BuildRequests should be merged for
