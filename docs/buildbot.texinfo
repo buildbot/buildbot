@@ -5242,7 +5242,7 @@ svn:ignore properties and global-ignores in subversion/config.
 build. This is everything that would appear in a @code{svn status}.
 
 @item depth
-(optional): Specify depth argument to achieve sparse checkout. 
+(optional): Specify depth argument to achieve sparse checkout.  Only available if slave has Subversion 1.5 or higher.
 empty - updates will not pull in any files or subdirectories not already present.
 files - updates will pull in any files not already present, but not directories.
 immediates - updates willl pull in any files or subdirectories not already present, the new subdirectories will have depth: empty.
