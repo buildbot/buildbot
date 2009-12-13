@@ -6,7 +6,8 @@ from twisted.web.util import Redirect
 import re, urllib, time
 from twisted.python import log
 from buildbot import interfaces
-from buildbot.status.web.base import HtmlResource, BuildLineMixin, path_to_build, path_to_slave, path_to_builder
+from buildbot.status.web.base import HtmlResource, BuildLineMixin, \
+    path_to_build, path_to_slave, path_to_builder, path_to_change
 from buildbot.process.base import BuildRequest
 from buildbot.sourcestamp import SourceStamp
 
@@ -47,8 +48,7 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
             b['stop_url'] = path_to_build(req, build) + '/stop'
 
         return b
-   
-
+          
     def content(self, req, cxt):
         b = self.builder_status
         control = self.builder_control
@@ -63,8 +63,12 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
 
         cxt['pending'] = []        
         for pb in b.getPendingBuilds():
+            changes = []
+
             if pb.source.changes:
-                reason = "<br/>\n".join(c.asHTML() for c in pb.source.changes)
+                for c in pb.source.changes:
+                    change_strings.append({ 'url' : path_to_change(req, c),
+                                            'who' : c.who})
             elif pb.source.revision:
                 reason = pb.source.revision
             else:
@@ -73,13 +77,15 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
             if self.builder_control is not None:
                 cancel_url = path_to_builder(req, self.builder.status) + '/cancelbuild'     
             else:
-                cancel_url = None
+                cancel_url = None                               
                     
             cxt['pending'].append({
                 'when': time.strftime("%b %d %H:%M:%S", time.localtime(pb.getSubmitTime())),
+                'delay': util.formatInterval(util.now() - build_request.getSubmitTime()),
                 'reason': reason,
                 'cancel_url': cancel_url,
-                'id': id(pb)
+                'id': id(pb),
+                'changes' : changes
                 })
                         
         numbuilds = req.args.get('numbuilds', ['5'])[0]

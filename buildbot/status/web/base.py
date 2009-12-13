@@ -118,6 +118,10 @@ def path_to_slave(request, slave):
             "buildslaves/" +
             urllib.quote(slave.getName(), safe=''))
 
+def path_to_change(request, change):
+    return (path_to_root(request) +
+            "changes/%s" % change.number)
+
 class Box:
     # a Box wraps an Event. The Box has HTML <td> parameters that Events
     # lack, and it has a base URL to which each File's name is relative.
