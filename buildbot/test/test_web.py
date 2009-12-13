@@ -409,7 +409,7 @@ class GetURL(RunMixin, unittest.TestCase):
         self.assertURLEqual(step, "builders/b1/builds/0/steps/remote%20dummy")
         # maybe page for build.getTestResults?
         self.assertURLEqual(step.getLogs()[0],
-                            "builders/b1/builds/0/steps/remote%20dummy/logs/0")
+                            "builders/b1/builds/0/steps/remote%20dummy/logs/stdio")
 
 
 

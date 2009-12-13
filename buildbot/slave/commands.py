@@ -1007,6 +1007,7 @@ class SlaveDirectoryUploadCommand(SlaveFileUploadCommand):
         return d
 
     def finished(self, res):
+        self.fp.close()
         os.remove(self.tarname)
         if self.debug:
             log.msg('finished: stderr=%r, rc=%r' % (self.stderr, self.rc))
@@ -1195,6 +1196,7 @@ class SlaveShellCommand(Command):
                         filename of a local log file. This local file will be
                         watched just like 'tail -f', and all changes will be
                         written to 'log' status updates.
+        - ['logEnviron']: False to not log the environment variables on the slave
 
     ShellCommand creates the following status messages:
         - {'stdout': data} : when stdout data is available
@@ -1220,6 +1222,7 @@ class SlaveShellCommand(Command):
                          keepStdinOpen=args.get('keep_stdin_open'),
                          logfiles=args.get('logfiles', {}),
                          usePTY=args.get('usePTY', "slave-config"),
+                         logEnviron=args.get('logEnviron', True),
                          )
         self.command = c
         d = self.command.start()

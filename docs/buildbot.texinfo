@@ -1,7 +1,7 @@
 \input texinfo @c -*-texinfo-*-
 @c %**start of header
 @setfilename buildbot.info
-@settitle BuildBot Manual 0.7.10
+@settitle BuildBot Manual 0.7.11
 @defcodeindex cs
 @defcodeindex sl
 @defcodeindex bf
@@ -3372,8 +3372,8 @@ c['status'].append(words.IRC(host="irc.example.com", nick="bb",
 Status delivery has its own chapter, @xref{Status Delivery}, in which
 all the built-in status targets are documented.
 
-@node Limiting Memory and Disk Usage::
-@section Limiting Memory and Disk Usage::
+@node Limiting Memory and Disk Usage
+@section Limiting Memory and Disk Usage
 
 Buildbot stores historical information on disk in the form of "Pickle" files
 and compressed logfiles.  In a large installation, these can quickly consume
