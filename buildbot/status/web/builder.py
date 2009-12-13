@@ -44,7 +44,8 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
             b['current_step'] = "[waiting for Lock]"
             # TODO: is this necessarily the case?
 
-        if self.builder_control is not None:
+        builder_control = self.getControl(req)
+        if builder_control is not None:
             b['stop_url'] = path_to_build(req, build) + '/stop'
 
         return b

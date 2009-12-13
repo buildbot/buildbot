@@ -44,7 +44,7 @@ class OneBuildSlaveResource(HtmlResource, BuildLineMixin):
                     current_builds.append(self.get_line_values(request, cb))
 
         try:
-            max_builds = int(request.args.get('builds')[0])
+            max_builds = int(request.args.get('numbuilds')[0])
         except:
             max_builds = 10
            
