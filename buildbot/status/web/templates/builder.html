@@ -52,7 +52,13 @@
 
     </li>
   {% endfor %}
-  </ul>     
+  </ul>  
+  
+  <form method="pos" action="{{ cancel_url }}" class="command cancelbuild" style="display:inline">
+    <input type="hidden" name="id" value="all" />
+    <input type="submit" value="Cancel All" />
+  </form>
+     
 {% else %}
   <h2>No pending builds</h2>
 {% endif %}

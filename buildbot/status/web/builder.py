@@ -68,7 +68,7 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
 
             if pb.source.changes:
                 for c in pb.source.changes:
-                    change_strings.append({ 'url' : path_to_change(req, c),
+                    changes.append({ 'url' : path_to_change(req, c),
                                             'who' : c.who})
             elif pb.source.revision:
                 reason = pb.source.revision
@@ -77,17 +77,17 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
             
             if self.builder_control is not None:
                 cancel_url = path_to_builder(req, self.builder.status) + '/cancelbuild'     
-            else:
-                cancel_url = None                               
                     
             cxt['pending'].append({
                 'when': time.strftime("%b %d %H:%M:%S", time.localtime(pb.getSubmitTime())),
-                'delay': util.formatInterval(util.now() - build_request.getSubmitTime()),
+                'delay': util.formatInterval(util.now() - pb.getSubmitTime()),
                 'reason': reason,
                 'cancel_url': cancel_url,
                 'id': id(pb),
                 'changes' : changes
                 })
+
+        cxt['cancel_url'] = path_to_builder(req, self.builder_status) + '/cancelbuild'
                         
         numbuilds = req.args.get('numbuilds', ['5'])[0]
         recent = cxt['recent'] = []
@@ -187,15 +187,21 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
 
     def cancel(self, req):
         try:
-            request_id = int(req.args.get("id", [None])[0])
+            request_id = req.args.get("id", [None])[0]
+            if request_id == "all":
+                cancel_all = True
+            else:
+                cancel_all = False
+                request_id = int(request_id)
         except:
             request_id = None
         if request_id:
             for build_req in self.builder_control.getPendingBuilds():
-                if id(build_req.original_request.status) == request_id:
+                if cancel_all or id(build_req.original_request.status) == request_id:
                     log.msg("Cancelling %s" % build_req)
                     build_req.cancel()
-                    break
+                    if not cancel_all:
+                        break
         return Redirect(".")
 
     def getChild(self, path, req):
