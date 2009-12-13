@@ -217,7 +217,7 @@ class BotMaster(service.MultiService):
                 if t2 is None:
                     return -1
                 return cmp(t1, t2)
-            builders.sort(cmp=_sortfunc)
+            builders.sort(_sortfunc)
         try:
             for b in builders:
                 b.maybeStartBuild()

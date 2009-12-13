@@ -130,16 +130,12 @@ class FeedResource(XmlResource):
                     break
 
         # Sort build list by date, youngest first.
-        if sys.version_info[:3] >= (2,4,0):
-            builds.sort(key=lambda build: build.getTimes(), reverse=True)
-        else:
-            # If you need compatibility with python < 2.4, use this for
-            # sorting instead:
-            # We apply Decorate-Sort-Undecorate
-            deco = [(build.getTimes(), build) for build in builds]
-            deco.sort()
-            deco.reverse()
-            builds = [build for (b1, build) in deco]
+        # To keep compatibility with python < 2.4, use this for sorting instead:
+        # We apply Decorate-Sort-Undecorate
+        deco = [(build.getTimes(), build) for build in builds]
+        deco.sort()
+        deco.reverse()
+        builds = [build for (b1, build) in deco]
 
         if builds:
             builds = builds[:min(len(builds), maxFeeds)]
