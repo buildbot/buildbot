@@ -319,7 +319,8 @@ class Dependent(BaseUpstreamScheduler):
     def __init__(self, name, upstream, builderNames, properties={}):
         assert interfaces.IUpstreamScheduler.providedBy(upstream)
         BaseUpstreamScheduler.__init__(self, name, properties)
-        self.upstream = upstream
+        self.upstream_name = upstream.name
+        self.upstream = None
         self.builderNames = builderNames
 
     def listBuilderNames(self):
@@ -327,15 +328,17 @@ class Dependent(BaseUpstreamScheduler):
 
     def getPendingBuildTimes(self):
         # report the upstream's value
-        return self.upstream.getPendingBuildTimes()
+        return self.getUpstreamScheduler().getPendingBuildTimes()
 
     def startService(self):
         service.MultiService.startService(self)
+        self.upstream = self.findUpstreamScheduler()
         self.upstream.subscribeToSuccessfulBuilds(self.upstreamBuilt)
 
     def stopService(self):
         d = service.MultiService.stopService(self)
         self.upstream.unsubscribeToSuccessfulBuilds(self.upstreamBuilt)
+        self.upstream = None
         return d
 
     def upstreamBuilt(self, ss):
@@ -343,16 +346,23 @@ class Dependent(BaseUpstreamScheduler):
                     properties=self.properties)
         self.submitBuildSet(bs)
 
-    def checkUpstreamScheduler(self):
+    def findUpstreamScheduler(self):
         # find our *active* upstream scheduler (which may not be self.upstream!) by name
-        up_name = self.upstream.name
         upstream = None
         for s in self.parent.allSchedulers():
-            if s.name == up_name and interfaces.IUpstreamScheduler.providedBy(s):
+            if s.name == self.upstream_name and interfaces.IUpstreamScheduler.providedBy(s):
                 upstream = s
         if not upstream:
             log.msg("ERROR: Couldn't find upstream scheduler of name <%s>" %
-                up_name)
+                self.upstream_name)
+        return upstream
+
+    def checkUpstreamScheduler(self):
+        # if we don't already have an upstream, then there's nothing to worry about
+        if not self.upstream:
+            return
+
+        upstream = self.findUpstreamScheduler()
 
         # if it's already correct, we're good to go
         if upstream is self.upstream:
