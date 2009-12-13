@@ -74,10 +74,24 @@ the Builders you are interested in here.</p>
 <table>
 {% for bn in all_builders %}
  <tr><td><input type="checkbox" name="builder" value="{{bn}}"
-  {% if bn in show_builders %}checked="checked"{% endif %} >
+  {% if bn in show_builders %}checked="checked"{% endif %} />
  </td><td>{{bn}}</td></tr>
 {% endfor %}
 </table>
+
+<h2>Showing only the Builders with failures</h2>
+
+<p>By adding the <tt>failures_only=true</tt> argument, the display will be limited
+to showing builders that are currently failing. A builder is considered
+failing if the last finished build was not successful, a step in the current
+build(s) failed, or if the builder is offline.
+
+<p>
+  <input type="checkbox" name="failures_only" value="true" 
+    {% if failures_only %}checked="checked"{% endif %} >  
+    Show failures only
+  </input>
+</p>
 
 <h2>Auto-reloading the Page</h2>
 

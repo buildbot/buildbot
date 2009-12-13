@@ -228,6 +228,7 @@ def insertGaps(g, lastEventTime, idleGap=2):
         followingEventStarts = starts
         if debug: log.msg(" fES1", starts)
 
+
 class WaterfallHelp(HtmlResource):
     title = "Waterfall Help"
 
@@ -235,13 +236,13 @@ class WaterfallHelp(HtmlResource):
         HtmlResource.__init__(self)
         self.categories = categories
 
-    def content(self, request, context):
-
+    def content(self, request, cxt):
         status = self.getStatus(request)
 
-        cxt = {}
         cxt['show_events_checked'] = request.args.get("show_events", ["true"])[0].lower() == "true"
         cxt['branches'] = [b for b in request.args.get("branch", []) if b]
+
+        cxt['failures_only'] = request.args.get("failures_only", ["false"])[0].lower() == "true"
 
         # this has a set of toggle-buttons to let the user choose the
         # builders
@@ -300,8 +301,35 @@ class WaterfallStatusResource(HtmlResource):
                 pass
         return None
 
-    def content(self, request, ctx):
+    def isSuccess(self, builderStatus):
+        # Helper function to return True if the builder is not failing.
+        # The function will return false if the current state is "offline",
+        # the last build was not successful, or if a step from the current
+        # build(s) failed.
 
+        # Make sure the builder is online.
+        if builderStatus.getState()[0] == 'offline':
+            return False
+
+        # Look at the last finished build to see if it was success or not.
+        lastBuild = builderStatus.getLastFinishedBuild()
+        if lastBuild and lastBuild.getResults() != builder.SUCCESS:
+            return False
+
+        # Check all the current builds to see if one step is already
+        # failing.
+        currentBuilds = builderStatus.getCurrentBuilds()
+        if currentBuilds:
+            for build in currentBuilds:
+                for step in build.getSteps():
+                    if step.getResults()[0] == builder.FAILURE:
+                        return False
+
+        # The last finished build was successful, and all the current builds
+        # don't have any failed steps.
+        return True
+
+    def content(self, request, ctx):
         status = self.getStatus(request)
         ctx['refresh'] = self.get_reload_time(request)
 
@@ -326,6 +354,13 @@ class WaterfallStatusResource(HtmlResource):
         showCategories = request.args.get("category", [])
         if showCategories:
             builders = [b for b in builders if b.category in showCategories]
+
+        # If the URL has the failures_only=true argument, we remove all the
+        # builders that are not currently red or won't be turning red at the end
+        # of their current run.
+        failuresOnly = request.args.get("failures_only", ["false"])[0]
+        if failuresOnly.lower() == "true":
+            builders = [b for b in builders if not self.isSuccess(b)]
         
         (changeNames, builderNames, timestamps, eventGrid, sourceEvents) = \
                       self.buildGrid(request, builders)            
@@ -384,7 +419,7 @@ class WaterfallStatusResource(HtmlResource):
 
 
         helpurl = self.path_to_root(request) + "waterfall/help"
-        ctx['helppage'] = with_args(request, new_path=helpurl)
+        ctx['help_url'] = with_args(request, new_path=helpurl)
 
         if self.get_reload_time(request) is not None:
             ctx['no_reload_page'] = with_args(request, remove_args=["reload"])
