@@ -1614,6 +1614,8 @@ class CVS(SourceBase):
     ['branch']: a '-r' tag or branch name to use for the checkout/update
     ['login']: a string for use as a password to 'cvs login'
     ['global_options']: a list of strings to use before the CVS verb
+    ['checkout_options']: a list of strings to use after checkout,
+                          but before revision and branch specifiers
     """
 
     header = "cvs operation"
@@ -1624,6 +1626,7 @@ class CVS(SourceBase):
         self.cvsroot = args['cvsroot']
         self.cvsmodule = args['cvsmodule']
         self.global_options = args.get('global_options', [])
+        self.checkout_options = args.get('checkout_options', [])
         self.branch = args.get('branch')
         self.login = args.get('login')
         self.sourcedata = "%s\n%s\n%s\n" % (self.cvsroot, self.cvsmodule,
@@ -1678,11 +1681,15 @@ class CVS(SourceBase):
         command = ([self.vcexe, '-d', self.cvsroot, '-z3'] +
                    self.global_options +
                    [verb, '-d', self.srcdir])
+
+        if verb == "checkout":
+            command += self.checkout_options
         if self.branch:
             command += ['-r', self.branch]
         if self.revision:
             command += ['-D', self.revision]
         command += [self.cvsmodule]
+        
         c = ShellCommand(self.builder, command, d,
                          sendRC=False, timeout=self.timeout, usePTY=False)
         self.command = c

@@ -16,7 +16,8 @@ from buildbot.process import base
  PINGING, # build about to start, making sure it is still alive
  BUILDING, # build is running
  LATENT, # latent slave is not substantiated; similar to idle
- ) = range(5)
+ SUBSTANTIATING,
+ ) = range(6)
 
 
 class AbstractSlaveBuilder(pb.Referenceable):
@@ -260,6 +261,7 @@ class LatentSlaveBuilder(AbstractSlaveBuilder):
                                                          self.builder_name))
 
     def substantiate(self, build):
+        self.state = SUBSTANTIATING
         d = self.slave.substantiate(self)
         if not self.slave.substantiated:
             event = self.builder.builder_status.addEvent(
