@@ -331,8 +331,8 @@ class WaterfallStatusResource(HtmlResource):
                       self.buildGrid(request, builders)            
             
         # start the table: top-header material
-        ctx['timezone'] = time.tzname[time.localtime()[-1]]
-        ctx['changesURL'] = request.childLink("../changes")
+        ctx['tz'] = time.tzname[time.localtime()[-1]]
+        ctx['changes_url'] = request.childLink("../changes")
         
         bn = ctx['builders'] = []
                 
@@ -379,7 +379,7 @@ class WaterfallStatusResource(HtmlResource):
 
         if timestamps:
             bottom = timestamps[-1]
-            ctx['nexpage'] = with_args(request, ["last_time"],
+            ctx['nextpage'] = with_args(request, ["last_time"],
                                  [("last_time", str(int(bottom)))])
 
 

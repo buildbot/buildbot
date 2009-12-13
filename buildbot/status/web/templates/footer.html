@@ -4,20 +4,20 @@
 <a href="{{ welcomeurl }}">Welcome Page</a>
 <br />
 
-<a href="http://buildbot.sourceforge.net/">Buildbot</a>-{{ version }}
+<a href="http://buildbot.net/">Buildbot</a>-{{ version }}
 
-{% if projectName %}
-  working for the
-  {% if projectURL %}
-    <a href="{{ projectURL }}">{{ projectName }}</a>
+{% if project_name %}
+  working for
+  {% if project_url %}
+    <a href="{{ project_url }}">{{ project_name }}</a>
   {% else %}
-    {{ projectName }}
+    {{ project_name }}
   {% endif %}
   project
 {% endif %}
 
 <br />
 
-Page built: {{ time }}
+Page built: {{ time }} ({{ tz }})
 </div>
 

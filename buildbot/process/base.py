@@ -351,8 +351,9 @@ class Build:
             self.setupBuild(expectations) # create .steps
         except:
             # the build hasn't started yet, so log the exception as a point
-            # event instead of flunking the build. TODO: associate this
-            # failure with the build instead. this involves doing
+            # event instead of flunking the build. 
+            # TODO: associate this failure with the build instead. 
+            # this involves doing
             # self.build_status.buildStarted() from within the exception
             # handler
             log.msg("Build.setupBuild failed")

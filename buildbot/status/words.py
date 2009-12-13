@@ -395,8 +395,8 @@ class Contact:
             raise UsageError("you must provide a Builder, "
                              "try 'force build WHICH <REASON>'")
 
-        # keep weird stuff out of the branch and revision strings. TODO:
-        # centralize this somewhere.
+        # keep weird stuff out of the branch and revision strings. 
+        # TODO:  centralize this somewhere.
         if branch and not re.match(r'^[\w\.\-\/]*$', branch):
             log.msg("bad branch '%s'" % branch)
             self.send("sorry, bad branch '%s'" % branch)

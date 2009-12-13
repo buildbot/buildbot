@@ -58,14 +58,16 @@ class OneBuildSlaveResource(HtmlResource, BuildLineMixin):
                 if n > max_builds:
                     break
 
+        ctx.updatedict(slave = s.getSlave(self.slavename),
+                       slavename = self.slavename,  
+                       current = current_builds, 
+                       recent = recent_builds, 
+                       shutdown_url = request.childLink("shutdown"),
+                       control = self.getControl(request),
+                       this_url = "../../../" + path_to_slave(request, slave))
+
         template = request.site.buildbot_service.templates.get_template("buildslave.html");
-        data = template.render(slave = s.getSlave(self.slavename),
-                               slavename = self.slavename,  
-                               current = current_builds, 
-                               recent = recent_builds, 
-                               shutdown_url = request.childLink("shutdown"),
-                               control = self.getControl(request),
-                               this_url = "../../../" + path_to_slave(request, slave))
+        data = template.render(**ctx)
 
         return data
 
@@ -86,7 +88,7 @@ class BuildSlavesResource(HtmlResource):
                     used_by_builder[slavename] = []
                 used_by_builder[slavename].append(bname)
 
-        slaves = []
+        slaves = ctx['slaves'] = []
         for name in util.naturalSort(s.getSlaveNames()):
             info = {}
             slaves.append(info)
@@ -108,7 +110,7 @@ class BuildSlavesResource(HtmlResource):
                                                                 time.localtime(last))
 
         template = request.site.buildbot_service.templates.get_template("buildslaves.html")
-        data = template.render(slaves=slaves)
+        data = template.render(**ctx)
         return data
 
     def getChild(self, path, req):

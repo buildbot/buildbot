@@ -61,7 +61,7 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
         connected_slaves = [s for s in slaves if s.isConnected()]
 
         cxt['current'] = [self.builder(x, req) for x in b.getCurrentBuilds()]        
-
+            
         cxt['pending'] = []        
         for pb in b.getPendingBuilds():
             changes = []
@@ -74,20 +74,17 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
                 reason = pb.source.revision
             else:
                 reason = "no changes specified"
-            
-            if self.builder_control is not None:
-                cancel_url = path_to_builder(req, self.builder.status) + '/cancelbuild'     
                     
             cxt['pending'].append({
                 'when': time.strftime("%b %d %H:%M:%S", time.localtime(pb.getSubmitTime())),
                 'delay': util.formatInterval(util.now() - pb.getSubmitTime()),
                 'reason': reason,
-                'cancel_url': cancel_url,
                 'id': id(pb),
                 'changes' : changes
                 })
 
-        cxt['cancel_url'] = path_to_builder(req, self.builder_status) + '/cancelbuild'
+        if self.builder_control is not None:
+            cxt['cancel_url'] = path_to_builder(req, b) + '/cancelbuild'
                         
         numbuilds = req.args.get('numbuilds', ['5'])[0]
         recent = cxt['recent'] = []
@@ -113,7 +110,6 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
 
         if control is not None:
             cxt['ping_url'] = path_to_builder(req, b) + '/ping'
-
 
         template = req.site.buildbot_service.templates.get_template("builder.html")
         return template.render(**cxt)
@@ -148,8 +144,8 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
             if not self.authUser(req):
                 return Redirect("../../authfail")
 
-        # keep weird stuff out of the branch and revision strings. TODO:
-        # centralize this somewhere.
+        # keep weird stuff out of the branch and revision strings. 
+        # TODO: centralize this somewhere.
         if not re.match(r'^[\w\.\-\/]*$', branch):
             log.msg("bad branch '%s'" % branch)
             return Redirect("..")

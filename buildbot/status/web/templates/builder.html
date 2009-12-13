@@ -37,8 +37,8 @@
   {% for b in pending %}
     <li><font size="-1">({{ b.when }}, waiting {{ b.delay }})</font> 
     
-    {% if b.cancel_url %}
-      <form method="post" action="{{ b.cancel_url }}" class="command cancelbuild" style="display:inline">
+    {% if cancel_url %}
+      <form method="post" action="{{ cancel_url }}" class="command cancelbuild" style="display:inline">
         <input type="hidden" name="id" value="{{ b.id }}" />
         <input type="submit" value="Cancel Build" />
       </form>
@@ -54,10 +54,12 @@
   {% endfor %}
   </ul>  
   
-  <form method="pos" action="{{ cancel_url }}" class="command cancelbuild" style="display:inline">
-    <input type="hidden" name="id" value="all" />
-    <input type="submit" value="Cancel All" />
-  </form>
+  {% if cancel_url %}
+    <form method="pos" action="{{ cancel_url }}" class="command cancelbuild" style="display:inline">
+      <input type="hidden" name="id" value="all" />
+      <input type="submit" value="Cancel All" />
+    </form>
+   {% endif %}
      
 {% else %}
   <h2>No pending builds</h2>
@@ -99,7 +101,9 @@
 {% endfor %}
 </ol>
 
-{{ forms.force_build(force_url, use_user_passwd) }}
+{% if force_url %}
+  {{ forms.force_build(force_url, use_user_passwd) }}
+{% endif %}
 
 {% if all_slaves_offline %}
   <p>All buildslaves appear to be offline, so it's not possible

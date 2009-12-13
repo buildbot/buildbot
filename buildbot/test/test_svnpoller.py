@@ -471,6 +471,5 @@ class Everything(unittest.TestCase):
         self.failUnless(abs(c4.when - time.time()) < 60)
 
 
-# TODO:
-#  get coverage of split_file returning None
+# TODO: get coverage of split_file returning None
 #  point at a live SVN server for a little while

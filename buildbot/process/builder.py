@@ -776,9 +776,8 @@ class Builder(pb.Referenceable):
             d = sb.ping(self.START_BUILD_TIMEOUT)
         # ping the slave to make sure they're still there. If they're fallen
         # off the map (due to a NAT timeout or something), this will fail in
-        # a couple of minutes, depending upon the TCP timeout. TODO: consider
-        # making this time out faster, or at least characterize the likely
-        # duration.
+        # a couple of minutes, depending upon the TCP timeout. 
+        # TODO consider making this time out faster, or at least characterize the likely duration.
         d.addCallback(self._startBuild_1, build, sb)
         return d
 

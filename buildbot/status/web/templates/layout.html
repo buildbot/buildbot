@@ -1,36 +1,40 @@
 {%- block doctype -%}
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-{%- endblock %}
+{% endblock %}
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    {%- block head %}
+    {% block head %}
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    {{ metatags }}
+    {% if metatags %}
+      {{ metatags }}
+    {% endif %}
     <title>{{ title }}</title>
     <link rel="stylesheet" href="{{ stylesheet }}" type="text/css" />
     {% endblock %}
   </head>
   <body>
-    {%- block header %}
+    {% block header -%}
     <div class="header">
     </div>
     {% endblock %}
-    {%- block content %} {% endblock %}
-    {%- block footer %} 
+    {%- block content -%} {%- endblock -%}
+    {%- block footer -%} 
     <div class="footer">
+      <hr/>
       <a href="http://buildbot.net/">Buildbot</a> {{version}}
-      {% if project_name %}
+      {% if project_name -%}
         working for the
-        {% if project_url %}
+        {%- if project_url %}
           <a href="{{project_url}}">{{project_name}}</a>
-        {% else %}
-          {{project_name}}
-        {% endif %}
+        {%- else %}
+          {{ project_name }}
+        {%- endif %}
         project
       {% endif %}
+      <br/>
       Page built: {{time}} ({{tz}})
     </div>
-    {%- endblock %}
+    {% endblock -%}
   </body>
 </html>

@@ -746,8 +746,7 @@ class UploadDirectory(StepTester, unittest.TestCase):
         return d
 
 
-# TODO:
-#  test relative paths, ~/paths
+# TODO: test relative paths, ~/paths
 #   need to implement expanduser() for slave-side
 #  test error message when master-side file is in a missing directory
 #  remove workdir= default?

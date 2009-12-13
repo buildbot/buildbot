@@ -7,8 +7,8 @@
 {% block content %}
 <table border="0" cellspacing="0">
 
-{% if projectName and projectURL %}
-  <a href="{{ projectURL }}">{{ projectName }}</a><br />
+{% if project_name and project_url %}
+  <a href="{{ project_url }}">{{ project_name }}</a><br />
 {% endif %}
 
 <tr class="LastBuild">
@@ -36,10 +36,10 @@
 </tr>
 
 <tr>
-<td align="center" class="Time">{{ TZ }}</td>
-<td align="center" class="Change"><a href="{{ changesURL }}">changes</a></td>
+<td align="center" class="Time">{{ tz }}</td>
+<td align="center" class="Change"><a href="{{ changes_url }}">changes</a></td>
 
-{% for b in builderNames %}
+{% for b in builders %}
  <td align="center" class="Builder"><a href="{{ b.url }}">{{ b.name }}</a></td>
 {% endfor %}
 </tr>
@@ -48,15 +48,9 @@
 
 </table>
 
-<hr/>
-
-<div class="footer">
 {% if nextpage %}
  <a href="{{ nextpage }}">next page</a>
 {% endif %}
-
-<a href="{{ helppage }}">help</a>
-<a href="{{ welcomeurl }}">welcome</a>
 
 {% if no_reload_page %}
  <a href="{{ no_reload_page }}">Stop Reloading</a> 

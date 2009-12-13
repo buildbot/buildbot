@@ -230,8 +230,8 @@ class Trial(ShellCommand):
     name = "trial"
     progressMetrics = ('output', 'tests', 'test.log')
     # note: the slash only works on unix buildslaves, of course, but we have
-    # no way to know what the buildslave uses as a separator. TODO: figure
-    # out something clever.
+    # no way to know what the buildslave uses as a separator. 
+    # TODO: figure out something clever.
     logfiles = {"test.log": "_trial_temp/test.log"}
     # we use test.log to track Progress at the end of __init__()
 

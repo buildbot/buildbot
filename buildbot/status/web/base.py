@@ -194,14 +194,7 @@ class HtmlResource(resource.Resource):
             request.redirect(new_url)
             return ''
 
-        status = self.getStatus(request)
-        ctx = dict(project_url = status.getProjectURL(),
-                   project_name = status.getProjectName(),
-                   stylesheet = self.path_to_root(request) + 'buildbot.css',
-                   version = version,
-                   time = time.strftime("%a %d %b %Y %H:%M:%S",
-                                        time.localtime(util.now())),
-                   tz = time.tzname[time.localtime()[-1]])
+        ctx = self.getContext(request)
 
         data = self.content(request, ctx)
         if isinstance(data, unicode):
@@ -211,6 +204,21 @@ class HtmlResource(resource.Resource):
             request.setHeader("content-length", len(data))
             return ''
         return data
+
+    def getContext(self, request):
+        status = self.getStatus(request)
+        return dict(project_url = status.getProjectURL(),
+                    project_name = status.getProjectName(),
+                    stylesheet = self.path_to_root(request) + 'buildbot.css',
+                    path_to_root = self.path_to_root(request),
+                    version = version,
+                    time = time.strftime("%a %d %b %Y %H:%M:%S",
+                                        time.localtime(util.now())),
+                    tz = time.tzname[time.localtime()[-1]],
+                    metatags = [],
+                    title = 'BuildBot',
+                    welcomeurl = self.path_to_root(request) + "index.html")
+        
 
     def getStatus(self, request):
         return request.site.buildbot_service.getStatus()
@@ -235,14 +243,9 @@ class HtmlResource(resource.Resource):
         return path_to_root(request)
 
     def footer(self, req):
-        status = self.getStatus(req)
         template = req.site.buildbot_service.templates.get_template("footer.html")
-        return template.render(projectURL = status.getProjectURL(),
-                               projectName = status.getProjectName(),
-                               welcomeurl = self.path_to_root(req) + "index.html",
-                               version = version,
-                               time = time.strftime("%a %d %b %Y %H:%M:%S",
-                                                    time.localtime(util.now())))
+        cxt = self.getContext(req)
+        return template.render(**cxt)
 
     def getTitle(self, request):
         return self.title
@@ -303,8 +306,10 @@ class DirectoryLister(static.DirectoryLister):
                    stylesheet = path_to_root(request) + 'buildbot.css',
                    version = version,
                    time = time.strftime("%a %d %b %Y %H:%M:%S",
-                                        time.localtime(util.now())))
-
+                                        time.localtime(util.now())),
+                   tz = time.tzname[time.localtime()[-1]],
+                   metatags = [],
+                   title = 'BuildBot')
 
         if self.dirs is None:
             directory = os.listdir(self.path)

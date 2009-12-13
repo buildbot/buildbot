@@ -280,7 +280,15 @@ FOOTER = '''
 </html>
 '''
 
-
+class AlmostStrictUndefined(jinja2.StrictUndefined):
+    ''' An undefined that allows boolean testing but 
+        fails properly on every other use.
+        
+        Much better than the default Undefined, but not
+        fully as strict as StrictUndefined '''
+    def __nonzero__(self):
+        return False
+    
 class WebStatus(service.MultiService):
     implements(IStatusReceiver)
     # TODO: IStatusReceiver is really about things which subscribe to hear
@@ -488,7 +496,8 @@ class WebStatus(service.MultiService):
                                       default_loader])
         self.templates = jinja2.Environment(loader=loader,
                                             extensions=['jinja2.ext.i18n'],
-                                            trim_blocks=True)
+                                            trim_blocks=True,
+                                            undefined=AlmostStrictUndefined)
 
         # keep track of cached connections so we can break them when we shut
         # down. See ticket #102 for more details.
