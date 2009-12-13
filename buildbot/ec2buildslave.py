@@ -187,8 +187,8 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
         options.sort()
         log.msg('sorted images (last is chosen): %s' %
                 (', '.join(
-                    '%s (%s)' % (candidate[-1].id, candidate[-1].location)
-                    for candidate in options)))
+                    ['%s (%s)' % (candidate[-1].id, candidate[-1].location)
+                    for candidate in options])))
         if not options:
             raise ValueError('no available images match constraints')
         return options[-1][-1]

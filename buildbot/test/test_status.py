@@ -15,6 +15,10 @@ from buildbot.changes.changes import Change
 from buildbot.process.builder import Builder
 from time import sleep
 
+import sys
+if sys.version_info[:3] < (2,4,0):
+    from sets import Set as set
+
 mail = None
 try:
     from buildbot.status import mail
