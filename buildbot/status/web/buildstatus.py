@@ -9,13 +9,12 @@ class BuildStatusStatusResource(HtmlResource):
     def head(self, request):
         return ""
 
-    def body(self, request):
+    def content(self, request, ctx):
         """Display a build in the same format as the waterfall page.
         The HTTP GET parameters are the builder name and the build
         number."""
 
         status = self.getStatus(request)
-        data = ""
 
         # Get the parameters.
         name = request.args.get("builder", [None])[0]
@@ -23,12 +22,9 @@ class BuildStatusStatusResource(HtmlResource):
         if not name or not number:
             return "builder and number parameter missing"
 
-        # Main table for the build status.
-        data += '<table>\n'
-
         # Check if the builder in parameter exists.
         try:
-          builder = status.getBuilder(name)
+            builder = status.getBuilder(name)
         except:
             return "unknown builder"
 
@@ -37,19 +33,21 @@ class BuildStatusStatusResource(HtmlResource):
         if not build:
             return "unknown build %s" % number
 
+        rows = ctx['rows'] = []
+
         # Display each step, starting by the last one.
         for i in range(len(build.getSteps()) - 1, -1, -1):
             if build.getSteps()[i].getText():
-                data += " <tr>\n"
-                data += IBox(build.getSteps()[i]).getBox(request).td(align="center")
-                data += " </tr>\n"
+                rows.append(IBox(build.getSteps()[i]).getBox(request).td(align="center"))
 
         # Display the bottom box with the build number in it.
-        data += "<tr>"
-        data += IBox(build).getBox(request).td(align="center")
-        data += "</tr></table>\n"
+        ctx['build'] = IBox(build).getBox(request).td(align="center")
+        
+        template = request.site.buildbot_service.templates.get_template("buildstatus.html")
+        data = template.render(**ctx)
 
         # We want all links to display in a new tab/window instead of in the
         # current one.
+        # TODO: Move to template
         data = data.replace('<a ', '<a target="_blank"')
         return data

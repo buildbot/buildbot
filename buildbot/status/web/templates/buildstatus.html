@@ -1,0 +1,11 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<table>
+  {% for r in rows %}
+    <tr>{{ r }}</tr>
+  {% endfor %}
+
+  <tr>{{ build }}</tr>
+</table>
+{% endblock %}
