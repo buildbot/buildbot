@@ -951,6 +951,7 @@ class SlaveDirectoryUploadCommand(SlaveFileUploadCommand):
         - ['writer']:    RemoteReference to a transfer._DirectoryWriter object
         - ['maxsize']:   max size (in bytes) of file to write
         - ['blocksize']: max size for each data block
+        - ['compress']:  one of [None, 'bz2', 'gz']
     """
     debug = True
 
@@ -960,6 +961,7 @@ class SlaveDirectoryUploadCommand(SlaveFileUploadCommand):
         self.writer = args['writer']
         self.remaining = args['maxsize']
         self.blocksize = args['blocksize']
+        self.compress = args['compress']
         self.stderr = None
         self.rc = 0
 
@@ -976,7 +978,13 @@ class SlaveDirectoryUploadCommand(SlaveFileUploadCommand):
         # Create temporary archive
         fd, self.tarname = tempfile.mkstemp()
         fileobj = os.fdopen(fd, 'w')
-        archive = tarfile.open(name=self.tarname, mode="w|bz2", fileobj=fileobj)
+        if self.compress == 'bz2':
+            mode='w|bz2'
+        elif self.compress == 'gz':
+            mode='w|gz'
+        else:
+            mode = 'w'
+        archive = tarfile.open(name=self.tarname, mode=mode, fileobj=fileobj)
         archive.add(self.path, '')
         archive.close()
         fileobj.close()

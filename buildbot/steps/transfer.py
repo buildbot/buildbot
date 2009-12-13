@@ -65,11 +65,11 @@ class _DirectoryWriter(_FileWriter):
     step to unpack the archive, once the transfer has completed.
     """
 
-    def __init__(self, destroot, maxsize, mode):
+    def __init__(self, destroot, maxsize, compress, mode):
         self.destroot = destroot
 
         self.fd, self.tarname = tempfile.mkstemp()
-
+        self.compress = compress
         _FileWriter.__init__(self, self.tarname, maxsize, mode)
 
     def remote_unpack(self):
@@ -80,7 +80,13 @@ class _DirectoryWriter(_FileWriter):
             self.fp.close()
             self.fp = None
         fileobj = os.fdopen(self.fd, 'r')
-        archive = tarfile.open(name=self.tarname, mode="r|bz2", fileobj=fileobj)
+        if self.compress == 'bz2':
+            mode='r|bz2'
+        elif self.compress == 'gz':
+            mode='r|gz'
+        else:
+            mode = 'r'
+        archive = tarfile.open(name=self.tarname, mode=mode, fileobj=fileobj)
         archive.extractall(path=self.destroot)
         os.remove(self.tarname)
 
@@ -221,6 +227,7 @@ class DirectoryUpload(BuildStep):
                      base dir, default 'build'
     - ['maxsize']    maximum size of each file, default None (=unlimited)
     - ['blocksize']  maximum size of each block being transfered
+    - ['compress']   compression type to use: one of [None, 'gz', 'bz2']
     - ['mode']       file access mode for the resulting master-side file.
                      The default (=None) is to leave it up to the umask of
                      the buildmaster process.
@@ -231,13 +238,14 @@ class DirectoryUpload(BuildStep):
 
     def __init__(self, slavesrc, masterdest,
                  workdir="build", maxsize=None, blocksize=16*1024, mode=None,
-                 **buildstep_kwargs):
+                 compress=None, **buildstep_kwargs):
         BuildStep.__init__(self, **buildstep_kwargs)
         self.addFactoryArguments(slavesrc=slavesrc,
                                  masterdest=masterdest,
                                  workdir=workdir,
                                  maxsize=maxsize,
                                  blocksize=blocksize,
+                                 compress=compress,
                                  mode=mode,
                                  )
 
@@ -246,6 +254,8 @@ class DirectoryUpload(BuildStep):
         self.workdir = workdir
         self.maxsize = maxsize
         self.blocksize = blocksize
+        assert compress in (None, 'gz', 'bz2')
+        self.compress = compress
         assert isinstance(mode, (int, type(None)))
         self.mode = mode
 
@@ -270,7 +280,7 @@ class DirectoryUpload(BuildStep):
         self.step_status.setText(['uploading', os.path.basename(source)])
         
         # we use maxsize to limit the amount of data on both sides
-        dirWriter = _DirectoryWriter(masterdest, self.maxsize, self.mode)
+        dirWriter = _DirectoryWriter(masterdest, self.maxsize, self.compress, self.mode)
 
         # default arguments
         args = {
@@ -279,6 +289,7 @@ class DirectoryUpload(BuildStep):
             'writer': dirWriter,
             'maxsize': self.maxsize,
             'blocksize': self.blocksize,
+            'compress': self.compress
             }
 
         self.cmd = StatusRemoteCommand('uploadDirectory', args)
