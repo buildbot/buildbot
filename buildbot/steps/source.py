@@ -499,7 +499,7 @@ class SVN(Source):
 			m = ("This buildslave (%s) does not support svn depth "
 			     "arguments.  "
 			     "Refusing to build. "
-			     "Please upgrade the buildslave." % (self.build.slavename,))
+			     "Please upgrade the buildslave." % (self.build.slavename))
                 	raise BuildSlaveTooOldError(m)
 		else: 
 			self.args['depth'] = self.depth
