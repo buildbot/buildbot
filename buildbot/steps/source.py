@@ -495,7 +495,7 @@ class SVN(Source):
 
 	#Set up depth if specified
 	if self.depth is not None:
-		if self.slaveVersionIsOlderThan("svn","2.9")):
+		if self.slaveVersionIsOlderThan("svn","2.9"):
 			m = ("This buildslave (%s) does not support svn depth "
 			     "arguments.  "
 			     "Refusing to build. "
