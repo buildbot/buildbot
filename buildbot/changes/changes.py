@@ -286,7 +286,10 @@ class ChangeMaster(service.MultiService):
             return None
         offset = num - first
         log.msg(self, "offset", offset)
-        return self.changes[offset]
+        if 0 <= offset <= len(self.changes):
+            return self.changes[offset]
+        else:
+            return None
 
     def __getstate__(self):
         d = service.MultiService.__getstate__(self)
