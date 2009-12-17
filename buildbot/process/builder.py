@@ -678,8 +678,8 @@ class Builder(pb.Referenceable):
             self.fireTestEvent('idle')
 
     def maybeStartBuild(self):
-        log.msg("maybeStartBuild %s: %s %s" %
-                (self, self.buildable, self.slaves))
+        log.msg("maybeStartBuild %s: %i request(s), %i slave(s)" %
+                (self, len(self.buildable), len(self.slaves)))
         if not self.buildable:
             self.updateBigStatus()
             return # nothing to do
@@ -687,8 +687,6 @@ class Builder(pb.Referenceable):
         # pick an idle slave
         available_slaves = [sb for sb in self.slaves if sb.isAvailable()]
         if not available_slaves:
-            log.msg("%s: want to start build, but we don't have a remote"
-                    % self)
             self.updateBigStatus()
             return
         if self.nextSlave:
@@ -700,8 +698,6 @@ class Builder(pb.Referenceable):
                 log.err(Failure())
 
             if not sb:
-                log.msg("%s: want to start build, but we don't have a remote"
-                        % self)
                 self.updateBigStatus()
                 return
         elif self.CHOOSE_SLAVES_RANDOMLY:
