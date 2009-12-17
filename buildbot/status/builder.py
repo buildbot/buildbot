@@ -264,6 +264,9 @@ class LogFile:
             # is out of date, and we're overlapping with earlier builds now.
             # Warn about it, but then overwrite the old pickle file
             log.msg("Warning: Overwriting old serialized Build at %s" % fn)
+        dirname = os.path.dirname(fn)
+        if not os.path.exists(dirname):
+            os.makedirs(dirname)
         self.openfile = open(fn, "w+")
         self.runEntries = []
         self.watchers = []
@@ -1716,6 +1719,10 @@ class BuilderStatus(styles.Versioned):
         # skim the directory and delete anything that shouldn't be there anymore
         build_re = re.compile(r"^([0-9]+)$")
         build_log_re = re.compile(r"^([0-9]+)-.*$")
+        # if the directory doesn't exist, bail out here
+        if not os.path.exists(self.basedir):
+            return
+
         for filename in os.listdir(self.basedir):
             num = None
             mo = build_re.match(filename)
