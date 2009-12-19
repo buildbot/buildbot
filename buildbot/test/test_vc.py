@@ -2293,7 +2293,7 @@ class BzrHelper(BaseHelper):
             rep = self.rep_trunk
         else:
             rep = os.path.join(self.bzr_base, branch)
-        w = self.dovc(self.bzr_base, ["checkout", rep, workdir])
+        w = self.dovc(self.bzr_base, ["clone", rep, workdir])
         yield w; w.getResult()
         open(os.path.join(workdir, "subdir", "subdir.c"), "w").write(TRY_C)
     vc_try_checkout = deferredGenerator(vc_try_checkout)

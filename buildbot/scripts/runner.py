@@ -848,6 +848,12 @@ class TryOptions(usage.Options):
          "Run the trial build on this Builder. Can be used multiple times."],
         ["properties", None, None,
          "A set of properties made available in the build environment, format:prop=value,propb=valueb..."],
+
+        ["try-topfile", None, None,
+         "Name of a file at the top of the tree, used to find the top. Only needed for SVN and CVS."],
+        ["try-topdir", None, None,
+         "Path to the top of the working copy. Only needed for SVN and CVS."],
+
         ]
 
     optFlags = [

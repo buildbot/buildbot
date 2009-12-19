@@ -2051,6 +2051,7 @@ class Git(SourceBase):
 
     def setup(self, args):
         SourceBase.setup(self, args)
+        self.vcexe = getCommand("git")
         self.repourl = args['repourl']
         self.branch = args.get('branch')
         if not self.branch:
@@ -2072,6 +2073,17 @@ class Git(SourceBase):
     def readSourcedata(self):
         return open(self.sourcedatafile, "r").read()
 
+    def _dovccmd(self, command, cb=None, **kwargs):
+        c = ShellCommand(self.builder, [self.vcexe] + command, self._fullSrcdir(),
+                         sendRC=False, timeout=self.timeout,
+                         maxTime=self.maxTime, usePTY=False, **kwargs)
+        self.command = c
+        d = c.start()
+        if cb:
+            d.addCallback(self._abandonOnFailure)
+            d.addCallback(cb)
+        return d
+
     # If the repourl matches the sourcedata file, then
     # we can say that the sourcedata matches.  We can
     # ignore branch changes, since Git can work with
@@ -2086,13 +2098,17 @@ class Git(SourceBase):
             return False
         return True
 
-    def _didSubmodules(self, res):
-        command = ['git', 'submodule', 'update', '--init']
-        c = ShellCommand(self.builder, command, self._fullSrcdir(),
-                         sendRC=False, timeout=self.timeout,
-                         maxTime=self.maxTime, usePTY=False)
-        self.command = c
-        return c.start()
+    def _cleanSubmodules(self, res):
+        return self._dovccmd(['submodule', 'foreach', 'git', 'clean', '-dfx'])
+
+    def _updateSubmodules(self, res):
+        return self._dovccmd(['submodule', 'update'], self._cleanSubmodules)
+
+    def _initSubmodules(self, res):
+        if self.submodules:
+            return self._dovccmd(['submodule', 'init'], self._updateSubmodules)
+        else:
+            return defer.succeed(0)
 
     def _didFetch(self, res):
         if self.revision:
@@ -2100,70 +2116,51 @@ class Git(SourceBase):
         else:
             head = 'FETCH_HEAD'
 
-        command = ['git', 'reset', '--hard', head]
-        c = ShellCommand(self.builder, command, self._fullSrcdir(),
-                         sendRC=False, timeout=self.timeout,
-                         maxTime=self.maxTime, usePTY=False)
-        self.command = c
-        d = c.start()
-        if self.submodules:
-            d.addCallback(self._abandonOnFailure)
-            d.addCallback(self._didSubmodules)
-        return d
+        command = ['reset', '--hard', head]
+        return self._dovccmd(command, self._initSubmodules)
 
     # Update first runs "git clean", removing local changes, This,
     # combined with the later "git reset" equates clobbering the repo,
     # but it's much more efficient.
     def doVCUpdate(self):
-        command = ['git', 'clean', '-f', '-d', '-x']
-        c = ShellCommand(self.builder, command, self._fullSrcdir(),
-                         sendRC=False, timeout=self.timeout,
-                         maxTime=self.maxTime, usePTY=False)
-        self.command = c
-        d = c.start()
-        d.addCallback(self._abandonOnFailure)
-        d.addCallback(self._didClean)
-        return d
+        command = ['clean', '-f', '-d', '-x']
+        return self._dovccmd(command, self._didClean)
 
-    def _didClean(self, dummy):
-        command = ['git', 'fetch', '-t', self.repourl, self.branch]
+    def _doFetch(self, dummy):
+        command = ['fetch', '-t', self.repourl, self.branch]
         self.sendStatus({"header": "fetching branch %s from %s\n"
                                         % (self.branch, self.repourl)})
-        c = ShellCommand(self.builder, command, self._fullSrcdir(),
-                         sendRC=False, timeout=self.timeout,
-                         maxTime=self.maxTime, usePTY=False)
-        self.command = c
-        d = c.start()
-        d.addCallback(self._abandonOnFailure)
-        d.addCallback(self._didFetch)
-        return d
+        return self._dovccmd(command, self._didFetch)
+
+    def _didClean(self, dummy):
+        # After a clean, try to use the given revision if we have one.
+        if self.revision:
+            # We know what revision we want.  See if we have it.
+            d = self._dovccmd(['reset', '--hard', self.revision],
+                              self._initSubmodules)
+            # If we are unable to reset to the specified version, we
+            # must do a fetch first and retry.
+            d.addErrback(self._doFetch)
+            return d
+        else:
+            # No known revision, go grab the latest.
+            return self._doFetch(None)
 
     def _didInit(self, res):
         return self.doVCUpdate()
 
     def doVCFull(self):
         os.mkdir(self._fullSrcdir())
-        c = ShellCommand(self.builder, ['git', 'init'], self._fullSrcdir(),
-                         sendRC=False, timeout=self.timeout,
-                         maxTime=self.maxTime, usePTY=False)
-        self.command = c
-        d = c.start()
-        d.addCallback(self._abandonOnFailure)
-        d.addCallback(self._didInit)
-        return d
+        return self._dovccmd(['init'], self._didInit)
 
     def parseGotRevision(self):
-        command = ['git', 'rev-parse', 'HEAD']
-        c = ShellCommand(self.builder, command, self._fullSrcdir(),
-                         sendRC=False, keepStdout=True, usePTY=False)
-        d = c.start()
+        command = ['rev-parse', 'HEAD']
         def _parse(res):
-            hash = c.stdout.strip()
+            hash = self.command.stdout.strip()
             if len(hash) != 40:
                 return None
             return hash
-        d.addCallback(_parse)
-        return d
+        return self._dovccmd(command, _parse, keepStdout=True)
 
 registerSlaveCommand("git", Git, command_version)
 
