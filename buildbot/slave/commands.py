@@ -2887,7 +2887,8 @@ class P4Base(SourceBase):
             command.extend(['-P', self.p4passwd])
         if self.p4client:
             command.extend(['-c', self.p4client])
-        command.extend(['changes', '-m', '1', '#have'])
+        # add '-s submitted' for bug #626
+        command.extend(['changes', '-s', 'submitted', '-m', '1', '#have'])
         c = ShellCommand(self.builder, command, self.builder.basedir,
                          environ=self.env, timeout=self.timeout,
                          maxTime=self.maxTime, sendStdout=True,
