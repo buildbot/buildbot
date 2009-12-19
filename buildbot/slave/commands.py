@@ -285,9 +285,9 @@ class ShellCommand:
     def __init__(self, builder, command,
                  workdir, environ=None,
                  sendStdout=True, sendStderr=True, sendRC=True,
-                 timeout=None, initialStdin=None, keepStdinOpen=False,
-                 keepStdout=False, keepStderr=False, logEnviron=True,
-                 logfiles={}, usePTY="slave-config"):
+                 timeout=None, maxTime=None, initialStdin=None,
+                 keepStdinOpen=False, keepStdout=False, keepStderr=False,
+                 logEnviron=True, logfiles={}, usePTY="slave-config"):
         """
 
         @param keepStdout: if True, we keep a copy of all the stdout text
@@ -336,6 +336,8 @@ class ShellCommand:
         self.logEnviron = logEnviron
         self.timeout = timeout
         self.timer = None
+        self.maxTime = maxTime
+        self.maxTimer = None
         self.keepStdout = keepStdout
         self.keepStderr = keepStderr
 
@@ -518,6 +520,9 @@ class ShellCommand:
         if self.timeout:
             self.timer = reactor.callLater(self.timeout, self.doTimeout)
 
+        if self.maxTime:
+            self.maxTimer = reactor.callLater(self.maxTime, self.doMaxTimeout)
+
         for w in self.logFileWatchers:
             w.start()
 
@@ -592,6 +597,11 @@ class ShellCommand:
     def doTimeout(self):
         self.timer = None
         msg = "command timed out: %d seconds without output" % self.timeout
+        self.kill(msg)
+
+    def doMaxTimeout(self):
+        self.maxTimer = None
+        msg = "command timed out: %d seconds elapsed" % self.maxTime
         self.kill(msg)
 
     def kill(self, msg):
@@ -1192,6 +1202,7 @@ class SlaveShellCommand(Command):
                       configuration of the slave)
         - ['not_really']: 1 to skip execution and return rc=0
         - ['timeout']: seconds of silence to tolerate before killing command
+        - ['maxTime']: seconds before killing command
         - ['logfiles']: dict mapping LogFile name to the workdir-relative
                         filename of a local log file. This local file will be
                         watched just like 'tail -f', and all changes will be
@@ -1215,6 +1226,7 @@ class SlaveShellCommand(Command):
         c = ShellCommand(self.builder, args['command'],
                          workdir, environ=args.get('env'),
                          timeout=args.get('timeout', None),
+                         maxTime=args.get('maxTime', None),
                          sendStdout=args.get('want_stdout', True),
                          sendStderr=args.get('want_stderr', True),
                          sendRC=True,
@@ -1357,6 +1369,8 @@ class SourceBase(Command):
         - ['timeout']:  seconds of silence tolerated before we kill off the
                         command
 
+        - ['maxTime']:  seconds before we kill off the command
+
         - ['retry']:    If not None, this is a tuple of (delay, repeats)
                         which means that any failed VC updates should be
                         reattempted, up to REPEATS times, after a delay of
@@ -1378,6 +1392,7 @@ class SourceBase(Command):
         self.revision = args.get('revision')
         self.patch = args.get('patch')
         self.timeout = args.get('timeout', 120)
+        self.maxTime = args.get('maxTime', None)
         self.retry = args.get('retry')
         # VC-specific subclasses should override this to extract more args.
         # Make sure to upcall!
@@ -1564,7 +1579,8 @@ class SourceBase(Command):
             return defer.succeed(0)
         command = ["rm", "-rf", d]
         c = ShellCommand(self.builder, command, self.builder.basedir,
-                         sendRC=0, timeout=self.timeout, usePTY=False)
+                         sendRC=0, timeout=self.timeout, maxTime=self.maxTime,
+                         usePTY=False)
 
         self.command = c
         # sendRC=0 means the rm command will send stdout/stderr to the
@@ -1594,7 +1610,8 @@ class SourceBase(Command):
 
         command = ['cp', '-R', '-P', '-p', fromdir, todir]
         c = ShellCommand(self.builder, command, self.builder.basedir,
-                         sendRC=False, timeout=self.timeout, usePTY=False)
+                         sendRC=False, timeout=self.timeout, maxTime=self.maxTime,
+                         usePTY=False)
         self.command = c
         d = c.start()
         d.addCallback(self._abandonOnFailure)
@@ -1609,7 +1626,7 @@ class SourceBase(Command):
         # now apply the patch
         c = ShellCommand(self.builder, command, dir,
                          sendRC=False, timeout=self.timeout,
-                         initialStdin=diff, usePTY=False)
+                         maxTime=self.maxTime, initialStdin=diff, usePTY=False)
         self.command = c
         d = c.start()
         d.addCallback(self._abandonOnFailure)
@@ -1658,6 +1675,7 @@ class CVS(SourceBase):
                        + ['login'])
             c = ShellCommand(self.builder, command, d,
                              sendRC=False, timeout=self.timeout,
+                             maxTime=self.maxTime,
                              initialStdin=self.login+"\n", usePTY=False)
             self.command = c
             d = c.start()
@@ -1679,7 +1697,8 @@ class CVS(SourceBase):
         if self.revision:
             command += ['-D', self.revision]
         c = ShellCommand(self.builder, command, d,
-                         sendRC=False, timeout=self.timeout, usePTY=False)
+                         sendRC=False, timeout=self.timeout,
+                         maxTime=self.maxTime, usePTY=False)
         self.command = c
         return c.start()
 
@@ -1702,7 +1721,8 @@ class CVS(SourceBase):
         command += [self.cvsmodule]
         
         c = ShellCommand(self.builder, command, d,
-                         sendRC=False, timeout=self.timeout, usePTY=False)
+                         sendRC=False, timeout=self.timeout,
+                         maxTime=self.maxTime, usePTY=False)
         self.command = c
         return c.start()
 
@@ -1757,7 +1777,7 @@ class SVN(SourceBase):
                    '--non-interactive', '--no-auth-cache']
         c = ShellCommand(self.builder, command, d,
                          sendRC=False, timeout=self.timeout,
-                         keepStdout=True, usePTY=False)
+                         maxTime=self.maxTime, keepStdout=True, usePTY=False)
         self.command = c
         return c.start()
 
@@ -1779,7 +1799,7 @@ class SVN(SourceBase):
                         self.svnurl, self.srcdir]
         c = ShellCommand(self.builder, command, d,
                          sendRC=False, timeout=self.timeout,
-                         keepStdout=True, usePTY=False)
+                         maxTime=self.maxTime, keepStdout=True, usePTY=False)
         self.command = c
         return c.start()
 
@@ -1858,7 +1878,8 @@ class Darcs(SourceBase):
         d = os.path.join(self.builder.basedir, self.srcdir)
         command = [self.vcexe, 'pull', '--all', '--verbose']
         c = ShellCommand(self.builder, command, d,
-                         sendRC=False, timeout=self.timeout, usePTY=False)
+                         sendRC=False, timeout=self.timeout,
+                         maxTime=self.maxTime, usePTY=False)
         self.command = c
         return c.start()
 
@@ -1879,7 +1900,8 @@ class Darcs(SourceBase):
         command.append(self.repourl)
 
         c = ShellCommand(self.builder, command, d,
-                         sendRC=False, timeout=self.timeout, usePTY=False)
+                         sendRC=False, timeout=self.timeout,
+                         maxTime=self.maxTime, usePTY=False)
         self.command = c
         d = c.start()
         if self.revision:
@@ -1951,7 +1973,8 @@ class Monotone(SourceBase):
                    "-r", self.revision,
                    "-b", self.branch]
         c = ShellCommand(self.builder, command, self.full_srcdir,
-                         sendRC=False, timeout=self.timeout, usePTY=False)
+                         sendRC=False, timeout=self.timeout,
+                         maxTime=self.maxTime, usePTY=False)
         self.command = c
         return c.start()
 
@@ -1965,7 +1988,8 @@ class Monotone(SourceBase):
                    "-b", self.branch,
                    self.full_srcdir]
         c = ShellCommand(self.builder, command, self.builder.basedir,
-                         sendRC=False, timeout=self.timeout, usePTY=False)
+                         sendRC=False, timeout=self.timeout,
+                         maxTime=self.maxTime, usePTY=False)
         self.command = c
         return c.start()
 
@@ -1986,7 +2010,8 @@ class Monotone(SourceBase):
             command = [self.monotone, "db", "init",
                        "--db=" + self.full_db_path]
         c = ShellCommand(self.builder, command, self.builder.basedir,
-                         sendRC=False, timeout=self.timeout, usePTY=False)
+                         sendRC=False, timeout=self.timeout,
+                         maxTime=self.maxTime, usePTY=False)
         self.command = c
         d = c.start()
         d.addCallback(self._abandonOnFailure)
@@ -1998,7 +2023,8 @@ class Monotone(SourceBase):
         command = [self.monotone, "--db=" + self.full_db_path,
                    "pull", "--ticker=dot", self.server_addr, self.branch]
         c = ShellCommand(self.builder, command, self.builder.basedir,
-                         sendRC=False, timeout=self._pull_timeout, usePTY=False)
+                         sendRC=False, timeout=self._pull_timeout,
+                         maxTime=self.maxTime, usePTY=False)
         self.sendStatus({"header": "pulling %s from %s\n"
                                    % (self.branch, self.server_addr)})
         self.command = c
@@ -2063,7 +2089,8 @@ class Git(SourceBase):
     def _didSubmodules(self, res):
         command = ['git', 'submodule', 'update', '--init']
         c = ShellCommand(self.builder, command, self._fullSrcdir(),
-                         sendRC=False, timeout=self.timeout, usePTY=False)
+                         sendRC=False, timeout=self.timeout,
+                         maxTime=self.maxTime, usePTY=False)
         self.command = c
         return c.start()
 
@@ -2075,7 +2102,8 @@ class Git(SourceBase):
 
         command = ['git', 'reset', '--hard', head]
         c = ShellCommand(self.builder, command, self._fullSrcdir(),
-                         sendRC=False, timeout=self.timeout, usePTY=False)
+                         sendRC=False, timeout=self.timeout,
+                         maxTime=self.maxTime, usePTY=False)
         self.command = c
         d = c.start()
         if self.submodules:
@@ -2089,7 +2117,8 @@ class Git(SourceBase):
     def doVCUpdate(self):
         command = ['git', 'clean', '-f', '-d', '-x']
         c = ShellCommand(self.builder, command, self._fullSrcdir(),
-                         sendRC=False, timeout=self.timeout, usePTY=False)
+                         sendRC=False, timeout=self.timeout,
+                         maxTime=self.maxTime, usePTY=False)
         self.command = c
         d = c.start()
         d.addCallback(self._abandonOnFailure)
@@ -2101,7 +2130,8 @@ class Git(SourceBase):
         self.sendStatus({"header": "fetching branch %s from %s\n"
                                         % (self.branch, self.repourl)})
         c = ShellCommand(self.builder, command, self._fullSrcdir(),
-                         sendRC=False, timeout=self.timeout, usePTY=False)
+                         sendRC=False, timeout=self.timeout,
+                         maxTime=self.maxTime, usePTY=False)
         self.command = c
         d = c.start()
         d.addCallback(self._abandonOnFailure)
@@ -2114,7 +2144,8 @@ class Git(SourceBase):
     def doVCFull(self):
         os.mkdir(self._fullSrcdir())
         c = ShellCommand(self.builder, ['git', 'init'], self._fullSrcdir(),
-                         sendRC=False, timeout=self.timeout, usePTY=False)
+                         sendRC=False, timeout=self.timeout,
+                         maxTime=self.maxTime, usePTY=False)
         self.command = c
         d = c.start()
         d.addCallback(self._abandonOnFailure)
@@ -2182,7 +2213,8 @@ class Arch(SourceBase):
         if self.revision:
             command.append(self.revision)
         c = ShellCommand(self.builder, command, d,
-                         sendRC=False, timeout=self.timeout, usePTY=False)
+                         sendRC=False, timeout=self.timeout,
+                         maxTime=self.maxTime, usePTY=False)
         self.command = c
         return c.start()
 
@@ -2194,8 +2226,8 @@ class Arch(SourceBase):
 
         command = [self.vcexe, 'register-archive', '--force', self.url]
         c = ShellCommand(self.builder, command, self.builder.basedir,
-                         sendRC=False, keepStdout=True,
-                         timeout=self.timeout, usePTY=False)
+                         sendRC=False, keepStdout=True, timeout=self.timeout,
+                         maxTime=self.maxTime, usePTY=False)
         self.command = c
         d = c.start()
         d.addCallback(self._abandonOnFailure)
@@ -2228,7 +2260,8 @@ class Arch(SourceBase):
                    '--no-pristine',
                    ver, self.srcdir]
         c = ShellCommand(self.builder, command, self.builder.basedir,
-                         sendRC=False, timeout=self.timeout, usePTY=False)
+                         sendRC=False, timeout=self.timeout,
+                         maxTime=self.maxTime, usePTY=False)
         self.command = c
         d = c.start()
         d.addCallback(self._abandonOnFailure)
@@ -2240,7 +2273,8 @@ class Arch(SourceBase):
         d = os.path.join(self.builder.basedir, self.srcdir)
         command = [self.vcexe, 'build-config', self.buildconfig]
         c = ShellCommand(self.builder, command, d,
-                         sendRC=False, timeout=self.timeout, usePTY=False)
+                         sendRC=False, timeout=self.timeout,
+                         maxTime=self.maxTime, usePTY=False)
         self.command = c
         d = c.start()
         d.addCallback(self._abandonOnFailure)
@@ -2300,7 +2334,8 @@ class Bazaar(Arch):
         command = [self.vcexe, 'get', '--no-pristine',
                    ver, self.srcdir]
         c = ShellCommand(self.builder, command, self.builder.basedir,
-                         sendRC=False, timeout=self.timeout, usePTY=False)
+                         sendRC=False, timeout=self.timeout,
+                         maxTime=self.maxTime, usePTY=False)
         self.command = c
         d = c.start()
         d.addCallback(self._abandonOnFailure)
@@ -2375,7 +2410,8 @@ class Bzr(SourceBase):
         srcdir = os.path.join(self.builder.basedir, self.srcdir)
         command = [self.vcexe, 'update']
         c = ShellCommand(self.builder, command, srcdir,
-                         sendRC=False, timeout=self.timeout, usePTY=False)
+                         sendRC=False, timeout=self.timeout,
+                         maxTime=self.maxTime, usePTY=False)
         self.command = c
         return c.start()
 
@@ -2403,7 +2439,8 @@ class Bzr(SourceBase):
         command.append(self.srcdir)
 
         c = ShellCommand(self.builder, command, d,
-                         sendRC=False, timeout=self.timeout, usePTY=False)
+                         sendRC=False, timeout=self.timeout,
+                         maxTime=self.maxTime, usePTY=False)
         self.command = c
         d = c.start()
         return d
@@ -2418,13 +2455,15 @@ class Bzr(SourceBase):
         command.append(self.repourl)
         command.append(tmpdir)
         c = ShellCommand(self.builder, command, self.builder.basedir,
-                         sendRC=False, timeout=self.timeout, usePTY=False)
+                         sendRC=False, timeout=self.timeout,
+                         maxTime=self.maxTime, usePTY=False)
         self.command = c
         d = c.start()
         def _export(res):
             command = [self.vcexe, 'export', srcdir]
             c = ShellCommand(self.builder, command, tmpdir,
-                             sendRC=False, timeout=self.timeout, usePTY=False)
+                             sendRC=False, timeout=self.timeout,
+                             maxTime=self.maxTime, usePTY=False)
             self.command = c
             return c.start()
         d.addCallback(_export)
@@ -2514,7 +2553,7 @@ class Mercurial(SourceBase):
         command = [self.vcexe, 'pull', '--verbose', self.repourl]
         c = ShellCommand(self.builder, command, d,
                          sendRC=False, timeout=self.timeout,
-                         keepStdout=True, usePTY=False)
+                         maxTime=self.maxTime, keepStdout=True, usePTY=False)
         self.command = c
         d = c.start()
         d.addCallback(self._handleEmptyUpdate)
@@ -2542,7 +2581,8 @@ class Mercurial(SourceBase):
         command.extend([self.repourl, d])
         
         c = ShellCommand(self.builder, command, self.builder.basedir,
-                         sendRC=False, timeout=self.timeout, usePTY=False)
+                         sendRC=False, timeout=self.timeout,
+                         maxTime=self.maxTime, usePTY=False)
         self.command = c
         cmd1 = c.start()
         cmd1.addCallback(self._update)
@@ -2707,7 +2747,7 @@ class Mercurial(SourceBase):
             updatecmd.extend(['--rev', self.args.get('branch',  'default')])
         self.command = ShellCommand(self.builder, updatecmd,
             self.builder.basedir, sendRC=False,
-            timeout=self.timeout, usePTY=False)
+            timeout=self.timeout, maxTime=self.maxTime, usePTY=False)
         return self.command.start()
 
     def parseGotRevision(self):
@@ -2758,8 +2798,9 @@ class P4Base(SourceBase):
         command.extend(['changes', '-m', '1', '#have'])
         c = ShellCommand(self.builder, command, self.builder.basedir,
                          environ=self.env, timeout=self.timeout,
-                         sendStdout=True, sendStderr=False, sendRC=False,
-                         keepStdout=True, usePTY=False)
+                         maxTime=self.maxTime, sendStdout=True,
+                         sendStderr=False, sendRC=False, keepStdout=True,
+                         usePTY=False)
         self.command = c
         d = c.start()
 
@@ -2845,7 +2886,7 @@ class P4(P4Base):
         env = {}
         c = ShellCommand(self.builder, command, self.builder.basedir,
                          environ=env, sendRC=False, timeout=self.timeout,
-                         keepStdout=True, usePTY=False)
+                         maxTime=self.maxTime, keepStdout=True, usePTY=False)
         self.command = c
         d = c.start()
         d.addCallback(self._abandonOnFailure)
@@ -2882,7 +2923,8 @@ class P4(P4Base):
         log.msg(client_spec)
         c = ShellCommand(self.builder, command, self.builder.basedir,
                          environ=env, sendRC=False, timeout=self.timeout,
-                         initialStdin=client_spec, usePTY=False)
+                         maxTime=self.maxTime, initialStdin=client_spec,
+                         usePTY=False)
         self.command = c
         d = c.start()
         d.addCallback(self._abandonOnFailure)
@@ -2936,7 +2978,8 @@ class P4Sync(P4Base):
             command.extend(['@' + self.revision])
         env = {}
         c = ShellCommand(self.builder, command, d, environ=env,
-                         sendRC=False, timeout=self.timeout, usePTY=False)
+                         sendRC=False, timeout=self.timeout,
+                         maxTime=self.maxTime, usePTY=False)
         self.command = c
         return c.start()
 

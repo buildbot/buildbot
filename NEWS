@@ -1,5 +1,13 @@
 User visible changes in Buildbot.             -*- outline -*-
 
+** New buildstep `MTR'
+
+A new class buildbot.process.mtrlogobserver.MTR was added. This buildstep is
+used to run test suites using mysql-test-run. It parses the stdio output for
+test failures and summarises them on the waterfall page. It also makes server
+error logs available for debugging failures, and optionally inserts
+information about test runs and test failures into an external database.
+
 * Release 0.7.11p (July 16, 2009)
 
 Fixes a few test failures in 0.7.11, and gives a default value for branchType
