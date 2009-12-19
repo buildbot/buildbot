@@ -55,6 +55,7 @@ class GridStatusMixin(object):
             head += '<meta http-equiv="refresh" content="%d">\n' % reload_time
         return head
 
+
     def build_cxt(self, request, build):
         if not build:
             return {}
@@ -247,10 +248,10 @@ class TransposedGridStatusResource(HtmlResource, GridStatusMixin):
         sortedBuilderNames.sort()
         
         cxt['sorted_builder_names'] = sortedBuilderNames
-        cxt['builder_builds'] = builder_builds = {}
+        cxt['builder_builds'] = builder_builds = []
         cxt['builders'] = builders = []
         cxt['range'] = range(len(stamps))
-
+        
         for bn in sortedBuilderNames:
             builds = [None] * len(stamps)
 
@@ -267,7 +268,7 @@ class TransposedGridStatusResource(HtmlResource, GridStatusMixin):
                 build = build.getPreviousBuild()
 
             builders.append(self.builder_cxt(request, builder))
-            builder_builds[bn] = map(lambda b: self.build_cxt(request, b), builds)
+            builder_builds.append(map(lambda b: self.build_cxt(request, b), builds))
 
         template = request.site.buildbot_service.templates.get_template('grid_transposed.html')
         data = template.render(**cxt)

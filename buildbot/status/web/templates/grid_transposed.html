@@ -14,8 +14,8 @@
 {% for i in range %}
  <tr>
  {{ grid.stamp_td(stamps[i]) }}
- {% for bn in sorted_builder_names %}
-   {{ grid.build_td(builder_builds[bn][i]) }}
+ {% for b in builder_builds %}
+   {{ grid.build_td(b[i]) }}
  {% endfor %}
  </tr>
 {% endfor %}

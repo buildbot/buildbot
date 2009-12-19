@@ -36,7 +36,7 @@
 
 {% macro build_td(build) -%}
   <td class="build {{ build.class }}">
-    <a href="{{ build.url }}">{{ build.text|e|join('<br/>') }}</a>
+    <a href="{{ build.url }}">{{ build.text|join('<br/>') }}</a>
   </td>
 {%- endmacro %}
 
