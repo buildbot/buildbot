@@ -272,7 +272,7 @@ HEADER = '''
 
 HEAD_ELEMENTS = [
     '<title>%(title)s</title>',
-    '<link href="%(root)sbuildbot.css" rel="stylesheet" type="text/css" />',
+    '<link href="%(root)sdefault.css" rel="stylesheet" type="text/css" />',
     ]
 BODY_ATTRS = {
     'vlink': "#800080",
@@ -280,7 +280,7 @@ BODY_ATTRS = {
 
 FOOTER = '''
 </html>
-'''
+'''        
 
 class AlmostStrictUndefined(jinja2.StrictUndefined):
     ''' An undefined that allows boolean testing but 
@@ -345,7 +345,7 @@ class WebStatus(service.MultiService):
 
     All URLs for pages which are not defined here are used to look
     for files in PUBLIC_HTML, which defaults to BASEDIR/public_html.
-    This means that /robots.txt or /buildbot.css or /favicon.ico can
+    This means that /robots.txt or /default.css or /favicon.ico can
     be placed in that directory.
 
     If an index file (index.html, index.htm, or index, in that order) is
@@ -358,7 +358,7 @@ class WebStatus(service.MultiService):
     bottom.
 
     This webserver defines class attributes on elements so they can be styled
-    with CSS stylesheets. All pages pull in PUBLIC_HTML/buildbot.css, and you
+    with CSS stylesheets. All pages pull in PUBLIC_HTML/default.css, and you
     can cause additional stylesheets to be loaded by adding a suitable <link>
     to the WebStatus instance's .head_elements attribute.
 
@@ -582,6 +582,7 @@ class WebStatus(service.MultiService):
             os.mkdir(htmldir)
 
         root = StaticFile(htmldir)
+        root.putChild("", RootPage())
 
         for name, child_resource in self.childrenToBeAdded.iteritems():
             root.putChild(name, child_resource)
@@ -664,7 +665,7 @@ class Waterfall(WebStatus):
         # all 'data' files are in the directory of our executable
         here = os.path.dirname(sys.executable)
         buildbot_icon = os.path.abspath(os.path.join(here, "buildbot.png"))
-        buildbot_css = os.path.abspath(os.path.join(here, "classic.css"))
+        buildbot_css = os.path.abspath(os.path.join(here, "default.css"))
     else:
         # running from source
         # the icon is sibpath(__file__, "../buildbot.png") . This is for
@@ -673,7 +674,7 @@ class Waterfall(WebStatus):
         buildbot_icon = os.path.abspath(os.path.join(up(up(up(__file__))),
                                                      "buildbot.png"))
         buildbot_css = os.path.abspath(os.path.join(up(__file__),
-                                                    "classic.css"))
+                                                    "default.css"))
 
     compare_attrs = ["http_port", "distrib_port", "allowForce",
                      "categories", "css", "favicon", "robots_txt"]
@@ -690,12 +691,12 @@ class Waterfall(WebStatus):
         WebStatus.__init__(self, http_port, distrib_port, allowForce)
         self.css = css
         if css:
-            if os.path.exists(os.path.join("public_html", "buildbot.css")):
+            if os.path.exists(os.path.join("public_html", "default.css")):
                 # they've upgraded, so defer to that copy instead
                 pass
             else:
                 data = open(css, "rb").read()
-                self.putChild("buildbot.css", static.Data(data, "text/css"))
+                self.putChild("default.css", static.Data(data, "text/css"))
         self.favicon = favicon
         self.robots_txt = robots_txt
         if favicon:

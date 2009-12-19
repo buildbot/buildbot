@@ -291,9 +291,8 @@ def upgradeMaster(config):
     # check web files: index.html, default.css, robots.txt
     webdir = os.path.join(basedir, "public_html")
     m.upgrade_public_html({
-          'index.html' : util.sibpath(__file__, "../status/web/index.html"),
           'bg_gradient.jpg' : util.sibpath(__file__, "../status/web/bg_gradient.jpg"),
-          'buildbot.css' : util.sibpath(__file__, "../status/web/default.css"),
+          'default.css' : util.sibpath(__file__, "../status/web/default.css"),
           'robots.txt' : util.sibpath(__file__, "../status/web/robots.txt"),
       })
     m.populate_if_missing(os.path.join(basedir, "master.cfg.sample"),
@@ -373,9 +372,8 @@ def createMaster(config):
     m.makeTAC(contents)
     m.sampleconfig(util.sibpath(__file__, "sample.cfg"))
     m.public_html({
-          'index.html' : util.sibpath(__file__, "../status/web/index.html"),
           'bg_gradient.jpg' : util.sibpath(__file__, "../status/web/bg_gradient.jpg"),
-          'buildbot.css' : util.sibpath(__file__, "../status/web/default.css"),
+          'default.css' : util.sibpath(__file__, "../status/web/default.css"),
           'robots.txt' : util.sibpath(__file__, "../status/web/robots.txt"),
       })
     m.makefile()

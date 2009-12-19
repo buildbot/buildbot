@@ -196,7 +196,7 @@ bottom = Template('''
 <div class="footer">
   [ <a href="$welcomeUrl">welcome</a> ] 
   <br />
-  <a href="http://buildbot.sourceforge.net/">Buildbot - $version</a> working for the <a href="$projectUrl"> $projectName </a> project.
+  <a href="http://buildbot.net/">Buildbot - $version</a> working for the <a href="$projectUrl"> $projectName </a> project.
   <br />
   Page built: $time
   <br />

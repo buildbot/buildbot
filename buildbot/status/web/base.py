@@ -231,7 +231,7 @@ class HtmlResource(resource.Resource):
         status = self.getStatus(request)
         return dict(project_url = status.getProjectURL(),
                     project_name = status.getProjectName(),
-                    stylesheet = self.path_to_root(request) + 'buildbot.css',
+                    stylesheet = self.path_to_root(request) + 'default.css',
                     path_to_root = self.path_to_root(request),
                     version = version,
                     time = time.strftime("%a %d %b %Y %H:%M:%S",
@@ -276,8 +276,8 @@ class HtmlResource(resource.Resource):
         s = request.site.buildbot_service
         values = s.template_values.copy()
         values['root'] = self.path_to_root(request)
-        # e.g. to reference the top-level 'buildbot.css' page, use
-        # "%(root)sbuildbot.css"
+        # e.g. to reference the top-level 'default.css' page, use
+        # "%(root)sdefault.css"
         values['title'] = self.getTitle(request)
         return template % values
 
@@ -325,7 +325,7 @@ class DirectoryLister(static.DirectoryLister):
 
         cxt = dict(project_url = status.getProjectURL(),
                    project_name = status.getProjectName(),
-                   stylesheet = path_to_root(request) + 'buildbot.css',
+                   stylesheet = path_to_root(request) + 'default.css',
                    version = version,
                    time = time.strftime("%a %d %b %Y %H:%M:%S",
                                         time.localtime(util.now())),
@@ -408,7 +408,6 @@ class BuildLineMixin:
         rev = str(rev)
         if len(rev) > 40:
             rev = rev[0:40] + "..."
-        root = self.path_to_root(req)
         css_class = css_classes.get(results, "")
         values = {'class': css_class,
                   'builder_name': builder_name,
