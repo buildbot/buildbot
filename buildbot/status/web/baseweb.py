@@ -388,7 +388,8 @@ class WebStatus(service.MultiService):
     # all the changes).
 
     def __init__(self, http_port=None, distrib_port=None, allowForce=False,
-                 public_html="public_html", site=None, numbuilds=20, auth=None):
+                 public_html="public_html", site=None, numbuilds=20, 
+                 num_events=200, num_event_max=None, auth=None):
         """Run a web server that provides Buildbot status.
 
         @type  http_port: int or L{twisted.application.strports} string
@@ -439,6 +440,14 @@ class WebStatus(service.MultiService):
         by passing the equally named argument to constructors of OneLinePerBuildOneBuilder
         and OneLinePerBuild --- and via the UI, by tacking ?numbuilds=xy onto the URL.
 
+        @type num_events: int
+        @param num_events: Defaualt number of events to show in the waterfall.
+
+        @type num_events_max: int
+        @param num_events_max: The maximum number of events that are allowed to be
+        shown in the waterfall.  The default value of C{None} will disable this
+        check
+
         @type auth: a L{status.web.auth.IAuth} or C{None}
         @param auth: an object that performs authentication to restrict access
                      to the C{allowForce} features. Ignored if C{allowForce}
@@ -457,6 +466,10 @@ class WebStatus(service.MultiService):
                 distrib_port = "unix:%s" % distrib_port
         self.distrib_port = distrib_port
         self.allowForce = allowForce
+        self.num_events = num_events
+        if num_events_max:
+            assert num_events_max >= num_events
+            self.num_events_max = num_events_max
         self.public_html = public_html
 
         if self.allowForce and auth:
@@ -478,7 +491,8 @@ class WebStatus(service.MultiService):
             self.site = server.Site(root)
         self.childrenToBeAdded = {}
 
-        self.setupUsualPages(numbuilds=numbuilds)
+        self.setupUsualPages(numbuilds=numbuilds, num_events=num_events,
+                             num_events_max=num_events_max)
 
         # the following items are accessed by HtmlResource when it renders
         # each page.
@@ -513,9 +527,10 @@ class WebStatus(service.MultiService):
             s = strports.service(self.distrib_port, f)
             s.setServiceParent(self)
 
-    def setupUsualPages(self, numbuilds):
+    def setupUsualPages(self, numbuilds, num_events, num_events_max):
         #self.putChild("", IndexOrWaterfallRedirection())
-        self.putChild("waterfall", WaterfallStatusResource())
+        self.putChild("waterfall", WaterfallStatusResource(num_events=num_events,
+                                        num_events_max=num_events_max))
         self.putChild("grid", GridStatusResource())
         self.putChild("console", ConsoleStatusResource())
         self.putChild("tgrid", TransposedGridStatusResource())

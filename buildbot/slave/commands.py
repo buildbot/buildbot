@@ -2,6 +2,7 @@
 
 import os, sys, re, signal, shutil, types, time, tarfile, tempfile
 from stat import ST_CTIME, ST_MTIME, ST_SIZE
+from xml.dom.minidom import parseString
 
 from zope.interface import implements
 from twisted.internet.protocol import ProcessProtocol
@@ -1462,7 +1463,7 @@ class SourceBase(Command):
 
     def sourcedataMatches(self):
         try:
-            olddata = open(self.sourcedatafile, "r").read()
+            olddata = self.readSourcedata()
             if olddata != self.sourcedata:
                 return False
         except IOError:
@@ -1471,7 +1472,7 @@ class SourceBase(Command):
 
     def sourcedirIsPatched(self):
         return os.path.exists(os.path.join(self.builder.basedir,
-                                           self.srcdir,
+                                           self.workdir,
                                            ".buildbot-patched"))
 
     def _handleGotRevision(self, res):
@@ -1495,6 +1496,9 @@ class SourceBase(Command):
         If this information is unavailable, just return None."""
 
         return None
+
+    def readSourcedata(self):
+        return open(self.sourcedatafile, "r").read()
 
     def writeSourcedata(self, res):
         open(self.sourcedatafile, "w").write(self.sourcedata)
@@ -1648,8 +1652,11 @@ class SourceBase(Command):
             '--forward',
         ]
         dir = os.path.join(self.builder.basedir, self.workdir)
-        # mark the directory so we don't try to update it later
-        open(os.path.join(dir, ".buildbot-patched"), "w").write("patched\n")
+        # Mark the directory so we don't try to update it later, or at least try
+        # to revert first.
+        marker = open(os.path.join(dir, ".buildbot-patched"), "w")
+        marker.write("patched\n")
+        marker.close()
 
         # Update 'dir' with the 'root' option. Make sure it is a subdirectory
         # of dir.
@@ -1773,8 +1780,11 @@ class SVN(SourceBase):
     handled by SourceBase, this command reads the following keys:
 
     ['svnurl'] (required): the SVN repository string
-    ['username']    Username passed to the svn command
-    ['password']    Password passed to the svn command
+    ['username']:          Username passed to the svn command
+    ['password']:          Password passed to the svn command
+    ['keep_on_purge']:     Files and directories to keep between updates
+    ['ignore_ignores']:    Ignore ignores when purging changes
+    ['always_purge']:      Always purge local changes after each build
     """
 
     header = "svn operation"
@@ -1784,6 +1794,10 @@ class SVN(SourceBase):
         self.vcexe = getCommand("svn")
         self.svnurl = args['svnurl']
         self.sourcedata = "%s\n" % self.svnurl
+        self.keep_on_purge = args.get('keep_on_purge', [])
+        self.keep_on_purge.append(".buildbot-sourcedata")
+        self.ignore_ignores = args.get('ignore_ignores', True)
+        self.always_purge = args.get('always_purge', False)
 
         self.svn_args = []
         if args.has_key('username'):
@@ -1793,46 +1807,73 @@ class SVN(SourceBase):
         if args.get('extra_args', None) is not None:
             self.svn_args.extend(args['extra_args'])
 
+    def _dovccmd(self, command, args, rootdir=None, cb=None, **kwargs):
+        if rootdir is None:
+            rootdir = os.path.join(self.builder.basedir, self.srcdir)
+        fullCmd = [self.vcexe, command, '--non-interactive', '--no-auth-cache']
+        fullCmd.extend(self.svn_args)
+        fullCmd.extend(args)
+        c = ShellCommand(self.builder, fullCmd, rootdir,
+                         environ=self.env, sendRC=False, timeout=self.timeout,
+                         maxTime=self.maxTime, usePTY=False, **kwargs)
+        self.command = c
+        d = c.start()
+        if cb:
+            d.addCallback(self._abandonOnFailure)
+            d.addCallback(cb)
+        return d
+
     def sourcedirIsUpdateable(self):
-        return (not self.sourcedirIsPatched() and
-                os.path.isfile(os.path.join(self.builder.basedir,
-                                            self.srcdir, ".svn", "format")))
+        return os.path.isdir(os.path.join(self.builder.basedir,
+                                          self.srcdir, ".svn"))
 
     def doVCUpdate(self):
+        if self.sourcedirIsPatched() or self.always_purge:
+            return self._purgeAndUpdate()
         revision = self.args['revision'] or 'HEAD'
         # update: possible for mode in ('copy', 'update')
-        d = os.path.join(self.builder.basedir, self.srcdir)
-        command = [self.vcexe, 'update'] + \
-                    self.svn_args + \
-                    ['--revision', str(revision),
-                   '--non-interactive', '--no-auth-cache']
-        c = ShellCommand(self.builder, command, d,
-                         sendRC=False, timeout=self.timeout,
-                         maxTime=self.maxTime, keepStdout=True, usePTY=False)
-        self.command = c
-        return c.start()
+        return self._dovccmd('update', ['--revision', str(revision)],
+                             keepStdout=True)
 
     def doVCFull(self):
         revision = self.args['revision'] or 'HEAD'
-        d = self.builder.basedir
+        args = ['--revision', str(revision), self.svnurl, self.srcdir]
         if self.mode == "export":
-            command = [self.vcexe, 'export'] + \
-                        self.svn_args + \
-                        ['--revision', str(revision),
-                        '--non-interactive', '--no-auth-cache',
-                        self.svnurl, self.srcdir]
+            command = 'export'
         else:
             # mode=='clobber', or copy/update on a broken workspace
-            command = [self.vcexe, 'checkout'] + \
-                        self.svn_args + \
-                        ['--revision', str(revision),
-                        '--non-interactive', '--no-auth-cache',
-                        self.svnurl, self.srcdir]
-        c = ShellCommand(self.builder, command, d,
-                         sendRC=False, timeout=self.timeout,
-                         maxTime=self.maxTime, keepStdout=True, usePTY=False)
-        self.command = c
-        return c.start()
+            command = 'checkout'
+        return self._dovccmd(command, args, rootdir=self.builder.basedir,
+                             keepStdout=True)
+
+    def _purgeAndUpdate(self):
+        """svn revert has several corner cases that make it unpractical.
+
+        Use the Force instead and delete everything that shows up in status."""
+        args = ['--xml']
+        if self.ignore_ignores:
+          args.append('--no-ignore')
+        return self._dovccmd('status', args, keepStdout=True,
+                             cb=self._purgeAndUpdate2)
+
+    def _purgeAndUpdate2(self, res):
+        """Delete everything that shown up on status."""
+        result_xml = parseString(self.command.stdout)
+        for entry in result_xml.getElementsByTagName('entry'):
+            filename = entry.getAttribute('path')
+            if filename in self.keep_on_purge:
+                continue
+            filepath = os.path.join(self.builder.basedir, self.workdir,
+                                    filename)
+            if os.path.isfile(filepath):
+                os.chmod(filepath, 0700)
+                os.remove(filepath)
+            else:
+                rmdirRecursive(filepath)
+        # Now safe to update.
+        revision = self.args['revision'] or 'HEAD'
+        return self._dovccmd('update', ['--revision', str(revision)],
+                             keepStdout=True)
 
     def getSvnVersionCommand(self):
         """
@@ -2066,11 +2107,12 @@ class Git(SourceBase):
     """Git specific VC operation. In addition to the arguments
     handled by SourceBase, this command reads the following keys:
 
-    ['repourl'] (required): the upstream GIT repository string
-    ['branch'] (optional): which version (i.e. branch or tag) to
-                           retrieve. Default: "master".
+    ['repourl'] (required):    the upstream GIT repository string
+    ['branch'] (optional):     which version (i.e. branch or tag) to
+                               retrieve. Default: "master".
     ['submodules'] (optional): whether to initialize and update
-                           submodules. Default: False.
+                               submodules. Default: False.
+    ['ignore_ignores']:        ignore ignores when purging changes.
     """
 
     header = "git operation"
@@ -2084,6 +2126,7 @@ class Git(SourceBase):
             self.branch = "master"
         self.sourcedata = "%s %s\n" % (self.repourl, self.branch)
         self.submodules = args.get('submodules')
+        self.ignore_ignores = args.get('ignore_ignores', True)
 
     def _fullSrcdir(self):
         return os.path.join(self.builder.basedir, self.srcdir)
@@ -2095,9 +2138,6 @@ class Git(SourceBase):
 
     def sourcedirIsUpdateable(self):
         return os.path.isdir(os.path.join(self._fullSrcdir(), ".git"))
-
-    def readSourcedata(self):
-        return open(self.sourcedatafile, "r").read()
 
     def _dovccmd(self, command, cb=None, **kwargs):
         c = ShellCommand(self.builder, [self.vcexe] + command, self._fullSrcdir(),
@@ -2125,7 +2165,10 @@ class Git(SourceBase):
         return True
 
     def _cleanSubmodules(self, res):
-        return self._dovccmd(['submodule', 'foreach', 'git', 'clean', '-dfx'])
+        command = ['submodule', 'foreach', 'git', 'clean', '-d', '-f']
+        if self.ignore_ignores:
+            command.append('-x')
+        return self._dovccmd(command)
 
     def _updateSubmodules(self, res):
         return self._dovccmd(['submodule', 'update'], self._cleanSubmodules)
@@ -2142,6 +2185,8 @@ class Git(SourceBase):
         else:
             head = 'FETCH_HEAD'
 
+        # That is not sufficient. git will leave unversioned files and empty
+        # directories. Clean them up manually in _didReset.
         command = ['reset', '--hard', head]
         return self._dovccmd(command, self._initSubmodules)
 
@@ -2149,7 +2194,9 @@ class Git(SourceBase):
     # combined with the later "git reset" equates clobbering the repo,
     # but it's much more efficient.
     def doVCUpdate(self):
-        command = ['clean', '-f', '-d', '-x']
+        command = ['clean', '-f', '-d']
+        if self.ignore_ignores:
+            command.append('-x')
         return self._dovccmd(command, self._didClean)
 
     def _doFetch(self, dummy):
@@ -2547,6 +2594,7 @@ class Mercurial(SourceBase):
     handled by SourceBase, this command reads the following keys:
 
     ['repourl'] (required): the Mercurial repository string
+    ['clobberOnBranchChange']: Document me. See ticket #462.
     """
 
     header = "mercurial operation"
@@ -2591,12 +2639,12 @@ class Mercurial(SourceBase):
         d = os.path.join(self.builder.basedir, self.srcdir)
         command = [self.vcexe, 'clone', '--verbose', '--noupdate']
 
-        # if got revision, clobbering and in dirname, only clone to specific revision 
-        # (otherwise, do full clone to re-use .hg dir for subsequent byuilds) 
-        if self.args.get('revision') and self.mode == 'clobber' and self.branchType == 'dirname': 
-            command.extend(['--rev', self.args.get('revision')]) 
+        # if got revision, clobbering and in dirname, only clone to specific revision
+        # (otherwise, do full clone to re-use .hg dir for subsequent builds)
+        if self.args.get('revision') and self.mode == 'clobber' and self.branchType == 'dirname':
+            command.extend(['--rev', self.args.get('revision')])
         command.extend([self.repourl, d])
-        
+
         c = ShellCommand(self.builder, command, self.builder.basedir,
                          sendRC=False, timeout=self.timeout,
                          maxTime=self.maxTime, usePTY=False)
@@ -2671,8 +2719,7 @@ class Mercurial(SourceBase):
                 msg = "Fresh hg repo, don't worry about in-repo branch name"
                 log.msg(msg)
 
-            elif os.path.exists(os.path.join(self.builder.basedir,
-                                             self.srcdir, ".buildbot-patched")):
+            elif self.sourcedirIsPatched():
                 self.clobber = self._purge
 
             elif self.update_branch != current_branch:
