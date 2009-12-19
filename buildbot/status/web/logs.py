@@ -8,27 +8,7 @@ from twisted.web.error import NoResource
 
 from buildbot import interfaces
 from buildbot.status import builder
-from buildbot.status.web.base import IHTMLLog, HtmlResource
-
-
-textlog_stylesheet = """
-<style type="text/css">
- div.data {
-  font-family: "Courier New", courier, monotype;
- }
- span.stdout {
-  font-family: "Courier New", courier, monotype;
- }
- span.stderr {
-  font-family: "Courier New", courier, monotype;
-  color: red;
- }
- span.header {
-  font-family: "Courier New", courier, monotype;
-  color: blue;
- }
-</style>
-"""
+from buildbot.status.web.base import IHTMLLog, HtmlResource, path_to_root
 
 class ChunkConsumer:
     implements(interfaces.IStatusLogConsumer)
@@ -72,73 +52,73 @@ class TextLog(Resource):
             return self
         return HtmlResource.getChild(self, path, req)
 
-    def htmlHeader(self, request):
-        title = "Log File contents"
-        data = "<html>\n<head><title>" + title + "</title>\n"
-        data += textlog_stylesheet
-        data += "</head>\n"
-        data += "<body vlink=\"#800080\">\n"
-        texturl = request.childLink("text")
-        data += '<a href="%s">(view as text)</a><br />\n' % texturl
-        data += "<pre>\n"
-        return data
-
     def content(self, entries):
-        spanfmt = '<span class="%s">%s</span>'
-        data = ""
+        html_entries = []
+        text_data = ''
         for type, entry in entries:
             if type >= len(builder.ChunkTypes) or type < 0:
                 # non-std channel, don't display
                 continue
-            if self.asText:
-                if type != builder.HEADER:
-                    data += entry
-            else:
-                data += spanfmt % (builder.ChunkTypes[type],
-                                   html.escape(entry))
-        return data
+            
+            is_header = type != builder.HEADER
 
-    def htmlFooter(self):
-        data = "</pre>\n"
-        data += "</body></html>\n"
-        return data
+            if not self.asText:
+                html_entries.append(dict(type = builder.ChunkTypes[type], 
+                                      text = entry,
+                                      is_header = is_header))
+            elif is_header:
+                text_data += entry
 
-    def render_HEAD(self, request):
         if self.asText:
-            request.setHeader("content-type", "text/plain")
+            return text_data
         else:
-            request.setHeader("content-type", "text/html")
+            return self.template.module.chunks(html_entries)
+
+    def render_HEAD(self, req):
+        self._setContentType(req)
 
         # vague approximation, ignores markup
-        request.setHeader("content-length", self.original.length)
+        req.setHeader("content-length", self.original.length)
         return ''
 
     def render_GET(self, req):
+        self._setContentType(req)
         self.req = req
 
-        if self.asText:
-            req.setHeader("content-type", "text/plain")
-        else:
-            req.setHeader("content-type", "text/html")
-
         if not self.asText:
-            req.write(self.htmlHeader(req))
+            self.template = req.site.buildbot_service.templates.get_template("logs.html")                
+            
+            data = self.template.module.page_header(
+                    title = "Log File contents",
+                    texturl = req.childLink("text"),
+                    path_to_root = path_to_root(req))
+            req.write(data)
 
         self.original.subscribeConsumer(ChunkConsumer(req, self))
         return server.NOT_DONE_YET
 
+    def _setContentType(self, req):
+        if self.asText:
+            req.setHeader("content-type", "text/plain")
+        else:
+            req.setHeader("content-type", "text/html")
+        
     def finished(self):
         if not self.req:
             return
         try:
             if not self.asText:
-                self.req.write(self.htmlFooter())
+                data = self.template.module.page_footer()
+                self.req.write(data)
             self.req.finish()
         except pb.DeadReferenceError:
             pass
         # break the cycle, the Request's .notifications list includes the
         # Deferred (from req.notifyFinish) that's pointing at us.
         self.req = None
+        
+        # release template
+        self.template = None
 
 components.registerAdapter(TextLog, interfaces.IStatusLog, IHTMLLog)
 

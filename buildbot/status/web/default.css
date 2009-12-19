@@ -128,3 +128,19 @@ td.Project a:hover, td.start a:hover {
 	color: #000;
 }
 
+/* log view */
+
+.log * {
+  vlink: #800080;
+  font-family: "Courier New", courier, monotype;
+}
+span.stdout {
+  color: black;
+}
+span.stderr {
+  color: red;
+}
+span.header {
+  padding: 1em;
+  color: blue;
+}

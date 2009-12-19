@@ -1,0 +1,30 @@
+{%- macro page_header(title, path_to_root, texturl) -%}
+  <html>
+  <head><title>{{ title }}</title>
+  <link rel="stylesheet" href="{{ path_to_root }}default.css" type="text/css" />
+  </head>
+  <body class='log'>
+    <a href="{{ texturl }}">(view as text)</a><br/>
+    <pre>  
+{%- endmacro -%}
+
+{%- macro chunks(entries) -%}
+  {%- for entry in entries -%}
+    {%- if entry.is_header -%}
+      </pre>
+      <div class="header">
+        <h3>Command</h3>  
+        <pre>{{ entry.text|e }}</pre>
+      </div>
+      <pre>
+    {%- else -%}
+      <span class="{{ entry.type|e }}">{{ entry.text|e }}</span>
+    {%- endif -%}
+  {%- endfor %}
+{%- endmacro -%}
+
+{%- macro page_footer() -%}
+</pre>
+</body>
+</html>
+{%- endmacro -%}
