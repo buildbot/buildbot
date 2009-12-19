@@ -241,7 +241,7 @@ class WaterfallHelp(HtmlResource):
     def content(self, request, cxt):
         status = self.getStatus(request)
 
-        cxt['show_events_checked'] = request.args.get("show_events", ["true"])[0].lower() == "true"
+        cxt['show_events_checked'] = request.args.get("show_events", ["false"])[0].lower() == "true"
         cxt['branches'] = [b for b in request.args.get("branch", []) if b]
 
         cxt['failures_only'] = request.args.get("failures_only", ["false"])[0].lower() == "true"
@@ -435,7 +435,7 @@ class WaterfallStatusResource(HtmlResource):
         # TODO: see if we can use a cached copy
 
         showEvents = False
-        if request.args.get("show_events", ["true"])[0].lower() == "true":
+        if request.args.get("show_events", ["false"])[0].lower() == "true":
             showEvents = True
         filterCategories = request.args.get('category', [])
         filterBranches = [b for b in request.args.get("branch", []) if b]
