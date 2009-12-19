@@ -430,6 +430,8 @@ class LogFile:
     def addEntry(self, channel, text):
         assert not self.finished
 
+        if isinstance(text, unicode):
+            text = text.encode('utf-8')
         if channel != HEADER:
             # Truncate the log if it's more than logMaxSize bytes
             if self.logMaxSize and self.nonHeaderLength > self.logMaxSize:

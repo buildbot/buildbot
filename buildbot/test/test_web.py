@@ -1,4 +1,5 @@
 # -*- test-case-name: buildbot.test.test_web -*-
+# -*- coding: utf-8 -*-
 
 import os, time, shutil
 import warnings
@@ -452,7 +453,7 @@ BuildmasterConfig = {
         bss.stepStarted()
 
         log1 = step1.addLog("output")
-        log1.addStdout("some stdout\n")
+        log1.addStdout(u"sÒme stdout\n")
         log1.finish()
 
         log2 = step1.addHTMLLog("error", "<html>ouch</html>")
@@ -506,7 +507,8 @@ BuildmasterConfig = {
         logurl = self.getLogURL("setup", "output")
         d = client.getPage(logurl + "/text")
         def _check(logtext):
-            self.failUnlessEqual(logtext, "some stdout\n")
+            # verify utf-8 encoding.
+            self.failUnlessEqual(logtext, "sÒme stdout\n")
         d.addCallback(_check)
         return d
 

@@ -1,4 +1,5 @@
 # -*- test-case-name: buildbot.test.test_vc -*-
+# -*- coding: utf-8 -*-
 
 import sys, os, time, re
 from email.Utils import mktime_tz, parsedate_tz
@@ -64,7 +65,7 @@ f1 = factory.BuildFactory([
 c = {}
 c['slaves'] = [BuildSlave('bot1', 'sekrit')]
 c['schedulers'] = []
-c['builders'] = [{'name': 'vc', 'slavename': 'bot1',
+c['builders'] = [{'name': 'vç', 'slavename': 'bot1',
                   'builddir': 'vc-dir', 'factory': f1}]
 c['slavePortnum'] = 0
 # do not compress logs in tests
@@ -85,7 +86,7 @@ diff -u -r1.1.1.1 subdir.c
  main(int argc, const char *argv[])
  {
 -    printf("Hello subdir.\n");
-+    printf("Hello patched subdir.\n");
++    printf("HellÒ patched subdir.\n");
      return 0;
  }
 """
@@ -107,7 +108,7 @@ TRY_PATCH = '''
  main(int argc, const char *argv[])
  {
 -    printf("Hello subdir.\\n");
-+    printf("Hello try.\\n");
++    printf("HÉllo try.\\n");
      return 0;
  }
 '''
@@ -429,7 +430,7 @@ class VCBase(SignalMixin):
                                self.slavebase, keepalive=0, usePTY=False)
         self.slave = slave
         slave.startService()
-        d = self.master.botmaster.waitUntilBuilderAttached("vc")
+        d = self.master.botmaster.waitUntilBuilderAttached("vç")
         return d
 
     def loadConfig(self, config):
@@ -438,7 +439,7 @@ class VCBase(SignalMixin):
         # to stop and restart the slave.
         d = defer.succeed(None)
         if self.slave:
-            d = self.master.botmaster.waitUntilBuilderDetached("vc")
+            d = self.master.botmaster.waitUntilBuilderDetached("vç")
             self.slave.stopService()
         d.addCallback(lambda res: self.master.loadConfig(config))
         d.addCallback(lambda res: self.connectSlave())
@@ -459,7 +460,7 @@ class VCBase(SignalMixin):
         #print "doBuild(ss: b=%s rev=%s)" % (ss.branch, ss.revision)
         req = base.BuildRequest("test_vc forced build", ss, 'test_builder')
         d = req.waitUntilFinished()
-        c.getBuilder("vc").requestBuild(req)
+        c.getBuilder("vç").requestBuild(req)
         d.addCallback(self._doBuild_1, shouldSucceed)
         return d
     def _doBuild_1(self, bs, shouldSucceed):
@@ -774,7 +775,7 @@ class VCBase(SignalMixin):
         subdir_c = os.path.join(self.slavebase, "vc-dir", "build",
                                 "subdir", "subdir.c")
         data = open(subdir_c, "r").read()
-        self.failUnlessIn("Hello patched subdir.\\n", data)
+        self.failUnlessIn("HellÒ patched subdir.\\n", data)
         self.failUnlessEqual(bs.getProperty("revision"),
                              self.helper.trunk[-1] or None)
         self.checkGotRevision(bs, self.helper.trunk[-1])
@@ -813,7 +814,7 @@ class VCBase(SignalMixin):
         subdir_c = os.path.join(self.slavebase, "vc-dir", "build",
                                 "subdir", "subdir.c")
         data = open(subdir_c, "r").read()
-        self.failUnlessIn("Hello patched subdir.\\n", data)
+        self.failUnlessIn("HellÒ patched subdir.\\n", data)
         self.failUnlessEqual(bs.getProperty("revision"),
                              self.helper.trunk[-2] or None)
         self.checkGotRevision(bs, self.helper.trunk[-2])
@@ -832,7 +833,7 @@ class VCBase(SignalMixin):
         subdir_c = os.path.join(self.slavebase, "vc-dir", "build",
                                 "subdir", "subdir.c")
         data = open(subdir_c, "r").read()
-        self.failUnlessIn("Hello patched subdir.\\n", data)
+        self.failUnlessIn("HellÒ patched subdir.\\n", data)
         self.failUnlessEqual(bs.getProperty("revision"),
                              self.helper.branch[-1] or None)
         self.failUnlessEqual(bs.getProperty("branch"), self.helper.branchname or None)
@@ -1076,7 +1077,7 @@ class VCBase(SignalMixin):
         self.tearDownSignalHandler()
         d = defer.succeed(None)
         if self.slave:
-            d2 = self.master.botmaster.waitUntilBuilderDetached("vc")
+            d2 = self.master.botmaster.waitUntilBuilderDetached("vç")
             d.addCallback(lambda res: self.slave.stopService())
             d.addCallback(lambda res: d2)
         if self.master:
@@ -3306,4 +3307,4 @@ class Patch(VCBase, unittest.TestCase):
         # make sure the file actually got patched
         subdir_c = os.path.join(self.workdir, "subdir", "subdir.c")
         data = open(subdir_c, "r").read()
-        self.failUnlessIn("Hello patched subdir.\\n", data)
+        self.failUnlessIn("HellÒ patched subdir.\\n", data)

@@ -44,6 +44,8 @@ class ChunkConsumer:
     def writeChunk(self, chunk):
         formatted = self.textlog.content([chunk])
         try:
+            if isinstance(formatted, unicode):
+                formatted = formatted.encode('utf-8')
             self.original.write(formatted)
         except pb.DeadReferenceError:
             self.producing.stopProducing()

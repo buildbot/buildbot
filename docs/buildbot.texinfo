@@ -1850,7 +1850,7 @@ f.addStep(Compile())
 c['builders'] = [
   @{'name': 'test', 'slavenames': ['slave1', 'slave2', 'slave3', 'slave4',
                                    'slave5', 'slave6'],
-    'builddir': 'test', 'factory': f', 'slavebuilddir': 'test',
+    'builddir': 'test', 'factory': f, 'slavebuilddir': 'test',
     'env': @{'PATH': '/opt/local/bin:/opt/app/bin:/usr/local/bin:/usr/bin'@}@}
 
 @end example
