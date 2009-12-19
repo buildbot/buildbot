@@ -3,6 +3,8 @@ from __future__ import generators
 import sys, time, os.path
 import urllib
 
+from twisted.web import html, resource
+
 from buildbot import util
 from buildbot import version
 from buildbot.status.web.base import HtmlResource
@@ -171,6 +173,7 @@ class GridStatusResource(HtmlResource, GridStatusMixin):
                'ANYBRANCH': ANYBRANCH,
                'stamps': stamps,
               }  
+            html_categories = map(html.escape(categories))
         
         sortedBuilderNames = status.getBuilderNames()[:]
         sortedBuilderNames.sort()
@@ -239,6 +242,7 @@ class TransposedGridStatusResource(HtmlResource, GridStatusMixin):
                'ANYBRANCH': ANYBRANCH,
                'stamps': stamps,
               }          
+            html_categories = map(html.escape(categories))
 
         sortedBuilderNames = status.getBuilderNames()[:]
         sortedBuilderNames.sort()

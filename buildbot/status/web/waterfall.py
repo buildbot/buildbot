@@ -401,7 +401,7 @@ class WaterfallStatusResource(HtmlResource):
                     newargs[k].append(v)
                 else:
                     newargs[k] = [v]
-            newquery = "&".join(["%s=%s" % (k, urllib.quote(v))
+            newquery = "&".join(["%s=%s" % (urllib.quote(k), urllib.quote(v))
                                  for k in newargs
                                  for v in newargs[k]
                                  ])

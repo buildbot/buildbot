@@ -6,11 +6,11 @@
   {% pluralize categories %}
    <b>Categories:</b><br/>
   {% endtrans %}
-  {{ categories|join('<br/>') }}
+  {{ categories|e|join('<br/>') }}
  {% endif %}
 
  {% if branch != ANYBRANCH %}
-  <br><b>Branch:</b> {{ branch or "trunk" }}
+  <br><b>Branch:</b> {{ branch|e or "trunk" }}
  {% endif %}
 {%- endmacro %}
 
@@ -36,7 +36,7 @@
 
 {% macro build_td(build) -%}
   <td class="build {{ build.class }}">
-    <a href="{{ build.url }}">{{ build.text|join('<br/>') }}</a>
+    <a href="{{ build.url }}">{{ build.text|e|join('<br/>') }}</a>
   </td>
 {%- endmacro %}
 

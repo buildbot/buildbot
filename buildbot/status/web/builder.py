@@ -86,7 +86,7 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
         if self.builder_control is not None:
             cxt['cancel_url'] = path_to_builder(req, b) + '/cancelbuild'
                         
-        numbuilds = req.args.get('numbuilds', ['5'])[0]
+        numbuilds = int(req.args.get('numbuilds', ['5'])[0])
         recent = cxt['recent'] = []
         for build in b.generateFinishedBuilds(num_builds=int(numbuilds)):
             recent.append(self.get_line_values(req, build, False))
@@ -130,7 +130,7 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
         revision = req.args.get("revision", [""])[0]
 
         r = "The web-page 'force build' button was pressed by '%s': %s\n" \
-            % (name, reason)
+            % (html.escape(name), html.escape(reason))
         log.msg("web forcebuild of builder '%s', branch='%s', revision='%s'"
                 " by user '%s'" % (self.builder_status.getName(), branch,
                                    revision, name))

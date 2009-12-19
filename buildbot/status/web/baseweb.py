@@ -207,7 +207,7 @@ class OneBoxPerBuilder(HtmlResource):
         branches = [b for b in req.args.get("branch", []) if b]
 
         cxt = {}
-        cxt['branches'] = " ".join(branches)
+        cxt['branches'] = branches
         bs = cxt['builders'] = []
         
         building = False

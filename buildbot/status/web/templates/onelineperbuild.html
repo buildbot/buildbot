@@ -1,10 +1,10 @@
 {% from 'build_line.html' import build_line %}
 {% import 'forms.html' as forms %}
 
-<h1>Last {{ num_builds }} finished builds: {{ branches|join(', ') }}</h1>
+<h1>Last {{ num_builds }} finished builds: {{ branches|join(', ')|e }}</h1>
 
 {% if builders %}
-  <p>of builders: {{ builders|join(", ") }}</p>
+  <p>of builders: {{ builders|join(", ")|e }}</p>
 {% endif %}
  
 <ul>

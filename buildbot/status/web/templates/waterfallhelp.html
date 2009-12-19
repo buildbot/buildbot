@@ -56,7 +56,7 @@ Erase the text from these "Show Branch:" boxes to remove that branch filter.
 <table>
 {% for b in branches %}
  <tr><td>Show Branch: 
- <input type="text" name="branch" value="{b}">
+ <input type="text" name="branch" value="{{ b|e }}">
  </td></tr>
 {% endfor %}
 </table>
@@ -73,7 +73,7 @@ the Builders you are interested in here.</p>
        
 <table>
 {% for bn in all_builders %}
- <tr><td><input type="checkbox" name="builder" value="{{bn}}"
+ <tr><td><input type="checkbox" name="builder" value="{{ bn }}"
   {% if bn in show_builders %}checked="checked"{% endif %} />
  </td><td>{{bn}}</td></tr>
 {% endfor %}
@@ -100,7 +100,7 @@ reload itself after that many seconds.</p>
 
 <table>
 {% for value, name in times %}
- <tr><td><input type="radio" name="reload" value="{{value}}"
+ <tr><td><input type="radio" name="reload" value="{{ value }}"
   {% if value == current_reload_time %}checked="checked"{% endif %} >
  </td><td>{{name}}</td></tr>
 {% endfor %}

@@ -1,7 +1,7 @@
 {% from 'build_line.html' import build_line %}
 
-<h1>Last {{ num_builds }} builds of builder {{ builder_name }}: 
-    {{ branches|join(', ') }}
+<h1>Last {{ num_builds }} builds of builder {{ builder_name|e }}: 
+    {{ branches|join(', ')|e }}
 </h1>
 
 <ul>
