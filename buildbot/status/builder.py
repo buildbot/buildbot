@@ -1737,6 +1737,11 @@ class BuilderStatus(styles.Versioned):
         for Nb in range(1, self.nextBuildNumber+1):
             b = self.getBuild(-Nb)
             if not b:
+                # HACK: If this is the first build we are looking at, it is
+                # possible it's in progress but locked before it has written a
+                # pickle; in this case keep looking.
+                if Nb == 1:
+                    continue
                 break
             if branches and not b.getSourceStamp().branch in branches:
                 continue
