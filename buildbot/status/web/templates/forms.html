@@ -68,9 +68,11 @@
   </div>
   {% for i in range(1,4) %}
   <div class="row">
-     <span class="label">Property {{ i }}, </span>
-     Name: <input type="text" name="prop{{ i }}name" />
-     Value: <input type="text" name="prop{{ i }}value" />
+     Property {{ i }}
+     <span class="label">Name:</span>
+     <span class="field"><input type="text" name="property{{ i }}name" /></span>
+     <span class="label">Value:</span>
+     <span class="field"><input type="text" name="property{{ i }}value" /></span>
   </div>
   {% endfor %}
   
