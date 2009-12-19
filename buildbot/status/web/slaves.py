@@ -58,15 +58,15 @@ class OneBuildSlaveResource(HtmlResource, BuildLineMixin):
                 if n > max_builds:
                     break
 
-        ctx.updatedict(slave = s.getSlave(self.slavename),
-                       slavename = self.slavename,  
-                       current = current_builds, 
-                       recent = recent_builds, 
-                       shutdown_url = request.childLink("shutdown"),
-                       control = self.getControl(request),
-                       this_url = "../../../" + path_to_slave(request, slave))
+        ctx.update(dict(slave = s.getSlave(self.slavename),
+                        slavename = self.slavename,  
+                        current = current_builds, 
+                        recent = recent_builds, 
+                        shutdown_url = request.childLink("shutdown"),
+                        control = self.getControl(request),
+                        this_url = "../../../" + path_to_slave(request, slave)))
 
-        template = request.site.buildbot_service.templates.get_template("buildslave.html");
+        template = request.site.buildbot_service.templates.get_template("buildslave.html")
         data = template.render(**ctx)
 
         return data
