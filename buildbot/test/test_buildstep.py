@@ -7,6 +7,7 @@ from twisted.trial import unittest
 from buildbot import interfaces
 from buildbot.process import buildstep
 from buildbot.process import mtrlogobserver
+from buildbot.process import subunitlogobserver
 
 # have to subclass LogObserver in order to test it, since the default
 # implementations of outReceived() and errReceived() do nothing
@@ -270,3 +271,47 @@ class RemoteShellTest(unittest.TestCase):
         testval = repr(rsc)
         rsc = buildstep.RemoteShellCommand('.', 'make')
         testval = repr(rsc)
+
+
+class SubunitLogObserver(subunitlogobserver.SubunitLogObserver):
+    """Subclassed to allow testing behaviour without a real buildstep."""
+
+    def __init__(self):
+        subunitlogobserver.SubunitLogObserver.__init__(self)
+        self.testFails = []
+        self.testWarnLists = []
+        # We don't have a buildstep in self.step.
+        # So we'll just install ourself there, so we can check the call of
+        # setProgress().
+        # Same for self.step.step_status.setText()
+        self.step = self
+        self.step_status = self
+        self.progresses = []
+        self.text = []
+
+    def setProgress(self, type, value):
+        self.progresses.append((type, value))
+
+    def setText(self, text):
+        self.text = text
+
+
+class SubunitLogObserverTests(ObserverTestCase):
+    observer_cls = SubunitLogObserver
+
+    def test1(self):
+        self._logStdout("""
+test: foo
+success: foo
+test: bar
+failure: bar [
+string
+]
+test: gam
+skip: gam
+test: quux
+xfail: quux
+""")
+        self.assertEqual(self.observer.progresses,
+            [('tests', 1), ('tests', 2), ('tests failed', 1), ('tests', 3),
+             ('tests failed', 2), ('tests', 4)])

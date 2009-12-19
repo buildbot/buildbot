@@ -225,6 +225,7 @@ Simple ShellCommand Subclasses
 * PerlModuleTest::
 * Testing with mysql-test-run::
 * SetProperty::
+* SubunitShellCommand::
 
 Python BuildSteps
 
@@ -5747,6 +5748,7 @@ file less verbose.
 * PerlModuleTest::
 * Testing with mysql-test-run::
 * SetProperty::
+* SubunitShellCommand::
 @end menu
 
 @node Configure, Compile, Simple ShellCommand Subclasses, Simple ShellCommand Subclasses
@@ -5969,7 +5971,7 @@ The subdirectory in which to look for server error log files. Defaults to
 @end table
 
 
-@node SetProperty,  , Testing with mysql-test-run, Simple ShellCommand Subclasses
+@node SetProperty, SubunitShellCommand , Testing with mysql-test-run, Simple ShellCommand Subclasses
 @subsubsection SetProperty
 
 @bsindex buildbot.steps.shell.SetProperty
@@ -6011,6 +6013,21 @@ f.addStep(SetProperty(
 
 Then @code{my_extract} will see @code{stdout="output1\noutput2\n"}
 and @code{stderr="error\n"}.
+
+@node SubunitShellCommand,  , SetProperty, Simple ShellCommand Subclasses
+@subsubsection SubunitShellCommand
+
+@bsindex buildbot.process.subunitlogger.SubunitShellCommand
+
+This buildstep is similar to ShellCommand, except that it runs the log content
+through a subunit filter to extract test and failure counts.
+
+@example
+f.addStep(SubunitShellCommand(command="make test"))
+@end example
+
+This runs @code{make test} and filters it through subunit. The 'tests' and
+'test failed' progress metrics will now accumulate test data from the test run.
 
 @node Python BuildSteps, Transferring Files, Simple ShellCommand Subclasses, Build Steps
 @subsection Python BuildSteps
@@ -6830,7 +6847,7 @@ build number.
 @example
 class TestWithCodeCoverage(BuildStep):
     command = ["make", "test",
-               WithProperties("buildnum=%s" % "buildnumber")]
+               WithProperties("buildnum=%s", "buildnumber")]
 
     def createSummary(self, log):
         buildnumber = self.getProperty("buildnumber")
@@ -6844,7 +6861,7 @@ output by the build process itself:
 @example
 class TestWithCodeCoverage(BuildStep):
     command = ["make", "test",
-               WithProperties("buildnum=%s" % "buildnumber")]
+               WithProperties("buildnum=%s", "buildnumber")]
 
     def createSummary(self, log):
         output = StringIO(log.getText())

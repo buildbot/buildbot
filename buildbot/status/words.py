@@ -306,15 +306,15 @@ class Contact:
 
         self.send(r)
 
+    results_descriptions = {
+        SUCCESS: "Success",
+        WARNINGS: "Warnings",
+        FAILURE: "Failure",
+        EXCEPTION: "Exception",
+        }
+
     def buildFinished(self, builderName, build, results):
         builder = build.getBuilder()
-
-        results_descriptions = {
-            SUCCESS: "Success",
-            WARNINGS: "Warnings",
-            FAILURE: "Failure",
-            EXCEPTION: "Exception",
-            }
 
         # only notify about builders we are interested in
         log.msg('[Contact] builder %r in category %s finished' % (builder, builder.category))
@@ -323,39 +323,47 @@ class Contact:
             builder.category not in self.channel.categories):
             return
 
-        results = build.getResults()
+        if not self.notify_for_finished(build):
+            return
 
         r = "build #%d of %s is complete: %s" % \
             (build.getNumber(),
              builder.getName(),
-             results_descriptions.get(results, "??"))
+             self.results_descriptions.get(build.getResults(), "??"))
         r += " [%s]" % " ".join(build.getText())
         buildurl = self.channel.status.getURLForThing(build)
         if buildurl:
             r += "  Build details are at %s" % buildurl
 
-        if self.notify_for('finished') or self.notify_for(lower(results_descriptions.get(results))):
-            self.send(r)
-            return
+        if self.channel.showBlameList and build.getResults() != SUCCESS and len(build.changes) != 0:
+            r += '  blamelist: ' + ', '.join([c.who for c in build.changes])
+
+        self.send(r)
+
+    def notify_for_finished(self, build):
+        results = build.getResults()
+
+        if self.notify_for('finished'):
+            return True
+
+        if self.notify_for(lower(self.results_descriptions.get(results))):
+            return True
 
         prevBuild = build.getPreviousBuild()
         if prevBuild:
             prevResult = prevBuild.getResults()
 
-            required_notification_control_string = join((lower(results_descriptions.get(prevResult)), \
+            required_notification_control_string = join((lower(self.results_descriptions.get(prevResult)), \
                                                              'To', \
-                                                             capitalize(results_descriptions.get(results))), \
+                                                             capitalize(self.results_descriptions.get(results))), \
                                                             '')
 
             if (self.notify_for(required_notification_control_string)):
-                self.send(r)
+                return True
+
+        return False
 
     def watchedBuildFinished(self, b):
-        results = {SUCCESS: "Success",
-                   WARNINGS: "Warnings",
-                   FAILURE: "Failure",
-                   EXCEPTION: "Exception",
-                   }
 
         # only notify about builders we are interested in
         builder = b.getBuilder()
@@ -368,7 +376,7 @@ class Contact:
         r = "Hey! build %s #%d is complete: %s" % \
             (b.getBuilder().getName(),
              b.getNumber(),
-             results.get(b.getResults(), "??"))
+             self.results_descriptions.get(b.getResults(), "??"))
         r += " [%s]" % " ".join(b.getText())
         self.send(r)
         buildurl = self.channel.status.getURLForThing(b)
@@ -580,14 +588,15 @@ class IRCContact(Contact):
         self.dest = dest
 
     def describeUser(self, user):
-        if self.dest[0] == "#":
+        if self.dest[0] == '#':
             return "IRC user <%s> on channel %s" % (user, self.dest)
         return "IRC user <%s> (privmsg)" % user
 
     # userJoined(self, user, channel)
 
     def send(self, message):
-        self.channel.msg(self.dest, message.encode("ascii", "replace"))
+        self.channel.msgOrNotice(self.dest, message.encode("ascii", "replace"))
+
     def act(self, action):
         self.channel.me(self.dest, action.encode("ascii", "replace"))
 
@@ -662,7 +671,7 @@ class IrcStatusBot(irc.IRCClient):
     implements(IChannel)
     contactClass = IRCContact
 
-    def __init__(self, nickname, password, channels, status, categories, notify_events):
+    def __init__(self, nickname, password, channels, status, categories, notify_events, noticeOnChannel = False, showBlameList = False):
         """
         @type  nickname: string
         @param nickname: the nickname by which this bot should be known
@@ -683,6 +692,14 @@ class IrcStatusBot(irc.IRCClient):
         self.counter = 0
         self.hasQuit = 0
         self.contacts = {}
+        self.noticeOnChannel = noticeOnChannel
+        self.showBlameList = showBlameList
+
+    def msgOrNotice(self, dest, message):
+        if self.noticeOnChannel and dest[0] == '#':
+            self.notice(dest, message)
+        else:
+            self.msg(dest, message)
 
     def addContact(self, name, contact):
         self.contacts[name] = contact
@@ -777,7 +794,7 @@ class IrcStatusFactory(ThrottledClientFactory):
     shuttingDown = False
     p = None
 
-    def __init__(self, nickname, password, channels, categories, notify_events):
+    def __init__(self, nickname, password, channels, categories, notify_events, noticeOnChannel = False, showBlameList = False):
         #ThrottledClientFactory.__init__(self) # doesn't exist
         self.status = None
         self.nickname = nickname
@@ -785,6 +802,8 @@ class IrcStatusFactory(ThrottledClientFactory):
         self.channels = channels
         self.categories = categories
         self.notify_events = notify_events
+        self.noticeOnChannel = noticeOnChannel
+        self.showBlameList = showBlameList
 
     def __getstate__(self):
         d = self.__dict__.copy()
@@ -799,7 +818,9 @@ class IrcStatusFactory(ThrottledClientFactory):
     def buildProtocol(self, address):
         p = self.protocol(self.nickname, self.password,
                           self.channels, self.status,
-                          self.categories, self.notify_events)
+                          self.categories, self.notify_events,
+                          noticeOnChannel = self.noticeOnChannel,
+                          showBlameList = self.showBlameList)
         p.factory = self
         p.status = self.status
         p.control = self.control
@@ -832,7 +853,8 @@ class IRC(base.StatusReceiverMultiService):
                      "categories"]
 
     def __init__(self, host, nick, channels, port=6667, allowForce=True,
-                 categories=None, password=None, notify_events={}):
+                 categories=None, password=None, notify_events={},
+                 noticeOnChannel = False, showBlameList = True):
         base.StatusReceiverMultiService.__init__(self)
 
         assert allowForce in (True, False) # TODO: implement others
@@ -848,7 +870,9 @@ class IRC(base.StatusReceiverMultiService):
         self.notify_events = notify_events
         log.msg('Notify events %s' % notify_events)
         self.f = IrcStatusFactory(self.nick, self.password,
-                                  self.channels, self.categories, self.notify_events)
+                                  self.channels, self.categories, self.notify_events,
+                                  noticeOnChannel = noticeOnChannel,
+                                  showBlameList = showBlameList)
         c = internet.TCPClient(self.host, self.port, self.f)
         c.setServiceParent(self)
 
