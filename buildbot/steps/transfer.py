@@ -263,19 +263,17 @@ class DirectoryUpload(BuildStep):
     - ['masterdest'] name of destination directory at master
     - ['workdir']    string with slave working directory relative to builder
                      base dir, default 'build'
-    - ['maxsize']    maximum size of each file, default None (=unlimited)
+    - ['maxsize']    maximum size of the compressed tarfile containing the
+                     whole directory
     - ['blocksize']  maximum size of each block being transfered
     - ['compress']   compression type to use: one of [None, 'gz', 'bz2']
-    - ['mode']       file access mode for the resulting master-side file.
-                     The default (=None) is to leave it up to the umask of
-                     the buildmaster process.
 
     """
 
     name = 'upload'
 
     def __init__(self, slavesrc, masterdest,
-                 workdir="build", maxsize=None, blocksize=16*1024, mode=None,
+                 workdir="build", maxsize=None, blocksize=16*1024,
                  compress=None, **buildstep_kwargs):
         BuildStep.__init__(self, **buildstep_kwargs)
         self.addFactoryArguments(slavesrc=slavesrc,
@@ -284,7 +282,6 @@ class DirectoryUpload(BuildStep):
                                  maxsize=maxsize,
                                  blocksize=blocksize,
                                  compress=compress,
-                                 mode=mode,
                                  )
 
         self.slavesrc = slavesrc
@@ -294,8 +291,6 @@ class DirectoryUpload(BuildStep):
         self.blocksize = blocksize
         assert compress in (None, 'gz', 'bz2')
         self.compress = compress
-        assert isinstance(mode, (int, type(None)))
-        self.mode = mode
 
     def start(self):
         version = self.slaveVersion("uploadDirectory")
@@ -318,7 +313,7 @@ class DirectoryUpload(BuildStep):
         self.step_status.setText(['uploading', os.path.basename(source)])
         
         # we use maxsize to limit the amount of data on both sides
-        dirWriter = _DirectoryWriter(masterdest, self.maxsize, self.compress, self.mode)
+        dirWriter = _DirectoryWriter(masterdest, self.maxsize, self.compress, 0600)
 
         # default arguments
         args = {

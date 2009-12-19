@@ -57,7 +57,6 @@ class OneBuildSlaveResource(HtmlResource, BuildLineMixin):
                 recent_builds.append(self.get_line_values(request, rb))
                 if n > max_builds:
                     break
-
         ctx.update(dict(slave = s.getSlave(self.slavename),
                         slavename = self.slavename,  
                         current = current_builds, 
@@ -66,10 +65,8 @@ class OneBuildSlaveResource(HtmlResource, BuildLineMixin):
                         control = self.getControl(request),
                         this_url = "../../../" + path_to_slave(request, slave),
                         access_uri = slave.getAccessURI()))
-
         template = request.site.buildbot_service.templates.get_template("buildslave.html")
         data = template.render(**ctx)
-
         return data
 
 # /buildslaves

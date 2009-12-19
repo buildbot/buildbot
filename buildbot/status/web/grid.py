@@ -211,9 +211,7 @@ class GridStatusResource(HtmlResource, GridStatusMixin):
             b['builds'] = []
             for build in builds:
                 b['builds'].append(self.build_cxt(request, build))
-
             cxt['builders'].append(b)
-
         template = request.site.buildbot_service.templates.get_template("grid.html")
         data = template.render(**cxt)
         data += self.footer(request)        
