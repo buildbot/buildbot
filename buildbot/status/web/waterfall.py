@@ -244,6 +244,7 @@ class WaterfallHelp(HtmlResource):
         cxt['show_events_checked'] = request.args.get("show_events", ["false"])[0].lower() == "true"
         cxt['branches'] = [b for b in request.args.get("branch", []) if b]
 
+
         cxt['failures_only'] = request.args.get("failures_only", ["false"])[0].lower() == "true"
 
         # this has a set of toggle-buttons to let the user choose the

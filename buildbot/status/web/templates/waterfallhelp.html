@@ -33,7 +33,7 @@ be displayed that occurred <b>before</b> this timestamp. Instead of providing
 given interval, where each timestamp on the left hand edge counts as a single
 event. You can add a <tt>num_events=</tt> argument to override this this.</p>
     
-<h2>Hiding non-Build events</h2>
+<h2>Showing non-Build events</h2>
 
 <p>By passing <tt>show_events=true</tt>, you can remove the "buildslave
 attached", "buildslave detached", and "builder reconfigured" events that
@@ -42,7 +42,7 @@ appear in-between the actual builds.</p>
 <p>
 <input type="checkbox" name="show_events" value="true" 
 {% if show_events_checked %} checked="checked" {% endif %} >
-Hide non-Build events
+Show non-Build events
 </p>
 
 <h2>Showing only Certain Branches</h2>
