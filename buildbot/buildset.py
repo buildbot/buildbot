@@ -31,6 +31,9 @@ class BuildSet:
     def waitUntilFinished(self):
         return self.status.waitUntilFinished()
 
+    def getProperties(self):
+        return self.properties
+
     def start(self, builders):
         """This is called by the BuildMaster to actually create and submit
         the BuildRequests."""

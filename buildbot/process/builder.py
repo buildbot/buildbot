@@ -881,7 +881,8 @@ class BuilderControl(components.Adapter):
             return
 
         ss = bs.getSourceStamp(absolute=True)
-        req = base.BuildRequest(reason, ss, self.original.name)
+        req = base.BuildRequest(reason, ss, self.original.name,
+                                properties=bs.getProperties())
         self.requestBuild(req)
 
     def getPendingBuilds(self):

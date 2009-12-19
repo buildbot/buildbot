@@ -103,12 +103,20 @@ class RemoteCommand(pb.Referenceable):
         @returns: a deferred that will fire when the remote command is
                   done (with None as the result)
         """
+
+        # Allow use of WithProperties in logfile path names.
+        cmd_args = self.args
+        if cmd_args.has_key("logfiles") and cmd_args["logfiles"]:
+            cmd_args = cmd_args.copy()
+            properties = self.step.build.getProperties()
+            cmd_args["logfiles"] = properties.render(cmd_args["logfiles"])
+
         # This method only initiates the remote command.
         # We will receive remote_update messages as the command runs.
         # We will get a single remote_complete when it finishes.
         # We should fire self.deferred when the command is done.
         d = self.remote.callRemote("startCommand", self, self.commandID,
-                                   self.remote_command, self.args)
+                                   self.remote_command, cmd_args)
         return d
 
     def interrupt(self, why):
@@ -994,6 +1002,13 @@ class LoggingBuildStep(BuildStep):
 
     def describe(self, done=False):
         raise NotImplementedError("implement this in a subclass")
+
+    def addLogFile(self, logname, filename):
+        """
+        This allows to add logfiles after construction, but before calling
+        startCommand().
+        """
+        self.logfiles[logname] = filename
 
     def startCommand(self, cmd, errorMessages=[]):
         """
