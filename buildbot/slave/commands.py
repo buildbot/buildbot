@@ -17,7 +17,7 @@ from buildbot.util import to_text
 # this used to be a CVS $-style "Revision" auto-updated keyword, but since I
 # moved to Darcs as the primary repository, this is updated manually each
 # time this file is changed. The last cvs_ver that was here was 1.51 .
-command_version = "2.8"
+command_version = "2.9"
 
 # version history:
 #  >=1.17: commands are interruptable
@@ -1808,6 +1808,7 @@ class SVN(SourceBase):
     ['keep_on_purge']:     Files and directories to keep between updates
     ['ignore_ignores']:    Ignore ignores when purging changes
     ['always_purge']:      Always purge local changes after each build
+    ['depth']:     	   Pass depth argument to subversion 1.5+ 
     """
 
     header = "svn operation"
@@ -1829,6 +1830,9 @@ class SVN(SourceBase):
             self.svn_args.extend(["--password", Obfuscated(args['password'], "XXXX")])
         if args.get('extra_args', None) is not None:
             self.svn_args.extend(args['extra_args'])
+
+	if args.has_key('depth'):
+	    self.svn_args.extend(["--depth",args['depth']])
 
     def _dovccmd(self, command, args, rootdir=None, cb=None, **kwargs):
         if rootdir is None:

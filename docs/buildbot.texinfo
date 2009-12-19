@@ -5241,6 +5241,11 @@ svn:ignore properties and global-ignores in subversion/config.
 (optional): if set to True, always purge local changes after each
 build. This is everything that would appear in a @code{svn status}.
 
+@item depth
+(optional): Specify depth argument to achieve sparse checkout.  Only available if slave has Subversion 1.5 or higher.
+
+If set to "empty" updates will not pull in any files or subdirectories not already present. If set to "files", updates will pull in any files not already present, but not directories.  If set to "immediates", updates willl pull in any files or subdirectories not already present, the new subdirectories will have depth: empty.  If set to "infinity", updates will pull in any files or subdirectories not already present; the new subdirectories will have depth-infinity. Infinity is equivalent to SVN default update behavior, without specifying any depth argument.
+
 @end table
 
 If you are using branches, you must also make sure your

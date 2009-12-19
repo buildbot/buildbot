@@ -160,7 +160,7 @@ class Maker:
         f.close()
         os.chmod(target, 0600)
 
-    def public_html(self, index_html, buildbot_css, robots_txt):
+    def public_html(self, files):
         webdir = os.path.join(self.basedir, "public_html")
         if os.path.exists(webdir):
             if not self.quiet:
@@ -170,20 +170,11 @@ class Maker:
             os.mkdir(webdir)
         if not self.quiet:
             print "populating public_html/"
-        target = os.path.join(webdir, "index.html")
-        f = open(target, "wt")
-        f.write(open(index_html, "rt").read())
-        f.close()
-
-        target = os.path.join(webdir, "buildbot.css")
-        f = open(target, "wt")
-        f.write(open(buildbot_css, "rt").read())
-        f.close()
-
-        target = os.path.join(webdir, "robots.txt")
-        f = open(target, "wt")
-        f.write(open(robots_txt, "rt").read())
-        f.close()
+        for target, source in files.iteritems():
+            target = os.path.join(webdir, target)
+            f = open(target, "wt")
+            f.write(open(source, "rt").read())
+            f.close()
 
     def populate_if_missing(self, target, source, overwrite=False):
         new_contents = open(source, "rt").read()
@@ -206,18 +197,15 @@ class Maker:
                 print "populating %s" % target
             open(target, "wt").write(new_contents)
 
-    def upgrade_public_html(self, index_html, buildbot_css, robots_txt):
+    def upgrade_public_html(self, files):
         webdir = os.path.join(self.basedir, "public_html")
         if not os.path.exists(webdir):
             if not self.quiet:
                 print "populating public_html/"
             os.mkdir(webdir)
-        self.populate_if_missing(os.path.join(webdir, "index.html"),
-                                 index_html)
-        self.populate_if_missing(os.path.join(webdir, "buildbot.css"),
-                                 buildbot_css)
-        self.populate_if_missing(os.path.join(webdir, "robots.txt"),
-                                 robots_txt)
+        for target, source in files.iteritems():
+            self.populate_if_missing(os.path.join(webdir, target),
+                                 source)
 
     def check_master_cfg(self):
         from buildbot.master import BuildMaster
@@ -300,12 +288,14 @@ def upgradeMaster(config):
     m = Maker(config)
     # TODO: check Makefile
     # TODO: check TAC file
-    # check web files: index.html, classic.css, robots.txt
+    # check web files: index.html, default.css, robots.txt
     webdir = os.path.join(basedir, "public_html")
-    m.upgrade_public_html(util.sibpath(__file__, "../status/web/index.html"),
-                          util.sibpath(__file__, "../status/web/classic.css"),
-                          util.sibpath(__file__, "../status/web/robots.txt"),
-                          )
+    m.upgrade_public_html({
+          'index.html' : util.sibpath(__file__, "../status/web/index.html"),
+          'bg_gradient.jpg' : util.sibpath(__file__, "../status/web/bg_gradient.jpg"),
+          'buildbot.css' : util.sibpath(__file__, "../status/web/default.css"),
+          'robots.txt' : util.sibpath(__file__, "../status/web/robots.txt"),
+      })
     m.populate_if_missing(os.path.join(basedir, "master.cfg.sample"),
                           util.sibpath(__file__, "sample.cfg"),
                           overwrite=True)
@@ -382,10 +372,12 @@ def createMaster(config):
     contents = masterTAC % config
     m.makeTAC(contents)
     m.sampleconfig(util.sibpath(__file__, "sample.cfg"))
-    m.public_html(util.sibpath(__file__, "../status/web/index.html"),
-                  util.sibpath(__file__, "../status/web/classic.css"),
-                  util.sibpath(__file__, "../status/web/robots.txt"),
-                  )
+    m.public_html({
+          'index.html' : util.sibpath(__file__, "../status/web/index.html"),
+          'bg_gradient.jpg' : util.sibpath(__file__, "../status/web/bg_gradient.jpg"),
+          'buildbot.css' : util.sibpath(__file__, "../status/web/default.css"),
+          'robots.txt' : util.sibpath(__file__, "../status/web/robots.txt"),
+      })
     m.makefile()
 
     if not m.quiet: print "buildmaster configured in %s" % m.basedir

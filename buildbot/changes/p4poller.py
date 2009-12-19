@@ -31,7 +31,7 @@ class P4Source(base.ChangeSource, util.ComparableMixin):
                      "p4bin", "pollinterval"]
 
     changes_line_re = re.compile(
-            r"Change (?P<num>\d+) on \S+ by \S+@\S+ '.+'$")
+            r"Change (?P<num>\d+) on \S+ by \S+@\S+ '.*'$")
     describe_header_re = re.compile(
             r"Change \d+ by (?P<who>\S+)@\S+ on (?P<when>.+)$")
     file_re = re.compile(r"^\.\.\. (?P<path>[^#]+)#\d+ \w+$")
