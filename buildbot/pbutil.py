@@ -72,13 +72,6 @@ class ReconnectingPBClientFactory(PBClientFactory,
             self.doGetPerspective(self._root)
         self.gotRootObject(self._root)
 
-    def __getstate__(self):
-        # this should get folded into ReconnectingClientFactory
-        d = self.__dict__.copy()
-        d['connector'] = None
-        d['_callID'] = None
-        return d
-
     # oldcred methods
 
     def getPerspective(self, *args):

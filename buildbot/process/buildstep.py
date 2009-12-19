@@ -62,14 +62,6 @@ class RemoteCommand(pb.Referenceable):
         self.remote_command = remote_command
         self.args = args
 
-    def __getstate__(self):
-        dict = self.__dict__.copy()
-        # Remove the remote ref: if necessary (only for resumed builds), it
-        # will be reattached at resume time
-        if dict.has_key("remote"):
-            del dict["remote"]
-        return dict
-
     def run(self, step, remote):
         self.active = True
         self.step = step

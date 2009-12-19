@@ -240,12 +240,6 @@ class Build:
     def __repr__(self):
         return "<Build %s>" % (self.builder.name,)
 
-    def __getstate__(self):
-        d = self.__dict__.copy()
-        if d.has_key('remote'):
-            del d['remote']
-        return d
-
     def blamelist(self):
         blamelist = []
         for c in self.allChanges():
