@@ -86,7 +86,7 @@ class SlaveBuilder(pb.Referenceable, service.Service):
         self.builddir = builddir
         self.basedir = os.path.join(self.bot.basedir, self.builddir)
         if not os.path.isdir(self.basedir):
-            os.mkdir(self.basedir)
+            os.makedirs(self.basedir)
 
     def stopService(self):
         service.Service.stopService(self)

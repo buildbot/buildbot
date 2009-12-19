@@ -328,7 +328,7 @@ class MailNotifier(base.StatusReceiverMultiService):
         self.extraRecipients = extraRecipients
         self.sendToInterestedUsers = sendToInterestedUsers
         self.fromaddr = fromaddr
-        assert mode in ('all', 'failing', 'problem', 'change')
+        assert mode in ('all', 'failing', 'problem', 'change', 'passing')
         self.mode = mode
         self.categories = categories
         self.builders = builders
