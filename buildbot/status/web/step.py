@@ -20,17 +20,19 @@ class StatusResourceBuildStep(HtmlResource):
         s = self.step_status
         b = s.getBuild()
 
-        logs = []        
+        cxt = {}
+
+        logs = cxt['logs'] = []        
         for l in s.getLogs():
             # FIXME: If the step name has a / in it, this is broken
             # either way.  If we quote it but say '/'s are safe,
             # it chops up the step name.  If we quote it and '/'s
             # are not safe, it escapes the / that separates the
             # step name from the log number.
-            logs.append({'log': l,
-                         'link': req.childLink("logs/%s" % urllib.quote(l.getName())), })
+            logs.append({'has_contents': l.hasContents(),
+                         'name': l.getName(),
+                         'link': req.childLink("logs/%s" % urllib.quote(l.getName())) })
 
-        cxt = {}
         start, end = s.getTimes()
         
         if start:
@@ -45,8 +47,7 @@ class StatusResourceBuildStep(HtmlResource):
         cxt.update(dict(builder_link = path_to_builder(req, b.getBuilder()),
                         build_link = path_to_build(req, b),
                         b = b,
-                        s = s,
-                        logs = logs))
+                        s = s))
         
         template = req.site.buildbot_service.templates.get_template("buildstep.html");        
         data = template.render(**cxt)

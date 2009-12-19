@@ -39,10 +39,10 @@
 <h2>Logs</h2>
 <ul>
 {% for l in logs %}
-  {% if l.log.hasContents() %}
-    <li><a href="{{ l.link|e }}">{{ l.log.getName()|e }}</a></li>
+  {% if l.has_contents %}
+    <li><a href="{{ l.link|e }}">{{ l.name|e }}</a></li>
   {% else %}
-    <li>{{ l.log.getName()|e }}</li>
+    <li>{{ l.name|e }}</li>
   {% endif %}
 {% endfor %}
 </ul>
