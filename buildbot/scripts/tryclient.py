@@ -156,21 +156,17 @@ class BzrExtractor(SourceStampExtractor):
     patchlevel = 0
     vcexe = "bzr"
     def getBaseRevision(self):
-        d = self.dovc(["version-info"])
+        d = self.dovc(["revision-info","-rsubmit:"])
         d.addCallback(self.get_revision_number)
         return d
+
     def get_revision_number(self, out):
-        for line in out.split("\n"):
-            colon = line.find(":")
-            if colon != -1:
-                key, value = line[:colon], line[colon+2:]
-                if key == "revno":
-                    self.baserev = int(value)
-                    return
-        raise ValueError("unable to find revno: in bzr output: '%s'" % out)
+        revno, revid= out.split()
+        self.baserev = 'revid:' + revid
+        return
 
     def getPatch(self, res):
-        d = self.dovc(["diff"])
+        d = self.dovc(["diff","-r%s.." % self.baserev])
         d.addCallback(self.readPatch, self.patchlevel)
         return d
 

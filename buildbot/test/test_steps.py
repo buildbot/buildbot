@@ -14,6 +14,7 @@
 # todo: test batched updates, by invoking remote_update(updates) instead of
 # statusUpdate(update). Also involves interrupted builds.
 
+import sys
 import os
 
 from twisted.trial import unittest
@@ -624,6 +625,112 @@ ending line
         results = step.evaluateCommand(cmd)
         self.failUnlessEqual(results, WARNINGS)
 
+    def testCompile4(self):
+        # Test suppression of warnings.
+        self.masterbase = "Warnings.testCompile4"
+        step = self.makeStep(shell.Compile,
+                             warningPattern="^(.*?):([0-9]+): [Ww]arning: (.*)$",
+                             warningExtractor=shell.Compile.warnExtractFromRegexpGroups,
+                             directoryEnterPattern="make.*: Entering directory [\"`'](.*)['`\"]",
+                             directoryLeavePattern="make.*: Leaving directory")
+        step.addSuppression([(r"/subdir/", r"xyzzy", None, None),
+                             (r"foo.c", r".*", None, 20),
+                             (r"foo.c", r".*", 200, None),
+                             (r"foo.c", r".*", 50, 50),
+                             (r"xxx", r".*", None, None),
+                             ])
+        log = step.addLog("stdio")
+        output = \
+"""Making all in .
+make[1]: Entering directory `/abs/path/build'
+foo.c:10: warning: `bar' defined but not used
+foo.c:50: warning: `bar' defined but not used
+make[2]: Entering directory `/abs/path/build/subdir'
+baz.c:33: warning: `xyzzy' defined but not used
+baz.c:34: warning: `magic' defined but not used
+make[2]: Leaving directory `/abs/path/build/subdir'
+foo.c:100: warning: `xyzzy' defined but not used
+foo.c:200: warning: `bar' defined but not used
+make[2]: Leaving directory `/abs/path/build'
+"""
+        log.addStdout(output)
+        log.finish()
+        step.createSummary(log)
+        self.failUnlessEqual(step.getProperty("warnings-count"), 2)
+        logs = {}
+        for log in step.step_status.getLogs():
+            logs[log.getName()] = log
+        self.failUnless("warnings" in logs)
+        lines = logs["warnings"].readlines()
+        self.failUnlessEqual(len(lines), 2)
+        self.failUnlessEqual(lines[0], "baz.c:34: warning: `magic' defined but not used\n")
+        self.failUnlessEqual(lines[1], "foo.c:100: warning: `xyzzy' defined but not used\n")
+
+        cmd = buildstep.RemoteCommand(None, {})
+        cmd.rc = 0
+        results = step.evaluateCommand(cmd)
+        self.failUnlessEqual(results, WARNINGS)
+
+    def filterArgs(self, args):
+        if "writer" in args:
+            args["writer"] = self.wrap(args["writer"])
+        return args
+
+    suppressionFileData = """
+# Sample suppressions file for testing
+
+/subdir/ : xyzzy
+foo.c: .* : 0-20
+foo.c: .*: 200-10000
+foo.c :.*: 50
+xxx : .*
+"""
+    def testCompile5(self):
+        # Test downloading warning suppression file from slave.
+        self.slavebase = "Warnings.testCompile5.slave"
+        self.masterbase = "Warnings.testCompile5.master"
+        sb = self.makeSlaveBuilder()
+        os.mkdir(os.path.join(self.slavebase, self.slavebuilderbase,
+                              "build"))
+        output = \
+"""Making all in .
+make[1]: Entering directory `/abs/path/build'
+foo.c:10: warning: `bar' defined but not used
+foo.c:50: warning: `bar' defined but not used
+make[2]: Entering directory `/abs/path/build/subdir'
+baz.c:33: warning: `xyzzy' defined but not used
+baz.c:34: warning: `magic' defined but not used
+make[2]: Leaving directory `/abs/path/build/subdir'
+foo.c:100: warning: `xyzzy' defined but not used
+foo.c:200: warning: `bar' defined but not used
+make[2]: Leaving directory `/abs/path/build'
+"""
+        printStatement = ('print """%s"""' % output)
+        step = self.makeStep(shell.Compile,
+                             warningPattern="^(.*?):([0-9]+): [Ww]arning: (.*)$",
+                             warningExtractor=shell.Compile.warnExtractFromRegexpGroups,
+                             suppressionFile="warnings.supp",
+                             command=[sys.executable, "-c", printStatement])
+        slavesrc = os.path.join(self.slavebase,
+                                self.slavebuilderbase,
+                                "build",
+                                "warnings.supp")
+        open(slavesrc, "w").write(self.suppressionFileData)
+
+        d = self.runStep(step)
+        def _checkResult(result):
+            self.failUnlessEqual(step.getProperty("warnings-count"), 2)
+            logs = {}
+            for log in step.step_status.getLogs():
+                logs[log.getName()] = log
+            self.failUnless("warnings" in logs)
+            lines = logs["warnings"].readlines()
+            self.failUnlessEqual(len(lines), 2)
+            self.failUnlessEqual(lines[0], "baz.c:34: warning: `magic' defined but not used\n")
+            self.failUnlessEqual(lines[1], "foo.c:100: warning: `xyzzy' defined but not used\n")
+
+        d.addCallback(_checkResult)
+        return d
 
 class TreeSize(StepTester, unittest.TestCase):
     def testTreeSize(self):

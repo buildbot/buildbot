@@ -716,14 +716,15 @@ c['builders'] = [{'name': 'triggerer', 'slavename': 'bot1',
         self.assertEqual(self.getFlag("props"), "lit:dyn")
 
 class PropertyPropagation(RunMixin, TestFlagMixin, unittest.TestCase):
-    def setupTest(self, config, builders, checkFn):
+    def setupTest(self, config, builders, checkFn, changeProps={}):
         self.clearFlags()
         m = self.master
         m.loadConfig(config)
         m.readConfig = True
         m.startService()
 
-        c = changes.Change("bob", ["Makefile", "foo/bar.c"], "changed stuff")
+        c = changes.Change("bob", ["Makefile", "foo/bar.c"], "changed stuff",
+                           properties=changeProps)
         m.change_svc.addChange(c)
 
         d = self.connectSlave(builders=builders)
@@ -758,6 +759,30 @@ c['builders'] = [{'name': 'flagcolor', 'slavename': 'bot1',
             self.failUnlessEqual(self.getFlag('testresult'),
                 'color=red sched=mysched')
         return self.setupTest(self.config_schprop, ['flagcolor'], _check)
+
+    config_changeprop = config_base + """
+from buildbot.scheduler import Scheduler
+from buildbot.steps.dummy import Dummy
+from buildbot.test.runutils import SetTestFlagStep
+from buildbot.process.properties import WithProperties
+c['schedulers'] = [
+    Scheduler('mysched', None, 0.1, ['flagcolor'], properties={'color':'red'}),
+]
+factory = factory.BuildFactory([
+    s(SetTestFlagStep, flagname='testresult', 
+      value=WithProperties('color=%(color)s sched=%(scheduler)s prop1=%(prop1)s')),
+    ])
+c['builders'] = [{'name': 'flagcolor', 'slavename': 'bot1',
+                  'builddir': 'test', 'factory': factory},
+                ]
+"""
+
+    def testChangeProp(self):
+        def _check(res):
+            self.failUnlessEqual(self.getFlag('testresult'),
+                'color=blue sched=mysched prop1=prop1')
+        return self.setupTest(self.config_changeprop, ['flagcolor'], _check,
+                              changeProps={'color': 'blue', 'prop1': 'prop1'})
 
     config_slaveprop = config_base + """
 from buildbot.scheduler import Scheduler

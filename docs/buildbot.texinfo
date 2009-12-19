@@ -5759,6 +5759,66 @@ The @code{warningPattern=} can also be a pre-compiled python regexp
 object: this makes it possible to add flags like @code{re.I} (to use
 case-insensitive matching).
 
+The @code{suppressionFile=} argument can be specified as the (relative) path
+of a file inside the workdir defining warnings to be suppressed from the
+warning counting and log file. The file will be uploaded to the master from
+the slave before compiling, and any warning matched by a line in the
+suppression file will be ignored. This is useful to accept certain warnings
+(eg. in some special module of the source tree or in cases where the compiler
+is being particularly stupid), yet still be able to easily detect and fix the
+introduction of new warnings.
+
+The file must contain one line per pattern of warnings to ignore. Empty lines
+and lines beginning with @code{#} are ignored. Other lines must consist of a
+regexp matching the file name, followed by a colon (@code{:}), followed by a
+regexp matching the text of the warning. Optionally this may be followed by
+another colon and a line number range. For example:
+
+@example
+# Sample warning suppression file
+
+mi_packrec.c : .*result of 32-bit shift implicitly converted to 64 bits.* : 560-600
+DictTabInfo.cpp : .*invalid access to non-static.*
+kernel_types.h : .*only defines private constructors and has no friends.* : 51
+@end example
+
+If no line number range is specified, the pattern matches the whole file; if
+only one number is given it matches only on that line.
+
+The default warningPattern regexp only matches the warning text, so line
+numbers and file names are ignored. To enable line number and file name
+matching, privide a different regexp and provide a function (callable) as the
+argument of @code{warningExtractor=}. The function is called with three
+arguments: the BuildStep object, the line in the log file with the warning,
+and the @code{SRE_Match} object of the regexp search for @code{warningPattern}. It
+should return a tuple @code{(filename, linenumber, warning_test)}. For
+example:
+
+@example
+f.addStep(Compile(command=["make"],
+                  warningPattern="^(.*?):([0-9]+): [Ww]arning: (.*)$",
+                  warningExtractor=Compile.warnExtractFromRegexpGroups,
+                  suppressionFile="support-files/compiler_warnings.supp"))
+@end example
+
+(@code{Compile.warnExtractFromRegexpGroups} is a pre-defined function that
+returns the filename, linenumber, and text from groups (1,2,3) of the regexp
+match).
+
+In projects with source files in multiple directories, it is possible to get
+full path names for file names matched in the suppression file, as long as the
+build command outputs the names of directories as they are entered into and
+left again. For this, specify regexps for the arguments
+@code{directoryEnterPattern=} and @code{directoryLeavePattern=}. The
+@code{directoryEnterPattern=} regexp should return the name of the directory
+entered into in the first matched group. The defaults, which are suitable for
+GNU Make, are these:
+
+@example
+directoryEnterPattern = "make.*: Entering directory [\"`'](.*)['`\"]"
+directoryLeavePattern = "make.*: Leaving directory"
+@end example
+
 (TODO: this step needs to be extended to look for GCC error messages
 as well, and collect them into a separate logfile, along with the
 source code filenames involved).
