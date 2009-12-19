@@ -189,11 +189,12 @@ class FeedResource(XmlResource):
                     # Add the last 30 lines of each log.
                     for log in s.getLogs():
                         log_lines.append('Last lines of build log "%s":' % log.getName())
+                        log_lines.append([])
                         try:
                             logdata = log.getText()
                         except IOError:
                             # Probably the log file has been removed
-                            logdata ='<b>log file not available</b>'
+                            logdata ='** log file not available **'
 
                         log_lines.extend(logdata.split('\n')[-30:])
 
