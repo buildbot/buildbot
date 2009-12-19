@@ -136,7 +136,7 @@ class Contact:
         self.send("buildbot-%s at your service" % version)
 
     def command_LIST(self, args, who):
-        args = args.split()
+        args = slex.split(args)
         if len(args) == 0:
             raise UsageError, "try 'list builders'"
         if args[0] == 'builders':
@@ -154,7 +154,7 @@ class Contact:
     command_LIST.usage = "list builders - List configured builders"
 
     def command_STATUS(self, args, who):
-        args = args.split()
+        args = slex.split(args)
         if len(args) == 0:
             which = "all"
         elif len(args) == 1:
@@ -213,7 +213,7 @@ class Contact:
             self.unsubscribe_from_build_events()
 
     def command_NOTIFY(self, args, who):
-        args = args.split()
+        args = slex.split(args)
 
         if not args:
             raise UsageError("try 'notify on|off|list <EVENT>'")
@@ -244,7 +244,7 @@ class Contact:
     command_NOTIFY.usage = "notify on|off|list [<EVENT>] ... - Notify me about build events.  event should be one or more of: 'started', 'finished', 'failure', 'success', 'exception' or 'xToY' (where x and Y are one of success, warnings, failure, exception, but Y is capitalized)"
 
     def command_WATCH(self, args, who):
-        args = args.split()
+        args = slex.split(args)
         if len(args) != 1:
             raise UsageError("try 'watch <builder>'")
         which = args[0]
@@ -432,7 +432,7 @@ class Contact:
     command_FORCE.usage = "force build <which> <reason> - Force a build"
 
     def command_STOP(self, args, who):
-        args = args.split(None, 2)
+        args = slex.split(args)
         if len(args) < 3 or args[0] != 'build':
             raise UsageError, "try 'stop build WHICH <REASON>'"
         which = args[1]
@@ -498,7 +498,7 @@ class Contact:
         self.send("last build [%s]: %s" % (which, str))
 
     def command_LAST(self, args, who):
-        args = args.split()
+        args = slex.split(args)
         if len(args) == 0:
             which = "all"
         elif len(args) == 1:
@@ -522,7 +522,7 @@ class Contact:
         return commands
 
     def command_HELP(self, args, who):
-        args = args.split()
+        args = slex.split(args)
         if len(args) == 0:
             self.send("Get help on what? (try 'help <foo>', or 'commands' for a command list)")
             return
@@ -601,14 +601,14 @@ class IRCContact(Contact):
         self.channel.me(self.dest, action.encode("ascii", "replace"))
 
     def command_JOIN(self, args, who):
-        args = args.split()
+        args = slex.split(args)
         to_join = args[0]
         self.channel.join(to_join)
         self.send("Joined %s" % to_join)
     command_JOIN.usage = "join channel - Join another channel"
 
     def command_LEAVE(self, args, who):
-        args = args.split()
+        args = slex.split(args)
         to_leave = args[0]
         self.send("Buildbot has been told to leave %s" % to_leave)
         self.channel.part(to_leave)
