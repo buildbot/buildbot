@@ -86,11 +86,11 @@
   {% if s.connected %}
     CONNECTED
     {% if s.admin %}
-       Admin: {{ s.admin }}
+       Admin: {{ s.admin|e }}
     {% endif %}
     {% if s.host %}
       <span class='label'>Host info:</span>
-      <pre>{{ s.host }}</pre>
+      <pre>{{ s.host|e }}</pre>
     {% endif %}
   {% else %}
     NOT CONNECTED 

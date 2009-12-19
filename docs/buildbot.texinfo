@@ -2261,12 +2261,17 @@ available to queriers (over IRC) who want to find out where to get
 more information about this buildbot.
 
 @bcindex c['logCompressionLimit']
-The @code{logCompressionLimit} enables bz2-compression of build logs on
+The @code{logCompressionLimit} enables compression of build logs on
 disk for logs that are bigger than the given size, or disables that
 completely if given @code{False}. The default value is 4k, which should
 be a reasonable default on most file systems. This setting has no impact
 on status plugins, and merely affects the required disk space on the
 master for build logs.
+
+@bcindex c['logCompressionMethod']
+The @code{logCompressionMethod} controls what type of compression is used for
+build logs.  The default is 'bz2', the other valid option is 'gz'.  'bz2'
+offers better compression at the expense of more CPU time.
 
 @bcindex c['logMaxSize']
 The @code{logMaxSize} parameter sets an upper limit (in bytes) to how large
@@ -5203,23 +5208,35 @@ you should create the @code{SVN} step with the @code{baseURL} and
 name will be appended. It should probably end in a slash.
 
 @item defaultBranch
-this specifies the name of the branch to use when a Build does not
-provide one of its own. This will be appended to @code{baseURL} to
-create the string that will be passed to the @code{svn checkout}
-command.
+(optional): this specifies the name of the branch to use when a Build
+does not provide one of its own. This will be appended to
+@code{baseURL} to create the string that will be passed to the
+@code{svn checkout} command.
 
 @item username
-if specified, this will be passed to the @code{svn} binary with a
-@code{--username} option.
+(optional): if specified, this will be passed to the @code{svn}
+binary with a @code{--username} option.
 
 @item password
-if specified, this will be passed to the @code{svn} binary with a
-@code{--password} option.  The password itself will be suitably obfuscated in
-the logs.
+(optional): if specified, this will be passed to the @code{svn}
+binary with a @code{--password} option.  The password itself will be
+suitably obfuscated in the logs.
 
 @item extra_args
-if specified, an array of strings that will be passed as extra
-arguments to the @code{svn} binary.
+(optional): if specified, an array of strings that will be passed as
+extra arguments to the @code{svn} binary.
+
+@item keep_on_purge
+(optional): specific files or directories to keep between purges,
+like some build outputs that can be reused between builds.
+
+@item ignore_ignores
+(optional): when purging changes, don't use rules defined in
+svn:ignore properties and global-ignores in subversion/config.
+
+@item always_purge
+(optional): if set to True, always purge local changes after each
+build. This is everything that would appear in a @code{svn status}.
 
 @end table
 
@@ -5560,6 +5577,11 @@ The Git step takes the following arguments:
 does not provide one of its own. If this this parameter is not
 specified, and the Build does not provide a branch, the ``master''
 branch will be used.
+
+@item ignore_ignores
+(optional): when purging changes, don't use .gitignore and
+.git/info/exclude.
+
 @end table
 
 

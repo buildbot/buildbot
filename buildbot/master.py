@@ -523,6 +523,7 @@ class BuildMaster(service.MultiService):
                       "buildbotURL", "properties", "prioritizeBuilders",
                       "eventHorizon", "buildCacheSize", "logHorizon", "buildHorizon",
                       "changeHorizon", "logMaxSize", "logMaxTailSize",
+                      "logCompressionMethod",
                       )
         for k in config.keys():
             if k not in known_keys:
@@ -559,6 +560,9 @@ class BuildMaster(service.MultiService):
             if logCompressionLimit is not None and not \
                     isinstance(logCompressionLimit, int):
                 raise ValueError("logCompressionLimit needs to be bool or int")
+            logCompressionMethod = config.get('logCompressionMethod', "bz2")
+            if logCompressionMethod not in ('bz2', 'gz'):
+                raise ValueError("logCompressionMethod needs to be 'bz2', or 'gz'")
             logMaxSize = config.get('logMaxSize')
             if logMaxSize is not None and not \
                     isinstance(logMaxSize, int):
@@ -743,6 +747,7 @@ class BuildMaster(service.MultiService):
         self.properties.update(properties, self.configFileName)
 
         self.status.logCompressionLimit = logCompressionLimit
+        self.status.logCompressionMethod = logCompressionMethod
         self.status.logMaxSize = logMaxSize
         self.status.logMaxTailSize = logMaxTailSize
         # Update any of our existing builders with the current log parameters.
@@ -750,6 +755,7 @@ class BuildMaster(service.MultiService):
         # reconfig.
         for builder in self.botmaster.builders.values():
             builder.builder_status.setLogCompressionLimit(logCompressionLimit)
+            builder.builder_status.setLogCompressionMethod(logCompressionMethod)
             builder.builder_status.setLogMaxSize(logMaxSize)
             builder.builder_status.setLogMaxTailSize(logMaxTailSize)
 
