@@ -10,6 +10,9 @@ from twisted.python import log, logfile
 from buildbot.test.runutils import SignalMixin
 import os
 
+from buildbot.test.runutils import RunMixin, rmtree
+from buildbot.changes import changes
+
 '''Testcases to verify that the --log-size and --log-count options to
 create-master and create-slave actually work.
 

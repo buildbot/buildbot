@@ -79,6 +79,12 @@ class Change:
         self.files = files[:]
         self.files.sort()
 
+    def __setstate__(self, dict):
+        self.__dict__ = dict
+        # Older Changes won't have a 'properties' attribute in them
+        if not hasattr(self, 'properties'):
+            self.properties = Properties()
+
     def asText(self):
         data = ""
         data += self.getFileContents()

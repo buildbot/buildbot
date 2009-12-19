@@ -575,6 +575,9 @@ class ShellCommand:
         if self.timer:
             self.timer.cancel()
             self.timer = None
+        if self.maxTimer:
+            self.maxTimer.cancel()
+            self.maxTimer = None
         d = self.deferred
         self.deferred = None
         if d:
@@ -587,6 +590,9 @@ class ShellCommand:
         if self.timer:
             self.timer.cancel()
             self.timer = None
+        if self.maxTimer:
+            self.maxTimer.cancel()
+            self.maxTimer = None
         d = self.deferred
         self.deferred = None
         if d:
@@ -610,6 +616,9 @@ class ShellCommand:
         if self.timer:
             self.timer.cancel()
             self.timer = None
+        if self.maxTimer:
+            self.maxTimer.cancel()
+            self.maxTimer = None
         if hasattr(self.process, "pid") and self.process.pid is not None:
             msg += ", killing pid %s" % self.process.pid
         log.msg(msg)

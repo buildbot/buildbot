@@ -899,6 +899,18 @@ class Log(unittest.TestCase):
         return d
     testLargeSummary.timeout = 5
 
+    def testLimit(self):
+        l = MyLog(self.basedir, "limit")
+        l.logMaxSize = 150
+        for i in range(1000):
+            l.addStdout("Some data")
+        l.finish()
+        t = l.getText()
+        # Compare against 175 since we truncate logs based on chunks, so we may
+        # go slightly over the limit
+        self.failIf(len(t) > 175, "Text too long (%i)" % len(t))
+        self.failUnless("truncated" in l.getTextWithHeaders(),
+                "No truncated message found")
 
 class CompressLog(unittest.TestCase):
     # compression is not supported unless bz2 is installed

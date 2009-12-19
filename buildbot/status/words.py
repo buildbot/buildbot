@@ -53,7 +53,6 @@ class IrcBuildRequest:
         d = s.waitUntilFinished()
         d.addCallback(self.parent.watchedBuildFinished)
 
-
 class Contact:
     """I hold the state for a single user's interaction with the buildbot.
 
@@ -661,6 +660,7 @@ class IrcStatusBot(irc.IRCClient):
     """I represent the buildbot to an IRC server.
     """
     implements(IChannel)
+    contactClass = IRCContact
 
     def __init__(self, nickname, password, channels, status, categories, notify_events):
         """
@@ -690,7 +690,7 @@ class IrcStatusBot(irc.IRCClient):
     def getContact(self, name):
         if name in self.contacts:
             return self.contacts[name]
-        new_contact = IRCContact(self, name)
+        new_contact = self.contactClass(self, name)
         self.contacts[name] = new_contact
         return new_contact
 
@@ -742,6 +742,9 @@ class IrcStatusBot(irc.IRCClient):
 
     def joined(self, channel):
         self.log("I have joined %s" % (channel,))
+        # trigger contact contructor, which in turn subscribes to notify events
+        self.getContact(channel)
+
     def left(self, channel):
         self.log("I have left %s" % (channel,))
     def kickedFrom(self, channel, kicker, message):
@@ -843,12 +846,10 @@ class IRC(base.StatusReceiverMultiService):
         self.allowForce = allowForce
         self.categories = categories
         self.notify_events = notify_events
-
-        # need to stash the factory so we can give it the status object
+        log.msg('Notify events %s' % notify_events)
         self.f = IrcStatusFactory(self.nick, self.password,
                                   self.channels, self.categories, self.notify_events)
-
-        c = internet.TCPClient(host, port, self.f)
+        c = internet.TCPClient(self.host, self.port, self.f)
         c.setServiceParent(self)
 
     def setServiceParent(self, parent):
