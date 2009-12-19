@@ -2048,6 +2048,7 @@ class SlaveStatus:
 
     admin = None
     host = None
+    access_uri = None
     version = None
     connected = False
     graceful_shutdown = False
@@ -2064,6 +2065,8 @@ class SlaveStatus:
         return self.admin
     def getHost(self):
         return self.host
+    def getAccessURI(self):
+        return self.access_uri
     def getVersion(self):
         return self.version
     def isConnected(self):
@@ -2077,6 +2080,8 @@ class SlaveStatus:
         self.admin = admin
     def setHost(self, host):
         self.host = host
+    def setAccessURI(self, access_uri):
+        self.access_uri = access_uri
     def setVersion(self, version):
         self.version = version
     def setConnected(self, isConnected):

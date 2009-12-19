@@ -958,6 +958,10 @@ the host: OS, version, memory size, CPU speed, versions of relevant
 libraries installed, and finally the version of the buildbot code
 which is running the buildslave.
 
+The optional @file{BASEDIR/info/access_uri} can specify a URI which will
+connect a user to the machine.  Many systems accept @code{ssh://hostname} URIs
+for this purpose.
+
 If you run many buildslaves, you may want to create a single
 @file{~buildslave/info} file and share it among all the buildslaves
 with symlinks.

@@ -197,6 +197,7 @@ class AbstractBuildSlave(NewCredPerspective, service.MultiService):
                 # TODO: info{} might have other keys
                 state["admin"] = info.get("admin")
                 state["host"] = info.get("host")
+                state["access_uri"] = info.get("access_uri", None)
             def _info_unavailable(why):
                 # maybe an old slave, doesn't implement remote_getSlaveInfo
                 log.msg("BuildSlave.info_unavailable")
@@ -233,6 +234,7 @@ class AbstractBuildSlave(NewCredPerspective, service.MultiService):
         def _accept_slave(res):
             self.slave_status.setAdmin(state.get("admin"))
             self.slave_status.setHost(state.get("host"))
+            self.slave_status.setAccessURI(state.get("access_uri"))
             self.slave_status.setVersion(state.get("version"))
             self.slave_status.setConnected(True)
             self.slave_commands = state.get("slave_commands")

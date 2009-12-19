@@ -64,7 +64,8 @@ class OneBuildSlaveResource(HtmlResource, BuildLineMixin):
                         recent = recent_builds, 
                         shutdown_url = request.childLink("shutdown"),
                         control = self.getControl(request),
-                        this_url = "../../../" + path_to_slave(request, slave)))
+                        this_url = "../../../" + path_to_slave(request, slave),
+                        access_uri = slave.getAccessURI()))
 
         template = request.site.buildbot_service.templates.get_template("buildslave.html")
         data = template.render(**ctx)

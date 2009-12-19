@@ -95,6 +95,10 @@ class Maker:
             f.write("Please put a description of this build host here\n")
             f.close()
             created = True
+        access_uri = os.path.join(path, "access_uri")
+        if not os.path.exists(access_uri):
+            if not self.quiet:
+                print "Not creating info/access_uri - add it if you wish"
         if created and not self.quiet:
             print "Please edit the files in %s appropriately." % path
 

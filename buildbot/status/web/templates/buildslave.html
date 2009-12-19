@@ -4,6 +4,10 @@
 {% block content %}
 <h1>Build Slave: {{ slavename|e }}</h1>
 
+{% if access_uri %}
+  <a href="{{ access_uri|e }}">Click to Access Slave</a>
+{% endif %}
+
 {% if not slave.isConnected %}
   <h2>NOT CONNECTED</h2>
 {% elif control %}
