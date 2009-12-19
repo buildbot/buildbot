@@ -391,6 +391,48 @@ class Mail(unittest.TestCase):
         self.assertFalse(mailer._shouldAttachLog('anything'))
         self.assertTrue(mailer._shouldAttachLog('something'))
 
+    def testShouldAttachPatches(self):
+        basedir = "test_should_attach_patches"
+        os.mkdir(basedir)
+        b1 = self.makeBuild(4, builder.FAILURE)
+        b1.setProperty('buildnumber', 1, 'Build')
+        b1.setText(["snarkleack", "polarization", "failed"])
+        b1.blamelist = ["dev3", "dev3", "dev3", "dev4",
+                        "Thomas_Walters"]
+        b1.source.changes = (Change(who = 'author1', files = ['file1'], comments = 'comment1', revision = 123),
+                             Change(who = 'author2', files = ['file2'], comments = 'comment2', revision = 456))
+        b1.testlogs = [MyLog(basedir, 'compile', "Compile log here\n"),
+                       MyLog(basedir, 'test', "Test log here\nTest 1 failed\nTest 2 failed\nTest 3 failed\nTest 4 failed\n")]
+        b1.source.patch = (0, '--- /dev/null\n+++ a_file\n', None)
+
+        mailer = MyMailer(fromaddr="buildbot@example.com", addPatch=True)
+        mailer.parent = self
+        mailer.status = self
+        self.messages = []
+        mailer.buildFinished("builder1", b1, b1.results)
+        m,r = self.messages.pop()
+        self.assertTrue(m.is_multipart())
+        self.assertEqual(len([True for i in m.walk()]), 3)
+
+        mailer = MyMailer(fromaddr="buildbot@example.com", addPatch=False)
+        mailer.parent = self
+        mailer.status = self
+        self.messages = []
+        mailer.buildFinished("builder1", b1, b1.results)
+        m,r = self.messages.pop()
+        self.assertFalse(m.is_multipart())
+        self.assertEqual(len([True for i in m.walk()]), 1)
+
+        mailer = MyMailer(fromaddr="buildbot@example.com")
+        mailer.parent = self
+        mailer.status = self
+        self.messages = []
+        mailer.buildFinished("builder1", b1, b1.results)
+        m,r = self.messages.pop()
+        self.assertTrue(m.is_multipart())
+        self.assertEqual(len([True for i in m.walk()]), 3)
+
+
     def testFailure(self):
         mailer = MyMailer(fromaddr="buildbot@example.com", mode="problem",
                           extraRecipients=["recip@example.com",
@@ -1705,6 +1747,7 @@ class BuildExpectation(unittest.TestCase):
             Builder.__init__(self, {
                     'name': name,
                     'builddir': '/tmp/somewhere',
+                    'slavebuilddir': '/tmp/somewhere_else',
                     'factory': 'aFactory'
                     }, BuildExpectation.MyBuilderStatus())
 

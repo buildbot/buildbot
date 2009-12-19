@@ -173,6 +173,7 @@ class GridStatusResource(HtmlResource, GridStatusMixin):
                'ANYBRANCH': ANYBRANCH,
                'stamps': stamps,
               }  
+
         
         sortedBuilderNames = status.getBuilderNames()[:]
         sortedBuilderNames.sort()

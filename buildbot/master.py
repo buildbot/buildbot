@@ -6,6 +6,7 @@ try:
     import signal
 except ImportError:
     pass
+import string
 from cPickle import load
 import warnings
 
@@ -642,6 +643,8 @@ class BuildMaster(service.MultiService):
         slavenames = [s.slavename for s in slaves]
         buildernames = []
         dirnames = []
+        badchars_map = string.maketrans("\t !#$%&'()*+,./:;<=>?@[\\]^{|}~",
+                                        "______________________________")
         for b in builders:
             if type(b) is tuple:
                 raise ValueError("builder %s must be defined with a dict, "
@@ -657,6 +660,10 @@ class BuildMaster(service.MultiService):
                 raise ValueError("duplicate builder name %s"
                                  % b['name'])
             buildernames.append(b['name'])
+
+            # Fix the dictionnary with default values.
+            b.setdefault('builddir', b['name'].translate(badchars_map))
+            b.setdefault('slavebuilddir', b['builddir'])
             if b['builddir'] in dirnames:
                 raise ValueError("builder %s reuses builddir %s"
                                  % (b['name'], b['builddir']))
@@ -892,7 +899,7 @@ class BuildMaster(service.MultiService):
         # everything in newList is either unchanged, changed, or new
         for name, data in newList.items():
             old = self.botmaster.builders.get(name)
-            basedir = data['builddir'] # used on both master and slave
+            basedir = data['builddir']
             #name, slave, builddir, factory = data
             if not old: # new
                 # category added after 0.6.2

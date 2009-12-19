@@ -287,7 +287,7 @@ def makeBuildStep(basedir, step_class=BuildStep, **kwargs):
 
     ss = SourceStamp()
     setup = {'name': "builder1", "slavename": "bot1",
-             'builddir': "builddir", 'factory': None}
+             'builddir': "builddir", 'slavebuilddir': "slavebuilddir", 'factory': None}
     b0 = Builder(setup, bss.getBuild().getBuilder())
     b0.botmaster = FakeBotMaster()
     br = BuildRequest("reason", ss, 'test_builder')
