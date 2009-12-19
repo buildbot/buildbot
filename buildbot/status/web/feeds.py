@@ -178,20 +178,25 @@ class FeedResource(XmlResource):
             title = ('%s failed on "%s"' %
                      (source, build.getBuilder().getName()))
 
-            # get name of the failed step and the last 30 lines of its log.
-            if build.getLogs():
-                log = build.getLogs()[-1]
-                laststep = log.getStep().getName()
-                try:
-                    lastlog = log.getText()
-                except IOError:
-                    # Probably the log file has been removed
-                    lastlog='<b>log file not available</b>'
+            
+            # Add information about the failing steps.
+            failed_steps = []
+            log_lines = []
+            for s in build.getSteps():
+                if s.getResults()[0] == FAILURE:
+                    failed_steps.append(s.getName())
 
-            lines = re.split('\n', lastlog)
-            lastlog = ''
-            for logline in lines[max(0, len(lines)-30):]:
-                lastlog += logline + '\n'
+                    # Add the last 30 lines of each log.
+                    for log in s.getLogs():
+                        log_lines.append('Last lines of build log "%s":' % log.getName())
+                        try:
+                            logdata = log.getText()
+                        except IOError:
+                            # Probably the log file has been removed
+                            logdata ='<b>log file not available</b>'
+
+                        log_lines.extend(logdata.split('\n')[-30:])
+
 
             bc = {}
             bc['date'] = time.strftime("%a, %d %b %Y %H:%M:%S GMT", finishedTime)
@@ -201,10 +206,10 @@ class FeedResource(XmlResource):
             bc['name'] = build.getBuilder().getName()
             bc['number'] = build.getNumber()
             bc['responsible_users'] = build.getResponsibleUsers()
-            bc['last_step'] = laststep            
+            bc['failed_steps'] = failed_steps
             bc['title'] = title
             bc['link'] = link
-            bc['lastlog'] = lastlog
+            bc['log_lines'] = log_lines
     
             if finishedTime is not None:
                 bc['rfc822_pubdate'] = time.strftime("%a, %d %b %Y %H:%M:%S GMT",

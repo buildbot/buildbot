@@ -17,7 +17,7 @@
     <description>
       <![CDATA[
         {{ item_desc(b, project_url, project_name)|indent(8) }}
-        <pre>{{ b.lastlog|e }}</pre>
+        <pre>{{ b.log_lines|join('\n')|e  }}</pre>
       ]]>
     </description>
     {% if b.rfc822_pubdate %}
