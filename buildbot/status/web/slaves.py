@@ -97,8 +97,10 @@ class BuildSlavesResource(HtmlResource):
             info['running_builds'] = len(slave_status.getRunningBuilds())
             info['link'] = request.childLink(urllib.quote(name,''))
             info['name'] = name
-            info['builders'] = [{'link': request.childLink("../builders/%s" % bname), 'name': bname}
-                                for bname in used_by_builder.get(name, [])]
+            info['builders'] = [{'link': request.childLink("../builders/%s" % bname),
+                                 'name': bname}]
+            info['version'] = slave.getVersion()
+
             info['connected'] = slave.isConnected()
             
             if slave.isConnected():

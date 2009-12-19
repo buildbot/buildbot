@@ -205,6 +205,17 @@ class AbstractBuildSlave(NewCredPerspective, service.MultiService):
             return d1
         d.addCallback(_get_info)
 
+        def _get_version(res):
+            d1 = bot.callRemote("getVersion")
+            def _got_version(version):
+                state["version"] = version
+            def _version_unavailable(why):
+                # probably an old slave
+                log.msg("BuildSlave.version_unavailable")
+                log.err(why)
+            d1.addCallbacks(_got_version, _version_unavailable)
+        d.addCallback(_get_version)
+
         def _get_commands(res):
             d1 = bot.callRemote("getCommands")
             def _got_commands(commands):
@@ -222,6 +233,7 @@ class AbstractBuildSlave(NewCredPerspective, service.MultiService):
         def _accept_slave(res):
             self.slave_status.setAdmin(state.get("admin"))
             self.slave_status.setHost(state.get("host"))
+            self.slave_status.setVersion(state.get("version"))
             self.slave_status.setConnected(True)
             self.slave_commands = state.get("slave_commands")
             self.slave = bot
