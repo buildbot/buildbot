@@ -60,7 +60,7 @@ def connectFailed(error):
     return error
 
 
-def addChange(dummy, remote, changei):
+def addChange(remote, changei):
     logging.debug("addChange %s, %s" % (repr(remote), repr(changei)))
     try:
         c = changei.next()
@@ -73,12 +73,17 @@ def addChange(dummy, remote, changei):
         logging.debug("  %s: %s" % (key, value))
 
     d = remote.callRemote('addChange', c)
-    d.addCallback(addChange, remote, changei)
+
+    # tail recursion in Twisted can blow out the stack, so we
+    # insert a callLater to delay things
+    def recurseLater(x):
+        reactor.callLater(0, addChange, remote, changei)
+    d.addCallback(recurseLater)
     return d
 
 
 def connected(remote):
-    return addChange(None, remote, changes.__iter__())
+    return addChange(remote, changes.__iter__())
 
 
 def grab_commit_info(c, rev):
