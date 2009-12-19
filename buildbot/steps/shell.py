@@ -472,7 +472,6 @@ class PerlModuleTest(Test):
 
                     test_totals_line = test_result_lines[1]
                     total_str = test_totals_line[3]
-                    
                     rc = SUCCESS
                 else:
                     failed_str = test_result_line[1]
@@ -484,9 +483,24 @@ class PerlModuleTest(Test):
 
                 total = int(total_str)
 
+        warnings = 0
+        if self.warningPattern:
+            wre = self.warningPattern
+            if isinstance(wre, str):
+                wre = re.compile(wre)
+
+            warnings = len([l for l in lines if wre.search(l)])
+
+            # Because there are two paths that are used to determine
+            # the success/fail result, I have to modify it here if
+            # there were warnings.
+            if rc == SUCCESS and warnings:
+                rc = WARNINGS
+
         if total:
             passed = total - failed
 
-            self.setTestResults(total=total, failed=failed, passed=passed)
+            self.setTestResults(total=total, failed=failed, passed=passed,
+                                warnings=warnings)
 
         return rc

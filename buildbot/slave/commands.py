@@ -2499,9 +2499,9 @@ class Mercurial(SourceBase):
         SourceBase.setup(self, args)
         self.vcexe = getCommand("hg")
         self.repourl = args['repourl']
-        self.clobberOnBranchChange = args['clobberOnBranchChange']
+        self.clobberOnBranchChange = args.get('clobberOnBranchChange', True)
         self.sourcedata = "%s\n" % self.repourl
-        self.branchType = args['branchType']
+        self.branchType = args.get('branchType', 'dirname')
         self.stdout = ""
         self.stderr = ""
 

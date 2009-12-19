@@ -777,7 +777,7 @@ class BuildStepStatus(styles.Versioned):
         return self.urls.copy()
 
     def isStarted(self):
-	return (self.started is not None)
+        return (self.started is not None)
 
     def isFinished(self):
         return (self.finished is not None)

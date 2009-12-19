@@ -2321,6 +2321,8 @@ class Bzr(VCBase, unittest.TestCase):
         # TODO: testRetry has the same problem with Bzr as it does for
         # Arch
         return d
+    # Bzr is *slow*, and the testCheckout step takes a *very* long time
+    testCheckout.timeout = 480
 
     def testPatch(self):
         self.helper.vcargs = { 'baseURL': self.helper.bzr_base + "/",
@@ -2879,6 +2881,12 @@ class GitHelper(BaseHelper):
         env['GIT_DIR'] = self.gitrepo
         w = self.dovc(self.repbase, "init", env=env)
         yield w; w.getResult()
+
+        # NetBSD pkgsrc uses templates that stupidly enable the update hook, requiring
+        # a non-default description.  This is broken, but easily worked around.
+        # http://www.netbsd.org/cgi-bin/query-pr-single.pl?number=41683
+        descrfile = os.path.join(self.gitrepo, "description")
+        open(descrfile, "w").write("NetBSD workaround")
 
         self.populate(tmp)
         w = self.dovc(tmp, "init")

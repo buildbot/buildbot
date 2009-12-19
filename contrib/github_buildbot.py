@@ -1,271 +1,257 @@
 #!/usr/bin/env python
+"""
+github_buildbot.py is based on git_buildbot.py
 
-# This code is largely based on the code from contrib/git_buildbot.py 
-#
-# To run this program just call `./github_buildbot.py` or run  
-# `./github_buildbot.py &` to run in the background.  
-#
-# Be sure to modify the settings as necessary. You may use
-# this service hook for as many github projects as you desire. Just set the 
-# post-receive service hook in github to the publically accessible address of
-# the server this script runs on.  The default port is 4000.  Example service 
-# hook: http://yourserver.com:4000.
-#
-# github_buildbot.py will determine the repository information from the JSON 
-# HTTP POST it receives from github.com and build the appropriate repository.
-# If your github repository is private, you must add a ssh key to the github
-# repository for the user who initiated github_buildbot.py
-#
+github_buildbot.py will determine the repository information from the JSON 
+HTTP POST it receives from github.com and build the appropriate repository.
+If your github repository is private, you must add a ssh key to the github
+repository for the user who initiated github_buildbot.py
 
-import tempfile, logging, re, os, sys, commands
+"""
+
+import tempfile
+import logging
+import re
+import os
+import sys
+import commands
+import traceback
 from twisted.web import server, resource
 from twisted.internet import reactor
 from twisted.spread import pb
 from twisted.cred import credentials
-from twisted.internet import reactor
-from buildbot.scripts import runner
+from optparse import OptionParser
 
 try:
-	import json
+    import json
 except ImportError:
-	import simplejson as json
+    import simplejson as json
 
-# The port to run the listening HTTP server for github post-receieve hook on
-
-port = 4000
-
-# Modify this for github repo domain (in case you are using something in your
-# .ssh/config)
-
-github = 'github.com'
-
-# Modify this to fit your setup, or pass in --master server:host on the
-# command line
-
-master = "localhost:9989"
-
-remote = "origin"
-
-branch = "master"
-
-changes = []
 
 class GitHubBuildBot(resource.Resource):
-	
-	isLeaf = True
-	def render_POST(self, request):
-		payload = json.loads(request.args['payload'][0])
-		#logging.debug(payload)
-		result = update_git_dir(payload['repository']['owner']['name'] , payload['repository']['name'])
-		if result:
-			self.process_change(payload)
-
-	def process_change(self,payload):
-		
-		[oldrev, newrev, refname] = payload['before'], payload['after'], payload['ref']
-		
-		# We only care about regular heads, i.e. branches
-		m = re.match(r"^refs\/heads\/(.+)$", refname)
-		if not m:
-			logging.info("Ignoring refname `%s': Not a branch" % refname)
-
-		branch = m.group(1)
-		# Find out if the branch was created, deleted or updated. Branches
-		# being deleted aren't really interesting.
-		if re.match(r"^0*$", newrev):
-			logging.info("Branch `%s' deleted, ignoring" % branch)
-		elif re.match(r"^0*$", oldrev):
-			gen_create_branch_changes(newrev, refname, branch)
-		else:
-			gen_update_branch_changes(oldrev, newrev, refname, branch)
-
-		# Submit the changes, if any
-		if not changes:
-			logging.warning("No changes found")
-			return
-				    
-		host, port = master.split(':')
-		port = int(port)
-
-		f = pb.PBClientFactory()
-		d = f.login(credentials.UsernamePassword("change", "changepw"))
-		reactor.connectTCP(host, port, f)
-
-		d.addErrback(connectFailed)
-		d.addCallback(connected)
-
-
-def connectFailed(error):
-    logging.error("Could not connect to %s: %s"
-            % (master, error.getErrorMessage()))
-    return error
-
-
-def addChange(dummy, remote, changei):
-    logging.debug("addChange %s, %s" % (repr(remote), repr(changei)))
-    try:
-        c = changei.next()
-    except StopIteration:
-        remote.broker.transport.loseConnection()
-        return None
+    """
+    GitHubBuildBot creates the webserver that responds to the GitHub Service
+    Hook.
+    """
+    isLeaf = True
+    github = None
+    master = None
+    local_dir = None
+    port = None
+    private = False
     
-    logging.info("New revision: %s" % c['revision'][:8])
-    for key, value in c.iteritems():
-        logging.debug("  %s: %s" % (key, value))
-    
-    d = remote.callRemote('addChange', c)
-    d.addCallback(addChange, remote, changei)
-    return d
-
-
-def connected(remote):
-    return addChange(None, remote, changes.__iter__())
-
-
-def grab_commit_info(c, rev):
-    # Extract information about committer and files using git show
-    f = os.popen("git show --raw --pretty=full %s" % rev, 'r')
-    
-    files = []
-    
-    while True:
-        line = f.readline()
-        if not line:
-            break
+    def render_POST(self, request):
+        """
+        Reponds only to POST events and starts the build process
         
-        m = re.match(r"^:.*[MAD]\s+(.+)$", line)
-        if m:
-            logging.debug("Got file: %s" % m.group(1))
-            files.append(m.group(1))
-            continue
+        :arguments:
+            request
+                the http request object
+        """
+        try:
+            payload = json.loads(request.args['payload'][0])
+            user = payload['repository']['owner']['name']
+            repo = payload['repository']['name']
+            self.private = payload['repository']['private']
+            logging.debug("Payload: " + str(payload))
+            self.github_sync(self.local_dir, user, repo, self.github)
+            self.process_change(payload)
+        except Exception:
+            logging.error("Encountered an exception:")
+            for msg in traceback.format_exception(*sys.exc_info()):
+                logging.error(msg.strip())
+
+    def process_change(self, payload):
+        """
+        Consumes the JSON as a python object and actually starts the build.
         
-        m = re.match(r"^Author:\s+(.+)$", line)
-        if m:
-            logging.debug("Got author: %s" % m.group(1))
-            c['who'] = m.group(1)
+        :arguments:
+            payload
+                Python Object that represents the JSON sent by GitHub Service
+                Hook.
+        """
+        changes = []
+        newrev = payload['after']
+        refname = payload['ref']
         
-        if re.match(r"^Merge: .*$", line):
-            files.append('merge')
-    
-    c['files'] = files
-    status = f.close()
-    if status:
-        logging.warning("git show exited with status %d" % status)
+        # We only care about regular heads, i.e. branches
+        match = re.match(r"^refs\/heads\/(.+)$", refname)
+        if not match:
+            logging.info("Ignoring refname `%s': Not a branch" % refname)
 
-
-def gen_changes(input, branch):
-    while True:
-        line = input.readline()
-        if not line:
-            break
+        branch = match.group(1)
+        # Find out if the branch was created, deleted or updated. Branches
+        # being deleted aren't really interesting.
+        if re.match(r"^0*$", newrev):
+            logging.info("Branch `%s' deleted, ignoring" % branch)
+        else: 
+            for commit in payload['commits']:
+                files = []
+                files.extend(commit['added'])
+                files.extend(commit['modified'])
+                files.extend(commit['removed'])
+                change = {'revision': commit['id'],
+                     'comments': commit['message'],
+                     'branch': branch,
+                     'who': commit['author']['name'] 
+                            + " <" + commit['author']['email'] + ">",
+                     'files': files,
+                     'links': [commit['url']],
+                }
+                changes.append(change)
         
-        logging.debug("Change: %s" % line)
+        # Submit the changes, if any
+        if not changes:
+            logging.warning("No changes found")
+            return
+                    
+        host, port = self.master.split(':')
+        port = int(port)
+
+        factory = pb.PBClientFactory()
+        deferred = factory.login(credentials.UsernamePassword("change",
+                                                                "changepw"))
+        reactor.connectTCP(host, port, factory)
+
+        deferred.addErrback(self.connectFailed)
+        deferred.addCallback(self.connected, changes)
+
+
+    def connectFailed(self, error):
+        """
+        If connection is failed.  Logs the error.
+        """
+        logging.error("Could not connect to master: %s"
+                % error.getErrorMessage())
+        return error
+
+    def addChange(self, dummy, remote, changei):
+        """
+        Sends changes from the commit to the buildmaster.
+        """
+        logging.debug("addChange %s, %s" % (repr(remote), repr(changei)))
+        try:
+            change = changei.next()
+        except StopIteration:
+            remote.broker.transport.loseConnection()
+            return None
+    
+        logging.info("New revision: %s" % change['revision'][:8])
+        for key, value in change.iteritems():
+            logging.debug("  %s: %s" % (key, value))
+    
+        deferred = remote.callRemote('addChange', change)
+        deferred.addCallback(self.addChange, remote, changei)
+        return deferred
+
+    def connected(self, remote, changes):
+        """
+        Reponds to the connected event.
+        """
+        return self.addChange(None, remote, changes.__iter__())
+
+    def github_sync(self, tmp, user, repo, github_url = 'github.com'):
+        """
+        Syncs the github repository to the server which hosts the buildmaster.
+        """
+        if not os.path.exists(tmp):
+            raise RuntimeError("temporary directory %s does not exist; \
+                                please create it" % tmp)
+        repodir = tmp + "/" + repo + ".git"
+        if os.path.exists(repodir):
+            os.chdir(repodir)
+            self.fetch(repodir)
+        else:
+            self.create_repo(tmp, user, repo, github_url)
+
+    def fetch(self, repo_dir):
+        """
+        Updates the bare repository that mirrors the github server
+        """
+        os.chdir(repo_dir)
+        cmd = 'git fetch'
+        logging.info("Fetching changes from github to: " + repo_dir)
+        (result, output) = commands.getstatusoutput(cmd)
+        if result != 0:
+            logging.error(output)
+            raise RuntimeError("Unable to fetch remote changes")
+
+    
+    def create_repo(self, tmp, user, repo, github_url = 'github.com'):
+        """
+        Clones the github repository as a mirror repo on the local server
+        """
+        if self.private:
+            url = 'git@' + github_url + ':' + user + '/' + repo + '.git'
+        else:
+            url = 'git://' + github_url + '/' + user + '/' + repo + '.git'
+        repodir = tmp + "/" + repo + ".git"
+
+        # clone the repo
+        os.chdir(tmp)
+        cmd = "git clone --mirror %s %s" % (url, repodir)
+        logging.info("Clone bare repository: %s" % cmd)
+        (result, output) = commands.getstatusoutput(cmd)
+        if result != 0:
+            logging.error(output)
+            raise RuntimeError("Unable to initalize bare repository")
+
+def main():
+    """
+    The main event loop that starts the server and configures it.
+    """
+    usage = "usage: %prog [options]"
+    parser = OptionParser(usage)
+    parser.add_option("-d", "--dir",
+        help="The dir in which the repositories will"
+            + "be stored [default: %default]", default=tempfile.gettempdir(),
+            dest="dir")
         
-        m = re.match(r"^([0-9a-f]+) (.*)$", line.strip())
-        c = {'revision': m.group(1),
-             'comments': m.group(2),
-             'branch': branch,
-        }
-        grab_commit_info(c, m.group(1))
-        changes.append(c)
-
-
-def gen_create_branch_changes(newrev, refname, branch):
-    # A new branch has been created. Generate changes for everything
-    # up to `newrev' which does not exist in any branch but `refname'.
-    #
-    # Note that this may be inaccurate if two new branches are created
-    # at the same time, pointing to the same commit, or if there are
-    # commits that only exists in a common subset of the new branches.
+    parser.add_option("-p", "--port", 
+        help="Port the HTTP server listens to for the GitHub Service Hook"
+            + " [default: %default]", default=4000, dest="port")
+        
+    parser.add_option("-m", "--buildmaster",
+        help="Buildbot Master host and port. ie: localhost:9989 [default:" 
+            + " %default]", default="localhost:9989", dest="buildmaster")
+        
+    parser.add_option("-l", "--log", 
+        help="The absolute path, including filename, to save the log to"
+            + " [default: %default]", 
+            default = tempfile.gettempdir() + "/github_buildbot.log",
+            dest="log")
+        
+    parser.add_option("-L", "--level", 
+        help="The logging level: debug, info, warn, error, fatal [default:" 
+            + " %default]", default='warn', dest="level")
+        
+    parser.add_option("-g", "--github", 
+        help="The github serve [default: %default]", default='github.com',
+        dest="github")
+        
+    (options, _) = parser.parse_args()
     
-    logging.info("Branch `%s' created" % branch)
+    levels = {
+        'debug':logging.DEBUG,
+        'info':logging.INFO,
+        'warn':logging.WARNING,
+        'error':logging.ERROR,
+        'fatal':logging.FATAL,
+    }
     
-    f = os.popen("git rev-parse --not --branches"
-            + "| grep -v $(git rev-parse %s)" % refname
-            + "| git rev-list --reverse --pretty=oneline --stdin %s" % newrev,
-            'r')
+    filename = options.log
+    log_format = "%(asctime)s - %(levelname)s - %(message)s" 
+    logging.basicConfig(filename=filename, format=log_format, 
+                        level=levels[options.level])
     
-    gen_changes(f, branch)
+    github_bot = GitHubBuildBot()
+    github_bot.github = options.github
+    github_bot.master = options.buildmaster
+    github_bot.local_dir = options.dir
     
-    status = f.close()
-    if status:
-        logging.warning("git rev-list exited with status %d" % status)
-
-
-def gen_update_branch_changes(oldrev, newrev, refname, branch):
-    # A branch has been updated. If it was a fast-forward update,
-    # generate Change events for everything between oldrev and newrev.
-    #
-    # In case of a forced update, first generate a "fake" Change event
-    # rewinding the branch to the common ancestor of oldrev and
-    # newrev. Then, generate Change events for each commit between the
-    # common ancestor and newrev.
-    
-    logging.info("Branch `%s' updated %s .. %s"
-            % (branch, oldrev[:8], newrev[:8]))
-    
-    baserev = commands.getoutput("git merge-base %s %s" % (oldrev, newrev))
-    logging.debug("oldrev=%s newrev=%s baserev=%s" % (oldrev, newrev, baserev))
-    if baserev != oldrev:
-        c = {'revision': baserev,
-             'comments': "Rewind branch",
-             'branch': branch,
-             'who': "dummy",
-        }
-        logging.info("Branch %s was rewound to %s" % (branch, baserev[:8]))
-        files = []
-        f = os.popen("git diff --raw %s..%s" % (oldrev, baserev), 'r')
-        while True:
-            line = f.readline()
-            if not line:
-                break
+    site = server.Site(github_bot)
+    reactor.listenTCP(options.port, site)
+    reactor.run()
             
-            file = re.match(r"^:.*[MAD]\s*(.+)$", line).group(1)
-            logging.debug("  Rewound file: %s" % file)
-            files.append(file)
-        
-        status = f.close()
-        if status:
-            logging.warning("git diff exited with status %d" % status)
-        
-        if files:
-            c['files'] = files
-            changes.append(c)
-    
-    if newrev != baserev:
-        # Not a pure rewind
-        f = os.popen("git rev-list --reverse --pretty=oneline %s..%s"
-                % (baserev, newrev), 'r')
-        gen_changes(f, branch)
-        
-        status = f.close()
-        if status:
-            logging.warning("git rev-list exited with status %d" % status)
-
-def update_git_dir(user, repo):
-	tempdir = tempfile.gettempdir()
-	repodir = tempdir+"/"+repo
-	if os.path.exists(repodir):
-		os.chdir(repodir)
-		logging.info("Updating existing git repository: " + repodir)
-		cmd = 'git pull '+remote+' '+branch
-		logging.debug("Git command: "+ cmd)
-		(result,output) = commands.getstatusoutput(cmd)
-	else:
-		os.chdir(tempdir)
-		cmd = 'git clone git@'+github+':'+user+'/'+repo+'.git'
-		logging.info("Attempting to create new repository location: "+ cmd)
-		(result,output) = commands.getstatusoutput(cmd)
-		if result == 0:
-			os.chdir(repodir)
-		else:
-			logging.error(output)
-	if result == 0:
-		return True
-
 if __name__ == '__main__':
-	FORMAT = "%(asctime)s - %(levelname)s - %(message)s" 
-	logging.basicConfig(format=FORMAT,level=logging.WARNING,)
-	site = server.Site(GitHubBuildBot())
-	reactor.listenTCP(port, site)
-	reactor.run()
+    main()

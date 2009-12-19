@@ -811,7 +811,7 @@ buildbot upgrade-master @var{basedir}
 @end example
 
 This command will also scan your @file{master.cfg} file for
-incompatbilities (by loading it and printing any errors or deprecation
+incompatibilities (by loading it and printing any errors or deprecation
 warnings that occur). Each buildbot release tries to be compatible
 with configurations that worked cleanly (i.e. without deprecation
 warnings) on the previous release: any functions or classes that are
