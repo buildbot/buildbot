@@ -334,9 +334,13 @@ class LogFile:
         # yield() calls.
 
         f = self.getFile()
-        offset = 0
-        f.seek(0, 2)
-        remaining = f.tell()
+        if not self.finished:
+            offset = 0
+            f.seek(0, 2)
+            remaining = f.tell()
+        else:
+            offset = 0
+            remaining = None
 
         leftover = None
         if self.runEntries and (not channels or
@@ -354,8 +358,12 @@ class LogFile:
         chunks = []
         p = LogFileScanner(chunks.append, channels)
         f.seek(offset)
-        data = f.read(min(remaining, self.BUFFERSIZE))
-        remaining -= len(data)
+        if remaining is not None:
+            data = f.read(min(remaining, self.BUFFERSIZE))
+            remaining -= len(data)
+        else:
+            data = f.read(self.BUFFERSIZE)
+
         offset = f.tell()
         while data:
             p.dataReceived(data)
@@ -366,8 +374,11 @@ class LogFile:
                 else:
                     yield (channel, text)
             f.seek(offset)
-            data = f.read(min(remaining, self.BUFFERSIZE))
-            remaining -= len(data)
+            if remaining is not None:
+                data = f.read(min(remaining, self.BUFFERSIZE))
+                remaining -= len(data)
+            else:
+                data = f.read(self.BUFFERSIZE)
             offset = f.tell()
         del f
 

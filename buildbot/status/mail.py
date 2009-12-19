@@ -113,7 +113,7 @@ def message(attrs):
     if attrs['branch']:
         source += "[branch %s] " % attrs['branch']
     if attrs['revision']:
-        source += attrs['revision']
+        source += str(attrs['revision'])
     else:
         source += "HEAD"
     if attrs['patch']:
