@@ -74,9 +74,10 @@ class MtrLogObserver(LogLineObserver):
     _line_re4 = re.compile(r"^The servers were restarted [0-9]+ times$")
     _line_re5 = re.compile(r"^Only\s+[0-9]+\s+of\s+[0-9]+\s+completed.$")
 
-    def __init__(self, textLimit=5, testNameLimit=16):
+    def __init__(self, textLimit=5, testNameLimit=16, testType=None):
         self.textLimit = textLimit
         self.testNameLimit = testNameLimit
+        self.testType = testType
         self.numTests = 0
         self.testFail = None
         self.failList = []
@@ -151,6 +152,8 @@ class MtrLogObserver(LogLineObserver):
             text = ["test"]
         else:
             text = ["testing"]
+        if self.testType:
+            text.append(self.testType)
         fails = self.failList[:]
         fails.sort()
         self.addToText(fails, text)
@@ -246,15 +249,26 @@ class MTR(Test):
     test_type
     test_info
         Two descriptive strings that will be inserted in the database tables if
-        dbpool is specified."""
+        dbpool is specified. The test_type string, if specified, will also
+        appear on the waterfall page."""
 
-    def __init__(self, dbpool=None, test_type="mysql-test-run", test_info="",
+    def __init__(self, dbpool=None, test_type=None, test_info="",
+                 description=None, descriptionDone=None,
                  autoCreateTables=False, textLimit=5, testNameLimit=16,
                  parallel=4, logfiles = {}, lazylogfiles = True,
                  warningPattern="MTR's internal check of the test case '.*' failed",
                  mtr_subdir="mysql-test", **kwargs):
 
+        if description is None:
+            description = ["testing"]
+            if test_type:
+                description.append(test_type)
+        if descriptionDone is None:
+            descriptionDone = ["test"]
+            if test_type:
+                descriptionDone.append(test_type)
         Test.__init__(self, logfiles=logfiles, lazylogfiles=lazylogfiles,
+                      description=description, descriptionDone=descriptionDone,
                       warningPattern=warningPattern, **kwargs)
         self.dbpool = dbpool
         self.test_type = test_type
@@ -291,7 +305,8 @@ class MTR(Test):
                 self.addLogFile(logname, subdir + "/" + filename)
 
         self.myMtr = self.MyMtrLogObserver(textLimit=self.textLimit,
-                                           testNameLimit=self.testNameLimit)
+                                           testNameLimit=self.testNameLimit,
+                                           testType=self.test_type)
         self.addLogObserver("stdio", self.myMtr)
         # Insert a row for this test run into the database and set up
         # build properties, then start the command proper.
@@ -399,12 +414,15 @@ CREATE TABLE IF NOT EXISTS test_warnings(
             revision = self.getProperty("got_revision")
         except exceptions.KeyError:
             revision = self.getProperty("revision")
+        typ = "mtr"
+        if self.test_type:
+            typ = self.test_type
         txn.execute("""
 INSERT INTO test_run(branch, revision, platform, dt, bbnum, typ, info)
 VALUES (%s, %s, %s, CURRENT_TIMESTAMP(), %s, %s, %s)
 """, (self.getProperty("branch"), revision,
       self.getProperty("buildername"), self.getProperty("buildnumber"),
-      self.test_type, self.test_info))
+      typ, self.test_info))
 
         return txn.lastrowid
 

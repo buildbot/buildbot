@@ -176,7 +176,8 @@ class Source(LoggingBuildStep):
             revision = self.computeSourceRevision(s.changes)
         # if patch is None, then do not patch the tree after checkout
 
-        # 'patch' is None or a tuple of (patchlevel, diff)
+        # 'patch' is None or a tuple of (patchlevel, diff, root)
+        # root is optional.
         patch = s.patch
         if patch:
             self.addCompleteLog("patch", patch[1])
@@ -1157,4 +1158,3 @@ class Monotone(Source):
         assert slavever, "slave is too old, does not know about monotone"
         cmd = LoggedRemoteCommand("monotone", self.args)
         self.startCommand(cmd)
-

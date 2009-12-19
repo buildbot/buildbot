@@ -90,6 +90,15 @@ diff -u -r1.1.1.1 subdir.c
  }
 """
 
+# Test buildbot try --root support.
+subdir_diff = p0_diff.replace('subdir/subdir.c', 'subdir.c')
+
+# Test --patchlevel support.
+p2_diff = p0_diff.replace('subdir/subdir.c', 'foo/bar/subdir/subdir.c')
+
+# Used in do_patch() test.
+PATCHLEVEL0, SUBDIR_ROOT, PATCHLEVEL2 = range(3)
+
 # this patch does not include the filename headers, so it is
 # patchlevel-neutral
 TRY_PATCH = '''
@@ -726,7 +735,7 @@ class VCBase(SignalMixin):
         #self.checkGotRevisionIsLatest(bs)
         # VC 'export' is not required to have a got_revision
 
-    def do_patch(self):
+    def do_patch(self, type):
         vctype = self.vctype
         args = self.helper.vcargs
         m = self.master
@@ -737,12 +746,19 @@ class VCBase(SignalMixin):
             s += ", %s=%s" % (k, repr(v))
         s += ")"
         self.config = config_vc % s
-
+        if type == PATCHLEVEL0:
+          self.patch = (0, p0_diff)
+        elif type == SUBDIR_ROOT:
+          self.patch = (0, subdir_diff, 'subdir')
+        elif type == PATCHLEVEL2:
+          self.patch = (2, p2_diff)
+        else:
+          raise NotImplementedError
         m.loadConfig(self.config % "clobber")
         m.readConfig = True
         m.startService()
 
-        ss = SourceStamp(revision=self.helper.trunk[-1], patch=(0, p0_diff))
+        ss = SourceStamp(revision=self.helper.trunk[-1], patch=self.patch)
 
         d = self.connectSlave()
         d.addCallback(lambda res: self.doBuild(ss=ss))
@@ -783,7 +799,7 @@ class VCBase(SignalMixin):
         return self._doPatch_3()
 
     def _doPatch_3(self, res=None):
-        ss = SourceStamp(revision=self.helper.trunk[-2], patch=(0, p0_diff))
+        ss = SourceStamp(revision=self.helper.trunk[-2], patch=self.patch)
         d = self.doBuild(ss=ss)
         d.addCallback(self._doPatch_4)
         return d
@@ -802,7 +818,7 @@ class VCBase(SignalMixin):
         # now check that we can patch a branch
         ss = SourceStamp(branch=self.helper.branchname,
                          revision=self.helper.branch[-1],
-                         patch=(0, p0_diff))
+                         patch=self.patch)
         d = self.doBuild(ss=ss)
         d.addCallback(self._doPatch_5)
         return d
@@ -1041,6 +1057,8 @@ class VCBase(SignalMixin):
 
 
     def dumpPatch(self, patch):
+        # FIXME: This function is never called.
+        raise NotImplementedError
         # this exists to help me figure out the right 'patchlevel' value
         # should be returned by tryclient.getSourceStamp
         n = self.mktemp()
@@ -1212,7 +1230,15 @@ class CVS(VCBase, unittest.TestCase):
         return d
 
     def testPatch(self):
-        d = self.do_patch()
+        d = self.do_patch(PATCHLEVEL0)
+        return d
+
+    def testPatchSubDir(self):
+        d = self.do_patch(SUBDIR_ROOT)
+        return d
+
+    def testPatchP2(self):
+        d = self.do_patch(PATCHLEVEL2)
         return d
 
     def testCheckoutBranch(self):
@@ -1419,7 +1445,21 @@ class SVN(VCBase, unittest.TestCase):
         self.helper.vcargs = { 'baseURL': self.helper.svnurl + "/",
                                'defaultBranch': "sample/trunk",
                                }
-        d = self.do_patch()
+        d = self.do_patch(PATCHLEVEL0)
+        return d
+
+    def testPatchSubDir(self):
+        self.helper.vcargs = { 'baseURL': self.helper.svnurl + "/",
+                               'defaultBranch': "sample/trunk",
+                               }
+        d = self.do_patch(SUBDIR_ROOT)
+        return d
+
+    def testPatchP2(self):
+        self.helper.vcargs = { 'baseURL': self.helper.svnurl + "/",
+                               'defaultBranch': "sample/trunk",
+                               }
+        d = self.do_patch(PATCHLEVEL2)
         return d
 
     def testCheckoutBranch(self):
@@ -1608,7 +1648,21 @@ class P4(VCBase, unittest.TestCase):
         self.helper.vcargs = { 'p4port': self.helper.p4port,
                                'p4base': '//depot/',
                                'defaultBranch': 'trunk' }
-        d = self.do_patch()
+        d = self.do_patch(PATCHLEVEL0)
+        return d
+
+    def testPatchSubDir(self):
+        self.helper.vcargs = { 'p4port': self.helper.p4port,
+                               'p4base': '//depot/',
+                               'defaultBranch': 'trunk' }
+        d = self.do_patch(SUBDIR_ROOT)
+        return d
+
+    def testPatchP2(self):
+        self.helper.vcargs = { 'p4port': self.helper.p4port,
+                               'p4base': '//depot/',
+                               'defaultBranch': 'trunk' }
+        d = self.do_patch(PATCHLEVEL2)
         return d
 
 VCS.registerVC(P4.vc_name, P4Helper())
@@ -1725,7 +1779,19 @@ class Darcs(VCBase, unittest.TestCase):
     def testPatch(self):
         self.helper.vcargs = { 'baseURL': self.helper.darcs_base + "/",
                                'defaultBranch': "trunk" }
-        d = self.do_patch()
+        d = self.do_patch(PATCHLEVEL0)
+        return d
+
+    def testPatchSubDir(self):
+        self.helper.vcargs = { 'baseURL': self.helper.darcs_base + "/",
+                               'defaultBranch': "trunk" }
+        d = self.do_patch(SUBDIR_ROOT)
+        return d
+
+    def testPatchP2(self):
+        self.helper.vcargs = { 'baseURL': self.helper.darcs_base + "/",
+                               'defaultBranch': "trunk" }
+        d = self.do_patch(PATCHLEVEL2)
         return d
 
     def testCheckoutBranch(self):
@@ -2027,7 +2093,19 @@ class Arch(VCBase, unittest.TestCase):
     def testPatch(self):
         self.helper.vcargs = {'url': self.helper.archrep,
                               'version': self.helper.defaultbranch }
-        d = self.do_patch()
+        d = self.do_patch(PATCHLEVEL0)
+        return d
+
+    def testPatchSubDir(self):
+        self.helper.vcargs = {'url': self.helper.archrep,
+                              'version': self.helper.defaultbranch }
+        d = self.do_patch(SUBDIR_ROOT)
+        return d
+
+    def testPatchP2(self):
+        self.helper.vcargs = {'url': self.helper.archrep,
+                              'version': self.helper.defaultbranch }
+        d = self.do_patch(PATCHLEVEL2)
         return d
 
     def testCheckoutBranch(self):
@@ -2105,7 +2183,25 @@ class Bazaar(Arch):
                               'archive': self.helper.archname,
                               'version': self.helper.defaultbranch,
                               }
-        d = self.do_patch()
+        d = self.do_patch(PATCHLEVEL0)
+        return d
+
+    def testPatchSubDir(self):
+        self.helper.vcargs = {'url': self.helper.archrep,
+                              # Baz adds the required 'archive' argument
+                              'archive': self.helper.archname,
+                              'version': self.helper.defaultbranch,
+                              }
+        d = self.do_patch(SUBDIR_ROOT)
+        return d
+
+    def testPatchP2(self):
+        self.helper.vcargs = {'url': self.helper.archrep,
+                              # Baz adds the required 'archive' argument
+                              'archive': self.helper.archname,
+                              'version': self.helper.defaultbranch,
+                              }
+        d = self.do_patch(PATCHLEVEL2)
         return d
 
     def testCheckoutBranch(self):
@@ -2328,7 +2424,19 @@ class Bzr(VCBase, unittest.TestCase):
     def testPatch(self):
         self.helper.vcargs = { 'baseURL': self.helper.bzr_base + "/",
                                'defaultBranch': "trunk" }
-        d = self.do_patch()
+        d = self.do_patch(PATCHLEVEL0)
+        return d
+
+    def testPatchSubDir(self):
+        self.helper.vcargs = { 'baseURL': self.helper.bzr_base + "/",
+                               'defaultBranch': "trunk" }
+        d = self.do_patch(SUBDIR_ROOT)
+        return d
+
+    def testPatchP2(self):
+        self.helper.vcargs = { 'baseURL': self.helper.bzr_base + "/",
+                               'defaultBranch': "trunk" }
+        d = self.do_patch(PATCHLEVEL2)
         return d
 
     def testCheckoutBranch(self):
@@ -2548,7 +2656,19 @@ class Mercurial(VCBase, unittest.TestCase):
     def testPatch(self):
         self.helper.vcargs = { 'baseURL': self.helper.hg_base + "/",
                                'defaultBranch': "trunk" }
-        d = self.do_patch()
+        d = self.do_patch(PATCHLEVEL0)
+        return d
+
+    def testPatchSubDir(self):
+        self.helper.vcargs = { 'baseURL': self.helper.hg_base + "/",
+                               'defaultBranch': "trunk" }
+        d = self.do_patch(SUBDIR_ROOT)
+        return d
+
+    def testPatchP2(self):
+        self.helper.vcargs = { 'baseURL': self.helper.hg_base + "/",
+                               'defaultBranch': "trunk" }
+        d = self.do_patch(PATCHLEVEL2)
         return d
 
     def testCheckoutBranch(self):
@@ -2744,7 +2864,17 @@ class MercurialInRepo(Mercurial):
 
     def testPatch(self):
         self.helper.vcargs = self.default_args()
-        d = self.do_patch()
+        d = self.do_patch(PATCHLEVEL0)
+        return d
+
+    def testPatchSubDir(self):
+        self.helper.vcargs = self.default_args()
+        d = self.do_patch(SUBDIR_ROOT)
+        return d
+
+    def testPatchP2(self):
+        self.helper.vcargs = self.default_args()
+        d = self.do_patch(PATCHLEVEL2)
         return d
 
     def testCheckoutBranch(self):
@@ -2992,7 +3122,19 @@ class Git(VCBase, unittest.TestCase):
     def testPatch(self):
         self.helper.vcargs = { 'repourl': self.helper.gitrepo,
                                'branch': "master" }
-        d = self.do_patch()
+        d = self.do_patch(PATCHLEVEL0)
+        return d
+
+    def testPatchSubDir(self):
+        self.helper.vcargs = { 'repourl': self.helper.gitrepo,
+                               'branch': "master" }
+        d = self.do_patch(SUBDIR_ROOT)
+        return d
+
+    def testPatchP2(self):
+        self.helper.vcargs = { 'repourl': self.helper.gitrepo,
+                               'branch': "master" }
+        d = self.do_patch(PATCHLEVEL2)
         return d
 
     def testCheckoutBranch(self):

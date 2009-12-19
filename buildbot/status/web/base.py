@@ -35,6 +35,7 @@ css_classes = {SUCCESS: "success",
                FAILURE: "failure",
                SKIPPED: "skipped",
                EXCEPTION: "exception",
+               None: "",
                }
 
 def td(text="", parms={}, **props):
