@@ -6,7 +6,7 @@ from twisted.internet import defer, reactor
 import urllib, time
 from twisted.python import log
 from buildbot.status.web.base import HtmlResource, \
-     css_classes, path_to_builder, path_to_slave,
+     css_classes, path_to_builder, path_to_slave, \
      getAndCheckProperties
 
 from buildbot.status.web.step import StepsResource

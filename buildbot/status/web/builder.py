@@ -7,7 +7,7 @@ import re, urllib, time
 from twisted.python import log
 from buildbot import interfaces
 from buildbot.status.web.base import HtmlResource, BuildLineMixin, \
-    path_to_build, path_to_slave, path_to_builder, path_to_change,
+    path_to_build, path_to_slave, path_to_builder, path_to_change, \
     getAndCheckProperties
 from buildbot.process.base import BuildRequest
 from buildbot.process.properties import Properties
