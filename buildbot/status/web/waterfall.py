@@ -574,7 +574,6 @@ class WaterfallStatusResource(HtmlResource):
 
         data += "</table>\n"
 
-        data += '<hr /><div class="footer">\n'
 
         def with_args(req, remove_args=[], new_args=[], new_path=None):
             # sigh, nevow makes this sort of manipulation easier
@@ -612,32 +611,13 @@ class WaterfallStatusResource(HtmlResource):
         helppage = with_args(request, new_path=helpurl)
         data += '[<a href="%s">help</a>]\n' % helppage
 
-        welcomeurl = self.path_to_root(request) + "index.html"
-        data += '[<a href="%s">welcome</a>]\n' % welcomeurl
-
         if self.get_reload_time(request) is not None:
             no_reload_page = with_args(request, remove_args=["reload"])
             data += '[<a href="%s">Stop Reloading</a>]\n' % no_reload_page
 
         data += "<br />\n"
+	data += self.footer(status, request)
 
-
-        bburl = "http://buildbot.net/?bb-ver=%s" % urllib.quote(version)
-        data += '<a href="%s">Buildbot-%s</a> ' % (bburl, version)
-        if projectName:
-            data += "working for the "
-            if projectURL:
-                data += '<a href="%s">%s</a> project.' % (projectURL,
-                                                            projectName)
-            else:
-                data += "%s project." % projectName
-        data += "<br />\n"
-        # TODO: push this to the right edge, if possible
-        data += ("Page built: " +
-                 time.strftime("%a %d %b %Y %H:%M:%S",
-                               time.localtime(util.now()))
-                 + "\n")
-        data += '</div>\n'
         return data
 
     def body0(self, request, builders):

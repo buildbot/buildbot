@@ -122,30 +122,7 @@ class OneBuildSlaveResource(HtmlResource, OneLineMixin):
                     break
         data.append("</ul>\n")
 
-        projectURL = s.getProjectURL()
-        projectName = s.getProjectName()
-        data.append('<hr /><div class="footer">\n')
-
-        welcomeurl = self.path_to_root(req) + "index.html"
-        data.append("[<a href=\"%s\">welcome</a>]\n" % welcomeurl)
-        data.append("<br />\n")
-
-        data.append('<a href="http://buildbot.sourceforge.net/">Buildbot</a>')
-        data.append("-%s " % version)
-        if projectName:
-            data.append("working for the ")
-            if projectURL:
-                data.append("<a href=\"%s\">%s</a> project." % (projectURL,
-                                                            projectName))
-            else:
-                data.append("%s project." % projectName)
-        data.append("<br />\n")
-        data.append("Page built: " +
-                 time.strftime("%a %d %b %Y %H:%M:%S",
-                               time.localtime(util.now()))
-                 + "\n")
-        data.append("</div>\n")
-
+        data.append(self.footer(s, req))
         return "".join(data)
 
 # /buildslaves
