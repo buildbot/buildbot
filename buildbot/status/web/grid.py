@@ -173,7 +173,6 @@ class GridStatusResource(HtmlResource, GridStatusMixin):
                'ANYBRANCH': ANYBRANCH,
                'stamps': stamps,
               }  
-            html_categories = map(html.escape(categories))
         
         sortedBuilderNames = status.getBuilderNames()[:]
         sortedBuilderNames.sort()
@@ -242,7 +241,6 @@ class TransposedGridStatusResource(HtmlResource, GridStatusMixin):
                'ANYBRANCH': ANYBRANCH,
                'stamps': stamps,
               }          
-            html_categories = map(html.escape(categories))
 
         sortedBuilderNames = status.getBuilderNames()[:]
         sortedBuilderNames.sort()

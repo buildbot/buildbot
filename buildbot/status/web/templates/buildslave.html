@@ -2,7 +2,7 @@
 
 {% extends "layout.html" %}
 {% block content %}
-<h1>Build Slave: {{ slavename }}</h1>
+<h1>Build Slave: {{ slavename|e }}</h1>
 
 {% if not slave.isConnected %}
   <h2>NOT CONNECTED</h2>
