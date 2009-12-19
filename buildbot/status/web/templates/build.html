@@ -93,16 +93,17 @@ Build #{{ b.getNumber() }}
     <span class="{{ s.css_class }}">
       <a href="{{ s.link }}">{{ s.name }}</a> 
       {{ s.text }} ({{ s.time_to_run }} s)
-     </span>
+    </span>
 
-  {% if s.logs %}
     <ol>
-    {% for l in s.logs %}
-      <li><a href="{{ l.link }}">{{ l.name }}</a></li>
-    {% endfor %}
-    </ol>
-  {% endif %}
- 
+      {% for l in s.logs %}
+        <li><a href="{{ l.link }}">{{ l.name }}</a></li>
+      {% endfor %}
+    
+      {% for u in s.urls %}
+        <li><a href="{{ u.url }}">{{ u.logname }}</a></li>
+      {% endfor %}
+    </ol>  
   </li>
 {% endfor %}
 </ol>
