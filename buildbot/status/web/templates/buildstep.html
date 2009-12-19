@@ -26,13 +26,15 @@
 {% endif %}
 
 <h2>Timing</h2>
-<table>
-  <tr><td>Start</td><td>{{ start }}</td></tr>
-  {% if end %}
-    <tr><td>End</td><td>{{ end }}</td></tr>
-  {% endif %}
-  <tr><td>Elapsed</td><td>{{ elapsed }}</td></tr>
-</table>
+{% if start %}
+  <table>
+    <tr><td>Start</td><td>{{ start }}</td></tr>
+    <tr><td>End</td><td>{{ end or "Not finished" }}</td></tr>
+    <tr><td>Elapsed</td><td>{{ elapsed }}</td></tr>
+  </table>
+{% else %}
+  <b>Not started</b>
+{% endif %}
   
 <h2>Logs</h2>
 <ul>

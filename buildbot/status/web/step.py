@@ -30,25 +30,26 @@ class StatusResourceBuildStep(HtmlResource):
             logs.append({'log': l,
                          'link': req.childLink("logs/%s" % urllib.quote(l.getName())), })
 
-        dict = {}
+        cxt = {}
         start, end = s.getTimes()
-        if end:
-            dict['elapsed'] = util.formatInterval(end - start)
-            dict['end'] = ctime(end)
-        else:
-            now = util.now()
-            dict['elapsed'] = util.formatInterval(now - start)
-
-        start = ctime(start)
+        
+        if start:
+            cxt['start'] = ctime(start)
+            if end:
+                cxt['end'] = ctime(end)
+                cxt['elapsed'] = util.formatInterval(end - start)
+            else:
+                cxt['end'] = "Not Finished"
+                cxt['elapsed'] = util.formatInterval(util.now() - start)
+        
+        cxt.update(dict(builder_link = path_to_builder(req, b.getBuilder()),
+                        build_link = path_to_build(req, b),
+                        b = b,
+                        s = s,
+                        logs = logs))
         
         template = req.site.buildbot_service.templates.get_template("buildstep.html");        
-        data = template.render(builder_link = path_to_builder(req, b.getBuilder()),
-                               build_link = path_to_build(req, b),
-                               b = b,
-                               s = s,
-                               logs = logs,
-                               start = start,
-                               **dict)
+        data = template.render(**cxt)
 
 
         return data + self.footer(req)
