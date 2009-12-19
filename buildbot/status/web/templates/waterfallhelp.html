@@ -100,9 +100,9 @@ reload itself after that many seconds.</p>
 
 <table>
 {% for value, name in times %}
- <tr><td><input type="radio" name="reload" value="{{ value }}"
+ <tr><td><input type="radio" name="reload" value="{{ value|e }}"
   {% if value == current_reload_time %}checked="checked"{% endif %} >
- </td><td>{{name}}</td></tr>
+ </td><td>{{ name|e }}</td></tr>
 {% endfor %}
 </table>
 
