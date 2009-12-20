@@ -1,5 +1,11 @@
 User visible changes in Buildbot.             -*- outline -*-
 
+** MailNotifier's customMesg replaced by messageFormatter
+
+The customMesg mechanism had the unfortunate side effect of loading all data
+for a build into memory simultaneously, which for some builds could cause
+memory exhaustion.
+
 ** Suppression of selected compiler warnings
 
 The WarningCountingShellCommand class has been extended with the ability to
