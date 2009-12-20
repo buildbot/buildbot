@@ -280,6 +280,10 @@ class Contact:
         log.msg('[Contact] BuildRequest for %s submitted to Builder %s' %
             (brstatus.getSourceStamp(), brstatus.builderName))
 
+    def requestCancelled(self, brstatus)
+        # nothing happens with this notification right now
+        pass
+
     def builderRemoved(self, builderName):
         log.msg('[Contact] Builder %s removed' % (builderName))
 
