@@ -439,12 +439,8 @@ class Builder(pb.Referenceable):
                          % (self.slavebuilddir, setup['slavebuilddir']))
         if setup['factory'] != self.buildFactory: # compare objects
             diffs.append('factory changed')
-        oldlocks = [(lock.__class__, lock.name)
-                    for lock in self.locks]
-        newlocks = [(lock.__class__, lock.name)
-                    for lock in setup.get('locks',[])]
-        if oldlocks != newlocks:
-            diffs.append('locks changed from %s to %s' % (oldlocks, newlocks))
+        if setup.get('locks', []) != self.locks:
+            diffs.append('locks changed from %s to %s' % (self.locks, setup.get('locks')))
         if setup.get('nextSlave') != self.nextSlave:
             diffs.append('nextSlave changed from %s to %s' % (self.nextSlave, setup['nextSlave']))
         if setup.get('nextBuild') != self.nextBuild:
