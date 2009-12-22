@@ -46,18 +46,19 @@ class ANYBRANCH: pass # a flag value, used below
 class DevRevision:
     """Helper class that contains all the information we need for a revision."""
 
-    def __init__(self, revision, who, comments, date, revlink):
+    def __init__(self, revision, who, comments, date, revlink, when):
         self.revision = revision
         self.comments = comments
         self.who = who
         self.date = date
         self.revlink = revlink
+        self.when = when
 
 
 class DevBuild:
     """Helper class that contains all the information we need for a build."""
 
-    def __init__(self, revision, results, number, isFinished, text, eta, details):
+    def __init__(self, revision, results, number, isFinished, text, eta, details, when):
         self.revision = revision
         self.results = results 
         self.number = number
@@ -65,6 +66,7 @@ class DevBuild:
         self.text = text
         self.eta = eta
         self.details = details
+        self.when = when
 
 
 class ConsoleStatusResource(HtmlResource):
@@ -87,6 +89,8 @@ class ConsoleStatusResource(HtmlResource):
 
         self.allowForce = allowForce
         self.css = css
+
+        self.comparator = IntegerRevisionComparator()
 
     def getTitle(self, request):
         status = self.getStatus(request)
@@ -239,7 +243,8 @@ class ConsoleStatusResource(HtmlResource):
                     
                     rev = DevRevision(change.revision, change.who,
                                       change.comments, change.getTime(),
-                                      getattr(change, 'revlink', None))
+                                      getattr(change, 'revlink', None),
+                                      change.when)
                     revisions.append(rev)
 
         return revisions
@@ -295,9 +300,7 @@ class ConsoleStatusResource(HtmlResource):
             got_rev = -1
             try:
                 got_rev = build.getProperty("got_revision")
-                try:
-                    got_rev = int(got_rev)
-                except:
+                if not self.comparator.isValidRevision(got_rev):
                     got_rev = -1
             except KeyError:
                 pass
@@ -305,9 +308,7 @@ class ConsoleStatusResource(HtmlResource):
             try:
                 if got_rev == -1:
                    got_rev = build.getProperty("revision")
-                try:
-                    got_rev = int(got_rev)
-                except:
+                if not self.comparator.isValidRevision(got_rev):
                     got_rev = -1
             except:
                 pass
@@ -323,12 +324,14 @@ class ConsoleStatusResource(HtmlResource):
                                              build.isFinished(),
                                              build.getText(),
                                              build.getETA(),
-                                             details)
+                                             details,
+                                             build.getTimes()[0])
 
                 builds.append(devBuild)
 
                 # Now break if we have enough builds.
-                if int(got_rev) < int(revision):
+                if self.comparator.isRevisionEarlier(
+                    devBuild, builder.getBuild(-1).getChanges()[-1]):
                     break
 
             build = build.getPreviousBuild()
@@ -541,12 +544,12 @@ class ConsoleStatusResource(HtmlResource):
 
                 # Find the first build that does not include the revision.
                 for build in allBuilds[builder]:
-                    if int(build.revision) >= int(revision.revision):
-                        introducedIn = build
-                    else:
+                    if self.comparator.isRevisionEarlier(build, revision):
                         firstNotIn = build
                         break
-
+                    else:
+                        introducedIn = build
+                        
                 # Get the results of the first build with the revision, and the
                 # first build that does not include the revision.
                 results = None
