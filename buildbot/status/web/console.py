@@ -775,3 +775,31 @@ class ConsoleStatusResource(HtmlResource):
                                 revisions, categories, branch, debugInfo)
 
         return data
+
+class RevisionComparator(object):
+    """Used for comparing between revisions, as some
+    VCS use a plain counter for revisions (like SVN)
+    while others use different concepts (see Git).
+    """
+    
+    # TODO (avivby): Should this be a zope interface?
+    
+    def isRevisionEarlier(self, first, second):
+        raise NotImplementedError
+
+    def getSortingKey(self):
+        raise NotImplementedError
+    
+class TimeRevisionComparator(RevisionComparator):
+    def isRevisionEarlier(self, first, second):
+        return first.when < second.when
+
+    def getSortingKey(self):
+        return operator.attrgetter('when')
+
+class IntegerRevisionComparator(RevisionComparator):
+    def isRevisionEarlier(self, first, second):
+        return int(first.revision) < int(second.revision)
+
+    def getSortingKey(self):
+        return operator.attrgetter('revision')
