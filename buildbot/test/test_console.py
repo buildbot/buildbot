@@ -83,6 +83,13 @@ class IntegerRevisionComparatorTest(unittest.TestCase):
         self.assertTrue(self.comparator.isRevisionEarlier(first, second))
         self.assertFalse(self.comparator.isRevisionEarlier(second, first))
 
+    def testIsValidRevisionAcceptsIntegers(self):
+        for rev in range(100):
+            self.assertTrue(self.comparator.isValidRevision(str(rev)))
+
+    def testIsValidRevisionDoesNotAcceptNonIntegers(self):
+        self.assertFalse(self.comparator.isValidRevision('revision'))
+
 # Helper class to mock a request. We define only what we really need.
 class MockRequest(object):
     def childLink(self, link):

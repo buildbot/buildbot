@@ -784,13 +784,28 @@ class RevisionComparator(object):
     
     # TODO (avivby): Should this be a zope interface?
     
-    def isRevisionEarlier(self, first, second):
+    def isRevisionEarlier(self, first_change, second_change):
+        """Used for comparing 2 changes"""
+        raise NotImplementedError
+
+    def isValidRevision(self, revision):
+        """Checks whether the revision seems like a VCS revision"""
         raise NotImplementedError
     
 class TimeRevisionComparator(RevisionComparator):
     def isRevisionEarlier(self, first, second):
         return first.when < second.when
 
+    def isValidRevision(self, revision):
+        return True # No general way of determining
+
 class IntegerRevisionComparator(RevisionComparator):
     def isRevisionEarlier(self, first, second):
         return int(first.revision) < int(second.revision)
+
+    def isValidRevision(self, revision):
+        try:
+            int(revision)
+            return True
+        except:
+            return False
