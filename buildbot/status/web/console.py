@@ -72,12 +72,7 @@ class DevBuild:
 class ConsoleStatusResource(HtmlResource):
     """Main console class. It displays a user-oriented status page.
     Every change is a line in the page, and it shows the result of the first
-    build with this change for each slave.
-
-    NOTE: this console view works only for SCM that have integer revisions, like
-    SVN. We require this because, instead of crawling all the history over and
-    over for sourcestamp, we do number comparaison. I.E. If gotRevision is 1000,
-    then revision 999 has been tested it in, because 1000 > 999"""
+    build with this change for each slave."""
 
     def __init__(self, allowForce=True, css=None, orderByTime=False):
         HtmlResource.__init__(self)
