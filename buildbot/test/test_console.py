@@ -1,7 +1,5 @@
 # -*- test-case-name: buildbot.test.test_console -*-
 
-import os 
-
 from twisted.trial import unittest
 
 from buildbot.status import builder
