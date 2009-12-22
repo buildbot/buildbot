@@ -204,8 +204,8 @@ class ConsoleStatusResource(HtmlResource):
             prevChange = None
             newChanges = []
             for change in allChanges:
-                rev = int(change.revision)
-                if not prevChange or rev != int(prevChange.revision):
+                rev = change.revision
+                if not prevChange or rev != prevChange.revision:
                     newChanges.append(change)
                 prevChange = change
             allChanges = newChanges
