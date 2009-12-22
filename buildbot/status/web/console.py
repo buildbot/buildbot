@@ -1,6 +1,6 @@
 from __future__ import generators
 
-import sys, time, os.path
+import time
 import operator
 import re
 import urllib
