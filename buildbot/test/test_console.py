@@ -68,6 +68,16 @@ class TimeRevisionComparatorTest(unittest.TestCase):
         self.assertTrue(self.comparator.isRevisionEarlier(first, second))
         self.assertFalse(self.comparator.isRevisionEarlier(second, first))
 
+    def testReturnedKeySortsRevisionsCorrectly(self):
+        my_changes = [_createDummyChange('rev' + str(i))
+                      for i in range(1, 6)]
+        for i in range(1, len(my_changes)):
+            my_changes[i].when = my_changes[i-1].when + 1
+
+        reversed_changes = list(reversed(my_changes))
+        reversed_changes.sort(key=self.comparator.getSortingKey())
+        self.assertEqual(my_changes, reversed_changes)
+
 class IntegerRevisionComparatorTest(unittest.TestCase):
     def setUp(self):
         self.comparator = console.IntegerRevisionComparator()
@@ -89,6 +99,13 @@ class IntegerRevisionComparatorTest(unittest.TestCase):
 
     def testIsValidRevisionDoesNotAcceptNonIntegers(self):
         self.assertFalse(self.comparator.isValidRevision('revision'))
+
+    def testReturnedKeySortsRevisionsCorrectly(self):
+        my_changes = [_createDummyChange(str(i)) for i in range(1, 6)]
+
+        reversed_changes = list(reversed(my_changes))
+        reversed_changes.sort(key=self.comparator.getSortingKey())
+        self.assertEqual(my_changes, reversed_changes)
 
 # Helper class to mock a request. We define only what we really need.
 class MockRequest(object):

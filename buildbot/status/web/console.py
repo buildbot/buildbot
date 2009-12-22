@@ -202,7 +202,7 @@ class ConsoleStatusResource(HtmlResource):
 
             # the new changes are not sorted, and can contain duplicates.
             # Sort the list.
-            allChanges.sort(key=operator.attrgetter('revision'))
+            allChanges.sort(key=self.comparator.getSortingKey())
 
             # Remove the dups
             prevChange = None
@@ -794,6 +794,9 @@ class RevisionComparator(object):
     def isValidRevision(self, revision):
         """Checks whether the revision seems like a VCS revision"""
         raise NotImplementedError
+
+    def getSortingKey(self):
+        raise NotImplementedError
     
 class TimeRevisionComparator(RevisionComparator):
     def isRevisionEarlier(self, first, second):
@@ -801,6 +804,9 @@ class TimeRevisionComparator(RevisionComparator):
 
     def isValidRevision(self, revision):
         return True # No general way of determining
+
+    def getSortingKey(self):
+        return operator.attrgetter('when')
 
 class IntegerRevisionComparator(RevisionComparator):
     def isRevisionEarlier(self, first, second):
@@ -812,3 +818,7 @@ class IntegerRevisionComparator(RevisionComparator):
             return True
         except:
             return False
+
+    def getSortingKey(self):
+        return operator.attrgetter('revision')
+
