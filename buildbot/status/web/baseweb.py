@@ -399,7 +399,8 @@ class WebStatus(service.MultiService):
 
     def __init__(self, http_port=None, distrib_port=None, allowForce=False,
                  public_html="public_html", site=None, numbuilds=20,
-                 num_events=200, num_events_max=None, auth=None):
+                 num_events=200, num_events_max=None, auth=None,
+                 order_console_by_time=False):
         """Run a web server that provides Buildbot status.
 
         @type  http_port: int or L{twisted.application.strports} string
@@ -463,6 +464,11 @@ class WebStatus(service.MultiService):
                      to the C{allowForce} features. Ignored if C{allowForce}
                      is not C{True}. If C{auth} is C{None}, people can force or
                      stop builds without auth.
+
+        @type order_console_by_time: bool
+        @param order_console_by_time: Whether to order changes (commits) in the console
+                     view according to the time they were created (for VCS like Git) or
+                     according to their integer revision numbers (for VCS like SVN).
         """
 
         service.MultiService.__init__(self)
@@ -490,6 +496,8 @@ class WebStatus(service.MultiService):
                 log.msg("Warning: Ignoring authentication. allowForce must be"
                         " set to True use this")
             self.auth = None
+
+        self.orderConsoleByTime = order_console_by_time
 
         # If we were given a site object, go ahead and use it.
         if site:
@@ -530,7 +538,8 @@ class WebStatus(service.MultiService):
         self.putChild("waterfall", WaterfallStatusResource(num_events=num_events,
                                         num_events_max=num_events_max))
         self.putChild("grid", GridStatusResource())
-        self.putChild("console", ConsoleStatusResource())
+        self.putChild("console", ConsoleStatusResource(
+                orderByTime=self.orderConsoleByTime))
         self.putChild("tgrid", TransposedGridStatusResource())
         self.putChild("builders", BuildersResource()) # has builds/steps/logs
         self.putChild("changes", ChangesResource())

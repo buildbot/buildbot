@@ -79,7 +79,7 @@ class ConsoleStatusResource(HtmlResource):
     over for sourcestamp, we do number comparaison. I.E. If gotRevision is 1000,
     then revision 999 has been tested it in, because 1000 > 999"""
 
-    def __init__(self, allowForce=True, css=None):
+    def __init__(self, allowForce=True, css=None, orderByTime=False):
         HtmlResource.__init__(self)
 
         self.status = None
@@ -90,7 +90,10 @@ class ConsoleStatusResource(HtmlResource):
         self.allowForce = allowForce
         self.css = css
 
-        self.comparator = IntegerRevisionComparator()
+        if orderByTime:
+            self.comparator = TimeRevisionComparator()
+        else:
+            self.comparator = IntegerRevisionComparator()
 
     def getTitle(self, request):
         status = self.getStatus(request)
