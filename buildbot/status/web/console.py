@@ -786,20 +786,11 @@ class RevisionComparator(object):
     
     def isRevisionEarlier(self, first, second):
         raise NotImplementedError
-
-    def getSortingKey(self):
-        raise NotImplementedError
     
 class TimeRevisionComparator(RevisionComparator):
     def isRevisionEarlier(self, first, second):
         return first.when < second.when
 
-    def getSortingKey(self):
-        return operator.attrgetter('when')
-
 class IntegerRevisionComparator(RevisionComparator):
     def isRevisionEarlier(self, first, second):
         return int(first.revision) < int(second.revision)
-
-    def getSortingKey(self):
-        return operator.attrgetter('revision')
