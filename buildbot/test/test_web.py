@@ -15,7 +15,7 @@ from twisted.web import client
 
 from buildbot import master, interfaces, sourcestamp
 from buildbot.status import html, builder
-from buildbot.status.web import waterfall
+from buildbot.status.web import waterfall, xmlrpc
 from buildbot.changes.changes import Change
 from buildbot.process import base
 from buildbot.process.buildstep import BuildStep
@@ -603,3 +603,13 @@ BuildmasterConfig = {
         d.addCallback(_check)
         d.addErrback(_fail)
         return d
+
+class XMLRPC(unittest.TestCase):
+    def test_init(self):
+        server = xmlrpc.XMLRPCServer()
+        self.assert_(server)
+
+    def test_render(self):
+        self.assertRaises(NameError,
+                          lambda:
+                              xmlrpc.XMLRPCServer().render(Request()))
