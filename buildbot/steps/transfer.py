@@ -115,7 +115,7 @@ class _DirectoryWriter(_FileWriter):
         if self.fp:
             self.fp.close()
             self.fp = None
-        fileobj = os.fdopen(self.fd, 'r')
+        fileobj = os.fdopen(self.fd, 'rb')
         if self.compress == 'bz2':
             mode='r|bz2'
         elif self.compress == 'gz':
@@ -126,6 +126,8 @@ class _DirectoryWriter(_FileWriter):
             tarfile.TarFile.extractall = _extractall
         archive = tarfile.open(name=self.tarname, mode=mode, fileobj=fileobj)
         archive.extractall(path=self.destroot)
+        archive.close()
+        fileobj.close()
         os.remove(self.tarname)
 
 
