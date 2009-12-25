@@ -751,13 +751,13 @@ class VCBase(SignalMixin):
         s += ")"
         self.config = config_vc % s
         if type == PATCHLEVEL0:
-          self.patch = (0, p0_diff)
+            self.patch = (0, p0_diff)
         elif type == SUBDIR_ROOT:
-          self.patch = (0, subdir_diff, 'subdir')
+            self.patch = (0, subdir_diff, 'subdir')
         elif type == PATCHLEVEL2:
-          self.patch = (2, p2_diff)
+            self.patch = (2, p2_diff)
         else:
-          raise NotImplementedError
+            raise NotImplementedError
         m.loadConfig(self.config % "clobber")
         m.readConfig = True
         m.startService()

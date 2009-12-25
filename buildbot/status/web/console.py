@@ -20,7 +20,7 @@ def getResultsClass(results, prevResults, inProgress):
         return "running"
 
     if results is None:
-       return "notstarted"
+        return "notstarted"
 
     if results == builder.SUCCESS:
         return "success"
@@ -112,7 +112,7 @@ class ConsoleStatusResource(HtmlResource):
             try:
                 reload_time = int(request.args["reload"][0])
                 if reload_time != 0:
-                  reload_time = max(reload_time, 15)
+                    reload_time = max(reload_time, 15)
             except ValueError:
                 pass
 
@@ -254,26 +254,26 @@ class ConsoleStatusResource(HtmlResource):
             for step in build.getSteps():
                 (result, reason) = step.getResults()
                 if result == builder.FAILURE:
-                  name = step.getName()
+                    name = step.getName()
 
-                  # Remove html tags from the error text.
-                  stripHtml = re.compile(r'<.*?>')
-                  strippedDetails = stripHtml .sub('', ' '.join(step.getText()))
+                    # Remove html tags from the error text.
+                    stripHtml = re.compile(r'<.*?>')
+                    strippedDetails = stripHtml .sub('', ' '.join(step.getText()))
 
-                  details += "<li> %s : %s. \n" % (builderName, strippedDetails)
-                  if step.getLogs():
-                      details += "[ "
-                      for log in step.getLogs():
-                          logname = log.getName()
-                          logurl = request.childLink(
+                    details += "<li> %s : %s. \n" % (builderName, strippedDetails)
+                    if step.getLogs():
+                        details += "[ "
+                        for log in step.getLogs():
+                            logname = log.getName()
+                            logurl = request.childLink(
                               "../builders/%s/builds/%s/steps/%s/logs/%s" %
                                 (urllib.quote(builderName),
                                  build.getNumber(),
                                  urllib.quote(name),
                                  urllib.quote(logname)))
-                          details += "<a href=\"%s\">%s</a> " % (logurl,
+                            details += "<a href=\"%s\">%s</a> " % (logurl,
                                                                  log.getName())
-                      details += "]"
+                        details += "]"
         return details
 
     def getBuildsForRevision(self, request, builder, builderName, lastRevision,
@@ -305,7 +305,7 @@ class ConsoleStatusResource(HtmlResource):
 
             try:
                 if got_rev == -1:
-                   got_rev = build.getProperty("revision")
+                    got_rev = build.getProperty("revision")
                 if not self.comparator.isValidRevision(got_rev):
                     got_rev = -1
             except:
@@ -441,7 +441,7 @@ class ConsoleStatusResource(HtmlResource):
         # Display the first TD (empty) element.
         subs["last"] = ""
         if len(builderList) == 1:
-          subs["last"] = "last"
+            subs["last"] = "last"
         data += res.main_line_slave_header.substitute(subs)
 
         nbSlaves = 0
@@ -475,25 +475,25 @@ class ConsoleStatusResource(HtmlResource):
             # For each builder in this category, we set the build info and we
             # display the box.
             for builder in builderList[category]:
-              subs["color"] = "notstarted"
-              subs["title"] = builder
-              subs["url"] = "./builders/%s" % urllib.quote(builder)
-              state, builds = status.getBuilder(builder).getState()
-              # Check if it's offline, if so, the box is purple.
-              if state == "offline":
-                  subs["color"] = "exception"
-              else:
-                  # If not offline, then display the result of the last
-                  # finished build.
-                  build = self.getHeadBuild(status.getBuilder(builder))
-                  while build and not build.isFinished():
-                      build = build.getPreviousBuild()
+                subs["color"] = "notstarted"
+                subs["title"] = builder
+                subs["url"] = "./builders/%s" % urllib.quote(builder)
+                state, builds = status.getBuilder(builder).getState()
+                # Check if it's offline, if so, the box is purple.
+                if state == "offline":
+                    subs["color"] = "exception"
+                else:
+                    # If not offline, then display the result of the last
+                    # finished build.
+                    build = self.getHeadBuild(status.getBuilder(builder))
+                    while build and not build.isFinished():
+                        build = build.getPreviousBuild()
 
-                  if build:
-                      subs["color"] = getResultsClass(build.getResults(), None,
+                    if build:
+                        subs["color"] = getResultsClass(build.getResults(), None,
                                                       False)
 
-              data += res.main_line_slave_status.substitute(subs)
+                data += res.main_line_slave_status.substitute(subs)
 
         data += res.main_line_slave_footer.substitute(subs)
         return data
@@ -509,7 +509,7 @@ class ConsoleStatusResource(HtmlResource):
         # Display the first TD (empty) element.
         subs["last"] = ""
         if len(builderList) == 1:
-          subs["last"] = "last"
+            subs["last"] = "last"
         data += res.main_line_status_header.substitute(subs)
 
         details = ""
@@ -662,9 +662,9 @@ class ConsoleStatusResource(HtmlResource):
         # For each revision we show one line
         for revision in revisions:
             if not subs["alt"]:
-              subs["alt"] = "Alt"
+                subs["alt"] = "Alt"
             else:
-              subs["alt"] = ""
+                subs["alt"] = ""
 
             # Fill the dictionnary with these new information
             subs["revision"] = revision.revision
@@ -696,8 +696,8 @@ class ConsoleStatusResource(HtmlResource):
             
             # Display the details of the failures, if any.
             if details:
-              subs["details"] = details
-              data += res.main_line_details.substitute(subs)
+                subs["details"] = details
+                data += res.main_line_details.substitute(subs)
 
             # Display the comments for this revision
             data += res.main_line_comments.substitute(subs)
@@ -746,7 +746,7 @@ class ConsoleStatusResource(HtmlResource):
         # last 80 revisions.
         numRevs = 40
         if devName:
-          numRevs *= 2
+            numRevs *= 2
         numBuilds = numRevs
 
 

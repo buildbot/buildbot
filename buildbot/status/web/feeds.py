@@ -28,7 +28,7 @@ import re
 import sys
 import time
 from twisted.web import resource
-from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE, EXCEPTION
+from buildbot.status.builder import FAILURE
 
 class XmlResource(resource.Resource):
     contentType = "text/xml; charset=UTF-8"
