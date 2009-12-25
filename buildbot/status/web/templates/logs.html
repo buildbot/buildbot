@@ -9,18 +9,9 @@
 {%- endmacro -%}
 
 {%- macro chunks(entries) -%}
-  {%- for entry in entries -%}
-    {%- if entry.is_header -%}
-      </pre>
-      <div class="header">
-        <h3>Command</h3>  
-        <pre>{{ entry.text|e }}</pre>
-      </div>
-      <pre>
-    {%- else -%}
-      <span class="{{ entry.type|e }}">{{ entry.text|e }}</span>
-    {%- endif -%}
-  {%- endfor %}
+{%- for entry in entries -%}
+      <span class="{{ entry.type }}">{{ entry.text|e }}</span>
+{% endfor -%}
 {%- endmacro -%}
 
 {%- macro page_footer() -%}

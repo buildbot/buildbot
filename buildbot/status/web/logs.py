@@ -60,13 +60,13 @@ class TextLog(Resource):
                 # non-std channel, don't display
                 continue
             
-            is_header = type != builder.HEADER
+            is_header = type == builder.HEADER
 
             if not self.asText:
                 html_entries.append(dict(type = builder.ChunkTypes[type], 
-                                      text = entry,
-                                      is_header = is_header))
-            elif is_header:
+                                         text = entry,
+                                         is_header = is_header))
+            elif not is_header:
                 text_data += entry
 
         if self.asText:
@@ -92,6 +92,7 @@ class TextLog(Resource):
                     title = "Log File contents",
                     texturl = req.childLink("text"),
                     path_to_root = path_to_root(req))
+            data = data.encode('utf-8')                   
             req.write(data)
 
         self.original.subscribeConsumer(ChunkConsumer(req, self))
@@ -109,6 +110,7 @@ class TextLog(Resource):
         try:
             if not self.asText:
                 data = self.template.module.page_footer()
+                data = data.encode('utf-8')
                 self.req.write(data)
             self.req.finish()
         except pb.DeadReferenceError:
