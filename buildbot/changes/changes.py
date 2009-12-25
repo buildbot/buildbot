@@ -10,24 +10,6 @@ from twisted.web import html
 from buildbot import interfaces, util
 from buildbot.process.properties import Properties
 
-html_tmpl = """
-<p>Changed by: <b>%(who)s</b><br />
-Changed at: <b>%(at)s</b><br />
-%(branch)s
-%(revision)s
-<br />
-
-Changed files:
-%(files)s
-
-Comments:
-%(comments)s
-
-Properties:
-%(properties)s
-</p>
-"""
-
 class Change:
     """I represent a single change to the source tree. This may involve
     several files, but they are all changed by the same person, and there is
@@ -94,60 +76,26 @@ class Change:
         data += "Properties: \n%s\n\n" % self.getProperties()
         return data
 
-    def asHTML(self):
-        links = []
+    def html_dict(self):
+        '''returns a dictonary with suitable info for html/mail rendering'''
+        files = []
         for file in self.files:
             link = filter(lambda s: s.find(file) != -1, self.links)
-            if len(link) == 1:
-                # could get confused
-                links.append('<a href="%s"><b>%s</b></a>' % (link[0], file))
-            else:
-                links.append('<b>%s</b>' % file)
-        if self.revision:
-            if getattr(self, 'revlink', ""):
-                revision = 'Revision: <a href="%s"><b>%s</b></a>\n' % (
-                        self.revlink, self.revision)
-            else:
-                revision = "Revision: <b>%s</b><br />\n" % self.revision
-        else:
-            revision = ''
+            url = link[0] if len(link) == 1 else None
+            files.append(dict(url=url, name=file))
+        
+        files = sorted(files, cmp=lambda a,b: a['file'] < b['file'])
 
-        branch = ""
-        if self.branch:
-            branch = "Branch: <b>%s</b><br />\n" % self.branch
-
-        properties = []
-        for prop in self.properties.asList():
-            properties.append("%s: %s<br />" % (prop[0], prop[1]))
-
-        kwargs = { 'who'       : html.escape(self.who),
+        kwargs = { 'who'       : self.who,
                    'at'        : self.getTime(),
-                   'files'     : html.UL(links) + '\n',
-                   'revision'  : revision,
-                   'branch'    : branch,
-                   'comments'  : html.PRE(self.comments),
-                   'properties': html.UL(properties) + '\n' }
-        return html_tmpl % kwargs
+                   'files'     : files,
+                   'revision'  : self.revision,
+                   'revlink'   : getattr(self, 'revlink', None),
+                   'branch'    : self.branch,
+                   'comments'  : self.comments,
+                   'properties': self.properties.asList() }
 
-    def get_HTML_box(self, url):
-        """Return the contents of a TD cell for the waterfall display.
-
-        @param url: the URL that points to an HTML page that will render
-        using our asHTML method. The Change is free to use this or ignore it
-        as it pleases.
-
-        @return: the HTML that will be put inside the table cell. Typically
-        this is just a single href named after the author of the change and
-        pointing at the passed-in 'url'.
-        """
-        who = self.getShortAuthor()
-        if self.comments is None:
-            title = ""
-        else:
-            title = html.escape(self.comments)
-        return '<a href="%s" title="%s">%s</a>' % (url,
-                                                   title,
-                                                   html.escape(who))
+        return kwargs
 
     def getShortAuthor(self):
         return self.who

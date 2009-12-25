@@ -15,6 +15,8 @@ from buildbot.changes.changes import Change
 from buildbot.process.builder import Builder
 from time import sleep
 
+import jinja2
+
 import sys
 if sys.version_info[:3] < (2,4,0):
     from sets import Set as set
@@ -150,12 +152,21 @@ def customTextMailMessage(attrs):
     return ("\n".join(text), 'plain')
 
 def customHTMLMailMessage(attrs):
+    loader = jinja2.PackageLoader('buildbot.status.web', 'templates')
+    templates = jinja2.Environment(loader=loader,
+                                extensions=['jinja2.ext.i18n'],
+                                trim_blocks=True)
+    template = templates.get_template("change.html")
+
+    
     logLines = 3
     text = list()
     text.append("<h3>STATUS <a href='%s'>%s</a>:</h3>" % (attrs['buildURL'],
                                                           attrs['result'].title()))
-    text.append("<h4>Recent Changes:</h4>")
-    text.extend([c.asHTML() for c in attrs['changes']])
+    text.append("<h4>Recent Changes:</h4>")   
+    for c in attrs['changes']: 
+        text.append(template.module.change(**c.html_dict()))
+                    
     name, url, lines, status = attrs['logs'][-1]
     text.append("<h4>Last %d lines of '%s':</h4>" % (logLines, name))
     text.append("<p>")
@@ -378,7 +389,7 @@ class Mail(unittest.TestCase):
         #
         #self.fail(t)
         self.failUnlessIn("<h4>Last 3 lines of 'step.test':</h4>", t)
-        self.failUnlessIn("<p>Changed by: <b>author2</b><br />", t)
+        self.failUnlessIn("Changed by: <b>author2</b>", t)
         self.failUnlessIn("Test 3 failed", t)
         self.failUnlessIn("number was: 1", t)
 
