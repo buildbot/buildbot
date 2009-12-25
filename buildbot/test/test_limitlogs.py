@@ -2,7 +2,7 @@
 
 from twisted.trial import unittest
 from twisted.internet import reactor, defer
-from twisted.internet.utils import getProcessValue, getProcessOutput
+from twisted.internet.utils import getProcessOutputAndValue, getProcessOutput
 import twisted
 from twisted.python.versions import Version
 from twisted.python.procutils import which
@@ -57,28 +57,38 @@ class MasterLogs(unittest.TestCase, SignalMixin):
             raise unittest.SkipTest("Twisted 8.2.0 or higher required")
         self.setUpSignalHandler()
 
+        # assume python is running
+        import buildbot, sys
+        self.pythonexe = sys.executable
+        bb_path = os.path.dirname(buildbot.__path__[0])
+        self.buildbotexe = os.sep.join([bb_path, 'bin', 'buildbot'])
+        self.env = os.environ
+        if not bb_path in os.environ['PYTHONPATH'].split(os.pathsep):
+            self.env['PYTHONPATH'] = bb_path + os.pathsep + self.env['PYTHONPATH']
+
     def tearDown(self):
         self.tearDownSignalHandler()
 
     def testLog(self):
-        exes = which('buildbot')
-        if not exes:
-            raise unittest.SkipTest("Buildbot needs to be installed")
-        self.buildbotexe = exes[0]
-        d = getProcessValue(self.buildbotexe,
-                            ['create-master', '--log-size=1000', '--log-count=2',
-                             'master'])
+        d = getProcessOutputAndValue(self.pythonexe,
+                            [self.buildbotexe, 'create-master', '--log-size=1000', '--log-count=2',
+                             'master'], env=self.env)
         d.addCallback(self._master_created)
         return d
 
-    def _master_created(self, res):
-        open('master/master.cfg', 'w').write(master_cfg)
-        d = getProcessOutput(self.buildbotexe,
-                            ['start', 'master'])
+    def _master_created(self, r):
+        out, err, res = r            
+        self.failIf(res != 0, "create-master failed:\nstdout: %s\nstderr: %s" % (out, err))
+        open(os.path.join('master', 'master.cfg'), 'w').write(master_cfg)
+        d = getProcessOutputAndValue(self.pythonexe,
+                            [self.buildbotexe, 'start', 'master'],
+                            env=self.env)
         d.addBoth(self._master_running)
         return d
 
     def _master_running(self, res):
+        out, err, res = r            
+        self.failIf(res != 0, "start master failed:\nstdout: %s\nstderr: %s" % (out, err))
         self.addCleanup(self._stop_master)
         d = defer.Deferred()
         reactor.callLater(2, d.callback, None)
@@ -94,8 +104,9 @@ class MasterLogs(unittest.TestCase, SignalMixin):
         self.failUnless(firstline.endswith("this is a mighty long string and I am going to write it into the log often\n"))
 
     def _stop_master(self):
-        d = getProcessOutput(self.buildbotexe,
-                            ['stop', 'master'])
+        d = getProcessOutput(self.pythonexe,
+                            [self.buildbotexe, 'stop', 'master'],
+                            env=self.env)
         d.addBoth(self._master_stopped)
         return d
 
