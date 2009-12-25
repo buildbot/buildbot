@@ -1,6 +1,6 @@
 from __future__ import generators
 
-import sys, time, os.path
+import time
 import operator
 import re
 import urllib
@@ -46,18 +46,19 @@ class ANYBRANCH: pass # a flag value, used below
 class DevRevision:
     """Helper class that contains all the information we need for a revision."""
 
-    def __init__(self, revision, who, comments, date, revlink):
+    def __init__(self, revision, who, comments, date, revlink, when):
         self.revision = revision
         self.comments = comments
         self.who = who
         self.date = date
         self.revlink = revlink
+        self.when = when
 
 
 class DevBuild:
     """Helper class that contains all the information we need for a build."""
 
-    def __init__(self, revision, results, number, isFinished, text, eta, details):
+    def __init__(self, revision, results, number, isFinished, text, eta, details, when):
         self.revision = revision
         self.results = results 
         self.number = number
@@ -65,19 +66,15 @@ class DevBuild:
         self.text = text
         self.eta = eta
         self.details = details
+        self.when = when
 
 
 class ConsoleStatusResource(HtmlResource):
     """Main console class. It displays a user-oriented status page.
     Every change is a line in the page, and it shows the result of the first
-    build with this change for each slave.
+    build with this change for each slave."""
 
-    NOTE: this console view works only for SCM that have integer revisions, like
-    SVN. We require this because, instead of crawling all the history over and
-    over for sourcestamp, we do number comparaison. I.E. If gotRevision is 1000,
-    then revision 999 has been tested it in, because 1000 > 999"""
-
-    def __init__(self, allowForce=True, css=None):
+    def __init__(self, allowForce=True, css=None, orderByTime=False):
         HtmlResource.__init__(self)
 
         self.status = None
@@ -87,6 +84,11 @@ class ConsoleStatusResource(HtmlResource):
 
         self.allowForce = allowForce
         self.css = css
+
+        if orderByTime:
+            self.comparator = TimeRevisionComparator()
+        else:
+            self.comparator = IntegerRevisionComparator()
 
     def getTitle(self, request):
         status = self.getStatus(request)
@@ -198,14 +200,14 @@ class ConsoleStatusResource(HtmlResource):
 
             # the new changes are not sorted, and can contain duplicates.
             # Sort the list.
-            allChanges.sort(key=operator.attrgetter('revision'))
+            allChanges.sort(key=self.comparator.getSortingKey())
 
             # Remove the dups
             prevChange = None
             newChanges = []
             for change in allChanges:
-                rev = int(change.revision or -1)
-                if not prevChange or rev != int(prevChange.revision or -1):
+                rev = change.revision
+                if not prevChange or rev != prevChange.revision:
                     newChanges.append(change)
                 prevChange = change
             allChanges = newChanges
@@ -239,7 +241,8 @@ class ConsoleStatusResource(HtmlResource):
                     
                     rev = DevRevision(change.revision, change.who,
                                       change.comments, change.getTime(),
-                                      getattr(change, 'revlink', None))
+                                      getattr(change, 'revlink', None),
+                                      change.when)
                     revisions.append(rev)
 
         return revisions
@@ -295,9 +298,7 @@ class ConsoleStatusResource(HtmlResource):
             got_rev = -1
             try:
                 got_rev = build.getProperty("got_revision")
-                try:
-                    got_rev = int(got_rev)
-                except:
+                if not self.comparator.isValidRevision(got_rev):
                     got_rev = -1
             except KeyError:
                 pass
@@ -305,9 +306,7 @@ class ConsoleStatusResource(HtmlResource):
             try:
                 if got_rev == -1:
                    got_rev = build.getProperty("revision")
-                try:
-                    got_rev = int(got_rev)
-                except:
+                if not self.comparator.isValidRevision(got_rev):
                     got_rev = -1
             except:
                 pass
@@ -323,12 +322,14 @@ class ConsoleStatusResource(HtmlResource):
                                              build.isFinished(),
                                              build.getText(),
                                              build.getETA(),
-                                             details)
+                                             details,
+                                             build.getTimes()[0])
 
                 builds.append(devBuild)
 
                 # Now break if we have enough builds.
-                if int(got_rev) < int(revision):
+                if self.comparator.isRevisionEarlier(
+                    devBuild, builder.getBuild(-1).getChanges()[-1]):
                     break
 
             build = build.getPreviousBuild()
@@ -541,12 +542,12 @@ class ConsoleStatusResource(HtmlResource):
 
                 # Find the first build that does not include the revision.
                 for build in allBuilds[builder]:
-                    if int(build.revision) >= int(revision.revision):
-                        introducedIn = build
-                    else:
+                    if self.comparator.isRevisionEarlier(build, revision):
                         firstNotIn = build
                         break
-
+                    else:
+                        introducedIn = build
+                        
                 # Get the results of the first build with the revision, and the
                 # first build that does not include the revision.
                 results = None
@@ -775,3 +776,47 @@ class ConsoleStatusResource(HtmlResource):
                                 revisions, categories, branch, debugInfo)
 
         return data
+
+class RevisionComparator(object):
+    """Used for comparing between revisions, as some
+    VCS use a plain counter for revisions (like SVN)
+    while others use different concepts (see Git).
+    """
+    
+    # TODO (avivby): Should this be a zope interface?
+    
+    def isRevisionEarlier(self, first_change, second_change):
+        """Used for comparing 2 changes"""
+        raise NotImplementedError
+
+    def isValidRevision(self, revision):
+        """Checks whether the revision seems like a VCS revision"""
+        raise NotImplementedError
+
+    def getSortingKey(self):
+        raise NotImplementedError
+    
+class TimeRevisionComparator(RevisionComparator):
+    def isRevisionEarlier(self, first, second):
+        return first.when < second.when
+
+    def isValidRevision(self, revision):
+        return True # No general way of determining
+
+    def getSortingKey(self):
+        return operator.attrgetter('when')
+
+class IntegerRevisionComparator(RevisionComparator):
+    def isRevisionEarlier(self, first, second):
+        return int(first.revision) < int(second.revision)
+
+    def isValidRevision(self, revision):
+        try:
+            int(revision)
+            return True
+        except:
+            return False
+
+    def getSortingKey(self):
+        return operator.attrgetter('revision')
+
