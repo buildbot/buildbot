@@ -91,7 +91,7 @@ class Image:
         return Stub(name='reservation',
                     instances=[Instance(self.data, self.id, **kwargs)])
 
-    def create(cls, self, data, ami, owner, location):
+    def create(cls, data, ami, owner, location):
         assert ami not in data.images
         self = cls(data, ami, owner, location)
         data.images[ami] = self
@@ -162,8 +162,8 @@ class Key:
     #    self.raw.write_private_key(f)
     #    self.material = f.getvalue()
 
-    def create(klass, name, keys):
-        self = klass()
+    def create(cls, name, keys):
+        self = cls()
         self.name = name
         self.keys = keys
         assert name not in keys
@@ -415,7 +415,11 @@ class Initialization(Mixin, unittest.TestCase):
 
     def testDefaultSeparateFile(self):
         # set up .ec2/aws_id
-        home = os.environ['HOME']
+        for h in ['HOME', 'USERPROFILE']:
+            if h in os.environ:
+                home = os.environ[h]
+                break
+
         fake_home = os.path.join(os.getcwd(), 'basedir') # see RunMixin.setUp
         os.environ['HOME'] = fake_home
         dir = os.path.join(fake_home, '.ec2')
