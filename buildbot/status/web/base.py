@@ -59,33 +59,6 @@ Return a new Properties object containing each property found in req.
                 return None
             properties.setProperty(pname, pvalue, "Force Build Form")
     return properties
-def td(text="", parms={}, **props):
-    data = ""
-    data += "  "
-    #if not props.has_key("border"):
-    #    props["border"] = 1
-    props.update(parms)
-    comment = props.get("comment", None)
-    if comment:
-        data += "<!-- %s -->" % comment
-    data += "<td"
-    class_ = props.get('class_', None)
-    if class_:
-        props["class"] = class_
-    for prop in ("align", "colspan", "rowspan", "border",
-                 "valign", "halign", "class"):
-        p = props.get(prop, None)
-        if p != None:
-            data += " %s=\"%s\"" % (prop, p)
-    data += ">"
-    if not text:
-        text = "&nbsp;"
-    if isinstance(text, list):
-        data += "<br />".join(text)
-    else:
-        data += text
-    data += "</td>\n"
-    return data
 
 def build_get_class(b):
     """
@@ -168,8 +141,9 @@ class Box:
         text = self.text
         if not text and self.show_idle:
             text = ["[idle]"]
-        return td(text, props, class_=self.class_)
-
+        props['class'] = self.class_
+        props['text'] = text;
+        return props    
 
 class HtmlResource(resource.Resource):
     # this is a cheap sort of template thingy

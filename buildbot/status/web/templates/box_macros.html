@@ -1,0 +1,12 @@
+{% macro box(text=[], comment=None) -%}
+
+{%- if comment -%}<!-- {{ comment }} -->{%- endif -%}
+<td class="{{ kwargs.class or kwargs.class_ or "" }}"
+  {%- for prop in ("align", "colspan", "rowspan", "border", "valign", "halign") -%}
+    {%- if prop in kwargs -%}
+      {{ prop }}="{{ kwargs[prop] }}"                 
+    {%- endif -%}
+  {%- endfor -%}>
+  {{- text|join("<br/>") -}}
+  </td>
+{% endmacro %}

@@ -8,9 +8,7 @@ from twisted.web import html, resource
 from buildbot import util
 from buildbot import version
 from buildbot.status.web.base import HtmlResource
-#from buildbot.status.web.base import Box, HtmlResource, IBox, ICurrentBox, \
-#     ITopBox, td, build_get_class, path_to_build, path_to_step, map_branches
-from buildbot.status.web.base import build_get_class
+from buildbot.status.web.base import build_get_class, path_to_builder, path_to_build
 
 # set grid_css to the full pathname of the css file
 if hasattr(sys, "frozen"):
@@ -69,11 +67,10 @@ class GridStatusMixin(object):
             text = [ 'building' ]
 
         name = build.getBuilder().getName()
-        number = build.getNumber()
 
         cxt = {}
         cxt['name'] = name
-        cxt['url'] = "builders/%s/builds/%d" % (name, number)
+        cxt['url'] = path_to_build(request, build)
         cxt['text'] = text
         cxt['class'] = build_get_class(build)
         return cxt
@@ -99,7 +96,7 @@ class GridStatusMixin(object):
         # instead. The only times it should show up in "current activity" is
         # when the builder is otherwise idle.
 
-        cxt = { 'url': urllib.quote(builder.getName(), safe=''),
+        cxt = { 'url': path_to_builder(request, builder),
                 'name': builder.getName(),
                 'state': state,
                 'n_pending': len(builder.getPendingBuilds()) }
