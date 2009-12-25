@@ -34,8 +34,10 @@ import jinja2
 
 
 class LastBuild(HtmlResource):
-    def body(self, request):
-        return "missing\n"
+    def context(self, request, context):
+        context['content'] = "missing"
+        template = request.site.buildbot_service.templates.get_template("empty.html")
+        return template.render(**cxt)
 
 def getLastNBuilds(status, numbuilds, builders=[], branches=[]):
     """Return a list with the last few Builds, sorted by start time.

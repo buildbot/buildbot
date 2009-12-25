@@ -286,8 +286,11 @@ class StaticHTML(HtmlResource):
         HtmlResource.__init__(self)
         self.bodyHTML = body
         self.title = title
-    def body(self, request):
-        return self.bodyHTML
+    def content(self, request, cxt):
+        cxt['content'] = self.bodyHTML
+        cxt['title'] = self.title
+        template = request.site.buildbot_service.templates.get_template("empty.html")
+        return template.render(**cxt)
 
 class DirectoryLister(static.DirectoryLister):
     """This variant of the static.DirectoryLister uses a template
