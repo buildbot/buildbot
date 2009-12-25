@@ -226,17 +226,17 @@ class Waterfall(BaseWeb, unittest.TestCase):
         config1 = base_config + """
 from buildbot.changes import mail
 c['change_source'] = mail.SyncmailMaildirSource('my-maildir')
-c['status'] = [html.Waterfall(http_port=0, robots_txt=%s)]
-""" % repr(self.robots_txt)
+c['status'] = [html.WebStatus(http_port=0)]
+"""
 
         self.master = m = ConfiguredMaster("test_web4", config1)
         m.startService()
-        port = self.find_waterfall(m).getPortnum()
+        port = self.find_webstatus(m).getPortnum()
         self.port = port
         # insert an event
         m.change_svc.addChange(Change("user", ["foo.c"], "comments"))
 
-        d = client.getPage("http://localhost:%d/" % port)
+        d = client.getPage("http://localhost:%d/waterfall" % port)
 
         def _check1(page):
             self.failUnless(page)
@@ -245,8 +245,7 @@ c['status'] = [html.Waterfall(http_port=0, robots_txt=%s)]
             TZ = time.tzname[time.localtime()[-1]]
             self.failUnlessIn("(%s)" % TZ, page)
 
-            # phase=0 is really for debugging the waterfall layout
-            return client.getPage("http://localhost:%d/?phase=0" % self.port)
+            return client.getPage("http://localhost:%d/waterfall" % self.port)
         d.addCallback(_check1)
 
         def _check2(page):
@@ -260,14 +259,7 @@ c['status'] = [html.Waterfall(http_port=0, robots_txt=%s)]
             self.failUnlessIn("<li>Syncmail mailing list in maildir " +
                               "my-maildir</li>", changes)
 
-            return client.getPage("http://localhost:%d/robots.txt" % self.port)
         d.addCallback(_check3)
-
-        def _check4(robotstxt):
-            # needed on win32
-            robotstxt = robotstxt.replace('\r\n', '\n')
-            self.failUnless(robotstxt == self.robots_txt_contents)
-        d.addCallback(_check4)
 
         return d
 
@@ -298,11 +290,11 @@ class WaterfallSteps(unittest.TestCase):
                 return name
         req = FakeRequest()
         box = waterfall.IBox(s).getBox(req)
-        td = box.td()
+        text = "\n".join(box.td()['text'])
         e1 = '[<a href="http://coverage.example.org/target" class="BuildStep external">coverage</a>]'
-        self.failUnlessSubstring(e1, td)
+        self.failUnlessSubstring(e1, text)
         e2 = '[<a href="http://coverage.example.org/icon.png" class="BuildStep external">icon</a>]'
-        self.failUnlessSubstring(e2, td)
+        self.failUnlessSubstring(e2, text)
 
 
 

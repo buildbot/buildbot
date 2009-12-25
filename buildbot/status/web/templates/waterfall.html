@@ -1,8 +1,5 @@
 {% extends "layout.html" %}
-{% block head %}
-  {{ super() }}
-  <meta http-equiv="refresh" content="{{refresh}}"/>
-{% endblock %}
+{% from "box_macros.html" import box %}
 
 {% block content %}
 <table border="0" cellspacing="0">
@@ -44,7 +41,16 @@
 {% endfor %}
 </tr>
 
-{{ waterfall }}
+{# waterfall contents goes here #}    
+{% for i in range(gridlen) -%}
+  <tr>
+  {% for strip in grid -%}        
+    {%- if strip[i] -%}{{ box(**strip[i]) }}
+    {%- elif no_bubble -%}{{ box() }}
+    {%- endif -%}
+  {%- endfor -%}
+  </tr>
+{% endfor %}
 
 </table>
 

@@ -13,7 +13,7 @@ from buildbot import version
 from buildbot.status import builder
 
 from buildbot.status.web.base import Box, HtmlResource, IBox, ICurrentBox, \
-     ITopBox, td, build_get_class, path_to_build, path_to_step, map_branches
+     ITopBox, build_get_class, path_to_build, path_to_step, map_branches
 
 
 
@@ -268,7 +268,7 @@ class WaterfallHelp(HtmlResource):
             times.insert(0, (current_reload_time, current_reload_time) )
 
         cxt['times'] = times
-        cxt['current_reload_time'] = current_reload_time        
+        cxt['current_reload_time'] = current_reload_time   
 
         template = request.site.buildbot_service.templates.get_template("waterfallhelp.html")
         return template.render(**cxt)
@@ -388,8 +388,8 @@ class WaterfallStatusResource(HtmlResource):
                        'status_class': current_box.class_,                       
                         })
 
-        ctx['waterfall'] = self.phase2(request, changeNames + builderNames, timestamps, eventGrid,
-                  sourceEvents)
+        ctx.update(self.phase2(request, changeNames + builderNames, timestamps, eventGrid,
+                  sourceEvents))
 
         def with_args(req, remove_args=[], new_args=[], new_path=None):
             # sigh, nevow makes this sort of manipulation easier
@@ -579,9 +579,10 @@ class WaterfallStatusResource(HtmlResource):
     
     def phase2(self, request, sourceNames, timestamps, eventGrid,
                sourceEvents):
-        data = ""
+
         if not timestamps:
-            return data
+            return dict(grid=[], gridlen=0)
+        
         # first pass: figure out the height of the chunks, populate grid
         grid = []
         for i in range(1+len(sourceNames)):
@@ -692,21 +693,12 @@ class WaterfallStatusResource(HtmlResource):
                             strip[-i+1] = None
                         else:
                             strip[-i].parms['rowspan'] = 1
-        # third pass: render the HTML table
+
+        # convert to dicts
         for i in range(gridlen):
-            data += " <tr>\n";
             for strip in grid:
-                b = strip[i]
-                if b:
-                    # convert data to a unicode string, whacking any non-ASCII characters it might contain
-                    s = b.td()
-                    if isinstance(s, unicode):
-                        s = s.encode("utf-8", "replace")
-                    data += s
-                else:
-                    if noBubble:
-                        data += td([])
-                # Nones are left empty, rowspan should make it all fit
-            data += " </tr>\n"
-        return data
+                if strip[i]:
+                    strip[i] = strip[i].td()
+
+        return dict(grid=grid, gridlen=gridlen, no_bubble=noBubble)
 

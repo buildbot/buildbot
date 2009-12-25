@@ -1,5 +1,8 @@
+{% extends 'layout.html' %}
 {% import 'forms.html' as forms %}
+{% from "box_macros.html" import box %}
 
+{% block content %}
 <h1>Latest builds: {{ branches|join(', ')|e }}</h1>
 
 <table>
@@ -14,9 +17,11 @@
   {% else %}
     <td class="LastBuild box">no build</td>
   {% endif %}  
-  {{ b.current_box }}
+  {{ box(**b.current_box) }}
 {% endfor %}
 </table>
 
 {% if stop_url %}{{ forms.stop(stop_url, use_user_passwd, True, 'Builds') }}{% endif %}
 {% if force_url %}{{ forms.force_build(force_url, use_user_passwd, True) }}{% endif %}
+
+{% endblock %}

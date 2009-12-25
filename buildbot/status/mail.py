@@ -28,122 +28,6 @@ if sys.version_info[:3] < (2,4,0):
 
 VALID_EMAIL = re.compile("[a-zA-Z0-9\.\_\%\-\+]+@[a-zA-Z0-9\.\_\%\-]+.[a-zA-Z]{2,6}")
 
-def message(attrs):
-    """Generate a buildbot mail message and return a tuple of message text
-    and type.
-
-    This function can be replaced using the customMesg variable in MailNotifier.
-    A message function will *always* get a dictionary of attributes with
-    the following values:
-
-      builderName - (str) Name of the builder that generated this event.
-      
-      projectName - (str) Name of the project.
-      
-      mode - (str) Mode set in MailNotifier. (failing, passing, problem, change).
-      
-      result - (str) Builder result as a string. 'success', 'warnings',
-               'failure', 'skipped', or 'exception'
-               
-      buildURL - (str) URL to build page.
-      
-      buildbotURL - (str) URL to buildbot main page.
-      
-      buildText - (str) Build text from build.getText().
-
-      buildProperties - (Properties) Mapping of property names to values
-      
-      slavename - (str) Slavename.
-      
-      reason - (str) Build reason from build.getReason().
-      
-      responsibleUsers - (List of str) List of responsible users.
-      
-      branch - (str) Name of branch used. If no SourceStamp exists branch
-               is an empty string.
-               
-      revision - (str) Name of revision used. If no SourceStamp exists revision
-                 is an empty string.
-                 
-      patch - (str) Name of patch used. If no SourceStamp exists patch
-              is an empty string.
-
-      changes - (list of objs) List of change objects from SourceStamp. A change
-                object has the following useful information:
-                
-                who - who made this change
-                revision - what VC revision is this change
-                branch - on what branch did this change occur
-                when - when did this change occur
-                files - what files were affected in this change
-                comments - comments reguarding the change.
-
-                The functions asText and asHTML return a list of strings with
-                the above information formatted. 
-              
-      logs - (List of Tuples) List of tuples that contain the log name, log url
-             and log contents as a list of strings.
-    """
-    text = ""
-    if attrs['mode'] == "all":
-        text += "The Buildbot has finished a build"
-    elif attrs['mode'] == "failing":
-        text += "The Buildbot has detected a failed build"
-    elif attrs['mode'] == "passing":
-        text += "The Buildbot has detected a passing build"
-    elif attrs['mode'] == "change" and attrs['result'] == 'success':
-        text += "The Buildbot has detected a restored build"
-    else:    
-        text += "The Buildbot has detected a new failure"
-    text += " of %s on %s.\n" % (attrs['builderName'], attrs['projectName'])
-    if attrs['buildURL']:
-        text += "Full details are available at:\n %s\n" % attrs['buildURL']
-    text += "\n"
-
-    if attrs['buildbotURL']:
-        text += "Buildbot URL: %s\n\n" % urllib.quote(attrs['buildbotURL'], '/:')
-
-    text += "Buildslave for this Build: %s\n\n" % attrs['slavename']
-    text += "Build Reason: %s\n" % attrs['reason']
-
-    #
-    # No source stamp
-    #
-    source = ""
-    if attrs['branch']:
-        source += "[branch %s] " % attrs['branch']
-    if attrs['revision']:
-        source += str(attrs['revision'])
-    else:
-        source += "HEAD"
-    if attrs['patch']:
-        source += " (plus patch)"
-
-    text += "Build Source Stamp: %s\n" % source
-
-    text += "Blamelist: %s\n" % ",".join(attrs['responsibleUsers'])
-
-    text += "\n"
-
-    t = attrs['buildText']
-    if t:
-        t = ": " + " ".join(t)
-    else:
-        t = ""
-
-    if attrs['result'] == 'success':
-        text += "Build succeeded!\n"
-    elif attrs['result'] == 'warnings':
-        text += "Build Had Warnings%s\n" % t
-    else:
-        text += "BUILD FAILED%s\n" % t
-
-    text += "\n"
-    text += "sincerely,\n"
-    text += " -The Buildbot\n"
-    text += "\n"
-    return (text, 'plain')
-
 class Domain(util.ComparableMixin):
     implements(interfaces.IEmailLookup)
     compare_attrs = ["domain"]
@@ -183,14 +67,14 @@ class MailNotifier(base.StatusReceiverMultiService):
     compare_attrs = ["extraRecipients", "lookup", "fromaddr", "mode",
                      "categories", "builders", "addLogs", "relayhost",
                      "subject", "sendToInterestedUsers", "customMesg",
-                     "extraHeaders"]
+                     "messageFormatter", "extraHeaders"]
 
     def __init__(self, fromaddr, mode="all", categories=None, builders=None,
                  addLogs=False, relayhost="localhost",
                  subject="buildbot %(result)s in %(projectName)s on %(builder)s",
                  lookup=None, extraRecipients=[],
-                 sendToInterestedUsers=True, customMesg=message,
-                 extraHeaders=None, addPatch=True):
+                 sendToInterestedUsers=True, customMesg=None,
+                 messageFormatter=None, extraHeaders=None, addPatch=True):
         """
         @type  fromaddr: string
         @param fromaddr: the email address to be used in the 'From' header.
@@ -261,58 +145,12 @@ class MailNotifier(base.StatusReceiverMultiService):
                           match their twistedmatrix.com account names.
                           
         @type  customMesg: func
-        @param customMesg: A function that returns a tuple containing the text of
-                           a custom message and its type. This function takes
-                           the dict attrs which has the following values:
+        @param customMesg: (this function is deprecated)
 
-                           builderName - (str) Name of the builder that generated this event.
-      
-                           projectName - (str) Name of the project.
-                           
-                           mode - (str) Mode set in MailNotifier. (failing, passing, problem, change).
-      
-                           result - (str) Builder result as a string. 'success', 'warnings',
-                                    'failure', 'skipped', or 'exception'
-               
-                           buildURL - (str) URL to build page.
-      
-                           buildbotURL - (str) URL to buildbot main page.
-      
-                           buildText - (str) Build text from build.getText().
+        @type messageFormatter: func
+        @param messageFormatter: function taking (name, build, result) and returning
+                a tuple (body, type)
 
-                           buildProperties - (Properties instance) Mapping of
-                                             property names to values
-      
-                           slavename - (str) Slavename.
-      
-                           reason - (str) Build reason from build.getReason().
-      
-                           responsibleUsers - (List of str) List of responsible users.
-      
-                           branch - (str) Name of branch used. If no SourceStamp exists branch
-                                    is an empty string.
-               
-                           revision - (str) Name of revision used. If no SourceStamp exists revision
-                                      is an empty string.
-                 
-                           patch - (str) Name of patch used. If no SourceStamp exists patch
-                                   is an empty string.
-
-                           changes - (list of objs) List of change objects from SourceStamp. A change
-                                     object has the following useful information:
-                
-                                     who - who made this change
-                                     revision - what VC revision is this change
-                                     branch - on what branch did this change occur
-                                     when - when did this change occur
-                                     files - what files were affected in this change
-                                     comments - comments reguarding the change.
-
-                                     The functions asText and asHTML return a list of strings with
-                                     the above information formatted. 
-
-                           logs - (List of Tuples) List of tuples that contain the log name, log url,
-                                  and log contents as a list of strings.
         @type  extraHeaders: dict
         @param extraHeaders: A dict of extra headers to add to the mail. It's
                              best to avoid putting 'To', 'From', 'Date',
@@ -341,17 +179,25 @@ class MailNotifier(base.StatusReceiverMultiService):
             assert interfaces.IEmailLookup.providedBy(lookup)
         self.lookup = lookup
         self.customMesg = customMesg
+        self.messageFormatter = messageFormatter
         if extraHeaders:
             assert isinstance(extraHeaders, dict)
         self.extraHeaders = extraHeaders
         self.addPatch = addPatch
         self.watched = []
-        self.status = None
+        self.master_status = None
 
         # you should either limit on builders or categories, not both
         if self.builders != None and self.categories != None:
             twlog.err("Please specify only builders to ignore or categories to include")
             raise # FIXME: the asserts above do not raise some Exception either
+
+        if customMesg and messageFormatter:
+            twlog.err("Specify only one of customMesg and messageFormatter")
+            self.customMesg = None
+
+        if customMesg:
+            twlog.msg("customMesg is deprecated; please use messageFormatter instead")
 
     def setServiceParent(self, parent):
         """
@@ -361,11 +207,11 @@ class MailNotifier(base.StatusReceiverMultiService):
         self.setup()
 
     def setup(self):
-        self.status = self.parent.getStatus()
-        self.status.subscribe(self)
+        self.master_status = self.parent.getStatus()
+        self.master_status.subscribe(self)
 
     def disownServiceParent(self):
-        self.status.unsubscribe(self)
+        self.master_status.unsubscribe(self)
         for w in self.watched:
             w.unsubscribe(self)
         return base.StatusReceiverMultiService.disownServiceParent(self)
@@ -420,7 +266,7 @@ class MailNotifier(base.StatusReceiverMultiService):
         # rearrange this.
         return self.buildMessage(name, build, results)
 
-    def buildMessage(self, name, build, results):
+    def getCustomMesgData(self, mode, name, build, results, master_status):
         #
         # logs is a list of tuples that contain the log
         # name, log url, and the log contents as a list of strings.
@@ -432,18 +278,18 @@ class MailNotifier(base.StatusReceiverMultiService):
             logStatus, dummy = logStep.getResults()
             logName = logf.getName()
             logs.append(('%s.%s' % (stepName, logName),
-                         '%s/steps/%s/logs/%s' % (self.status.getURLForThing(build), stepName, logName),
+                         '%s/steps/%s/logs/%s' % (master_status.getURLForThing(build), stepName, logName),
                          logf.getText().splitlines(),
                          logStatus))
 
         properties = build.getProperties()
                 
         attrs = {'builderName': name,
-                 'projectName': self.status.getProjectName(),
-                 'mode': self.mode,
+                 'projectName': master_status.getProjectName(),
+                 'mode': mode,
                  'result': Results[results],
-                 'buildURL': self.status.getURLForThing(build),
-                 'buildbotURL': self.status.getBuildbotURL(),
+                 'buildURL': master_status.getURLForThing(build),
+                 'buildbotURL': master_status.getBuildbotURL(),
                  'buildText': build.getText(),
                  'buildProperties': properties,
                  'slavename': build.getSlavename(),
@@ -462,11 +308,86 @@ class MailNotifier(base.StatusReceiverMultiService):
             attrs['patch'] = ss.patch
             attrs['changes'] = ss.changes[:]
 
-        text, type = self.customMesg(attrs)
+        return attrs
+
+    def defaultMessage(self, mode, name, build, results, master_status):
+        """Generate a buildbot mail message and return a tuple of message text
+        and type."""
+        result = Results[results]
+
+        text = ""
+        if mode == "all":
+            text += "The Buildbot has finished a build"
+        elif mode == "failing":
+            text += "The Buildbot has detected a failed build"
+        elif mode == "passing":
+            text += "The Buildbot has detected a passing build"
+        elif mode == "change" and result == 'success':
+            text += "The Buildbot has detected a restored build"
+        else:    
+            text += "The Buildbot has detected a new failure"
+        text += " of %s on %s.\n" % (name, master_status.getProjectName())
+        if master_status.getURLForThing(build):
+            text += "Full details are available at:\n %s\n" % master_status.getURLForThing(build)
+        text += "\n"
+
+        if master_status.getBuildbotURL():
+            text += "Buildbot URL: %s\n\n" % urllib.quote(master_status.getBuildbotURL(), '/:')
+
+        text += "Buildslave for this Build: %s\n\n" % build.getSlavename()
+        text += "Build Reason: %s\n" % build.getReason()
+
+        source = ""
+        ss = build.getSourceStamp()
+        if ss and ss.branch:
+            source += "[branch %s] " % ss.branch
+        if ss and ss.revision:
+            source += str(ss.revision)
+        else:
+            source += "HEAD"
+        if ss and ss.patch:
+            source += " (plus patch)"
+
+        text += "Build Source Stamp: %s\n" % source
+
+        text += "Blamelist: %s\n" % ",".join(build.getResponsibleUsers())
+
+        text += "\n"
+
+        t = build.getText()
+        if t:
+            t = ": " + " ".join(t)
+        else:
+            t = ""
+
+        if result == 'success':
+            text += "Build succeeded!\n"
+        elif result == 'warnings':
+            text += "Build Had Warnings%s\n" % t
+        else:
+            text += "BUILD FAILED%s\n" % t
+
+        text += "\n"
+        text += "sincerely,\n"
+        text += " -The Buildbot\n"
+        text += "\n"
+        return (text, 'plain')
+
+    def buildMessage(self, name, build, results):
+        if self.customMesg:
+            # the customMesg stuff can be *huge*, so we prefer not to load it
+            attrs = self.getCustomMesgData(self.mode, name, build, results, self.master_status)
+            text, type = self.customMesg(attrs)
+        elif self.messageFormatter:
+            text, type = self.messageFormatter(self.mode, name, build, results, self.master_status)
+        else:
+            text, type = self.defaultMessage(self.mode, name, build, results, self.master_status)
+
         assert type in ('plain', 'html'), "'%s' message type must be 'plain' or 'html'." % type
 
         haveAttachments = False
-        if (attrs['patch'] and self.addPatch) or self.addLogs:
+        ss = build.getSourceStamp()
+        if (ss and ss.patch and self.addPatch) or self.addLogs:
             haveAttachments = True
             if not canDoAttachments:
                 twlog.msg("warning: I want to send mail with attachments, "
@@ -483,15 +404,16 @@ class MailNotifier(base.StatusReceiverMultiService):
             m.set_type("text/%s" % type)
 
         m['Date'] = formatdate(localtime=True)
-        m['Subject'] = self.subject % { 'result': attrs['result'],
-                                        'projectName': attrs['projectName'],
-                                        'builder': attrs['builderName'],
+        m['Subject'] = self.subject % { 'result': Results[results],
+                                        'projectName': self.master_status.getProjectName(),
+                                        'builder': name,
                                         }
         m['From'] = self.fromaddr
         # m['To'] is added later
 
-        if attrs['patch'] and self.addPatch:
-            a = MIMEText(attrs['patch'][1])
+        if ss and ss.patch and self.addPatch:
+            patch = ss.patch
+            a = MIMEText(patch[1])
             a.add_header('Content-Disposition', "attachment",
                          filename="source patch")
             m.attach(a)

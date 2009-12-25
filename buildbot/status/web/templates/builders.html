@@ -1,5 +1,7 @@
 {% extends "layout.html" %}
+
 {% block content %}
+
 <h1>Builders</h1>
 
 <ol>
@@ -7,4 +9,5 @@
   <li><a href="{{ b.link }}">{{ b.name|e }}</a></li>
 {% endfor %}
 </ol>
+
 {% endblock %}

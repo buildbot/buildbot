@@ -8131,59 +8131,28 @@ mn = MailNotifier(fromaddr="buildbot@@example.org",
                   extraRecipients=['listaddr@@example.org'])
 @end example
 
-In some cases it is desirable to have different information then what
-is provided in a standard MailNotifier message. For this purpose
-MailNotifier provides the argument customMesg (a function) which allows
-for the creation of messages with unique content.
+In some cases it is desirable to have different information then what is
+provided in a standard MailNotifier message. For this purpose MailNotifier
+provides the argument @code{messageFormatter} (a function) which allows for the
+creation of messages with unique content.
 
-For example it can be useful to display the last few lines of a log file
-and recent changes when a builder fails:
+For example, if only short emails are desired (e.g., for delivery to phones)
 
 @example
-def message(attrs):
+from buildbot.status.builder Results
+def messageFormatter(name, build, results, master_status):
+    result = Results[results]
+
     logLines = 10
     text = list()
-    text.append("STATUS: %s" % attrs['result'].title())
-    text.append("")
-    text.extend([c.asText() for c in attrs['changes']])
-    text.append("")
-    name, url, lines, logstatus = attrs['logs'][-1]
-    text.append("Last %d lines of '%s':" % (logLines, name))
-    text.extend(["\t%s\n" % line for line in lines[len(lines)-logLines:]])
-    text.append("")
-    text.append("-buildbot")
+    text.append("STATUS: %s" % result.title())
     return ("\n".join(text), 'plain')
 
 mn = MailNotifier(fromaddr="buildbot@@example.org",
                   sendToInterestedUsers=False,
                   mode='problem',
                   extraRecipients=['listaddr@@example.org'],
-                  customMesg=message)
-@end example
-
-A customMesg function takes a single dict argument (see below) and returns a
-tuple of strings. The first string is the complete text of the message and the
-second is the message type ('plain' or 'html'). The 'html' type should be used
-when generating an HTML message:
-
-@example
-def message(attrs):
-    logLines = 10
-    text = list()
-    text.append('<h4>Build status %s.</h4>' % (attrs['result'].title()))
-    if attrs['changes']:
-        text.append('<h4>Recent Changes:</h4>')
-        text.extend([c.asHTML() for c in attrs['changes']])
-    name, url, lines, logstatus = attrs['logs'][-1]
-    text.append('<h4>Last %d lines of "%s":</h4>' % (logLines, name))
-    text.append('<p>')
-    text.append('<br>'.join([line for line in lines[len(lines)-logLines:]]))
-    text.append('</p>')
-    text.append('<br><br>')
-    text.append('Full log at: %s' % url)
-    text.append('<br><br>')
-    text.append('<b>-buildbot</b>')
-    return ('\n'.join(text), 'html')
+                  messageFormatter=messageFormatter)
 @end example
 
 @heading MailNotifier arguments
@@ -8257,47 +8226,63 @@ lookup='twistedmatrix.com' will allow mail to be sent to all
 developers whose SVN usernames match their twistedmatrix.com account
 names. See buildbot/status/mail.py for more details.
 
-@item customMesg
-This is a optional function that can be used to generate a custom mail
-message. The customMesg function takes a single dict and must return a
-tuple containing the message text and type ('html' or 'plain'). Below is a list
-of availale keys in the dict passed to customMesg:
+@item messageFormatter
 
-@table @code
-@item builderName
-(str) Name of the builder that generated this event.
-@item projectName
-(str) Name of the project.
-@item mode
-(str) Mode set in MailNotifier. (failing, passing, problem).
-@item result
-(str) Builder result as a string. 'success', 'warnings', 'failure', 'skipped', or 'exception'
-@item buildURL
-(str) URL to build page.
-@item buildbotURL
-(str) URL to buildbot main page.
-@item buildText
-(str) Build text from build.getText().
-@item buildProperties
-(Properties instance) Mapping of property names to values.
-@item slavename
-(str) Slavename.
-@item reason
-(str) Build reason from build.getReason().
-@item responsibleUsers
-(List of str) List of responsible users.
-@item branch
-(str) Name of branch used. If no SourceStamp exists branch
-is an empty string.
-@item revision
-(str) Name of revision used. If no SourceStamp exists revision
-is an empty string.
-@item patch
-(str) Name of patch used. If no SourceStamp exists patch
-is an empty string.
-@item changes
-(list of objs) List of change objects from SourceStamp. A change
-object has the following useful information:
+This is a optional function that can be used to generate a custom mail message.
+A @code{messageFormatter} function takes the mail mode (@code{mode}), builder
+name (@code{name}), the build status (@code{build}), the result code
+(@code{results}), and the BuildMaster status (@code{master_status}).  It
+returns a tuple of strings. The first string is the complete text of the
+message and the second is the message type ('plain' or 'html'). The 'html' type
+should be used when generating an HTML message.
+
+@item extraHeaders
+(dictionary) A dictionary containing key/value pairs of extra headers to add
+to sent e-mails. Both the keys and the values may be a WithProperties instance.
+
+@end table
+
+As a help to those writing @code{messageFormatter} functions, the following
+table describes how to get some useful pieces of information from the various
+status objects:
+
+@table @bullet
+@item Name of the builder that generated this event
+@code{name}
+@item Name of the project
+@code{master_status.getProjectName()}
+@item MailNotifier mode
+@code{mode} (one of @code{all, failing, problem, change, passing})
+@item Builder result as a string
+@example
+from buildbot.status.builder Results
+result_str = Results[results]
+# one of 'success', 'warnings', 'failure', 'skipped', or 'exception'
+@end example
+@item URL to build page
+@code{master_status.getURLForThing(build)}
+@item URL to buildbot main page.
+@code{master_status.getBuildbotURL()}
+@item Build text
+@code{build.getText()}
+@item Mapping of property names to values
+@code{build.getProperties()} (a @code{Properties} instance)
+@item Slave name
+@code{build.getSlavename()}
+@item Build reason (from a forced build)
+@code{build.getReason()}
+@item List of responsible users
+@code{build.getResponsibleUsers()}
+@item Source information (only valid if ss is not None)
+@example
+ss = build.getSourceStamp()
+if ss:
+    branch = ss.branch
+    revision = ss.revision
+    patch = ss.patch
+    changes = ss.changes # list
+@end example
+A change object has the following useful information:
 @table @code
 @item who
 (str) who made this change
@@ -8312,18 +8297,19 @@ object has the following useful information:
 @item comments
 (str) comments reguarding the change.
 @end table
-The functions asText and asHTML return a list of strings with
+The @code{Change} methods asText and asHTML return a list of strings with
 the above information formatted.
-@item logs
-(List of Tuples) List of tuples where each tuple contains the log name, log url,
-log contents as a list of strings, and the status of the corresponding build step,
-i.e. SUCCESS, WARNING, or FAILURE.
-@end table
-
-@item extraHeaders
-(dictionary) A dictionary containing key/value pairs of extra headers to add
-to sent e-mails. Both the keys and the values may be a WithProperties instance.
-
+@item Log information
+@example
+logs = list()
+for logf in build.getLogs():
+    logStep = logf.getStep()
+    stepName = logStep.getName()
+    logStatus, dummy = logStep.getResults()
+    logName = logf.getName()
+    log_url = '%s/steps/%s/logs/%s' % (master_status.getURLForThing(build), stepName, logName)
+    log_body = logf.getText().splitlines() # note: can be VERY LARGE
+@end example
 @end table
 
 @node IRC Bot, PBListener, MailNotifier, Status Delivery

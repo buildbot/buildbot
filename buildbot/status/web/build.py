@@ -27,14 +27,10 @@ class StatusResourceBuild(HtmlResource):
                 (html.escape(self.build_status.getBuilder().getName()),
                  self.build_status.getNumber()))
 
-    def body(self, req):
+    def content(self, req, cxt):
         b = self.build_status
         status = self.getStatus(req)
-        projectName = status.getProjectName()
 
-        cxt = {}
-        cxt['path_to_root'] = self.path_to_root(req)
-        cxt['project_name'] = projectName
         cxt['b'] = b
         cxt['path_to_builder'] = path_to_builder(req, b.getBuilder())
         
@@ -135,9 +131,7 @@ class StatusResourceBuild(HtmlResource):
             cxt['using_user_passwd'] = self.isUsingUserPasswd(req)
 
         template = req.site.buildbot_service.templates.get_template("build.html")
-        data = template.render(**cxt)
-        data += self.footer(req)
-        return data
+        return template.render(**cxt)
 
     def stop(self, req):
         if self.isUsingUserPasswd(req):

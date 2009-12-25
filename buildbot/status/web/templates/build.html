@@ -1,10 +1,11 @@
+{% extends "layout.html" %}
 {% import 'forms.html' as forms %}
 
-<div class="title"><a href="{{ path_to_root }}">{{ project_name }}</a></div>
+{% block content %}
 
 <h1>
-<a href="{{ path_to_builder }}">Builder {{ b.getBuilder().getName() }}</a>
-Build #{{ b.getNumber() }}
+Builder <a href="{{ path_to_builder }}">{{ b.getBuilder().getName() }}</a>
+Build #{{ b.getNumber() }}:
 </h1>
 
 {% if not b.isFinished() %}
@@ -114,7 +115,7 @@ Build #{{ b.getNumber() }}
 <tr><th>Name</th><th>Value</th><th>Source</th></tr>
 
 {% for p in properties %}
-  <tr><td>{{ p.name|e }}</td>
+  <tr><td align="left">{{ p.name|e }}</td>
   {% if p.short_value %}
     <td>{{ p.short_value|e }} .. [property value too long]</td>
   {% else %}
@@ -187,3 +188,5 @@ Build #{{ b.getNumber() }}
     </form>
   {% endif %}
 {% endif %}
+
+{% endblock %}

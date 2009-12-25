@@ -9,9 +9,11 @@ from buildbot.status.web.base import HtmlResource, StaticHTML, IBox, Box
 # /changes/NN
 class ChangesResource(HtmlResource):
 
-    def body(self, req):
+    def content(self, req, cxt):
+        cxt['sources'] = self.getStatus(req).getChangeSources()
         template = req.site.buildbot_service.templates.get_template("change_sources.html")
-        return template.render(sources = self.getStatus(req).getChangeSources()) + self.footer(req)
+        return template.render(**cxt)
+    
 
     def getChild(self, path, req):
         num = int(path)

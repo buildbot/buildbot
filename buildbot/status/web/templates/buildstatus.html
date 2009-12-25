@@ -1,11 +1,12 @@
 {% extends "layout.html" %}
+{% from "box_macros.html" import box %}
 
 {% block content %}
 <table>
   {% for r in rows %}
-    <tr>{{ r }}</tr>
+    <tr>{{ box(r) }}</tr>
   {% endfor %}
 
-  <tr>{{ build }}</tr>
+  <tr>{{ box(build) }}</tr>
 </table>
 {% endblock %}

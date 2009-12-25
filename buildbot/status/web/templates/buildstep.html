@@ -1,3 +1,7 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
 <h1>BuildStep 
   <a href="{{ builder_link }}">{{ b.getBuilder().getName() }}</a> 
   <a href="{{ build_link }}">{{ b.getNumber() }}</a>: {{ s.getName() }}
@@ -47,3 +51,4 @@
 {% endfor %}
 </ul>
   
+{% endblock %}
