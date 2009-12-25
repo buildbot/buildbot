@@ -1,9 +1,4 @@
-
 from buildbot.status.web.base import HtmlResource
-import buildbot
-import twisted
-import jinja2
-import time, sys
 
 class RootPage(HtmlResource):
     title = "Buildbot"

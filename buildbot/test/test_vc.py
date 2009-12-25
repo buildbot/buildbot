@@ -2243,7 +2243,6 @@ class Bazaar(Arch):
         self.serveHTTP()
 
         # break the repository server
-        from twisted.web import static
         self.site.resource = static.Data("Sorry, repository is offline",
                                          "text/plain")
         # and arrange to fix it again in 5 seconds, while the test is
@@ -2275,7 +2274,6 @@ class Bazaar(Arch):
         self.serveHTTP()
 
         # break the repository server, and leave it broken
-        from twisted.web import static
         self.site.resource = static.Data("Sorry, repository is offline",
                                          "text/plain")
 
@@ -2466,7 +2464,6 @@ class Bzr(VCBase, unittest.TestCase):
         self.serveHTTP()
 
         # break the repository server
-        from twisted.web import static
         self.site.resource = static.Data("Sorry, repository is offline",
                                          "text/plain")
         # and arrange to fix it again in 5 seconds, while the test is
@@ -2496,7 +2493,6 @@ class Bzr(VCBase, unittest.TestCase):
         self.serveHTTP()
 
         # break the repository server, and leave it broken
-        from twisted.web import static
         self.site.resource = static.Data("Sorry, repository is offline",
                                          "text/plain")
 

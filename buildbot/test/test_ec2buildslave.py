@@ -2,7 +2,6 @@
 
 import os
 import sys
-import StringIO
 import textwrap
 
 from twisted.trial import unittest
@@ -92,9 +91,9 @@ class Image:
         return Stub(name='reservation',
                     instances=[Instance(self.data, self.id, **kwargs)])
 
-    def create(klass, data, ami, owner, location):
+    def create(cls, self, data, ami, owner, location):
         assert ami not in data.images
-        self = klass(data, ami, owner, location)
+        self = cls(data, ami, owner, location)
         data.images[ami] = self
         return self
     create = classmethod(create)
@@ -258,7 +257,7 @@ class Mixin(RunMixin):
     def tearDown(self):
         try:
             import boto
-            import boto.exception
+            import boto.exception #@UnusedImport
         except ImportError:
             pass
         else:

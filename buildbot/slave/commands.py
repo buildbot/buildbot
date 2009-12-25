@@ -564,7 +564,7 @@ class ShellCommand:
         self.elapsedTime = time.time() - self.startTime
         log.msg("command finished with signal %s, exit code %s, elapsedTime: %0.6f" % (sig,rc,self.elapsedTime))
         for w in self.logFileWatchers:
-             # this will send the final updates
+            # this will send the final updates
             w.stop()
         if sig is not None:
             rc = -1
@@ -1831,8 +1831,8 @@ class SVN(SourceBase):
         if args.get('extra_args', None) is not None:
             self.svn_args.extend(args['extra_args'])
 
-	if args.has_key('depth'):
-	    self.svn_args.extend(["--depth",args['depth']])
+        if args.has_key('depth'):
+            self.svn_args.extend(["--depth",args['depth']])
 
     def _dovccmd(self, command, args, rootdir=None, cb=None, **kwargs):
         if rootdir is None:
@@ -1879,7 +1879,7 @@ class SVN(SourceBase):
         Use the Force instead and delete everything that shows up in status."""
         args = ['--xml']
         if self.ignore_ignores:
-          args.append('--no-ignore')
+            args.append('--no-ignore')
         return self._dovccmd('status', args, keepStdout=True, sendStdout=False,
                              cb=self._purgeAndUpdate2)
 

@@ -2,7 +2,7 @@
 
 from twisted.trial import unittest
 
-from buildbot.changes.changes import *
+from buildbot.changes.changes import Change, TestChangeMaster
 
 class _DummyParent:
     def __init__(self):

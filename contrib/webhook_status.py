@@ -3,7 +3,6 @@ import urllib
 from twisted.python import log
 from twisted.internet import reactor
 from twisted.web import client, error
-from twisted.application import service
 
 from buildbot import status
 

@@ -25,7 +25,6 @@
 
 import os
 import re
-import sys
 import time
 from twisted.web import resource
 from buildbot.status.builder import FAILURE

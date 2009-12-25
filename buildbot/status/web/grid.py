@@ -1,12 +1,7 @@
 from __future__ import generators
 
-import sys, time, os.path
-import urllib
+import sys, os.path
 
-from twisted.web import html, resource
-
-from buildbot import util
-from buildbot import version
 from buildbot.status.web.base import HtmlResource
 from buildbot.status.web.base import build_get_class, path_to_builder, path_to_build
 

@@ -33,7 +33,6 @@ from twisted.spread import pb
 from twisted.cred import credentials
 from twisted.internet import reactor
 
-from buildbot.scripts import runner
 from optparse import OptionParser
 
 # Modify this to fit your setup, or pass in --master server:host on the

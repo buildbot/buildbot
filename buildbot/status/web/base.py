@@ -1,12 +1,12 @@
 
 import urlparse, urllib, time, re
 from zope.interface import Interface
-from twisted.web import html, resource, static
+from twisted.web import resource, static
 from twisted.python import log
 from buildbot.status import builder
 from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE, SKIPPED, EXCEPTION
 from buildbot import version, util
-import sys, os, cgi
+import os, cgi
 from buildbot.process.properties import Properties
 
 class ITopBox(Interface):

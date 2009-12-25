@@ -12,9 +12,7 @@ repository for the user who initiated the build on the buildslave.
 import tempfile
 import logging
 import re
-import os
 import sys
-import commands
 import traceback
 from twisted.web import server, resource
 from twisted.internet import reactor

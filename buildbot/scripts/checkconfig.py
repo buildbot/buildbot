@@ -3,7 +3,6 @@ import os
 from shutil import copy, rmtree
 from tempfile import mkdtemp
 from os.path import isfile
-import traceback
 
 from buildbot import master
 

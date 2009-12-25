@@ -2,16 +2,13 @@
 
 """Based on the fakechanges.py contrib script"""
 
-import sys
-import commands
-import random
 import os.path
 import time
-import MySQLdb
+import MySQLdb #@UnresolvedImport
 
 from twisted.spread import pb
 from twisted.cred import credentials
-from twisted.internet import reactor, task
+from twisted.internet import reactor
 from twisted.python import log
 
 

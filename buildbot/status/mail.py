@@ -20,7 +20,7 @@ from twisted.python import log as twlog
 
 from buildbot import interfaces, util
 from buildbot.status import base
-from buildbot.status.builder import FAILURE, SUCCESS, WARNINGS, Results
+from buildbot.status.builder import FAILURE, SUCCESS, Results
 
 import sys
 if sys.version_info[:3] < (2,4,0):

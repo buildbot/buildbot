@@ -408,7 +408,7 @@ class SVN(Source):
         self.keep_on_purge = keep_on_purge
         self.ignore_ignores = ignore_ignores
         self.always_purge = always_purge
-	self.depth = depth
+        self.depth = depth
 
         Source.__init__(self, **kwargs)
         self.addFactoryArguments(svnurl=svnurl,
@@ -493,16 +493,16 @@ class SVN(Source):
         self.args['revision'] = revision
         self.args['patch'] = patch
 
-	#Set up depth if specified
-	if self.depth is not None:
-		if self.slaveVersionIsOlderThan("svn","2.9"):
-			m = ("This buildslave (%s) does not support svn depth "
+        #Set up depth if specified
+        if self.depth is not None:
+            if self.slaveVersionIsOlderThan("svn","2.9"):
+                m = ("This buildslave (%s) does not support svn depth "
 			     "arguments.  "
 			     "Refusing to build. "
 			     "Please upgrade the buildslave." % (self.build.slavename))
-                	raise BuildSlaveTooOldError(m)
-		else: 
-			self.args['depth'] = self.depth
+                raise BuildSlaveTooOldError(m)
+            else: 
+                self.args['depth'] = self.depth
 
         if self.username is not None or self.password is not None:
             if self.slaveVersionIsOlderThan("svn", "2.8"):

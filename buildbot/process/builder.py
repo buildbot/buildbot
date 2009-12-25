@@ -789,7 +789,7 @@ class Builder(pb.Referenceable):
         d = build.startBuild(bs, self.expectations, sb)
         d.addCallback(self.buildFinished, sb)
         d.addErrback(log.err) # this shouldn't happen. if it does, the slave
-                              # will be wedged
+                                # will be wedged
         for req in build.requests:
             req.buildStarted(build, bs)
         return build # this is the IBuildControl
@@ -807,7 +807,7 @@ class Builder(pb.Referenceable):
         self.building.remove(build)
         for req in build.requests:
             self.buildable.insert(0, req) # the interrupted build gets first
-                                          # priority
+                                            # priority
             self.builder_status.addBuildRequest(req.status)
 
 

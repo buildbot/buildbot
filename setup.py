@@ -109,7 +109,7 @@ class SdistTestCommand(TestCommand):
                     os.rmdir(os.path.join(root, name))
         # Import setup making it as if we ran setup.py with the sdist arg
         sys.argv.append('sdist')
-        import setup
+        import setup #@Reimport @UnresolvedImport @UnusedImport
         try:
             # attempt to extract the sdist data
             from gzip import GzipFile
@@ -225,7 +225,7 @@ setup_args = {
 try:
     # If setuptools is installed, then we'll add setuptools-specific arguments
     # to the setup args.
-    import setuptools
+    import setuptools #@UnusedImport
 except ImportError:
     pass
 else:

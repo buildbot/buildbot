@@ -9,7 +9,6 @@ import time
 import operator
 
 from buildbot import interfaces, util
-from buildbot import version
 from buildbot.status import builder
 
 from buildbot.status.web.base import Box, HtmlResource, IBox, ICurrentBox, \

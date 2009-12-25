@@ -20,8 +20,6 @@ class RpmBuild(ShellCommand):
     Build and RPM based on pased spec filename
     """
 
-    import os.path
-
     name = "rpmbuilder"
     haltOnFailure = 1
     flunkOnFailure = 1

@@ -1,10 +1,8 @@
-from twisted.internet import defer, reactor
 from twisted.trial import unittest
 
 from buildbot.sourcestamp import SourceStamp
 from buildbot.process.base import BuildRequest
 from buildbot.process.properties import Properties
-from buildbot.status import builder, base, words
 from buildbot.changes.changes import Change
 
 from buildbot.test.runutils import RunMixin

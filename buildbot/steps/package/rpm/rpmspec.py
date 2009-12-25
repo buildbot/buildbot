@@ -21,7 +21,6 @@ class RpmSpec(ShellCommand):
     """
 
     import re
-    import types
 
     #initialize spec info vars and get them from the spec file
     n_regex = re.compile('^Name:[ ]*([^\s]*)')

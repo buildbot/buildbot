@@ -8,9 +8,8 @@ import sys
 import os
 import tempfile
 import shutil
-import py2exe
 
-from os.path import dirname, join, abspath, exists, splitext
+from os.path import dirname, join, abspath, splitext
 
 this_dir = abspath(dirname(__file__))
 bb_root_dir = abspath(join(this_dir, "..", ".."))

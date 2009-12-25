@@ -5,12 +5,12 @@ from itertools import count
 from zope.interface import implements
 from twisted.python import log
 from twisted.application import strports, service
-from twisted.web import server, distrib, static, html
+from twisted.web import server, distrib, static
 from twisted.spread import pb
 
 from buildbot.interfaces import IControl, IStatusReceiver
 
-from buildbot.status.web.base import HtmlResource, Box, \
+from buildbot.status.web.base import HtmlResource,  \
      build_get_class, ICurrentBox, BuildLineMixin, map_branches, StaticFile
 from buildbot.status.web.feeds import Rss20StatusResource, \
      Atom10StatusResource
@@ -37,7 +37,7 @@ class LastBuild(HtmlResource):
     def context(self, request, context):
         context['content'] = "missing"
         template = request.site.buildbot_service.templates.get_template("empty.html")
-        return template.render(**cxt)
+        return template.render(**context)
 
 def getLastNBuilds(status, numbuilds, builders=[], branches=[]):
     """Return a list with the last few Builds, sorted by start time.

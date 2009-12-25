@@ -22,7 +22,7 @@ from twisted.internet import reactor, defer
 
 from buildbot.sourcestamp import SourceStamp
 from buildbot.process import buildstep, base, factory
-from buildbot.process.properties import Properties, WithProperties
+from buildbot.process.properties import WithProperties
 from buildbot.buildslave import BuildSlave
 from buildbot.steps import shell, source, python, master
 from buildbot.status import builder

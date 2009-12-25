@@ -2,7 +2,7 @@
 from zope.interface import implements
 from twisted.python import components
 from twisted.spread import pb
-from twisted.web import html, server
+from twisted.web import server
 from twisted.web.resource import Resource
 from twisted.web.error import NoResource
 

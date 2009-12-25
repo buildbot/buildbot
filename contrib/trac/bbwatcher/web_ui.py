@@ -1,12 +1,11 @@
 import pkg_resources
 import re
-from xmlrpclib import ServerProxy
 
 from genshi.builder import tag
 
 from trac.core import Component, implements
 from trac.config import Option
-from trac.wiki.formatter import format_to, format_to_html, format_to_oneliner
+from trac.wiki.formatter import format_to_oneliner
 from trac.util.datefmt import to_timestamp, to_datetime
 from trac.mimeview.api import Context
 

@@ -23,7 +23,6 @@ import commands
 import xml.dom.minidom
 import ConfigParser
 import os.path
-import codecs
 
 # change these settings to match your project
 svnurl = "https://pse.cheme.cmu.edu/svn/ascend/code/trunk"

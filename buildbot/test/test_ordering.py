@@ -1,8 +1,7 @@
 from twisted.trial import unittest
-from twisted.internet import reactor, defer
+from twisted.internet import  defer
 
-from buildbot.test.runutils import RunMixin, TestFlagMixin, rmtree
-from buildbot.changes import changes
+from buildbot.test.runutils import RunMixin, rmtree
 from buildbot.sourcestamp import SourceStamp
 from buildbot.process.base import BuildRequest
 

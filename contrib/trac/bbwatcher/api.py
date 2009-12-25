@@ -6,7 +6,7 @@ from model import Builder, Build
 class BuildBotSystem(object):
 	def __init__(self, url):
 		try:
-			scheme, loc, path, _ ,_ = urlparse.urlsplit(url, scheme='http')
+			scheme, loc, _, _, _ = urlparse.urlsplit(url, scheme='http')
 			url = '%s://%s/xmlrpc'%(scheme, loc)
 			self.server = xmlrpclib.ServerProxy(url)
 		except Exception, e:

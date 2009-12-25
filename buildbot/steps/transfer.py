@@ -63,7 +63,7 @@ def _extractall(self, path=".", members=None):
     """Fallback extractall method for TarFile, in case it doesn't have its own."""
 
     import copy
-    import operator
+    import operator #@UnusedImport
 
     directories = []
 

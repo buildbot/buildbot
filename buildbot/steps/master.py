@@ -1,7 +1,7 @@
 import os, types
-from twisted.python import log, failure, runtime
-from twisted.internet import reactor, defer, task
-from buildbot.process.buildstep import RemoteCommand, BuildStep
+from twisted.python import runtime
+from twisted.internet import reactor 
+from buildbot.process.buildstep import BuildStep
 from buildbot.process.buildstep import SUCCESS, FAILURE
 from twisted.internet.protocol import ProcessProtocol
 

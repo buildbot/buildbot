@@ -10,7 +10,6 @@ from buildbot.status.web.base import HtmlResource, BuildLineMixin, \
     path_to_build, path_to_slave, path_to_builder, path_to_change, \
     getAndCheckProperties
 from buildbot.process.base import BuildRequest
-from buildbot.process.properties import Properties
 from buildbot.sourcestamp import SourceStamp
 
 from buildbot.status.web.build import BuildsResource, StatusResourceBuild

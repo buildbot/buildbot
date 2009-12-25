@@ -1,13 +1,12 @@
 
 import time, urllib
-from twisted.python import log
 from twisted.web import html
 from twisted.web.util import Redirect
 from twisted.web.error import NoResource
 
 from buildbot.status.web.base import HtmlResource, abbreviate_age, \
-    BuildLineMixin, path_to_slave, path_to_build
-from buildbot import version, util
+    BuildLineMixin, path_to_slave
+from buildbot import util
 
 # /buildslaves/$slavename
 class OneBuildSlaveResource(HtmlResource, BuildLineMixin):

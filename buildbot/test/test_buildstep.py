@@ -279,7 +279,7 @@ class SubunitLogObserver(subunitlogobserver.SubunitLogObserver):
     def __init__(self):
         # Skip this test if subunit is not installed.
         try:
-            from subunit import TestProtocolServer
+            from subunit import TestProtocolServer #@UnusedImport
         except ImportError:
             raise unittest.SkipTest("subunit.TestProtocolServer not available")
         subunitlogobserver.SubunitLogObserver.__init__(self)

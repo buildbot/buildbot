@@ -1,7 +1,4 @@
-from twisted.web import html, resource
-from buildbot.status.web.base import Box
-from buildbot.status.web.base import HtmlResource
-from buildbot.status.web.base import IBox
+from buildbot.status.web.base import HtmlResource, IBox
 
 class BuildStatusStatusResource(HtmlResource):
     def __init__(self, categories=None):

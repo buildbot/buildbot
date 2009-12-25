@@ -10,7 +10,7 @@ from twisted.trial import unittest
 from buildbot import interfaces
 from buildbot.sourcestamp import SourceStamp
 from buildbot.process.base import BuildRequest, Build
-from buildbot.status import builder, base, words, progress
+from buildbot.status import builder, base, words
 from buildbot.changes.changes import Change
 from buildbot.process.builder import Builder
 from time import sleep
@@ -26,6 +26,7 @@ try:
     from buildbot.status import mail
 except ImportError:
     pass
+
 from buildbot.status import progress, client # NEEDS COVERAGE
 from buildbot.test.runutils import RunMixin, setupBuildStepStatus, rmtree
 
@@ -885,8 +886,7 @@ class Log(unittest.TestCase):
         l2.addStdout(800*"a") # should now have two chunks on disk, 1000+600
         l2.addStdout(800*"b") # HEADER,1000+600*a on disk, 800*a in memory
         l2.addStdout(800*"b") # HEADER,1000+600*a,1000+600*b on disk
-        l2.addStdout(200*"c") # HEADER,1000+600*a,1000+600*b on disk,
-                              # 200*c in memory
+        l2.addStdout(200*"c") # HEADER,1000+600*a,1000+600*b on disk, 200*c in memory
         
         s = MyLogConsumer(limit=1)
         d = l2.subscribeConsumer(s)
@@ -968,7 +968,7 @@ class Log(unittest.TestCase):
 class CompressLog(unittest.TestCase):
     # compression is not supported unless bz2 is installed
     try:
-        import bz2
+        import bz2 #@UnusedImport
     except:
         skip = "compression not supported (no bz2 module available)"
 

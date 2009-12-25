@@ -10,7 +10,7 @@ from buildbot.status.web.base import HtmlResource, \
      getAndCheckProperties
 
 from buildbot.status.web.step import StepsResource
-from buildbot import version, util
+from buildbot import util
 
 # /builders/$builder/builds/$buildnum
 class StatusResourceBuild(HtmlResource):
