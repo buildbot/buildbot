@@ -63,6 +63,9 @@ class TextLog(Resource):
             is_header = type == builder.HEADER
 
             if not self.asText:
+                # jinja only works with unicode, or pure ascii, so assume utf-8 in logs
+                if not isinstance(entry, unicode):
+                    entry = unicode(entry, 'utf-8')
                 html_entries.append(dict(type = builder.ChunkTypes[type], 
                                          text = entry,
                                          is_header = is_header))
