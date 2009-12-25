@@ -9,6 +9,9 @@
     {% if metatags %}
       {{ metatags }}
     {% endif %}
+    {% if refresh %}
+      <meta http-equiv="refresh" content="{{ refresh }}"/>
+    {% endif %}
     <title>{{ title }}</title>
     <link rel="stylesheet" href="{{ stylesheet }}" type="text/css" />
     {% endblock %}
@@ -16,6 +19,8 @@
   <body>
     {% block header -%}
     <div class="header">
+        <a href="{{ path_to_root or '/' }}">Home</a>
+        <hr/>
     </div>
     {% endblock %}
 

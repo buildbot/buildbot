@@ -1,4 +1,8 @@
-Change sources:
+{% extends "layout.html" %}
+
+{% block content %}
+
+<h1>Change sources</h1>
 
 {% if sources %}
   <ol>
@@ -9,3 +13,5 @@ Change sources:
 {% else %}
   none (push only)
 {% endif %}
+
+{% endblock %}

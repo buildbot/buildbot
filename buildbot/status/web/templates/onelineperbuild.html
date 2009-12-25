@@ -1,6 +1,8 @@
+{% extends "layout.html" %}
 {% from 'build_line.html' import build_line %}
 {% import 'forms.html' as forms %}
 
+{% block content %}
 <h1>Last {{ num_builds }} finished builds: {{ branches|join(', ')|e }}</h1>
 
 {% if builders %}
@@ -19,3 +21,5 @@
 
 {% if stop_url %}{{ forms.stop(stop_url, use_user_passwd, True, 'Builds') }}{% endif %}
 {% if force_url %}{{ forms.force_build(force_url, use_user_passwd, True) }}{% endif %}
+
+{% endblock %}

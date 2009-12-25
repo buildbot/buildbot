@@ -1,4 +1,7 @@
+{% extends "layout.html" %}
 {% from 'build_line.html' import build_line %}
+
+{% block content %}
 
 <h1>Last {{ num_builds }} builds of builder {{ builder_name|e }}: 
     {{ branches|join(', ')|e }}
@@ -11,3 +14,5 @@
   <li>No matching builds found</li>
 {% endfor %}
 </ul>
+
+{% endblock %}

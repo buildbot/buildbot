@@ -16,11 +16,9 @@ class StatusResourceBuildStep(HtmlResource):
         self.status = build_status
         self.step_status = step_status
 
-    def body(self, req):
+    def content(self, req, cxt):
         s = self.step_status
         b = s.getBuild()
-
-        cxt = {}
 
         logs = cxt['logs'] = []        
         for l in s.getLogs():
@@ -50,10 +48,7 @@ class StatusResourceBuildStep(HtmlResource):
                         s = s))
         
         template = req.site.buildbot_service.templates.get_template("buildstep.html");        
-        data = template.render(**cxt)
-
-
-        return data + self.footer(req)
+        return template.render(**cxt)
 
     def getChild(self, path, req):
         if path == "logs":

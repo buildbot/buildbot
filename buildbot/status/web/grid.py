@@ -152,14 +152,13 @@ class GridStatusResource(HtmlResource, GridStatusMixin):
     control = None
     changemaster = None
 
-    def __init__(self, allowForce=True, css=None):
+    def __init__(self, allowForce=True):
         HtmlResource.__init__(self)
 
         self.allowForce = allowForce
-        self.css = css or grid_css
 
 
-    def body(self, request):
+    def content(self, request, cxt):
         """This method builds the regular grid display.
         That is, build stamps across the top, build hosts down the left side
         """
@@ -174,14 +173,11 @@ class GridStatusResource(HtmlResource, GridStatusMixin):
         status = self.getStatus(request)
         stamps = self.getRecentSourcestamps(status, numBuilds, categories, branch)
 
-        cxt = {'project_url': status.getProjectURL(),
-               'project_name': status.getProjectName(),
-               'categories': categories,
-               'branch': branch,
-               'ANYBRANCH': ANYBRANCH,
-               'stamps': stamps,
-              }  
-
+        cxt.update({'categories': categories,
+                    'branch': branch,
+                    'ANYBRANCH': ANYBRANCH,
+                    'stamps': stamps,
+                    })
         
         sortedBuilderNames = status.getBuilderNames()[:]
         sortedBuilderNames.sort()
@@ -209,10 +205,10 @@ class GridStatusResource(HtmlResource, GridStatusMixin):
             for build in builds:
                 b['builds'].append(self.build_cxt(request, build))
             cxt['builders'].append(b)
+
         template = request.site.buildbot_service.templates.get_template("grid.html")
-        data = template.render(**cxt)
-        data += self.footer(request)        
-        return data
+        return template.render(**cxt)
+
 
 class TransposedGridStatusResource(HtmlResource, GridStatusMixin):
     # TODO: docs
@@ -220,14 +216,12 @@ class TransposedGridStatusResource(HtmlResource, GridStatusMixin):
     control = None
     changemaster = None
 
-    def __init__(self, allowForce=True, css=None):
+    def __init__(self, allowForce=True):
         HtmlResource.__init__(self)
 
         self.allowForce = allowForce
-        self.css = css or grid_css
 
-
-    def body(self, request):
+    def content(self, request, cxt):
         """This method builds the transposed grid display.
         That is, build hosts across the top, build stamps down the left side
         """
@@ -242,13 +236,11 @@ class TransposedGridStatusResource(HtmlResource, GridStatusMixin):
         status = self.getStatus(request)
         stamps = self.getRecentSourcestamps(status, numBuilds, categories, branch)
 
-        cxt = {'project_url': status.getProjectURL(),
-               'project_name': status.getProjectName(),
-               'categories': categories,
-               'branch': branch,
-               'ANYBRANCH': ANYBRANCH,
-               'stamps': stamps,
-              }          
+        cxt.update({'categories': categories,
+                    'branch': branch,
+                    'ANYBRANCH': ANYBRANCH,
+                    'stamps': stamps,
+                    })
 
         sortedBuilderNames = status.getBuilderNames()[:]
         sortedBuilderNames.sort()
@@ -279,6 +271,5 @@ class TransposedGridStatusResource(HtmlResource, GridStatusMixin):
 
         template = request.site.buildbot_service.templates.get_template('grid_transposed.html')
         data = template.render(**cxt)
-        data += self.footer(request)        
         return data
 

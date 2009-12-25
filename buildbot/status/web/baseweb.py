@@ -105,14 +105,7 @@ class OneLinePerBuild(HtmlResource, BuildLineMixin):
                 pass
         return None
 
-    def head(self, request):
-        head = ''
-        reload_time = self.get_reload_time(request)
-        if reload_time is not None:
-            head += ' <meta http-equiv="refresh" content="%d">\n' % reload_time
-        return head
-
-    def body(self, req):
+    def content(self, req, cxt):
         status = self.getStatus(req)
         control = self.getControl(req)
         numbuilds = int(req.args.get("numbuilds", [self.numbuilds])[0])
@@ -122,7 +115,7 @@ class OneLinePerBuild(HtmlResource, BuildLineMixin):
         g = status.generateFinishedBuilds(builders, map_branches(branches),
                                           numbuilds, max_search=numbuilds)
 
-        cxt = {}
+        cxt['refresh'] = self.get_reload_time(req)
         cxt['num_builds'] = numbuilds
         cxt['branches'] =  branches
         cxt['builders'] = builders
@@ -150,9 +143,7 @@ class OneLinePerBuild(HtmlResource, BuildLineMixin):
                 cxt['force_url'] = "builders/_all/force"
 
         template = req.site.buildbot_service.templates.get_template('onelineperbuild.html')
-        data = template.render(**cxt)
-        data += self.footer(req)
-        return data
+        return template.render(**cxt)
 
 
 
@@ -167,7 +158,7 @@ class OneLinePerBuildOneBuilder(HtmlResource, BuildLineMixin):
         self.numbuilds = numbuilds
         self.title = "Recent Builds of %s" % self.builder_name
 
-    def body(self, req):
+    def content(self, req, cxt):
         numbuilds = int(req.args.get("numbuilds", [self.numbuilds])[0])
         branches = [b for b in req.args.get("branch", []) if b]
 
@@ -175,16 +166,13 @@ class OneLinePerBuildOneBuilder(HtmlResource, BuildLineMixin):
         g = self.builder.generateFinishedBuilds(map_branches(branches),
                                                 numbuilds)
 
-        builds = map(lambda b: self.get_line_values(req, b), g)
+        cxt['builds'] = map(lambda b: self.get_line_values(req, b), g)
+        cxt.update(dict(num_builds=numbuilds,
+                        builder_name=self.builder_name,
+                        branches=branches))    
 
         template = req.site.buildbot_service.templates.get_template('onelineperbuildonebuilder.html')
-        data = template.render(num_builds=numbuilds,
-                               builder_name=self.builder_name,
-                               branches=branches,
-                               builds=builds)
-
-        data += self.footer(req)
-        return data
+        return template.render(**cxt)
 
 # /one_box_per_builder
 #  accepts builder=, branch=
@@ -200,14 +188,13 @@ class OneBoxPerBuilder(HtmlResource):
 
     title = "Latest Build"
 
-    def body(self, req):
+    def content(self, req, cxt):
         status = self.getStatus(req)
         control = self.getControl(req)
 
         builders = req.args.get("builder", status.getBuilderNames())
         branches = [b for b in req.args.get("branch", []) if b]
 
-        cxt = {}
         cxt['branches'] = branches
         bs = cxt['builders'] = []
         
@@ -254,9 +241,7 @@ class OneBoxPerBuilder(HtmlResource):
                 cxt['force_url'] = "builders/_all/force"                
 
         template = req.site.buildbot_service.templates.get_template("oneboxperbuilder.html")
-        data = template.render(**cxt)
-        data += self.footer(req)
-        return data
+        return template.render(**cxt)
 
 
 
