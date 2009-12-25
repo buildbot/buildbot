@@ -1,4 +1,3 @@
-
 """Interface documentation.
 
 Define the interfaces that are implemented by various buildbot classes.

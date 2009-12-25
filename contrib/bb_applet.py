@@ -33,10 +33,10 @@ if 0:
     print "starting"
 
 from twisted.internet import gtk2reactor
-gtk2reactor.install()
+gtk2reactor.install() #@UndefinedVariable
 
-import gtk
-import gnomeapplet
+import gtk #@UnresolvedImport
+import gnomeapplet #@UnresolvedImport
 
 # preferences are not yet implemented
 MENU = """

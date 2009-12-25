@@ -1,12 +1,12 @@
 
 from twisted.internet import gtk2reactor
-gtk2reactor.install()
+gtk2reactor.install() #@UndefinedVariable
 
 import sys, time
 
-import pygtk
+import pygtk #@UnresolvedImport
 pygtk.require("2.0")
-import gobject, gtk
+import gobject, gtk #@UnresolvedImport
 assert(gtk.Window) # in gtk1 it's gtk.GtkWindow
 
 from twisted.spread import pb

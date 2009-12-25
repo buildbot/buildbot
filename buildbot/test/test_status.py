@@ -684,11 +684,11 @@ class Log(unittest.TestCase):
     def testMerge2(self):
         l = MyLog(self.basedir, "merge2")
         l.addHeader("HEADER\n")
-        for i in xrange(1000):
+        for _ in xrange(1000):
             l.addStdout("aaaa")
-        for i in xrange(30):
+        for _ in xrange(30):
             l.addStderr("bbbb")
-        for i in xrange(10):
+        for _ in xrange(10):
             l.addStdout("cc")
         target = 1000*"aaaa" + 30 * "bbbb" + 10 * "cc"
         self.failUnlessEqual(len(l.getText()), len(target))
@@ -702,9 +702,9 @@ class Log(unittest.TestCase):
         l = MyLog(self.basedir, "merge3")
         l.chunkSize = 100
         l.addHeader("HEADER\n")
-        for i in xrange(8):
+        for _ in xrange(8):
             l.addStdout(10*"a")
-        for i in xrange(8):
+        for _ in xrange(8):
             l.addStdout(10*"a")
         self.failUnlessEqual(list(l.getChunks()),
                              [(builder.HEADER, "HEADER\n"),

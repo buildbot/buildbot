@@ -33,9 +33,9 @@
 
 import os
 
-from mercurial.i18n import gettext as _
-from mercurial.node import bin, hex, nullid
-from mercurial.context import workingctx
+from mercurial.i18n import gettext as _ #@UnresolvedImport
+from mercurial.node import bin, hex, nullid #@UnresolvedImport
+from mercurial.context import workingctx #@UnresolvedImport
 
 # mercurial's on-demand-importing hacks interfere with the:
 #from zope.interface import Interface
