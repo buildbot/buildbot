@@ -88,7 +88,7 @@ class ComparableMixin:
     def __hash__(self):
         alist = [self.__class__] + \
                 [getattr(self, name, _None) for name in self.compare_attrs]
-        return hash(tuple(alist))
+        return hash(tuple(map(str,alist)))
 
     def __cmp__(self, them):
         result = cmp(type(self), type(them))
