@@ -349,16 +349,17 @@ version_config = """
 from buildbot.process import factory
 from buildbot.test.test_steps import VersionCheckingStep
 from buildbot.buildslave import BuildSlave
+from buildbot.config import BuilderConfig
 BuildmasterConfig = c = {}
 f1 = factory.BuildFactory([
     factory.s(VersionCheckingStep),
     ])
 c['slaves'] = [BuildSlave('bot1', 'sekrit')]
 c['schedulers'] = []
-c['builders'] = [{'name':'quick', 'slavename':'bot1',
-                  'builddir': 'quickdir',
-                  'slavebuilddir': 'quickslavedir',
-                  'factory': f1}]
+c['builders'] = [
+    BuilderConfig(name='quick', slavename='bot1', factory=f1,
+            builddir='quickdir', slavebuilddir='quickslavedir'),
+]
 c['slavePortnum'] = 0
 """
 

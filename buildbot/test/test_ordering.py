@@ -11,6 +11,7 @@ from buildbot.process import factory
 from buildbot.steps import dummy
 from buildbot.buildslave import BuildSlave
 from buildbot.scheduler import Scheduler
+from buildbot.config import BuilderConfig
 
 f1 = factory.BuildFactory([dummy.Dummy(timeout=0)])
 
@@ -22,9 +23,10 @@ def nextSlave(builder, slaves):
 BuildmasterConfig = c = {}
 c['slaves'] = [BuildSlave('bot1', 'sekrit'), BuildSlave('bot2', 'sekrit')]
 c['schedulers'] = [Scheduler('dummy', None, 0, ['dummy'])]
-c['builders'] = []
-c['builders'].append({'name':'dummy', 'slavenames':['bot1','bot2'],
-                      'builddir': 'dummy', 'factory': f1, 'nextSlave': nextSlave})
+c['builders'] = [
+    BuilderConfig(name='dummy', slavenames=['bot1', 'bot2'],
+                  factory=f1, nextSlave=nextSlave),
+]
 c['slavePortnum'] = 0
 c['mergeRequests'] = lambda builder, req1, req2: False
 """
@@ -69,6 +71,7 @@ from buildbot.process import factory
 from buildbot.steps import dummy
 from buildbot.buildslave import BuildSlave
 from buildbot.scheduler import Scheduler
+from buildbot.config import BuilderConfig
 
 f1 = factory.BuildFactory([dummy.Dummy(timeout=0)])
 
@@ -79,9 +82,9 @@ def nextBuild(builder, requests):
 BuildmasterConfig = c = {}
 c['slaves'] = [BuildSlave('bot1', 'sekrit')]
 c['schedulers'] = [Scheduler('dummy', None, 0, ['dummy'])]
-c['builders'] = []
-c['builders'].append({'name':'dummy', 'slavenames':['bot1'],
-                      'builddir': 'dummy', 'factory': f1, 'nextBuild': nextBuild})
+c['builders'] = [
+    BuilderConfig(name='dummy', slavenames=['bot1'], factory=f1, nextBuild=nextBuild),
+]
 c['slavePortnum'] = 0
 c['mergeRequests'] = lambda builder, req1, req2: False
 """
@@ -129,6 +132,7 @@ from buildbot.process import factory
 from buildbot.steps import dummy
 from buildbot.buildslave import BuildSlave
 from buildbot.scheduler import Scheduler
+from buildbot.config import BuilderConfig
 
 f1 = factory.BuildFactory([dummy.Dummy(timeout=0)])
 
@@ -141,11 +145,10 @@ def prioritizeBuilders(buildmaster, builders):
 BuildmasterConfig = c = {}
 c['slaves'] = [BuildSlave('bot1', 'sekrit')]
 c['schedulers'] = [Scheduler('dummy', None, 0, ['dummy1', 'dummy2'])]
-c['builders'] = []
-c['builders'].append({'name':'dummy1', 'slavenames':['bot1'],
-                      'builddir': 'dummy1', 'factory': f1})
-c['builders'].append({'name':'dummy2', 'slavenames':['bot1'],
-                      'builddir': 'dummy2', 'factory': f1})
+c['builders'] = [
+    BuilderConfig(name='dummy1', slavename='bot1', factory=f1),
+    BuilderConfig(name='dummy2', slavename='bot1', factory=f1),
+]
 c['slavePortnum'] = 0
 c['mergeRequests'] = lambda builder, req1, req2: False
 c['prioritizeBuilders'] = prioritizeBuilders

@@ -353,6 +353,7 @@ config_1 = """
 from buildbot import locks
 from buildbot.process import factory
 from buildbot.buildslave import BuildSlave
+from buildbot.config import BuilderConfig
 s = factory.s
 from buildbot.test.test_locks import LockStep
 
@@ -367,20 +368,21 @@ f1 = factory.BuildFactory([s(LockStep, timeout=2, locks=[first_lock])])
 f2 = factory.BuildFactory([s(LockStep, timeout=3, locks=[second_lock])])
 f3 = factory.BuildFactory([s(LockStep, timeout=2, locks=[])])
 
-b1a = {'name': 'full1a', 'slavename': 'bot1', 'builddir': '1a', 'factory': f1}
-b1b = {'name': 'full1b', 'slavename': 'bot1', 'builddir': '1b', 'factory': f1}
-b1c = {'name': 'full1c', 'slavename': 'bot1', 'builddir': '1c', 'factory': f3,
-       'locks': [first_lock, second_lock]}
-b1d = {'name': 'full1d', 'slavename': 'bot1', 'builddir': '1d', 'factory': f2}
-b2a = {'name': 'full2a', 'slavename': 'bot2', 'builddir': '2a', 'factory': f1}
-b2b = {'name': 'full2b', 'slavename': 'bot2', 'builddir': '2b', 'factory': f3,
-       'locks': [second_lock]}
+b1a = BuilderConfig(name='full1a', slavename='bot1', factory=f1)
+b1b = BuilderConfig(name='full1b', slavename='bot1', factory=f1)
+b1c = BuilderConfig(name='full1c', slavename='bot1', factory=f3,
+                    locks=[first_lock, second_lock])
+b1d = BuilderConfig(name='full1d', slavename='bot1', factory=f2)
+
+b2a = BuilderConfig(name='full2a', slavename='bot2', factory=f1)
+b2b = BuilderConfig(name='full2b', slavename='bot2', factory=f3,
+                    locks=[second_lock])
 c['builders'] = [b1a, b1b, b1c, b1d, b2a, b2b]
 """
 
 config_1a = config_1 + \
 """
-b1b = {'name': 'full1b', 'slavename': 'bot1', 'builddir': '1B', 'factory': f1}
+b1b = BuilderConfig(name='full1b', builddir='1B', slavename='bot1', factory=f1)
 c['builders'] = [b1a, b1b, b1c, b1d, b2a, b2b]
 """
 
