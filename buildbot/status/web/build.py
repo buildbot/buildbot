@@ -1,5 +1,6 @@
 
 from twisted.web import html
+from twisted.web.error import NoResource
 from twisted.web.util import Redirect, DeferredResource
 from twisted.internet import defer, reactor
 
@@ -11,6 +12,8 @@ from buildbot.status.web.base import HtmlResource, \
 
 from buildbot.status.web.step import StepsResource
 from buildbot import util
+
+
 
 # /builders/$builder/builds/$buildnum
 class StatusResourceBuild(HtmlResource):
@@ -207,6 +210,9 @@ class BuildsResource(HtmlResource):
         HtmlResource.__init__(self)
         self.builder_status = builder_status
         self.builder_control = builder_control
+
+    def content(self, req, cxt):
+        return "subpages shows data for each build"
 
     def getChild(self, path, req):
         try:

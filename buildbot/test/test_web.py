@@ -283,14 +283,27 @@ class WaterfallSteps(unittest.TestCase):
         s = setupBuildStepStatus("test_web.test_urls")
         s.addURL("coverage", "http://coverage.example.org/target")
         s.addURL("icon", "http://coverage.example.org/icon.png")
+
+
+        class FakeService:
+            import jinja2
+            templates = jinja2.Environment(loader=jinja2.PackageLoader('buildbot.status.web', 'templates'),
+                                       extensions=['jinja2.ext.i18n'],
+                                       trim_blocks=True)
+        
+        class FakeSite:
+            buildbot_service = FakeService()        
+        
         class FakeRequest:
+            site = FakeSite()
             prepath = []
             postpath = []
             def childLink(self, name):
                 return name
+
         req = FakeRequest()
         box = waterfall.IBox(s).getBox(req)
-        text = "\n".join(box.td()['text'])
+        text = box.td()['text']
         e1 = '[<a href="http://coverage.example.org/target" class="BuildStep external">coverage</a>]'
         self.failUnlessSubstring(e1, text)
         e2 = '[<a href="http://coverage.example.org/icon.png" class="BuildStep external">icon</a>]'
