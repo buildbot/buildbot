@@ -6,7 +6,6 @@ try:
     import signal
 except ImportError:
     pass
-import string
 from cPickle import load
 import warnings
 
@@ -21,7 +20,7 @@ from twisted.persisted import styles
 
 import buildbot
 # sibling imports
-from buildbot.util import now
+from buildbot.util import now, safeTranslate
 from buildbot.pbutil import NewCredPerspective
 from buildbot.process.builder import Builder, IDLE
 from buildbot.process.base import BuildRequest
@@ -31,6 +30,7 @@ from buildbot.sourcestamp import SourceStamp
 from buildbot.buildslave import BuildSlave
 from buildbot import interfaces, locks
 from buildbot.process.properties import Properties
+from buildbot.config import BuilderConfig
 
 ########################################
 
@@ -533,13 +533,6 @@ class BuildMaster(service.MultiService):
             # required
             schedulers = config['schedulers']
             builders = config['builders']
-            for k in builders:
-                if k['name'].startswith("_"):
-                    errmsg = ("builder names must not start with an "
-                              "underscore: " + k['name'])
-                    log.err(errmsg)
-                    raise ValueError(errmsg)
-
             slavePortnum = config['slavePortnum']
             #slaves = config['slaves']
             #change_source = config['change_source']
@@ -648,19 +641,18 @@ class BuildMaster(service.MultiService):
         buildernames = []
         dirnames = []
 
-        # Remove potentially harmful characters from builder name if it is to be
-        # used as the build dir.
-        badchars_map = string.maketrans("\t !#$%&'()*+,./:;<=>?@[\\]^{|}~",
-                                        "______________________________")
-        def safeTranslate(str):
-            if isinstance(str, unicode):
-                str = str.encode('utf8')
-            return str.translate(badchars_map)
+        # convert builders from objects to config dictionaries
+        builders_dicts = []
+        for b in builders:
+            if isinstance(b, BuilderConfig):
+                builders_dicts.append(b.getConfigDict())
+            elif type(b) is dict:
+                builders_dicts.append(b)
+            else:
+                raise ValueError("builder %s is not a BuilderConfig object (or a dict)" % b)
+        builders = builders_dicts
 
         for b in builders:
-            if type(b) is tuple:
-                raise ValueError("builder %s must be defined with a dict, "
-                                 "not a tuple" % b[0])
             if b.has_key('slavename') and b['slavename'] not in slavenames:
                 raise ValueError("builder %s uses undefined slave %s" \
                                  % (b['name'], b['slavename']))
@@ -673,9 +665,18 @@ class BuildMaster(service.MultiService):
                                  % b['name'])
             buildernames.append(b['name'])
 
-            # Fix the dictionnary with default values.
+            # sanity check name (BuilderConfig does this too)
+            if b['name'].startswith("_"):
+                errmsg = ("builder names must not start with an "
+                          "underscore: " + b['name'])
+                log.err(errmsg)
+                raise ValueError(errmsg)
+
+            # Fix the dictionnary with default values, in case this wasn't
+            # specified with a BuilderConfig object (which sets the same defaults)
             b.setdefault('builddir', safeTranslate(b['name']))
             b.setdefault('slavebuilddir', b['builddir'])
+
             if b['builddir'] in dirnames:
                 raise ValueError("builder %s reuses builddir %s"
                                  % (b['name'], b['builddir']))

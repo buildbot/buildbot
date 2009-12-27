@@ -22,6 +22,7 @@ Currently only testing the master side of it.
 master_cfg = """from buildbot.process import factory
 from buildbot.steps import dummy
 from buildbot.buildslave import BuildSlave
+from buildbot.config import BuilderConfig
 s = factory.s
 
 f1 = factory.QuickBuildFactory('fakerep', 'cvsmodule', configure=None)
@@ -34,9 +35,9 @@ f2 = factory.BuildFactory([
 BuildmasterConfig = c = {}
 c['slaves'] = [BuildSlave('bot1', 'sekrit')]
 c['schedulers'] = []
-c['builders'] = []
-c['builders'].append({'name':'quick', 'slavename':'bot1',
-                      'builddir': 'quickdir', 'factory': f1})
+c['builders'] = [
+    BuilderConfig(name='quick', slavename='bot1', factory=f1),
+]
 c['slavePortnum'] = 0
 
 from twisted.python import log

@@ -42,15 +42,17 @@ from buildbot.status import html
 from buildbot.buildslave import BuildSlave
 from buildbot.scheduler import Scheduler
 from buildbot.process.factory import BuildFactory
+from buildbot.config import BuilderConfig
 
 BuildmasterConfig = c = {
     'change_source': PBChangeSource(),
     'slaves': [BuildSlave('bot1name', 'bot1passwd')],
     'schedulers': [Scheduler('name', None, 60, ['builder1'])],
-    'builders': [{'name': 'builder1', 'slavename': 'bot1name',
-                  'builddir': 'builder1', 'factory': BuildFactory()}],
     'slavePortnum': 0,
     }
+c['builders'] = [
+    BuilderConfig(name='builder1', slavename='bot1name', factory=BuildFactory()),
+]
 """
 
 
@@ -319,6 +321,7 @@ from buildbot.steps import dummy
 from buildbot.scheduler import Scheduler
 from buildbot.changes.base import ChangeSource
 from buildbot.buildslave import BuildSlave
+from buildbot.config import BuilderConfig
 s = factory.s
 
 class DiscardScheduler(Scheduler):
@@ -337,9 +340,8 @@ c['status'] = [html.Waterfall(http_port=0)]
 f = factory.BuildFactory([s(dummy.RemoteDummy, timeout=1)])
 
 c['builders'] = [
-    {'name': 'b1', 'slavenames': ['bot1','bot2'],
-     'builddir': 'b1', 'factory': f},
-    ]
+    BuilderConfig(name='b1', slavenames=['bot1', 'bot2'], factory=f),
+]
 c['buildbotURL'] = 'http://dummy.example.org:8010/'
 
 """
@@ -425,15 +427,18 @@ class Logfile(BaseWeb, RunMixin, unittest.TestCase):
 from buildbot.status import html
 from buildbot.process.factory import BasicBuildFactory
 from buildbot.buildslave import BuildSlave
+from buildbot.config import BuilderConfig
+
 f1 = BasicBuildFactory('cvsroot', 'cvsmodule')
-BuildmasterConfig = {
+BuildmasterConfig = c = {
     'slaves': [BuildSlave('bot1', 'passwd1')],
     'schedulers': [],
-    'builders': [{'name': 'builder1', 'slavename': 'bot1',
-                  'builddir':'workdir', 'factory':f1}],
     'slavePortnum': 0,
     'status': [html.WebStatus(http_port=0)],
     }
+c['builders'] = [
+    BuilderConfig(name='builder1', slavename='bot1', factory=f1),
+]
 """
         if os.path.exists("test_logfile"):
             shutil.rmtree("test_logfile")

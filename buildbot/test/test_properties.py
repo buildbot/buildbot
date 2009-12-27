@@ -166,6 +166,7 @@ run_config = """
 from buildbot.process import factory
 from buildbot.steps.shell import ShellCommand, WithProperties
 from buildbot.buildslave import BuildSlave
+from buildbot.config import BuilderConfig
 s = factory.s
 
 BuildmasterConfig = c = {}
@@ -190,8 +191,9 @@ f1 = factory.BuildFactory([s(ShellCommand,
                              timeout=10,
                              )])
 
-b1 = {'name': 'full1', 'slavename': 'bot1', 'builddir': 'bd1', 'factory': f1}
-c['builders'] = [b1]
+c['builders'] = [
+    BuilderConfig(name='full1', slavename='bot1', factory=f1, builddir='bd1'),
+]
 
 """
 
@@ -214,6 +216,7 @@ class Run(RunMixin, unittest.TestCase):
 from buildbot.process import factory
 from buildbot.steps.shell import ShellCommand, SetProperty, WithProperties
 from buildbot.buildslave import BuildSlave
+from buildbot.config import BuilderConfig
 s = factory.s
 
 BuildmasterConfig = c = {}
@@ -225,8 +228,9 @@ f1 = factory.BuildFactory([
 ##STEPS##
 ])
 
-b1 = {'name': 'full1', 'slavename': 'bot1', 'builddir': 'bd1', 'factory': f1}
-c['builders'] = [b1]
+c['builders'] = [
+    BuilderConfig(name='full1', slavename='bot1', factory=f1, builddir='bd1'),
+]
 """
 
     SetPropertySimple_config = SetProperty_base_config.replace("##STEPS##", """

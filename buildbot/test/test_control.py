@@ -16,6 +16,7 @@ config = """
 from buildbot.process import factory
 from buildbot.steps import dummy
 from buildbot.buildslave import BuildSlave
+from buildbot.config import BuilderConfig
 
 def s(klass, **kwargs):
     return (klass, kwargs)
@@ -26,8 +27,9 @@ f1 = factory.BuildFactory([
 c = {}
 c['slaves'] = [BuildSlave('bot1', 'sekrit')]
 c['schedulers'] = []
-c['builders'] = [{'name': 'force', 'slavename': 'bot1',
-                  'builddir': 'force-dir', 'factory': f1}]
+c['builders'] = [
+    BuilderConfig(name='force', slavename='bot1', factory=f1),
+]
 c['slavePortnum'] = 0
 BuildmasterConfig = c
 """

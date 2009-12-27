@@ -12,6 +12,7 @@ run_config = """
 from buildbot.process import factory
 from buildbot.steps.shell import ShellCommand, WithProperties
 from buildbot.buildslave import BuildSlave
+from buildbot.config import BuilderConfig
 s = factory.s
 
 BuildmasterConfig = c = {}
@@ -28,8 +29,8 @@ f2 = factory.BuildFactory([s(ShellCommand, flunkOnFailure=True,
                              command=['ls -WillFail'],
                              workdir='.', timeout=10)])
 
-b1 = {'name': 'full1', 'slavename': 'bot1', 'builddir': 'bd1', 'factory': f1}
-b2 = {'name': 'full2', 'slavename': 'bot1', 'builddir': 'bd2', 'factory': f2}
+b1 = BuilderConfig(name='full1', slavename='bot1', builddir='bd1', factory=f1)
+b2 = BuilderConfig(name='full2', slavename='bot1', builddir='bd2', factory=f2)
 c['builders'] = [b1, b2]
 """
 

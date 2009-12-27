@@ -10,6 +10,7 @@ from buildbot.process import factory
 from buildbot.steps import dummy
 from buildbot.buildslave import BuildSlave
 from buildbot.scheduler import Triggerable, Dependent
+from buildbot.config import BuilderConfig
 
 BuildmasterConfig = c = {}
 
@@ -21,10 +22,10 @@ c['slaves'] = [BuildSlave('bot1', 'sekrit')]
 upstream = Triggerable('s_upstream', ['upstream'], {'prop': '%s'})
 dep = Dependent('s_dep', upstream, ['depend'], {'dep prop': '%s'})
 c['schedulers'] = [upstream, dep]
-c['builders'] = [{'name':'upstream', 'slavename':'bot1',
-                  'builddir': 'upstream', 'factory': f},
-                 {'name':'depend', 'slavename':'bot1',
-                  'builddir': 'depend', 'factory': f}]
+c['builders'] = [
+    BuilderConfig(name='upstream', slavename='bot1', factory=f),
+    BuilderConfig(name='depend', slavename='bot1', factory=f),
+]
 c['slavePortnum'] = 0
 """
 

@@ -1808,13 +1808,19 @@ the @emph{latest sources} of the same branch.
 
 @cindex Builder
 
-The @code{Builder} is a long-lived object which controls all Builds of
-a given type. Each one is created when the config file is first
-parsed, and lives forever (or rather until it is removed from the
-config file). It mediates the connections to the buildslaves that do
-all the work, and is responsible for creating the @code{Build} objects
-that decide @emph{how} a build is performed (i.e., which steps are
-executed in what order).
+The Buildmaster runs a collection of Builders, each of which handles a single
+type of build (e.g. full versus quick), on one or more build slaves.   Builders
+serve as a kind of queue for a particular type of build.  Each Builder gets a
+separate column in the waterfall display. In general, each Builder runs
+independently (although various kinds of interlocks can cause one Builder to
+have an effect on another).
+
+Each @code{Builder} is a long-lived object which controls a sequence of Builds.
+Each Builder is created when the config file is first parsed, and lives forever
+(or rather until it is removed from the config file). It mediates the
+connections to the buildslaves that do all the work, and is responsible for
+creating the @code{Build} objects that decide @emph{how} a build is performed
+(i.e., which steps are executed in what order).
 
 Each @code{Builder} gets a unique name, and the path name of a
 directory where it gets to do all its work (there is a
@@ -1831,28 +1837,20 @@ A @code{Builder} which is used to perform OS-X builds (as opposed to
 Linux or Solaris builds) should naturally be associated with an
 OS-X-based buildslave.
 
-A @code{Builder} may be given a set of environment variables to be used
-in its @pxref{ShellCommand}s. These variables will override anything in the
-buildslave's environment. Variables passed directly to a ShellCommand will
-override variables of the same name passed to the Builder.
+If multiple buildslaves are available for any given Builder, you will
+have some measure of redundancy: in case one slave goes offline, the
+others can still keep the Builder working. In addition, multiple
+buildslaves will allow multiple simultaneous builds for the same
+Builder, which might be useful if you have a lot of forced or ``try''
+builds taking place.
 
-For example, if you a pool of identical slaves it is often easier to manage
-variables like PATH from Buildbot rather than manually editing it inside of
-the slaves' environment.
-
-@example
-f = factory.BuildFactory
-f.addStep(ShellCommand(
-              command=['bash', './configure']))
-f.addStep(Compile())
-
-c['builders'] = [
-  @{'name': 'test', 'slavenames': ['slave1', 'slave2', 'slave3', 'slave4',
-                                   'slave5', 'slave6'],
-    'builddir': 'test', 'factory': f, 'slavebuilddir': 'test',
-    'env': @{'PATH': '/opt/local/bin:/opt/app/bin:/usr/local/bin:/usr/bin'@}@}
-
-@end example
+If you use this feature, it is important to make sure that the
+buildslaves are all, in fact, capable of running the given build. The
+slave hosts should be configured similarly, otherwise you will spend a
+lot of time trying (unsuccessfully) to reproduce a failure that only
+occurs on some of the buildslaves and not the others. Different
+platforms, operating systems, versions of major programs or libraries,
+all these things mean you should use separate Builders.
 
 @node Users, Build Properties, Builder, Concepts
 @section Users
@@ -3291,19 +3289,20 @@ c['properties'] = @{
 
 @bcindex c['builders']
 
-The @code{c['builders']} key is a list of dictionaries which specify
-the Builders. The Buildmaster runs a collection of Builders, each of
-which handles a single type of build (e.g. full versus quick), on a
-single build slave. A Buildbot which makes sure that the latest code
-(``HEAD'') compiles correctly across four separate architecture will
-have four Builders, each performing the same build but on different
-slaves (one per platform).
+The @code{c['builders']} key is a list of objects giving configuration for the
+Builders.  For more information, @xref{Builder}.  The class definition for the
+builder configuration is in @code{buildbot.config}.  In the configuration file,
+its use looks like:
 
-Each Builder gets a separate column in the waterfall display. In
-general, each Builder runs independently (although various kinds of
-interlocks can cause one Builder to have an effect on another).
+@example
+from buildbot.config import BuilderConfig
+c['builders'] = [
+    BuilderConfig(name='quick', slavenames=['bot1', 'bot2'], factory=f_quick),
+    BuilderConfig(name='thorough', slavename='bot1', factory=f_thorough),
+]
+@end example
 
-Each Builder specification dictionary has several required keys:
+The constructor takes the following keyword arguments:
 
 @table @code
 @item name
@@ -3311,32 +3310,16 @@ This specifies the Builder's name, which is used in status
 reports.
 
 @item slavename
-This specifies which buildslave will be used by this Builder.
-@code{slavename} must appear in the @code{c['slaves']} list. Each
-buildslave can accomodate multiple Builders.
-
 @item slavenames
-If you provide @code{slavenames} instead of @code{slavename}, you can
-give a list of buildslaves which are capable of running this Builder.
-If multiple buildslaves are available for any given Builder, you will
-have some measure of redundancy: in case one slave goes offline, the
-others can still keep the Builder working. In addition, multiple
-buildslaves will allow multiple simultaneous builds for the same
-Builder, which might be useful if you have a lot of forced or ``try''
-builds taking place.
-
-If you use this feature, it is important to make sure that the
-buildslaves are all, in fact, capable of running the given build. The
-slave hosts should be configured similarly, otherwise you will spend a
-lot of time trying (unsuccessfully) to reproduce a failure that only
-occurs on some of the buildslaves and not the others. Different
-platforms, operating systems, versions of major programs or libraries,
-all these things mean you should use separate Builders.
+These arguments specify the buildslave or buildslaves that will be used by this
+Builder.  All slaves names must appear in the @code{c['slaves']} list. Each
+buildslave can accomodate multiple Builders.  The @code{slavenames} parameter
+can be a list of names, while @code{slavename} can specify only one slave.
 
 @item factory
 This is a @code{buildbot.process.factory.BuildFactory} instance which
 controls how the build is performed. Full details appear in their own
-chapter, @xref{Build Process}. Parameters like the location of the CVS
+section, @xref{Build Process}. Parameters like the location of the CVS
 repository and the compile-time options used for the build are
 generally provided as arguments to the factory's constructor.
 
@@ -3358,7 +3341,7 @@ Specifies the name of a subdirectory (under the base directory) in which
 everything related to this builder will be placed on the buildslave.
 This is where checkouts, compiles, and tests are run. If not set,
 defaults to @code{builddir}. If a slave is connected to multiple builders
-that shares the same @code{slavebuilddir}, make sure the slave is set to
+that share the same @code{slavebuilddir}, make sure the slave is set to
 run one build at a time or ensure this is fine to run multiple builds from
 the same directory simultaneously.
 
@@ -3388,6 +3371,33 @@ object which is assigning a new job, and a list of @code{BuildRequest}
 objects of pending builds. The function should return one of the
 @code{BuildRequest} objects, or @code{None} if none of the pending
 builds should be started.
+
+@item locks
+This argument specifies a list of locks that apply to this builder; @xref{Interlocks}.
+
+@item env
+A Builder may be given a dictionary of environment variables in this parameter.
+The variables are used in @pxref{ShellCommand} steps in builds created by this
+builder. The environment variables will override anything in the buildslave's
+environment. Variables passed directly to a @code{ShellCommand} will override
+variables of the same name passed to the Builder.
+
+For example, if you a pool of identical slaves it is often easier to manage
+variables like PATH from Buildbot rather than manually editing it inside of
+the slaves' environment.
+
+@example
+f = factory.BuildFactory
+f.addStep(ShellCommand(
+              command=['bash', './configure']))
+f.addStep(Compile())
+
+c['builders'] = [
+  BuilderConfig(name='test', factory=f,
+        slavenames=['slave1', 'slave2', 'slave3', 'slave4'],
+        env=@{'PATH': '/opt/local/bin:/opt/app/bin:/usr/local/bin:/usr/bin'@}),
+]
+@end example
 
 @end table
 
@@ -4837,6 +4847,14 @@ having WARNINGS. The remaining steps will still be executed.
 @item alwaysRun
 if True, this build step will always be run, even if a previous buildstep
 with @code{haltOnFailure=True} has failed.
+
+@item doStepIf
+A step can be configured to only run under certain conditions.  To do this, set
+the step's @code{doStepIf} to a boolean value, or to a function that returns a
+boolean value.  If the value or function result is false, then the step will
+return SKIPPED without doing anything.  Oherwise, the step will be executed
+normally.  If you set @code{doStepIf} to a function, that function should
+accept one parameter, which will be the @code{Step} object itself.
 
 @item locks
 a list of Locks (instances of @code{buildbot.locks.SlaveLock} or

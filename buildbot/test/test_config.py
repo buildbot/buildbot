@@ -74,23 +74,47 @@ c['builders'] = [{ 'name': 'builder1', 'slavename': 'bot1',
                    'builddir': 'workdir2', 'factory': f1 }]
 """
 
+buildersCfg5 = buildersCfg2 + \
+"""
+from buildbot.config import BuilderConfig
+c['builders'] = [
+    BuilderConfig(
+        name = 'builder1',
+        slavename = 'bot1',
+        builddir = 'newworkdir',
+        factory = f1),
+    BuilderConfig(
+        name = 'builder2',
+        slavename = 'bot1',
+        builddir = 'workdir2',
+        factory = f1)
+]
+"""
+
+
 wpCfg1 = buildersCfg + \
 """
 from buildbot.steps import shell
+from buildbot.config import BuilderConfig
 f1 = BasicBuildFactory('cvsroot', 'cvsmodule')
 f1.addStep(shell.ShellCommand, command=[shell.WithProperties('echo')])
-c['builders'] = [{'name':'builder1', 'slavename':'bot1',
-                  'builddir':'workdir1', 'factory': f1}]
+c['builders'] = [
+    BuilderConfig(name='builder1', slavename='bot1',
+        builddir='workdir1', factory=f1)
+]
 """
 
 wpCfg2 = buildersCfg + \
 """
 from buildbot.steps import shell
+from buildbot.config import BuilderConfig
 f1 = BasicBuildFactory('cvsroot', 'cvsmodule')
 f1.addStep(shell.ShellCommand,
            command=[shell.WithProperties('echo %s', 'revision')])
-c['builders'] = [{'name':'builder1', 'slavename':'bot1',
-                  'builddir':'workdir1', 'factory': f1}]
+c['builders'] = [
+    BuilderConfig(name='builder1', slavename='bot1',
+        builddir='workdir1', factory=f1)
+]
 """
 
 
@@ -153,16 +177,15 @@ interlockCfgBad = \
 """
 from buildbot.process.factory import BasicBuildFactory
 from buildbot.buildslave import BuildSlave
+from buildbot.config import BuilderConfig
 c = {}
 c['slaves'] = [BuildSlave('bot1', 'pw1')]
 c['schedulers'] = []
 f1 = BasicBuildFactory('cvsroot', 'cvsmodule')
 c['builders'] = [
-                 { 'name': 'builder1', 'slavename': 'bot1',
-                 'builddir': 'workdir', 'factory': f1 },
-                 { 'name': 'builder2', 'slavename': 'bot1',
-                 'builddir': 'workdir2', 'factory': f1 },
-                   ]
+    BuilderConfig(name='builder1', slavename='bot1', factory=f1),
+    BuilderConfig(name='builder2', slavename='bot1', factory=f1),
+]
 # interlocks have been removed
 c['interlocks'] = [('lock1', ['builder1'], ['builder2', 'builder3']),
                    ]
@@ -176,6 +199,7 @@ from buildbot.steps.dummy import Dummy
 from buildbot.process.factory import BuildFactory, s
 from buildbot.locks import MasterLock
 from buildbot.buildslave import BuildSlave
+from buildbot.config import BuilderConfig
 c = {}
 c['slaves'] = [BuildSlave('bot1', 'pw1')]
 c['schedulers'] = []
@@ -183,11 +207,10 @@ l1 = MasterLock('lock1')
 l2 = MasterLock('lock1') # duplicate lock name
 f1 = BuildFactory([s(Dummy, locks=[])])
 c['builders'] = [
-                 { 'name': 'builder1', 'slavename': 'bot1',
-                 'builddir': 'workdir', 'factory': f1, 'locks': [l1, l2] },
-                 { 'name': 'builder2', 'slavename': 'bot1',
-                 'builddir': 'workdir2', 'factory': f1 },
-                   ]
+    BuilderConfig(name='builder1', slavename='bot1', factory=f1,
+                  locks=[l1, l2]),
+    BuilderConfig(name='builder2', slavename='bot1', factory=f1),
+]
 c['slavePortnum'] = 9999
 BuildmasterConfig = c
 """
@@ -198,6 +221,7 @@ from buildbot.steps.dummy import Dummy
 from buildbot.process.factory import BuildFactory, s
 from buildbot.locks import MasterLock, SlaveLock
 from buildbot.buildslave import BuildSlave
+from buildbot.config import BuilderConfig
 c = {}
 c['slaves'] = [BuildSlave('bot1', 'pw1')]
 c['schedulers'] = []
@@ -205,11 +229,10 @@ l1 = MasterLock('lock1')
 l2 = SlaveLock('lock1') # duplicate lock name
 f1 = BuildFactory([s(Dummy, locks=[])])
 c['builders'] = [
-                 { 'name': 'builder1', 'slavename': 'bot1',
-                 'builddir': 'workdir', 'factory': f1, 'locks': [l1, l2] },
-                 { 'name': 'builder2', 'slavename': 'bot1',
-                 'builddir': 'workdir2', 'factory': f1 },
-                   ]
+    BuilderConfig(name='builder1', slavename='bot1', factory=f1,
+                  locks=[l1, l2]),
+    BuilderConfig(name='builder2', slavename='bot1', factory=f1),
+]
 c['slavePortnum'] = 9999
 BuildmasterConfig = c
 """
@@ -242,6 +265,7 @@ lockCfg1a = \
 from buildbot.process.factory import BasicBuildFactory
 from buildbot.locks import MasterLock
 from buildbot.buildslave import BuildSlave
+from buildbot.config import BuilderConfig
 c = {}
 c['slaves'] = [BuildSlave('bot1', 'pw1')]
 c['schedulers'] = []
@@ -249,11 +273,10 @@ f1 = BasicBuildFactory('cvsroot', 'cvsmodule')
 l1 = MasterLock('lock1')
 l2 = MasterLock('lock2')
 c['builders'] = [
-                 { 'name': 'builder1', 'slavename': 'bot1',
-                 'builddir': 'workdir', 'factory': f1, 'locks': [l1, l2] },
-                 { 'name': 'builder2', 'slavename': 'bot1',
-                 'builddir': 'workdir2', 'factory': f1 },
-                   ]
+    BuilderConfig(name='builder1', slavename='bot1', factory=f1,
+                  locks=[l1, l2]),
+    BuilderConfig(name='builder2', slavename='bot1', factory=f1),
+]
 c['slavePortnum'] = 9999
 BuildmasterConfig = c
 """
@@ -263,6 +286,7 @@ lockCfg1b = \
 from buildbot.process.factory import BasicBuildFactory
 from buildbot.locks import MasterLock
 from buildbot.buildslave import BuildSlave
+from buildbot.config import BuilderConfig
 c = {}
 c['slaves'] = [BuildSlave('bot1', 'pw1')]
 c['schedulers'] = []
@@ -270,11 +294,9 @@ f1 = BasicBuildFactory('cvsroot', 'cvsmodule')
 l1 = MasterLock('lock1')
 l2 = MasterLock('lock2')
 c['builders'] = [
-                 { 'name': 'builder1', 'slavename': 'bot1',
-                 'builddir': 'workdir', 'factory': f1, 'locks': [l1] },
-                 { 'name': 'builder2', 'slavename': 'bot1',
-                 'builddir': 'workdir2', 'factory': f1 },
-                   ]
+    BuilderConfig(name='builder1', slavename='bot1', factory=f1, locks=[l1]),
+    BuilderConfig(name='builder2', slavename='bot1', factory=f1),
+]
 c['slavePortnum'] = 9999
 BuildmasterConfig = c
 """
@@ -286,6 +308,7 @@ from buildbot.steps.dummy import Dummy
 from buildbot.process.factory import BuildFactory, s
 from buildbot.locks import MasterLock
 from buildbot.buildslave import BuildSlave
+from buildbot.config import BuilderConfig
 c = {}
 c['slaves'] = [BuildSlave('bot1', 'pw1')]
 c['schedulers'] = []
@@ -295,11 +318,9 @@ f1 = BuildFactory([s(Dummy, locks=[l1,l2])])
 f2 = BuildFactory([s(Dummy)])
 
 c['builders'] = [
-                 { 'name': 'builder1', 'slavename': 'bot1',
-                 'builddir': 'workdir', 'factory': f1 },
-                 { 'name': 'builder2', 'slavename': 'bot1',
-                 'builddir': 'workdir2', 'factory': f2 },
-                   ]
+    BuilderConfig(name='builder1', slavename='bot1', factory=f1),
+    BuilderConfig(name='builder2', slavename='bot1', factory=f2),
+]
 c['slavePortnum'] = 9999
 BuildmasterConfig = c
 """
@@ -310,6 +331,7 @@ from buildbot.steps.dummy import Dummy
 from buildbot.process.factory import BuildFactory, s
 from buildbot.locks import MasterLock
 from buildbot.buildslave import BuildSlave
+from buildbot.config import BuilderConfig
 c = {}
 c['slaves'] = [BuildSlave('bot1', 'pw1')]
 c['schedulers'] = []
@@ -319,11 +341,9 @@ f1 = BuildFactory([s(Dummy, locks=[l1])])
 f2 = BuildFactory([s(Dummy)])
 
 c['builders'] = [
-                 { 'name': 'builder1', 'slavename': 'bot1',
-                 'builddir': 'workdir', 'factory': f1 },
-                 { 'name': 'builder2', 'slavename': 'bot1',
-                 'builddir': 'workdir2', 'factory': f2 },
-                   ]
+    BuilderConfig(name='builder1', slavename='bot1', factory=f1),
+    BuilderConfig(name='builder2', slavename='bot1', factory=f2),
+]
 c['slavePortnum'] = 9999
 BuildmasterConfig = c
 """
@@ -334,6 +354,7 @@ from buildbot.steps.dummy import Dummy
 from buildbot.process.factory import BuildFactory, s
 from buildbot.locks import MasterLock
 from buildbot.buildslave import BuildSlave
+from buildbot.config import BuilderConfig
 c = {}
 c['slaves'] = [BuildSlave('bot1', 'pw1')]
 c['schedulers'] = []
@@ -343,11 +364,9 @@ f1 = BuildFactory([s(Dummy)])
 f2 = BuildFactory([s(Dummy)])
 
 c['builders'] = [
-                 { 'name': 'builder1', 'slavename': 'bot1',
-                 'builddir': 'workdir', 'factory': f1 },
-                 { 'name': 'builder2', 'slavename': 'bot1',
-                 'builddir': 'workdir2', 'factory': f2 },
-                   ]
+    BuilderConfig(name='builder1', slavename='bot1', factory=f1),
+    BuilderConfig(name='builder2', slavename='bot1', factory=f2),
+]
 c['slavePortnum'] = 9999
 BuildmasterConfig = c
 """
@@ -357,11 +376,11 @@ schedulersCfg = \
 from buildbot.scheduler import Scheduler, Dependent
 from buildbot.process.factory import BasicBuildFactory
 from buildbot.buildslave import BuildSlave
+from buildbot.config import BuilderConfig
 c = {}
 c['slaves'] = [BuildSlave('bot1', 'pw1')]
 f1 = BasicBuildFactory('cvsroot', 'cvsmodule')
-b1 = {'name':'builder1', 'slavename':'bot1',
-      'builddir':'workdir', 'factory':f1}
+b1 = BuilderConfig(name='builder1', slavename='bot1', factory=f1)
 c['builders'] = [b1]
 c['schedulers'] = [Scheduler('full', None, 60, ['builder1'])]
 c['slavePortnum'] = 9999
@@ -804,6 +823,13 @@ c['schedulers'] = [s1, Dependent('downstream', s1, ['builder1'])]
         b5 = master.botmaster.builders["builder1"]
         self.failIf(b4 is b5)
         
+        master.loadConfig(buildersCfg5)
+        self.failUnlessEqual(master.botmaster.builderNames, ["builder1",
+                                                             "builder2"])
+        self.failUnlessListsEquivalent(master.botmaster.builders.keys(),
+                                       ["builder1", "builder2"])
+        b5 = master.botmaster.builders["builder1"]
+        
         # and removing it should make the Builder go away
         master.loadConfig(emptyCfg)
         self.failUnlessEqual(master.botmaster.builderNames, [])
@@ -1196,6 +1222,7 @@ from buildbot.process.factory import BuildFactory, s
 from buildbot.steps.shell import ShellCommand
 from buildbot.steps.source import Darcs
 from buildbot.buildslave import BuildSlave
+from buildbot.config import BuilderConfig
 BuildmasterConfig = c = {}
 c['slaves'] = [BuildSlave('bot1', 'pw1')]
 c['schedulers'] = []
@@ -1205,8 +1232,9 @@ f1 = BuildFactory([ShellCommand(command='echo yes'),
                    ])
 f1.addStep(Darcs(repourl='http://buildbot.net/repos/trunk'))
 f1.addStep(ShellCommand, command='echo old-style')
-c['builders'] = [{'name':'builder1', 'slavename':'bot1',
-                  'builddir':'workdir', 'factory':f1}]
+c['builders'] = [
+    BuilderConfig(name='builder1', slavename='bot1', factory=f1),
+]
 """
 
 cfg1_bad = \
@@ -1215,6 +1243,7 @@ from buildbot.process.factory import BuildFactory, s
 from buildbot.steps.shell import ShellCommand
 from buildbot.steps.source import Darcs
 from buildbot.buildslave import BuildSlave
+from buildbot.config import BuilderConfig
 BuildmasterConfig = c = {}
 c['slaves'] = [BuildSlave('bot1', 'pw1')]
 c['schedulers'] = []
@@ -1227,8 +1256,9 @@ f1 = BuildFactory([ShellCommand(command='echo yes'),
 # but an easy mistake is to do this:
 f1.addStep(ShellCommand(), command='echo args')
 # this test makes sure this error doesn't get ignored
-c['builders'] = [{'name':'builder1', 'slavename':'bot1',
-                  'builddir':'workdir', 'factory':f1}]
+c['builders'] = [
+    BuilderConfig(name='builder1', slavename='bot1', factory=f1),
+]
 """
 
 class Factories(unittest.TestCase):
