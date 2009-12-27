@@ -25,7 +25,7 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
         self.builder_control = builder_control
 
     def getTitle(self, request):
-        return "Buildbot: %s" % html.escape(self.builder_status.getName())
+        return "Buildbot: %s" % self.builder_status.getName()
 
     def builder(self, build, req):
         b = {}

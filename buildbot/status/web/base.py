@@ -203,17 +203,18 @@ class HtmlResource(resource.Resource):
 
     def getContext(self, request):
         status = self.getStatus(request)
+        path_to_root = self.path_to_root(request)
         return dict(project_url = status.getProjectURL(),
                     project_name = status.getProjectName(),
-                    stylesheet = self.path_to_root(request) + 'default.css',
-                    path_to_root = self.path_to_root(request),
+                    stylesheet = path_to_root + 'default.css',
+                    path_to_root = path_to_root,
                     version = version,
                     time = time.strftime("%a %d %b %Y %H:%M:%S",
                                         time.localtime(util.now())),
                     tz = time.tzname[time.localtime()[-1]],
                     metatags = [],
-                    title = 'BuildBot',
-                    welcomeurl = self.path_to_root(request) + "index.html")
+                    title = self.getTitle(request),
+                    welcomeurl = path_to_root)
         
 
     def getStatus(self, request):
@@ -238,48 +239,8 @@ class HtmlResource(resource.Resource):
     def path_to_root(self, request):
         return path_to_root(request)
 
-    def footer(self, req):
-        template = req.site.buildbot_service.templates.get_template("footer.html")
-        cxt = self.getContext(req)
-        return template.render(**cxt)
-
     def getTitle(self, request):
         return self.title
-
-    def fillTemplate(self, template, request):
-        s = request.site.buildbot_service
-        values = s.template_values.copy()
-        values['root'] = self.path_to_root(request)
-        # e.g. to reference the top-level 'default.css' page, use
-        # "%(root)sdefault.css"
-        values['title'] = self.getTitle(request)
-        return template % values
-
-    def content(self, request, context=None):
-        # This method is obsolete.
-        # Override in subclasses.
-
-        s = request.site.buildbot_service
-        data = ""
-        data += self.fillTemplate(s.header, request)
-        data += "<head>\n"
-        for he in s.head_elements:
-            data += " " + self.fillTemplate(he, request) + "\n"        
-        data += self.head(request)
-        data += "</head>\n\n"
-
-        data += '<body %s>\n' % " ".join(['%s="%s"' % (k,v)
-                                          for (k,v) in s.body_attrs.items()])
-        data += self.body(request)
-        data += "</body>\n"
-        data += self.fillTemplate(s.footer, request)
-        return data
-
-    def head(self, request):
-        return ""
-
-    def body(self, request):
-        return "Dummy\n"
 
 class StaticHTML(HtmlResource):
     def __init__(self, body, title):
@@ -347,6 +308,7 @@ WEEK = 7*DAY
 MONTH = 30*DAY
 
 def plural(word, words, num):
+
     if int(num) == 1:
         return "%d %s" % (num, word)
     else:

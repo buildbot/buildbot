@@ -16,7 +16,7 @@ class OneBuildSlaveResource(HtmlResource, BuildLineMixin):
         self.slavename = slavename
 
     def getTitle(self, req):
-        return "Buildbot: %s" % html.escape(self.slavename)
+        return "Buildbot: %s" % self.slavename
 
     def getChild(self, path, req):
         s = self.getStatus(req)

@@ -13,7 +13,6 @@ class ChangeResource(HtmlResource):
         
     def content(self, req, cxt):
         cxt.update(self.change.html_dict())
-        cxt['title'] = self.title
         template = req.site.buildbot_service.templates.get_template("change.html")
         data = template.render(cxt)
         return data      
@@ -39,7 +38,7 @@ class ChangeBox(components.Adapter):
 
     def getBox(self, req):
         url = req.childLink("../changes/%d" % self.original.number)
-        template = req.site.buildbot_service.templates.get_template("change.html")
+        template = req.site.buildbot_service.templates.get_template("change_macros.html")
         text = template.module.box_contents(url=url,
                                             who=self.original.getShortAuthor(),
                                             title=self.original.comments)

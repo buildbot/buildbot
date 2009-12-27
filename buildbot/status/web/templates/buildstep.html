@@ -2,9 +2,10 @@
 
 {% block content %}
 
-<h1>BuildStep 
-  <a href="{{ builder_link }}">{{ b.getBuilder().getName() }}</a> 
-  <a href="{{ build_link }}">{{ b.getNumber() }}</a>: {{ s.getName() }}
+<h1>
+  Builder <a href="{{ builder_link }}">{{ b.getBuilder().getName() }}</a> 
+  build <a href="{{ build_link }}">#{{ b.getNumber() }}</a> 
+  step <a href="">{{ s.getName() }}</a>:   
 </h1>
 
 {% if s.isFinished() %}

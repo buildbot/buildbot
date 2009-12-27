@@ -1,48 +1,5 @@
 {% extends "layout.html" %}
-
-{# contains two macros used to render HTML as change, as well as the main page #}
-
-{% macro change(who, at, branch, revision, files, comments, properties, revlink) %}
-
-<p>
-Changed by: <b>{{ who|e }}</b><br/>
-Changed at: <b>{{ at }}</b><br/>
-{% if branch %}
-  Branch: <b>{{ branch|e }}</b><br/>
-{% endif %}
-{% if revision %}
- {% if revlink %}<a href="{{ revlink }}">{{ revision }}</a>
- {% else %}{{ revision }}
- {% endif %}
-{% endif %}
-</p>
-
-<h3>Changed files</h3>
-<ul>
-{% for f in files -%}
-  <li>
-  {%- if f.url %}<a href="{{ f.url }}"><b>{{ f.name }}</b></a></li>
-  {%- else %}<b>{{ f.name }}</b>
-  {%- endif -%}
-  </li>
-{% endfor %}
-</ul>
-
-<h3>Comments</h3>
-<pre>{{ comments }}</pre>
-
-<h3>Properties</h3>
-<ul>
-{% for p in properties %}
-  <li>{{ p[0] }}: {{ p[1] }}</li>
-{% endfor %}
-</ul>
-
-{%- endmacro %}
-
-{% macro box_contents(who, url, title) -%}
-<a href="{{ url }}" title="{{ title }}">{{ who|e }}</a>
-{%- endmacro %}
+{% from "change_macros.html" import change %]
 
 {% block content %}
 

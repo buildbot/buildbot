@@ -10,9 +10,9 @@
       {{ metatags }}
     {% endif %}
     {% if refresh %}
-      <meta http-equiv="refresh" content="{{ refresh }}"/>
+      <meta http-equiv="refresh" content="{{ refresh|e }}"/>
     {% endif %}
-    <title>{{ title }}</title>
+    <title>{{ title|e }}</title>
     <link rel="stylesheet" href="{{ stylesheet }}" type="text/css" />
     {% endblock %}
   </head>
@@ -43,7 +43,7 @@
         project
       {% endif %}
       <br/>
-      Page built: {{time}} ({{tz}})
+      Page built: <b>{{ time }}</b> ({{ tz }})
     </div>
     {% endblock -%}
   </body>

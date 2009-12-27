@@ -41,14 +41,6 @@ class GridStatusMixin(object):
                 pass
         return None
 
-    def head(self, request):
-        head = ''
-        reload_time = self.get_reload_time(request)
-        if reload_time is not None:
-            head += '<meta http-equiv="refresh" content="%d">\n' % reload_time
-        return head
-
-
     def build_cxt(self, request, build):
         if not build:
             return {}
@@ -168,6 +160,8 @@ class GridStatusResource(HtmlResource, GridStatusMixin):
         status = self.getStatus(request)
         stamps = self.getRecentSourcestamps(status, numBuilds, categories, branch)
 
+        cxt['refresh'] = self.get_reload_time(request)
+
         cxt.update({'categories': categories,
                     'branch': branch,
                     'ANYBRANCH': ANYBRANCH,
@@ -226,6 +220,8 @@ class TransposedGridStatusResource(HtmlResource, GridStatusMixin):
         categories = request.args.get("category", [])
         branch = request.args.get("branch", [ANYBRANCH])[0]
         if branch == 'trunk': branch = None
+
+        cxt['refresh'] = self.get_reload_time(request)
 
         # and the data we want to render
         status = self.getStatus(request)

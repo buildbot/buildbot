@@ -4,9 +4,6 @@ class BuildStatusStatusResource(HtmlResource):
     def __init__(self, categories=None):
         HtmlResource.__init__(self)
 
-    def head(self, request):
-        return ""
-
     def content(self, request, ctx):
         """Display a build in the same format as the waterfall page.
         The HTTP GET parameters are the builder name and the build

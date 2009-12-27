@@ -24,7 +24,7 @@ class StatusResourceBuild(HtmlResource):
 
     def getTitle(self, request):
         return ("Buildbot: %s Build #%d" %
-                (html.escape(self.build_status.getBuilder().getName()),
+                (self.build_status.getBuilder().getName(),
                  self.build_status.getNumber()))
 
     def content(self, req, cxt):

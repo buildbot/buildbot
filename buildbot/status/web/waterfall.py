@@ -121,8 +121,8 @@ class BuildBox(components.Adapter):
         number = b.getNumber()
         url = path_to_build(req, b)
         reason = b.getReason()
-        text = ('<a title="Reason: %s" href="%s">Build %d</a>'
-                % (html.escape(reason), url, number))
+        template = req.site.buildbot_service.templates.get_template("box_macros.html")
+        text = template.module.build_box(reason=reason,url=url,number=number)
         class_ = "start"
         if b.isFinished() and not b.getSteps():
             # the steps have been pruned, so there won't be any indication
@@ -142,18 +142,23 @@ class StepBox(components.Adapter):
             text = []
         text = text[:]
         logs = self.original.getLogs()
+        
+        cxt = dict(text=text, logs=[], urls=[])
+
         for num in range(len(logs)):
             name = logs[num].getName()
             if logs[num].hasContents():
                 url = urlbase + "/logs/%s" % urllib.quote(name)
-                text.append("<a href=\"%s\">%s</a>" % (url, html.escape(name)))
             else:
-                text.append(html.escape(name))
-        urls = self.original.getURLs()
-        ex_url_class = "BuildStep external"
-        for name, target in urls.items():
-            text.append('[<a href="%s" class="%s">%s</a>]' %
-                        (target, ex_url_class, html.escape(name)))
+                url = None
+            cxt['logs'].append(dict(name=name, url=url))
+
+        for name, target in self.original.getURLs().items():
+            cxt['urls'].append(dict(link=target,name=name))
+
+        template = req.site.buildbot_service.templates.get_template("box_macros.html")
+        text = template.module.step_box(**cxt)
+        
         class_ = "BuildStep " + build_get_class(self.original)
         return Box(text, class_=class_)
 components.registerAdapter(StepBox, builder.BuildStepStatus, IBox)
@@ -242,8 +247,6 @@ class WaterfallHelp(HtmlResource):
 
         cxt['show_events_checked'] = request.args.get("show_events", ["false"])[0].lower() == "true"
         cxt['branches'] = [b for b in request.args.get("branch", []) if b]
-
-
         cxt['failures_only'] = request.args.get("failures_only", ["false"])[0].lower() == "true"
 
         # this has a set of toggle-buttons to let the user choose the
@@ -589,7 +592,7 @@ class WaterfallStatusResource(HtmlResource):
         # grid is a list of columns, one for the timestamps, and one per
         # event source. Each column is exactly the same height. Each element
         # of the list is a single <td> box.
-        lastDate = time.strftime("<b>%d %b %Y</b>",
+        lastDate = time.strftime("%d %b %Y",
                                  time.localtime(util.now()))
         for r in range(0, len(timestamps)):
             chunkstrip = eventGrid[r]
@@ -699,5 +702,5 @@ class WaterfallStatusResource(HtmlResource):
                 if strip[i]:
                     strip[i] = strip[i].td()
 
-        return dict(grid=grid, gridlen=gridlen, no_bubble=noBubble)
+        return dict(grid=grid, gridlen=gridlen, no_bubble=noBubble, time=lastDate)
 
