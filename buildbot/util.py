@@ -2,7 +2,7 @@
 
 from twisted.internet.defer import Deferred
 from twisted.spread import pb
-import time, re
+import time, re, string
 
 def naturalSort(l):
     """Returns a sorted copy of l, so that numbers in strings are sorted in the
@@ -109,3 +109,13 @@ def to_text(s):
         return s
     else:
         return str(s)
+
+# Remove potentially harmful characters from builder name if it is to be
+# used as the build dir.
+badchars_map = string.maketrans("\t !#$%&'()*+,./:;<=>?@[\\]^{|}~",
+                                "______________________________")
+def safeTranslate(str):
+    if isinstance(str, unicode):
+        str = str.encode('utf8')
+    return str.translate(badchars_map)
+

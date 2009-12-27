@@ -18,6 +18,7 @@ config_1 = """
 from buildbot.process import factory
 from buildbot.steps import dummy
 from buildbot.buildslave import BuildSlave
+from buildbot.config import BuilderConfig
 s = factory.s
 
 BuildmasterConfig = c = {}
@@ -33,27 +34,23 @@ f3 = factory.BuildFactory([s(dummy.RemoteDummy, timeout=3)])
 f4 = factory.BuildFactory([s(dummy.RemoteDummy, timeout=5)])
 
 c['builders'] = [
-    {'name': 'b1', 'slavenames': ['bot1','bot2','bot3'],
-     'builddir': 'b1', 'factory': f1},
-    ]
+    BuilderConfig(name='b1', slavenames=['bot1', 'bot2', 'bot3'], factory=f1),
+]
 """
 
 config_2 = config_1 + """
 
 c['builders'] = [
-    {'name': 'b1', 'slavenames': ['bot1','bot2','bot3'],
-     'builddir': 'b1', 'factory': f2},
-    ]
+    BuilderConfig(name='b1', slavenames=['bot1', 'bot2', 'bot3'], factory=f2),
+]
 
 """
 
 config_busyness = config_1 + """
 c['builders'] = [
-    {'name': 'b1', 'slavenames': ['bot1'],
-     'builddir': 'b1', 'factory': f3},
-    {'name': 'b2', 'slavenames': ['bot1'],
-     'builddir': 'b2', 'factory': f4},
-    ]
+    BuilderConfig(name='b1', slavenames=['bot1', ], factory=f3),
+    BuilderConfig(name='b2', slavenames=['bot1', ], factory=f4),
+]
 """
 
 class Slave(RunMixin, unittest.TestCase):
@@ -268,6 +265,7 @@ from buildbot.process import factory
 from buildbot.steps import dummy
 from buildbot.buildslave import BuildSlave
 from buildbot.test.test_slaves import FakeLatentBuildSlave
+from buildbot.config import BuilderConfig
 s = factory.s
 
 BuildmasterConfig = c = {}
@@ -286,9 +284,8 @@ f3 = factory.BuildFactory([s(dummy.RemoteDummy, timeout=3)])
 f4 = factory.BuildFactory([s(dummy.RemoteDummy, timeout=5)])
 
 c['builders'] = [
-    {'name': 'b1', 'slavenames': ['bot1','bot2','bot3'],
-     'builddir': 'b1', 'factory': f1},
-    ]
+    BuilderConfig(name='b1', slavenames=['bot1', 'bot2', 'bot3'], factory=f1),
+]
 """
 
 
@@ -654,6 +651,7 @@ config_3 = """
 from buildbot.process import factory
 from buildbot.steps import dummy
 from buildbot.buildslave import BuildSlave
+from buildbot.config import BuilderConfig
 s = factory.s
 
 BuildmasterConfig = c = {}
@@ -667,23 +665,20 @@ f2 = factory.BuildFactory([s(dummy.Wait, handle='two')])
 f3 = factory.BuildFactory([s(dummy.Wait, handle='three')])
 
 c['builders'] = [
-    {'name': 'b1', 'slavenames': ['bot1'],
-     'builddir': 'b1', 'factory': f1},
-    ]
+    BuilderConfig(name='b1', slavename='bot1', factory=f1),
+]
 """
 
 config_4 = config_3 + """
 c['builders'] = [
-    {'name': 'b1', 'slavenames': ['bot1'],
-     'builddir': 'b1', 'factory': f2},
-    ]
+    BuilderConfig(name='b1', slavename='bot1', factory=f2),
+]
 """
 
 config_5 = config_3 + """
 c['builders'] = [
-    {'name': 'b1', 'slavenames': ['bot1'],
-     'builddir': 'b1', 'factory': f3},
-    ]
+    BuilderConfig(name='b1', slavename='bot1', factory=f3),
+]
 """
 
 from buildbot.slave.commands import waitCommandRegistry
@@ -905,23 +900,21 @@ class Slave2(RunMixin, unittest.TestCase):
 
 config_multi_builders = config_1 + """
 c['builders'] = [
-    {'name': 'dummy', 'slavenames': ['bot1','bot2','bot3'],
-     'builddir': 'b1', 'factory': f2},
-    {'name': 'dummy2', 'slavenames': ['bot1','bot2','bot3'],
-     'builddir': 'b2', 'factory': f2},
-    {'name': 'dummy3', 'slavenames': ['bot1','bot2','bot3'],
-     'builddir': 'b3', 'factory': f2},
-    ]
-
+    BuilderConfig(name='dummy', factory=f2,
+                  slavenames=['bot1', 'bot2', 'bot3']),
+    BuilderConfig(name='dummy2', factory=f2,
+                  slavenames=['bot1', 'bot2', 'bot3']),
+    BuilderConfig(name='dummy3', factory=f2,
+                  slavenames=['bot1', 'bot2', 'bot3']),
+]
 """
 
 config_mail_missing = config_1 + """
 c['slaves'] = [BuildSlave('bot1', 'sekrit', notify_on_missing='admin',
                           missing_timeout=1)]
 c['builders'] = [
-    {'name': 'dummy', 'slavenames': ['bot1'],
-     'builddir': 'b1', 'factory': f1},
-    ]
+    BuilderConfig(name='dummy', slavename='bot1', factory=f1),
+]
 c['projectName'] = 'myproject'
 c['projectURL'] = 'myURL'
 """

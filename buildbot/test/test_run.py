@@ -16,6 +16,7 @@ config_base = """
 from buildbot.process import factory
 from buildbot.steps import dummy
 from buildbot.buildslave import BuildSlave
+from buildbot.config import BuilderConfig
 s = factory.s
 
 f1 = factory.QuickBuildFactory('fakerep', 'cvsmodule', configure=None)
@@ -28,10 +29,10 @@ f2 = factory.BuildFactory([
 BuildmasterConfig = c = {}
 c['slaves'] = [BuildSlave('bot1', 'sekrit')]
 c['schedulers'] = []
-c['builders'] = []
-c['builders'].append({'name':'quick', 'slavename':'bot1',
-                      'builddir': 'quickdir', 'factory': f1,
-                      'slavebuilddir': 'slavequickdir'})
+c['builders'] = [
+    BuilderConfig(name='quick', slavename='bot1', factory=f1,
+        builddir='quickdir', slavebuilddir='slavequickdir'),
+]
 c['slavePortnum'] = 0
 """
 
@@ -47,8 +48,10 @@ c['slaves'] = [ BuildSlave('bot1', 'sekrit') ]
 from buildbot.scheduler import Scheduler
 c['schedulers'] = [Scheduler('dummy', None, 0.1, ['dummy'])]
 
-c['builders'] = [{'name': 'dummy', 'slavename': 'bot1',
-                  'builddir': 'dummy1', 'factory': f2}]
+c['builders'] = [
+    BuilderConfig(name='dummy', slavename='bot1',
+                  factory=f2, builddir='dummy1'),
+]
 """
 
 config_cant_build = config_can_build + """
@@ -64,40 +67,50 @@ c['slaves'] = [ BuildSlave('bot1', 'sekrit', max_builds=1) ]
 from buildbot.scheduler import Scheduler
 c['schedulers'] = [Scheduler('dummy', None, 0.1, ['dummy', 'dummy2'])]
 
-c['builders'].append({'name': 'dummy', 'slavename': 'bot1',
-                      'factory': f2})
-c['builders'].append({'name': 'dummy2', 'slavename': 'bot1',
-                      'builddir': 'dummy2', 'factory': f2})
+c['builders'] = c['builders'] + [
+    BuilderConfig(name='dummy', slavename='bot1', factory=f2),
+    BuilderConfig(name='dummy2', slavename='bot1', factory=f2),
+]
 """
 
 config_2 = config_base + """
-c['builders'] = [{'name': 'dummy', 'slavename': 'bot1',
-                  'builddir': 'dummy1', 'factory': f2},
-                 {'name': 'test dummy', 'slavename': 'bot1',
-                  'factory': f2, 'category': 'test'}]
+c['builders'] = [
+    BuilderConfig(name='dummy', slavename='bot1',
+                  builddir='dummy1', factory=f2),
+    BuilderConfig(name='test dummy', slavename='bot1',
+                  factory=f2, category='test'),
+]
 """
 
 config_3 = config_2 + """
-c['builders'].append({'name': 'adummy', 'slavename': 'bot1',
-                      'builddir': 'adummy3', 'factory': f2})
-c['builders'].append({'name': 'bdummy', 'slavename': 'bot1',
-                      'builddir': 'adummy4', 'factory': f2,
-                      'category': 'test'})
+c['builders'] = c['builders'] + [
+    BuilderConfig(name='adummy', slavename='bot1',
+                  builddir='adummy3', factory=f2),
+    BuilderConfig(name='bdummy', slavename='bot1',
+                  builddir='adummy4', factory=f2,
+                  category='test'),
+]
 """
 
 config_4 = config_base + """
-c['builders'] = [{'name': 'dummy', 'slavename': 'bot1',
-                  'slavebuilddir': 'sdummy', 'factory': f2}]
+c['builders'] = [
+    BuilderConfig(name='dummy', slavename='bot1',
+                  slavebuilddir='sdummy', factory=f2),
+]
 """
 
 config_4_newbasedir = config_4 + """
-c['builders'] = [{'name': 'dummy', 'slavename': 'bot1',
-                  'builddir': 'dummy2', 'factory': f2}]
+c['builders'] = [
+    BuilderConfig(name='dummy', slavename='bot1',
+                  builddir='dummy2', factory=f2),
+]
 """
 
 config_4_newbuilder = config_4_newbasedir + """
-c['builders'].append({'name': 'dummy2', 'slavename': 'bot1',
-                      'builddir': 'dummy23', 'factory': f2})
+c['builders'] = c['builders'] + [
+    BuilderConfig(name='dummy2', slavename='bot1',
+                  builddir='dummy23', factory=f2),
+]
 """
 
 class Run(unittest.TestCase):

@@ -1,18 +1,18 @@
 # -*- test-case-name: buildbot.test.test_console -*-
 
-import os 
-
 from twisted.trial import unittest
 
 from buildbot.status import builder
 from buildbot.status.web import console
 from buildbot.test.runutils import RunMixin
+from buildbot.changes import changes
 
 # Configuration to be used by the getBuildDetailsTest
 run_config = """
 from buildbot.process import factory
 from buildbot.steps.shell import ShellCommand, WithProperties
 from buildbot.buildslave import BuildSlave
+from buildbot.config import BuilderConfig
 s = factory.s
 
 BuildmasterConfig = c = {}
@@ -29,8 +29,8 @@ f2 = factory.BuildFactory([s(ShellCommand, flunkOnFailure=True,
                              command=['ls -WillFail'],
                              workdir='.', timeout=10)])
 
-b1 = {'name': 'full1', 'slavename': 'bot1', 'builddir': 'bd1', 'factory': f1}
-b2 = {'name': 'full2', 'slavename': 'bot1', 'builddir': 'bd2', 'factory': f2}
+b1 = BuilderConfig(name='full1', slavename='bot1', builddir='bd1', factory=f1)
+b2 = BuilderConfig(name='full2', slavename='bot1', builddir='bd2', factory=f2)
 c['builders'] = [b1, b2]
 """
 
@@ -49,6 +49,64 @@ class ConsoleTest(unittest.TestCase):
         self.assertEqual(console.getResultsClass(builder.FAILURE, builder.EXCEPTION, False), "failure")
         self.assertEqual(console.getResultsClass(builder.FAILURE, builder.FAILURE, True), "running")
         self.assertEqual(console.getResultsClass(builder.EXCEPTION, builder.FAILURE, False), "exception")
+
+def _createDummyChange(revision):
+    return changes.Change('Committer', ['files'], 'comment', revision=revision)
+
+class TimeRevisionComparatorTest(unittest.TestCase):
+    def setUp(self):
+        self.comparator = console.TimeRevisionComparator()
+        
+    def testSameRevisionIsNotGreater(self):
+        change = _createDummyChange('abcdef')
+        self.assertFalse(self.comparator.isRevisionEarlier(change, change))
+
+    def testOrdersDifferentRevisions(self):
+        first = _createDummyChange('first_rev')
+        second = _createDummyChange('second_rev')
+        
+        second.when += 1 # Make sure it's "after" the first
+        self.assertTrue(self.comparator.isRevisionEarlier(first, second))
+        self.assertFalse(self.comparator.isRevisionEarlier(second, first))
+
+    def testReturnedKeySortsRevisionsCorrectly(self):
+        my_changes = [_createDummyChange('rev' + str(i))
+                      for i in range(1, 6)]
+        for i in range(1, len(my_changes)):
+            my_changes[i].when = my_changes[i-1].when + 1
+
+        reversed_changes = list(reversed(my_changes))
+        reversed_changes.sort(key=self.comparator.getSortingKey())
+        self.assertEqual(my_changes, reversed_changes)
+
+class IntegerRevisionComparatorTest(unittest.TestCase):
+    def setUp(self):
+        self.comparator = console.IntegerRevisionComparator()
+    
+    def testSameRevisionIsNotGreater(self):
+        change = _createDummyChange('1')
+        self.assertFalse(self.comparator.isRevisionEarlier(change, change))
+
+    def testOrdersDifferentRevisions(self):
+        first = _createDummyChange('1')
+        second = _createDummyChange('2')
+
+        self.assertTrue(self.comparator.isRevisionEarlier(first, second))
+        self.assertFalse(self.comparator.isRevisionEarlier(second, first))
+
+    def testIsValidRevisionAcceptsIntegers(self):
+        for rev in range(100):
+            self.assertTrue(self.comparator.isValidRevision(str(rev)))
+
+    def testIsValidRevisionDoesNotAcceptNonIntegers(self):
+        self.assertFalse(self.comparator.isValidRevision('revision'))
+
+    def testReturnedKeySortsRevisionsCorrectly(self):
+        my_changes = [_createDummyChange(str(i)) for i in range(1, 6)]
+
+        reversed_changes = list(reversed(my_changes))
+        reversed_changes.sort(key=self.comparator.getSortingKey())
+        self.assertEqual(my_changes, reversed_changes)
 
 # Helper class to mock a request. We define only what we really need.
 class MockRequest(object):

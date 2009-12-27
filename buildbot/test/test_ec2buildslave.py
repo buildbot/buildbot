@@ -271,6 +271,7 @@ class BasicConfig(Mixin, unittest.TestCase):
         from buildbot.process import factory
         from buildbot.steps import dummy
         from buildbot.ec2buildslave import EC2LatentBuildSlave
+        from buildbot.config import BuilderConfig
         s = factory.s
 
         BuildmasterConfig = c = {}
@@ -286,9 +287,8 @@ class BasicConfig(Mixin, unittest.TestCase):
         f1 = factory.BuildFactory([s(dummy.RemoteDummy, timeout=1)])
 
         c['builders'] = [
-            {'name': 'b1', 'slavenames': ['bot1'],
-             'builddir': 'b1', 'factory': f1},
-            ]
+            BuilderConfig(name='b1', slavename='bot1', factory=f1),
+        ]
         """)
 
     def testSequence(self):
@@ -354,6 +354,7 @@ class ElasticIP(Mixin, unittest.TestCase):
         from buildbot.process import factory
         from buildbot.steps import dummy
         from buildbot.ec2buildslave import EC2LatentBuildSlave
+        from buildbot.config import BuilderConfig
         s = factory.s
 
         BuildmasterConfig = c = {}
@@ -370,9 +371,8 @@ class ElasticIP(Mixin, unittest.TestCase):
         f1 = factory.BuildFactory([s(dummy.RemoteDummy, timeout=1)])
 
         c['builders'] = [
-            {'name': 'b1', 'slavenames': ['bot1'],
-             'builddir': 'b1', 'factory': f1},
-            ]
+            BuilderConfig(name='b1', slavename='bot1', factory=f1),
+        ]
         """)
 
     def testSequence(self):

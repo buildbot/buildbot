@@ -992,6 +992,7 @@ config_base = """
 from buildbot.process import factory
 from buildbot.steps import dummy
 from buildbot.buildslave import BuildSlave
+from buildbot.config import BuilderConfig
 s = factory.s
 
 f1 = factory.QuickBuildFactory('fakerep', 'cvsmodule', configure=None)
@@ -1004,17 +1005,18 @@ f2 = factory.BuildFactory([
 BuildmasterConfig = c = {}
 c['slaves'] = [BuildSlave('bot1', 'sekrit')]
 c['schedulers'] = []
-c['builders'] = []
-c['builders'].append({'name':'quick', 'slavename':'bot1',
-                      'builddir': 'quickdir', 'factory': f1})
+c['builders'] = [
+    BuilderConfig(name='quick', slavename='bot1', factory=f1),
+]
 c['slavePortnum'] = 0
 """
 
 config_2 = config_base + """
-c['builders'] = [{'name': 'dummy', 'slavename': 'bot1',
-                  'builddir': 'dummy1', 'factory': f2},
-                 {'name': 'testdummy', 'slavename': 'bot1',
-                  'builddir': 'dummy2', 'factory': f2, 'category': 'test'}]
+c['builders'] = [
+    BuilderConfig(name='dummy', slavename='bot1', factory=f2),
+    BuilderConfig(name='testdummy', slavename='bot1',
+                  factory=f2, category='test'),
+]
 """
 
 class STarget(base.StatusReceiver):

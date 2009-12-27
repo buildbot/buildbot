@@ -14,6 +14,7 @@ from buildbot.steps import dummy
 from buildbot.buildslave import BuildSlave
 s = factory.s
 from buildbot.test.test_locks import LockStep
+from buildbot.config import BuilderConfig
 
 BuildmasterConfig = c = {}
 c['slaves'] = [BuildSlave('bot1', 'sekrit'), BuildSlave('bot2', 'sekrit')]
@@ -38,8 +39,10 @@ f_slowpass = factory.BuildFactory([s(dummy.Dummy, timeout=2)])
 f_fastfail = factory.BuildFactory([s(dummy.FailingDummy, timeout=1)])
 
 def builder(name, f):
-    d = {'name': name, 'slavename': 'bot1', 'builddir': name, 'factory': f}
-    return d
+    return BuilderConfig(
+        name=name,
+        slavename='bot1',
+        factory=f)
 
 c['builders'] = [builder('slowpass', f_slowpass),
                  builder('fastfail', f_fastfail),

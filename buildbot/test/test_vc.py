@@ -57,6 +57,7 @@ config_vc = """
 from buildbot.process import factory
 from buildbot.steps import source
 from buildbot.buildslave import BuildSlave
+from buildbot.config import BuilderConfig
 s = factory.s
 
 f1 = factory.BuildFactory([
@@ -65,8 +66,9 @@ f1 = factory.BuildFactory([
 c = {}
 c['slaves'] = [BuildSlave('bot1', 'sekrit')]
 c['schedulers'] = []
-c['builders'] = [{'name': 'vç', 'slavename': 'bot1',
-                  'builddir': 'vc-dir', 'factory': f1}]
+c['builders'] = [
+    BuilderConfig(name='vç', slavename='bot1', factory=f1, builddir='vc-dir'),
+]
 c['slavePortnum'] = 0
 # do not compress logs in tests
 c['logCompressionLimit'] = False
