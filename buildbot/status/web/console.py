@@ -10,7 +10,6 @@ from buildbot import version
 from buildbot.status import builder
 from buildbot.status.web.base import HtmlResource
 from buildbot.status.web import console_html as res
-from buildbot.status.web import console_js as js
 
 def getResultsClass(results, prevResults, inProgress):
     """Given the current and past results, return the class that will be used
@@ -100,31 +99,6 @@ class ConsoleStatusResource(HtmlResource):
 
     def getChangemaster(self, request):
         return request.site.buildbot_service.parent.change_svc
-
-    def head(self, request):
-        # Start by adding all the javascript functions we have.
-        head = "<script type='text/javascript'> %s </script>" % js.JAVASCRIPT
-
-        reload_time = None
-        # Check if there was an arg. Don't let people reload faster than
-        # every 15 seconds. 0 means no reload.
-        if "reload" in request.args:
-            try:
-                reload_time = int(request.args["reload"][0])
-                if reload_time != 0:
-                    reload_time = max(reload_time, 15)
-            except ValueError:
-                pass
-
-        # Sets the default reload time to 60 seconds.
-        if not reload_time:
-            reload_time = 60
-
-        # Append the tag to refresh the page. 
-        if reload_time is not None and reload_time != 0:
-            head += '<meta http-equiv="refresh" content="%d">\n' % reload_time
-        return head
-
 
     ##
     ## Data gathering functions
@@ -612,41 +586,15 @@ class ConsoleStatusResource(HtmlResource):
         subs["time"] = time.strftime("%a %d %b %Y %H:%M:%S",
                                      time.localtime(util.now()))
         subs["debugInfo"] = debugInfo
-
-
-        #
-        # Show the header.
-        #
-
-        data = res.top_header.substitute(subs)
-        data += res.top_info_name.substitute(subs)
-
-        if categories:
-            data += res.top_info_categories.substitute(subs)
-
-        if branch != ANYBRANCH:
-            data += res.top_info_branch.substitute(subs)
-
-        data += res.top_info_name_end.substitute(subs)
-        # Display the legend.
-        data += res.top_legend.substitute(subs)
-
-        # Display the personalize box.
-        data += res.top_personalize.substitute(subs)
-
-        data += res.top_footer.substitute(subs)
-
-
-        #
-        # Display the main page
-        #
-        data += res.main_header.substitute(subs)
+        subs['ANYBRANCH'] = ANYBRANCH
 
         # "Alt" is set for every other line, to be able to switch the background
         # color.
         subs["alt"] = "Alt"
         subs["first"] = ""
         subs["last"] = ""
+
+        data = ''
 
         # Display the categories if there is more than 1.
         if builderList and len(builderList) > 1:
@@ -702,17 +650,37 @@ class ConsoleStatusResource(HtmlResource):
             # Display the comments for this revision
             data += res.main_line_comments.substitute(subs)
 
-        data += res.main_footer.substitute(subs)
 
         #
         # Display the footer of the page.
         #
         debugInfo["load_time"] = time.time() - debugInfo["load_time"]
-        data += res.bottom.substitute(subs)
-        return data
+        subs['content'] = data
+        return subs
 
-    def body(self, request):
+
+    def content(self, request, cxt):
         "This method builds the main console view display."
+
+        reload_time = None
+        # Check if there was an arg. Don't let people reload faster than
+        # every 15 seconds. 0 means no reload.
+        if "reload" in request.args:
+            try:
+                reload_time = int(request.args["reload"][0])
+                if reload_time != 0:
+                    reload_time = max(reload_time, 15)
+            except ValueError:
+                pass
+
+        # Sets the default reload time to 60 seconds.
+        if not reload_time:
+            reload_time = 60
+
+        # Append the tag to refresh the page. 
+        if reload_time is not None and reload_time != 0:
+            cxt['refresh'] = reload_time
+
 
         # Debug information to display at the end of the page.
         debugInfo = dict()
@@ -730,9 +698,6 @@ class ConsoleStatusResource(HtmlResource):
 
         # and the data we want to render
         status = self.getStatus(request)
-
-        projectURL = status.getProjectURL()
-        projectName = status.getProjectName()
 
         # Get all revisions we can find.
         source = self.getChangemaster(request)
@@ -771,10 +736,12 @@ class ConsoleStatusResource(HtmlResource):
 
         debugInfo["added_blocks"] = 0
 
-        data = ""
-        data += self.displayPage(request, status, builderList, allBuilds,
-                                revisions, categories, branch, debugInfo)
+        cxt['debuginfo'] = debugInfo
+        cxt.update(self.displayPage(request, status, builderList, allBuilds,
+                                    revisions, categories, branch, debugInfo))
 
+        template = request.site.buildbot_service.templates.get_template("console.html")
+        data = template.render(cxt)
         return data
 
 class RevisionComparator(object):
