@@ -1045,6 +1045,13 @@ command:
 buildbot start @var{BASEDIR}
 @end example
 
+The @var{BASEDIR} is option and can be omitted if the current directory
+contains the buildbot configuration (the @file{buildbot.tac} file).
+
+@example
+buildbot start
+@end example
+
 This command will start the daemon and then return, so normally it
 will not produce any output. To verify that the programs are indeed
 running, look for a pair of files named @file{twistd.log} and

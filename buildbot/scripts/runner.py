@@ -21,7 +21,11 @@ class MakerBase(usage.Options):
         ["quiet", "q", "Do not emit the commands being run"],
         ]
 
-    #["basedir", "d", None, "Base directory for the buildmaster"],
+    longdesc = """
+    Operates upon the specified <basedir> (or the current directory, if not
+    specified).
+    """
+
     opt_h = usage.Options.opt_help
 
     def parseArgs(self, *args):
@@ -264,7 +268,7 @@ class UpgradeMasterOptions(MakerBase):
         ]
 
     def getSynopsis(self):
-        return "Usage:    buildbot upgrade-master [options] <basedir>"
+        return "Usage:    buildbot upgrade-master [options] [<basedir>]"
 
     longdesc = """
     This command takes an existing buildmaster working directory and
@@ -318,7 +322,7 @@ class MasterOptions(MakerBase):
          "limit the number of kept old twisted log files"],
         ]
     def getSynopsis(self):
-        return "Usage:    buildbot create-master [options] <basedir>"
+        return "Usage:    buildbot create-master [options] [<basedir>]"
 
     longdesc = """
     This command creates a buildmaster working directory and buildbot.tac
@@ -613,18 +617,18 @@ class StartOptions(MakerBase):
         ['quiet', 'q', "Don't display startup log messages"],
         ]
     def getSynopsis(self):
-        return "Usage:    buildbot start <basedir>"
+        return "Usage:    buildbot start [<basedir>]"
 
 class StopOptions(MakerBase):
     def getSynopsis(self):
-        return "Usage:    buildbot stop <basedir>"
+        return "Usage:    buildbot stop [<basedir>]"
 
 class ReconfigOptions(MakerBase):
     optFlags = [
         ['quiet', 'q', "Don't display log messages about reconfiguration"],
         ]
     def getSynopsis(self):
-        return "Usage:    buildbot reconfig <basedir>"
+        return "Usage:    buildbot reconfig [<basedir>]"
 
 
 
@@ -633,7 +637,7 @@ class RestartOptions(MakerBase):
         ['quiet', 'q', "Don't display startup log messages"],
         ]
     def getSynopsis(self):
-        return "Usage:    buildbot restart <basedir>"
+        return "Usage:    buildbot restart [<basedir>]"
 
 class DebugClientOptions(usage.Options):
     optFlags = [
