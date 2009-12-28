@@ -496,3 +496,72 @@ class Locks(RunMixin, unittest.TestCase):
 #                              ("done", 1), ("done", 3),
 #                              ("start", 2), ("done", 2)])
 
+class BuilderLocks(RunMixin, unittest.TestCase):
+    config = """\
+from buildbot import locks
+from buildbot.process import factory
+from buildbot.buildslave import BuildSlave
+from buildbot.config import BuilderConfig
+s = factory.s
+from buildbot.test.test_locks import LockStep
+
+BuildmasterConfig = c = {}
+c['slaves'] = [BuildSlave('bot1', 'sekrit'), BuildSlave('bot2', 'sekrit')]
+c['schedulers'] = []
+c['slavePortnum'] = 0
+
+master_lock = locks.MasterLock('master', maxCount=2)
+f_excl = factory.BuildFactory([s(LockStep, timeout=0,
+                               locks=[master_lock.access("exclusive")])])
+f_count = factory.BuildFactory([s(LockStep, timeout=0,
+                                locks=[master_lock])])
+
+slaves = ['bot1', 'bot2']
+c['builders'] = [
+  BuilderConfig(name='excl_A', slavenames=slaves, factory=f_excl),
+  BuilderConfig(name='excl_B', slavenames=slaves, factory=f_excl),
+  BuilderConfig(name='count_A', slavenames=slaves, factory=f_count),
+  BuilderConfig(name='count_B', slavenames=slaves, factory=f_count),
+]
+"""
+
+    def setUp(self):
+        N = 'test_builder'
+        RunMixin.setUp(self)
+        self.reqs = [BuildRequest("forced build", SourceStamp(), N)
+                     for i in range(4)]
+        self.events = []
+        for i in range(4):
+            self.reqs[i].number = i
+            self.reqs[i].events = self.events
+        d = self.master.loadConfig(self.config)
+        d.addCallback(lambda res: self.master.startService())
+        d.addCallback(lambda res: self.connectSlaves(["bot1", "bot2"],
+                                                     ["excl_A", "excl_B",
+                                                      "count_A", "count_B"]))
+        return d
+
+    def testOrder(self):
+        self.control.getBuilder("excl_A").requestBuild(self.reqs[0])
+        self.control.getBuilder("excl_B").requestBuild(self.reqs[1])
+        self.control.getBuilder("count_A").requestBuild(self.reqs[2])
+        self.control.getBuilder("count_B").requestBuild(self.reqs[3])
+        d = defer.DeferredList([r.waitUntilFinished()
+                                for r in self.reqs])
+        d.addCallback(self._testOrder)
+        return d
+
+    def _testOrder(self, res):
+        # excl_A and excl_B cannot overlap with any other steps.
+        self.assert_(("start", 0) in self.events)
+        self.assert_(("done", 0) in self.events)
+        self.assert_(self.events.index(("start", 0)) + 1 ==
+                     self.events.index(("done", 0)))
+
+        self.assert_(("start", 1) in self.events)
+        self.assert_(("done", 1) in self.events)
+        self.assert_(self.events.index(("start", 1)) + 1 ==
+                     self.events.index(("done", 1)))
+
+        # FIXME: We really want to test that count_A and count_B were
+        # overlapped, but don't have a reliable way to do this.
