@@ -1043,12 +1043,13 @@ class IBuilderControl(Interface):
         the build that is currently in progress: once the build finishes,
         there is nothing to control anymore."""
 
-    def ping(timeout=30):
+    def ping():
         """Attempt to contact the slave and see if it is still alive. This
         returns a Deferred which fires with either True (the slave is still
-        alive) or False (the slave did not respond). As a side effect, adds
-        an event to this builder's column in the waterfall display
-        containing the results of the ping."""
+        alive) or False (the slave did not respond). As a side effect, adds an
+        event to this builder's column in the waterfall display containing the
+        results of the ping. Note that this may not fail for a long time, it is
+        implemented in terms of the timeout on the underlying TCP connection."""
         # TODO: this ought to live in ISlaveControl, maybe with disconnect()
         # or something. However the event that is emitted is most useful in
         # the Builder column, so it kinda fits here too.

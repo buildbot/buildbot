@@ -240,7 +240,7 @@ class Ping(RunMixin, unittest.TestCase):
         return d
 
     def _testPing_1(self, res):
-        d = interfaces.IControl(self.master).getBuilder("dummy").ping(1)
+        d = interfaces.IControl(self.master).getBuilder("dummy").ping()
         d.addCallback(self._testPing_2)
         return d
 
@@ -330,13 +330,13 @@ class Disconnect(RunMixin, unittest.TestCase):
         # forcing a build will work: the build detect that the slave is no
         # longer available and will be re-queued. Wait 5 seconds, then check
         # to make sure the build is still in the 'waiting for a slave' queue.
-        self.control.getBuilder("dummy").original.START_BUILD_TIMEOUT = 1
         req = BuildRequest("forced build", SourceStamp(), "test_builder")
         self.failUnlessEqual(req.startCount, 0)
         self.control.getBuilder("dummy").requestBuild(req)
-        # this should ping the slave, which doesn't respond, and then give up
-        # after a second. The BuildRequest will be re-queued, and its
-        # .startCount will be incremented.
+        # this should ping the slave, which doesn't respond (and eventually
+        # times out). The BuildRequest will be re-queued, and its .startCount
+        # will be incremented.
+        self.killSlave()
         d = defer.Deferred()
         d.addCallback(self._testIdle2_1, req)
         reactor.callLater(3, d.callback, None)
@@ -486,7 +486,7 @@ class Disconnect(RunMixin, unittest.TestCase):
         bc = self.control.getBuilder("dummy")
 
         # ping should succeed
-        d = bc.ping(1)
+        d = bc.ping()
         d.addCallback(self._testDisappear_1, bc)
         return d
 
@@ -496,8 +496,9 @@ class Disconnect(RunMixin, unittest.TestCase):
         # now, before any build is run, make the slave disappear
         self.disappearSlave(allowReconnect=False)
 
-        # at this point, a ping to the slave should timeout
-        d = bc.ping(1)
+        # initiate the ping and then kill the slave, to simulate a disconnect.
+        d = bc.ping()
+        self.killSlave()
         d.addCallback(self. _testDisappear_2)
         return d
     def _testDisappear_2(self, res):

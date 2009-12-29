@@ -1,5 +1,10 @@
 User visible changes in Buildbot.             -*- outline -*-
 
+** Builder.ping no longer accepts timeout argument (#664).
+
+The implementation was not robust enough and could cause the master to
+unexpectedly disconnect the slave.
+
 ** MailNotifier's customMesg replaced by messageFormatter
 
 The customMesg mechanism had the unfortunate side effect of loading all data
