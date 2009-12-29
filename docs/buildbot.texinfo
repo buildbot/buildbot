@@ -9242,6 +9242,9 @@ For configuration questions and general discussion, please use the
 archives are available at
 @uref{http://lists.sourceforge.net/lists/listinfo/buildbot-devel}
 
+The #buildbot channel on Freenode's IRC servers hosts development discussion, and
+often folks are available to answer questions there, as well.
+
 @node Developer's Appendix, Index of Useful Classes, Resources, Top
 @unnumbered Developer's Appendix
 
