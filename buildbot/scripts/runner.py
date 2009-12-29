@@ -28,13 +28,12 @@ class MakerBase(usage.Options):
         if len(args) > 0:
             self['basedir'] = args[0]
         else:
-            self['basedir'] = None
+            # Use the current directory if no basedir was specified.
+            self['basedir'] = os.getcwd()
         if len(args) > 1:
             raise usage.UsageError("I wasn't expecting so many arguments")
 
     def postOptions(self):
-        if self['basedir'] is None:
-            raise usage.UsageError("<basedir> parameter is required")
         self['basedir'] = os.path.abspath(self['basedir'])
 
 makefile_sample = """# -*- makefile -*-

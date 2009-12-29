@@ -12,7 +12,7 @@ from twisted.python.procutils import which
 
 from buildbot.slave.interfaces import ISlaveCommand
 from buildbot.slave.registry import registerSlaveCommand
-from buildbot.util import to_text
+from buildbot.util import to_text, remove_userpassword
 
 # this used to be a CVS $-style "Revision" auto-updated keyword, but since I
 # moved to Darcs as the primary repository, this is updated manually each
@@ -2798,6 +2798,9 @@ class Mercurial(SourceBase):
                         repourl = repourl.split('file://')[1]
                 else:
                     repourl = self.repourl
+
+                oldurl = remove_userpassword(oldurl)
+                repourl = remove_userpassword(repourl)
 
                 if oldurl != repourl:
                     self.clobber = self._clobber

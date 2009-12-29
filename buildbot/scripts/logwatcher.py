@@ -38,6 +38,10 @@ class LogWatcher(LineOnlyReceiver):
         self.timer = None
 
     def start(self):
+        # If the log file doesn't exist, create it now.
+        if not os.path.exists(self.logfile):
+            open(self.logfile, 'a').close()
+
         # return a Deferred that fires when the reconfig process has
         # finished. It errbacks with TimeoutError if the finish line has not
         # been seen within 10 seconds, and with ReconfigError if the error
