@@ -22,7 +22,7 @@ class Options(unittest.TestCase):
 
     def check(self, d, key):
         basedir = os.sep.join(d)
-        options = runner.loadOptions(self.optionsFile, here=basedir,
+        options = runner.loadOptionsFile(self.optionsFile, here=basedir,
                                      home=self.home)
         if key is None:
             self.failIf(options.has_key('key'))
