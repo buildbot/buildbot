@@ -1902,7 +1902,7 @@ class SVN(SourceBase):
     ['keep_on_purge']:     Files and directories to keep between updates
     ['ignore_ignores']:    Ignore ignores when purging changes
     ['always_purge']:      Always purge local changes after each build
-    ['depth']:     	   Pass depth argument to subversion 1.5+ 
+    ['depth']:             Pass depth argument to subversion 1.5+
     """
 
     header = "svn operation"
