@@ -2,7 +2,7 @@
 
 {% extends "layout.html" %}
 {% block content %}
-<h1>Build Slave: {{ slavename|e }}</h1>
+<h1>Build Slave {{ slavename|e }}</h1>
 
 {% if access_uri %}
   <a href="{{ access_uri|e }}">Click to Access Slave</a>

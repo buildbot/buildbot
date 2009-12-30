@@ -20,9 +20,19 @@
     {% block header -%}
     <div class="header">
         <a href="{{ path_to_root or '/' }}">Home</a>
-        <hr/>
+        - <a href="{{ path_to_root }}waterfall">Waterfall</a>
+        <a href="{{ path_to_root }}grid">Grid</a>
+        <a href="{{ path_to_root }}tgrid">T-Grid</a>
+        <a href="{{ path_to_root }}console">Console</a>
+        <a href="{{ path_to_root }}one_box_per_builder">Builders</a>
+        <a href="{{ path_to_root }}one_line_per_build">Recent Builds</a>
+        <a href="{{ path_to_root }}buildslaves">Buildslaves</a>
+        <a href="{{ path_to_root }}changes">Changesources</a>
+        - <a href="{{ path_to_root }}about">About</a>
     </div>
     {% endblock %}
+
+    <hr/>
 
     <div class="content">
       {%- block content -%}     
