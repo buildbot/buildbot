@@ -75,16 +75,20 @@ function checkMouseLeave(element, event) {
 {% endblock %}
 
 {% block content %}
+
+<h1>Console View</h1> 
+
 <div align="center">
   <table width=95% class="Grid" border="0" cellspacing="0">
     <tr>
-      <td width=33% align=left class=left_align><a href="{{ project_url }}">{{ project_name }}</a>
-        {% if categories %}
-          <br><b>Categories:</b> {{ categories }}
-        {% endif %}
-        {% if branch != ANYBRANCH %}
-          <br><b>Branch:</b> {{ branch }}
-        {% endif %}
+      <td width="33%" align="left" class="left_align">
+        <a href="{{ project_url }}">{{ project_name }}</a>
+{% if categories|length > 1 %}
+        <br><b>Categories:</b> {{ categories }}
+{% endif %}
+{% if branch != ANYBRANCH %}
+        <br><b>Branch:</b> {{ branch }}
+{% endif %}
       </td>
       <td width=33% align=center class=center_align>
         <div align="center">
@@ -121,19 +125,121 @@ function checkMouseLeave(element, event) {
      </tr>
   </table>
 </div>
+
 <br>
+
+{% set alt_class = cycler('', 'alt') %}
+
 <div align="center">
-  <table width=96%>
-    {{ content }} 
-  </table>
+<table width="96%">
+  
+{% if categories|length > 1 %}
+  <tr>
+    <td width="1%">
+    </td>
+    <td width="1%">
+    </td>
+  {% for c in categories %}
+      <td class='DevStatus {{ alt_class.next() }} {{ "first" if loop.first}} {{ "last" if loop.last}}' width='{{ c.size }}%'>
+        {{ c.name }}
+      </td>
+  {% endfor %}
+  </tr>
+  <tr class='DevStatusSpacing'>
+  </tr>
+{% endif %}
+
+{% if slaves %}
+  <tr>
+    <td width="1%">
+    </td>
+    <td width="1%">
+    </td>
+  {% for c in categories %}
+    <td class='DevSlave {{ alt_class.next() }} {{ "last" if loop.last }}'>
+      <table width="100%">
+        <tr>          
+    {% for s in slaves[c.name] %}          
+          <td class='DevSlaveBox'>
+            <a href='{{ s.url }}' title='{{ s.title }}' class='DevSlaveBox {{ s.color }}' target=_blank>
+            </a>
+          </td>
+    {% endfor %}            
+        </tr>
+      </table>
+    </td>
+  {% endfor %}
+  </tr>
+{% endif %}
+  
+{% for r in revisions %}
+  {% set alt = alt_class.next() %}
+  {% set last = "last" if loop.last else "" %}
+
+  <tr>
+    <td class='DevRev {{ alt }}' width="1%">
+    {% if r.link %}<a href="{{ r.link }}">{{ r.id|e }}</a>
+    {% else %}{{ r.id|e }}
+    {% endif %}
+    </td>
+    <td class='DevName {{ alt }}' width="1%">
+      {{ r.who }}
+    </td>
+
+  {% for c in categories %}
+    <td class='DevStatus {{ alt }} {{ last }}'>
+      <table width="100%">
+        <tr>    
+    {% for b in r.builds[c.name] %}
+          <td class='DevStatusBox'>
+            <a href='#' onClick='showBuildBox("{{ b.url }}", event); return false;' 
+               title='{{ b.title }}' class='DevStatusBox {{ b.color }} {{ b.tag }}' 
+               target=_blank></a>
+          </td>
+    {% endfor %}    
+        </tr>
+      </table>
+    </td>
+  {% endfor %}
+  </tr>
+   
+  <tr>
+    <td colspan="{{ r.span }}" class='DevComment {{ alt }}'> 
+      {{ r.comments|e }}
+    </td>
+  </tr>
+ 
+  {% if r.details %}
+  <tr>
+    <td colspan="{{ r.span }}" class='DevDetails {{ alt }}'>
+      <ul style='margin: 0px; padding: 1em;'>
+        {{ r.details }}
+      </ul>
+    </td>
+  </tr>    
+  {% endif %} 
+  
+  <tr class='DevStatusSpacing'>
+    <td>
+    </td>
+  </tr>  
+
+{% endfor %}
+  
+</table>
 </div>
+
 <div id="divBox" OnMouseOut="if (checkMouseLeave(this, event)) this.style.display = 'None'" class="BuildWaterfall"> 
 </div>
+
 <iframe id="frameBox" style="display: none;" onload="updateDiv(event);"></iframe>
   
 {% endblock %}
 
+
 {% block footer %}
+
 {{ super() }}
 <p>Debug info: {{ debuginfo }}</p>
+
 {% endblock %}

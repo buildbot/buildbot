@@ -124,6 +124,9 @@ c['status'] = [ws]
         d.addCallback(self._check, "builders", "Builders")
         d.addCallback(self._check, "builders/builder1", "Builder: builder1")
         d.addCallback(self._check, "builders/builder1/builds", "") # dummy
+        d.addCallback(self._check, "console", "Console")
+        d.addCallback(self._check, "grid", 'class="Grid"')
+        d.addCallback(self._check, "tgrid", 'class="Grid"')
         # TODO: the pages beyond here would be great to test, but that would
         # require causing a build to complete.
         #d.addCallback(self._check, "builders/builder1/builds/1", "")

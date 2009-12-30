@@ -369,93 +369,64 @@ class ConsoleStatusResource(HtmlResource):
     ## Display functions
     ##
 
-    def displayCategories(self, builderList, debugInfo, subs):
+    def displayCategories(self, builderList, debugInfo):
         """Display the top category line."""
 
-        data = res.main_line_category_header.substitute(subs)
         count = 0
         for category in builderList:
             count += len(builderList[category])
 
-        i = 0
         categories = builderList.keys()
         categories.sort()
-        for category in categories:
-            # First, we add a flag to say if it's the first or the last one.
-            # This is useful is your css is doing rounding at the edge of the
-            # tables.
-            subs["first"] = ""
-            subs["last"] = ""
-            if i == 0:
-                subs["first"] = "first"
-            if i == len(builderList) -1:
-                subs["last"] = "last"
-
+        
+        cs = []
+        
+        for category in categories:            
+            c = {}
             # TODO(nsylvain): Another hack to display the category in a pretty
             # way.  If the master owner wants to display the categories in a
             # given order, he/she can prepend a number to it. This number won't
             # be shown.
-            subs["category"] = category.lstrip('0123456789')
+            c["name"] = category.lstrip('0123456789')
 
             # To be able to align the table correctly, we need to know
             # what percentage of space this category will be taking. This is
             # (#Builders in Category) / (#Builders Total) * 100.
-            subs["size"] = (len(builderList[category]) * 100) / count
-            data += res.main_line_category_name.substitute(subs)
-            i += 1
-        data += res.main_line_category_footer.substitute(subs)
-        return data
+            c["size"] = (len(builderList[category]) * 100) / count            
+            cs.append(c)
+            
+        return cs
 
-    def displaySlaveLine(self, status, builderList, debugInfo, subs):
+    def displaySlaveLine(self, status, builderList, debugInfo):
         """Display a line the shows the current status for all the builders we
         care about."""
 
-        data = ""
-
-        # Display the first TD (empty) element.
-        subs["last"] = ""
-        if len(builderList) == 1:
-            subs["last"] = "last"
-        data += res.main_line_slave_header.substitute(subs)
-
         nbSlaves = 0
-        subs["first"] = ""
 
         # Get the number of builders.
         for category in builderList:
             nbSlaves += len(builderList[category])
 
-        i = 0
-
-        # Get the catefories, and order them alphabetically.
+        # Get the categories, and order them alphabetically.
         categories = builderList.keys()
         categories.sort()
 
+        slaves = {}
+
         # For each category, we display each builder.
         for category in categories:
-            subs["last"] = ""
-
-            # If it's the last category, we set the "last" flag.
-            if i == len(builderList) - 1:
-                subs["last"] = "last"
-
-            # This is not the first category, we need to add the spacing we have
-            # between 2 categories.
-            if i != 0:
-                data += res.main_line_slave_section.substitute(subs)
-
-            i += 1
-
+            slaves[category] = []
             # For each builder in this category, we set the build info and we
             # display the box.
             for builder in builderList[category]:
-                subs["color"] = "notstarted"
-                subs["title"] = builder
-                subs["url"] = "./builders/%s" % urllib.quote(builder)
+                s = {}
+                s["color"] = "notstarted"
+                s["title"] = builder
+                s["url"] = "./builders/%s" % urllib.quote(builder)
                 state, builds = status.getBuilder(builder).getState()
                 # Check if it's offline, if so, the box is purple.
                 if state == "offline":
-                    subs["color"] = "exception"
+                    s["color"] = "exception"
                 else:
                     # If not offline, then display the result of the last
                     # finished build.
@@ -464,51 +435,34 @@ class ConsoleStatusResource(HtmlResource):
                         build = build.getPreviousBuild()
 
                     if build:
-                        subs["color"] = getResultsClass(build.getResults(), None,
+                        s["color"] = getResultsClass(build.getResults(), None,
                                                       False)
 
-                data += res.main_line_slave_status.substitute(subs)
+                slaves[category].append(s)
 
-        data += res.main_line_slave_footer.substitute(subs)
-        return data
+        return slaves
 
-    def displayStatusLine(self, builderList, allBuilds, revision, debugInfo,
-                          subs):
+    def displayStatusLine(self, builderList, allBuilds, revision, debugInfo):
         """Display the boxes that represent the status of each builder in the
         first build "revision" was in. Returns an HTML list of errors that
         happened during these builds."""
 
-        data = ""
-
-        # Display the first TD (empty) element.
-        subs["last"] = ""
-        if len(builderList) == 1:
-            subs["last"] = "last"
-        data += res.main_line_status_header.substitute(subs)
-
         details = ""
         nbSlaves = 0
-        subs["first"] = ""
         for category in builderList:
             nbSlaves += len(builderList[category])
 
-        i = 0
         # Sort the categories.
         categories = builderList.keys()
         categories.sort()
+        
+        builds = {}
   
         # Display the boxes by category group.
         for category in categories:
-            # Last category? We set the "last" flag.
-            subs["last"] = ""
-            if i == len(builderList) - 1:
-                subs["last"] = "last"
-
-            # Not the first category? We add the spacing between 2 categories.
-            if i != 0:
-                data += res.main_line_status_section.substitute(subs)
-            i += 1
-
+  
+            builds[category] = []
+            
             # Display the boxes for each builder in this category.
             for builder in builderList[category]:
                 introducedIn = None
@@ -554,108 +508,73 @@ class ConsoleStatusResource(HtmlResource):
 
                 if isRunning:
                     title += ' ETA: %ds' % (introducedIn.eta or 0)
-
+                    
                 resultsClass = getResultsClass(results, previousResults, isRunning)
-                subs["url"] = url
-                subs["title"] = title
-                subs["color"] = resultsClass
-                subs["tag"] = tag
 
-                data += res.main_line_status_box.substitute(subs)
+                b = {}                
+                b["url"] = url
+                b["title"] = title
+                b["color"] = resultsClass
+                b["tag"] = tag
+
+                builds[category].append(b)
 
                 # If the box is red, we add the explaination in the details
                 # section.
                 if current_details and resultsClass == "failure":
                     details += current_details
 
-        data += res.main_line_status_footer.substitute(subs)
-        return (data, details)
+        return (builds, details)
 
     def displayPage(self, request, status, builderList, allBuilds, revisions,
                     categories, branch, debugInfo):
         """Display the console page."""
         # Build the main template directory with all the informations we have.
         subs = dict()
-        subs["projectUrl"] = status.getProjectURL() or ""
-        subs["projectName"] = status.getProjectName() or ""
         subs["branch"] = branch or 'trunk'
         if categories:
             subs["categories"] = ' '.join(categories)
-        subs["welcomeUrl"] = self.path_to_root(request) + "index.html"
-        subs["version"] = version
         subs["time"] = time.strftime("%a %d %b %Y %H:%M:%S",
                                      time.localtime(util.now()))
         subs["debugInfo"] = debugInfo
-        subs['ANYBRANCH'] = ANYBRANCH
+        subs["ANYBRANCH"] = ANYBRANCH
 
-        # "Alt" is set for every other line, to be able to switch the background
-        # color.
-        subs["alt"] = "Alt"
-        subs["first"] = ""
-        subs["last"] = ""
-
-        data = ''
-
-        # Display the categories if there is more than 1.
-        if builderList and len(builderList) > 1:
-            dataToAdd = self.displayCategories(builderList, debugInfo, subs)
-            data += dataToAdd
-
-        # Display the build slaves status.
         if builderList:
-            dataToAdd = self.displaySlaveLine(status, builderList, debugInfo,
-                                              subs)
-            data += dataToAdd
+            subs["categories"] = self.displayCategories(builderList, debugInfo)
+            subs['slaves'] = self.displaySlaveLine(status, builderList, debugInfo)
+        else:
+            subs["categories"] = []
+
+        subs['revisions'] = []
 
         # For each revision we show one line
         for revision in revisions:
-            if not subs["alt"]:
-                subs["alt"] = "Alt"
-            else:
-                subs["alt"] = ""
-
+            r = {}
+            
             # Fill the dictionnary with these new information
-            subs["revision"] = revision.revision
-            if revision.revlink:
-                subs["revision_link"] = ("<a href=\"%s\">%s</a>" 
-                                         % (revision.revlink,
-                                            revision.revision))
-            else:
-                subs["revision_link"] = revision.revision
-            subs["who"] = revision.who
-            subs["date"] = revision.date
-            comment = revision.comments or ""
-            subs["comments"] = comment.replace('<', '&lt;').replace('>', '&gt;')
-            comment_quoted = urllib.quote(subs["comments"].encode("utf-8"))
-
-            # Display the revision number and the committer.
-            data += res.main_line_info.substitute(subs)
+            r["id"] = revision.revision
+            r["link"] = revision.revlink 
+            r["who"] = revision.who
+            r["date"] = revision.date
+            r["comments"] = revision.comments
 
             # Display the status for all builders.
-            (dataToAdd, details) = self.displayStatusLine(builderList,
-                                                            allBuilds,
-                                                            revision,
-                                                            debugInfo,
-                                                            subs)
-            data += dataToAdd
+            (builds, details) = self.displayStatusLine(builderList,
+                                            allBuilds,
+                                            revision,
+                                            debugInfo)
+            r['builds'] = builds
+            r['details'] = details
 
             # Calculate the td span for the comment and the details.
-            subs["span"] = len(builderList) + 2
-            
-            # Display the details of the failures, if any.
-            if details:
-                subs["details"] = details
-                data += res.main_line_details.substitute(subs)
+            r["span"] = len(builderList) + 2            
 
-            # Display the comments for this revision
-            data += res.main_line_comments.substitute(subs)
-
+            subs['revisions'].append(r)
 
         #
         # Display the footer of the page.
         #
         debugInfo["load_time"] = time.time() - debugInfo["load_time"]
-        subs['content'] = data
         return subs
 
 
@@ -681,9 +600,8 @@ class ConsoleStatusResource(HtmlResource):
         if reload_time is not None and reload_time != 0:
             cxt['refresh'] = reload_time
 
-
         # Debug information to display at the end of the page.
-        debugInfo = dict()
+        debugInfo = cxt['debuginfo'] = dict()
         debugInfo["load_time"] = time.time()
 
         # get url parameters
@@ -736,7 +654,6 @@ class ConsoleStatusResource(HtmlResource):
 
         debugInfo["added_blocks"] = 0
 
-        cxt['debuginfo'] = debugInfo
         cxt.update(self.displayPage(request, status, builderList, allBuilds,
                                     revisions, categories, branch, debugInfo))
 
