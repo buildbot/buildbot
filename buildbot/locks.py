@@ -236,7 +236,7 @@ class SlaveLock(BaseLockId):
 
     """
 
-    compare_attrs = ['name', 'maxCount', 'maxCountForSlave', '_maxCountForSlaveList']
+    compare_attrs = ['name', 'maxCount', '_maxCountForSlaveList']
     lockClass = RealSlaveLock
     def __init__(self, name, maxCount=1, maxCountForSlave={}):
         self.name = name

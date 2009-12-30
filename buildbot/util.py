@@ -119,3 +119,15 @@ def safeTranslate(str):
         str = str.encode('utf8')
     return str.translate(badchars_map)
 
+def remove_userpassword(url):
+    if '@' not in url:
+        return url
+    if '://' not in url:
+        return url
+
+    # urlparse would've been nice, but doesn't support ssh... sigh    
+    protocol_url = url.split('://')
+    protocol = protocol_url[0]
+    repo_url = protocol_url[1].split('@')[-1]
+
+    return protocol + '://' + repo_url

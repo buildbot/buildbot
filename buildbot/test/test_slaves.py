@@ -143,11 +143,11 @@ class Slave(RunMixin, unittest.TestCase):
 
         b1 = self.master.botmaster.builders["b1"]
         # reduce the ping time so we'll failover faster
-        b1.START_BUILD_TIMEOUT = 1
         assert b1.CHOOSE_SLAVES_RANDOMLY
         b1.CHOOSE_SLAVES_RANDOMLY = False
         self.disappearSlave("bot1", "b1", allowReconnect=False)
         d = self.doBuild("b1")
+        self.killSlave("bot1", "b1")
         d.addCallback(self._testFallback2_1)
         return d
     def _testFallback2_1(self, res):

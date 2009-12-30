@@ -376,15 +376,12 @@ class Try(pb.Referenceable):
 
     def __init__(self, config):
         self.config = config
-        self.opts = runner.loadOptions()
-        self.connect = self.getopt('connect', 'try_connect')
+        self.connect = self.getopt('connect')
         assert self.connect, "you must specify a connect style: ssh or pb"
-        self.builderNames = self.getopt('builders', 'try_builders')
+        self.builderNames = self.getopt('builders')
 
-    def getopt(self, config_name, options_name, default=None):
+    def getopt(self, config_name, default=None):
         value = self.config.get(config_name)
-        if value is None or value == []:
-            value = self.opts.get(options_name)
         if value is None or value == []:
             value = default
         return value
@@ -392,14 +389,14 @@ class Try(pb.Referenceable):
     def createJob(self):
         # returns a Deferred which fires when the job parameters have been
         # created
-        opts = self.opts
+
         # generate a random (unique) string. It would make sense to add a
         # hostname and process ID here, but a) I suspect that would cause
         # windows portability problems, and b) really this is good enough
         self.bsid = "%d-%s" % (time.time(), random.randint(0, 1000000))
 
         # common options
-        branch = self.getopt("branch", "try_branch")
+        branch = self.getopt("branch")
 
         difffile = self.config.get("diff")
         if difffile:
@@ -412,14 +409,14 @@ class Try(pb.Referenceable):
             ss = SourceStamp(branch, baserev, patch)
             d = defer.succeed(ss)
         else:
-            vc = self.getopt("vc", "try_vc")
+            vc = self.getopt("vc")
             if vc in ("cvs", "svn"):
                 # we need to find the tree-top
-                topdir = self.getopt("try-topdir", "try_topdir")
+                topdir = self.getopt("try-topdir")
                 if topdir:
                     treedir = os.path.expanduser(topdir)
                 else:
-                    topfile = self.getopt("try-topfile", "try_topfile")
+                    topfile = self.getopt("try-topfile")
                     treedir = getTopdir(topfile)
             else:
                 treedir = os.getcwd()
@@ -453,12 +450,11 @@ class Try(pb.Referenceable):
 
     def deliverJob(self):
         # returns a Deferred that fires when the job has been delivered
-        opts = self.opts
 
         if self.connect == "ssh":
-            tryhost = self.getopt("tryhost", "try_host")
-            tryuser = self.getopt("username", "try_username")
-            trydir = self.getopt("trydir", "try_dir")
+            tryhost = self.getopt("tryhost")
+            tryuser = self.getopt("username")
+            trydir = self.getopt("trydir")
 
             argv = ["ssh", "-l", tryuser, tryhost,
                     "buildbot", "tryserver", "--jobdir", trydir]
@@ -469,9 +465,9 @@ class Try(pb.Referenceable):
             d = pp.d
             return d
         if self.connect == "pb":
-            user = self.getopt("username", "try_username")
-            passwd = self.getopt("passwd", "try_password")
-            master = self.getopt("master", "try_master")
+            user = self.getopt("username")
+            passwd = self.getopt("passwd")
+            master = self.getopt("master")
             tryhost, tryport = master.split(":")
             tryport = int(tryport)
             f = pb.PBClientFactory()
@@ -514,7 +510,7 @@ class Try(pb.Referenceable):
             self._getStatus_1()
         # contact the status port
         # we're probably using the ssh style
-        master = self.getopt("master", "masterstatus")
+        master = self.getopt("master")
         host, port = master.split(":")
         port = int(port)
         self.announce("contacting the status port at %s:%d" % (host, port))

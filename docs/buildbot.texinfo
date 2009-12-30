@@ -1045,6 +1045,13 @@ command:
 buildbot start @var{BASEDIR}
 @end example
 
+The @var{BASEDIR} is option and can be omitted if the current directory
+contains the buildbot configuration (the @file{buildbot.tac} file).
+
+@example
+buildbot start
+@end example
+
 This command will start the daemon and then return, so normally it
 will not produce any output. To verify that the programs are indeed
 running, look for a pair of files named @file{twistd.log} and
@@ -8605,10 +8612,10 @@ the @code{buildbot statusgui} command:
 buildbot statusgui --master @var{MASTERHOST}:@var{PORT}
 @end example
 
-This command starts a simple Gtk+-based status client, which contains
-a few boxes for each Builder that change color as events occur. It
-uses the same @option{--master} argument as the @command{buildbot
-statuslog} command (@pxref{statuslog}).
+This command starts a simple Gtk+-based status client, which contains a few
+boxes for each Builder that change color as events occur. It uses the same
+@option{--master} argument and @code{masterstatus} option as the
+@command{buildbot statuslog} command (@pxref{statuslog}).
 
 @node try,  , statusgui, Developer Tools
 @subsection try
@@ -9026,19 +9033,20 @@ VC server. It requires that you have a PBChangeSource
 buildbot sendchange --master @var{MASTERHOST}:@var{PORT} --username @var{USER} @var{FILENAMES..}
 @end example
 
-There are other (optional) arguments which can influence the
-@code{Change} that gets submitted:
+The @code{master} and @code{username} arguments can also be given in the
+options file (@pxref{.buildbot config directory}).  There are other (optional)
+arguments which can influence the @code{Change} that gets submitted:
 
 @table @code
 @item --branch
-This provides the (string) branch specifier. If omitted, it defaults
-to None, indicating the ``default branch''. All files included in this
-Change must be on the same branch.
+(or option @code{branch}) This provides the (string) branch specifier. If
+omitted, it defaults to None, indicating the ``default branch''. All files
+included in this Change must be on the same branch.
 
 @item --category
-This provides the (string) category specifier. If omitted, it defaults
-to None, indicating ``no category''. The category property is used
-by Schedulers to filter what changes they listen to.
+(or option @code{category}) This provides the (string) category specifier. If
+omitted, it defaults to None, indicating ``no category''. The category property
+is used by Schedulers to filter what changes they listen to.
 
 @item --revision_number
 This provides a (numeric) revision number for the change, used for VC systems
@@ -9089,7 +9097,7 @@ value.
 
 @option{--master} can also be provided in @file{.debug/options} by the
 @code{master} key. @option{--passwd} can be provided by the
-@code{debugPassword} key.
+@code{debugPassword} key.  @xref{.buildbot config directory}.
 
 The @code{Connect} button must be pressed before any of the other
 buttons will be active. This establishes the connection to the
@@ -9163,63 +9171,79 @@ master = 'buildbot.example.org:18990'
 debugPassword = 'eiv7Po'
 @end example
 
+Note carefully that the names in the @code{options} file usually do not match
+the command-line option name.
+
 @table @code
 @item masterstatus
-Location of the @code{client.PBListener} status port, used by
-@command{statuslog} and @command{statusgui}.
+Equivalent to @code{--master} for @ref{statuslog} and @ref{statusgui}, this
+gives the location of the @code{client.PBListener} status port.
 
 @item master
-Location of the @code{debugPort} (for @command{debugclient}). Also the
-location of the @code{pb.PBChangeSource} (for @command{sendchange}).
-Usually shares the slaveport, but a future version may make it
-possible to have these listen on a separate port number.
+Equivalent to @code{--master} for @ref{debugclient} and @ref{sendchange}.
+This option is used for two purposes.  It is the location of the
+@code{debugPort} for @command{debugclient} and the location of the
+@code{pb.PBChangeSource} for @command{sendchange}.  Generally these are the
+same port.
 
 @item debugPassword
-Must match the value of @code{c['debugPassword']}, used to protect the
+Equivalent to @code{--passwd} for @ref{debugclient}.
+
+XXX Must match the value of @code{c['debugPassword']}, used to protect the
 debug port, for the @command{debugclient} command.
 
 @item username
-Provides a default username for the @command{sendchange} command.
+Equivalent to @code{--username} for the @ref{sendchange} command.
 
-@end table
+@item branch
+Equivalent to @code{--branch} for the @ref{sendchange} command.
 
+@item category
+Equivalent to @code{--category} for the @ref{sendchange} command.
 
-The following options are used by the @code{buildbot try} command
-(@pxref{try}):
-
-@table @code
 @item try_connect
-This specifies how the ``try'' command should deliver its request to
-the buildmaster. The currently accepted values are ``ssh'' and ``pb''.
+Equivalent to @code{--connect}, this specifies how the @ref{try} command should
+deliver its request to the buildmaster. The currently accepted values are
+``ssh'' and ``pb''.
+
 @item try_builders
-Which builders should be used for the ``try'' build.
+Equivalent to @code{--builders}, specifies which builders should be used for
+the @ref{try} build.
+
 @item try_vc
-This specifies the version control system being used.
+Equivalent to @code{--vc} for @ref{try}, this specifies the version control
+system being used.
+
 @item try_branch
-This indicates that the current tree is on a non-trunk branch.
+Equivlanent to @code{--branch}, this indicates that the current tree is on a non-trunk branch.
+
 @item try_topdir
 @item try_topfile
-Use @code{try_topdir} to explicitly indicate the top of your working
-tree, or @code{try_topfile} to name a file that will only be found in
-that top-most directory.
+Use @code{try_topdir}, equivalent to @code{--try-topdir}, to explicitly
+indicate the top of your working tree, or @code{try_topfile}, equivalent to
+@code{--try-topfile} to name a file that will only be found in that top-most
+directory.
 
 @item try_host
 @item try_username
 @item try_dir
-When try_connect is ``ssh'', the command will pay attention to
-@code{try_host}, @code{try_username}, and @code{try_dir}.
+When @code{try_connect} is ``ssh'', the command will use @code{try_host} for
+@code{--tryhost}, @code{try_username} for @code{--username}, and @code{try_dir}
+for @code{--trydir}.  Apologies for the confusing presence and absence of
+'try'.
 
 @item try_username
 @item try_password
 @item try_master
-Instead, when @code{try_connect} is ``pb'', the command will pay
-attention to @code{try_username}, @code{try_password}, and
-@code{try_master}.
+Similarly, when @code{try_connect} is ``pb'', the command will pay attention to
+@code{try_username} for @code{--username}, @code{try_password} for
+@code{--passwd}, and @code{try_master} for @code{--master}.
 
 @item try_wait
 @item masterstatus
-@code{try_wait} and @code{masterstatus} are used to ask the ``try''
-command to wait for the requested build to complete.
+@code{try_wait} and @code{masterstatus} (equivalent to @code{--wait} and
+@code{master}, respectively) are used to ask the @ref{try} command to wait for
+the requested build to complete.
 
 @end table
 
@@ -9234,6 +9258,9 @@ For configuration questions and general discussion, please use the
 @code{buildbot-devel} mailing list. The subscription instructions and
 archives are available at
 @uref{http://lists.sourceforge.net/lists/listinfo/buildbot-devel}
+
+The #buildbot channel on Freenode's IRC servers hosts development discussion, and
+often folks are available to answer questions there, as well.
 
 @node Developer's Appendix, Index of Useful Classes, Resources, Top
 @unnumbered Developer's Appendix
