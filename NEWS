@@ -1,6 +1,25 @@
-User visible changes in Buildbot.             -*- outline -*-
+Major User visible changes in Buildbot.             -*- outline -*-
+  (see ChangeLog for a detailed list of changes)
 
-** Builder.ping no longer accepts timeout argument (#664).
+* Release 0.7.12rc1 (December 31, 2009)
+
+** New 'console' display
+
+This is a new web status view combining the best of the (t)grid and waterfall
+views.
+
+** Builders are configured with an object
+
+Instead of a list of dictionaries, builders are now specified using a
+BuilderConfig object in the configuration file.  This will allow for better
+argument checking and default values, and also makes it easier for users to
+create subclasses to handle site-specific builder details.
+
+** Support for log compression
+
+Log files can be compressed on the master side using either gzip or bzip2.
+
+** Builder.ping no longer accepts timeout argument (bug #664).
 
 The implementation was not robust enough and could cause the master to
 unexpectedly disconnect the slave.
@@ -24,6 +43,8 @@ used to run test suites using mysql-test-run. It parses the stdio output for
 test failures and summarises them on the waterfall page. It also makes server
 error logs available for debugging failures, and optionally inserts
 information about test runs and test failures into an external database.
+
+** Many, many bugfixes
 
 * Release 0.7.11p (July 16, 2009)
 
