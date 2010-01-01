@@ -126,12 +126,12 @@ class Unit(unittest.TestCase):
         d.addCallback(lambda lock: lock.release("cleanup", la))
         return d
 
-    def testRandomCounting(self):
+    def dont_testRandomCounting(self):
         lid = locks.MasterLock('dummy')
         la = locks.LockAccess(lid, 'counting')
         return self._testRandom(la)
 
-    def testRandomExclusive(self):
+    def dont_testRandomExclusive(self):
         lid = locks.MasterLock('dummy')
         la = locks.LockAccess(lid, 'exclusive')
         return self._testRandom(la)
