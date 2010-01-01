@@ -2235,16 +2235,10 @@ class Git(SourceBase):
         except IOError:
             diffbranch = False
         if diffbranch:
-            command = ['git', 'clean', '-f', '-d']
+            command = ['clean', '-f', '-d']
             if self.ignore_ignores:
                 command.append('-x')
-            c = ShellCommand(self.builder, command, self._fullSrcdir(),
-                             sendRC=False, timeout=self.timeout, usePTY=False)
-            self.command = c
-            d = c.start()
-            d.addCallback(self._abandonOnFailure)
-            d.addCallback(self._didClean)
-            return d
+            return self._dovccmd(command, self._didClean)
         return self._didClean(None)
 
     def _doFetch(self, dummy):
