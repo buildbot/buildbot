@@ -3155,45 +3155,6 @@ class Git(VCBase, unittest.TestCase):
         d = self.do_getpatch()
         return d
 
-    # The git tests override parts of the test sequence to demonstrate
-    # different update behavior.  In the git cases, we always
-    # effectively have a clobbered tree.
-
-    def _do_vctest_update_3(self, bs):
-        log.msg("_do_vctest_update_3")
-        self.shouldExist(self.workdir, "main.c")
-        self.shouldExist(self.workdir, "version.c")
-        self.shouldContain(self.workdir, "version.c",
-                           "version=%d" % self.helper.version)
-        self.failUnlessEqual(bs.getProperty("revision"), None)
-        self.checkGotRevisionIsLatest(bs)
-
-        # now "update" to an older revision
-        d = self.doBuild(ss=SourceStamp(revision=self.helper.trunk[-2]))
-        d.addCallback(self._do_vctest_update_4)
-        return d
-
-    def _do_vctest_copy_2(self, bs):
-        log.msg("_do_vctest_copy 3")
-        if self.metadir:
-            self.shouldExist(self.workdir, self.metadir)
-        self.shouldNotExist(self.workdir, "newfile")
-        self.failUnlessEqual(bs.getProperty("revision"), None)
-        self.checkGotRevisionIsLatest(bs)
-        self.touch(self.workdir, "newfile")
-
-    def _doBranch_3(self, bs):
-        log.msg("_doBranch_3")
-        # make sure it is still on the branch
-        main_c = os.path.join(self.slavebase, "vc-dir", "build", "main.c")
-        data = open(main_c, "r").read()
-        self.failUnlessIn("Hello branch.", data)
-
-        # now make sure that a non-branch checkout clobbers the tree
-        d = self.doBuild(ss=SourceStamp())
-        d.addCallback(self._doBranch_4)
-        return d
-
 VCS.registerVC(Git.vc_name, GitHelper())
 
 
