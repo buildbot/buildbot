@@ -9,7 +9,6 @@ from buildbot import util
 from buildbot import version
 from buildbot.status import builder
 from buildbot.status.web.base import HtmlResource
-from buildbot.status.web import console_html as res
 
 def getResultsClass(results, prevResults, inProgress):
     """Given the current and past results, return the class that will be used
@@ -206,7 +205,7 @@ class ConsoleStatusResource(HtmlResource):
             return revisions
 
         totalRevs = len(allChanges)
-        for i in range(totalRevs-1, totalRevs-numRevs, -1):
+        for i in range(totalRevs - 1, totalRevs - numRevs, -1):
             if i < 0:
                 break
             change = allChanges[i]
@@ -240,7 +239,7 @@ class ConsoleStatusResource(HtmlResource):
                         for log in step.getLogs():
                             logname = log.getName()
                             logurl = request.childLink(
-                              "../builders/%s/builds/%s/steps/%s/logs/%s" %
+                              "../builders/%s/builds/%s/steps/%s/logs/%s" % 
                                 (urllib.quote(builderName),
                                  build.getNumber(),
                                  urllib.quote(name),
@@ -641,7 +640,7 @@ class ConsoleStatusResource(HtmlResource):
         builderList = None
         allBuilds = None
         if revisions:
-            lastRevision = revisions[len(revisions)-1].revision
+            lastRevision = revisions[len(revisions) - 1].revision
             debugInfo["last_revision"] = lastRevision
 
             (builderList, allBuilds) = self.getAllBuildsForRevision(status,
