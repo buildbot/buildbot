@@ -53,14 +53,13 @@ REQUIREMENTS:
  Python: http://www.python.org
 
    Buildbot requires python-2.3 or later, and is primarily developed against
-   python-2.4 . It is also tested against python-2.5 .
+   python-2.4 . It is also tested against python-2.5 and python-2.6.
 
  Twisted: http://twistedmatrix.com
 
-   Both the buildmaster and the buildslaves require Twisted-2.0.x or later.
+   Both the buildmaster and the buildslaves require Twisted-2.5.x or later.
    As always, the most recent version is recommended. It has been tested
-   against Twisted-2.5.0, Twisted-8.0.1, Twisted-8.1.0, and Twisted SVN as of
-   the date of release.
+   against Twisted-2.5.0 and Twisted-8.0.1 through Twisted-8.2.0.
 
    Certain versions of Twisted are delivered as a collection of subpackages.
    You'll need at least "Twisted" (the core package), and you'll also want
@@ -80,13 +79,13 @@ If you would like to run the unit test suite, use a command like this:
 
  PYTHONPATH=. trial buildbot.test
 
-This should run up to 221 tests, depending upon what VC tools you have
-installed. On my desktop machine it takes about six minutes to complete.
+This should a whole bunch of tests, depending upon what VC tools you have
+irstalled. On my desktop machine it takes about six minutes to complete.
 Nothing should fail (at least under unix), a few might be skipped. If any of
-the tests fail, you should stop and investigate the cause before continuing
-the installation process, as it will probably be easier to track down the bug
-early. There are a few known failures under windows and OS-X, but please
-report these to the mailing list so we can isolate and resolve them.
+the tests fail, you should stop and investigate the cause before continuing the
+installation process, as it will probably be easier to track down the bug
+early. There are a few known failures under windows and OS-X, but please report
+these to the mailing list so we can isolate and resolve them.
 
 Neither CVS nor SVN support file based repositories on network filesystem
 (or network drives in Windows parlance). Therefore it is recommended to run

@@ -2207,6 +2207,12 @@ class Git(SourceBase):
         else:
             return defer.succeed(0)
 
+    def _didHeadCheckout(self, res):
+        # Rename branch, so that the repo will have the expected branch name
+        # For further information about this, see the commit message
+        command = ['branch', '-M', self.branch]
+        return self._dovccmd(command, self._initSubmodules)
+        
     def _didFetch(self, res):
         if self.revision:
             head = self.revision
@@ -2216,19 +2222,29 @@ class Git(SourceBase):
         # That is not sufficient. git will leave unversioned files and empty
         # directories. Clean them up manually in _didReset.
         command = ['reset', '--hard', head]
-        return self._dovccmd(command, self._initSubmodules)
+        return self._dovccmd(command, self._didHeadCheckout)
 
-    # Update first runs "git clean", removing local changes, This,
-    # combined with the later "git reset" equates clobbering the repo,
+    # Update first runs "git clean", removing local changes,
+    # if the branch to be checked out has changed.  This, combined
+    # with the later "git reset" equates clobbering the repo,
     # but it's much more efficient.
     def doVCUpdate(self):
-        command = ['clean', '-f', '-d']
-        if self.ignore_ignores:
-            command.append('-x')
-        return self._dovccmd(command, self._didClean)
+        try:
+            # Check to see if our branch has changed
+            diffbranch = self.sourcedata != self.readSourcedata()
+        except IOError:
+            diffbranch = False
+        if diffbranch:
+            command = ['clean', '-f', '-d']
+            if self.ignore_ignores:
+                command.append('-x')
+            return self._dovccmd(command, self._didClean)
+        return self._didClean(None)
 
     def _doFetch(self, dummy):
-        command = ['fetch', '-t', self.repourl, self.branch]
+        # The plus will make sure the repo is moved to the branch's
+        # head even if it is not a simple "fast-forward"
+        command = ['fetch', '-t', self.repourl, '+%s' % self.branch]
         self.sendStatus({"header": "fetching branch %s from %s\n"
                                         % (self.branch, self.repourl)})
         return self._dovccmd(command, self._didFetch)

@@ -1,0 +1,2132 @@
+commit 71584a4d81973d2a90300e9d46ccde1cb6b7c703
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Thu Dec 31 19:21:48 2009 -0600
+
+    set version number
+
+commit 7fa5137bbc449144d76334bd366920d8b6a7c2c0
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Thu Dec 31 19:08:58 2009 -0600
+
+    (refs #632) Revert "Always clean the source tree before doing a fetch."
+    
+    This reverts commit 4caa96ac83982a2444b7deb33a7bb00ade14f3bf
+
+commit 2e875cedbcb52a0d85ce779131112c7db8abc664
+Author: Aviv Ben-Yosef <aviv.by@gmail.com>
+Date:   Thu Dec 31 17:14:26 2009 +0200
+
+    Fixing ticket #609
+    
+    The problem in the ticket is that Git does not checkout the wanted branch, but simply checks out master branch and resets it to the HEAD of the given branch. This means that any scripts in the build that rely on the name of the git-branch in the repo will not see the name they expect to see.
+    
+    We do not want to simply checkout the branch every time, as that will leave a lot of "dangling" branches if the branch names are changed with time.
+    So, the decision is to do the same thing we did till now, but also add a step for renaming the branch to the expected name, and make sure the fetching will reset to the wanted revision.
+
+commit a9fc66b44c6002f9467d321a6a1a66895a3023ba
+Merge: 22f923d cbef2cd
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Wed Dec 30 19:35:01 2009 -0600
+
+    Merge branch 'xmlrpc' of git://github.com/kzys/buildbot
+
+commit 22f923d15b8a8b9dddfc81cd62bae7a3cc2328ec
+Author: Tom Fogal <tfogal@alumni.unh.edu>
+Date:   Wed Dec 30 11:41:24 2009 -0700
+
+    Make it clear that `workdir' is an option to ShellCommand.
+
+commit 2b69157655f299d8459ecbc92637a6ffd0e9130f
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Tue Dec 29 17:39:44 2009 -0600
+
+    refs #286, #492 - fix optionfile parsing for buildbot subcommands, with improved docs
+
+commit 9296935cd849fcd600e55b392bcc0c79a3d50346
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Tue Dec 29 11:21:44 2009 -0600
+
+    mention #buildbot
+
+commit e9b44bfb18f7db96bdeb01de26641c72ed975ad2
+Merge: 7e4e948 9bbedb5
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Tue Dec 29 11:10:00 2009 -0600
+
+    Merge branch 'bug664'
+
+commit 7e4e948a49b2f511367caac0ea91f91501fee546
+Author: Marcus Lindblom <macke@yar.nu>
+Date:   Tue Dec 29 11:45:02 2009 +0100
+
+    Remove user/passwd when comparing Mercurial URLs (fixes #640)
+    Thanks to Milton Pividon for doing most of the work. :)
+
+commit 9bbedb5a02c55d0d97ddfee6d40576d254491762
+Author: Daniel Dunbar <daniel@zuster.org>
+Date:   Mon Dec 28 15:53:23 2009 -0800
+
+    #664: Remove Builder.ping timeout support, the implementation was not robust enough and could cause the master to unexpectedly disconnect the slave.
+
+commit 25729e4e57174b2fbaea23f09f938611f4e79e39
+Author: Daniel Dunbar <daniel@zuster.org>
+Date:   Mon Dec 28 15:32:38 2009 -0800
+
+    Change RunMixin.killSlave to optionally take the slave and builder names as arguments.
+
+commit bd845d3b18fc5760fee6e657b12d6cb43003e472
+Author: Daniel Dunbar <daniel@zuster.org>
+Date:   Mon Dec 28 14:53:25 2009 -0800
+
+    Add a test for mixed exclusive/counting access on builders.
+
+commit 6561a0802f2526f23e53cf4dd3038f99f62ef37c
+Author: Daniel Dunbar <daniel@zuster.org>
+Date:   Sun Dec 27 17:09:41 2009 -0800
+
+    Tweak buildbot --help / doc for basedir change.
+
+commit 9c37ea82e518de7524f572ac222922d9f794baa7
+Author: Daniel Dunbar <daniel@zuster.org>
+Date:   Sun Dec 27 14:46:24 2009 -0800
+
+    LogWatcher: Create log files before trying to tail them; this makes the watch code work when twistd.log isn't preexisting.
+
+commit af5c745b6a8a8332a4d73caaef5ba9c43491d60a
+Author: Daniel Dunbar <daniel@zuster.org>
+Date:   Sun Dec 27 14:04:05 2009 -0800
+
+    Trac #527: make "buildbot start" directory optional.
+
+commit 95a2433e397985d4705c647c789718ab2bddcf71
+Author: Daniel Dunbar <daniel@zuster.org>
+Date:   Sun Dec 27 13:09:52 2009 -0800
+
+    Revert change to include SlaveLock.maxCountForSlave in compare_attrs, it isn't
+    hashable and we rely on this. This fixes several buildbot.test.test_locks.Locks
+    I introduced.
+
+commit 801803f0e55adc70a175433e189c15ba596d2f81
+Merge: c8b2133 5d65dc6
+Author: Daniel Dunbar <daniel@zuster.org>
+Date:   Sun Dec 27 12:27:13 2009 -0800
+
+    Merge commit 'upstream/master'
+
+commit 5d65dc65a03ec3a38648c42407f3163de3310aa6
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Sat Dec 26 19:22:05 2009 -0600
+
+    document doStepIf
+
+commit a70a00b22c920ae2c1e95f7bc614a7a94ded861a
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Sat Dec 26 12:13:35 2009 -0600
+
+    (refs #10) add BuilderConfig class, use it in tests, and doc it
+
+commit cbef2cde1940272881aff15c29ef9c4f48fb3e86
+Author: KATO Kazuyoshi <kzys@8-p.info>
+Date:   Thu Dec 24 19:51:23 2009 +0900
+
+    Added tests of buildbot.status.web.xmlrpc.
+
+commit a4b19bb3e96e14c32b446617faf3da306a3deaef
+Author: Aviv Ben-Yosef <aviv.by@gmail.com>
+Date:   Wed Dec 23 01:27:43 2009 +0200
+
+    Removing the comment that is no longer true
+
+commit 6c5ae79608a6db370a07cb44f7ca66bd4e4679b9
+Author: Aviv Ben-Yosef <aviv.by@gmail.com>
+Date:   Wed Dec 23 01:22:39 2009 +0200
+
+    Adding flag for choosing ordering scheme
+
+commit 939588b066b0b30dc52f0417196a35f07446b47b
+Author: Aviv Ben-Yosef <aviv.by@gmail.com>
+Date:   Wed Dec 23 01:10:59 2009 +0200
+
+    Apparantly this is needed
+
+commit 83a1c283cf17793f816aab1e2af1f75dc4ea4356
+Author: Aviv Ben-Yosef <aviv.by@gmail.com>
+Date:   Wed Dec 23 01:06:23 2009 +0200
+
+    Using the created classes
+
+commit 6fba2d38e1a8d86914d694f400227c191e8116f2
+Author: Aviv Ben-Yosef <aviv.by@gmail.com>
+Date:   Tue Dec 22 23:54:23 2009 +0200
+
+    Adding ability to validate revisions
+
+commit 4824989af1a9786c959c3f986733999d68535e19
+Author: Aviv Ben-Yosef <aviv.by@gmail.com>
+Date:   Tue Dec 22 23:29:37 2009 +0200
+
+    Removing useless methods
+    
+    At first, I saw that the changes list was being sorted by the revisions, and thought that because of that
+    it will be necessary to allow sorting by time for the other VCSs. But, then I realized that the sorting
+    was being done simply so that duplicate changes with same revision will be grouped for removing. This works
+    no matter if the revision is a number or not.
+
+commit 98f39c12bb8cf60b7e003c2effc9a47def2c2645
+Author: Aviv Ben-Yosef <aviv.by@gmail.com>
+Date:   Tue Dec 22 22:58:05 2009 +0200
+
+    Removing useless conversion to int
+    
+    This simple comparison between revisions uses a conversion to int that breaks if the revision is not an int (like in Git). There's no difference simply comparing the strings directly, so I removed this.
+
+commit 2835d4c7a33c4f1d47f9f5f5025b822ca5bee65c
+Author: Aviv Ben-Yosef <aviv.by@gmail.com>
+Date:   Tue Dec 22 22:57:02 2009 +0200
+
+    adding comparators
+
+commit 5264eda6284dcc8209f8e00a40b9698643bcfc47
+Author: Aviv Ben-Yosef <aviv.by@gmail.com>
+Date:   Tue Dec 22 21:08:22 2009 +0200
+
+    removing unused imports
+
+commit 3cfc460d40dca32cac2dac168cc51e9751da81a2
+Author: Aviv Ben-Yosef <aviv.by@gmail.com>
+Date:   Tue Dec 22 21:04:34 2009 +0200
+
+    Removed unused import
+
+commit 668c83e6e0082a3be1919aa9ed8e961d974071ce
+Merge: c28838e e092d24
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Sun Dec 20 19:26:30 2009 -0600
+
+    Merge branch 'master' of git://github.com/ddunbar/buildbot
+
+commit c8b2133950e50e7a79dc3f67c945209fde940735
+Merge: c28838e e092d24
+Author: Daniel Dunbar <daniel@zuster.org>
+Date:   Sun Dec 20 17:01:31 2009 -0800
+
+    Merge commit 'origin/master'
+
+commit c28838ef1d66bd7d39b806a9310780a977e52474
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Sun Dec 20 15:57:58 2009 -0600
+
+    add colon
+
+commit 864430a024d92d07ff4c012d14fcf3b3d4f50a6e
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Sun Dec 20 14:49:16 2009 -0600
+
+    (fixes #638) add a requestCancelled method (that does nothing) to IRCContact
+
+commit a901bfd6caf637731a894298fa6e7b6bcc2bb02e
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Sat Dec 19 11:45:46 2009 -0600
+
+    fixes #464 replace customMesg with messageFormatter
+
+commit 2ce63d429f8ce04b6aa57b8fa25a1c185f5263bc
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Sat Dec 19 10:33:36 2009 -0600
+
+    (fixes #220) spell shlex right
+
+commit fb70a1dd799ff16ef9b3002707ed3613c5780c0d
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Sat Dec 19 09:52:55 2009 -0600
+
+    (fixes #645) remove tail recursion
+
+commit 0c51ff9e5b3e358d3f2e268f5f3cf81a9ac1eb3f
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Sat Dec 19 09:49:32 2009 -0600
+
+    (fixes #220) use shlex.split everywhere in the IRC bot
+
+commit 79b289d5abe33a7183f4ac2da7476662c4b98fdf
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Fri Dec 18 22:37:48 2009 -0600
+
+    refs #626 -- use -s submitted in p4 changes invocation
+
+commit 1c030ed5c477feed5e1c15210d5d15f49e983bc3
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Fri Dec 18 21:48:59 2009 -0600
+
+    refs #617 - add 'passing' to the list of possible modes
+
+commit f6397a8a733f54ac808d086606f78a2101ea375e
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Fri Dec 18 21:47:10 2009 -0600
+
+    refs #602 - use os.makedirs
+
+commit 676b0c38115deb2edb19ade9dc02c406e310d4b3
+Author: Dan Locks <dwlocks@dwlocks-laptop.zmanda.com>
+Date:   Fri Dec 18 21:45:21 2009 -0600
+
+    (refs #620) Web status pages should use HtmlResource.footer
+
+commit d1b2ea31841ee2daae9718c64e25d695d5966cf2
+Author: Chris AtLee <catlee@mozilla.com>
+Date:   Thu Dec 17 10:10:54 2009 -0500
+
+    Cleanup maybeStartBuild messages
+
+commit 85a84d7f99cb463235849b150f91031cd5fec442
+Author: Chris AtLee <catlee@mozilla.com>
+Date:   Wed Nov 25 07:12:49 2009 -0500
+
+    Stop duplicate attach/detach messages
+
+commit 53bff455df74b6127dcf6dee9006bc0acaa1646b
+Author: Chris AtLee <catlee@mozilla.com>
+Date:   Thu Dec 17 09:57:40 2009 -0500
+
+    Check that the change exists before returning it
+
+commit 1d658d06ed6abc31222d1e7b6f76454709aeed25
+Author: Chris AtLee <catlee@mozilla.com>
+Date:   Thu Dec 17 09:30:31 2009 -0500
+
+    Handling cases where the builder directory on the master is gone
+
+commit fa93c4907a54495d106983633a37473ab2da8139
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Wed Dec 16 23:42:46 2009 -0600
+
+    (bug #646) remove the non-functional 'mode' argument from DirectoryUpload
+
+commit ea17f9cf8c95867da1eb015ed07b7037b2232b3b
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Wed Dec 16 23:33:13 2009 -0600
+
+    (fixes #641) change default style
+
+commit fadc2b8611522c35364870e7ea398b716a61173f
+Merge: 6748148 1c8c37d
+Author: Jonathan S. Romero <jonnyro@jonnyro-desktop.(none)>
+Date:   Mon Dec 14 10:48:25 2009 -0500
+
+    Merge commit 'upstream/master'
+
+commit 674814844fda31c2e9d15a7044b785fa903a7f47
+Author: Jonathan S. Romero <jonnyro@jonnyro-desktop.(none)>
+Date:   Mon Dec 14 10:37:44 2009 -0500
+
+    Correct syntax error in source.py
+
+commit 297e3e6465f3aef3139eecd78f143ecc812dad1b
+Author: Jonathan S. Romero <jonnyro@jonnyro-desktop.(none)>
+Date:   Mon Dec 14 10:26:22 2009 -0500
+
+    Correct syntax error in source.py
+
+commit 3e395a187eb560c1f0d1d93a513a327b47fb8894
+Author: Jonathan S. Romero <jonnyro@jonnyro-desktop.(none)>
+Date:   Mon Dec 14 10:25:00 2009 -0500
+
+    Improve documentation for depth argument in SVN buildstep
+
+commit 0fd7b31b562a444244f4ab03a0d0a866ef82de47
+Author: Jonathan Romero <jonnyro@rumega.cfl.rr.com>
+Date:   Sat Dec 12 02:48:40 2009 -0500
+
+    Specify that depth argument requires subversion 1.5 or higher.
+
+commit 04302b410288107f17759d36f0191f23cc8e7d1d
+Author: Jonathan Romero <jonnyro@rumega.cfl.rr.com>
+Date:   Sat Dec 12 02:47:03 2009 -0500
+
+    Describe depth argument to SVN checkout step.
+
+commit f29b5e8028b22b60f6a49958bdb5cff059d49da3
+Author: Jonathan Romero <jonnyro@rumega.cfl.rr.com>
+Date:   Sat Dec 12 02:39:27 2009 -0500
+
+    Attempt to check buildslave version properly when depth argument is specified to SVN checkout step.
+
+commit 7a6ea4afbe8c607f36c78793ea60dc0bf17cc1c0
+Author: Jonathan S. Romero <jonnyro@jonnyro-desktop.(none)>
+Date:   Fri Dec 11 15:06:20 2009 -0500
+
+    Check that svn is not older than 1.5 before adding --depth argument
+
+commit 1c8c37ddca5a347ae00bf138dbef370886cdb62b
+Author: William Deegan <bdbaddog@gmail.com>
+Date:   Fri Dec 11 11:55:37 2009 -0800
+
+    Fix issue with perforce submissions with no comment.
+    This currently causes p4poller to throw an exception, which hangs further buildbot builds on that branch.
+    Now blank comments are allowed.
+
+commit e3f5d30cb0c507cd592e2467f5f3b1a060ffd54d
+Author: Jonathan S. Romero <jonnyro@jonnyro-desktop.(none)>
+Date:   Fri Dec 11 14:55:20 2009 -0500
+
+    Only set depth arg if not none
+
+commit 080a25ee21f37838c8f2cb3bad723577c89dd5fe
+Author: Jonathan S. Romero <jonnyro@jonnyro-desktop.(none)>
+Date:   Fri Dec 11 14:42:11 2009 -0500
+
+    Fix depth argument in SVN source step
+
+commit eae7d56bae3d5e3711fc470cac9a138ad7b47cbe
+Author: Jonathan S. Romero <jonnyro@jonnyro-desktop.(none)>
+Date:   Fri Dec 11 14:22:33 2009 -0500
+
+    Make sure the depth argument makes it into the args array for the svn command
+
+commit 0e859e2396c7af54d9ecf9c299b75eef5c9600f7
+Author: Jonathan S. Romero <jonnyro@jonnyro-desktop.(none)>
+Date:   Fri Dec 11 13:50:43 2009 -0500
+
+    Attempt to add depth argument to source checkout steps
+
+commit acb279a3bbb484d1120f37e97ab7b69d8240cf04
+Author: Kristian Nielsen <knielsen@knielsen-hq.org>
+Date:   Tue Dec 8 12:48:50 2009 +0100
+
+    Fix ticket #643: extra rows and empty cells in grid displays.
+    
+    Problem was that sourcestamp comparison was too fine-grained; we want
+    to assign builds to same rows if the underlying code version is the
+    same, even if there are minor differences in build properties or the
+    like.
+
+commit 10e051422660c9d0b873991cb0890ebf55cfdc80
+Author: Kristian Nielsen <knielsen@knielsen-hq.org>
+Date:   Tue Dec 8 10:26:10 2009 +0100
+
+    Fix ticket #642: Specifying extra build properties for force/resubmit
+    build does not work.
+    
+    Fix naming of form parameters to be consistent between the code that
+    generates the form and the code that handles the submitted HTTP request.
+    
+    Implement code for resubmit build to handle extra custom build
+    properties in the submitted HTTP request (this was missing in the
+    existing code).
+
+commit efac01b5d653443f11065a728f3bb5a7aee9e9a1
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Tue Dec 8 10:02:24 2009 -0600
+
+    (fixes #630) stringify revision in mail formatting
+
+commit 08172aba45ebd827fe3351329a310403ca0f42a5
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Mon Dec 7 09:37:33 2009 -0600
+
+    trivial change to test notification
+
+commit 0a26b31a14ffe2c0941b8fde9528a4fff2f01ea4
+Author: Chris AtLee <catlee@mozilla.com>
+Date:   Fri Dec 4 17:10:34 2009 -0500
+
+    Fix getChunks when reading gzip files.
+    
+    Since gzip files are always finished, we don't need to freeze the state
+    of the logfile by determining where the end of the file is.
+
+commit dcbf829e332577709d7b426fa411e746845943f4
+Author: Chris AtLee <catlee@mozilla.com>
+Date:   Fri Dec 4 15:16:00 2009 -0500
+
+    Fix viewing buildsteps when logfile.hasContents() is False
+
+commit c34b07026d91f9c2904f261e916bf5600aab16f4
+Author: maruel@chromium.org <maruel@chromium.org>
+Date:   Wed Dec 2 07:30:58 2009 -0800
+
+    Fix removal of files when purge try changes.
+    
+    Was broken in f77caa6937e5f1e2e5e473187ca12fdc42816059.
+
+commit 09260e6c0375a03b8148000e2362627e9905c4be
+Author: maruel@chromium.org <maruel@chromium.org>
+Date:   Wed Dec 2 07:29:42 2009 -0800
+
+    Fix removal of symlinks in rmdirRecursive().
+    
+    os.chmod fails on Mac with symlinks so skip this step.
+
+commit cc174f0c20ca2a91c85f71328ca1cbd46f3110c9
+Author: maruel@chromium.org <maruel@chromium.org>
+Date:   Tue Dec 1 13:49:15 2009 -0800
+
+    Add more unicode support and unit tests.
+
+commit cd1a02e696629a21ff00e4f9b1c8d031916f5f98
+Merge: 765c1da 99d65c9
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Tue Dec 1 14:40:55 2009 -0600
+
+    Merge branch 'slavedir2' of git://github.com/maruel/buildbot
+
+commit 99d65c9ad09e68327a758efe8eaf099051f8cc37
+Author: maruel@chromium.org <maruel@chromium.org>
+Date:   Tue Dec 1 12:22:17 2009 -0800
+
+    Restore support for unicode builder name.
+    
+    The regression was introduced in 0c60cf7040b6595766a6509be4faa47ce77fbe5b.
+    
+    Add a regression unit test.
+
+commit 765c1da7d71f3229881dc980609f2461572e00bd
+Author: Marius Gedminas <marius@gedmin.as>
+Date:   Tue Dec 1 19:53:08 2009 +0200
+
+    Fix small Python syntax error in example in docs.
+
+commit 34c1935c9e69392c1c5e0935173b027832a076e1
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Fri Nov 27 10:41:55 2009 -0600
+
+    add an optional clickable access_uri for each slave
+
+commit 5746904b70556eefee3636b5e6081b972f3332df
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Fri Nov 27 10:21:50 2009 -0600
+
+    prevent HTML injection via buildslave host info
+
+commit 2aec827cd7aa915b2a9bb16fa6434535a847e65a
+Merge: 2b6f38a c829d3d
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Tue Nov 24 16:19:31 2009 -0600
+
+    Merge commit 'c829d3d'
+
+commit c829d3d651bf51dd8baa47741f124ae917a3d0e7
+Author: maruel@chromium.org <maruel@chromium.org>
+Date:   Tue Nov 24 13:12:32 2009 -0800
+
+    Add documentation and flag accessibility on the master side.
+
+commit 2b6f38ae0b7ac454bfdc274830ceba45e9211929
+Merge: b8bf3d5 985c0bd
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Tue Nov 24 14:46:50 2009 -0600
+
+    Merge branch 'epyrun' of git://github.com/maruel/buildbot
+
+commit 985c0bd878df0e200853770bf16f31e317e956d6
+Author: maruel@chromium.org <maruel@chromium.org>
+Date:   Tue Nov 24 12:36:01 2009 -0800
+
+    Fix docs/gen-reference to work with epydoc 3.0.1
+
+commit b8bf3d5ef60f6158688f7aaeee186fe37ce64336
+Author: Chris AtLee <catlee@mozilla.com>
+Date:   Tue Nov 24 14:33:19 2009 -0500
+
+    Don't do os.fsync when we're done with a log.
+
+commit f171c13c456a4cd418b9463138324c36945456ab
+Author: Kristian Nielsen <knielsen@knielsen-hq.org>
+Date:   Tue Nov 24 09:28:30 2009 +0100
+
+    Fix test failure in test_buildstep.SubunitLogObserverTests
+    Skip the test when the subunit module is not available.
+
+commit 71f8aa9a01a9f858c5fec616375c108f56f587c4
+Author: Kristian Nielsen <knielsen@knielsen-hq.org>
+Date:   Mon Nov 16 20:16:22 2009 +0100
+
+    In clobber source step, if permissions prevent rm -rf from deleting all,
+    run a recursive chmod and re-try the rm -rf.
+    
+    This avoids failures that require manual fixup if a step leaves behind
+    subdirectories with chmod 0 permissions.
+    
+    This fixes ticket#29 for Posix systems (previous fix is blocking, and only
+    used on Windows).
+
+commit 8d6d4b7001b6b52dd9be104abc0e0dd9cf2e7ea0
+Author: Chris AtLee <catlee@mozilla.com>
+Date:   Wed Sep 23 23:54:51 2009 -0400
+
+    Adding support for gz compressed log files
+
+commit df5a96f1963f302c601a30f2e5b3771b2b2096f3
+Author: Chris AtLee <catlee@mozilla.com>
+Date:   Mon Nov 23 18:33:25 2009 -0500
+
+    Fixing typo
+
+commit dfa162c82060b6d2b169ec892e397ba8702ed5b8
+Merge: f8baa32 cadbb9d
+Author: Chris AtLee <catlee@mozilla.com>
+Date:   Mon Nov 23 18:24:58 2009 -0500
+
+    Merge branch 'master' of github.com:djmitche/buildbot
+
+commit cadbb9df35b08a09fec895d0fc42f3cc55cb62af
+Author: John Ford <john@johnford.info>
+Date:   Mon Nov 23 17:20:56 2009 -0600
+
+    specify a default num_events value for the waterfall in the master
+    config file instead of changing a hard coded value, and add a
+    configurable limit, too
+
+commit f8baa326abef1b8b15a4bfb1d1c04e09e1f827cb
+Merge: 2e5edf0 281207c
+Author: Chris AtLee <catlee@mozilla.com>
+Date:   Mon Nov 23 18:15:13 2009 -0500
+
+    Merge branch 'master' of github.com:djmitche/buildbot
+
+commit f77caa6937e5f1e2e5e473187ca12fdc42816059
+Author: maruel@chromium.org <maruel@chromium.org>
+Date:   Sun Nov 22 17:06:25 2009 -0800
+
+    Add patched checkout cleanup for SVN checkout. This removes the need to do a fresh svn checkout on each try job.
+    
+    Add 'keep_on_purge', 'ignore_ignores' and 'always_purge' to SVN.
+    
+    Add 'ignore_ignores' to Git.
+    
+    Small cleanups.
+
+commit e092d24fe9fdf4d01d2d9c8752c7036982973af1
+Author: Daniel Dunbar <ddunbar@smooshlab.apple.com>
+Date:   Fri Nov 20 12:40:09 2009 -0800
+
+    Switch Builder.compareToSetup function to just use a comparison on the locks list.
+    
+    This is more uniform and fixes a crash trying to access the .name field of LockAccess variables; I'm not sure why this was doing the comparison manually in the first place...
+
+commit a6081f8e361aea7765be8a0bac45fdf880cacc4d
+Author: Daniel Dunbar <ddunbar@smooshlab.apple.com>
+Date:   Fri Nov 20 12:38:19 2009 -0800
+
+    Add util.ComparableMixin to LockAccess, and also use
+    SlaveLock.maxCountForSlave as a compare attr for SlaveLock (since it
+    could conceivably be used independently from the
+    _maxCountForSlaveList).
+
+commit 281207c6d3e5171bf0457bf86c1a48c69efaf8c1
+Author: maruel@chromium.org <maruel@chromium.org>
+Date:   Fri Nov 20 12:25:02 2009 -0800
+
+    Replace self.srcdir to self.workdir where appropriate
+
+commit d8fddfa5b0250204a0fa0820d6864e14f09e1bed
+Author: Daniel Dunbar <ddunbar@lordcrumb.apple.com>
+Date:   Fri Nov 20 10:50:29 2009 -0800
+
+    Fix crash when viewing a step which hasn't started (invalid subtraction).
+    
+    This also tweaks the output a bit, for unstarted steps:
+    --
+    Timing
+    Start	Not Started
+    End	Not Started
+    Elapsed	Not Started
+    --
+    
+    For in progress steps:
+    --
+    Timing
+    
+    Start	Fri Nov 20 10:48:47 2009
+    End	Not Finished
+    Elapsed	39 secs
+    --
+    
+    For completed steps:
+    --
+    Timing
+    
+    Start	Fri Nov 20 10:48:47 2009
+    End	Fri Nov 20 10:48:47 2009
+    Elapsed	0 secs
+    --
+
+commit 010f37dda88168c12b6f22895741a85312d513e2
+Author: maruel@chromium.org <maruel@chromium.org>
+Date:   Thu Nov 19 11:28:28 2009 -0800
+
+    Added SourceBase.sourcedirIsPatched()
+
+commit 0fc8eade38879945b0f2193e37a08a061b8569e0
+Author: Kristian Nielsen <knielsen@knielsen-hq.org>
+Date:   Wed Nov 18 10:58:27 2009 +0100
+
+    Fix transposed grid to not crash when specifying categories.
+
+commit 138c831f1bc4340b7043dd74b3081d201abdef18
+Author: Kristian Nielsen <knielsen@knielsen-hq.org>
+Date:   Wed Nov 18 10:20:12 2009 +0100
+
+    Fix typo that breaks category argument to grid web status page.
+
+commit 7db28fc8b69cb8d59dbf548cbb7493368fda0d15
+Author: maruel@chromium.org <maruel@chromium.org>
+Date:   Mon Nov 16 13:37:48 2009 -0800
+
+    Fix multiple unit tests broken by 0c60cf7040b6595766a6509be4faa47ce77fbe5b.
+
+commit 1688df9a0576dbcf63be2bb9c81d8898c393d830
+Merge: 84a0c8a 2b00a49
+Author: Matt Heitzenroder <mheitzenroder@gmail.com>
+Date:   Wed Nov 4 21:22:38 2009 -0500
+
+    simplified the code so it doesn't have to clone locally
+
+commit 2e5edf03dfa6fc72ae353a4b5aabdd7fe2685077
+Merge: 514823b 2b00a49
+Author: Chris AtLee <catlee@mozilla.com>
+Date:   Wed Nov 4 19:38:16 2009 -0500
+
+    Merge branch 'master' of github.com:djmitche/buildbot
+
+commit 2b00a49451bad833f609b383747dcd1f9f947f3f
+Author: maruel@chromium.org <maruel@chromium.org>
+Date:   Wed Nov 4 07:13:38 2009 -0800
+
+    Clarify documentation about builder's 'builddir' and 'slavebuilddir'.
+
+commit 0c60cf7040b6595766a6509be4faa47ce77fbe5b
+Author: maruel@chromium.org <maruel@chromium.org>
+Date:   Mon Nov 2 18:36:56 2009 -0800
+
+    Add support for slavebuilddir in builder's dictionnary.
+    
+    builddir defaults to builder's name (escaped)
+    
+    This permits sharing a slave checkout across multiple builders
+    
+    Includes unit test update and doc.
+
+commit 1d76022c164583bd81b206ecb715ee9105f8b9b9
+Merge: 6785c24 c2dc58a
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Fri Oct 30 21:25:48 2009 -0400
+
+    Merge branch 'attach2' of git://github.com/maruel/buildbot
+
+commit c2dc58add0ca2efc7a804b71fef7cab9fba8ecc7
+Author: maruel@chromium.org <maruel@chromium.org>
+Date:   Fri Oct 30 13:49:28 2009 -0700
+
+    Add 'addPatch' parameter to mail.MailNotifier, unit test and doc.
+    
+    Defaults to True to keep previous behavior. Can be set to False to disable attaching patches to the emails.
+
+commit d64156aa120fc756df198baae0b5e9e24d80a40e
+Author: Nicolás Alvarez <nicolas.alvarez@gmail.com>
+Date:   Mon Oct 26 00:49:25 2009 -0300
+
+    Fix use of WithProperties in documentation example.
+
+commit 7e458eda777f59ec1457dcb4eff75a07b60a2cf8
+Author: Robert Collins <robertc@robertcollins.net>
+Date:   Sun Oct 25 21:11:34 2009 -0400
+
+    (closes #610) add subunit log watcher
+
+commit c95253dd1e429f11bb0e5b71c64a8b06941fff5d
+Author: Brian Warner <warner@lothar.com>
+Date:   Thu Oct 22 15:23:02 2009 -0700
+
+    addStep(): reject spurious kwargs when using the BuildStep-instance form.
+    
+    Without this, the args are silently ignored, which is a hassle to debug.
+
+commit 910d7558ca0276af163685aa376f84107ac679a2
+Author: KATO Kazuyoshi <kzys@8-p.info>
+Date:   Wed Oct 21 22:08:18 2009 +0900
+
+    Revert misc changes.
+
+commit b8d2a5cad7d1abf1f9829bc39c9cddc6d7066cd2
+Author: KATO Kazuyoshi <kzys@8-p.info>
+Date:   Wed Oct 21 21:59:44 2009 +0900
+
+    Cleanup.
+
+commit df9cf59632b1a5db88dd0fa6eb3fc01d02668e11
+Author: KATO Kazuyoshi <kzys@8-p.info>
+Date:   Wed Oct 21 02:44:42 2009 +0900
+
+    Be configurable.
+
+commit 57607e8c7de3e944b79299861685915e53515003
+Author: Kristian Nielsen <knmeister@gmail.com>
+Date:   Sun Oct 18 07:32:26 2009 +0200
+
+    In MTR buildstep, use the type of test in the description and descriptionDone on the waterfall page.
+    This makes it easier to distinguish diffferent test runs in the same build.
+
+commit a69297d5fdfd3f12f7660482a7a8ef1bc48014b0
+Author: maruel@chromium.org <maruel@chromium.org>
+Date:   Wed Oct 14 18:47:44 2009 -0700
+
+    Update comment
+
+commit 776deed181395407c33b17d94ab344bc57f6740b
+Author: KATO Kazuyoshi <kzys@8-p.info>
+Date:   Fri Oct 9 08:18:37 2009 +0900
+
+    Show "blamelist" on failed to build.
+
+commit 5c9202b8c1bbdfc67ad0aa6c438e78a0de4ce18a
+Author: KATO Kazuyoshi <kzys@8-p.info>
+Date:   Fri Oct 9 03:10:51 2009 +0900
+
+    Cleanup.
+
+commit 7f95beec26f19baf7c5de65f90f365d52ffcf257
+Author: KATO Kazuyoshi <kzys@8-p.info>
+Date:   Fri Oct 9 02:40:12 2009 +0900
+
+    DRY
+
+commit 3ba244d413013ee70d9c3a48554a250566e5dc1e
+Author: KATO Kazuyoshi <kzys@8-p.info>
+Date:   Fri Oct 9 02:11:38 2009 +0900
+
+    Use "notice" to public messages.
+
+commit 6e6fb276e9d139323d993b867909a5066651303c
+Author: KATO Kazuyoshi <kzys@8-p.info>
+Date:   Fri Oct 9 01:53:52 2009 +0900
+
+    Extract a little method.
+
+commit 25a6b1a86dbab09c6e23329b35a82d710c20df0d
+Author: Brian Warner <warner@lothar.com>
+Date:   Wed Oct 7 17:03:31 2009 -0700
+
+    builder.py: start cleanup by adding SlaveBuilder.prepare() and moving the
+    substantiate() call into it, rather than having Builder switch on the
+    slavebuilder's class
+
+commit 514823b5bc23547c7f456a6b8fce81332fda161f
+Author: Chris AtLee <catlee@mozilla.com>
+Date:   Mon Oct 26 07:52:35 2009 -0400
+
+    Add a css class for when there are no results
+
+commit 6785c245689c8cdfe7d5341b9bc1677a2207ce5f
+Merge: 778f316 0236a3e
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Mon Oct 26 00:09:15 2009 -0400
+
+    Merge branch 'master' of git://github.com/nicolas17/buildbot
+
+commit 0236a3eaaa20cc6eb53fb6c99662d59a99f2506b
+Author: Nicolás Alvarez <nicolas.alvarez@gmail.com>
+Date:   Mon Oct 26 00:49:25 2009 -0300
+
+    Fix use of WithProperties in documentation example.
+
+commit 778f316fe30d8a17c7f2d541d502253038d69faa
+Author: Robert Collins <robertc@robertcollins.net>
+Date:   Sun Oct 25 21:11:34 2009 -0400
+
+    (closes #610) add subunit log watcher
+
+commit 3c372f4e360415322e8c01bc68879b73f403504d
+Merge: db55e15 1d591e9
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Fri Oct 23 18:13:40 2009 -0400
+
+    Merge branch 'irc' of git://github.com/kzys/buildbot into irc-stuff
+
+commit db55e151a9e5a373a4b720b02099ac9e66ec73ad
+Merge: 1974aef 265143f
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Thu Oct 22 23:31:41 2009 -0400
+
+    Merge branch 'doRevert1' of git://github.com/maruel/buildbot
+
+commit 1974aef0690fe52b37f8b4a7c331f9459cd518de
+Author: Brian Warner <warner@lothar.com>
+Date:   Thu Oct 22 15:23:02 2009 -0700
+
+    addStep(): reject spurious kwargs when using the BuildStep-instance form.
+    
+    Without this, the args are silently ignored, which is a hassle to debug.
+
+commit 5c516dacfa118434eaaca80072af5a8d0e18dcd0
+Merge: 20c2099 11c59aa
+Author: Brian Warner <warner@lothar.com>
+Date:   Wed Oct 21 16:48:04 2009 -0700
+
+    Merge branch 'master' of github.com:djmitche/buildbot
+
+commit 11c59aa0c41b554d7bcdc9866fb927fcba9ede02
+Merge: 391b33d 62ddce3
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Wed Oct 21 18:01:56 2009 -0400
+
+    Merge branch 'warner-cleanup'
+
+commit 20c2099a07b72b7026d6d7099e2dfd7566b0837d
+Merge: 62ddce3 391b33d
+Author: Brian Warner <warner@lothar.com>
+Date:   Wed Oct 21 14:28:07 2009 -0700
+
+    Merge branch 'master' of github.com:djmitche/buildbot
+
+commit 1d591e945dfc518a2b547d387344cb539041787b
+Author: KATO Kazuyoshi <kzys@8-p.info>
+Date:   Wed Oct 21 22:08:18 2009 +0900
+
+    Revert misc changes.
+
+commit 95f7a0e4f86c9052236e195ead6346545db778fd
+Author: KATO Kazuyoshi <kzys@8-p.info>
+Date:   Wed Oct 21 21:59:44 2009 +0900
+
+    Cleanup.
+
+commit c56bd20cb96a2e363f5f85aa9a935187abab680a
+Author: KATO Kazuyoshi <kzys@8-p.info>
+Date:   Wed Oct 21 02:44:42 2009 +0900
+
+    Be configurable.
+
+commit 391b33dbae39b54689aedc345edf64e860d61a37
+Author: Kristian Nielsen <knmeister@gmail.com>
+Date:   Sun Oct 18 07:32:26 2009 +0200
+
+    In MTR buildstep, use the type of test in the description and descriptionDone on the waterfall page.
+    This makes it easier to distinguish diffferent test runs in the same build.
+
+commit 29c61a55a54bfcc7a1dbf831ca10ebd99f33d9ab
+Author: maruel@chromium.org <maruel@chromium.org>
+Date:   Thu Oct 15 08:21:01 2009 -0700
+
+    Update SourceStamp doc
+
+commit 5cd289ba4762b5ca146dfdbe64b19782a75362dc
+Author: maruel@chromium.org <maruel@chromium.org>
+Date:   Thu Oct 15 08:02:25 2009 -0700
+
+    Revert "Add buildbot try support code, untested"
+    
+    This reverts commit 9137a5c0d107ac97b2ba6bf373e984096178c9c8.
+    
+    Better to not add untested stuff in.
+
+commit 265143fce8f4375e58598389ca1f3bb6df7cfa30
+Author: maruel@chromium.org <maruel@chromium.org>
+Date:   Wed Oct 14 18:47:44 2009 -0700
+
+    Update comment
+
+commit 1bf0ddaaff54e2e55af1c96f56e178d37177cfed
+Author: maruel@chromium.org <maruel@chromium.org>
+Date:   Wed Oct 14 17:19:03 2009 -0700
+
+    Add tests for --root and for --patchlevel.
+
+commit 9137a5c0d107ac97b2ba6bf373e984096178c9c8
+Author: maruel@chromium.org <maruel@chromium.org>
+Date:   Tue Oct 13 11:52:35 2009 -0700
+
+    Add buildbot try support code, untested
+
+commit 17e919571571e5c0428b42133f7695fe0029ee90
+Author: maruel@chromium.org <maruel@chromium.org>
+Date:   Tue Oct 13 07:54:53 2009 -0700
+
+    Add support for 'root' option for self.patch, used as the third parameter.
+    
+    Add these flags to patch invocation: --remove-empty-files --force --forward
+
+commit 11dc5912ce79b10caf28e325fc3f247b5a161ce2
+Author: William Siegrist <wsiegrist@apple.com>
+Date:   Wed Oct 14 09:57:01 2009 -0400
+
+    (fixes #627) add category support to AnyBranchScheduler
+
+commit be1431f727129133ce86ed61021469f387dc9644
+Merge: 33a0d6a 791014d
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Fri Oct 9 18:10:53 2009 -0400
+
+    Merge branch 'master' of git://github.com/gldnspud/buildbot
+
+commit 791014d99c5b7f440419ef8325d58a91d6f1403a
+Author: Matthew Scott <gldnspud@gmail.com>
+Date:   Fri Oct 9 21:57:14 2009 +0000
+
+    Change source forwarder for bitbucket.org POST service
+
+commit 33a0d6a76f83a6c3464db7cc8a27b0e65a8b2e41
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Fri Oct 9 10:57:18 2009 -0400
+
+    (closes #607) make revision a string
+
+commit 74bdccc691c9be31464111f919851f13ce4b24bd
+Author: KATO Kazuyoshi <kzys@8-p.info>
+Date:   Fri Oct 9 08:18:37 2009 +0900
+
+    Show "blamelist" on failed to build.
+
+commit ee197b5bc2ac331226753d92074be230f5762ce6
+Author: Nicolas Sylvain <nsylvain@chromium.org>
+Date:   Fri Oct 9 00:48:23 2009 +0800
+
+    Fix a regression introduced in 32ebee2a2adf0a1824c21982f50ca18648073d64 where
+    projectURL is used but not defined.
+
+commit f77912c9d5dfc6576a94ad08a6783a91d1468cbc
+Author: Lital Natan <procscsi@gmail.com>
+Date:   Wed Oct 7 22:53:24 2009 +0800
+
+    use os.makedirs in the git source step, to create intervening directories
+
+commit 4b8c68c068a1c54711878f5e6abff7df575838c2
+Author: Brian Warner <warner@lothar.com>
+Date:   Wed Oct 7 05:29:22 2009 +0800
+
+    cleanup: remove dead code from the era of pickled BuildMasters
+    
+    (remove __setstate__, __getstate__, and styles.Versioned calls from
+    everything but Status and Change classes)
+
+commit 4404f7c643dda228f3565065cc753638edca79b8
+Author: KATO Kazuyoshi <kzys@8-p.info>
+Date:   Fri Oct 9 03:10:51 2009 +0900
+
+    Cleanup.
+
+commit a44126372ee671af2e3c50b30c25f486d8a34400
+Author: KATO Kazuyoshi <kzys@8-p.info>
+Date:   Fri Oct 9 02:40:12 2009 +0900
+
+    DRY
+
+commit 8b5cf831456ba3fd7c78b8027b5d60b57beb1d71
+Author: KATO Kazuyoshi <kzys@8-p.info>
+Date:   Fri Oct 9 02:11:38 2009 +0900
+
+    Use "notice" to public messages.
+
+commit 5eed0f9ccb8fc69a0763eff665cdacd6d98f4646
+Author: KATO Kazuyoshi <kzys@8-p.info>
+Date:   Fri Oct 9 01:53:52 2009 +0900
+
+    Extract a little method.
+
+commit 1fc591ea18fe72d1cc8594182308d2aeb51634e0
+Author: Nicolas Sylvain <nsylvain@chromium.org>
+Date:   Thu Oct 8 11:48:23 2009 -0500
+
+    Fix a regression introduced in 32ebee2a2adf0a1824c21982f50ca18648073d64 where
+    projectURL is used but not defined.
+
+commit 62ddce3d6ba671bfd84c231ce6b0d4e0226bf58f
+Author: Brian Warner <warner@lothar.com>
+Date:   Wed Oct 7 17:03:31 2009 -0700
+
+    builder.py: start cleanup by adding SlaveBuilder.prepare() and moving the
+    substantiate() call into it, rather than having Builder switch on the
+    slavebuilder's class
+
+commit b92e6705de666e55517d37c801461038f9dfc689
+Merge: 210dcf6 4c8e215
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Wed Oct 7 16:29:29 2009 -0400
+
+    Merge branch 'master' of git://github.com/warner/buildbot
+
+commit 210dcf66260cb2ca77ecd0992f4274b4994302f6
+Author: Lital Natan <procscsi@gmail.com>
+Date:   Wed Oct 7 10:53:24 2009 -0400
+
+    use os.makedirs in the git source step, to create intervening directories
+
+commit 4c8e215a8a178e32a440158f31300a6eb7ab75a3
+Author: Brian Warner <warner@lothar.com>
+Date:   Tue Oct 6 14:29:22 2009 -0700
+
+    cleanup: remove dead code from the era of pickled BuildMasters
+    
+    (remove __setstate__, __getstate__, and styles.Versioned calls from
+    everything but Status and Change classes)
+
+commit bfe60159e63288cc68e3ee0ee05ff0c4a54edaba
+Merge: cb7215e 93ab18d
+Author: Matthew Scott <gldnspud@gmail.com>
+Date:   Sun Oct 4 16:25:38 2009 -0700
+
+    Merge branch 'master' of git://github.com/djmitche/buildbot
+
+commit cb7215ef3d364b17a945d714c027ad5e66c7c1a0
+Author: Matthew Scott <gldnspud@gmail.com>
+Date:   Sun Oct 4 23:24:54 2009 +0000
+
+    Pass repository information from github changes; pass url of commit as revlink
+
+commit 4e61e409707451df1b2194ac9903ccaa8c0b1e68
+Author: Matthew Scott <gldnspud@gmail.com>
+Date:   Sun Oct 4 23:24:14 2009 +0000
+
+    Allow revlinks to pass through PB-sourced changes
+
+commit 93ab18dc2d8a346fafbe9998802860d1edf46c54
+Merge: 2fc57d2 32ebee2
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Sun Oct 4 15:38:05 2009 -0400
+
+    Merge branch 'bug365' of git://github.com/dwlocks/buildbot
+    
+    Conflicts:
+    	buildbot/status/web/build.py
+
+commit 2fc57d26910afa2224de901697d74e67d8a4df59
+Author: Matthew Scott <gldnspud@gmail.com>
+Date:   Sun Oct 4 18:30:09 2009 +0000
+
+    Properly accept --port as integer in github_buildbot cmd line options
+
+commit 7320da808e575f082ae7b903c01db258f31c196a
+Merge: 101be40 bfb1d06
+Author: Ben Hearsum <bhearsum@voot.(none)>
+Date:   Sun Oct 4 12:59:54 2009 -0400
+
+    Merge branch 'master' of git@github.com:djmitche/buildbot
+
+commit 101be400a03e00403debe3bd08b7c1ca68085c5a
+Author: Ben Hearsum <bhearsum@voot.(none)>
+Date:   Sun Oct 4 12:59:30 2009 -0400
+
+    Ticket #579: Resubmitted builds do not include properties set by Triggers.
+
+commit bfb1d06a8a2a8732c2801b90517bef2665e90424
+Merge: 08263a9 e5b037c
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Sun Oct 4 12:51:09 2009 -0400
+
+    Merge branch 'misc-fixes' of git://github.com/knielsen/buildbot
+
+commit 08263a9a97dc2dcd7162e369e3b92feb4282a2ab
+Author: Ben Hearsum <bhearsum@voot.(none)>
+Date:   Sun Oct 4 03:51:24 2009 -0400
+
+    Make sure version is always defined in SlaveStatus, just like host and admin.
+
+commit b4e332c9268c293343b0de1ed3c4d80cd1b8c3d9
+Author: Ben Hearsum <bhearsum@voot.(none)>
+Date:   Sun Oct 4 03:43:19 2009 -0400
+
+    Ticket #197: show version number of buildslave buildbot code on the /buildslaves page.
+
+commit 51149daa8af82b1ffa2c4a6bca41929bab5bdef1
+Author: Ben Hearsum <bhearsum@voot.(none)>
+Date:   Sun Oct 4 02:50:55 2009 -0400
+
+    Ticket #365 (custom properties via force build) refactor and addition. Patch by dwlocks
+
+commit e5b037c9d3be4e54e5091e7f63602c3d025374d0
+Author: Kristian Nielsen <knmeister@gmail.com>
+Date:   Fri Oct 2 21:14:14 2009 +0200
+
+    Implement that server log files can be found in subdirectory with MTR buildstep.
+    
+    To allow this to support WithProperties, implement that LoggingBuildStep can
+    take logfiles to watch dynamically as well as in constructor.
+
+commit c51709d4e7f2b5163213a7af7df5d4ad45e73769
+Author: Kristian Nielsen <knmeister@gmail.com>
+Date:   Fri Oct 2 19:56:37 2009 +0200
+
+    Implement WithProperties support in two places where it was missing.
+
+commit 9ec7f18e0b673f63962f744a2739338ed67265d4
+Author: Kristian Nielsen <knmeister@gmail.com>
+Date:   Fri Oct 2 19:55:15 2009 +0200
+
+    Update mysql-test-run parsing regexps for latest MySQL 5.1.38 changes.
+    (the variants of a test may now contain spaces).
+
+commit 72b0abc0c56e9f2047964df1f20059885cfcd595
+Author: Kristian Nielsen <knmeister@gmail.com>
+Date:   Thu Sep 17 10:05:15 2009 +0200
+
+    Add sane default for MTR buildstep's warningPattern.
+    
+    The default warningPattern now matches when mysql-test-run detects
+    that a test case succeeds, but does not properly clean up the
+    environment for the following test. This is much better than getting
+    random warnings when a test case name or output contains the word
+    "warning" :-)
+
+commit 9bd4602fbe4b526418ff8451ebe614c4db9a201b
+Author: Kristian Nielsen <knmeister@gmail.com>
+Date:   Wed Aug 26 10:13:37 2009 +0200
+
+    Fix matching of directory enter/leave paths.
+
+commit 32ebee2a2adf0a1824c21982f50ca18648073d64
+Author: Dan Locks <dwlocks@dwlocks-laptop.zmanda.com>
+Date:   Thu Oct 1 23:08:08 2009 -0500
+
+    Bugid: 365, add custom properties fields to force and resubmit forms.
+    
+        * buildbot/status/web/base.py: Part of this fix was already
+          commited, but was funky to use in more than one place.  Refactored
+          the change into a function.
+        * buildbot/status/web/build.py: use the refactored function to add
+          property fields to the resubmit form.
+
+commit e177c92e706ef2e27022ccd86174041a26ff051f
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Wed Sep 30 20:44:33 2009 -0400
+
+    don't try to HTML escape None when branch=None
+
+commit 07b8e3df43a7b8cddd8e9df34a48ae298cd79bed
+Author: Chris AtLee <catlee@mozilla.com>
+Date:   Thu Sep 24 00:43:39 2009 -0400
+
+    Fix for test failures, and improved log limit test
+
+commit 4c8769fbec698c066c8b2c5ea2241dd1b7769fec
+Author: Chris AtLee <catlee@mozilla.com>
+Date:   Wed Sep 23 23:32:27 2009 -0400
+
+    Warn about log truncation immediately when it happens
+
+commit 593f20e00e6f8740088cdff316dd757fcb9aebce
+Author: Chris AtLee <catlee@mozilla.com>
+Date:   Wed Sep 23 17:16:02 2009 -0400
+
+    Drop entire chunks at a time from the tail buffer
+
+commit 169077861a3e3974fcb38bb78e01c3561953cbed
+Author: Chris AtLee <catlee@mozilla.com>
+Date:   Wed Sep 23 15:49:58 2009 -0400
+
+    Adding docs for logMaxTailSize.
+
+commit 17d1487f2d41be31aa1bb5026d9727d4907ee18c
+Author: Chris AtLee <catlee@mozilla.com>
+Date:   Wed Sep 23 15:45:31 2009 -0400
+
+    Adding logMaxTailSize parameter
+    
+    Also making internal variables match their configuration parameter names
+    for consistency.
+
+commit b8ccc08d4bb4e80244503cf37b6c8e73fb764f48
+Author: Chris AtLee <catlee@mozilla.com>
+Date:   Tue Sep 22 11:18:49 2009 -0400
+
+    Handle updates to logMaxSize and logCompressionLimit parameters on a
+    reconfig
+
+commit 7b2b7f797518b71eacd9381b556b566b3a7977e9
+Author: Chris AtLee <catlee@mozilla.com>
+Date:   Wed Sep 16 12:15:31 2009 -0400
+
+    Adding docs for logMaxSize parameter
+
+commit 115760d9b4282f5f177e547270acb23824fe6ac4
+Author: Chris AtLee <catlee@mozilla.com>
+Date:   Tue Sep 15 17:29:16 2009 -0400
+
+    Initial implementation of logMaxSize
+
+commit 3beff6a98dacdfe05e8b525cb3fcb3409d16bfc8
+Author: Ben Hearsum <bhearsum@bitters-2.local>
+Date:   Fri Sep 18 09:41:57 2009 -0400
+
+    Fix Change Properties patch to be backwards compatible to already pickled Changes.
+
+commit c3055ec7b2da2937a6b7553b2c1625681405be5b
+Author: Chris AtLee <catlee@mozilla.com>
+Date:   Thu Sep 17 15:58:00 2009 -0400
+
+    Cancel the maxTime timer when the command exits.
+
+commit ae77a085a2f5afc616394bfac879c6ca99d9eea4
+Merge: 29eb918 f9bfc42
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Sun Sep 13 01:09:01 2009 -0400
+
+    Merge branch 'irc_extend' of git://github.com/dhubler/buildbot
+
+commit 29eb918e2e32f0ec03f405cbb9b57741f0f1dcbf
+Author: Nicolas Sylvain <nsylvain@chromium.org>
+Date:   Fri Sep 11 13:08:08 2009 -0700
+
+    Make changes to the test_console.py requested during the code
+    review by maruel and djmitche.
+
+commit 1800aae52289f27bd01655ff35a42a4460670474
+Author: Nicolas Sylvain <nsylvain@chromium.org>
+Date:   Fri Sep 11 12:49:41 2009 -0700
+
+    Add new tests for the console status page.
+
+commit baed1a3ee0627b80756cf1ab8f25840c23f4f193
+Merge: 702d705 e67b8e0
+Author: Nicolas Sylvain <nsylvain@chromium.org>
+Date:   Fri Sep 11 12:47:14 2009 -0700
+
+    Merge branch 'master' of git://github.com/djmitche/buildbot into console_clean
+
+commit f9bfc42de358360e330adc3d1062a4658704dbb7
+Author: Douglas Hubler <dhubler@localhost.(none)>
+Date:   Tue Sep 8 16:40:42 2009 -0400
+
+    Remove files that are related to holding builds, not to extending IRC
+
+commit e67b8e0e5ec570a9f8e9f09b7606d02e63c62d49
+Author: Dustin Sallings <dustin@spy.net>
+Date:   Sun Sep 6 19:14:40 2009 -0700
+
+    Move git submodule logic into initSubmodules
+
+commit fabad2476cebc077d58c9293ce389d465648b019
+Author: Dustin Sallings <dustin@spy.net>
+Date:   Sun Sep 6 18:48:09 2009 -0700
+
+    Avoid git fetches by optimistically trying requested revisions.
+    
+    If we have the necessary objects already to perform a build, don't
+    bother trying to contact what is most likely a central resource to
+    perform this build.
+    
+    In my case, *most* of my builds unnecessarily contact github to
+    perform a fetch that does not bring down new objects.
+
+commit f5761d0b31ed96288e38e6119a0b73219b077be5
+Author: Dustin Sallings <dustin@spy.net>
+Date:   Sun Sep 6 18:28:41 2009 -0700
+
+    Further git submodule support.
+    
+    Using a more backwards-compatible sequence as well as a submodule
+    clean, we can ensure more consistent builds with a wider variety of
+    versions of git.
+
+commit c6445b504569ec4543eb6a192665bea16f787c4c
+Author: Dustin Sallings <dustin@spy.net>
+Date:   Sun Sep 6 17:53:38 2009 -0700
+
+    Use vcexe for git commands.
+
+commit ce79ca4fd4215711cdafdb2c55467795937b4035
+Author: Dustin Sallings <dustin@spy.net>
+Date:   Sun Sep 6 17:52:13 2009 -0700
+
+    Remove a lot of redundant shell command code from the git commands.
+
+commit 8d18923c268fdca01d5aff2ae485ecc8c51ffd00
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Mon Sep 7 13:46:07 2009 -0400
+
+    fix typo and always set revision to something interesting; thanks to Tim Couper <tim@tizmoi.net>
+
+commit d1ed8ce990f74bf35041444658e32c265a67c1a1
+Author: Nicolás Alvarez <nicolas.alvarez@gmail.com>
+Date:   Fri Sep 4 20:36:58 2009 -0300
+
+    Add try-topfile and try-topdir to TryOptions.
+
+commit 08978a3f5bc99487e0f93a78d7ade3723547957b
+Author: Ben Hearsum <bhearsum@bitters-2.local>
+Date:   Wed Sep 2 14:04:06 2009 -0400
+
+    whitespace change to trigger testruns.
+
+commit bfebe10f06c1187d1f07dea467c59f0eef2d6f96
+Author: Ben Hearsum <bhearsum@bitters-2.local>
+Date:   Wed Sep 2 13:11:14 2009 -0400
+
+    Improve plain-text output of Change Properties
+
+commit 69520ab844a8383a01560d17fea9a1c3d8841006
+Author: Dustin Sallings <dustin@spy.net>
+Date:   Tue Sep 1 10:28:38 2009 -0700
+
+    Test fix for bzr try (complement of 8f494663)
+    
+    The repo from which the try was being tried was not very realistic.
+    Replacing a checkout with a clone for the working repo allows it have
+    a submit location it can reference for constructing a patch.
+
+commit 07d7040ecc7fd2a4195111b7eb26dd0cbe0f2781
+Author: Ben Hearsum <bhearsum@bitters-2.local>
+Date:   Tue Sep 1 09:55:19 2009 -0400
+
+    Whitespace change to trigger another testrun.
+
+commit 724ef5a59ae8c5b4dfeea3148a2c1f8d9db0ef30
+Author: Ben Hearsum <bhearsum@bitters-2.local>
+Date:   Tue Sep 1 09:24:59 2009 -0400
+
+    Adding docs for Change Properties.
+
+commit 702d705598444e0ed37b182eac12ec8bd8bcd24b
+Author: Daniel Dunbar <ddunbar@smooshlab.apple.com>
+Date:   Sun Jul 19 19:21:39 2009 -0700
+
+    Minor bug fix, got_rev may not be an integer.
+
+commit 65ee78a12f9e8af09339d181c9abe59ef8b50a74
+Author: Daniel Dunbar <daniel@zuster.org>
+Date:   Sun Jul 19 18:40:48 2009 -0700
+
+    Use Change's 'revlink' property in the console view.
+
+commit 474be07e38461cb7313fe44fa505115e4b4eb118
+Author: Daniel Dunbar <daniel@zuster.org>
+Date:   Thu Jul 23 22:59:48 2009 -0700
+
+    Workaround for #601 in console.
+     - This should really be fixed by fixing getBuild()...
+
+commit 16ec41a6a1500d0117007fcd84ca89cf530a03aa
+Author: Nicolas Sylvain <nsylvain@chromium.org>
+Date:   Thu Jul 16 19:20:19 2009 -0700
+
+    Initial commit of the new console view.
+    
+    The console view is a new StatusResource that displays
+    a developer-oriented view. It makes it easy to know
+    what was the result of a given change on all the builders.
+    
+    This is still a work in progress, but this version
+    should be working. It supports only integer-based
+    SCM at this point (svn, perforce, etc..., not git).
+
+commit 37adcb35c19c3e89846060f78b2eb4632124b6f1
+Author: Ben Hearsum <bhearsum@bitters-2.local>
+Date:   Mon Aug 31 16:51:35 2009 -0400
+
+    Disable testLock4 because it is intermittent/flakey.
+
+commit bcd04d730f38cd9303e7e22efce7e21778b2c35b
+Author: Ben Hearsum <bhearsum@bitters-2.local>
+Date:   Mon Aug 31 11:47:13 2009 -0400
+
+    Add Properties support to Change objects and Force Build form.
+    
+    Make Properties on the Force Build form actually work.
+    
+    Add support for sending properties through sendchange, changes.Change bugfix.
+    
+    Bugfix for pb.py
+    
+    Better arg handling of properties with sendchange command.
+    
+    Formatting fixes
+
+commit 59757549a7a3a608dc90aa51c848c45a813526e6
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Wed Aug 26 20:49:51 2009 -0400
+
+    master version is 'latest'
+
+commit 2fe9e61ca08f0d9e3c52cbb97c5c1a8ca001293c
+Author: Douglas Hubler <dhubler@localhost.(none)>
+Date:   Tue Aug 25 14:42:17 2009 -0400
+
+    Dont need to pass in ircstatusfactory when we can already control the protocol class
+
+commit dc38ae91b13ba42a6361cde689974375f22ac4f8
+Author: Douglas Hubler <dhubler@localhost.(none)>
+Date:   Tue Aug 25 14:41:15 2009 -0400
+
+    Use a dict to store builds, to reduce chances of duplicates
+
+commit 8f494663cb889fda7ac290728ec72c5e5ef49bee
+Author: Monty Taylor <mordred@inaugust.com>
+Date:   Thu Jul 23 00:24:37 2009 -0700
+
+    Changed the way we get patch and revid.
+
+commit 5565d333475d1a904f40e1c37a5c8b561cd03c47
+Author: Kristian Nielsen <knmeister@gmail.com>
+Date:   Tue Aug 18 13:08:38 2009 +0200
+
+    Implement suppression of specific warnings in WarningCountingShellCommand
+    
+    Warnings to be suppressed can be matched by regexp against filename or
+    warning text, and against line number range.
+    
+    Suppressions can be parsed from a file downloaded from the slave build
+    directory (so warnings to suppress are tracked in revision control
+    along with the source code being compiled).
+
+commit 98578726636b4b401724fde0a553596e6064724c
+Author: Nicolás Alvarez <nicolas.alvarez@gmail.com>
+Date:   Thu Aug 13 01:46:01 2009 -0300
+
+    Fix XSS in waterfall help.
+
+commit efc31f82990b385be67c37a704fe523a0d7d4a61
+Author: Nicolás Alvarez <nicolas.alvarez@gmail.com>
+Date:   Thu Aug 13 01:35:59 2009 -0300
+
+    Yet another XSS, in tests/<nonexistent>
+
+commit e7424607fec8e9528add2d0aeffb2f18402bd6b2
+Author: Nicolás Alvarez <nicolas.alvarez@gmail.com>
+Date:   Thu Aug 13 01:30:59 2009 -0300
+
+    Fix another XSS bug, in /buildslaves/.
+
+commit 5a240f967bc22d58f29d090a42a0071b699375b4
+Author: Nicolás Alvarez <nicolas.alvarez@gmail.com>
+Date:   Thu Aug 13 01:04:19 2009 -0300
+
+    one_box_per_builder?branch was still vulnerable after djmitche's change.
+    Change to use correct variable.
+
+commit 9c57635edf6f8678f9b28472baa7cfef2d278712
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Wed Aug 12 23:57:16 2009 -0400
+
+    fix a few dozen additional XSS vulnerabilities
+
+commit 71740dd877b5aaa46cc7425f55c9c8ad4da5162f
+Author: Brandon Ehle <azverkan@yahoo.com>
+Date:   Wed Aug 12 11:13:49 2009 -0700
+
+    Fix the waterfall help page to work with the new show_events default being default.
+
+commit ad13a16bbdec535c8edebdbba4f77ae39b19c84c
+Author: Nicolas Sylvain <nsylvain@google.com>
+Date:   Wed Aug 12 14:04:23 2009 -0400
+
+    fix XSS vulnerability reported by Nicolas Sylvain <nsylvain@google.com>
+
+commit 39dafd5ebabef96466f0885f4474497196588957
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Tue Aug 11 13:48:02 2009 -0400
+
+    fix typo in docs
+
+commit 16e657eb93731f6a2b69746db4c0e4e8d2e9d224
+Merge: 549ce4a 00b2fac
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Thu Aug 6 14:48:19 2009 -0400
+
+    Merge branch 'mtrlogobserver' of git://github.com/knielsen/buildbot
+
+commit 549ce4a109a2b269b7f33121a5a3c88f34c44b16
+Merge: 5be6259 02de002
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Thu Aug 6 12:21:32 2009 -0400
+
+    Merge branch 'max_time' of git://github.com/catlee/buildbot
+
+commit 02de0024fefa0fbf4f983d850c8d4254dfbd01cb
+Author: Chris AtLee <catlee@mozilla.com>
+Date:   Thu Aug 6 12:04:30 2009 -0400
+
+    Adding documentation for the maxTime parameter
+
+commit e8cc193af97fe15e7c54f24dfce09c45a08d60da
+Author: Chris AtLee <catlee@mozilla.com>
+Date:   Thu Jul 16 18:11:27 2009 -0700
+
+    Adding maxTime parameter to relevent classes, and fixing up tests
+
+commit 00b2fac1f3f75c7431cd9aa6b06dfc993e56b5d6
+Author: Kristian Nielsen <knmeister@gmail.com>
+Date:   Thu Aug 6 15:59:30 2009 +0200
+
+    Implement new buildbot.process.mtrlogobserver.MTR buildstep, for running mysql-test-run test suites.
+    
+    Implement a new BuildStep MTR.
+    
+    It parses the output of a test run with mysql-test-run.
+    
+    Test cases are counted and used to provide better completion time
+    estimates. Test failures are summarised on the Waterfall
+    Display. Server error logs are made available for debugging problems.
+    
+    Optionally, information about test runs is inserted into an external database.
+
+commit 1328d648c24cef58c39c63a8c9f5601bbbeeef96
+Author: Kristian Nielsen <knmeister@gmail.com>
+Date:   Fri Jul 10 17:36:55 2009 +0200
+
+    Implement `lazylogfiles' option for LoggingBuildStep.
+    
+    This suppresses entries in the `logfiles' argument where no data is
+    ever written to the logfile on the slave.
+
+commit 8d0c97d620daf5490120e5c613d667a01d47670e
+Author: Douglas Hubler <dhubler@localhost.(none)>
+Date:   Wed Aug 5 10:37:19 2009 -0400
+
+    A feature to put a failed build into a holding pattern, extends IRC bot to hold and free builds
+
+commit e17a4dd8dcd41e37fa052eac3cae7827a693ee73
+Author: Douglas Hubler <dhubler@localhost.(none)>
+Date:   Wed Aug 5 10:34:15 2009 -0400
+
+    Allow extending IRC bit to add custom commands
+
+commit 5be625970d5675860ea297e9b31af50a23a0b2e6
+Merge: 50bdb99 97aa04a
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Tue Aug 4 15:35:24 2009 -0400
+
+    Merge branch 'master' of git://github.com/zellyn/buildbot
+
+commit f9103c5d9fb98a4929246c51b5c4a1664e942d95
+Merge: a5545f6 50bdb99
+Author: Chris AtLee <catlee@mozilla.com>
+Date:   Tue Aug 4 10:51:00 2009 -0400
+
+    Merge branch 'master' of git@github.com:djmitche/buildbot
+
+commit 50bdb99e1f3f5f2182a435ee0bf5c9674e90733f
+Author: Douglas Hubler <dhubler@bigbird.(none)>
+Date:   Sat Aug 1 01:35:29 2009 -0400
+
+    Fix bugs and documentation for SVNPoller w/catagory fix
+
+commit 95cd7089babe1d7c1bc6cc679e430e24df62782f
+Author: Douglas Hubler <dhubler@bigbird.(none)>
+Date:   Sat Aug 1 01:09:41 2009 -0400
+
+    Allow SVNPoller to accept a category so it branch schedulers can filter properly
+
+commit f15ebee1c64a549a01c508783784f889325501ef
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Sat Aug 1 10:46:17 2009 -0400
+
+    fix whitespace
+
+commit 15bd807777ad2f998589b8463abb40642513be20
+Merge: dc73c81 6aed4aa
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Sat Aug 1 10:44:55 2009 -0400
+
+    Merge branch 'myfixes' of git://github.com/lurker99/buildbot
+
+commit dc73c811eb497caae18477f3f7f23bb5a636d64f
+Merge: 198220f 98b64bf
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Sat Aug 1 10:37:00 2009 -0400
+
+    Merge branch 'trac-601' of git://github.com/ddunbar/buildbot
+
+commit 198220f9a7c68aa11dce96be96aaef88c36f8d35
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Sat Aug 1 10:14:35 2009 -0400
+
+    move the waterfall down in the default index.html
+
+commit dcd8fad0fccafef1f837a8f93325b6d9778b18f1
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Thu Jul 30 15:13:49 2009 -0400
+
+    recommend using keyword arguments for Dependent constructor
+
+commit 9dfbb1649537f863b8354470a9e4bc05ee9b5d39
+Merge: 57b6539 1123175
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Wed Jul 29 23:48:19 2009 -0400
+
+    Merge branch 'master' of git://github.com/nicolas17/buildbot
+
+commit 6aed4aaaa8361a39176309bd5f179770f84e2cac
+Author: lurker99 <boris.vaisburd@.metistec.local>
+Date:   Wed Jul 29 18:26:14 2009 +0300
+
+    Added urls list to the build property page
+
+commit 57b6539af70556c4fe07ac92209756dd5b2302c3
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Sun Jul 26 14:48:47 2009 -0400
+
+    make the Mercurial tests more reliable by not trying to invent a username with gethostname()
+
+commit 57e75139a85aeb753aad74dbf6d8fbca31fef8a6
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Sun Jul 26 14:48:25 2009 -0400
+
+    make all VC tests more reliably clean up before running
+
+commit 7689937a5f88d7f6023b0f82cc29371bd6bae51a
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Sun Jul 26 14:14:04 2009 -0400
+
+    disable buildbot.test.test_locks.Locks.testLock3
+
+commit d38df8c6b9a9a192b7282f9abd5d799698a4cd76
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Sun Jul 26 13:18:09 2009 -0400
+
+    fix UnboundLocalError
+
+commit 112317504d29f379f1d8bdf1b8c74c782af0a456
+Author: Nicolás Alvarez <nicolas.alvarez@gmail.com>
+Date:   Sat Jul 25 00:32:45 2009 -0300
+
+    Fix typo in comment.
+
+commit 98b64bf101e12b457bf3805c663407d3772bf43d
+Author: Daniel Dunbar <daniel@zuster.org>
+Date:   Thu Jul 23 22:39:46 2009 -0700
+
+    Workaround for #601, when a build is locked it may not be in currentBui
+    lds, but also not in the cache or on disk. In that case, the BuilderStatus eventGenerator ends up not returning any builds.
+     - I'm not sure of the correct fix, so just ignore failures looking up the most
+       recent build.
+
+commit c47a9f5f10c7679bfe852038585e26c03728e5a9
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Thu Jul 23 18:01:56 2009 -0400
+
+    fix tests for MasterShellCommand use of WithProperties
+
+commit 19ae4719c10e05f696714a90781f0b3e9c732a6e
+Author: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>
+Date:   Thu Jul 23 14:45:58 2009 -0300
+
+    steps/master.py: Adding WithProperties support to MasterShellCommand (fixes #450)
+    
+    Just calling properties.render() function to attribute 'command' of MasterShellCommand class in start().
+    MasterShellCommand unit test updated.
+    
+    Signed-off-by: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>
+
+commit 8174ed96f3a291cd0e9057b79617ee6dc80c7a22
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Mon Jul 20 13:59:45 2009 -0400
+
+    don't test compression if it's not supported
+
+commit 31534817fecfa929113fd95dffd5745e3d432d86
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Mon Jul 20 13:50:19 2009 -0400
+
+    don't add Nones to a DeferredList
+
+commit 4dcda7197e346f8dba56978f670cddca34cca340
+Author: Daniel Dunbar <daniel@zuster.org>
+Date:   Sun Jul 19 20:19:30 2009 -0700
+
+    Fix for RSS quoting issues.
+
+commit 497aa6cc5a0ede348b16e2f299d81f1585c576e2
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Mon Jul 20 10:29:33 2009 -0400
+
+    (fixes #599) make bz2 module optional
+
+commit 7d71ae0f2c167e90c79e6bafa6150568c2a22624
+Author: Daniel Dunbar <daniel@zuster.org>
+Date:   Sun Jul 19 14:35:05 2009 -0700
+
+    Fix #597, show all failing steps (instead of last step), and include the tail
+    ends of all logs for the failing steps.
+
+commit df2e0842949f8cd05a4a14f3567be5aa4268b36d
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Fri Jul 17 21:07:17 2009 -0400
+
+    (fixes #592) store allChanges, rather than trying to concatenate {un,}importantChanges and thereby losing the order of changes
+
+commit 28b86b7719658b24f806fb8bd5b483f819fca9a6
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Fri Jul 17 16:55:06 2009 -0400
+
+    (fixes #588) don't show 'Cancel All' if allowForce=False
+    
+    Note that the check for allowForce when this button is clicked is
+    already present in the source, so this is a cosmetic change to not show
+    a button that will lead the user to an error message.
+
+commit a5545f6d878d70bd3ed91fbf7e0e2938c46667f8
+Merge: cbb5c0a 64773c1
+Author: Chris AtLee <catlee@mozilla.com>
+Date:   Fri Jul 17 16:20:52 2009 -0400
+
+    Merge branch 'master' of git@github.com:djmitche/buildbot
+    
+    Conflicts:
+    	buildbot/scripts/runner.py
+
+commit 64773c1a0d77eaf675e8eb25c7f0d2bc60f605cd
+Author: Nicolas Sylvain <nsylvain@chromium.org>
+Date:   Thu Jul 16 11:51:31 2009 -0700
+
+    Call head() on the StatusResource pages only once per request.
+    
+    The html <head> element contains duplicated content
+    when there is other parameters to the requests because
+    it is being called inside a for loop. It needs to be out
+    of the loop.
+    
+    For example, see the duplicated meta refresh on this page :
+    http://buildbot.net/metabuildbot/waterfall?branch=&builder=docs&reload=60
+
+commit 18f19ae8ee8393398eba09f5537a304eed12d9e2
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Thu Jul 16 13:52:00 2009 -0400
+
+    add increased timeout for buildbot.test.test_vc.Bzr.testCheckout
+
+commit 2c75b327c43650bfc15fdee09f61667de7342cb2
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Thu Jul 16 11:28:58 2009 -0400
+
+    add link to the NetBSD pkgsrc bug
+
+commit f064c5d7a01b8e5ea7459c475cc86ac22999455e
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Thu Jul 16 10:28:11 2009 -0400
+
+    work around NetBSD bug that breaks 'git init'
+
+commit 57bfa26a075dae5f00aed83d8bf9c127e80e8490
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Thu Jul 16 09:59:17 2009 -0400
+
+    inc version number to 0.7.11p1, edit NEWS and add ChangeLog
+
+commit 707a8203d164e8f73c2135f974343374620464e5
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Sun Jul 12 20:09:58 2009 -0400
+
+    disable buggy test
+
+commit 84a0c8acccbf6074cd62904542b6467bb75741d4
+Author: Matt Heitzenroder <mheitzenroder@gmail.com>
+Date:   Wed Jul 15 19:31:55 2009 -0400
+
+    removed references to dir
+
+commit 7d8a46f9a488da60df945e8c95efb3c6c7bc68ce
+Author: Matt Heitzenroder <mheitzenroder@gmail.com>
+Date:   Wed Jul 15 19:29:13 2009 -0400
+
+    No need to bulid a mirror of the directory.
+
+commit aedd1e71b573ba613adc4399d1e10d895174c4af
+Merge: 5d0cafd c68db6d
+Author: Matt Heitzenroder <mheitzenroder@gmail.com>
+Date:   Tue Jul 14 03:22:56 2009 -0400
+
+    Merge branch 'master' of git://github.com/djmitche/buildbot
+
+commit 5d0cafd7979284c8c0adc605ae8203eb8a7be36a
+Author: Matt Heitzenroder <mheitzenroder@gmail.com>
+Date:   Tue Jul 14 03:20:10 2009 -0400
+
+    corrected KeyError with Private vs private
+
+commit b5049437028c2f303535a99d894c187f0a3f670c
+Author: Matt Heitzenroder <mheitzenroder@gmail.com>
+Date:   Tue Jul 14 02:57:10 2009 -0400
+
+    catch all exceptions when receiving a post
+
+commit 19882836a96e263029b056b7f9f27c30d52ee8ae
+Author: Matt Heitzenroder <mheitzenroder@gmail.com>
+Date:   Tue Jul 14 02:51:59 2009 -0400
+
+    updated docstrings
+
+commit 8111ba893d41a3b768ea048be003702fe62cbd27
+Author: Matt Heitzenroder <mheitzenroder@gmail.com>
+Date:   Tue Jul 14 02:50:38 2009 -0400
+
+    set private attributed based on value of private attribute in GitHub JSON.  cleaned per pylint.
+
+commit c68db6d3fca22d211675ec2652f6d7a5cff5689a
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Mon Jul 13 12:28:01 2009 -0400
+
+    add a default value for branchType, per Marcus and Marijn
+
+commit 85d3fa6633a07efa882f47e591abe9f3c6c73eba
+Author: Matt Heitzenroder <mheitzenroder@gmail.com>
+Date:   Sun Jul 12 16:40:59 2009 -0400
+
+    adding the remote is no longer necessary
+
+commit 0e1d465c2739f84806f218452380d3c3acf3e1f3
+Author: Matt Heitzenroder <mheitzenroder@gmail.com>
+Date:   Sun Jul 12 16:23:51 2009 -0400
+
+    switched clone from bare to mirror
+
+commit e2190bf5aaf825123ee93b739c694891a040dbca
+Merge: ed573ab 515ea72
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Sat Jul 11 12:16:21 2009 -0400
+
+    Merge branch 'master' of git://github.com/nicolas17/buildbot
+
+commit ed573ab910d484ad5303794da00dd396d0667f79
+Author: Dustin Sallings <dustin@spy.net>
+Date:   Fri Jul 10 22:49:01 2009 -0700
+
+    Add warning support to PerlModuleTest.
+    
+    PerlModuleTest completely ignored the warningPattern directive and
+    failed to otherwise communicate any warnings that occurred during test
+    time.
+    
+    It now should do what one might expect when configured to check for
+    warnings.
+
+commit 515ea7289455704c7bad89a9d0d6410f52f26f9e
+Author: Nicolás Alvarez <nicolas.alvarez@gmail.com>
+Date:   Sat Jul 11 01:23:03 2009 -0300
+
+    Replaced tabs (ew\!) in Python code.
+
+commit c7a38d331b869a23cad3001724feae3055c80455
+Author: Stefan Seefeld <seefeld@sympatico.ca>
+Date:   Fri Jul 10 22:45:50 2009 -0400
+
+    (fixes #582) This patch fixes the test failures by injecting an extractall method into TarFile if not already present.
+
+commit bd24cdbaaa1fc76cebb06cdb4793aa76cd152b6c
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Fri Jul 10 22:43:08 2009 -0400
+
+    (refs #585) try adding an __init__.py to see if it fixes RPM builds
+
+commit bee810e56b03d835ba7178cafcf004a83a3e9980
+Merge: 1a914f4 0be8a1c
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Fri Jul 10 10:11:42 2009 -0400
+
+    Merge branch 'fixes' of git://github.com/catlee/buildbot
+
+commit 1a914f467dc997d1a9ce483f8a20f1e7e61139dc
+Merge: 35f9555 9f9d8ed
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Fri Jul 10 10:10:54 2009 -0400
+
+    Merge branch 'changesfix' of git://github.com/catlee/buildbot
+
+commit 35f9555f498788abdb343d2b057876c32d08ec73
+Merge: 8014dd5 2f0b4ea
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Fri Jul 10 10:07:28 2009 -0400
+
+    Merge branch 'master' of git://github.com/roder/buildbot
+
+commit 8014dd5bc3c4d0a3ef463496e10e41fe378f90dc
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Thu Jul 9 21:34:42 2009 -0400
+
+    fix always-true assertions
+
+commit 9b1d41b2b6eb5d89cea39a6994ae289a6bb1b1b1
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Wed Jul 8 17:33:37 2009 -0400
+
+    update NEWS
+
+commit 95aac8dd6ae964b8692698ae3ce966b0fcf7bb70
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Wed Jul 8 15:22:54 2009 -0400
+
+    fix typo: getUpstreamScheduler vs findUpstreamScheduler
+
+commit 926a593430dd46317b33fab7a83ab79ee9962995
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Wed Jul 8 12:41:53 2009 -0400
+
+    add error checking and a --private flag to use git@github.com:user/repo.git instead of git://
+
+commit 71a4942d409cd9ea647c7d0bc25e61ab4d71e06e
+Author: Benjamin Smedberg <benjamin@smedbergs.us>
+Date:   Wed Jul 8 11:53:29 2009 -0400
+
+    (fixes #584) add default value for clobberOnBranchChange
+
+commit 2f0b4ea6c8cd60e4075ae34d16757839fc374349
+Merge: 8a41298 3a3f751
+Author: Matt Heitzenroder <mheitzenroder@gmail.com>
+Date:   Tue Jul 7 12:55:08 2009 -0400
+
+    Merge branch 'master' of git://github.com/djmitche/buildbot
+
+commit 8a412980bd4f868b663ada0f7775b109fbac355f
+Author: Matt Heitzenroder <mheitzenroder@gmail.com>
+Date:   Tue Jul 7 12:54:59 2009 -0400
+
+    fixed typo
+
+commit 3a3f751fdae220230cd24dc65d01b8458eab7acd
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Tue Jul 7 12:49:35 2009 -0400
+
+    log the exception too
+
+commit 81d3acbd914ba9c365483e5b95902de1cde7fe55
+Merge: 8e260fd 564c443
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Tue Jul 7 12:48:46 2009 -0400
+
+    Merge branch 'master' of git://github.com/roder/buildbot
+
+commit 564c443565c0f331d15e6d7f8ca1f02accc96809
+Author: Matt Heitzenroder <mheitzenroder@gmail.com>
+Date:   Tue Jul 7 02:29:00 2009 -0400
+
+    fail gracefully, well... stumble a bit and make a joke about it, but don't faceplant.
+
+commit c4fb6105538f93accd8734ef40c11930410a1d75
+Author: Matt Heitzenroder <mheitzenroder@gmail.com>
+Date:   Tue Jul 7 00:01:07 2009 -0400
+
+    simplified, removed local globals, added cmd line options
+
+commit 8e260fdb91a99056a569f05ba9d9e61c7fad1875
+Merge: 157198e 43c720c
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Mon Jul 6 10:08:15 2009 -0400
+
+    Merge branch 'master' of git://github.com/dustin/buildbot
+
+commit 43c720c778acaec59eacf51abdd0c97902d73e2b
+Author: Dustin Sallings <dustin@spy.net>
+Date:   Mon Jul 6 00:45:51 2009 -0700
+
+    Disable waterfall misc events by default.
+
+commit b51cef36a8d3fa4aececae8bb55ef63f6f69a797
+Author: Dustin Sallings <dustin@spy.net>
+Date:   Mon Jul 6 00:35:43 2009 -0700
+
+    Fix waterfall display when showing events.
+
+commit 157198e10f58228e87b549bd0dd7d29e843d7a4d
+Author: Nicolás Alvarez <nicolas.alvarez@gmail.com>
+Date:   Sun Jul 5 21:54:30 2009 -0300
+
+    Fix some docstring typos.
+
+commit 1e130b0160f3e22b3147f37ee2f7a49d65a78b97
+Author: Nicolás Alvarez <nicolas.alvarez@gmail.com>
+Date:   Sun Jul 5 19:48:53 2009 -0300
+
+    Fix typo in documentation.
+
+commit a6df44b0260334a4c9039fe8fd43d9588d1bc636
+Author: Dustin Sallings <dustin@spy.net>
+Date:   Sun Jul 5 15:10:39 2009 -0700
+
+    Retry on delivery failure.
+
+commit e595f9c0ccf9aac794935e4dd836a19b3533a60f
+Author: Dustin Sallings <dustin@spy.net>
+Date:   Sun Jul 5 14:37:59 2009 -0700
+
+    First pass at webhook retries.
+
+commit dd9f28106f6621b47523c2dd8286a4c41c72d8bc
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Sun Jul 5 16:23:47 2009 -0400
+
+    fix tests to reflect new behavior
+
+commit 0f40bc1bb79470dc13a614cd96e28b96de06b4bb
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Sun Jul 5 16:19:09 2009 -0400
+
+    fix texinfo typo
+
+commit 2834f58f2f7a47336679eed9ff93995be859ab36
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Sun Jul 5 13:48:09 2009 -0400
+
+    (refs #361) thread the already-documented logEnviron the rest of the way through to the SlaveCommand step
+
+commit 9b4c509b762c429ce53e930b31e6d4ef3f18f260
+Merge: 1b80f86 3043fbc
+Author: Dustin J. Mitchell <dustin@zmanda.com>
+Date:   Sun Jul 5 09:25:22 2009 -0400
+
+    Merge branch 'webhook-retries' of git://github.com/dustin/buildbot
+
+commit 3043fbcadccb24f58183e42fdd2dd4c484446626
+Author: Dustin Sallings <dustin@spy.net>
+Date:   Sat Jul 4 16:18:57 2009 -0700
+
+    Documented WebHookTransmitter
+
+commit 6239fd6bf389bdb82609b7b01613ccafa79027b7
+Author: Dustin Sallings <dustin@spy.net>
+Date:   Sat Jul 4 14:35:28 2009 -0700
+
+    Better version info on builds.
+
+commit 602ef714247a0b456d3e1193fa6616619cfb1598
+Author: Dustin Sallings <dustin@spy.net>
+Date:   Sat Jul 4 13:57:45 2009 -0700
+
+    Implement the category filtering.
+
+commit 954124677269a6109fb3456c0b9d4c1b1f8d5a1a
+Author: Dustin Sallings <dustin@spy.net>
+Date:   Sat Jul 4 12:58:07 2009 -0700
+
+    Allow status 204.
+
+commit 9cfecc5a308ff993211b614172534839c123f15f
+Author: Dustin Sallings <dustin@spy.net>
+Date:   Sat Jul 4 12:56:19 2009 -0700
+
+    Allow for more than one webhook destination URL.
+
+commit 466b4b7e6f8f48ae63f131b4c072df341fc05912
+Author: Dustin Sallings <dustin@spy.net>
+Date:   Sat Jul 4 03:56:40 2009 -0700
+
+    A webhook status listener.
+
+commit 57c0aeba02570aa78601b53a5d816844e17c8b2c
+Author: Dustin Sallings <dustin@spy.net>
+Date:   Sat Jul 4 00:33:29 2009 -0700
+
+    Fix for log URL generation.
+
+commit 97aa04aa47a4ae3074446d22b377ef9a4f8ebbf2
+Author: Zellyn Hunter <zhunter@ajc.com>
+Date:   Wed Jul 1 14:11:47 2009 -0400
+
+    make alwaysUseLatest=True blank out revision before calling startVC
+
+commit cbb5c0a2f2113bf870bb415814eae5b31f4cb8e1
+Author: Chris AtLee <catlee@mozilla.com>
+Date:   Tue Jun 23 08:07:26 2009 -0400
+
+    On buildbot stop, don't die if the process doesn't exist any more.
+
+commit 9f9d8ed3a964df2e5fe27cec8e14a6d31f2509b3
+Author: Chris AtLee <catlee@mozilla.com>
+Date:   Fri May 22 17:30:40 2009 -0400
+
+    Make changes.links safer.
+    
+    Mutable objects shouldn't be used as the defaults in method arguments.
+
+commit 0be8a1cc660537043a45cd0d207fd59621c61d4f
+Author: Chris AtLee <catlee@mozilla.com>
+Date:   Thu May 14 18:33:51 2009 -0400
+
+    If the process doesn't exist anymore, just ignore it
