@@ -18,7 +18,7 @@
   </head>
   <body>
     {% block header -%}
-    <div class="header">
+    <div class="header">    
         <a href="{{ path_to_root or '/' }}">Home</a>
         - <a href="{{ path_to_root }}waterfall">Waterfall</a>
         <a href="{{ path_to_root }}grid">Grid</a>
@@ -40,18 +40,18 @@
     </div>
 
     {%- block footer -%} 
-    <div class="footer">
+    <div class="footer" style="clear:both">
       <hr/>
-      <a href="http://buildbot.net/">Buildbot</a> {{version}}
+      <a href="http://buildbot.net/">BuildBot</a> ({{version}})
       {% if project_name -%}
-        working for the
-        {%- if project_url %}
+        working for the&nbsp;
+        {%- if project_url -%}
           <a href="{{ project_url }}">{{ project_name }}</a>
-        {%- else %}
+        {%- else -%}
           {{ project_name }}
-        {%- endif %}
-        project
-      {% endif %}
+        {%- endif -%}
+        &nbsp;project.
+      {%- endif -%}
       <br/>
       Page built: <b>{{ time }}</b> ({{ tz }})
     </div>

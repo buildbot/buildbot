@@ -2,32 +2,50 @@
 
 {% block content %}
 
-<h1>Welcome to the Buildbot!</h1>
+<h1>Welcome to the Buildbot
+{%- if project_name -%}
+  &nbsp;for the&nbsp;
+  {%- if project_url -%}
+    <a href="{{ project_url }}">{{ project_name }}</a>
+  {%- else -%}
+    {{ project_name }}
+  {%- endif -%}
+&nbsp;project
+{%- endif -%}
+!
+</h1>
+
+<div class="column">
 
 <ul>
-  <li>the <a href="waterfall">Waterfall Display</a> will give you a
+  {% set item_class=cycler('alt', '') %}
+  
+  <li class="{{ item_class.next() }}">The <a href="waterfall">Waterfall Display</a> will give you a
   time-oriented summary of recent buildbot activity.</li>
 
-  <li>the <a href="grid">Grid Display</a> will give you a
+  <li class="{{ item_class.next() }}">The <a href="grid">Grid Display</a> will give you a
   developer-oriented summary of recent buildbot activity.</li>
 
-  <li>the <a href="tgrid">Transposed Grid Display</a> presents
+  <li class="{{ item_class.next() }}">The <a href="tgrid">Transposed Grid Display</a> presents
   the same information as the grid, but lists the revisions down the side.</li>
 
-  <li>the <a href="console">Console</a> presents 
+  <li class="{{ item_class.next() }}">The <a href="console">Console</a> presents 
   a user-oriented status page.</li>
 
-  <li>The <a href="one_box_per_builder">Latest Build</a> for each builder is
+  <li class="{{ item_class.next() }}">The <a href="one_box_per_builder">Latest Build</a> for each builder is
   here.</li>
 
-  <li><a href="one_line_per_build">Recent Builds</a> are summarized here, one
+  <li class="{{ item_class.next() }}"><a href="one_line_per_build">Recent Builds</a> are summarized here, one
   per line.</li>
 
-  <li><a href="buildslaves">Buildslave</a> information</li>
-  <li><a href="changes">Changesource</a> information.</li>
+  <li class="{{ item_class.next() }}"><a href="buildslaves">Buildslave</a> information</li>
+  <li class="{{ item_class.next() }}"><a href="changes">Changesource</a> information.</li>
 
-  <br />
-  <li><a href="about">About this Buildbot</a></li>
+  <li class="{{ item_class.next() }}"><a href="about">About</a> this Buildbot</li>
 </ul>
+
+<p><i>This and other pages can be overridden and customized.</i></p>
+
+</div>
 
 {% endblock %}

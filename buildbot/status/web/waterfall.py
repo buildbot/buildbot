@@ -609,9 +609,9 @@ class WaterfallStatusResource(HtmlResource):
                     stuff = []
                     # add the date at the beginning (if it is not the same as
                     # today's date), and each time it changes
-                    todayday = time.strftime("<b>%a</b>",
+                    todayday = time.strftime("%a",
                                              time.localtime(timestamps[r]))
-                    today = time.strftime("<b>%d %b %Y</b>",
+                    today = time.strftime("%d %b %Y",
                                           time.localtime(timestamps[r]))
                     if today != lastDate:
                         stuff.append(todayday)

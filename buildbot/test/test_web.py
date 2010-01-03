@@ -258,8 +258,8 @@ c['status'] = [html.WebStatus(http_port=0)]
         d.addCallback(_check2)
 
         def _check3(changes):
-            self.failUnlessIn("<li>Syncmail mailing list in maildir " +
-                              "my-maildir</li>", changes)
+            self.failUnlessIn("Syncmail mailing list in maildir " +
+                              "my-maildir", changes)
 
         d.addCallback(_check3)
 

@@ -1,7 +1,7 @@
 
 import urllib
 from buildbot.status.web.base import HtmlResource, path_to_builder, \
-     path_to_build
+     path_to_build, css_classes
 from buildbot.status.web.logs import LogsResource
 from buildbot import util
 from time import ctime
@@ -41,11 +41,12 @@ class StatusResourceBuildStep(HtmlResource):
             else:
                 cxt['end'] = "Not Finished"
                 cxt['elapsed'] = util.formatInterval(util.now() - start)
-        
+                
         cxt.update(dict(builder_link = path_to_builder(req, b.getBuilder()),
                         build_link = path_to_build(req, b),
                         b = b,
-                        s = s))
+                        s = s,
+                        result_css = css_classes[b.getResults()]))
         
         template = req.site.buildbot_service.templates.get_template("buildstep.html");        
         return template.render(**cxt)

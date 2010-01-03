@@ -4,14 +4,18 @@
 
 <h1>Changesources</h1>
 
+<div class="column">
+
 {% if sources %}
   <ol>
   {% for s in sources %}
-     <li>{{ s.describe() }}</li>
+     <li class={{ loop.cycle('alt', '') }}>{{ s.describe() }}</li>
   {% endfor %}
   </ol>
 {% else %}
   none (push only)
 {% endif %}
+
+</div>
 
 {% endblock %}

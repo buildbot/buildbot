@@ -27,10 +27,14 @@ class ChangesResource(HtmlResource):
     
 
     def getChild(self, path, req):
-        num = int(path)
-        c = self.getStatus(req).getChange(num)
+        try:
+            num = int(path)
+            c = self.getStatus(req).getChange(num)
+        except ValueError:
+            c = None
+            num = path
         if not c:
-            return NoResource("No change number '%d'" % num)    
+            return NoResource("No change number '%s'" % path)    
         return ChangeResource(c, num)
     
 class ChangeBox(components.Adapter):

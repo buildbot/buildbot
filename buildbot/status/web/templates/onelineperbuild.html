@@ -1,5 +1,5 @@
 {% extends "layout.html" %}
-{% from 'build_line.html' import build_line %}
+{% from 'build_line.html' import build_table %}
 {% import 'forms.html' as forms %}
 
 {% block content %}
@@ -9,13 +9,7 @@
   <p>of builders: {{ builders|join(", ")|e }}</p>
 {% endif %}
  
-<ul>
-  {% for b in builds %}
-    <li>{{ build_line(b) }}</li>
-  {% else %}
-    <li>No matching builds found</li>
-  {% endfor %}
-</ul>
+{{ build_table(builds, True) }}
 
 <p>{{ online_count }} builder(s) online.</p>
 

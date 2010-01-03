@@ -1,4 +1,4 @@
-{% from 'build_line.html' import build_line %}
+{% from 'build_line.html' import build_table %}
 {% import 'forms.html' as forms %}
 
 {% extends "layout.html" %}
@@ -6,11 +6,15 @@
 
 <h1>Builder {{ name }}</h1>
 
+<p>(<a href="{{ path_to_root }}waterfall?show={{ name }}">view in waterfall</a>)</p>
+
+<div class="column">
+
 {% if current %}
   <h2>Current Builds:</h2>
   <ul>
   {% for b in current %}
-    <li><a href="{{ b.link }}>{{ b.num }}</a>
+    <li><a href="{{ b.link }}">{{ b.num }}</a>
     {% if b.when %}
       ETA: {{ b.when_time }} [{{ b.when }}s]
     {% endif %}
@@ -64,23 +68,16 @@
 {% endif %}
 
 <h2>Recent Builds:</h2>
-(<a href="{{ path_to_root }}waterfall?show={{ name }}">view in waterfall</a>)
 
-<ul>
-{% for b in recent %}
-  <li>{{ build_line(b) }}</li>
-  {% if loop.first %}
-    <br/>
-  {% endif %}
-{% else %}
-  <li>No recent builds</li>
-{% endfor %}
-</ul>
+{{ build_table(recent) }}
+
+</div>
+<div class="column">
 
 <h2>Buildslaves:</h2>
 <ol>
 {% for s in slaves %}
-  <li><b><a href="{{ s.link|e }}">{{ s.name|e }}</a></b>
+  <li class="{{ loop.cycle('alt', '') }}"><b><a href="{{ s.link|e }}">{{ s.name|e }}</a></b>
   {% if s.connected %}
     CONNECTED
     {% if s.admin %}
@@ -114,5 +111,7 @@
     <input type="submit" value="Ping Builder" />
   </form>
 {% endif %}
+
+</div>
 
 {% endblock %}

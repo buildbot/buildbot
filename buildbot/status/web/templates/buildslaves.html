@@ -4,48 +4,54 @@
 
 <h1>Buildslaves</h1>
 
+<div class="column">
+
 <ol>
 {% for s in slaves %}
   <li><a href="{{ s.link }}">{{ s.name }}</a>:
   <ul>
+  {% set item_class = cycler('alt', '') %}
+  
   
   {% if s.builders %}
-    <li>Used by builders: 
+    <li class="{{ item_class.next() }}">Used by builders: 
     {% set comma = joiner(", ") %}    
     {% for b in s.builders %}
       {{ comma() }}<a href="{{ b.link }}">{{ b.name }}</a>
     {% endfor %}
     </li>
   {% else %}
-    <li>Not used by any Builders</li>
+    <li class="{{ item_class.next() }}">Not used by any Builders</li>
   {% endif %}
  
-  <li>Running BuildBot version: {{ s.version }}</li>
+  <li class="{{ item_class.next() }}">Running BuildBot version: {{ s.version }}</li>
  
   {% if s.connected %}
-    <li>Slave is currently connected</li>
+    <li class="{{ item_class.next() }}">Slave is currently connected</li>
     
     {% if s.admin %}
-      <li>Admin: {{ s.admin|replace('@', '-at-') }}</li>
+      <li class="{{ item_class.next() }}">Admin: {{ s.admin|replace('@', '-at-') }}</li>
     {% endif %}
     
     {% if s.last_heard_from_age %}
-      <li>Last heard from {{ s.last_heard_from_age }}
+      <li class="{{ item_class.next() }}">Last heard from {{ s.last_heard_from_age }}
           <font size="-1">{{ s.last_heard_from_time }}</font></li>          
       {% if s.running_builds %}
-        <li>Slave is currently running {{ s.running_builds }} build(s).</li>
+        <li class="{{ item_class.next() }}">Slave is currently running {{ s.running_builds }} build(s).</li>
       {% else %}
-        <li>Slave is idle.</li>
+        <li class="{{ item_class.next() }}">Slave is idle.</li>
       {% endif %}
     {% endif %}
     
   {% else %}
-    <li><b>Slave is NOT currently connected</b></li>
+    <li class="{{ item_class.next() }}"><b>Slave is currently NOT connected</b></li>
   {% endif %}
   
   </ul>
   </li>
 {% endfor %}
 </ol>  
+
+</div>
   
 {% endblock %}

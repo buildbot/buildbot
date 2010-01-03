@@ -1,5 +1,7 @@
 {% macro change(who, at, branch, revision, files, comments, properties, revlink) %}
 
+<h3>Properties</h3>
+
 <p>
 Changed by: <b>{{ who|e }}</b><br/>
 Changed at: <b>{{ at }}</b><br/>
@@ -16,7 +18,7 @@ Changed at: <b>{{ at }}</b><br/>
 <h3>Changed files</h3>
 <ul>
 {% for f in files -%}
-  <li>
+  <li class="{{ loop.cycle('alt', '') }}">
   {%- if f.url %}<a href="{{ f.url }}"><b>{{ f.name }}</b></a></li>
   {%- else %}<b>{{ f.name }}</b>
   {%- endif -%}

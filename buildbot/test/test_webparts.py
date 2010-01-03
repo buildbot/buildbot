@@ -117,12 +117,12 @@ c['status'] = [ws]
         d.addCallback(self._check, "waterfall", "current activity")
         d.addCallback(self._check, "about", "Buildbot is a free software")
         d.addCallback(self._check, "changes", "PBChangeSource listener")
-        d.addCallback(self._check, "buildslaves", "Build Slaves")
+        d.addCallback(self._check, "buildslaves", "Buildslaves")
         d.addCallback(self._check, "one_line_per_build",
                       "Last 20 finished builds")
         d.addCallback(self._check, "one_box_per_builder", "Latest builds")
         d.addCallback(self._check, "builders", "Builders")
-        d.addCallback(self._check, "builders/builder1", "Builder: builder1")
+        d.addCallback(self._check, "builders/builder1", "Builder builder1")
         d.addCallback(self._check, "builders/builder1/builds", "") # dummy
         d.addCallback(self._check, "console", "Console")
         d.addCallback(self._check, "grid", 'class="Grid"')

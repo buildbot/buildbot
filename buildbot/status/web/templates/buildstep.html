@@ -8,11 +8,13 @@
   step <a href="">{{ s.getName() }}</a> 
 </h1>
 
+<div class="column">
+
 {% if s.isFinished() %}
   <h2>Finished</h2>
-  <p>  
+  <p class="{{ result_css }} result">  
   {% for l in s.getText() %}
-    {{ l|e }}
+    {{ l|e }}<br/>
   {% endfor %}
   </p>  
 {% else %}
@@ -32,24 +34,28 @@
 
 <h2>Timing</h2>
 {% if start %}
-  <table>
-    <tr><td>Start</td><td>{{ start }}</td></tr>
-    <tr><td>End</td><td>{{ end or "Not finished" }}</td></tr>
-    <tr><td>Elapsed</td><td>{{ elapsed }}</td></tr>
+  <table class="info">
+    <tr class="alt"><td class="left">Start</td><td>{{ start }}</td></tr>
+    <tr><td class="left">End</td><td>{{ end or "Not finished" }}</td></tr>
+    <tr class="alt"><td class="left">Elapsed</td><td>{{ elapsed }}</td></tr>
   </table>
 {% else %}
   <b>Not started</b>
 {% endif %}
   
 <h2>Logs</h2>
-<ul>
+<ol>
 {% for l in logs %}
+  <li class="{{ loop.cycle('alt', '') }}">
   {% if l.has_contents %}
-    <li><a href="{{ l.link|e }}">{{ l.name|e }}</a></li>
+    <a href="{{ l.link|e }}">{{ l.name|e }}</a>
   {% else %}
-    <li>{{ l.name|e }}</li>
+    {{ l.name|e }}
   {% endif %}
+  </li>
 {% endfor %}
 </ul>
-  
+
+</div>
+
 {% endblock %}

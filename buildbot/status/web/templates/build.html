@@ -1,5 +1,6 @@
 {% extends "layout.html" %}
 {% import 'forms.html' as forms %}
+{% from "change_macros.html" import change %}
 
 {% block content %}
 
@@ -8,8 +9,10 @@ Builder <a href="{{ path_to_builder }}">{{ b.getBuilder().getName() }}</a>
 Build #{{ b.getNumber() }}
 </h1>
 
+<div class="column">
+
 {% if not b.isFinished() %}
-  <h2>Build In Progress</h2>
+  <h2>Build In Progress:</h2>
 
   {% if when_time %}
     <div>ETA: {{ when }}s ({{ when_time }})</div>
@@ -19,13 +22,11 @@ Build #{{ b.getNumber() }}
     {{ forms.stop(stop_url, using_user_passwd, on_all=False) }}
   {% endif %}
 {% else %}
-  <h2>Results</h2>
+  <h2>Results:</h2>
 
-  <span class="{{ result_css }}">   
-  {% for t in b.getText() %}
-    {{ t }}
-  {% endfor %}  
-  </span>
+  <div class="{{ result_css }} result">   
+  {{ b.getText()|join(' ')|capitalize }}
+  </div>
    
   {% if b.getTestResults() %}
     <h3><a href="{{ tests_link }}"/></h3>
@@ -34,29 +35,30 @@ Build #{{ b.getNumber() }}
 
 <h2>SourceStamp:</h2>
 <ul>
+{% set ss_class = cycler('alt','') %}
 
 {% if ss.branch %}
-  <li>Branch: {{ ss.branch|e }}</li>
+  <li class="{{ ss_class.next() }}">Branch: {{ ss.branch|e }}</li>
 {% endif %}
 
 {% if ss.revision %}
-  <li>Revision: {{ ss.revision|e }}</li>
+  <li class="{{ ss_class.next() }}">Revision: {{ ss.revision|e }}</li>
 {% endif %}
 
 {% if ss.pathch%}
-  <li>Patch: YES </li>
+  <li class="{{ ss_class.next() }}">Patch: YES </li>
 {% endif %}
 
 {% if ss.changes %}
-  <li>Changes: see below</li>
+  <li class="{{ ss_class.next() }}">Changes: see below</li>
 {% endif %}
 
 {% if most_recent_rev_build %}
-   <li>build of most recent revision</li>
+  <li class="{{ ss_class.next() }}">Build of most recent revision</li>
 {% endif %}
     
 {% if got_revision %}
-    <li>Got Revision: {{ got_revision }}</li>
+  <li class="{{ ss_class.next() }}">Got Revision: {{ got_revision }}</li>
 {% endif %}
 
 </ul>
@@ -91,37 +93,43 @@ Build #{{ b.getNumber() }}
 <ol>
 {% for s in steps %}
   <li>
-    <span class="{{ s.css_class }}">
+    <div class="{{ s.css_class }}">
       <a href="{{ s.link }}">{{ s.name }}</a> 
-      {{ s.text }} ({{ s.time_to_run }} s)
-    </span>
+      {{ s.text }}&nbsp;<span style="float:right">({{ s.time_to_run }} s)</span> 
+    </div>
 
     <ol>
+      {% set item_class = cycler('alt', '') %}
       {% for l in s.logs %}
-        <li><a href="{{ l.link }}">{{ l.name }}</a></li>
+        <li class="{{ item_class.next() }}"><a href="{{ l.link }}">{{ l.name }}</a></li>
       {% endfor %}
     
       {% for u in s.urls %}
-        <li><a href="{{ u.url }}">{{ u.logname }}</a></li>
+        <li class="{{ item_class.next() }}"><a href="{{ u.url }}">{{ u.logname }}</a></li>
       {% endfor %}
     </ol>  
   </li>
 {% endfor %}
 </ol>
 
+</div>
+<div class="column">
+
 <h2>Build Properties:</h2>
 
-<table>
+<table class="info">
 <tr><th>Name</th><th>Value</th><th>Source</th></tr>
 
 {% for p in properties %}
-  <tr><td align="left">{{ p.name|e }}</td>
+  <tr class="{{ loop.cycle('alt', '') }}">
+    <td class="left">{{ p.name|e|capitalize }}</td>
   {% if p.short_value %}
     <td>{{ p.short_value|e }} .. [property value too long]</td>
   {% else %}
     <td>{{ p.value|e }}</td>
   {% endif %}
-  <td>{{ p.source|e }}</td></tr>
+    <td>{{ p.source|e }}</td>
+  </tr>
 {% endfor %}
 
 </table>
@@ -139,27 +147,31 @@ Build #{{ b.getNumber() }}
 {% endif %}
 
 
-<h2>Timing</h2>
-<table>
-<tr>
-  <td>Start</td><td>{{ start }}</td></tr>
-  {% if end %}
-    <tr><td>End</td><td>{{ end }}</td></tr>
-  {% endif %}
-  <tr><td>Elapsed</td><td>{{ elapsed }}</td></tr>
+<h2>Timing:</h2>
+<table class="info">
+  <tr class="alt"><td class="left">Start</td><td>{{ start }}</td></tr>
+{% if end %}
+  <tr><td class="left">End</td><td>{{ end }}</td></tr>
+{% endif %}
+  <tr {{ 'class="alt"' if end }}><td class="left">Elapsed</td><td>{{ elapsed }}</td></tr>
 </table>
 
+</div>
+
 {% if ss.changes %}
+<div class="column">
   <h2>All Changes:</h2>
   <ol>
   {% for c in ss.changes %}
-    <li>{{ c.asHTML() }}</li>
+    <li>{{ change(**c.html_dict()) }}</li>
   {% endfor %}  
   </ol>
 
 {# TODO:
  # <pre>{{ b.changesText()|e }}</pre>
  #} 
+
+
 
   {% if resubmit %}
     <h3>Resubmit Build:</h3>
@@ -187,6 +199,10 @@ Build #{{ b.getNumber() }}
       <input type="submit" value="Rebuild" />
     </form>
   {% endif %}
+  
+</div> 
 {% endif %}
+
+
 
 {% endblock %}

@@ -1,24 +1,10 @@
-{% from 'build_line.html' import build_line %}
+{% from 'build_line.html' import build_table %}
 
 {% extends "layout.html" %}
 {% block content %}
-<h1>Build Slave {{ slavename|e }}</h1>
+<h1>Buildslave: {{ slavename|e }}</h1>
 
-{% if access_uri %}
-  <a href="{{ access_uri|e }}">Click to Access Slave</a>
-{% endif %}
-
-{% if not slave.isConnected %}
-  <h2>NOT CONNECTED</h2>
-{% elif control %}
-  {% if not slave.getGraceFul %}
-    <form method="POST" action="{{ shutdown_url }}">
-      <input type="submit" value="Gracefully Shutdown">
-    </form>
-  {% else %}
-    <p>Gracefully shutting down...</p>
-  {% endif %}
-{% endif %}
+<div class="column">
 
 {% if current %}
   <h2>Currently building:</h2>
@@ -37,10 +23,25 @@
 {% endif %}
 
 <h2>Recent builds</h2>
-<ul>
-{% for b in recent %}
-   <li>{{ build_line(b, True) }}</li>
-{% endfor %}
-</ul>
+{{ build_table(recent, True) }}
+  
+</div>
+<div class="column">
+{% if access_uri %}
+  <a href="{{ access_uri|e }}">Click to Access Slave</a>
+{% endif %}
+
+{% if not slave.isConnected() %}
+  <p>(not connected)</p>
+{% elif control %}
+  {% if not slave.getGraceFul %}
+    <form method="POST" action="{{ shutdown_url }}">
+      <input type="submit" value="Gracefully Shutdown">
+    </form>
+  {% else %}
+    <p>Gracefully shutting down...</p>
+  {% endif %}
+{% endif %}
+</div>
   
 {% endblock %}

@@ -245,18 +245,6 @@ class OneBoxPerBuilder(HtmlResource):
         template = req.site.buildbot_service.templates.get_template("oneboxperbuilder.html")
         return template.render(**cxt)
 
-
-
-HEADER = '''
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
- "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-
-<html
- xmlns="http://www.w3.org/1999/xhtml"
- lang="en"
- xml:lang="en">
-'''
-
 HEAD_ELEMENTS = [
     '<title>%(title)s</title>',
     '<link href="%(root)sdefault.css" rel="stylesheet" type="text/css" />',
@@ -264,10 +252,6 @@ HEAD_ELEMENTS = [
 BODY_ATTRS = {
     'vlink': "#800080",
     }
-
-FOOTER = '''
-</html>
-'''        
 
 class AlmostStrictUndefined(jinja2.StrictUndefined):
     ''' An undefined that allows boolean testing but 
@@ -332,23 +316,23 @@ class WebStatus(service.MultiService):
 
     All URLs for pages which are not defined here are used to look
     for files in PUBLIC_HTML, which defaults to BASEDIR/public_html.
-    This means that /robots.txt or /default.css or /favicon.ico can
-    be placed in that directory.
-
-    If an index file (index.html, index.htm, or index, in that order) is
-    present in PUBLIC_HTML, it will be used for the root resource. If not,
-    the default behavior is to put a redirection to the /waterfall page.
-
+    This means that /robots.txt or /favicon.ico can be placed in 
+    that directory
+    
+    This webserver uses the jinja2 template system to generate the web pages
+    (see http://jinja.pocoo.org/2/) and by default loads pages from the 
+    buildbot.status.web.templates package. Any file here can be overridden by placing
+    a corresponding file in the master's 'templates' directory. 
+    
+    The main customization points are layout.html which loads style sheet 
+    (css) and provides header and footer content, and root.html, which 
+    generates the root page. 
+    
     All of the resources provided by this service use relative URLs to reach
     each other. The only absolute links are the c['projectURL'] links at the
     top and bottom of the page, and the buildbot home-page link at the
     bottom.
-
-    This webserver defines class attributes on elements so they can be styled
-    with CSS stylesheets. All pages pull in PUBLIC_HTML/default.css, and you
-    can cause additional stylesheets to be loaded by adding a suitable <link>
-    to the WebStatus instance's .head_elements attribute.
-
+    
     Buildbot uses some generic classes to identify the type of object, and
     some more specific classes for the various kinds of those types. It does
     this by specifying both in the class attributes where applicable,
@@ -492,11 +476,6 @@ class WebStatus(service.MultiService):
         # the following items are accessed by HtmlResource when it renders
         # each page.
         self.site.buildbot_service = self
-        self.header = HEADER
-        self.head_elements = HEAD_ELEMENTS[:]
-        self.body_attrs = BODY_ATTRS.copy()
-        self.footer = FOOTER
-        self.template_values = {}
 
         # Set up the jinja templating engine.
         if hasattr(sys, "frozen"):

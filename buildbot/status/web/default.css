@@ -18,7 +18,7 @@ table {
 }
 
 table td {
-	padding: 3px 0px 3px 0px;
+	padding: 3px 2px 3px 2px;
 	text-align: center;
 }
 
@@ -34,6 +34,7 @@ table td {
 td.Time {
 	color: #000;
 	border-bottom: 1px solid #aaa;
+	padding: 0.2em 0.5em 0.2em 0.5em;
 	background-color: #eee;
 }
 
@@ -126,6 +127,44 @@ td.sourcestamp {
 
 td.Project a:hover, td.start a:hover {
 	color: #000;
+}
+
+/* column container */
+
+div.column {
+	margin: 0 2em 2em 0;
+	float: left;
+}
+
+/* info tables */
+
+table.info {
+    border-spacing: 1px;
+}	
+
+table.info td {
+    padding: 0.2em 1em 0.2em 1em;
+    text-align: center;
+}
+
+table.info td.left {
+	text-align: left
+}
+
+.info .alt {
+	background-color: #f6f6f6;
+}
+
+li.alt {
+    background-color: #f6f6f6;
+}
+
+li { 
+	padding: 0.2em 1em 0.2em 1em;
+}
+
+.result {
+	 padding: 0.5em
 }
 
 /* log view */
