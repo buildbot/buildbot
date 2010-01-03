@@ -35,8 +35,12 @@
 {%- endmacro %}
 
 {% macro build_td(build) -%}
+{% if build %}
   <td class="build {{ build.class }}">
     <a href="{{ build.url }}">{{ build.text|join('<br/>') }}</a>
   </td>
+{% else %}
+  <td class="build">&nbsp;</td>
+{% endif %}
 {%- endmacro %}
 
