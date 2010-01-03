@@ -301,8 +301,10 @@ class ConsoleStatusResource(HtmlResource):
                 builds.append(devBuild)
 
                 # Now break if we have enough builds.
-                if self.comparator.isRevisionEarlier(
-                    devBuild, builder.getBuild(-1).getChanges()[-1]):
+                c = builder.getBuild(-1).getChanges()
+                #XXX: c is sometimes an empty tuple, so c[-1] fails?!?!
+                if c and self.comparator.isRevisionEarlier(
+                    devBuild, c[-1]):
                     break
 
             build = build.getPreviousBuild()

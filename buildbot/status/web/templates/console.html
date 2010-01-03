@@ -82,9 +82,8 @@ function checkMouseLeave(element, event) {
   <table width=95% class="Grid" border="0" cellspacing="0">
     <tr>
       <td width="33%" align="left" class="left_align">
-        <a href="{{ project_url }}">{{ project_name }}</a>
 {% if categories|length > 1 %}
-        <br><b>Categories:</b> {{ categories }}
+        <br><b>Categories:</b> {% for c in categories %}{{ c.name }} {% endfor %}
 {% endif %}
 {% if branch != ANYBRANCH %}
         <br><b>Branch:</b> {{ branch }}
