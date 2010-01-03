@@ -147,6 +147,11 @@ table.info td {
     text-align: center;
 }
 
+table.info th {
+	padding: 0.2em 1.5em 0.2em 1.5em;
+    text-align: center;
+}
+
 table.info td.left {
 	text-align: left
 }
