@@ -15,7 +15,7 @@ Build #{{ b.getNumber() }}
   <h2>Build In Progress:</h2>
 
   {% if when_time %}
-    <div>ETA: {{ when }}s ({{ when_time }})</div>
+    <p>ETA: {{ when }}s ({{ when_time }})</p>
   {% endif %}
   
   {% if stop_url %} 
@@ -24,9 +24,9 @@ Build #{{ b.getNumber() }}
 {% else %}
   <h2>Results:</h2>
 
-  <div class="{{ result_css }} result">   
+  <p class="{{ result_css }} result">   
   {{ b.getText()|join(' ')|capitalize }}
-  </div>
+  </p>
    
   {% if b.getTestResults() %}
     <h3><a href="{{ tests_link }}"/></h3>
@@ -34,34 +34,34 @@ Build #{{ b.getNumber() }}
 {% endif %}
 
 <h2>SourceStamp:</h2>
-<ul>
+<table class="info" width=100%>
 {% set ss_class = cycler('alt','') %}
 
 {% if ss.branch %}
-  <li class="{{ ss_class.next() }}">Branch: {{ ss.branch|e }}</li>
+  <tr class="{{ ss_class.next() }}"><td class="left">Branch</td><td>{{ ss.branch|e }}</td></tr>
 {% endif %}
 
 {% if ss.revision %}
-  <li class="{{ ss_class.next() }}">Revision: {{ ss.revision|e }}</li>
+  <tr class="{{ ss_class.next() }}"><td class="left">Revision</td><td>{{ ss.revision|e }}</td></tr>
 {% endif %}
 
-{% if ss.pathch%}
-  <li class="{{ ss_class.next() }}">Patch: YES </li>
+{% if ss.patch %}
+  <tr class="{{ ss_class.next() }}"><td class="left">Patch</td><td>YES</td></tr>
 {% endif %}
 
 {% if ss.changes %}
-  <li class="{{ ss_class.next() }}">Changes: see below</li>
+  <tr class="{{ ss_class.next() }}"><td class="left">Changes</td><td>see below</td></tr>
 {% endif %}
 
 {% if most_recent_rev_build %}
-  <li class="{{ ss_class.next() }}">Build of most recent revision</li>
+  <tr class="{{ ss_class.next() }}"><td class="left" colspan="2">Build of most recent revision</td></tr>
 {% endif %}
     
 {% if got_revision %}
-  <li class="{{ ss_class.next() }}">Got Revision: {{ got_revision }}</li>
+  <tr class="{{ ss_class.next() }}"><td class="left">Got Revision</td><td>{{ got_revision }}</td></tr>
 {% endif %}
 
-</ul>
+</table>
 
 {#
  # TODO: turn this into a table, or some other sort of definition-list
@@ -77,7 +77,9 @@ Build #{{ b.getNumber() }}
 {% endif %}
 
 <h2>Reason:</h2>
+<p>
 {{ b.getReason()|e }}
+</p>
 
 <h2>Steps and Logfiles:</h2>
 
@@ -93,7 +95,7 @@ Build #{{ b.getNumber() }}
 <ol>
 {% for s in steps %}
   <li>
-    <div class="{{ s.css_class }}">
+    <div class="{{ s.css_class }} result">
       <a href="{{ s.link }}">{{ s.name }}</a> 
       {{ s.text }}&nbsp;<span style="float:right">({{ s.time_to_run }} s)</span> 
     </div>
@@ -117,7 +119,7 @@ Build #{{ b.getNumber() }}
 
 <h2>Build Properties:</h2>
 
-<table class="info">
+<table class="info" width=100%>
 <tr><th>Name</th><th>Value</th><th>Source</th></tr>
 
 {% for p in properties %}
@@ -139,16 +141,16 @@ Build #{{ b.getNumber() }}
 {% if responsible_users %}
   <ol>
   {% for user in responsible_users %}
-     <li>{{ user|e }}</li>
+     <li class="{{ loop.cycle('alt', '') }}">{{ user|e }}</li>
   {% endfor %}
   </ol>
 {% else %}
-  <div>no responsible users</div>
+  <p>no responsible users</p>
 {% endif %}
 
 
 <h2>Timing:</h2>
-<table class="info">
+<table class="info" width="100%">
   <tr class="alt"><td class="left">Start</td><td>{{ start }}</td></tr>
 {% if end %}
   <tr><td class="left">End</td><td>{{ end }}</td></tr>

@@ -1,19 +1,32 @@
 {% macro change(who, at, branch, revision, files, comments, properties, revlink) %}
 
-<h3>Properties</h3>
+<h3>Information</h3>
 
-<p>
-Changed by: <b>{{ who|e }}</b><br/>
-Changed at: <b>{{ at }}</b><br/>
+<table class="info">
+{% set row_class=cycler('alt','') %}
+  <tr class="{{ row_class.next() }}">
+    <td class="left">Changed by</td><td><b>{{ who|e }}</b></td>
+  </tr>
+  <tr class="{{ row_class.next() }}">
+    <td class="left">Changed at</td><td><b>{{ at }}</b><td>
+  </tr>
+
 {% if branch %}
-  Branch: <b>{{ branch|e }}</b><br/>
+  <tr class="{{ row_class.next() }}">
+    <td class="left">Branch<b>{{ branch|e }}</b><br/>
 {% endif %}
+
 {% if revision %}
- {% if revlink %}<a href="{{ revlink }}">{{ revision }}</a>
- {% else %}{{ revision }}
- {% endif %}
+  <tr class="{{ row_class.next() }}">
+   <td class="left">Revision</td>
+   <td> 
+ {%- if revlink -%}<a href="{{ revlink }}">{{ revision }}</a>
+ {%- else -%}{{ revision }}
+ {%- endif -%}
+   </td>
+  </tr>
 {% endif %}
-</p>
+</table>
 
 <h3>Changed files</h3>
 <ul>
@@ -26,15 +39,21 @@ Changed at: <b>{{ at }}</b><br/>
 {% endfor %}
 </ul>
 
+{% if comments %}
 <h3>Comments</h3>
 <pre>{{ comments }}</pre>
+{% endif %}
 
+{% if properties %}
 <h3>Properties</h3>
-<ul>
+<table class="info">
 {% for p in properties %}
-  <li>{{ p[0] }}: {{ p[1] }}</li>
+  <tr class="{{ loop.cycle('alt') }}">
+    <td class="left">{{ p[0]|capitalize }}</td><td>{{ p[1] }}</td> 
+  </tr>
 {% endfor %}
-</ul>
+</table>
+{% endif %}
 
 {%- endmacro %}
 
