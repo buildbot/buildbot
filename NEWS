@@ -44,6 +44,11 @@ test failures and summarises them on the waterfall page. It also makes server
 error logs available for debugging failures, and optionally inserts
 information about test runs and test failures into an external database.
 
+** Python API Docs
+
+The docstrings for buildbot are now available in a web-friendly format:
+  http://djmitche.github.com/buildbot/docs/latest/reference
+
 ** Many, many bugfixes
 
 * Release 0.7.11p (July 16, 2009)
