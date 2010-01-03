@@ -75,26 +75,32 @@
 <div class="column">
 
 <h2>Buildslaves:</h2>
-<ol>
+<table class="info">
+{% if slaves %}
+<tr>
+  <th>Name</th>
+  <th>Status</th>
+  <th>Admin</th>
+  <th>Info</th>
+</tr>
+{% endif %}
 {% for s in slaves %}
-  <li class="{{ loop.cycle('alt', '') }}"><b><a href="{{ s.link|e }}">{{ s.name|e }}</a></b>
+  <tr class="{{ loop.cycle('alt', '') }}">
+  <td><b><a href="{{ s.link|e }}">{{ s.name|e }}</a></b></td>
   {% if s.connected %}
-    CONNECTED
-    {% if s.admin %}
-       Admin: {{ s.admin|e }}
-    {% endif %}
-    {% if s.host %}
-      <span class='label'>Host info:</span>
-      <pre>{{ s.host|e }}</pre>
-    {% endif %}
+    <td class="idle">connected</td>
+    <td>{{ s.admin|e if s.admin }}</td>
+    <td><pre>{{ s.host|e if s.host}}</pre></td>
   {% else %}
-    NOT CONNECTED 
+    <td class="offline">offline</td> 
+    <td/>
+    <td/>
   {% endif %}
-  </li>
+  </td>
 {% else %}
-  <li>no slaves attached</li>
+  <td>no slaves attached</td>
 {% endfor %}
-</ol>
+</table>
 
 {% if force_url %}
   {{ forms.force_build(force_url, use_user_passwd) }}

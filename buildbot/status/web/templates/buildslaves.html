@@ -6,51 +6,62 @@
 
 <div class="column">
 
-<ol>
+<table class="info">
+
+<tr>
+  <th>Name</th>
+  <th>Builders</th>
+  <th>BuildBot</th>
+  <th>Admin</th>
+  <th>Last heard from</th>
+  <th>Status</th>
+</tr>
+
 {% for s in slaves %}
-  <li><a href="{{ s.link }}">{{ s.name }}</a>:
-  <ul>
-  {% set item_class = cycler('alt', '') %}
+  <tr class="{{ loop.cycle('alt','') }}">
+  <td><b><a href="{{ s.link }}">{{ s.name }}</a></b></td>
   
-  
+  <td>
   {% if s.builders %}
-    <li class="{{ item_class.next() }}">Used by builders: 
     {% set comma = joiner(", ") %}    
     {% for b in s.builders %}
       {{ comma() }}<a href="{{ b.link }}">{{ b.name }}</a>
     {% endfor %}
-    </li>
   {% else %}
-    <li class="{{ item_class.next() }}">Not used by any Builders</li>
+    <span class="Warning">no builders</span>
   {% endif %}
- 
-  <li class="{{ item_class.next() }}">Running BuildBot version: {{ s.version }}</li>
+  </td>
+
+  <td>{{ s.version or '-' }}</td>
  
   {% if s.connected %}
-    <li class="{{ item_class.next() }}">Slave is currently connected</li>
+    <td>
+    {%- if s.admin -%}
+      Admin: {{ s.admin|replace('@', '<span style="display:none">-at-</span>@') }}
+    {%- endif -%}
+    </td>
     
-    {% if s.admin %}
-      <li class="{{ item_class.next() }}">Admin: {{ s.admin|replace('@', '-at-') }}</li>
+    <td>
+    {%- if s.last_heard_from_age -%}
+      {{ s.last_heard_from_age }} <font size="-1">{{ s.last_heard_from_time }}        
+    {%- endif -%}
+    </td>
+        
+    {% if s.running_builds %}
+      <td class="building">Running {{ s.running_builds }} build(s)</td>
+    {% else %}
+      <td class="idle">Idle</td>
     {% endif %}
-    
-    {% if s.last_heard_from_age %}
-      <li class="{{ item_class.next() }}">Last heard from {{ s.last_heard_from_age }}
-          <font size="-1">{{ s.last_heard_from_time }}</font></li>          
-      {% if s.running_builds %}
-        <li class="{{ item_class.next() }}">Slave is currently running {{ s.running_builds }} build(s).</li>
-      {% else %}
-        <li class="{{ item_class.next() }}">Slave is idle.</li>
-      {% endif %}
-    {% endif %}
-    
+        
   {% else %}
-    <li class="{{ item_class.next() }}"><b>Slave is currently NOT connected</b></li>
+    <td>-</td>
+    <td>-</td>
+    <td class="offline">Not connected</td>
   {% endif %}
   
-  </ul>
-  </li>
+  </tr>
 {% endfor %}
-</ol>  
+</table>
 
 </div>
   
