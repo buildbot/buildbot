@@ -371,17 +371,29 @@ class MailNotifier(base.StatusReceiverMultiService):
         text += "sincerely,\n"
         text += " -The Buildbot\n"
         text += "\n"
-        return (text, 'plain')
+        return { 'body' : text, 'type' : 'plain' }
 
     def buildMessage(self, name, build, results):
         if self.customMesg:
             # the customMesg stuff can be *huge*, so we prefer not to load it
             attrs = self.getCustomMesgData(self.mode, name, build, results, self.master_status)
             text, type = self.customMesg(attrs)
+            msgdict = { 'body' : text, 'type' : type }
         elif self.messageFormatter:
-            text, type = self.messageFormatter(self.mode, name, build, results, self.master_status)
+            msgdict = self.messageFormatter(self.mode, name, build, results, self.master_status)
         else:
-            text, type = self.defaultMessage(self.mode, name, build, results, self.master_status)
+            msgdict = self.defaultMessage(self.mode, name, build, results, self.master_status)
+
+        text = msgdict['body']
+        type = msgdict['type']
+        if 'subject' in msgdict:
+            subject = msgdict['subject']
+        else:
+            subject = self.subject % { 'result': Results[results],
+                                       'projectName': self.master_status.getProjectName(),
+                                       'builder': name,
+                                       }
+
 
         assert type in ('plain', 'html'), "'%s' message type must be 'plain' or 'html'." % type
 
@@ -404,10 +416,7 @@ class MailNotifier(base.StatusReceiverMultiService):
             m.set_type("text/%s" % type)
 
         m['Date'] = formatdate(localtime=True)
-        m['Subject'] = self.subject % { 'result': Results[results],
-                                        'projectName': self.master_status.getProjectName(),
-                                        'builder': name,
-                                        }
+        m['Subject'] = subject
         m['From'] = self.fromaddr
         # m['To'] is added later
 
