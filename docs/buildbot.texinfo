@@ -8172,7 +8172,10 @@ def messageFormatter(name, build, results, master_status):
     logLines = 10
     text = list()
     text.append("STATUS: %s" % result.title())
-    return ("\n".join(text), 'plain')
+    return {
+        'body' : "\n".join(text), 
+        'type' : 'plain'
+    }
 
 mn = MailNotifier(fromaddr="buildbot@@example.org",
                   sendToInterestedUsers=False,
@@ -8258,9 +8261,10 @@ This is a optional function that can be used to generate a custom mail message.
 A @code{messageFormatter} function takes the mail mode (@code{mode}), builder
 name (@code{name}), the build status (@code{build}), the result code
 (@code{results}), and the BuildMaster status (@code{master_status}).  It
-returns a tuple of strings. The first string is the complete text of the
-message and the second is the message type ('plain' or 'html'). The 'html' type
-should be used when generating an HTML message.
+returns a dictionary. The @code{body} key gives a string that is the complete
+text of the message. The @code{type} key is the message type ('plain' or
+'html'). The 'html' type should be used when generating an HTML message.  The
+@code{subject} key is optional, but gives the subject for the email.
 
 @item extraHeaders
 (dictionary) A dictionary containing key/value pairs of extra headers to add
