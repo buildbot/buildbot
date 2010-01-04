@@ -315,6 +315,11 @@ class MailNotifier(base.StatusReceiverMultiService):
         and type."""
         result = Results[results]
 
+        subject = self.subject % { 'result': Results[results],
+                                   'projectName': master_status.getProjectName(),
+                                   'builder': name,
+                                   }
+
         text = ""
         if mode == "all":
             text += "The Buildbot has finished a build"
@@ -371,17 +376,21 @@ class MailNotifier(base.StatusReceiverMultiService):
         text += "sincerely,\n"
         text += " -The Buildbot\n"
         text += "\n"
-        return (text, 'plain')
+        return (subject, text, 'plain')
 
     def buildMessage(self, name, build, results):
         if self.customMesg:
             # the customMesg stuff can be *huge*, so we prefer not to load it
             attrs = self.getCustomMesgData(self.mode, name, build, results, self.master_status)
             text, type = self.customMesg(attrs)
+            subject = self.subject % { 'result': Results[results],
+                                       'projectName': self.master_status.getProjectName(),
+                                       'builder': name,
+                                       }
         elif self.messageFormatter:
-            text, type = self.messageFormatter(self.mode, name, build, results, self.master_status)
+            subject, text, type = self.messageFormatter(self.mode, name, build, results, self.master_status)
         else:
-            text, type = self.defaultMessage(self.mode, name, build, results, self.master_status)
+            subject, text, type = self.defaultMessage(self.mode, name, build, results, self.master_status)
 
         assert type in ('plain', 'html'), "'%s' message type must be 'plain' or 'html'." % type
 
@@ -404,10 +413,7 @@ class MailNotifier(base.StatusReceiverMultiService):
             m.set_type("text/%s" % type)
 
         m['Date'] = formatdate(localtime=True)
-        m['Subject'] = self.subject % { 'result': Results[results],
-                                        'projectName': self.master_status.getProjectName(),
-                                        'builder': name,
-                                        }
+        m['Subject'] = subject
         m['From'] = self.fromaddr
         # m['To'] is added later
 
