@@ -42,6 +42,7 @@ command_version = "2.9"
 #  >= 2.6: added uploadDirectory
 #  >= 2.7: added usePTY option to SlaveShellCommand
 #  >= 2.8: added username and password args to SVN class
+#  >= 2.9: add depth arg to SVN class
 
 class CommandInterrupted(Exception):
     pass
