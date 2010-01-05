@@ -8854,6 +8854,14 @@ the Builder names:
 try_builders = ["full-OSX", "full-win32", "full-linux"]
 @end example
 
+If you are using the PB approach, you can get the names of the builders
+that are configured for the try scheduler using the @code{get-builder-names}
+argument:
+
+@example
+buildbot try --get-builder-names --connect=pb --master=... --username=... --passwd=...
+@end example
+
 @heading specifying the VC system
 
 The @command{try} command also needs to know how to take the

@@ -660,6 +660,36 @@ class Try(pb.Referenceable):
             self.exitcode = 1
         self.running.callback(self.exitcode)
 
+    def getAvailableBuilderNames(self):
+        # This logs into the master using the PB protocol to
+        # get the names of the configured builders that can
+        # be used for the --builder argument
+        opts = self.opts
+        if self.connect == "pb":
+            user = self.getopt("username", "try_username")
+            passwd = self.getopt("passwd", "try_password")
+            master = self.getopt("master", "try_master")
+            tryhost, tryport = master.split(":")
+            tryport = int(tryport)
+            f = pb.PBClientFactory()
+            d = f.login(credentials.UsernamePassword(user, passwd))
+            reactor.connectTCP(tryhost, tryport, f)
+            d.addCallback(self._getBuilderNames, self._getBuilderNames2)
+            return d
+        if self.connect == "ssh":
+            raise RuntimeError("ssh connection type not supported for this command")
+        raise RuntimeError("unknown connecttype '%s', should be 'pb'" % self.connect)
+
+    def _getBuilderNames(self, remote, output):
+        d = remote.callRemote("getAvailableBuilderNames")
+        d.addCallback(self._getBuilderNames2)
+        return d
+
+    def _getBuilderNames2(self, buildernames):
+        print "The following builders are available for the try scheduler: "
+        for buildername in buildernames:
+            print buildername
+
     def announce(self, message):
         if not self.quiet:
             print message
@@ -670,14 +700,17 @@ class Try(pb.Referenceable):
         print "using '%s' connect method" % self.connect
         self.exitcode = 0
         d = defer.Deferred()
-        d.addCallback(lambda res: self.createJob())
-        d.addCallback(lambda res: self.announce("job created"))
-        deliver = self.deliverJob
-        if bool(self.config.get("dryrun")):
-            deliver = self.fakeDeliverJob
-        d.addCallback(lambda res: deliver())
-        d.addCallback(lambda res: self.announce("job has been delivered"))
-        d.addCallback(lambda res: self.getStatus())
+        if bool(self.config.get("get-builder-names")):
+            d.addCallback(lambda res: self.getAvailableBuilderNames())
+        else:
+            d.addCallback(lambda res: self.createJob())
+            d.addCallback(lambda res: self.announce("job created"))
+            deliver = self.deliverJob
+            if bool(self.config.get("dryrun")):
+                deliver = self.fakeDeliverJob
+            d.addCallback(lambda res: deliver())
+            d.addCallback(lambda res: self.announce("job has been delivered"))
+            d.addCallback(lambda res: self.getStatus())
         d.addErrback(log.err)
         d.addCallback(self.cleanup)
         d.addCallback(lambda res: reactor.stop())

@@ -900,6 +900,7 @@ class TryOptions(OptionsWithOptionsFile):
     optFlags = [
         ["wait", None, "wait until the builds have finished"],
         ["dryrun", 'n', "Gather info, but don't actually submit."],
+        ["get-builder-names", None, "Get the names of available builders. Doesn't submit anything. Only supported for 'pb' connections."],
         ]
 
     # here it is, the definitive, quirky mapping of .buildbot/options names to

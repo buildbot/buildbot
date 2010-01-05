@@ -668,6 +668,9 @@ class TryBase(BaseScheduler):
             builderNames = self.builderNames
         return builderNames
 
+    def getAvailableBuilderNames(self):
+        return self.builderNames
+
 class BadJobfile(Exception):
     pass
 
@@ -818,6 +821,13 @@ class Try_Userpass_Perspective(pbutil.NewCredPerspective):
         # return a remotely-usable BuildSetStatus object
         from buildbot.status.client import makeRemote
         return makeRemote(bs.status)
+
+    def perspective_getAvailableBuilderNames(self):
+        # Return a list of builder names that are configured
+        # for the try service
+        # This is mostly intended for integrating try services
+        # into other applications
+        return self.parent.getAvailableBuilderNames()
 
 class Triggerable(BaseUpstreamScheduler):
     """This scheduler doesn't do anything until it is triggered by a Trigger
