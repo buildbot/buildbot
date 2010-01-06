@@ -13,9 +13,9 @@
 {% if s.isFinished() %}
   <h2>Finished</h2>
   <p class="{{ result_css }} result">  
-  {% for l in s.getText() %}
-    {{ l|e }}<br/>
-  {% endfor %}
+    {%- set text = s.getText() -%}
+    {%- if text is string %}{{ text|e }}
+    {%- else %}{{ text|join(" ")|e }}{% endif -%}
   </p>  
 {% else %}
   <h2>Not Finished</h2>
