@@ -225,9 +225,12 @@ class FeedResource(XmlResource):
             
             build_cxts.append(bc)
 
-        cxt = {}
+        title = self.title
+        if not title:
+            title = 'Build status of ' + self.projectName
 
-        cxt['title'] = self.title if self.title else ('Build status of ' + self.projectName)
+        cxt = {}
+        cxt['title'] = title
         cxt['project_url'] = self.link
         cxt['project_name'] = self.projectName
         cxt['language'] = self.language

@@ -348,6 +348,10 @@ class BuildLineMixin:
         if len(rev) > 40:
             rev = rev[0:40] + "..."
         css_class = css_classes.get(results, "")
+
+        if type(text) == list:
+            text = " ".join(text)            
+
         values = {'class': css_class,
                   'builder_name': builder_name,
                   'buildnum': build.getNumber(),
@@ -358,7 +362,7 @@ class BuildLineMixin:
                   'rev': rev,
                   'time': time.strftime(self.LINE_TIME_FORMAT,
                                         time.localtime(build.getTimes()[0])),
-                  'text': text if type(text) == str else " ".join(text), 
+                  'text': text,
                   'include_builder': include_builder
                   }
         return values

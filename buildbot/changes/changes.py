@@ -81,7 +81,10 @@ class Change:
         files = []
         for file in self.files:
             link = filter(lambda s: s.find(file) != -1, self.links)
-            url = link[0] if len(link) == 1 else None
+            if len(link) == 1:
+                url = link[0]
+            else:
+                url = None
             files.append(dict(url=url, name=file))
         
         files = sorted(files, cmp=lambda a,b: a['file'] < b['file'])
