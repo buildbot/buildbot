@@ -93,6 +93,8 @@ class StatusResourceBuild(HtmlResource):
                 step['css_class'] = css_classes[s.getResults()[0]]
             elif s.isStarted():
                 step['css_class'] = "running"
+            else: 
+                step['css_class'] = "not_started"
 
             step['link'] = req.childLink("steps/%s" % urllib.quote(s.getName()))
             step['text'] = " ".join(s.getText())
