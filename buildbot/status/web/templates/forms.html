@@ -42,10 +42,10 @@
 {% endmacro %}
 
 {% macro force_build(force_url, use_user_passwd, on_all=False) %}
- <form method="post" action="{{ force_url }}" class="command forcebuild">
- 
+ <form method="post" action="{{ force_url }}" class="command forcebuild">  
+
   {% if on_all %}
-     <p>To force a build on all Builders, fill out the following fields
+     <p>To force a build on <b><u>all Builders</u></b>, fill out the following fields
           and push the 'Force Build' button</p>
   {% else %}
      <p>To force a build, fill out the following fields and

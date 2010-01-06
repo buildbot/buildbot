@@ -9,11 +9,25 @@
   <p>of builders: {{ builders|join(", ")|e }}</p>
 {% endif %}
  
+<div class="column">
+
 {{ build_table(builds, True) }}
 
 <p>{{ online_count }} builder(s) online.</p>
 
-{% if stop_url %}{{ forms.stop(stop_url, use_user_passwd, True, 'Builds') }}{% endif %}
-{% if force_url %}{{ forms.force_build(force_url, use_user_passwd, True) }}{% endif %}
+</div>
+<div class="column">
+
+{% if stop_url %}
+  <h2>Stop build</h2>
+  {{ forms.stop(stop_url, use_user_passwd, True, 'Builds') }}
+{% endif %}
+
+{% if force_url %}
+  <h2>Force build</h2>
+  {{ forms.force_build(force_url, use_user_passwd, True) }}
+{% endif %}
+
+</div>
 
 {% endblock %}
