@@ -87,7 +87,7 @@ class Change:
                 url = None
             files.append(dict(url=url, name=file))
         
-        files = sorted(files, cmp=lambda a,b: a['file'] < b['file'])
+        files = sorted(files, cmp=lambda a,b: a['name'] < b['name'])
 
         kwargs = { 'who'       : self.who,
                    'at'        : self.getTime(),
