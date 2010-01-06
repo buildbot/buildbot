@@ -4,13 +4,17 @@
 
 <h1>About this Buildbot</h1>
 
+<div class="column">
+
 <h2>Version Information</h2>
 <ul>
- <li>Buildbot: {{ buildbot }}</li>
- <li>Twisted: {{ twisted }}</li>
- <li>Jinja: {{ jinja }}</li>
- <li>Python: {{ python }}</li>
- <li>Buildmaster platform: {{ platform }}</li>
+{% set item_class=cycler('alt', '') %}
+
+ <li class="{{ item_class.next() }}">Buildbot: {{ buildbot }}</li>
+ <li class="{{ item_class.next() }}">Twisted: {{ twisted }}</li>
+ <li class="{{ item_class.next() }}">Jinja: {{ jinja }}</li>
+ <li class="{{ item_class.next() }}">Python: {{ python }}</li>
+ <li class="{{ item_class.next() }}">Buildmaster platform: {{ platform }}</li>
 
 </ul>
 
@@ -22,5 +26,7 @@
 <p>Please visit the <a href="http://buildbot.net/">Buildbot Home Page</a> for
 more information, including documentation, bug reports, and source
 downloads.</p>
+
+</div>
 
 {% endblock %}
