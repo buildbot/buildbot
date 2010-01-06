@@ -81,7 +81,6 @@
   <th>Name</th>
   <th>Status</th>
   <th>Admin</th>
-  <th>Info</th>
 </tr>
 {% endif %}
 {% for s in slaves %}
@@ -90,10 +89,8 @@
   {% if s.connected %}
     <td class="idle">connected</td>
     <td>{{ s.admin|e if s.admin }}</td>
-    <td><pre>{{ s.host|e if s.host}}</pre></td>
   {% else %}
     <td class="offline">offline</td> 
-    <td/>
     <td/>
   {% endif %}
   </td>
@@ -102,20 +99,22 @@
 {% endfor %}
 </table>
 
+{% if ping_url %}
+  <h2>Ping slaves</h2>
+  <form method="post" action="{{ ping_url }}" class="command pingbuilder">
+    <p>To ping the buildslave(s), push the 'Ping' button</p>
+    <input type="submit" value="Ping Builder" />
+  </form>
+{% endif %}
+
 {% if force_url %}
+  <h2>Force build</h2>
   {{ forms.force_build(force_url, use_user_passwd) }}
 {% endif %}
 
 {% if all_slaves_offline %}
   <p>All buildslaves appear to be offline, so it's not possible
   to force this build to execute at this time.</p>
-{% endif %}
-
-{% if ping_url %}
-  <form method="post" action="{{ ping_url }}" class="command pingbuilder">
-    <p>To ping the buildslave(s), push the 'Ping' button</p>
-    <input type="submit" value="Ping Builder" />
-  </form>
 {% endif %}
 
 </div>

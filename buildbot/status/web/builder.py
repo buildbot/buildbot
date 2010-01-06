@@ -101,7 +101,6 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
             c = s['connected'] = slave.isConnected()
             if c:
                 s['admin'] = slave.getAdmin()
-                s['host'] = slave.getHost()
 
         if control is not None and connected_slaves:
             cxt['force_url'] = path_to_builder(req, b) + '/force'

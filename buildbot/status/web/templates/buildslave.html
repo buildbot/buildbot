@@ -31,6 +31,11 @@
   <a href="{{ access_uri|e }}">Click to Access Slave</a>
 {% endif %}
 
+{% if info %}
+  <h2>Slave information</h2>
+  <pre>{{ info|e }}</pre>
+{% endif %}
+
 {% if not slave.isConnected() %}
   <p>(not connected)</p>
 {% elif control %}
