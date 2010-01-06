@@ -328,14 +328,37 @@ class ConsoleStatusResource(HtmlResource):
                 builds.append(devBuild)
 
                 # Now break if we have enough builds.
+                current_revision = self.getChangeForBuild(
+                    builder.getBuild(-1), revision)
                 if self.comparator.isRevisionEarlier(
-                    devBuild, builder.getBuild(-1).getChanges()[-1]):
+                    devBuild, current_revision):
                     break
 
             build = build.getPreviousBuild()
 
         return builds
 
+    def getChangeForBuild(self, build, revision):
+        if not build.getChanges(): # Forced build
+            devBuild = DevBuild(revision, build.getResults(),
+                                build.getNumber(),
+                                build.isFinished(),
+                                build.getText(),
+                                build.getETA(),
+                                None,
+                                build.getTimes()[0])
+
+            return devBuild
+        
+        for change in build.getChanges():
+            if change.revision == revision:
+                return change
+
+        # No matching change, return the last change in build
+        changes = build.getChanges()[:]
+        changes.sort(key=self.comparator.getSortingKey())
+        return changes[-1]
+    
     def getAllBuildsForRevision(self, status, request, lastRevision, numBuilds,
                                 categories, builders, debugInfo):
         """Returns a dictionnary of builds we need to inspect to be able to
