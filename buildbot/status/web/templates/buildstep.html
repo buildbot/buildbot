@@ -27,7 +27,7 @@
   <h2>Expectations</h2>
   <ul>
   {% for e in exp %}
-    <li>{{ e[0]|e }}: current={{ e[1] }}, target={{ e[2] }}
+    <li>{{ e[0]|e }}: current={{ e[1] }}, target={{ e[2] }}</li>
   {% endfor %}
   </ul>
 {% endif %}
@@ -44,7 +44,7 @@
 {% endif %}
   
 <h2>Logs</h2>
-<ol>
+<ul>
 {% for l in logs %}
   <li class="{{ loop.cycle('alt', '') }}">
   {% if l.has_contents %}
