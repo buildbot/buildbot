@@ -22,14 +22,13 @@
   <td><b><a href="{{ s.link }}">{{ s.name }}</a></b></td>
   
   <td>
-  {% if s.builders %}
-    {% set comma = joiner(", ") %}    
-    {% for b in s.builders %}
-      {{ comma() }}<a href="{{ b.link }}">{{ b.name }}</a>
-    {% endfor %}
-  {% else %}
+  {%- if s.builders %}
+    {%- for b in s.builders %}
+      <a href="{{ b.link }}">{{ b.name }}</a>
+    {%- endfor %}
+  {%- else %}
     <span class="Warning">no builders</span>
-  {% endif %}
+  {%- endif -%}
   </td>
 
   <td>{{ s.version or '-' }}</td>

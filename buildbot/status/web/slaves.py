@@ -86,7 +86,7 @@ class BuildSlavesResource(HtmlResource):
                 if slavename not in used_by_builder:
                     used_by_builder[slavename] = []
                 used_by_builder[slavename].append(bname)
-
+                
         slaves = ctx['slaves'] = []
         for name in util.naturalSort(s.getSlaveNames()):
             info = {}
@@ -96,8 +96,11 @@ class BuildSlavesResource(HtmlResource):
             info['running_builds'] = len(slave_status.getRunningBuilds())
             info['link'] = request.childLink(urllib.quote(name,''))
             info['name'] = name
-            info['builders'] = [{'link': request.childLink("../builders/%s" % bname),
-                                 'name': bname}]
+            
+            info['builders'] = []
+            for b in used_by_builder.get(name, []):
+                info['builders'].append(dict(link=request.childLink("../builders/%s" % b), name=b))
+                                        
             info['version'] = slave.getVersion()
             info['connected'] = slave.isConnected()
             
