@@ -40,7 +40,7 @@
   <p>(not connected)</p>
 {% elif control %}
   {% if not slave.getGraceFul %}
-    <form method="POST" action="{{ shutdown_url }}">
+    <form method="post" action="{{ shutdown_url }}">
       <input type="submit" value="Gracefully Shutdown"/>
     </form>
   {% else %}
