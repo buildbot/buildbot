@@ -22,10 +22,10 @@
 {%- endmacro %}
 
 {% macro builder_td(b) -%}
-  <td valign="center" style="text-align: center" class="builder {{ b.state }}">
+  <td valign="middle" style="text-align: center" class="builder {{ b.state }}">
     <a href="{{ b.url }}">{{ b.name }}</a>
     {%- if b.state != 'idle' or b.n_pending > 0 -%}
-      <br>({{ b.state }}
+      <br/>({{ b.state }}
       {%- if b.n_pending > 0 -%}
         with {{ b.n_pending }})
       {%- endif -%}      
