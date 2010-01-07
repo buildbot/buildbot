@@ -64,7 +64,8 @@ class OneBuildSlaveResource(HtmlResource, BuildLineMixin):
                         control = self.getControl(request),
                         this_url = "../../../" + path_to_slave(request, slave),
                         access_uri = slave.getAccessURI()),
-                        info = slave.getHost())
+                        admin = unicode(slave.getAdmin() or '', 'utf-8'),
+                        host = unicode(slave.getHost() or '', 'utf-8'))
         template = request.site.buildbot_service.templates.get_template("buildslave.html")
         data = template.render(**ctx)
         return data
@@ -98,11 +99,10 @@ class BuildSlavesResource(HtmlResource):
             info['builders'] = [{'link': request.childLink("../builders/%s" % bname),
                                  'name': bname}]
             info['version'] = slave.getVersion()
-
             info['connected'] = slave.isConnected()
             
             if slave.isConnected():
-                info['admin'] = slave.getAdmin()
+                info['admin'] = unicode(slave.getAdmin(), 'utf-8')
                 last = slave.lastMessageReceived()
                 if last:
                     info['last_heard_from_age'] = abbreviate_age(time.time() - last)

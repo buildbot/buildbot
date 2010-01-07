@@ -31,9 +31,14 @@
   <a href="{{ access_uri|e }}">Click to Access Slave</a>
 {% endif %}
 
-{% if info %}
+{% if admin %}
+  <h2>Administrator</h2>
+  <p>{{ admin|e|replace('@', '<span style="display:none">-ohnoyoudont-</span>@') }}</p>
+{% endif %}
+
+{% if host %}
   <h2>Slave information</h2>
-  <pre>{{ info|e }}</pre>
+  <pre>{{ host|e }}</pre>
 {% endif %}
 
 {% if not slave.isConnected() %}
