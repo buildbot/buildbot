@@ -13,7 +13,7 @@
   <tr class="{{ loop.cycle('alt', '') if loop }}">
     <td>{{ b.time }}</td>
     <td>{{ b.rev }}</td>
-    <td class="{{ b.class }}">{{ b.results }}</span></td>
+    <td class="{{ b.class }}">{{ b.results }}</td>
   {%- if include_builder %}    
     <td><a href="{{ b.builderurl }}">{{ b.builder_name }}</a></td>
   {% endif %}
