@@ -15,7 +15,7 @@
 
 {% for b in builders %}  
   <td align="center" class="{{ b.top_class }}">
-    <a href="{{ b.url }}">{{ b.name }}<br/>
+    <a href="{{ b.url }}">{{ b.name }}</a><br/>
     {{ " ".join(b.top) }}
   </td>
 {% endfor %}
