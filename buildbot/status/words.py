@@ -853,12 +853,13 @@ class IRC(base.StatusReceiverMultiService):
     server, however I can join multiple channels."""
 
     compare_attrs = ["host", "port", "nick", "password",
-                     "channels", "allowForce",
+                     "channels", "allowForce", "useSSL",
                      "categories"]
 
     def __init__(self, host, nick, channels, port=6667, allowForce=True,
                  categories=None, password=None, notify_events={},
-                 noticeOnChannel = False, showBlameList = True):
+                 noticeOnChannel = False, showBlameList = True,
+                 useSSL=False):
         base.StatusReceiverMultiService.__init__(self)
 
         assert allowForce in (True, False) # TODO: implement others
@@ -877,7 +878,14 @@ class IRC(base.StatusReceiverMultiService):
                                   self.channels, self.categories, self.notify_events,
                                   noticeOnChannel = noticeOnChannel,
                                   showBlameList = showBlameList)
-        c = internet.TCPClient(self.host, self.port, self.f)
+
+        if useSSL:
+            # SSL client needs a ClientContextFactory for some SSL mumbo-jumbo
+            cf = ssl.ClientContextFactory()
+            c = internet.SSLCLient(self.host, self.port, self.f, cf)
+        else:
+            c = internet.TCPClient(self.host, self.port, self.f)
+
         c.setServiceParent(self)
 
     def setServiceParent(self, parent):
