@@ -54,3 +54,23 @@ class test_checkRepoURL(unittest.TestCase):
     def test_win32file_path(self):
         self.assertUrl('c:\\repos\\my-repo', 'c:\\repos\\my-repo')
 
+class DictStuff(unittest.TestCase):
+    def test_dictofsets(self):
+        d = util.DictOfSets()
+        d.add("a", 1)
+        d.add("a", 2)
+        d.add("b", 3)
+        self.failUnless("a" in d)
+        self.failUnless("b" in d)
+        self.failIf("c" in d)
+        self.failUnlessEqual(d["a"], set([1,2]))
+        self.failUnlessEqual(d["b"], set([3]))
+        self.failUnlessRaises(KeyError, lambda: d["c"])
+        d.remove("c", 4) # ignored
+        d.remove("b", 4) # ignored
+        d.remove("b", 3)
+        self.failIf("b" in d)
+        self.failUnlessEqual(d.pop("a"), set([1,2]))
+        self.failIf("a" in d)
+        self.failUnlessEqual(d.pop("c"), set())
+        self.failUnlessEqual(d.pop("f"), set())
