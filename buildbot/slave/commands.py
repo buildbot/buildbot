@@ -1868,8 +1868,7 @@ class CVS(SourceBase):
                    self.global_options +
                    [verb, '-d', self.srcdir])
 
-        if verb == "checkout":
-            command += self.checkout_options
+        command += self.checkout_options
         if self.branch:
             command += ['-r', self.branch]
         if self.revision:
