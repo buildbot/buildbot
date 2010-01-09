@@ -8204,10 +8204,10 @@ def messageFormatter(name, build, results, master_status):
     logLines = 10
     text = list()
     text.append("STATUS: %s" % result.title())
-    return {
+    return @{
         'body' : "\n".join(text), 
         'type' : 'plain'
-    }
+    @}
 
 mn = MailNotifier(fromaddr="buildbot@@example.org",
                   sendToInterestedUsers=False,
