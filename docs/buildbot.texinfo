@@ -5688,6 +5688,13 @@ builder's @code{c['builddir']} key in master.cfg) plus the workdir
 itself (a class-level attribute of the BuildFactory, defaults to
 ``@file{build}'').
 
+For example:
+
+@example
+f.addStep(ShellCommand(command=["make", "test"],
+                       workdir="build/tests"))
+@end example
+
 @item env
 a dictionary of environment strings which will be added to the child
 command's environment. For example, to run tests with a different i18n
