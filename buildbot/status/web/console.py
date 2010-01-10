@@ -354,8 +354,8 @@ class ConsoleStatusResource(HtmlResource):
             if change.revision == revision:
                 return change
 
-        # No matching change, return the last change in build
-        changes = build.getChanges()[:]
+        # No matching change, return the last change in build.
+        changes = list(build.getChanges())
         changes.sort(key=self.comparator.getSortingKey())
         return changes[-1]
     
