@@ -420,27 +420,6 @@ class Locks(RunMixin, unittest.TestCase):
                              [("start", 1), ("done", 1),
                               ("start", 2), ("done", 2)])
 
-    def dont_testLock1a(self): ## disabled -- test itself is buggy
-        # just like testLock1, but we reload the config file first, with a
-        # change that causes full1b to be changed. This tickles a design bug
-        # in which full1a and full1b wind up with distinct Lock instances.
-        d = self.master.loadConfig(config_1a)
-        d.addCallback(self._testLock1a_1)
-        return d
-    def _testLock1a_1(self, res):
-        self.control.getBuilder("full1a").requestBuild(self.req1)
-        self.control.getBuilder("full1b").requestBuild(self.req2)
-        d = defer.DeferredList([self.req1.waitUntilFinished(),
-                                self.req2.waitUntilFinished()])
-        d.addCallback(self._testLock1a_2)
-        return d
-
-    def _testLock1a_2(self, res):
-        # full1a should complete its step before full1b starts it
-        self.failUnlessEqual(self.events,
-                             [("start", 1), ("done", 1),
-                              ("start", 2), ("done", 2)])
-
     def testLock2(self):
         # two builds run on separate slaves with slave-scoped locks should
         # not interfere
@@ -456,45 +435,6 @@ class Locks(RunMixin, unittest.TestCase):
         # different slaves, however, so they might start in either order.
         self.failUnless(self.events[:2] == [("start", 1), ("start", 2)] or
                         self.events[:2] == [("start", 2), ("start", 1)])
-
-    def dont_testLock3(self): ## disabled -- test fails sporadically
-        # two builds run on separate slaves with master-scoped locks should
-        # not overlap
-        self.control.getBuilder("full1c").requestBuild(self.req1)
-        self.control.getBuilder("full2b").requestBuild(self.req2)
-        d = defer.DeferredList([self.req1.waitUntilFinished(),
-                                self.req2.waitUntilFinished()])
-        d.addCallback(self._testLock3_1)
-        return d
-
-    def _testLock3_1(self, res):
-        # full2b should not start until after full1c finishes. The builds run
-        # on different slaves, so we can't really predict which will start
-        # first. The important thing is that they don't overlap.
-        self.failUnless(self.events == [("start", 1), ("done", 1),
-                                        ("start", 2), ("done", 2)]
-                        or self.events == [("start", 2), ("done", 2),
-                                           ("start", 1), ("done", 1)]
-                        )
-
-    # This test has been disabled due to flakeyness/intermittentness
-#    def testLock4(self):
-#        self.control.getBuilder("full1a").requestBuild(self.req1)
-#        self.control.getBuilder("full1c").requestBuild(self.req2)
-#        self.control.getBuilder("full1d").requestBuild(self.req3)
-#        d = defer.DeferredList([self.req1.waitUntilFinished(),
-#                                self.req2.waitUntilFinished(),
-#                                self.req3.waitUntilFinished()])
-#        d.addCallback(self._testLock4_1)
-#        return d
-#
-#    def _testLock4_1(self, res):
-#        # full1a starts, then full1d starts (because they do not interfere).
-#        # Once both are done, full1c can run.
-#        self.failUnlessEqual(self.events,
-#                             [("start", 1), ("start", 3),
-#                              ("done", 1), ("done", 3),
-#                              ("start", 2), ("done", 2)])
 
 class BuilderLocks(RunMixin, unittest.TestCase):
     config = """\
