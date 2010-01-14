@@ -8201,11 +8201,10 @@ creation of messages with unique content.
 For example, if only short emails are desired (e.g., for delivery to phones)
 
 @example
-from buildbot.status.builder Results
-def messageFormatter(name, build, results, master_status):
+from buildbot.status.builder import Results
+def messageFormatter(mode, name, build, results, master_status):
     result = Results[results]
 
-    logLines = 10
     text = list()
     text.append("STATUS: %s" % result.title())
     return @{
@@ -8219,6 +8218,87 @@ mn = MailNotifier(fromaddr="buildbot@@example.org",
                   extraRecipients=['listaddr@@example.org'],
                   messageFormatter=messageFormatter)
 @end example
+
+Another example of a function delivering a customized html email
+containing the last 80 lines of logs of a failing build step is given
+below:
+
+@example
+from buildbot.status.builder import Results
+
+def message_formatter(mode, name, build, results, master_status):
+    """Provide a customized message to BuildBot's MailNotifier.
+
+    The last 80 lines of the log are provided as well as the changes
+    relevant to the build.  Message content is formatted as html.
+    """
+    result = Results[results]
+
+    limit_lines = 80
+    text = list()
+    text.append('<h4>Build status: %s</h4>' % result.upper())
+    text.append("Buildslave for this Build: <b>%s</b>" % build.getSlavename())
+    text.append('<br>')
+    if master_status.getURLForThing(build):
+        text.append('Complete logs for all build steps: <a href="%s">%s</a>'
+                    % (master_status.getURLForThing(build),
+                       master_status.getURLForThing(build))
+                    )
+    text.append('<br>')
+    text.append("Build Reason: %s" % build.getReason())
+    text.append('<br>')
+
+    source = ""
+    ss = build.getSourceStamp()
+    if ss.branch:
+        source += "[branch %s] " % ss.branch
+    if ss.revision:
+        source +=  ss.revision
+    else:
+        source += "HEAD"
+    if ss.patch:
+        source += " (plus patch)"
+    text.append("Build Source Stamp: <b>%s</b>" % source)
+    text.append('<br>')
+    text.append("Blamelist: %s" % ",".join(build.getResponsibleUsers()))
+    if ss.changes:
+        text.append('<h4>Recent Changes:</h4>')
+        text.extend([c.asHTML() for c in ss.changes])
+
+    logs = list()
+    for log in build.getLogs():
+        log_name = "%s.%s" % (log.getStep().getName(), log.getName())
+        log_status, dummy = log.getStep().getResults()
+        log_body = log.getText().splitlines() # Note: can be VERY LARGE
+        log_url = '%s/steps/%s/logs/%s' % (master_status.getURLForThing(build),
+                                           log.getStep().getName(),
+                                           log.getName())
+        logs.append((log_name, log_url, log_body, log_status))
+
+    name, url, content, logstatus = logs[-1]
+
+    text.append('<i>Detailed log of last build step:</i> <a href="%s">%s</a>'
+                % (url, url))
+    text.append('<br>')
+    text.append('<h4>Last %d lines of "%s":</h4>' % (limit_lines, name))
+    text.append('<p>')
+    text.append('<br>'.join([line for line in
+                             content[len(content)-limit_lines:]]))
+    text.append('</p>')
+    text.append('<br><br>')
+    text.append('<b>-The BuildBot</b>')
+    return @{
+        'body': "\n".join(text),
+        'type': 'html'
+        @}
+
+mn = MailNotifier(fromaddr="buildbot@@example.org",
+                  sendToInterestedUsers=False,
+                  mode='failing',
+                  extraRecipients=['listaddr@@example.org'],
+                  messageFormatter=message_formatter)
+@end example
+
 
 @heading MailNotifier arguments
 
@@ -8321,7 +8401,7 @@ status objects:
 @code{mode} (one of @code{all, failing, problem, change, passing})
 @item Builder result as a string
 @example
-from buildbot.status.builder Results
+from buildbot.status.builder import Results
 result_str = Results[results]
 # one of 'success', 'warnings', 'failure', 'skipped', or 'exception'
 @end example
@@ -8368,13 +8448,14 @@ the above information formatted.
 @item Log information
 @example
 logs = list()
-for logf in build.getLogs():
-    logStep = logf.getStep()
-    stepName = logStep.getName()
-    logStatus, dummy = logStep.getResults()
-    logName = logf.getName()
-    log_url = '%s/steps/%s/logs/%s' % (master_status.getURLForThing(build), stepName, logName)
-    log_body = logf.getText().splitlines() # note: can be VERY LARGE
+for log in build.getLogs():
+    log_name = "%s.%s" % (log.getStep().getName(), log.getName())
+    log_status, dummy = log.getStep().getResults()
+    log_body = log.getText().splitlines() # Note: can be VERY LARGE
+    log_url = '%s/steps/%s/logs/%s' % (master_status.getURLForThing(build),
+                                       log.getStep().getName(),
+                                       log.getName())
+    logs.append((log_name, log_url, log_body, log_status))
 @end example
 @end table
 
