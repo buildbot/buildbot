@@ -147,9 +147,17 @@ class MailNotifier(base.StatusReceiverMultiService):
         @type  customMesg: func
         @param customMesg: (this function is deprecated)
 
-        @type messageFormatter: func
-        @param messageFormatter: function taking (name, build, result) and returning
-                a tuple (body, type)
+        @type  messageFormatter: func
+        @param messageFormatter: function taking (mode, name, build, result,
+                                 master_status ) and returning a dictionary
+                                 containing two required keys "body" and "type",
+                                 with a third optional key, "subject". The
+                                 "body" key gives a string that contains the
+                                 complete text of the message. The "type" key
+                                 is the message type ('plain' or 'html'). The
+                                 'html' type should be used when generating an
+                                 HTML message.  The optional "subject" key
+                                 gives the subject for the email.
 
         @type  extraHeaders: dict
         @param extraHeaders: A dict of extra headers to add to the mail. It's
