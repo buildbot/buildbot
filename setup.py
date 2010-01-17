@@ -18,7 +18,6 @@ import glob
 from distutils.core import setup, Command
 from buildbot import version
 
-# Path: twisted!cvstoys!buildbot
 from distutils.command.install_data import install_data
 
 def include(d, e):

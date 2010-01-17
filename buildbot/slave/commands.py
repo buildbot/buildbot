@@ -1568,7 +1568,9 @@ class SourceBase(Command):
                 self.sendStatus({'header': msg + "\n"})
                 log.msg(msg)
                 d = defer.Deferred()
-                self.maybeClobber(d)
+                # we are going to do a full checkout, so a clobber is
+                # required first
+                self.doClobber(d, self.workdir)
                 d.addCallback(lambda res: self.doVCFull())
                 d.addBoth(self.maybeDoVCRetry)
                 reactor.callLater(delay, d.callback, None)
