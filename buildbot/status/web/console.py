@@ -200,7 +200,7 @@ class ConsoleStatusResource(HtmlResource):
 
             # the new changes are not sorted, and can contain duplicates.
             # Sort the list.
-            allChanges.sort(key=self.comparator.getSortingKey())
+            allChanges.sort(lambda a, b: cmp(getattr(a, self.comparator.getSortingKey()), getattr(b, self.comparator.getSortingKey())))
 
             # Remove the dups
             prevChange = None
@@ -356,7 +356,7 @@ class ConsoleStatusResource(HtmlResource):
 
         # No matching change, return the last change in build.
         changes = list(build.getChanges())
-        changes.sort(key=self.comparator.getSortingKey())
+        changes.sort(lambda a, b: cmp(getattr(a, self.comparator.getSortingKey()), getattr(b, self.comparator.getSortingKey())))
         return changes[-1]
     
     def getAllBuildsForRevision(self, status, request, lastRevision, numBuilds,
@@ -827,7 +827,7 @@ class TimeRevisionComparator(RevisionComparator):
         return True # No general way of determining
 
     def getSortingKey(self):
-        return operator.attrgetter('when')
+        return "when"
 
 class IntegerRevisionComparator(RevisionComparator):
     def isRevisionEarlier(self, first, second):
@@ -841,5 +841,5 @@ class IntegerRevisionComparator(RevisionComparator):
             return False
 
     def getSortingKey(self):
-        return operator.attrgetter('revision')
+        return "revision"
 

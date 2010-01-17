@@ -1,4 +1,8 @@
-from string import Template
+try:
+    from string import Template
+except ImportError:
+    from buildbot.stringTemplate import Template
+
 
 top_header = Template('''
 <div align="center">

@@ -7,6 +7,13 @@ from buildbot.status.web import console
 from buildbot.test.runutils import RunMixin
 from buildbot.changes import changes
 
+try:
+    reversed
+except NameError:
+    def reversed(data):
+	for index in xrange(len(data)-1,-1,-1):
+	    yield data[index]
+
 # Configuration to be used by the getBuildDetailsTest
 run_config = """
 from buildbot.process import factory
@@ -76,7 +83,7 @@ class TimeRevisionComparatorTest(unittest.TestCase):
             my_changes[i].when = my_changes[i-1].when + 1
 
         reversed_changes = list(reversed(my_changes))
-        reversed_changes.sort(key=self.comparator.getSortingKey())
+        reversed_changes.sort(lambda a,b: cmp(getattr(a, self.comparator.getSortingKey()), getattr(b, self.comparator.getSortingKey())))
         self.assertEqual(my_changes, reversed_changes)
 
 class IntegerRevisionComparatorTest(unittest.TestCase):
@@ -105,7 +112,7 @@ class IntegerRevisionComparatorTest(unittest.TestCase):
         my_changes = [_createDummyChange(str(i)) for i in range(1, 6)]
 
         reversed_changes = list(reversed(my_changes))
-        reversed_changes.sort(key=self.comparator.getSortingKey())
+        reversed_changes.sort(lambda a,b: cmp(getattr(a, self.comparator.getSortingKey()), getattr(b, self.comparator.getSortingKey())))
         self.assertEqual(my_changes, reversed_changes)
 
 # Helper class to mock a request. We define only what we really need.
