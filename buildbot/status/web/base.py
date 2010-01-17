@@ -404,8 +404,8 @@ def userfilter(value):
     if m:
         user = jinja2.escape(m.group(1))
         email = emailfilter(m.group(2))        
-        email = jinja2.Markup('<span class="email"><br/>%s</span>') % email
-        return jinja2.Markup('<span class="user">%s%s</span>' % (user, email))
+        email = jinja2.Markup('<div class="email">%s</div>') % email
+        return jinja2.Markup('<div class="user">%s%s</div>' % (user, email))
     else:
         return jinja2.escape(value)
         
@@ -415,13 +415,17 @@ def shortrevfilter(value):
         allow to see full id on mouse over. '''
         
     try:
+        value = unicode(value)        
         short = value[:12]
     except TypeError:
         return jinja2.escape(value)
         
+    if short == value:
+        return jinja2.Markup('<span class="revision">%s</span>') % value 
+        
     html = jinja2.Markup('''
-        <span class="revision"><span class="short">%(short)s</span> 
-        <span class="full">%(full)s</span></span>''')
+        <div class="revision"><div class="short">%(short)s</div> 
+        <div class="full">%(full)s</div></div>''')
     return html % dict(short=short, full=value)
 
 
