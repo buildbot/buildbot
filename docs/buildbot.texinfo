@@ -2826,7 +2826,7 @@ def prioritizeBuilders(buildmaster, builders):
 
 c['prioritizeBuilders'] = prioritizeBuilders
 @end example
-            
+
 
 @node Setting the slaveport, Buildslave Specifiers, Prioritizing Builders, Configuration
 @section Setting the slaveport
@@ -5629,7 +5629,7 @@ branch will be used.
 @cindex BitKeeper Checkout
 @bsindex buildbot.steps.source.BK
 
-The @code{BK} build step performs a @uref{http://www.bitkeeper.com/, BitKeeper} 
+The @code{BK} build step performs a @uref{http://www.bitkeeper.com/, BitKeeper}
 checkout or update.
 
 The BitKeeper step takes the following arguments:
@@ -7611,7 +7611,7 @@ necessary to cover the changes.
 
 @item recurse
 If @code{True}, tells Trial (with the @code{--recurse} argument) to look in all
-subdirectories for additional test cases. 
+subdirectories for additional test cases.
 
 @item reactor
 which reactor to use, like 'gtk' or 'java'. If not provided, the Twisted's
@@ -8208,7 +8208,7 @@ def messageFormatter(mode, name, build, results, master_status):
     text = list()
     text.append("STATUS: %s" % result.title())
     return @{
-        'body' : "\n".join(text), 
+        'body' : "\n".join(text),
         'type' : 'plain'
     @}
 
