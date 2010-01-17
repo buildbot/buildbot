@@ -2955,7 +2955,7 @@ class Mercurial(SourceBase):
 
     def parseGotRevision(self):
         # we use 'hg identify' to find out what we wound up with
-        command = [self.vcexe, "identify"]
+        command = [self.vcexe, "identify", "--id", "--debug"] # get full rev id
         c = ShellCommand(self.builder, command,
                          os.path.join(self.builder.basedir, self.srcdir),
                          environ=self.env,
