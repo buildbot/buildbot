@@ -155,7 +155,7 @@ Build #{{ b.getNumber() }}
 {% if end %}
   <tr><td class="left">End</td><td>{{ end }}</td></tr>
 {% endif %}
-  <tr {{ 'class="alt"' if end }}><td class="left">Elapsed</td><td>{{ elapsed }}</td></tr>
+  <tr {{ 'class="alt"' if end else '' }}><td class="left">Elapsed</td><td>{{ elapsed }}</td></tr>
 </table>
 
   {% if resubmit %}
