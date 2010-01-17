@@ -188,3 +188,13 @@ span.header {
   padding: 1em;
   color: blue;
 }
+
+/* revison & email */
+
+.revision .full { 
+  display: none;
+}
+
+.user .email {
+  display: none;
+}
