@@ -385,9 +385,9 @@ def upgradeMaster(config):
     # check web files: index.html, default.css, robots.txt
     webdir = os.path.join(basedir, "public_html")
     m.upgrade_public_html({
-          'bg_gradient.jpg' : util.sibpath(__file__, "../status/web/bg_gradient.jpg"),
-          'default.css' : util.sibpath(__file__, "../status/web/default.css"),
-          'robots.txt' : util.sibpath(__file__, "../status/web/robots.txt"),
+          'bg_gradient.jpg' : util.sibpath(__file__, "../status/web/files/bg_gradient.jpg"),
+          'default.css' : util.sibpath(__file__, "../status/web/files/default.css"),
+          'robots.txt' : util.sibpath(__file__, "../status/web/files/robots.txt"),
       })
     m.populate_if_missing(os.path.join(basedir, "master.cfg.sample"),
                           util.sibpath(__file__, "sample.cfg"),
@@ -470,9 +470,9 @@ def createMaster(config):
     m.makeTAC(contents)
     m.sampleconfig(util.sibpath(__file__, "sample.cfg"))
     m.public_html({
-          'bg_gradient.jpg' : util.sibpath(__file__, "../status/web/bg_gradient.jpg"),
-          'default.css' : util.sibpath(__file__, "../status/web/default.css"),
-          'robots.txt' : util.sibpath(__file__, "../status/web/robots.txt"),
+          'bg_gradient.jpg' : util.sibpath(__file__, "../status/web/files/bg_gradient.jpg"),
+          'default.css' : util.sibpath(__file__, "../status/web/files/default.css"),
+          'robots.txt' : util.sibpath(__file__, "../status/web/files/robots.txt"),
       })
     m.makefile()
 
