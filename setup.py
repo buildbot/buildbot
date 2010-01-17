@@ -200,6 +200,8 @@ setup_args = {
                 ("buildbot/clients", ["buildbot/clients/debug.glade"]),
                 ("buildbot/status/web",
                  ["buildbot/status/web/classic.css",
+                  "buildbot/status/web/default.css",
+                  "buildbot/status/web/extended.css",
                   "buildbot/status/web/index.html",
                   "buildbot/status/web/robots.txt",
                   ]),
