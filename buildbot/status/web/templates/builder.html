@@ -47,7 +47,7 @@
     {% endif %}    
     
     {% if b.changes %}
-      {% for c in b.changes %}<a href="{{ c.url }}">{{ c.who }}</a>{% endfor %}
+      {% for c in b.changes %}<a href="{{ c.url }}">{{ c.who|email }}</a>{% endfor %}
     {% else %}
       {{ b.reason }}
     {% endif %}    
@@ -88,7 +88,7 @@
   <td><b><a href="{{ s.link|e }}">{{ s.name|e }}</a></b></td>
   {% if s.connected %}
     <td class="idle">connected</td>
-    <td>{{ s.admin|e if s.admin }}</td>
+    <td>{{ s.admin|email if s.admin }}</td>
   {% else %}
     <td class="offline">offline</td> 
     <td/>

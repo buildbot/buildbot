@@ -8,9 +8,9 @@
 
 {% if sources %}
   <ol>
-  {% for s in sources %}
+  {% for s in sources -%}
      <li class={{ loop.cycle('alt', '') }}>{{ s.describe() }}</li>
-  {% endfor %}
+  {% endfor -%}
   </ol>
 {% else %}
   none (push only)

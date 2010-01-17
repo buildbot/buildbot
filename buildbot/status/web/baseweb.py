@@ -25,7 +25,10 @@ from buildbot.status.web.xmlrpc import XMLRPCServer
 from buildbot.status.web.about import AboutBuildbot
 from buildbot.status.web.auth import IAuth, AuthFailResource
 from buildbot.status.web.root import RootPage
+
+import buildbot.status.web.base as webbase
 import jinja2
+
 
 # this class contains the status services (WebStatus and the older Waterfall)
 # which can be put in c['status']. It also contains some of the resources
@@ -244,23 +247,7 @@ class OneBoxPerBuilder(HtmlResource):
 
         template = req.site.buildbot_service.templates.get_template("oneboxperbuilder.html")
         return template.render(**cxt)
-
-HEAD_ELEMENTS = [
-    '<title>%(title)s</title>',
-    '<link href="%(root)sdefault.css" rel="stylesheet" type="text/css" />',
-    ]
-BODY_ATTRS = {
-    'vlink': "#800080",
-    }
-
-class AlmostStrictUndefined(jinja2.StrictUndefined):
-    ''' An undefined that allows boolean testing but 
-        fails properly on every other use.
-        
-        Much better than the default Undefined, but not
-        fully as strict as StrictUndefined '''
-    def __nonzero__(self):
-        return False
+    
     
 class WebStatus(service.MultiService):
     implements(IStatusReceiver)
@@ -487,7 +474,11 @@ class WebStatus(service.MultiService):
         self.templates = jinja2.Environment(loader=loader,
                                             extensions=['jinja2.ext.i18n'],
                                             trim_blocks=True,
-                                            undefined=AlmostStrictUndefined)
+                                            undefined=webbase.AlmostStrictUndefined)
+        
+        self.templates.filters['email'] = webbase.emailfilter
+        self.templates.filters['user'] = webbase.userfilter
+        self.templates.filters['shortrev'] = webbase.shortrevfilter  
 
         # keep track of cached connections so we can break them when we shut
         # down. See ticket #102 for more details.

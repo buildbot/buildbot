@@ -1,4 +1,4 @@
-{% from 'build_line.html' import build_table %}
+{% from 'build_line.html' import build_table, build_line %}
 
 {% extends "layout.html" %}
 {% block content %}
@@ -33,7 +33,7 @@
 
 {% if admin %}
   <h2>Administrator</h2>
-  <p>{{ admin|e|replace('@', '<span style="display:none">-ohnoyoudont-</span>@') }}</p>
+  <p>{{ admin|email }}</p>
 {% endif %}
 
 {% if host %}

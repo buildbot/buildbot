@@ -92,11 +92,12 @@ class Change:
         kwargs = { 'who'       : self.who,
                    'at'        : self.getTime(),
                    'files'     : files,
-                   'revision'  : self.revision,
+                   'rev'       : self.revision,
                    'revlink'   : getattr(self, 'revlink', None),
                    'branch'    : self.branch,
                    'comments'  : self.comments,
-                   'properties': self.properties.asList() }
+                   'properties': self.properties.asList(),
+                   'number'    : self.number }
 
         return kwargs
 

@@ -15,9 +15,11 @@
 {%- endmacro %}
 
 
-{% macro stamp_td(stamp) -%}
-  <td valign="bottom" class="sourcestamp">
-    {{ stamp.getText()|join }}
+{% macro stamp_td(rev, branch=None, patch=False) -%}
+  <td valign="bottom" class="sourcestamp">    
+    {{- rev|shortrev }}
+    {%- if branch %} in {{ branch }}{% endif %}
+    {%- if patch %} [patch]{% endif %}
   </td>
 {%- endmacro %}
 

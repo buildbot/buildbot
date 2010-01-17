@@ -36,7 +36,7 @@
   {% if s.connected %}
     <td>
     {%- if s.admin -%}
-      Admin: {{ s.admin|e|replace('@', '<span style="display:none">-ohnoyoudont-</span>@') }}
+      Admin: {{ s.admin|email }}
     {%- endif -%}
     </td>
     

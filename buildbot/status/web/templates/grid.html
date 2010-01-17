@@ -13,7 +13,7 @@
  </td>
 
  {% for s in stamps %}
-  {{ grid.stamp_td(s) }}
+  {{ grid.stamp_td(**s.getHTMLDict()) }}
  {% endfor %}
 </tr>
 

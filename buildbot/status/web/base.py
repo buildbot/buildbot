@@ -6,6 +6,7 @@ from twisted.python import log
 from buildbot.status import builder
 from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE, SKIPPED, EXCEPTION
 from buildbot import version, util
+import jinja2
 import os, cgi
 from buildbot.process.properties import Properties
 
@@ -376,3 +377,59 @@ def map_branches(branches):
     if "trunk" in branches:
         return branches + [None]
     return branches
+
+
+# jinja utilities 
+
+def emailfilter(value):
+    ''' Escape & obfuscate e-mail addresses
+    
+        replacing @ with <span style="display:none> reportedly works well against web-spiders
+        and the next level is to use rot-13 (or something) and decode in javascript '''    
+    
+    user = jinja2.escape(value)
+    obfuscator = jinja2.Markup('<span style="display:none">ohnoyoudont</span>@')
+    output = user.replace('@', obfuscator)
+    return output
+ 
+ 
+def userfilter(value):
+    ''' Hide e-mail address from user name when viewing changes
+    
+        We still include the (obfuscated) e-mail so that we can show
+        it on mouse-over or similar etc 
+    '''
+    r = re.compile('(.*) +<(.*)>')
+    m = r.search(value)
+    if m:
+        user = jinja2.escape(m.group(1))
+        email = emailfilter(m.group(2))        
+        email = jinja2.Markup('<span class="email"><br/>%s</span>') % email
+        return jinja2.Markup('<span class="user">%s%s</span>' % (user, email))
+    else:
+        return jinja2.escape(value)
+        
+
+def shortrevfilter(value):
+    ''' Shorten the revisison string to 12-chars (Mercurial short-id),
+        allow to see full id on mouse over. '''
+        
+    try:
+        short = value[:12]
+    except TypeError:
+        return jinja2.escape(value)
+        
+    html = jinja2.Markup('''
+        <span class="revision"><span class="short">%(short)s</span> 
+        <span class="full">%(full)s</span></span>''')
+    return html % dict(short=short, full=value)
+
+
+class AlmostStrictUndefined(jinja2.StrictUndefined):
+    ''' An undefined that allows boolean testing but 
+        fails properly on every other use.
+        
+        Much better than the default Undefined, but not
+        fully as strict as StrictUndefined '''
+    def __nonzero__(self):
+        return False

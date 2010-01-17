@@ -1,6 +1,6 @@
 {% extends "layout.html" %}
 {% import 'forms.html' as forms %}
-{% from "change_macros.html" import change %}
+{% from "change_macros.html" import change with context %}
 
 {% block content %}
 
@@ -140,8 +140,8 @@ Build #{{ b.getNumber() }}
 
 {% if responsible_users %}
   <ol>
-  {% for user in responsible_users %}
-     <li class="{{ loop.cycle('alt', '') }}">{{ user|e }}</li>
+  {% for u in responsible_users %}
+     <li class="{{ loop.cycle('alt', '') }}">{{ u|user }}</li>
   {% endfor %}
   </ol>
 {% else %}
