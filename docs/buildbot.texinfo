@@ -7776,7 +7776,7 @@ default value is False, since it also allows anyone with a web browser to waste
 computing resources forcing unnecessary builds.
 
 If you do not wish to allow strangers to cause a build to run or to stop
-current builds, pass an instance of @code{status.web.authentication.IAuth} as a
+current builds, pass an instance of @code{status.web.auth.IAuth} as a
 @code{auth} keyword argument to @code{WebStatus}.  The class @code{BasicAuth}
 implements a basic authentication mechanism using a list of user/password
 tuples provided from the configuration file.  The class @code{HTPasswdAuth}
@@ -7784,11 +7784,11 @@ implements an authentication against an @file{.htpasswd} file.
 
 @example
 from buildbot.status.html import WebStatus
-from buildbot.status.web.authentication import BasicAuth
+from buildbot.status.web.auth import BasicAuth
 users = [('bob', 'secret-pass'), ('jill', 'super-pass')]
 c['status'].append(WebStatus(http_port=8080, auth=BasicAuth(users)))
 
-from buildbot.status.web.authentication import HTPasswdAuth
+from buildbot.status.web.auth import HTPasswdAuth
 file = '/path/to/file'
 c['status'].append(WebStatus(http_port=8080, auth=(HTPasswdAuth(file))))
 @end example
