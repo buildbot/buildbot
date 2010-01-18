@@ -204,6 +204,7 @@ setup_args = {
                   "buildbot/status/web/extended.css",
                   "buildbot/status/web/index.html",
                   "buildbot/status/web/robots.txt",
+                  "buildbot/status/web/bg_gradient.jpg",
                   ]),
                 ("buildbot/scripts", ["buildbot/scripts/sample.cfg"]),
                 ("buildbot/test/mail", testmsgs),
