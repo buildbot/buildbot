@@ -205,6 +205,8 @@ class HtmlResource(resource.Resource):
     def getContext(self, request):
         status = self.getStatus(request)
         path_to_root = self.path_to_root(request)
+        # if you change something here, you'll probably need to change it
+        # in DirectoryLister, too
         return dict(project_url = status.getProjectURL(),
                     project_name = status.getProjectName(),
                     stylesheet = path_to_root + 'default.css',
@@ -265,12 +267,14 @@ class DirectoryLister(static.DirectoryLister):
         cxt = dict(project_url = status.getProjectURL(),
                    project_name = status.getProjectName(),
                    stylesheet = path_to_root(request) + 'default.css',
+                   path_to_root = path_to_root(request),
                    version = version,
                    time = time.strftime("%a %d %b %Y %H:%M:%S",
                                         time.localtime(util.now())),
                    tz = time.tzname[time.localtime()[-1]],
                    metatags = [],
-                   title = 'BuildBot')
+                   title = 'BuildBot',
+                   welcomeurl = path_to_root(request))
 
         if self.dirs is None:
             directory = os.listdir(self.path)
