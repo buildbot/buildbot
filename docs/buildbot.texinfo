@@ -7793,6 +7793,19 @@ configuration will make the HTML status page available at
 appear at @code{http://host/buildbot/}, and the right virtual host
 setup can even place it at @code{http://buildbot.host/} .
 
+The @code{changecommentlink} can be used to create links to
+ticket-ids from change comments (i.e. #123). The argument should
+be a tuple of two strings where the first element is a regex that
+searches for strings (with match groups) and the second is a replace-string
+that, when substituted with \1 etc, creates the URL.
+(the @code{<a href=""></a>} is added outside this)
+I.e. for Trac: @code{changecommentlink(r"#(\d+)", r"http://buildbot.net/trac/ticket/\1")}.
+
+The @code{revlink} is similarly used to create links from revision
+ids to a web-view of your source control system. The Use %s to insert
+ the revision id in the url. I.e. for Buildbot on github: @code{revlink='http://github.com/djmitche/buildbot/tree/%s'}
+(The revision id will be URL encoded before inserted in the replacement string)
+
 @node Enabling the "Force Build" Button
 @subsection Enabling the "Force Build" Button
 
