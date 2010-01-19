@@ -29,7 +29,7 @@
     {%- if b.state != 'idle' or b.n_pending > 0 -%}
       <br/>({{ b.state }}
       {%- if b.n_pending > 0 -%}
-        with {{ b.n_pending }})
+        , plus {{ b.n_pending }}
       {%- endif -%}      
       )
     {%- endif -%}
