@@ -42,7 +42,7 @@ Build #{{ b.getNumber() }}
 {% endif %}
 
 {% if ss.revision %}
-  <tr class="{{ ss_class.next() }}"><td class="left">Revision</td><td>{{ ss.revision|e }}</td></tr>
+  <tr class="{{ ss_class.next() }}"><td class="left">Revision</td><td>{{ ss.revision|revlink }}</td></tr>
 {% endif %}
 
 {% if ss.patch %}
@@ -58,7 +58,7 @@ Build #{{ b.getNumber() }}
 {% endif %}
     
 {% if got_revision %}
-  <tr class="{{ ss_class.next() }}"><td class="left">Got Revision</td><td>{{ got_revision }}</td></tr>
+  <tr class="{{ ss_class.next() }}"><td class="left">Got Revision</td><td>{{ got_revision|revlink }}</td></tr>
 {% endif %}
 
 </table>
@@ -197,17 +197,7 @@ Build #{{ b.getNumber() }}
     <li>{{ change(**c.html_dict()) }}</li>
   {% endfor %}  
   </ol>
-
-{# TODO:
- # <pre>{{ b.changesText()|e }}</pre>
- #} 
-
 </div> 
 {% endif %}
-
-
-
-
-
 
 {% endblock %}

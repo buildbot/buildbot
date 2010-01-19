@@ -348,7 +348,8 @@ class WebStatus(service.MultiService):
     def __init__(self, http_port=None, distrib_port=None, allowForce=False,
                  public_html="public_html", site=None, numbuilds=20,
                  num_events=200, num_events_max=None, auth=None,
-                 order_console_by_time=False, changecommentlink=None):
+                 order_console_by_time=False, changecommentlink=None,
+                 revlink=None):
         """Run a web server that provides Buildbot status.
 
         @type  http_port: int or L{twisted.application.strports} string
@@ -423,6 +424,13 @@ class WebStatus(service.MultiService):
                      to all change comments. The first element represents what to search
                      for and the second yields an url (the <a href=""></a> is added outside this)
                      I.e. for Trac: (r"#(\d+)", r"http://buildbot.net/trac/ticket/\1") 
+
+        @type revlink: string or C{None}
+        @param revlink: a replacement string that is applied to all revisions and
+                        will, if set, create a link to the result of the replacement.
+                        Use %s to insert the revision id in the url. 
+                        I.e. for Buildbot on github: ('http://github.com/djmitche/buildbot/tree/%s') 
+                        (The revision id will be URL encoded before inserted in the replacement string)
         """
 
         service.MultiService.__init__(self)
@@ -484,10 +492,15 @@ class WebStatus(service.MultiService):
         
         self.templates.filters['email'] = webbase.emailfilter
         self.templates.filters['user'] = webbase.userfilter
-        self.templates.filters['shortrev'] = webbase.shortrevfilter
+        self.templates.filters['shortrev'] = \
+            webbase.shortrevfilter(revlink, self.templates)
+        self.templates.filters['revlink'] = \
+            webbase.revlinkfilter(revlink, self.templates)
+        
         if changecommentlink:
+            regex, replace = changecommentlink
             self.templates.filters['changecomment'] = \
-                webbase.addlinkfilter(*changecommentlink) 
+                webbase.addlinkfilter(regex, replace) 
         else:
             self.templates.filters['changecomment'] = jinja2.escape
 

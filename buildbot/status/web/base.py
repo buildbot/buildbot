@@ -414,32 +414,80 @@ def userfilter(value):
         return jinja2.escape(value)
         
 
-def shortrevfilter(value):
-    ''' Shorten the revisison string to 12-chars (Mercurial short-id),
-        allow to see full id on mouse over. '''
+def shortrevfilter(replace, templates):
+    ''' Returns a function which shortens the revisison string 
+        to 12-chars (Mercurial short-id)
+        and add link if replacement string is set. 
         
-    try:
-        value = unicode(value)        
-        short = value[:12]
-    except TypeError:
-        return jinja2.escape(value)
-        
-    if short == value:
-        return jinja2.Markup('<span class="revision">%s</span>') % value 
-        
-    html = jinja2.Markup('''
-        <div class="revision"><div class="short">%(short)s</div> 
-        <div class="full">%(full)s</div></div>''')
-    return html % dict(short=short, full=value)
+        (The full id is still visible in HTML, for mouse-over events etc.)
 
+        TODO: Add a 'source' argument to SourceStamp and apply it here
+
+        @param replace: a python format string with an %s
+        @param templates: a jinja2 environment
+    ''' 
+    
+    def filter(value):
+        if not value:
+            return u''
+
+        macros = templates.get_template("revmacros.html").module
+        value = unicode(value)
+        
+        if replace:
+            id_html = macros.id_replace
+            short_html = macros.shorten_replace            
+            url = replace % urllib.quote(value)
+        else:
+            id_html = macros.id
+            short_html = macros.shorten
+            url = None
+ 
+        value = jinja2.escape(value)
+        short = value[:12]
+        
+        if short == value:
+            return id_html(rev=value, url=url) 
+        else:
+            return short_html(short=short, rev=value, url=url)
+        
+    return filter
+
+
+def revlinkfilter(replace, templates):
+    ''' Returns a function which adds an url link to a 
+        revision identifiers.
+        
+        @param replace: a python format string with an %s
+        @param templates: a jinja2 environment
+    ''' 
+        
+    def filter(value):
+        if not value:
+            return u''
+        
+        macros = templates.get_template("revmacros.html").module    
+        value = unicode(value)
+
+        if replace:
+            html = macros.id_replace
+            url = replace % urllib.quote(value)
+        else:
+            html = macros.id  
+            url = None
+            
+        return html(rev=value, url=url)
+    
+    return filter
+     
 
 def addlinkfilter(search, replace):
     ''' Returns function that does regex search/replace in 
         comments to add links to bug ids and similar.
         
-        search - a regex to match what we look for 
-        replace - an url with \1\2 to include data from search 
-                  (I wrap with the <a href="...">...</a>.. myself)
+        @param search: a regex to match what we look for 
+        @param replace: an url with \1\2 to include data from search 
+                        (I wrap with the <a href="...">...</a>.. myself)
     '''
     
     regex = re.compile(search)

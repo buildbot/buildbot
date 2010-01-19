@@ -22,7 +22,7 @@
    <td class="left">Revision</td>
    <td> 
  {%- if revlink -%}<a href="{{ revlink }}">{{ rev|e }}</a>
- {%- else -%}{{ rev|e }}
+ {%- else -%}{{ rev|revlink }}
  {%- endif -%}
    </td>
   </tr>

@@ -178,8 +178,8 @@ function checkMouseLeave(element, event) {
   <tr>
     <td class='DevRev {{ alt }}' width="1%">
     {% if r.link %}<a href="{{ r.link }}">{{ r.id|shortrev }}</a>
-    {% else %}{{ r.id|shortrev }}
-    {% endif %}
+    {%- else %}{{ r.id|shortrev }}
+    {%- endif %}
     </td>
     <td class='DevName {{ alt }}' width="1%">
       {{ r.who|user }}
