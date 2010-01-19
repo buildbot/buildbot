@@ -7,11 +7,13 @@ include docs/images/icon.blend docs/images/Makefile
 include docs/epyrun docs/gen-reference docs/Makefile
 include buildbot/test/mail/* buildbot/test/subdir/*
 include buildbot/scripts/sample.cfg
-include buildbot/status/web/*.css buildbot/status/web/*.html buildbot/status/web/*.jpg
+include buildbot/status/web/files/*
+include buildbot/status/web/templates/*.css buildbot/status/web/templates/*.html buildbot/status/web/templates/*.jpg buildbot/status/web/templates/*.xml
 include buildbot/status/web/robots.txt
 include buildbot/clients/debug.glade
 include buildbot/buildbot.png
 include ChangeLog*
+include test-dist.sh
 
 include contrib/* contrib/windows/* contrib/OS-X/* contrib/CSS/*
 include contrib/trac/* contrib/trac/bbwatcher/* contrib/trac/bbwatcher/templates/*
