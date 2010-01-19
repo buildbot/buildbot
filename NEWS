@@ -22,6 +22,20 @@ argument checking and default values, and also makes it easier for users to
 create subclasses to handle site-specific builder details.  The old,
 dictionary-based method of configuration is still supported.
 
+** Check for common mis-configuration in addStep
+
+When adding a new step to a factory, either of these are acceptable:
+
+  f.addStep(ShellCommand(command="echo hello, world", description="say hi"))
+  f.addStep(ShellCommand, command="echo hello, world", description="say hi")
+
+but trying to mix these syntaxes is a common misconfiguration:
+
+  f.addStep(ShellCommand(command="echo hello, world"), description="say hi")
+
+in which case the description argument was silently ignored.  This is now an
+error.
+
 ** Support for log compression
 
 Log files can be compressed on the master side using either gzip or bzip2.
