@@ -1,5 +1,0 @@
-junk ^reference$
-precious \.info$
-precious ^buildbot.html$
-precious ^buildbot$
-precious ^buildbot.ps$
