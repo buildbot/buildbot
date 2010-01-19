@@ -3,12 +3,15 @@ include MANIFEST.in README README.w32 NEWS CREDITS COPYING
 include docs/examples/*.cfg
 include docs/buildbot.texinfo docs/buildbot.info* docs/buildbot.html
 include docs/*.png docs/images/*.png docs/images/*.svg docs/images/*.txt
+include docs/images/icon.blend docs/images/Makefile
 include docs/epyrun docs/gen-reference docs/Makefile
 include buildbot/test/mail/* buildbot/test/subdir/*
 include buildbot/scripts/sample.cfg
-include buildbot/status/web/*.css buildbot/status/web/*.html
+include buildbot/status/web/*.css buildbot/status/web/*.html buildbot/status/web/*.jpg
 include buildbot/status/web/robots.txt
 include buildbot/clients/debug.glade
 include buildbot/buildbot.png
+include ChangeLog*
 
 include contrib/* contrib/windows/* contrib/OS-X/* contrib/CSS/*
+include contrib/trac/* contrib/trac/bbwatcher/* contrib/trac/bbwatcher/templates/*
