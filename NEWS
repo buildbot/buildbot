@@ -1,19 +1,40 @@
 Major User visible changes in Buildbot.             -*- outline -*-
   (see ChangeLog for a detailed list of changes)
 
-* Release 0.7.12rc1 (December 31, 2009)
+* Release 0.7.12rc4 (December 31, 2009)
 
 ** New 'console' display
 
 This is a new web status view combining the best of the (t)grid and waterfall
 views.
 
-** Builders are configured with an object
+** New 'extended' stylesheet
 
-Instead of a list of dictionaries, builders are now specified using a
+Buildbot has a new, much nicer stylesheet available.  Copy the file
+buildbot/status/web/extended.css over your existing public_html/buildbot.css to
+se it.
+
+** Builders can be configured with an object
+
+Instead of a list of dictionaries, builders can now specified using a
 BuilderConfig object in the configuration file.  This will allow for better
 argument checking and default values, and also makes it easier for users to
-create subclasses to handle site-specific builder details.
+create subclasses to handle site-specific builder details.  The old,
+dictionary-based method of configuration is still supported.
+
+** Check for common mis-configuration in addStep
+
+When adding a new step to a factory, either of these are acceptable:
+
+  f.addStep(ShellCommand(command="echo hello, world", description="say hi"))
+  f.addStep(ShellCommand, command="echo hello, world", description="say hi")
+
+but trying to mix these syntaxes is a common misconfiguration:
+
+  f.addStep(ShellCommand(command="echo hello, world"), description="say hi")
+
+in which case the description argument was silently ignored.  This is now an
+error.
 
 ** Support for log compression
 
