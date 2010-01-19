@@ -189,7 +189,7 @@ span.header {
   color: blue;
 }
 
-/* revison & email */
+/* revision & email */
 
 .revision .full { 
   display: none;
@@ -197,4 +197,15 @@ span.header {
 
 .user .email {
   display: none;
+}
+
+/* change comments (use regular colors here) */
+
+pre.comments > a:link, pre.comments > a:visited{
+    color: blue;
+}
+
+pre.comments > a:active {
+    color: purple;
+
 }

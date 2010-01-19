@@ -348,7 +348,7 @@ class WebStatus(service.MultiService):
     def __init__(self, http_port=None, distrib_port=None, allowForce=False,
                  public_html="public_html", site=None, numbuilds=20,
                  num_events=200, num_events_max=None, auth=None,
-                 order_console_by_time=False):
+                 order_console_by_time=False, changecommentlink=None):
         """Run a web server that provides Buildbot status.
 
         @type  http_port: int or L{twisted.application.strports} string
@@ -400,7 +400,7 @@ class WebStatus(service.MultiService):
         and OneLinePerBuild --- and via the UI, by tacking ?numbuilds=xy onto the URL.
 
         @type num_events: int
-        @param num_events: Defaualt number of events to show in the waterfall.
+        @param num_events: Default number of events to show in the waterfall.
 
         @type num_events_max: int
         @param num_events_max: The maximum number of events that are allowed to be
@@ -417,6 +417,12 @@ class WebStatus(service.MultiService):
         @param order_console_by_time: Whether to order changes (commits) in the console
                      view according to the time they were created (for VCS like Git) or
                      according to their integer revision numbers (for VCS like SVN).
+
+        @type changecommentlink: tuple (2 strings) or C{None}
+        @param changecommentlink: a regular expression and replacement string that is applied
+                     to all change comments. The first element represents what to search
+                     for and the second yields an url (the <a href=""></a> is added outside this)
+                     I.e. for Trac: (r"#(\d+)", r"http://buildbot.net/trac/ticket/\1") 
         """
 
         service.MultiService.__init__(self)
@@ -478,7 +484,12 @@ class WebStatus(service.MultiService):
         
         self.templates.filters['email'] = webbase.emailfilter
         self.templates.filters['user'] = webbase.userfilter
-        self.templates.filters['shortrev'] = webbase.shortrevfilter  
+        self.templates.filters['shortrev'] = webbase.shortrevfilter
+        if changecommentlink:
+            self.templates.filters['changecomment'] = \
+                webbase.addlinkfilter(*changecommentlink) 
+        else:
+            self.templates.filters['changecomment'] = jinja2.escape
 
         # keep track of cached connections so we can break them when we shut
         # down. See ticket #102 for more details.

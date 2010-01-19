@@ -31,7 +31,7 @@
 
 {% if comments %}
 <h3>Comments</h3>
-<pre>{{ comments|e }}</pre>
+<pre class="comments">{{ comments|changecomment }}</pre>
 {% endif %}
 
 <h3 class="files">Changed files</h3>

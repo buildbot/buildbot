@@ -433,6 +433,25 @@ def shortrevfilter(value):
     return html % dict(short=short, full=value)
 
 
+def addlinkfilter(search, replace):
+    ''' Returns function that does regex search/replace in 
+        comments to add links to bug ids and similar.
+        
+        search - a regex to match what we look for 
+        replace - an url with \1\2 to include data from search 
+                  (I wrap with the <a href="...">...</a>.. myself)
+    '''
+    
+    regex = re.compile(search)
+    link_replace = jinja2.Markup(r'<a href="%s">\g<0></a>' % replace)
+    
+    def filter(value):
+        comments = jinja2.escape(value)
+        return regex.sub(link_replace, comments)
+    
+    return filter
+
+
 class AlmostStrictUndefined(jinja2.StrictUndefined):
     ''' An undefined that allows boolean testing but 
         fails properly on every other use.
