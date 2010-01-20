@@ -151,8 +151,6 @@ class ContextMixin():
     def getContext(self, request):
         status = self.getStatus(request)
         rootpath = path_to_root(request)
-        # if you change something here, you'll probably need to change it
-        # in DirectoryLister, too
         return dict(project_url = status.getProjectURL(),
                     project_name = status.getProjectName(),
                     stylesheet = rootpath + 'default.css',
