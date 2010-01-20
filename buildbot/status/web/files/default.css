@@ -23,11 +23,11 @@ table td {
 }
 
 .Project {
-	width: 100px;
+	min-width: 6em;
 }
 
 .LastBuild, .Activity {
-	width: 230px;
+	min-width: 15em;
 	padding: 0 0 0 4px;
 }
 
@@ -72,8 +72,8 @@ td.idle, td.waiting, td.offline, td.building {
 
 td.builder {
 	width: 150px;
-        color: #333333;
-        background-color: #CCCCCC;
+    color: #333333;
+    background-color: #CCCCCC;
 }
 
 td.sourcestamp {
