@@ -9071,9 +9071,10 @@ revision. Then it does @code{tla changes --diffs} to obtain the patch.
 then a @code{bzr diff -r$base..} to obtain the patch.
 
 @item Mercurial
-@code{hg identify} emits a short revision ID (basically a truncated
-SHA1 hash of the current revision's contents), which is used as the
-base revision. @code{hg diff} then provides the patch relative to that
+@code{hg identify --debug} emits the full revision id (as opposed to
+the common 12-char truncated) which is a SHA1 hash of the current 
+revision's contents. This is used as the base revision. 
+@code{hg diff} then provides the patch relative to that
 revision. For @command{try} to work, your working directory must only
 have patches that are available from the same remotely-available
 repository that the build process' @code{source.Mercurial} will use.

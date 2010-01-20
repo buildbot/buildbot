@@ -174,7 +174,7 @@ class MercurialExtractor(SourceStampExtractor):
     patchlevel = 1
     vcexe = "hg"
     def getBaseRevision(self):
-        d = self.dovc(["identify"])
+        d = self.dovc(["identify", "--id", "--debug"])
         d.addCallback(self.parseStatus)
         return d
     def parseStatus(self, output):
