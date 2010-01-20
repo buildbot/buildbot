@@ -156,12 +156,8 @@ table.info td.left {
 	text-align: left
 }
 
-.info .alt {
+.alt {
 	background-color: #f6f6f6;
-}
-
-li.alt {
-    background-color: #f6f6f6;
 }
 
 li { 
