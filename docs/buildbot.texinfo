@@ -9070,6 +9070,14 @@ revision. Then it does @code{tla changes --diffs} to obtain the patch.
 @command{try} does a @code{bzr revision-info} to find the base revision,
 then a @code{bzr diff -r$base..} to obtain the patch.
 
+@item Mercurial
+@code{hg identify} emits a short revision ID (basically a truncated
+SHA1 hash of the current revision's contents), which is used as the
+base revision. @code{hg diff} then provides the patch relative to that
+revision. For @command{try} to work, your working directory must only
+have patches that are available from the same remotely-available
+repository that the build process' @code{source.Mercurial} will use.
+
 @item Darcs
 @command{try} does a @code{darcs changes --context} to find the list
 of all patches back to and including the last tag that was made. This text
@@ -9078,14 +9086,6 @@ patches) is sufficient to re-create the tree. Therefore the contents
 of this ``context'' file @emph{are} the revision stamp for a
 Darcs-controlled source tree.  It then does a @code{darcs diff
 -u} to compute the patch relative to that revision.
-
-@item Mercurial
-@code{hg identify} emits a short revision ID (basically a truncated
-SHA1 hash of the current revision's contents), which is used as the
-base revision. @code{hg diff} then provides the patch relative to that
-revision. For @command{try} to work, your working directory must only
-have patches that are available from the same remotely-available
-repository that the build process' @code{source.Mercurial} will use.
 
 @item Git
 @code{git branch -v} lists all the branches available in the local
