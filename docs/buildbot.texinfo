@@ -8977,8 +8977,10 @@ using, with an argument like @option{--vc=cvs} or @option{--vc=tla}.
 This can also be provided as @code{try_vc} in
 @file{.buildbot/options}.
 
+@c The order of this list comes from the end of scripts/tryclient.py
+
 The following names are recognized: @code{cvs} @code{svn} @code{baz}
-@code{tla} @code{hg} @code{darcs}
+@code{tla} @code{bzr} @code{hg} @code{darcs} @code{git}
 
 
 @heading finding the top of the tree
@@ -9063,6 +9065,10 @@ patch.
 fully-qualified version identifier (ARCHIVE/VERSION), then takes the
 first line of @code{tla logs --reverse} to figure out the base
 revision. Then it does @code{tla changes --diffs} to obtain the patch.
+
+@item bzr
+@command{try} does a @code{bzr revision-info} to find the base revision,
+then a @code{bzr diff -r$base..} to obtain the patch.
 
 @item Darcs
 @code{darcs changes --context} emits a text file that contains a list
