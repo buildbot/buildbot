@@ -145,8 +145,33 @@ class Box:
         props['class'] = self.class_
         props['text'] = text;
         return props    
+    
+    
+class ContextMixin():
+    def getContext(self, request):
+        status = self.getStatus(request)
+        rootpath = path_to_root(request)
+        # if you change something here, you'll probably need to change it
+        # in DirectoryLister, too
+        return dict(project_url = status.getProjectURL(),
+                    project_name = status.getProjectName(),
+                    stylesheet = rootpath + 'default.css',
+                    path_to_root = rootpath,
+                    version = version,
+                    time = time.strftime("%a %d %b %Y %H:%M:%S",
+                                        time.localtime(util.now())),
+                    tz = time.tzname[time.localtime()[-1]],
+                    metatags = [],
+                    title = self.getTitle(request),
+                    welcomeurl = rootpath)
 
-class HtmlResource(resource.Resource):
+    def getStatus(self, request):
+        return request.site.buildbot_service.getStatus()    
+        
+    def getTitle(self, request):
+        return self.title
+
+class HtmlResource(resource.Resource, ContextMixin):
     # this is a cheap sort of template thingy
     contentType = "text/html; charset=UTF-8"
     title = "Buildbot"
@@ -202,27 +227,6 @@ class HtmlResource(resource.Resource):
             return ''
         return data
 
-    def getContext(self, request):
-        status = self.getStatus(request)
-        path_to_root = self.path_to_root(request)
-        # if you change something here, you'll probably need to change it
-        # in DirectoryLister, too
-        return dict(project_url = status.getProjectURL(),
-                    project_name = status.getProjectName(),
-                    stylesheet = path_to_root + 'default.css',
-                    path_to_root = path_to_root,
-                    version = version,
-                    time = time.strftime("%a %d %b %Y %H:%M:%S",
-                                        time.localtime(util.now())),
-                    tz = time.tzname[time.localtime()[-1]],
-                    metatags = [],
-                    title = self.getTitle(request),
-                    welcomeurl = path_to_root)
-        
-
-    def getStatus(self, request):
-        return request.site.buildbot_service.getStatus()
-
     def getControl(self, request):
         return request.site.buildbot_service.getControl()
 
@@ -239,11 +243,6 @@ class HtmlResource(resource.Resource):
     def getChangemaster(self, request):
         return request.site.buildbot_service.getChangeSvc()
 
-    def path_to_root(self, request):
-        return path_to_root(request)
-
-    def getTitle(self, request):
-        return self.title
 
 class StaticHTML(HtmlResource):
     def __init__(self, body, title):
@@ -256,25 +255,14 @@ class StaticHTML(HtmlResource):
         template = request.site.buildbot_service.templates.get_template("empty.html")
         return template.render(**cxt)
 
-class DirectoryLister(static.DirectoryLister):
+class DirectoryLister(static.DirectoryLister, ContextMixin):
     """This variant of the static.DirectoryLister uses a template
     for rendering."""
 
+    title = 'BuildBot'
+
     def render(self, request):
-
-        status = request.site.buildbot_service.getStatus()
-
-        cxt = dict(project_url = status.getProjectURL(),
-                   project_name = status.getProjectName(),
-                   stylesheet = path_to_root(request) + 'default.css',
-                   path_to_root = path_to_root(request),
-                   version = version,
-                   time = time.strftime("%a %d %b %Y %H:%M:%S",
-                                        time.localtime(util.now())),
-                   tz = time.tzname[time.localtime()[-1]],
-                   metatags = [],
-                   title = 'BuildBot',
-                   welcomeurl = path_to_root(request))
+        cxt = self.getContext(request)
 
         if self.dirs is None:
             directory = os.listdir(self.path)

@@ -11,7 +11,8 @@ from twisted.spread import pb
 from buildbot.interfaces import IControl, IStatusReceiver
 
 from buildbot.status.web.base import HtmlResource,  \
-     build_get_class, ICurrentBox, BuildLineMixin, map_branches, StaticFile
+     build_get_class, ICurrentBox, BuildLineMixin, map_branches, \
+     StaticFile, path_to_root
 from buildbot.status.web.feeds import Rss20StatusResource, \
      Atom10StatusResource
 from buildbot.status.web.waterfall import WaterfallStatusResource
@@ -205,7 +206,7 @@ class OneBoxPerBuilder(HtmlResource):
         
         building = False
         online = 0
-        base_builders_url = self.path_to_root(req) + "builders/"
+        base_builders_url = path_to_root(req) + "builders/"
         for bn in builders:
             bld = { 'link': base_builders_url + urllib.quote(bn, safe=''),
                     'name': bn }

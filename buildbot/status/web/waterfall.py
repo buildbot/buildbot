@@ -12,7 +12,8 @@ from buildbot import interfaces, util
 from buildbot.status import builder
 
 from buildbot.status.web.base import Box, HtmlResource, IBox, ICurrentBox, \
-     ITopBox, build_get_class, path_to_build, path_to_step, map_branches
+     ITopBox, build_get_class, path_to_build, path_to_step, path_to_root, \
+     map_branches
 
 
 
@@ -425,7 +426,7 @@ class WaterfallStatusResource(HtmlResource):
                                  [("last_time", str(int(bottom)))])
 
 
-        helpurl = self.path_to_root(request) + "waterfall/help"
+        helpurl = path_to_root(request) + "waterfall/help"
         ctx['help_url'] = with_args(request, new_path=helpurl)
 
         if self.get_reload_time(request) is not None:
