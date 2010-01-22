@@ -1294,9 +1294,11 @@ class CVSHelper_checkout_options(CVSHelper):
         time.sleep(2)
         self.addBranchRev(self.getdate())
         time.sleep(2)
-        self.vcargs = { 'cvsroot': self.cvsrep, 
+        self.vcargs = { 'cvsroot': self.cvsrep,
                         'cvsmodule': "sample",
-                        'checkout_options':["-P"] }
+                        'checkout_options':["-n"],
+                        # must be valid for both 'checkout' and 'export'
+                        }
     createRepository = deferredGenerator(createRepository)
 
 
