@@ -424,7 +424,7 @@ class WebStatus(service.MultiService):
         @param changecommentlink: a regular expression and replacement string that is applied
                      to all change comments. The first element represents what to search
                      for and the second yields an url (the <a href=""></a> is added outside this)
-                     I.e. for Trac: (r"#(\d+)", r"http://buildbot.net/trac/ticket/\1") 
+                     I.e. for Trac: (r'#(\d+)', r'http://buildbot.net/trac/ticket/\1') 
 
         @type revlink: string or C{None}
         @param revlink: a replacement string that is applied to all revisions and
@@ -665,7 +665,7 @@ class Waterfall(WebStatus):
         buildbot_icon = os.path.abspath(os.path.join(up(up(up(__file__))),
                                                      "buildbot.png"))
         buildbot_css = os.path.abspath(os.path.join(up(__file__),
-                                                    "default.css"))
+                                                    "files/default.css"))
 
     compare_attrs = ["http_port", "distrib_port", "allowForce",
                      "categories", "css", "favicon", "robots_txt"]
