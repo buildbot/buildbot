@@ -11,6 +11,7 @@ from buildbot import interfaces
 from buildbot.sourcestamp import SourceStamp
 from buildbot.process.base import BuildRequest, Build
 from buildbot.status import builder, base, words
+from buildbot.status.web.base import createJinjaEnv
 from buildbot.changes.changes import Change
 from buildbot.process.builder import Builder
 from time import sleep
@@ -153,23 +154,16 @@ def customTextMailMessage(attrs):
     return ("\n".join(text), 'plain')
 
 def customHTMLMailMessage(attrs):
-    loader = jinja2.PackageLoader('buildbot.status.web', 'templates')
-    templates = jinja2.Environment(loader=loader,
-                                extensions=['jinja2.ext.i18n'],
-                                trim_blocks=True)
-    template = templates.get_template("change.html")
-
+    templates = createJinjaEnv()
+    template = templates.get_template("change_macros.html")
     
     logLines = 3
     text = list()
     text.append("<h3>STATUS <a href='%s'>%s</a>:</h3>" % (attrs['buildURL'],
                                                           attrs['result'].title()))
-    # TODO: include the same filters in an email rendering as are available in
-    # web renderings (bug #691)
-
-    #text.append("<h4>Recent Changes:</h4>")   
-    #for c in attrs['changes']: 
-    #    text.append(template.module.change(**c.html_dict()))
+    text.append("<h4>Recent Changes:</h4>")   
+    for c in attrs['changes']: 
+        text.append(template.module.change(**c.html_dict()))
                     
     name, url, lines, status = attrs['logs'][-1]
     text.append("<h4>Last %d lines of '%s':</h4>" % (logLines, name))
@@ -359,6 +353,7 @@ class Mail(unittest.TestCase):
         #self.fail(t)
         self.failUnlessIn("comment1", t)
         self.failUnlessIn("comment2", t)
+        self.failUnlessIn("author2", t)
         self.failUnlessIn("Test 4 failed", t)
         self.failUnlessIn("number was: 1", t)
 
@@ -393,7 +388,7 @@ class Mail(unittest.TestCase):
         #
         #self.fail(t)
         self.failUnlessIn("<h4>Last 3 lines of 'step.test':</h4>", t)
-        #self.failUnlessIn("Changed by: <b>author2</b>", t) # see comments in customHTMLMailMessage, above
+        self.failUnlessIn("Changed by</td><td><b>author2</b></td>", t)
         self.failUnlessIn("Test 3 failed", t)
         self.failUnlessIn("number was: 1", t)
 

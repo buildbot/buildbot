@@ -1,13 +1,13 @@
 
 import urlparse, urllib, time, re
+import os, cgi, sys
+import jinja2
 from zope.interface import Interface
 from twisted.web import resource, static
 from twisted.python import log
 from buildbot.status import builder
 from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE, SKIPPED, EXCEPTION
 from buildbot import version, util
-import jinja2
-import os, cgi
 from buildbot.process.properties import Properties
 
 class ITopBox(Interface):
@@ -370,6 +370,50 @@ def map_branches(branches):
 
 
 # jinja utilities 
+
+def createJinjaEnv(revlink=None, changecommentlink=None):
+    ''' Create a jinja environment changecommentlink is used to
+        render HTML in the WebStatus and for mail changes
+    
+         @type changecommentlink: tuple (2 strings) or C{None}
+        @param changecommentlink: a regular expression and replacement string that is applied
+                     to all change comments. The first element represents what to search
+                     for and the second yields an url (the <a href=""></a> is added outside this)
+                     I.e. for Trac: (r'#(\d+)', r'http://buildbot.net/trac/ticket/\1') 
+
+        @type revlink: string or C{None}
+        @param revlink: a replacement string that is applied to all revisions and
+                        will, if set, create a link to the result of the replacement.
+                        Use %s to insert the revision id in the url. 
+                        I.e. for Buildbot on github: ('http://github.com/djmitche/buildbot/tree/%s') 
+                        (The revision id will be URL encoded before inserted in the replacement string)
+    '''
+    
+    if hasattr(sys, "frozen"):
+        assert False, 'Frozen config not supported with jinja (yet)'
+
+    default_loader = jinja2.PackageLoader('buildbot.status.web', 'templates')
+    root = os.path.join(os.getcwd(), 'templates')
+    loader = jinja2.ChoiceLoader([jinja2.FileSystemLoader(root),
+                                  default_loader])
+    env = jinja2.Environment(loader=loader,
+                                        extensions=['jinja2.ext.i18n'],
+                                        trim_blocks=True,
+                                        undefined=AlmostStrictUndefined)
+    
+    env.filters['urlencode'] = urllib.quote
+    env.filters['email'] = emailfilter
+    env.filters['user'] = userfilter
+    env.filters['shortrev'] = shortrevfilter(revlink, env)
+    env.filters['revlink'] = revlinkfilter(revlink, env)
+    
+    if changecommentlink:
+        regex, replace = changecommentlink
+        env.filters['changecomment'] = addlinkfilter(regex, replace) 
+    else:
+        env.filters['changecomment'] = jinja2.escape
+            
+    return env    
 
 def emailfilter(value):
     ''' Escape & obfuscate e-mail addresses

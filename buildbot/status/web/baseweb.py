@@ -12,7 +12,7 @@ from buildbot.interfaces import IControl, IStatusReceiver
 
 from buildbot.status.web.base import HtmlResource,  \
      build_get_class, ICurrentBox, BuildLineMixin, map_branches, \
-     StaticFile, path_to_root
+     StaticFile, path_to_root, createJinjaEnv
 from buildbot.status.web.feeds import Rss20StatusResource, \
      Atom10StatusResource
 from buildbot.status.web.waterfall import WaterfallStatusResource
@@ -26,10 +26,6 @@ from buildbot.status.web.xmlrpc import XMLRPCServer
 from buildbot.status.web.about import AboutBuildbot
 from buildbot.status.web.auth import IAuth, AuthFailResource
 from buildbot.status.web.root import RootPage
-
-import buildbot.status.web.base as webbase
-import jinja2
-
 
 # this class contains the status services (WebStatus and the older Waterfall)
 # which can be put in c['status']. It also contains some of the resources
@@ -480,31 +476,7 @@ class WebStatus(service.MultiService):
         self.site.buildbot_service = self
 
         # Set up the jinja templating engine.
-        if hasattr(sys, "frozen"):
-            assert False, 'Frozen config not supported with jinja (yet)'
-        default_loader = jinja2.PackageLoader('buildbot.status.web', 'templates')
-        root = os.path.join(os.getcwd(), 'templates')
-        loader = jinja2.ChoiceLoader([jinja2.FileSystemLoader(root),
-                                      default_loader])
-        self.templates = jinja2.Environment(loader=loader,
-                                            extensions=['jinja2.ext.i18n'],
-                                            trim_blocks=True,
-                                            undefined=webbase.AlmostStrictUndefined)
-        
-        self.templates.filters['urlencode'] = urllib.quote
-        self.templates.filters['email'] = webbase.emailfilter
-        self.templates.filters['user'] = webbase.userfilter
-        self.templates.filters['shortrev'] = \
-            webbase.shortrevfilter(revlink, self.templates)
-        self.templates.filters['revlink'] = \
-            webbase.revlinkfilter(revlink, self.templates)
-        
-        if changecommentlink:
-            regex, replace = changecommentlink
-            self.templates.filters['changecomment'] = \
-                webbase.addlinkfilter(regex, replace) 
-        else:
-            self.templates.filters['changecomment'] = jinja2.escape
+        self.templates = createJinjaEnv(revlink, changecommentlink)
 
         # keep track of cached connections so we can break them when we shut
         # down. See ticket #102 for more details.
