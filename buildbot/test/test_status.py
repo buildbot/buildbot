@@ -164,9 +164,12 @@ def customHTMLMailMessage(attrs):
     text = list()
     text.append("<h3>STATUS <a href='%s'>%s</a>:</h3>" % (attrs['buildURL'],
                                                           attrs['result'].title()))
-    text.append("<h4>Recent Changes:</h4>")   
-    for c in attrs['changes']: 
-        text.append(template.module.change(**c.html_dict()))
+    # TODO: include the same filters in an email rendering as are available in
+    # web renderings (bug #691)
+
+    #text.append("<h4>Recent Changes:</h4>")   
+    #for c in attrs['changes']: 
+    #    text.append(template.module.change(**c.html_dict()))
                     
     name, url, lines, status = attrs['logs'][-1]
     text.append("<h4>Last %d lines of '%s':</h4>" % (logLines, name))
@@ -390,7 +393,7 @@ class Mail(unittest.TestCase):
         #
         #self.fail(t)
         self.failUnlessIn("<h4>Last 3 lines of 'step.test':</h4>", t)
-        self.failUnlessIn("Changed by: <b>author2</b>", t)
+        #self.failUnlessIn("Changed by: <b>author2</b>", t) # see comments in customHTMLMailMessage, above
         self.failUnlessIn("Test 3 failed", t)
         self.failUnlessIn("number was: 1", t)
 
