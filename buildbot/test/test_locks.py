@@ -400,10 +400,10 @@ class Locks(RunMixin, unittest.TestCase):
         req1.events = req2.events = req3.events = self.events = []
         d = self.master.loadConfig(config_1)
         d.addCallback(lambda res: self.master.startService())
-        d.addCallback(lambda res: self.connectSlaves(["bot1", "bot2"],
-                                                     ["full1a", "full1b",
-                                                      "full1c", "full1d",
-                                                      "full2a", "full2b"]))
+        d.addCallback(lambda res: self.connectSlave(
+                    ["full1a", "full1b", "full1c", "full1d"],
+                    "bot1"))
+        d.addCallback(lambda res: self.connectSlave(["full2a", "full2b"], "bot2"))
         return d
 
     def testLock1(self):
@@ -476,9 +476,10 @@ c['builders'] = [
             self.reqs[i].events = self.events
         d = self.master.loadConfig(self.config)
         d.addCallback(lambda res: self.master.startService())
-        d.addCallback(lambda res: self.connectSlaves(["bot1", "bot2"],
-                                                     ["excl_A", "excl_B",
-                                                      "count_A", "count_B"]))
+        d.addCallback(lambda res: self.connectSlave(
+                    ["excl_A", "excl_B", "count_A", "count_B"], "bot1"))
+        d.addCallback(lambda res: self.connectSlave(
+                    ["excl_A", "excl_B", "count_A", "count_B"], "bot2"))
         return d
 
     def testOrder(self):

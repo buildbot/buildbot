@@ -104,17 +104,6 @@ class RunMixin:
         self.connectOneSlave(slavename, opts)
         return d
 
-    def connectSlaves(self, slavenames, builders):
-        dl = []
-        # initiate call for all of them, before waiting on result,
-        # otherwise we might miss some
-        for b in builders:
-            dl.append(self.master.botmaster.waitUntilBuilderAttached(b))
-        d = defer.DeferredList(dl)
-        for name in slavenames:
-            self.connectOneSlave(name)
-        return d
-
     def connectSlave2(self):
         # this takes over for bot1, so it has to share the slavename
         port = self.master.slavePort._port.getHost().port

@@ -53,15 +53,14 @@ class MergeRequestsTest(RunMixin, unittest.TestCase):
                     R("changes", S("branch1", None, None, [c4,c5,c6]), 'test_builder'),
                     )
 
-        m = self.master
-        m.loadConfig(master_cfg % mergefun)
-        m.readConfig = True
-        m.startService()
-        builder = self.control.getBuilder('dummy')
-        for req in reqs:
-            builder.requestBuild(req)
-
-        d = self.connectSlave()
+        d = self.master.loadConfig(master_cfg % mergefun)
+        d.addCallback(lambda res: self.master.startService())
+        def request_builds(_):
+            builder = self.control.getBuilder('dummy')
+            for req in reqs:
+                builder.requestBuild(req)
+        d.addCallback(request_builds)
+        d.addCallback(lambda res : self.connectSlave())
         d.addCallback(self.waitForBuilds, results)
 
         return d
@@ -179,9 +178,9 @@ class MergeRequestsTest(RunMixin, unittest.TestCase):
                   properties = p1),
                 R("why", S("branch1", None, None, None), 'test_builder',
                   properties = p1),
-                R("why", S("branch1", None, None, None), 'test_builder',
+                R("why", S("branch2", None, None, None), 'test_builder',
                   properties = p2),
-                R("why", S("branch1", None, None, None), 'test_builder',
+                R("why", S("branch2", None, None, None), 'test_builder',
                   properties = p2),
                 )
         return self.do_test(mergefun,
@@ -189,7 +188,7 @@ class MergeRequestsTest(RunMixin, unittest.TestCase):
                               'branch': 'branch1',
                               'changecount': 0},
                              {'reason': 'why',
-                              'branch': 'branch1',
+                              'branch': 'branch2',
                               'changecount': 0},
                              ),
                             reqs=reqs)
