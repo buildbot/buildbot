@@ -171,7 +171,7 @@ class ContextMixin():
 
 class HtmlResource(resource.Resource, ContextMixin):
     # this is a cheap sort of template thingy
-    contentType = "text/html; charset=UTF-8"
+    contentType = "text/html; charset=utf-8"
     title = "Buildbot"
     addSlash = False # adapted from Nevow
 

@@ -189,7 +189,8 @@ class StatusResourceBuild(HtmlResource):
         # preferred place is somewhere that the user can see tangible
         # evidence of their build starting (or to see the reason that it
         # didn't start). This should be the Builder page.
-        r = Redirect("../..") # the Builder's page
+
+        r = Redirect('../..') # the Builder's page
         d = defer.Deferred()
         reactor.callLater(1, d.callback, r)
         return DeferredResource(d)

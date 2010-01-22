@@ -103,9 +103,9 @@ class TextLog(Resource):
 
     def _setContentType(self, req):
         if self.asText:
-            req.setHeader("content-type", "text/plain")
+            req.setHeader("content-type", "text/plain; charset=utf-8")
         else:
-            req.setHeader("content-type", "text/html")
+            req.setHeader("content-type", "text/html; charset=utf-8")
         
     def finished(self):
         if not self.req:

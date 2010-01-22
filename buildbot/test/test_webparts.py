@@ -1,16 +1,25 @@
+# -*- test-case-name: buildbot.test.test_webparts -*-
+# -*- coding: utf-8 -*-
 
 import os
+import re
+import time
+
 from twisted.trial import unittest
 from twisted.internet import defer
 from twisted.web import client
 from twisted.web.error import Error as WebError
+from buildbot import sourcestamp
 from buildbot.slave.commands import rmdirRecursive
-from buildbot.status import html
-from test_web import BaseWeb, base_config, ConfiguredMaster
+from buildbot.status import html, builder
 from buildbot.scripts import runner
+from buildbot.changes.changes import Change
+from buildbot.process import base
+from buildbot.process.buildstep import BuildStep
+from test_web import BaseWeb, base_config, ConfiguredMaster
 
-class Webparts(BaseWeb, unittest.TestCase):
 
+class _WebpartsTest(BaseWeb, unittest.TestCase):
     def find_webstatus(self, master):
         return filter(lambda child: isinstance(child, html.WebStatus),
                       list(master))
@@ -53,6 +62,7 @@ class Webparts(BaseWeb, unittest.TestCase):
                           "Couldn't find substring '%s' in page:\n%s" %
                           (substring, page))
 
+class Webparts(_WebpartsTest):
     def testInit(self):
         extraconfig = """
 from twisted.web import static
@@ -141,4 +151,297 @@ c['status'] = [ws]
         #d.addCallback(self._check,
         #              "builders/builder1/builds/1/steps/compile/logs/stdio/text", "")
         return d
+    
+    
+class WebpartsRecursive(_WebpartsTest):    
+    '''A rather big test that attempts to fill the buildbot 
+       state with as much info as possible, then walk all
+       reachable pages from the root url and make sure
+       they all are accessible w/o errors and that they 
+       validate according to the given doctype
+       
+       This test  accesses the network the first time around.
+       (This can be avoided if we include the cached dtd:s in
+        the repo.)
+
+       Lxml (http://codespeak.net/lxml/) is used to parse
+       and validate all, so this test is skipped if lxml
+       is not installed.       
+    '''
+    
+    log = False # Set to True to list pages being checked
+    
+    def setUp(self):
+        try:
+            from lxml import etree
+        except ImportError:
+            raise unittest.SkipTest("lxml not installed")
+    
+        class CustomResolver(etree.Resolver):
+            '''Cache DTDs to avoid w3.org blocking
+            
+               from http://www.hoboes.com/Mimsy/hacks/caching-dtds-using-lxml-and-etree/
+            '''
+        
+            import tempfile
+            cache = '%s/buildbot-test-dtd-cache' % tempfile.gettempdir()
+            
+            if WebpartsRecursive.log:
+                print "\nCaching DTDs in: %s" % cache
+        
+            def resolve(self, URL, id, context):
+                import urllib
+                import urlparse
+                
+                #determine cache path
+                url = urlparse.urlparse(URL)
+                filefolder, filename = os.path.split(url.path)
+                filefolder = url.hostname + filefolder
+                dtdFolder = os.path.join(self.cache, filefolder)
+                dtdPath = os.path.join(dtdFolder, filename)
+        
+                #cache if necessary
+                if not os.path.exists(dtdPath):
+                    print "CREATING CACHE FOR", URL
+                    if not os.path.exists(dtdFolder):
+                        os.makedirs(dtdFolder)
+                    filename, headers = urllib.urlretrieve(URL, dtdPath)
+        
+                #resolve the cached file
+                return self.resolve_file(open(dtdPath), context, base_url=URL)
+
+        self.CustomResolver = CustomResolver
+
+        extraconfig = """
+from buildbot.status import html
+from buildbot.changes import mail
+from buildbot.process import factory
+from buildbot.steps import dummy
+from buildbot.scheduler import Scheduler
+from buildbot.changes.base import ChangeSource
+from buildbot.buildslave import BuildSlave
+from buildbot.config import BuilderConfig
+s = factory.s
+
+class DiscardScheduler(Scheduler):
+    def addChange(self, change):
+        pass
+class DummyChangeSource(ChangeSource):
+    def describe(self):
+        return "dummy"
+
+ws = html.WebStatus(http_port=0, allowForce=True,
+                    revlink="http://server.net/webrepo/%s",
+                    changecommentlink=(r"#(\\d+)", r"http://server.net/trac/ticket/\\1"))
+c['status'] = [ws]
+
+c['slaves'] = [BuildSlave('bot1', 'sekrit'), BuildSlave('bot2', 'sekrit')]
+c['change_source'] = DummyChangeSource()
+c['schedulers'] = [DiscardScheduler('discard', None, 60, ['builder1'])]
+c['slavePortnum'] = 0
+
+f = factory.BuildFactory([s(dummy.RemoteDummy, timeout=1)])
+
+c['builders'] = [
+    BuilderConfig(name='builder1', slavenames=['bot1', 'bot2'], factory=f),
+]
+c['buildbotURL'] = 'http://dummy.example.org:8010/'
+
+"""
+        self.startMaster(extraconfig)
+
+        for i in range(5):        
+            c = Change("user", ["foo.c"] * i, "see ticket #%i" % i, 
+                       revision=str(42+i), when=0.1*i)
+            self.master.change_svc.addChange(c)       
+            
+        ss = sourcestamp.SourceStamp(revision=42)
+        req = base.BuildRequest("reason", ss, 'test_builder')
+        build1 = base.Build([req])            
+        bs = self.master.status.getBuilder("builder1").newBuild()
+        bs.setReason("reason")
+        bs.buildStarted(build1)
+        
+        bs.setSourceStamp(ss)
+        
+        bs.setProperty("revision", "42", "testcase")
+        bs.setProperty("got_revision", "47", "testcase")
+
+        step1 = BuildStep(name="setup")
+        step1.setBuild(build1)
+        bss = bs.addStepWithName("setup")
+        step1.setStepStatus(bss)
+        bss.stepStarted()
+
+        log1 = step1.addLog("output")
+        log1.addStdout(u"some stdout\n") # FIXME: Unicode here fails validation
+        log1.finish()
+
+        # this has to validate too for the test to pass 
+        log2 = step1.addHTMLLog("error", '''
+            <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+              "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+            <html>
+                <head><title>Teh Log</title></head>
+                <body>Aaaiight</body>
+            </html>''')
+
+        log3 = step1.addLog("big")
+        log3.addStdout("somewhat big log\n")
+        for i in range(50):
+            log3.addStdout("a" * 50 + "\n")
+            log3.addStderr("b" * 50 + "\n")
+        log3.finish()
+
+        log5 = step1.addLog("mixed")
+        log5.addHeader("header content")
+        log5.addStdout("this is stdout content")
+        log5.addStderr("errors go here")
+        log5.addEntry(5, "non-standard content on channel 5")
+        log5.addStderr(" and some trailing stderr")
+
+        d = defer.maybeDeferred(step1.step_status.stepFinished,
+                                builder.SUCCESS)
+        bs.buildFinished()
+        return d
+                    
+    def testAllPagesValidate(self):
+        '''Fetch all pages, follow all links'''
+
+        from lxml import html
+        
+        self.parser = html.XHTMLParser(dtd_validation=True, no_network=False)
+        self.parser.resolvers.add(self.CustomResolver())
+        self.errors = []
+        self.error_count = 0
+        self.visited_urls = [self.baseurl]
+        self.skipped_urls = []
+        
+        d = defer.succeed(None)        
+        d.addCallback(self._check_pages, [self.baseurl])
+        d.addCallback(self._reporterrors)
+        return d        
+    
+    def _reporterrors(self, _):
+        if self.errors:
+            fail_summary = u"%i/%i urls contains errors:\n  %s" % \
+                (self.error_count, len(self.visited_urls), 
+                 u"\n  ".join(self.errors))
+            self.fail(fail_summary) 
+        elif self.log:
+            print "%i urls ok" % len(self.visited_urls)
+
+
+    def _getpage(self, _, url):
+        return client.getPage(url)
+
+    def _show_weberror(self, why, url):
+        self.error_count += 1
+        why.trap(WebError)
+        self.errors.append("*** %s: %s" % (url, why.getErrorMessage()))
+
+    def _check_links(self, res, urls):
+        d = defer.succeed(None)
+
+        for url in urls:
+            d.addCallback(self._getpage, url)
+            d.addErrback(self._show_weberror, url)
+        
+        return d
+    
+    def _check_pages(self, _, urls):        
+        d = defer.succeed(None)
+
+        for url in urls:
+            d.addCallback(self._getpage, url)
+            d.addErrback(self._show_weberror, url)
+            d.addCallback(self._validate_and_recurse, url)            
+            
+        return d    
+        
+    def _validate_and_recurse(self, page, url):
+        if not page:
+            return
+        
+        from lxml import etree, html
+                        
+        try:
+            # parse & validate xhtml
+            xhtml = html.fromstring(page, url, self.parser)
+        except etree.XMLSyntaxError as e:
+            self.error_count += 1
+            self.errors.append("***** %s: %s *****" % 
+                               (url.replace(self.baseurl, '/'), e.msg))
+
+            # print some context around each line mentioned in error message
+            cxt = 3
+            lines = []                
+            for m in re.finditer("line (\d+)(, column (\d+))?", e.msg):
+                l,c = m.group(1,3)
+                lines.append((int(l)-1,c))
+            
+            for i, txt in enumerate(page.split('\n')):
+                line_n = i+1 # line numbering in err msg starts at 1 
+                if any(map(lambda (l,_): l-cxt-2 < i < l+cxt, lines)): 
+                    self.errors.append(u"  %i: %s" % (line_n, txt))
+                    
+                    # print column marker
+                    for l,c in lines:
+                        if l == i and c:
+                            t = u"  %i: " % line_n + " " * int(c) + "^"
+                            self.errors.append(t)
+                            break
+            
+            return None
+
+        xhtml.make_links_absolute()
+        
+        # extract links
+        pages = []
+        links = []
+        for element, attr, link, pos in xhtml.iterlinks():
+            if link.endswith('/None'):
+                continue
+            
+            if link in self.visited_urls:
+                continue
+                                
+            # skip non-local links
+            if not link.startswith(self.baseurl):
+                if link not in self.skipped_urls:
+                    self.skipped_urls.append(link)
+                    if self.log:
+                        print "Skipping: %s" % link
+                continue
+
+            # remove namespace (assume only xhtml namespace)
+            tag = element.tag.split('}')[1] 
+                                            
+            # FIXME: rebuild redirects to a bad place in this test            
+            untestable = ['/rebuild']            
+            if any (map(lambda e: link.endswith(e), untestable)):
+                continue
+            
+            # follow anchor links to other pages 
+            # FIXME: text logs aren't html, check content-type in getPage
+            unvalidatable = ['/text']
+            if tag == 'a' and not any (map(lambda e: link.endswith(e), unvalidatable)):
+                if self.log:
+                    print "Validating: %s" % link
+                pages.append(link)        
+            else:
+                if self.log:
+                    print "Checking: %s" % link
+                links.append(link)
+                
+            self.visited_urls.append(link)
+                
+        d = None
+        if pages or links:
+            d = defer.succeed(None)
+        if pages:
+            d.addCallback(self._check_pages, pages)                    
+        if links:
+            d.addCallback(self._check_links, links)                
+        return d        
 

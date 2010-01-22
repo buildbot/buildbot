@@ -3,7 +3,7 @@
 {% block head %}
 {{ super() }}
 <script type='text/javascript'>
-// <;![Cdata[
+// <![CDATA[
 //
 
 //
@@ -70,6 +70,7 @@ function checkMouseLeave(element, event) {
     return !containsDOM(element, event.relatedTarget);
   }
 }
+
 // ]]> 
 </script>
 {% endblock %}
@@ -79,7 +80,7 @@ function checkMouseLeave(element, event) {
 <h1>Console View</h1> 
 
 <div align="center">
-  <table width=95% class="Grid" border="0" cellspacing="0">
+  <table width="95%" class="Grid" border="0" cellspacing="0">
     <tr>
       <td width="33%" align="left" class="left_align">
 {% if categories|length > 1 %}
@@ -89,7 +90,7 @@ function checkMouseLeave(element, event) {
         <br><b>Branch:</b> {{ branch }}
 {% endif %}
       </td>
-      <td width=33% align=center class=center_align>
+      <td width="33%" align="center" class="center_align">
         <div align="center">
           <table class="info">
             <tr>
@@ -104,28 +105,27 @@ function checkMouseLeave(element, event) {
           </table>
         </div>
       </td>
-      <td width=33% align=right class=right_align>
-        <script>
+      <td width="33%" align="right" class="right_align">
+        <script type="text/javascript"> <![CDATA[
           function reload_page() {
             name_value = document.getElementById('namebox').value
             if (document.location.href.lastIndexOf('?') == -1)
               document.location.href = document.location.href+ '?name=' + name_value;
             else
               document.location.href = document.location.href+ '&name=' + name_value;
-          }
+          } ]]> 
         </script>
         <input id='namebox' name='name' type='text' style='color:#999;'
             onblur='this.value = this.value || this.defaultValue; this.style.color = "#999";'
             onfocus='this.value=""; this.style.color = "#000";'
-            value='Personalized for...'>
-      
-        <input type=submit value='Go' onclick='reload_page()'>
+            value='Personalized for...'/>      
+        <input type='submit' value='Go' onclick='reload_page()'/>
       </td>
      </tr>
   </table>
 </div>
 
-<br>
+<br/>
 
 {% set alt_class = cycler('', 'alt') %}
 
@@ -160,7 +160,7 @@ function checkMouseLeave(element, event) {
         <tr>          
     {% for s in slaves[c.name] %}          
           <td class='DevSlaveBox'>
-            <a href='{{ s.url }}' title='{{ s.title }}' class='DevSlaveBox {{ s.color }}' target=_blank>
+            <a href='{{ s.url }}' title='{{ s.title }}' class='DevSlaveBox {{ s.color }}' target="_blank">
             </a>
           </td>
     {% endfor %}            
@@ -191,9 +191,9 @@ function checkMouseLeave(element, event) {
         <tr>    
     {% for b in r.builds[c.name] %}
           <td class='DevStatusBox'>
-            <a href='#' onClick='showBuildBox("{{ b.url }}", event); return false;' 
+            <a href='#' onclick='showBuildBox("{{ b.url|urlencode }}", event); return false;' 
                title='{{ b.title }}' class='DevStatusBox {{ b.color }} {{ b.tag }}' 
-               target=_blank></a>
+               target="_blank"></a>
           </td>
     {% endfor %}    
         </tr>
@@ -223,15 +223,28 @@ function checkMouseLeave(element, event) {
     </td>
   </tr>  
 
+{% else %}
+ <tr><td>No revisions available</td></tr>
 {% endfor %}
   
 </table>
 </div>
 
-<div id="divBox" OnMouseOut="if (checkMouseLeave(this, event)) this.style.display = 'None'" class="BuildWaterfall"> 
+
+<div id="divBox" onmouseout="if (checkMouseLeave(this, event)) this.style.display = 'None'" class="BuildWaterfall"> 
 </div>
 
-<iframe id="frameBox" style="display: none;" onload="updateDiv(event);"></iframe>
+
+<script type="text/javascript">
+// replace 'onload="updateDiv(event);" with this, as iframe doesn't have onload event in xhtml
+window.onload = function() {
+  document.getElementById('myframe').onload = function(event) {
+    updateDiv(event);
+  };
+}; 
+</script>
+
+<iframe id="frameBox" style="display: none;"></iframe>
   
 {% endblock %}
 

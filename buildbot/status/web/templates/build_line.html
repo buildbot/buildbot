@@ -1,5 +1,5 @@
 {% macro build_line(b, include_builder=False) %}
-  <font size="-1">({{ b.time }})</font>
+  <small>({{ b.time }})</small>
   Rev: {{ b.rev|shortrev }}
   <span class="{{ b.class }}">{{ b.results }}</span>
   {% if include_builder %}

@@ -491,6 +491,7 @@ class WebStatus(service.MultiService):
                                             trim_blocks=True,
                                             undefined=webbase.AlmostStrictUndefined)
         
+        self.templates.filters['urlencode'] = urllib.quote
         self.templates.filters['email'] = webbase.emailfilter
         self.templates.filters['user'] = webbase.userfilter
         self.templates.filters['shortrev'] = \

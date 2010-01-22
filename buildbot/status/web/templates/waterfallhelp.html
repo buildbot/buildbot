@@ -1,7 +1,7 @@
 {% extends "layout.html" %}
 {% block content %}
 
-<form action="../waterfall" method="GET">
+<form action="../waterfall" method="get">
 
 <h1>The Waterfall Display</h1>
 
@@ -41,7 +41,7 @@ appear in-between the actual builds.</p>
 
 <p>
 <input type="checkbox" name="show_events" value="true" 
-{% if show_events_checked %} checked="checked" {% endif %} >
+{% if show_events_checked %} checked="checked" {% endif %}/>
 Show non-Build events
 </p>
 
@@ -53,13 +53,17 @@ arguments are given, builds from all branches will be displayed.</p>
 
 Erase the text from these "Show Branch:" boxes to remove that branch filter.
 
+{% if branches %}
 <table>
-{% for b in branches %}
- <tr><td>Show Branch: 
- <input type="text" name="branch" value="{{ b|e }}">
- </td></tr>
-{% endfor %}
+  {% for b in branches %}
+  <tr>
+    <td>Show Branch: 
+      <input type="text" name="branch" value="{{ b|e }}"/>
+    </td>
+  </tr>
+  {% endfor %}
 </table>
+{% endif %}
 
 <h2>Limiting the Builders that are Displayed</h2>
 
@@ -84,13 +88,12 @@ the Builders you are interested in here.</p>
 <p>By adding the <tt>failures_only=true</tt> argument, the display will be limited
 to showing builders that are currently failing. A builder is considered
 failing if the last finished build was not successful, a step in the current
-build(s) failed, or if the builder is offline.
+build(s) failed, or if the builder is offline.</p>
 
 <p>
   <input type="checkbox" name="failures_only" value="true" 
-    {% if failures_only %}checked="checked"{% endif %} >  
+    {% if failures_only %}checked="checked"{% endif %}/>  
     Show failures only
-  </input>
 </p>
 
 <h2>Auto-reloading the Page</h2>
@@ -101,7 +104,7 @@ reload itself after that many seconds.</p>
 <table>
 {% for value, name in times %}
  <tr><td><input type="radio" name="reload" value="{{ value|e }}"
-  {% if value == current_reload_time %}checked="checked"{% endif %} >
+  {% if value == current_reload_time %}checked="checked"{% endif %}/>
  </td><td>{{ name|e }}</td></tr>
 {% endfor %}
 </table>

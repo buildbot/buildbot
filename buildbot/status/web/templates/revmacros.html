@@ -1,7 +1,7 @@
 {# both macro pairs must have the same signature #}
 
 {% macro id_replace(rev, url) -%}
-  <span class="revision"><a href="{{ url }}">r{{ rev }}</span>
+  <span class="revision"><a href="{{ url }}">r{{ rev }}</a></span>
 {%- endmacro %}
 
 {% macro shorten_replace(short, rev, url) -%}

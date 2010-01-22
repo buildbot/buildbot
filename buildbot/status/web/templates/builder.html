@@ -37,7 +37,7 @@
   <h2>Pending builds:</h2>
   <ul>
   {% for b in pending %}
-    <li><font size="-1">({{ b.when }}, waiting {{ b.delay }})</font> 
+    <li><small>({{ b.when }}, waiting {{ b.delay }})</small> 
     
     {% if cancel_url %}
       <form method="post" action="{{ cancel_url }}" class="command cancelbuild" style="display:inline">

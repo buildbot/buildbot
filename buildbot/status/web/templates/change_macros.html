@@ -42,6 +42,8 @@
   {%- else %}<b>{{ f.name|e }}</b>
   {%- endif -%}
   </li>
+{% else %}
+  <li>no files</li>
 {% endfor %}
 </ul>
 
