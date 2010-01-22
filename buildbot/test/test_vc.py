@@ -1306,7 +1306,7 @@ class CVS_checkout_options(CVS):
     CVSHelper_checkout_options
     set checkout_options to verify that it works
     """
-    vc_name = "cvs"
+    vc_name = "cvs_co"
 
     metadir = "CVS"
     vctype = "source.CVS"
@@ -2530,8 +2530,7 @@ class MercurialHelper(BaseHelper):
         return (True, None)
 
     def extract_id(self, output):
-        m = re.search(r'^(\w+)', output)
-        return m.group(0)
+        return output.strip()
 
     def createRepository(self):
         self.createBasedir()
@@ -2557,7 +2556,7 @@ class MercurialHelper(BaseHelper):
         w = self.dovc(tmp, ['push', self.rep_trunk])
         # note that hg-push does not actually update the working directory
         yield w; w.getResult()
-        w = self.dovc(tmp, "identify")
+        w = self.dovc(tmp, ["identify", "--id", "--debug"])
         yield w; out = w.getResult()
         self.addTrunkRev(self.extract_id(out))
 
@@ -2566,7 +2565,7 @@ class MercurialHelper(BaseHelper):
         yield w; w.getResult()
         w = self.dovc(tmp, ['push', self.rep_branch])
         yield w; w.getResult()
-        w = self.dovc(tmp, "identify")
+        w = self.dovc(tmp, ["identify", "--id", "--debug"])
         yield w; out = w.getResult()
         self.addBranchRev(self.extract_id(out))
         rmdirRecursive(tmp)
@@ -2589,7 +2588,7 @@ class MercurialHelper(BaseHelper):
         yield w; w.getResult()
         w = self.dovc(tmp, ['push', self.rep_trunk])
         yield w; w.getResult()
-        w = self.dovc(tmp, "identify")
+        w = self.dovc(tmp, ["identify", "--id", "--debug"])
         yield w; out = w.getResult()
         self.addTrunkRev(self.extract_id(out))
         rmdirRecursive(tmp)
@@ -2784,7 +2783,7 @@ class MercurialInRepoHelper(MercurialHelper):
         w = self.dovc(tmp, ['push', self.repo])
         # note that hg-push does not actually update the working directory
         yield w; w.getResult()
-        w = self.dovc(tmp, "identify")
+        w = self.dovc(tmp, ["identify", "--id", "--debug"])
         yield w; out = w.getResult()
         self.addTrunkRev(self.extract_id(out))
 
@@ -2795,7 +2794,7 @@ class MercurialInRepoHelper(MercurialHelper):
         yield w; w.getResult()
         w = self.dovc(tmp, ['push', '-f', self.repo])
         yield w; w.getResult()
-        w = self.dovc(tmp, "identify")
+        w = self.dovc(tmp, ["identify", "--id", "--debug"])
         yield w; out = w.getResult()
         self.addBranchRev(self.extract_id(out))
         rmdirRecursive(tmp)
@@ -2820,7 +2819,7 @@ class MercurialInRepoHelper(MercurialHelper):
         yield w; w.getResult()
         w = self.dovc(tmp, ['push', '--force', self.repo])
         yield w; w.getResult()
-        w = self.dovc(tmp, "identify")
+        w = self.dovc(tmp, ["identify", "--id", "--debug"])
         yield w; out = w.getResult()
         self.addTrunkRev(self.extract_id(out))
         rmdirRecursive(tmp)
