@@ -53,6 +53,8 @@
     {{ l.name|e }}
   {% endif %}
   </li>
+{% else %}
+  <li class="alt">- No logs -</li> 
 {% endfor %}
 </ul>
 

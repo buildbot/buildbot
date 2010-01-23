@@ -168,9 +168,9 @@ class WebpartsRecursive(_WebpartsTest):
        and validate all, so this test is skipped if lxml
        is not installed.       
     '''
-    
+
     log = False # Set to True to list pages being checked
-    
+
     def setUp(self):
         try:
             from lxml import etree
@@ -237,22 +237,31 @@ c['status'] = [ws]
 
 c['slaves'] = [BuildSlave('bot1', 'sekrit'), BuildSlave('bot2', 'sekrit')]
 c['change_source'] = DummyChangeSource()
-c['schedulers'] = [DiscardScheduler('discard', None, 60, ['builder1'])]
+c['schedulers'] = [DiscardScheduler('discard1', None, 60, ['builder1']),
+                   DiscardScheduler('discard2', 'release', 30, ['builder1'])]
 c['slavePortnum'] = 0
 
 f = factory.BuildFactory([s(dummy.RemoteDummy, timeout=1)])
 
 c['builders'] = [
     BuilderConfig(name='builder1', slavenames=['bot1', 'bot2'], factory=f),
+    BuilderConfig(name='builder2', slavenames=['bot1'], factory=f),
+    BuilderConfig(name='builder3', slavenames=['bot2'], factory=f),
 ]
 c['buildbotURL'] = 'http://dummy.example.org:8010/'
+c['projectName'] = 'BuildBot Trial Test'
+c['projectURL'] = 'http://server.net/home'
 
 """
         self.startMaster(extraconfig)
 
         for i in range(5):        
+            if i % 2 == 0:
+                branch = "release"
+            else:
+                branch = None
             c = Change("user", ["foo.c"] * i, "see ticket #%i" % i, 
-                       revision=str(42+i), when=0.1*i)
+                       revision=str(42+i), when=0.1*i, branch=branch)
             self.master.change_svc.addChange(c)       
             
         ss = sourcestamp.SourceStamp(revision=42)
@@ -266,12 +275,23 @@ c['buildbotURL'] = 'http://dummy.example.org:8010/'
         
         bs.setProperty("revision", "42", "testcase")
         bs.setProperty("got_revision", "47", "testcase")
+        bs.setProperty("branch", "release", "testcase")
 
         step1 = BuildStep(name="setup")
         step1.setBuild(build1)
         bss = bs.addStepWithName("setup")
         step1.setStepStatus(bss)
         bss.stepStarted()
+        
+        step2 = BuildStep(name="build")
+        step2.setBuild(build1)
+        bss = bs.addStepWithName("build")
+        step2.setStepStatus(bss)
+        bss.stepStarted()        
+
+        step1.addURL("url1", "http://logurl.net/1")
+        step1.addURL("url2", "http://logurl.net/2")
+        step1.addURL("url3", "http://logurl.net/3")
 
         log1 = step1.addLog("output")
         log1.addStdout(u"some stdout\n") # FIXME: Unicode here fails validation
@@ -299,9 +319,30 @@ c['buildbotURL'] = 'http://dummy.example.org:8010/'
         log5.addStderr("errors go here")
         log5.addEntry(5, "non-standard content on channel 5")
         log5.addStderr(" and some trailing stderr")
-
-        d = defer.maybeDeferred(step1.step_status.stepFinished,
-                                builder.SUCCESS)
+                
+                
+        d = defer.succeed(None)     
+                   
+        for i in range(1,3):
+            ss = sourcestamp.SourceStamp(revision=42+i, branch='release')
+            req = base.BuildRequest("reason", ss, 'test_builder')
+            build = base.Build([req] * i)            
+            bs = self.master.status.getBuilder("builder%i" % i).newBuild()
+            bs.setReason("reason")
+            bs.buildStarted(build)
+            bs.setSourceStamp(ss)
+                                
+            s = BuildStep(name="setup")
+            s.setBuild(build1)            
+            bss = bs.addStepWithName("setup")
+            s.setStepStatus(bss)
+            bss.stepStarted()            
+            log = s.addLog("stdio")
+            log.finish()
+            
+                    
+        d.chainDeferred(defer.maybeDeferred(step1.step_status.stepFinished,
+                                builder.SUCCESS))
         bs.buildFinished()
         return d
                     
@@ -314,53 +355,74 @@ c['buildbotURL'] = 'http://dummy.example.org:8010/'
         self.parser.resolvers.add(self.CustomResolver())
         self.errors = []
         self.error_count = 0
+        self.link_count = 0
         self.visited_urls = [self.baseurl]
         self.skipped_urls = []
+        self.log = True # uncomment to see logs
         
         d = defer.succeed(None)        
-        d.addCallback(self._check_pages, [self.baseurl])
+        d.addCallback(self._check_pages, [self.baseurl], "<testcase>")
         d.addCallback(self._reporterrors)
         return d        
     
     def _reporterrors(self, _):
-        if self.errors:
+        url_count = len(self.visited_urls)
+        skip_count = len(self.skipped_urls)
+
+        if self.errors or self.error_count:
             fail_summary = u"%i/%i urls contains errors:\n  %s" % \
-                (self.error_count, len(self.visited_urls), 
-                 u"\n  ".join(self.errors))
+                (self.error_count, url_count, u"\n  ".join(self.errors))
             self.fail(fail_summary) 
         elif self.log:
-            print "%i urls ok" % len(self.visited_urls)
-
+            print "%i urls ok, %i urls skipped in %i links" % \
+                (url_count, skip_count, self.link_count)    
+            
+        # these numbers need adjustment when web layout changes
+        # but should catch empty pages 
+        self.failIf(url_count < 55, 
+                    "Only %i urls visited, expected at least 55" % url_count)
+        self.failIf(skip_count < 15, 
+                    "Only %i urls skipped, expected at least 15" % skip_count)
+        self.failIf(self.link_count < 770, 
+                    "Only %i links encountered, expected at least 770" % self.link_count)
 
     def _getpage(self, _, url):
         return client.getPage(url)
 
-    def _show_weberror(self, why, url):
+    def _show_weberror(self, why, url, source):
         self.error_count += 1
         why.trap(WebError)
+        url = url.replace(self.baseurl, '')
+        source = source.replace(self.baseurl, '')
         self.errors.append("*** %s: %s" % (url, why.getErrorMessage()))
+        self.errors.append("  * from: %s" % source)
 
-    def _check_links(self, res, urls):
+    def _check_links(self, res, urls, source):
         d = defer.succeed(None)
 
         for url in urls:
             d.addCallback(self._getpage, url)
-            d.addErrback(self._show_weberror, url)
+            d.addErrback(self._show_weberror, url, source)
         
         return d
     
-    def _check_pages(self, _, urls):        
+    def _check_pages(self, _, urls, source):        
         d = defer.succeed(None)
 
         for url in urls:
             d.addCallback(self._getpage, url)
-            d.addErrback(self._show_weberror, url)
+            d.addErrback(self._show_weberror, url, source)
             d.addCallback(self._validate_and_recurse, url)            
-            
+            from twisted.python import log
+            d.addErrback(log.err)            
+
         return d    
         
     def _validate_and_recurse(self, page, url):
         if not page:
+            # this happens mostly on errors, which are reported elsewhere
+            if self.log:
+                print "Empty: %s" % url
             return
         
         from lxml import etree, html
@@ -400,6 +462,8 @@ c['buildbotURL'] = 'http://dummy.example.org:8010/'
         pages = []
         links = []
         for element, attr, link, pos in xhtml.iterlinks():
+            self.link_count += 1
+            
             if link.endswith('/None'):
                 continue
             
@@ -418,7 +482,7 @@ c['buildbotURL'] = 'http://dummy.example.org:8010/'
             tag = element.tag.split('}')[1] 
                                             
             # FIXME: rebuild redirects to a bad place in this test            
-            untestable = ['/rebuild']            
+            untestable = ['/rebuild', '/stop']            
             if any (map(lambda e: link.endswith(e), untestable)):
                 continue
             
@@ -440,8 +504,8 @@ c['buildbotURL'] = 'http://dummy.example.org:8010/'
         if pages or links:
             d = defer.succeed(None)
         if pages:
-            d.addCallback(self._check_pages, pages)                    
+            d.addCallback(self._check_pages, pages, url)                    
         if links:
-            d.addCallback(self._check_links, links)                
+            d.addCallback(self._check_links, links, url)                
         return d        
 

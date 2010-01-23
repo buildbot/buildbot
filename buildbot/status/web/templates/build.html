@@ -104,6 +104,8 @@ Build #{{ b.getNumber() }}
       {% set item_class = cycler('alt', '') %}
       {% for l in s.logs %}
         <li class="{{ item_class.next() }}"><a href="{{ l.link }}">{{ l.name }}</a></li>
+      {% else %}
+        <li class="{{ item_class.next() }}">- no logs -</li>
       {% endfor %}
     
       {% for u in s.urls %}

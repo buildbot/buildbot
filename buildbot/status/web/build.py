@@ -98,7 +98,7 @@ class StatusResourceBuild(HtmlResource):
 
             step['link'] = req.childLink("steps/%s" % urllib.quote(s.getName()))
             step['text'] = " ".join(s.getText())
-            step['urls'] = map(lambda x:dict(url=x[0],logname=x[1]), s.getURLs().items())
+            step['urls'] = map(lambda x:dict(url=x[1],logname=x[0]), s.getURLs().items())
 
             step['logs']= []
             for l in s.getLogs():
