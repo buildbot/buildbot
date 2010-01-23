@@ -358,7 +358,7 @@ c['projectURL'] = 'http://server.net/home'
         self.link_count = 0
         self.visited_urls = [self.baseurl]
         self.skipped_urls = []
-        self.log = True # uncomment to see logs
+        # self.log = True # uncomment to see logs
         
         d = defer.succeed(None)        
         d.addCallback(self._check_pages, [self.baseurl], "<testcase>")
