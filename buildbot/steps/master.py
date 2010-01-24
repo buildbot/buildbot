@@ -15,10 +15,23 @@ class MasterShellCommand(BuildStep):
     description='Running'
     descriptionDone='Ran'
 
-    def __init__(self, command, **kwargs):
+    def __init__(self, command,
+                 description=None, descriptionDone=None,
+                 **kwargs):
         BuildStep.__init__(self, **kwargs)
-        self.addFactoryArguments(command=command)
+        self.addFactoryArguments(description=description,
+                                 descriptionDone=descriptionDone,
+                                 command=command)
+
         self.command=command
+        if description:
+            self.description = description
+        if isinstance(self.description, str):
+            self.description = [self.description]
+        if descriptionDone:
+            self.descriptionDone = descriptionDone
+        if isinstance(self.descriptionDone, str):
+            self.descriptionDone = [self.descriptionDone]
 
     class LocalPP(ProcessProtocol):
         def __init__(self, step):
@@ -65,6 +78,7 @@ class MasterShellCommand(BuildStep):
         stdio_log.addHeader("** RUNNING ON BUILDMASTER **\n")
         stdio_log.addHeader(" in dir %s\n" % os.getcwd())
         stdio_log.addHeader(" argv: %s\n" % (argv,))
+        self.step_status.setText(list(self.description))
 
         # TODO add a timeout?
         proc = reactor.spawnProcess(self.LocalPP(self), argv[0], argv)
@@ -75,5 +89,5 @@ class MasterShellCommand(BuildStep):
             self.step_status.setText(["failed (%d)" % status_object.value.exitCode])
             self.finished(FAILURE)
         else:
-            self.step_status.setText(["succeeded"])
+            self.step_status.setText(list(self.descriptionDone))
             self.finished(SUCCESS)

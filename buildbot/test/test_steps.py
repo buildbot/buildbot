@@ -865,7 +865,8 @@ class MasterShellCommand(StepTester, unittest.TestCase):
         self.masterbase = "testMasterShellCommand.master"
         sb = self.makeSlaveBuilder()
         step = self.makeStep(master.MasterShellCommand, command=['echo',
-                                   WithProperties("hi build-%(other)s.tar.gz")])
+                                   WithProperties("hi build-%(other)s.tar.gz")],
+                                   description="foo", descriptionDone="bar")
         step.build.setProperty("other", "foo", "test")
 
         # we can't invoke runStep until the reactor is started .. hence this
