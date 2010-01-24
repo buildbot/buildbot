@@ -7,8 +7,6 @@ If you discover things that are missing or incorrect, please send your
 corrections to the buildbot-devel mailing list (archives and subscription
 information are available at http://buildbot.sourceforge.net).
 
-Many thanks to Mike "Bear" Taylor for developing this list.
-
 
 0. Check to make sure your PATHEXT environment variable has ";.PY" in 
 it -- if not set your global environment to include it.
