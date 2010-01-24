@@ -55,6 +55,11 @@ REQUIREMENTS:
    Buildbot requires python-2.3 or later, and is primarily developed against
    python-2.4 . It is also tested against python-2.5 and python-2.6.
 
+ ZopeInterface: http://www.zope.org/Products/ZopeInterface
+
+   Twisted requires ZopeInterface to be installed. Version 3.0.1final is
+   known to work with Twisted.
+
  Twisted: http://twistedmatrix.com
 
    Both the buildmaster and the buildslaves require Twisted-2.5.x or later.
@@ -65,8 +70,7 @@ REQUIREMENTS:
    You'll need at least "Twisted" (the core package), and you'll also want
    TwistedMail, TwistedWeb, and TwistedWords (for sending email, serving a
    web status page, and delivering build status via IRC, respectively). You
-   might also want TwistedConch (for the encrypted Manhole debug port). Note
-   that Twisted requires ZopeInterface to be installed as well.
+   might also want TwistedConch (for the encrypted Manhole debug port).
 
 INSTALLATION:
 
