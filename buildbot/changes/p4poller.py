@@ -100,19 +100,22 @@ class P4Source(base.ChangeSource, util.ComparableMixin):
             self.working = True
             d = self._get_changes()
             d.addCallback(self._process_changes)
-            d.addBoth(self._finished)
+            d.addCallbacks(self._finished_ok, self._finished_failure)
             return d
 
-    def _finished(self, res):
+    def _finished_ok(self, res):
+        assert self.working
+        self.working = False
+        return res
+
+    def _finished_failure(self, res):
         assert self.working
         self.working = False
 
         # Again, the return value is only for unit testing.
         # If there's a failure, log it so it isn't lost.
-        if isinstance(res, failure.Failure):
-            log.msg('P4 poll failed: %s' % res)
-            return None
-        return res
+        log.msg('P4 poll failed: %s' % res)
+        return None
 
     def _get_changes(self):
         args = []
