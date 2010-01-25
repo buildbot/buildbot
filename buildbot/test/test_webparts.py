@@ -430,7 +430,7 @@ c['projectURL'] = 'http://server.net/home'
         try:
             # parse & validate xhtml
             xhtml = html.fromstring(page, url, self.parser)
-        except etree.XMLSyntaxError as e:
+        except etree.XMLSyntaxError, e:
             self.error_count += 1
             self.errors.append("***** %s: %s *****" % 
                                (url.replace(self.baseurl, '/'), e.msg))
