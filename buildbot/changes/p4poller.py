@@ -34,7 +34,7 @@ class P4Source(base.ChangeSource, util.ComparableMixin):
             r"Change (?P<num>\d+) on \S+ by \S+@\S+ '.*'$")
     describe_header_re = re.compile(
             r"Change \d+ by (?P<who>\S+)@\S+ on (?P<when>.+)$")
-    file_re = re.compile(r"^\.\.\. (?P<path>[^#]+)#\d+ \w+$")
+    file_re = re.compile(r"^\.\.\. (?P<path>[^#]+)#\d+ [/\w]+$")
     datefmt = '%Y/%m/%d %H:%M:%S'
 
     parent = None # filled in when we're added

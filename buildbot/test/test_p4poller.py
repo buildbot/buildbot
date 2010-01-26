@@ -40,7 +40,7 @@ p4change = {
     3: change_3_log +
 """Affected files ...
 
-... //depot/myproject/branch_b/branch_b_file#1 add
+... //depot/myproject/branch_b/branch_b_file#1 move/add
 ... //depot/myproject/branch_b/whatbranch#1 branch
 ... //depot/myproject/branch_c/whatbranch#1 branch
 """,
