@@ -129,13 +129,22 @@ start:
 	twistd --no_save -y buildbot.tac
 
 stop:
-	kill `cat twistd.pid`
+	if [ -e twistd.pid ]; \\
+	then kill `cat twistd.pid`; \\
+	else echo "Nothing to stop."; \\
+	fi
 
 reconfig:
-	kill -HUP `cat twistd.pid`
+	if [ -e twistd.pid ]; \\
+	then kill -HUP `cat twistd.pid`; \\
+	else echo "Nothing to reconfig."; \\
+	fi
 
 log:
-	tail -f twistd.log
+	if [ -e twistd.log ]; \\
+	then tail -f twistd.log; \\
+	else echo "Nothing to tail."; \\
+	fi
 """
 
 class Maker:
