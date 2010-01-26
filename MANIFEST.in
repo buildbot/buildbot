@@ -8,7 +8,7 @@ include docs/epyrun docs/gen-reference docs/Makefile
 include buildbot/test/mail/* buildbot/test/subdir/*
 include buildbot/scripts/sample.cfg
 include buildbot/status/web/files/*
-include buildbot/status/web/templates/*.css buildbot/status/web/templates/*.html buildbot/status/web/templates/*.jpg buildbot/status/web/templates/*.xml
+include buildbot/status/web/templates/*.html buildbot/status/web/templates/*.xml
 include buildbot/clients/debug.glade
 include buildbot/buildbot.png
 include ChangeLog*
