@@ -205,7 +205,7 @@ setup_args = {
               ],
     'data_files': [("buildbot", ["buildbot/buildbot.png"]),
                 ("buildbot/clients", ["buildbot/clients/debug.glade"]),
-                ("buildbot/status/web",
+                ("buildbot/status/web/files",
                  ["buildbot/status/web/files/default.css",
                   "buildbot/status/web/files/bg_gradient.jpg",
                   "buildbot/status/web/files/robots.txt",
