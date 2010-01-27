@@ -5,7 +5,7 @@
 import re, shlex
 
 from zope.interface import Interface, implements
-from twisted.internet import protocol, reactor
+from twisted.internet import protocol, reactor, ssl
 from twisted.words.protocols import irc
 from twisted.python import log, failure
 from twisted.application import internet
@@ -882,7 +882,7 @@ class IRC(base.StatusReceiverMultiService):
         if useSSL:
             # SSL client needs a ClientContextFactory for some SSL mumbo-jumbo
             cf = ssl.ClientContextFactory()
-            c = internet.SSLCLient(self.host, self.port, self.f, cf)
+            c = internet.SSLClient(self.host, self.port, self.f, cf)
         else:
             c = internet.TCPClient(self.host, self.port, self.f)
 
