@@ -52,8 +52,8 @@ REQUIREMENTS:
 
  Python: http://www.python.org
 
-   Buildbot requires python-2.3 or later, and is primarily developed against
-   python-2.4 . It is also tested against python-2.5 and python-2.6.
+   Buildbot requires python-2.4 or later. It is also tested against
+   python-2.5 and python-2.6.
 
  Jinja2: http://jinja.pocoo.org/2
 
