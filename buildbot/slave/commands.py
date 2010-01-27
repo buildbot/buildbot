@@ -2912,7 +2912,7 @@ class Mercurial(SourceBase):
                 oldurl = remove_userpassword(oldurl)
                 repourl = remove_userpassword(repourl)
 
-                if oldurl != repourl:
+                if oldurl.rstrip('/') != repourl.rstrip('/'):
                     self.clobber = self._clobber
                     msg = "RepoURL changed from '%s' in wc to '%s' in update. Clobbering" % (oldurl, repourl)
                     log.msg(msg)
