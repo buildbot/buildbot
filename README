@@ -55,6 +55,11 @@ REQUIREMENTS:
    Buildbot requires python-2.3 or later, and is primarily developed against
    python-2.4 . It is also tested against python-2.5 and python-2.6.
 
+ Jinja2: http://jinja.pocoo.org/2
+
+  Jinja2 is a general purpose templating language and is used by Buildbot
+  to generate the HTML output.
+
  ZopeInterface: http://www.zope.org/Products/ZopeInterface
 
    Twisted requires ZopeInterface to be installed. Version 3.0.1final is
