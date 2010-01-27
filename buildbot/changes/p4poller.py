@@ -4,6 +4,7 @@
 
 import re
 import time
+import os
 
 from twisted.python import log, failure
 from twisted.internet import defer, reactor
@@ -29,6 +30,9 @@ class P4Source(base.ChangeSource, util.ComparableMixin):
 
     compare_attrs = ["p4port", "p4user", "p4passwd", "p4base",
                      "p4bin", "pollinterval"]
+
+    env_vars = ["P4CLIENT", "P4PORT", "P4PASSWD", "P4USER",
+                "P4CHARSET"]
 
     changes_line_re = re.compile(
             r"Change (?P<num>\d+) on \S+ by \S+@\S+ '.*'$")
@@ -117,6 +121,11 @@ class P4Source(base.ChangeSource, util.ComparableMixin):
         log.msg('P4 poll failed: %s' % res)
         return None
 
+    def _get_process_output(self, args):
+        env = dict([(e, os.environ.get(e)) for e in self.env_vars if os.environ.get(e)])
+        d = getProcessOutput(self.p4bin, args, env)
+        return d
+
     def _get_changes(self):
         args = []
         if self.p4port:
@@ -130,8 +139,7 @@ class P4Source(base.ChangeSource, util.ComparableMixin):
             args.extend(['%s...@%d,now' % (self.p4base, self.last_change+1)])
         else:
             args.extend(['-m', '1', '%s...' % (self.p4base,)])
-        env = {}
-        return getProcessOutput(self.p4bin, args, env)
+        return self._get_process_output(args)
 
     def _process_changes(self, result):
         last_change = self.last_change
@@ -165,9 +173,7 @@ class P4Source(base.ChangeSource, util.ComparableMixin):
         if self.p4passwd:
             args.extend(['-P', self.p4passwd])
         args.extend(['describe', '-s', str(num)])
-        env = {}
-        d = getProcessOutput(self.p4bin, args, env)
-        return d
+        return self._get_process_output(args)
 
     def _process_describe(self, result, num):
         lines = result.split('\n')
