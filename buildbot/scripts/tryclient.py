@@ -185,6 +185,49 @@ class MercurialExtractor(SourceStampExtractor):
         d.addCallback(self.readPatch, self.patchlevel)
         return d
 
+
+class PerforceExtractor(SourceStampExtractor):
+    patchlevel = 1
+    vcexe = "p4"
+    def getBaseRevision(self):
+        d = self.dovc(["changes", "-m1 ..."])
+        d.addCallback(self.parseStatus)
+        return d
+
+    def parseStatus(self, res):
+        #
+        # extract the base change number
+        #
+        m = re.search(r'Change (\d+)',res)
+        if m:
+            self.baserev = m.group(1)
+        else:
+            self.baserev = res # the whole context file
+
+    def readPatch(self, res, patchlevel):
+        #
+        # extract the actual patch from "res"
+        #
+        mpatch = ""
+        branch = "main"
+        for line in res.split("\n"):
+            m = re.search(r'==== //depot/([\w\_\-]+)/([\w\/\.\d\-\_]+)#(\d+) -',line)
+            if m:
+                mpatch += "--- /%s#%s\n" % (m.group(2), m.group(3) )
+                mpatch += "+++ /%s\n" % (m.group(2) )
+                branch = m.group(1)
+                pass
+            else:
+                mpatch += line
+                mpatch += "\n"
+        self.branch = branch
+        self.patch = (patchlevel, mpatch)
+    def getPatch(self, res):
+        d = self.dovc(["diff", "-du"])
+        d.addCallback(self.readPatch, self.patchlevel)
+        return d
+
+
 class DarcsExtractor(SourceStampExtractor):
     patchlevel = 1
     vcexe = "darcs"
@@ -274,6 +317,8 @@ def getSourceStamp(vctype, treetop, branch=None):
         e = TlaExtractor(treetop, branch)
     elif vctype == "hg":
         e = MercurialExtractor(treetop, branch)
+    elif vctype == "p4":
+        e = PerforceExtractor(treetop, branch)
     elif vctype == "darcs":
         e = DarcsExtractor(treetop, branch)
     elif vctype == "git":
