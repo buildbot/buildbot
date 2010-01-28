@@ -28,7 +28,15 @@
    +---------+        +---------+      :queue :
    | Builder |        | Builder |      +======+
    +---------+        +---------+         |
-                                          v
-                                    +---------+
-                                    | Builder |
-                                    +---------+
+         |                  |             v
+         |                  |       +---------+
+       Build              Build     | Builder |
+         |                  |       +---------+
+         |                  |           Build 
+         v                  v             v
+    +---------+   |    +---------+   +---------+ 
+    |  Slave  |   |    |  Slave  |   |  Slave  |
+    | Builder |   |    | Builder |   | Builder |
+    +---------+   |    +---------+   +---------+
+                  |
+    Build Slave   |            Build Slave
