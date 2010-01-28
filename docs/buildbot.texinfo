@@ -490,8 +490,6 @@ through protocols like HTTP, mail, and IRC.
 
 @end itemize
 
-@image{images/slavebuilder,,,SlaveBuilders,}
-
 Each Builder is configured with a list of BuildSlaves that it will use
 for its builds. These buildslaves are expected to behave identically:
 the only reason to use multiple BuildSlaves for a single Builder is to
