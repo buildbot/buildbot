@@ -664,7 +664,6 @@ class Try(pb.Referenceable):
         # This logs into the master using the PB protocol to
         # get the names of the configured builders that can
         # be used for the --builder argument
-        opts = self.opts
         if self.connect == "pb":
             user = self.getopt("username", "try_username")
             passwd = self.getopt("passwd", "try_password")
