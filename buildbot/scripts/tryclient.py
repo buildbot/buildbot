@@ -496,7 +496,7 @@ class Try(pb.Referenceable):
     def getStatus(self):
         # returns a Deferred that fires when the builds have finished, and
         # may emit status messages while we wait
-        wait = bool(self.getopt("wait", "try_wait", False))
+        wait = bool(self.getopt("wait", "try_wait"))
         if not wait:
             # TODO: emit the URL where they can follow the builds. This
             # requires contacting the Status server over PB and doing
