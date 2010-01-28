@@ -8978,7 +8978,7 @@ This can also be provided as @code{try_vc} in
 @c The order of this list comes from the end of scripts/tryclient.py
 
 The following names are recognized: @code{cvs} @code{svn} @code{baz}
-@code{tla} @code{bzr} @code{hg} @code{darcs} @code{git}
+@code{tla} @code{bzr} @code{hg} @code{darcs} @code{git} @code{p4}
 
 
 @heading finding the top of the tree
