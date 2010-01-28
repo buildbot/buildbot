@@ -190,7 +190,7 @@ class PerforceExtractor(SourceStampExtractor):
     patchlevel = 1
     vcexe = "p4"
     def getBaseRevision(self):
-        d = self.dovc(["changes", "-m1 ..."])
+        d = self.dovc(["changes", "-m1", "..."])
         d.addCallback(self.parseStatus)
         return d
 
