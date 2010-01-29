@@ -74,10 +74,6 @@ class Options(unittest.TestCase):
         
 
 class Create(unittest.TestCase):
-    def failUnlessIn(self, substring, string, msg=None):
-        # trial provides a version of this that requires python-2.3 to test
-        # strings.
-        self.failUnless(string.find(substring) != -1, msg)
     def failUnlessExists(self, filename):
         self.failUnless(os.path.exists(filename), "%s should exist" % filename)
     def failIfExists(self, filename):

@@ -120,9 +120,6 @@ def stopHTTPLog():
 class BaseWeb:
     master = None
 
-    def failUnlessIn(self, substr, string, note=None):
-        self.failUnless(string.find(substr) != -1, note)
-
     def tearDown(self):
         stopHTTPLog()
         if self.master:
@@ -269,16 +266,9 @@ c['status'] = [html.WebStatus(http_port=0)]
 
 class WaterfallSteps(unittest.TestCase):
 
-    # failUnlessSubstring copied from twisted-2.1.0, because this helps us
-    # maintain compatibility with python2.2.
-    def failUnlessSubstring(self, substring, astring, msg=None):
-        """a python2.2 friendly test to assert that substring is found in
-        astring parameters follow the semantics of failUnlessIn
-        """
-        if astring.find(substring) == -1:
-            raise self.failureException(msg or "%r not found in %r"
-                                        % (substring, astring))
-        return substring
+    def failUnlessSubstring(self, substr, string, msg=None):
+        self.assertIn(substr, string, msg or "%r not found in %r"
+                                    % (substr, string))
     assertSubstring = failUnlessSubstring
 
     def test_urls(self):

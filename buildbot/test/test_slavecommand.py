@@ -71,9 +71,9 @@ class ShellBase(SignalMixin):
     def tearDown(self):
         self.tearDownSignalHandler()
 
-    def failUnlessIn(self, substring, string):
-        self.failUnless(string.find(substring) != -1,
-                        "'%s' not in '%s'" % (substring, string))
+    def failUnlessIn(self, substr, string):
+        self.assertIn(substr, string,
+                        "'%s' not in '%s'" % (substr, string))
 
     def getfile(self, which):
         got = ""

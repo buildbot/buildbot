@@ -188,9 +188,9 @@ class Mail(unittest.TestCase):
     def makeBuild(self, number, results):
         return MyBuild(self.builder, number, results)
 
-    def failUnlessIn(self, substring, string):
-        self.failUnless(string.find(substring) != -1,
-                        "didn't see '%s' in '%s'" % (substring, string))
+    def failUnlessIn(self, substr, string):
+        self.assertIn(substr, string,
+                        "didn't see '%s' in '%s'" % (substr, string))
 
     def getProjectName(self):
         return "PROJECT"

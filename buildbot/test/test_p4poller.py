@@ -84,13 +84,6 @@ class TestP4Poller(unittest.TestCase):
         self.changes = []
         self.addChange = self.changes.append
 
-    def failUnlessIn(self, substr, string):
-        # this is for compatibility with python2.2
-        if isinstance(string, str):
-            self.failUnless(string.find(substr) != -1)
-        else:
-            self.assertIn(substr, string)
-
     def testCheck(self):
         """successful checks"""
         self.t = MockP4Source(p4changes=[first_p4changes, second_p4changes],

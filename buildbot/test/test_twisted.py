@@ -167,9 +167,6 @@ class Counter(unittest.TestCase):
 
 
 class Parse(unittest.TestCase):
-    def failUnlessIn(self, substr, string):
-        self.failUnless(string.find(substr) != -1)
-
     def testParse(self):
         t = MyTrial(build=None, workdir=".", testpath=None, testChanges=True)
         t.results = []

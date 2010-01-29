@@ -397,13 +397,13 @@ class VCBase(SignalMixin):
     has_got_revision = False
     has_got_revision_branches_are_merged = False # for SVN
 
-    def failUnlessIn(self, substring, string, msg=None):
+    def failUnlessIn(self, substr, string, msg=None):
         # trial provides a version of this that requires python-2.3 to test
         # strings.
         if msg is None:
-            msg = ("did not see the expected substring '%s' in string '%s'" %
-                   (substring, string))
-        self.failUnless(string.find(substring) != -1, msg)
+            msg = ("did not see the expected substr '%s' in string '%s'" %
+                   (substr, string))
+        self.assertIn(substr, string, msg)
 
     def setUp(self):
         self.setUpSignalHandler()
