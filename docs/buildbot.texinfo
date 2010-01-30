@@ -9077,6 +9077,15 @@ revision. For @command{try} to work, your working directory must only
 have patches that are available from the same remotely-available
 repository that the build process' @code{source.Mercurial} will use.
 
+@item Perforce
+@command{try} does a @code{p4 changes -m1 ...} to determine the latest
+changelist and implicitly assumes that the local tree is synched to this
+revision. This is followed by a @code{p4 diff -du} to obtain the patch.
+A p4 patch differs sligtly from a normal diff. It contains full depot
+paths and must be converted to paths relative to the branch top. To convert
+the following restriction is imposed. The p4base (see @pxref{P4Source})
+ is assumed to be @code{//depot}
+
 @item Darcs
 @command{try} does a @code{darcs changes --context} to find the list
 of all patches back to and including the last tag that was made. This text
