@@ -1,16 +1,11 @@
 # -*- test-case-name: buildbot.test.test_status -*-
 
-# the email.MIMEMultipart module is only available in python-2.2.2 and later
 import re
 
 from email.Message import Message
 from email.Utils import formatdate
 from email.MIMEText import MIMEText
-try:
-    from email.MIMEMultipart import MIMEMultipart
-    canDoAttachments = True
-except ImportError:
-    canDoAttachments = False
+from email.MIMEMultipart import MIMEMultipart
 import urllib
 
 from zope.interface import implements
@@ -21,10 +16,6 @@ from twisted.python import log as twlog
 from buildbot import interfaces, util
 from buildbot.status import base
 from buildbot.status.builder import FAILURE, SUCCESS, Results
-
-import sys
-if sys.version_info[:3] < (2,4,0):
-    from sets import Set as set
 
 VALID_EMAIL = re.compile("[a-zA-Z0-9\.\_\%\-\+]+@[a-zA-Z0-9\.\_\%\-]+.[a-zA-Z]{2,6}")
 
@@ -405,17 +396,8 @@ class MailNotifier(base.StatusReceiverMultiService):
 
         assert type in ('plain', 'html'), "'%s' message type must be 'plain' or 'html'." % type
 
-        haveAttachments = False
         ss = build.getSourceStamp()
         if (ss and ss.patch and self.addPatch) or self.addLogs:
-            haveAttachments = True
-            if not canDoAttachments:
-                twlog.msg("warning: I want to send mail with attachments, "
-                          "but this python is too old to have "
-                          "email.MIMEMultipart . Please upgrade to python-2.3 "
-                          "or newer to enable addLogs=True")
-
-        if haveAttachments and canDoAttachments:
             m = MIMEMultipart()
             m.attach(MIMEText(text, type))
         else:

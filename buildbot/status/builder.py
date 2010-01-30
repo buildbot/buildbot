@@ -12,16 +12,8 @@ import os, shutil, sys, re, urllib, itertools
 import gc
 from cPickle import load, dump
 from cStringIO import StringIO
-
-try: # bz2 is not available on py23
-    from bz2 import BZ2File
-except ImportError:
-    BZ2File = None
-
-try:
-    from gzip import GzipFile
-except ImportError:
-    GzipFile = None
+from bz2 import BZ2File
+from gzip import GzipFile
 
 # sibling imports
 from buildbot import interfaces, util, sourcestamp
@@ -304,16 +296,14 @@ class LogFile:
             return self.openfile
         # otherwise they get their own read-only handle
         # try a compressed log first
-        if BZ2File is not None:
-            try:
-                return BZ2File(self.getFilename() + ".bz2", "r")
-            except IOError:
-                pass
-        if GzipFile is not None:
-            try:
-                return GzipFile(self.getFilename() + ".gz", "r")
-            except IOError:
-                pass
+        try:
+            return BZ2File(self.getFilename() + ".bz2", "r")
+        except IOError:
+            pass
+        try:
+            return GzipFile(self.getFilename() + ".gz", "r")
+        except IOError:
+            pass
         return open(self.getFilename(), "r")
 
     def getText(self):
@@ -521,12 +511,8 @@ class LogFile:
     def compressLog(self):
         # bail out if there's no compression support
         if self.compressMethod == "bz2":
-            if BZ2File is None:
-                return
             compressed = self.getFilename() + ".bz2.tmp"
         elif self.compressMethod == "gz":
-            if GzipFile is None:
-                return
             compressed = self.getFilename() + ".gz.tmp"
         d = threads.deferToThread(self._compressLog, compressed)
         d.addCallback(self._renameCompressedLog, compressed)
