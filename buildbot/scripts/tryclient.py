@@ -201,8 +201,9 @@ class PerforceExtractor(SourceStampExtractor):
         m = re.search(r'Change (\d+)',res)
         if m:
             self.baserev = m.group(1)
-        else:
-            self.baserev = res # the whole context file
+            return
+
+        raise IndexError("Could not find change number in output: %s" % res)
 
     def readPatch(self, res, patchlevel):
         #
