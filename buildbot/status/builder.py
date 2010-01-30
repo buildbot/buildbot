@@ -13,11 +13,7 @@ import gc
 from cPickle import load, dump
 from cStringIO import StringIO
 from bz2 import BZ2File
-
-try:
-    from gzip import GzipFile
-except ImportError:
-    GzipFile = None
+from gzip import GzipFile
 
 # sibling imports
 from buildbot import interfaces, util, sourcestamp
@@ -304,12 +300,10 @@ class LogFile:
             return BZ2File(self.getFilename() + ".bz2", "r")
         except IOError:
             pass
-
-        if GzipFile is not None:
-            try:
-                return GzipFile(self.getFilename() + ".gz", "r")
-            except IOError:
-                pass
+        try:
+            return GzipFile(self.getFilename() + ".gz", "r")
+        except IOError:
+            pass
         return open(self.getFilename(), "r")
 
     def getText(self):
@@ -519,8 +513,6 @@ class LogFile:
         if self.compressMethod == "bz2":
             compressed = self.getFilename() + ".bz2.tmp"
         elif self.compressMethod == "gz":
-            if GzipFile is None:
-                return
             compressed = self.getFilename() + ".gz.tmp"
         d = threads.deferToThread(self._compressLog, compressed)
         d.addCallback(self._renameCompressedLog, compressed)
