@@ -187,7 +187,7 @@ class MercurialExtractor(SourceStampExtractor):
 
 
 class PerforceExtractor(SourceStampExtractor):
-    patchlevel = 1
+    patchlevel = 0
     vcexe = "p4"
     def getBaseRevision(self):
         d = self.dovc(["changes", "-m1", "..."])
@@ -209,19 +209,19 @@ class PerforceExtractor(SourceStampExtractor):
         #
         # extract the actual patch from "res"
         #
+        assert self.branch, "you must specify a branch"
         mpatch = ""
-        branch = "main"
+        found = False
         for line in res.split("\n"):
-            m = re.search(r'==== //depot/([\w\_\-]+)/([\w\/\.\d\-\_]+)#(\d+) -',line)
+            m = re.search('==== //depot/' + self.branch + r'/([\w\/\.\d\-\_]+)#(\d+) -',line)
             if m:
-                mpatch += "--- /%s#%s\n" % (m.group(2), m.group(3) )
-                mpatch += "+++ /%s\n" % (m.group(2) )
-                branch = m.group(1)
-                pass
+                mpatch += "--- %s#%s\n" % (m.group(1), m.group(2) )
+                mpatch += "+++ %s\n" % (m.group(1) )
+                found = True
             else:
                 mpatch += line
                 mpatch += "\n"
-        self.branch = branch
+        assert found, "could not parse patch file"
         self.patch = (patchlevel, mpatch)
     def getPatch(self, res):
         d = self.dovc(["diff", "-du"])
