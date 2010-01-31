@@ -9,7 +9,7 @@ from twisted.spread import pb
 
 from buildbot import scheduler, sourcestamp, buildset, status
 from buildbot.changes.changes import Change
-from buildbot.scripts import tryclient
+from buildbot.clients import tryclient
 
 
 class FakeMaster(service.MultiService):

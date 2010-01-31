@@ -962,7 +962,7 @@ class TryOptions(OptionsWithOptionsFile):
             self['wait'] = True
 
 def doTry(config):
-    from buildbot.scripts import tryclient
+    from buildbot.clients import tryclient
     t = tryclient.Try(config)
     t.run()
 

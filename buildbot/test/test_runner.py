@@ -6,7 +6,8 @@ from twisted.python import usage
 import os, shutil, shlex
 import sets
 
-from buildbot.scripts import runner, tryclient
+from buildbot.clients import tryclient
+from buildbot.scripts import runner
 
 class Options(unittest.TestCase):
     optionsFile = "SDFsfsFSdfsfsFSD"

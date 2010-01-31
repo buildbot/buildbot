@@ -23,7 +23,7 @@ from buildbot.process import base
 from buildbot.steps import source
 from buildbot.changes import changes
 from buildbot.sourcestamp import SourceStamp
-from buildbot.scripts import tryclient
+from buildbot.clients import tryclient
 from buildbot.test.runutils import SignalMixin, myGetProcessOutputAndValue
 
 #step.LoggedRemoteCommand.debug = True
