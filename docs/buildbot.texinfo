@@ -5870,11 +5870,11 @@ This is meant to handle compiling or building a project written in C.
 The default command is @code{make all}. When the compile is finished,
 the log file is scanned for GCC warning messages, a summary log is
 created with any problems that were seen, and the step is marked as
-WARNINGS if any were discovered. The number of warnings is stored in a
-Build Property named ``warnings-count'', which is accumulated over all
-Compile steps (so if two warnings are found in one step, and three are
-found in another step, the overall build will have a
-``warnings-count'' property of 5.
+WARNINGS if any were discovered. Through the @code{WarningCountingShellCommand}
+superclass, the number of warnings is stored in a Build Property named
+``warnings-count'', which is accumulated over all Compile steps (so if two
+warnings are found in one step, and three are found in another step, the
+overall build will have a ``warnings-count'' property of 5).
 
 The default regular expression used to detect a warning is
 @code{'.*warning[: ].*'} , which is fairly liberal and may cause
@@ -5890,6 +5890,12 @@ f.addStep(Compile(command=["make", "test"],
 The @code{warningPattern=} can also be a pre-compiled python regexp
 object: this makes it possible to add flags like @code{re.I} (to use
 case-insensitive matching).
+
+Note that the compiled @code{warningPattern} will have its @code{match} method
+called, which is subtly different from a @code{search}. Your regular
+expression must match the from the beginning of the line. This means that to
+look for the word "warning" in the middle of a line, you will need to
+prepend @code{'.*'} to your regular expression.
 
 The @code{suppressionFile=} argument can be specified as the (relative) path
 of a file inside the workdir defining warnings to be suppressed from the
