@@ -5,7 +5,7 @@
 import re, shlex
 
 from zope.interface import Interface, implements
-from twisted.internet import protocol, reactor, ssl
+from twisted.internet import protocol, reactor
 from twisted.words.protocols import irc
 from twisted.python import log, failure
 from twisted.application import internet
@@ -17,6 +17,13 @@ from buildbot.process.base import BuildRequest
 from buildbot.status import base
 from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE, EXCEPTION
 from buildbot.scripts.runner import ForceOptions
+
+# twisted.internet.ssl requires PyOpenSSL, so be resilient if it's missing
+try:
+    from twisted.internet import ssl
+    have_ssl = True
+except ImportError:
+    have_ssl = False
 
 from string import join, capitalize, lower
 
@@ -881,6 +888,8 @@ class IRC(base.StatusReceiverMultiService):
 
         if useSSL:
             # SSL client needs a ClientContextFactory for some SSL mumbo-jumbo
+            if not have_ssl:
+                raise RuntimeError("useSSL requires PyOpenSSL")
             cf = ssl.ClientContextFactory()
             c = internet.SSLClient(self.host, self.port, self.f, cf)
         else:
