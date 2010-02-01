@@ -1,6 +1,7 @@
 # -*- test-case-name: buildbot.test.test_properties -*-
 
 import os
+import sys
 
 from twisted.trial import unittest
 
