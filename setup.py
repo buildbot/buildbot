@@ -216,7 +216,7 @@ setup_args = {
                 include("buildbot/status/web/templates", '*.html'),
                 ("buildbot/scripts", ["buildbot/scripts/sample.cfg"]),
                 ("buildbot/test/unit/mail", testmsgs),
-                ("buildbot/test/unit/subdir", ["buildbot/test/subdir/emit.py"]),
+                ("buildbot/test/unit/subdir", ["buildbot/test/unit/subdir/emit.py"]),
                 ],
     'scripts': scripts,
     'cmdclass': {'install_data': install_data_twisted,
