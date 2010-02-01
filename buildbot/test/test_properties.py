@@ -248,8 +248,8 @@ c['builders'] = [
         def _check_props(bs):
             self.failUnlessEqual(bs.getProperty("foo"), "foo")
             self.failUnlessEqual(bs.getProperty("wp"), "wp")
-            # (will this fail on some platforms, due to newline differences?)
-            self.failUnlessEqual(bs.getProperty("bar"), "bar\n")
+            # (replace converts windows newlines to native)
+            self.failUnlessEqual(bs.getProperty("bar").replace("\r\n", "\n"), "bar\n")
             return bs
         d.addCallback(_check_props)
         return d
@@ -263,6 +263,8 @@ c['builders'] = [
     """)
 
     def testSetPropertyExtractFn(self):
+        if sys.platform == 'win32':
+            raise unittest.SkipTest("stderr doesn't work on windoze")
         d = self.master.loadConfig(self.SetPropertyExtractFn_config)
         d.addCallback(lambda res: self.master.startService())
         d.addCallback(lambda res: self.connectOneSlave("bot1"))
