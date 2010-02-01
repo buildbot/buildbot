@@ -50,7 +50,10 @@ def loadOptionsFile(filename="options", here=None, home=None):
 
     if home is None:
         if runtime.platformType == 'win32':
-            home = os.path.join(os.environ['APPDATA'], "buildbot")
+            # never trust env-vars, use the proper API
+            from win32com.shell import shellcon, shell            
+            appdata = shell.SHGetFolderPath(0, shellcon.CSIDL_APPDATA, 0, 0)
+            home = os.path.join(appdata, "buildbot")             
         else:
             home = os.path.expanduser("~/.buildbot")
 
