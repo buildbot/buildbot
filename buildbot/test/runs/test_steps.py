@@ -729,8 +729,8 @@ make[2]: Leaving directory `/abs/path/build'
             self.failUnless("warnings" in logs)
             lines = [ line.replace("\r\n", "\n") for line in logs["warnings"].readlines() ]
             self.failUnlessEqual(len(lines), 2)
-            self.failUnlessEqual(lines[0], "baz.c:34: warning: `magic' defined but not used\n")
-            self.failUnlessEqual(lines[1], "foo.c:100: warning: `xyzzy' defined but not used\n")
+            self.failUnlessEqual(lines[0].strip(), "baz.c:34: warning: `magic' defined but not used")
+            self.failUnlessEqual(lines[1].strip(), "foo.c:100: warning: `xyzzy' defined but not used")
 
         d.addCallback(_checkResult)
         return d
@@ -879,7 +879,7 @@ class MasterShellCommand(StepTester, unittest.TestCase):
         def _check(results):
             self.failUnlessEqual(results, SUCCESS)
             logtxt = step.getLog("stdio").getText()
-            self.failUnlessEqual(logtxt.strip(), "hi build-foo.tar.gz")
+            self.failUnlessEqual(logtxt.strip().strip('"'), "hi build-foo.tar.gz")
         d.addCallback(_check)
         reactor.callLater(0, d.callback, None)
         return d

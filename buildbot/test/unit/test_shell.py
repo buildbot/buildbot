@@ -20,8 +20,8 @@ class SlaveSide(SlaveCommandTestBase, unittest.TestCase):
         d = self.startCommand(SlaveShellCommand, args)
         d.addCallback(self.collectUpdates)
         def _check(logs):
-            self.failUnlessEqual(logs['stdout'].replace("\r\n", "\n"), "this is stdout\n")
-            self.failUnlessEqual(logs['stderr'].replace("\r\n", "\n"), "this is stderr\n")
+            self.failUnlessEqual(logs['stdout'].strip(), "this is stdout")
+            self.failUnlessEqual(logs['stderr'].strip(), "this is stderr")
         d.addCallback(_check)
         return d
 
