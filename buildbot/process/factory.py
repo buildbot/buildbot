@@ -58,12 +58,16 @@ class BuildFactory(util.ComparableMixin):
             if kwargs:
                 raise ArgumentsInTheWrongPlace()
             s = step_or_factory.getStepFactory()
-        else:
+        elif type(step_or_factory) == type(BuildStep) and \
+                issubclass(step_or_factory, BuildStep):
             s = (step_or_factory, dict(kwargs))
+        else:
+            raise ValueError('%r is not a BuildStep nor BuildStep subclass' % step_or_factory)
         self.steps.append(s)
 
     def addSteps(self, steps):
-        self.steps.extend([ s.getStepFactory() for s in steps ])
+        for s in steps:
+            self.addStep(s)
 
 # BuildFactory subclasses for common build tools
 

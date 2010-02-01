@@ -1261,6 +1261,11 @@ c['builders'] = [
 ]
 """
 
+cfg1_bad2 = cfg1 + \
+"""
+f1.addStep(BuildFactory()) # pass addStep something that's not a step or step class
+"""
+
 class Factories(unittest.TestCase):
     def printExpecting(self, factory, args):
         factory_keys = factory[1].keys()
@@ -1327,6 +1332,10 @@ class Factories(unittest.TestCase):
     def testBadAddStepArguments(self):
         m = BuildMaster(".")
         self.failUnlessRaises(ArgumentsInTheWrongPlace, m.loadConfig, cfg1_bad)
+
+    def testBadAddStepArguments(self):
+        m = BuildMaster(".")
+        self.failUnlessRaises(ValueError, m.loadConfig, cfg1_bad2)
 
     def _loop(self, orig):
         step_class, kwargs = orig.getStepFactory()
