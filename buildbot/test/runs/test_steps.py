@@ -727,7 +727,7 @@ make[2]: Leaving directory `/abs/path/build'
             for log in step.step_status.getLogs():
                 logs[log.getName()] = log
             self.failUnless("warnings" in logs)
-            lines = logs["warnings"].readlines()
+            lines = [ line.replace("\r\n", "\n") for line in logs["warnings"].readlines() ]
             self.failUnlessEqual(len(lines), 2)
             self.failUnlessEqual(lines[0], "baz.c:34: warning: `magic' defined but not used\n")
             self.failUnlessEqual(lines[1], "foo.c:100: warning: `xyzzy' defined but not used\n")
