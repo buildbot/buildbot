@@ -34,6 +34,70 @@ class Domain(util.ComparableMixin):
         return name + "@" + self.domain
 
 
+def defaultMessage(mode, name, build, results, master_status):
+    """Generate a buildbot mail message and return a tuple of message text
+        and type."""
+    result = Results[results]
+
+    text = ""
+    if mode == "all":
+        text += "The Buildbot has finished a build"
+    elif mode == "failing":
+        text += "The Buildbot has detected a failed build"
+    elif mode == "passing":
+        text += "The Buildbot has detected a passing build"
+    elif mode == "change" and result == 'success':
+        text += "The Buildbot has detected a restored build"
+    else:    
+        text += "The Buildbot has detected a new failure"
+    text += " of %s on %s.\n" % (name, master_status.getProjectName())
+    if master_status.getURLForThing(build):
+        text += "Full details are available at:\n %s\n" % master_status.getURLForThing(build)
+    text += "\n"
+
+    if master_status.getBuildbotURL():
+        text += "Buildbot URL: %s\n\n" % urllib.quote(master_status.getBuildbotURL(), '/:')
+
+    text += "Buildslave for this Build: %s\n\n" % build.getSlavename()
+    text += "Build Reason: %s\n" % build.getReason()
+
+    source = ""
+    ss = build.getSourceStamp()
+    if ss and ss.branch:
+        source += "[branch %s] " % ss.branch
+    if ss and ss.revision:
+        source += str(ss.revision)
+    else:
+        source += "HEAD"
+    if ss and ss.patch:
+        source += " (plus patch)"
+
+    text += "Build Source Stamp: %s\n" % source
+
+    text += "Blamelist: %s\n" % ",".join(build.getResponsibleUsers())
+
+    text += "\n"
+
+    t = build.getText()
+    if t:
+        t = ": " + " ".join(t)
+    else:
+        t = ""
+
+    if result == 'success':
+        text += "Build succeeded!\n"
+    elif result == 'warnings':
+        text += "Build Had Warnings%s\n" % t
+    else:
+        text += "BUILD FAILED%s\n" % t
+
+    text += "\n"
+    text += "sincerely,\n"
+    text += " -The Buildbot\n"
+    text += "\n"
+    return { 'body' : text, 'type' : 'plain' }
+
+
 class MailNotifier(base.StatusReceiverMultiService):
     """This is a status notifier which sends email to a list of recipients
     upon the completion of each build. It can be configured to only send out
@@ -65,7 +129,8 @@ class MailNotifier(base.StatusReceiverMultiService):
                  subject="buildbot %(result)s in %(projectName)s on %(builder)s",
                  lookup=None, extraRecipients=[],
                  sendToInterestedUsers=True, customMesg=None,
-                 messageFormatter=None, extraHeaders=None, addPatch=True):
+                 messageFormatter=defaultMessage, extraHeaders=None,
+                 addPatch=True):
         """
         @type  fromaddr: string
         @param fromaddr: the email address to be used in the 'From' header.
@@ -191,10 +256,6 @@ class MailNotifier(base.StatusReceiverMultiService):
             twlog.err("Please specify only builders to ignore or categories to include")
             raise # FIXME: the asserts above do not raise some Exception either
 
-        if customMesg and messageFormatter:
-            twlog.err("Specify only one of customMesg and messageFormatter")
-            self.customMesg = None
-
         if customMesg:
             twlog.msg("customMesg is deprecated; please use messageFormatter instead")
 
@@ -309,79 +370,14 @@ class MailNotifier(base.StatusReceiverMultiService):
 
         return attrs
 
-    def defaultMessage(self, mode, name, build, results, master_status):
-        """Generate a buildbot mail message and return a tuple of message text
-        and type."""
-        result = Results[results]
-
-        text = ""
-        if mode == "all":
-            text += "The Buildbot has finished a build"
-        elif mode == "failing":
-            text += "The Buildbot has detected a failed build"
-        elif mode == "passing":
-            text += "The Buildbot has detected a passing build"
-        elif mode == "change" and result == 'success':
-            text += "The Buildbot has detected a restored build"
-        else:    
-            text += "The Buildbot has detected a new failure"
-        text += " of %s on %s.\n" % (name, master_status.getProjectName())
-        if master_status.getURLForThing(build):
-            text += "Full details are available at:\n %s\n" % master_status.getURLForThing(build)
-        text += "\n"
-
-        if master_status.getBuildbotURL():
-            text += "Buildbot URL: %s\n\n" % urllib.quote(master_status.getBuildbotURL(), '/:')
-
-        text += "Buildslave for this Build: %s\n\n" % build.getSlavename()
-        text += "Build Reason: %s\n" % build.getReason()
-
-        source = ""
-        ss = build.getSourceStamp()
-        if ss and ss.branch:
-            source += "[branch %s] " % ss.branch
-        if ss and ss.revision:
-            source += str(ss.revision)
-        else:
-            source += "HEAD"
-        if ss and ss.patch:
-            source += " (plus patch)"
-
-        text += "Build Source Stamp: %s\n" % source
-
-        text += "Blamelist: %s\n" % ",".join(build.getResponsibleUsers())
-
-        text += "\n"
-
-        t = build.getText()
-        if t:
-            t = ": " + " ".join(t)
-        else:
-            t = ""
-
-        if result == 'success':
-            text += "Build succeeded!\n"
-        elif result == 'warnings':
-            text += "Build Had Warnings%s\n" % t
-        else:
-            text += "BUILD FAILED%s\n" % t
-
-        text += "\n"
-        text += "sincerely,\n"
-        text += " -The Buildbot\n"
-        text += "\n"
-        return { 'body' : text, 'type' : 'plain' }
-
     def buildMessage(self, name, build, results):
         if self.customMesg:
             # the customMesg stuff can be *huge*, so we prefer not to load it
             attrs = self.getCustomMesgData(self.mode, name, build, results, self.master_status)
             text, type = self.customMesg(attrs)
             msgdict = { 'body' : text, 'type' : type }
-        elif self.messageFormatter:
-            msgdict = self.messageFormatter(self.mode, name, build, results, self.master_status)
         else:
-            msgdict = self.defaultMessage(self.mode, name, build, results, self.master_status)
+            msgdict = self.messageFormatter(self.mode, name, build, results, self.master_status)
 
         text = msgdict['body']
         type = msgdict['type']
