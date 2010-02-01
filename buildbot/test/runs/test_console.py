@@ -141,7 +141,9 @@ class GetBuildDetailsTests(RunMixin, unittest.TestCase):
 [ <a href="../builders/buildername/builds/0/steps/shell/logs/stdio">stdio</a> ]"""
             console_status = console.ConsoleStatusResource()
             results = console_status.getBuildDetails(MockRequest(), "buildername", bs);
-            self.assertEqual(results, expected_details)
+            # web output has some extra whitespace after the first line, so strip that away
+            self.assertEqual([ l.strip() for l in results.split('\n') ],
+                             [ l.strip() for l in expected_details.split('\n') ])
 
         d.addCallback(expectFailure)
         return d
