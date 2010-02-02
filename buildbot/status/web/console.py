@@ -222,31 +222,34 @@ class ConsoleStatusResource(HtmlResource):
 
     def getBuildDetails(self, request, builderName, build):
         """Returns an HTML list of failures for a given build."""
-        details = ""
-        if build.getLogs():
-            for step in build.getSteps():
-                (result, reason) = step.getResults()
-                if result == builder.FAILURE:
-                    name = step.getName()
+        details = {}
+        if not build.getLogs():
+            return details
+        
+        for step in build.getSteps():
+            (result, reason) = step.getResults()
+            if result == builder.FAILURE:
+                name = step.getName()
 
-                    # Remove html tags from the error text.
-                    stripHtml = re.compile(r'<.*?>')
-                    strippedDetails = stripHtml .sub('', ' '.join(step.getText()))
+                # Remove html tags from the error text.
+                stripHtml = re.compile(r'<.*?>')
+                strippedDetails = stripHtml.sub('', ' '.join(step.getText()))
+                
+                details['buildername'] = builderName
+                details['status'] = strippedDetails
+                details['reason'] = reason
+                logs = details['logs'] = []
 
-                    details += "<li> %s : %s. \n" % (builderName, strippedDetails)
-                    if step.getLogs():
-                        details += "[ "
-                        for log in step.getLogs():
-                            logname = log.getName()
-                            logurl = request.childLink(
-                              "../builders/%s/builds/%s/steps/%s/logs/%s" % 
-                                (urllib.quote(builderName),
-                                 build.getNumber(),
-                                 urllib.quote(name),
-                                 urllib.quote(logname)))
-                            details += "<a href=\"%s\">%s</a> " % (logurl,
-                                                                 log.getName())
-                        details += "]"
+                if step.getLogs():
+                    for log in step.getLogs():
+                        logname = log.getName()
+                        logurl = request.childLink(
+                          "../builders/%s/builds/%s/steps/%s/logs/%s" % 
+                            (urllib.quote(builderName),
+                             build.getNumber(),
+                             urllib.quote(name),
+                             urllib.quote(logname)))
+                        logs.append(dict(url=logurl, name=logname))
         return details
 
     def getBuildsForRevision(self, request, builder, builderName, lastRevision,
@@ -448,7 +451,7 @@ class ConsoleStatusResource(HtmlResource):
                 state, builds = status.getBuilder(builder).getState()
                 # Check if it's offline, if so, the box is purple.
                 if state == "offline":
-                    s["color"] = "exception"
+                    s["color"] = "offline"
                 else:
                     # If not offline, then display the result of the last
                     # finished build.
@@ -469,7 +472,7 @@ class ConsoleStatusResource(HtmlResource):
         first build "revision" was in. Returns an HTML list of errors that
         happened during these builds."""
 
-        details = ""
+        details = []
         nbSlaves = 0
         for category in builderList:
             nbSlaves += len(builderList[category])
@@ -514,7 +517,7 @@ class ConsoleStatusResource(HtmlResource):
                 url = "./waterfall"
                 title = builder
                 tag = ""
-                current_details = None
+                current_details = {}
                 if introducedIn:
                     current_details = introducedIn.details or ""
                     url = "./buildstatus?builder=%s&number=%s" % (urllib.quote(builder),
@@ -544,7 +547,7 @@ class ConsoleStatusResource(HtmlResource):
                 # If the box is red, we add the explaination in the details
                 # section.
                 if current_details and resultsClass == "failure":
-                    details += current_details
+                    details.append(current_details)
 
         return (builds, details)
 

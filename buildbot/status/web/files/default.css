@@ -354,7 +354,7 @@ div.BuildWaterfall {
 	border-color: #C29D46;
 }
 
-.exception,td.offline {
+.exception {
 	color: #FFFFFF;
 	background-color: #f6f;
 	border-color: #ACA0B3;
@@ -365,6 +365,13 @@ div.BuildWaterfall {
 	background-color: #ff6;
 	border-color: #C5C56D;
 }
+
+.offline,td.offline {
+    color: #FFFFFF;
+    background-color: #777777;
+    border-color: #dddddd;
+}
+
 
 .start {
 	border-bottom-left-radius: 10px;
@@ -379,6 +386,7 @@ div.BuildWaterfall {
 	border-width: 1px;
 	border-style: solid;
 	border-color: #aaa;
+    background-color: #fff;
 }
 
 .closed {

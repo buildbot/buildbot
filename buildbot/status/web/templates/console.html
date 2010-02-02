@@ -100,6 +100,7 @@ function checkMouseLeave(element, event) {
               <td class='legend warnings' title='It was failing before, and it is still failing. Make sure you did not introduce new regressions'>Failed&nbsp;Again</td>
               <td class='legend running' title='The tests are still running'>Running</td>
               <td class='legend exception' title='Something went wrong with the test, there is no result'>Exception</td>
+              <td class='legend offline' title='The builder is offline, as there are no slaves connected to it'>Offline</td>
               <td class='legend notstarted' title='No result yet.'>No&nbsp;data</td>
             </tr>
           </table>
@@ -204,7 +205,7 @@ function checkMouseLeave(element, event) {
    
   <tr>
     <td colspan="{{ r.span }}" class='DevComment {{ alt }}'> 
-      {{ r.comments|changecomment|replace('\n', '<br/>') }}
+      {{ r.comments|changecomment|replace('\n', '<br/>').replace(' ','&nbsp;') }}
     </td>
   </tr>
  
@@ -212,7 +213,13 @@ function checkMouseLeave(element, event) {
   <tr>
     <td colspan="{{ r.span }}" class='DevDetails {{ alt }}'>
       <ul style='margin: 0px; padding: 0 0 0 1.5em;'>
-        {{ r.details }}
+    {% for d in r.details %}
+        <li>{{ d.buildername }}: {{ d.status }} - &nbsp;
+      {%- for l in d.logs -%}
+            <a href="{{ l.url }}">{{ l.name }}</a>
+      {%- endfor -%}
+        </li>
+    {% endfor %}
       </ul>
     </td>
   </tr>    
