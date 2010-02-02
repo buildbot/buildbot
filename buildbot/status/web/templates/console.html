@@ -127,7 +127,7 @@ function checkMouseLeave(element, event) {
 
 <br/>
 
-{% set alt_class = cycler('', 'alt') %}
+{% set alt_class = cycler('', 'Alt') %}
 
 <div align="center">
 <table width="96%">
@@ -211,7 +211,7 @@ function checkMouseLeave(element, event) {
   {% if r.details %}
   <tr>
     <td colspan="{{ r.span }}" class='DevDetails {{ alt }}'>
-      <ul style='margin: 0px; padding: 1em;'>
+      <ul style='margin: 0px; padding: 0 0 0 1.5em;'>
         {{ r.details }}
       </ul>
     </td>
