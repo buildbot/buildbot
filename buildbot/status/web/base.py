@@ -408,8 +408,7 @@ def createJinjaEnv(revlink=None, changecommentlink=None):
     env.filters['revlink'] = revlinkfilter(revlink, env)
     
     if changecommentlink:
-        regex, replace = changecommentlink
-        env.filters['changecomment'] = addlinkfilter(regex, replace) 
+        env.filters['changecomment'] = addlinkfilter(*changecommentlink) 
     else:
         env.filters['changecomment'] = jinja2.escape
             
@@ -511,21 +510,21 @@ def revlinkfilter(replace, templates):
     return filter
      
 
-def addlinkfilter(search, replace):
+def addlinkfilter(search, url_replace, title_replace=''):
     ''' Returns function that does regex search/replace in 
         comments to add links to bug ids and similar.
         
         @param search: a regex to match what we look for 
-        @param replace: an url with \1\2 to include data from search 
-                        (I wrap with the <a href="...">...</a>.. myself)
+        @param url_replace: an url with regex refs (\g<0>, \1, \2, etc) that becomes the 'href' attribute
+        @param title_replace: similar to url_replace, but for the 'title' attribute
     '''
     
     regex = re.compile(search)
-    link_replace = jinja2.Markup(r'<a href="%s">\g<0></a>' % replace)
+    link_replace = jinja2.Markup(r'<a href="%s" title="%s">\g<0></a>' % 
+                                 (url_replace, title_replace))
     
     def filter(value):
-        comments = jinja2.escape(value)
-        return regex.sub(link_replace, comments)
+        return regex.sub(link_replace, value)
     
     return filter
 

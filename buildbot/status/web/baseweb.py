@@ -416,11 +416,12 @@ class WebStatus(service.MultiService):
                      view according to the time they were created (for VCS like Git) or
                      according to their integer revision numbers (for VCS like SVN).
 
-        @type changecommentlink: tuple (2 strings) or C{None}
+        @type changecommentlink: tuple (3 strings) or C{None}
         @param changecommentlink: a regular expression and replacement string that is applied
                      to all change comments. The first element represents what to search
-                     for and the second yields an url (the <a href=""></a> is added outside this)
-                     I.e. for Trac: (r'#(\d+)', r'http://buildbot.net/trac/ticket/\1') 
+                     for, the second should yield an url (for use in the href attribute of a link)
+                     and the third gives the title attribute
+                     I.e. for Trac: (r'#(\d+)', r'http://buildbot.net/trac/ticket/\1', r'Ticket \g<0>') 
 
         @type revlink: string or C{None}
         @param revlink: a replacement string that is applied to all revisions and
