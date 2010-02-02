@@ -130,20 +130,24 @@ class GetBuildDetailsTests(RunMixin, unittest.TestCase):
         def expectSuccess(bs):
             console_status = console.ConsoleStatusResource()
             results = console_status.getBuildDetails(MockRequest(), "buildername", bs);
-            self.assertEqual(results, "")
+            self.assertEqual(results, {})
         d.addCallback(expectSuccess)
 
         d.addCallback(lambda res: self.requestBuild("full2"))
 
         # Make sure the build details returned contained the expected error.
         def expectFailure(bs):
-            expected_details = """<li> buildername : 'ls -WillFail' failed.
-[ <a href="../builders/buildername/builds/0/steps/shell/logs/stdio">stdio</a> ]"""
+            expected_details = {
+                  'buildername': 'buildername',
+                 'logs': [{'name': 'stdio',
+                          'url': '../builders/buildername/builds/0/steps/shell/logs/stdio'}],
+                  'reason': ['shell'],
+                  'status': "'ls -WillFail' failed"}            
+            
             console_status = console.ConsoleStatusResource()
             results = console_status.getBuildDetails(MockRequest(), "buildername", bs);
             # web output has some extra whitespace after the first line, so strip that away
-            self.assertEqual([ l.strip() for l in results.split('\n') ],
-                             [ l.strip() for l in expected_details.split('\n') ])
+            self.assertEqual(results, expected_details)
 
         d.addCallback(expectFailure)
         return d
