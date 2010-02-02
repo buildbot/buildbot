@@ -147,7 +147,7 @@ class Box:
         return props    
     
     
-class ContextMixin():
+class ContextMixin(object):
     def getContext(self, request):
         status = self.getStatus(request)
         rootpath = path_to_root(request)
