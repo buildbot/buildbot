@@ -253,43 +253,52 @@ class StaticHTML(HtmlResource):
         template = request.site.buildbot_service.templates.get_template("empty.html")
         return template.render(**cxt)
 
-class DirectoryLister(static.DirectoryLister, ContextMixin):
-    """This variant of the static.DirectoryLister uses a template
-    for rendering."""
+# DirectoryLister isn't available in Twisted-2.5.0, so we just skip
+# this particular feature.
+have_DirectoryLister = False
+if hasattr(static, 'DirectoryLister'):
+    have_DirectoryLister = True
+    class DirectoryLister(static.DirectoryLister, ContextMixin):
+        """This variant of the static.DirectoryLister uses a template
+        for rendering."""
 
-    title = 'BuildBot'
+        title = 'BuildBot'
 
-    def render(self, request):
-        cxt = self.getContext(request)
+        def render(self, request):
+            cxt = self.getContext(request)
 
-        if self.dirs is None:
-            directory = os.listdir(self.path)
-            directory.sort()
-        else:
-            directory = self.dirs
+            if self.dirs is None:
+                directory = os.listdir(self.path)
+                directory.sort()
+            else:
+                directory = self.dirs
 
-        dirs, files = self._getFilesAndDirectories(directory)
+            dirs, files = self._getFilesAndDirectories(directory)
 
-        cxt['path'] = cgi.escape(urllib.unquote(request.uri))
-        cxt['directories'] = dirs
-        cxt['files'] = files
-        template = request.site.buildbot_service.templates.get_template("directory.html")
-        data = template.render(**cxt)
-        if isinstance(data, unicode):
-            data = data.encode("utf-8")
-        return data
-        
+            cxt['path'] = cgi.escape(urllib.unquote(request.uri))
+            cxt['directories'] = dirs
+            cxt['files'] = files
+            template = request.site.buildbot_service.templates.get_template("directory.html")
+            data = template.render(**cxt)
+            if isinstance(data, unicode):
+                data = data.encode("utf-8")
+            return data
 
 class StaticFile(static.File):
     """This class adds support for templated directory
     views."""
 
     def directoryListing(self):
-        return DirectoryLister(self.path,
-                               self.listNames(),
-                               self.contentTypes,
-                               self.contentEncodings,
-                               self.defaultType)
+        if have_DirectoryLister:
+            return DirectoryLister(self.path,
+                                   self.listNames(),
+                                   self.contentTypes,
+                                   self.contentEncodings,
+                                   self.defaultType)
+        else:
+            return static.Data("""
+   Directory Listings require Twisted-8.0.0 or later
+                """, "text/plain")
         
 
 MINUTE = 60
