@@ -219,7 +219,6 @@ class BotMaster(service.MultiService):
                     return -1
                 return cmp(t1, t2)
             builders.sort(_sortfunc)
-        print "sorted:", builders
         try:
             for b in builders:
                 b.maybeStartBuild()
