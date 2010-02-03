@@ -220,8 +220,8 @@ class ShellBase(SignalMixin):
         # but the process *ought* to be killed somehow
         self.failUnlessIn("process killed by signal", got)
         #print got
-    if runtime.platformType != 'posix':
-        testTimeout.todo = "timeout doesn't appear to work under windows"
+    if runtime.platformType == 'win32':
+        testTimeout.skip = "timeout doesn't appear to work under windows"
 
     def testInterrupt1(self):
         args = {'command': [sys.executable, self.sleepcmd, "10"],
@@ -237,7 +237,7 @@ class ShellBase(SignalMixin):
         self.failUnlessIn("command interrupted", got)
         if runtime.platformType == "posix":
             self.failUnlessIn("process killed by signal", got)
-    if runtime.platformType != 'posix':
+    if runtime.platformType == 'win32':
         testInterrupt1.skip = "interrupt doesn't appear to work under windows"
 
 
