@@ -83,6 +83,29 @@ the Builders you are interested in here.</p>
 {% endfor %}
 </table>
 
+<h2>Limiting the Builds that are Displayed</h2>
+
+<p>By adding one or more <tt>committer=</tt> arguments, the display will be
+limited to showing builds that were started by the given committer.  If no
+<tt>committer=</tt> arguments are provided, all builds will be displayed.</p>
+
+<p>To view a Waterfall page with only a subset of Builds displayed, select
+the committers your are interested in here.</p>
+
+Erase the text from these "Show Committer:" boxes to remove that filter.
+
+{% if committers %}
+  <table>
+    {% for cn in committers %}
+      <tr>
+        <td>
+          Show Committer: <input type="text" name="committer" value="{{ cn }}">
+        </td>
+      </tr>
+    {% endfor %}
+  </table>
+{% endif %}
+
 <h2>Showing only the Builders with failures</h2>
 
 <p>By adding the <tt>failures_only=true</tt> argument, the display will be limited
