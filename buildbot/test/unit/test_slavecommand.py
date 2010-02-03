@@ -238,7 +238,7 @@ class ShellBase(SignalMixin):
         if runtime.platformType == "posix":
             self.failUnlessIn("process killed by signal", got)
     if runtime.platformType != 'posix':
-        testInterrupt1.todo = "interrupt doesn't appear to work under windows"
+        testInterrupt1.skip = "interrupt doesn't appear to work under windows"
 
 
     # todo: twisted-specific command tests
@@ -286,6 +286,8 @@ class Shell(ShellBase, unittest.TestCase):
         # N.B.: under windows, the trial process hangs out for another few
         # seconds. I assume that the win32eventreactor is waiting for one of
         # the lingering child processes to really finish.
+    if runtime.platformType != 'posix':
+        testInterrupt2.skip = "interrupt doesn't appear to work under windows"
 
 haveProcess = interfaces.IReactorProcess(reactor, None)
 if runtime.platformType == 'posix':
