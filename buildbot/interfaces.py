@@ -442,7 +442,7 @@ class IBuilderStatus(Interface):
         delivered."""
 
 class IEventSource(Interface):
-    def eventGenerator(branches=[], categories=[]):
+    def eventGenerator(branches=[], categories=[], committers=[]):
         """This function creates a generator which will yield all of this
         object's status events, starting with the most recent and progressing
         backwards in time. These events provide the IStatusEvent interface.
@@ -458,6 +458,10 @@ class IEventSource(Interface):
         should only return events that are categorized within the
         given category.  If the list is empty, events for all
         categories should be returned.
+
+        @param comitters: a list of committers.  The generator should only
+        return events caused by one of the listed committers. If the list is
+        empty or None, events from every committers should be returned.
         """
 
 class IBuildStatus(Interface):

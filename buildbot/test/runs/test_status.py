@@ -1837,3 +1837,22 @@ class Pruning(unittest.TestCase):
             '13', '13-log-foo',
             '14', '14-log-bar', '14-log-foo',
         ])
+
+class EventGenerator(unittest.TestCase):
+    def makeGenerator(selfx, reasons=[]):
+        b = MyBuilder("bname")
+        b1 = b.newBuild()
+        b1.setSourceStamp(SourceStamp(changes=[Change("foo", [], "")]))
+        b1.buildStarted(b1)
+        b2 = b.newBuild()
+        b2.setSourceStamp(SourceStamp(changes=[Change("bar", [], "")]))
+        b2.buildStarted(b2)
+        return b.eventGenerator([], [], reasons)
+
+    def testEventGenerator_Unfiltered(self):
+        gen = self.makeGenerator()
+        self.failUnlessEqual(len([e for e in gen]), 2)
+
+    def testEventGenerator_Filtered(self):
+        gen = self.makeGenerator(["foo"])
+        self.failUnlessEqual(len([e for e in gen]), 1)

@@ -249,6 +249,7 @@ class WaterfallHelp(HtmlResource):
         cxt['show_events_checked'] = request.args.get("show_events", ["false"])[0].lower() == "true"
         cxt['branches'] = [b for b in request.args.get("branch", []) if b]
         cxt['failures_only'] = request.args.get("failures_only", ["false"])[0].lower() == "true"
+        cxt['committers'] = [c for c in request.args.get("committer", []) if c]
 
         # this has a set of toggle-buttons to let the user choose the
         # builders
@@ -446,6 +447,7 @@ class WaterfallStatusResource(HtmlResource):
         filterCategories = request.args.get('category', [])
         filterBranches = [b for b in request.args.get("branch", []) if b]
         filterBranches = map_branches(filterBranches)
+        filterCommitters = [c for c in request.args.get("committer", []) if c]
         maxTime = int(request.args.get("last_time", [util.now()])[0])
         if "show_time" in request.args:
             minTime = maxTime - int(request.args["show_time"][0])
@@ -495,7 +497,8 @@ class WaterfallStatusResource(HtmlResource):
 
         for s in sources:
             gen = insertGaps(s.eventGenerator(filterBranches,
-                                              filterCategories),
+                                              filterCategories,
+                                              filterCommitters),
                              showEvents,
                              lastEventTime)
             sourceGenerators.append(gen)
