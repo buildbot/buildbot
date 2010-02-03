@@ -946,6 +946,9 @@ class TestBuilder(RunMixin, unittest.TestCase):
 
         return d
 
+    def waitUntilBuildFinished(self, build):
+        return build.build_status.waitUntilFinished()
+
     def testBuilderEnv(self):
         return self.doBuilderEnvTest("dummy", self._testBuilderEnv1)
 
@@ -957,6 +960,7 @@ class TestBuilder(RunMixin, unittest.TestCase):
         self.failUnlessEqual('bar', s.cmd.args['env']['foo'])
         self.failUnless('blah' in s.cmd.args['env'])
         self.failUnlessEqual('blah', s.cmd.args['env']['blah'])
+        return self.waitUntilBuildFinished(build)
 
     def testBuilderEnvOverride(self):
         return self.doBuilderEnvTest("dummy2", self._testBuilderEnvOverride1)
@@ -967,6 +971,7 @@ class TestBuilder(RunMixin, unittest.TestCase):
         s = build.currentStep
         self.failUnless('blah' in s.cmd.args['env'])
         self.failUnlessEqual('blah', s.cmd.args['env']['blah'])
+        return self.waitUntilBuildFinished(build)
 
     def testBuilderNoStepEnv(self):
         return self.doBuilderEnvTest("dummy3", self._testBuilderNoStepEnv1)
@@ -977,6 +982,7 @@ class TestBuilder(RunMixin, unittest.TestCase):
         s = build.currentStep
         self.failUnless('blah' in s.cmd.args['env'])
         self.failUnlessEqual('bar', s.cmd.args['env']['blah'])
+        return self.waitUntilBuildFinished(build)
 
 class SchedulerWatchers(RunMixin, TestFlagMixin, unittest.TestCase):
     config_watchable = config_base + """
