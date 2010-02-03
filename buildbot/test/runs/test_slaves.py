@@ -57,10 +57,10 @@ class Slave(RunMixin, unittest.TestCase):
 
     def setUp(self):
         RunMixin.setUp(self)
-        self.master.loadConfig(config_1)
-        self.master.startService()
-        d = self.connectSlave(["b1"])
-        d.addCallback(lambda res: self.connectSlave(["b1"], "bot2"))
+        d = self.master.loadConfig(config_1)
+        d.addCallback(lambda res : self.master.startService())
+        d.addCallback(lambda res : self.connectSlave(["b1"]))
+        d.addCallback(lambda res : self.connectSlave(["b1"], "bot2"))
         return d
 
     def doBuild(self, buildername):
@@ -297,14 +297,16 @@ class LatentSlave(RunMixin, unittest.TestCase):
         #twisted.internet.base.DelayedCall.debug = True
         # debugging
         RunMixin.setUp(self)
-        self.master.loadConfig(latent_config)
-        self.master.startService()
-        self.bot1 = self.master.botmaster.slaves['bot1']
-        self.bot2 = self.master.botmaster.slaves['bot2']
-        self.bot3 = self.master.botmaster.slaves['bot3']
-        self.bot1.testcase = self
-        self.bot2.testcase = self
-        self.b1 = self.master.botmaster.builders['b1']
+        d = self.master.loadConfig(latent_config)
+        d.addCallback(lambda res : self.master.startService())
+        def finishSetup(_):
+            self.bot1 = self.master.botmaster.slaves['bot1']
+            self.bot2 = self.master.botmaster.slaves['bot2']
+            self.bot3 = self.master.botmaster.slaves['bot3']
+            self.bot1.testcase = self
+            self.bot2.testcase = self
+            self.b1 = self.master.botmaster.builders['b1']
+        d.addCallback(finishSetup)
 
     def doBuild(self, buildername):
         br = BuildRequest("forced", SourceStamp(), 'test_builder')
@@ -574,9 +576,9 @@ class SlaveBusyness(RunMixin, unittest.TestCase):
 
     def setUp(self):
         RunMixin.setUp(self)
-        self.master.loadConfig(config_busyness)
-        self.master.startService()
-        d = self.connectSlave(["b1", "b2"])
+        d = self.master.loadConfig(config_busyness)
+        d.addCallback(lambda res : self.master.startService())
+        d.addCallback(lambda res : self.connectSlave(["b1", "b2"]))
         return d
 
     def doBuild(self, buildername):
@@ -687,9 +689,9 @@ class Reconfig(RunMixin, unittest.TestCase):
 
     def setUp(self):
         RunMixin.setUp(self)
-        self.master.loadConfig(config_3)
-        self.master.startService()
-        d = self.connectSlave(["b1"])
+        d = self.master.loadConfig(config_3)
+        d.addCallback(lambda res : self.master.startService())
+        d.addCallback(lambda res : self.connectSlave(["b1"]))
         return d
 
     def _one_started(self):
@@ -844,8 +846,9 @@ class Slave2(RunMixin, unittest.TestCase):
 
     def setUp(self):
         RunMixin.setUp(self)
-        self.master.loadConfig(config_1)
-        self.master.startService()
+        d = self.master.loadConfig(config_1)
+        d.addCallback(lambda res : self.master.startService())
+        return d
 
     def doBuild(self, buildername, reason="forced"):
         # we need to prevent these builds from being merged, so we create
@@ -926,10 +929,9 @@ class FakeMailer(mail.MailNotifier):
 
 class BuildSlave(RunMixin, unittest.TestCase):
     def test_track_builders(self):
-        self.master.loadConfig(config_multi_builders)
-        self.master.readConfig = True
-        self.master.startService()
-        d = self.connectSlave()
+        d = self.master.loadConfig(config_multi_builders)
+        d.addCallback(lambda res : self.master.startService())
+        d.addCallback(lambda res : self.connectSlave())
 
         def _check(res):
             b = self.master.botmaster.builders['dummy']
@@ -944,15 +946,16 @@ class BuildSlave(RunMixin, unittest.TestCase):
         return d
 
     def test_mail_on_missing(self):
-        self.master.loadConfig(config_mail_missing)
-        self.master.readConfig = True
-        self.master.startService()
         fm = FakeMailer("buildbot@example.org")
-        fm.messages = []
-        fm.setServiceParent(self.master)
-        self.master.statusTargets.append(fm)
 
-        d = self.connectSlave()
+        d = self.master.loadConfig(config_mail_missing)
+        d.addCallback(lambda res : self.master.startService())
+        def addFakeMailer(_):
+            fm.messages = []
+            fm.setServiceParent(self.master)
+            self.master.statusTargets.append(fm)
+        d.addCallback(addFakeMailer)
+        d.addCallback(lambda res : self.connectSlave())
         d.addCallback(self.stall, 1)
         d.addCallback(lambda res: self.shutdownSlave("bot1", "dummy"))
         def _not_yet(res):
