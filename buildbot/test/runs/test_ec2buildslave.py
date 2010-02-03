@@ -419,6 +419,8 @@ class Initialization(Mixin, unittest.TestCase):
             if h in os.environ:
                 home = os.environ[h]
                 break
+        else:
+            home = None
 
         fake_home = os.path.join(os.getcwd(), 'basedir') # see RunMixin.setUp
         os.environ['HOME'] = fake_home
@@ -435,7 +437,10 @@ class Initialization(Mixin, unittest.TestCase):
         # for completeness, we'll show that the connection actually exists.
         self.failUnless(isinstance(bot1.conn, Connection))
         # clean up.
-        os.environ['HOME'] = home
+        if home is None:
+            del os.environ['HOME']
+        else:
+            os.environ['HOME'] = home
         self.rmtree(dir)
 
     def testCustomSeparateFile(self):
