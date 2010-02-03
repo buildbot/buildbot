@@ -1049,66 +1049,6 @@ c['builders'].append({'name':'quick2', 'slavenames':slavenames, 'builddir': 'qui
 c['slavePortnum'] = 0
 """
 
-class BuildPrioritization(RunMixin, unittest.TestCase):
-    def rmtree(self, d):
-        rmtree(d)
-
-    def testPriority(self):
-        self.rmtree("basedir")
-        os.mkdir("basedir")
-        self.master.loadConfig(config_priority)
-        self.master.readConfig = True
-        self.master.startService()
-
-        # Our fake source stamp
-        # we override canBeMergedWith so that our requests don't get merged together
-        ss = SourceStamp()
-        ss.canBeMergedWith = lambda x: False
-
-        # Send 10 requests to alternating builders
-        # We fudge the submittedAt field after submitting since they're all
-        # getting submitted so close together according to time.time()
-        # and all we care about is what order they're run in.
-        reqs = []
-        self.start_order = []
-        for i in range(10):
-            req = BuildRequest(str(i), ss, "test_builder")
-            j = i % 2 + 1
-            self.master.botmaster.builders['quick%i' % j].submitBuildRequest(req)
-            req.submittedAt = i
-            # Keep track of what order the builds start in
-            def append(build):
-                self.start_order.append(int(build.reason))
-            req.subscribe(append)
-            reqs.append(req.waitUntilFinished())
-
-        dl = defer.DeferredList(reqs)
-        dl.addCallback(self._all_finished)
-
-        def _delay(res):
-            d1 = defer.Deferred()
-            reactor.callLater(0.5, d1.callback, None)
-            # this test depends upon this 0.5s delay landing us in the middle
-            # of one of the builds.
-            return d1
-
-        def _connect(res, i):
-            return self.connectSlave(slavename="bot%i" % i, builders=["quick1", "quick2"])
-
-        # Now add the slaves
-        d = self.connectSlave(slavename="bot0", builders=["quick1", "quick2"])
-        for i in range(1,5):
-            d.addCallback(_delay)
-            d.addCallback(_connect, i)
-
-        d.addCallback(lambda x: dl)
-
-        return d
-
-    def _all_finished(self, *args):
-        # The builds should have finished in proper order
-        self.failUnlessEqual(self.start_order, range(10))
-
 # Test graceful shutdown when no builds are active, as well as
 # canStartBuild after graceful shutdown is initiated
 config_graceful_shutdown_idle = config_base
