@@ -7959,7 +7959,7 @@ addition, adding one or more ``category='' query arguments to the URL
 will limit the display to Builders that were defined with one of the
 given categories.
 
-By adding one or more ``name='' query arguments, the console view is
+By adding one or more ``name='' query arguments to the URL, the console view is
 restricted to only showing changes made by the given users.
 
 NOTE: To use this page, your buildbot.css file in public_html
@@ -7969,7 +7969,12 @@ The console view is still in development. At this moment it supports
 only the source control managers that have an integer based revision id,
 like svn. It also has some issues with displaying multiple braches at the
 same time. If you do have multiple branches, you should use the
-``branch='' query argument.
+``branch='' query argument.  The @code{order_console_by_time} option may help
+with non-integer VCs:
+
+@example
+w = html.WebStatus(http_port=8080, order_console_by_time=True)
+@end example
 
 @item /rss
 
