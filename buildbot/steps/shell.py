@@ -491,6 +491,12 @@ class WarningCountingShellCommand(ShellCommand):
         return ShellCommand.start(self)
 
     def createSummary(self, log):
+        """
+        Match log lines against warningPattern.
+
+        Warnings are collected into another log for this step, and the
+        build-wide 'warnings-count' is updated."""
+
         self.warnCount = 0
 
         # Now compile a regular expression from whichever warning pattern we're
