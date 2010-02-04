@@ -1625,8 +1625,11 @@ class SourceBase(Command):
         assert isinstance(rc, int)
         if rc == 0:
             return defer.succeed(0)
-        # Attempt a recursive chmod and re-try the rm -rf after.
-        command = ["chmod", "-R", "u+rwx", os.path.join(self.builder.basedir, dirname)]
+        # Attempt a recursive chmod and re-try the rm -rf after.  The '-f' here
+        # works around a broken 'chmod -R' on FreeBSD (it tries to recurse into a
+        # directory for which it doesn't have permission, before changing that
+        # permission)
+        command = ["chmod", "-Rf", "u+rwx", os.path.join(self.builder.basedir, dirname)]
         c = ShellCommand(self.builder, command, self.builder.basedir,
                          sendRC=0, timeout=self.timeout, maxTime=self.maxTime,
                          usePTY=False)
