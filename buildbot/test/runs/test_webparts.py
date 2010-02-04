@@ -4,9 +4,11 @@
 import os
 import re
 import time
+import urlparse
 
 from twisted.trial import unittest
 from twisted.internet import defer
+from twisted.python import util
 from twisted.web import client
 from twisted.web.error import Error as WebError
 from buildbot import sourcestamp
@@ -178,34 +180,22 @@ class WebpartsRecursive(_WebpartsTest):
             raise unittest.SkipTest("lxml not installed")
 
         class CustomResolver(etree.Resolver):
-            '''Cache DTDs to avoid w3.org blocking
+            '''Use cached DTDs to avoid network access
 
                from http://www.hoboes.com/Mimsy/hacks/caching-dtds-using-lxml-and-etree/
             '''
-
-            import tempfile
-            cache = '%s/buildbot-test-dtd-cache' % tempfile.gettempdir()
 
             if WebpartsRecursive.log:
                 print "\nCaching DTDs in: %s" % cache
 
             def resolve(self, URL, id, context):
-                import urllib
-                import urlparse
-
-                #determine cache path
+                #determine cache filename
                 url = urlparse.urlparse(URL)
-                filefolder, filename = os.path.split(url.path)
-                filefolder = url.hostname + filefolder
-                dtdFolder = os.path.join(self.cache, filefolder)
-                dtdPath = os.path.join(dtdFolder, filename)
-
+                dtdPath = util.sibpath(__file__,
+                            url.hostname + '.' + url.path.replace('/', '.'))
                 #cache if necessary
                 if not os.path.exists(dtdPath):
-                    print "CREATING CACHE FOR", URL
-                    if not os.path.exists(dtdFolder):
-                        os.makedirs(dtdFolder)
-                    filename, headers = urllib.urlretrieve(URL, dtdPath)
+                    raise ValueError("URL '%s' is not cached in '%s'" % (URL, dtdPath))
 
                 #resolve the cached file
                 return self.resolve_file(open(dtdPath), context, base_url=URL)
@@ -351,7 +341,7 @@ c['projectURL'] = 'http://server.net/home'
 
         from lxml import html
 
-        self.parser = html.XHTMLParser(dtd_validation=True, no_network=False)
+        self.parser = html.XHTMLParser(dtd_validation=True, no_network=True)
         self.parser.resolvers.add(self.CustomResolver())
         self.errors = []
         self.error_count = 0

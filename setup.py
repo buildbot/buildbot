@@ -217,6 +217,12 @@ setup_args = {
                 ("buildbot/scripts", ["buildbot/scripts/sample.cfg"]),
                 ("buildbot/test/unit/mail", testmsgs),
                 ("buildbot/test/unit/subdir", ["buildbot/test/unit/subdir/emit.py"]),
+                ("buildbot/test/runs", [
+                            'www.w3.org..TR.xhtml1.DTD.xhtml-lat1.ent',
+                            'www.w3.org..TR.xhtml1.DTD.xhtml-special.ent',
+                            'www.w3.org..TR.xhtml1.DTD.xhtml-symbol.ent',
+                            'www.w3.org..TR.xhtml1.DTD.xhtml1-transitional.dtd',
+                    ]),
                 ],
     'scripts': scripts,
     'cmdclass': {'install_data': install_data_twisted,
