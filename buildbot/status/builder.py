@@ -2377,3 +2377,7 @@ class Status:
         bss.waitUntilFinished().addCallback(self.activeBuildSets.remove)
         for t in self.watchers:
             t.buildsetSubmitted(bss)
+
+    def changeAdded(self, change):
+        for t in self.watchers:
+            t.changeAdded(change)

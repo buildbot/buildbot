@@ -29,6 +29,9 @@ class StatusReceiver:
     def buildETAUpdate(self, build, ETA):
         pass
 
+    def changeAdded(self, change):
+        pass
+
     def stepStarted(self, build, step):
         pass
 

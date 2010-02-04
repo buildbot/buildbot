@@ -1056,6 +1056,9 @@ class STarget(base.StatusReceiver):
     def buildETAUpdate(self, build, ETA):
         self.events.append(("buildETAUpdate", build, ETA))
         self.announce()
+    def changeAdded(self, change):
+        self.events.append(("changeAdded", change))
+        self.announce()
     def stepStarted(self, build, step):
         self.events.append(("stepStarted", build, step))
         self.announce()
@@ -1089,6 +1092,23 @@ class STarget(base.StatusReceiver):
     def builderRemoved(self, name):
         self.events.append(("builderRemoved", name))
         self.announce()
+
+class VerifyChangeAdded(RunMixin, unittest.TestCase):
+    def testChangeAdded(self):
+        m = self.master
+
+        s = m.getStatus()
+        self.t1 = t1 = STarget(["builder"])
+        s.subscribe(t1)
+
+        m.loadConfig(config_2)
+        m.readConfig = True
+        m.startService()
+
+        cm = self.master.change_svc
+        c = Change("bob", ["Makefile", "foo/bar.c"], "changed stuff")
+        cm.addChange(c)
+        self.failUnlessEqual(t1.events[-1], ("changeAdded", c))
 
 class Subscription(RunMixin, unittest.TestCase):
     # verify that StatusTargets can subscribe/unsubscribe properly

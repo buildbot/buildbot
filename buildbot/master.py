@@ -989,6 +989,7 @@ class BuildMaster(service.MultiService):
     def addChange(self, change):
         for s in self.allSchedulers():
             s.addChange(change)
+        self.status.changeAdded(change)
 
     def submitBuildSet(self, bs):
         # determine the set of Builders to use
