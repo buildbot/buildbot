@@ -101,6 +101,13 @@ class ShellCommand(LoggingBuildStep):
         # we need to stash the RemoteShellCommand's args too
         self.addFactoryArguments(**kwargs)
 
+    def setStepStatus(self, step_status):
+        LoggingBuildStep.setStepStatus(self, step_status)
+
+        # start doesn't set text soon enough to capture our description in
+        # the stepStarted status notification.  Set text here so it's included.
+        self.step_status.setText(self.describe(False))
+
     def setDefaultWorkdir(self, workdir):
         rkw = self.remote_kwargs
         rkw['workdir'] = rkw['workdir'] or workdir
@@ -220,6 +227,11 @@ class TreeSize(ShellCommand):
     name = "treesize"
     command = ["du", "-s", "-k", "."]
     kib = None
+
+    def __init__(self, *args, **kwargs):
+        kwargs.setdefault('description', 'taking tree size')
+        kwargs.setdefault('descriptionDone', 'tree sized')
+        ShellCommand.__init__(self, *args, **kwargs)
 
     def commandComplete(self, cmd):
         out = cmd.logs['stdio'].getText()
