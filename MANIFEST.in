@@ -15,5 +15,5 @@ include buildbot/test/runs/www.w3.org*
 include ChangeLog*
 include test-dist.sh
 
-include contrib/* contrib/windows/* contrib/OS-X/* contrib/CSS/*
+include contrib/* contrib/windows/* contrib/os-x/* contrib/css/*
 include contrib/trac/* contrib/trac/bbwatcher/* contrib/trac/bbwatcher/templates/*
