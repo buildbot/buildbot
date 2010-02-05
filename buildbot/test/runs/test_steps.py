@@ -714,6 +714,7 @@ make[2]: Leaving directory `/abs/path/build'
                              warningExtractor=shell.Compile.warnExtractFromRegexpGroups,
                              suppressionFile="warnings.supp",
                              command=[sys.executable, "-c", printStatement])
+        self.failUnlessEqual(step.step_status.getText(), ['compiling'])
         slavesrc = os.path.join(self.slavebase,
                                 self.slavebuilderbase,
                                 "build",
@@ -731,6 +732,8 @@ make[2]: Leaving directory `/abs/path/build'
             self.failUnlessEqual(len(lines), 2)
             self.failUnlessEqual(lines[0].strip(), "baz.c:34: warning: `magic' defined but not used")
             self.failUnlessEqual(lines[1].strip(), "foo.c:100: warning: `xyzzy' defined but not used")
+            self.failUnlessEqual(step.step_status.getText(), ['compile',
+                                                              'warnings'])
 
         d.addCallback(_checkResult)
         return d

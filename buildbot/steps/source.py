@@ -142,6 +142,13 @@ class Source(LoggingBuildStep):
         self.description = description
         self.descriptionDone = descriptionDone
 
+    def setStepStatus(self, step_status):
+        LoggingBuildStep.setStepStatus(self, step_status)
+
+        # start doesn't set text soon enough to capture our description in
+        # the stepStarted status notification.  Set text here so it's included.
+        self.step_status.setText(self.describe(False))
+
     def setDefaultWorkdir(self, workdir):
         self.args['workdir'] = self.args['workdir'] or workdir
 
