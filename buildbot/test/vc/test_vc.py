@@ -465,6 +465,7 @@ class VCBase(SignalMixin):
         c.getBuilder("vç").requestBuild(req)
         d.addCallback(self._doBuild_1, shouldSucceed)
         return d
+    shouldPrintTheseLogs = False ## TEMPORARY
     def _doBuild_1(self, bs, shouldSucceed):
         r = bs.getResults()
         if r != SUCCESS and shouldSucceed:
@@ -622,9 +623,14 @@ class VCBase(SignalMixin):
         return d
     def _do_vctest_update_2(self, bs):
         log.msg("_do_vctest_update_2")
+        # add some debugging information if this is going to fail; it usually
+        # fails because the VC clobbered when it shoulda updated, so this might
+        # help
+        if not os.path.exists(os.path.join(self.workdir, "newfile")):
+            self.printLogs(bs)
+        self.shouldExist(self.workdir, "newfile")
         self.shouldExist(self.workdir, "main.c")
         self.shouldExist(self.workdir, "version.c")
-        self.touch(self.workdir, "newfile")
         # now make a change to the repository and make sure we pick it up
         d = self.helper.vc_revise()
         d.addCallback(lambda res: self.doBuild())
