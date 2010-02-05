@@ -935,6 +935,10 @@ class IStatusReceiver(Interface):
         """This is a periodic update on the progress this Build has made
         towards completion."""
 
+    def changeAdded(change):
+        """A new Change was added to the ChangeMaster.  By the time this event
+        is received, all schedulers have already received the change."""
+
     def stepStarted(build, step):
         """A step has just started. 'step' is the IBuildStepStatus which
         represents the step: it can be queried for more information.
