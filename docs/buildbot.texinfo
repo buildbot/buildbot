@@ -8336,7 +8336,7 @@ The email address to be used in the 'From' header.
 Users. If False, only send mail to the extraRecipients list.
 
 @item extraRecipients
-(tuple of strings). A list of email addresses to which messages should
+(list of strings). A list of email addresses to which messages should
 be sent (in addition to the InterestedUsers list, which includes any
 developers who made Changes that went into this build). It is a good
 idea to create a small mailing list and deliver to that, then let
