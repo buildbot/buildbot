@@ -5,6 +5,7 @@ Parse various kinds of 'CVS notify' email.
 """
 import os, re
 import time, calendar
+import datetime
 from email import message_from_file
 from email.Utils import parseaddr
 from email.Iterators import body_line_iterator
@@ -150,6 +151,10 @@ class SyncmailMaildirSource(MaildirSource):
         # however, because there are a lot of broken clocks out there.
         when = util.now()
 
+        # calculate a "revision" based on that timestamp
+        theCurrentTime =  datetime.datetime.utcfromtimestamp(float(when))
+        rev = theCurrentTime.isoformat()
+
         subject = m["subject"]
         # syncmail puts the repository-relative directory in the subject:
         # mprefix + "%(dir)s %(file)s,%(oldversion)s,%(newversion)s", where
@@ -233,7 +238,7 @@ class SyncmailMaildirSource(MaildirSource):
         comments = comments.rstrip() + "\n"
 
         change = changes.Change(who, files, comments, isdir, when=when,
-                                branch=branch)
+                                branch=branch, revision=rev)
 
         return change
 
