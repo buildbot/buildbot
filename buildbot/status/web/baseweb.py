@@ -22,6 +22,7 @@ from buildbot.status.web.changes import ChangesResource
 from buildbot.status.web.builder import BuildersResource
 from buildbot.status.web.buildstatus import BuildStatusStatusResource 
 from buildbot.status.web.slaves import BuildSlavesResource
+from buildbot.status.web.status_json import JsonStatusResource
 from buildbot.status.web.xmlrpc import XMLRPCServer
 from buildbot.status.web.about import AboutBuildbot
 from buildbot.status.web.auth import IAuth, AuthFailResource
@@ -555,6 +556,7 @@ class WebStatus(service.MultiService):
         status = self.getStatus()
         root.putChild("rss", Rss20StatusResource(status))
         root.putChild("atom", Atom10StatusResource(status))
+        root.putChild("json", JsonStatusResource(status))
 
         self.site.resource = root
 
