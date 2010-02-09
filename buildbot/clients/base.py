@@ -121,5 +121,5 @@ if __name__ == '__main__':
     master = "localhost:8007"
     if len(sys.argv) > 1:
         master = sys.argv[1]
-    c = TextClient()
+    c = TextClient(master)
     c.run()
