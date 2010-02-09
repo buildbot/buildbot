@@ -130,12 +130,28 @@ class Change:
             for f in self.files:
                 data += " %s\n" % f
         return data
-        
+
     def getProperties(self):
         data = ""
         for prop in self.properties.asList():
             data += "  %s: %s" % (prop[0], prop[1])
         return data
+
+    def asDict(self):
+        result = {}
+        # Constant
+        result['number'] = self.number
+        result['branch'] = self.branch
+        result['category'] = self.category
+        result['who'] = self.getShortAuthor()
+        result['comments'] = self.comments
+        result['revision'] = self.revision
+        result['when'] = self.when
+        result['files'] = self.files
+        result['revlink'] = self.revlink
+        result['properties'] = self.properties.asList()
+        return result
+
 
 class ChangeMaster(service.MultiService):
 
@@ -280,3 +296,5 @@ class TestChangeMaster(ChangeMaster):
     """A ChangeMaster for use in tests that does not save itself"""
     def stopService(self):
         return service.MultiService.stopService(self)
+
+# vim: set ts=4 sts=4 sw=4 et:

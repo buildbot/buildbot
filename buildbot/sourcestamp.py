@@ -94,7 +94,7 @@ class SourceStamp(util.ComparableMixin):
         if self.patch:
             text.append("[patch]")
         return text
-    
+
     def getHTMLDict(self):
         if self.revision is None:
             return dict(rev='latest')
@@ -104,3 +104,15 @@ class SourceStamp(util.ComparableMixin):
         if self.patch:
             d['patch'] = True
         return d
+
+    def asDict(self):
+        result = {}
+        # Constant
+        result['revision'] = self.revision
+        # TODO(maruel): Make the patch content a suburl.
+        result['patch'] = self.patch
+        result['branch'] = self.branch
+        result['changes'] = [c.asDict() for c in getattr(self, 'changes', [])]
+        return result
+
+# vim: set ts=4 sts=4 sw=4 et:

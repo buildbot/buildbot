@@ -774,6 +774,17 @@ class BuildRequestStatus:
     def setSubmitTime(self, t):
         self.submittedAt = t
 
+    def asDict(self):
+        result = {}
+        # Constant
+        result['source'] = self.source.asDict()
+        result['builderName'] = self.getBuilderName()
+        result['submittedAt'] = self.getSubmitTime()
+
+        # Transient
+        result['builds'] = [build.asDict() for build in self.getBuilds()]
+        return result
+
 
 class BuildStepStatus(styles.Versioned):
     """
@@ -1068,6 +1079,26 @@ class BuildStepStatus(styles.Versioned):
     def upgradeToVersion2(self):
         if not hasattr(self, "statistics"):
             self.statistics = {}
+
+    def asDict(self):
+        result = {}
+        # Constant
+        result['name'] = self.getName()
+
+        # Transient
+        result['text'] = self.getText()
+        result['results'] = self.getResults()
+        result['is_started'] = self.isStarted()
+        result['is_finished'] = self.isFinished()
+        result['statistics'] = self.statistics
+        result['times'] = self.getTimes()
+        result['expectations'] = self.getExpectations()
+        result['eta'] = self.getETA()
+        result['urls'] = self.getURLs()
+        # TODO(maruel): Move that to a sub-url or just publish the log_url
+        # instead.
+        #result['logs'] = self.getLogs()
+        return result
 
 
 class BuildStatus(styles.Versioned):
@@ -1477,6 +1508,34 @@ class BuildStatus(styles.Versioned):
             log.msg("unable to save build %s-#%d" % (self.builder.name,
                                                      self.number))
             log.err()
+
+    def asDict(self):
+        result = {}
+        # Constant
+        result['number'] = self.getNumber()
+        result['source_stamp'] = self.getSourceStamp().asDict()
+        result['reason'] = self.getReason()
+        result['requests'] = [r.asDict() for r in self.getRequests()]
+        result['blame'] = self.getResponsibleUsers()
+        result['changes'] = [c.asText() for c in self.getChanges()]
+
+        # Transient
+        result['properties'] = self.getProperties().asList()
+        result['times'] = self.getTimes()
+        result['text'] = self.getText()
+        result['results'] = self.getResults()
+        result['slave'] = self.getSlavename()
+        # TODO(maruel): Add.
+        #result['test_results'] = self.getTestResults()
+        # TODO(maruel): Include the url? It's too heavy otherwise.
+        #result['logs'] = self.getLogs()
+        result['eta'] = self.getETA()
+        result['steps'] = [bss.asDict() for bss in self.steps]
+        if self.getCurrentStep():
+            result['current_step'] = self.getCurrentStep().asDict()
+        else:
+            result['current_step'] = None
+        return result
 
 
 
@@ -2045,6 +2104,32 @@ class BuilderStatus(styles.Versioned):
         if client in self.subscribers:
             self.subscribers.remove(client)
 
+    def asDict(self):
+        result = {}
+        # Constant
+        # TODO(maruel): Fix me. We don't want to leak the full path.
+        result['basedir'] = os.path.basename(self.basedir)
+        result['category'] = self.category
+        result['slaves'] = self.slavenames
+        #result['url'] = self.parent.getURLForThing(self)
+        # TODO(maruel): Add cache settings? Do we care?
+
+        # Transient
+        # Collect build numbers.
+        # Important: Only grab the *cached* builds numbers to reduce I/O.
+        current_builds = [b.getNumber() for b in self.currentBuilds]
+        cached_builds = list(set(self.buildCache.keys() + current_builds))
+        cached_builds.sort()
+        result['cached_builds'] = cached_builds
+        result['current_builds'] = current_builds
+        result['state'] = self.getState()[0]
+        # BuildRequestStatus doesn't have a number so display the SourceStamp.
+        result['pending_builds'] = [
+            b.getSourceStamp().asDict() for b in self.getPendingBuilds()
+        ]
+        return result
+
+
 class SlaveStatus:
     implements(interfaces.ISlaveStatus)
 
@@ -2114,6 +2199,16 @@ class SlaveStatus:
         graceful shutdown flag is changed."""
         if watcher in self.graceful_callbacks:
             self.graceful_callbacks.remove(watcher)
+
+    def asDict(self):
+        result = {}
+        # Transient
+        result['host'] = self.getHost()
+        result['admin'] = self.getAdmin()
+        result['version'] = self.getVersion()
+        result['connected'] = self.isConnected()
+        return result
+
 
 class Status:
     """
@@ -2381,3 +2476,14 @@ class Status:
     def changeAdded(self, change):
         for t in self.watchers:
             t.changeAdded(change)
+
+    def asDict(self):
+        result = {}
+        # Constant
+        result['name'] = self.getProjectName()
+        result['url'] = self.getProjectURL()
+        # TODO: self.getSchedulers()
+        # self.getChangeSources()
+        return result
+
+# vim: set ts=4 sts=4 sw=4 et:
