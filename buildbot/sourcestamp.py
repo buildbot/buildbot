@@ -1,3 +1,5 @@
+# -*- test-case-name: buildbot.test.test_sourcestamp -*-
+
 from zope.interface import implements
 from buildbot import util, interfaces
 
