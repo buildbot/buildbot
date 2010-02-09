@@ -1,3 +1,4 @@
+# -*- test-case-name: buildbot.test.test_web_status_json -*-
 # Original Copyright (c) 2010 The Chromium Authors.
 
 """Simple JSON exporter."""
