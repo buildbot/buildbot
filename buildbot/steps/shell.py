@@ -226,11 +226,11 @@ class ShellCommand(LoggingBuildStep):
 class TreeSize(ShellCommand):
     name = "treesize"
     command = ["du", "-s", "-k", "."]
+    description = "measuring tree size"
+    descriptionDone = "tree size measured"
     kib = None
 
     def __init__(self, *args, **kwargs):
-        kwargs.setdefault('description', 'taking tree size')
-        kwargs.setdefault('descriptionDone', 'tree sized')
         ShellCommand.__init__(self, *args, **kwargs)
 
     def commandComplete(self, cmd):
