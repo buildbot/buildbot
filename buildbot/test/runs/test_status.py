@@ -1092,6 +1092,12 @@ class STarget(base.StatusReceiver):
     def builderRemoved(self, name):
         self.events.append(("builderRemoved", name))
         self.announce()
+    def slaveConnected(self, name):
+        self.events.append(("slaveConnected", name))
+        self.announce()
+    def slaveDisconnected(self, name):
+        self.events.append(("slaveDisconnected", name))
+        self.announce()
 
 class VerifyChangeAdded(RunMixin, unittest.TestCase):
     def testChangeAdded(self):
@@ -1161,10 +1167,12 @@ class Subscription(RunMixin, unittest.TestCase):
         return d
 
     def _testSlave_1(self, res, t1):
-        self.failUnlessEqual(len(t1.events), 2)
+        self.failUnlessEqual(len(t1.events), 3)
         self.failUnlessEqual(t1.events[0],
-                             ("builderChangedState", "dummy", "idle"))
+                             ("slaveConnected", "bot1"))
         self.failUnlessEqual(t1.events[1],
+                             ("builderChangedState", "dummy", "idle"))
+        self.failUnlessEqual(t1.events[2],
                              ("builderChangedState", "testdummy", "idle"))
         t1.events = []
 
@@ -1194,6 +1202,7 @@ class Subscription(RunMixin, unittest.TestCase):
                               "builderChangedState", # offline
                               "builderAdded",
                               "builderChangedState", # idle
+                              "slaveConnected",
                               "builderChangedState", # offline
                               "builderChangedState", # idle
                               "builderChangedState", # building
@@ -1261,6 +1270,7 @@ class Subscription(RunMixin, unittest.TestCase):
         d = req.waitUntilFinished()
         d2 = self.master.botmaster.waitUntilBuilderIdle("dummy")
         dl = defer.DeferredList([d, d2])
+        dl.addCallback(lambda ign: self.shutdownAllSlaves())
         dl.addCallback(self._testSlave_3)
         return dl
 
@@ -1271,6 +1281,21 @@ class Subscription(RunMixin, unittest.TestCase):
                         "t4.eta_build was %g, not in (%g,%g)"
                         % (t4.eta_build, eta-1, eta+1))
 
+        self.failUnlessEqual([ev[0] for ev in self.t4.events],
+                             ["builderAdded",
+                              "builderChangedState", # offline
+                              "builderAdded",
+                              "builderChangedState", # idle
+                              "builderChangedState", # building
+                              "buildStarted",
+                              "stepStarted", "stepFinished",
+                              "stepStarted", "stepFinished",
+                              "buildFinished",
+                              "builderChangedState",
+                              "slaveDisconnected",
+                              "builderChangedState",
+                              "builderChangedState",
+                              ])
 
 class Client(unittest.TestCase):
     def testAdaptation(self):
