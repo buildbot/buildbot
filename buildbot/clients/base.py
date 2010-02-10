@@ -63,6 +63,8 @@ class StatusClient(pb.Referenceable):
 class TextClient:
     def __init__(self, master, events="steps"):
         """
+        @type  master: string
+        @param master: a host:port string to masters L{buildbot.status.client.PBListener}
         @type  events: string, one of builders, builds, steps, logs, full
         @param events: specify what level of detail should be reported.
          - 'builders': only announce new/removed Builders
