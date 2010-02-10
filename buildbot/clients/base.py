@@ -116,10 +116,3 @@ buildbot.status.client.PBListener port and not to the slaveport?
             reactor.stop()
         except RuntimeError:
             pass
-
-if __name__ == '__main__':
-    master = "localhost:8007"
-    if len(sys.argv) > 1:
-        master = sys.argv[1]
-    c = TextClient(master)
-    c.run()
