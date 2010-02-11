@@ -305,7 +305,7 @@ class ConsoleStatusResource(HtmlResource):
 
                 # Now break if we have enough builds.
                 current_revision = self.getChangeForBuild(
-                    builder.getBuild(-1), revision)
+                    build, revision)
                 if self.comparator.isRevisionEarlier(
                     devBuild, current_revision):
                     break
