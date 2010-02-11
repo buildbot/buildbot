@@ -420,9 +420,9 @@ class Builder(pb.Referenceable):
         if setup.get('locks', []) != self.locks:
             diffs.append('locks changed from %s to %s' % (self.locks, setup.get('locks')))
         if setup.get('nextSlave') != self.nextSlave:
-            diffs.append('nextSlave changed from %s to %s' % (self.nextSlave, setup['nextSlave']))
+            diffs.append('nextSlave changed from %s to %s' % (self.nextSlave, setup.get('nextSlave')))
         if setup.get('nextBuild') != self.nextBuild:
-            diffs.append('nextBuild changed from %s to %s' % (self.nextBuild, setup['nextBuild']))
+            diffs.append('nextBuild changed from %s to %s' % (self.nextBuild, setup.get('nextBuild')))
         if setup['buildHorizon'] != self.buildHorizon:
             diffs.append('buildHorizon changed from %s to %s' % (self.buildHorizon, setup['buildHorizon']))
         if setup['logHorizon'] != self.logHorizon:
