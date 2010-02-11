@@ -735,6 +735,8 @@ class StatusClientOptions(OptionsWithOptionsFile):
     optParameters = [
         ["master", "m", None,
          "Location of the buildmaster's status port (host:port)"],
+        ["username", "u", "statusClient", "Username performing the trial build"],
+        ["passwd", None, "clientpw", "password for PB authentication"],
         ]
     buildbotOptions = [
         [ 'masterstatus', 'master' ],
@@ -752,7 +754,9 @@ def statuslog(config):
     if master is None:
         raise usage.UsageError("master must be specified: on the command "
                                "line or in ~/.buildbot/options")
-    c = base.TextClient(master)
+    passwd = config.get('passwd')
+    username = config.get('username')
+    c = base.TextClient(master, username=username, passwd=passwd)
     c.run()
 
 def statusgui(config):

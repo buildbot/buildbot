@@ -61,8 +61,17 @@ class StatusClient(pb.Referenceable):
         print "logChunk[%s]: %s" % (ChunkTypes[channel], text)
 
 class TextClient:
-    def __init__(self, master, events="steps"):
+    def __init__(self, master, events="steps", username="statusClient", passwd="clientpw"):
         """
+        @type  master: string
+        @param master: a host:port string to masters L{buildbot.status.client.PBListener}
+
+        @type  username: string
+        @param username: 
+
+        @type  passwd: string
+        @param passwd: 
+
         @type  events: string, one of builders, builds, steps, logs, full
         @param events: specify what level of detail should be reported.
          - 'builders': only announce new/removed Builders
@@ -73,6 +82,8 @@ class TextClient:
          - 'full': also announce log contents
         """        
         self.master = master
+        self.username = username
+        self.passwd = passwd
         self.listener = StatusClient(events)
 
     def run(self):
@@ -89,7 +100,7 @@ class TextClient:
             print " expecting something more like localhost:8007"
             raise
         cf = pb.PBClientFactory()
-        creds = credentials.UsernamePassword("statusClient", "clientpw")
+        creds = credentials.UsernamePassword(self.username, self.passwd)
         d = cf.login(creds)
         reactor.connectTCP(host, port, cf)
         d.addCallbacks(self.connected, self.not_connected)
@@ -116,10 +127,3 @@ buildbot.status.client.PBListener port and not to the slaveport?
             reactor.stop()
         except RuntimeError:
             pass
-
-if __name__ == '__main__':
-    master = "localhost:8007"
-    if len(sys.argv) > 1:
-        master = sys.argv[1]
-    c = TextClient()
-    c.run()
