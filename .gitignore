@@ -27,3 +27,4 @@ docs/images/status.png
 .project
 .pydevproject
 .settings
+twisted/
