@@ -19,7 +19,7 @@ from twisted.web import error, html, resource
 _IS_INT = re.compile('^[-+]?\d+$')
 
 
-FLAGS = """Flags:
+FLAGS = """\
   - as_text
     - By default, application/json is used. Setting as_text=1 change the type
       to text/plain and implicitly set compact=0. Mainly useful to look at the
@@ -33,7 +33,7 @@ FLAGS = """Flags:
       "select=" includes the actual url otherwise it is skipped.
 """
 
-EXAMPLES = """Examples:
+EXAMPLES = """\
   - /json
     - Root node, that *doesn't* mean all the data. Many things (like logs) must
       be explicitly queried for performance reasons.
@@ -282,30 +282,18 @@ class HelpResource(HtmlResource):
         self.text = text
         self.title = title
         self.parent_node = parent_node
-        self.rendered = False
 
-    def body(self, request):
-        if not self.rendered:
-            self.text = ToHtml(self.text) + '<p>\n'
-            more_text = '<a href="../help">Parent\'s help</a><p>'
-            if len(self.parent_node.children) > 1:
-                more_text += '<p>Child nodes are:<ul>\n'
-                for (name, child) in self.parent_node.children.iteritems():
-                    if name == 'help':
-                        continue
-                    name = html.escape(name)
-                    more_text += (
-                        '<li><a href="%s">%s</a> (<a href="%s/help">%s/help</a>)</li>\n' %
-                        (name + '?as_text=1', name, name, name))
-                more_text += '</ul>\n'
-            self.text += more_text
-            examples = ToHtml(EXAMPLES).replace(
+    def content(self, request, cxt):
+        cxt['level'] = self.parent_node.level
+        cxt['text'] = ToHtml(self.text)
+        cxt['children'] = [ n for n in self.parent_node.children.keys() if n != 'help' ]
+        cxt['flags'] = ToHtml(FLAGS)
+        cxt['examples'] = ToHtml(EXAMPLES).replace(
                 'href="/json',
                 'href="%sjson' % (self.level * '../'))
-            self.text += ToHtml(FLAGS) + '<p>' + examples
-            self.rendered = True
-        return self.text
 
+        template = request.site.buildbot_service.templates.get_template("jsonhelp.html")
+        return template.render(**cxt)
 
 class BuilderJsonResource(JsonResource):
     help = """Describe a single builder.
@@ -617,7 +605,7 @@ For help on any sub directory, use url /child/help
         self.putChild('project', ProjectJsonResource(status))
         self.putChild('slaves', SlavesJsonResource(status))
         # This needs to be called before the first HelpResource().body call.
-        self.HackExamples()
+        self.hackExamples()
 
     def content(self, request):
         result = JsonResource.content(self, request)
@@ -625,7 +613,7 @@ For help on any sub directory, use url /child/help
         request.path = 'buildbot'
         return result
 
-    def HackExamples(self):
+    def hackExamples(self):
         global EXAMPLES
         # Find the first builder with a previous build or select the last one.
         builder = None
