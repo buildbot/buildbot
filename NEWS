@@ -8,6 +8,17 @@ Major User visible changes in Buildbot.             -*- outline -*-
 This view has lots of useful information perfectly formed for serving as input
 to JavaScript status displays.  See /json/help for details.
 
+* Jinja
+
+TODO - write this :)
+
+* Cleanup, Bug Fixes, and Test Fixes
+
+Thanks to help from a number of devoted contributors, this version of Buildbot
+has seen a lot of house-cleaning, and even passes all of its own unit tests!
+
+TODO - make this true
+
 * Release 0.7.12 (January 21, 2010)
 
 ** New 'console' display
