@@ -3,6 +3,11 @@ Major User visible changes in Buildbot.             -*- outline -*-
 
 * Next Release (add significant changes here)
 
+* New /json web status
+
+This view has lots of useful information perfectly formed for serving as input
+to JavaScript status displays.  See /json/help for details.
+
 * Release 0.7.12 (January 21, 2010)
 
 ** New 'console' display

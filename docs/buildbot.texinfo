@@ -7994,6 +7994,13 @@ This provides an atom feed summarizing all failed builds. The same
 query-arguments used by 'waterfall' can be added to filter the feed
 output.
 
+@item /json
+
+This view provides quick access to Buildbot status information in a form that
+is easiliy digested from other programs, including JavaScript.  See
+@code{/json/help} for detailed interactive documentation of the output formats
+for this view.
+
 @item /buildstatus?builder=$BUILDERNAME&number=$BUILDNUM
 
 This displays a waterfall-like chronologically-oriented view of all the
