@@ -230,6 +230,9 @@ setup_args = {
                  'sdist_test': SdistTestCommand},
     }
 
+py_25 = sys.version_info[0] > 2 or (sys.version_info[0] == 2 and sys.version_info[1] >= 5)
+py_26 = sys.version_info[0] > 2 or (sys.version_info[0] == 2 and sys.version_info[1] >= 6)
+
 try:
     # If setuptools is installed, then we'll add setuptools-specific arguments
     # to the setup args.
@@ -237,10 +240,15 @@ try:
 except ImportError:
     pass
 else:
+    ## dependencies
     setup_args['install_requires'] = [
         'twisted >= 2.0.0',
         'Jinja2'
     ]
+    # Python-2.6 and up includes json
+    if not py_26:
+        setup_args['install_requires'].append('simplejson')
+
     entry_points={
         'console_scripts': [
             'buildbot = buildbot.scripts.runner:run'],
