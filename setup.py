@@ -244,11 +244,10 @@ else:
     setup_args['install_requires'] = [
         'twisted >= 2.0.0',
         'Jinja2',
-        'simplejson'
     ]
     # Python-2.6 and up includes json
-    #if not py_26:
-        #setup_args['install_requires'].append('simplejson')
+    if not py_26:
+        setup_args['install_requires'].append('simplejson')
 
     entry_points={
         'console_scripts': [
