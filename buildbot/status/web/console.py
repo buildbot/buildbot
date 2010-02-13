@@ -315,7 +315,7 @@ class ConsoleStatusResource(HtmlResource):
         return builds
 
     def getChangeForBuild(self, build, revision):
-        if not build.getChanges(): # Forced build
+        if not build or not build.getChanges(): # Forced build
             devBuild = DevBuild(revision, build.getResults(),
                                 build.getNumber(),
                                 build.isFinished(),
