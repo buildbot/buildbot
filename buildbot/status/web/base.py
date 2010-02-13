@@ -384,7 +384,7 @@ def createJinjaEnv(revlink=None, changecommentlink=None):
     ''' Create a jinja environment changecommentlink is used to
         render HTML in the WebStatus and for mail changes
     
-         @type changecommentlink: tuple (2 strings) or C{None}
+        @type changecommentlink: tuple (2 strings) or C{None}
         @param changecommentlink: a regular expression and replacement string that is applied
                      to all change comments. The first element represents what to search
                      for and the second yields an url (the <a href=""></a> is added outside this)
@@ -398,17 +398,17 @@ def createJinjaEnv(revlink=None, changecommentlink=None):
                         (The revision id will be URL encoded before inserted in the replacement string)
     '''
     
-    if hasattr(sys, "frozen"):
-        assert False, 'Frozen config not supported with jinja (yet)'
+    # See http://buildbot.net/trac/ticket/658
+    assert not hasattr(sys, "frozen"), 'Frozen config not supported with jinja (yet)'
 
     default_loader = jinja2.PackageLoader('buildbot.status.web', 'templates')
     root = os.path.join(os.getcwd(), 'templates')
     loader = jinja2.ChoiceLoader([jinja2.FileSystemLoader(root),
                                   default_loader])
     env = jinja2.Environment(loader=loader,
-                                        extensions=['jinja2.ext.i18n'],
-                                        trim_blocks=True,
-                                        undefined=AlmostStrictUndefined)
+                             extensions=['jinja2.ext.i18n'],
+                             trim_blocks=True,
+                             undefined=AlmostStrictUndefined)
     
     env.filters['urlencode'] = urllib.quote
     env.filters['email'] = emailfilter
