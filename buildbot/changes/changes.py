@@ -101,6 +101,21 @@ class Change:
 
         return kwargs
 
+    def asDict(self):
+        result = {}
+        # Constant
+        result['number'] = self.number
+        result['branch'] = self.branch
+        result['category'] = self.category
+        result['who'] = self.getShortAuthor()
+        result['comments'] = self.comments
+        result['revision'] = self.revision
+        result['when'] = self.when
+        result['files'] = self.files
+        result['revlink'] = self.revlink
+        result['properties'] = self.properties.asList()
+        return result
+
     def getShortAuthor(self):
         return self.who
 
@@ -136,21 +151,6 @@ class Change:
         for prop in self.properties.asList():
             data += "  %s: %s" % (prop[0], prop[1])
         return data
-
-    def asDict(self):
-        result = {}
-        # Constant
-        result['number'] = self.number
-        result['branch'] = self.branch
-        result['category'] = self.category
-        result['who'] = self.getShortAuthor()
-        result['comments'] = self.comments
-        result['revision'] = self.revision
-        result['when'] = self.when
-        result['files'] = self.files
-        result['revlink'] = self.revlink
-        result['properties'] = self.properties.asList()
-        return result
 
 
 class ChangeMaster(service.MultiService):
