@@ -247,7 +247,10 @@ else:
     ]
     # Python-2.6 and up includes json
     if not py_26:
+        print "adding simplejson requirement"
         setup_args['install_requires'].append('simplejson')
+    else:
+        print "simplejson not required in Python-2.6 and higher"
 
     entry_points={
         'console_scripts': [
