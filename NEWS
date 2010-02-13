@@ -3,21 +3,25 @@ Major User visible changes in Buildbot.             -*- outline -*-
 
 * Next Release (add significant changes here)
 
-* New /json web status
+** New /json web status
 
 This view has lots of useful information perfectly formed for serving as input
 to JavaScript status displays.  See /json/help for details.
 
-* Jinja
+** Jinja
 
 TODO - write this :)
 
-* Cleanup, Bug Fixes, and Test Fixes
+** Cleanup, Bug Fixes, and Test Fixes
 
 Thanks to help from a number of devoted contributors, this version of Buildbot
 has seen a lot of house-cleaning, and even passes all of its own unit tests!
 
 TODO - make this true
+
+** Removals
+
+*** Removed buildbot.status.html.Waterfall (deprecated in 0.7.6)
 
 * Release 0.7.12 (January 21, 2010)
 

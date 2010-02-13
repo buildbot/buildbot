@@ -276,7 +276,6 @@ WebStatus
 * WebStatus Configuration Parameters::
 * Buildbot Web Resources::
 * XMLRPC server::
-* HTML Waterfall::
 
 Command-line tool
 
@@ -5804,8 +5803,8 @@ if the command takes longer than this many seconds, it will be killed.
 This will be used to describe the command (on the Waterfall display)
 while the command is still running. It should be a single
 imperfect-tense verb, like ``compiling'' or ``testing''. The preferred
-form is a list of short strings, which allows the HTML Waterfall
-display to create narrower columns by emitting a <br> tag between each
+form is a list of short strings, which allows the HTML 
+displays to create narrower columns by emitting a <br> tag between each
 word. You may also provide a single string.
 
 @item descriptionDone
@@ -7752,7 +7751,6 @@ they provide.
 * Enabling the "Force Build" Button::
 * Buildbot Web Resources::
 * XMLRPC server::
-* HTML Waterfall::
 @end menu
 
 @node WebStatus Configuration Parameters
@@ -8112,7 +8110,7 @@ details.
 
 @end table
 
-@node XMLRPC server, HTML Waterfall, Buildbot Web Resources, WebStatus
+@node XMLRPC server
 @subsection XMLRPC server
 
 When using WebStatus, the buildbot runs an XML-RPC server at
@@ -8152,25 +8150,6 @@ complete information about the build. It does not include the contents
 of the log files, but it has just about everything else.
 
 @end table
-
-@node HTML Waterfall,  , XMLRPC server, WebStatus
-@subsection HTML Waterfall
-
-@cindex Waterfall
-@stindex buildbot.status.html.Waterfall
-
-The @code{Waterfall} status target, deprecated as of 0.7.6, is a
-subset of the regular @code{WebStatus} resource (@pxref{WebStatus}).
-This section (and the @code{Waterfall} class itself) will be removed
-from a future release.
-
-@example
-from buildbot.status import html
-w = html.WebStatus(http_port=8080)
-c['status'].append(w)
-@end example
-
-
 
 @node MailNotifier, IRC Bot, WebStatus, Status Delivery
 @section MailNotifier

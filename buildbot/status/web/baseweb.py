@@ -298,6 +298,8 @@ class WebStatus(service.MultiService):
      /about : describe this buildmaster (Buildbot and support library versions)
      /xmlrpc : (not yet implemented) an XMLRPC server with build status
 
+     and more!  see the manual.
+
 
     All URLs for pages which are not defined here are used to look
     for files in PUBLIC_HTML, which defaults to BASEDIR/public_html.
@@ -614,62 +616,3 @@ class WebStatus(service.MultiService):
 # resources can get access to the IStatus by calling
 # request.site.buildbot_service.getStatus()
 
-# this is the compatibility class for the old waterfall. It is exactly like a
-# regular WebStatus except that the root resource (e.g. http://buildbot.net/)
-# always redirects to a WaterfallStatusResource, and the old arguments are
-# mapped into the new resource-tree approach. In the normal WebStatus, the
-# root resource either redirects the browser to /waterfall or serves
-# PUBLIC_HTML/index.html, and favicon/robots.txt are provided by
-# having the admin write actual files into PUBLIC_HTML/ .
-
-# note: we don't use a util.Redirect here because HTTP requires that the
-# Location: header provide an absolute URI, and it's non-trivial to figure
-# out our absolute URI from here.
-
-class Waterfall(WebStatus):
-
-    if hasattr(sys, "frozen"):
-        # all 'data' files are in the directory of our executable
-        here = os.path.dirname(sys.executable)
-        buildbot_icon = os.path.abspath(os.path.join(here, "buildbot.png"))
-        buildbot_css = os.path.abspath(os.path.join(here, "default.css"))
-    else:
-        # running from source
-        # the icon is sibpath(__file__, "../buildbot.png") . This is for
-        # portability.
-        up = os.path.dirname
-        buildbot_icon = os.path.abspath(os.path.join(up(up(up(__file__))),
-                                                     "buildbot.png"))
-        buildbot_css = os.path.abspath(os.path.join(up(__file__),
-                                                    "files/default.css"))
-
-    compare_attrs = ["http_port", "distrib_port", "allowForce",
-                     "categories", "css", "favicon", "robots_txt"]
-
-    def __init__(self, http_port=None, distrib_port=None, allowForce=True,
-                 categories=None, css=buildbot_css, favicon=buildbot_icon,
-                 robots_txt=None):
-        import warnings
-        m = ("buildbot.status.html.Waterfall is deprecated as of 0.7.6 "
-             "and will be removed from a future release. "
-             "Please use html.WebStatus instead.")
-        warnings.warn(m, DeprecationWarning)
-
-        WebStatus.__init__(self, http_port, distrib_port, allowForce)
-        self.css = css
-        if css:
-            if os.path.exists(os.path.join("public_html", "default.css")):
-                # they've upgraded, so defer to that copy instead
-                pass
-            else:
-                data = open(css, "rb").read()
-                self.putChild("default.css", static.Data(data, "text/css"))
-        self.favicon = favicon
-        self.robots_txt = robots_txt
-        if favicon:
-            data = open(favicon, "rb").read()
-            self.putChild("favicon.ico", static.Data(data, "image/x-icon"))
-        if robots_txt:
-            data = open(robots_txt, "rb").read()
-            self.putChild("robots.txt", static.Data(data, "text/plain"))
-        self.putChild("", WaterfallStatusResource(categories))

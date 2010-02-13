@@ -141,31 +141,31 @@ c['status'] = [words.IRC('irc.us.freenode.net', 'buildbot', ['knotted'])]
 webCfg1 = emptyCfg + \
 """
 from buildbot.status import html
-c['status'] = [html.Waterfall(http_port=9980)]
+c['status'] = [html.WebStatus(http_port=9980)]
 """
 
 webCfg2 = emptyCfg + \
 """
 from buildbot.status import html
-c['status'] = [html.Waterfall(http_port=9981)]
+c['status'] = [html.WebStatus(http_port=9981)]
 """
 
 webCfg3 = emptyCfg + \
 """
 from buildbot.status import html
-c['status'] = [html.Waterfall(http_port='tcp:9981:interface=127.0.0.1')]
+c['status'] = [html.WebStatus(http_port='tcp:9981:interface=127.0.0.1')]
 """
 
 webNameCfg1 = emptyCfg + \
 """
 from buildbot.status import html
-c['status'] = [html.Waterfall(distrib_port='~/.twistd-web-pb')]
+c['status'] = [html.WebStatus(distrib_port='~/.twistd-web-pb')]
 """
 
 webNameCfg2 = emptyCfg + \
 """
 from buildbot.status import html
-c['status'] = [html.Waterfall(distrib_port='./bar.socket')]
+c['status'] = [html.WebStatus(distrib_port='./bar.socket')]
 """
 
 debugPasswordCfg = emptyCfg + \

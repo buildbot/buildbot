@@ -131,11 +131,6 @@ class BaseWeb:
             if isinstance(child, html.WebStatus):
                 return child
 
-    def find_waterfall(self, master):
-        for child in list(master):
-            if isinstance(child, html.Waterfall):
-                return child
-
 class Ports(BaseWeb, unittest.TestCase):
 
     def test_webPortnum(self):
@@ -325,7 +320,7 @@ c['slaves'] = [BuildSlave('bot1', 'sekrit'), BuildSlave('bot2', 'sekrit')]
 c['change_source'] = DummyChangeSource()
 c['schedulers'] = [DiscardScheduler('discard', None, 60, ['b1'])]
 c['slavePortnum'] = 0
-c['status'] = [html.Waterfall(http_port=0)]
+c['status'] = [html.WebStatus(http_port=0)]
 
 f = factory.BuildFactory([s(dummy.RemoteDummy, timeout=1)])
 

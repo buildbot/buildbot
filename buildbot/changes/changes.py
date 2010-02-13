@@ -28,7 +28,7 @@ class Change:
 
     Changes should be submitted to ChangeMaster.addChange() in
     chronologically increasing order. Out-of-order changes will probably
-    cause the html.Waterfall display to be corrupted."""
+    cause the web status displays to be corrupted."""
 
     implements(interfaces.IStatusEvent)
 
