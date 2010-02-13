@@ -506,7 +506,7 @@ class ChangesJsonResource(JsonResource):
             while number in self.children:
                 # TODO(maruel): Do something better?
                 number = str(int(c.number)+1)
-        self.putChild(number, ChangeJsonResource(status, c))
+            self.putChild(number, ChangeJsonResource(status, c))
 
     def asDict(self, request):
         """Don't throw an exception when there is no child."""
