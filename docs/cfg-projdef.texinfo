@@ -1,0 +1,35 @@
+There are a couple of basic settings that you use to tell the buildbot
+what project it is working on. This information is used by status
+reporters to let users find out more about the codebase being
+exercised by this particular Buildbot installation.
+
+@example
+c['projectName'] = "Buildbot"
+c['projectURL'] = "http://buildbot.sourceforge.net/"
+c['buildbotURL'] = "http://localhost:8010/"
+@end example
+
+@bcindex c['projectName']
+@code{projectName} is a short string will be used to describe the
+project that this buildbot is working on. For example, it is used as
+the title of the waterfall HTML page.
+
+@bcindex c['projectURL']
+@code{projectURL} is a string that gives a URL for the project as a
+whole. HTML status displays will show @code{projectName} as a link to
+@code{projectURL}, to provide a link from buildbot HTML pages to your
+project's home page.
+
+@bcindex c['buildbotURL']
+The @code{buildbotURL} string should point to the location where the buildbot's
+internal web server is visible. This typically uses the port number set when
+you create the @code{Waterfall} object: the buildbot needs your help to figure
+out a suitable externally-visible host name.
+
+When status notices are sent to users (either by email or over IRC),
+@code{buildbotURL} will be used to create a URL to the specific build
+or problem that they are being notified about. It will also be made
+available to queriers (over IRC) who want to find out where to get
+more information about this buildbot.
+
+

@@ -24,6 +24,7 @@ work around this, but true support for multi-tree builds remains elusive.
 * BonsaiPoller::
 * SVNPoller::
 * Bzr Poller::
+* Change Source Index::
 @end menu
 
 @node Choosing a Change Source
@@ -1100,4 +1101,6 @@ responsible for the change. set this value to True if this is pointed against
 a PQM-managed branch.
 @end table
 
-
+@node Change Source Index
+@subsection Change Source Index
+@printindex cs
