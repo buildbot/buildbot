@@ -109,6 +109,10 @@ are useful in @file{master.cfg}, the buildmaster's configuration file.
 Classes that are not listed here are generally internal things that
 admins are unlikely to have much use for.
 
+A more complete collection of documentation from the source code itself is
+available in the API documentation at
+@uref{http://djmitche.github.com/buildbot/docs/}.
+
 @heading Change Sources
 @printindex cs
 
