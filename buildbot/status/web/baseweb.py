@@ -17,6 +17,8 @@ from buildbot.status.web.feeds import Rss20StatusResource, \
      Atom10StatusResource
 from buildbot.status.web.waterfall import WaterfallStatusResource
 from buildbot.status.web.console import ConsoleStatusResource
+from buildbot.status.web.olpb import OneLinePerBuild
+from buildbot.status.web.obpb import OneBoxPerBuilder
 from buildbot.status.web.grid import GridStatusResource, TransposedGridStatusResource
 from buildbot.status.web.changes import ChangesResource
 from buildbot.status.web.builder import BuildersResource
@@ -29,174 +31,9 @@ from buildbot.status.web.authz import Authz
 from buildbot.status.web.auth import AuthFailResource
 from buildbot.status.web.root import RootPage
 
-# this class contains the status services (WebStatus and the older Waterfall)
-# which can be put in c['status']. It also contains some of the resources
-# that are attached to the WebStatus at various well-known URLs, which the
-# admin might wish to attach (using WebStatus.putChild) at other URLs.
+# this class contains the WebStatus class.  Basic utilities are in base.py,
+# and specific pages are each in their own module.
 
-
-# /one_line_per_build
-#  accepts builder=, branch=, numbuilds=, reload=
-class OneLinePerBuild(HtmlResource, BuildLineMixin):
-    """This shows one line per build, combining all builders together. Useful
-    query arguments:
-
-    numbuilds=: how many lines to display
-    builder=: show only builds for this builder. Multiple builder= arguments
-              can be used to see builds from any builder in the set.
-    reload=: reload the page after this many seconds
-    """
-
-    title = "Recent Builds"
-
-    def __init__(self, numbuilds=20):
-        HtmlResource.__init__(self)
-        self.numbuilds = numbuilds
-
-    def getChild(self, path, req):
-        status = self.getStatus(req)
-        builder = status.getBuilder(path)
-        return OneLinePerBuildOneBuilder(builder, numbuilds=self.numbuilds)
-
-    def get_reload_time(self, request):
-        if "reload" in request.args:
-            try:
-                reload_time = int(request.args["reload"][0])
-                return max(reload_time, 15)
-            except ValueError:
-                pass
-        return None
-
-    def content(self, req, cxt):
-        status = self.getStatus(req)
-        numbuilds = int(req.args.get("numbuilds", [self.numbuilds])[0])
-        builders = req.args.get("builder", [])
-        branches = [b for b in req.args.get("branch", []) if b]
-
-        g = status.generateFinishedBuilds(builders, map_branches(branches),
-                                          numbuilds, max_search=numbuilds)
-
-        cxt['refresh'] = self.get_reload_time(req)
-        cxt['num_builds'] = numbuilds
-        cxt['branches'] =  branches
-        cxt['builders'] = builders
-        
-        got = 0
-        building = 0
-        online = 0
-
-        builders = cxt['builds'] = []
-        for build in g:
-            got += 1
-            builders.append(self.get_line_values(req, build))
-            builder_status = build.getBuilder().getState()[0]
-            if builder_status == "building":
-                building += 1
-                online += 1
-            elif builder_status != "offline":
-                online += 1
-
-        cxt['authz'] = self.getAuthz(req)
-        cxt['num_online'] = online
-        cxt['num_building'] = building
-
-        template = req.site.buildbot_service.templates.get_template('onelineperbuild.html')
-        return template.render(**cxt)
-
-
-
-# /one_line_per_build/$BUILDERNAME
-#  accepts branch=, numbuilds=
-
-class OneLinePerBuildOneBuilder(HtmlResource, BuildLineMixin):
-    def __init__(self, builder, numbuilds=20):
-        HtmlResource.__init__(self)
-        self.builder = builder
-        self.builder_name = builder.getName()
-        self.numbuilds = numbuilds
-        self.title = "Recent Builds of %s" % self.builder_name
-
-    def content(self, req, cxt):
-        numbuilds = int(req.args.get("numbuilds", [self.numbuilds])[0])
-        branches = [b for b in req.args.get("branch", []) if b]
-
-        # walk backwards through all builds of a single builder
-        g = self.builder.generateFinishedBuilds(map_branches(branches),
-                                                numbuilds)
-
-        cxt['builds'] = map(lambda b: self.get_line_values(req, b), g)
-        cxt.update(dict(num_builds=numbuilds,
-                        builder_name=self.builder_name,
-                        branches=branches))    
-
-        template = req.site.buildbot_service.templates.get_template('onelineperbuildonebuilder.html')
-        return template.render(**cxt)
-
-# /one_box_per_builder
-#  accepts builder=, branch=
-class OneBoxPerBuilder(HtmlResource):
-    """This shows a narrow table with one row per builder. The leftmost column
-    contains the builder name. The next column contains the results of the
-    most recent build. The right-hand column shows the builder's current
-    activity.
-
-    builder=: show only builds for this builder. Multiple builder= arguments
-              can be used to see builds from any builder in the set.
-    """
-
-    title = "Latest Build"
-
-    def content(self, req, cxt):
-        status = self.getStatus(req)
-
-        builders = req.args.get("builder", status.getBuilderNames())
-        branches = [b for b in req.args.get("branch", []) if b]
-
-        cxt['branches'] = branches
-        bs = cxt['builders'] = []
-        
-        building = 0
-        online = 0
-        base_builders_url = path_to_root(req) + "builders/"
-        for bn in builders:
-            bld = { 'link': base_builders_url + urllib.quote(bn, safe=''),
-                    'name': bn }
-            bs.append(bld)
-
-            builder = status.getBuilder(bn)
-            builds = list(builder.generateFinishedBuilds(map_branches(branches),
-                                                         num_builds=1))
-            if builds:
-                b = builds[0]
-                bld['build_url'] = (bld['link'] + "/builds/%d" % b.getNumber())
-                try:
-                    label = b.getProperty("got_revision")
-                except KeyError:
-                    label = None
-                if not label or len(str(label)) > 20:
-                    label = "#%d" % b.getNumber()
-                
-                bld['build_label'] = label
-                bld['build_text'] = " ".join(b.getText())
-                bld['build_css_class'] = build_get_class(b)
-
-            current_box = ICurrentBox(builder).getBox(status)
-            bld['current_box'] = current_box.td()
-
-            builder_status = builder.getState()[0]
-            if builder_status == "building":
-                building += 1
-                online += 1
-            elif builder_status != "offline":
-                online += 1
-                
-        cxt['authz'] = self.getAuthz(req)
-        cxt['num_building'] = online
-        cxt['num_online'] = online
-
-        template = req.site.buildbot_service.templates.get_template("oneboxperbuilder.html")
-        return template.render(**cxt)
-    
     
 class WebStatus(service.MultiService):
     implements(IStatusReceiver)
