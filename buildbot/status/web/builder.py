@@ -67,7 +67,7 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
                 for c in pb.source.changes:
                     changes.append({ 'url' : path_to_change(req, c),
                                             'who' : c.who})
-            elif pb.source.revision:
+            if pb.source.revision:
                 reason = pb.source.revision
             else:
                 reason = "no changes specified"
