@@ -1,0 +1,775 @@
+This chapter defines some of the basic concepts that the Buildbot
+uses. You'll need to understand how the Buildbot sees the world to
+configure it properly.
+
+@menu
+* Version Control Systems::
+* Schedulers::
+* BuildSet::
+* BuildRequest::
+* Builder::
+* Users::
+* Build Properties::
+@end menu
+
+@node Version Control Systems
+@section Version Control Systems
+
+@cindex Version Control
+
+These source trees come from a Version Control System of some kind.
+CVS and Subversion are two popular ones, but the Buildbot supports
+others. All VC systems have some notion of an upstream
+@code{repository} which acts as a server@footnote{except Darcs, but
+since the Buildbot never modifies its local source tree we can ignore
+the fact that Darcs uses a less centralized model}, from which clients
+can obtain source trees according to various parameters. The VC
+repository provides source trees of various projects, for different
+branches, and from various points in time. The first thing we have to
+do is to specify which source tree we want to get.
+
+@menu
+* Generalizing VC Systems::
+* Source Tree Specifications::
+* How Different VC Systems Specify Sources::
+* Attributes of Changes::
+@end menu
+
+@node Generalizing VC Systems
+@subsection Generalizing VC Systems
+
+For the purposes of the Buildbot, we will try to generalize all VC
+systems as having repositories that each provide sources for a variety
+of projects. Each project is defined as a directory tree with source
+files. The individual files may each have revisions, but we ignore
+that and treat the project as a whole as having a set of revisions
+(CVS is really the only VC system still in widespread use that has
+per-file revisions.. everything modern has moved to atomic tree-wide
+changesets). Each time someone commits a change to the project, a new
+revision becomes available. These revisions can be described by a
+tuple with two items: the first is a branch tag, and the second is
+some kind of revision stamp or timestamp. Complex projects may have
+multiple branch tags, but there is always a default branch. The
+timestamp may be an actual timestamp (such as the -D option to CVS),
+or it may be a monotonically-increasing transaction number (such as
+the change number used by SVN and P4, or the revision number used by
+Arch/Baz/Bazaar, or a labeled tag used in CVS)@footnote{many VC
+systems provide more complexity than this: in particular the local
+views that P4 and ClearCase can assemble out of various source
+directories are more complex than we're prepared to take advantage of
+here}. The SHA1 revision ID used by Monotone, Mercurial, and Git is
+also a kind of revision stamp, in that it specifies a unique copy of
+the source tree, as does a Darcs ``context'' file.
+
+When we aren't intending to make any changes to the sources we check out
+(at least not any that need to be committed back upstream), there are two
+basic ways to use a VC system:
+
+@itemize @bullet
+@item
+Retrieve a specific set of source revisions: some tag or key is used
+to index this set, which is fixed and cannot be changed by subsequent
+developers committing new changes to the tree. Releases are built from
+tagged revisions like this, so that they can be rebuilt again later
+(probably with controlled modifications).
+@item
+Retrieve the latest sources along a specific branch: some tag is used
+to indicate which branch is to be used, but within that constraint we want
+to get the latest revisions.
+@end itemize
+
+Build personnel or CM staff typically use the first approach: the
+build that results is (ideally) completely specified by the two
+parameters given to the VC system: repository and revision tag. This
+gives QA and end-users something concrete to point at when reporting
+bugs. Release engineers are also reportedly fond of shipping code that
+can be traced back to a concise revision tag of some sort.
+
+Developers are more likely to use the second approach: each morning
+the developer does an update to pull in the changes committed by the
+team over the last day. These builds are not easy to fully specify: it
+depends upon exactly when you did a checkout, and upon what local
+changes the developer has in their tree. Developers do not normally
+tag each build they produce, because there is usually significant
+overhead involved in creating these tags. Recreating the trees used by
+one of these builds can be a challenge. Some VC systems may provide
+implicit tags (like a revision number), while others may allow the use
+of timestamps to mean ``the state of the tree at time X'' as opposed
+to a tree-state that has been explicitly marked.
+
+The Buildbot is designed to help developers, so it usually works in
+terms of @emph{the latest} sources as opposed to specific tagged
+revisions. However, it would really prefer to build from reproducible
+source trees, so implicit revisions are used whenever possible.
+
+@node Source Tree Specifications
+@subsection Source Tree Specifications
+
+So for the Buildbot's purposes we treat each VC system as a server
+which can take a list of specifications as input and produce a source
+tree as output. Some of these specifications are static: they are
+attributes of the builder and do not change over time. Others are more
+variable: each build will have a different value. The repository is
+changed over time by a sequence of Changes, each of which represents a
+single developer making changes to some set of files. These Changes
+are cumulative@footnote{Monotone's @emph{multiple heads} feature
+violates this assumption of cumulative Changes, but in most situations
+the changes don't occur frequently enough for this to be a significant
+problem}.
+
+For normal builds, the Buildbot wants to get well-defined source trees
+that contain specific Changes, and exclude other Changes that may have
+occurred after the desired ones. We assume that the Changes arrive at
+the buildbot (through one of the mechanisms described in @pxref{Change
+Sources}) in the same order in which they are committed to the
+repository. The Buildbot waits for the tree to become ``stable''
+before initiating a build, for two reasons. The first is that
+developers frequently make multiple related commits in quick
+succession, even when the VC system provides ways to make atomic
+transactions involving multiple files at the same time. Running a
+build in the middle of these sets of changes would use an inconsistent
+set of source files, and is likely to fail (and is certain to be less
+useful than a build which uses the full set of changes). The
+tree-stable-timer is intended to avoid these useless builds that
+include some of the developer's changes but not all. The second reason
+is that some VC systems (i.e. CVS) do not provide repository-wide
+transaction numbers, so that timestamps are the only way to refer to
+a specific repository state. These timestamps may be somewhat
+ambiguous, due to processing and notification delays. By waiting until
+the tree has been stable for, say, 10 minutes, we can choose a
+timestamp from the middle of that period to use for our source
+checkout, and then be reasonably sure that any clock-skew errors will
+not cause the build to be performed on an inconsistent set of source
+files.
+
+The Schedulers always use the tree-stable-timer, with a timeout that
+is configured to reflect a reasonable tradeoff between build latency
+and change frequency. When the VC system provides coherent
+repository-wide revision markers (such as Subversion's revision
+numbers, or in fact anything other than CVS's timestamps), the
+resulting Build is simply performed against a source tree defined by
+that revision marker. When the VC system does not provide this, a
+timestamp from the middle of the tree-stable period is used to
+generate the source tree@footnote{this @code{checkoutDelay} defaults
+to half the tree-stable timer, but it can be overridden with an
+argument to the Source Step}.
+
+@node How Different VC Systems Specify Sources
+@subsection How Different VC Systems Specify Sources
+
+For CVS, the static specifications are @code{repository} and
+@code{module}. In addition to those, each build uses a timestamp (or
+omits the timestamp to mean @code{the latest}) and @code{branch tag}
+(which defaults to HEAD). These parameters collectively specify a set
+of sources from which a build may be performed.
+
+@uref{http://subversion.tigris.org, Subversion} combines the
+repository, module, and branch into a single @code{Subversion URL}
+parameter. Within that scope, source checkouts can be specified by a
+numeric @code{revision number} (a repository-wide
+monotonically-increasing marker, such that each transaction that
+changes the repository is indexed by a different revision number), or
+a revision timestamp. When branches are used, the repository and
+module form a static @code{baseURL}, while each build has a
+@code{revision number} and a @code{branch} (which defaults to a
+statically-specified @code{defaultBranch}). The @code{baseURL} and
+@code{branch} are simply concatenated together to derive the
+@code{svnurl} to use for the checkout.
+
+@uref{http://www.perforce.com/, Perforce} is similar. The server
+is specified through a @code{P4PORT} parameter. Module and branch
+are specified in a single depot path, and revisions are
+depot-wide. When branches are used, the @code{p4base} and
+@code{defaultBranch} are concatenated together to produce the depot
+path.
+
+@uref{http://wiki.gnuarch.org/, Arch} and
+@uref{http://bazaar.canonical.com/, Bazaar} specify a repository by
+URL, as well as a @code{version} which is kind of like a branch name.
+Arch uses the word @code{archive} to represent the repository. Arch
+lets you push changes from one archive to another, removing the strict
+centralization required by CVS and SVN. It retains the distinction
+between repository and working directory that most other VC systems
+use. For complex multi-module directory structures, Arch has a
+built-in @code{build config} layer with which the checkout process has
+two steps. First, an initial bootstrap checkout is performed to
+retrieve a set of build-config files. Second, one of these files is
+used to figure out which archives/modules should be used to populate
+subdirectories of the initial checkout.
+
+Builders which use Arch and Bazaar therefore have a static archive
+@code{url}, and a default ``branch'' (which is a string that specifies
+a complete category--branch--version triple). Each build can have its
+own branch (the category--branch--version string) to override the
+default, as well as a revision number (which is turned into a
+--patch-NN suffix when performing the checkout).
+
+
+@uref{http://bazaar-vcs.org, Bzr} (which is a descendant of
+Arch/Bazaar, and is frequently referred to as ``Bazaar'') has the same
+sort of repository-vs-workspace model as Arch, but the repository data
+can either be stored inside the working directory or kept elsewhere
+(either on the same machine or on an entirely different machine). For
+the purposes of Buildbot (which never commits changes), the repository
+is specified with a URL and a revision number.
+
+The most common way to obtain read-only access to a bzr tree is via
+HTTP, simply by making the repository visible through a web server
+like Apache. Bzr can also use FTP and SFTP servers, if the buildslave
+process has sufficient privileges to access them. Higher performance
+can be obtained by running a special Bazaar-specific server. None of
+these matter to the buildbot: the repository URL just has to match the
+kind of server being used. The @code{repoURL} argument provides the
+location of the repository.
+
+Branches are expressed as subdirectories of the main central
+repository, which means that if branches are being used, the BZR step
+is given a @code{baseURL} and @code{defaultBranch} instead of getting
+the @code{repoURL} argument.
+
+
+@uref{http://darcs.net/, Darcs} doesn't really have the
+notion of a single master repository. Nor does it really have
+branches. In Darcs, each working directory is also a repository, and
+there are operations to push and pull patches from one of these
+@code{repositories} to another. For the Buildbot's purposes, all you
+need to do is specify the URL of a repository that you want to build
+from. The build slave will then pull the latest patches from that
+repository and build them. Multiple branches are implemented by using
+multiple repositories (possibly living on the same server).
+
+Builders which use Darcs therefore have a static @code{repourl} which
+specifies the location of the repository. If branches are being used,
+the source Step is instead configured with a @code{baseURL} and a
+@code{defaultBranch}, and the two strings are simply concatenated
+together to obtain the repository's URL. Each build then has a
+specific branch which replaces @code{defaultBranch}, or just uses the
+default one. Instead of a revision number, each build can have a
+``context'', which is a string that records all the patches that are
+present in a given tree (this is the output of @command{darcs changes
+--context}, and is considerably less concise than, e.g. Subversion's
+revision number, but the patch-reordering flexibility of Darcs makes
+it impossible to provide a shorter useful specification).
+
+@uref{http://selenic.com/mercurial, Mercurial} is like Darcs, in that
+each branch is stored in a separate repository. The @code{repourl},
+@code{baseURL}, and @code{defaultBranch} arguments are all handled the
+same way as with Darcs. The ``revision'', however, is the hash
+identifier returned by @command{hg identify}.
+
+@uref{http://git.or.cz/, Git} also follows a decentralized model, and
+each repository can have several branches and tags. The source Step is
+configured with a static @code{repourl} which specifies the location
+of the repository. In addition, an optional @code{branch} parameter
+can be specified to check out code from a specific branch instead of
+the default ``master'' branch. The ``revision'' is specified as a SHA1
+hash as returned by e.g. @command{git rev-parse}. No attempt is made
+to ensure that the specified revision is actually a subset of the
+specified branch.
+
+
+@node Attributes of Changes
+@subsection Attributes of Changes
+
+@heading Who
+
+Each Change has a @code{who} attribute, which specifies which
+developer is responsible for the change. This is a string which comes
+from a namespace controlled by the VC repository. Frequently this
+means it is a username on the host which runs the repository, but not
+all VC systems require this (Arch, for example, uses a fully-qualified
+@code{Arch ID}, which looks like an email address, as does Darcs).
+Each StatusNotifier will map the @code{who} attribute into something
+appropriate for their particular means of communication: an email
+address, an IRC handle, etc.
+
+@heading Files
+
+It also has a list of @code{files}, which are just the tree-relative
+filenames of any files that were added, deleted, or modified for this
+Change. These filenames are used by the @code{fileIsImportant}
+function (in the Scheduler) to decide whether it is worth triggering a
+new build or not, e.g. the function could use the following function
+to only run a build if a C file were checked in:
+
+@example
+def has_C_files(change):
+    for name in change.files:
+        if name.endswith(".c"):
+            return True
+    return False
+@end example
+
+Certain BuildSteps can also use the list of changed files
+to run a more targeted series of tests, e.g. the
+@code{python_twisted.Trial} step can run just the unit tests that
+provide coverage for the modified .py files instead of running the
+full test suite.
+
+@heading Comments
+
+The Change also has a @code{comments} attribute, which is a string
+containing any checkin comments.
+
+@heading Revision
+
+Each Change can have a @code{revision} attribute, which describes how
+to get a tree with a specific state: a tree which includes this Change
+(and all that came before it) but none that come after it. If this
+information is unavailable, the @code{.revision} attribute will be
+@code{None}. These revisions are provided by the ChangeSource, and
+consumed by the @code{computeSourceRevision} method in the appropriate
+@code{source.Source} class.
+
+@table @samp
+@item CVS
+@code{revision} is an int, seconds since the epoch
+@item SVN
+@code{revision} is an int, the changeset number (r%d)
+@item Darcs
+@code{revision} is a large string, the output of @code{darcs changes --context}
+@item Mercurial
+@code{revision} is a short string (a hash ID), the output of @code{hg identify}
+@item Arch/Bazaar
+@code{revision} is the full revision ID (ending in --patch-%d)
+@item P4
+@code{revision} is an int, the transaction number
+@item Git
+@code{revision} is a short string (a SHA1 hash), the output of e.g.
+@code{git rev-parse}
+@end table
+
+@heading Branches
+
+The Change might also have a @code{branch} attribute. This indicates
+that all of the Change's files are in the same named branch. The
+Schedulers get to decide whether the branch should be built or not.
+
+For VC systems like CVS, Arch, Monotone, and Git, the @code{branch}
+name is unrelated to the filename. (that is, the branch name and the
+filename inhabit unrelated namespaces). For SVN, branches are
+expressed as subdirectories of the repository, so the file's
+``svnurl'' is a combination of some base URL, the branch name, and the
+filename within the branch. (In a sense, the branch name and the
+filename inhabit the same namespace). Darcs branches are
+subdirectories of a base URL just like SVN. Mercurial branches are the
+same as Darcs.
+
+@table @samp
+@item CVS
+branch='warner-newfeature', files=['src/foo.c']
+@item SVN
+branch='branches/warner-newfeature', files=['src/foo.c']
+@item Darcs
+branch='warner-newfeature', files=['src/foo.c']
+@item Mercurial
+branch='warner-newfeature', files=['src/foo.c']
+@item Arch/Bazaar
+branch='buildbot--usebranches--0', files=['buildbot/master.py']
+@item Git
+branch='warner-newfeature', files=['src/foo.c']
+@end table
+
+@heading Build Properties
+
+A Change may have one or more properties attached to it, usually specified
+through the Force Build form or @pxref{sendchange}. Properties are discussed
+in detail in the @pxref{Build Properties} section.
+
+@heading Links
+
+@c TODO: who is using 'links'? how is it being used?
+
+Finally, the Change might have a @code{links} list, which is intended
+to provide a list of URLs to a @emph{viewcvs}-style web page that
+provides more detail for this Change, perhaps including the full file
+diffs.
+
+
+@node Schedulers
+@section Schedulers
+
+@cindex Scheduler
+
+Each Buildmaster has a set of @code{Scheduler} objects, each of which
+gets a copy of every incoming Change. The Schedulers are responsible
+for deciding when Builds should be run. Some Buildbot installations
+might have a single Scheduler, while others may have several, each for
+a different purpose.
+
+For example, a ``quick'' scheduler might exist to give immediate
+feedback to developers, hoping to catch obvious problems in the code
+that can be detected quickly. These typically do not run the full test
+suite, nor do they run on a wide variety of platforms. They also
+usually do a VC update rather than performing a brand-new checkout
+each time. You could have a ``quick'' scheduler which used a 30 second
+timeout, and feeds a single ``quick'' Builder that uses a VC
+@code{mode='update'} setting.
+
+A separate ``full'' scheduler would run more comprehensive tests a
+little while later, to catch more subtle problems. This scheduler
+would have a longer tree-stable-timer, maybe 30 minutes, and would
+feed multiple Builders (with a @code{mode=} of @code{'copy'},
+@code{'clobber'}, or @code{'export'}).
+
+The @code{tree-stable-timer} and @code{fileIsImportant} decisions are
+made by the Scheduler. Dependencies are also implemented here.
+Periodic builds (those which are run every N seconds rather than after
+new Changes arrive) are triggered by a special @code{Periodic}
+Scheduler subclass. The default Scheduler class can also be told to
+watch for specific branches, ignoring Changes on other branches. This
+may be useful if you have a trunk and a few release branches which
+should be tracked, but when you don't want to have the Buildbot pay
+attention to several dozen private user branches.
+
+When the setup has multiple sources of Changes the @code{category}
+can be used for @code{Scheduler} objects to filter out a subset
+of the Changes.  Note that not all change sources can attach a category.
+
+Some Schedulers may trigger builds for other reasons, other than
+recent Changes. For example, a Scheduler subclass could connect to a
+remote buildmaster and watch for builds of a library to succeed before
+triggering a local build that uses that library.
+
+Each Scheduler creates and submits @code{BuildSet} objects to the
+@code{BuildMaster}, which is then responsible for making sure the
+individual @code{BuildRequests} are delivered to the target
+@code{Builders}.
+
+@code{Scheduler} instances are activated by placing them in the
+@code{c['schedulers']} list in the buildmaster config file. Each
+Scheduler has a unique name.
+
+
+@node BuildSet
+@section BuildSet
+
+@cindex BuildSet
+
+A @code{BuildSet} is the name given to a set of Builds that all
+compile/test the same version of the tree on multiple Builders. In
+general, all these component Builds will perform the same sequence of
+Steps, using the same source code, but on different platforms or
+against a different set of libraries.
+
+The @code{BuildSet} is tracked as a single unit, which fails if any of
+the component Builds have failed, and therefore can succeed only if
+@emph{all} of the component Builds have succeeded. There are two kinds
+of status notification messages that can be emitted for a BuildSet:
+the @code{firstFailure} type (which fires as soon as we know the
+BuildSet will fail), and the @code{Finished} type (which fires once
+the BuildSet has completely finished, regardless of whether the
+overall set passed or failed).
+
+A @code{BuildSet} is created with a @emph{source stamp} tuple of
+(branch, revision, changes, patch), some of which may be None, and a
+list of Builders on which it is to be run. They are then given to the
+BuildMaster, which is responsible for creating a separate
+@code{BuildRequest} for each Builder.
+
+There are a couple of different likely values for the
+@code{SourceStamp}:
+
+@table @code
+@item (revision=None, changes=[CHANGES], patch=None)
+This is a @code{SourceStamp} used when a series of Changes have
+triggered a build. The VC step will attempt to check out a tree that
+contains CHANGES (and any changes that occurred before CHANGES, but
+not any that occurred after them).
+
+@item (revision=None, changes=None, patch=None)
+This builds the most recent code on the default branch. This is the
+sort of @code{SourceStamp} that would be used on a Build that was
+triggered by a user request, or a Periodic scheduler. It is also
+possible to configure the VC Source Step to always check out the
+latest sources rather than paying attention to the Changes in the
+SourceStamp, which will result in same behavior as this.
+
+@item (branch=BRANCH, revision=None, changes=None, patch=None)
+This builds the most recent code on the given BRANCH. Again, this is
+generally triggered by a user request or Periodic build.
+
+@item (revision=REV, changes=None, patch=(LEVEL, DIFF, SUBDIR_ROOT))
+This checks out the tree at the given revision REV, then applies a
+patch (using @code{patch -pLEVEL <DIFF}) from inside the relative
+directory SUBDIR_ROOT. Item SUBDIR_ROOT is optional and defaults to the
+builder working directory. The @ref{try} feature uses this kind of
+@code{SourceStamp}. If @code{patch} is None, the patching step is
+bypassed.
+
+@end table
+
+The buildmaster is responsible for turning the @code{BuildSet} into a
+set of @code{BuildRequest} objects and queueing them on the
+appropriate Builders.
+
+
+@node BuildRequest
+@section BuildRequest
+
+@cindex BuildRequest
+
+A @code{BuildRequest} is a request to build a specific set of sources
+on a single specific @code{Builder}. Each @code{Builder} runs the
+@code{BuildRequest} as soon as it can (i.e. when an associated
+buildslave becomes free). @code{BuildRequest}s are prioritized from
+oldest to newest, so when a buildslave becomes free, the
+@code{Builder} with the oldest @code{BuildRequest} is run.
+
+The @code{BuildRequest} contains the @code{SourceStamp} specification.
+The actual process of running the build (the series of Steps that will
+be executed) is implemented by the @code{Build} object. In this future
+this might be changed, to have the @code{Build} define @emph{what}
+gets built, and a separate @code{BuildProcess} (provided by the
+Builder) to define @emph{how} it gets built.
+
+@code{BuildRequest} is created with optional @code{Properties}.  One
+of these, @code{owner}, is collected by the resultant @code{Build} and
+added to the set of @emph{interested users} to which status
+notifications will be sent, depending on the configuration for each
+status object.
+
+The @code{BuildRequest} may be mergeable with other compatible
+@code{BuildRequest}s. Builds that are triggered by incoming Changes
+will generally be mergeable. Builds that are triggered by user
+requests are generally not, unless they are multiple requests to build
+the @emph{latest sources} of the same branch.
+
+@node Builder
+@section Builder
+
+@cindex Builder
+
+The Buildmaster runs a collection of Builders, each of which handles a single
+type of build (e.g. full versus quick), on one or more build slaves.   Builders
+serve as a kind of queue for a particular type of build.  Each Builder gets a
+separate column in the waterfall display. In general, each Builder runs
+independently (although various kinds of interlocks can cause one Builder to
+have an effect on another).
+
+Each @code{Builder} is a long-lived object which controls a sequence of Builds.
+Each Builder is created when the config file is first parsed, and lives forever
+(or rather until it is removed from the config file). It mediates the
+connections to the buildslaves that do all the work, and is responsible for
+creating the @code{Build} objects that decide @emph{how} a build is performed
+(i.e., which steps are executed in what order).
+
+Each @code{Builder} gets a unique name, and the path name of a
+directory where it gets to do all its work (there is a
+buildmaster-side directory for keeping status information, as well as
+a buildslave-side directory where the actual checkout/compile/test
+commands are executed). It also gets a @code{BuildFactory}, which is
+responsible for creating new @code{Build} instances: because the
+@code{Build} instance is what actually performs each build, choosing
+the @code{BuildFactory} is the way to specify what happens each time a
+build is done.
+
+Each @code{Builder} is associated with one of more @code{BuildSlaves}.
+A @code{Builder} which is used to perform OS-X builds (as opposed to
+Linux or Solaris builds) should naturally be associated with an
+OS-X-based buildslave.
+
+If multiple buildslaves are available for any given Builder, you will
+have some measure of redundancy: in case one slave goes offline, the
+others can still keep the Builder working. In addition, multiple
+buildslaves will allow multiple simultaneous builds for the same
+Builder, which might be useful if you have a lot of forced or ``try''
+builds taking place.
+
+If you use this feature, it is important to make sure that the
+buildslaves are all, in fact, capable of running the given build. The
+slave hosts should be configured similarly, otherwise you will spend a
+lot of time trying (unsuccessfully) to reproduce a failure that only
+occurs on some of the buildslaves and not the others. Different
+platforms, operating systems, versions of major programs or libraries,
+all these things mean you should use separate Builders.
+
+@node Users
+@section Users
+
+@cindex Users
+
+Buildbot has a somewhat limited awareness of @emph{users}. It assumes
+the world consists of a set of developers, each of whom can be
+described by a couple of simple attributes. These developers make
+changes to the source code, causing builds which may succeed or fail.
+
+Each developer is primarily known through the source control system. Each
+Change object that arrives is tagged with a @code{who} field that
+typically gives the account name (on the repository machine) of the user
+responsible for that change. This string is the primary key by which the
+User is known, and is displayed on the HTML status pages and in each Build's
+``blamelist''.
+
+To do more with the User than just refer to them, this username needs to
+be mapped into an address of some sort. The responsibility for this mapping
+is left up to the status module which needs the address. The core code knows
+nothing about email addresses or IRC nicknames, just user names.
+
+@menu
+* Doing Things With Users::
+* Email Addresses::
+* IRC Nicknames::
+* Live Status Clients::
+@end menu
+
+@node Doing Things With Users
+@subsection Doing Things With Users
+
+Each Change has a single User who is responsible for that Change. Most
+Builds have a set of Changes: the Build represents the first time these
+Changes have been built and tested by the Buildbot. The build has a
+``blamelist'' that consists of a simple union of the Users responsible
+for all the Build's Changes.
+
+The Build provides (through the IBuildStatus interface) a list of Users
+who are ``involved'' in the build. For now this is equal to the
+blamelist, but in the future it will be expanded to include a ``build
+sheriff'' (a person who is ``on duty'' at that time and responsible for
+watching over all builds that occur during their shift), as well as
+per-module owners who simply want to keep watch over their domain (chosen by
+subdirectory or a regexp matched against the filenames pulled out of the
+Changes). The Involved Users are those who probably have an interest in the
+results of any given build.
+
+In the future, Buildbot will acquire the concept of ``Problems'',
+which last longer than builds and have beginnings and ends. For example, a
+test case which passed in one build and then failed in the next is a
+Problem. The Problem lasts until the test case starts passing again, at
+which point the Problem is said to be ``resolved''.
+
+If there appears to be a code change that went into the tree at the
+same time as the test started failing, that Change is marked as being
+resposible for the Problem, and the user who made the change is added
+to the Problem's ``Guilty'' list. In addition to this user, there may
+be others who share responsibility for the Problem (module owners,
+sponsoring developers). In addition to the Responsible Users, there
+may be a set of Interested Users, who take an interest in the fate of
+the Problem.
+
+Problems therefore have sets of Users who may want to be kept aware of
+the condition of the problem as it changes over time. If configured, the
+Buildbot can pester everyone on the Responsible list with increasing
+harshness until the problem is resolved, with the most harshness reserved
+for the Guilty parties themselves. The Interested Users may merely be told
+when the problem starts and stops, as they are not actually responsible for
+fixing anything.
+
+@node Email Addresses
+@subsection Email Addresses
+
+The @code{buildbot.status.mail.MailNotifier} class
+(@pxref{MailNotifier}) provides a status target which can send email
+about the results of each build. It accepts a static list of email
+addresses to which each message should be delivered, but it can also
+be configured to send mail to the Build's Interested Users. To do
+this, it needs a way to convert User names into email addresses.
+
+For many VC systems, the User Name is actually an account name on the
+system which hosts the repository. As such, turning the name into an
+email address is a simple matter of appending
+``@@repositoryhost.com''. Some projects use other kinds of mappings
+(for example the preferred email address may be at ``project.org''
+despite the repository host being named ``cvs.project.org''), and some
+VC systems have full separation between the concept of a user and that
+of an account on the repository host (like Perforce). Some systems
+(like Arch) put a full contact email address in every change.
+
+To convert these names to addresses, the MailNotifier uses an EmailLookup
+object. This provides a .getAddress method which accepts a name and
+(eventually) returns an address. The default @code{MailNotifier}
+module provides an EmailLookup which simply appends a static string,
+configurable when the notifier is created. To create more complex behaviors
+(perhaps using an LDAP lookup, or using ``finger'' on a central host to
+determine a preferred address for the developer), provide a different object
+as the @code{lookup} argument.
+
+In the future, when the Problem mechanism has been set up, the Buildbot
+will need to send mail to arbitrary Users. It will do this by locating a
+MailNotifier-like object among all the buildmaster's status targets, and
+asking it to send messages to various Users. This means the User-to-address
+mapping only has to be set up once, in your MailNotifier, and every email
+message the buildbot emits will take advantage of it.
+
+@node IRC Nicknames
+@subsection IRC Nicknames
+
+Like MailNotifier, the @code{buildbot.status.words.IRC} class
+provides a status target which can announce the results of each build. It
+also provides an interactive interface by responding to online queries
+posted in the channel or sent as private messages.
+
+In the future, the buildbot can be configured map User names to IRC
+nicknames, to watch for the recent presence of these nicknames, and to
+deliver build status messages to the interested parties. Like
+@code{MailNotifier} does for email addresses, the @code{IRC} object
+will have an @code{IRCLookup} which is responsible for nicknames. The
+mapping can be set up statically, or it can be updated by online users
+themselves (by claiming a username with some kind of ``buildbot: i am
+user warner'' commands).
+
+Once the mapping is established, the rest of the buildbot can ask the
+@code{IRC} object to send messages to various users. It can report on
+the likelihood that the user saw the given message (based upon how long the
+user has been inactive on the channel), which might prompt the Problem
+Hassler logic to send them an email message instead.
+
+@node Live Status Clients
+@subsection Live Status Clients
+
+The Buildbot also offers a PB-based status client interface which can
+display real-time build status in a GUI panel on the developer's desktop.
+This interface is normally anonymous, but it could be configured to let the
+buildmaster know @emph{which} developer is using the status client. The
+status client could then be used as a message-delivery service, providing an
+alternative way to deliver low-latency high-interruption messages to the
+developer (like ``hey, you broke the build'').
+
+@node Build Properties
+@section Build Properties
+@cindex Properties
+
+Each build has a set of ``Build Properties'', which can be used by its
+BuildStep to modify their actions.  These properties, in the form of
+key-value pairs, provide a general framework for dynamically altering
+the behavior of a build based on its circumstances.
+
+Properties come from a number of places:
+@itemize
+@item global configuration --
+These properties apply to all builds.
+@item schedulers --
+A scheduler can specify properties available to all the builds it
+starts.
+@item changes --
+A change can have properties attached to it. These are usually specified
+through Force Build or sendchange.
+@item buildslaves --
+A buildslave can pass properties on to the builds it performs.
+@item builds --
+A build automatically sets a number of properties on itself.
+@item steps --
+Steps of a build can set properties that are available to subsequent
+steps.  In particular, source steps set a number of properties.
+@end itemize
+
+Properties are very flexible, and can be used to implement all manner
+of functionality.  Here are some examples:
+
+Most Source steps record the revision that they checked out in
+the @code{got_revision} property.  A later step could use this
+property to specify the name of a fully-built tarball, dropped in an
+easily-acessible directory for later testing.
+
+Some projects want to perform nightly builds as well as in response
+to committed changes.  Such a project would run two schedulers,
+both pointing to the same set of builders, but could provide an
+@code{is_nightly} property so that steps can distinguish the nightly
+builds, perhaps to run more resource-intensive tests.
+
+Some projects have different build processes on different systems.
+Rather than create a build factory for each slave, the steps can use
+buildslave properties to identify the unique aspects of each slave
+and adapt the build process dynamically.
+
+

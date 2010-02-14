@@ -28,3 +28,5 @@ docs/images/status.png
 .pydevproject
 .settings
 twisted/
+docs/buildbot
+docs/version.texinfo

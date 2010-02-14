@@ -1,0 +1,2914 @@
+A @code{Build} object is responsible for actually performing a build.
+It gets access to a remote @code{SlaveBuilder} where it may run
+commands, and a @code{BuildStatus} object where it must emit status
+events. The @code{Build} is created by the Builder's
+@code{BuildFactory}.
+
+The default @code{Build} class is made up of a fixed sequence of
+@code{BuildSteps}, executed one after another until all are complete
+(or one of them indicates that the build should be halted early). The
+default @code{BuildFactory} creates instances of this @code{Build}
+class with a list of @code{BuildSteps}, so the basic way to configure
+the build is to provide a list of @code{BuildSteps} to your
+@code{BuildFactory}.
+
+More complicated @code{Build} subclasses can make other decisions:
+execute some steps only if certain files were changed, or if certain
+previous steps passed or failed. The base class has been written to
+allow users to express basic control flow without writing code, but
+you can always subclass and customize to achieve more specialized
+behavior.
+
+@menu
+* Build Steps::
+* Interlocks::
+* Build Factories::
+@end menu
+
+@node Build Steps
+@section Build Steps
+
+@code{BuildStep}s are usually specified in the buildmaster's
+configuration file, in a list that goes into the @code{BuildFactory}.
+The @code{BuildStep} instances in this list are used as templates to
+construct new independent copies for each build (so that state can be
+kept on the @code{BuildStep} in one build without affecting a later
+build). Each @code{BuildFactory} can be created with a list of steps,
+or the factory can be created empty and then steps added to it using
+the @code{addStep} method:
+
+@example
+from buildbot.steps import source, shell
+from buildbot.process import factory
+
+f = factory.BuildFactory()
+f.addStep(source.SVN(svnurl="http://svn.example.org/Trunk/"))
+f.addStep(shell.ShellCommand(command=["make", "all"]))
+f.addStep(shell.ShellCommand(command=["make", "test"]))
+@end example
+
+In earlier versions (0.7.5 and older), these steps were specified with
+a tuple of (step_class, keyword_arguments). Steps can still be
+specified this way, but the preferred form is to pass actual
+@code{BuildStep} instances to @code{addStep}, because that gives the
+@code{BuildStep} class a chance to do some validation on the
+arguments.
+
+If you have a common set of steps which are used in several factories, the
+@code{addSteps} method may be handy.  It takes an iterable of @code{BuildStep}
+instances.
+
+@example
+setup_steps = [
+    source.SVN(svnurl="http://svn.example.org/Trunk/")
+    shell.ShellCommand(command="./setup")
+]
+quick = factory.BuildFactory()
+quick.addSteps(setup_steps)
+quick.addStep(shell.shellCommand(command="make quick"))
+@end example
+
+The rest of this section lists all the standard BuildStep objects
+available for use in a Build, and the parameters which can be used to
+control each.
+
+@menu
+* Common Parameters::
+* Using Build Properties::
+* Source Checkout::
+* ShellCommand::
+* Simple ShellCommand Subclasses::
+* Python BuildSteps::
+* Transferring Files::
+* Steps That Run on the Master::
+* Triggering Schedulers::
+* Writing New BuildSteps::
+@end menu
+
+@node Common Parameters
+@subsection Common Parameters
+
+The standard @code{Build} runs a series of @code{BuildStep}s in order,
+only stopping when it runs out of steps or if one of them requests
+that the build be halted. It collects status information from each one
+to create an overall build status (of SUCCESS, WARNINGS, or FAILURE).
+
+All BuildSteps accept some common parameters. Some of these control
+how their individual status affects the overall build. Others are used
+to specify which @code{Locks} (see @pxref{Interlocks}) should be
+acquired before allowing the step to run.
+
+Arguments common to all @code{BuildStep} subclasses:
+
+
+@table @code
+@item name
+the name used to describe the step on the status display. It is also
+used to give a name to any LogFiles created by this step.
+
+@item haltOnFailure
+if True, a FAILURE of this build step will cause the build to halt
+immediately. Steps with @code{alwaysRun=True} are still run. Generally
+speaking, haltOnFailure implies flunkOnFailure (the default for most
+BuildSteps). In some cases, particularly series of tests, it makes sense
+to haltOnFailure if something fails early on but not flunkOnFailure.
+This can be achieved with haltOnFailure=True, flunkOnFailure=False.
+
+@item flunkOnWarnings
+when True, a WARNINGS or FAILURE of this build step will mark the
+overall build as FAILURE. The remaining steps will still be executed.
+
+@item flunkOnFailure
+when True, a FAILURE of this build step will mark the overall build as
+a FAILURE. The remaining steps will still be executed.
+
+@item warnOnWarnings
+when True, a WARNINGS or FAILURE of this build step will mark the
+overall build as having WARNINGS. The remaining steps will still be
+executed.
+
+@item warnOnFailure
+when True, a FAILURE of this build step will mark the overall build as
+having WARNINGS. The remaining steps will still be executed.
+
+@item alwaysRun
+if True, this build step will always be run, even if a previous buildstep
+with @code{haltOnFailure=True} has failed.
+
+@item doStepIf
+A step can be configured to only run under certain conditions.  To do this, set
+the step's @code{doStepIf} to a boolean value, or to a function that returns a
+boolean value.  If the value or function result is false, then the step will
+return SKIPPED without doing anything.  Oherwise, the step will be executed
+normally.  If you set @code{doStepIf} to a function, that function should
+accept one parameter, which will be the @code{Step} object itself.
+
+@item locks
+a list of Locks (instances of @code{buildbot.locks.SlaveLock} or
+@code{buildbot.locks.MasterLock}) that should be acquired before
+starting this Step. The Locks will be released when the step is
+complete. Note that this is a list of actual Lock instances, not
+names. Also note that all Locks must have unique names.
+
+@end table
+
+@node Using Build Properties
+@subsection Using Build Properties
+@cindex Properties
+
+Build properties are a generalized way to provide configuration
+information to build steps; see @ref{Build Properties}.
+
+Some build properties are inherited from external sources -- global
+properties, schedulers, or buildslaves.  Some build properties are
+set when the build starts, such as the SourceStamp information. Other
+properties can be set by BuildSteps as they run, for example the
+various Source steps will set the @code{got_revision} property to the
+source revision that was actually checked out (which can be useful
+when the SourceStamp in use merely requested the ``latest revision'':
+@code{got_revision} will tell you what was actually built).
+
+In custom BuildSteps, you can get and set the build properties with
+the @code{getProperty}/@code{setProperty} methods. Each takes a string
+for the name of the property, and returns or accepts an
+arbitrary@footnote{Build properties are serialized along with the
+build results, so they must be serializable. For this reason, the
+value of any build property should be simple inert data: strings,
+numbers, lists, tuples, and dictionaries. They should not contain
+class instances.} object. For example:
+
+@example
+class MakeTarball(ShellCommand):
+    def start(self):
+        if self.getProperty("os") == "win":
+            self.setCommand([ ... ]) # windows-only command
+        else:
+            self.setCommand([ ... ]) # equivalent for other systems
+        ShellCommand.start(self)
+@end example
+
+@heading WithProperties
+@cindex WithProperties
+
+You can use build properties in ShellCommands by using the
+@code{WithProperties} wrapper when setting the arguments of
+the ShellCommand. This interpolates the named build properties
+into the generated shell command.  Most step parameters accept
+@code{WithProperties}.  Please file bugs for any parameters which
+do not.
+
+@example
+from buildbot.steps.shell import ShellCommand
+from buildbot.process.properties import WithProperties
+
+f.addStep(ShellCommand(
+          command=["tar", "czf",
+                   WithProperties("build-%s.tar.gz", "revision"),
+                   "source"]))
+@end example
+
+If this BuildStep were used in a tree obtained from Subversion, it
+would create a tarball with a name like @file{build-1234.tar.gz}.
+
+The @code{WithProperties} function does @code{printf}-style string
+interpolation, using strings obtained by calling
+@code{build.getProperty(propname)}. Note that for every @code{%s} (or
+@code{%d}, etc), you must have exactly one additional argument to
+indicate which build property you want to insert.
+
+You can also use python dictionary-style string interpolation by using
+the @code{%(propname)s} syntax. In this form, the property name goes
+in the parentheses, and WithProperties takes @emph{no} additional
+arguments:
+
+@example
+f.addStep(ShellCommand(
+          command=["tar", "czf",
+                   WithProperties("build-%(revision)s.tar.gz"),
+                   "source"]))
+@end example
+
+Don't forget the extra ``s'' after the closing parenthesis! This is
+the cause of many confusing errors.
+
+The dictionary-style interpolation supports a number of more advanced
+syntaxes, too.
+
+@table @code
+
+@item propname:-replacement
+If @code{propname} exists, substitute its value; otherwise,
+substitute @code{replacement}.  @code{replacement} may be empty
+(@code{%(propname:-)s})
+
+@item propname:+replacement
+If @code{propname} exists, substitute @code{replacement}; otherwise,
+substitute an empty string.
+
+@end table
+
+Although these are similar to shell substitutions, no other
+substitutions are currently supported, and @code{replacement} in the
+above cannot contain more substitutions.
+
+Note: like python, you can either do positional-argument interpolation
+@emph{or} keyword-argument interpolation, not both. Thus you cannot use
+a string like @code{WithProperties("foo-%(revision)s-%s", "branch")}.
+
+@heading Common Build Properties
+
+The following build properties are set when the build is started, and
+are available to all steps.
+
+@table @code
+@item branch
+
+This comes from the build's SourceStamp, and describes which branch is
+being checked out. This will be @code{None} (which interpolates into
+@code{WithProperties} as an empty string) if the build is on the
+default branch, which is generally the trunk. Otherwise it will be a
+string like ``branches/beta1.4''. The exact syntax depends upon the VC
+system being used.
+
+@item revision
+
+This also comes from the SourceStamp, and is the revision of the source code
+tree that was requested from the VC system. When a build is requested of a
+specific revision (as is generally the case when the build is triggered by
+Changes), this will contain the revision specification. This is always a
+string, although the syntax depends upon the VC system in use: for SVN it is an
+integer, for Mercurial it is a short string, for Darcs it is a rather large
+string, etc.
+
+If the ``force build'' button was pressed, the revision will be @code{None},
+which means to use the most recent revision available.  This is a ``trunk
+build''. This will be interpolated as an empty string.
+
+@item got_revision
+
+This is set when a Source step checks out the source tree, and
+provides the revision that was actually obtained from the VC system.
+In general this should be the same as @code{revision}, except for
+trunk builds, where @code{got_revision} indicates what revision was
+current when the checkout was performed. This can be used to rebuild
+the same source code later.
+
+Note that for some VC systems (Darcs in particular), the revision is a
+large string containing newlines, and is not suitable for interpolation
+into a filename.
+
+@item buildername
+
+This is a string that indicates which Builder the build was a part of.
+The combination of buildername and buildnumber uniquely identify a
+build.
+
+@item buildnumber
+
+Each build gets a number, scoped to the Builder (so the first build
+performed on any given Builder will have a build number of 0). This
+integer property contains the build's number.
+
+@item slavename
+
+This is a string which identifies which buildslave the build is
+running on.
+
+@item scheduler
+
+If the build was started from a scheduler, then this property will
+contain the name of that scheduler.
+
+@end table
+
+
+@node Source Checkout
+@subsection Source Checkout
+
+The first step of any build is typically to acquire the source code
+from which the build will be performed. There are several classes to
+handle this, one for each of the different source control system that
+Buildbot knows about. For a description of how Buildbot treats source
+control in general, see @ref{Version Control Systems}.
+
+All source checkout steps accept some common parameters to control how
+they get the sources and where they should be placed. The remaining
+per-VC-system parameters are mostly to specify where exactly the
+sources are coming from.
+
+@table @code
+@item mode
+
+a string describing the kind of VC operation that is desired. Defaults
+to @code{update}.
+
+@table @code
+@item update
+specifies that the CVS checkout/update should be performed directly
+into the workdir. Each build is performed in the same directory,
+allowing for incremental builds. This minimizes disk space, bandwidth,
+and CPU time. However, it may encounter problems if the build process
+does not handle dependencies properly (sometimes you must do a ``clean
+build'' to make sure everything gets compiled), or if source files are
+deleted but generated files can influence test behavior (e.g. python's
+.pyc files), or when source directories are deleted but generated
+files prevent CVS from removing them. Builds ought to be correct
+regardless of whether they are done ``from scratch'' or incrementally,
+but it is useful to test both kinds: this mode exercises the
+incremental-build style.
+
+@item copy
+specifies that the CVS workspace should be maintained in a separate
+directory (called the 'copydir'), using checkout or update as
+necessary. For each build, a new workdir is created with a copy of the
+source tree (rm -rf workdir; cp -r copydir workdir). This doubles the
+disk space required, but keeps the bandwidth low (update instead of a
+full checkout). A full 'clean' build is performed each time. This
+avoids any generated-file build problems, but is still occasionally
+vulnerable to CVS problems such as a repository being manually
+rearranged, causing CVS errors on update which are not an issue with a
+full checkout.
+
+@c TODO: something is screwy about this, revisit. Is it the source
+@c directory or the working directory that is deleted each time?
+
+@item clobber
+specifes that the working directory should be deleted each time,
+necessitating a full checkout for each build. This insures a clean
+build off a complete checkout, avoiding any of the problems described
+above. This mode exercises the ``from-scratch'' build style.
+
+@item export
+this is like @code{clobber}, except that the 'cvs export' command is
+used to create the working directory. This command removes all CVS
+metadata files (the CVS/ directories) from the tree, which is
+sometimes useful for creating source tarballs (to avoid including the
+metadata in the tar file).
+@end table
+
+@item workdir
+like all Steps, this indicates the directory where the build will take
+place. Source Steps are special in that they perform some operations
+outside of the workdir (like creating the workdir itself).
+
+@item alwaysUseLatest
+if True, bypass the usual ``update to the last Change'' behavior, and
+always update to the latest changes instead.
+
+@item retry
+If set, this specifies a tuple of @code{(delay, repeats)} which means
+that when a full VC checkout fails, it should be retried up to
+@var{repeats} times, waiting @var{delay} seconds between attempts. If
+you don't provide this, it defaults to @code{None}, which means VC
+operations should not be retried. This is provided to make life easier
+for buildslaves which are stuck behind poor network connections.
+
+@end table
+
+
+My habit as a developer is to do a @code{cvs update} and @code{make} each
+morning. Problems can occur, either because of bad code being checked in, or
+by incomplete dependencies causing a partial rebuild to fail where a
+complete from-scratch build might succeed. A quick Builder which emulates
+this incremental-build behavior would use the @code{mode='update'}
+setting.
+
+On the other hand, other kinds of dependency problems can cause a clean
+build to fail where a partial build might succeed. This frequently results
+from a link step that depends upon an object file that was removed from a
+later version of the tree: in the partial tree, the object file is still
+around (even though the Makefiles no longer know how to create it).
+
+``official'' builds (traceable builds performed from a known set of
+source revisions) are always done as clean builds, to make sure it is
+not influenced by any uncontrolled factors (like leftover files from a
+previous build). A ``full'' Builder which behaves this way would want
+to use the @code{mode='clobber'} setting.
+
+Each VC system has a corresponding source checkout class: their
+arguments are described on the following pages.
+
+
+@menu
+* CVS::
+* SVN::
+* Darcs::
+* Mercurial::
+* Arch::
+* Bazaar::
+* Bzr::
+* P4::
+* Git::
+* BitKeeper::
+@end menu
+
+@node CVS
+@subsubsection CVS
+@cindex CVS Checkout
+@bsindex buildbot.steps.source.CVS
+
+
+The @code{CVS} build step performs a @uref{http://www.nongnu.org/cvs/,
+CVS} checkout or update. It takes the following arguments:
+
+@table @code
+@item cvsroot
+(required): specify the CVSROOT value, which points to a CVS
+repository, probably on a remote machine. For example, the cvsroot
+value you would use to get a copy of the Buildbot source code is
+@code{:pserver:anonymous@@cvs.sourceforge.net:/cvsroot/buildbot}
+
+@item cvsmodule
+(required): specify the cvs @code{module}, which is generally a
+subdirectory of the CVSROOT. The cvsmodule for the Buildbot source
+code is @code{buildbot}.
+
+@item branch
+a string which will be used in a @code{-r} argument. This is most
+useful for specifying a branch to work on. Defaults to @code{HEAD}.
+
+@item global_options
+a list of flags to be put before the verb in the CVS command.
+
+@item checkoutDelay
+if set, the number of seconds to put between the timestamp of the last
+known Change and the value used for the @code{-D} option. Defaults to
+half of the parent Build's treeStableTimer.
+
+@end table
+
+
+@node SVN
+@subsubsection SVN
+
+@cindex SVN Checkout
+@bsindex buildbot.steps.source.SVN
+
+
+The @code{SVN} build step performs a
+@uref{http://subversion.tigris.org, Subversion} checkout or update.
+There are two basic ways of setting up the checkout step, depending
+upon whether you are using multiple branches or not.
+
+If all of your builds use the same branch, then you should create the
+@code{SVN} step with the @code{svnurl} argument:
+
+@table @code
+@item svnurl
+(required): this specifies the @code{URL} argument that will be given
+to the @code{svn checkout} command. It dictates both where the
+repository is located and which sub-tree should be extracted. In this
+respect, it is like a combination of the CVS @code{cvsroot} and
+@code{cvsmodule} arguments. For example, if you are using a remote
+Subversion repository which is accessible through HTTP at a URL of
+@code{http://svn.example.com/repos}, and you wanted to check out the
+@code{trunk/calc} sub-tree, you would use
+@code{svnurl="http://svn.example.com/repos/trunk/calc"} as an argument
+to your @code{SVN} step.
+@end table
+
+If, on the other hand, you are building from multiple branches, then
+you should create the @code{SVN} step with the @code{baseURL} and
+@code{defaultBranch} arguments instead:
+
+@table @code
+@item baseURL
+(required): this specifies the base repository URL, to which a branch
+name will be appended. It should probably end in a slash.
+
+@item defaultBranch
+(optional): this specifies the name of the branch to use when a Build
+does not provide one of its own. This will be appended to
+@code{baseURL} to create the string that will be passed to the
+@code{svn checkout} command.
+
+@item username
+(optional): if specified, this will be passed to the @code{svn}
+binary with a @code{--username} option.
+
+@item password
+(optional): if specified, this will be passed to the @code{svn}
+binary with a @code{--password} option.  The password itself will be
+suitably obfuscated in the logs.
+
+@item extra_args
+(optional): if specified, an array of strings that will be passed as
+extra arguments to the @code{svn} binary.
+
+@item keep_on_purge
+(optional): specific files or directories to keep between purges,
+like some build outputs that can be reused between builds.
+
+@item ignore_ignores
+(optional): when purging changes, don't use rules defined in
+svn:ignore properties and global-ignores in subversion/config.
+
+@item always_purge
+(optional): if set to True, always purge local changes after each
+build. This is everything that would appear in a @code{svn status}.
+
+@item depth
+(optional): Specify depth argument to achieve sparse checkout.  Only available if slave has Subversion 1.5 or higher.
+
+If set to "empty" updates will not pull in any files or subdirectories not already present. If set to "files", updates will pull in any files not already present, but not directories.  If set to "immediates", updates willl pull in any files or subdirectories not already present, the new subdirectories will have depth: empty.  If set to "infinity", updates will pull in any files or subdirectories not already present; the new subdirectories will have depth-infinity. Infinity is equivalent to SVN default update behavior, without specifying any depth argument.
+
+@end table
+
+If you are using branches, you must also make sure your
+@code{ChangeSource} will report the correct branch names.
+
+@heading branch example
+
+Let's suppose that the ``MyProject'' repository uses branches for the
+trunk, for various users' individual development efforts, and for
+several new features that will require some amount of work (involving
+multiple developers) before they are ready to merge onto the trunk.
+Such a repository might be organized as follows:
+
+@example
+svn://svn.example.org/MyProject/trunk
+svn://svn.example.org/MyProject/branches/User1/foo
+svn://svn.example.org/MyProject/branches/User1/bar
+svn://svn.example.org/MyProject/branches/User2/baz
+svn://svn.example.org/MyProject/features/newthing
+svn://svn.example.org/MyProject/features/otherthing
+@end example
+
+Further assume that we want the Buildbot to run tests against the
+trunk and against all the feature branches (i.e., do a
+checkout/compile/build of branch X when a file has been changed on
+branch X, when X is in the set [trunk, features/newthing,
+features/otherthing]). We do not want the Buildbot to automatically
+build any of the user branches, but it should be willing to build a
+user branch when explicitly requested (most likely by the user who
+owns that branch).
+
+There are three things that need to be set up to accomodate this
+system. The first is a ChangeSource that is capable of identifying the
+branch which owns any given file. This depends upon a user-supplied
+function, in an external program that runs in the SVN commit hook and
+connects to the buildmaster's @code{PBChangeSource} over a TCP
+connection. (you can use the ``@code{buildbot sendchange}'' utility
+for this purpose, but you will still need an external program to
+decide what value should be passed to the @code{--branch=} argument).
+For example, a change to a file with the SVN url of
+``svn://svn.example.org/MyProject/features/newthing/src/foo.c'' should
+be broken down into a Change instance with
+@code{branch='features/newthing'} and @code{file='src/foo.c'}.
+
+The second piece is an @code{AnyBranchScheduler} which will pay
+attention to the desired branches. It will not pay attention to the
+user branches, so it will not automatically start builds in response
+to changes there. The AnyBranchScheduler class requires you to
+explicitly list all the branches you want it to use, but it would not
+be difficult to write a subclass which used
+@code{branch.startswith('features/'} to remove the need for this
+explicit list. Or, if you want to build user branches too, you can use
+AnyBranchScheduler with @code{branches=None} to indicate that you want
+it to pay attention to all branches.
+
+The third piece is an @code{SVN} checkout step that is configured to
+handle the branches correctly, with a @code{baseURL} value that
+matches the way the ChangeSource splits each file's URL into base,
+branch, and file.
+
+@example
+from buildbot.changes.pb import PBChangeSource
+from buildbot.scheduler import AnyBranchScheduler
+from buildbot.process import source, factory
+from buildbot.steps import source, shell
+
+c['change_source'] = PBChangeSource()
+s1 = AnyBranchScheduler('main',
+                        ['trunk', 'features/newthing', 'features/otherthing'],
+                        10*60, ['test-i386', 'test-ppc'])
+c['schedulers'] = [s1]
+
+f = factory.BuildFactory()
+f.addStep(source.SVN(mode='update',
+                     baseURL='svn://svn.example.org/MyProject/',
+                     defaultBranch='trunk'))
+f.addStep(shell.Compile(command="make all"))
+f.addStep(shell.Test(command="make test"))
+
+c['builders'] = [
+  @{'name':'test-i386', 'slavename':'bot-i386', 'builddir':'test-i386',
+                       'factory':f @},
+  @{'name':'test-ppc', 'slavename':'bot-ppc', 'builddir':'test-ppc',
+                      'factory':f @},
+ ]
+@end example
+
+In this example, when a change arrives with a @code{branch} attribute
+of ``trunk'', the resulting build will have an SVN step that
+concatenates ``svn://svn.example.org/MyProject/'' (the baseURL) with
+``trunk'' (the branch name) to get the correct svn command. If the
+``newthing'' branch has a change to ``src/foo.c'', then the SVN step
+will concatenate ``svn://svn.example.org/MyProject/'' with
+``features/newthing'' to get the svnurl for checkout.
+
+@node Darcs
+@subsubsection Darcs
+
+@cindex Darcs Checkout
+@bsindex buildbot.steps.source.Darcs
+
+
+The @code{Darcs} build step performs a
+@uref{http://darcs.net/, Darcs} checkout or update.
+
+Like @xref{SVN}, this step can either be configured to always check
+out a specific tree, or set up to pull from a particular branch that
+gets specified separately for each build. Also like SVN, the
+repository URL given to Darcs is created by concatenating a
+@code{baseURL} with the branch name, and if no particular branch is
+requested, it uses a @code{defaultBranch}. The only difference in
+usage is that each potential Darcs repository URL must point to a
+fully-fledged repository, whereas SVN URLs usually point to sub-trees
+of the main Subversion repository. In other words, doing an SVN
+checkout of @code{baseURL} is legal, but silly, since you'd probably
+wind up with a copy of every single branch in the whole repository.
+Doing a Darcs checkout of @code{baseURL} is just plain wrong, since
+the parent directory of a collection of Darcs repositories is not
+itself a valid repository.
+
+The Darcs step takes the following arguments:
+
+@table @code
+@item repourl
+(required unless @code{baseURL} is provided): the URL at which the
+Darcs source repository is available.
+
+@item baseURL
+(required unless @code{repourl} is provided): the base repository URL,
+to which a branch name will be appended. It should probably end in a
+slash.
+
+@item defaultBranch
+(allowed if and only if @code{baseURL} is provided): this specifies
+the name of the branch to use when a Build does not provide one of its
+own. This will be appended to @code{baseURL} to create the string that
+will be passed to the @code{darcs get} command.
+@end table
+
+@node Mercurial
+@subsubsection Mercurial
+
+@cindex Mercurial Checkout
+@bsindex buildbot.steps.source.Mercurial
+
+
+The @code{Mercurial} build step performs a
+@uref{http://selenic.com/mercurial, Mercurial} (aka ``hg'') checkout
+or update.
+
+Branches are available in two modes: ''dirname'' like @xref{Darcs}, or
+''inrepo'', which uses the repository internal branches. Make sure this
+setting matches your changehook, if you have that installed.
+
+The Mercurial step takes the following arguments:
+
+@table @code
+@item repourl
+(required unless @code{baseURL} is provided): the URL at which the
+Mercurial source repository is available.
+
+@item baseURL
+(required unless @code{repourl} is provided): the base repository URL,
+to which a branch name will be appended. It should probably end in a
+slash.
+
+@item defaultBranch
+(allowed if and only if @code{baseURL} is provided): this specifies
+the name of the branch to use when a Build does not provide one of its
+own. This will be appended to @code{baseURL} to create the string that
+will be passed to the @code{hg clone} command.
+
+@item branchType
+either 'dirname' (default) or 'inrepo' depending on whether
+the branch name should be appended to the @code{baseURL}
+or the branch is a mercurial named branch and can be
+found within the @code{repourl}.
+
+@item clobberOnBranchChange
+boolean, defaults to True. If set and
+using inrepos branches, clobber the tree
+at each branch change. Otherwise, just
+update to the branch.
+
+@end table
+
+
+@node Arch
+@subsubsection Arch
+
+@cindex Arch Checkout
+@bsindex buildbot.steps.source.Arch
+
+
+The @code{Arch} build step performs an @uref{http://gnuarch.org/,
+Arch} checkout or update using the @code{tla} client. It takes the
+following arguments:
+
+@table @code
+@item url
+(required): this specifies the URL at which the Arch source archive is
+available.
+
+@item version
+(required): this specifies which ``development line'' (like a branch)
+should be used. This provides the default branch name, but individual
+builds may specify a different one.
+
+@item archive
+(optional): Each repository knows its own archive name. If this
+parameter is provided, it must match the repository's archive name.
+The parameter is accepted for compatibility with the @code{Bazaar}
+step, below.
+
+@end table
+
+@node Bazaar
+@subsubsection Bazaar
+
+@cindex Bazaar Checkout
+@bsindex buildbot.steps.source.Bazaar
+
+
+@code{Bazaar} is an alternate implementation of the Arch VC system,
+which uses a client named @code{baz}. The checkout semantics are just
+different enough from @code{tla} that there is a separate BuildStep for
+it.
+
+It takes exactly the same arguments as @code{Arch}, except that the
+@code{archive=} parameter is required. (baz does not emit the archive
+name when you do @code{baz register-archive}, so we must provide it
+ourselves).
+
+
+@node Bzr
+@subsubsection Bzr
+
+@cindex Bzr Checkout
+@bsindex buildbot.steps.source.Bzr
+
+@code{bzr} is a descendant of Arch/Baz, and is frequently referred to
+as simply ``Bazaar''. The repository-vs-workspace model is similar to
+Darcs, but it uses a strictly linear sequence of revisions (one
+history per branch) like Arch. Branches are put in subdirectories.
+This makes it look very much like Mercurial. It takes the following
+arguments:
+
+@table @code
+
+@item repourl
+(required unless @code{baseURL} is provided): the URL at which the
+Bzr source repository is available.
+
+@item baseURL
+(required unless @code{repourl} is provided): the base repository URL,
+to which a branch name will be appended. It should probably end in a
+slash.
+
+@item defaultBranch
+(allowed if and only if @code{baseURL} is provided): this specifies
+the name of the branch to use when a Build does not provide one of its
+own. This will be appended to @code{baseURL} to create the string that
+will be passed to the @code{bzr checkout} command.
+
+@item forceSharedRepo
+(boolean, optional, defaults to False): If set to True, the working directory
+will be made into a bzr shared repository if it is not already. Shared
+repository greatly reduces the amount of history data that needs to be
+downloaded if not using update/copy mode, or if using update/copy mode with
+multiple branches.
+@end table
+
+
+
+@node P4
+@subsubsection P4
+
+@cindex Perforce Update
+@bsindex buildbot.steps.source.P4
+@c TODO @bsindex buildbot.steps.source.P4Sync
+
+
+The @code{P4} build step creates a @uref{http://www.perforce.com/,
+Perforce} client specification and performs an update.
+
+@table @code
+@item p4base
+A view into the Perforce depot without branch name or trailing "...".
+Typically "//depot/proj/".
+@item defaultBranch
+A branch name to append on build requests if none is specified.
+Typically "trunk".
+@item p4port
+(optional): the host:port string describing how to get to the P4 Depot
+(repository), used as the -p argument for all p4 commands.
+@item p4user
+(optional): the Perforce user, used as the -u argument to all p4
+commands.
+@item p4passwd
+(optional): the Perforce password, used as the -p argument to all p4
+commands.
+@item p4extra_views
+(optional): a list of (depotpath, clientpath) tuples containing extra
+views to be mapped into the client specification. Both will have
+"/..." appended automatically. The client name and source directory
+will be prepended to the client path.
+@item p4client
+(optional): The name of the client to use. In mode='copy' and
+mode='update', it's particularly important that a unique name is used
+for each checkout directory to avoid incorrect synchronization. For
+this reason, Python percent substitution will be performed on this value
+to replace %(slave)s with the slave name and %(builder)s with the
+builder name. The default is "buildbot_%(slave)s_%(build)s".
+@end table
+
+
+@node Git
+@subsubsection Git
+
+@cindex Git Checkout
+@bsindex buildbot.steps.source.Git
+
+The @code{Git} build step clones or updates a @uref{http://git.or.cz/,
+Git} repository and checks out the specified branch or revision. Note
+that the buildbot supports Git version 1.2.0 and later: earlier
+versions (such as the one shipped in Ubuntu 'Dapper') do not support
+the @command{git init} command that the buildbot uses.
+
+The Git step takes the following arguments:
+
+@table @code
+@item repourl
+(required): the URL of the upstream Git repository.
+
+@item branch
+(optional): this specifies the name of the branch to use when a Build
+does not provide one of its own. If this this parameter is not
+specified, and the Build does not provide a branch, the ``master''
+branch will be used.
+
+@item ignore_ignores
+(optional): when purging changes, don't use .gitignore and
+.git/info/exclude.
+
+@end table
+
+
+@node BitKeeper
+@subsubsection BitKeeper
+
+@cindex BitKeeper Checkout
+@bsindex buildbot.steps.source.BK
+
+The @code{BK} build step performs a @uref{http://www.bitkeeper.com/, BitKeeper}
+checkout or update.
+
+The BitKeeper step takes the following arguments:
+
+@table @code
+@item repourl
+(required unless @code{baseURL} is provided): the URL at which the
+BitKeeper source repository is available.
+
+@item baseURL
+(required unless @code{repourl} is provided): the base repository URL,
+to which a branch name will be appended. It should probably end in a
+slash.
+
+@end table
+
+
+@node ShellCommand
+@subsection ShellCommand
+
+@bsindex buildbot.steps.shell.ShellCommand
+@c TODO @bsindex buildbot.steps.shell.TreeSize
+
+This is a useful base class for just about everything you might want
+to do during a build (except for the initial source checkout). It runs
+a single command in a child shell on the buildslave. All stdout/stderr
+is recorded into a LogFile. The step finishes with a status of FAILURE
+if the command's exit code is non-zero, otherwise it has a status of
+SUCCESS.
+
+The preferred way to specify the command is with a list of argv strings,
+since this allows for spaces in filenames and avoids doing any fragile
+shell-escaping. You can also specify the command with a single string, in
+which case the string is given to '/bin/sh -c COMMAND' for parsing.
+
+On Windows, commands are run via @code{cmd.exe /c} which works well. However,
+if you're running a batch file, the error level does not get propagated
+correctly unless you add 'call' before your batch file's name:
+@code{cmd=['call', 'myfile.bat', ...]}.
+
+@code{ShellCommand} arguments:
+
+@table @code
+@item command
+a list of strings (preferred) or single string (discouraged) which
+specifies the command to be run. A list of strings is preferred
+because it can be used directly as an argv array. Using a single
+string (with embedded spaces) requires the buildslave to pass the
+string to /bin/sh for interpretation, which raises all sorts of
+difficult questions about how to escape or interpret shell
+metacharacters.
+
+@item workdir
+All ShellCommands are run by default in the ``workdir'', which
+defaults to the ``@file{build}'' subdirectory of the slave builder's
+base directory. The absolute path of the workdir will thus be the
+slave's basedir (set as an option to @code{buildbot create-slave},
+@pxref{Creating a buildslave}) plus the builder's basedir (set in the
+builder's @code{c['builddir']} key in master.cfg) plus the workdir
+itself (a class-level attribute of the BuildFactory, defaults to
+``@file{build}'').
+
+For example:
+
+@example
+f.addStep(ShellCommand(command=["make", "test"],
+                       workdir="build/tests"))
+@end example
+
+@item env
+a dictionary of environment strings which will be added to the child
+command's environment. For example, to run tests with a different i18n
+language setting, you might use
+
+@example
+f.addStep(ShellCommand(command=["make", "test"],
+                       env=@{'LANG': 'fr_FR'@}))
+@end example
+
+These variable settings will override any existing ones in the
+buildslave's environment or the environment specified in the
+Builder. The exception is PYTHONPATH, which is merged
+with (actually prepended to) any existing $PYTHONPATH setting. The
+value is treated as a list of directories to prepend, and a single
+string is treated like a one-item list. For example, to prepend both
+@file{/usr/local/lib/python2.3} and @file{/home/buildbot/lib/python}
+to any existing $PYTHONPATH setting, you would do something like the
+following:
+
+@example
+f.addStep(ShellCommand(
+              command=["make", "test"],
+              env=@{'PYTHONPATH': ["/usr/local/lib/python2.3",
+                                   "/home/buildbot/lib/python"] @}))
+@end example
+
+@item want_stdout
+if False, stdout from the child process is discarded rather than being
+sent to the buildmaster for inclusion in the step's LogFile.
+
+@item want_stderr
+like @code{want_stdout} but for stderr. Note that commands run through
+a PTY do not have separate stdout/stderr streams: both are merged into
+stdout.
+
+@item usePTY
+Should this command be run in a @code{pty}?  The default is to observe the
+configuration of the client (@pxref{Buildslave Options}), but specifying
+@code{True} or @code{False} here will override the default.
+
+The advantage of using a PTY is that ``grandchild'' processes are more likely
+to be cleaned up if the build is interrupted or times out (since it enables the
+use of a ``process group'' in which all child processes will be placed). The
+disadvantages: some forms of Unix have problems with PTYs, some of your unit
+tests may behave differently when run under a PTY (generally those which check
+to see if they are being run interactively), and PTYs will merge the stdout and
+stderr streams into a single output stream (which means the red-vs-black
+coloring in the logfiles will be lost).
+
+@item logfiles
+Sometimes commands will log interesting data to a local file, rather
+than emitting everything to stdout or stderr. For example, Twisted's
+``trial'' command (which runs unit tests) only presents summary
+information to stdout, and puts the rest into a file named
+@file{_trial_temp/test.log}. It is often useful to watch these files
+as the command runs, rather than using @command{/bin/cat} to dump
+their contents afterwards.
+
+The @code{logfiles=} argument allows you to collect data from these
+secondary logfiles in near-real-time, as the step is running. It
+accepts a dictionary which maps from a local Log name (which is how
+the log data is presented in the build results) to either a remote filename
+(interpreted relative to the build's working directory), or a dictionary
+of options. Each named file will be polled on a regular basis (every couple
+of seconds) as the build runs, and any new text will be sent over to the
+buildmaster.
+
+If you provide a dictionary of options instead of a string, you must specify
+the @code{filename} key. You can optionally provide a @code{follow} key which
+is a boolean controlling whether a logfile is followed or concatenated in its
+entirety.  Following is appropriate for logfiles to which the build step will
+append, where the pre-existing contents are not interesting.  The default value
+for @code{follow} is @code{False}, which gives the same behavior as just
+providing a string filename.
+
+@example
+f.addStep(ShellCommand(
+              command=["make", "test"],
+              logfiles=@{"triallog": "_trial_temp/test.log"@}))
+@end example
+
+@example
+f.addStep(ShellCommand(
+              command=["make", "test"],
+              logfiles=@{"triallog": @{"filename": "_trial_temp/test.log",
+			       "follow": True,@}@}))
+@end example
+
+
+@item lazylogfiles
+If set to @code{True}, logfiles will be tracked lazily, meaning that they will
+only be added when and if something is written to them. This can be used to
+suppress the display of empty or missing log files. The default is @code{False}.
+
+
+@item timeout
+if the command fails to produce any output for this many seconds, it
+is assumed to be locked up and will be killed.
+
+@item maxTime
+if the command takes longer than this many seconds, it will be killed.
+
+@item description
+This will be used to describe the command (on the Waterfall display)
+while the command is still running. It should be a single
+imperfect-tense verb, like ``compiling'' or ``testing''. The preferred
+form is a list of short strings, which allows the HTML 
+displays to create narrower columns by emitting a <br> tag between each
+word. You may also provide a single string.
+
+@item descriptionDone
+This will be used to describe the command once it has finished. A
+simple noun like ``compile'' or ``tests'' should be used. Like
+@code{description}, this may either be a list of short strings or a
+single string.
+
+If neither @code{description} nor @code{descriptionDone} are set, the
+actual command arguments will be used to construct the description.
+This may be a bit too wide to fit comfortably on the Waterfall
+display.
+
+@example
+f.addStep(ShellCommand(command=["make", "test"],
+                       description=["testing"],
+                       descriptionDone=["tests"]))
+@end example
+
+@item logEnviron
+If this option is true (the default), then the step's logfile will describe the
+environment variables on the slave.  In situations where the environment is not
+relevant and is long, it may be easier to set @code{logEnviron=False}.
+
+@end table
+
+@node Simple ShellCommand Subclasses
+@subsection Simple ShellCommand Subclasses
+
+Several subclasses of ShellCommand are provided as starting points for
+common build steps. These are all very simple: they just override a few
+parameters so you don't have to specify them yourself, making the master.cfg
+file less verbose.
+
+@menu
+* Configure::
+* Compile::
+* Test::
+* TreeSize::
+* PerlModuleTest::
+* Testing with mysql-test-run::
+* SetProperty::
+* SubunitShellCommand::
+@end menu
+
+@node Configure
+@subsubsection Configure
+
+@bsindex buildbot.steps.shell.Configure
+
+This is intended to handle the @code{./configure} step from
+autoconf-style projects, or the @code{perl Makefile.PL} step from perl
+MakeMaker.pm-style modules. The default command is @code{./configure}
+but you can change this by providing a @code{command=} parameter.
+
+@node Compile
+@subsubsection Compile
+
+@bsindex buildbot.steps.shell.Compile
+
+This is meant to handle compiling or building a project written in C.
+The default command is @code{make all}. When the compile is finished,
+the log file is scanned for GCC warning messages, a summary log is
+created with any problems that were seen, and the step is marked as
+WARNINGS if any were discovered. Through the @code{WarningCountingShellCommand}
+superclass, the number of warnings is stored in a Build Property named
+``warnings-count'', which is accumulated over all Compile steps (so if two
+warnings are found in one step, and three are found in another step, the
+overall build will have a ``warnings-count'' property of 5).
+
+The default regular expression used to detect a warning is
+@code{'.*warning[: ].*'} , which is fairly liberal and may cause
+false-positives. To use a different regexp, provide a
+@code{warningPattern=} argument, or use a subclass which sets the
+@code{warningPattern} attribute:
+
+@example
+f.addStep(Compile(command=["make", "test"],
+                  warningPattern="^Warning: "))
+@end example
+
+The @code{warningPattern=} can also be a pre-compiled python regexp
+object: this makes it possible to add flags like @code{re.I} (to use
+case-insensitive matching).
+
+Note that the compiled @code{warningPattern} will have its @code{match} method
+called, which is subtly different from a @code{search}. Your regular
+expression must match the from the beginning of the line. This means that to
+look for the word "warning" in the middle of a line, you will need to
+prepend @code{'.*'} to your regular expression.
+
+The @code{suppressionFile=} argument can be specified as the (relative) path
+of a file inside the workdir defining warnings to be suppressed from the
+warning counting and log file. The file will be uploaded to the master from
+the slave before compiling, and any warning matched by a line in the
+suppression file will be ignored. This is useful to accept certain warnings
+(eg. in some special module of the source tree or in cases where the compiler
+is being particularly stupid), yet still be able to easily detect and fix the
+introduction of new warnings.
+
+The file must contain one line per pattern of warnings to ignore. Empty lines
+and lines beginning with @code{#} are ignored. Other lines must consist of a
+regexp matching the file name, followed by a colon (@code{:}), followed by a
+regexp matching the text of the warning. Optionally this may be followed by
+another colon and a line number range. For example:
+
+@example
+# Sample warning suppression file
+
+mi_packrec.c : .*result of 32-bit shift implicitly converted to 64 bits.* : 560-600
+DictTabInfo.cpp : .*invalid access to non-static.*
+kernel_types.h : .*only defines private constructors and has no friends.* : 51
+@end example
+
+If no line number range is specified, the pattern matches the whole file; if
+only one number is given it matches only on that line.
+
+The default warningPattern regexp only matches the warning text, so line
+numbers and file names are ignored. To enable line number and file name
+matching, privide a different regexp and provide a function (callable) as the
+argument of @code{warningExtractor=}. The function is called with three
+arguments: the BuildStep object, the line in the log file with the warning,
+and the @code{SRE_Match} object of the regexp search for @code{warningPattern}. It
+should return a tuple @code{(filename, linenumber, warning_test)}. For
+example:
+
+@example
+f.addStep(Compile(command=["make"],
+                  warningPattern="^(.*?):([0-9]+): [Ww]arning: (.*)$",
+                  warningExtractor=Compile.warnExtractFromRegexpGroups,
+                  suppressionFile="support-files/compiler_warnings.supp"))
+@end example
+
+(@code{Compile.warnExtractFromRegexpGroups} is a pre-defined function that
+returns the filename, linenumber, and text from groups (1,2,3) of the regexp
+match).
+
+In projects with source files in multiple directories, it is possible to get
+full path names for file names matched in the suppression file, as long as the
+build command outputs the names of directories as they are entered into and
+left again. For this, specify regexps for the arguments
+@code{directoryEnterPattern=} and @code{directoryLeavePattern=}. The
+@code{directoryEnterPattern=} regexp should return the name of the directory
+entered into in the first matched group. The defaults, which are suitable for
+GNU Make, are these:
+
+@example
+directoryEnterPattern = "make.*: Entering directory [\"`'](.*)['`\"]"
+directoryLeavePattern = "make.*: Leaving directory"
+@end example
+
+(TODO: this step needs to be extended to look for GCC error messages
+as well, and collect them into a separate logfile, along with the
+source code filenames involved).
+
+
+@node Test
+@subsubsection Test
+
+@bsindex buildbot.steps.shell.Test
+
+This is meant to handle unit tests. The default command is @code{make
+test}, and the @code{warnOnFailure} flag is set.
+
+@node TreeSize
+@subsubsection TreeSize
+
+@bsindex buildbot.steps.shell.TreeSize
+
+This is a simple command that uses the 'du' tool to measure the size
+of the code tree. It puts the size (as a count of 1024-byte blocks,
+aka 'KiB' or 'kibibytes') on the step's status text, and sets a build
+property named 'tree-size-KiB' with the same value.
+
+@node PerlModuleTest
+@subsubsection PerlModuleTest
+
+@bsindex buildbot.steps.shell.PerlModuleTest
+
+This is a simple command that knows how to run tests of perl modules.
+It parses the output to determine the number of tests passed and
+failed and total number executed, saving the results for later query.
+
+@node Testing with mysql-test-run
+@subsubsection Testing with mysql-test-run
+
+The @code{process.mtrlogobserver.MTR} class is a subclass of @code{Test}
+(@ref{Test}). It is used to run test suites using the mysql-test-run program,
+as used in MySQL, Drizzle, MariaDB, and MySQL storage engine plugins.
+
+The shell command to run the test suite is specified in the same way as for
+the Test class. The MTR class will parse the output of running the test suite,
+and use the count of tests executed so far to provide more accurate completion
+time estimates. Any test failures that occur during the test are summarized on
+the Waterfall Display.
+
+Server error logs are added as additional log files, useful to debug test
+failures.
+
+Optionally, data about the test run and any test failures can be inserted into
+a database for further analysis and report generation. To use this facility,
+create an instance of @code{twisted.enterprise.adbapi.ConnectionPool} with
+connections to the database. The necessary tables can be created automatically
+by setting @code{autoCreateTables} to @code{True}, or manually using the SQL
+found in the @file{mtrlogobserver.py} source file.
+
+One problem with specifying a database is that each reload of the
+configuration will get a new instance of @code{ConnectionPool} (even if the
+connection parameters are the same). To avoid that Buildbot thinks the builder
+configuration has changed because of this, use the
+@code{process.mtrlogobserver.EqConnectionPool} subclass of
+@code{ConnectionPool}, which implements an equiality operation that avoids
+this problem.
+
+Example use:
+
+@example
+from buildbot.process.mtrlogobserver import MTR, EqConnectionPool
+myPool = EqConnectionPool("MySQLdb", "host", "buildbot", "password", "db")
+myFactory.addStep(MTR(workdir="mysql-test", dbpool=myPool,
+                      command=["perl", "mysql-test-run.pl", "--force"]))
+@end example
+
+@code{MTR} arguments:
+
+@table @code
+
+@item textLimit
+Maximum number of test failures to show on the waterfall page (to not flood
+the page in case of a large number of test failures. Defaults to 5.
+
+@item testNameLimit
+Maximum length of test names to show unabbreviated in the waterfall page, to
+avoid excessive column width. Defaults to 16.
+
+@item parallel
+Value of @code{--parallel} option used for mysql-test-run.pl (number of processes
+used to run the test suite in parallel). Defaults to 4. This is used to
+determine the number of server error log files to download from the
+slave. Specifying a too high value does not hurt (as nonexisting error logs
+will be ignored), however if using @code{--parallel} value greater than the default
+it needs to be specified, or some server error logs will be missing.
+
+@item dbpool
+An instance of twisted.enterprise.adbapi.ConnectionPool, or None.  Defaults to
+None. If specified, results are inserted into the database using the
+ConnectionPool.
+
+@item autoCreateTables
+Boolean, defaults to False. If True (and @code{dbpool} is specified), the
+necessary database tables will be created automatically if they do not exist
+already. Alternatively, the tables can be created manually from the SQL
+statements found in the mtrlogobserver.py source file.
+
+@item test_type
+Short string that will be inserted into the database in the row for the test
+run. Defaults to the empty string, but can be specified to identify different
+types of test runs.
+
+@item test_info
+Descriptive string that will be inserted into the database in the row for the test
+run. Defaults to the empty string, but can be specified as a user-readable
+description of this particular test run.
+
+@item mtr_subdir
+The subdirectory in which to look for server error log files. Defaults to
+``mysql-test'', which is usually correct. WithProperties is supported.
+
+@end table
+
+
+@node SetProperty
+@subsubsection SetProperty
+
+@bsindex buildbot.steps.shell.SetProperty
+
+This buildstep is similar to ShellCommand, except that it captures the
+output of the command into a property.  It is usually used like this:
+
+@example
+f.addStep(SetProperty(command="uname -a", property="uname"))
+@end example
+
+This runs @code{uname -a} and captures its stdout, stripped of leading
+and trailing whitespace, in the property "uname".  To avoid stripping,
+add @code{strip=False}.  The @code{property} argument can be specified
+as a @code{WithProperties} object.
+
+The more advanced usage allows you to specify a function to extract
+properties from the command output.  Here you can use regular
+expressions, string interpolation, or whatever you would like.
+The function is called with three arguments: the exit status of the
+command, its standard output as a string, and its standard error as
+a string.  It should return a dictionary containing all new properties.
+
+@example
+def glob2list(rc, stdout, stderr):
+    jpgs = [ l.strip() for l in stdout.split('\n') ]
+    return @{ 'jpgs' : jpgs @}
+f.addStep(SetProperty(command="ls -1 *.jpg", extract_fn=glob2list))
+@end example
+
+Note that any ordering relationship of the contents of stdout and
+stderr is lost.  For example, given
+
+@example
+f.addStep(SetProperty(
+    command="echo output1; echo error >&2; echo output2",
+    extract_fn=my_extract))
+@end example
+
+Then @code{my_extract} will see @code{stdout="output1\noutput2\n"}
+and @code{stderr="error\n"}.
+
+@node SubunitShellCommand
+@subsubsection SubunitShellCommand
+
+@bsindex buildbot.process.subunitlogger.SubunitShellCommand
+
+This buildstep is similar to ShellCommand, except that it runs the log content
+through a subunit filter to extract test and failure counts.
+
+@example
+f.addStep(SubunitShellCommand(command="make test"))
+@end example
+
+This runs @code{make test} and filters it through subunit. The 'tests' and
+'test failed' progress metrics will now accumulate test data from the test run.
+
+@node Python BuildSteps
+@subsection Python BuildSteps
+
+Here are some BuildSteps that are specifcally useful for projects
+implemented in Python.
+
+@menu
+* BuildEPYDoc::
+* PyFlakes::
+* PyLint::
+@end menu
+
+@node BuildEPYDoc
+@subsubsection BuildEPYDoc
+
+@bsindex buildbot.steps.python.BuildEPYDoc
+
+@url{http://epydoc.sourceforge.net/, epydoc} is a tool for generating
+API documentation for Python modules from their docstrings. It reads
+all the .py files from your source tree, processes the docstrings
+therein, and creates a large tree of .html files (or a single .pdf
+file).
+
+The @code{buildbot.steps.python.BuildEPYDoc} step will run
+@command{epydoc} to produce this API documentation, and will count the
+errors and warnings from its output.
+
+You must supply the command line to be used. The default is
+@command{make epydocs}, which assumes that your project has a Makefile
+with an ``epydocs'' target. You might wish to use something like
+@command{epydoc -o apiref source/PKGNAME} instead. You might also want
+to add @command{--pdf} to generate a PDF file instead of a large tree
+of HTML files.
+
+The API docs are generated in-place in the build tree (under the
+workdir, in the subdirectory controlled by the ``-o'' argument). To
+make them useful, you will probably have to copy them to somewhere
+they can be read. A command like @command{rsync -ad apiref/
+dev.example.com:~public_html/current-apiref/} might be useful. You
+might instead want to bundle them into a tarball and publish it in the
+same place where the generated install tarball is placed.
+
+@example
+from buildbot.steps.python import BuildEPYDoc
+
+...
+f.addStep(BuildEPYDoc(command=["epydoc", "-o", "apiref", "source/mypkg"]))
+@end example
+
+
+@node PyFlakes
+@subsubsection PyFlakes
+
+@bsindex buildbot.steps.python.PyFlakes
+
+@url{http://divmod.org/trac/wiki/DivmodPyflakes, PyFlakes} is a tool
+to perform basic static analysis of Python code to look for simple
+errors, like missing imports and references of undefined names. It is
+like a fast and simple form of the C ``lint'' program. Other tools
+(like pychecker) provide more detailed results but take longer to run.
+
+The @code{buildbot.steps.python.PyFlakes} step will run pyflakes and
+count the various kinds of errors and warnings it detects.
+
+You must supply the command line to be used. The default is
+@command{make pyflakes}, which assumes you have a top-level Makefile
+with a ``pyflakes'' target. You might want to use something like
+@command{pyflakes .} or @command{pyflakes src}.
+
+@example
+from buildbot.steps.python import PyFlakes
+
+...
+f.addStep(PyFlakes(command=["pyflakes", "src"]))
+@end example
+
+@node PyLint
+@subsubsection PyLint
+
+@bsindex buildbot.steps.python.PyLint
+
+Similarly, the @code{buildbot.steps.python.PyLint} step will run pylint and
+analyze the results.
+
+You must supply the command line to be used. There is no default.
+
+@example
+from buildbot.steps.python import PyLint
+
+...
+f.addStep(PyLint(command=["pylint", "src"]))
+@end example
+
+
+@node Transferring Files
+@subsection Transferring Files
+
+@cindex File Transfer
+@bsindex buildbot.steps.transfer.FileUpload
+@bsindex buildbot.steps.transfer.FileDownload
+@bsindex buildbot.steps.transfer.DirectoryUpload
+
+Most of the work involved in a build will take place on the
+buildslave. But occasionally it is useful to do some work on the
+buildmaster side. The most basic way to involve the buildmaster is
+simply to move a file from the slave to the master, or vice versa.
+There are a pair of BuildSteps named @code{FileUpload} and
+@code{FileDownload} to provide this functionality. @code{FileUpload}
+moves a file @emph{up to} the master, while @code{FileDownload} moves
+a file @emph{down from} the master.
+
+As an example, let's assume that there is a step which produces an
+HTML file within the source tree that contains some sort of generated
+project documentation. We want to move this file to the buildmaster,
+into a @file{~/public_html} directory, so it can be visible to
+developers. This file will wind up in the slave-side working directory
+under the name @file{docs/reference.html}. We want to put it into the
+master-side @file{~/public_html/ref.html}.
+
+@example
+from buildbot.steps.shell import ShellCommand
+from buildbot.steps.transfer import FileUpload
+
+f.addStep(ShellCommand(command=["make", "docs"]))
+f.addStep(FileUpload(slavesrc="docs/reference.html",
+                     masterdest="~/public_html/ref.html"))
+@end example
+
+The @code{masterdest=} argument will be passed to os.path.expanduser,
+so things like ``~'' will be expanded properly. Non-absolute paths
+will be interpreted relative to the buildmaster's base directory.
+Likewise, the @code{slavesrc=} argument will be expanded and
+interpreted relative to the builder's working directory.
+
+
+To move a file from the master to the slave, use the
+@code{FileDownload} command. For example, let's assume that some step
+requires a configuration file that, for whatever reason, could not be
+recorded in the source code repository or generated on the buildslave
+side:
+
+@example
+from buildbot.steps.shell import ShellCommand
+from buildbot.steps.transfer import FileDownload
+
+f.addStep(FileDownload(mastersrc="~/todays_build_config.txt",
+                       slavedest="build_config.txt"))
+f.addStep(ShellCommand(command=["make", "config"]))
+@end example
+
+Like @code{FileUpload}, the @code{mastersrc=} argument is interpreted
+relative to the buildmaster's base directory, and the
+@code{slavedest=} argument is relative to the builder's working
+directory. If the buildslave is running in @file{~buildslave}, and the
+builder's ``builddir'' is something like @file{tests-i386}, then the
+workdir is going to be @file{~buildslave/tests-i386/build}, and a
+@code{slavedest=} of @file{foo/bar.html} will get put in
+@file{~buildslave/tests-i386/build/foo/bar.html}. Both of these commands
+will create any missing intervening directories.
+
+@subheading Other Parameters
+
+The @code{maxsize=} argument lets you set a maximum size for the file
+to be transferred. This may help to avoid surprises: transferring a
+100MB coredump when you were expecting to move a 10kB status file
+might take an awfully long time. The @code{blocksize=} argument
+controls how the file is sent over the network: larger blocksizes are
+slightly more efficient but also consume more memory on each end, and
+there is a hard-coded limit of about 640kB.
+
+The @code{mode=} argument allows you to control the access permissions
+of the target file, traditionally expressed as an octal integer. The
+most common value is probably 0755, which sets the ``x'' executable
+bit on the file (useful for shell scripts and the like). The default
+value for @code{mode=} is None, which means the permission bits will
+default to whatever the umask of the writing process is. The default
+umask tends to be fairly restrictive, but at least on the buildslave
+you can make it less restrictive with a --umask command-line option at
+creation time (@pxref{Buildslave Options}).
+
+@subheading Transfering Directories
+
+To transfer complete directories from the buildslave to the master, there
+is a BuildStep named @code{DirectoryUpload}. It works like @code{FileUpload},
+just for directories. However it does not support the @code{maxsize},
+@code{blocksize} and @code{mode} arguments. As an example, let's assume an
+generated project documentation, which consists of many files (like the output
+of doxygen or epydoc). We want to move the entire documentation to the
+buildmaster, into a @code{~/public_html/docs} directory. On the slave-side
+the directory can be found under @code{docs}:
+
+@example
+from buildbot.steps.shell import ShellCommand
+from buildbot.steps.transfer import DirectoryUpload
+
+f.addStep(ShellCommand(command=["make", "docs"]))
+f.addStep(DirectoryUpload(slavesrc="docs",
+				masterdest="~/public_html/docs"))
+@end example
+
+The DirectoryUpload step will create all necessary directories and
+transfers empty directories, too.
+
+@node Steps That Run on the Master
+@subsection Steps That Run on the Master
+
+Occasionally, it is useful to execute some task on the master, for example to
+create a directory, deploy a build result, or trigger some other centralized
+processing.  This is possible, in a limited fashion, with the
+@code{MasterShellCommand} step.
+
+This step operates similarly to a regular @code{ShellCommand}, but executes on
+the master, instead of the slave.  To be clear, the enclosing @code{Build}
+object must still have a slave object, just as for any other step -- only, in
+this step, the slave does not do anything.
+
+In this example, the step renames a tarball based on the day of the week.
+
+@example
+from buildbot.steps.transfer import FileUpload
+from buildbot.steps.master import MasterShellCommand
+
+f.addStep(FileUpload(slavesrc="widgetsoft.tar.gz",
+                     masterdest="/var/buildoutputs/widgetsoft-new.tar.gz"))
+f.addStep(MasterShellCommand(command="""
+    cd /var/buildoutputs;
+    mv widgetsoft-new.tar.gz widgetsoft-`date +%a`.tar.gz"""))
+@end example
+
+@node Triggering Schedulers
+@subsection Triggering Schedulers
+
+The counterpart to the Triggerable described in section
+@pxref{Triggerable Scheduler} is the Trigger BuildStep.
+
+@example
+from buildbot.steps.trigger import Trigger
+f.addStep(Trigger(schedulerNames=['build-prep'],
+                  waitForFinish=True,
+                  updateSourceStamp=True,
+                  set_properties=@{ 'quick' : False @},
+                  copy_properties=[ 'release_code_name' ]))
+@end example
+
+The @code{schedulerNames=} argument lists the Triggerables
+that should be triggered when this step is executed.  Note that
+it is possible, but not advisable, to create a cycle where a build
+continually triggers itself, because the schedulers are specified
+by name.
+
+If @code{waitForFinish} is True, then the step will not finish until
+all of the builds from the triggered schedulers have finished. If this
+argument is False (the default) or not given, then the buildstep
+succeeds immediately after triggering the schedulers.
+
+If @code{updateSourceStamp} is True (the default), then step updates
+the SourceStamp given to the Triggerables to include
+@code{got_revision} (the revision actually used in this build) as
+@code{revision} (the revision to use in the triggered builds). This is
+useful to ensure that all of the builds use exactly the same
+SourceStamp, even if other Changes have occurred while the build was
+running.
+
+Two parameters allow control of the properties that are passed to the triggered
+scheduler.  To simply copy properties verbatim, list them in the
+@code{copy_properties} parameter.  To set properties explicitly, use the more
+sophisticated @code{set_properties}, which takes a dictionary mapping property
+names to values.  You may use @code{WithProperties} here to dynamically
+construct new property values.
+
+@node Writing New BuildSteps
+@subsection Writing New BuildSteps
+
+While it is a good idea to keep your build process self-contained in
+the source code tree, sometimes it is convenient to put more
+intelligence into your Buildbot configuration. One way to do this is
+to write a custom BuildStep. Once written, this Step can be used in
+the @file{master.cfg} file.
+
+The best reason for writing a custom BuildStep is to better parse the
+results of the command being run. For example, a BuildStep that knows
+about JUnit could look at the logfiles to determine which tests had
+been run, how many passed and how many failed, and then report more
+detailed information than a simple @code{rc==0} -based ``good/bad''
+decision.
+
+@menu
+* Writing BuildStep Constructors::
+* BuildStep LogFiles::
+* Reading Logfiles::
+* Adding LogObservers::
+* BuildStep URLs::
+@end menu
+
+@node Writing BuildStep Constructors
+@subsubsection Writing BuildStep Constructors
+
+BuildStep classes have some extra equipment, because they are their own
+factories.  Consider the use of a BuildStep in @file{master.cfg}:
+
+@example
+f.addStep(MyStep(someopt="stuff", anotheropt=1))
+@end example
+
+This creates a single instance of class @code{MyStep}.  However, Buildbot needs
+a new object each time the step is executed.  this is accomplished by storing
+the information required to instantiate a new object in the @code{factory}
+attribute.  When the time comes to construct a new Build, BuildFactory consults
+this attribute (via @code{getStepFactory}) and instantiates a new step object.
+
+When writing a new step class, then, keep in mind are that you cannot do
+anything "interesting" in the constructor -- limit yourself to checking and
+storing arguments.  To ensure that these arguments are provided to any new
+objects, call @code{self.addFactoryArguments} with any keyword arguments your
+constructor needs.
+
+Keep a @code{**kwargs} argument on the end of your options, and pass that up to
+the parent class's constructor.
+
+The whole thing looks like this:
+
+@example
+class Frobinfy(LoggingBuildStep):
+    def __init__(self,
+            frob_what="frobee",
+            frob_how_many=None,
+            frob_how=None,
+            **kwargs)
+
+        # check
+        if frob_how_many is None:
+            raise TypeError("Frobinfy argument how_many is required")
+
+        # call parent
+        LoggingBuildStep.__init__(self, **kwargs)
+
+        # and record arguments for later
+        self.addFactoryArguments(
+            frob_what=frob_what,
+            frob_how_many=frob_how_many,
+            frob_how=frob_how)
+
+class FastFrobnify(Frobnify):
+    def __init__(self,
+            speed=5,
+            **kwargs)
+        Frobnify.__init__(self, **kwargs)
+        self.addFactoryArguments(
+            speed=speed)
+@end example
+
+@node BuildStep LogFiles
+@subsubsection BuildStep LogFiles
+
+Each BuildStep has a collection of ``logfiles''. Each one has a short
+name, like ``stdio'' or ``warnings''. Each LogFile contains an
+arbitrary amount of text, usually the contents of some output file
+generated during a build or test step, or a record of everything that
+was printed to stdout/stderr during the execution of some command.
+
+These LogFiles are stored to disk, so they can be retrieved later.
+
+Each can contain multiple ``channels'', generally limited to three
+basic ones: stdout, stderr, and ``headers''. For example, when a
+ShellCommand runs, it writes a few lines to the ``headers'' channel to
+indicate the exact argv strings being run, which directory the command
+is being executed in, and the contents of the current environment
+variables. Then, as the command runs, it adds a lot of ``stdout'' and
+``stderr'' messages. When the command finishes, a final ``header''
+line is added with the exit code of the process.
+
+Status display plugins can format these different channels in
+different ways. For example, the web page shows LogFiles as text/html,
+with header lines in blue text, stdout in black, and stderr in red. A
+different URL is available which provides a text/plain format, in
+which stdout and stderr are collapsed together, and header lines are
+stripped completely. This latter option makes it easy to save the
+results to a file and run @command{grep} or whatever against the
+output.
+
+Each BuildStep contains a mapping (implemented in a python dictionary)
+from LogFile name to the actual LogFile objects. Status plugins can
+get a list of LogFiles to display, for example, a list of HREF links
+that, when clicked, provide the full contents of the LogFile.
+
+@heading Using LogFiles in custom BuildSteps
+
+The most common way for a custom BuildStep to use a LogFile is to
+summarize the results of a ShellCommand (after the command has
+finished running). For example, a compile step with thousands of lines
+of output might want to create a summary of just the warning messages.
+If you were doing this from a shell, you would use something like:
+
+@example
+grep "warning:" output.log >warnings.log
+@end example
+
+In a custom BuildStep, you could instead create a ``warnings'' LogFile
+that contained the same text. To do this, you would add code to your
+@code{createSummary} method that pulls lines from the main output log
+and creates a new LogFile with the results:
+
+@example
+    def createSummary(self, log):
+        warnings = []
+        for line in log.readlines():
+            if "warning:" in line:
+                warnings.append()
+        self.addCompleteLog('warnings', "".join(warnings))
+@end example
+
+This example uses the @code{addCompleteLog} method, which creates a
+new LogFile, puts some text in it, and then ``closes'' it, meaning
+that no further contents will be added. This LogFile will appear in
+the HTML display under an HREF with the name ``warnings'', since that
+is the name of the LogFile.
+
+You can also use @code{addHTMLLog} to create a complete (closed)
+LogFile that contains HTML instead of plain text. The normal LogFile
+will be HTML-escaped if presented through a web page, but the HTML
+LogFile will not. At the moment this is only used to present a pretty
+HTML representation of an otherwise ugly exception traceback when
+something goes badly wrong during the BuildStep.
+
+In contrast, you might want to create a new LogFile at the beginning
+of the step, and add text to it as the command runs. You can create
+the LogFile and attach it to the build by calling @code{addLog}, which
+returns the LogFile object. You then add text to this LogFile by
+calling methods like @code{addStdout} and @code{addHeader}. When you
+are done, you must call the @code{finish} method so the LogFile can be
+closed. It may be useful to create and populate a LogFile like this
+from a LogObserver method @xref{Adding LogObservers}.
+
+The @code{logfiles=} argument to @code{ShellCommand} (see
+@pxref{ShellCommand}) creates new LogFiles and fills them in realtime
+by asking the buildslave to watch a actual file on disk. The
+buildslave will look for additions in the target file and report them
+back to the BuildStep. These additions will be added to the LogFile by
+calling @code{addStdout}. These secondary LogFiles can be used as the
+source of a LogObserver just like the normal ``stdio'' LogFile.
+
+@node Reading Logfiles
+@subsubsection Reading Logfiles
+
+Once a LogFile has been added to a BuildStep with @code{addLog()},
+@code{addCompleteLog()}, @code{addHTMLLog()}, or @code{logfiles=},
+your BuildStep can retrieve it by using @code{getLog()}:
+
+@example
+class MyBuildStep(ShellCommand):
+    logfiles = @{ "nodelog": "_test/node.log" @}
+
+    def evaluateCommand(self, cmd):
+        nodelog = self.getLog("nodelog")
+        if "STARTED" in nodelog.getText():
+            return SUCCESS
+        else:
+            return FAILURE
+@end example
+
+For a complete list of the methods you can call on a LogFile, please
+see the docstrings on the @code{IStatusLog} class in
+@file{buildbot/interfaces.py}.
+
+
+@node Adding LogObservers
+@subsubsection Adding LogObservers
+
+@cindex LogObserver
+@cindex LogLineObserver
+
+Most shell commands emit messages to stdout or stderr as they operate,
+especially if you ask them nicely with a @code{--verbose} flag of some
+sort. They may also write text to a log file while they run. Your
+BuildStep can watch this output as it arrives, to keep track of how
+much progress the command has made. You can get a better measure of
+progress by counting the number of source files compiled or test cases
+run than by merely tracking the number of bytes that have been written
+to stdout. This improves the accuracy and the smoothness of the ETA
+display.
+
+To accomplish this, you will need to attach a @code{LogObserver} to
+one of the log channels, most commonly to the ``stdio'' channel but
+perhaps to another one which tracks a log file. This observer is given
+all text as it is emitted from the command, and has the opportunity to
+parse that output incrementally. Once the observer has decided that
+some event has occurred (like a source file being compiled), it can
+use the @code{setProgress} method to tell the BuildStep about the
+progress that this event represents.
+
+There are a number of pre-built @code{LogObserver} classes that you
+can choose from (defined in @code{buildbot.process.buildstep}, and of
+course you can subclass them to add further customization. The
+@code{LogLineObserver} class handles the grunt work of buffering and
+scanning for end-of-line delimiters, allowing your parser to operate
+on complete stdout/stderr lines. (Lines longer than a set maximum
+length are dropped; the maximum defaults to 16384 bytes, but you can
+change it by calling @code{setMaxLineLength()} on your
+@code{LogLineObserver} instance.  Use @code{sys.maxint} for effective
+infinity.)
+
+For example, let's take a look at the @code{TrialTestCaseCounter},
+which is used by the Trial step to count test cases as they are run.
+As Trial executes, it emits lines like the following:
+
+@example
+buildbot.test.test_config.ConfigTest.testDebugPassword ... [OK]
+buildbot.test.test_config.ConfigTest.testEmpty ... [OK]
+buildbot.test.test_config.ConfigTest.testIRC ... [FAIL]
+buildbot.test.test_config.ConfigTest.testLocks ... [OK]
+@end example
+
+When the tests are finished, trial emits a long line of ``======'' and
+then some lines which summarize the tests that failed. We want to
+avoid parsing these trailing lines, because their format is less
+well-defined than the ``[OK]'' lines.
+
+The parser class looks like this:
+
+@example
+from buildbot.process.buildstep import LogLineObserver
+
+class TrialTestCaseCounter(LogLineObserver):
+    _line_re = re.compile(r'^([\w\.]+) \.\.\. \[([^\]]+)\]$')
+    numTests = 0
+    finished = False
+
+    def outLineReceived(self, line):
+        if self.finished:
+            return
+        if line.startswith("=" * 40):
+            self.finished = True
+            return
+
+        m = self._line_re.search(line.strip())
+        if m:
+            testname, result = m.groups()
+            self.numTests += 1
+            self.step.setProgress('tests', self.numTests)
+@end example
+
+This parser only pays attention to stdout, since that's where trial
+writes the progress lines. It has a mode flag named @code{finished} to
+ignore everything after the ``===='' marker, and a scary-looking
+regular expression to match each line while hopefully ignoring other
+messages that might get displayed as the test runs.
+
+Each time it identifies a test has been completed, it increments its
+counter and delivers the new progress value to the step with
+@code{self.step.setProgress}. This class is specifically measuring
+progress along the ``tests'' metric, in units of test cases (as
+opposed to other kinds of progress like the ``output'' metric, which
+measures in units of bytes). The Progress-tracking code uses each
+progress metric separately to come up with an overall completion
+percentage and an ETA value.
+
+To connect this parser into the @code{Trial} BuildStep,
+@code{Trial.__init__} ends with the following clause:
+
+@example
+        # this counter will feed Progress along the 'test cases' metric
+        counter = TrialTestCaseCounter()
+        self.addLogObserver('stdio', counter)
+        self.progressMetrics += ('tests',)
+@end example
+
+This creates a TrialTestCaseCounter and tells the step that the
+counter wants to watch the ``stdio'' log. The observer is
+automatically given a reference to the step in its @code{.step}
+attribute.
+
+@subheading A Somewhat Whimsical Example
+
+Let's say that we've got some snazzy new unit-test framework called
+Framboozle. It's the hottest thing since sliced bread. It slices, it
+dices, it runs unit tests like there's no tomorrow. Plus if your unit
+tests fail, you can use its name for a Web 2.1 startup company, make
+millions of dollars, and hire engineers to fix the bugs for you, while
+you spend your afternoons lazily hang-gliding along a scenic pacific
+beach, blissfully unconcerned about the state of your
+tests.@footnote{framboozle.com is still available. Remember, I get 10%
+:).}
+
+To run a Framboozle-enabled test suite, you just run the 'framboozler'
+command from the top of your source code tree. The 'framboozler'
+command emits a bunch of stuff to stdout, but the most interesting bit
+is that it emits the line "FNURRRGH!" every time it finishes running a
+test case@footnote{Framboozle gets very excited about running unit
+tests.}. You'd like to have a test-case counting LogObserver that
+watches for these lines and counts them, because counting them will
+help the buildbot more accurately calculate how long the build will
+take, and this will let you know exactly how long you can sneak out of
+the office for your hang-gliding lessons without anyone noticing that
+you're gone.
+
+This will involve writing a new BuildStep (probably named
+"Framboozle") which inherits from ShellCommand. The BuildStep class
+definition itself will look something like this:
+
+@example
+# START
+from buildbot.steps.shell import ShellCommand
+from buildbot.process.buildstep import LogLineObserver
+
+class FNURRRGHCounter(LogLineObserver):
+    numTests = 0
+    def outLineReceived(self, line):
+        if "FNURRRGH!" in line:
+            self.numTests += 1
+            self.step.setProgress('tests', self.numTests)
+
+class Framboozle(ShellCommand):
+    command = ["framboozler"]
+
+    def __init__(self, **kwargs):
+        ShellCommand.__init__(self, **kwargs)   # always upcall!
+        counter = FNURRRGHCounter())
+        self.addLogObserver('stdio', counter)
+        self.progressMetrics += ('tests',)
+# FINISH
+@end example
+
+So that's the code that we want to wind up using. How do we actually
+deploy it?
+
+You have a couple of different options.
+
+Option 1: The simplest technique is to simply put this text
+(everything from START to FINISH) in your master.cfg file, somewhere
+before the BuildFactory definition where you actually use it in a
+clause like:
+
+@example
+f = BuildFactory()
+f.addStep(SVN(svnurl="stuff"))
+f.addStep(Framboozle())
+@end example
+
+Remember that master.cfg is secretly just a python program with one
+job: populating the BuildmasterConfig dictionary. And python programs
+are allowed to define as many classes as they like. So you can define
+classes and use them in the same file, just as long as the class is
+defined before some other code tries to use it.
+
+This is easy, and it keeps the point of definition very close to the
+point of use, and whoever replaces you after that unfortunate
+hang-gliding accident will appreciate being able to easily figure out
+what the heck this stupid "Framboozle" step is doing anyways. The
+downside is that every time you reload the config file, the Framboozle
+class will get redefined, which means that the buildmaster will think
+that you've reconfigured all the Builders that use it, even though
+nothing changed. Bleh.
+
+Option 2: Instead, we can put this code in a separate file, and import
+it into the master.cfg file just like we would the normal buildsteps
+like ShellCommand and SVN.
+
+Create a directory named ~/lib/python, put everything from START to
+FINISH in ~/lib/python/framboozle.py, and run your buildmaster using:
+
+@example
+ PYTHONPATH=~/lib/python buildbot start MASTERDIR
+@end example
+
+or use the @file{Makefile.buildbot} to control the way
+@command{buildbot start} works. Or add something like this to
+something like your ~/.bashrc or ~/.bash_profile or ~/.cshrc:
+
+@example
+ export PYTHONPATH=~/lib/python
+@end example
+
+Once we've done this, our master.cfg can look like:
+
+@example
+from framboozle import Framboozle
+f = BuildFactory()
+f.addStep(SVN(svnurl="stuff"))
+f.addStep(Framboozle())
+@end example
+
+or:
+
+@example
+import framboozle
+f = BuildFactory()
+f.addStep(SVN(svnurl="stuff"))
+f.addStep(framboozle.Framboozle())
+@end example
+
+(check out the python docs for details about how "import" and "from A
+import B" work).
+
+What we've done here is to tell python that every time it handles an
+"import" statement for some named module, it should look in our
+~/lib/python/ for that module before it looks anywhere else. After our
+directories, it will try in a bunch of standard directories too
+(including the one where buildbot is installed). By setting the
+PYTHONPATH environment variable, you can add directories to the front
+of this search list.
+
+Python knows that once it "import"s a file, it doesn't need to
+re-import it again. This means that reconfiguring the buildmaster
+(with "buildbot reconfig", for example) won't make it think the
+Framboozle class has changed every time, so the Builders that use it
+will not be spuriously restarted. On the other hand, you either have
+to start your buildmaster in a slightly weird way, or you have to
+modify your environment to set the PYTHONPATH variable.
+
+
+Option 3: Install this code into a standard python library directory
+
+Find out what your python's standard include path is by asking it:
+
+@example
+80:warner@@luther% python
+Python 2.4.4c0 (#2, Oct  2 2006, 00:57:46)
+[GCC 4.1.2 20060928 (prerelease) (Debian 4.1.1-15)] on linux2
+Type "help", "copyright", "credits" or "license" for more information.
+>>> import sys
+>>> import pprint
+>>> pprint.pprint(sys.path)
+['',
+ '/usr/lib/python24.zip',
+ '/usr/lib/python2.4',
+ '/usr/lib/python2.4/plat-linux2',
+ '/usr/lib/python2.4/lib-tk',
+ '/usr/lib/python2.4/lib-dynload',
+ '/usr/local/lib/python2.4/site-packages',
+ '/usr/lib/python2.4/site-packages',
+ '/usr/lib/python2.4/site-packages/Numeric',
+ '/var/lib/python-support/python2.4',
+ '/usr/lib/site-python']
+@end example
+
+In this case, putting the code into
+/usr/local/lib/python2.4/site-packages/framboozle.py would work just
+fine. We can use the same master.cfg "import framboozle" statement as
+in Option 2. By putting it in a standard include directory (instead of
+the decidedly non-standard ~/lib/python), we don't even have to set
+PYTHONPATH to anything special. The downside is that you probably have
+to be root to write to one of those standard include directories.
+
+
+Option 4: Submit the code for inclusion in the Buildbot distribution
+
+Make a fork of buildbot on http://github.com/djmitche/buildbot or post a patch
+in a bug at http://buildbot.net.  In either case, post a note about your patch
+to the mailing list, so others can provide feedback and, eventually, commit it.
+
+@example
+from buildbot.steps import framboozle
+f = BuildFactory()
+f.addStep(SVN(svnurl="stuff"))
+f.addStep(framboozle.Framboozle())
+@end example
+
+And then you don't even have to install framboozle.py anywhere on your
+system, since it will ship with Buildbot. You don't have to be root,
+you don't have to set PYTHONPATH. But you do have to make a good case
+for Framboozle being worth going into the main distribution, you'll
+probably have to provide docs and some unit test cases, you'll need to
+figure out what kind of beer the author likes, and then you'll have to
+wait until the next release. But in some environments, all this is
+easier than getting root on your buildmaster box, so the tradeoffs may
+actually be worth it.
+
+
+
+Putting the code in master.cfg (1) makes it available to that
+buildmaster instance. Putting it in a file in a personal library
+directory (2) makes it available for any buildmasters you might be
+running. Putting it in a file in a system-wide shared library
+directory (3) makes it available for any buildmasters that anyone on
+that system might be running. Getting it into the buildbot's upstream
+repository (4) makes it available for any buildmasters that anyone in
+the world might be running. It's all a matter of how widely you want
+to deploy that new class.
+
+
+
+@node BuildStep URLs
+@subsubsection BuildStep URLs
+
+@cindex links
+@cindex BuildStep URLs
+@cindex addURL
+
+Each BuildStep has a collection of ``links''. Like its collection of
+LogFiles, each link has a name and a target URL. The web status page
+creates HREFs for each link in the same box as it does for LogFiles,
+except that the target of the link is the external URL instead of an
+internal link to a page that shows the contents of the LogFile.
+
+These external links can be used to point at build information hosted
+on other servers. For example, the test process might produce an
+intricate description of which tests passed and failed, or some sort
+of code coverage data in HTML form, or a PNG or GIF image with a graph
+of memory usage over time. The external link can provide an easy way
+for users to navigate from the buildbot's status page to these
+external web sites or file servers. Note that the step itself is
+responsible for insuring that there will be a document available at
+the given URL (perhaps by using @command{scp} to copy the HTML output
+to a @file{~/public_html/} directory on a remote web server). Calling
+@code{addURL} does not magically populate a web server.
+
+To set one of these links, the BuildStep should call the @code{addURL}
+method with the name of the link and the target URL. Multiple URLs can
+be set.
+
+In this example, we assume that the @command{make test} command causes
+a collection of HTML files to be created and put somewhere on the
+coverage.example.org web server, in a filename that incorporates the
+build number.
+
+@example
+class TestWithCodeCoverage(BuildStep):
+    command = ["make", "test",
+               WithProperties("buildnum=%s", "buildnumber")]
+
+    def createSummary(self, log):
+        buildnumber = self.getProperty("buildnumber")
+        url = "http://coverage.example.org/builds/%s.html" % buildnumber
+        self.addURL("coverage", url)
+@end example
+
+You might also want to extract the URL from some special message
+output by the build process itself:
+
+@example
+class TestWithCodeCoverage(BuildStep):
+    command = ["make", "test",
+               WithProperties("buildnum=%s", "buildnumber")]
+
+    def createSummary(self, log):
+        output = StringIO(log.getText())
+        for line in output.readlines():
+            if line.startswith("coverage-url:"):
+                url = line[len("coverage-url:"):].strip()
+                self.addURL("coverage", url)
+                return
+@end example
+
+Note that a build process which emits both stdout and stderr might
+cause this line to be split or interleaved between other lines. It
+might be necessary to restrict the getText() call to only stdout with
+something like this:
+
+@example
+        output = StringIO("".join([c[1]
+                                   for c in log.getChunks()
+                                   if c[0] == LOG_CHANNEL_STDOUT]))
+@end example
+
+Of course if the build is run under a PTY, then stdout and stderr will
+be merged before the buildbot ever sees them, so such interleaving
+will be unavoidable.
+
+
+@node Interlocks
+@section Interlocks
+
+@cindex locks
+@slindex buildbot.locks.MasterLock
+@slindex buildbot.locks.SlaveLock
+@slindex buildbot.locks.LockAccess
+
+Until now, we assumed that a master can run builds at any slave whenever
+needed or desired.  Some times, you want to enforce additional constraints on
+builds. For reasons like limited network bandwidth, old slave machines, or a
+self-willed data base server, you may want to limit the number of builds (or
+build steps) that can access a resource.
+
+The mechanism used by Buildbot is known as the read/write lock.@footnote{See
+http://en.wikipedia.org/wiki/Read/write_lock_pattern for more information.} It
+allows either many readers or a single writer but not a combination of readers
+and writers. The general lock has been modified and extended for use in
+Buildbot. Firstly, the general lock allows an infinite number of readers. In
+Buildbot, we often want to put an upper limit on the number of readers, for
+example allowing two out of five possible builds at the same time. To do this,
+the lock counts the number of active readers. Secondly, the terms @emph{read
+mode} and @emph{write mode} are confusing in Buildbot context. They have been
+replaced by @emph{counting mode} (since the lock counts them) and @emph{exclusive
+mode}.  As a result of these changes, locks in Buildbot allow a number of
+builds (upto some fixed number) in counting mode, or they allow one build in
+exclusive mode.
+
+Often, not all slaves are equal. To allow for this situation, Buildbot allows
+to have a separate upper limit on the count for each slave. In this way, you
+can have at most 3 concurrent builds at a fast slave, 2 at a slightly older
+slave, and 1 at all other slaves.
+
+The final thing you can specify when you introduce a new lock is its scope.
+Some constraints are global -- they must be enforced over all slaves. Other
+constraints are local to each slave.  A @emph{master lock} is used for the
+global constraints. You can ensure for example that at most one build (of all
+builds running at all slaves) accesses the data base server. With a
+@emph{slave lock} you can add a limit local to each slave. With such a lock,
+you can for example enforce an upper limit to the number of active builds at a
+slave, like above.
+
+Time for a few examples. Below a master lock is defined to protect a data base,
+and a slave lock is created to limit the number of builds at each slave.
+
+@example
+from buildbot import locks
+
+db_lock = locks.MasterLock("database")
+build_lock = locks.SlaveLock("slave_builds",
+                             maxCount = 1,
+                             maxCountForSlave = @{ 'fast': 3, 'new': 2 @})
+@end example
+
+After importing locks from buildbot, @code{db_lock} is defined to be a master
+lock. The @code{"database"} string is used for uniquely identifying the lock.
+At the next line, a slave lock called @code{build_lock} is created. It is
+identified by the @code{"slave_builds"} string. Since the requirements of the
+lock are a bit more complicated, two optional arguments are also specified. The
+@code{maxCount} parameter sets the default limit for builds in counting mode to
+@code{1}. For the slave called @code{'fast'} however, we want to have at most
+three builds, and for the slave called @code{'new'} the upper limit is two
+builds running at the same time.
+
+The next step is using the locks in builds.  Buildbot allows a lock to be used
+during an entire build (from beginning to end), or only during a single build
+step. In the latter case, the lock is claimed for use just before the step
+starts, and released again when the step ends. To prevent
+deadlocks,@footnote{Deadlock is the situation where two or more slaves each
+hold a lock in exclusive mode, and in addition want to claim the lock held by
+the other slave exclusively as well. Since locks allow at most one exclusive
+user, both slaves will wait forever.} it is not possible to claim or release
+locks at other times.
+
+To use locks, you should add them with a @code{locks} argument.
+Each use of a lock is either in counting mode (that is, possibly shared with
+other builds) or in exclusive mode. A build or build step proceeds only when it
+has acquired all locks. If a build or step needs a lot of locks, it may be
+starved@footnote{Starving is the situation that only a few locks are available,
+and they are immediately grabbed by another build. As a result, it may take a
+long time before all locks needed by the starved build are free at the same
+time.} by other builds that need fewer locks.
+
+To illustrate use of locks, a few examples.
+
+@example
+from buildbot import locks
+from buildbot.steps import source, shell
+from buildbot.process import factory
+
+db_lock = locks.MasterLock("database")
+build_lock = locks.SlaveLock("slave_builds",
+                             maxCount = 1,
+                             maxCountForSlave = @{ 'fast': 3, 'new': 2 @})
+
+f = factory.BuildFactory()
+f.addStep(source.SVN(svnurl="http://example.org/svn/Trunk"))
+f.addStep(shell.ShellCommand(command="make all"))
+f.addStep(shell.ShellCommand(command="make test",
+                             locks=[db_lock.access('exclusive')]))
+
+b1 = @{'name': 'full1', 'slavename': 'fast',  'builddir': 'f1', 'factory': f,
+       'locks': [build_lock.access('counting')] @}
+
+b2 = @{'name': 'full2', 'slavename': 'new',   'builddir': 'f2', 'factory': f.
+       'locks': [build_lock.access('counting')] @}
+
+b3 = @{'name': 'full3', 'slavename': 'old',   'builddir': 'f3', 'factory': f.
+       'locks': [build_lock.access('counting')] @}
+
+b4 = @{'name': 'full4', 'slavename': 'other', 'builddir': 'f4', 'factory': f.
+       'locks': [build_lock.access('counting')] @}
+
+c['builders'] = [b1, b2, b3, b4]
+@end example
+
+Here we have four slaves @code{b1}, @code{b2}, @code{b3}, and @code{b4}. Each
+slave performs the same checkout, make, and test build step sequence.
+We want to enforce that at most one test step is executed between all slaves due
+to restrictions with the data base server. This is done by adding the
+@code{locks=} parameter with the third step. It takes a list of locks with their
+access mode. In this case only the @code{db_lock} is needed. The exclusive
+access mode is used to ensure there is at most one slave that executes the test
+step.
+
+In addition to exclusive accessing the data base, we also want slaves to stay
+responsive even under the load of a large number of builds being triggered.
+For this purpose, the slave lock called @code{build_lock} is defined. Since
+the restraint holds for entire builds, the lock is specified in the builder
+with @code{'locks': [build_lock.access('counting')]}.
+@node Build Factories
+@section Build Factories
+
+
+Each Builder is equipped with a ``build factory'', which is
+responsible for producing the actual @code{Build} objects that perform
+each build. This factory is created in the configuration file, and
+attached to a Builder through the @code{factory} element of its
+dictionary.
+
+The standard @code{BuildFactory} object creates @code{Build} objects
+by default. These Builds will each execute a collection of BuildSteps
+in a fixed sequence. Each step can affect the results of the build,
+but in general there is little intelligence to tie the different steps
+together. You can create subclasses of @code{Build} to implement more
+sophisticated build processes, and then use a subclass of
+@code{BuildFactory} (or simply set the @code{buildClass} attribute) to
+create instances of your new Build subclass.
+
+
+@menu
+* BuildStep Objects::
+* BuildFactory::
+* Process-Specific build factories::
+@end menu
+
+@node BuildStep Objects
+@subsection BuildStep Objects
+
+The steps used by these builds are all subclasses of @code{BuildStep}.
+The standard ones provided with Buildbot are documented later,
+@xref{Build Steps}. You can also write your own subclasses to use in
+builds.
+
+The basic behavior for a @code{BuildStep} is to:
+
+@itemize @bullet
+@item
+run for a while, then stop
+@item
+possibly invoke some RemoteCommands on the attached build slave
+@item
+possibly produce a set of log files
+@item
+finish with a status described by one of four values defined in
+buildbot.status.builder: SUCCESS, WARNINGS, FAILURE, SKIPPED
+@item
+provide a list of short strings to describe the step
+@item
+define a color (generally green, orange, or red) with which the
+step should be displayed
+@end itemize
+
+
+More sophisticated steps may produce additional information and
+provide it to later build steps, or store it in the factory to provide
+to later builds.
+
+
+@menu
+* BuildFactory Attributes::
+* Quick builds::
+@end menu
+
+@node BuildFactory
+@subsection BuildFactory
+
+@bfindex buildbot.process.factory.BuildFactory
+@bfindex buildbot.process.factory.BasicBuildFactory
+@c TODO: what is BasicSVN anyway?
+@bfindex buildbot.process.factory.BasicSVN
+
+The default @code{BuildFactory}, provided in the
+@code{buildbot.process.factory} module, contains an internal list of
+``BuildStep specifications'': a list of @code{(step_class, kwargs)}
+tuples for each. These specification tuples are constructed when the
+config file is read, by asking the instances passed to @code{addStep}
+for their subclass and arguments.
+
+When asked to create a Build, the @code{BuildFactory} puts a copy of
+the list of step specifications into the new Build object. When the
+Build is actually started, these step specifications are used to
+create the actual set of BuildSteps, which are then executed one at a
+time. This serves to give each Build an independent copy of each step.
+For example, a build which consists of a CVS checkout followed by a
+@code{make build} would be constructed as follows:
+
+@example
+from buildbot.steps import source, shell
+from buildbot.process import factory
+
+f = factory.BuildFactory()
+f.addStep(source.CVS(cvsroot=CVSROOT, cvsmodule="project", mode="update"))
+f.addStep(shell.Compile(command=["make", "build"]))
+@end example
+
+(To support config files from buildbot-0.7.5 and earlier,
+@code{addStep} also accepts the @code{f.addStep(shell.Compile,
+command=["make","build"])} form, although its use is discouraged
+because then the @code{Compile} step doesn't get to validate or
+complain about its arguments until build time. The modern
+pass-by-instance approach allows this validation to occur while the
+config file is being loaded, where the admin has a better chance of
+noticing problems).
+
+It is also possible to pass a list of steps into the
+@code{BuildFactory} when it is created. Using @code{addStep} is
+usually simpler, but there are cases where is is more convenient to
+create the list of steps ahead of time.:
+
+@example
+from buildbot.steps import source, shell
+from buildbot.process import factory
+
+all_steps = [source.CVS(cvsroot=CVSROOT, cvsmodule="project", mode="update"),
+             shell.Compile(command=["make", "build"]),
+            ]
+f = factory.BuildFactory(all_steps)
+@end example
+
+
+Each step can affect the build process in the following ways:
+
+@itemize @bullet
+@item
+If the step's @code{haltOnFailure} attribute is True, then a failure
+in the step (i.e. if it completes with a result of FAILURE) will cause
+the whole build to be terminated immediately: no further steps will be
+executed, with the exception of steps with @code{alwaysRun} set to
+True. @code{haltOnFailure} is useful for setup steps upon which the
+rest of the build depends: if the CVS checkout or @code{./configure}
+process fails, there is no point in trying to compile or test the
+resulting tree.
+
+@item
+If the step's @code{alwaysRun} attribute is True, then it will always
+be run, regardless of if previous steps have failed. This is useful
+for cleanup steps that should always be run to return the build
+directory or build slave into a good state.
+
+@item
+If the @code{flunkOnFailure} or @code{flunkOnWarnings} flag is set,
+then a result of FAILURE or WARNINGS will mark the build as a whole as
+FAILED. However, the remaining steps will still be executed. This is
+appropriate for things like multiple testing steps: a failure in any
+one of them will indicate that the build has failed, however it is
+still useful to run them all to completion.
+
+@item
+Similarly, if the @code{warnOnFailure} or @code{warnOnWarnings} flag
+is set, then a result of FAILURE or WARNINGS will mark the build as
+having WARNINGS, and the remaining steps will still be executed. This
+may be appropriate for certain kinds of optional build or test steps.
+For example, a failure experienced while building documentation files
+should be made visible with a WARNINGS result but not be serious
+enough to warrant marking the whole build with a FAILURE.
+
+@end itemize
+
+In addition, each Step produces its own results, may create logfiles,
+etc. However only the flags described above have any effect on the
+build as a whole.
+
+The pre-defined BuildSteps like @code{CVS} and @code{Compile} have
+reasonably appropriate flags set on them already. For example, without
+a source tree there is no point in continuing the build, so the
+@code{CVS} class has the @code{haltOnFailure} flag set to True. Look
+in @file{buildbot/steps/*.py} to see how the other Steps are
+marked.
+
+Each Step is created with an additional @code{workdir} argument that
+indicates where its actions should take place. This is specified as a
+subdirectory of the slave builder's base directory, with a default
+value of @code{build}. This is only implemented as a step argument (as
+opposed to simply being a part of the base directory) because the
+CVS/SVN steps need to perform their checkouts from the parent
+directory.
+
+@menu
+* BuildFactory Attributes::
+* Quick builds::
+@end menu
+
+@node BuildFactory Attributes
+@subsubsection BuildFactory Attributes
+
+Some attributes from the BuildFactory are copied into each Build.
+
+@cindex treeStableTimer
+
+@table @code
+@item useProgress
+(defaults to True): if True, the buildmaster keeps track of how long
+each step takes, so it can provide estimates of how long future builds
+will take. If builds are not expected to take a consistent amount of
+time (such as incremental builds in which a random set of files are
+recompiled or tested each time), this should be set to False to
+inhibit progress-tracking.
+
+@end table
+
+
+@node Quick builds
+@subsubsection Quick builds
+
+@bfindex buildbot.process.factory.QuickBuildFactory
+
+The difference between a ``full build'' and a ``quick build'' is that
+quick builds are generally done incrementally, starting with the tree
+where the previous build was performed. That simply means that the
+source-checkout step should be given a @code{mode='update'} flag, to
+do the source update in-place.
+
+In addition to that, the @code{useProgress} flag should be set to
+False. Incremental builds will (or at least the ought to) compile as
+few files as necessary, so they will take an unpredictable amount of
+time to run. Therefore it would be misleading to claim to predict how
+long the build will take.
+
+
+@node Process-Specific build factories
+@subsection Process-Specific build factories
+
+Many projects use one of a few popular build frameworks to simplify
+the creation and maintenance of Makefiles or other compilation
+structures. Buildbot provides several pre-configured BuildFactory
+subclasses which let you build these projects with a minimum of fuss.
+
+@menu
+* GNUAutoconf::
+* CPAN::
+* Python distutils::
+* Python/Twisted/trial projects::
+@end menu
+
+@node GNUAutoconf
+@subsubsection GNUAutoconf
+
+@bfindex buildbot.process.factory.GNUAutoconf
+
+@uref{http://www.gnu.org/software/autoconf/, GNU Autoconf} is a
+software portability tool, intended to make it possible to write
+programs in C (and other languages) which will run on a variety of
+UNIX-like systems. Most GNU software is built using autoconf. It is
+frequently used in combination with GNU automake. These tools both
+encourage a build process which usually looks like this:
+
+@example
+% CONFIG_ENV=foo ./configure --with-flags
+% make all
+% make check
+# make install
+@end example
+
+(except of course the Buildbot always skips the @code{make install}
+part).
+
+The Buildbot's @code{buildbot.process.factory.GNUAutoconf} factory is
+designed to build projects which use GNU autoconf and/or automake. The
+configuration environment variables, the configure flags, and command
+lines used for the compile and test are all configurable, in general
+the default values will be suitable.
+
+Example:
+
+@example
+# use the s() convenience function defined earlier
+f = factory.GNUAutoconf(source=s(source.SVN, svnurl=URL, mode="copy"),
+                        flags=["--disable-nls"])
+@end example
+
+Required Arguments:
+
+@table @code
+@item source
+This argument must be a step specification tuple that provides a
+BuildStep to generate the source tree.
+@end table
+
+Optional Arguments:
+
+@table @code
+@item configure
+The command used to configure the tree. Defaults to
+@code{./configure}. Accepts either a string or a list of shell argv
+elements.
+
+@item configureEnv
+The environment used for the initial configuration step. This accepts
+a dictionary which will be merged into the buildslave's normal
+environment. This is commonly used to provide things like
+@code{CFLAGS="-O2 -g"} (to turn off debug symbols during the compile).
+Defaults to an empty dictionary.
+
+@item configureFlags
+A list of flags to be appended to the argument list of the configure
+command. This is commonly used to enable or disable specific features
+of the autoconf-controlled package, like @code{["--without-x"]} to
+disable windowing support. Defaults to an empty list.
+
+@item compile
+this is a shell command or list of argv values which is used to
+actually compile the tree. It defaults to @code{make all}. If set to
+None, the compile step is skipped.
+
+@item test
+this is a shell command or list of argv values which is used to run
+the tree's self-tests. It defaults to @code{make check}. If set to
+None, the test step is skipped.
+
+@end table
+
+
+@node CPAN
+@subsubsection CPAN
+
+@bfindex buildbot.process.factory.CPAN
+
+Most Perl modules available from the @uref{http://www.cpan.org/, CPAN}
+archive use the @code{MakeMaker} module to provide configuration,
+build, and test services. The standard build routine for these modules
+looks like:
+
+@example
+% perl Makefile.PL
+% make
+% make test
+# make install
+@end example
+
+(except again Buildbot skips the install step)
+
+Buildbot provides a @code{CPAN} factory to compile and test these
+projects.
+
+
+Arguments:
+@table @code
+@item source
+(required): A step specification tuple, like that used by GNUAutoconf.
+
+@item perl
+A string which specifies the @code{perl} executable to use. Defaults
+to just @code{perl}.
+
+@end table
+
+
+@node Python distutils
+@subsubsection Python distutils
+
+@bfindex buildbot.process.factory.Distutils
+
+Most Python modules use the @code{distutils} package to provide
+configuration and build services. The standard build process looks
+like:
+
+@example
+% python ./setup.py build
+% python ./setup.py install
+@end example
+
+Unfortunately, although Python provides a standard unit-test framework
+named @code{unittest}, to the best of my knowledge @code{distutils}
+does not provide a standardized target to run such unit tests. (Please
+let me know if I'm wrong, and I will update this factory.)
+
+The @code{Distutils} factory provides support for running the build
+part of this process. It accepts the same @code{source=} parameter as
+the other build factories.
+
+
+Arguments:
+@table @code
+@item source
+(required): A step specification tuple, like that used by GNUAutoconf.
+
+@item python
+A string which specifies the @code{python} executable to use. Defaults
+to just @code{python}.
+
+@item test
+Provides a shell command which runs unit tests. This accepts either a
+string or a list. The default value is None, which disables the test
+step (since there is no common default command to run unit tests in
+distutils modules).
+
+@end table
+
+
+@node Python/Twisted/trial projects
+@subsubsection Python/Twisted/trial projects
+
+@bfindex buildbot.process.factory.Trial
+@c TODO: document these steps better
+@bsindex buildbot.steps.python_twisted.HLint
+@bsindex buildbot.steps.python_twisted.Trial
+@bsindex buildbot.steps.python_twisted.ProcessDocs
+@bsindex buildbot.steps.python_twisted.BuildDebs
+@bsindex buildbot.steps.python_twisted.RemovePYCs
+
+Twisted provides a unit test tool named @code{trial} which provides a
+few improvements over Python's built-in @code{unittest} module. Many
+python projects which use Twisted for their networking or application
+services also use trial for their unit tests. These modules are
+usually built and tested with something like the following:
+
+@example
+% python ./setup.py build
+% PYTHONPATH=build/lib.linux-i686-2.3 trial -v PROJECTNAME.test
+% python ./setup.py install
+@end example
+
+Unfortunately, the @file{build/lib} directory into which the
+built/copied .py files are placed is actually architecture-dependent,
+and I do not yet know of a simple way to calculate its value. For many
+projects it is sufficient to import their libraries ``in place'' from
+the tree's base directory (@code{PYTHONPATH=.}).
+
+In addition, the @var{PROJECTNAME} value where the test files are
+located is project-dependent: it is usually just the project's
+top-level library directory, as common practice suggests the unit test
+files are put in the @code{test} sub-module. This value cannot be
+guessed, the @code{Trial} class must be told where to find the test
+files.
+
+The @code{Trial} class provides support for building and testing
+projects which use distutils and trial. If the test module name is
+specified, trial will be invoked. The library path used for testing
+can also be set.
+
+One advantage of trial is that the Buildbot happens to know how to
+parse trial output, letting it identify which tests passed and which
+ones failed. The Buildbot can then provide fine-grained reports about
+how many tests have failed, when individual tests fail when they had
+been passing previously, etc.
+
+Another feature of trial is that you can give it a series of source
+.py files, and it will search them for special @code{test-case-name}
+tags that indicate which test cases provide coverage for that file.
+Trial can then run just the appropriate tests. This is useful for
+quick builds, where you want to only run the test cases that cover the
+changed functionality.
+
+Arguments:
+@table @code
+@item testpath
+Provides a directory to add to @code{PYTHONPATH} when running the unit
+tests, if tests are being run. Defaults to @code{.} to include the
+project files in-place. The generated build library is frequently
+architecture-dependent, but may simply be @file{build/lib} for
+pure-python modules.
+
+@item python
+which python executable to use. This list will form the start of
+the argv array that will launch trial. If you use this,
+you should set @code{trial} to an explicit path (like
+@code{/usr/bin/trial} or @code{./bin/trial}). The parameter defaults to @code{None}, which
+leaves it out entirely (running @code{trial args} instead of
+@code{python ./bin/trial args}). Likely values are @code{['python']},
+@code{['python2.2']}, or @code{['python', '-Wall']}.
+
+@item trial
+provides the name of the @code{trial} command. It is occasionally
+useful to use an alternate executable, such as @code{trial2.2} which
+might run the tests under an older version of Python. Defaults to
+@code{trial}.
+
+@item trialMode
+a list of arguments to pass to trial, specifically to set the reporting mode.
+This defaults to @code{['--reporter=bwverbose']}, which only works for
+Twisted-2.1.0 and later.
+
+@item trialArgs
+a list of arguments to pass to trial, available to turn on any extra flags you
+like. Defaults to @code{[]}.
+
+@item tests
+Provides a module name or names which contain the unit tests for this
+project. Accepts a string, typically @code{PROJECTNAME.test}, or a
+list of strings. Defaults to None, indicating that no tests should be
+run. You must either set this or @code{testChanges}.
+
+@item testChanges
+if True, ignore the @code{tests} parameter and instead ask the Build for all
+the files that make up the Changes going into this build. Pass these filenames
+to trial and ask it to look for test-case-name tags, running just the tests
+necessary to cover the changes.
+
+@item recurse
+If @code{True}, tells Trial (with the @code{--recurse} argument) to look in all
+subdirectories for additional test cases.
+
+@item reactor
+which reactor to use, like 'gtk' or 'java'. If not provided, the Twisted's
+usual platform-dependent default is used.
+
+@item randomly
+If @code{True}, tells Trial (with the @code{--random=0} argument) to
+run the test cases in random order, which sometimes catches subtle
+inter-test dependency bugs. Defaults to @code{False}.
+@end table
+
+The step can also take any of the @code{ShellCommand} arguments, e.g.,
+@code{haltOnFailure}.
+
+Unless one of @code{tests} or @code{testChanges} are set, the step will
+generate an exception.
+
+

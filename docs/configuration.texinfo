@@ -1,0 +1,1529 @@
+@cindex Configuration
+
+The buildbot's behavior is defined by the ``config file'', which
+normally lives in the @file{master.cfg} file in the buildmaster's base
+directory (but this can be changed with an option to the
+@code{buildbot create-master} command). This file completely specifies
+which Builders are to be run, which slaves they should use, how
+Changes should be tracked, and where the status information is to be
+sent. The buildmaster's @file{buildbot.tac} file names the base
+directory; everything else comes from the config file.
+
+A sample config file was installed for you when you created the
+buildmaster, but you will need to edit it before your buildbot will do
+anything useful.
+
+This chapter gives an overview of the format of this file and the
+various sections in it. You will need to read the later chapters to
+understand how to fill in each section properly.
+
+@menu
+* Config File Format::
+* Loading the Config File::
+* Testing the Config File::
+* Defining the Project::
+* Change Sources and Schedulers::
+* Merging BuildRequests::
+* Prioritizing Builders::
+* Setting the slaveport::
+* Buildslave Specifiers::
+* On-Demand ("Latent") Buildslaves::
+* Defining Global Properties::
+* Defining Builders::
+* Defining Status Targets::
+* Limiting Memory and Disk Usage::
+* Debug options::
+@end menu
+
+@node Config File Format
+@section Config File Format
+
+The config file is, fundamentally, just a piece of Python code which
+defines a dictionary named @code{BuildmasterConfig}, with a number of
+keys that are treated specially. You don't need to know Python to do
+basic configuration, though, you can just copy the syntax of the
+sample file. If you @emph{are} comfortable writing Python code,
+however, you can use all the power of a full programming language to
+achieve more complicated configurations.
+
+The @code{BuildmasterConfig} name is the only one which matters: all
+other names defined during the execution of the file are discarded.
+When parsing the config file, the Buildmaster generally compares the
+old configuration with the new one and performs the minimum set of
+actions necessary to bring the buildbot up to date: Builders which are
+not changed are left untouched, and Builders which are modified get to
+keep their old event history.
+
+Basic Python syntax: comments start with a hash character (``#''),
+tuples are defined with @code{(parenthesis, pairs)}, arrays are
+defined with @code{[square, brackets]}, tuples and arrays are mostly
+interchangeable. Dictionaries (data structures which map ``keys'' to
+``values'') are defined with curly braces: @code{@{'key1': 'value1',
+'key2': 'value2'@} }. Function calls (and object instantiation) can use
+named parameters, like @code{w = html.Waterfall(http_port=8010)}.
+
+The config file starts with a series of @code{import} statements,
+which make various kinds of Steps and Status targets available for
+later use. The main @code{BuildmasterConfig} dictionary is created,
+then it is populated with a variety of keys. These keys are broken
+roughly into the following sections, each of which is documented in
+the rest of this chapter:
+
+@itemize @bullet
+@item
+Project Definitions
+@item
+Change Sources / Schedulers
+@item
+Slaveport
+@item
+Buildslave Configuration
+@item
+Builders / Interlocks
+@item
+Status Targets
+@item
+Debug options
+@end itemize
+
+The config file can use a few names which are placed into its namespace:
+
+@table @code
+@item basedir
+the base directory for the buildmaster. This string has not been
+expanded, so it may start with a tilde. It needs to be expanded before
+use. The config file is located in
+@code{os.path.expanduser(os.path.join(basedir, 'master.cfg'))}
+
+@end table
+
+
+@node Loading the Config File
+@section Loading the Config File
+
+The config file is only read at specific points in time. It is first
+read when the buildmaster is launched. Once it is running, there are
+various ways to ask it to reload the config file. If you are on the
+system hosting the buildmaster, you can send a @code{SIGHUP} signal to
+it: the @command{buildbot} tool has a shortcut for this:
+
+@example
+buildbot reconfig @var{BASEDIR}
+@end example
+
+This command will show you all of the lines from @file{twistd.log}
+that relate to the reconfiguration. If there are any problems during
+the config-file reload, they will be displayed in these lines.
+
+The debug tool (@code{buildbot debugclient --master HOST:PORT}) has a
+``Reload .cfg'' button which will also trigger a reload. In the
+future, there will be other ways to accomplish this step (probably a
+password-protected button on the web page, as well as a privileged IRC
+command).
+
+When reloading the config file, the buildmaster will endeavor to
+change as little as possible about the running system. For example,
+although old status targets may be shut down and new ones started up,
+any status targets that were not changed since the last time the
+config file was read will be left running and untouched. Likewise any
+Builders which have not been changed will be left running. If a
+Builder is modified (say, the build process is changed) while a Build
+is currently running, that Build will keep running with the old
+process until it completes. Any previously queued Builds (or Builds
+which get queued after the reconfig) will use the new process.
+
+@node Testing the Config File
+@section Testing the Config File
+
+To verify that the config file is well-formed and contains no deprecated or
+invalid elements, use the ``checkconfig'' command, passing it either a master
+directory or a config file.
+
+@example
+% buildbot checkconfig master.cfg
+Config file is good!
+# or
+% buildbot checkconfig /tmp/masterdir
+Config file is good!
+@end example
+
+If the config file has deprecated features (perhaps because you've
+upgraded the buildmaster and need to update the config file to match),
+they will be announced by checkconfig. In this case, the config file
+will work, but you should really remove the deprecated items and use
+the recommended replacements instead:
+
+@example
+% buildbot checkconfig master.cfg
+/usr/lib/python2.4/site-packages/buildbot/master.py:559: DeprecationWarning: c['sources'] is
+deprecated as of 0.7.6 and will be removed by 0.8.0 . Please use c['change_source'] instead.
+  warnings.warn(m, DeprecationWarning)
+Config file is good!
+@end example
+
+If the config file is simply broken, that will be caught too:
+
+@example
+% buildbot checkconfig master.cfg
+Traceback (most recent call last):
+  File "/usr/lib/python2.4/site-packages/buildbot/scripts/runner.py", line 834, in doCheckConfig
+    ConfigLoader(configFile)
+  File "/usr/lib/python2.4/site-packages/buildbot/scripts/checkconfig.py", line 31, in __init__
+    self.loadConfig(configFile)
+  File "/usr/lib/python2.4/site-packages/buildbot/master.py", line 480, in loadConfig
+    exec f in localDict
+  File "/home/warner/BuildBot/master/foolscap/master.cfg", line 90, in ?
+    c[bogus] = "stuff"
+NameError: name 'bogus' is not defined
+@end example
+
+
+@node Defining the Project
+@section Defining the Project
+
+There are a couple of basic settings that you use to tell the buildbot
+what project it is working on. This information is used by status
+reporters to let users find out more about the codebase being
+exercised by this particular Buildbot installation.
+
+@example
+c['projectName'] = "Buildbot"
+c['projectURL'] = "http://buildbot.sourceforge.net/"
+c['buildbotURL'] = "http://localhost:8010/"
+@end example
+
+@bcindex c['projectName']
+@code{projectName} is a short string will be used to describe the
+project that this buildbot is working on. For example, it is used as
+the title of the waterfall HTML page.
+
+@bcindex c['projectURL']
+@code{projectURL} is a string that gives a URL for the project as a
+whole. HTML status displays will show @code{projectName} as a link to
+@code{projectURL}, to provide a link from buildbot HTML pages to your
+project's home page.
+
+@bcindex c['buildbotURL']
+The @code{buildbotURL} string should point to the location where the
+buildbot's internal web server (usually the @code{html.Waterfall}
+page) is visible. This typically uses the port number set when you
+create the @code{Waterfall} object: the buildbot needs your help to
+figure out a suitable externally-visible host name.
+
+When status notices are sent to users (either by email or over IRC),
+@code{buildbotURL} will be used to create a URL to the specific build
+or problem that they are being notified about. It will also be made
+available to queriers (over IRC) who want to find out where to get
+more information about this buildbot.
+
+@bcindex c['logCompressionLimit']
+The @code{logCompressionLimit} enables compression of build logs on
+disk for logs that are bigger than the given size, or disables that
+completely if given @code{False}. The default value is 4k, which should
+be a reasonable default on most file systems. This setting has no impact
+on status plugins, and merely affects the required disk space on the
+master for build logs.
+
+@bcindex c['logCompressionMethod']
+The @code{logCompressionMethod} controls what type of compression is used for
+build logs.  The default is 'bz2', the other valid option is 'gz'.  'bz2'
+offers better compression at the expense of more CPU time.
+
+@bcindex c['logMaxSize']
+The @code{logMaxSize} parameter sets an upper limit (in bytes) to how large
+logs from an individual build step can be.  The default value is None, meaning
+no upper limit to the log size.  Any output exceeding @code{logMaxSize} will be
+truncated, and a message to this effect will be added to the log's HEADER
+channel.
+
+@bcindex c['logMaxTailSize']
+If @code{logMaxSize} is set, and the output from a step exceeds the maximum,
+the @code{logMaxTailSize} parameter controls how much of the end of the build
+log will be kept.  The effect of setting this parameter is that the log will
+contain the first @code{logMaxSize} bytes and the last @code{logMaxTailSize}
+bytes of output.  Don't set this value too high, as the the tail of the log is
+kept in memory.
+
+@node Change Sources and Schedulers
+@section Change Sources and Schedulers
+
+@bcindex c['sources']
+@bcindex c['change_source']
+
+The @code{c['change_source']} key is the ChangeSource
+instance@footnote{To be precise, it is an object or a list of objects
+which all implement the @code{buildbot.interfaces.IChangeSource}
+Interface. It is unusual to have multiple ChangeSources, so this key
+accepts either a single ChangeSource or a sequence of them.} that
+defines how the buildmaster learns about source code changes. More
+information about what goes here is available in @xref{Getting Source
+Code Changes}.
+
+@example
+from buildbot.changes.pb import PBChangeSource
+c['change_source'] = PBChangeSource()
+@end example
+
+(note: in buildbot-0.7.5 and earlier, this key was named
+@code{c['sources']}, and required a list. @code{c['sources']} is
+deprecated as of buildbot-0.7.6 and is scheduled to be removed in a
+future release).
+
+@bcindex c['changeHorizon']
+
+The @code{c['changeHorizon']} key determines how many changes the master will
+keep a record of. One place these changes are displayed is on the waterfall
+page.  This parameter defaults to 0, which means keep all changes indefinitely.
+
+
+@bcindex c['schedulers']
+@code{c['schedulers']} is a list of Scheduler instances, each
+of which causes builds to be started on a particular set of
+Builders. The two basic Scheduler classes you are likely to start
+with are @code{Scheduler} and @code{Periodic}, but you can write a
+customized subclass to implement more complicated build scheduling.
+
+Scheduler arguments
+should always be specified by name (as keyword arguments), to allow
+for future expansion:
+
+@example
+sched = Scheduler(name="quick", builderNames=['lin', 'win'])
+@end example
+
+All schedulers have several arguments in common:
+
+@table @code
+@item name
+
+Each Scheduler must have a unique name. This is used in status
+displays, and is also available in the build property @code{scheduler}.
+
+@item builderNames
+
+This is the set of builders which this scheduler should trigger, specified
+as a list of names (strings).
+
+@item properties
+@cindex Properties
+
+This is a dictionary specifying properties that will be transmitted
+to all builds started by this scheduler.
+
+@end table
+
+Here is a brief catalog of the available Scheduler types. All these
+Schedulers are classes in @code{buildbot.scheduler}, and the
+docstrings there are the best source of documentation on the arguments
+taken by each one.
+
+@menu
+* Scheduler Scheduler::
+* AnyBranchScheduler::
+* Dependent Scheduler::
+* Periodic Scheduler::
+* Nightly Scheduler::
+* Try Schedulers::
+* Triggerable Scheduler::
+@end menu
+
+@node Scheduler Scheduler
+@subsection Scheduler Scheduler
+@slindex buildbot.scheduler.Scheduler
+
+This is the original and still most popular Scheduler class. It follows
+exactly one branch, and starts a configurable tree-stable-timer after
+each change on that branch. When the timer expires, it starts a build
+on some set of Builders. The Scheduler accepts a @code{fileIsImportant}
+function which can be used to ignore some Changes if they do not
+affect any ``important'' files.
+
+The arguments to this scheduler are:
+
+@table @code
+@item name
+
+@item builderNames
+
+@item properties
+
+@item branch
+This Scheduler will pay attention to a single branch, ignoring Changes
+that occur on other branches. Setting @code{branch} equal to the
+special value of @code{None} means it should only pay attention to
+the default branch. Note that @code{None} is a keyword, not a string,
+so you want to use @code{None} and not @code{"None"}.
+
+@item treeStableTimer
+The Scheduler will wait for this many seconds before starting the
+build. If new changes are made during this interval, the timer will be
+restarted, so really the build will be started after a change and then
+after this many seconds of inactivity.
+
+@item fileIsImportant
+A callable which takes one argument, a Change instance, and returns
+@code{True} if the change is worth building, and @code{False} if
+it is not.  Unimportant Changes are accumulated until the build is
+triggered by an important change.  The default value of None means
+that all Changes are important.
+
+@item categories
+A list of categories of changes that this scheduler will respond to.  If this
+is specified, then any non-matching changes are ignored.
+
+@end table
+
+Example:
+
+@example
+from buildbot import scheduler
+quick = scheduler.Scheduler(name="quick",
+                    branch=None,
+                    treeStableTimer=60,
+                    builderNames=["quick-linux", "quick-netbsd"])
+full = scheduler.Scheduler(name="full",
+                    branch=None,
+                    treeStableTimer=5*60,
+                    builderNames=["full-linux", "full-netbsd", "full-OSX"])
+c['schedulers'] = [quick, full]
+@end example
+
+In this example, the two ``quick'' builders are triggered 60 seconds
+after the tree has been changed. The ``full'' builds do not run quite
+so quickly (they wait 5 minutes), so hopefully if the quick builds
+fail due to a missing file or really simple typo, the developer can
+discover and fix the problem before the full builds are started. Both
+Schedulers only pay attention to the default branch: any changes
+on other branches are ignored by these Schedulers. Each Scheduler
+triggers a different set of Builders, referenced by name.
+
+@node AnyBranchScheduler
+@subsection AnyBranchScheduler
+@slindex buildbot.scheduler.AnyBranchScheduler
+
+This scheduler uses a tree-stable-timer like the default one, but
+follows multiple branches at once. Each branch gets a separate timer.
+
+The arguments to this scheduler are:
+
+@table @code
+@item name
+
+@item builderNames
+
+@item properties
+
+@item branches
+This Scheduler will pay attention to any number of branches, ignoring
+Changes that occur on other branches. Branches are specified just as
+for the @code{Scheduler} class.
+
+@item treeStableTimer
+The Scheduler will wait for this many seconds before starting the
+build. If new changes are made during this interval, the timer will be
+restarted, so really the build will be started after a change and then
+after this many seconds of inactivity.
+
+@item fileIsImportant
+A callable which takes one argument, a Change instance, and returns
+@code{True} if the change is worth building, and @code{False} if
+it is not.  Unimportant Changes are accumulated until the build is
+triggered by an important change.  The default value of None means
+that all Changes are important.
+
+@item categories
+A list of categories of changes that this scheduler will respond to.  If this
+is specified, then any non-matching changes are ignored.
+
+@end table
+
+@node Dependent Scheduler
+@subsection Dependent Scheduler
+@cindex Dependent
+@cindex Dependencies
+@slindex buildbot.scheduler.Dependent
+
+It is common to wind up with one kind of build which should only be
+performed if the same source code was successfully handled by some
+other kind of build first. An example might be a packaging step: you
+might only want to produce .deb or RPM packages from a tree that was
+known to compile successfully and pass all unit tests. You could put
+the packaging step in the same Build as the compile and testing steps,
+but there might be other reasons to not do this (in particular you
+might have several Builders worth of compiles/tests, but only wish to
+do the packaging once). Another example is if you want to skip the
+``full'' builds after a failing ``quick'' build of the same source
+code. Or, if one Build creates a product (like a compiled library)
+that is used by some other Builder, you'd want to make sure the
+consuming Build is run @emph{after} the producing one.
+
+You can use ``Dependencies'' to express this relationship
+to the Buildbot. There is a special kind of Scheduler named
+@code{scheduler.Dependent} that will watch an ``upstream'' Scheduler
+for builds to complete successfully (on all of its Builders). Each time
+that happens, the same source code (i.e. the same @code{SourceStamp})
+will be used to start a new set of builds, on a different set of
+Builders. This ``downstream'' scheduler doesn't pay attention to
+Changes at all. It only pays attention to the upstream scheduler.
+
+If the build fails on any of the Builders in the upstream set,
+the downstream builds will not fire.  Note that, for SourceStamps
+generated by a ChangeSource, the @code{revision} is None, meaning HEAD.
+If any changes are committed between the time the upstream scheduler
+begins its build and the time the dependent scheduler begins its
+build, then those changes will be included in the downstream build.
+See the @pxref{Triggerable Scheduler} for a more flexible dependency
+mechanism that can avoid this problem.
+
+The keyword arguments to this scheduler are:
+
+@table @code
+@item name
+
+@item builderNames
+
+@item properties
+
+@item upstream
+The upstream scheduler to watch.  Note that this is an ``instance'',
+not the name of the scheduler.
+@end table
+
+Example:
+
+@example
+from buildbot import scheduler
+tests = scheduler.Scheduler("just-tests", None, 5*60,
+                            ["full-linux", "full-netbsd", "full-OSX"])
+package = scheduler.Dependent(name="build-package",
+                              upstream=tests, # <- no quotes!
+                              builderNames=["make-tarball", "make-deb", "make-rpm"])
+c['schedulers'] = [tests, package]
+@end example
+
+@node Periodic Scheduler
+@subsection Periodic Scheduler
+@slindex buildbot.scheduler.Periodic
+
+This simple scheduler just triggers a build every N seconds.
+
+The arguments to this scheduler are:
+
+@table @code
+@item name
+
+@item builderNames
+
+@item properties
+
+@item periodicBuildTimer
+The time, in seconds, after which to start a build.
+@end table
+
+Example:
+
+@example
+from buildbot import scheduler
+nightly = scheduler.Periodic(name="nightly",
+                builderNames=["full-solaris"],
+                periodicBuildTimer=24*60*60)
+c['schedulers'] = [nightly]
+@end example
+
+The Scheduler in this example just runs the full solaris build once
+per day. Note that this Scheduler only lets you control the time
+between builds, not the absolute time-of-day of each Build, so this
+could easily wind up a ``daily'' or ``every afternoon'' scheduler
+depending upon when it was first activated.
+
+@node Nightly Scheduler
+@subsection Nightly Scheduler
+@slindex buildbot.scheduler.Nightly
+
+This is highly configurable periodic build scheduler, which triggers
+a build at particular times of day, week, month, or year. The
+configuration syntax is very similar to the well-known @code{crontab}
+format, in which you provide values for minute, hour, day, and month
+(some of which can be wildcards), and a build is triggered whenever
+the current time matches the given constraints. This can run a build
+every night, every morning, every weekend, alternate Thursdays,
+on your boss's birthday, etc.
+
+Pass some subset of @code{minute}, @code{hour}, @code{dayOfMonth},
+@code{month}, and @code{dayOfWeek}; each may be a single number or
+a list of valid values. The builds will be triggered whenever the
+current time matches these values. Wildcards are represented by a
+'*' string. All fields default to a wildcard except 'minute', so
+with no fields this defaults to a build every hour, on the hour.
+The full list of parameters is:
+
+@table @code
+@item name
+
+@item builderNames
+
+@item properties
+
+@item branch
+The branch to build, just as for @code{Scheduler}.
+
+@item minute
+The minute of the hour on which to start the build.  This defaults
+to 0, meaning an hourly build.
+
+@item hour
+The hour of the day on which to start the build, in 24-hour notation.
+This defaults to *, meaning every hour.
+
+@item month
+The month in which to start the build, with January = 1.  This defaults
+to *, meaning every month.
+
+@item dayOfWeek
+The day of the week to start a build, with Monday = 0.  This defauls
+to *, meaning every day of the week.
+
+@item onlyIfChanged
+If this is true, then builds will not be scheduled at the designated time
+unless the source has changed since the previous build.
+@end table
+
+For example, the following master.cfg clause will cause a build to be
+started every night at 3:00am:
+
+@example
+s = scheduler.Nightly(name='nightly',
+        builderNames=['builder1', 'builder2'],
+        hour=3,
+        minute=0)
+@end example
+
+This scheduler will perform a build each monday morning at 6:23am and
+again at 8:23am, but only if someone has committed code in the interim:
+
+@example
+s = scheduler.Nightly(name='BeforeWork',
+         builderNames=['builder1'],
+         dayOfWeek=0,
+         hour=[6,8],
+         minute=23,
+         onlyIfChanged=True)
+@end example
+
+The following runs a build every two hours, using Python's @code{range}
+function:
+
+@example
+s = Nightly(name='every2hours',
+        builderNames=['builder1'],
+        hour=range(0, 24, 2))
+@end example
+
+Finally, this example will run only on December 24th:
+
+@example
+s = Nightly(name='SleighPreflightCheck',
+        builderNames=['flying_circuits', 'radar'],
+        month=12,
+        dayOfMonth=24,
+        hour=12,
+        minute=0)
+@end example
+
+@node Try Schedulers
+@subsection Try Schedulers
+@slindex buildbot.scheduler.Try_Jobdir
+@slindex buildbot.scheduler.Try_Userpass
+
+This scheduler allows developers to use the @code{buildbot try}
+command to trigger builds of code they have not yet committed. See
+@ref{try} for complete details.
+
+Two implementations are available: @code{Try_Jobdir} and
+@code{Try_Userpass}.  The former monitors a job directory, specified
+by the @code{jobdir} parameter, while the latter listens for PB
+connections on a specific @code{port}, and authenticates against
+@code{userport}.
+
+@node Triggerable Scheduler
+@subsection Triggerable Scheduler
+@cindex Triggers
+@slindex buildbot.scheduler.Triggerable
+
+The @code{Triggerable} scheduler waits to be triggered by a Trigger
+step (see @ref{Triggering Schedulers}) in another build. That step
+can optionally wait for the scheduler's builds to complete. This
+provides two advantages over Dependent schedulers. First, the same
+scheduler can be triggered from multiple builds. Second, the ability
+to wait for a Triggerable's builds to complete provides a form of
+"subroutine call", where one or more builds can "call" a scheduler
+to perform some work for them, perhaps on other buildslaves.
+
+The parameters are just the basics:
+
+@table @code
+@item name
+@item builderNames
+@item properties
+@end table
+
+This class is only useful in conjunction with the @code{Trigger} step.
+Here is a fully-worked example:
+
+@example
+from buildbot import scheduler
+from buildbot.process import factory
+from buildbot.steps import trigger
+
+checkin = scheduler.Scheduler(name="checkin",
+            branch=None,
+            treeStableTimer=5*60,
+            builderNames=["checkin"])
+nightly = scheduler.Nightly(name='nightly',
+            builderNames=['nightly'],
+            hour=3,
+            minute=0)
+
+mktarball = scheduler.Triggerable(name="mktarball",
+                builderNames=["mktarball"])
+build = scheduler.Triggerable(name="build-all-platforms",
+                builderNames=["build-all-platforms"])
+test = scheduler.Triggerable(name="distributed-test",
+                builderNames=["distributed-test"])
+package = scheduler.Triggerable(name="package-all-platforms",
+                builderNames=["package-all-platforms"])
+
+c['schedulers'] = [mktarball, checkin, nightly, build, test, package]
+
+# on checkin, make a tarball, build it, and test it
+checkin_factory = factory.BuildFactory()
+checkin_factory.addStep(trigger.Trigger(schedulerNames=['mktarball'],
+                                       waitForFinish=True))
+checkin_factory.addStep(trigger.Trigger(schedulerNames=['build-all-platforms'],
+                                   waitForFinish=True))
+checkin_factory.addStep(trigger.Trigger(schedulerNames=['distributed-test'],
+                                  waitForFinish=True))
+
+# and every night, make a tarball, build it, and package it
+nightly_factory = factory.BuildFactory()
+nightly_factory.addStep(trigger.Trigger(schedulerNames=['mktarball'],
+                                       waitForFinish=True))
+nightly_factory.addStep(trigger.Trigger(schedulerNames=['build-all-platforms'],
+                                   waitForFinish=True))
+nightly_factory.addStep(trigger.Trigger(schedulerNames=['package-all-platforms'],
+                                     waitForFinish=True))
+@end example
+
+@node Merging BuildRequests
+@section Merging BuildRequests
+
+@bcindex c['mergeRequests']
+
+By default, buildbot merges BuildRequests that have the compatible
+SourceStamps. This behaviour can be customized with the
+@code{c['mergeRequests']} configuration key.  This key specifies a function
+which is called with three arguments: a @code{Builder} and two
+@code{BuildRequest} objects.  It should return true if the requests can be
+merged.  For example:
+
+@example
+def mergeRequests(builder, req1, req2):
+    """Don't merge buildrequest at all"""
+    return False
+c['mergeRequests'] = mergeRequests
+@end example
+
+In many cases, the details of the SourceStamps and BuildRequests are important.
+In this example, only BuildRequests with the same "reason" are merged; thus
+developers forcing builds for different reasons will see distinct builds.
+
+@example
+def mergeRequests(builder, req1, req2):
+    if req1.source.canBeMergedWith(req2.source) and  req1.reason == req2.reason:
+       return True
+    return False
+c['mergeRequests'] = mergeRequests
+@end example
+
+@node Prioritizing Builders
+@section Prioritizing Builders
+
+@bcindex c['prioritizeBuilders']
+
+By default, buildbot will attempt to start builds on builders in order from the
+builder with the oldest pending request to the newest. This behaviour can be
+customized with the @code{c['prioritizeBuilders']} configuration key.
+This key specifies a function which is called with two arguments: a
+@code{BuildMaster} and a list of @code{Builder} objects. It
+should return a list of @code{Builder} objects in the desired order.
+It may also remove items from the list if builds should not be started
+on those builders.
+
+@example
+def prioritizeBuilders(buildmaster, builders):
+    """Prioritize builders.  'finalRelease' builds have the highest
+    priority, so they should be built before running tests, or
+    creating builds."""
+    builderPriorities = @{
+        "finalRelease": 0,
+        "test": 1,
+        "build": 2,
+    @}
+    builders.sort(key=lambda b: builderPriorities.get(b.name, 0))
+    return builders
+
+c['prioritizeBuilders'] = prioritizeBuilders
+@end example
+
+
+@node Setting the slaveport
+@section Setting the slaveport
+
+@bcindex c['slavePortnum']
+
+The buildmaster will listen on a TCP port of your choosing for
+connections from buildslaves. It can also use this port for
+connections from remote Change Sources, status clients, and debug
+tools. This port should be visible to the outside world, and you'll
+need to tell your buildslave admins about your choice.
+
+It does not matter which port you pick, as long it is externally
+visible, however you should probably use something larger than 1024,
+since most operating systems don't allow non-root processes to bind to
+low-numbered ports. If your buildmaster is behind a firewall or a NAT
+box of some sort, you may have to configure your firewall to permit
+inbound connections to this port.
+
+@example
+c['slavePortnum'] = 10000
+@end example
+
+@code{c['slavePortnum']} is a @emph{strports} specification string,
+defined in the @code{twisted.application.strports} module (try
+@command{pydoc twisted.application.strports} to get documentation on
+the format). This means that you can have the buildmaster listen on a
+localhost-only port by doing:
+
+@example
+c['slavePortnum'] = "tcp:10000:interface=127.0.0.1"
+@end example
+
+This might be useful if you only run buildslaves on the same machine,
+and they are all configured to contact the buildmaster at
+@code{localhost:10000}.
+
+
+@node Buildslave Specifiers
+@section Buildslave Specifiers
+@bcindex c['slaves']
+
+The @code{c['slaves']} key is a list of known buildslaves. In the common case,
+each buildslave is defined by an instance of the BuildSlave class.  It
+represents a standard, manually started machine that will try to connect to
+the buildbot master as a slave.  Contrast these with the "on-demand" latent
+buildslaves, such as the Amazon Web Service Elastic Compute Cloud latent
+buildslave discussed below.
+
+The BuildSlave class is instantiated with two values: (slavename,
+slavepassword). These are the same two values that need to be provided to the
+buildslave administrator when they create the buildslave.
+
+The slavenames must be unique, of course. The password exists to
+prevent evildoers from interfering with the buildbot by inserting
+their own (broken) buildslaves into the system and thus displacing the
+real ones.
+
+Buildslaves with an unrecognized slavename or a non-matching password
+will be rejected when they attempt to connect, and a message
+describing the problem will be put in the log file (see @ref{Logfiles}).
+
+@example
+from buildbot.buildslave import BuildSlave
+c['slaves'] = [BuildSlave('bot-solaris', 'solarispasswd')
+               BuildSlave('bot-bsd', 'bsdpasswd')
+              ]
+@end example
+
+@cindex Properties
+@code{BuildSlave} objects can also be created with an optional
+@code{properties} argument, a dictionary specifying properties that
+will be available to any builds performed on this slave.  For example:
+
+@example
+from buildbot.buildslave import BuildSlave
+c['slaves'] = [BuildSlave('bot-solaris', 'solarispasswd',
+                    properties=@{'os':'solaris'@}),
+              ]
+@end example
+
+The @code{BuildSlave} constructor can also take an optional
+@code{max_builds} parameter to limit the number of builds that it
+will execute simultaneously:
+
+@example
+from buildbot.buildslave import BuildSlave
+c['slaves'] = [BuildSlave("bot-linux", "linuxpassword", max_builds=2)]
+@end example
+
+Historical note: in buildbot-0.7.5 and earlier, the @code{c['bots']}
+key was used instead, and it took a list of (name, password) tuples.
+This key is accepted for backwards compatibility, but is deprecated as
+of 0.7.6 and will go away in some future release.
+
+@menu
+* When Buildslaves Go Missing::
+@end menu
+
+@node When Buildslaves Go Missing
+@subsection When Buildslaves Go Missing
+
+Sometimes, the buildslaves go away. One very common reason for this is
+when the buildslave process is started once (manually) and left
+running, but then later the machine reboots and the process is not
+automatically restarted.
+
+If you'd like to have the administrator of the buildslave (or other
+people) be notified by email when the buildslave has been missing for
+too long, just add the @code{notify_on_missing=} argument to the
+@code{BuildSlave} definition:
+
+@example
+c['slaves'] = [BuildSlave('bot-solaris', 'solarispasswd',
+                          notify_on_missing="bob@@example.com"),
+              ]
+@end example
+
+By default, this will send email when the buildslave has been
+disconnected for more than one hour. Only one email per
+connection-loss event will be sent. To change the timeout, use
+@code{missing_timeout=} and give it a number of seconds (the default
+is 3600).
+
+You can have the buildmaster send email to multiple recipients: just
+provide a list of addresses instead of a single one:
+
+@example
+c['slaves'] = [BuildSlave('bot-solaris', 'solarispasswd',
+                          notify_on_missing=["bob@@example.com",
+                                             "alice@@example.org"],
+                          missing_timeout=300, # notify after 5 minutes
+                          ),
+              ]
+@end example
+
+The email sent this way will use a MailNotifier (@pxref{MailNotifier})
+status target, if one is configured. This provides a way for you to
+control the ``from'' address of the email, as well as the relayhost
+(aka ``smarthost'') to use as an SMTP server. If no MailNotifier is
+configured on this buildmaster, the buildslave-missing emails will be
+sent using a default configuration.
+
+Note that if you want to have a MailNotifier for buildslave-missing
+emails but not for regular build emails, just create one with
+builders=[], as follows:
+
+@example
+from buildbot.status import mail
+m = mail.MailNotifier(fromaddr="buildbot@@localhost", builders=[],
+                      relayhost="smtp.example.org")
+c['status'].append(m)
+c['slaves'] = [BuildSlave('bot-solaris', 'solarispasswd',
+                          notify_on_missing="bob@@example.com"),
+              ]
+@end example
+
+@node On-Demand ("Latent") Buildslaves
+@section On-Demand ("Latent") Buildslaves
+
+The standard buildbot model has slaves started manually.  The previous section
+described how to configure the master for this approach.
+
+Another approach is to let the buildbot master start slaves when builds are
+ready, on-demand.  Thanks to services such as Amazon Web Services' Elastic
+Compute Cloud ("AWS EC2"), this is relatively easy to set up, and can be
+very useful for some situations.
+
+The buildslaves that are started on-demand are called "latent" buildslaves.
+As of this writing, buildbot ships with an abstract base class for building
+latent buildslaves, and a concrete implementation for AWS EC2.
+
+@menu
+* Amazon Web Services Elastic Compute Cloud ("AWS EC2")::
+* Dangers with Latent Buildslaves::
+* Writing New Latent Buildslaves::
+@end menu
+
+@node Amazon Web Services Elastic Compute Cloud ("AWS EC2")
+@subsection Amazon Web Services Elastic Compute Cloud ("AWS EC2")
+
+@url{http://aws.amazon.com/ec2/,,AWS EC2} is a web service that allows you to
+start virtual machines in an Amazon data center. Please see their website for
+details, incuding costs. Using the AWS EC2 latent buildslaves involves getting
+an EC2 account with AWS and setting up payment; customizing one or more EC2
+machine images ("AMIs") on your desired operating system(s) and publishing
+them (privately if needed); and configuring the buildbot master to know how to
+start your customized images for "substantiating" your latent slaves.
+
+@menu
+* Get an AWS EC2 Account::
+* Create an AMI::
+* Configure the Master with an EC2LatentBuildSlave::
+@end menu
+
+@node Get an AWS EC2 Account
+@subsubsection Get an AWS EC2 Account
+
+To start off, to use the AWS EC2 latent buildslave, you need to get an AWS
+developer account and sign up for EC2. These instructions may help you get
+started:
+
+@itemize @bullet
+@item
+Go to http://aws.amazon.com/ and click to "Sign Up Now" for an AWS account.
+
+@item
+Once you are logged into your account, you need to sign up for EC2.
+Instructions for how to do this have changed over time because Amazon changes
+their website, so the best advice is to hunt for it. After signing up for EC2,
+it may say it wants you to upload an x.509 cert. You will need this to create
+images (see below) but it is not technically necessary for the buildbot master
+configuration.
+
+@item
+You must enter a valid credit card before you will be able to use EC2. Do that
+under 'Payment Method'.
+
+@item
+Make sure you're signed up for EC2 by going to 'Your Account'->'Account
+Activity' and verifying EC2 is listed.
+@end itemize
+
+@node Create an AMI
+@subsubsection Create an AMI
+
+Now you need to create an AMI and configure the master.  You may need to
+run through this cycle a few times to get it working, but these instructions
+should get you started.
+
+Creating an AMI is out of the scope of this document.  The
+@url{http://docs.amazonwebservices.com/AWSEC2/latest/GettingStartedGuide/,,EC2 Getting Started Guide}
+is a good resource for this task.  Here are a few additional hints.
+
+@itemize @bullet
+@item
+When an instance of the image starts, it needs to automatically start a
+buildbot slave that connects to your master (to create a buildbot slave,
+@pxref{Creating a buildslave}; to make a daemon,
+@pxref{Launching the daemons}).
+
+@item
+You may want to make an instance of the buildbot slave, configure it as a
+standard buildslave in the master (i.e., not as a latent slave), and test and
+debug it that way before you turn it into an AMI and convert to a latent
+slave in the master.
+@end itemize
+
+@node Configure the Master with an EC2LatentBuildSlave
+@subsubsection Configure the Master with an EC2LatentBuildSlave
+
+Now let's assume you have an AMI that should work with the
+EC2LatentBuildSlave.  It's now time to set up your buildbot master
+configuration.
+
+You will need some information from your AWS account: the "Access Key Id" and
+the "Secret Access Key".  If you've built the AMI yourself, you probably
+already are familiar with these values.  If you have not, and someone has
+given you access to an AMI, these hints may help you find the necessary
+values:
+
+@itemize @bullet
+@item
+While logged into your AWS account, find the "Access Identifiers" link (either
+on the left, or via "Your Account" -> "Access Identifiers".
+
+@item
+On the page, you'll see alphanumeric values for "Your Access Key Id:" and
+"Your Secret Access Key:". Make a note of these. Later on, we'll call the
+first one your "identifier" and the second one your "secret_identifier."
+@end itemize
+
+When creating an EC2LatentBuildSlave in the buildbot master configuration,
+the first three arguments are required.  The name and password are the first
+two arguments, and work the same as with normal buildslaves.  The next
+argument specifies the type of the EC2 virtual machine (available options as
+of this writing include "m1.small", "m1.large", 'm1.xlarge", "c1.medium",
+and "c1.xlarge"; see the EC2 documentation for descriptions of these
+machines).
+
+Here is the simplest example of configuring an EC2 latent buildslave. It
+specifies all necessary remaining values explicitly in the instantiation.
+
+@example
+from buildbot.ec2buildslave import EC2LatentBuildSlave
+c['slaves'] = [EC2LatentBuildSlave('bot1', 'sekrit', 'm1.large',
+                                   ami='ami-12345',
+                                   identifier='publickey',
+                                   secret_identifier='privatekey'
+                                   )]
+@end example
+
+The "ami" argument specifies the AMI that the master should start.  The
+"identifier" argument specifies the AWS "Access Key Id," and the
+"secret_identifier" specifies the AWS "Secret Access Key." Both the AMI and
+the account information can be specified in alternate ways.
+
+Note that whoever has your identifier and secret_identifier values can request
+AWS work charged to your account, so these values need to be carefully
+protected. Another way to specify these access keys is to put them in a
+separate file. You can then make the access privileges stricter for this
+separate file, and potentially let more people read your main configuration
+file.
+
+By default, you can make an .ec2 directory in the home folder of the user
+running the buildbot master. In that directory, create a file called aws_id.
+The first line of that file should be your access key id; the second line
+should be your secret access key id. Then you can instantiate the build slave
+as follows.
+
+@example
+from buildbot.ec2buildslave import EC2LatentBuildSlave
+c['slaves'] = [EC2LatentBuildSlave('bot1', 'sekrit', 'm1.large',
+                                   ami='ami-12345')]
+@end example
+
+If you want to put the key information in another file, use the
+"aws_id_file_path" initialization argument.
+
+Previous examples used a particular AMI.  If the Buildbot master will be
+deployed in a process-controlled environment, it may be convenient to
+specify the AMI more flexibly.  Rather than specifying an individual AMI,
+specify one or two AMI filters.
+
+In all cases, the AMI that sorts last by its location (the S3 bucket and
+manifest name) will be preferred.
+
+One available filter is to specify the acceptable AMI owners, by AWS account
+number (the 12 digit number, usually rendered in AWS with hyphens like
+"1234-5678-9012", should be entered as in integer).
+
+@example
+from buildbot.ec2buildslave import EC2LatentBuildSlave
+bot1 = EC2LatentBuildSlave('bot1', 'sekrit', 'm1.large',
+                           valid_ami_owners=[11111111111,
+                                             22222222222],
+                           identifier='publickey',
+                           secret_identifier='privatekey'
+                           )
+@end example
+
+The other available filter is to provide a regular expression string that
+will be matched against each AMI's location (the S3 bucket and manifest name).
+
+@example
+from buildbot.ec2buildslave import EC2LatentBuildSlave
+bot1 = EC2LatentBuildSlave(
+    'bot1', 'sekrit', 'm1.large',
+    valid_ami_location_regex=r'buildbot\-.*/image.manifest.xml',
+    identifier='publickey', secret_identifier='privatekey')
+@end example
+
+The regular expression can specify a group, which will be preferred for the
+sorting.  Only the first group is used; subsequent groups are ignored.
+
+@example
+from buildbot.ec2buildslave import EC2LatentBuildSlave
+bot1 = EC2LatentBuildSlave(
+    'bot1', 'sekrit', 'm1.large',
+    valid_ami_location_regex=r'buildbot\-.*\-(.*)/image.manifest.xml',
+    identifier='publickey', secret_identifier='privatekey')
+@end example
+
+If the group can be cast to an integer, it will be.  This allows 10 to sort
+after 1, for instance.
+
+@example
+from buildbot.ec2buildslave import EC2LatentBuildSlave
+bot1 = EC2LatentBuildSlave(
+    'bot1', 'sekrit', 'm1.large',
+    valid_ami_location_regex=r'buildbot\-.*\-(\d+)/image.manifest.xml',
+    identifier='publickey', secret_identifier='privatekey')
+@end example
+
+In addition to using the password as a handshake between the master and the
+slave, you may want to use a firewall to assert that only machines from a
+specific IP can connect as slaves.  This is possible with AWS EC2 by using
+the Elastic IP feature.  To configure, generate a Elastic IP in AWS, and then
+specify it in your configuration using the "elastic_ip" argument.
+
+@example
+from buildbot.ec2buildslave import EC2LatentBuildSlave
+c['slaves'] = [EC2LatentBuildSlave('bot1', 'sekrit', 'm1.large',
+                                   'ami-12345',
+                                   identifier='publickey',
+                                   secret_identifier='privatekey',
+                                   elastic_ip='208.77.188.166'
+                                   )]
+@end example
+
+The EC2LatentBuildSlave supports all other configuration from the standard
+BuildSlave.  The "missing_timeout" and "notify_on_missing" specify how long
+to wait for an EC2 instance to attach before considering the attempt to have
+failed, and email addresses to alert, respectively.  "missing_timeout"
+defaults to 20 minutes.
+
+The "build_wait_timeout" allows you to specify how long an EC2LatentBuildSlave
+should wait after a build for another build before it shuts down the EC2
+instance.  It defaults to 10 minutes.
+
+"keypair_name" and "security_name" allow you to specify different names for
+these AWS EC2 values.  They both default to "latent_buildbot_slave".
+
+@node Dangers with Latent Buildslaves
+@subsection Dangers with Latent Buildslaves
+
+Any latent build slave that interacts with a for-fee service, such as the
+EC2LatentBuildSlave, brings significant risks. As already identified, the
+configuraton will need access to account information that, if obtained by a
+criminal, can be used to charge services to your account. Also, bugs in the
+buildbot software may lead to unnecessary charges. In particular, if the
+master neglects to shut down an instance for some reason, a virtual machine
+may be running unnecessarily, charging against your account. Manual and/or
+automatic (e.g. nagios with a plugin using a library like boto)
+double-checking may be appropriate.
+
+A comparitively trivial note is that currently if two instances try to attach
+to the same latent buildslave, it is likely that the system will become
+confused.  This should not occur, unless, for instance, you configure a normal
+build slave to connect with the authentication of a latent buildbot.  If the
+situation occurs, stop all attached instances and restart the master.
+
+@node Writing New Latent Buildslaves
+@subsection Writing New Latent Buildslaves
+
+Writing a new latent buildslave should only require subclassing
+@code{buildbot.buildslave.AbstractLatentBuildSlave} and implementing
+start_instance and stop_instance.
+
+@example
+def start_instance(self):
+    # responsible for starting instance that will try to connect with this
+    # master. Should return deferred. Problems should use an errback. The
+    # callback value can be None, or can be an iterable of short strings to
+    # include in the "substantiate success" status message, such as
+    # identifying the instance that started.
+    raise NotImplementedError
+
+def stop_instance(self, fast=False):
+    # responsible for shutting down instance. Return a deferred. If `fast`,
+    # we're trying to shut the master down, so callback as soon as is safe.
+    # Callback value is ignored.
+    raise NotImplementedError
+@end example
+
+See @code{buildbot.ec2buildslave.EC2LatentBuildSlave} for an example, or see the
+test example @code{buildbot.test_slaves.FakeLatentBuildSlave}.
+
+@node Defining Global Properties
+@section Defining Global Properties
+@bcindex c['properties']
+@cindex Properties
+
+The @code{'properties'} configuration key defines a dictionary
+of properties that will be available to all builds started by the
+buildmaster:
+
+@example
+c['properties'] = @{
+    'Widget-version' : '1.2',
+    'release-stage' : 'alpha'
+@}
+@end example
+
+@node Defining Builders
+@section Defining Builders
+
+@bcindex c['builders']
+
+The @code{c['builders']} key is a list of objects giving configuration for the
+Builders.  For more information, @xref{Builder}.  The class definition for the
+builder configuration is in @code{buildbot.config}.  In the configuration file,
+its use looks like:
+
+@example
+from buildbot.config import BuilderConfig
+c['builders'] = [
+    BuilderConfig(name='quick', slavenames=['bot1', 'bot2'], factory=f_quick),
+    BuilderConfig(name='thorough', slavename='bot1', factory=f_thorough),
+]
+@end example
+
+The constructor takes the following keyword arguments:
+
+@table @code
+@item name
+This specifies the Builder's name, which is used in status
+reports.
+
+@item slavename
+@item slavenames
+These arguments specify the buildslave or buildslaves that will be used by this
+Builder.  All slaves names must appear in the @code{c['slaves']} list. Each
+buildslave can accomodate multiple Builders.  The @code{slavenames} parameter
+can be a list of names, while @code{slavename} can specify only one slave.
+
+@item factory
+This is a @code{buildbot.process.factory.BuildFactory} instance which
+controls how the build is performed. Full details appear in their own
+section, @xref{Build Process}. Parameters like the location of the CVS
+repository and the compile-time options used for the build are
+generally provided as arguments to the factory's constructor.
+
+@end table
+
+Other optional keys may be set on each Builder:
+
+@table @code
+
+@item builddir
+Specifies the name of a subdirectory (under the base directory) in which
+everything related to this builder will be placed on the buildmaster.
+This holds build status information. If not set, defaults to @code{name}
+with some characters escaped. Each builder must have a unique build
+directory.
+
+@item slavebuilddir
+Specifies the name of a subdirectory (under the base directory) in which
+everything related to this builder will be placed on the buildslave.
+This is where checkouts, compiles, and tests are run. If not set,
+defaults to @code{builddir}. If a slave is connected to multiple builders
+that share the same @code{slavebuilddir}, make sure the slave is set to
+run one build at a time or ensure this is fine to run multiple builds from
+the same directory simultaneously.
+
+@item category
+If provided, this is a string that identifies a category for the
+builder to be a part of. Status clients can limit themselves to a
+subset of the available categories. A common use for this is to add
+new builders to your setup (for a new module, or for a new buildslave)
+that do not work correctly yet and allow you to integrate them with
+the active builders. You can put these new builders in a test
+category, make your main status clients ignore them, and have only
+private status clients pick them up. As soon as they work, you can
+move them over to the active category.
+
+@item nextSlave
+If provided, this is a function that controls which slave will be assigned
+future jobs. The function is passed two arguments, the @code{Builder}
+object which is assigning a new job, and a list of @code{BuildSlave}
+objects. The function should return one of the @code{BuildSlave}
+objects, or @code{None} if none of the available slaves should be
+used.
+
+@item nextBuild
+If provided, this is a function that controls which build request will be
+handled next. The function is passed two arguments, the @code{Builder}
+object which is assigning a new job, and a list of @code{BuildRequest}
+objects of pending builds. The function should return one of the
+@code{BuildRequest} objects, or @code{None} if none of the pending
+builds should be started.
+
+@item locks
+This argument specifies a list of locks that apply to this builder; @xref{Interlocks}.
+
+@item env
+A Builder may be given a dictionary of environment variables in this parameter.
+The variables are used in @pxref{ShellCommand} steps in builds created by this
+builder. The environment variables will override anything in the buildslave's
+environment. Variables passed directly to a @code{ShellCommand} will override
+variables of the same name passed to the Builder.
+
+For example, if you a pool of identical slaves it is often easier to manage
+variables like PATH from Buildbot rather than manually editing it inside of
+the slaves' environment.
+
+@example
+f = factory.BuildFactory
+f.addStep(ShellCommand(
+              command=['bash', './configure']))
+f.addStep(Compile())
+
+c['builders'] = [
+  BuilderConfig(name='test', factory=f,
+        slavenames=['slave1', 'slave2', 'slave3', 'slave4'],
+        env=@{'PATH': '/opt/local/bin:/opt/app/bin:/usr/local/bin:/usr/bin'@}),
+]
+@end example
+
+@end table
+
+
+@node Defining Status Targets
+@section Defining Status Targets
+
+The Buildmaster has a variety of ways to present build status to
+various users. Each such delivery method is a ``Status Target'' object
+in the configuration's @code{status} list. To add status targets, you
+just append more objects to this list:
+
+@bcindex c['status']
+
+@example
+c['status'] = []
+
+from buildbot.status import html
+c['status'].append(html.Waterfall(http_port=8010))
+
+from buildbot.status import mail
+m = mail.MailNotifier(fromaddr="buildbot@@localhost",
+                      extraRecipients=["builds@@lists.example.com"],
+                      sendToInterestedUsers=False)
+c['status'].append(m)
+
+from buildbot.status import words
+c['status'].append(words.IRC(host="irc.example.com", nick="bb",
+                             channels=["#example"]))
+@end example
+
+Status delivery has its own chapter, @xref{Status Delivery}, in which
+all the built-in status targets are documented.
+
+@node Limiting Memory and Disk Usage
+@section Limiting Memory and Disk Usage
+
+Buildbot stores historical information on disk in the form of "Pickle" files
+and compressed logfiles.  In a large installation, these can quickly consume
+disk space, yet in many cases developers never consult this historical
+information.  Four configuration parameters control the "pruning" of various
+data, shown here with their default values:
+
+@bcindex c['buildHorizon']
+@bcindex c['eventHorizon']
+@bcindex c['logHorizon']
+@bcindex c['buildCacheSize']
+@example
+c['buildHorizon'] = 100
+c['eventHorizon'] = 50
+c['logHorizon'] = 40
+
+c['buildCacheSize'] = 15
+
+c['builders'] = [
+  @{'name': 'test1', 'builddir': 'test1', 'factory': f, 'buildHorizon': 150@}
+]
+@end example
+
+The @code{buildHorizon} specifies the minimum number of builds for each builder
+which should be kept on disk.  The @code{eventHorizon} specifies the minumum
+number of events to keep -- events mostly describe connections and
+disconnections of slaves, and are seldom helpful to developers.  The
+@code{logHorizon} gives the minimum number of builds for which logs should be
+maintained; this parameter must be less than @code{buildHorizon}. Builds older
+than @code{logHorizon} but not older than @code{buildHorizon} will maintain
+their overall status and the status of each step, but the logfiles will be
+deleted.
+
+Finally, the @code{buildCacheSize} gives the number of builds for each builder
+which are cached in memory.  This number should be larger than the number of
+builds required for commonly-used status displays (the waterfall or grid
+views), so that those displays do not miss the cache on a refresh.
+
+@node Debug options
+@section Debug options
+
+
+@bcindex c['debugPassword']
+If you set @code{c['debugPassword']}, then you can connect to the
+buildmaster with the diagnostic tool launched by @code{buildbot
+debugclient MASTER:PORT}. From this tool, you can reload the config
+file, manually force builds, and inject changes, which may be useful
+for testing your buildmaster without actually commiting changes to
+your repository (or before you have the Change Sources set up). The
+debug tool uses the same port number as the slaves do:
+@code{c['slavePortnum']}, and is authenticated with this password.
+
+@example
+c['debugPassword'] = "debugpassword"
+@end example
+
+@bcindex c['manhole']
+If you set @code{c['manhole']} to an instance of one of the classes in
+@code{buildbot.manhole}, you can telnet or ssh into the buildmaster
+and get an interactive Python shell, which may be useful for debugging
+buildbot internals. It is probably only useful for buildbot
+developers. It exposes full access to the buildmaster's account
+(including the ability to modify and delete files), so it should not
+be enabled with a weak or easily guessable password.
+
+There are three separate @code{Manhole} classes. Two of them use SSH,
+one uses unencrypted telnet. Two of them use a username+password
+combination to grant access, one of them uses an SSH-style
+@file{authorized_keys} file which contains a list of ssh public keys.
+
+@table @code
+@item manhole.AuthorizedKeysManhole
+You construct this with the name of a file that contains one SSH
+public key per line, just like @file{~/.ssh/authorized_keys}. If you
+provide a non-absolute filename, it will be interpreted relative to
+the buildmaster's base directory.
+
+@item manhole.PasswordManhole
+This one accepts SSH connections but asks for a username and password
+when authenticating. It accepts only one such pair.
+
+
+@item manhole.TelnetManhole
+This accepts regular unencrypted telnet connections, and asks for a
+username/password pair before providing access. Because this
+username/password is transmitted in the clear, and because Manhole
+access to the buildmaster is equivalent to granting full shell
+privileges to both the buildmaster and all the buildslaves (and to all
+accounts which then run code produced by the buildslaves), it is
+highly recommended that you use one of the SSH manholes instead.
+
+@end table
+
+@example
+# some examples:
+from buildbot import manhole
+c['manhole'] = manhole.AuthorizedKeysManhole(1234, "authorized_keys")
+c['manhole'] = manhole.PasswordManhole(1234, "alice", "mysecretpassword")
+c['manhole'] = manhole.TelnetManhole(1234, "bob", "snoop_my_password_please")
+@end example
+
+The @code{Manhole} instance can be configured to listen on a specific
+port. You may wish to have this listening port bind to the loopback
+interface (sometimes known as ``lo0'', ``localhost'', or 127.0.0.1) to
+restrict access to clients which are running on the same host.
+
+@example
+from buildbot.manhole import PasswordManhole
+c['manhole'] = PasswordManhole("tcp:9999:interface=127.0.0.1","admin","passwd")
+@end example
+
+To have the @code{Manhole} listen on all interfaces, use
+@code{"tcp:9999"} or simply 9999. This port specification uses
+@code{twisted.application.strports}, so you can make it listen on SSL
+or even UNIX-domain sockets if you want.
+
+Note that using any Manhole requires that the TwistedConch package be
+installed, and that you be using Twisted version 2.0 or later.
+
+The buildmaster's SSH server will use a different host key than the
+normal sshd running on a typical unix host. This will cause the ssh
+client to complain about a ``host key mismatch'', because it does not
+realize there are two separate servers running on the same host. To
+avoid this, use a clause like the following in your @file{.ssh/config}
+file:
+
+@example
+Host remotehost-buildbot
+ HostName remotehost
+ HostKeyAlias remotehost-buildbot
+ Port 9999
+ # use 'user' if you use PasswordManhole and your name is not 'admin'.
+ # if you use AuthorizedKeysManhole, this probably doesn't matter.
+ User admin
+@end example
+
+
+
