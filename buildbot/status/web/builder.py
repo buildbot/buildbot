@@ -9,7 +9,7 @@ from buildbot import interfaces
 from buildbot.status.web.base import HtmlResource, BuildLineMixin, \
     path_to_build, path_to_slave, path_to_builder, path_to_change, \
     path_to_root, getAndCheckProperties, ICurrentBox, build_get_class, \
-    map_branches
+    map_branches, path_to_authfail
 from buildbot.process.base import BuildRequest
 from buildbot.sourcestamp import SourceStamp
 
@@ -121,19 +121,19 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
         if not auth_ok:
             if not self.getAuthz(req).actionAllowed('forceBuild', req, self.builder_status):
                 log.msg("..but not authorized")
-                return Redirect("../../authfail")
+                return Redirect(path_to_authfail(req))
 
         # keep weird stuff out of the branch revision, and property strings.
         # TODO: centralize this somewhere.
         if not re.match(r'^[\w\.\-\/]*$', branch):
             log.msg("bad branch '%s'" % branch)
-            return Redirect("..")
+            return Redirect(path_to_builder(req, self.builder_status))
         if not re.match(r'^[\w\.\-\/]*$', revision):
             log.msg("bad revision '%s'" % revision)
-            return Redirect("..")
+            return Redirect(path_to_builder(req, self.builder_status))
         properties = getAndCheckProperties(req)
         if properties is None:
-            return Redirect("..")
+            return Redirect(path_to_builder(req, self.builder_status))
         if not branch:
             branch = None
         if not revision:
@@ -158,18 +158,18 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
             # honored
             pass
         # send the user back to the builder page
-        return Redirect(".")
+        return Redirect(path_to_builder(req, self.builder_status))
 
     def ping(self, req):
         log.msg("web ping of builder '%s'" % self.builder_status.getName())
         if not self.getAuthz(req).actionAllowed('pingBuilder', req, self.builder_status):
             log.msg("..but not authorized")
-            return Redirect("../../authfail")
+            return Redirect(path_to_authfail(req))
         c = interfaces.IControl(self.getBuildmaster(req))
         bc = c.getBuilder(self.builder_status.getName())
         bc.ping()
         # send the user back to the builder page
-        return Redirect(".")
+        return Redirect(path_to_builder(req, self.builder_status))
 
     def cancelbuild(self, req):
         try:
@@ -192,10 +192,10 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
                     if authz.actionAllowed('cancelPendingBuild', req, build_req):
                         build_req.cancel()
                     else:
-                        return Redirect("../../authfail")
+                        return Redirect(path_to_authfail(req))
                     if not cancel_all:
                         break
-        return Redirect(".")
+        return Redirect(path_to_builder(req, self.builder_status))
 
     def getChild(self, path, req):
         if path == "force":
@@ -228,19 +228,19 @@ class StatusResourceAllBuilders(HtmlResource, BuildLineMixin):
     def forceall(self, req):
         authz = self.getAuthz(req)
         if not authz.actionAllowed('forceAllBuilds', req):
-            return Redirect("../../authfail");
+            return Redirect(path_to_authfail(req))
 
         for bname in self.status.getBuilderNames():
             builder_status = self.status.getBuilder(bname)
             build = StatusResourceBuilder(builder_status)
             build.force(req, auth_ok=True) # auth_ok because we already checked
         # back to the welcome page
-        return Redirect("../..")
+        return Redirect(path_to_root(req))
 
     def stopall(self, req):
         authz = self.getAuthz(req)
         if not authz.actionAllowed('stopAllBuilds', req):
-            return Redirect("../../authfail");
+            return Redirect(path_to_authfail(req))
 
         for bname in self.status.getBuilderNames():
             builder_status = self.status.getBuilder(bname)
@@ -254,7 +254,7 @@ class StatusResourceAllBuilders(HtmlResource, BuildLineMixin):
                 build = StatusResourceBuild(build_status)
                 build.stop(req, auth_ok=True)
         # go back to the welcome page
-        return Redirect("../..")
+        return Redirect(path_to_root(req))
 
 
 # /builders

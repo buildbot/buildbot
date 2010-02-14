@@ -5,7 +5,7 @@ from twisted.web.util import Redirect
 from twisted.web.error import NoResource
 
 from buildbot.status.web.base import HtmlResource, abbreviate_age, \
-    BuildLineMixin, path_to_slave
+    BuildLineMixin, path_to_slave, path_to_authfail
 from buildbot import util
 
 # /buildslaves/$slavename
@@ -25,7 +25,7 @@ class OneBuildSlaveResource(HtmlResource, BuildLineMixin):
             if self.getAuthz(req).actionAllowed("gracefulShutdown", req, slave):
                 slave.setGraceful(True)
             else:
-                return Redirect("../../authfail")
+                return Redirect(path_to_authfail(req))
         return Redirect(path_to_slave(req, slave))
 
     def content(self, request, ctx):        

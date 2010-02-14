@@ -8,7 +8,7 @@ import urllib, time
 from twisted.python import log
 from buildbot.status.web.base import HtmlResource, \
      css_classes, path_to_build, path_to_builder, path_to_slave, \
-     getAndCheckProperties
+     getAndCheckProperties, path_to_authfail
 
 from buildbot.status.web.step import StepsResource
 from buildbot import util, interfaces
@@ -135,7 +135,7 @@ class StatusResourceBuild(HtmlResource):
         # check if this is allowed
         if not auth_ok:
             if not self.getAuthz(req).actionAllowed('stopBuild', req, self.build_status):
-                return Redirect("../../../../authfail")
+                return Redirect(path_to_authfail(req))
 
         b = self.build_status
         log.msg("web stopBuild of build %s:%s" % \
@@ -155,7 +155,7 @@ class StatusResourceBuild(HtmlResource):
 
         # we're at http://localhost:8080/svn-hello/builds/5/stop?[args] and
         # we want to go to: http://localhost:8080/svn-hello
-        r = Redirect("../..")
+        r = Redirect(path_to_builder(req, self.build_status.getBuilder()))
         d = defer.Deferred()
         reactor.callLater(1, d.callback, r)
         return DeferredResource(d)
@@ -163,7 +163,7 @@ class StatusResourceBuild(HtmlResource):
     def rebuild(self, req):
         # check auth
         if not self.getAuthz(req).actionAllowed('forceBuild', req, self.build_status.getBuilder()):
-            return Redirect("../../../../authfail")
+            return Redirect(path_to_authfail(req))
 
         # get a control object
         c = interfaces.IControl(self.getBuildmaster(req))
@@ -194,7 +194,7 @@ class StatusResourceBuild(HtmlResource):
         # evidence of their build starting (or to see the reason that it
         # didn't start). This should be the Builder page.
 
-        r = Redirect('../..') # the Builder's page
+        r = Redirect(path_to_builder(req, self.build_status.getBuilder()))
         d = defer.Deferred()
         reactor.callLater(1, d.callback, r)
         return DeferredResource(d)

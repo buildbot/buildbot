@@ -30,7 +30,7 @@ from buildbot.status.web.auth import IAuth
 # This usually looks something like
 #
 #  if not self.getAuthz(req).actionAllowed('myNewTrick', req, someExtraArg):
-#      return Redirect("../../authfail") # double-check this path!
+#      return Redirect(path_to_authfail(req))
 #
 # the someExtraArg is optional (it's handled with *args, so you can have
 # several if you want), and is given to the user's authorization function.
