@@ -7970,7 +7970,7 @@ One or more @code{builder=} or @code{branch=} arguments can be used to
 restrict the list. In addition, a @code{numbuilds=} argument will
 control how many lines are displayed (20 by default).
 
-@item /one_box_per_builder
+@item /builders
 
 This page shows a small table, with one box for each Builder,
 containing the results of the most recent Build. It does not show the

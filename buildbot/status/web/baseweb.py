@@ -7,6 +7,7 @@ from twisted.python import log
 from twisted.application import strports, service
 from twisted.web import server, distrib, static
 from twisted.spread import pb
+from twisted.web.util import Redirect
 
 from buildbot.interfaces import IControl, IStatusReceiver
 
@@ -18,7 +19,6 @@ from buildbot.status.web.feeds import Rss20StatusResource, \
 from buildbot.status.web.waterfall import WaterfallStatusResource
 from buildbot.status.web.console import ConsoleStatusResource
 from buildbot.status.web.olpb import OneLinePerBuild
-from buildbot.status.web.obpb import OneBoxPerBuilder
 from buildbot.status.web.grid import GridStatusResource, TransposedGridStatusResource
 from buildbot.status.web.changes import ChangesResource
 from buildbot.status.web.builder import BuildersResource
@@ -34,7 +34,6 @@ from buildbot.status.web.root import RootPage
 # this class contains the WebStatus class.  Basic utilities are in base.py,
 # and specific pages are each in their own module.
 
-    
 class WebStatus(service.MultiService):
     implements(IStatusReceiver)
     # TODO: IStatusReceiver is really about things which subscribe to hear
@@ -82,7 +81,6 @@ class WebStatus(service.MultiService):
      /buildslaves/SLAVENAME : describe a single BuildSlave
      /one_line_per_build : summarize the last few builds, one line each
      /one_line_per_build/BUILDERNAME : same, but only for a single builder
-     /one_box_per_builder : show the latest build and current activity
      /about : describe this buildmaster (Buildbot and support library versions)
      /xmlrpc : (not yet implemented) an XMLRPC server with build status
 
@@ -305,13 +303,13 @@ class WebStatus(service.MultiService):
                 orderByTime=self.orderConsoleByTime))
         self.putChild("tgrid", TransposedGridStatusResource())
         self.putChild("builders", BuildersResource()) # has builds/steps/logs
+        self.putChild("one_box_per_builder", Redirect("/builders"))
         self.putChild("changes", ChangesResource())
         self.putChild("buildslaves", BuildSlavesResource())
         self.putChild("buildstatus", BuildStatusStatusResource())
         #self.putChild("schedulers", SchedulersResource())
         self.putChild("one_line_per_build",
                       OneLinePerBuild(numbuilds=numbuilds))
-        self.putChild("one_box_per_builder", OneBoxPerBuilder())
         self.putChild("xmlrpc", XMLRPCServer())
         self.putChild("about", AboutBuildbot())
         self.putChild("authfail", AuthFailResource())

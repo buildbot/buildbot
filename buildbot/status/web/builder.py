@@ -8,7 +8,8 @@ from twisted.python import log
 from buildbot import interfaces
 from buildbot.status.web.base import HtmlResource, BuildLineMixin, \
     path_to_build, path_to_slave, path_to_builder, path_to_change, \
-    getAndCheckProperties
+    path_to_root, getAndCheckProperties, ICurrentBox, build_get_class, \
+    map_branches
 from buildbot.process.base import BuildRequest
 from buildbot.sourcestamp import SourceStamp
 
@@ -261,17 +262,57 @@ class BuildersResource(HtmlResource):
     title = "Builders"
     addSlash = True
 
-    def content(self, req, ctx):
-        s = self.getStatus(req)
+    def content(self, req, cxt):
+        status = self.getStatus(req)
 
-        ctx['builders'] = builders = []
-        for bname in s.getBuilderNames():
-            builders.append({'link' : req.childLink(urllib.quote(bname, safe='')),
-                             'name' : bname})
-                      
-        template = req.site.buildbot_service.templates.get_template('builders.html')
-        return template.render(ctx)
+        builders = req.args.get("builder", status.getBuilderNames())
+        branches = [b for b in req.args.get("branch", []) if b]
 
+        cxt['branches'] = branches
+        bs = cxt['builders'] = []
+        
+        building = 0
+        online = 0
+        base_builders_url = path_to_root(req) + "builders/"
+        for bn in builders:
+            bld = { 'link': base_builders_url + urllib.quote(bn, safe=''),
+                    'name': bn }
+            bs.append(bld)
+
+            builder = status.getBuilder(bn)
+            builds = list(builder.generateFinishedBuilds(map_branches(branches),
+                                                         num_builds=1))
+            if builds:
+                b = builds[0]
+                bld['build_url'] = (bld['link'] + "/builds/%d" % b.getNumber())
+                try:
+                    label = b.getProperty("got_revision")
+                except KeyError:
+                    label = None
+                if not label or len(str(label)) > 20:
+                    label = "#%d" % b.getNumber()
+                
+                bld['build_label'] = label
+                bld['build_text'] = " ".join(b.getText())
+                bld['build_css_class'] = build_get_class(b)
+
+            current_box = ICurrentBox(builder).getBox(status)
+            bld['current_box'] = current_box.td()
+
+            builder_status = builder.getState()[0]
+            if builder_status == "building":
+                building += 1
+                online += 1
+            elif builder_status != "offline":
+                online += 1
+                
+        cxt['authz'] = self.getAuthz(req)
+        cxt['num_building'] = online
+        cxt['num_online'] = online
+
+        template = req.site.buildbot_service.templates.get_template("builders.html")
+        return template.render(**cxt)
+    
     def getChild(self, path, req):
         s = self.getStatus(req)
         if path in s.getBuilderNames():

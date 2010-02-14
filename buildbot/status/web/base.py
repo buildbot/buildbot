@@ -4,6 +4,7 @@ import os, cgi, sys
 import jinja2
 from zope.interface import Interface
 from twisted.web import resource, static
+from twisted.web.static import redirectTo
 from twisted.python import log
 from buildbot.status import builder
 from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE, SKIPPED, EXCEPTION
