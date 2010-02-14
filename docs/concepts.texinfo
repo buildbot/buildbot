@@ -4,7 +4,7 @@ configure it properly.
 
 @menu
 * Version Control Systems::
-* Schedulers::
+* Scheduling Builds::
 * BuildSet::
 * BuildRequest::
 * Builder::
@@ -386,8 +386,8 @@ provides more detail for this Change, perhaps including the full file
 diffs.
 
 
-@node Schedulers
-@section Schedulers
+@node Scheduling Builds
+@section Scheduling Builds
 
 @cindex Scheduler
 

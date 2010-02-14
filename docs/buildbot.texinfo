@@ -54,7 +54,6 @@ provided the copyright notice and this notice are preserved.
 * Installation::                Installing and setting up a Builbot system
 * Concepts::                    What goes on in the buildbot's little mind.
 * Configuration::               Controlling the buildbot.
-* Getting Source Code Changes::  Discovering when to run a build.
 * Build Process::               Controlling how each build is run.
 * Status Delivery::             Telling the world about the build's results.
 * Command-line Tool::           The 'buildbot' utility
@@ -80,10 +79,6 @@ provided the copyright notice and this notice are preserved.
 @node Configuration
 @chapter Configuration
 @include configuration.texinfo
-
-@node Getting Source Code Changes
-@chapter Getting Source Code Changes
-@include changesources.texinfo
 
 @node Build Process
 @chapter Build Process
@@ -131,18 +126,7 @@ available in the API documentation at
 @node Index of master.cfg keys
 @unnumbered Index of master.cfg keys
 
-This is a list of all of the significant keys in @code{master.cfg}. Recall that
-@code{master.cfg} is effectively a small python program with exactly one
-responsibility: create a dictionary named @code{BuildmasterConfig}.  The keys
-of this dictionary are listed here. The beginning of the master.cfg file
-typically starts with something like:
-
-@example
-BuildmasterConfig = c = @{@}
-@end example
-
-Therefore a config key of @code{change_source} will usually appear in
-master.cfg as @code{c['change_source']}.
+This is a list of all of the significant keys in @code{master.cfg}'s @code{BuildmasterConfig}.
 
 @printindex bc
 

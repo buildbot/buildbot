@@ -19,10 +19,13 @@ understand how to fill in each section properly.
 
 @menu
 * Config File Format::
+* Predefined Config File Symbols::
 * Loading the Config File::
 * Testing the Config File::
-* Defining the Project::
-* Change Sources and Schedulers::
+* Project Definitions::
+* Global Configuration::
+* Change Sources::
+* Schedulers::
 * Merging BuildRequests::
 * Prioritizing Builders::
 * Setting the slaveport::
@@ -54,39 +57,39 @@ actions necessary to bring the buildbot up to date: Builders which are
 not changed are left untouched, and Builders which are modified get to
 keep their old event history.
 
-Basic Python syntax: comments start with a hash character (``#''),
-tuples are defined with @code{(parenthesis, pairs)}, arrays are
-defined with @code{[square, brackets]}, tuples and arrays are mostly
-interchangeable. Dictionaries (data structures which map ``keys'' to
-``values'') are defined with curly braces: @code{@{'key1': 'value1',
-'key2': 'value2'@} }. Function calls (and object instantiation) can use
-named parameters, like @code{w = html.Waterfall(http_port=8010)}.
+The beginning of the master.cfg file
+typically starts with something like:
 
-The config file starts with a series of @code{import} statements,
-which make various kinds of Steps and Status targets available for
-later use. The main @code{BuildmasterConfig} dictionary is created,
-then it is populated with a variety of keys. These keys are broken
-roughly into the following sections, each of which is documented in
-the rest of this chapter:
+@example
+BuildmasterConfig = c = @{@}
+@end example
 
-@itemize @bullet
-@item
-Project Definitions
-@item
-Change Sources / Schedulers
-@item
-Slaveport
-@item
-Buildslave Configuration
-@item
-Builders / Interlocks
-@item
-Status Targets
-@item
-Debug options
-@end itemize
+Therefore a config key of @code{change_source} will usually appear in
+master.cfg as @code{c['change_source']}.
 
-The config file can use a few names which are placed into its namespace:
+See @ref{Index of master.cfg keys} for a full list of @code{BuildMasterConfig}
+keys.
+
+@heading Basic Python Syntax
+
+Python comments start with a hash character (``#''), tuples are defined with
+@code{(parenthesis, pairs)}, and lists (arrays) are defined with @code{[square,
+brackets]}. Tuples and listsk are mostly interchangeable. Dictionaries (data
+structures which map ``keys'' to ``values'') are defined with curly braces:
+@code{@{'key1': 'value1', 'key2': 'value2'@} }. Function calls (and object
+instantiation) can use named parameters, like @code{w =
+html.Waterfall(http_port=8010)}.
+
+The config file starts with a series of @code{import} statements, which make
+various kinds of Steps and Status targets available for later use. The main
+@code{BuildmasterConfig} dictionary is created, then it is populated with a
+variety of keys, described section-by-section in subsequent chapters. 
+
+@node Predefined Config File Symbols
+@section Predefined Config File Symbols
+
+The following symbols are automatically available for use in the configuration
+file.
 
 @table @code
 @item basedir
@@ -94,9 +97,7 @@ the base directory for the buildmaster. This string has not been
 expanded, so it may start with a tilde. It needs to be expanded before
 use. The config file is located in
 @code{os.path.expanduser(os.path.join(basedir, 'master.cfg'))}
-
 @end table
-
 
 @node Loading the Config File
 @section Loading the Config File
@@ -178,8 +179,8 @@ NameError: name 'bogus' is not defined
 @end example
 
 
-@node Defining the Project
-@section Defining the Project
+@node Project Definitions
+@section Project Definitions
 
 There are a couple of basic settings that you use to tell the buildbot
 what project it is working on. This information is used by status
@@ -204,11 +205,10 @@ whole. HTML status displays will show @code{projectName} as a link to
 project's home page.
 
 @bcindex c['buildbotURL']
-The @code{buildbotURL} string should point to the location where the
-buildbot's internal web server (usually the @code{html.Waterfall}
-page) is visible. This typically uses the port number set when you
-create the @code{Waterfall} object: the buildbot needs your help to
-figure out a suitable externally-visible host name.
+The @code{buildbotURL} string should point to the location where the buildbot's
+internal web server is visible. This typically uses the port number set when
+you create the @code{Waterfall} object: the buildbot needs your help to figure
+out a suitable externally-visible host name.
 
 When status notices are sent to users (either by email or over IRC),
 @code{buildbotURL} will be used to create a URL to the specific build
@@ -216,10 +216,22 @@ or problem that they are being notified about. It will also be made
 available to queriers (over IRC) who want to find out where to get
 more information about this buildbot.
 
+@node Global Configuration
+@section Global Configuration
+
+The keys in this section affect the operations of the buildmaster globally.
+
+@example
+c['logCompressionLimit'] = 16384
+c['logCompressionMethod'] = 'gz'
+c['logMaxSize'] = 1024*1024 # 1M
+c['logMaxTailSize'] = 32768
+@end example
+
 @bcindex c['logCompressionLimit']
 The @code{logCompressionLimit} enables compression of build logs on
 disk for logs that are bigger than the given size, or disables that
-completely if given @code{False}. The default value is 4k, which should
+completely if set to @code{False}. The default value is 4k, which should
 be a reasonable default on most file systems. This setting has no impact
 on status plugins, and merely affects the required disk space on the
 master for build logs.
@@ -244,37 +256,22 @@ contain the first @code{logMaxSize} bytes and the last @code{logMaxTailSize}
 bytes of output.  Don't set this value too high, as the the tail of the log is
 kept in memory.
 
-@node Change Sources and Schedulers
-@section Change Sources and Schedulers
-
-@bcindex c['sources']
-@bcindex c['change_source']
-
-The @code{c['change_source']} key is the ChangeSource
-instance@footnote{To be precise, it is an object or a list of objects
-which all implement the @code{buildbot.interfaces.IChangeSource}
-Interface. It is unusual to have multiple ChangeSources, so this key
-accepts either a single ChangeSource or a sequence of them.} that
-defines how the buildmaster learns about source code changes. More
-information about what goes here is available in @xref{Getting Source
-Code Changes}.
-
-@example
-from buildbot.changes.pb import PBChangeSource
-c['change_source'] = PBChangeSource()
-@end example
-
-(note: in buildbot-0.7.5 and earlier, this key was named
-@code{c['sources']}, and required a list. @code{c['sources']} is
-deprecated as of buildbot-0.7.6 and is scheduled to be removed in a
-future release).
-
 @bcindex c['changeHorizon']
 
 The @code{c['changeHorizon']} key determines how many changes the master will
 keep a record of. One place these changes are displayed is on the waterfall
 page.  This parameter defaults to 0, which means keep all changes indefinitely.
 
+@c the remainder of this chapter is made up of other files, each of which acts
+@c as if it was at the chapter level; the @lowersections/@raisesections make all
+@c of this work out
+
+@node Change Sources
+@section Change Sources
+@include cfg-changesources.texinfo
+
+@node Schedulers
+@section Schedulers
 
 @bcindex c['schedulers']
 @code{c['schedulers']} is a list of Scheduler instances, each

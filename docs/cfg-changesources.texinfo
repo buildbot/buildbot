@@ -1,12 +1,3 @@
-The most common way to use the Buildbot is centered around the idea of
-@code{Source Trees}: a directory tree filled with source code of some form
-which can be compiled and/or tested. Some projects use languages that don't
-involve any compilation step: nevertheless there may be a @code{build} phase
-where files are copied or rearranged into a form that is suitable for
-installation. Some projects do not have unit tests, and the Buildbot is
-merely helping to make sure that the sources can compile correctly. But in
-all of these cases, the thing-being-tested is a single source tree.
-
 A Version Control System mantains a source tree, and tells the
 buildmaster when it changes. The first step of each Build is typically
 to acquire a copy of some version of this tree.
@@ -15,64 +6,32 @@ This chapter describes how the Buildbot learns about what Changes have
 occurred. For more information on VC systems and Changes, see
 @ref{Version Control Systems}.
 
+Changes can be provided by a variety of ChangeSource types, although any given
+project will typically have only a single ChangeSource active. This section
+provides a description of all available ChangeSource types and explains how to
+set up each of them.
+
+In general, each Buildmaster watches a single source tree.  It is possible to
+work around this, but true support for multi-tree builds remains elusive.
 
 @menu
-* Change Sources::
-* Choosing ChangeSources::
+* Choosing a Change Source::
+* Configuring Change Sources::
 * CVSToys - PBService::
 * Mail-parsing ChangeSources::
 * PBChangeSource::
 * P4Source::
 * BonsaiPoller::
 * SVNPoller::
-* MercurialHook::
-* Bzr Hook::
 * Bzr Poller::
 @end menu
 
-
-
-@node Change Sources
-@section Change Sources
-
-@c TODO: rework this, the one-buildmaster-one-tree thing isn't quite
-@c so narrow-minded anymore
-
-Each Buildmaster watches a single source tree. Changes can be provided
-by a variety of ChangeSource types, however any given project will
-typically have only a single ChangeSource active. This section
-provides a description of all available ChangeSource types and
-explains how to set up each of them.
+@node Choosing a Change Source
+@subsection Choosing a Change Source
 
 There are a variety of ChangeSources available, some of which are
 meant to be used in conjunction with other tools to deliver Change
 events from the VC repository to the buildmaster.
-
-@itemize @bullet
-
-@item CVSToys
-This ChangeSource opens a TCP connection from the buildmaster to a
-waiting FreshCVS daemon that lives on the repository machine, and
-subscribes to hear about Changes.
-
-@item MaildirSource
-This one watches a local maildir-format inbox for email sent out by
-the repository when a change is made. When a message arrives, it is
-parsed to create the Change object. A variety of parsing functions are
-available to accomodate different email-sending tools.
-
-@item PBChangeSource
-This ChangeSource listens on a local TCP socket for inbound
-connections from a separate tool. Usually, this tool would be run on
-the VC repository machine in a commit hook. It is expected to connect
-to the TCP socket and send a Change message over the network
-connection. The @command{buildbot sendchange} command is one example
-of a tool that knows how to send these messages, so you can write a
-commit script for your VC system that calls it to deliver the Change.
-There are other tools in the contrib/ directory that use the same
-protocol.
-
-@end itemize
 
 As a quick guide, here is a list of VC systems and the ChangeSources
 that might be useful with them. All of these ChangeSources are in the
@@ -145,9 +104,11 @@ All VC systems can be driven by a PBChangeSource and the
 If you write an email parsing function, they can also all be driven by
 a suitable @code{MaildirSource}.
 
+@node Configuring Change Sources
+@subsection Configuring Change Sources
 
-@node Choosing ChangeSources
-@section Choosing ChangeSources
+@bcindex c['sources']
+@bcindex c['change_source']
 
 The @code{master.cfg} configuration file has a dictionary key named
 @code{BuildmasterConfig['change_source']}, which holds the active
@@ -158,13 +119,13 @@ key.
 Each buildmaster typically has just a single ChangeSource, since it is
 only watching a single source tree. But if, for some reason, you need
 multiple sources, just set @code{c['change_source']} to a list of
-ChangeSources.. it will accept that too.
+ChangeSources.
 
 @example
 s = FreshCVSSourceNewcred(host="host", port=4519,
                           user="alice", passwd="secret",
                           prefix="Twisted")
-BuildmasterConfig['change_source'] = [s]
+c['change_source'] = [s]
 @end example
 
 Each source tree has a nominal @code{top}. Each Change has a list of
@@ -176,11 +137,11 @@ that @code{ChangeSource}. Files which are outside this sub-tree are
 ignored by the changesource: it does not generate Changes for those
 files.
 
-
 @node CVSToys - PBService
-@section CVSToys - PBService
+@subsection CVSToys - PBService
 
 @csindex buildbot.changes.freshcvs.FreshCVSSource
+@csindex buildbot.changes.freshcvs.FreshCVSSourceOldcred
 
 The @uref{http://purl.net/net/CVSToys, CVSToys} package provides a
 server which runs on the machine that hosts the CVS repository it
@@ -190,14 +151,14 @@ changes. One of the notification options is named @code{PBService} and
 works by listening on a TCP port for clients. These clients subscribe
 to hear about commit notifications.
 
-The buildmaster has a CVSToys-compatible @code{PBService} client built
-in. There are two versions of it, one for old versions of CVSToys
-(1.0.9 and earlier) which used the @code{oldcred} authentication
-framework, and one for newer versions (1.0.10 and later) which use
-@code{newcred}. Both are classes in the
-@code{buildbot.changes.freshcvs} package.
+The buildmaster has a CVSToys-compatible @code{PBService} client built in.
+There are two versions of it, one for old versions of CVSToys (1.0.9 and
+earlier, @code{FreshCVSSourceOldcred}) which used the @code{oldcred}
+authentication framework, and one for newer versions (1.0.10 and later) which
+use @code{newcred}. Both are classes in the @code{buildbot.changes.freshcvs}
+package.
 
-@code{FreshCVSSourceNewcred} objects are created with the following
+@code{FreshCVSSource} objects are created with the following
 parameters:
 
 @table @samp
@@ -236,9 +197,9 @@ using a username of 'foo' and a password of 'bar'.
 Then add a clause like this to your buildmaster's @file{master.cfg}:
 
 @example
-BuildmasterConfig['change_source'] = FreshCVSSource("cvs.example.com", 4519,
-                                                    "foo", "bar",
-                                                    prefix="glib/")
+c['change_source'] = FreshCVSSource("cvs.example.com", 4519,
+                                    "foo", "bar",
+                                    prefix="glib/")
 @end example
 
 where "cvs.example.com" is the host that is running the FreshCVS daemon, and
@@ -251,7 +212,7 @@ it handles.
 
 
 @node Mail-parsing ChangeSources
-@section Mail-parsing ChangeSources
+@subsection Mail-parsing ChangeSources
 
 Many projects publish information about changes to their source tree
 by sending an email message out to a mailing list, frequently named
@@ -266,8 +227,7 @@ buildmaster admin needs to arrange for these email messages to arrive
 in a place where the buildmaster can find them, and configure the
 buildmaster to parse the messages correctly. Once that is in place,
 the email parser will create Change objects and deliver them to the
-Schedulers (see @pxref{Change Sources and Schedulers}) just
-like any other ChangeSource.
+Schedulers (see @pxref{Schedulers}) just like any other ChangeSource.
 
 There are two components to setting up an email-based ChangeSource.
 The first is to route the email messages to the buildmaster, which is
@@ -291,10 +251,15 @@ c['change_source'] = SyncmailMaildirSource("~/maildir-buildbot",
 * Subscribing the Buildmaster::
 * Using Maildirs::
 * Parsing Email Change Messages::
+* FCMaildirSource::
+* SyncmailMaildirSource::
+* BonsaiMaildirSource::
+* SVNCommitEmailMaildirSource::
+* BzrLaunchpadEmailMaildirSource::
 @end menu
 
 @node Subscribing the Buildmaster
-@subsection Subscribing the Buildmaster
+@subsubsection Subscribing the Buildmaster
 
 The recommended way to install the buildbot is to create a dedicated
 account for the buildmaster. If you do this, the account will probably
@@ -321,7 +286,7 @@ Thus you can assign an extension address like
 
 
 @node Using Maildirs
-@subsection Using Maildirs
+@subsubsection Using Maildirs
 
 A ``maildir'' is a simple directory structure originally developed for
 qmail that allows safe atomic update without locking. Create a base
@@ -353,7 +318,7 @@ this facility is not available, it polls the directory for new
 messages, every 10 seconds by default.
 
 @node Parsing Email Change Messages
-@subsection Parsing Email Change Messages
+@subsubsection Parsing Email Change Messages
 
 The second component to setting up an email-based ChangeSource is to
 parse the actual notices. This is highly dependent upon the VC system
@@ -361,7 +326,7 @@ and commit script in use.
 
 A couple of common tools used to create these change emails are:
 
-@table @samp
+@table @b
 
 @item CVS
 @table @samp
@@ -414,14 +379,6 @@ the prefix: if the filename does not start with the prefix, the file
 is ignored. If the filename @emph{does} start with the prefix, that
 prefix is stripped from the filename before any further processing is
 done. Thus the prefix usually ends with a slash.
-
-@menu
-* FCMaildirSource::
-* SyncmailMaildirSource::
-* BonsaiMaildirSource::
-* SVNCommitEmailMaildirSource::
-* BzrLaunchpadEmailMaildirSource::
-@end menu
 
 @node FCMaildirSource
 @subsubsection FCMaildirSource
@@ -532,7 +489,7 @@ c['change_source'] = BzrLaunchpadEmailMaildirSource("~/maildir-buildbot", branch
 
 
 @node PBChangeSource
-@section PBChangeSource
+@subsection PBChangeSource
 
 @csindex buildbot.changes.pb.PBChangeSource
 
@@ -601,8 +558,169 @@ stripping prefixes at the sending end.
 
 @end table
 
+The following hooks are useful for sending changes to a PBChangeSource:
+
+@menu
+* Mercurial Hook::
+* Bzr Hook::
+@end menu
+
+@node Mercurial Hook
+@subsubsection Mercurial Hook
+
+Since Mercurial is written in python, the hook script can invoke
+Buildbot's @code{sendchange} function directly, rather than having to
+spawn an external process. This function delivers the same sort of
+changes as @code{buildbot sendchange} and the various hook scripts in
+contrib/, so you'll need to add a @code{pb.PBChangeSource} to your
+buildmaster to receive these changes.
+
+To set this up, first choose a Mercurial repository that represents
+your central ``official'' source tree. This will be the same
+repository that your buildslaves will eventually pull from. Install
+Buildbot on the machine that hosts this repository, using the same
+version of python as Mercurial is using (so that the Mercurial hook
+can import code from buildbot). Then add the following to the
+@code{.hg/hgrc} file in that repository, replacing the buildmaster
+hostname/portnumber as appropriate for your buildbot:
+
+@example
+[hooks]
+changegroup.buildbot = python:buildbot.changes.hgbuildbot.hook
+
+[hgbuildbot]
+master = buildmaster.example.org:9987
+@end example
+
+(Note that Mercurial lets you define multiple @code{changegroup} hooks
+by giving them distinct names, like @code{changegroup.foo} and
+@code{changegroup.bar}, which is why we use
+@code{changegroup.buildbot} in this example. There is nothing magical
+about the ``buildbot'' suffix in the hook name. The
+@code{[hgbuildbot]} section @emph{is} special, however, as it is the
+only section that the buildbot hook pays attention to.)
+
+Also note that this runs as a @code{changegroup} hook, rather than as
+an @code{incoming} hook. The @code{changegroup} hook is run with
+multiple revisions at a time (say, if multiple revisions are being
+pushed to this repository in a single @command{hg push} command),
+whereas the @code{incoming} hook is run with just one revision at a
+time. The @code{hgbuildbot.hook} function will only work with the
+@code{changegroup} hook.
+
+The @code{[hgbuildbot]} section has two other parameters that you
+might specify, both of which control the name of the branch that is
+attached to the changes coming from this hook.
+
+One common branch naming policy for Mercurial repositories is to use
+it just like Darcs: each branch goes into a separate repository, and
+all the branches for a single project share a common parent directory.
+For example, you might have @file{/var/repos/PROJECT/trunk/} and
+@file{/var/repos/PROJECT/release}. To use this style, use the
+@code{branchtype = dirname} setting, which simply uses the last
+component of the repository's enclosing directory as the branch name:
+
+@example
+[hgbuildbot]
+master = buildmaster.example.org:9987
+branchtype = dirname
+@end example
+
+Another approach is to use Mercurial's built-in branches (the kind
+created with @command{hg branch} and listed with @command{hg
+branches}). This feature associates persistent names with particular
+lines of descent within a single repository. (note that the buildbot
+@code{source.Mercurial} checkout step does not yet support this kind
+of branch). To have the commit hook deliver this sort of branch name
+with the Change object, use @code{branchtype = inrepo}:
+
+@example
+[hgbuildbot]
+master = buildmaster.example.org:9987
+branchtype = inrepo
+@end example
+
+Finally, if you want to simply specify the branchname directly, for
+all changes, use @code{branch = BRANCHNAME}. This overrides
+@code{branchtype}:
+
+@example
+[hgbuildbot]
+master = buildmaster.example.org:9987
+branch = trunk
+@end example
+
+If you use @code{branch=} like this, you'll need to put a separate
+.hgrc in each repository. If you use @code{branchtype=}, you may be
+able to use the same .hgrc for all your repositories, stored in
+@file{~/.hgrc} or @file{/etc/mercurial/hgrc}.
+
+
+@node Bzr Hook
+@subsubsection Bzr Hook
+
+Bzr is also written in Python, and the Bzr hook depends on Twisted to send the
+changes.
+
+To install, put @code{contrib/bzr_buildbot.py} in one of your plugins
+locations a bzr plugins directory (e.g.,
+@code{~/.bazaar/plugins}). Then, in one of your bazaar conf files (e.g.,
+@code{~/.bazaar/locations.conf}), set the location you want to connect with buildbot
+with these keys:
+
+@table @code
+@item buildbot_on
+one of 'commit', 'push, or 'change'. Turns the plugin on to report changes via
+commit, changes via push, or any changes to the trunk. 'change' is
+recommended.
+
+@item buildbot_server
+(required to send to a buildbot master) the URL of the buildbot master to
+which you will connect (as of this writing, the same server and port to which
+slaves connect).
+
+@item buildbot_port
+(optional, defaults to 9989) the port of the buildbot master to which you will
+connect (as of this writing, the same server and port to which slaves connect)
+
+@item buildbot_pqm
+(optional, defaults to not pqm) Normally, the user that commits the revision
+is the user that is responsible for the change. When run in a pqm (Patch Queue
+Manager, see https://launchpad.net/pqm) environment, the user that commits is
+the Patch Queue Manager, and the user that committed the *parent* revision is
+responsible for the change. To turn on the pqm mode, set this value to any of
+(case-insensitive) "Yes", "Y", "True", or "T".
+
+@item buildbot_dry_run
+(optional, defaults to not a dry run) Normally, the post-commit hook will
+attempt to communicate with the configured buildbot server and port. If this
+parameter is included and any of (case-insensitive) "Yes", "Y", "True", or
+"T", then the hook will simply print what it would have sent, but not attempt
+to contact the buildbot master.
+
+@item buildbot_send_branch_name
+(optional, defaults to not sending the branch name) If your buildbot's bzr
+source build step uses a repourl, do *not* turn this on. If your buildbot's
+bzr build step uses a baseURL, then you may set this value to any of
+(case-insensitive) "Yes", "Y", "True", or "T" to have the buildbot master
+append the branch name to the baseURL.
+
+@end table
+
+When buildbot no longer has a hardcoded password, it will be a configuration
+option here as well.
+
+Here's a simple example that you might have in your
+@code{~/.bazaar/locations.conf}.
+
+@example
+[chroot-*:///var/local/myrepo/mybranch]
+buildbot_on = change
+buildbot_server = localhost
+@end example
+
 @node P4Source
-@section P4Source
+@subsection P4Source
 
 @csindex buildbot.changes.p4poller.P4Source
 
@@ -658,7 +776,7 @@ c['change_source'] = s
 @end example
 
 @node BonsaiPoller
-@section BonsaiPoller
+@subsection BonsaiPoller
 
 @csindex buildbot.changes.bonsaipoller.BonsaiPoller
 
@@ -675,7 +793,7 @@ arguments it accepts.
 
 
 @node SVNPoller
-@section SVNPoller
+@subsection SVNPoller
 
 @csindex buildbot.changes.svnpoller.SVNPoller
 
@@ -953,162 +1071,8 @@ def my_file_splitter(path):
     return (branch, '/'.join(pieces))
 @end example
 
-@node MercurialHook
-@section MercurialHook
-
-Since Mercurial is written in python, the hook script can invoke
-Buildbot's @code{sendchange} function directly, rather than having to
-spawn an external process. This function delivers the same sort of
-changes as @code{buildbot sendchange} and the various hook scripts in
-contrib/, so you'll need to add a @code{pb.PBChangeSource} to your
-buildmaster to receive these changes.
-
-To set this up, first choose a Mercurial repository that represents
-your central ``official'' source tree. This will be the same
-repository that your buildslaves will eventually pull from. Install
-Buildbot on the machine that hosts this repository, using the same
-version of python as Mercurial is using (so that the Mercurial hook
-can import code from buildbot). Then add the following to the
-@code{.hg/hgrc} file in that repository, replacing the buildmaster
-hostname/portnumber as appropriate for your buildbot:
-
-@example
-[hooks]
-changegroup.buildbot = python:buildbot.changes.hgbuildbot.hook
-
-[hgbuildbot]
-master = buildmaster.example.org:9987
-@end example
-
-(Note that Mercurial lets you define multiple @code{changegroup} hooks
-by giving them distinct names, like @code{changegroup.foo} and
-@code{changegroup.bar}, which is why we use
-@code{changegroup.buildbot} in this example. There is nothing magical
-about the ``buildbot'' suffix in the hook name. The
-@code{[hgbuildbot]} section @emph{is} special, however, as it is the
-only section that the buildbot hook pays attention to.)
-
-Also note that this runs as a @code{changegroup} hook, rather than as
-an @code{incoming} hook. The @code{changegroup} hook is run with
-multiple revisions at a time (say, if multiple revisions are being
-pushed to this repository in a single @command{hg push} command),
-whereas the @code{incoming} hook is run with just one revision at a
-time. The @code{hgbuildbot.hook} function will only work with the
-@code{changegroup} hook.
-
-The @code{[hgbuildbot]} section has two other parameters that you
-might specify, both of which control the name of the branch that is
-attached to the changes coming from this hook.
-
-One common branch naming policy for Mercurial repositories is to use
-it just like Darcs: each branch goes into a separate repository, and
-all the branches for a single project share a common parent directory.
-For example, you might have @file{/var/repos/PROJECT/trunk/} and
-@file{/var/repos/PROJECT/release}. To use this style, use the
-@code{branchtype = dirname} setting, which simply uses the last
-component of the repository's enclosing directory as the branch name:
-
-@example
-[hgbuildbot]
-master = buildmaster.example.org:9987
-branchtype = dirname
-@end example
-
-Another approach is to use Mercurial's built-in branches (the kind
-created with @command{hg branch} and listed with @command{hg
-branches}). This feature associates persistent names with particular
-lines of descent within a single repository. (note that the buildbot
-@code{source.Mercurial} checkout step does not yet support this kind
-of branch). To have the commit hook deliver this sort of branch name
-with the Change object, use @code{branchtype = inrepo}:
-
-@example
-[hgbuildbot]
-master = buildmaster.example.org:9987
-branchtype = inrepo
-@end example
-
-Finally, if you want to simply specify the branchname directly, for
-all changes, use @code{branch = BRANCHNAME}. This overrides
-@code{branchtype}:
-
-@example
-[hgbuildbot]
-master = buildmaster.example.org:9987
-branch = trunk
-@end example
-
-If you use @code{branch=} like this, you'll need to put a separate
-.hgrc in each repository. If you use @code{branchtype=}, you may be
-able to use the same .hgrc for all your repositories, stored in
-@file{~/.hgrc} or @file{/etc/mercurial/hgrc}.
-
-
-@node Bzr Hook
-@section Bzr Hook
-
-Bzr is also written in Python, and the Bzr hook depends on Twisted to send the
-changes.
-
-To install, put @code{contrib/bzr_buildbot.py} in one of your plugins
-locations a bzr plugins directory (e.g.,
-@code{~/.bazaar/plugins}). Then, in one of your bazaar conf files (e.g.,
-@code{~/.bazaar/locations.conf}), set the location you want to connect with buildbot
-with these keys:
-
-@table @code
-@item buildbot_on
-one of 'commit', 'push, or 'change'. Turns the plugin on to report changes via
-commit, changes via push, or any changes to the trunk. 'change' is
-recommended.
-
-@item buildbot_server
-(required to send to a buildbot master) the URL of the buildbot master to
-which you will connect (as of this writing, the same server and port to which
-slaves connect).
-
-@item buildbot_port
-(optional, defaults to 9989) the port of the buildbot master to which you will
-connect (as of this writing, the same server and port to which slaves connect)
-
-@item buildbot_pqm
-(optional, defaults to not pqm) Normally, the user that commits the revision
-is the user that is responsible for the change. When run in a pqm (Patch Queue
-Manager, see https://launchpad.net/pqm) environment, the user that commits is
-the Patch Queue Manager, and the user that committed the *parent* revision is
-responsible for the change. To turn on the pqm mode, set this value to any of
-(case-insensitive) "Yes", "Y", "True", or "T".
-
-@item buildbot_dry_run
-(optional, defaults to not a dry run) Normally, the post-commit hook will
-attempt to communicate with the configured buildbot server and port. If this
-parameter is included and any of (case-insensitive) "Yes", "Y", "True", or
-"T", then the hook will simply print what it would have sent, but not attempt
-to contact the buildbot master.
-
-@item buildbot_send_branch_name
-(optional, defaults to not sending the branch name) If your buildbot's bzr
-source build step uses a repourl, do *not* turn this on. If your buildbot's
-bzr build step uses a baseURL, then you may set this value to any of
-(case-insensitive) "Yes", "Y", "True", or "T" to have the buildbot master
-append the branch name to the baseURL.
-
-@end table
-
-When buildbot no longer has a hardcoded password, it will be a configuration
-option here as well.
-
-Here's a simple example that you might have in your
-@code{~/.bazaar/locations.conf}.
-
-@example
-[chroot-*:///var/local/myrepo/mybranch]
-buildbot_on = change
-buildbot_server = localhost
-@end example
-
 @node Bzr Poller
-@section Bzr Poller
+@subsection Bzr Poller
 
 If you cannot insert a Bzr hook in the server, you can use the Bzr Poller. To
 use, put @code{contrib/bzr_buildbot.py} somewhere that your buildbot
