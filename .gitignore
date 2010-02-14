@@ -30,3 +30,5 @@ docs/images/status.png
 twisted/
 docs/buildbot
 docs/version.texinfo
+docs/docs.tgz
+docs/latest
