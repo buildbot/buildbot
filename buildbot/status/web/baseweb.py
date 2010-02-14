@@ -35,48 +35,6 @@ from buildbot.status.web.root import RootPage
 # admin might wish to attach (using WebStatus.putChild) at other URLs.
 
 
-class LastBuild(HtmlResource):
-    def context(self, request, context):
-        context['content'] = "missing"
-        template = request.site.buildbot_service.templates.get_template("empty.html")
-        return template.render(**context)
-
-def getLastNBuilds(status, numbuilds, builders=[], branches=[]):
-    """Return a list with the last few Builds, sorted by start time.
-    builder_names=None means all builders
-    """
-
-    # TODO: this unsorts the list of builder names, ick
-    builder_names = set(status.getBuilderNames())
-    if builders:
-        builder_names = builder_names.intersection(set(builders))
-
-    # to make sure that we get everything, we must get 'numbuilds' builds
-    # from *each* source, then sort by ending time, then trim to the last
-    # 20. We could be more efficient, but it would require the same
-    # gnarly code that the Waterfall uses to generate one event at a
-    # time. TODO: factor that code out into some useful class.
-    events = []
-    for builder_name in builder_names:
-        builder = status.getBuilder(builder_name)
-        for build_number in count(1):
-            if build_number > numbuilds:
-                break # enough from this builder, move on to another
-            build = builder.getBuild(-build_number)
-            if not build:
-                break # no more builds here, move on to the next builder
-            #if not build.isFinished():
-            #    continue
-            (build_start, build_end) = build.getTimes()
-            event = (build_start, builder_name, build)
-            events.append(event)
-    def _sorter(a, b):
-        return cmp( a[:2], b[:2] )
-    events.sort(_sorter)
-    # now only return the actual build, and only return some of them
-    return [e[2] for e in events[-numbuilds:]]
-
-
 # /one_line_per_build
 #  accepts builder=, branch=, numbuilds=, reload=
 class OneLinePerBuild(HtmlResource, BuildLineMixin):
