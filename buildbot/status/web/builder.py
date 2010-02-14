@@ -209,26 +209,6 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
             return self.force(req)
         if path == "ping":
             return self.ping(req)
-        if path == "events":
-            num = req.postpath.pop(0)
-            req.prepath.append(num)
-            num = int(num)
-            # TODO: is this dead code? .statusbag doesn't exist,right?
-            log.msg("getChild['path']: %s" % req.uri)
-            return NoResource("events are unavailable until code gets fixed")
-            filename = req.postpath.pop(0)
-            req.prepath.append(filename)
-            e = self.builder_status.getEventNumbered(num)
-            if not e:
-                return NoResource("No such event '%d'" % num)
-            file = e.files.get(filename, None)
-            if file == None:
-                return NoResource("No such file '%s'" % filename)
-            if type(file) == type(""):
-                if file[:6] in ("<HTML>", "<html>"):
-                    return static.Data(file, "text/html")
-                return static.Data(file, "text/plain")
-            return file
         if path == "cancelbuild":
             return self.cancel(req)
         if path == "builds":
