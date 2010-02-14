@@ -8,11 +8,10 @@ class XMLRPCServer(xmlrpc.XMLRPC):
         xmlrpc.XMLRPC.__init__(self)
 
     def render(self, req):
-        # extract the IStatus and IControl objects for later use, since they
-        # come from the request object. They'll be the same each time, but
-        # they aren't available until the first request arrives.
+        # extract the IStatus object for later use, since it comes from the
+        # request object. It'll be the same each time, but it isn't available
+        # until the first request arrives.
         self.status = req.site.buildbot_service.getStatus()
-        self.control = req.site.buildbot_service.getControl()
         return xmlrpc.XMLRPC.render(self, req)
 
     def xmlrpc_getAllBuilders(self):

@@ -21,8 +21,11 @@ class OneBuildSlaveResource(HtmlResource, BuildLineMixin):
     def getChild(self, path, req):
         s = self.getStatus(req)
         slave = s.getSlave(self.slavename)
-        if path == "shutdown" and self.getControl(req):
-            slave.setGraceful(True)
+        if path == "shutdown":
+            if self.getAuthz(req).actionAllowed("gracefulShutdown", req, slave):
+                slave.setGraceful(True)
+            else:
+                return Redirect("../../authfail")
         return Redirect(path_to_slave(req, slave))
 
     def content(self, request, ctx):        
@@ -61,7 +64,7 @@ class OneBuildSlaveResource(HtmlResource, BuildLineMixin):
                         current = current_builds, 
                         recent = recent_builds, 
                         shutdown_url = request.childLink("shutdown"),
-                        control = self.getControl(request),
+                        authz = self.getAuthz(request),
                         this_url = "../../../" + path_to_slave(request, slave),
                         access_uri = slave.getAccessURI()),
                         admin = unicode(slave.getAdmin() or '', 'utf-8'),

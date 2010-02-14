@@ -25,7 +25,8 @@ from buildbot.status.web.slaves import BuildSlavesResource
 from buildbot.status.web.status_json import JsonStatusResource
 from buildbot.status.web.xmlrpc import XMLRPCServer
 from buildbot.status.web.about import AboutBuildbot
-from buildbot.status.web.auth import IAuth, AuthFailResource
+from buildbot.status.web.authz import Authz
+from buildbot.status.web.auth import AuthFailResource
 from buildbot.status.web.root import RootPage
 
 # this class contains the status services (WebStatus and the older Waterfall)
@@ -110,7 +111,6 @@ class OneLinePerBuild(HtmlResource, BuildLineMixin):
 
     def content(self, req, cxt):
         status = self.getStatus(req)
-        control = self.getControl(req)
         numbuilds = int(req.args.get("numbuilds", [self.numbuilds])[0])
         builders = req.args.get("builder", [])
         branches = [b for b in req.args.get("branch", []) if b]
@@ -124,8 +124,8 @@ class OneLinePerBuild(HtmlResource, BuildLineMixin):
         cxt['builders'] = builders
         
         got = 0
-        building = False
-        online = cxt['online_count'] = 0
+        building = 0
+        online = 0
 
         builders = cxt['builds'] = []
         for build in g:
@@ -133,17 +133,14 @@ class OneLinePerBuild(HtmlResource, BuildLineMixin):
             builders.append(self.get_line_values(req, build))
             builder_status = build.getBuilder().getState()[0]
             if builder_status == "building":
-                building = True
+                building += 1
                 online += 1
             elif builder_status != "offline":
                 online += 1
 
-        if control is not None:
-            cxt['use_user_passwd'] = self.isUsingUserPasswd(req)
-            if building:
-                cxt['stop_url'] = "builders/_all/stop"
-            if online:
-                cxt['force_url'] = "builders/_all/force"
+        cxt['authz'] = self.getAuthz(req)
+        cxt['num_online'] = online
+        cxt['num_building'] = building
 
         template = req.site.buildbot_service.templates.get_template('onelineperbuild.html')
         return template.render(**cxt)
@@ -193,7 +190,6 @@ class OneBoxPerBuilder(HtmlResource):
 
     def content(self, req, cxt):
         status = self.getStatus(req)
-        control = self.getControl(req)
 
         builders = req.args.get("builder", status.getBuilderNames())
         branches = [b for b in req.args.get("branch", []) if b]
@@ -201,7 +197,7 @@ class OneBoxPerBuilder(HtmlResource):
         cxt['branches'] = branches
         bs = cxt['builders'] = []
         
-        building = False
+        building = 0
         online = 0
         base_builders_url = path_to_root(req) + "builders/"
         for bn in builders:
@@ -231,17 +227,14 @@ class OneBoxPerBuilder(HtmlResource):
 
             builder_status = builder.getState()[0]
             if builder_status == "building":
-                building = True
+                building += 1
                 online += 1
             elif builder_status != "offline":
                 online += 1
                 
-        if control is not None:
-            cxt['use_user_passwd'] = self.isUsingUserPasswd(req)
-            if building:
-                cxt['stop_url'] = "builders/_all/stop"
-            if online:
-                cxt['force_url'] = "builders/_all/force"                
+        cxt['authz'] = self.getAuthz(req)
+        cxt['num_building'] = online
+        cxt['num_online'] = online
 
         template = req.site.buildbot_service.templates.get_template("oneboxperbuilder.html")
         return template.render(**cxt)
@@ -345,11 +338,11 @@ class WebStatus(service.MultiService):
     # not (we'd have to do a recursive traversal of all children to discover
     # all the changes).
 
-    def __init__(self, http_port=None, distrib_port=None, allowForce=False,
+    def __init__(self, http_port=None, distrib_port=None, allowForce=None,
                  public_html="public_html", site=None, numbuilds=20,
                  num_events=200, num_events_max=None, auth=None,
                  order_console_by_time=False, changecommentlink=None,
-                 revlink=None):
+                 revlink=None, authz=None):
         """Run a web server that provides Buildbot status.
 
         @type  http_port: int or L{twisted.application.strports} string
@@ -383,8 +376,11 @@ class WebStatus(service.MultiService):
                              a non-absolute pathname will probably confuse
                              the strports parser.
 
-        @param allowForce: boolean, if True then the webserver will allow
-                           visitors to trigger and cancel builds
+        @param allowForce: deprecated; use authz instead
+        @param auth: deprecated; use with authz
+
+        @param authz: a buildbot.status.web.authz.Authz instance giving the authorization
+                           parameters for this view
 
         @param public_html: the path to the public_html directory for this display,
                             either absolute or relative to the basedir.  The default
@@ -444,21 +440,32 @@ class WebStatus(service.MultiService):
             if distrib_port[0] in "/~.": # pathnames
                 distrib_port = "unix:%s" % distrib_port
         self.distrib_port = distrib_port
-        self.allowForce = allowForce
         self.num_events = num_events
         if num_events_max:
             assert num_events_max >= num_events
             self.num_events_max = num_events_max
         self.public_html = public_html
 
-        if self.allowForce and auth:
-            assert IAuth.providedBy(auth)
-            self.auth = auth
-        else:
+        # make up an authz if allowForce was given
+        if authz:
+            if allowForce is not None:
+                raise ValueError("cannot use both allowForce and authz parameters")
             if auth:
-                log.msg("Warning: Ignoring authentication. allowForce must be"
-                        " set to True use this")
-            self.auth = None
+                raise ValueError("cannot use both auth and authz parameters (pass "
+                                 "auth as an Authz parameter)")
+        else:
+            # invent an authz
+            if allowForce and auth:
+                authz = Authz(auth=auth, default_action="auth")
+            elif allowForce:
+                authz = Authz(default_action=True)
+            else:
+                if auth:
+                    log.msg("Warning: Ignoring authentication. Search for 'authorization'"
+                            " in the manual")
+                authz = Authz() # no authorization for anything
+
+        self.authz = authz
 
         self.orderConsoleByTime = order_console_by_time
 
@@ -582,11 +589,6 @@ class WebStatus(service.MultiService):
     def getStatus(self):
         return self.master.getStatus()
 
-    def getControl(self):
-        if self.allowForce:
-            return IControl(self.master)
-        return None
-
     def getChangeSvc(self):
         return self.master.change_svc
 
@@ -595,23 +597,13 @@ class WebStatus(service.MultiService):
         s = list(self)[0]
         return s._port.getHost().port
 
-    def isUsingUserPasswd(self):
-        """Returns boolean to indicate if this WebStatus uses authentication"""
-        if self.auth:
-            return True
-        return False
-
-    def authUser(self, user, passwd):
-        """Check that user/passwd is a valid user/pass tuple and can should be
-        allowed to perform the action. If this WebStatus is not password
-        protected, this function returns False."""
-        if not self.isUsingUserPasswd():
-            return False
-        if self.auth.authenticate(user, passwd):
-            return True
-        log.msg("Authentication failed for '%s': %s" % (user,
-                                                        self.auth.errmsg()))
-        return False
+    # What happened to getControl?!
+    #
+    # instead of passing control objects all over the place in the web
+    # code, at the few places where a control instance is required we
+    # find the requisite object manually, starting at the buildmaster.
+    # This is in preparation for removal of the IControl hierarchy
+    # entirely.
 
 # resources can get access to the IStatus by calling
 # request.site.buildbot_service.getStatus()

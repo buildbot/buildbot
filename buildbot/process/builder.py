@@ -848,7 +848,7 @@ class BuilderControl(components.Adapter):
             raise interfaces.NoSlaveError
         self.requestBuild(req)
 
-    def resubmitBuild(self, bs, reason="<rebuild, no reason given>", extraProperties=None):
+    def rebuildBuild(self, bs, reason="<rebuild, no reason given>", extraProperties=None):
         if not bs.isFinished():
             return
 

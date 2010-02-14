@@ -7,11 +7,11 @@ from twisted.internet import defer, reactor
 import urllib, time
 from twisted.python import log
 from buildbot.status.web.base import HtmlResource, \
-     css_classes, path_to_builder, path_to_slave, \
+     css_classes, path_to_build, path_to_builder, path_to_slave, \
      getAndCheckProperties
 
 from buildbot.status.web.step import StepsResource
-from buildbot import util
+from buildbot import util, interfaces
 
 
 
@@ -19,11 +19,9 @@ from buildbot import util
 class StatusResourceBuild(HtmlResource):
     addSlash = True
 
-    def __init__(self, build_status, build_control, builder_control):
+    def __init__(self, build_status):
         HtmlResource.__init__(self)
         self.build_status = build_status
-        self.build_control = build_control
-        self.builder_control = builder_control
 
     def getTitle(self, request):
         return ("Buildbot: %s Build #%d" %
@@ -44,10 +42,6 @@ class StatusResourceBuild(HtmlResource):
                 cxt['when_time'] = time.strftime("%H:%M:%S",
                                                 time.localtime(time.time() + when))
                 
-               
-            if self.build_control is not None:
-                cxt['stop_url'] = urllib.quote(req.childLink("stop")) 
-                cxt['using_user_passwd'] = self.isUsingUserPasswd(req)
         else: 
             cxt['result_css'] = css_classes[b.getResults()]
             if b.getTestResults():
@@ -129,21 +123,21 @@ class StatusResourceBuild(HtmlResource):
             now = util.now()
             cxt['elapsed'] = util.formatInterval(now - start)
             
-        cxt['resubmit'] = b.isFinished() and self.builder_control is not None     
-        if cxt['resubmit']:               
-            cxt['exactly'] = (ss.revision is not None) or b.getChanges()
-            cxt['rebuild_url'] = urllib.quote(req.childLink("rebuild"))
-            cxt['using_user_passwd'] = self.isUsingUserPasswd(req)
+        cxt['exactly'] = (ss.revision is not None) or b.getChanges()
+
+        cxt['build_url'] = path_to_build(req, b)
+        cxt['authz'] = self.getAuthz(req)
 
         template = req.site.buildbot_service.templates.get_template("build.html")
         return template.render(**cxt)
 
-    def stop(self, req):
-        if self.isUsingUserPasswd(req):
-            if not self.authUser(req):
-                return Redirect("../../../authfailed")
+    def stop(self, req, auth_ok=False):
+        # check if this is allowed
+        if not auth_ok:
+            if not self.getAuthz(req).actionAllowed('stopBuild', req, self.build_status):
+                return Redirect("../../../../authfail")
+
         b = self.build_status
-        c = self.build_control
         log.msg("web stopBuild of build %s:%s" % \
                 (b.getBuilder().getName(), b.getNumber()))
         name = req.args.get("username", ["<unknown>"])[0]
@@ -151,8 +145,14 @@ class StatusResourceBuild(HtmlResource):
         # html-quote both the username and comments, just to be safe
         reason = ("The web-page 'stop build' button was pressed by "
                   "'%s': %s\n" % (html.escape(name), html.escape(comments)))
-        if c:
-            c.stopBuild(reason)
+
+        c = interfaces.IControl(self.getBuildmaster(req))
+        bldrc = c.getBuilder(self.build_status.getBuilder().getName())
+        if bldrc:
+            bldc = bldrc.getBuild(self.build_status.getNumber())
+            if bldc:
+                bldc.stopBuild(reason)
+
         # we're at http://localhost:8080/svn-hello/builds/5/stop?[args] and
         # we want to go to: http://localhost:8080/svn-hello
         r = Redirect("../..")
@@ -161,11 +161,15 @@ class StatusResourceBuild(HtmlResource):
         return DeferredResource(d)
 
     def rebuild(self, req):
-        if self.isUsingUserPasswd(req):
-            if not self.authUser(req):
-                return Redirect("../../../authfailed")
+        # check auth
+        if not self.getAuthz(req).actionAllowed('forceBuild', req, self.build_status.getBuilder()):
+            return Redirect("../../../../authfail")
+
+        # get a control object
+        c = interfaces.IControl(self.getBuildmaster(req))
+        bc = c.getBuilder(self.build_status.getBuilder().getName())
+
         b = self.build_status
-        bc = self.builder_control
         builder_name = b.getBuilder().getName()
         log.msg("web rebuild of build %s:%s" % (builder_name, b.getNumber()))
         name = req.args.get("username", ["<unknown>"])[0]
@@ -178,7 +182,7 @@ class StatusResourceBuild(HtmlResource):
                     % (bc, b.isFinished()))
             # TODO: indicate an error
         else:
-            bc.resubmitBuild(b, reason, extraProperties)
+            bc.rebuildBuild(b, reason, extraProperties)
         # we're at
         # http://localhost:8080/builders/NAME/builds/5/rebuild?[args]
         # Where should we send them?
@@ -209,10 +213,9 @@ class StatusResourceBuild(HtmlResource):
 class BuildsResource(HtmlResource):
     addSlash = True
 
-    def __init__(self, builder_status, builder_control):
+    def __init__(self, builder_status):
         HtmlResource.__init__(self)
         self.builder_status = builder_status
-        self.builder_control = builder_control
 
     def content(self, req, cxt):
         return "subpages shows data for each build"
@@ -225,12 +228,7 @@ class BuildsResource(HtmlResource):
         if num is not None:
             build_status = self.builder_status.getBuild(num)
             if build_status:
-                if self.builder_control:
-                    build_control = self.builder_control.getBuild(num)
-                else:
-                    build_control = None
-                return StatusResourceBuild(build_status, build_control,
-                                           self.builder_control)
+                return StatusResourceBuild(build_status)
 
         return HtmlResource.getChild(self, path, req)
 

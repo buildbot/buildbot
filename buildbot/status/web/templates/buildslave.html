@@ -1,4 +1,5 @@
 {% from 'build_line.html' import build_table, build_line %}
+{% import 'forms.html' as forms %}
 
 {% extends "layout.html" %}
 {% block content %}
@@ -43,13 +44,12 @@
 
 {% if not slave.isConnected() %}
   <p>(not connected)</p>
-{% elif control %}
-  {% if not slave.getGraceFul %}
-    <form method="post" action="{{ shutdown_url }}">
-      <input type="submit" value="Gracefully Shutdown"/>
-    </form>
+{% elif authz.advertiseAction('gracefulShutdown') %}
+  <h2>Graceful Shutdown</h2>
+  {% if slave.getGraceful() %}
+    <p>Slave will shut down gracefully when it is idle.</p>
   {% else %}
-    <p>Gracefully shutting down...</p>
+    {{ forms.graceful_shutdown(shutdown_url, authz) }}
   {% endif %}
 {% endif %}
 </div>

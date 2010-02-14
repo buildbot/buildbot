@@ -18,8 +18,9 @@ Build #{{ b.getNumber() }}
     <p>ETA: {{ when }}s ({{ when_time }})</p>
   {% endif %}
   
-  {% if stop_url %} 
-    {{ forms.stop(stop_url, using_user_passwd, on_all=False) }}
+  {% if authz.advertiseAction('stopBuild') %}
+    <h2>Stop Build</h2>
+    {{ forms.stop_build(build_url+"/stop", authz, on_all=False, short=False, label='This Build') }}
   {% endif %}
 {% else %}
   <h2>Results:</h2>
@@ -160,31 +161,9 @@ Build #{{ b.getNumber() }}
   <tr {{ 'class="alt"' if end else '' }}><td class="left">Elapsed</td><td>{{ elapsed }}</td></tr>
 </table>
 
-  {% if resubmit %}
+  {% if authz.advertiseAction('forceBuild') %}
     <h3>Resubmit Build:</h3>
-  
-    {% if exactly %}
-      <p>This tree was built from a specific set of
-          source files, and can be rebuilt exactly</p>
-    {% else %}
-      <p>This tree was built from the most recent revision
-      {% if ss.branch %}
-        (along some branch)
-      {% endif %}            
-      and thus it might not be possible to rebuild it
-      exactly. <br/>Any changes that have been committed 
-      after this build was started <b>will</b> be 
-      included in a rebuild.</p>
-    {% endif %}
-
-    <form method="post" action="{{ rebuild_url }}" class="command rebuild">      
-      {{ forms.name_user_passwd(using_user_passwd) }}
-      <div class="row">
-        <span class="label">Reason for re-running build:</span>
-        <input type='text' name='comments' />
-      </div>       
-      <input type="submit" value="Rebuild" />
-    </form>
+    {{ forms.rebuild_build(build_url+"/rebuild", authz, exactly, ss) }}
   {% endif %}
 
 </div>

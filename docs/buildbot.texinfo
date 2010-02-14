@@ -1256,8 +1256,8 @@ speed up the process.
 @subsection Forcing Builds
 
 From the buildmaster's main status web page, you can force a build to be run on
-your build slave if you set the option @code{allowForce=True} in your
-@code{master.cfg} file @pxref{Enabling the "Force Build" Button}.
+your build slave if you set the proper authorization options in your
+@code{master.cfg} file @pxref{WebStatus Configuration Parameters}.
 
 Figure out which column is for a builder that runs on your slave, click on that
 builder's name, and the page that comes up will have a "Force Build" button.
@@ -7747,98 +7747,10 @@ they provide.
 
 
 @menu
-* WebStatus Configuration Parameters::
-* Enabling the "Force Build" Button::
 * Buildbot Web Resources::
+* WebStatus Configuration Parameters::
 * XMLRPC server::
 @end menu
-
-@node WebStatus Configuration Parameters
-@subsection WebStatus Configuration Parameters
-
-The most common way to run a @code{WebStatus} is on a regular TCP
-port. To do this, just pass in the TCP port number when you create the
-@code{WebStatus} instance; this is called the @code{http_port} argument:
-
-@example
-from buildbot.status.html import WebStatus
-c['status'].append(WebStatus(8080))
-@end example
-
-The @code{http_port} argument is actually a ``strports specification''
-for the port that the web server should listen on. This can be a
-simple port number, or a string like
-@code{tcp:8080:interface=127.0.0.1} (to limit connections to the
-loopback interface, and therefore to clients running on the same
-host)@footnote{It may even be possible to provide SSL access by using
-a specification like
-@code{"ssl:12345:privateKey=mykey.pen:certKey=cert.pem"}, but this is
-completely untested}.
-
-If instead (or in addition) you provide the @code{distrib_port}
-argument, a twisted.web distributed server will be started either on a
-TCP port (if @code{distrib_port} is like @code{"tcp:12345"}) or more
-likely on a UNIX socket (if @code{distrib_port} is like
-@code{"unix:/path/to/socket"}).
-
-The @code{distrib_port} option means that, on a host with a
-suitably-configured twisted-web server, you do not need to consume a
-separate TCP port for the buildmaster's status web page. When the web
-server is constructed with @code{mktap web --user}, URLs that point to
-@code{http://host/~username/} are dispatched to a sub-server that is
-listening on a UNIX socket at @code{~username/.twisted-web-pb}. On
-such a system, it is convenient to create a dedicated @code{buildbot}
-user, then set @code{distrib_port} to
-@code{"unix:"+os.path.expanduser("~/.twistd-web-pb")}. This
-configuration will make the HTML status page available at
-@code{http://host/~buildbot/} . Suitable URL remapping can make it
-appear at @code{http://host/buildbot/}, and the right virtual host
-setup can even place it at @code{http://buildbot.host/} .
-
-The @code{changecommentlink} argument can be used to create links to
-ticket-ids from change comments (i.e. #123). The argument should
-be a tuple of three strings where the first element is a regex that
-searches for strings (with match groups), the second is a replace-string
-that, when substituted with \1 etc, yields the URL and the third
-is the title attribute of the link.
-(The @code{<a href="" title=""></a>} is added by the system.)
-So, for Trac tickets (#42, etc): 
-@code{changecommentlink(r"#(\d+)", r"http://buildbot.net/trac/ticket/\1", r"Ticket \g<0>")} .
-
-The @code{revlink} is similarly used to create links from revision
-ids to a web-view of your source control system. The Use %s to insert
-the revision id in the url. I.e. for Buildbot on github: 
-@code{revlink='http://github.com/djmitche/buildbot/tree/%s'}
-(The revision id will be URL encoded before inserted in the replacement string)
-
-@node Enabling the "Force Build" Button
-@subsection Enabling the "Force Build" Button
-
-An important @code{WebStatus} argument is @code{allowForce}. If set to True,
-then the web page will provide a ``Force Build'' button that allows visitors to
-manually trigger builds. This is useful for developers to re-run builds that
-have failed because of intermittent problems in the test suite, or because of
-libraries that were not installed at the time of the previous build. The
-default value is False, since it also allows anyone with a web browser to waste
-computing resources forcing unnecessary builds.
-
-If you do not wish to allow strangers to cause a build to run or to stop
-current builds, pass an instance of @code{status.web.auth.IAuth} as a
-@code{auth} keyword argument to @code{WebStatus}.  The class @code{BasicAuth}
-implements a basic authentication mechanism using a list of user/password
-tuples provided from the configuration file.  The class @code{HTPasswdAuth}
-implements an authentication against an @file{.htpasswd} file.
-
-@example
-from buildbot.status.html import WebStatus
-from buildbot.status.web.auth import BasicAuth
-users = [('bob', 'secret-pass'), ('jill', 'super-pass')]
-c['status'].append(WebStatus(http_port=8080, auth=BasicAuth(users)))
-
-from buildbot.status.web.auth import HTPasswdAuth
-file = '/path/to/file'
-c['status'].append(WebStatus(http_port=8080, auth=(HTPasswdAuth(file))))
-@end example
 
 @node Buildbot Web Resources
 @subsection Buildbot Web Resources
@@ -7876,10 +7788,6 @@ main part of the URL itself. For example, a page that describes Build
 
 The table below lists all of the internal pages and the URLs that can
 be used to access them.
-
-NOTE: of the pages described here, @code{/slave_status_timeline} and
-@code{/last_build} have not yet been implemented, and @code{/xmlrpc}
-has only a few methods so far. Future releases will improve this.
 
 @table @code
 
@@ -8078,23 +7986,6 @@ This page gives a brief summary of the Buildbot itself: software
 version, versions of some libraries that the Buildbot depends upon,
 etc. It also contains a link to the buildbot.net home page.
 
-@item /slave_status_timeline
-
-(note: this page has not yet been implemented)
-
-This provides a chronological display of configuration and operational
-events: master startup/shutdown, slave connect/disconnect, and
-config-file changes. When a config-file reload is abandoned because of
-an error in the config file, the error is displayed on this page.
-
-This page does not show any builds.
-
-@item /last_build/$BUILDERNAME/status.png
-
-This returns a PNG image that describes the results of the most recent
-build, which can be referenced in an IMG tag by other pages, perhaps
-from a completely different site. Use it as you would a webcounter.
-
 @end table
 
 There are also a set of web-status resources that are intended for use
@@ -8109,6 +8000,178 @@ information about various builds. See @ref{XMLRPC server} for more
 details.
 
 @end table
+
+@node WebStatus Configuration Parameters
+@subsection WebStatus Configuration Parameters
+
+@heading HTTP Connection
+
+The most common way to run a @code{WebStatus} is on a regular TCP
+port. To do this, just pass in the TCP port number when you create the
+@code{WebStatus} instance; this is called the @code{http_port} argument:
+
+@example
+from buildbot.status.html import WebStatus
+c['status'].append(http_port=WebStatus(http_port=8080))
+@end example
+
+The @code{http_port} argument is actually a ``strports specification'' for the
+port that the web server should listen on. This can be a simple port number, or
+a string like @code{http_port="tcp:8080:interface=127.0.0.1"} (to limit
+connections to the loopback interface, and therefore to clients running on the
+same host)@footnote{It may even be possible to provide SSL access by using a
+specification like @code{"ssl:12345:privateKey=mykey.pen:certKey=cert.pem"},
+but this is completely untested}.
+
+If instead (or in addition) you provide the @code{distrib_port}
+argument, a twisted.web distributed server will be started either on a
+TCP port (if @code{distrib_port} is like @code{"tcp:12345"}) or more
+likely on a UNIX socket (if @code{distrib_port} is like
+@code{"unix:/path/to/socket"}).
+
+The @code{public_html} option gives the path to a regular directory of HTML
+files that will be displayed alongside the various built-in URLs buildbot
+supplies.  This is most often used to supply CSS files (@code{/buildbot.css})
+and a top-level navigational file (@code{/index.html}), but can also serve any
+other files required - even build results!
+
+@heading Authorization
+
+The buildbot web status is, by default, read-only.  It displays lots of
+information, but users are not allowed to affect the operation of the
+buildmaster.  However, there are a number of supported activities that can
+be enabled, and Buildbot can also perform rudimentary username/password
+authentication.  The actions are:
+
+@table @code
+
+@item forceBuild
+
+force a particular builder to begin building, optionally with a specific revision, branch, etc.
+
+@item forceAllBuilds
+
+force @i{all} builders to start building
+
+@item pingBuilder
+
+"ping" a builder's buildslaves to check that they are alive
+
+@item gracefulShutdown
+
+gracefully shut down a slave when it is finished with its current build
+
+@item stopBuild
+
+stop a running build
+
+@item stopAllBuilds
+
+stop all running builds
+
+@item cancelPendingBuild
+
+cancel a build that has not yet started
+
+@end table
+
+For each of these actions, you can configure buildbot to never allow the
+action, always allow the action, allow the action to any authenticated user, or
+check with a function of your creation to determine whether the action is OK.
+
+This is all configured with the @code{Authz} class:
+
+@example
+from buildbot.status.html import WebStatus
+from buildbot.status.web.authz import Authz
+authz = Authz(
+    forceBuild=True,
+    stopBuild=True)
+c['status'].append(http_port=WebStatus(http_port=8080, authz=authz))
+@end example
+
+Each of the actions listed above is an option to @code{Authz}.  You can specify
+@code{False} (the default) to prohibit that action or @code{True} to enable it.
+
+@heading Authentication
+
+If you do not wish to allow strangers to perform actions, but do want
+developers to have such access, you will need to add some authentication
+support.  Pass an instance of @code{status.web.auth.IAuth} as a @code{auth}
+keyword argument to @code{Authz}, and specify the action as @code{"auth"}.
+
+@example
+from buildbot.status.html import WebStatus
+from buildbot.status.web.authz import Authz
+from buildbot.status.web.auth import BasicAuth
+users = [('bob', 'secret-pass'), ('jill', 'super-pass')]
+authz = Authz(auth=BasicAuth(users),
+    forceBuild='auth', # only authenticated users
+    pingBuilder=True, # but anyone can do this
+)
+c['status'].append(WebStatus(http_port=8080, authz=authz))
+# or
+from buildbot.status.web.auth import HTPasswdAuth
+auth = (HTPasswdAuth('/path/to/htpasswd'))
+@end example
+
+The class @code{BasicAuth} implements a basic authentication mechanism using a
+list of user/password tuples provided from the configuration file.  The class
+@code{HTPasswdAuth} implements an authentication against an @file{.htpasswd}
+file.
+
+If you need still-more flexibility, pass a function for the authentication
+action.  That function will be called with an authenticated username and some
+action-specific arguments, and should return true if the action is authorized.
+
+@example
+def canForceBuild(username, builder_status):
+    if builder_status.getName() == 'smoketest':
+        return True # any authenticated user can run smoketest
+    elif username == 'releng':
+        return True # releng can force whatever they want
+    else:
+        return False # otherwise, no way.
+
+authz = Authz(auth=BasicAuth(users),
+    forceBuild=canForceBuild)
+@end example
+
+The @code{forceBuild} and @code{pingBuilder} actions both supply a
+BuilderStatus object.  The @code{stopBuild} action supplies a BuildStatus
+object.  The @code{cancelPendingBuild} action supplies a BuildRequest.  The
+remainder do not supply any extra arguments.
+
+@heading Miscellaneous Options
+
+The @code{changecommentlink} argument can be used to create links to
+ticket-ids from change comments (i.e. #123). The argument should
+be a tuple of three strings where the first element is a regex that
+searches for strings (with match groups), the second is a replace-string
+that, when substituted with \1 etc, yields the URL and the third
+is the title attribute of the link.
+(The @code{<a href="" title=""></a>} is added by the system.)
+So, for Trac tickets (#42, etc): 
+@code{changecommentlink(r"#(\d+)", r"http://buildbot.net/trac/ticket/\1", r"Ticket \g<0>")} .
+
+The @code{revlink} is similarly used to create links from revision
+ids to a web-view of your source control system. The Use %s to insert
+the revision id in the url. I.e. for Buildbot on github: 
+@code{revlink='http://github.com/djmitche/buildbot/tree/%s'}
+(The revision id will be URL encoded before inserted in the replacement string)
+
+@heading Display-Specific Options
+
+The @code{order_console_by_time} option affects the rendering of the console;
+see the description of the console above.
+
+The @code{numbuilds} option determines the number of builds that most status
+displays will show.  It can usually be overriden in the URL, e.g.,
+@code{?numbuilds=13}.
+
+The @code{num_events} option gives the default number of events that the
+waterfall will display.  The @code{num_events_max} gives the maximum number of
+events displayed, even if the web browser requests more.
 
 @node XMLRPC server
 @subsection XMLRPC server

@@ -136,14 +136,7 @@ class GridStatusMixin(object):
 class GridStatusResource(HtmlResource, GridStatusMixin):
     # TODO: docs
     status = None
-    control = None
     changemaster = None
-
-    def __init__(self, allowForce=True):
-        HtmlResource.__init__(self)
-
-        self.allowForce = allowForce
-
 
     def content(self, request, cxt):
         """This method builds the regular grid display.
@@ -202,13 +195,7 @@ class GridStatusResource(HtmlResource, GridStatusMixin):
 class TransposedGridStatusResource(HtmlResource, GridStatusMixin):
     # TODO: docs
     status = None
-    control = None
     changemaster = None
-
-    def __init__(self, allowForce=True):
-        HtmlResource.__init__(self)
-
-        self.allowForce = allowForce
 
     def content(self, request, cxt):
         """This method builds the transposed grid display.

@@ -72,15 +72,13 @@ class ConsoleStatusResource(HtmlResource):
     Every change is a line in the page, and it shows the result of the first
     build with this change for each slave."""
 
-    def __init__(self, allowForce=True, css=None, orderByTime=False):
+    def __init__(self, css=None, orderByTime=False):
         HtmlResource.__init__(self)
 
         self.status = None
-        self.control = None
         self.changemaster = None
         self.initialRevs = None
 
-        self.allowForce = allowForce
         self.css = css
 
         if orderByTime:

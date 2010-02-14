@@ -19,10 +19,9 @@ from buildbot import util
 class StatusResourceBuilder(HtmlResource, BuildLineMixin):
     addSlash = True
 
-    def __init__(self, builder_status, builder_control):
+    def __init__(self, builder_status):
         HtmlResource.__init__(self)
         self.builder_status = builder_status
-        self.builder_control = builder_control
 
     def getTitle(self, request):
         return "Buildbot: %s" % self.builder_status.getName()
@@ -45,15 +44,12 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
             b['current_step'] = "[waiting for Lock]"
             # TODO: is this necessarily the case?
 
-        builder_control = self.getControl(req)
-        if builder_control is not None:
-            b['stop_url'] = path_to_build(req, build) + '/stop'
+        b['stop_url'] = path_to_build(req, build) + '/stop'
 
         return b
           
     def content(self, req, cxt):
         b = self.builder_status
-        control = self.builder_control
         status = self.getStatus(req)
 
         cxt['name'] = b.getName()
@@ -84,15 +80,13 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
                 'changes' : changes
                 })
 
-        if self.builder_control is not None:
-            cxt['cancel_url'] = path_to_builder(req, b) + '/cancelbuild'
-                        
         numbuilds = int(req.args.get('numbuilds', ['5'])[0])
         recent = cxt['recent'] = []
         for build in b.generateFinishedBuilds(num_builds=int(numbuilds)):
             recent.append(self.get_line_values(req, build, False))
 
         sl = cxt['slaves'] = []
+        connected_slaves = 0
         for slave in slaves:
             s = {}
             sl.append(s)
@@ -101,29 +95,16 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
             c = s['connected'] = slave.isConnected()
             if c:
                 s['admin'] = slave.getAdmin()
+                connected_slaves += 1
+        cxt['connected_slaves'] = connected_slaves
 
-        if control is not None and connected_slaves:
-            cxt['force_url'] = path_to_builder(req, b) + '/force'
-            cxt['use_user_passwd'] = self.isUsingUserPasswd(req)
-        elif control is not None:
-            cxt['all_slaves_offline'] = True
-
-        if control is not None:
-            cxt['ping_url'] = path_to_builder(req, b) + '/ping'
+        cxt['authz'] = self.getAuthz(req)
+        cxt['builder_url'] = path_to_builder(req, b)
 
         template = req.site.buildbot_service.templates.get_template("builder.html")
         return template.render(**cxt)
 
-    def force(self, req):
-        """
-
-        Custom properties can be passed from the web form.  To do
-        this, subclass this class, overriding the force() method.  You
-        can then determine the properties (usually from form values,
-        by inspecting req.args), then pass them to this superclass
-        force method.
-        
-        """
+    def force(self, req, auth_ok=False):
         name = req.args.get("username", ["<unknown>"])[0]
         reason = req.args.get("comments", ["<no reason specified>"])[0]
         branch = req.args.get("branch", [""])[0]
@@ -135,13 +116,10 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
                 " by user '%s'" % (self.builder_status.getName(), branch,
                                    revision, name))
 
-        if not self.builder_control:
-            # TODO: tell the web user that their request was denied
-            log.msg("but builder control is disabled")
-            return Redirect("..")
-
-        if self.isUsingUserPasswd(req):
-            if not self.authUser(req):
+        # check if this is allowed
+        if not auth_ok:
+            if not self.getAuthz(req).actionAllowed('forceBuild', req, self.builder_status):
+                log.msg("..but not authorized")
                 return Redirect("../../authfail")
 
         # keep weird stuff out of the branch revision, and property strings.
@@ -168,10 +146,12 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
         # buildbot.changes.changes.Change instance which is tedious at this
         # stage to compute
         s = SourceStamp(branch=branch, revision=revision)
-        req = BuildRequest(r, s, builderName=self.builder_status.getName(),
+        br = BuildRequest(r, s, builderName=self.builder_status.getName(),
                            properties=properties)
         try:
-            self.builder_control.requestBuildSoon(req)
+            c = interfaces.IControl(self.getBuildmaster(req))
+            bc = c.getBuilder(self.builder_status.getName())
+            bc.requestBuildSoon(br)
         except interfaces.NoSlaveError:
             # TODO: tell the web user that their request could not be
             # honored
@@ -181,11 +161,16 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
 
     def ping(self, req):
         log.msg("web ping of builder '%s'" % self.builder_status.getName())
-        self.builder_control.ping() # TODO: there ought to be an ISlaveControl
+        if not self.getAuthz(req).actionAllowed('pingBuilder', req, self.builder_status):
+            log.msg("..but not authorized")
+            return Redirect("../../authfail")
+        c = interfaces.IControl(self.getBuildmaster(req))
+        bc = c.getBuilder(self.builder_status.getName())
+        bc.ping()
         # send the user back to the builder page
         return Redirect(".")
 
-    def cancel(self, req):
+    def cancelbuild(self, req):
         try:
             request_id = req.args.get("id", [None])[0]
             if request_id == "all":
@@ -195,11 +180,18 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
                 request_id = int(request_id)
         except:
             request_id = None
+
+        authz = self.getAuthz(req)
         if request_id:
-            for build_req in self.builder_control.getPendingBuilds():
+            c = interfaces.IControl(self.getBuildmaster(req))
+            bc = c.getBuilder(self.builder_status.getName())
+            for build_req in bc.getPendingBuilds():
                 if cancel_all or id(build_req.original_request.status) == request_id:
                     log.msg("Cancelling %s" % build_req)
-                    build_req.cancel()
+                    if authz.actionAllowed('cancelPendingBuild', req, build_req):
+                        build_req.cancel()
+                    else:
+                        return Redirect("../../authfail")
                     if not cancel_all:
                         break
         return Redirect(".")
@@ -210,9 +202,9 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
         if path == "ping":
             return self.ping(req)
         if path == "cancelbuild":
-            return self.cancel(req)
+            return self.cancelbuild(req)
         if path == "builds":
-            return BuildsResource(self.builder_status, self.builder_control)
+            return BuildsResource(self.builder_status)
 
         return HtmlResource.getChild(self, path, req)
 
@@ -220,38 +212,37 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
 # /builders/_all
 class StatusResourceAllBuilders(HtmlResource, BuildLineMixin):
 
-    def __init__(self, status, control):
+    def __init__(self, status):
         HtmlResource.__init__(self)
         self.status = status
-        self.control = control
 
     def getChild(self, path, req):
-        if path == "force":
-            return self.force(req)
-        if path == "stop":
-            return self.stop(req)
+        if path == "forceall":
+            return self.forceall(req)
+        if path == "stopall":
+            return self.stopall(req)
 
         return HtmlResource.getChild(self, path, req)
 
-    def force(self, req):
+    def forceall(self, req):
+        authz = self.getAuthz(req)
+        if not authz.actionAllowed('forceAllBuilds', req):
+            return Redirect("../../authfail");
+
         for bname in self.status.getBuilderNames():
             builder_status = self.status.getBuilder(bname)
-            builder_control = None
-            c = self.getControl(req)
-            if c:
-                builder_control = c.getBuilder(bname)
-            build = StatusResourceBuilder(builder_status, builder_control)
-            build.force(req)
+            build = StatusResourceBuilder(builder_status)
+            build.force(req, auth_ok=True) # auth_ok because we already checked
         # back to the welcome page
         return Redirect("../..")
 
-    def stop(self, req):
+    def stopall(self, req):
+        authz = self.getAuthz(req)
+        if not authz.actionAllowed('stopAllBuilds', req):
+            return Redirect("../../authfail");
+
         for bname in self.status.getBuilderNames():
             builder_status = self.status.getBuilder(bname)
-            builder_control = None
-            c = self.getControl(req)
-            if c:
-                builder_control = c.getBuilder(bname)
             (state, current_builds) = builder_status.getState()
             if state != "building":
                 continue
@@ -259,13 +250,8 @@ class StatusResourceAllBuilders(HtmlResource, BuildLineMixin):
                 build_status = builder_status.getBuild(b.number)
                 if not build_status:
                     continue
-                if builder_control:
-                    build_control = builder_control.getBuild(b.number)
-                else:
-                    build_control = None
-                build = StatusResourceBuild(build_status, build_control,
-                                            builder_control)
-                build.stop(req)
+                build = StatusResourceBuild(build_status)
+                build.stop(req, auth_ok=True)
         # go back to the welcome page
         return Redirect("../..")
 
@@ -290,14 +276,9 @@ class BuildersResource(HtmlResource):
         s = self.getStatus(req)
         if path in s.getBuilderNames():
             builder_status = s.getBuilder(path)
-            builder_control = None
-            c = self.getControl(req)
-            if c:
-                builder_control = c.getBuilder(path)
-            return StatusResourceBuilder(builder_status, builder_control)
+            return StatusResourceBuilder(builder_status)
         if path == "_all":
-            return StatusResourceAllBuilders(self.getStatus(req),
-                                             self.getControl(req))
+            return StatusResourceAllBuilders(self.getStatus(req))
 
         return HtmlResource.getChild(self, path, req)
 

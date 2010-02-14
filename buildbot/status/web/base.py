@@ -225,18 +225,11 @@ class HtmlResource(resource.Resource, ContextMixin):
             return ''
         return data
 
-    def getControl(self, request):
-        return request.site.buildbot_service.getControl()
+    def getAuthz(self, request):
+        return request.site.buildbot_service.authz
 
-    def isUsingUserPasswd(self, request):
-        return request.site.buildbot_service.isUsingUserPasswd()
-
-    def authUser(self, request):
-        user = request.args.get("username", ["<unknown>"])[0]
-        passwd = request.args.get("passwd", ["<no-password>"])[0]
-        if user == "<unknown>" or passwd == "<no-password>":
-            return False
-        return request.site.buildbot_service.authUser(user, passwd)
+    def getBuildmaster(self, request):
+        return request.site.buildbot_service.master
 
     def getChangemaster(self, request):
         return request.site.buildbot_service.getChangeSvc()
