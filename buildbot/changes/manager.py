@@ -115,9 +115,9 @@ class ChangeManager(service.MultiService):
 
     # IEventSource methods
 
-    def eventGenerator(self, branches=[], categories=[], committers=[]):
+    def eventGenerator(self, branches=[], categories=[], committers=[], minTime=0):
         return self.parent.db.changeEventGenerator(branches, categories,
-                                                   committers)
+                                                   committers, minTime)
 
     def getChangeNumberedNow(self, changeid, t=None):
         return self.parent.db.getChangeNumberedNow(changeid, t)

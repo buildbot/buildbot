@@ -449,8 +449,10 @@ class WaterfallStatusResource(HtmlResource):
             minTime = maxTime - int(request.args["show_time"][0])
         elif "first_time" in request.args:
             minTime = int(request.args["first_time"][0])
+        elif filterBranches or filterCommitters:
+            minTime = util.now() - 24 * 60 * 60
         else:
-            minTime = None
+            minTime = 0
         spanLength = 10  # ten-second chunks
         req_events=int(request.args.get("num_events", [self.num_events])[0])
         if self.num_events_max and req_events > self.num_events_max:
@@ -494,7 +496,8 @@ class WaterfallStatusResource(HtmlResource):
         for s in sources:
             gen = insertGaps(s.eventGenerator(filterBranches,
                                               filterCategories,
-                                              filterCommitters),
+                                              filterCommitters,
+                                              minTime),
                              showEvents,
                              lastEventTime)
             sourceGenerators.append(gen)

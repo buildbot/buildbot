@@ -114,17 +114,26 @@ class MyStatus:
 
 class MyBuilder(builder.BuilderStatus):
     nextBuildNumber = 0
+    def newBuild(self):
+        number = self.nextBuildNumber
+        self.nextBuildNumber += 1
+        s = MyBuild(self, number, None, False)
+        s.waitUntilFinished().addCallback(self._buildFinished)
+        return s
 
 class MyBuild(builder.BuildStatus):
     testlogs = []
-    def __init__(self, parent, number, results):
+    def __init__(self, parent, number, results, finished=True):
         builder.BuildStatus.__init__(self, parent, number)
         self.results = results
         self.source = SourceStamp(revision="1.14")
         self.reason = "build triggered by changes"
-        self.finished = True
+        self.finished = finished
     def getLogs(self):
         return self.testlogs
+    def buildStarted(self, build, started):
+        self.started = started
+        self.builder.buildStarted(self)
 
 class MyLookup:
     implements(interfaces.IEmailLookup)
@@ -1888,15 +1897,15 @@ class Pruning(unittest.TestCase):
         ])
 
 class EventGenerator(unittest.TestCase):
-    def makeGenerator(selfx, reasons=[]):
+    def makeGenerator(self, reasons=[], minTime=0):
         b = MyBuilder("bname")
         b1 = b.newBuild()
         b1.setSourceStamp(SourceStamp(changes=[Change("foo", [], "")]))
-        b1.buildStarted(b1)
+        b1.buildStarted(b1, 1)
         b2 = b.newBuild()
         b2.setSourceStamp(SourceStamp(changes=[Change("bar", [], "")]))
-        b2.buildStarted(b2)
-        return b.eventGenerator([], [], reasons)
+        b2.buildStarted(b2, 2)
+        return b.eventGenerator([], [], reasons, minTime)
 
     def testEventGenerator_Unfiltered(self):
         gen = self.makeGenerator()
@@ -1904,4 +1913,8 @@ class EventGenerator(unittest.TestCase):
 
     def testEventGenerator_Filtered(self):
         gen = self.makeGenerator(["foo"])
+        self.failUnlessEqual(len([e for e in gen]), 1)
+
+    def testEventGenerator_MinTime(self):
+        gen = self.makeGenerator([], 2)
         self.failUnlessEqual(len([e for e in gen]), 1)

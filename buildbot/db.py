@@ -684,7 +684,7 @@ class DBConnector(util.ComparableMixin):
                       (change.number, propname, encoded_value))
         self.notify("add-change", change.number)
 
-    def changeEventGenerator(self, branches=[], categories=[], committers=[]):
+    def changeEventGenerator(self, branches=[], categories=[], committers=[], minTime=0):
         q = "SELECT changeid FROM changes"
         args = []
         if branches or categories or committers:
@@ -699,6 +699,8 @@ class DBConnector(util.ComparableMixin):
             if committers:
                 pieces.append("author IN %s" % self.parmlist(len(committers)))
                 args.extend(list(committers))
+            if minTime:
+                pieces.append("when_timestamp > %d" % minTime)
             q += " AND ".join(pieces)
         q += " ORDER BY changeid DESC"
         rows = self.runQueryNow(q, tuple(args))
