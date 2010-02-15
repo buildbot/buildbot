@@ -205,7 +205,7 @@ class MigrateChanges(Base, unittest.TestCase):
         db.create_db(spec)
         the_db = db.open_db(spec)
         self.dbs.add(the_db)
-        runner.migrate_changes_pickle_to_db(fn, the_db)
+        runner.migrate_changes_pickle_to_db(fn, the_db, silent=True)
         m = ChangeManager()
         m.parent = FakeMaster()
         m.parent.db = the_db

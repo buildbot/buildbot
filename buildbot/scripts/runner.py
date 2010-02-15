@@ -428,15 +428,15 @@ class UpgradeMasterOptions(MakerBase):
     pickle files.
     """
 
-def migrate_changes_pickle_to_db(fn, db):
+def migrate_changes_pickle_to_db(fn, db, silent=False):
     from cPickle import load
-    print "migrating Changes pickle to db"
+    if not silent: print "migrating Changes pickle to db"
 
     # 'source' will be an old b.c.changes.ChangeMaster instance, with a
     # .changes attribute
     source = load(open(fn,"rb"))
 
-    print " (%d Change objects)" % len(source.changes)
+    if not silent: print " (%d Change objects)" % len(source.changes)
     # about 150 changes per second on my laptop
     for c in source.changes:
         if not c.revision:
