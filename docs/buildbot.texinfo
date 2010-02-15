@@ -54,14 +54,9 @@ provided the copyright notice and this notice are preserved.
 * Installation::                Installing and setting up a Builbot system
 * Concepts::                    What goes on in the buildbot's little mind.
 * Configuration::               Controlling the buildbot.
-* Build Process::               Controlling how each build is run.
-* Status Delivery::             Telling the world about the build's results.
 * Command-line Tool::           The 'buildbot' utility
-* Resources::                   Getting help.
-
-* Index of Useful Classes::
-* Index of master.cfg keys::
-* Index::                       Complete index.
+* Resources::                   Getting help
+* Index::                       Concept Index
 @end menu
 
 @node Introduction
@@ -80,14 +75,6 @@ provided the copyright notice and this notice are preserved.
 @chapter Configuration
 @include configuration.texinfo
 
-@node Build Process
-@chapter Build Process
-@include buildprocess.texinfo
-
-@node Status Delivery
-@chapter Status Delivery
-@include status.texinfo
-
 @node Command-line Tool
 @chapter Command-line Tool
 @include cmdline.texinfo
@@ -96,45 +83,8 @@ provided the copyright notice and this notice are preserved.
 @chapter Resources
 @include resources.texinfo
 
-@node Index of Useful Classes
-@unnumbered Index of Useful Classes
-
-This is a list of all user-visible classes. There are the ones that
-are useful in @file{master.cfg}, the buildmaster's configuration file.
-Classes that are not listed here are generally internal things that
-admins are unlikely to have much use for.
-
-A more complete collection of documentation from the source code itself is
-available in the API documentation at
-@uref{http://djmitche.github.com/buildbot/docs/}.
-
-@heading Change Sources
-@printindex cs
-
-@heading Schedulers and Locks
-@printindex sl
-
-@heading Build Factories
-@printindex bf
-
-@heading Build Steps
-@printindex bs
-
-@heading Status Targets
-@printindex st
-
-@node Index of master.cfg keys
-@unnumbered Index of master.cfg keys
-
-This is a list of all of the significant keys in @code{master.cfg}'s @code{BuildmasterConfig}.
-
-@printindex bc
-
-
 @node Index
 @unnumbered Index
-
 @printindex cp
-
 
 @bye

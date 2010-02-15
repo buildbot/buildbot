@@ -6,6 +6,9 @@ The keys in this section affect the operations of the buildmaster globally.
 * Data Lifetime::
 * Merging BuildRequests::
 * Prioritizing Builders::
+* Setting the PB Port for Slaves::
+* Defining Global Properties::
+* Debug Options::
 @end menu
 
 @node Project Definitions
@@ -88,12 +91,41 @@ kept in memory.
 
 @example
 c['changeHorizon'] = 200
+c['buildHorizon'] = 100
+c['eventHorizon'] = 50
+c['logHorizon'] = 40
+c['buildCacheSize'] = 15
 @end example
 
+@bcindex c['logHorizon']
+@bcindex c['buildCacheSize']
 @bcindex c['changeHorizon']
+@bcindex c['buildHorizon']
+@bcindex c['eventHorizon']
+
+Buildbot stores historical information on disk in the form of "Pickle" files
+and compressed logfiles.  In a large installation, these can quickly consume
+disk space, yet in many cases developers never consult this historical
+information.  
+
 The @code{c['changeHorizon']} key determines how many changes the master will
 keep a record of. One place these changes are displayed is on the waterfall
 page.  This parameter defaults to 0, which means keep all changes indefinitely.
+
+The @code{buildHorizon} specifies the minimum number of builds for each builder
+which should be kept on disk.  The @code{eventHorizon} specifies the minumum
+number of events to keep -- events mostly describe connections and
+disconnections of slaves, and are seldom helpful to developers.  The
+@code{logHorizon} gives the minimum number of builds for which logs should be
+maintained; this parameter must be less than @code{buildHorizon}. Builds older
+than @code{logHorizon} but not older than @code{buildHorizon} will maintain
+their overall status and the status of each step, but the logfiles will be
+deleted.
+
+Finally, the @code{buildCacheSize} gives the number of builds for each builder
+which are cached in memory.  This number should be larger than the number of
+builds required for commonly-used status displays (the waterfall or grid
+views), so that those displays do not miss the cache on a refresh.
 
 @node Merging BuildRequests
 @subsection Merging BuildRequests
@@ -104,8 +136,8 @@ By default, buildbot merges BuildRequests that have compatible
 SourceStamps.
 
 This can be disabled for any particular Builder by passing
-@code{mergeRequests=False} to the BuilderConfig definition,
-@pxref{Defining Builders}. For example:
+@code{mergeRequests=False} to the BuilderConfig definition, @pxref{Builders}.
+For example:
 
 @example
 c['builders'] = [
@@ -169,3 +201,151 @@ def prioritizeBuilders(buildmaster, builders):
 c['prioritizeBuilders'] = prioritizeBuilders
 @end example
 
+@node Setting the PB Port for Slaves
+@subsection Setting the PB Port for Slaves
+
+@bcindex c['slavePortnum']
+
+@example
+c['slavePortnum'] = 10000
+@end example
+
+The buildmaster will listen on a TCP port of your choosing for
+connections from buildslaves. It can also use this port for
+connections from remote Change Sources, status clients, and debug
+tools. This port should be visible to the outside world, and you'll
+need to tell your buildslave admins about your choice.
+
+It does not matter which port you pick, as long it is externally
+visible, however you should probably use something larger than 1024,
+since most operating systems don't allow non-root processes to bind to
+low-numbered ports. If your buildmaster is behind a firewall or a NAT
+box of some sort, you may have to configure your firewall to permit
+inbound connections to this port.
+
+@code{c['slavePortnum']} is a @emph{strports} specification string,
+defined in the @code{twisted.application.strports} module (try
+@command{pydoc twisted.application.strports} to get documentation on
+the format). This means that you can have the buildmaster listen on a
+localhost-only port by doing:
+
+@example
+c['slavePortnum'] = "tcp:10000:interface=127.0.0.1"
+@end example
+
+This might be useful if you only run buildslaves on the same machine,
+and they are all configured to contact the buildmaster at
+@code{localhost:10000}.
+
+@node Defining Global Properties
+@subsection Defining Global Properties
+@bcindex c['properties']
+@cindex Properties
+
+The @code{'properties'} configuration key defines a dictionary
+of properties that will be available to all builds started by the
+buildmaster:
+
+@example
+c['properties'] = @{
+    'Widget-version' : '1.2',
+    'release-stage' : 'alpha'
+@}
+@end example
+
+@node Debug Options
+@subsection Debug Options
+
+@bcindex c['debugPassword']
+If you set @code{c['debugPassword']}, then you can connect to the
+buildmaster with the diagnostic tool launched by @code{buildbot
+debugclient MASTER:PORT}. From this tool, you can reload the config
+file, manually force builds, and inject changes, which may be useful
+for testing your buildmaster without actually commiting changes to
+your repository (or before you have the Change Sources set up). The
+debug tool uses the same port number as the slaves do:
+@code{c['slavePortnum']}, and is authenticated with this password.
+
+@example
+c['debugPassword'] = "debugpassword"
+@end example
+
+@bcindex c['manhole']
+If you set @code{c['manhole']} to an instance of one of the classes in
+@code{buildbot.manhole}, you can telnet or ssh into the buildmaster
+and get an interactive Python shell, which may be useful for debugging
+buildbot internals. It is probably only useful for buildbot
+developers. It exposes full access to the buildmaster's account
+(including the ability to modify and delete files), so it should not
+be enabled with a weak or easily guessable password.
+
+There are three separate @code{Manhole} classes. Two of them use SSH,
+one uses unencrypted telnet. Two of them use a username+password
+combination to grant access, one of them uses an SSH-style
+@file{authorized_keys} file which contains a list of ssh public keys.
+
+@table @code
+@item manhole.AuthorizedKeysManhole
+You construct this with the name of a file that contains one SSH
+public key per line, just like @file{~/.ssh/authorized_keys}. If you
+provide a non-absolute filename, it will be interpreted relative to
+the buildmaster's base directory.
+
+@item manhole.PasswordManhole
+This one accepts SSH connections but asks for a username and password
+when authenticating. It accepts only one such pair.
+
+
+@item manhole.TelnetManhole
+This accepts regular unencrypted telnet connections, and asks for a
+username/password pair before providing access. Because this
+username/password is transmitted in the clear, and because Manhole
+access to the buildmaster is equivalent to granting full shell
+privileges to both the buildmaster and all the buildslaves (and to all
+accounts which then run code produced by the buildslaves), it is
+highly recommended that you use one of the SSH manholes instead.
+
+@end table
+
+@example
+# some examples:
+from buildbot import manhole
+c['manhole'] = manhole.AuthorizedKeysManhole(1234, "authorized_keys")
+c['manhole'] = manhole.PasswordManhole(1234, "alice", "mysecretpassword")
+c['manhole'] = manhole.TelnetManhole(1234, "bob", "snoop_my_password_please")
+@end example
+
+The @code{Manhole} instance can be configured to listen on a specific
+port. You may wish to have this listening port bind to the loopback
+interface (sometimes known as ``lo0'', ``localhost'', or 127.0.0.1) to
+restrict access to clients which are running on the same host.
+
+@example
+from buildbot.manhole import PasswordManhole
+c['manhole'] = PasswordManhole("tcp:9999:interface=127.0.0.1","admin","passwd")
+@end example
+
+To have the @code{Manhole} listen on all interfaces, use
+@code{"tcp:9999"} or simply 9999. This port specification uses
+@code{twisted.application.strports}, so you can make it listen on SSL
+or even UNIX-domain sockets if you want.
+
+Note that using any Manhole requires that the TwistedConch package be
+installed, and that you be using Twisted version 2.0 or later.
+
+The buildmaster's SSH server will use a different host key than the
+normal sshd running on a typical unix host. This will cause the ssh
+client to complain about a ``host key mismatch'', because it does not
+realize there are two separate servers running on the same host. To
+avoid this, use a clause like the following in your @file{.ssh/config}
+file:
+
+@example
+Host remotehost-buildbot
+ HostName remotehost
+ HostKeyAlias remotehost-buildbot
+ Port 9999
+ # use 'user' if you use PasswordManhole and your name is not 'admin'.
+ # if you use AuthorizedKeysManhole, this probably doesn't matter.
+ User admin
+@end example

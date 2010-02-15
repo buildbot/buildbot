@@ -113,7 +113,7 @@ responsible for everything).
 The buildmaster is usually fed @code{Changes} by some sort of version control
 system (@pxref{Change Sources}), which may cause builds to be run. As the
 builds are performed, various status messages are produced, which are then sent
-to any registered Status Targets (@pxref{Status Delivery}).
+to any registered Status Targets (@pxref{Status Targets}).
 
 @c @image{FILENAME, WIDTH, HEIGHT, ALTTEXT, EXTENSION}
 @image{images/overview,,,Overview Diagram,}

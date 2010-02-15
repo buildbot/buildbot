@@ -613,9 +613,9 @@ buildbot debugclient --master @var{MASTERHOST}:@var{PORT} --passwd @var{DEBUGPW}
 
 This launches a small Gtk+/Glade-based debug tool, connecting to the
 buildmaster's ``debug port''. This debug port shares the same port
-number as the slaveport (@pxref{Setting the slaveport}), but the
+number as the slaveport (@pxref{Setting the PB Port for Slaves}), but the
 @code{debugPort} is only enabled if you set a debug password in the
-buildmaster's config file (@pxref{Debug options}). The
+buildmaster's config file (@pxref{Debug Options}). The
 @option{--passwd} option must match the @code{c['debugPassword']}
 value.
 

@@ -51,14 +51,6 @@ class SubunitLogObserver(buildstep.LogLineObserver, TestResult):
         """An issue - failing, erroring etc test."""
         self.step.setProgress('tests failed', len(self.failures) + len(self.errors))
 
-
-class SubunitShellCommand(ShellCommand):
-    """A ShellCommand that sniffs subunit output.
-
-    Ideally not needed, and thus here to be trivially deleted. See issue #615
-    """
-
-    def __init__(self, *args, **kwargs):
-        ShellCommand.__init__(self, *args, **kwargs)
-        self.addLogObserver('stdio', SubunitLogObserver())
-        self.progressMetrics = self.progressMetrics + ('tests', 'tests failed')
+# this used to be referenced here, so we keep a link for old time's sake
+import buildbot.steps.subunit
+SubunitShellCommand = buildbot.steps.subunit.SubunitShellCommand

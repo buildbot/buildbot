@@ -1,18 +1,40 @@
-More details are available in the docstrings for each class, use a
-command like @code{pydoc buildbot.status.html.WebStatus} to see them.
+The Buildmaster has a variety of ways to present build status to
+various users. Each such delivery method is a ``Status Target'' object
+in the configuration's @code{status} list. To add status targets, you
+just append more objects to this list:
+
+@bcindex c['status']
+
+@example
+c['status'] = []
+
+from buildbot.status import html
+c['status'].append(html.Waterfall(http_port=8010))
+
+from buildbot.status import mail
+m = mail.MailNotifier(fromaddr="buildbot@@localhost",
+                      extraRecipients=["builds@@lists.example.com"],
+                      sendToInterestedUsers=False)
+c['status'].append(m)
+
+from buildbot.status import words
+c['status'].append(words.IRC(host="irc.example.com", nick="bb",
+                             channels=["#example"]))
+@end example
+
 Most status delivery objects take a @code{categories=} argument, which
 can contain a list of ``category'' names: in this case, it will only
 show status for Builders that are in one of the named categories.
 
-(implementor's note: each of these objects should be a
-service.MultiService which will be attached to the BuildMaster object
-when the configuration is processed. They should use
-@code{self.parent.getStatus()} to get access to the top-level IStatus
-object, either inside @code{startService} or later. They may call
-@code{status.subscribe()} in @code{startService} to receive
-notifications of builder events, in which case they must define
-@code{builderAdded} and related methods. See the docstrings in
-@file{buildbot/interfaces.py} for full details.)
+@heading Implementation Note
+
+Each of these objects should be a service.MultiService which will be attached
+to the BuildMaster object when the configuration is processed. They should use
+@code{self.parent.getStatus()} to get access to the top-level IStatus object,
+either inside @code{startService} or later. They may call
+@code{status.subscribe()} in @code{startService} to receive notifications of
+builder events, in which case they must define @code{builderAdded} and related
+methods. See the docstrings in @file{buildbot/interfaces.py} for full details.
 
 @menu
 * WebStatus::
@@ -20,16 +42,11 @@ notifications of builder events, in which case they must define
 * IRC Bot::
 * PBListener::
 * Writing New Status Plugins::
+* Status Target Index::
 @end menu
 
-@c @node Email Delivery
-@c @subsection Email Delivery
-
-@c DOCUMENT THIS
-
-
 @node WebStatus
-@section WebStatus
+@subsection WebStatus
 
 @cindex WebStatus
 @stindex buildbot.status.web.baseweb.WebStatus
@@ -45,13 +62,12 @@ the @file{public_html/index.html} file in the buildmaster's base
 directory, where it is created by the @command{buildbot create-master}
 command along with the rest of the buildmaster.
 
-The most complex resource provided by @code{WebStatus} is the
+One of the most complex resource provided by @code{WebStatus} is the
 ``Waterfall Display'', which shows a time-based chart of events. This
-somewhat-busy display provides detailed information about all steps of
-all recent builds, and provides hyperlinks to look at individual build
-logs and source changes. By simply reloading this page on a regular
-basis, you will see a complete description of everything the buildbot
-is currently working on.
+somewhat-busy display provides detailed information about all steps of all
+recent builds, and provides hyperlinks to look at individual build logs and
+source changes. By simply reloading this page on a regular basis, you will see
+a complete description of everything the buildbot is currently working on.
 
 A similar, but more developer-oriented display is the "Grid" display.  This
 arranges builds by SourceStamp (horizontal axis) and builder (vertical axis),
@@ -66,6 +82,7 @@ this page, you can narrow the display to builds that involved certain
 branches, or which ran on certain Builders. These pages are described
 in great detail below.
 
+@heading Configuration
 
 When the buildmaster is created, a subdirectory named
 @file{public_html/} is created in its base directory. By default, @code{WebStatus}
@@ -116,7 +133,7 @@ they provide.
 @end menu
 
 @node Buildbot Web Resources
-@subsection Buildbot Web Resources
+@subsubsection Buildbot Web Resources
 
 Certain URLs are ``magic'', and the pages they serve are created by
 code in various classes in the @file{buildbot.status.web} package
@@ -365,7 +382,7 @@ details.
 @end table
 
 @node WebStatus Configuration Parameters
-@subsection WebStatus Configuration Parameters
+@subsubsection WebStatus Configuration Parameters
 
 @heading HTTP Connection
 
@@ -537,7 +554,7 @@ waterfall will display.  The @code{num_events_max} gives the maximum number of
 events displayed, even if the web browser requests more.
 
 @node XMLRPC server
-@subsection XMLRPC server
+@subsubsection XMLRPC server
 
 When using WebStatus, the buildbot runs an XML-RPC server at
 @file{/xmlrpc} that can be used by other programs to query build
@@ -578,7 +595,7 @@ of the log files, but it has just about everything else.
 @end table
 
 @node MailNotifier
-@section MailNotifier
+@subsection MailNotifier
 
 @cindex email
 @cindex mail
@@ -897,7 +914,7 @@ for log in build.getLogs():
 @end table
 
 @node IRC Bot
-@section IRC Bot
+@subsection IRC Bot
 
 @cindex IRC
 @stindex buildbot.status.words.IRC
@@ -1004,7 +1021,7 @@ before starting the second (hopefully fixed) build.
 @end table
 
 @node PBListener
-@section PBListener
+@subsection PBListener
 
 @cindex PBListener
 @stindex buildbot.status.client.PBListener
@@ -1024,7 +1041,7 @@ status client. The @code{port} argument can also be a strports
 specification string.
 
 @node Writing New Status Plugins
-@section Writing New Status Plugins
+@subsection Writing New Status Plugins
 
 TODO: this needs a lot more examples
 
@@ -1049,6 +1066,6 @@ server used by the Waterfall plugin), they can be attached as Service
 children of the plugin itself, using the @code{IServiceCollection}
 interface.
 
-
-
-
+@node Status Target Index
+@subsection Status Target Index
+@printindex st
