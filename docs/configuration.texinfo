@@ -22,12 +22,9 @@ understand how to fill in each section properly.
 * Predefined Config File Symbols::
 * Loading the Config File::
 * Testing the Config File::
-* Project Definitions::
 * Global Configuration::
 * Change Sources::
 * Schedulers::
-* Merging BuildRequests::
-* Prioritizing Builders::
 * Setting the slaveport::
 * Buildslave Specifiers::
 * On-Demand ("Latent") Buildslaves::
@@ -179,10 +176,6 @@ NameError: name 'bogus' is not defined
 @end example
 
 
-@node Project Definitions
-@section Project Definitions
-@include cfg-projdef.texinfo
-
 @node Global Configuration
 @section Global Configuration
 @include cfg-global.texinfo
@@ -195,67 +188,7 @@ NameError: name 'bogus' is not defined
 @section Schedulers
 @include cfg-schedulers.texinfo
 
-@node Merging BuildRequests
-@section Merging BuildRequests
-
-@bcindex c['mergeRequests']
-
-By default, buildbot merges BuildRequests that have the compatible
-SourceStamps. This behaviour can be customized with the
-@code{c['mergeRequests']} configuration key.  This key specifies a function
-which is called with three arguments: a @code{Builder} and two
-@code{BuildRequest} objects.  It should return true if the requests can be
-merged.  For example:
-
-@example
-def mergeRequests(builder, req1, req2):
-    """Don't merge buildrequest at all"""
-    return False
-c['mergeRequests'] = mergeRequests
-@end example
-
-In many cases, the details of the SourceStamps and BuildRequests are important.
-In this example, only BuildRequests with the same "reason" are merged; thus
-developers forcing builds for different reasons will see distinct builds.
-
-@example
-def mergeRequests(builder, req1, req2):
-    if req1.source.canBeMergedWith(req2.source) and  req1.reason == req2.reason:
-       return True
-    return False
-c['mergeRequests'] = mergeRequests
-@end example
-
-@node Prioritizing Builders
-@section Prioritizing Builders
-
-@bcindex c['prioritizeBuilders']
-
-By default, buildbot will attempt to start builds on builders in order from the
-builder with the oldest pending request to the newest. This behaviour can be
-customized with the @code{c['prioritizeBuilders']} configuration key.
-This key specifies a function which is called with two arguments: a
-@code{BuildMaster} and a list of @code{Builder} objects. It
-should return a list of @code{Builder} objects in the desired order.
-It may also remove items from the list if builds should not be started
-on those builders.
-
-@example
-def prioritizeBuilders(buildmaster, builders):
-    """Prioritize builders.  'finalRelease' builds have the highest
-    priority, so they should be built before running tests, or
-    creating builds."""
-    builderPriorities = @{
-        "finalRelease": 0,
-        "test": 1,
-        "build": 2,
-    @}
-    builders.sort(key=lambda b: builderPriorities.get(b.name, 0))
-    return builders
-
-c['prioritizeBuilders'] = prioritizeBuilders
-@end example
-
+@c working here --
 
 @node Setting the slaveport
 @section Setting the slaveport

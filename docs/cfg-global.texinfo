@@ -1,5 +1,53 @@
 The keys in this section affect the operations of the buildmaster globally.
 
+@menu
+* Project Definitions::
+* Log Handling::
+* Data Lifetime::
+* Merging BuildRequests::
+* Prioritizing Builders::
+@end menu
+
+@node Project Definitions
+@subsection Project Definitions
+
+There are a couple of basic settings that you use to tell the buildbot
+what project it is working on. This information is used by status
+reporters to let users find out more about the codebase being
+exercised by this particular Buildbot installation.
+
+@example
+c['projectName'] = "Buildbot"
+c['projectURL'] = "http://buildbot.sourceforge.net/"
+c['buildbotURL'] = "http://localhost:8010/"
+@end example
+
+@bcindex c['projectName']
+@code{projectName} is a short string will be used to describe the
+project that this buildbot is working on. For example, it is used as
+the title of the waterfall HTML page.
+
+@bcindex c['projectURL']
+@code{projectURL} is a string that gives a URL for the project as a
+whole. HTML status displays will show @code{projectName} as a link to
+@code{projectURL}, to provide a link from buildbot HTML pages to your
+project's home page.
+
+@bcindex c['buildbotURL']
+The @code{buildbotURL} string should point to the location where the buildbot's
+internal web server is visible. This typically uses the port number set when
+you create the @code{Waterfall} object: the buildbot needs your help to figure
+out a suitable externally-visible host name.
+
+When status notices are sent to users (either by email or over IRC),
+@code{buildbotURL} will be used to create a URL to the specific build
+or problem that they are being notified about. It will also be made
+available to queriers (over IRC) who want to find out where to get
+more information about this buildbot.
+
+@node Log Handling
+@subsection Log Handling
+
 @example
 c['logCompressionLimit'] = 16384
 c['logCompressionMethod'] = 'gz'
@@ -35,10 +83,76 @@ contain the first @code{logMaxSize} bytes and the last @code{logMaxTailSize}
 bytes of output.  Don't set this value too high, as the the tail of the log is
 kept in memory.
 
-@bcindex c['changeHorizon']
+@node Data Lifetime
+@subsection Data Lifetime
 
+@example
+c['changeHorizon'] = 200
+@end example
+
+@bcindex c['changeHorizon']
 The @code{c['changeHorizon']} key determines how many changes the master will
 keep a record of. One place these changes are displayed is on the waterfall
 page.  This parameter defaults to 0, which means keep all changes indefinitely.
 
+@node Merging BuildRequests
+@subsection Merging BuildRequests
+
+@bcindex c['mergeRequests']
+
+By default, buildbot merges BuildRequests that have the compatible
+SourceStamps. This behaviour can be customized with the
+@code{c['mergeRequests']} configuration key.  This key specifies a function
+which is called with three arguments: a @code{Builder} and two
+@code{BuildRequest} objects.  It should return true if the requests can be
+merged.  For example:
+
+@example
+def mergeRequests(builder, req1, req2):
+    """Don't merge buildrequest at all"""
+    return False
+c['mergeRequests'] = mergeRequests
+@end example
+
+In many cases, the details of the SourceStamps and BuildRequests are important.
+In this example, only BuildRequests with the same "reason" are merged; thus
+developers forcing builds for different reasons will see distinct builds.
+
+@example
+def mergeRequests(builder, req1, req2):
+    if req1.source.canBeMergedWith(req2.source) and  req1.reason == req2.reason:
+       return True
+    return False
+c['mergeRequests'] = mergeRequests
+@end example
+
+@node Prioritizing Builders
+@subsection Prioritizing Builders
+
+@bcindex c['prioritizeBuilders']
+
+By default, buildbot will attempt to start builds on builders in order from the
+builder with the oldest pending request to the newest. This behaviour can be
+customized with the @code{c['prioritizeBuilders']} configuration key.
+This key specifies a function which is called with two arguments: a
+@code{BuildMaster} and a list of @code{Builder} objects. It
+should return a list of @code{Builder} objects in the desired order.
+It may also remove items from the list if builds should not be started
+on those builders.
+
+@example
+def prioritizeBuilders(buildmaster, builders):
+    """Prioritize builders.  'finalRelease' builds have the highest
+    priority, so they should be built before running tests, or
+    creating builds."""
+    builderPriorities = @{
+        "finalRelease": 0,
+        "test": 1,
+        "build": 2,
+    @}
+    builders.sort(key=lambda b: builderPriorities.get(b.name, 0))
+    return builders
+
+c['prioritizeBuilders'] = prioritizeBuilders
+@end example
 
