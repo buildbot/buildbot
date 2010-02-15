@@ -6,6 +6,7 @@ from twisted.spread import pb
 from buildbot.process.buildstep import LoggingBuildStep, RemoteShellCommand
 from buildbot.process.buildstep import RemoteCommand
 from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE, STDOUT, STDERR
+from buildbot.interfaces import BuildSlaveTooOldError
 
 # for existing configurations that import WithProperties from here.  We like
 # to move this class around just to keep our readers guessing.
@@ -211,7 +212,6 @@ class ShellCommand(LoggingBuildStep):
 
         # check for the usePTY flag
         if kwargs.has_key('usePTY') and kwargs['usePTY'] != 'slave-config':
-            slavever = self.slaveVersion("shell", "old")
             if self.slaveVersionIsOlderThan("svn", "2.7"):
                 warnings.append("NOTE: slave does not allow master to override usePTY\n")
 

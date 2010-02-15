@@ -1,6 +1,5 @@
 
 from twisted.web import html
-from twisted.web.error import NoResource
 from twisted.web.util import Redirect, DeferredResource
 from twisted.internet import defer, reactor
 

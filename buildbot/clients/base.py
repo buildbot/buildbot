@@ -1,5 +1,5 @@
 
-import sys, re
+import re
 
 from twisted.spread import pb
 from twisted.cred import credentials, error

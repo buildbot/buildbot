@@ -2,7 +2,6 @@
 
 from zope.interface import implements
 from twisted.python import log, components
-from twisted.web import html
 import urllib
 
 import time
@@ -101,9 +100,6 @@ class BuildTopBox(components.Adapter):
         if not builds:
             return Box(["none"], class_="LastBuild")
         b = builds[0]
-        name = b.getBuilder().getName()
-        number = b.getNumber()
-        url = path_to_build(req, b)
         text = b.getText()
         tests_failed = b.getSummaryStatistic('tests-failed', operator.add, 0)
         if tests_failed: text.extend(["Failed tests: %d" % tests_failed])

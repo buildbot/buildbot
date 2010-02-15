@@ -81,7 +81,7 @@ class MasterShellCommand(BuildStep):
         self.step_status.setText(list(self.description))
 
         # TODO add a timeout?
-        proc = reactor.spawnProcess(self.LocalPP(self), argv[0], argv)
+        reactor.spawnProcess(self.LocalPP(self), argv[0], argv)
         # (the LocalPP object will call processEnded for us)
 
     def processEnded(self, status_object):

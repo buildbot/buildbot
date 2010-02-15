@@ -1,6 +1,5 @@
 
-import os, sys, urllib, weakref
-from itertools import count
+import os, weakref
 
 from zope.interface import implements
 from twisted.python import log
@@ -9,11 +8,9 @@ from twisted.web import server, distrib, static
 from twisted.spread import pb
 from twisted.web.util import Redirect
 
-from buildbot.interfaces import IControl, IStatusReceiver
+from buildbot.interfaces import IStatusReceiver
 
-from buildbot.status.web.base import HtmlResource,  \
-     build_get_class, ICurrentBox, BuildLineMixin, map_branches, \
-     StaticFile, path_to_root, createJinjaEnv
+from buildbot.status.web.base import StaticFile, createJinjaEnv
 from buildbot.status.web.feeds import Rss20StatusResource, \
      Atom10StatusResource
 from buildbot.status.web.waterfall import WaterfallStatusResource

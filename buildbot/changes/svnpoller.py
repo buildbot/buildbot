@@ -403,7 +403,6 @@ class SVNPoller(base.ChangeSource, util.ComparableMixin):
         changes = []
 
         for el in new_logentries:
-            branch_files = [] # get oldest change first
             revision = str(el.getAttribute("revision"))
 
             revlink=''

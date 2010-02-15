@@ -8,11 +8,12 @@ import os
 import re
 
 try:
-    import simplejson as json
+    import simplejson
+    json = simplejson # this hushes pyflakes
 except ImportError:
     import json
 
-from buildbot.status.web.base import HtmlResource, StaticHTML
+from buildbot.status.web.base import HtmlResource
 from twisted.web import error, html, resource
 
 

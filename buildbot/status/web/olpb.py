@@ -1,6 +1,4 @@
 
-import os, sys
-
 from buildbot.status.web.base import HtmlResource, BuildLineMixin, map_branches
 
 # /one_line_per_build

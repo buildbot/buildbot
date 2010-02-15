@@ -121,7 +121,7 @@ class BuildSlavesResource(HtmlResource):
 
     def getChild(self, path, req):
         try:
-            slave = self.getStatus(req).getSlave(path)
+            self.getStatus(req).getSlave(path)
             return OneBuildSlaveResource(path)
         except KeyError:
             return NoResource("No such slave '%s'" % html.escape(path))

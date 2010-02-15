@@ -113,7 +113,7 @@ class BonsaiParser:
 
         except NoMoreCiNodes:
             pass
-        except InvalidResultError, EmptyResult:
+        except (InvalidResultError, EmptyResult):
             raise
 
         return BonsaiResult(nodes)

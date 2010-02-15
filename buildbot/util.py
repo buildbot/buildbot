@@ -74,7 +74,7 @@ class CancelableDeferred(Deferred):
 
 def ignoreStaleRefs(failure):
     """d.addErrback(util.ignoreStaleRefs)"""
-    r = failure.trap(pb.DeadReferenceError, pb.PBConnectionLost)
+    failure.trap(pb.DeadReferenceError, pb.PBConnectionLost)
     return None
 
 class _None:

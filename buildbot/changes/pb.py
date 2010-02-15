@@ -19,7 +19,6 @@ class ChangePerspective(NewCredPerspective):
     def perspective_addChange(self, changedict):
         log.msg("perspective_addChange called")
         pathnames = []
-        prefixpaths = None
         for path in changedict['files']:
             if self.prefix:
                 if not path.startswith(self.prefix):

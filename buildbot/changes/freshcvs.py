@@ -18,7 +18,7 @@ class FreshCVSListener(pb.Referenceable):
     def remote_notify(self, root, files, message, user):
         try:
             self.source.notify(root, files, message, user)
-        except Exception, e:
+        except Exception:
             print "notify failed"
             log.err()
 

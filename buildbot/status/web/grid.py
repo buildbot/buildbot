@@ -1,19 +1,7 @@
 from __future__ import generators
 
-import sys, os.path
-
 from buildbot.status.web.base import HtmlResource
 from buildbot.status.web.base import build_get_class, path_to_builder, path_to_build
-
-# set grid_css to the full pathname of the css file
-if hasattr(sys, "frozen"):
-    # all 'data' files are in the directory of our executable
-    here = os.path.dirname(sys.executable)
-    grid_css = os.path.abspath(os.path.join(here, "grid.css"))
-else:
-    # running from source; look for a sibling to __file__
-    up = os.path.dirname
-    grid_css = os.path.abspath(os.path.join(up(__file__), "grid.css"))
 
 class ANYBRANCH: pass # a flag value, used below
 
