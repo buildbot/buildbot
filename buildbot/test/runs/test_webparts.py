@@ -2,6 +2,7 @@
 
 import os
 import re
+import sys
 import urlparse
 
 from twisted.trial import unittest
@@ -19,6 +20,12 @@ from buildbot.process.buildstep import BuildStep
 from test_web import BaseWeb, base_config, SimpleMaster
 from buildbot.buildrequest import BuildRequest
 
+# any() is only defined in python 2.5 and up
+if sys.version < (2,5):
+    def any(it):
+        for elt in it:
+            if elt: return True
+        return False
 
 class _WebpartsTest(BaseWeb):
     def find_webstatus(self, master):
@@ -183,7 +190,7 @@ class CustomResolver(etree.Resolver):
         #determine cache filename
         url = urlparse.urlparse(URL)
         dtdPath = util.sibpath(__file__,
-                               url.hostname + '.' + url.path.replace('/', '.'))
+                               url[1] + '.' + url[2].replace('/', '.'))
         #cache if necessary
         if not os.path.exists(dtdPath):
             raise ValueError("URL '%s' is not cached in '%s'" % (URL, dtdPath))
@@ -383,10 +390,10 @@ class WebpartsRecursive(_WebpartsTest, unittest.TestCase):
 
         # these numbers need adjustment when web layout changes
         # but should catch empty pages
-        self.failIf(url_count < 55,
-                    "Only %i urls visited, expected at least 55" % url_count)
-        self.failIf(skip_count < 15,
-                    "Only %i urls skipped, expected at least 15" % skip_count)
+        self.failIf(url_count < 54,
+                    "Only %i urls visited, expected at least 54" % url_count)
+        self.failIf(skip_count < 18,
+                    "Only %i urls skipped, expected at least 18" % skip_count)
         self.failIf(self.link_count < 770,
                     "Only %i links encountered, expected at least 770" % self.link_count)
 
@@ -485,8 +492,8 @@ class WebpartsRecursive(_WebpartsTest, unittest.TestCase):
             # remove namespace (assume only xhtml namespace)
             tag = element.tag.split('}')[1]
 
-            # FIXME: rebuild redirects to a bad place in this test
-            untestable = ['/rebuild', '/stop']
+            # FIXME: relative redirects are baaaad
+            untestable = ['/rebuild', '/stop', '/ping']
             if any (map(lambda e: link.endswith(e), untestable)):
                 continue
 
