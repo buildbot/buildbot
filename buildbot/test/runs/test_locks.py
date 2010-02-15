@@ -8,8 +8,7 @@ from twisted.internet import defer, reactor
 from buildbot import master
 from buildbot.steps import dummy
 from buildbot.sourcestamp import SourceStamp
-from buildbot.process.base import BuildRequest
-from buildbot.test.runutils import RunMixin
+from buildbot.test.runutils import RunMixin, StallMixin
 from buildbot import locks
 
 def claimHarder(lock, owner, la):
@@ -233,6 +232,7 @@ class MakeRealLock(unittest.TestCase):
         self.failIfEqual(mid1, mid3)
         # they should all be hashable
         d = {mid1: 1, mid2: 2, mid3: 3, mid4: 4}
+        del d
 
         l1 = self.make(mid1)
         self.failUnlessEqual(l1.name, "name1")
@@ -262,6 +262,7 @@ class MakeRealLock(unittest.TestCase):
         self.failIfEqual(sid5a, sid5b)
         # they should all be hashable
         d = {sid1: 1, sid2: 2, sid3: 3, sid4: 4, sid5: 5, sid5a: 6, sid5b: 7}
+        del d
 
         l1 = self.make(sid1)
         self.failUnlessEqual(l1.name, "name1")
@@ -303,7 +304,7 @@ class GetLock(unittest.TestCase):
         # BotMaster.locks, but they're small and shouldn't really cause a
         # problem.
 
-        b = master.BotMaster()
+        b = master.BotMaster(None)
         l1 = locks.MasterLock("one")
         l1a = locks.MasterLock("one")
         l2 = locks.MasterLock("one", maxCount=4)
@@ -341,12 +342,12 @@ class GetLock(unittest.TestCase):
 
 class LockStep(dummy.Dummy):
     def start(self):
-        number = self.build.requests[0].number
-        self.build.requests[0].events.append(("start", number))
+        bsid = self.build.requests[0].bsid
+        self.build.builder.events.append(("start", bsid))
         dummy.Dummy.start(self)
     def done(self):
-        number = self.build.requests[0].number
-        self.build.requests[0].events.append(("done", number))
+        bsid = self.build.requests[0].bsid
+        self.build.builder.events.append(("done", bsid))
         dummy.Dummy.done(self)
 
 config_1 = """
@@ -387,19 +388,10 @@ c['builders'] = [b1a, b1b, b1c, b1d, b2a, b2b]
 """
 
 
-class Locks(RunMixin, unittest.TestCase):
+class Locks(RunMixin, StallMixin, unittest.TestCase):
     def setUp(self):
-        N = 'test_builder'
         RunMixin.setUp(self)
-        self.req1 = req1 = BuildRequest("forced build", SourceStamp(), N)
-        req1.number = 1
-        self.req2 = req2 = BuildRequest("forced build", SourceStamp(), N)
-        req2.number = 2
-        self.req3 = req3 = BuildRequest("forced build", SourceStamp(), N)
-        req3.number = 3
-        req1.events = req2.events = req3.events = self.events = []
         d = self.master.loadConfig(config_1)
-        d.addCallback(lambda res: self.master.startService())
         d.addCallback(lambda res: self.connectSlave(
                     ["full1a", "full1b", "full1c", "full1d"],
                     "bot1"))
@@ -407,36 +399,52 @@ class Locks(RunMixin, unittest.TestCase):
         return d
 
     def testLock1(self):
-        self.control.getBuilder("full1a").requestBuild(self.req1)
-        self.control.getBuilder("full1b").requestBuild(self.req2)
-        d = defer.DeferredList([self.req1.waitUntilFinished(),
-                                self.req2.waitUntilFinished()])
+        self.full1a = self.master.botmaster.builders["full1a"]
+        self.full1b = self.master.botmaster.builders["full1b"]
+        self.full1a.events = self.full1b.events = self.events = []
+        ss = SourceStamp()
+        bs1 = self.master.submitBuildSet(["full1a"], ss, "forced build")
+        bs2 = self.master.submitBuildSet(["full1b"], ss, "forced build")
+        self.bsid1 = bs1.id
+        self.bsid2 = bs2.id
+        d = defer.DeferredList([bs1.waitUntilFinished(),
+                                bs2.waitUntilFinished()])
         d.addCallback(self._testLock1_1)
         return d
 
     def _testLock1_1(self, res):
         # full1a should complete its step before full1b starts it
         self.failUnlessEqual(self.events,
-                             [("start", 1), ("done", 1),
-                              ("start", 2), ("done", 2)])
+                             [("start", self.bsid1), ("done", self.bsid1),
+                              ("start", self.bsid2), ("done", self.bsid2)])
+        return self.stall(None, 0.5)
 
     def testLock2(self):
         # two builds run on separate slaves with slave-scoped locks should
         # not interfere
-        self.control.getBuilder("full1a").requestBuild(self.req1)
-        self.control.getBuilder("full2a").requestBuild(self.req2)
-        d = defer.DeferredList([self.req1.waitUntilFinished(),
-                                self.req2.waitUntilFinished()])
+        self.full1a = self.master.botmaster.builders["full1a"]
+        self.full2a = self.master.botmaster.builders["full2a"]
+        self.full1a.events = self.full2a.events = self.events = []
+        ss = SourceStamp()
+        bs1 = self.master.submitBuildSet(["full1a"], ss, "forced build")
+        bs2 = self.master.submitBuildSet(["full2a"], ss, "forced build")
+        self.bsid1 = bs1.id
+        self.bsid2 = bs2.id
+        d = defer.DeferredList([bs1.waitUntilFinished(),
+                                bs2.waitUntilFinished()])
         d.addCallback(self._testLock2_1)
         return d
 
     def _testLock2_1(self, res):
         # full2a should start its step before full1a finishes it. They run on
         # different slaves, however, so they might start in either order.
-        self.failUnless(self.events[:2] == [("start", 1), ("start", 2)] or
-                        self.events[:2] == [("start", 2), ("start", 1)])
+        self.failUnless(self.events[:2] == [("start", self.bsid1),
+                                            ("start", self.bsid2)] or
+                        self.events[:2] == [("start", self.bsid2),
+                                            ("start", self.bsid1)])
+        return self.stall(None, 0.5)
 
-class BuilderLocks(RunMixin, unittest.TestCase):
+class BuilderLocks(RunMixin, StallMixin, unittest.TestCase):
     config = """\
 from buildbot import locks
 from buildbot.process import factory
@@ -466,16 +474,8 @@ c['builders'] = [
 """
 
     def setUp(self):
-        N = 'test_builder'
         RunMixin.setUp(self)
-        self.reqs = [BuildRequest("forced build", SourceStamp(), N)
-                     for i in range(4)]
-        self.events = []
-        for i in range(4):
-            self.reqs[i].number = i
-            self.reqs[i].events = self.events
         d = self.master.loadConfig(self.config)
-        d.addCallback(lambda res: self.master.startService())
         d.addCallback(lambda res: self.connectSlave(
                     ["excl_A", "excl_B", "count_A", "count_B"], "bot1"))
         d.addCallback(lambda res: self.connectSlave(
@@ -483,26 +483,38 @@ c['builders'] = [
         return d
 
     def testOrder(self):
-        self.control.getBuilder("excl_A").requestBuild(self.reqs[0])
-        self.control.getBuilder("excl_B").requestBuild(self.reqs[1])
-        self.control.getBuilder("count_A").requestBuild(self.reqs[2])
-        self.control.getBuilder("count_B").requestBuild(self.reqs[3])
-        d = defer.DeferredList([r.waitUntilFinished()
-                                for r in self.reqs])
+        self.exclA = self.master.botmaster.builders["excl_A"]
+        self.exclB = self.master.botmaster.builders["excl_B"]
+        self.countA = self.master.botmaster.builders["count_A"]
+        self.countB = self.master.botmaster.builders["count_B"]
+        self.events = []
+        self.exclA.events = self.exclB.events = self.events
+        self.countA.events = self.countB.events = self.events
+        ss = SourceStamp()
+        bsses = [self.master.submitBuildSet(["excl_A"], ss, "forced"),
+                 self.master.submitBuildSet(["excl_B"], ss, "forced"),
+                 self.master.submitBuildSet(["count_A"], ss, "forced"),
+                 self.master.submitBuildSet(["count_B"], ss, "forced"),
+                 ]
+        self.bsids = [bss.id for bss in bsses]
+
+        d = defer.DeferredList([r.waitUntilFinished() for r in bsses])
         d.addCallback(self._testOrder)
         return d
 
     def _testOrder(self, res):
         # excl_A and excl_B cannot overlap with any other steps.
-        self.assert_(("start", 0) in self.events)
-        self.assert_(("done", 0) in self.events)
-        self.assert_(self.events.index(("start", 0)) + 1 ==
-                     self.events.index(("done", 0)))
+        self.assert_(("start", self.bsids[0]) in self.events)
+        self.assert_(("done", self.bsids[0]) in self.events)
+        self.assert_(self.events.index(("start", self.bsids[0])) + 1 ==
+                     self.events.index(("done", self.bsids[0])))
 
-        self.assert_(("start", 1) in self.events)
-        self.assert_(("done", 1) in self.events)
-        self.assert_(self.events.index(("start", 1)) + 1 ==
-                     self.events.index(("done", 1)))
+        self.assert_(("start", self.bsids[1]) in self.events)
+        self.assert_(("done", self.bsids[1]) in self.events)
+        self.assert_(self.events.index(("start", self.bsids[1])) + 1 ==
+                     self.events.index(("done", self.bsids[1])))
 
         # FIXME: We really want to test that count_A and count_B were
         # overlapped, but don't have a reliable way to do this.
+
+        return self.stall(None, 0.5)

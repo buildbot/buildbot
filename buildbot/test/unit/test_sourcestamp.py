@@ -32,14 +32,14 @@ class SourceStampTest(unittest.TestCase):
             Change('nob', ['file2', 'file3'], 'Com', branch='br3',
                    revision='rev3'),
         ]
-        s = SourceStamp(branch='Br', revision='Rev', patch='Pat',
+        s = SourceStamp(branch='Br', revision='Rev', patch=(1,'Pat'),
                         changes=changes)
         r = s.asDict()
         r['changes'][0]['when'] = 23
         r['changes'][1]['when'] = 42
         self.assertEqual(r, {
             'revision': 'rev3',
-            'patch': 'Pat',
+            'patch': (1,'Pat'),
             'branch': 'br3',
             'changes': [
                 {

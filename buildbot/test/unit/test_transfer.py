@@ -22,7 +22,7 @@ class UploadFile(StepTester, unittest.TestCase):
     def testSuccess(self):
         self.slavebase = "UploadFile.testSuccess.slave"
         self.masterbase = "UploadFile.testSuccess.master"
-        sb = self.makeSlaveBuilder()
+        self.makeSlaveBuilder()
         os.mkdir(os.path.join(self.slavebase, self.slavebuilderbase,
                               "build"))
         # the buildmaster normally runs chdir'ed into masterbase, so uploaded
@@ -45,7 +45,7 @@ class UploadFile(StepTester, unittest.TestCase):
 
         d = self.runStep(step)
         def _checkUpload(results):
-            step_status = step.step_status
+            #step_status = step.step_status
             #l = step_status.getLogs()
             #if l:
             #    logtext = l[0].getText()
@@ -60,7 +60,7 @@ class UploadFile(StepTester, unittest.TestCase):
     def testMaxsize(self):
         self.slavebase = "UploadFile.testMaxsize.slave"
         self.masterbase = "UploadFile.testMaxsize.master"
-        sb = self.makeSlaveBuilder()
+        self.makeSlaveBuilder()
         os.mkdir(os.path.join(self.slavebase, self.slavebuilderbase,
                               "build"))
         masterdest = os.path.join(self.masterbase, "dest2.text")
@@ -80,7 +80,7 @@ class UploadFile(StepTester, unittest.TestCase):
 
         d = self.runStep(step)
         def _checkUpload(results):
-            step_status = step.step_status
+            #step_status = step.step_status
             #l = step_status.getLogs()
             #if l:
             #    logtext = l[0].getText()
@@ -99,7 +99,7 @@ class UploadFile(StepTester, unittest.TestCase):
 
         self.slavebase = "UploadFile.testMode.slave"
         self.masterbase = "UploadFile.testMode.master"
-        sb = self.makeSlaveBuilder()
+        self.makeSlaveBuilder()
         os.mkdir(os.path.join(self.slavebase, self.slavebuilderbase,
                               "build"))
         masterdest = os.path.join(self.masterbase, "dest3.text")
@@ -119,7 +119,7 @@ class UploadFile(StepTester, unittest.TestCase):
 
         d = self.runStep(step)
         def _checkUpload(results):
-            step_status = step.step_status
+            #step_status = step.step_status
             #l = step_status.getLogs()
             #if l:
             #    logtext = l[0].getText()
@@ -139,7 +139,7 @@ class UploadFile(StepTester, unittest.TestCase):
     def testMissingFile(self):
         self.slavebase = "UploadFile.testMissingFile.slave"
         self.masterbase = "UploadFile.testMissingFile.master"
-        sb = self.makeSlaveBuilder()
+        self.makeSlaveBuilder()
         step = self.makeStep(FileUpload,
                              slavesrc="MISSING.txt",
                              masterdest="dest.txt")
@@ -160,7 +160,7 @@ class UploadFile(StepTester, unittest.TestCase):
     def testLotsOfBlocks(self):
         self.slavebase = "UploadFile.testLotsOfBlocks.slave"
         self.masterbase = "UploadFile.testLotsOfBlocks.master"
-        sb = self.makeSlaveBuilder()
+        self.makeSlaveBuilder()
         os.mkdir(os.path.join(self.slavebase, self.slavebuilderbase,
                               "build"))
         # the buildmaster normally runs chdir'ed into masterbase, so uploaded
@@ -185,7 +185,7 @@ class UploadFile(StepTester, unittest.TestCase):
 
         d = self.runStep(step)
         def _checkUpload(results):
-            step_status = step.step_status
+            #step_status = step.step_status
             #l = step_status.getLogs()
             #if l:
             #    logtext = l[0].getText()
@@ -200,7 +200,7 @@ class UploadFile(StepTester, unittest.TestCase):
     def testWorkdir(self):
         self.slavebase = "Upload.testWorkdir.slave"
         self.masterbase = "Upload.testWorkdir.master"
-        sb = self.makeSlaveBuilder()
+        self.makeSlaveBuilder()
 
         self.workdir = "mybuild"        # override default in StepTest
         full_workdir = os.path.join(
@@ -233,7 +233,7 @@ class UploadFile(StepTester, unittest.TestCase):
         # test that workdir can be a WithProperties object
         self.slavebase = "Upload.testWithProperties.slave"
         self.masterbase = "Upload.testWithProperties.master"
-        sb = self.makeSlaveBuilder()
+        self.makeSlaveBuilder()
 
         step = self.makeStep(FileUpload,
                              slavesrc="src.txt",
@@ -252,7 +252,7 @@ class DownloadFile(StepTester, unittest.TestCase):
     def testSuccess(self):
         self.slavebase = "DownloadFile.testSuccess.slave"
         self.masterbase = "DownloadFile.testSuccess.master"
-        sb = self.makeSlaveBuilder()
+        self.makeSlaveBuilder()
         os.mkdir(os.path.join(self.slavebase, self.slavebuilderbase,
                               "build"))
         mastersrc = os.path.join(self.masterbase, "source.text")
@@ -271,7 +271,7 @@ class DownloadFile(StepTester, unittest.TestCase):
 
         d = self.runStep(step)
         def _checkDownload(results):
-            step_status = step.step_status
+            #step_status = step.step_status
             self.failUnlessEqual(results, SUCCESS)
             self.failUnless(os.path.exists(slavedest))
             slavedest_contents = open(slavedest, "rb").read()
@@ -282,7 +282,7 @@ class DownloadFile(StepTester, unittest.TestCase):
     def testMaxsize(self):
         self.slavebase = "DownloadFile.testMaxsize.slave"
         self.masterbase = "DownloadFile.testMaxsize.master"
-        sb = self.makeSlaveBuilder()
+        self.makeSlaveBuilder()
         os.mkdir(os.path.join(self.slavebase, self.slavebuilderbase,
                               "build"))
         mastersrc = os.path.join(self.masterbase, "source.text")
@@ -302,7 +302,7 @@ class DownloadFile(StepTester, unittest.TestCase):
 
         d = self.runStep(step)
         def _checkDownload(results):
-            step_status = step.step_status
+            #step_status = step.step_status
             # the file should be truncated, and the step a FAILURE
             self.failUnlessEqual(results, FAILURE)
             self.failUnless(os.path.exists(slavedest))
@@ -318,7 +318,7 @@ class DownloadFile(StepTester, unittest.TestCase):
 
         self.slavebase = "DownloadFile.testMode.slave"
         self.masterbase = "DownloadFile.testMode.master"
-        sb = self.makeSlaveBuilder()
+        self.makeSlaveBuilder()
         os.mkdir(os.path.join(self.slavebase, self.slavebuilderbase,
                               "build"))
         mastersrc = os.path.join(self.masterbase, "source.text")
@@ -338,7 +338,7 @@ class DownloadFile(StepTester, unittest.TestCase):
 
         d = self.runStep(step)
         def _checkDownload(results):
-            step_status = step.step_status
+            #step_status = step.step_status
             self.failUnlessEqual(results, SUCCESS)
             self.failUnless(os.path.exists(slavedest))
             slavedest_contents = open(slavedest, "rb").read()
@@ -354,7 +354,7 @@ class DownloadFile(StepTester, unittest.TestCase):
     def testMissingFile(self):
         self.slavebase = "DownloadFile.testMissingFile.slave"
         self.masterbase = "DownloadFile.testMissingFile.master"
-        sb = self.makeSlaveBuilder()
+        self.makeSlaveBuilder()
         os.mkdir(os.path.join(self.slavebase, self.slavebuilderbase,
                               "build"))
         mastersrc = os.path.join(self.masterbase, "MISSING.text")
@@ -381,7 +381,7 @@ class DownloadFile(StepTester, unittest.TestCase):
     def testLotsOfBlocks(self):
         self.slavebase = "DownloadFile.testLotsOfBlocks.slave"
         self.masterbase = "DownloadFile.testLotsOfBlocks.master"
-        sb = self.makeSlaveBuilder()
+        self.makeSlaveBuilder()
         os.mkdir(os.path.join(self.slavebase, self.slavebuilderbase,
                               "build"))
         mastersrc = os.path.join(self.masterbase, "source.text")
@@ -402,7 +402,7 @@ class DownloadFile(StepTester, unittest.TestCase):
 
         d = self.runStep(step)
         def _checkDownload(results):
-            step_status = step.step_status
+            #step_status = step.step_status
             self.failUnlessEqual(results, SUCCESS)
             self.failUnless(os.path.exists(slavedest))
             slavedest_contents = open(slavedest, "rb").read()
@@ -413,7 +413,7 @@ class DownloadFile(StepTester, unittest.TestCase):
     def testWorkdir(self):
         self.slavebase = "Download.testWorkdir.slave"
         self.masterbase = "Download.testWorkdir.master"
-        sb = self.makeSlaveBuilder()
+        self.makeSlaveBuilder()
 
         # As in Upload.testWorkdir(), it's enough to test that makeStep()'s
         # call of setDefaultWorkdir() actually sets step.workdir.
@@ -427,7 +427,7 @@ class DownloadFile(StepTester, unittest.TestCase):
         # test that workdir can be a WithProperties object
         self.slavebase = "Download.testWithProperties.slave"
         self.masterbase = "Download.testWithProperties.master"
-        sb = self.makeSlaveBuilder()
+        self.makeSlaveBuilder()
 
         step = self.makeStep(FileDownload,
                              mastersrc="src.txt",
@@ -448,7 +448,7 @@ class UploadDirectory(StepTester, unittest.TestCase):
     def testSuccess(self):
         self.slavebase = "UploadDirectory.testSuccess.slave"
         self.masterbase = "UploadDirectory.testSuccess.master"
-        sb = self.makeSlaveBuilder()
+        self.makeSlaveBuilder()
         os.mkdir(os.path.join(self.slavebase, self.slavebuilderbase,
                               "build"))
         # the buildmaster normally runs chdir'ed into masterbase, so uploaded
@@ -483,7 +483,7 @@ class UploadDirectory(StepTester, unittest.TestCase):
 
         d = self.runStep(step)
         def _checkUpload(results):
-            step_status = step.step_status
+            #step_status = step.step_status
             #l = step_status.getLogs()
             #if l:
             #    logtext = l[0].getText()
@@ -506,7 +506,7 @@ class UploadDirectory(StepTester, unittest.TestCase):
     def testOneEmptyDir(self):
         self.slavebase = "UploadDirectory.testOneEmptyDir.slave"
         self.masterbase = "UploadDirectory.testOneEmptyDir.master"
-        sb = self.makeSlaveBuilder()
+        self.makeSlaveBuilder()
         os.mkdir(os.path.join(self.slavebase, self.slavebuilderbase,
                               "build"))
         # the buildmaster normally runs chdir'ed into masterbase, so uploaded
@@ -525,7 +525,7 @@ class UploadDirectory(StepTester, unittest.TestCase):
 
         d = self.runStep(step)
         def _checkUpload(results):
-            step_status = step.step_status
+            #step_status = step.step_status
             #l = step_status.getLogs()
             #if l:
             #    logtext = l[0].getText()
@@ -538,7 +538,7 @@ class UploadDirectory(StepTester, unittest.TestCase):
     def testManyEmptyDirs(self):
         self.slavebase = "UploadDirectory.testManyEmptyDirs.slave"
         self.masterbase = "UploadDirectory.testManyEmptyDirs.master"
-        sb = self.makeSlaveBuilder()
+        self.makeSlaveBuilder()
         os.mkdir(os.path.join(self.slavebase, self.slavebuilderbase,
                               "build"))
         # the buildmaster normally runs chdir'ed into masterbase, so uploaded
@@ -565,7 +565,7 @@ class UploadDirectory(StepTester, unittest.TestCase):
 
         d = self.runStep(step)
         def _checkUpload(results):
-            step_status = step.step_status
+            #step_status = step.step_status
             #l = step_status.getLogs()
             #if l:
             #    logtext = l[0].getText()
@@ -584,7 +584,7 @@ class UploadDirectory(StepTester, unittest.TestCase):
     def testOneDirOneFile(self):
         self.slavebase = "UploadDirectory.testOneDirOneFile.slave"
         self.masterbase = "UploadDirectory.testOneDirOneFile.master"
-        sb = self.makeSlaveBuilder()
+        self.makeSlaveBuilder()
         os.mkdir(os.path.join(self.slavebase, self.slavebuilderbase,
                               "build"))
         # the buildmaster normally runs chdir'ed into masterbase, so uploaded
@@ -605,7 +605,7 @@ class UploadDirectory(StepTester, unittest.TestCase):
 
         d = self.runStep(step)
         def _checkUpload(results):
-            step_status = step.step_status
+            #step_status = step.step_status
             #l = step_status.getLogs()
             #if l:
             #    logtext = l[0].getText()
@@ -620,7 +620,7 @@ class UploadDirectory(StepTester, unittest.TestCase):
     def testOneDirManyFiles(self):
         self.slavebase = "UploadDirectory.testOneDirManyFile.slave"
         self.masterbase = "UploadDirectory.testOneDirManyFile.master"
-        sb = self.makeSlaveBuilder()
+        self.makeSlaveBuilder()
         os.mkdir(os.path.join(self.slavebase, self.slavebuilderbase,
                               "build"))
         # the buildmaster normally runs chdir'ed into masterbase, so uploaded
@@ -647,7 +647,7 @@ class UploadDirectory(StepTester, unittest.TestCase):
 
         d = self.runStep(step)
         def _checkUpload(results):
-            step_status = step.step_status
+            #step_status = step.step_status
             #l = step_status.getLogs()
             #if l:
             #    logtext = l[0].getText()
@@ -664,7 +664,7 @@ class UploadDirectory(StepTester, unittest.TestCase):
     def testManyDirsManyFiles(self):
         self.slavebase = "UploadDirectory.testManyDirsManyFile.slave"
         self.masterbase = "UploadDirectory.testManyDirsManyFile.master"
-        sb = self.makeSlaveBuilder()
+        self.makeSlaveBuilder()
         os.mkdir(os.path.join(self.slavebase, self.slavebuilderbase,
                               "build"))
         # the buildmaster normally runs chdir'ed into masterbase, so uploaded
@@ -702,7 +702,7 @@ class UploadDirectory(StepTester, unittest.TestCase):
 
         d = self.runStep(step)
         def _checkUpload(results):
-            step_status = step.step_status
+            #step_status = step.step_status
             #l = step_status.getLogs()
             #if l:
             #    logtext = l[0].getText()
@@ -722,7 +722,7 @@ class UploadDirectory(StepTester, unittest.TestCase):
     def testBigFile(self):
         self.slavebase = "UploadDirectory.testBigFile.slave"
         self.masterbase = "UploadDirectory.testBigFile.master"
-        sb = self.makeSlaveBuilder()
+        self.makeSlaveBuilder()
         os.mkdir(os.path.join(self.slavebase, self.slavebuilderbase,
                               "build"))
         # the buildmaster normally runs chdir'ed into masterbase, so uploaded
@@ -743,7 +743,7 @@ class UploadDirectory(StepTester, unittest.TestCase):
 
         d = self.runStep(step)
         def _checkUpload(results):
-            step_status = step.step_status
+            #step_status = step.step_status
             self.failUnlessEqual(results, SUCCESS)
             self.failUnless(os.path.exists(masterdest))
             masterdest_contents = open(os.path.join(masterdest, "file"), "rb").read()

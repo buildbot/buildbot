@@ -1,5 +1,4 @@
 # -*- test-case-name: buildbot.test.test_web -*-
-# -*- coding: utf-8 -*-
 
 import os, time, shutil
 import warnings
@@ -13,7 +12,8 @@ from twisted.internet import reactor, defer, protocol
 from twisted.internet.interfaces import IReactorUNIX
 from twisted.web import client
 
-from buildbot import master, interfaces, sourcestamp
+from buildbot import master, interfaces, sourcestamp, db
+from buildbot.buildrequest import BuildRequest
 from buildbot.status import html, builder
 from buildbot.status.web import waterfall, xmlrpc
 from buildbot.changes.changes import Change
@@ -21,19 +21,17 @@ from buildbot.process import base
 from buildbot.process.buildstep import BuildStep
 from buildbot.test.runutils import setupBuildStepStatus
 
-class ConfiguredMaster(master.BuildMaster):
-    """This BuildMaster variant has a static config file, provided as a
-    string when it is created."""
+class SimpleMaster(master.BuildMaster):
+    """This BuildMaster variant uses a local sqlite DB, and gives more
+    control over the loading of the config file."""
 
-    def __init__(self, basedir, config):
-        self.config = config
-        master.BuildMaster.__init__(self, basedir)
+    def __init__(self, basedir):
+        spec = db.DB("sqlite3", os.path.join(basedir, "state.sqlite"))
+        db.create_db(spec)
+        master.BuildMaster.__init__(self, basedir, db=spec)
+        self.readConfig = True
 
-    def loadTheConfigFile(self):
-        self.loadConfig(self.config)
-
-components.registerAdapter(master.Control, ConfiguredMaster,
-                           interfaces.IControl)
+components.registerAdapter(master.Control, SimpleMaster, interfaces.IControl)
 
 
 base_config = """
@@ -133,16 +131,22 @@ class BaseWeb:
 
 class Ports(BaseWeb, unittest.TestCase):
 
+    def tearDown(self):
+        if self.master:
+            return self.master.stopService()
+
     def test_webPortnum(self):
         # run a regular web server on a TCP socket
         config = base_config + "c['status'] = [html.WebStatus(http_port=0)]\n"
         os.mkdir("test_web1")
-        self.master = m = ConfiguredMaster("test_web1", config)
+        self.master = m = SimpleMaster("test_web1")
         m.startService()
-        # hack to find out what randomly-assigned port it is listening on
-        port = self.find_webstatus(m).getPortnum()
-
-        d = client.getPage("http://localhost:%d/waterfall" % port)
+        d = m.loadConfig(config)
+        def _started(ign):
+            # hack to find out what randomly-assigned port it is listening on
+            port = self.find_webstatus(m).getPortnum()
+            return client.getPage("http://localhost:%d/waterfall" % port)
+        d.addCallback(_started)
         def _check(page):
             #print page
             self.failUnless(page)
@@ -157,17 +161,18 @@ class Ports(BaseWeb, unittest.TestCase):
         config = (base_config +
                   "c['status'] = [html.WebStatus(distrib_port='.web-pb')]\n")
         os.mkdir("test_web2")
-        self.master = m = ConfiguredMaster("test_web2", config)
+        self.master = m = SimpleMaster("test_web2")
         m.startService()
-
-        p = DistribUNIX("test_web2/.web-pb")
-
-        d = client.getPage("http://localhost:%d/remote/waterfall" % p.portnum)
+        d = m.loadConfig(config)
+        def _started(ign):
+            self.p = p = DistribUNIX("test_web2/.web-pb")
+            return client.getPage("http://localhost:%d/remote/waterfall" % p.portnum)
+        d.addCallback(_started)
         def _check(page):
             self.failUnless(page)
         d.addCallback(_check)
         def _done(res):
-            d1 = p.shutdown()
+            d1 = self.p.shutdown()
             d1.addCallback(lambda x: res)
             return d1
         d.addBoth(_done)
@@ -180,18 +185,21 @@ class Ports(BaseWeb, unittest.TestCase):
         config = (base_config +
                   "c['status'] = [html.WebStatus(distrib_port=0)]\n")
         os.mkdir("test_web3")
-        self.master = m = ConfiguredMaster("test_web3", config)
+        self.master = m = SimpleMaster("test_web3")
         m.startService()
-        dport = self.find_webstatus(m).getPortnum()
+        d = m.loadConfig(config)
+        def _started(ign):
+            dport = self.find_webstatus(m).getPortnum()
 
-        p = DistribTCP(dport)
+            self.p = p = DistribTCP(dport)
 
-        d = client.getPage("http://localhost:%d/remote/waterfall" % p.portnum)
+            return client.getPage("http://localhost:%d/remote/waterfall" % p.portnum)
+        d.addCallback(_started)
         def _check(page):
             self.failUnlessIn("http://buildbot.net", page)
         d.addCallback(_check)
         def _done(res):
-            d1 = p.shutdown()
+            d1 = self.p.shutdown()
             d1.addCallback(lambda x: res)
             return d1
         d.addBoth(_done)
@@ -223,14 +231,16 @@ c['change_source'] = mail.SyncmailMaildirSource('my-maildir')
 c['status'] = [html.WebStatus(http_port=0)]
 """
 
-        self.master = m = ConfiguredMaster("test_web4", config1)
+        self.master = m = SimpleMaster("test_web4")
         m.startService()
-        port = self.find_webstatus(m).getPortnum()
-        self.port = port
-        # insert an event
-        m.change_svc.addChange(Change("user", ["foo.c"], "comments"))
+        d = m.loadConfig(config1)
+        def _started(ign):
+            self.port = port = self.find_webstatus(m).getPortnum()
+            # insert an event
+            m.change_svc.addChange(Change("user", ["foo.c"], "comments"))
 
-        d = client.getPage("http://localhost:%d/waterfall" % port)
+            return client.getPage("http://localhost:%d/waterfall" % port)
+        d.addCallback(_started)
 
         def _check1(page):
             self.failUnless(page)
@@ -335,9 +345,8 @@ class GetURL(RunMixin, unittest.TestCase):
     def setUp(self):
         warnings.filterwarnings("ignore", category=DeprecationWarning)
         RunMixin.setUp(self)
-        self.master.loadConfig(geturl_config)
-        self.master.startService()
-        d = self.connectSlave(["b1"])
+        d = self.master.loadConfig(geturl_config)
+        d.addCallback(lambda ign: self.connectSlave(["b1"]))
         return d
 
     def tearDown(self):
@@ -346,10 +355,9 @@ class GetURL(RunMixin, unittest.TestCase):
         return RunMixin.tearDown(self)
 
     def doBuild(self, buildername):
-        br = base.BuildRequest("forced", sourcestamp.SourceStamp(), 'test_builder')
-        d = br.waitUntilFinished()
-        self.control.getBuilder(buildername).requestBuild(br)
-        return d
+        brs = self.control.submitBuildSet([buildername],
+                                          sourcestamp.SourceStamp(), "forced")
+        return brs.waitUntilFinished()
 
     def assertNoURL(self, target):
         self.failUnlessIdentical(self.status.getURLForThing(target), None)
@@ -377,7 +385,6 @@ class GetURL(RunMixin, unittest.TestCase):
         self.assertURLEqual(builder_s, "builders/b1")
 
     def testChange(self):
-        s = self.status
         c = Change("user", ["foo.c"], "comments")
         self.master.change_svc.addChange(c)
         # TODO: something more like s.getChanges(), requires IChange and
@@ -386,7 +393,6 @@ class GetURL(RunMixin, unittest.TestCase):
 
     def testBuild(self):
         # first we do some stuff so we'll have things to look at.
-        s = self.status
         d = self.doBuild("b1")
         # maybe check IBuildSetStatus here?
         d.addCallback(self._testBuild_1)
@@ -406,8 +412,8 @@ class GetURL(RunMixin, unittest.TestCase):
 
 
 
-class Logfile(BaseWeb, RunMixin, unittest.TestCase):
-    def setUp(self):
+class Logfile(BaseWeb, unittest.TestCase):
+    def create(self):
         config = """
 from buildbot.status import html
 from buildbot.process.factory import BasicBuildFactory
@@ -428,51 +434,57 @@ c['builders'] = [
         if os.path.exists("test_logfile"):
             shutil.rmtree("test_logfile")
         os.mkdir("test_logfile")
-        self.master = m = ConfiguredMaster("test_logfile", config)
+        self.master = m = SimpleMaster("test_logfile")
         m.startService()
-        # hack to find out what randomly-assigned port it is listening on
-        port = self.find_webstatus(m).getPortnum()
-        self.port = port
-        # insert an event
+        d = m.loadConfig(config)
+        def _started(ign):
+            # hack to find out what randomly-assigned port it is listening on
+            port = self.find_webstatus(m).getPortnum()
+            self.port = port
+            # insert an event
 
-        req = base.BuildRequest("reason", sourcestamp.SourceStamp(), 'test_builder')
-        build1 = base.Build([req])
-        bs = m.status.getBuilder("builder1").newBuild()
-        bs.setReason("reason")
-        bs.buildStarted(build1)
+            req = BuildRequest("reason", sourcestamp.SourceStamp(), 'test_builder')
+            build1 = base.Build([req])
+            bs = m.status.getBuilder("builder1").newBuild()
+            bs.setReason("reason")
+            bs.buildStarted(build1)
 
-        step1 = BuildStep(name="setup")
-        step1.setBuild(build1)
-        bss = bs.addStepWithName("setup")
-        step1.setStepStatus(bss)
-        bss.stepStarted()
+            step1 = BuildStep(name="setup")
+            step1.setBuild(build1)
+            bss = bs.addStepWithName("setup")
+            step1.setStepStatus(bss)
+            bss.stepStarted()
 
-        log1 = step1.addLog("output")
-        log1.addStdout(u"sÒme stdout\n")
-        log1.finish()
+            log1 = step1.addLog("output")
+            log1.addStdout(u"s\N{LATIN CAPITAL LETTER O WITH GRAVE}me stdout\n".encode("utf-8"))
+            log1.finish()
 
-        log2 = step1.addHTMLLog("error", "<html>ouch</html>")
+            log2 = step1.addHTMLLog("error", "<html>ouch</html>")
+            del log2
 
-        log3 = step1.addLog("big")
-        log3.addStdout("big log\n")
-        for i in range(1000):
-            log3.addStdout("a" * 500)
-            log3.addStderr("b" * 500)
-        log3.finish()
+            log3 = step1.addLog("big")
+            log3.addStdout("big log\n")
+            for i in range(1000):
+                log3.addStdout("a" * 500)
+                log3.addStderr("b" * 500)
+            log3.finish()
 
-        log4 = step1.addCompleteLog("bigcomplete",
-                                    "big2 log\n" + "a" * 1*1000*1000)
+            log4 = step1.addCompleteLog("bigcomplete",
+                                        "big2 log\n" + "a" * 1*1000*1000)
+            del log4
 
-        log5 = step1.addLog("mixed")
-        log5.addHeader("header content")
-        log5.addStdout("this is stdout content")
-        log5.addStderr("errors go here")
-        log5.addEntry(5, "non-standard content on channel 5")
-        log5.addStderr(" and some trailing stderr")
+            log5 = step1.addLog("mixed")
+            log5.addHeader("header content")
+            log5.addStdout("this is stdout content")
+            log5.addStderr("errors go here")
+            log5.addEntry(5, "non-standard content on channel 5")
+            log5.addStderr(" and some trailing stderr")
 
-        d = defer.maybeDeferred(step1.step_status.stepFinished,
-                                builder.SUCCESS)
-        bs.buildFinished()
+            d1 = defer.maybeDeferred(step1.step_status.stepFinished,
+                                     builder.SUCCESS)
+            bs.buildFinished()
+            return d1
+        d.addCallback(_started)
         return d
 
     def getLogPath(self, stepname, logname):
@@ -484,32 +496,37 @@ c['builders'] = [
                 + self.getLogPath(stepname, logname))
 
     def test_logfile1(self):
-        d = client.getPage("http://localhost:%d/" % self.port)
+        d = self.create()
+        d.addCallback(lambda ign:
+                      client.getPage("http://localhost:%d/" % self.port))
         def _check(page):
             self.failUnless(page)
         d.addCallback(_check)
         return d
 
     def test_logfile2(self):
-        logurl = self.getLogURL("setup", "output")
-        d = client.getPage(logurl)
+        d = self.create()
+        d.addCallback(lambda ign:
+                      client.getPage(self.getLogURL("setup", "output")))
         def _check(logbody):
             self.failUnless(logbody)
         d.addCallback(_check)
         return d
 
     def test_logfile3(self):
-        logurl = self.getLogURL("setup", "output")
-        d = client.getPage(logurl + "/text")
+        d = self.create()
+        d.addCallback(lambda ign:
+                      client.getPage(self.getLogURL("setup", "output") + "/text"))
         def _check(logtext):
             # verify utf-8 encoding.
-            self.failUnlessEqual(logtext, "sÒme stdout\n")
+            self.failUnlessEqual(logtext, u"s\N{LATIN CAPITAL LETTER O WITH GRAVE}me stdout\n".encode("utf-8"))
         d.addCallback(_check)
         return d
 
     def test_logfile4(self):
-        logurl = self.getLogURL("setup", "error")
-        d = client.getPage(logurl)
+        d = self.create()
+        d.addCallback(lambda ign:
+                      client.getPage(self.getLogURL("setup", "error")))
         def _check(logbody):
             self.failUnlessEqual(logbody, "<html>ouch</html>")
         d.addCallback(_check)
@@ -521,16 +538,20 @@ c['builders'] = [
         # twisted-1.3.0, fails to resume sending chunks after the client
         # stalls for a few seconds, because of a recursive doWrite() call
         # that was fixed in twisted-2.0.0
-        p = SlowReader("GET %s HTTP/1.0\r\n\r\n"
-                       % self.getLogPath("setup", "big"))
-        cf = CFactory(p)
-        c = reactor.connectTCP("localhost", self.port, cf)
-        d = p.d
-        def _check(res):
-            self.failUnlessIn("big log", p.data)
-            self.failUnlessIn("a"*100, p.data)
-            self.failUnless(p.count > 1*1000*1000)
-        d.addCallback(_check)
+        d = self.create()
+        def _created(ign):
+            p = SlowReader("GET %s HTTP/1.0\r\n\r\n"
+                           % self.getLogPath("setup", "big"))
+            cf = CFactory(p)
+            reactor.connectTCP("localhost", self.port, cf)
+            d1 = p.d
+            def _check(res):
+                self.failUnlessIn("big log", p.data)
+                self.failUnlessIn("a"*100, p.data)
+                self.failUnless(p.count > 1*1000*1000)
+            d1.addCallback(_check)
+            return d1
+        d.addCallback(_created)
         return d
 
     def test_logfile6(self):
@@ -538,16 +559,20 @@ c['builders'] = [
         # buildbot-0.6.6 dies as the NetstringReceiver barfs on the
         # saved logfile, because it was using one big chunk and exceeding
         # NetstringReceiver.MAX_LENGTH
-        p = SlowReader("GET %s HTTP/1.0\r\n\r\n"
-                       % self.getLogPath("setup", "bigcomplete"))
-        cf = CFactory(p)
-        c = reactor.connectTCP("localhost", self.port, cf)
-        d = p.d
-        def _check(res):
-            self.failUnlessIn("big2 log", p.data)
-            self.failUnlessIn("a"*100, p.data)
-            self.failUnless(p.count > 1*1000*1000)
-        d.addCallback(_check)
+        d = self.create()
+        def _created(ign):
+            p = SlowReader("GET %s HTTP/1.0\r\n\r\n"
+                           % self.getLogPath("setup", "bigcomplete"))
+            cf = CFactory(p)
+            reactor.connectTCP("localhost", self.port, cf)
+            d1 = p.d
+            def _check(res):
+                self.failUnlessIn("big2 log", p.data)
+                self.failUnlessIn("a"*100, p.data)
+                self.failUnless(p.count > 1*1000*1000)
+            d1.addCallback(_check)
+            return d1
+        d.addCallback(_created)
         return d
 
     def test_logfile7(self):
@@ -577,8 +602,9 @@ c['builders'] = [
                 if tag == 'span':
                     self.inSpan = False
 
-        logurl = self.getLogURL("setup", "mixed")
-        d = client.getPage(logurl, timeout=2)
+        d = self.create()
+        d.addCallback(lambda ign:
+                      client.getPage(self.getLogURL("setup", "mixed"), timeout=2))
         def _check(logbody):
             try:
                 p = SpanParser(self)

@@ -1,4 +1,4 @@
-# -*- test-case-name: buildbot.test.test_config -*-
+# -*- test-case-name: buildbot.test.unit.test_config -*-
 
 import os, warnings, exceptions
 
@@ -7,7 +7,8 @@ from twisted.python import failure
 from twisted.internet import defer
 
 from buildbot.master import BuildMaster
-from buildbot import scheduler
+from buildbot import scheduler, db
+from buildbot.eventual import flushEventualQueue
 from twisted.application import service, internet
 from twisted.spread import pb
 from twisted.web.server import Site
@@ -16,6 +17,7 @@ from buildbot.process.builder import Builder
 from buildbot.process.factory import BasicBuildFactory, ArgumentsInTheWrongPlace
 from buildbot.changes.pb import PBChangeSource
 from buildbot.changes.mail import SyncmailMaildirSource
+from buildbot.schedulers.basic import Scheduler
 from buildbot.steps.source import CVS, Darcs
 from buildbot.steps.shell import Compile, Test, ShellCommand
 from buildbot.status import base
@@ -24,8 +26,13 @@ from buildbot.steps import dummy, maxq, python, python_twisted, shell, \
 words = None
 try:
     from buildbot.status import words
+    class NotIRC(words.IRC):
+        # don't actually start it
+        def startService(self):
+            return
 except ImportError:
     pass
+from buildbot.test.runutils import ShouldFailMixin, StallMixin
 
 emptyCfg = \
 """
@@ -117,25 +124,28 @@ c['builders'] = [
 ]
 """
 
-
+ircBase = emptyCfg + \
+"""
+from buildbot.test.unit.test_config import NotIRC
+"""
 
 ircCfg1 = emptyCfg + \
 """
-from buildbot.status import words
-c['status'] = [words.IRC('irc.us.freenode.net', 'buildbot', ['twisted'])]
+from buildbot.test.unit.test_config import NotIRC
+c['status'] = [NotIRC('irc.us.freenode.net', 'buildbot', ['twisted'])]
 """
 
 ircCfg2 = emptyCfg + \
 """
-from buildbot.status import words
-c['status'] = [words.IRC('irc.us.freenode.net', 'buildbot', ['twisted']),
-               words.IRC('irc.example.com', 'otherbot', ['chan1', 'chan2'])]
+from buildbot.test.unit.test_config import NotIRC
+c['status'] = [NotIRC('irc.us.freenode.net', 'buildbot', ['twisted']),
+               NotIRC('irc.example.com', 'otherbot', ['chan1', 'chan2'])]
 """
 
 ircCfg3 = emptyCfg + \
 """
-from buildbot.status import words
-c['status'] = [words.IRC('irc.us.freenode.net', 'buildbot', ['knotted'])]
+from buildbot.test.unit.test_config import NotIRC
+c['status'] = [NotIRC('irc.us.freenode.net', 'buildbot', ['knotted'])]
 """
 
 webCfg1 = emptyCfg + \
@@ -159,7 +169,7 @@ c['status'] = [html.WebStatus(http_port='tcp:9981:interface=127.0.0.1')]
 webNameCfg1 = emptyCfg + \
 """
 from buildbot.status import html
-c['status'] = [html.WebStatus(distrib_port='~/.twistd-web-pb')]
+c['status'] = [html.WebStatus(distrib_port='./foo.socket')]
 """
 
 webNameCfg2 = emptyCfg + \
@@ -373,7 +383,7 @@ BuildmasterConfig = c
 
 schedulersCfg = \
 """
-from buildbot.scheduler import Scheduler, Dependent
+from buildbot.schedulers.basic import Scheduler, Dependent
 from buildbot.process.factory import BasicBuildFactory
 from buildbot.buildslave import BuildSlave
 from buildbot.config import BuilderConfig
@@ -390,12 +400,34 @@ c['buildbotURL'] = 'http://dummy.example.com/buildbot'
 BuildmasterConfig = c
 """
 
-class ConfigTest(unittest.TestCase):
+class SetupBase:
     def setUp(self):
         # this class generates several deprecation warnings, which the user
         # doesn't need to see.
         warnings.simplefilter('ignore', exceptions.DeprecationWarning)
-        self.buildmaster = BuildMaster(".")
+        self.serviceparent = service.MultiService()
+        self.serviceparent.startService()
+
+    def tearDown(self):
+        d = self.serviceparent.stopService()
+        d.addCallback(flushEventualQueue)
+        return d
+
+    def setup_master(self):
+        if not os.path.exists(self.basedir):
+            os.makedirs(self.basedir)
+        spec = db.DB("sqlite3", os.path.join(self.basedir, "state.sqlite"))
+        db.create_db(spec)
+        self.buildmaster = BuildMaster(self.basedir, db=spec)
+        self.buildmaster.readConfig = True
+        self.buildmaster.setServiceParent(self.serviceparent)
+
+class ConfigTest(SetupBase, unittest.TestCase, ShouldFailMixin, StallMixin):
+    def setUp(self):
+        # this class generates several deprecation warnings, which the user
+        # doesn't need to see.
+        warnings.simplefilter('ignore', exceptions.DeprecationWarning)
+        SetupBase.setUp(self)
 
     def failUnlessListsEquivalent(self, list1, list2):
         l1 = list1[:]
@@ -447,90 +479,120 @@ class ConfigTest(unittest.TestCase):
         return ret
 
     def testEmpty(self):
+        self.basedir = "config/configtest/empty"
+        self.setup_master()
         self.failUnlessRaises(KeyError, self.buildmaster.loadConfig, "")
 
     def testSimple(self):
         # covers slavePortnum, base checker passwords
+        self.basedir = "config/configtest/simple"
+        self.setup_master()
         master = self.buildmaster
-        master.loadChanges()
 
-        master.loadConfig(emptyCfg)
-        # note: this doesn't actually start listening, because the app
-        # hasn't been started running
-        self.failUnlessEqual(master.slavePortnum, "tcp:9999")
-        self.checkPorts(master, [(9999, pb.PBServerFactory)])
-        self.failUnlessEqual(list(master.change_svc), [])
-        self.failUnlessEqual(master.botmaster.builders, {})
-        self.failUnlessEqual(master.checker.users,
-                             {"change": "changepw"})
-        self.failUnlessEqual(master.projectName, "dummy project")
-        self.failUnlessEqual(master.projectURL, "http://dummy.example.com")
-        self.failUnlessEqual(master.buildbotURL,
-                             "http://dummy.example.com/buildbot")
+        d = master.loadConfig(emptyCfg)
+        def _check(ign):
+            # note: this doesn't actually start listening, because the app
+            # hasn't been started running
+            self.failUnlessEqual(master.slavePortnum, "tcp:9999")
+            self.checkPorts(master, [(9999, pb.PBServerFactory)])
+            self.failUnlessEqual(list(master.change_svc), [])
+            self.failUnlessEqual(master.botmaster.builders, {})
+            self.failUnlessEqual(master.checker.users,
+                                 {"change": "changepw"})
+            self.failUnlessEqual(master.projectName, "dummy project")
+            self.failUnlessEqual(master.projectURL, "http://dummy.example.com")
+            self.failUnlessEqual(master.buildbotURL,
+                                 "http://dummy.example.com/buildbot")
+        d.addCallback(_check)
+        return d
 
     def testSlavePortnum(self):
+        self.basedir = "config/configtest/slave_portnum"
+        self.setup_master()
         master = self.buildmaster
-        master.loadChanges()
 
-        master.loadConfig(emptyCfg)
-        self.failUnlessEqual(master.slavePortnum, "tcp:9999")
-        ports = self.checkPorts(master, [(9999, pb.PBServerFactory)])
-        p = ports[0]
-
-        master.loadConfig(emptyCfg)
-        self.failUnlessEqual(master.slavePortnum, "tcp:9999")
-        ports = self.checkPorts(master, [(9999, pb.PBServerFactory)])
-        self.failUnlessIdentical(p, ports[0],
-                                 "the slave port was changed even " + \
-                                 "though the configuration was not")
-
-        master.loadConfig(emptyCfg + "c['slavePortnum'] = 9000\n")
-        self.failUnlessEqual(master.slavePortnum, "tcp:9000")
-        ports = self.checkPorts(master, [(9000, pb.PBServerFactory)])
-        self.failIf(p is ports[0],
-                    "slave port was unchanged but configuration was changed")
+        d = master.loadConfig(emptyCfg)
+        def _check1(ign):
+            self.failUnlessEqual(master.slavePortnum, "tcp:9999")
+            ports = self.checkPorts(master, [(9999, pb.PBServerFactory)])
+            p = ports[0]
+            d = master.loadConfig(emptyCfg)
+            def _check2(ign):
+                self.failUnlessEqual(master.slavePortnum, "tcp:9999")
+                ports = self.checkPorts(master, [(9999, pb.PBServerFactory)])
+                self.failUnlessIdentical(p, ports[0],
+                                         "the slave port was changed even "
+                                         "though the configuration was not")
+            d.addCallback(_check2)
+            d.addCallback(lambda ign:
+                          master.loadConfig(emptyCfg +
+                                            "c['slavePortnum'] = 9000\n"))
+            def _check3(ign):
+                self.failUnlessEqual(master.slavePortnum, "tcp:9000")
+                ports = self.checkPorts(master, [(9000, pb.PBServerFactory)])
+                self.failIf(p is ports[0],
+                            "slave port was unchanged "
+                            "but configuration was changed")
+            d.addCallback(_check3)
+            return d
+        d.addCallback(_check1)
+        return d
 
     def testSlaves(self):
+        self.basedir = "config/configtest/slaves"
+        self.setup_master()
         master = self.buildmaster
-        master.loadChanges()
-        master.loadConfig(emptyCfg)
-        self.failUnlessEqual(master.botmaster.builders, {})
-        self.failUnlessEqual(master.checker.users,
-                             {"change": "changepw"})
-        # 'botsCfg' is testing backwards compatibility, for 0.7.5 config
-        # files that have not yet been updated to 0.7.6 . This compatibility
-        # (and this test) is scheduled for removal in 0.8.0 .
+        d = master.loadConfig(emptyCfg)
+        def _check1(ign):
+            self.failUnlessEqual(master.botmaster.builders, {})
+            self.failUnlessEqual(master.checker.users,
+                                 {"change": "changepw"})
+            # 'botsCfg' is testing backwards compatibility, for 0.7.5 config
+            # files that have not yet been updated to 0.7.6 . This
+            # compatibility (and this test) is scheduled for removal in 0.8.0
+        d.addCallback(_check1)
         botsCfg = (emptyCfg +
                    "c['bots'] = [('bot1', 'pw1'), ('bot2', 'pw2')]\n")
-        master.loadConfig(botsCfg)
-        self.failUnlessEqual(master.checker.users,
-                             {"change": "changepw",
-                              "bot1": "pw1",
-                              "bot2": "pw2"})
-        master.loadConfig(botsCfg)
-        self.failUnlessEqual(master.checker.users,
-                             {"change": "changepw",
-                              "bot1": "pw1",
-                              "bot2": "pw2"})
-        master.loadConfig(emptyCfg)
-        self.failUnlessEqual(master.checker.users,
-                             {"change": "changepw"})
+        d.addCallback(lambda ign: master.loadConfig(botsCfg))
+        def _check2(ign):
+            self.failUnlessEqual(master.checker.users,
+                                 {"change": "changepw",
+                                  "bot1": "pw1",
+                                  "bot2": "pw2"})
+        d.addCallback(_check2)
+        d.addCallback(lambda ign: master.loadConfig(botsCfg))
+        def _check3(ign):
+            self.failUnlessEqual(master.checker.users,
+                                 {"change": "changepw",
+                                  "bot1": "pw1",
+                                  "bot2": "pw2"})
+        d.addCallback(_check3)
+        d.addCallback(lambda ign: master.loadConfig(emptyCfg))
+        def _check4(ign):
+            self.failUnlessEqual(master.checker.users,
+                                 {"change": "changepw"})
+        d.addCallback(_check4)
         slavesCfg = (emptyCfg +
                      "from buildbot.buildslave import BuildSlave\n"
                      "c['slaves'] = [BuildSlave('bot1','pw1'), "
                      "BuildSlave('bot2','pw2')]\n")
-        master.loadConfig(slavesCfg)
-        self.failUnlessEqual(master.checker.users,
-                             {"change": "changepw",
-                              "bot1": "pw1",
-                              "bot2": "pw2"})
-
+        d.addCallback(lambda ign: master.loadConfig(slavesCfg))
+        def _check5(ign):
+            self.failUnlessEqual(master.checker.users,
+                                 {"change": "changepw",
+                                  "bot1": "pw1",
+                                  "bot2": "pw2"})
+        d.addCallback(_check5)
+        return d
 
     def testChangeSource(self):
+        self.basedir = "config/configtest/changesource"
+        self.setup_master()
         master = self.buildmaster
-        master.loadChanges()
-        master.loadConfig(emptyCfg)
-        self.failUnlessEqual(list(master.change_svc), [])
+        d = master.loadConfig(emptyCfg)
+        def _check0(ign):
+            self.failUnlessEqual(list(master.change_svc), [])
+        d.addCallback(_check0)
 
         sourcesCfg = emptyCfg + \
 """
@@ -538,7 +600,7 @@ from buildbot.changes.pb import PBChangeSource
 c['change_source'] = PBChangeSource()
 """
 
-        d = master.loadConfig(sourcesCfg)
+        d.addCallback(lambda ign: master.loadConfig(sourcesCfg))
         def _check1(res):
             self.failUnlessEqual(len(list(self.buildmaster.change_svc)), 1)
             s1 = list(self.buildmaster.change_svc)[0]
@@ -569,21 +631,27 @@ c['change_source'] = PBChangeSource()
 
     def testChangeSources(self):
         # make sure we can accept a list
+        self.basedir = "config/configtest/changesources"
+        self.setup_master()
+        maildir = os.path.join(self.basedir, "maildir")
+        maildir_new = os.path.join(self.basedir, "maildir", "new")
+        os.makedirs(maildir_new)
         master = self.buildmaster
-        master.loadChanges()
-        master.loadConfig(emptyCfg)
-        self.failUnlessEqual(list(master.change_svc), [])
+        d = master.loadConfig(emptyCfg)
+        def _check0(ign):
+            self.failUnlessEqual(list(master.change_svc), [])
+        d.addCallback(_check0)
 
         sourcesCfg = emptyCfg + \
 """
 from buildbot.changes.pb import PBChangeSource
 from buildbot.changes.mail import SyncmailMaildirSource
 c['change_source'] = [PBChangeSource(),
-                     SyncmailMaildirSource('.'),
+                     SyncmailMaildirSource(%r),
                     ]
-"""
+""" % (os.path.abspath(maildir),)
 
-        d = master.loadConfig(sourcesCfg)
+        d.addCallback(lambda ign: master.loadConfig(sourcesCfg))
         def _check1(res):
             self.failUnlessEqual(len(list(self.buildmaster.change_svc)), 2)
             s1,s2 = list(self.buildmaster.change_svc)
@@ -598,10 +666,13 @@ c['change_source'] = [PBChangeSource(),
 
     def testSources(self):
         # test backwards compatibility. c['sources'] is deprecated.
+        self.basedir = "config/configtest/sources"
+        self.setup_master()
         master = self.buildmaster
-        master.loadChanges()
-        master.loadConfig(emptyCfg)
-        self.failUnlessEqual(list(master.change_svc), [])
+        d = master.loadConfig(emptyCfg)
+        def _check0(ign):
+            self.failUnlessEqual(list(master.change_svc), [])
+        d.addCallback(_check0)
 
         sourcesCfg = emptyCfg + \
 """
@@ -609,7 +680,7 @@ from buildbot.changes.pb import PBChangeSource
 c['sources'] = [PBChangeSource()]
 """
 
-        d = master.loadConfig(sourcesCfg)
+        d.addCallback(lambda ign: master.loadConfig(sourcesCfg))
         def _check1(res):
             self.failUnlessEqual(len(list(self.buildmaster.change_svc)), 1)
             s1 = list(self.buildmaster.change_svc)[0]
@@ -625,72 +696,68 @@ c['sources'] = [PBChangeSource()]
         return None # all is good
 
     def testSchedulerErrors(self):
+        self.basedir = "config/configtest/schedulererrors"
+        self.setup_master()
         master = self.buildmaster
-        master.loadChanges()
-        master.loadConfig(emptyCfg)
-        self.failUnlessEqual(master.allSchedulers(), [])
+        d = master.loadConfig(emptyCfg)
+        def _check1(ign):
+            self.failUnlessEqual(master.allSchedulers(), [])
+        d.addCallback(_check1)
 
-        def _shouldBeFailure(res, hint=None):
-            self.shouldBeFailure(res, AssertionError, ValueError)
-            if hint:
-                self.failUnless(str(res).find(hint) != -1)
-
-        def _loadConfig(res, newcfg):
-            return self.buildmaster.loadConfig(newcfg)
-        d = defer.succeed(None)
+        def _test(ign, cfg, which, err, substr):
+            self.shouldFail(err, which, substr,
+                            self.buildmaster.loadConfig, cfg)
 
         # c['schedulers'] must be a list
         badcfg = schedulersCfg + \
 """
 c['schedulers'] = Scheduler('full', None, 60, ['builder1'])
 """
-        d.addCallback(_loadConfig, badcfg)
-        d.addBoth(_shouldBeFailure,
-                  "c['schedulers'] must be a list of Scheduler instances")
+        d.addCallback(_test, badcfg, "one Scheduler instance", AssertionError,
+                      "c['schedulers'] must be a list of Scheduler instances")
 
         # c['schedulers'] must be a list of IScheduler objects
         badcfg = schedulersCfg + \
 """
 c['schedulers'] = ['oops', 'problem']
 """
-        d.addCallback(_loadConfig, badcfg)
-        d.addBoth(_shouldBeFailure,
-                  "c['schedulers'] must be a list of Scheduler instances")
+        d.addCallback(_test, badcfg, "list of strings", AssertionError,
+                      "c['schedulers'] must be a list of Scheduler instances")
 
         # c['schedulers'] must point at real builders
         badcfg = schedulersCfg + \
 """
 c['schedulers'] = [Scheduler('full', None, 60, ['builder-bogus'])]
 """
-        d.addCallback(_loadConfig, badcfg)
-        d.addBoth(_shouldBeFailure, "uses unknown builder")
+        d.addCallback(_test, badcfg, "Scheduler with bogus builder",
+                      AssertionError,
+                      "uses unknown builder")
 
         # builderNames= must be a list
         badcfg = schedulersCfg + \
 """
 c['schedulers'] = [Scheduler('full', None, 60, 'builder1')]
 """
-        d.addCallback(_loadConfig, badcfg)
-        d.addBoth(_shouldBeFailure,
-                  "must be a list of Builder description names")
+        d.addCallback(_test, badcfg, "Scheduler with non-list", AssertionError,
+                      "must be a list of Builder description names")
 
         # builderNames= must be a list of strings, not dicts
         badcfg = schedulersCfg + \
 """
 c['schedulers'] = [Scheduler('full', None, 60, [b1])]
 """
-        d.addCallback(_loadConfig, badcfg)
-        d.addBoth(_shouldBeFailure,
-                  "must be a list of Builder description names")
+        d.addCallback(_test, badcfg, "Scheduler with list of non-names",
+                      AssertionError,
+                      "must be a list of Builder description names")
 
         # builderNames= must be a list of strings, not a dict
         badcfg = schedulersCfg + \
 """
 c['schedulers'] = [Scheduler('full', None, 60, b1)]
 """
-        d.addCallback(_loadConfig, badcfg)
-        d.addBoth(_shouldBeFailure,
-                  "must be a list of Builder description names")
+        d.addCallback(_test, badcfg, "Scheduler with single non-name",
+                      AssertionError,
+                      "must be a list of Builder description names")
 
         # each Scheduler must have a unique name
         badcfg = schedulersCfg + \
@@ -698,18 +765,19 @@ c['schedulers'] = [Scheduler('full', None, 60, b1)]
 c['schedulers'] = [Scheduler('dup', None, 60, []),
                    Scheduler('dup', None, 60, [])]
 """
-        d.addCallback(_loadConfig, badcfg)
-        d.addBoth(_shouldBeFailure, "Schedulers must have unique names")
+        d.addCallback(_test, badcfg, "non-unique Scheduler names", ValueError,
+                      "Schedulers must have unique names")
 
         return d
 
     def testSchedulers(self):
+        self.basedir = "config/configtest/schedulers"
+        self.setup_master()
         master = self.buildmaster
-        master.loadChanges()
-        master.loadConfig(emptyCfg)
-        self.failUnlessEqual(master.allSchedulers(), [])
-
-        d = self.buildmaster.loadConfig(schedulersCfg)
+        d = master.loadConfig(emptyCfg)
+        d.addCallback(lambda ign:
+                      self.failUnlessEqual(master.allSchedulers(), []))
+        d.addCallback(lambda ign: self.buildmaster.loadConfig(schedulersCfg))
         d.addCallback(self._testSchedulers_1)
         return d
 
@@ -717,7 +785,7 @@ c['schedulers'] = [Scheduler('dup', None, 60, []),
         sch = self.buildmaster.allSchedulers()
         self.failUnlessEqual(len(sch), 1)
         s = sch[0]
-        self.failUnless(isinstance(s, scheduler.Scheduler))
+        self.failUnless(isinstance(s, Scheduler))
         self.failUnlessEqual(s.name, "full")
         self.failUnlessEqual(s.branch, None)
         self.failUnlessEqual(s.treeStableTimer, 60)
@@ -753,122 +821,149 @@ c['schedulers'] = [s1, Dependent('downstream', s1, ['builder1'])]
         self.failUnlessEqual(sch1, sch2)
         self.failUnlessIdentical(sch1[0], sch2[0])
         self.failUnlessIdentical(sch1[1], sch2[1])
-        self.failUnlessIdentical(sch1[0].parent, self.buildmaster)
-        self.failUnlessIdentical(sch1[1].parent, self.buildmaster)
+        sm = self.buildmaster.scheduler_manager
+        self.failUnlessIdentical(sch1[0].parent, sm)
+        self.failUnlessIdentical(sch1[1].parent, sm)
 
 
 
     def testBuilders(self):
+        self.basedir = "config/configtest/builders"
+        self.setup_master()
         master = self.buildmaster
-        master.loadConfig(emptyCfg)
-        self.failUnlessEqual(master.botmaster.builders, {})
+        bm = master.botmaster
+        d = master.loadConfig(emptyCfg)
+        def _check1(ign):
+            self.failUnlessEqual(bm.builders, {})
+        d.addCallback(_check1)
 
-        master.loadConfig(buildersCfg)
-        self.failUnlessEqual(master.botmaster.builderNames, ["builder1"])
-        self.failUnlessEqual(master.botmaster.builders.keys(), ["builder1"])
-        b = master.botmaster.builders["builder1"]
-        self.failUnless(isinstance(b, Builder))
-        self.failUnlessEqual(b.name, "builder1")
-        self.failUnlessEqual(b.slavenames, ["bot1"])
-        self.failUnlessEqual(b.builddir, "workdir")
-        f1 = b.buildFactory
-        self.failUnless(isinstance(f1, BasicBuildFactory))
-        steps = f1.steps
-        self.failUnlessEqual(len(steps), 3)
-        self.failUnlessEqual(steps[0], (CVS,
-                                        {'cvsroot': 'cvsroot',
-                                         'cvsmodule': 'cvsmodule',
-                                         'mode': 'clobber'}))
-        self.failUnlessEqual(steps[1], (Compile,
-                                        {'command': 'make all'}))
-        self.failUnlessEqual(steps[2], (Test,
-                                        {'command': 'make check'}))
-
-
+        d.addCallback(lambda ign: master.loadConfig(buildersCfg))
+        def _check2(ign):
+            self.failUnlessEqual(bm.builderNames, ["builder1"])
+            self.failUnlessEqual(bm.builders.keys(), ["builder1"])
+            self.b = b = bm.builders["builder1"]
+            self.failUnless(isinstance(b, Builder))
+            self.failUnlessEqual(b.name, "builder1")
+            self.failUnlessEqual(b.slavenames, ["bot1"])
+            self.failUnlessEqual(b.builddir, "workdir")
+            f1 = b.buildFactory
+            self.failUnless(isinstance(f1, BasicBuildFactory))
+            steps = f1.steps
+            self.failUnlessEqual(len(steps), 3)
+            self.failUnlessEqual(steps[0], (CVS,
+                                            {'cvsroot': 'cvsroot',
+                                             'cvsmodule': 'cvsmodule',
+                                             'mode': 'clobber'}))
+            self.failUnlessEqual(steps[1], (Compile,
+                                            {'command': 'make all'}))
+            self.failUnlessEqual(steps[2], (Test,
+                                            {'command': 'make check'}))
+        d.addCallback(_check2)
         # make sure a reload of the same data doesn't interrupt the Builder
-        master.loadConfig(buildersCfg)
-        self.failUnlessEqual(master.botmaster.builderNames, ["builder1"])
-        self.failUnlessEqual(master.botmaster.builders.keys(), ["builder1"])
-        b2 = master.botmaster.builders["builder1"]
-        self.failUnlessIdentical(b, b2)
-        # TODO: test that the BuilderStatus object doesn't change
-        #statusbag2 = master.client_svc.statusbags["builder1"]
-        #self.failUnlessIdentical(statusbag, statusbag2)
+        d.addCallback(lambda ign: master.loadConfig(buildersCfg))
+        def _check3(ign):
+            self.failUnlessEqual(bm.builderNames, ["builder1"])
+            self.failUnlessEqual(bm.builders.keys(), ["builder1"])
+            b2 = bm.builders["builder1"]
+            self.failUnlessIdentical(self.b, b2)
+            # TODO: test that the BuilderStatus object doesn't change
+            #statusbag2 = master.client_svc.statusbags["builder1"]
+            #self.failUnlessIdentical(statusbag, statusbag2)
+        d.addCallback(_check3)
 
         # but changing something should result in a new Builder
-        master.loadConfig(buildersCfg2)
-        self.failUnlessEqual(master.botmaster.builderNames, ["builder1"])
-        self.failUnlessEqual(master.botmaster.builders.keys(), ["builder1"])
-        b3 = master.botmaster.builders["builder1"]
-        self.failIf(b is b3)
-        # the statusbag remains the same TODO
-        #statusbag3 = master.client_svc.statusbags["builder1"]
-        #self.failUnlessIdentical(statusbag, statusbag3)
+        d.addCallback(lambda ign: master.loadConfig(buildersCfg2))
+        def _check4(ign):
+            self.failUnlessEqual(bm.builderNames, ["builder1"])
+            self.failUnlessEqual(bm.builders.keys(), ["builder1"])
+            self.b3 = b3 = bm.builders["builder1"]
+            self.failIf(self.b is b3)
+            # the statusbag remains the same TODO
+            #statusbag3 = master.client_svc.statusbags["builder1"]
+            #self.failUnlessIdentical(statusbag, statusbag3)
+        d.addCallback(_check4)
 
         # adding new builder
-        master.loadConfig(buildersCfg3)
-        self.failUnlessEqual(master.botmaster.builderNames, ["builder1",
-                                                             "builder2"])
-        self.failUnlessListsEquivalent(master.botmaster.builders.keys(),
-                                       ["builder1", "builder2"])
-        b4 = master.botmaster.builders["builder1"]
-        self.failUnlessIdentical(b3, b4)
+        d.addCallback(lambda ign: master.loadConfig(buildersCfg3))
+        def _check5(ign):
+            self.failUnlessEqual(bm.builderNames, ["builder1", "builder2"])
+            self.failUnlessListsEquivalent(bm.builders.keys(),
+                                           ["builder1", "builder2"])
+            self.b4 = b4 = bm.builders["builder1"]
+            self.failUnlessIdentical(self.b3, b4)
+        d.addCallback(_check5)
 
         # changing first builder should leave it at the same place in the list
-        master.loadConfig(buildersCfg4)
-        self.failUnlessEqual(master.botmaster.builderNames, ["builder1",
-                                                             "builder2"])
-        self.failUnlessListsEquivalent(master.botmaster.builders.keys(),
-                                       ["builder1", "builder2"])
-        b5 = master.botmaster.builders["builder1"]
-        self.failIf(b4 is b5)
+        d.addCallback(lambda ign: master.loadConfig(buildersCfg4))
+        def _check6(ign):
+            self.failUnlessEqual(bm.builderNames, ["builder1", "builder2"])
+            self.failUnlessListsEquivalent(bm.builders.keys(),
+                                           ["builder1", "builder2"])
+            b5 = bm.builders["builder1"]
+            self.failIf(self.b4 is b5)
+        d.addCallback(_check6)
 
-        master.loadConfig(buildersCfg5)
-        self.failUnlessEqual(master.botmaster.builderNames, ["builder1",
-                                                             "builder2"])
-        self.failUnlessListsEquivalent(master.botmaster.builders.keys(),
-                                       ["builder1", "builder2"])
-        b5 = master.botmaster.builders["builder1"]
+        d.addCallback(lambda ign: master.loadConfig(buildersCfg5))
+        def _check6a(ign):
+            self.failUnlessEqual(bm.builderNames, ["builder1", "builder2"])
+            self.failUnlessListsEquivalent(bm.builders.keys(),
+                                           ["builder1", "builder2"])
+        d.addCallback(_check6a)
 
         # and removing it should make the Builder go away
-        master.loadConfig(emptyCfg)
-        self.failUnlessEqual(master.botmaster.builderNames, [])
-        self.failUnlessEqual(master.botmaster.builders, {})
-        #self.failUnlessEqual(master.client_svc.statusbags, {}) # TODO
+        d.addCallback(lambda ign: master.loadConfig(emptyCfg))
+        def _check7(ign):
+            self.failUnlessEqual(bm.builderNames, [])
+            self.failUnlessEqual(bm.builders, {})
+            #self.failUnlessEqual(master.client_svc.statusbags, {}) # TODO
+        d.addCallback(_check7)
+        return d
 
     def testWithProperties(self):
+        self.basedir = "config/configtest/withproperties"
+        self.setup_master()
         master = self.buildmaster
-        master.loadConfig(wpCfg1)
-        self.failUnlessEqual(master.botmaster.builderNames, ["builder1"])
-        self.failUnlessEqual(master.botmaster.builders.keys(), ["builder1"])
-        b1 = master.botmaster.builders["builder1"]
+        d = master.loadConfig(wpCfg1)
+        def _check1(ign):
+            self.failUnlessEqual(master.botmaster.builderNames, ["builder1"])
+            self.failUnlessEqual(master.botmaster.builders.keys(), ["builder1"])
+            self.b1 = master.botmaster.builders["builder1"]
+        d.addCallback(_check1)
 
         # reloading the same config should leave the builder unchanged
-        master.loadConfig(wpCfg1)
-        b2 = master.botmaster.builders["builder1"]
-        self.failUnlessIdentical(b1, b2)
+        d.addCallback(lambda ign: master.loadConfig(wpCfg1))
+        def _check2(ign):
+            b2 = master.botmaster.builders["builder1"]
+            self.failUnlessIdentical(self.b1, b2)
+        d.addCallback(_check2)
 
         # but changing the parameters of the WithProperties should change it
-        master.loadConfig(wpCfg2)
-        b3 = master.botmaster.builders["builder1"]
-        self.failIf(b1 is b3)
+        d.addCallback(lambda ign: master.loadConfig(wpCfg2))
+        def _check3(ign):
+            self.b3 = b3 = master.botmaster.builders["builder1"]
+            self.failIf(self.b1 is b3)
+        d.addCallback(_check3)
 
         # again, reloading same config should leave the builder unchanged
-        master.loadConfig(wpCfg2)
-        b4 = master.botmaster.builders["builder1"]
-        self.failUnlessIdentical(b3, b4)
+        d.addCallback(lambda ign: master.loadConfig(wpCfg2))
+        def _check4(ign):
+            b4 = master.botmaster.builders["builder1"]
+            self.failUnlessIdentical(self.b3, b4)
+        d.addCallback(_check4)
+        return d
 
     def checkIRC(self, m, expected):
         ircs = {}
-        for irc in self.servers(m, words.IRC):
+        for irc in self.servers(m, NotIRC):
             ircs[irc.host] = (irc.nick, irc.channels)
         self.failUnlessEqual(ircs, expected)
 
     def testIRC(self):
         if not words:
             raise unittest.SkipTest("Twisted Words package is not installed")
+        self.basedir = "config/configtest/IRC"
+        self.setup_master()
         master = self.buildmaster
-        master.loadChanges()
         d = master.loadConfig(emptyCfg)
         e1 = {}
         d.addCallback(lambda res: self.checkIRC(master, e1))
@@ -885,11 +980,14 @@ c['schedulers'] = [s1, Dependent('downstream', s1, ['builder1'])]
         d.addCallback(lambda res: master.loadConfig(ircCfg1))
         e5 = {'irc.us.freenode.net': ('buildbot', ['twisted'])}
         d.addCallback(lambda res: self.checkIRC(master, e5))
+        # we use a fake IRC subclass, which doesn't make any actual network
+        # connections
         return d
 
     def testWebPortnum(self):
+        self.basedir = "config/configtest/webportnum"
+        self.setup_master()
         master = self.buildmaster
-        master.loadChanges()
 
         d = master.loadConfig(webCfg1)
         def _check1(res):
@@ -935,35 +1033,22 @@ c['schedulers'] = [s1, Dependent('downstream', s1, ['builder1'])]
         return d
 
     def testWebPathname(self):
+        self.basedir = "config/configtest/webpathname"
+        self.setup_master()
         master = self.buildmaster
-        master.loadChanges()
 
         d = master.loadConfig(webNameCfg1)
         def _check1(res):
             self.checkPorts(self.buildmaster,
                             [(9999, pb.PBServerFactory),
-                             ('~/.twistd-web-pb', pb.PBServerFactory)])
+                             ('./foo.socket', pb.PBServerFactory)])
             unixports = self.UNIXports(self.buildmaster)
             self.f = f = unixports[0].args[1]
             self.failUnless(isinstance(f.root, ResourcePublisher))
         d.addCallback(_check1)
 
-        d.addCallback(lambda res: self.buildmaster.loadConfig(webNameCfg1))
-        # nothing should be changed
-        def _check2(res):
-            self.checkPorts(self.buildmaster,
-                            [(9999, pb.PBServerFactory),
-                             ('~/.twistd-web-pb', pb.PBServerFactory)])
-            newf = self.UNIXports(self.buildmaster)[0].args[1]
-            self.failUnlessIdentical(self.f, newf,
-                                     "web factory was changed even though "
-                                     "configuration was not")
-        # WebStatus is no longer a ComparableMixin, so it will be
-        # rebuilt on each reconfig
-        #d.addCallback(_check2)
-
         d.addCallback(lambda res: self.buildmaster.loadConfig(webNameCfg2))
-        def _check3(res):
+        def _check2(res):
             self.checkPorts(self.buildmaster,
                             [(9999, pb.PBServerFactory),
                              ('./bar.socket', pb.PBServerFactory)])
@@ -971,7 +1056,7 @@ c['schedulers'] = [s1, Dependent('downstream', s1, ['builder1'])]
             self.failIf(self.f is newf,
                         "web factory was unchanged but "
                         "configuration was changed")
-        d.addCallback(_check3)
+        d.addCallback(_check2)
 
         d.addCallback(lambda res: self.buildmaster.loadConfig(emptyCfg))
         d.addCallback(lambda res:
@@ -980,64 +1065,102 @@ c['schedulers'] = [s1, Dependent('downstream', s1, ['builder1'])]
         return d
 
     def testDebugPassword(self):
+        self.basedir = "config/configtest/debugpassword"
+        self.setup_master()
         master = self.buildmaster
 
-        master.loadConfig(debugPasswordCfg)
-        self.failUnlessEqual(master.checker.users,
-                             {"change": "changepw",
-                              "debug": "sekrit"})
+        d = master.loadConfig(debugPasswordCfg)
+        d.addCallback(lambda ign:
+                      self.failUnlessEqual(master.checker.users,
+                                           {"change": "changepw",
+                                            "debug": "sekrit"}))
 
-        master.loadConfig(debugPasswordCfg)
-        self.failUnlessEqual(master.checker.users,
-                             {"change": "changepw",
-                              "debug": "sekrit"})
+        d.addCallback(lambda ign: master.loadConfig(debugPasswordCfg))
+        d.addCallback(lambda ign:
+                      self.failUnlessEqual(master.checker.users,
+                                           {"change": "changepw",
+                                            "debug": "sekrit"}))
 
-        master.loadConfig(emptyCfg)
-        self.failUnlessEqual(master.checker.users,
-                             {"change": "changepw"})
+        d.addCallback(lambda ign: master.loadConfig(emptyCfg))
+        d.addCallback(lambda ign:
+                      self.failUnlessEqual(master.checker.users,
+                                           {"change": "changepw"}))
+        return d
 
     def testLocks(self):
+        self.basedir = "config/configtest/locks"
+        self.setup_master()
         master = self.buildmaster
         botmaster = master.botmaster
+        d = defer.succeed(None)
+        sf = self.shouldFail
 
         # make sure that c['interlocks'] is rejected properly
-        self.failUnlessRaises(KeyError, master.loadConfig, interlockCfgBad)
+        d.addCallback(lambda x:
+                      sf(KeyError, "1", "c['interlocks'] is no longer accepted",
+                         master.loadConfig, interlockCfgBad))
         # and that duplicate-named Locks are caught
-        self.failUnlessRaises(ValueError, master.loadConfig, lockCfgBad1)
-        self.failUnlessRaises(ValueError, master.loadConfig, lockCfgBad2)
-        self.failUnlessRaises(ValueError, master.loadConfig, lockCfgBad3)
+        d.addCallback(lambda x:
+                      sf(ValueError, "2", "Two different locks",
+                         master.loadConfig, lockCfgBad1))
+        d.addCallback(lambda x:
+                      sf(ValueError, "3", "share the name lock1",
+                         master.loadConfig, lockCfgBad2))
+        d.addCallback(lambda x:
+                      sf(ValueError, "4", "Two different locks",
+                         master.loadConfig, lockCfgBad3))
 
         # create a Builder that uses Locks
-        master.loadConfig(lockCfg1a)
-        b1 = master.botmaster.builders["builder1"]
-        self.failUnlessEqual(len(b1.locks), 2)
+        d.addCallback(lambda ign: master.loadConfig(lockCfg1a))
+        def _check1(ign):
+            self.b1 = botmaster.builders["builder1"]
+            self.failUnlessEqual(len(self.b1.locks), 2)
+        d.addCallback(_check1)
 
         # reloading the same config should not change the Builder
-        master.loadConfig(lockCfg1a)
-        self.failUnlessIdentical(b1, master.botmaster.builders["builder1"])
+        d.addCallback(lambda ign: master.loadConfig(lockCfg1a))
+        def _check2(ign):
+            self.failUnlessIdentical(self.b1, botmaster.builders["builder1"])
+        d.addCallback(_check2)
+
         # but changing the set of locks used should change it
-        master.loadConfig(lockCfg1b)
-        self.failIfIdentical(b1, master.botmaster.builders["builder1"])
-        b1 = master.botmaster.builders["builder1"]
-        self.failUnlessEqual(len(b1.locks), 1)
+        d.addCallback(lambda ign: master.loadConfig(lockCfg1b))
+        def _check3(ign):
+            self.failIfIdentical(self.b1, botmaster.builders["builder1"])
+            self.b1 = botmaster.builders["builder1"]
+            self.failUnlessEqual(len(self.b1.locks), 1)
+        d.addCallback(_check3)
 
         # similar test with step-scoped locks
-        master.loadConfig(lockCfg2a)
-        b1 = master.botmaster.builders["builder1"]
+        d.addCallback(lambda ign: master.loadConfig(lockCfg2a))
+
+        def _check4(ign):
+            self.b1 = botmaster.builders["builder1"]
+        d.addCallback(_check4)
+
         # reloading the same config should not change the Builder
-        master.loadConfig(lockCfg2a)
-        self.failUnlessIdentical(b1, master.botmaster.builders["builder1"])
+        d.addCallback(lambda ign: master.loadConfig(lockCfg2a))
+        def _check5(ign):
+            self.failUnlessIdentical(self.b1, botmaster.builders["builder1"])
+
         # but changing the set of locks used should change it
-        master.loadConfig(lockCfg2b)
-        self.failIfIdentical(b1, master.botmaster.builders["builder1"])
-        b1 = master.botmaster.builders["builder1"]
+        d.addCallback(lambda ign: master.loadConfig(lockCfg2b))
+        def _check6(ign):
+            self.failIfIdentical(self.b1, botmaster.builders["builder1"])
+            self.b1 = botmaster.builders["builder1"]
+        d.addCallback(_check6)
+
         # remove the locks entirely
-        master.loadConfig(lockCfg2c)
-        self.failIfIdentical(b1, master.botmaster.builders["builder1"])
+        d.addCallback(lambda ign: master.loadConfig(lockCfg2c))
+        def _check7(ign):
+            self.failIfIdentical(self.b1, master.botmaster.builders["builder1"])
+        d.addCallback(_check7)
+        return d
 
     def testNoChangeHorizon(self):
+        self.basedir = "config/configtest/NoChangeHorizon"
+        self.setup_master()
         master = self.buildmaster
-        master.loadChanges()
         sourcesCfg = emptyCfg + \
 """
 from buildbot.changes.pb import PBChangeSource
@@ -1051,8 +1174,9 @@ c['change_source'] = PBChangeSource()
         return d
 
     def testChangeHorizon(self):
+        self.basedir = "config/configtest/ChangeHorizon"
+        self.setup_master()
         master = self.buildmaster
-        master.loadChanges()
         sourcesCfg = emptyCfg + \
 """
 from buildbot.changes.pb import PBChangeSource
@@ -1072,17 +1196,17 @@ class ConfigElements(unittest.TestCase):
         s1 = scheduler.Scheduler(name='quick', branch=None,
                                  treeStableTimer=30,
                                  builderNames=['quick'])
-        s2 = scheduler.Scheduler(name="all", branch=None,
-                                 treeStableTimer=5*60,
-                                 builderNames=["a", "b"])
-        s3 = scheduler.Try_Userpass("try", ["a","b"], port=9989,
-                                    userpass=[("foo","bar")])
         s1a = scheduler.Scheduler(name='quick', branch=None,
                                   treeStableTimer=30,
                                   builderNames=['quick'])
+        s2 = scheduler.Scheduler(name="all", branch=None,
+                                 treeStableTimer=5*60,
+                                 builderNames=["a", "b"])
         s2a = scheduler.Scheduler(name="all", branch=None,
                                   treeStableTimer=5*60,
                                   builderNames=["a", "b"])
+        s3 = scheduler.Try_Userpass("try", ["a","b"], port=9989,
+                                    userpass=[("foo","bar")])
         s3a = scheduler.Try_Userpass("try", ["a","b"], port=9989,
                                      userpass=[("foo","bar")])
         self.failUnless(s1 == s1)
@@ -1093,21 +1217,37 @@ class ConfigElements(unittest.TestCase):
 
 
 
-class ConfigFileTest(unittest.TestCase):
+class ConfigFileTest(SetupBase, unittest.TestCase):
 
     def testFindConfigFile(self):
-        os.mkdir("test_cf")
-        open(os.path.join("test_cf", "master.cfg"), "w").write(emptyCfg)
-        slaveportCfg = emptyCfg + "c['slavePortnum'] = 9000\n"
-        open(os.path.join("test_cf", "alternate.cfg"), "w").write(slaveportCfg)
+        self.basedir = "config/configfiletest/FindConfigFile"
+        self.setup_master()
 
-        m = BuildMaster("test_cf")
-        m.loadTheConfigFile()
-        self.failUnlessEqual(m.slavePortnum, "tcp:9999")
+        open(os.path.join(self.basedir, "master.cfg"), "w").write(emptyCfg)
 
-        m = BuildMaster("test_cf", "alternate.cfg")
-        m.loadTheConfigFile()
-        self.failUnlessEqual(m.slavePortnum, "tcp:9000")
+        d = self.buildmaster.loadTheConfigFile()
+        def _check(ign):
+            self.failUnlessEqual(self.buildmaster.slavePortnum, "tcp:9999")
+        d.addCallback(_check)
+        d.addCallback(lambda ign: self.buildmaster.disownServiceParent())
+        def _setup2(ign):
+            basedir2 = "config/configfiletest/FindConfigFile_2"
+            if not os.path.exists(basedir2):
+                os.makedirs(basedir2)
+            spec = db.DB("sqlite3", os.path.join(basedir2, "state.sqlite"))
+            db.create_db(spec)
+            slaveportCfg = emptyCfg + "c['slavePortnum'] = 9000\n"
+            open(os.path.join(basedir2, "alternate.cfg"), "w").write(slaveportCfg)
+            m = BuildMaster(basedir2, "alternate.cfg", db=spec)
+            self.buildmaster = m
+            m.readConfig = True
+            m.setServiceParent(self.serviceparent)
+            return m.loadTheConfigFile()
+        d.addCallback(_setup2)
+        def _check2(ign):
+            self.failUnlessEqual(self.buildmaster.slavePortnum, "tcp:9000")
+        d.addCallback(_check2)
+        return d
 
 
 class MyTarget(base.StatusReceiverMultiService):
@@ -1164,8 +1304,12 @@ class StartService(unittest.TestCase):
         return self.master.stopService()
 
     def testStartService(self):
-        os.mkdir("test_ss")
-        self.master = m = BuildMaster("test_ss")
+        self.basedir = "config/startservice/startservice"
+        if not os.path.exists(self.basedir):
+            os.makedirs(self.basedir)
+        spec = db.DB("sqlite3", os.path.join(self.basedir, "state.sqlite"))
+        db.create_db(spec)
+        self.master = m = BuildMaster(self.basedir, db=spec)
         # inhibit the usual read-config-on-startup behavior
         m.readConfig = True
         m.startService()
@@ -1266,7 +1410,7 @@ cfg1_bad2 = cfg1 + \
 f1.addStep(BuildFactory()) # pass addStep something that's not a step or step class
 """
 
-class Factories(unittest.TestCase):
+class Factories(SetupBase, unittest.TestCase, ShouldFailMixin):
     def printExpecting(self, factory, args):
         factory_keys = factory[1].keys()
         factory_keys.sort()
@@ -1315,27 +1459,32 @@ class Factories(unittest.TestCase):
         self.failUnlessEqual(factory[1], darcs_args)
 
     def testSteps(self):
-        m = BuildMaster(".")
-        m.loadConfig(cfg1)
-        b = m.botmaster.builders["builder1"]
-        steps = b.buildFactory.steps
-        self.failUnlessEqual(len(steps), 4)
+        self.basedir = "config/factories/steps"
+        self.setup_master()
+        m = self.buildmaster
+        d = m.loadConfig(cfg1)
+        def _check1(ign):
+            b = m.botmaster.builders["builder1"]
+            steps = b.buildFactory.steps
+            self.failUnlessEqual(len(steps), 4)
 
-        self.failUnlessExpectedShell(steps[0], command="echo yes")
-        self.failUnlessExpectedShell(steps[1], defaults=False,
-                                     command="old-style")
-        self.failUnlessExpectedDarcs(steps[2],
-                                     repourl="http://buildbot.net/repos/trunk")
-        self.failUnlessExpectedShell(steps[3], defaults=False,
-                                     command="echo old-style")
+            self.failUnlessExpectedShell(steps[0], command="echo yes")
+            self.failUnlessExpectedShell(steps[1], defaults=False,
+                                         command="old-style")
+            self.failUnlessExpectedDarcs(steps[2],
+                                         repourl="http://buildbot.net/repos/trunk")
+            self.failUnlessExpectedShell(steps[3], defaults=False,
+                                         command="echo old-style")
+        d.addCallback(_check1)
+        return d
 
     def testBadAddStepArguments(self):
-        m = BuildMaster(".")
-        self.failUnlessRaises(ArgumentsInTheWrongPlace, m.loadConfig, cfg1_bad)
-
-    def testBadAddStepArguments(self):
-        m = BuildMaster(".")
-        self.failUnlessRaises(ValueError, m.loadConfig, cfg1_bad2)
+        self.basedir = "config/factories/BadAddStepArguments"
+        self.setup_master()
+        m = self.buildmaster
+        d = self.shouldFail(ArgumentsInTheWrongPlace, "here", None,
+                            m.loadConfig, cfg1_bad)
+        return d
 
     def _loop(self, orig):
         step_class, kwargs = orig.getStepFactory()

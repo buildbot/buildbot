@@ -1,16 +1,11 @@
 # -*- test-case-name: buildbot.test.test_control -*-
 
-import os
-
 from twisted.trial import unittest
-from twisted.internet import defer
 
-from buildbot import master, interfaces
+from buildbot import interfaces
 from buildbot.sourcestamp import SourceStamp
-from buildbot.slave import bot
 from buildbot.status.builder import SUCCESS
-from buildbot.process import base
-from buildbot.test.runutils import rmtree
+from buildbot.test.runutils import MasterMixin
 
 config = """
 from buildbot.process import factory
@@ -34,64 +29,30 @@ c['slavePortnum'] = 0
 BuildmasterConfig = c
 """
 
-class FakeBuilder:
-    name = "fake"
-    def getSlaveCommandVersion(self, command, oldversion=None):
-        return "1.10"
 
-
-class Force(unittest.TestCase):
-
-    def rmtree(self, d):
-        rmtree(d)
-
-    def setUp(self):
-        self.master = None
-        self.slave = None
-        self.rmtree("control_basedir")
-        os.mkdir("control_basedir")
-        self.master = master.BuildMaster("control_basedir")
-        self.slavebase = os.path.abspath("control_slavebase")
-        self.rmtree(self.slavebase)
-        os.mkdir("control_slavebase")
-
-    def connectSlave(self):
-        port = self.master.slavePort._port.getHost().port
-        slave = bot.BuildSlave("localhost", port, "bot1", "sekrit",
-                               self.slavebase, keepalive=0, usePTY=1)
-        self.slave = slave
-        slave.startService()
-        d = self.master.botmaster.waitUntilBuilderAttached("force")
-        return d
-
-    def tearDown(self):
-        dl = []
-        if self.slave:
-            dl.append(self.master.botmaster.waitUntilBuilderDetached("force"))
-            dl.append(defer.maybeDeferred(self.slave.stopService))
-        if self.master:
-            dl.append(defer.maybeDeferred(self.master.stopService))
-        return defer.DeferredList(dl)
+class Force(MasterMixin, unittest.TestCase):
+    # exercise methods of master.Control, BuilderControl, and BuildControl
 
     def testRequest(self):
-        m = self.master
-        m.loadConfig(config)
-        m.startService()
-        d = self.connectSlave()
+        self.basedir = "control/Force/request"
+        self.create_master()
+        d = self.master.loadConfig(config)
+        d.addCallback(lambda ign: self.connectSlave(builders=["force"]))
         d.addCallback(self._testRequest_1)
-        return d
-    def _testRequest_1(self, res):
-        c = interfaces.IControl(self.master)
-        req = base.BuildRequest("I was bored", SourceStamp(), 'test_builder')
-        builder_control = c.getBuilder("force")
-        d = defer.Deferred()
-        req.subscribe(d.callback)
-        builder_control.requestBuild(req)
         d.addCallback(self._testRequest_2)
-        # we use the same check-the-results code as testForce
+        d.addCallback(self._testRequest_3)
         return d
 
-    def _testRequest_2(self, build_control):
+    def _testRequest_1(self, res):
+        c = interfaces.IControl(self.master)
+        bss = c.submitBuildSet(["force"], SourceStamp(), "I was bored") # X
+        d = bss.waitUntilFinished()
+        return d
+
+    def _testRequest_2(self, bss):
+        return bss.getBuildRequests()[0].getBuilds()[0]
+
+    def PFF_testRequest_2(self, build_control):
         self.failUnless(interfaces.IBuildControl.providedBy(build_control))
         d = build_control.getStatus().waitUntilFinished()
         d.addCallback(self._testRequest_3)

@@ -271,6 +271,7 @@ class RemoteShellTest(unittest.TestCase):
         testval = repr(rsc)
         rsc = buildstep.RemoteShellCommand('.', 'make')
         testval = repr(rsc)
+        del testval
 
 
 class SubunitLogObserver(subunitlogobserver.SubunitLogObserver):

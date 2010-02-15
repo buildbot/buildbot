@@ -1,15 +1,19 @@
 # -*- test-case-name: buildbot.test.test_buildreq -*-
 
 from twisted.trial import unittest
+from twisted.internet import defer
 
-from buildbot import buildset, interfaces, sourcestamp
-from buildbot.process import base
-from buildbot.status import builder
+from buildbot import sourcestamp
+from buildbot.buildrequest import BuildRequest
+from buildbot.status.builder import SUCCESS, FAILURE
 from buildbot.changes.changes import Change
+from buildbot.process.properties import Properties
+from buildbot.test.runutils import MasterMixin, StallMixin
+from buildbot.eventual import fireEventually, flushEventualQueue
 
 class Request(unittest.TestCase):
     def testMerge(self):
-        R = base.BuildRequest
+        R = BuildRequest
         S = sourcestamp.SourceStamp
         N = 'test_builder'
         b1 =  R("why", S("branch1", None, None, None), N)
@@ -78,105 +82,209 @@ class Request(unittest.TestCase):
         self.failUnlessEqual(why, "changes")
 
 
-class FakeBuilder:
-    name = "fake"
-    def __init__(self):
-        self.requests = []
-    def submitBuildRequest(self, req):
-        self.requests.append(req)
 
+# replaces test_buildreq.Set.testBuildSet
+# exercises db.DBConnector.:
+#    def create_buildset(self, ssid, reason, properties, builderNames, t,
+#    def get_buildrequestids_for_buildset(self, bsid):
+#    def examine_buildset(self, bsid):
+# also uses:
+#    def get_unclaimed_buildrequests(self, buildername, old, master_name,
+#    def claim_buildrequests(self, now, master_name, master_incarnation, brids,
+#    def retire_buildrequests(self, brids, results):
 
-class Set(unittest.TestCase):
-    def testBuildSet(self):
-        S = buildset.BuildSet
-        a,b = FakeBuilder(), FakeBuilder()
+class BuildSet(MasterMixin, StallMixin, unittest.TestCase):
+    def test_basic(self):
+        self.basedir = "buildset/BuildSet/basic"
+        self.create_master()
+        db = self.master.db
+        run = db.runInteractionNow
 
-        # two builds, the first one fails, the second one succeeds. The
-        # waitUntilSuccess watcher fires as soon as the first one fails,
-        # while the waitUntilFinished watcher doesn't fire until all builds
-        # are complete.
+        # we must create all the things that go into a buildset
+        #c1 = Change(who="brian", files=["foo.c", "subdir/bar.c"],
+        #            comments="first change",
+        #            revision="1234")
+        #db.addChangeToDatabase(c1)
+        ss = sourcestamp.SourceStamp(branch="branchy")
+        ssid = run(lambda t: db.get_sourcestampid(ss,t))
+        props = Properties()
+        props.setProperty("pname", "pvalue", "psource")
 
-        source = sourcestamp.SourceStamp()
-        s = S(["a","b"], source, "forced build")
-        s.start([a,b])
-        self.failUnlessEqual(len(a.requests), 1)
-        self.failUnlessEqual(len(b.requests), 1)
-        r1 = a.requests[0]
-        self.failUnlessEqual(r1.reason, s.reason)
-        self.failUnlessEqual(r1.source, s.source)
+        bsid = run(lambda t:
+                   db.create_buildset(ssid, "reason", props, ["bn1", "bn2"], t))
+        mn, mi = "mastername", "incarnation"
+        reqs = run(lambda t:
+                   db.get_unclaimed_buildrequests("bn1", 1, mn, mi, t))
+        self.failUnlessEqual(len(reqs), 1)
+        self.failUnlessEqual(reqs[0].reason, "reason")
+        self.failUnlessEqual(reqs[0].builderName, "bn1")
+        #print reqs[0].properties
+        #self.failUnlessEqual(reqs[0].properties["pname"], "pvalue") #BROKEN
+        brids = db.get_buildrequestids_for_buildset(bsid)
+        bn1_brid = brids["bn1"]
+        bn2_brid = brids["bn2"]
+        self.failUnlessEqual(bn1_brid, reqs[0].id)
+        reqs2 = run(lambda t:
+                    db.get_unclaimed_buildrequests("bn2", 1, mn, mi, t))
+        self.failUnlessEqual(bn2_brid, reqs2[0].id)
 
-        st = s.status
-        self.failUnlessEqual(st.getSourceStamp(), source)
-        self.failUnlessEqual(st.getReason(), "forced build")
-        self.failUnlessEqual(st.getBuilderNames(), ["a","b"])
-        self.failIf(st.isFinished())
-        brs = st.getBuildRequests()
-        self.failUnlessEqual(len(brs), 2)
+        (successful, finished) = db.examine_buildset(bsid)
+        self.failUnlessEqual(successful, None)
+        self.failUnlessEqual(finished, False)
 
-        res = []
-        d1 = s.waitUntilSuccess()
-        d1.addCallback(lambda r: res.append(("success", r)))
-        d2 = s.waitUntilFinished()
-        d2.addCallback(lambda r: res.append(("finished", r)))
+        bs = self.master.status.getBuildSets()
+        self.failUnlessEqual(len(bs), 1)
+        brs = bs[0].getBuilderNamesAndBuildRequests()
+        self.failUnlessEqual(sorted(brs.keys()), ["bn1", "bn2"])
+        self.failUnlessEqual(sorted(bs[0].getBuilderNames()), ["bn1", "bn2"])
+        self.failUnlessEqual(len(bs[0].getBuildRequests()), 2)
+        ss2 = bs[0].getSourceStamp()
+        self.failUnlessEqual(ss2.branch, "branchy")
+        self.failUnlessEqual(bs[0].getReason(), "reason")
+        self.failUnlessEqual(bs[0].isFinished(), False)
+        self.failUnlessEqual(bs[0].getResults(), None)
 
-        self.failUnlessEqual(res, [])
+        db.retire_buildrequests([bn1_brid], SUCCESS)
+        self.failUnlessEqual(db.examine_buildset(bsid), (None, False))
+        db.retire_buildrequests([bn2_brid], SUCCESS)
+        self.failUnlessEqual(db.examine_buildset(bsid), (True, True))
 
-        # the first build finishes here, with FAILURE
-        builderstatus_a = builder.BuilderStatus("a")
-        bsa = builder.BuildStatus(builderstatus_a, 1)
-        bsa.setResults(builder.FAILURE)
-        a.requests[0].finished(bsa)
+        bsid2 = run(lambda t:
+                    db.create_buildset(ssid, "reason", props, ["bn1","bn2"], t))
+        brids2 = db.get_buildrequestids_for_buildset(bsid2)
+        self.failUnlessEqual(db.examine_buildset(bsid2), (None, False))
+        db.retire_buildrequests([brids2["bn1"]], SUCCESS)
+        self.failUnlessEqual(db.examine_buildset(bsid2), (None, False))
+        db.retire_buildrequests([brids2["bn2"]], FAILURE)
+        self.failUnlessEqual(db.examine_buildset(bsid2), (False, True))
 
-        # any FAILURE flunks the BuildSet immediately, so the
-        # waitUntilSuccess deferred fires right away. However, the
-        # waitUntilFinished deferred must wait until all builds have
-        # completed.
-        self.failUnlessEqual(len(res), 1)
-        self.failUnlessEqual(res[0][0], "success")
-        bss = res[0][1]
-        self.failUnless(interfaces.IBuildSetStatus(bss, None))
-        self.failUnlessEqual(bss.getResults(), builder.FAILURE)
+        bsid3 = run(lambda t:
+                    db.create_buildset(ssid, "reason", props, ["bn1","bn2"], t))
+        brids3 = db.get_buildrequestids_for_buildset(bsid3)
+        self.failUnlessEqual(db.examine_buildset(bsid3), (None, False))
+        db.retire_buildrequests([brids3["bn1"]], FAILURE)
+        self.failUnlessEqual(db.examine_buildset(bsid3), (False, False))
+        db.retire_buildrequests([brids3["bn2"]], SUCCESS)
+        self.failUnlessEqual(db.examine_buildset(bsid3), (False, True))
 
-        # here we finish the second build
-        builderstatus_b = builder.BuilderStatus("b")
-        bsb = builder.BuildStatus(builderstatus_b, 1)
-        bsb.setResults(builder.SUCCESS)
-        b.requests[0].finished(bsb)
+    def test_subscribe(self):
+        self.basedir = "buildset/BuildSet/subscribe"
+        self.create_master()
+        db = self.master.db
+        run = db.runInteractionNow
 
-        # .. which ought to fire the waitUntilFinished deferred
-        self.failUnlessEqual(len(res), 2)
-        self.failUnlessEqual(res[1][0], "finished")
-        self.failUnlessEqual(res[1][1], bss)
+        ss = sourcestamp.SourceStamp(branch="branchy")
+        ssid = run(lambda t: db.get_sourcestampid(ss,t))
 
-        # and finish the BuildSet overall
-        self.failUnless(st.isFinished())
-        self.failUnlessEqual(st.getResults(), builder.FAILURE)
+        d = defer.succeed(None)
+        d.addCallback(self._setup_subscribe, ssid)
+        d.addCallback(self._subscribe_test1)
+        d.addCallback(self._setup_subscribe, ssid)
+        d.addCallback(self._subscribe_test2)
+        d.addCallback(self._setup_subscribe, ssid)
+        d.addCallback(self._subscribe_test3)
+        return d
 
-    def testSuccess(self):
-        S = buildset.BuildSet
-        a,b = FakeBuilder(), FakeBuilder()
-        # this time, both builds succeed
+    def _setup_subscribe(self, ign, ssid):
+        db = self.master.db
+        run = db.runInteractionNow
+        props = Properties()
+        bsid = run(lambda t:
+                   db.create_buildset(ssid, "reason", props,
+                                      ["bn1", "bn2"], t))
+        mn, mi = "mastername", "incarnation"
+        brids = db.get_buildrequestids_for_buildset(bsid)
+        bss = self.master.status.getBuildSets()[0]
+        success_events = []
+        bss.waitUntilSuccess().addCallback(success_events.append)
+        finished_events = []
+        bss.waitUntilFinished().addCallback(finished_events.append)
 
-        source = sourcestamp.SourceStamp()
-        s = S(["a","b"], source, "forced build")
-        s.start([a,b])
+        return brids, bss, success_events, finished_events
 
-        st = s.status
-        self.failUnlessEqual(st.getSourceStamp(), source)
-        self.failUnlessEqual(st.getReason(), "forced build")
-        self.failUnlessEqual(st.getBuilderNames(), ["a","b"])
-        self.failIf(st.isFinished())
+    def _subscribe_test1(self, res):
+        db = self.master.db
+        (brids, bss, success_events, finished_events) = res
+        d = fireEventually()
+        def _check1(ign):
+            self.failUnlessEqual(len(success_events), 0)
+            self.failUnlessEqual(len(finished_events), 0)
+            db.retire_buildrequests([brids["bn1"]], SUCCESS)
+            return flushEventualQueue()
+        d.addCallback(_check1)
+        def _check2(ign):
+            self.failUnlessEqual(len(success_events), 0)
+            self.failUnlessEqual(len(finished_events), 0)
+            db.retire_buildrequests([brids["bn2"]], SUCCESS)
+            return flushEventualQueue()
+        d.addCallback(_check2)
+        def _check3(ign):
+            self.failUnlessEqual(len(success_events), 1)
+            self.failUnlessEqual(len(finished_events), 1)
+            self.failUnlessIdentical(bss.__class__,
+                                     success_events[0].__class__)
+            self.failUnlessEqual(success_events[0].isFinished(), True)
+            self.failUnlessEqual(success_events[0].getResults(), SUCCESS)
+            self.failUnlessEqual(finished_events[0].getResults(), SUCCESS)
+            return flushEventualQueue()
+        d.addCallback(_check3)
+        return d
 
-        builderstatus_a = builder.BuilderStatus("a")
-        bsa = builder.BuildStatus(builderstatus_a, 1)
-        bsa.setResults(builder.SUCCESS)
-        a.requests[0].finished(bsa)
+    def _subscribe_test2(self, res):
+        db = self.master.db
+        (brids, bss, success_events, finished_events) = res
+        d = fireEventually()
+        def _check1(ign):
+            self.failUnlessEqual(len(success_events), 0)
+            self.failUnlessEqual(len(finished_events), 0)
+            db.retire_buildrequests([brids["bn1"]], SUCCESS)
+            return flushEventualQueue()
+        d.addCallback(_check1)
+        def _check2(ign):
+            self.failUnlessEqual(len(success_events), 0)
+            self.failUnlessEqual(len(finished_events), 0)
+            db.retire_buildrequests([brids["bn2"]], FAILURE)
+            return flushEventualQueue()
+        d.addCallback(_check2)
+        def _check3(ign):
+            self.failUnlessEqual(len(success_events), 1)
+            self.failUnlessEqual(len(finished_events), 1)
+            self.failUnlessIdentical(bss.__class__,
+                                     success_events[0].__class__)
+            self.failUnlessEqual(success_events[0].isFinished(), True)
+            self.failUnlessEqual(success_events[0].getResults(), FAILURE)
+            self.failUnlessEqual(finished_events[0].getResults(), FAILURE)
+            return flushEventualQueue()
+        d.addCallback(_check3)
+        return d
 
-        builderstatus_b = builder.BuilderStatus("b")
-        bsb = builder.BuildStatus(builderstatus_b, 1)
-        bsb.setResults(builder.SUCCESS)
-        b.requests[0].finished(bsb)
-
-        self.failUnless(st.isFinished())
-        self.failUnlessEqual(st.getResults(), builder.SUCCESS)
+    def _subscribe_test3(self, res):
+        db = self.master.db
+        (brids, bss, success_events, finished_events) = res
+        d = fireEventually()
+        def _check1(ign):
+            self.failUnlessEqual(len(success_events), 0)
+            self.failUnlessEqual(len(finished_events), 0)
+            db.retire_buildrequests([brids["bn1"]], FAILURE)
+            return flushEventualQueue()
+        d.addCallback(_check1)
+        def _check2(ign):
+            self.failUnlessEqual(len(success_events), 1)
+            self.failUnlessEqual(len(finished_events), 0)
+            self.failUnlessEqual(success_events[0].isFinished(), False)
+            self.failUnlessEqual(success_events[0].getResults(), None)
+            db.retire_buildrequests([brids["bn2"]], SUCCESS)
+            return flushEventualQueue()
+        d.addCallback(_check2)
+        def _check3(ign):
+            self.failUnlessEqual(len(success_events), 1)
+            self.failUnlessEqual(len(finished_events), 1)
+            self.failUnlessIdentical(bss.__class__,
+                                     success_events[0].__class__)
+            self.failUnlessEqual(success_events[0].isFinished(), True)
+            self.failUnlessEqual(success_events[0].getResults(), FAILURE)
+            self.failUnlessEqual(finished_events[0].getResults(), FAILURE)
+            return flushEventualQueue()
+        d.addCallback(_check3)
+        return d
 

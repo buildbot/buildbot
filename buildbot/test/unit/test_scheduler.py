@@ -3,48 +3,35 @@
 import os, time
 
 from twisted.trial import unittest
-from twisted.internet import defer, reactor
-from twisted.application import service
-from twisted.spread import pb
 
-from buildbot import scheduler, sourcestamp, buildset, status
+from buildbot import scheduler, sourcestamp
 from buildbot.changes.changes import Change
 from buildbot.clients import tryclient
 
+from buildbot.test.runutils import MasterMixin, StallMixin
+from buildbot.test.pollmixin import PollMixin
 
-class FakeMaster(service.MultiService):
-    d = None
-    def submitBuildSet(self, bs):
-        self.sets.append(bs)
-        if self.d:
-            reactor.callLater(0, self.d.callback, bs)
-            self.d = None
-        return pb.Referenceable() # makes the cleanup work correctly
-
-class Scheduling(unittest.TestCase):
-    def setUp(self):
-        self.master = master = FakeMaster()
-        master.sets = []
-        master.startService()
-
-    def tearDown(self):
-        d = self.master.stopService()
-        return d
-
-    def addScheduler(self, s):
-        s.setServiceParent(self.master)
+class Scheduling(MasterMixin, StallMixin, PollMixin, unittest.TestCase):
+    def setSchedulers(self, *schedulers):
+        return self.master.scheduler_manager.updateSchedulers(schedulers)
 
     def testPeriodic1(self):
-        self.addScheduler(scheduler.Periodic("quickly", ["a","b"], 2))
-        d = defer.Deferred()
-        reactor.callLater(5, d.callback, None)
+        self.basedir = 'scheduler/Scheduling/testPeriodic1'
+        self.create_master()
+        d = self.setSchedulers(scheduler.Periodic("quickly", ["a","b"], 2))
+        d.addCallback(lambda ign: self.master.scheduler_manager.trigger())
+        d.addCallback(self.stall, 2)
+        d.addCallback(lambda ign: self.master.scheduler_manager.when_quiet())
         d.addCallback(self._testPeriodic1_1)
         return d
     def _testPeriodic1_1(self, res):
-        self.failUnless(len(self.master.sets) > 1)
-        s1 = self.master.sets[0]
-        self.failUnlessEqual(s1.builderNames, ["a","b"])
-        self.failUnlessEqual(s1.reason, "The Periodic scheduler named 'quickly' triggered this build")
+        bsids = self.master.db.get_active_buildset_ids()
+        self.failUnless(len(bsids) > 1)
+
+        (external_idstring, reason, ssid, complete, results) = self.master.db.get_buildset_info(bsids[0])
+        reqs = self.master.db.get_buildrequestids_for_buildset(bsids[0])
+        self.failUnlessEqual(sorted(reqs.keys()), ["a","b"])
+        self.failUnlessEqual(reason, "The Periodic scheduler named 'quickly' triggered this build")
 
     def testNightly(self):
         # now == 15-Nov-2005, 00:05:36 AM . By using mktime, this is
@@ -54,31 +41,31 @@ class Scheduling(unittest.TestCase):
         now = time.mktime((2005, 11, 15, 0, 5, 36, 1, 319, -1))
 
         s = scheduler.Nightly('nightly', ["a"], hour=3)
-        t = s.calculateNextRunTimeFrom(now)
+        t = s._calculateNextRunTimeFrom(now)
         self.failUnlessEqual(int(t-now), 2*HOUR+54*MIN+24)
 
         s = scheduler.Nightly('nightly', ["a"], minute=[3,8,54])
-        t = s.calculateNextRunTimeFrom(now)
+        t = s._calculateNextRunTimeFrom(now)
         self.failUnlessEqual(int(t-now), 2*MIN+24)
 
         s = scheduler.Nightly('nightly', ["a"],
                               dayOfMonth=16, hour=1, minute=6)
-        t = s.calculateNextRunTimeFrom(now)
+        t = s._calculateNextRunTimeFrom(now)
         self.failUnlessEqual(int(t-now), DAY+HOUR+24)
 
         s = scheduler.Nightly('nightly', ["a"],
                               dayOfMonth=16, hour=1, minute=3)
-        t = s.calculateNextRunTimeFrom(now)
+        t = s._calculateNextRunTimeFrom(now)
         self.failUnlessEqual(int(t-now), DAY+57*MIN+24)
 
         s = scheduler.Nightly('nightly', ["a"],
                               dayOfMonth=15, hour=1, minute=3)
-        t = s.calculateNextRunTimeFrom(now)
+        t = s._calculateNextRunTimeFrom(now)
         self.failUnlessEqual(int(t-now), 57*MIN+24)
 
         s = scheduler.Nightly('nightly', ["a"],
                               dayOfMonth=15, hour=0, minute=3)
-        t = s.calculateNextRunTimeFrom(now)
+        t = s._calculateNextRunTimeFrom(now)
         self.failUnlessEqual(int(t-now), 30*DAY-3*MIN+24)
 
 
@@ -87,125 +74,197 @@ class Scheduling(unittest.TestCase):
             return True
         return False
 
-    def testBranch(self):
+    def testOffBranch(self):
+        self.basedir = 'scheduler/Scheduling/OffBranch'
+        self.create_master()
         s = scheduler.Scheduler("b1", "branch1", 2, ["a","b"],
                                 fileIsImportant=self.isImportant)
-        self.addScheduler(s)
+        d = self.setSchedulers(s)
+
+        def _addChange(ign, c):
+            self.master.change_svc.addChange(c)
+            return self.master.scheduler_manager.when_quiet()
 
         c0 = Change("carol", ["important"], "other branch", branch="other")
-        s.addChange(c0)
-        self.failIf(s.timer)
-        self.failIf(s.importantChanges)
+        d.addCallback(_addChange, c0)
+
+        def _check(ign):
+            important, unimportant = self.master.db.runInteractionNow(
+                    lambda t: self.master.db.scheduler_get_classified_changes(s.schedulerid, t))
+            self.failIf(important)
+            self.failIf(unimportant)
+
+        d.addCallback(_check)
+
+    def testImportantChanges(self):
+        self.basedir = 'scheduler/Scheduling/ImportantChanges'
+        self.create_master()
+        s = scheduler.Scheduler("b1", "branch1", 2, ["a","b"],
+                                fileIsImportant=self.isImportant)
+
+        # Hijack run to prevent changes from being processed
+        oldrun = s.run
+        s.run = lambda: None
+
+        d = self.setSchedulers(s)
+
+        def _addChange(ign, c):
+            self.master.change_svc.addChange(c)
+            self.master.scheduler_manager.trigger()
+            return self.master.db.runInteraction(s.classify_changes)
 
         c1 = Change("alice", ["important", "not important"], "some changes",
                     branch="branch1")
-        s.addChange(c1)
+        d.addCallback(_addChange, c1)
         c2 = Change("bob", ["not important", "boring"], "some more changes",
                     branch="branch1")
-        s.addChange(c2)
+        d.addCallback(_addChange, c2)
         c3 = Change("carol", ["important", "dull"], "even more changes",
                     branch="branch1")
-        s.addChange(c3)
+        d.addCallback(_addChange, c3)
 
-        self.failUnlessEqual(s.importantChanges, [c1,c3])
-        self.failUnlessEqual(s.allChanges, [c1,c2,c3])
-        self.failUnless(s.timer)
+        def _check(ign):
+            important, unimportant = self.master.db.runInteractionNow(
+                    lambda t: self.master.db.scheduler_get_classified_changes(s.schedulerid, t))
+            important = [c.number for c in important]
+            unimportant = [c.number for c in unimportant]
+            self.failUnlessEqual(important, [c1.number,c3.number])
+            self.failUnlessEqual(unimportant, [c2.number])
+            s.run = oldrun
+            d1 = s.run()
+            d1.addCallback(lambda ign: self.master.scheduler_manager.trigger())
+            d1.addCallback(lambda ign: self.master.scheduler_manager.when_quiet())
+            return d1
 
-        d = defer.Deferred()
-        reactor.callLater(4, d.callback, None)
+        d.addCallback(_check)
         d.addCallback(self._testBranch_1)
         return d
+
     def _testBranch_1(self, res):
-        self.failUnlessEqual(len(self.master.sets), 1)
-        s = self.master.sets[0].source
+        bsids = self.master.db.get_active_buildset_ids()
+        self.failUnlessEqual(len(bsids), 1)
+
+        (external_idstring, reason, ssid, complete, results) = self.master.db.get_buildset_info(bsids[0])
+        s = self.master.db.getSourceStampNumberedNow(ssid)
         self.failUnlessEqual(s.branch, "branch1")
-        self.failUnlessEqual(s.revision, None)
+        # TODO: Fixme when change.revision = None is mapped to something else
+        self.failUnlessEqual(s.revision, 'None')
         self.failUnlessEqual(len(s.changes), 3)
         self.failUnlessEqual(s.patch, None)
 
 
     def testAnyBranch(self):
-        s = scheduler.AnyBranchScheduler("b1", None, 1, ["a","b"],
+        self.basedir = 'scheduler/Scheduling/AnyBranch'
+        self.create_master()
+        s = scheduler.AnyBranchScheduler("b1", 1, ["a", "b"],
                                          fileIsImportant=self.isImportant)
-        self.addScheduler(s)
+        d = self.setSchedulers(s)
+
+        def _addChange(ign, c):
+            self.master.change_svc.addChange(c)
 
         c1 = Change("alice", ["important", "not important"], "some changes",
                     branch="branch1")
-        s.addChange(c1)
+        d.addCallback(_addChange, c1)
         c2 = Change("bob", ["not important", "boring"], "some more changes",
                     branch="branch1")
-        s.addChange(c2)
+        d.addCallback(_addChange, c2)
         c3 = Change("carol", ["important", "dull"], "even more changes",
                     branch="branch1")
-        s.addChange(c3)
+        d.addCallback(_addChange, c3)
 
         c4 = Change("carol", ["important"], "other branch", branch="branch2")
-        s.addChange(c4)
+        d.addCallback(_addChange, c4)
 
         c5 = Change("carol", ["important"], "default branch", branch=None)
-        s.addChange(c5)
+        d.addCallback(_addChange, c5)
 
-        d = defer.Deferred()
-        reactor.callLater(2, d.callback, None)
+        d.addCallback(lambda ign: self.master.scheduler_manager.when_quiet())
+
         d.addCallback(self._testAnyBranch_1)
         return d
     def _testAnyBranch_1(self, res):
-        self.failUnlessEqual(len(self.master.sets), 3)
-        self.master.sets.sort(lambda a,b: cmp(a.source.branch,
-                                              b.source.branch))
+        bsids = self.master.db.get_active_buildset_ids()
+        self.failUnlessEqual(len(bsids), 3)
 
-        s1 = self.master.sets[0].source
+        sources = []
+        for bsid in bsids:
+            (external_idstring, reason, ssid, complete, results) = self.master.db.get_buildset_info(bsid)
+            s = self.master.db.getSourceStampNumberedNow(ssid)
+            sources.append(s)
+
+        sources.sort(lambda a,b: cmp(a.branch, b.branch))
+
+        s1 = sources[0]
         self.failUnlessEqual(s1.branch, None)
-        self.failUnlessEqual(s1.revision, None)
+        # TODO: Fixme when change.revision = None is mapped to something else
+        self.failUnlessEqual(s1.revision, "None")
         self.failUnlessEqual(len(s1.changes), 1)
         self.failUnlessEqual(s1.patch, None)
 
-        s2 = self.master.sets[1].source
+        s2 = sources[1]
         self.failUnlessEqual(s2.branch, "branch1")
-        self.failUnlessEqual(s2.revision, None)
+        # TODO: Fixme when change.revision = None is mapped to something else
+        self.failUnlessEqual(s2.revision, "None")
         self.failUnlessEqual(len(s2.changes), 3)
         self.failUnlessEqual(s2.patch, None)
 
-        s3 = self.master.sets[2].source
+        s3 = sources[2]
         self.failUnlessEqual(s3.branch, "branch2")
-        self.failUnlessEqual(s3.revision, None)
+        # TODO: Fixme when change.revision = None is mapped to something else
+        self.failUnlessEqual(s3.revision, "None")
         self.failUnlessEqual(len(s3.changes), 1)
         self.failUnlessEqual(s3.patch, None)
 
     def testAnyBranch2(self):
         # like testAnyBranch but without fileIsImportant
-        s = scheduler.AnyBranchScheduler("b1", None, 2, ["a","b"])
-        self.addScheduler(s)
+        self.basedir = 'scheduler/Scheduling/AnyBranch2'
+        self.create_master()
+        s = scheduler.AnyBranchScheduler("b1", 2, ["a","b"])
+
+        d = self.setSchedulers(s)
+
+        def _addChange(ign, c):
+            self.master.change_svc.addChange(c)
+
         c1 = Change("alice", ["important", "not important"], "some changes",
                     branch="branch1")
-        s.addChange(c1)
+        d.addCallback(_addChange, c1)
         c2 = Change("bob", ["not important", "boring"], "some more changes",
                     branch="branch1")
-        s.addChange(c2)
+        d.addCallback(_addChange, c2)
         c3 = Change("carol", ["important", "dull"], "even more changes",
                     branch="branch1")
-        s.addChange(c3)
+        d.addCallback(_addChange, c3)
 
         c4 = Change("carol", ["important"], "other branch", branch="branch2")
-        s.addChange(c4)
+        d.addCallback(_addChange, c4)
 
-        d = defer.Deferred()
-        reactor.callLater(2, d.callback, None)
+        d.addCallback(lambda ign: self.master.scheduler_manager.when_quiet())
         d.addCallback(self._testAnyBranch2_1)
         return d
     def _testAnyBranch2_1(self, res):
-        self.failUnlessEqual(len(self.master.sets), 2)
-        self.master.sets.sort(lambda a,b: cmp(a.source.branch,
-                                              b.source.branch))
-        s1 = self.master.sets[0].source
+        bsids = self.master.db.get_active_buildset_ids()
+        self.failUnlessEqual(len(bsids), 2)
+
+        sources = []
+        for bsid in bsids:
+            (external_idstring, reason, ssid, complete, results) = self.master.db.get_buildset_info(bsid)
+            s = self.master.db.getSourceStampNumberedNow(ssid)
+            sources.append(s)
+        sources.sort(lambda a,b: cmp(a.branch, b.branch))
+
+        s1 = sources[0]
         self.failUnlessEqual(s1.branch, "branch1")
-        self.failUnlessEqual(s1.revision, None)
+        # TODO: Fixme when change.revision = None is mapped to something else
+        self.failUnlessEqual(s1.revision, "None")
         self.failUnlessEqual(len(s1.changes), 3)
         self.failUnlessEqual(s1.patch, None)
 
-        s2 = self.master.sets[1].source
+        s2 = sources[1]
         self.failUnlessEqual(s2.branch, "branch2")
-        self.failUnlessEqual(s2.revision, None)
+        # TODO: Fixme when change.revision = None is mapped to something else
+        self.failUnlessEqual(s2.revision, "None")
         self.failUnlessEqual(len(s2.changes), 1)
         self.failUnlessEqual(s2.patch, None)
 
@@ -235,114 +294,129 @@ class Scheduling(unittest.TestCase):
                   os.path.join(jobdir, "new", filename))
 
     def testTryJobdir(self):
-        self.master.basedir = "try_jobdir"
-        os.mkdir(self.master.basedir)
+        self.basedir = "scheduler/Scheduling/TryJobdir"
+        self.create_master()
+        db = self.master.db
         jobdir = "jobdir1"
         jobdir_abs = os.path.join(self.master.basedir, jobdir)
         self.createMaildir(jobdir_abs)
         s = scheduler.Try_Jobdir("try1", ["a", "b"], jobdir)
-        self.addScheduler(s)
-        self.failIf(self.master.sets)
-        job1 = tryclient.createJobfile("buildsetID",
-                                       "branch1", "123", 1, "diff",
-                                       ["a", "b"])
-        self.master.d = d = defer.Deferred()
-        self.pushJob(jobdir_abs, job1)
-        d.addCallback(self._testTryJobdir_1)
-        # N.B.: if we don't have DNotify, we poll every 10 seconds, so don't
-        # set a .timeout here shorter than that. TODO: make it possible to
-        # set the polling interval, so we can make it shorter.
-        return d
+        s.watcher.pollinterval = 1.0 # set this before startService
+        d = self.setSchedulers(s)
+        def _then(ign):
+            job1 = tryclient.createJobfile("buildsetID",
+                                           "branch1", "123", 1, "diff",
+                                           ["a", "b"])
+            self.pushJob(jobdir_abs, job1)
+        d.addCallback(_then)
 
-    def _testTryJobdir_1(self, bs):
-        self.failUnlessEqual(bs.builderNames, ["a", "b"])
-        self.failUnlessEqual(bs.source.branch, "branch1")
-        self.failUnlessEqual(bs.source.revision, "123")
-        self.failUnlessEqual(bs.source.patch, (1, "diff"))
+        def _poll():
+            return bool(db.get_active_buildset_ids())
+        d.addCallback(lambda ign: self.poll(_poll, 0.1))
+        def _check(ign):
+            bsids = db.get_active_buildset_ids()
+            (external_idstring, reason, ssid, complete, results) = \
+                                db.get_buildset_info(bsids[0])
+            reqs = db.get_buildrequestids_for_buildset(bsids[0])
+            self.failUnlessEqual(sorted(reqs.keys()), ["a","b"])
+            s = db.getSourceStampNumberedNow(ssid)
+            self.failUnlessEqual(s.branch, "branch1")
+            self.failUnlessEqual(s.revision, "123")
+            self.failUnlessEqual(s.patch, (1, "diff"))
+        d.addCallback(_check)
+        return d
 
 
     def testTryUserpass(self):
+        self.basedir = "scheduler/Scheduling/TryUserpass"
+        self.create_master()
+        db = self.master.db
         up = [("alice","pw1"), ("bob","pw2")]
         s = scheduler.Try_Userpass("try2", ["a", "b"], 0, userpass=up)
-        self.addScheduler(s)
-        port = s.getPort()
-        config = {'connect': 'pb',
-                  'username': 'alice',
-                  'passwd': 'pw1',
-                  'master': "localhost:%d" % port,
-                  'builders': ["a", "b"],
-                  }
-        t = tryclient.Try(config)
-        ss = sourcestamp.SourceStamp("branch1", "123", (1, "diff"))
-        t.sourcestamp = ss
-        d2 = self.master.d = defer.Deferred()
-        d = t.deliverJob()
-        d.addCallback(self._testTryUserpass_1, t, d2)
+        d = self.setSchedulers(s)
+        def _then(ign):
+            port = s.getPort()
+            config = {'connect': 'pb',
+                      'username': 'alice',
+                      'passwd': 'pw1',
+                      'master': "localhost:%d" % port,
+                      'builders': ["a", "b"],
+                      }
+            self.tryclient = t = tryclient.Try(config)
+            ss = sourcestamp.SourceStamp("branch1", "123", (1, "diff"))
+            t.sourcestamp = ss
+            return t.deliverJob()
+        d.addCallback(_then)
+        def _job_delivered(ign):
+            # at this point, the Try object should have a RemoteReference to
+            # the status object.
+            self.failUnless(self.tryclient.buildsetStatus)
+        d.addCallback(_job_delivered)
+        def _poll():
+            return bool(db.get_active_buildset_ids())
+        d.addCallback(lambda ign: self.poll(_poll, 0.1))
+        def _check(ign):
+            bsids = db.get_active_buildset_ids()
+            (external_idstring, reason, ssid, complete, results) = \
+                                db.get_buildset_info(bsids[0])
+            reqs = db.get_buildrequestids_for_buildset(bsids[0])
+            self.failUnlessEqual(sorted(reqs.keys()), ["a","b"])
+            s = db.getSourceStampNumberedNow(ssid)
+            self.failUnlessEqual(s.branch, "branch1")
+            self.failUnlessEqual(s.revision, "123")
+            self.failUnlessEqual(s.patch, (1, "diff"))
+            self.tryclient.cleanup()
+        d.addCallback(_check)
         return d
-    testTryUserpass.timeout = 5
-    def _testTryUserpass_1(self, res, t, d2):
-        # at this point, the Try object should have a RemoteReference to the
-        # status object. The FakeMaster returns a stub.
-        self.failUnless(t.buildsetStatus)
-        d2.addCallback(self._testTryUserpass_2, t)
-        return d2
-    def _testTryUserpass_2(self, bs, t):
-        # this should be the BuildSet submitted by the TryScheduler
-        self.failUnlessEqual(bs.builderNames, ["a", "b"])
-        self.failUnlessEqual(bs.source.branch, "branch1")
-        self.failUnlessEqual(bs.source.revision, "123")
-        self.failUnlessEqual(bs.source.patch, (1, "diff"))
-
-        t.cleanup()
-
-        # twisted-2.0.1 (but not later versions) seems to require a reactor
-        # iteration before stopListening actually works. TODO: investigate
-        # this.
-        d = defer.Deferred()
-        reactor.callLater(0, d.callback, None)
-        return d
-
-    def testGetBuildSets(self):
-        # validate IStatus.getBuildSets
-        s = status.builder.Status(None, ".")
-        bs1 = buildset.BuildSet(["a","b"], sourcestamp.SourceStamp(),
-                                reason="one", bsid="1")
-        s.buildsetSubmitted(bs1.status)
-        self.failUnlessEqual(s.getBuildSets(), [bs1.status])
-        bs1.status.notifyFinishedWatchers()
-        self.failUnlessEqual(s.getBuildSets(), [])
 
     def testCategory(self):
-        s1 = scheduler.Scheduler("b1", "branch1", 2, ["a","b"], categories=["categoryA", "both"])
-        self.addScheduler(s1)
-        s2 = scheduler.Scheduler("b2", "branch1", 2, ["a","b"], categories=["categoryB", "both"])
-        self.addScheduler(s2)
+        self.basedir = "scheduler/Scheduling/Category"
+        self.create_master()
+        db = self.master.db
 
-        c0 = Change("carol", ["important"], "branch1", branch="branch1", category="categoryA")
-        s1.addChange(c0)
-        s2.addChange(c0)
+        # The basic Scheduler automatically removes classified changes from
+        # the DB and fires a build. We use a subclass which leaves them in
+        # the DB, so we can look at them later.
 
-        c1 = Change("carol", ["important"], "branch1", branch="branch1", category="categoryB")
-        s1.addChange(c1)
-        s2.addChange(c1)
+        s1 = NotScheduler("b1", "branch1", 2, ["a","b"],
+                          categories=["categoryA", "both"])
+        s2 = NotScheduler("b2", "branch1", 2, ["a","b"],
+                          categories=["categoryB", "both"])
+        s3 = NotScheduler("b3", "branch1", 2, ["a","b"])
+        d = self.setSchedulers(s1, s2, s3)
 
-        c2 = Change("carol", ["important"], "branch1", branch="branch1")
-        s1.addChange(c2)
-        s2.addChange(c2)
+        c0 = Change("carol", ["important"], "branch1", branch="branch1",
+                    category="categoryA", revision="c0")
+        c1 = Change("carol", ["important"], "branch1", branch="branch1",
+                    category="categoryB", revision="c1")
+        c2 = Change("carol", ["important"], "branch1", branch="branch1",
+                    revision="c2")
+        c3 = Change("carol", ["important"], "branch1", branch="branch1",
+                    category="both", revision="c3")
 
-        c3 = Change("carol", ["important"], "branch1", branch="branch1", category="both")
-        s1.addChange(c3)
-        s2.addChange(c3)
+        def _then(ign):
+            self.control.addChange(c0)
+            self.control.addChange(c1)
+            self.control.addChange(c2)
+            self.control.addChange(c3)
+            # those all trigger the SchedulerManager Loop, which will run
+            # classify_changes(). We must now wait for the loop to finish.
+            return self.wait_until_idle()
+        d.addCallback(_then)
 
-        self.failUnlessEqual(s1.importantChanges, [c0, c3])
-        self.failUnlessEqual(s2.importantChanges, [c1, c3])
+        def _check(t):
+            def _get_revs(changes):
+                return sorted([c.revision for c in changes])
+            (i,u) = db.scheduler_get_classified_changes(s1.schedulerid, t)
+            self.failUnlessEqual(_get_revs(i), ["c0", "c3"])
+            (i,u) = db.scheduler_get_classified_changes(s2.schedulerid, t)
+            self.failUnlessEqual(_get_revs(i), ["c1", "c3"])
+            (i,u) = db.scheduler_get_classified_changes(s3.schedulerid, t)
+            self.failUnlessEqual(_get_revs(i), ["c0", "c1", "c2", "c3"])
+        d.addCallback(lambda ign: db.runInteraction(_check))
+        return d
 
-        s = scheduler.Scheduler("b3", "branch1", 2, ["a","b"])
-        self.addScheduler(s)
-
-        c0 = Change("carol", ["important"], "branch1", branch="branch1", category="categoryA")
-        s.addChange(c0)
-        c1 = Change("carol", ["important"], "branch1", branch="branch1", category="categoryB")
-        s.addChange(c1)
-
-        self.failUnlessEqual(s.importantChanges, [c0, c1])
+class NotScheduler(scheduler.Scheduler):
+    def decide_and_remove_changes(self, t, important, unimportant):
+        # leave the classified changes in the DB
+        return None

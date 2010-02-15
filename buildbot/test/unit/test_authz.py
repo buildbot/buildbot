@@ -1,6 +1,5 @@
-from zope.interface import Interface, implements
+from zope.interface import implements
 from twisted.trial import unittest
-from twisted.internet import defer, reactor
 
 from buildbot.status.web.authz import Authz
 from buildbot.status.web.auth import IAuth

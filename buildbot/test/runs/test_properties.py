@@ -10,7 +10,8 @@ from buildbot.process import base
 from buildbot.process.properties import WithProperties, Properties
 from buildbot.status import builder
 from buildbot.slave.commands import rmdirRecursive
-from buildbot.test.runutils import RunMixin
+from buildbot.test.runutils import RunMixin, run_one_build
+from buildbot.buildrequest import BuildRequest
 
 
 class FakeBuild:
@@ -139,15 +140,15 @@ class BuildProperties(unittest.TestCase):
     def setUp(self):
         self.builder = FakeBuilder()
         self.builder_status = builder.BuilderStatus("fakebuilder")
-        self.builder_status.basedir = "test_properties"
+        self.basedir = self.mktemp()
+        os.mkdir(self.basedir)
+        self.builder_status.basedir = self.basedir
         self.builder_status.nextBuildNumber = 5
-        rmdirRecursive(self.builder_status.basedir)
-        os.mkdir(self.builder_status.basedir)
         self.build_status = self.builder_status.newBuild()
-        req = base.BuildRequest("reason",
-                    SourceStamp(branch="branch2", revision="1234"),
-                    'test_builder',
-                    properties=Properties(scheduler="fakescheduler"))
+        req = BuildRequest("reason",
+                           SourceStamp(branch="branch2", revision="1234"),
+                           'test_builder',
+                           properties=Properties(scheduler="fakescheduler"))
         self.build = base.Build([req])
         self.build.build_status = self.build_status
         self.build.setBuilder(self.builder)
@@ -202,12 +203,11 @@ class Run(RunMixin, unittest.TestCase):
     def testInterpolate(self):
         # run an actual build with a step that interpolates a build property
         d = self.master.loadConfig(run_config)
-        d.addCallback(lambda res: self.master.startService())
         d.addCallback(lambda res: self.connectOneSlave("bot1"))
         d.addCallback(lambda res: self.requestBuild("full1"))
         d.addCallback(self.failUnlessBuildSucceeded)
         def _check_touch(res):
-            f = os.path.join("slavebase-bot1", "bd1", "bot1-global-slprop")
+            f = os.path.join(self.slavebase, "bd1", "bot1-global-slprop")
             self.failUnless(os.path.exists(f))
             return res
         d.addCallback(_check_touch)
@@ -240,9 +240,11 @@ c['builders'] = [
         SetProperty(property='bar', command="echo bar", strip=False),
     """)
 
+    def requestBuild(self, buildername):
+        return run_one_build(self.control, buildername, SourceStamp(), "reason")
+
     def testSetPropertySimple(self):
         d = self.master.loadConfig(self.SetPropertySimple_config)
-        d.addCallback(lambda res: self.master.startService())
         d.addCallback(lambda res: self.connectOneSlave("bot1"))
         d.addCallback(lambda res: self.requestBuild("full1"))
         d.addCallback(self.failUnlessBuildSucceeded)
@@ -267,7 +269,6 @@ c['builders'] = [
         if sys.platform == 'win32':
             raise unittest.SkipTest("stderr doesn't work on windoze")
         d = self.master.loadConfig(self.SetPropertyExtractFn_config)
-        d.addCallback(lambda res: self.master.startService())
         d.addCallback(lambda res: self.connectOneSlave("bot1"))
         d.addCallback(lambda res: self.requestBuild("full1"))
         d.addCallback(self.failUnlessBuildSucceeded)

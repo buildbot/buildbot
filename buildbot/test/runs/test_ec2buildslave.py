@@ -5,12 +5,9 @@ import sys
 import textwrap
 
 from twisted.trial import unittest
-from twisted.internet import defer, reactor
 
-from buildbot.process.base import BuildRequest
-from buildbot.sourcestamp import SourceStamp
 from buildbot.status.builder import SUCCESS
-from buildbot.test.runutils import RunMixin
+from buildbot.test.runutils import RunMixin, StallMixin
 
 
 PENDING = 'pending'
@@ -216,13 +213,10 @@ class Boto:
     exception = Stub(EC2ResponseError=EC2ResponseError)
 
 
-class Mixin(RunMixin):
+class Mixin(RunMixin, StallMixin):
 
     def doBuild(self):
-        br = BuildRequest("forced", SourceStamp(), 'test_builder')
-        d = br.waitUntilFinished()
-        self.control.getBuilder('b1').requestBuild(br)
-        return d
+        return self.requestBuild("b1")
 
     def setUp(self):
         self.boto_setUp1()
@@ -249,7 +243,6 @@ class Mixin(RunMixin):
             del sys.modules['boto.exception']
 
     def boto_setUp3(self):
-        self.master.startService()
         self.boto.slave = self.bot1 = self.master.botmaster.slaves['bot1']
         self.bot1._poll_resolution = 0.1
         self.b1 = self.master.botmaster.builders['b1']
@@ -306,9 +299,15 @@ class BasicConfig(Mixin, unittest.TestCase):
         # let's start a build...
         self.build_deferred = self.doBuild()
         # ...and wait for the ec2 slave to show up
-        d = self.bot1.substantiation_deferred
+        d = self.stall(None, 1.0)
+        d.addCallback(lambda ign: self.bot1.substantiation_deferred)
         d.addCallback(self._testSequence_1)
+        d.addCallback(lambda ign: self.build_deferred)
+        d.addCallback(self._testSequence_2)
+        d.addCallback(self.stall, 0.5)
+        d.addCallback(self._testSequence_3)
         return d
+
     def _testSequence_1(self, res):
         # bot 1 is substantiated.
         self.assertNotIdentical(self.bot1.slave, None)
@@ -321,11 +320,8 @@ class BasicConfig(Mixin, unittest.TestCase):
                          ['latent_buildbot_slave'])
         self.assertEqual(self.bot1.instance.instance_type, 'm1.large')
         self.assertEqual(self.bot1.output.output, 'example_output')
-        # now we'll wait for the build to complete
-        d = self.build_deferred
-        del self.build_deferred
-        d.addCallback(self._testSequence_2)
-        return d
+        # now we'll wait for the build to complete, if it hasn't already
+
     def _testSequence_2(self, res):
         # build was a success!
         self.failUnlessEqual(res.getResults(), SUCCESS)
@@ -336,10 +332,7 @@ class BasicConfig(Mixin, unittest.TestCase):
         # we'll stash the instance around to look at it
         self.instance = self.bot1.instance
         # now we wait.
-        d = defer.Deferred()
-        reactor.callLater(0.5, d.callback, None)
-        d.addCallback(self._testSequence_3)
-        return d
+
     def _testSequence_3(self, res):
         # slave is insubstantiated
         self.assertIdentical(self.bot1.slave, None)
@@ -380,6 +373,8 @@ class ElasticIP(Mixin, unittest.TestCase):
         # let's start a build...
         d = self.doBuild()
         d.addCallback(self._testSequence_1)
+        d.addCallback(self.stall, 0.5)
+        d.addCallback(self._testSequence_2)
         return d
     def _testSequence_1(self, res):
         # build was a success!
@@ -391,10 +386,7 @@ class ElasticIP(Mixin, unittest.TestCase):
         # Let's let it shut down.  We'll set the build_wait_timer to fire
         # sooner, and wait for it to fire.
         self.bot1.build_wait_timer.reset(0)
-        d = defer.Deferred()
-        reactor.callLater(0.5, d.callback, None)
-        d.addCallback(self._testSequence_2)
-        return d
+
     def _testSequence_2(self, res):
         # slave is insubstantiated
         self.assertIdentical(self.bot1.slave, None)
@@ -422,7 +414,7 @@ class Initialization(Mixin, unittest.TestCase):
         else:
             home = None
 
-        fake_home = os.path.join(os.getcwd(), 'basedir') # see RunMixin.setUp
+        fake_home = self.basedir
         os.environ['HOME'] = fake_home
         dir = os.path.join(fake_home, '.ec2')
         os.mkdir(dir)
@@ -445,7 +437,7 @@ class Initialization(Mixin, unittest.TestCase):
 
     def testCustomSeparateFile(self):
         # set up .ec2/aws_id
-        file_path = os.path.join(os.getcwd(), 'basedir', 'custom_aws_id')
+        file_path = os.path.join(self.basedir, 'custom_aws_id')
         f = open(file_path, 'w')
         f.write('publickey\nprivatekey')
         f.close()

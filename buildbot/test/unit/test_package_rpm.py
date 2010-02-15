@@ -69,7 +69,7 @@ class TestRpmSpec(unittest.TestCase):
     def test_load(self):
         try:
             from cStringIO import StringIO
-        except ImportError, ie:
+        except ImportError:
             from StringIO import StringIO
 
         specfile = StringIO()

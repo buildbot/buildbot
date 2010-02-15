@@ -1,16 +1,20 @@
 # -*- test-case-name: buildbot.test.test_run -*-
 
 from twisted.trial import unittest
-from twisted.internet import reactor, defer
+from twisted.internet import defer
 import os
 
-from buildbot import master, interfaces
+from buildbot import interfaces
 from buildbot.sourcestamp import SourceStamp
 from buildbot.changes import changes
 from buildbot.status import builder
-from buildbot.process.base import BuildRequest
+from buildbot.process.builder import IDLE, BUILDING
+from buildbot.eventual import fireEventually, flushEventualQueue
 
-from buildbot.test.runutils import RunMixin, TestFlagMixin, rmtree
+from buildbot.test.runutils import MasterMixin, TestFlagMixin, StallMixin
+from buildbot.test.pollmixin import PollMixin
+from buildbot.slave.commands import waitCommandRegistry
+
 
 config_base = """
 from buildbot.process import factory
@@ -25,6 +29,9 @@ f2 = factory.BuildFactory([
     dummy.Dummy(timeout=1),
     dummy.RemoteDummy(timeout=2),
     ])
+
+f3 = factory.BuildFactory([dummy.Wait('f3')])
+f4 = factory.BuildFactory([dummy.Wait('f4')])
 
 BuildmasterConfig = c = {}
 c['slaves'] = [BuildSlave('bot1', 'sekrit')]
@@ -46,12 +53,36 @@ from buildbot.buildslave import BuildSlave
 c['slaves'] = [ BuildSlave('bot1', 'sekrit') ]
 
 from buildbot.scheduler import Scheduler
-c['schedulers'] = [Scheduler('dummy', None, 0.1, ['dummy'])]
+c['schedulers'] = [Scheduler('dummy', None, None, ['dummy'])]
 
 c['builders'] = [
     BuilderConfig(name='dummy', slavename='bot1',
-                  factory=f2, builddir='dummy1'),
+                  factory=f3, builddir='dummy1'),
 ]
+"""
+
+config_graceful_shutdown_idle = config_base + """
+from buildbot.buildslave import BuildSlave
+c['slaves'] = [ BuildSlave('bot1', 'sekrit', max_builds=2) ]
+
+from buildbot.scheduler import Scheduler
+c['schedulers'] = [Scheduler('dummy', None, None, ['dummy'])]
+
+c['builders'].append({'name': 'dummy', 'slavename': 'bot1',
+                      'builddir': 'dummy', 'factory': f3})
+"""
+
+config_graceful_shutdown_busy = config_base + """
+from buildbot.buildslave import BuildSlave
+c['slaves'] = [ BuildSlave('bot1', 'sekrit', max_builds=2) ]
+
+from buildbot.scheduler import Scheduler
+c['schedulers'] = [Scheduler('dummy', None, None, ['dummy', 'dummy2'])]
+
+c['builders'].append({'name': 'dummy', 'slavename': 'bot1',
+                      'builddir': 'dummy', 'factory': f3})
+c['builders'].append({'name': 'dummy2', 'slavename': 'bot1',
+                      'builddir': 'dummy2', 'factory': f4})
 """
 
 config_cant_build = config_can_build + """
@@ -65,11 +96,11 @@ from buildbot.buildslave import BuildSlave
 c['slaves'] = [ BuildSlave('bot1', 'sekrit', max_builds=1) ]
 
 from buildbot.scheduler import Scheduler
-c['schedulers'] = [Scheduler('dummy', None, 0.1, ['dummy', 'dummy2'])]
+c['schedulers'] = [Scheduler('dummy', None, None, ['dummy', 'dummy2'])]
 
 c['builders'] = c['builders'] + [
-    BuilderConfig(name='dummy', slavename='bot1', factory=f2),
-    BuilderConfig(name='dummy2', slavename='bot1', factory=f2),
+    BuilderConfig(name='dummy', slavename='bot1', factory=f3),
+    BuilderConfig(name='dummy2', slavename='bot1', factory=f4),
 ]
 """
 
@@ -113,103 +144,152 @@ c['builders'] = c['builders'] + [
 ]
 """
 
-class Run(unittest.TestCase):
-    def rmtree(self, d):
-        rmtree(d)
-
+class Run(MasterMixin, StallMixin, unittest.TestCase):
     def testMaster(self):
-        self.rmtree("basedir")
-        os.mkdir("basedir")
-        m = master.BuildMaster("basedir")
-        m.loadConfig(config_run)
-        m.readConfig = True
-        m.startService()
-        cm = m.change_svc
-        c = changes.Change("bob", ["Makefile", "foo/bar.c"], "changed stuff")
-        cm.addChange(c)
-        # verify that the Scheduler is now waiting
-        s = m.allSchedulers()[0]
-        self.failUnless(s.timer)
-        # halting the service will also stop the timer
-        d = defer.maybeDeferred(m.stopService)
+        self.basedir = "run/Run/Master"
+        self.create_master()
+        m = self.master
+        d = m.loadConfig(config_run)
+        def _then(ign):
+            cm = m.change_svc
+            c = changes.Change("bob", ["Makefile", "foo/bar.c"],
+                               "changed stuff")
+            cm.addChange(c)
+            return flushEventualQueue()
+        d.addCallback(_then)
+        d.addCallback(self.stall, 1.0) # needs time to finish. TODO: why is
+                                       # flushEventualQueue not sufficient?
+        # we used to check that the Scheduler is now waiting, but when its
+        # state moved into the database, that became a nuisance
+        def _check(ign):
+            # verify that the Scheduler is now waiting
+            s = m.allSchedulers()[0]
+            sid = s.schedulerid
+            state = m.db.runInteractionNow(lambda t:
+                                         m.db.scheduler_get_state(sid, t))
+            self.failUnlessEqual(state["last_processed"], 1)
+        d.addCallback(_check)
         return d
 
-class CanStartBuild(RunMixin, unittest.TestCase):
-    def rmtree(self, d):
-        rmtree(d)
+class WaitMixin:
+    # to use this, put a steps.dummy.Wait(handle="XYZ") in your test build
+    # factory, prepare, then start the build with reason="ABC". Then use
+    # something like this:
+    #
+    #  self.prepare_wait("XYZ", "ABC") # must be done before build starts
+    #  d = run_one_build(self.control, buildername, ss, reason="ABC")
+    #  d.addCallback(self.wait_until_step_reached, "XYZ", "ABC")
+    #  def assert_is_in_step(ign):
+    #      # now the build will be in the middle of the Wait step
+    #      # you must release it to continue
+    #      return self.release_build("XYZ", "ABC")
+    #  d.addCallback(assert_is_in_step)
+    #  d.addCallback(wait_for_build_to_finish)
+    _wait_handles = None
 
+    def prepare_wait(self, handle, reason):
+        if self._wait_handles is None:
+            self._wait_handles = {}
+        h = (handle, reason)
+        d1, d2 = defer.Deferred(), defer.Deferred()
+        self._wait_handles[h] = (d1, d2)
+        def _catch():
+            d1.callback(None)
+            return d2
+        waitCommandRegistry[h] = _catch
+    def wait_until_step_reached(self, ign, handle, reason):
+        h = (handle, reason)
+        d1, d2 = self._wait_handles[h]
+        return d1
+    def release_build(self, res, handle, reason):
+        h = (handle, reason)
+        d1, d2 = self._wait_handles[h]
+        del self._wait_handles[h]
+        d2.callback(None)
+        return res
+    def release_all_builds(self, res=None):
+        for (d1,d2) in self._wait_handles.values():
+            d2.callback(None)
+        del self._wait_handles
+        return res
+
+class CanStartBuild(MasterMixin, StallMixin, WaitMixin, unittest.TestCase):
     def testCanStartBuild(self):
-        return self.do_test(config_can_build, True)
+        self.basedir = "run/CanStartBuild/CanStartBuild"
+        self.prepare_wait("f3", "scheduler")
+        d = self.do_test(config_can_build)
+        d.addCallback(self.wait_until_step_reached, "f3", "scheduler")
+        d.addCallback(self._check, BUILDING)
+        d.addCallback(self.release_build, "f3", "scheduler")
+        d.addCallback(lambda bs: bs.waitUntilFinished())
+        return d
 
     def testCantStartBuild(self):
-        return self.do_test(config_cant_build, False)
-
-    def do_test(self, config, builder_should_run):
-        self.master.loadConfig(config)
-        self.master.readConfig = True
-        self.master.startService()
-        d = self.connectSlave()
-
-        # send a change
-        cm = self.master.change_svc
-        c = changes.Change("bob", ["Makefile", "foo/bar.c"], "changed stuff")
-        cm.addChange(c)
-
-        d.addCallback(self._do_test1, builder_should_run)
-
+        self.basedir = "run/CanStartBuild/CantStartBuild"
+        d = self.do_test(config_cant_build)
+        d.addCallback(self._check, IDLE)
         return d
 
-    def _do_test1(self, res, builder_should_run):
-        # delay a little bit. Note that relying upon timers is a bit fragile,
-        # in this case we're hoping that our 0.5 second timer will land us
-        # somewhere in the middle of the [0.1s, 3.1s] window (after the 0.1
-        # second Scheduler fires, then during the 3-second build), so that
-        # when we sample BuildSlave.state, we'll see BUILDING (or IDLE if the
-        # slave was told to be unavailable). On a heavily loaded system, our
-        # 0.5 second timer might not actually fire until after the build has
-        # completed. In the long run, it would be good to change this test to
-        # pass under those circumstances too.
-        d = defer.Deferred()
-        reactor.callLater(.5, d.callback, builder_should_run)
-        d.addCallback(self._do_test2)
+    def do_test(self, config):
+        self.create_master()
+        d = self.master.loadConfig(config)
+        d.addCallback(lambda ign: self.connectSlave())
+        def _then(ign):
+            # send a change
+            cm = self.master.change_svc
+            c = changes.Change("bob", ["Makefile", "foo/bar.c"],
+                               "changed stuff")
+            cm.addChange(c)
+        d.addCallback(_then)
         return d
 
-    def _do_test2(self, builder_should_run):
+    def _check(self, ign, expected_state):
         b = self.master.botmaster.builders['dummy']
         self.failUnless(len(b.slaves) == 1)
+        buildslave = b.slaves[0]
+        self.failUnlessEqual(buildslave.state, expected_state)
+        if buildslave.state == BUILDING:
+            bs = self.master.status.getBuilder("dummy").getCurrentBuilds()[0]
+            return bs
+        return None
 
-        bs = b.slaves[0]
-        from buildbot.process.builder import IDLE, BUILDING
-        if builder_should_run:
-            self.failUnlessEqual(bs.state, BUILDING)
-        else:
-            self.failUnlessEqual(bs.state, IDLE)
 
+class FirstToFire(defer.Deferred):
+    def __init__(self, *ds):
+        defer.Deferred.__init__(self)
+        # self.called
+        for d in ds:
+            d.addBoth(self._one_fired)
+    def _one_fired(self, res):
+        if not self.called:
+            self.callback(res)
+        return res
 
-class ConcurrencyLimit(RunMixin, unittest.TestCase):
+class ConcurrencyLimit(MasterMixin, WaitMixin, StallMixin, PollMixin,
+                       unittest.TestCase):
 
     def testConcurrencyLimit(self):
+        self.basedir = "run/ConcurrencyLimit/ConcurrencyLimit"
+        self.create_master()
+        self.prepare_wait("f3", "scheduler")
+        self.prepare_wait("f4", "scheduler")
         d = self.master.loadConfig(config_concurrency)
-        d.addCallback(lambda res: self.master.startService())
         d.addCallback(lambda res: self.connectSlave())
 
         def _send(res):
             # send a change. This will trigger both builders at the same
             # time, but since they share a slave, the max_builds=1 setting
             # will insure that only one of the two builds gets to run.
+            # TODO: setting max_builds=2 doesn't cause this to fail.
+            # TODO: sometimes this errors out
             cm = self.master.change_svc
             c = changes.Change("bob", ["Makefile", "foo/bar.c"],
                                "changed stuff")
             cm.addChange(c)
+            d1 = self.wait_until_step_reached(None, "f3", "scheduler")
+            d2 = self.wait_until_step_reached(None, "f4", "scheduler")
+            return FirstToFire(d1, d2)
         d.addCallback(_send)
-
-        def _delay(res):
-            d1 = defer.Deferred()
-            reactor.callLater(1, d1.callback, None)
-            # this test depends upon this 1s delay landing us in the middle
-            # of one of the builds.
-            return d1
-        d.addCallback(_delay)
 
         def _check(res):
             builders = [ self.master.botmaster.builders[bn]
@@ -217,66 +297,99 @@ class ConcurrencyLimit(RunMixin, unittest.TestCase):
             for builder in builders:
                 self.failUnless(len(builder.slaves) == 1)
 
-            from buildbot.process.builder import BUILDING
             building_bs = [ builder
                             for builder in builders
                             if builder.slaves[0].state == BUILDING ]
             # assert that only one build is running right now. If the
             # max_builds= weren't in effect, this would be 2.
             self.failUnlessEqual(len(building_bs), 1)
+            self.release_all_builds()
         d.addCallback(_check)
-
+        # this _wait approach sometimes fails, leaving a timer lying around
+        # which fires after the master has shut down (causing an error). I
+        # don't know why. I had to punt and add the stall().
+        def _wait():
+            s = self.master.status
+            if s.getBuilder("dummy").getLastFinishedBuild() is None:
+                return False
+            if s.getBuilder("dummy2").getLastFinishedBuild() is None:
+                return False
+            return True
+        d.addCallback(lambda ign: self.poll(_wait))
+        d.addCallback(self.stall, 0.5)
         return d
 
 
-class Ping(RunMixin, unittest.TestCase):
+class Ping(MasterMixin, unittest.TestCase):
     def testPing(self):
-        self.master.loadConfig(config_2)
-        self.master.readConfig = True
-        self.master.startService()
-
-        d = self.connectSlave()
-        d.addCallback(self._testPing_1)
+        self.basedir = "run/Ping/Ping"
+        self.create_master()
+        c = interfaces.IControl(self.master)
+        d = self.master.loadConfig(config_2)
+        d.addCallback(lambda ign: self.connectSlave())
+        d.addCallback(lambda ign: c.getBuilder("dummy").ping())
         return d
 
-    def _testPing_1(self, res):
-        d = interfaces.IControl(self.master).getBuilder("dummy").ping()
-        d.addCallback(self._testPing_2)
-        return d
-
-    def _testPing_2(self, res):
-        pass
-
-class BuilderNames(unittest.TestCase):
+class BuilderNames(MasterMixin, unittest.TestCase):
 
     def testGetBuilderNames(self):
-        os.mkdir("bnames")
-        m = master.BuildMaster("bnames")
-        s = m.getStatus()
+        self.basedir = "run/BuilderNames/GetBuilderNames"
+        self.create_master()
+        s = self.master.getStatus()
+        d = self.master.loadConfig(config_3)
+        def _check(ign):
+            self.failUnlessEqual(s.getBuilderNames(),
+                                 ["dummy", "test dummy", "adummy", "bdummy"])
+            self.failUnlessEqual(s.getBuilderNames(categories=['test']),
+                                 ["test dummy", "bdummy"])
+        d.addCallback(_check)
+        return d
 
-        m.loadConfig(config_3)
-        m.readConfig = True
+class Disconnect(MasterMixin, StallMixin, PollMixin, unittest.TestCase):
+    # verify that disconnecting the slave during a build properly
+    # terminates the build
 
-        self.failUnlessEqual(s.getBuilderNames(),
-                             ["dummy", "test dummy", "adummy", "bdummy"])
-        self.failUnlessEqual(s.getBuilderNames(categories=['test']),
-                             ["test dummy", "bdummy"])
+    # there are several points at which we might lose the slave or otherwise
+    # interrupt the build. We're interested in confirming that 1) the build
+    # actually stops, 2) the build is flunked (results=FAILURE) or retried
+    # (results=RETRY) as appropriate, 3) partially-dead buildslaves are
+    # detected quickly when appropriate (the pre-build Ping).
 
-class Disconnect(RunMixin, unittest.TestCase):
+    # we don't have full test coverage for this. An earlier version of this
+    # test used fragile time-based events (i.e. start a build, wait 1.5
+    # seconds, kill the slave, check the results). Those tests were removed.
 
-    def setUp(self):
-        RunMixin.setUp(self)
+    #  * before we submit a build: certain force-build methods will fail
+    #    (i.e. an IRC/web command should be refused)
+    #    [testIdle: disappearSlave(allowReconnect=False)]
+    #  * after we submit a build, but before the build starts (i.e. while
+    #    waiting in the scheduler)
+    #  * during the build's initial ping
+    #    [testBuild1: shutdownAllSlaves()]
+    #  * during the local Dummy() command
+    #    [XXXtestBuild2: shutdownAllSlaves()]
+    #    [XXXtestBuild3: killSlave()]
+    #    [XXXtestInterrupt: bc.stopBuild()]
+    #  * during the RemoteDummy() command
+    #    [XXXtestBuild4: killSlave()]
 
-        # verify that disconnecting the slave during a build properly
-        # terminates the build
-        m = self.master
+    def startup(self, use_fast_timeout=False):
+        d = self.master.loadConfig(config_2)
+        d.addCallback(self._earlycheck)
+        if use_fast_timeout:
+            d.addCallback(lambda ign: self.connectSlaveFastTimeout())
+        else:
+            d.addCallback(lambda ign: self.connectSlave())
+        # TODO: replacing this stall with flushEventualQueue or
+        # wait_until_idle fails, showing the slave state as "offline" instead
+        # of "idle". Why? connectSlave() waits on
+        # botmaster.waitUntilBuilderDetached(), so what more needs to happen?
+        d.addCallback(self.stall, 0.5)
+        d.addCallback(self._earlycheck2)
+        return d
+
+    def _earlycheck(self, ign):
         s = self.status
-        c = self.control
-
-        m.loadConfig(config_2)
-        m.readConfig = True
-        m.startService()
-
         self.failUnlessEqual(s.getBuilderNames(), ["dummy", "test dummy"])
         self.s1 = s1 = s.getBuilder("dummy")
         self.failUnlessEqual(s1.getName(), "dummy")
@@ -285,13 +398,8 @@ class Disconnect(RunMixin, unittest.TestCase):
         self.failUnlessEqual(s1.getLastFinishedBuild(), None)
         self.failUnlessEqual(s1.getBuild(-1), None)
 
-        d = self.connectSlave()
-        d.addCallback(self._disconnectSetup_1)
-        return d
-
-    def _disconnectSetup_1(self, res):
+    def _earlycheck2(self, res):
         self.failUnlessEqual(self.s1.getState(), ("idle", []))
-
 
     def verifyDisconnect(self, bs):
         self.failUnless(bs.isFinished())
@@ -314,305 +422,190 @@ class Disconnect(RunMixin, unittest.TestCase):
 
     def submitBuild(self):
         ss = SourceStamp()
-        br = BuildRequest("forced build", ss, "dummy")
-        self.control.getBuilder("dummy").requestBuild(br)
+        bss = self.control.submitBuildSet(["dummy"], ss, "forced build")
+        brs = bss.getBuildRequests()[0]
         d = defer.Deferred()
         def _started(bc):
-            br.unsubscribe(_started)
+            brs.unsubscribe(_started)
             d.callback(bc)
-        br.subscribe(_started)
+        brs.subscribe(_started)
         return d
 
-    def testIdle2(self):
-        # now suppose the slave goes missing
-        self.disappearSlave(allowReconnect=False)
-
-        # forcing a build will work: the build detect that the slave is no
-        # longer available and will be re-queued. Wait 5 seconds, then check
-        # to make sure the build is still in the 'waiting for a slave' queue.
-        req = BuildRequest("forced build", SourceStamp(), "test_builder")
-        self.failUnlessEqual(req.startCount, 0)
-        self.control.getBuilder("dummy").requestBuild(req)
-        # this should ping the slave, which doesn't respond (and eventually
-        # times out). The BuildRequest will be re-queued, and its .startCount
-        # will be incremented.
-        self.killSlave()
-        d = defer.Deferred()
-        d.addCallback(self._testIdle2_1, req)
-        reactor.callLater(3, d.callback, None)
+    def testIdle(self):
+        # if the slave does not respond to a ping when the build starts, the
+        # build will be put back in the queue (i.e. unclaimed)
+        self.basedir = "run/Disconnect/idle"
+        self.create_master()
+        db = self.master.db
+        d = self.startup()
+        def _then(ign):
+            self.disappearSlave(allowReconnect=False)
+            # the slave is now frozen, and won't respond to a ping. We submit
+            # a build request, and wait for it to be claimed (shouldn't take
+            # long). The build should be stuck in the waiting-for-pong state.
+            ss = SourceStamp()
+            bss = self.control.submitBuildSet(["dummy"], ss, "forced build")
+            brs = bss.getBuildRequests()[0]
+            self.brid = brs.brid
+        d.addCallback(_then)
+        def _get_claim(ign=None):
+            def _db(t):
+                t.execute(db.quoteq("SELECT claimed_at FROM buildrequests"
+                                    " WHERE id=?"),
+                          (self.brid,))
+                return t.fetchall()[0][0]
+            claimed_at = db.runInteractionNow(_db)
+            return claimed_at
+        def _is_claimed():
+            return bool(_get_claim() > 0)
+        d.addCallback(lambda ign: self.poll(_is_claimed))
+        # now we kill the slave, which drops the TCP connection and halts the
+        # ping. The BuildRequest should be put back into the unclaimed state.
+        d.addCallback(lambda ign: self.killSlave())
+        d.addCallback(self.wait_until_idle)
+        d.addCallback(_get_claim)
+        d.addCallback(lambda claim: self.failUnlessEqual(claim, 0))
         return d
-    testIdle2.timeout = 5
-
-    def _testIdle2_1(self, res, req):
-        self.failUnlessEqual(req.startCount, 1)
-        cancelled = req.cancel()
-        self.failUnless(cancelled)
+    testIdle.timeout = 10
 
 
     def testBuild1(self):
         # this next sequence is timing-dependent. The dummy build takes at
         # least 3 seconds to complete, and this batch of commands must
         # complete within that time.
-        #
-        d = self.submitBuild()
+        self.basedir = "run/Disconnect/Build1"
+        self.create_master()
+        d = self.startup()
+        d.addCallback(lambda ign: self.submitBuild())
         d.addCallback(self._testBuild1_1)
         return d
+    testBuild1.timeout = 10
 
-    def _testBuild1_1(self, bc):
-        bs = bc.getStatus()
+    def _testBuild1_1(self, bs):
         # now kill the slave before it gets to start the first step
         d = self.shutdownAllSlaves() # dies before it gets started
         d.addCallback(self._testBuild1_2, bs)
-        return d  # TODO: this used to have a 5-second timeout
+        return d
 
     def _testBuild1_2(self, res, bs):
         # now examine the just-stopped build and make sure it is really
         # stopped. This is checking for bugs in which the slave-detach gets
         # missed or causes an exception which prevents the build from being
         # marked as "finished due to an error".
-        d = bs.waitUntilFinished()
+        d1 = bs.waitUntilFinished()
         d2 = self.master.botmaster.waitUntilBuilderDetached("dummy")
-        dl = defer.DeferredList([d, d2])
-        dl.addCallback(self._testBuild1_3, bs)
-        return dl # TODO: this had a 5-second timeout too
-
-    def _testBuild1_3(self, res, bs):
-        self.failUnlessEqual(self.s1.getState()[0], "offline")
-        self.verifyDisconnect(bs)
-
-
-    def testBuild2(self):
-        # this next sequence is timing-dependent
-        d = self.submitBuild()
-        d.addCallback(self._testBuild2_1)
-        return d
-    testBuild2.timeout = 30
-
-    def _testBuild2_1(self, bc):
-        bs = bc.getStatus()
-        # shutdown the slave while it's running the first step
-        reactor.callLater(0.5, self.shutdownAllSlaves)
-
-        d = bs.waitUntilFinished()
-        d.addCallback(self._testBuild2_2, bs)
+        d = defer.DeferredList([d1, d2])
+        d.addCallback(self.wait_until_idle)
+        def _done(res):
+            self.failUnlessEqual(self.s1.getState()[0], "offline")
+            self.verifyDisconnect(bs)
+        d.addCallback(_done)
+        d.addCallback(self.wait_until_idle)
         return d
 
-    def _testBuild2_2(self, res, bs):
-        # we hit here when the build has finished. The builder is still being
-        # torn down, however, so spin for another second to allow the
-        # callLater(0) in Builder.detached to fire.
-        d = defer.Deferred()
-        reactor.callLater(1, d.callback, None)
-        d.addCallback(self._testBuild2_3, bs)
-        return d
-
-    def _testBuild2_3(self, res, bs):
-        self.failUnlessEqual(self.s1.getState()[0], "offline")
-        self.verifyDisconnect(bs)
-
-
-    def testBuild3(self):
-        # this next sequence is timing-dependent
-        d = self.submitBuild()
-        d.addCallback(self._testBuild3_1)
-        return d
-    testBuild3.timeout = 30
-
-    def _testBuild3_1(self, bc):
-        bs = bc.getStatus()
-        # kill the slave while it's running the first step
-        reactor.callLater(0.5, self.killSlave)
-        d = bs.waitUntilFinished()
-        d.addCallback(self._testBuild3_2, bs)
-        return d
-
-    def _testBuild3_2(self, res, bs):
-        # the builder is still being torn down, so give it another second
-        d = defer.Deferred()
-        reactor.callLater(1, d.callback, None)
-        d.addCallback(self._testBuild3_3, bs)
-        return d
-
-    def _testBuild3_3(self, res, bs):
-        self.failUnlessEqual(self.s1.getState()[0], "offline")
-        self.verifyDisconnect(bs)
-
-
-    def testBuild4(self):
-        # this next sequence is timing-dependent
-        d = self.submitBuild()
-        d.addCallback(self._testBuild4_1)
-        return d
-    testBuild4.timeout = 30
-
-    def _testBuild4_1(self, bc):
-        bs = bc.getStatus()
-        # kill the slave while it's running the second (remote) step
-        reactor.callLater(1.5, self.killSlave)
-        d = bs.waitUntilFinished()
-        d.addCallback(self._testBuild4_2, bs)
-        return d
-
-    def _testBuild4_2(self, res, bs):
-        # at this point, the slave is in the process of being removed, so it
-        # could either be 'idle' or 'offline'. I think there is a
-        # reactor.callLater(0) standing between here and the offline state.
-        #reactor.iterate() # TODO: remove the need for this
-
-        self.failUnlessEqual(self.s1.getState()[0], "offline")
-        self.verifyDisconnect2(bs)
-
-
-    def testInterrupt(self):
-        # this next sequence is timing-dependent
-        d = self.submitBuild()
-        d.addCallback(self._testInterrupt_1)
-        return d
-    testInterrupt.timeout = 30
-
-    def _testInterrupt_1(self, bc):
-        bs = bc.getStatus()
-        # halt the build while it's running the first step
-        reactor.callLater(0.5, bc.stopBuild, "bang go splat")
-        d = bs.waitUntilFinished()
-        d.addCallback(self._testInterrupt_2, bs)
-        return d
-
-    def _testInterrupt_2(self, res, bs):
-        self.verifyDisconnect(bs)
-
+    # other tests
 
     def testDisappear(self):
-        bc = self.control.getBuilder("dummy")
-
+        self.basedir = "run/Disconnect/Disappear"
+        self.create_master()
+        d = self.startup()
+        def _stash(ign):
+            self.bc = self.control.getBuilder("dummy")
+        d.addCallback(_stash)
         # ping should succeed
-        d = bc.ping()
-        d.addCallback(self._testDisappear_1, bc)
+        d.addCallback(lambda ign: self.bc.ping())
+        def _check1(pingres):
+            self.failUnlessEqual(pingres, True)
+            # now, before any build is run, make the slave disappear
+            self.disappearSlave(allowReconnect=False)
+            # initiate the ping and then kill the slave, to simulate a
+            # disconnect.
+            d2 = self.bc.ping()
+            self.killSlave()
+            return d2
+        d.addCallback(_check1)
+        def _check2(pingres):
+            self.failUnlessEqual(pingres, False)
+        d.addCallback(_check2)
         return d
-
-    def _testDisappear_1(self, res, bc):
-        self.failUnlessEqual(res, True)
-
-        # now, before any build is run, make the slave disappear
-        self.disappearSlave(allowReconnect=False)
-
-        # initiate the ping and then kill the slave, to simulate a disconnect.
-        d = bc.ping()
-        self.killSlave()
-        d.addCallback(self. _testDisappear_2)
-        return d
-    def _testDisappear_2(self, res):
-        self.failUnlessEqual(res, False)
 
     def testDuplicate(self):
-        bc = self.control.getBuilder("dummy")
-        bs = self.status.getBuilder("dummy")
-        ss = bs.getSlaves()[0]
+        self.basedir = "run/Disconnect/Duplicate"
+        self.create_master()
+        d = self.startup()
+        def _then(ign):
+            bs = self.status.getBuilder("dummy")
+            ss = self.ss = bs.getSlaves()[0]
 
-        self.failUnless(ss.isConnected())
-        self.failUnlessEqual(ss.getAdmin(), "one")
+            self.failUnless(ss.isConnected())
+            self.failUnlessEqual(ss.getAdmin(), "one")
 
-        # now, before any build is run, make the first slave disappear
-        self.disappearSlave(allowReconnect=False)
+            # now, before any build is run, make the first slave disappear
+            self.disappearSlave(allowReconnect=False)
 
-        d = self.master.botmaster.waitUntilBuilderDetached("dummy")
-        # now let the new slave take over
-        self.connectSlave2()
-        d.addCallback(self._testDuplicate_1, ss)
+            d2 = self.master.botmaster.waitUntilBuilderDetached("dummy")
+            # now let the new slave take over
+            self.connectSlave2()
+            return d2
+        d.addCallback(_then)
+        d.addCallback(lambda ign:
+                      self.master.botmaster.waitUntilBuilderAttached("dummy"))
+        def _check(ign):
+            self.failUnless(self.ss.isConnected())
+            self.failUnlessEqual(self.ss.getAdmin(), "two")
+        d.addCallback(_check)
         return d
-    testDuplicate.timeout = 5
-
-    def _testDuplicate_1(self, res, ss):
-        d = self.master.botmaster.waitUntilBuilderAttached("dummy")
-        d.addCallback(self._testDuplicate_2, ss)
-        return d
-
-    def _testDuplicate_2(self, res, ss):
-        self.failUnless(ss.isConnected())
-        self.failUnlessEqual(ss.getAdmin(), "two")
-
-
-class Disconnect2(RunMixin, unittest.TestCase):
-
-    def setUp(self):
-        RunMixin.setUp(self)
-        # verify that disconnecting the slave during a build properly
-        # terminates the build
-        m = self.master
-        s = self.status
-        c = self.control
-
-        m.loadConfig(config_2)
-        m.readConfig = True
-        m.startService()
-
-        self.failUnlessEqual(s.getBuilderNames(), ["dummy", "test dummy"])
-        self.s1 = s1 = s.getBuilder("dummy")
-        self.failUnlessEqual(s1.getName(), "dummy")
-        self.failUnlessEqual(s1.getState(), ("offline", []))
-        self.failUnlessEqual(s1.getCurrentBuilds(), [])
-        self.failUnlessEqual(s1.getLastFinishedBuild(), None)
-        self.failUnlessEqual(s1.getBuild(-1), None)
-
-        d = self.connectSlaveFastTimeout()
-        d.addCallback(self._setup_disconnect2_1)
-        return d
-
-    def _setup_disconnect2_1(self, res):
-        self.failUnlessEqual(self.s1.getState(), ("idle", []))
+    testDuplicate.timeout = 10
 
 
     def testSlaveTimeout(self):
-        # now suppose the slave goes missing. We want to find out when it
-        # creates a new Broker, so we reach inside and mark it with the
-        # well-known sigil of impending messy death.
-        bd = self.slaves['bot1'].getServiceNamed("bot").builders["dummy"]
-        broker = bd.remote.broker
-        broker.redshirt = 1
+        self.basedir = "run/Disconnect/SlaveTimeout"
+        self.create_master()
+        d = self.startup(use_fast_timeout=True)
+        def _then(ign):
+            # now suppose the slave goes missing. We want to find out when it
+            # creates a new Broker, so we reach inside and mark the current
+            # Broker with the well-known sigil of impending messy death.
+            bd = self.slaves['bot1'].getServiceNamed("bot").builders["dummy"]
+            broker = bd.remote.broker
+            broker.redshirt = 1
+        d.addCallback(_then)
+        # now we wait for 5 seconds, to make sure the keepalives will keep
+        # the connection up
+        d.addCallback(self.stall, 5.0)
+        def _then2(ign):
+            bd = self.slaves['bot1'].getServiceNamed("bot").builders["dummy"]
+            if not bd.remote or not hasattr(bd.remote.broker, "redshirt"):
+                self.fail("slave disconnected when it shouldn't have")
 
-        # make sure the keepalives will keep the connection up
-        d = defer.Deferred()
-        reactor.callLater(5, d.callback, None)
-        d.addCallback(self._testSlaveTimeout_1)
+            d = self.master.botmaster.waitUntilBuilderDetached("dummy")
+            # whoops! how careless of me.
+            self.disappearSlave(allowReconnect=True)
+            # the slave will realize the connection is lost within 2 seconds,
+            # then ReconnectingPBClientFactory will attempt a reconnect.
+            return d
+        d.addCallback(_then2)
+        d.addCallback(lambda ign:
+                      self.master.botmaster.waitUntilBuilderAttached("dummy"))
+        def _then3(ign):
+            # make sure it is a new connection (i.e. a new Broker)
+            bd = self.slaves['bot1'].getServiceNamed("bot").builders["dummy"]
+            self.failUnless(bd.remote, "hey, slave isn't really connected")
+            self.failIf(hasattr(bd.remote.broker, "redshirt"),
+                        "hey, slave's Broker is still marked for death")
+        d.addCallback(_then3)
         return d
     testSlaveTimeout.timeout = 20
 
-    def _testSlaveTimeout_1(self, res):
-        bd = self.slaves['bot1'].getServiceNamed("bot").builders["dummy"]
-        if not bd.remote or not hasattr(bd.remote.broker, "redshirt"):
-            self.fail("slave disconnected when it shouldn't have")
 
-        d = self.master.botmaster.waitUntilBuilderDetached("dummy")
-        # whoops! how careless of me.
-        self.disappearSlave(allowReconnect=True)
-        # the slave will realize the connection is lost within 2 seconds, and
-        # reconnect.
-        d.addCallback(self._testSlaveTimeout_2)
-        return d
-
-    def _testSlaveTimeout_2(self, res):
-        # the ReconnectingPBClientFactory will attempt a reconnect in two
-        # seconds.
-        d = self.master.botmaster.waitUntilBuilderAttached("dummy")
-        d.addCallback(self._testSlaveTimeout_3)
-        return d
-
-    def _testSlaveTimeout_3(self, res):
-        # make sure it is a new connection (i.e. a new Broker)
-        bd = self.slaves['bot1'].getServiceNamed("bot").builders["dummy"]
-        self.failUnless(bd.remote, "hey, slave isn't really connected")
-        self.failIf(hasattr(bd.remote.broker, "redshirt"),
-                    "hey, slave's Broker is still marked for death")
-
-
-class Basedir(RunMixin, unittest.TestCase):
+class Basedir(MasterMixin, unittest.TestCase):
     def testChangeBuilddir(self):
+        self.basedir = "run/Basedir/ChangeBuilddir"
+        self.slave_basedir = self.basedir
+        self.create_master()
         m = self.master
-        m.loadConfig(config_4)
-        m.readConfig = True
-        m.startService()
-
-        d = self.connectSlave()
+        d = m.loadConfig(config_4)
+        d.addCallback(lambda ign: self.connectSlave())
         d.addCallback(self._testChangeBuilddir_1)
         return d
 
@@ -623,7 +616,7 @@ class Basedir(RunMixin, unittest.TestCase):
         # slavebuilddir value.
         self.failUnlessEqual(builder.builddir, "sdummy")
         self.failUnlessEqual(builder.basedir,
-                             os.path.join("slavebase-bot1", "sdummy"))
+                             os.path.join(self.basedir, "slavebase-bot1", "sdummy"))
 
         d = self.master.loadConfig(config_4_newbasedir)
         d.addCallback(self._testChangeBuilddir_2)
@@ -638,21 +631,22 @@ class Basedir(RunMixin, unittest.TestCase):
         # the basedir should be updated
         self.failUnlessEqual(builder.builddir, "dummy2")
         self.failUnlessEqual(builder.basedir,
-                             os.path.join("slavebase-bot1", "dummy2"))
+                             os.path.join(self.basedir, "slavebase-bot1", "dummy2"))
 
         # add a new builder, which causes the basedir list to be reloaded
         d = self.master.loadConfig(config_4_newbuilder)
         return d
 
-class Triggers(RunMixin, TestFlagMixin, unittest.TestCase):
+class Triggers(MasterMixin, TestFlagMixin, StallMixin, PollMixin, unittest.TestCase):
     config_trigger = config_base + """
-from buildbot.scheduler import Triggerable, Scheduler
+from buildbot.schedulers.basic import Scheduler
+from buildbot.schedulers.triggerable import Triggerable
 from buildbot.steps.trigger import Trigger
 from buildbot.steps.dummy import Dummy
 from buildbot.test.runutils import SetTestFlagStep
 from buildbot.process.properties import WithProperties
 c['schedulers'] = [
-    Scheduler('triggerer', None, 0.1, ['triggerer'], properties={'dyn':'dyn'}),
+    Scheduler('triggerer', None, None, ['triggerer'], properties={'dyn':'dyn'}),
     Triggerable('triggeree', ['triggeree'])
 ]
 triggerer = factory.BuildFactory()
@@ -673,32 +667,25 @@ c['builders'] = [{'name': 'triggerer', 'slavename': 'bot1',
 """
 
     def mkConfig(self, args, dummyclass="Dummy"):
-        return self.config_trigger.replace("@ARGS@", args).replace("@DUMMYCLASS@", dummyclass)
-
-    def setupTest(self, args, dummyclass, checkFn):
-        self.clearFlags()
-        m = self.master
-        m.loadConfig(self.mkConfig(args, dummyclass))
-        m.readConfig = True
-        m.startService()
-
-        c = changes.Change("bob", ["Makefile", "foo/bar.c"], "changed stuff")
-        m.change_svc.addChange(c)
-
-        d = self.connectSlave(builders=['triggerer', 'triggeree'])
-        d.addCallback(self.startTimer, 0.5, checkFn)
-        return d
-
-    def startTimer(self, res, time, next_fn):
-        d = defer.Deferred()
-        reactor.callLater(time, d.callback, None)
-        d.addCallback(next_fn)
-        return d
+        c = self.config_trigger.replace("@ARGS@", args)
+        return c.replace("@DUMMYCLASS@", dummyclass)
 
     def testTriggerBuild(self):
-        return self.setupTest("schedulerNames=['triggeree']",
-                "Dummy",
-                self._checkTriggerBuild)
+        self.basedir = "run/Triggers/TriggerBuild"
+        self.create_master()
+        self.clearFlags()
+        config = self.mkConfig("schedulerNames=['triggeree']", "Dummy")
+        d = self.master.loadConfig(config)
+        c = changes.Change("bob", ["Makefile", "foo/bar.c"], "changed stuff")
+        d.addCallback(lambda ign: self.master.change_svc.addChange(c))
+        d.addCallback(lambda ign:
+                      self.connectSlave(builders=['triggerer', 'triggeree']))
+        d.addCallback(self.stall, 0.5)
+        d.addCallback(self._checkTriggerBuild)
+        d.addCallback(self.waitForBuildToFinish, "triggerer")
+        d.addCallback(self.waitForBuildToFinish, "triggeree")
+        d.addCallback(fireEventually)
+        return d
 
     def _checkTriggerBuild(self, res):
         self.failIfFlagNotSet('triggerer_started')
@@ -706,10 +693,35 @@ c['builders'] = [{'name': 'triggerer', 'slavename': 'bot1',
         self.failIfFlagSet('triggeree_finished')
         self.failIfFlagNotSet('triggerer_finished')
 
+    def waitForBuildToFinish(self, ign, builder):
+        def check():
+            bs = self.status.getBuilder(builder)
+            b = bs.getBuild(-1)
+            if not b or not b.isFinished():
+                return False
+            return True
+        d = self.poll(check)
+        d.addCallback(self.wait_until_idle)
+        return d
+
+
     def testTriggerBuildWait(self):
-        return self.setupTest("schedulerNames=['triggeree'], waitForFinish=1",
-                "Dummy",
-                self._checkTriggerBuildWait)
+        self.basedir = "run/Triggers/TriggerBuildWait"
+        self.create_master()
+        self.clearFlags()
+        config = self.mkConfig("schedulerNames=['triggeree'], waitForFinish=1",
+                               "Dummy")
+        d = self.master.loadConfig(config)
+        c = changes.Change("bob", ["Makefile", "foo/bar.c"], "changed stuff")
+        d.addCallback(lambda ign: self.master.change_svc.addChange(c))
+        d.addCallback(lambda ign:
+                      self.connectSlave(builders=['triggerer', 'triggeree']))
+        d.addCallback(self.stall, 0.5)
+        d.addCallback(self._checkTriggerBuildWait)
+        d.addCallback(self.waitForBuildToFinish, "triggerer")
+        d.addCallback(self.waitForBuildToFinish, "triggeree")
+        d.addCallback(fireEventually)
+        return d
 
     def _checkTriggerBuildWait(self, res):
         self.failIfFlagNotSet('triggerer_started')
@@ -718,39 +730,48 @@ c['builders'] = [{'name': 'triggerer', 'slavename': 'bot1',
         self.failIfFlagSet('triggerer_finished')
 
     def testProperties(self):
-        return self.setupTest("""
-                schedulerNames=['triggeree'],
-                set_properties={'lit' : 'lit'},
-                copy_properties=['dyn']
-            """, """
-                SetTestFlagStep, flagname='props',
-                    value=WithProperties('%(lit:-MISSING)s:%(dyn:-MISSING)s')
-            """,
-                self._checkProperties)
+        self.basedir = "run/Triggers/Properties"
+        self.create_master()
+        self.clearFlags()
+        config = self.mkConfig("schedulerNames=['triggeree'], set_properties={'lit' : 'lit'}, copy_properties=['dyn']",
+                               "SetTestFlagStep, flagname='props', value=WithProperties('%(lit:-MISSING)s:%(dyn:-MISSING)s')")
+        d = self.master.loadConfig(config)
+        c = changes.Change("bob", ["Makefile", "foo/bar.c"], "changed stuff")
+        d.addCallback(lambda ign: self.master.change_svc.addChange(c))
+        d.addCallback(lambda ign:
+                      self.connectSlave(builders=['triggerer', 'triggeree']))
+        d.addCallback(self.stall, 0.5)
+        d.addCallback(self._checkProperties)
+        d.addCallback(self.waitForBuildToFinish, "triggerer")
+        d.addCallback(self.waitForBuildToFinish, "triggeree")
+        d.addCallback(fireEventually)
+        return d
 
     def _checkProperties(self, res):
         self.assertEqual(self.getFlag("props"), "lit:dyn")
 
-class PropertyPropagation(RunMixin, TestFlagMixin, unittest.TestCase):
-    def setupTest(self, config, builders, checkFn, changeProps={}):
+class PropertyPropagation(MasterMixin, PollMixin, TestFlagMixin, unittest.TestCase):
+    def setupTest(self, config, builders, changeProps={}):
         self.clearFlags()
-        m = self.master
-        m.loadConfig(config)
-        m.readConfig = True
-        m.startService()
-
+        self.create_master()
         c = changes.Change("bob", ["Makefile", "foo/bar.c"], "changed stuff",
                            properties=changeProps)
-        m.change_svc.addChange(c)
-
-        d = self.connectSlave(builders=builders)
-        d.addCallback(self.startTimer, 0.5, checkFn)
+        d = self.master.loadConfig(config)
+        d.addCallback(lambda ign: self.master.change_svc.addChange(c))
+        d.addCallback(lambda ign: self.connectSlave(builders=builders))
+        for b in builders:
+            d.addCallback(self.waitForBuildToFinish, b)
         return d
 
-    def startTimer(self, res, time, next_fn):
-        d = defer.Deferred()
-        reactor.callLater(time, d.callback, None)
-        d.addCallback(next_fn)
+    def waitForBuildToFinish(self, ign, builder):
+        def check():
+            bs = self.status.getBuilder(builder)
+            b = bs.getBuild(-1)
+            if not b or not b.isFinished():
+                return False
+            return True
+        d = self.poll(check)
+        d.addCallback(self.wait_until_idle)
         return d
 
     config_schprop = config_base + """
@@ -759,7 +780,7 @@ from buildbot.steps.dummy import Dummy
 from buildbot.test.runutils import SetTestFlagStep
 from buildbot.process.properties import WithProperties
 c['schedulers'] = [
-    Scheduler('mysched', None, 0.1, ['flagcolor'], properties={'color':'red'}),
+    Scheduler('mysched', None, None, ['flagcolor'], properties={'color':'red'}),
 ]
 factory = factory.BuildFactory([
     s(SetTestFlagStep, flagname='testresult',
@@ -771,10 +792,13 @@ c['builders'] = [{'name': 'flagcolor', 'slavename': 'bot1',
 """
 
     def testScheduler(self):
+        self.basedir = "run/PropertyPropagation/Scheduler"
+        d = self.setupTest(self.config_schprop, ['flagcolor'])
         def _check(res):
             self.failUnlessEqual(self.getFlag('testresult'),
                 'color=red sched=mysched')
-        return self.setupTest(self.config_schprop, ['flagcolor'], _check)
+        d.addCallback(_check)
+        return d
 
     config_changeprop = config_base + """
 from buildbot.scheduler import Scheduler
@@ -794,11 +818,13 @@ c['builders'] = [{'name': 'flagcolor', 'slavename': 'bot1',
 """
 
     def testChangeProp(self):
+        d = self.setupTest(self.config_changeprop, ['flagcolor'],
+                           changeProps={'color': 'blue', 'prop1': 'prop1'})
         def _check(res):
             self.failUnlessEqual(self.getFlag('testresult'),
                 'color=blue sched=mysched prop1=prop1')
-        return self.setupTest(self.config_changeprop, ['flagcolor'], _check,
-                              changeProps={'color': 'blue', 'prop1': 'prop1'})
+        d.addCallback(_check)
+        return d
 
     config_slaveprop = config_base + """
 from buildbot.scheduler import Scheduler
@@ -818,10 +844,12 @@ c['builders'] = [{'name': 'flagcolor', 'slavename': 'bot1',
                 ]
 """
     def testSlave(self):
+        d = self.setupTest(self.config_slaveprop, ['flagcolor'])
         def _check(res):
             self.failUnlessEqual(self.getFlag('testresult'),
                 'color=orange slavename=bot1')
-        return self.setupTest(self.config_slaveprop, ['flagcolor'], _check)
+        d.addCallback(_check)
+        return d
 
     config_trigger = config_base + """
 from buildbot.scheduler import Triggerable, Scheduler
@@ -851,16 +879,17 @@ c['builders'] = [{'name': 'triggerer', 'slavename': 'bot1',
                   'builddir': 'triggeree', 'factory': triggeree}]
 """
     def testTrigger(self):
+        d = self.setupTest(self.config_trigger, ['triggerer', 'triggeree'])
         def _check(res):
             self.failUnlessEqual(self.getFlag('testresult'),
                 'sched=triggeree color=mauve')
-        return self.setupTest(self.config_trigger,
-                ['triggerer', 'triggeree'], _check)
+        d.addCallback(_check)
+        return d
 
 
 config_test_flag = config_base + """
 from buildbot.scheduler import Scheduler
-c['schedulers'] = [Scheduler('quick', None, 0.1, ['dummy'])]
+c['schedulers'] = [Scheduler('quick', None, None, ['dummy'])]
 
 from buildbot.test.runutils import SetTestFlagStep
 f3 = factory.BuildFactory([
@@ -871,29 +900,32 @@ c['builders'] = [{'name': 'dummy', 'slavename': 'bot1',
                   'builddir': 'dummy', 'factory': f3}]
 """
 
-class TestFlag(RunMixin, TestFlagMixin, unittest.TestCase):
+class TestFlag(MasterMixin, TestFlagMixin, unittest.TestCase):
     """Test for the TestFlag functionality in runutils"""
     def testTestFlag(self):
-        m = self.master
-        m.loadConfig(config_test_flag)
-        m.readConfig = True
-        m.startService()
+        self.basedir = 'run/Flag/TestFlag'
+        self.create_master()
+        d = self.master.loadConfig(config_test_flag)
+        d.addCallback(lambda ign: self.connectSlave())
 
-        c = changes.Change("bob", ["Makefile", "foo/bar.c"], "changed stuff")
-        m.change_svc.addChange(c)
+        def _addchange(ign):
+            c = changes.Change("bob", ["Makefile", "foo/bar.c"], "changed")
+            self.master.db.addChangeToDatabase(c)
+            ss = SourceStamp(changes=[c])
 
-        d = self.connectSlave()
-        d.addCallback(self._testTestFlag_1)
+            bss = self.control.submitBuildSet(['dummy'], ss, 'scheduler')
+            brs = bss.getBuildRequests()[0]
+            d1 = defer.Deferred()
+            def _started(bc):
+                brs.unsubscribe(_started)
+                d1.callback(bc)
+            brs.subscribe(_started)
+            return d1
+        d.addCallback(_addchange)
+        def _check(res):
+            self.failUnlessEqual(self.getFlag('foo'), 'bar')
+        d.addCallback(_check)
         return d
-
-    def _testTestFlag_1(self, res):
-        d = defer.Deferred()
-        reactor.callLater(0.5, d.callback, None)
-        d.addCallback(self._testTestFlag_2)
-        return d
-
-    def _testTestFlag_2(self, res):
-        self.failUnlessEqual(self.getFlag('foo'), 'bar')
 
 # TODO: test everything, from Change submission to Scheduler to Build to
 # Status. Use all the status types. Specifically I want to catch recurrences
@@ -902,9 +934,9 @@ class TestFlag(RunMixin, TestFlagMixin, unittest.TestCase):
 
 config_test_builder = config_base + """
 from buildbot.scheduler import Scheduler
-c['schedulers'] = [Scheduler('quick', 'dummy', 0.1, ['dummy']),
-                   Scheduler('quick2', 'dummy2', 0.1, ['dummy2']),
-                   Scheduler('quick3', 'dummy3', 0.1, ['dummy3'])]
+c['schedulers'] = [Scheduler('quick', 'dummy', None, ['dummy']),
+                   Scheduler('quick2', 'dummy2', None, ['dummy2']),
+                   Scheduler('quick3', 'dummy3', None, ['dummy3'])]
 
 from buildbot.steps.shell import ShellCommand
 f3 = factory.BuildFactory([
@@ -927,21 +959,27 @@ c['builders'].append({'name': 'dummy3', 'slavename': 'bot1',
                        'factory': f4})
 """
 
-class TestBuilder(RunMixin, unittest.TestCase):
-    def setUp(self):
-        RunMixin.setUp(self)
-        self.master.loadConfig(config_test_builder)
-        self.master.readConfig = True
-        self.master.startService()
-        self.connectSlave(builders=["dummy", "dummy2", "dummy3"])
-
+class TestBuilder(MasterMixin, StallMixin, unittest.TestCase):
     def doBuilderEnvTest(self, branch, cb):
-        c = changes.Change("bob", ["Makefile", "foo/bar.c"], "changed",
-                           branch=branch)
-        self.master.change_svc.addChange(c)
+        self.create_master()
+        d = self.master.loadConfig(config_test_builder)
+        d.addCallback(lambda ign: self.connectSlave(builders=["dummy", "dummy2", "dummy3"]))
 
-        d = defer.Deferred()
-        reactor.callLater(0.5, d.callback, None)
+        def _addchange(ign):
+            c = changes.Change("bob", ["Makefile", "foo/bar.c"], "changed", branch=branch)
+            self.master.db.addChangeToDatabase(c)
+            ss = SourceStamp(branch=branch, changes=[c])
+
+            bss = self.control.submitBuildSet([branch], ss, 'scheduler')
+            brs = bss.getBuildRequests()[0]
+            d1 = defer.Deferred()
+            def _started(bc):
+                brs.unsubscribe(_started)
+                d1.callback(bc)
+            brs.subscribe(_started)
+            return d1
+        d.addCallback(_addchange)
+
         d.addCallback(cb)
 
         return d
@@ -950,122 +988,203 @@ class TestBuilder(RunMixin, unittest.TestCase):
         return build.build_status.waitUntilFinished()
 
     def testBuilderEnv(self):
-        return self.doBuilderEnvTest("dummy", self._testBuilderEnv1)
-
-    def _testBuilderEnv1(self, res):
-        b = self.master.botmaster.builders['dummy']
-        build = b.building[0]
-        s = build.currentStep
-        self.failUnless('foo' in s.cmd.args['env'])
-        self.failUnlessEqual('bar', s.cmd.args['env']['foo'])
-        self.failUnless('blah' in s.cmd.args['env'])
-        self.failUnlessEqual('blah', s.cmd.args['env']['blah'])
-        return self.waitUntilBuildFinished(build)
+        self.basedir = "run/Builder/BuilderEnv"
+        def _check(res):
+            b = self.master.botmaster.builders['dummy']
+            build = b.building[0]
+            s = build.currentStep
+            self.failUnless('foo' in s.cmd.args['env'])
+            self.failUnlessEqual('bar', s.cmd.args['env']['foo'])
+            self.failUnless('blah' in s.cmd.args['env'])
+            self.failUnlessEqual('blah', s.cmd.args['env']['blah'])
+        return self.doBuilderEnvTest("dummy", _check)
 
     def testBuilderEnvOverride(self):
-        return self.doBuilderEnvTest("dummy2", self._testBuilderEnvOverride1)
-
-    def _testBuilderEnvOverride1(self, res):
-        b = self.master.botmaster.builders['dummy2']
-        build = b.building[0]
-        s = build.currentStep
-        self.failUnless('blah' in s.cmd.args['env'])
-        self.failUnlessEqual('blah', s.cmd.args['env']['blah'])
-        return self.waitUntilBuildFinished(build)
+        self.basedir = "run/Builder/BuilderEnvOverride"
+        def _check(res):
+            b = self.master.botmaster.builders['dummy2']
+            build = b.building[0]
+            s = build.currentStep
+            self.failUnless('blah' in s.cmd.args['env'])
+            self.failUnlessEqual('blah', s.cmd.args['env']['blah'])
+        return self.doBuilderEnvTest("dummy2", _check)
 
     def testBuilderNoStepEnv(self):
-        return self.doBuilderEnvTest("dummy3", self._testBuilderNoStepEnv1)
+        self.basedir = "run/Builder/BuilderNoStepEnv"
+        def _check(res):
+            b = self.master.botmaster.builders['dummy3']
+            build = b.building[0]
+            s = build.currentStep
+            self.failUnless('blah' in s.cmd.args['env'])
+            self.failUnlessEqual('bar', s.cmd.args['env']['blah'])
+        return self.doBuilderEnvTest("dummy3", _check)
 
-    def _testBuilderNoStepEnv1(self, res):
-        b = self.master.botmaster.builders['dummy3']
-        build = b.building[0]
-        s = build.currentStep
-        self.failUnless('blah' in s.cmd.args['env'])
-        self.failUnlessEqual('bar', s.cmd.args['env']['blah'])
-        return self.waitUntilBuildFinished(build)
-
-class SchedulerWatchers(RunMixin, TestFlagMixin, unittest.TestCase):
-    config_watchable = config_base + """
-from buildbot.scheduler import AnyBranchScheduler
-from buildbot.steps.dummy import Dummy
-from buildbot.test.runutils import setTestFlag, SetTestFlagStep
-s = AnyBranchScheduler(
-    name='abs',
-    branches=None,
-    treeStableTimer=0,
-    builderNames=['a', 'b'])
-c['schedulers'] = [ s ]
-
-# count the number of times a success watcher is called
-numCalls = [ 0 ]
-def watcher(ss):
-    numCalls[0] += 1
-    setTestFlag("numCalls", numCalls[0])
-s.subscribeToSuccessfulBuilds(watcher)
-
-f = factory.BuildFactory()
-f.addStep(Dummy(timeout=0))
-c['builders'] = [{'name': 'a', 'slavename': 'bot1',
-                  'builddir': 'a', 'factory': f},
-                 {'name': 'b', 'slavename': 'bot1',
-                  'builddir': 'b', 'factory': f}]
-"""
-
-    def testWatchers(self):
-        self.clearFlags()
-        m = self.master
-        m.loadConfig(self.config_watchable)
-        m.readConfig = True
-        m.startService()
-
-        c = changes.Change("bob", ["Makefile", "foo/bar.c"], "changed stuff")
-        m.change_svc.addChange(c)
-
-        d = self.connectSlave(builders=['a', 'b'])
-
-        def pause(res):
-            d = defer.Deferred()
-            reactor.callLater(1, d.callback, res)
-            return d
-        d.addCallback(pause)
-
-        def checkFn(res):
-            self.failUnlessEqual(self.getFlag('numCalls'), 1)
-        d.addCallback(checkFn)
-        return d
 
 config_priority = """
 from buildbot.process import factory
 from buildbot.steps import dummy
 from buildbot.buildslave import BuildSlave
-s = factory.s
+from buildbot.scheduler import Scheduler
 
-from buildbot.steps.shell import ShellCommand
 f1 = factory.BuildFactory([
-    s(ShellCommand, command="sleep 1", env={'blah':'blah'})
+    dummy.Dummy(timeout=1),
     ])
 
 BuildmasterConfig = c = {}
-slavenames = ['bot%i' % i for i in range(5)]
-c['slaves'] = [BuildSlave(name, 'sekrit', max_builds=1) for name in slavenames]
+c['slaves'] = [BuildSlave('bot1', 'sekrit')]
 c['schedulers'] = []
 c['builders'] = []
-c['builders'].append({'name':'quick1', 'slavenames':slavenames, 'builddir': 'quickdir1', 'factory': f1})
-c['builders'].append({'name':'quick2', 'slavenames':slavenames, 'builddir': 'quickdir2', 'factory': f1})
+c['builders'].append({'name':'quick1', 'slavename':'bot1', 'builddir': 'quickdir1', 'factory': f1})
+c['builders'].append({'name':'quick2', 'slavename':'bot1', 'builddir': 'quickdir2', 'factory': f1, 'category': 'special'})
 c['slavePortnum'] = 0
 """
 
+class BuildPrioritization(MasterMixin, unittest.TestCase):
+    def getTime(self):
+        return self.t[0]
+
+    def addTime(self, n):
+        self.t[0] += n
+
+    def do_test(self, config):
+        self.create_master()
+        self.t = [0]
+        self.master.db.getCurrentTime = self.getTime
+        return self.master.loadConfig(config)
+
+    def testSimplePriority(self):
+        self.basedir = "run/BuildPrioritization/SimplePriority"
+        d = self.do_test(config_priority)
+
+        # Send 2 requests to alternating builders, with quick1 being submitted
+        # before quick2
+        ss = SourceStamp()
+        self.addTime(1)
+        self.control.submitBuildSet(['quick1'], ss, 'first')
+        self.addTime(1)
+        self.control.submitBuildSet(['quick2'], ss, 'second')
+
+        def _check(ign):
+            # The builders should be sorted properly
+            builders = self.master.botmaster.builders.values()
+            builders = self.master.botmaster._sort_builders(None, builders)
+            self.failUnlessEqual([builder.name for builder in builders],
+                    ["quick1", "quick2"])
+
+        d.addCallback(_check)
+        return d
+
+    def testSimplePriorityReversed(self):
+        self.basedir = "run/BuildPrioritization/SimplePriorityReversed"
+        d = self.do_test(config_priority)
+
+        # Send 2 requests to alternating builders, with quick1 being submitted
+        # before quick2
+        ss = SourceStamp()
+        self.addTime(1)
+        self.control.submitBuildSet(['quick2'], ss, 'first')
+        self.addTime(1)
+        self.control.submitBuildSet(['quick1'], ss, 'second')
+
+        def _check(ign):
+            # The builders should be sorted properly
+            builders = self.master.botmaster.builders.values()
+            builders = self.master.botmaster._sort_builders(None, builders)
+            self.failUnlessEqual([builder.name for builder in builders],
+                    ["quick2", "quick1"])
+
+        d.addCallback(_check)
+        return d
+
+    def testComplexPriority(self):
+        self.basedir = "run/BuildPrioritization/ComplexPriority"
+        d = self.do_test(config_priority)
+
+        # Send 10 requests to alternating builders, with quick1 being submitted
+        # before quick2
+        ss = SourceStamp()
+        for i in range(10):
+            self.addTime(1)
+            if i % 2 == 0:
+                self.control.submitBuildSet(['quick1'], ss, str(i))
+            else:
+                self.control.submitBuildSet(['quick2'], ss, str(i))
+
+        def _check(ign):
+            # The builds should be runnable in the proper order
+            order = []
+            while True:
+                builders = self.master.botmaster.builders.values()
+                builders = self.master.botmaster._sort_builders(None, builders)
+                # Run the first builder
+                buildable = builders[0].getBuildable()
+                if not buildable:
+                    break
+                req = buildable[0]
+                order.append(int(req.reason))
+                self.master.db.retire_buildrequests([req.id], None)
+            self.failUnlessEqual(order, range(10))
+
+        d.addCallback(_check)
+        return d
+
+    def testCustomPriority(self):
+        self.basedir = "run/BuildPrioritization/CustomPriority"
+        d = self.do_test(config_priority + """
+def prioritizeBuilders(botmaster, builders):
+    def sortkey(builder):
+        if builder.builder_status.category == "special":
+            return 0, builder.getOldestRequestTime()
+        else:
+            return 1, builder.getOldestRequestTime()
+
+    builders.sort(key=sortkey)
+    return builders
+c['prioritizeBuilders'] = prioritizeBuilders
+""")
+
+        # Send 10 requests to alternating builders, with quick1 being submitted
+        # before quick2
+        ss = SourceStamp()
+        for i in range(10):
+            self.addTime(1)
+            if i % 2 == 0:
+                self.control.submitBuildSet(['quick1'], ss, str(i))
+            else:
+                self.control.submitBuildSet(['quick2'], ss, str(i))
+
+        def _check(ign):
+            # The builds should be runnable in the proper order
+            order = []
+            while True:
+                builders = self.master.botmaster.builders.values()
+                builders = self.master.botmaster.prioritizeBuilders(None, builders)
+                found = False
+                # Run the first builder
+                for builder in builders:
+                    buildable = builder.getBuildable()
+                    if not buildable:
+                        continue
+                    found = True
+                    req = buildable[0]
+                    order.append(int(req.reason))
+                    self.master.db.retire_buildrequests([req.id], None)
+                    break
+                if not found:
+                    break
+            self.failUnlessEqual(order, [1,3,5,7,9,0,2,4,6,8])
+
+        d.addCallback(_check)
+        return d
+
+
+
 # Test graceful shutdown when no builds are active, as well as
 # canStartBuild after graceful shutdown is initiated
-config_graceful_shutdown_idle = config_base
-class GracefulShutdownIdle(RunMixin, unittest.TestCase):
+class GracefulShutdownIdle(MasterMixin, WaitMixin, unittest.TestCase):
     def testShutdown(self):
-        self.rmtree("basedir")
-        os.mkdir("basedir")
-        self.master.loadConfig(config_graceful_shutdown_idle)
-        self.master.readConfig = True
-        self.master.startService()
-        d = self.connectSlave(builders=['quick'])
+        self.basedir = "run/GracefulShutdownIdle/Shutdown"
+        d = self.do_test(config_graceful_shutdown_idle)
         d.addCallback(self._do_shutdown)
         return d
 
@@ -1087,52 +1206,34 @@ class GracefulShutdownIdle(RunMixin, unittest.TestCase):
         self.assertEquals(bs.slave.canStartBuild(), False)
 
         # Wait a little bit and then check that we (pretended to) shut down
-        d = defer.Deferred()
+        d = fireEventually()
         d.addCallback(self._check_shutdown)
-        reactor.callLater(0.5, d.callback, None)
         return d
 
     def _check_shutdown(self, res):
         self.assertEquals(self.did_shutdown, True)
 
-# Test graceful shutdown when two builds are active
-config_graceful_shutdown_busy = config_base + """
-from buildbot.buildslave import BuildSlave
-c['slaves'] = [ BuildSlave('bot1', 'sekrit', max_builds=2) ]
+    def do_test(self, config):
+        self.create_master()
+        d = self.master.loadConfig(config)
+        d.addCallback(lambda ign: self.connectSlave())
+        return d
 
-from buildbot.scheduler import Scheduler
-c['schedulers'] = [Scheduler('dummy', None, 0.1, ['dummy', 'dummy2'])]
 
-c['builders'].append({'name': 'dummy', 'slavename': 'bot1',
-                      'builddir': 'dummy', 'factory': f2})
-c['builders'].append({'name': 'dummy2', 'slavename': 'bot1',
-                      'builddir': 'dummy2', 'factory': f2})
-"""
-class GracefulShutdownBusy(RunMixin, unittest.TestCase):
+class GracefulShutdownBusy(MasterMixin, WaitMixin, unittest.TestCase):
     def testShutdown(self):
-        self.rmtree("basedir")
-        os.mkdir("basedir")
-        d = self.master.loadConfig(config_graceful_shutdown_busy)
-        d.addCallback(lambda res: self.master.startService())
-        d.addCallback(lambda res: self.connectSlave())
+        self.basedir = "run/GracefulShutdownBusy/Shutdown"
+        self.prepare_wait("f3", "scheduler")
+        self.prepare_wait("f4", "scheduler")
+        d = self.do_test(config_graceful_shutdown_busy)
 
-        def _send(res):
-            # send a change. This will trigger both builders at the same
-            # time, but since they share a slave, the max_builds=1 setting
-            # will insure that only one of the two builds gets to run.
-            cm = self.master.change_svc
-            c = changes.Change("bob", ["Makefile", "foo/bar.c"],
-                               "changed stuff")
-            cm.addChange(c)
-        d.addCallback(_send)
-
-        def _delay(res):
-            d1 = defer.Deferred()
-            reactor.callLater(0.5, d1.callback, None)
-            # this test depends upon this 0.5s delay landing us in the middle
-            # of one of the builds.
-            return d1
-        d.addCallback(_delay)
+        def _wait(ign):
+            d = defer.DeferredList([
+                self.wait_until_step_reached(ign, "f3", "scheduler"),
+                self.wait_until_step_reached(ign, "f4", "scheduler"),
+                ])
+            return d
+        d.addCallback(_wait)
 
         # Start a graceful shutdown.  We should be in the middle of two builds
         def _shutdown(res):
@@ -1151,7 +1252,6 @@ class GracefulShutdownBusy(RunMixin, unittest.TestCase):
                          for bn in ('dummy', 'dummy2') ]
             for builder in builders:
                 self.failUnless(len(builder.slaves) == 1)
-            from buildbot.process.builder import BUILDING
             building_bs = [ builder
                             for builder in builders
                             if builder.slaves[0].state == BUILDING ]
@@ -1160,16 +1260,16 @@ class GracefulShutdownBusy(RunMixin, unittest.TestCase):
 
         d.addCallback(_shutdown)
 
+        d.addCallback(self.release_all_builds)
+
         # Wait a little bit again, and then make sure that we are still running
         # the two builds, and haven't shutdown yet
-        d.addCallback(_delay)
         def _check(res):
             self.assertEquals(self.did_shutdown, False)
             builders = [ self.master.botmaster.builders[bn]
                          for bn in ('dummy', 'dummy2') ]
             for builder in builders:
                 self.failUnless(len(builder.slaves) == 1)
-            from buildbot.process.builder import BUILDING
             building_bs = [ builder
                             for builder in builders
                             if builder.slaves[0].state == BUILDING ]
@@ -1188,15 +1288,15 @@ class GracefulShutdownBusy(RunMixin, unittest.TestCase):
             return dl
         d.addCallback(_wait_finish)
 
+        d.addCallback(flushEventualQueue)
+
         # Wait a little bit after the builds finish, and then
         # check that the slave has shutdown
-        d.addCallback(_delay)
         def _check_shutdown(res):
             # assert that we shutdown the slave
             self.assertEquals(self.did_shutdown, True)
             builders = [ self.master.botmaster.builders[bn]
                          for bn in ('dummy', 'dummy2') ]
-            from buildbot.process.builder import BUILDING
             building_bs = [ builder
                             for builder in builders
                             if builder.slaves[0].state == BUILDING ]
@@ -1205,3 +1305,17 @@ class GracefulShutdownBusy(RunMixin, unittest.TestCase):
         d.addCallback(_check_shutdown)
 
         return d
+
+    def do_test(self, config):
+        self.create_master()
+        d = self.master.loadConfig(config)
+        d.addCallback(lambda ign: self.connectSlave())
+        def _then(ign):
+            # send a change
+            cm = self.master.change_svc
+            c = changes.Change("bob", ["Makefile", "foo/bar.c"],
+                               "changed stuff")
+            cm.addChange(c)
+        d.addCallback(_then)
+        return d
+

@@ -1,36 +1,18 @@
 # -*- test-case-name: buildbot.test.test_web_status_json -*-
 # -*- coding: utf-8 -*-
 
-import os, shutil
-
-from twisted.python import components
 from twisted.trial import unittest
 from twisted.web import client, error
 
-from buildbot import master, interfaces
 from buildbot.status import html
 from buildbot.status.web.status_json import JsonStatusResource
+from buildbot.test.runutils import MasterMixin
 
 try:
-    import simplejson as json
+    import simplejson
+    json = simplejson # this hushes pyflakes
 except ImportError:
     import json
-
-
-class ConfiguredMaster(master.BuildMaster):
-    """This BuildMaster variant has a static config file, provided as a
-    string when it is created."""
-
-    def __init__(self, basedir, config):
-        self.config = config
-        master.BuildMaster.__init__(self, basedir)
-
-    def loadTheConfigFile(self):
-        self.loadConfig(self.config)
-
-
-components.registerAdapter(master.Control, ConfiguredMaster,
-                           interfaces.IControl)
 
 
 base_config = """
@@ -50,27 +32,23 @@ BuildmasterConfig = c = {
 c['builders'] = [
     BuilderConfig(name='builder1', slavename='bot1name', factory=BuildFactory()),
 ]
+c['status'] = [html.WebStatus(http_port=0)]
 """
 
 
-class TestStatusJson(unittest.TestCase):
-    def setUp(self):
-        config = base_config + "c['status'] = [html.WebStatus(http_port=0)]\n"
-        if os.path.isdir('test_web1'):
-            shutil.rmtree('test_web1')
-        os.mkdir('test_web1')
-        self.master = ConfiguredMaster('test_web1', config)
-        self.master.startService()
-        self.web_status = self.find(html.WebStatus)
-        self.status_json = self.find(
-            JsonStatusResource,
-            self.web_status.site.resource.children.itervalues())
-        # Hack to find out what randomly-assigned port it is listening on.
-        self.port = self.web_status.getPortnum()
-
-    def tearDown(self):
-        self.master.stopService()
-        shutil.rmtree('test_web1')
+class TestStatusJson(MasterMixin, unittest.TestCase):
+    def startup(self):
+        self.create_master()
+        d = self.master.loadConfig(base_config)
+        def _then(ign):
+            self.web_status = self.find(html.WebStatus)
+            self.status_json = self.find(
+                JsonStatusResource,
+                self.web_status.site.resource.children.itervalues())
+            # Hack to find out what randomly-assigned port it is listening on.
+            self.port = self.web_status.getPortnum()
+        d.addCallback(_then)
+        return d
 
     def find(self, type=None, obj=None):
         obj = obj or self.master
@@ -88,6 +66,8 @@ class TestStatusJson(unittest.TestCase):
         return d
 
     def testPresence(self):
+        self.basedir = "web_status_json/TestStatusJson/Presence"
+        d = self.startup()
         def _check(page):
             data = json.loads(page)
             self.assertEqual(len(data), 4)
@@ -95,18 +75,25 @@ class TestStatusJson(unittest.TestCase):
             self.assertEqual(len(data['change_sources']), 1)
             self.assertEqual(len(data['project']), 2)
             self.assertEqual(len(data['slaves']), 1)
-        return self.getPage('/json', _check)
+        d.addCallback(lambda ign: self.getPage('/json', _check))
+        return d
 
     def testHelp(self):
+        self.basedir = "web_status_json/TestStatusJson/Help"
+        d = self.startup()
         def _check(page):
             self.failUnless(page)
-        return self.getPage('/json/help', _check)
+        d.addCallback(lambda ign: self.getPage('/json/help', _check))
+        return d
 
     def testNonPresence(self):
+        self.basedir = "web_status_json/TestStatusJson/NonPresence"
+        d = self.startup()
         def _checkOk(page):
             self.assertFalse(page)
         def _checkFail(result):
             self.assertEqual(result.type, error.Error)
-        return self.getPage('/json2', _checkOk, _checkFail)
+        d.addCallback(lambda ign: self.getPage('/json2', _checkOk, _checkFail))
+        return d
 
 # vim: set ts=4 sts=4 sw=4 et:

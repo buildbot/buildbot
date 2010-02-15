@@ -115,21 +115,22 @@ class MockRequest(object):
 
 # Class to test the method getBuildDetails in ConsoleStatusResource.
 class GetBuildDetailsTests(RunMixin, unittest.TestCase):
-    # Test ConsoleStatusResource.getBuildDetails with a success and a failure case.
+    # Test ConsoleStatusResource.getBuildDetails with a success and a failure
+    # case.
     def testgetBuildDetails(self):
-        # run an actual build with a step that will succeed, then another build with
-        # a step that will fail, then make sure the build details generated contains
-        # the right data.
+        # run an actual build with a step that will succeed, then another
+        # build with a step that will fail, then make sure the build details
+        # generated contains the right data.
         d = self.master.loadConfig(run_config)
-        d.addCallback(lambda res: self.master.startService())
         d.addCallback(lambda res: self.connectOneSlave("bot1"))
         d.addCallback(lambda res: self.requestBuild("full1"))
 
-        # Make sure the build details returned is an  empty string to signify that
-        # everything was ok
+        # Make sure the build details returned is an empty string to signify
+        # that everything was ok
         def expectSuccess(bs):
             console_status = console.ConsoleStatusResource()
-            results = console_status.getBuildDetails(MockRequest(), "buildername", bs);
+            results = console_status.getBuildDetails(MockRequest(),
+                                                     "buildername", bs);
             self.assertEqual(results, {})
         d.addCallback(expectSuccess)
 

@@ -22,12 +22,14 @@ from twisted.internet import reactor, defer
 
 from buildbot.sourcestamp import SourceStamp
 from buildbot.process import buildstep, base, factory
-from buildbot.process.properties import WithProperties
+from buildbot.buildrequest import BuildRequest
+from buildbot.process.properties import Properties, WithProperties
 from buildbot.buildslave import BuildSlave
-from buildbot.steps import shell, source, python, master
+from buildbot.steps import shell, source, python
+from buildbot.steps.master import MasterShellCommand
 from buildbot.status import builder
 from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE, SKIPPED
-from buildbot.test.runutils import RunMixin, rmtree
+from buildbot.test.runutils import RunMixin, rmtree, run_one_build
 from buildbot.test.runutils import makeBuildStep, StepTester
 from buildbot.slave import commands, registry
 
@@ -77,7 +79,8 @@ class BuildStep(unittest.TestCase):
         self.builder_status.nextBuildNumber = 0
         os.mkdir(self.builder_status.basedir)
         self.build_status = self.builder_status.newBuild()
-        req = base.BuildRequest("reason", SourceStamp(), 'test_builder')
+        req = BuildRequest("reason", SourceStamp(), 'test_builder',
+                           Properties())
         self.build = base.Build([req])
         self.build.build_status = self.build_status # fake it
         self.build.builder = self.builder
@@ -201,9 +204,9 @@ class Steps(unittest.TestCase):
             (shell.Test, {'command': "make testharder"}),
             ]
         f = factory.ConfigurableBuildFactory(steps)
-        req = base.BuildRequest("reason", SourceStamp(), 'test_builder')
-        b = f.newBuild([req])
-        #for s in b.steps: print s.name
+        req = BuildRequest("reason", SourceStamp(), 'test_builder',
+                           Properties())
+        f.newBuild([req])
 
     def failUnlessClones(self, s1, attrnames):
         f1 = s1.getStepFactory()
@@ -278,7 +281,7 @@ class Steps(unittest.TestCase):
 
     def test_addHTMLLog(self):
         s = makeBuildStep("runs.test_steps.Steps.test_addHTMLLog")
-        l = s.addHTMLLog("newlog", "some html here")
+        s.addHTMLLog("newlog", "some html here")
         bs = s.step_status
         logs = bs.getLogs()
         self.failUnlessEqual(len(logs), 1)
@@ -288,7 +291,7 @@ class Steps(unittest.TestCase):
 
     def test_addCompleteLog(self):
         s = makeBuildStep("runs.test_steps.Steps.test_addCompleteLog")
-        l = s.addCompleteLog("newlog", "some stdout here")
+        s.addCompleteLog("newlog", "some stdout here")
         bs = s.step_status
         logs = bs.getLogs()
         self.failUnlessEqual(len(logs), 1)
@@ -299,7 +302,6 @@ class Steps(unittest.TestCase):
 
     def test_addLogObserver(self):
         s = makeBuildStep("runs.test_steps.Steps.test_addLogObserver")
-        bss = s.step_status
         o1,o2,o3 = MyObserver(), MyObserver(), MyObserver()
 
         # add the log before the observer
@@ -366,21 +368,16 @@ c['slavePortnum'] = 0
 class SlaveVersion(RunMixin, unittest.TestCase):
     def setUp(self):
         RunMixin.setUp(self)
-        self.master.loadConfig(version_config)
-        self.master.startService()
-        d = self.connectSlave(["quick"])
+        d = self.master.loadConfig(version_config)
+        d.addCallback(lambda ign: self.connectSlave(["quick"]))
         return d
 
     def doBuild(self, buildername):
-        br = base.BuildRequest("forced", SourceStamp(), 'test_builder')
-        d = br.waitUntilFinished()
-        self.control.getBuilder(buildername).requestBuild(br)
+        d = run_one_build(self.control, buildername, SourceStamp(), "forced")
         return d
-
 
     def checkCompare(self, s):
         cver = commands.command_version
-        v = s.slaveVersion("svn", None)
         # this insures that we are getting the version correctly
         self.failUnlessEqual(s.slaveVersion("svn", None), cver)
         # and that non-existent commands do not provide a version
@@ -692,7 +689,7 @@ xxx : .*
         # Test downloading warning suppression file from slave.
         self.slavebase = "Warnings.testCompile5.slave"
         self.masterbase = "Warnings.testCompile5.master"
-        sb = self.makeSlaveBuilder()
+        self.makeSlaveBuilder()
         os.mkdir(os.path.join(self.slavebase, self.slavebuilderbase,
                               "build"))
         output = \
@@ -743,7 +740,7 @@ class TreeSize(StepTester, unittest.TestCase):
         self.slavebase = "TreeSize.testTreeSize.slave"
         self.masterbase = "TreeSize.testTreeSize.master"
 
-        sb = self.makeSlaveBuilder()
+        self.makeSlaveBuilder()
         step = self.makeStep(shell.TreeSize)
         d = self.runStep(step)
         def _check(results):
@@ -862,14 +859,15 @@ Result: FAIL
         self.failUnlessEqual(ss.getStatistic('tests-total'), 264809)
         self.failUnlessEqual(ss.getStatistic('tests-passed'), 264522)
 
-class MasterShellCommand(StepTester, unittest.TestCase):
+class MasterCommand(StepTester, unittest.TestCase):
     def testMasterShellCommand(self):
         self.slavebase = "testMasterShellCommand.slave"
         self.masterbase = "testMasterShellCommand.master"
-        sb = self.makeSlaveBuilder()
-        step = self.makeStep(master.MasterShellCommand, command=['echo',
-                                   WithProperties("hi build-%(other)s.tar.gz")],
-                                   description="foo", descriptionDone="bar")
+        self.makeSlaveBuilder()
+        step = self.makeStep(MasterShellCommand,
+                             command=['echo',
+                                      WithProperties("hi build-%(other)s.tar.gz")],
+                             description="foo", descriptionDone="bar")
         step.build.setProperty("other", "foo", "test")
 
         # we can't invoke runStep until the reactor is started .. hence this
@@ -890,8 +888,8 @@ class MasterShellCommand(StepTester, unittest.TestCase):
     def testMasterShellCommand_badexit(self):
         self.slavebase = "testMasterShellCommand_badexit.slave"
         self.masterbase = "testMasterShellCommand_badexit.master"
-        sb = self.makeSlaveBuilder()
-        step = self.makeStep(master.MasterShellCommand, command="exit 1")
+        self.makeSlaveBuilder()
+        step = self.makeStep(MasterShellCommand, command="exit 1")
 
         # we can't invoke runStep until the reactor is started .. hence this
         # little dance
@@ -914,7 +912,7 @@ class ConditionalStepTest(StepTester, unittest.TestCase):
     def testNotSkipped(self):
         self.slavebase = "testNotSkipped.slave"
         self.masterbase = "testNotSkipped.master"
-        sb = self.makeSlaveBuilder()
+        self.makeSlaveBuilder()
         step = self.makeStep(SuccessStep)
         d = self.runStep(step)
         def _checkResults(results):
@@ -925,7 +923,7 @@ class ConditionalStepTest(StepTester, unittest.TestCase):
     def testSkipped(self):
         self.slavebase = "testSkipped.slave"
         self.masterbase = "testSkipped.master"
-        sb = self.makeSlaveBuilder()
+        self.makeSlaveBuilder()
         step = self.makeStep(SuccessStep, doStepIf=False)
         d = self.runStep(step)
         def _checkResults(results):
@@ -936,7 +934,7 @@ class ConditionalStepTest(StepTester, unittest.TestCase):
     def testNotSkippedFunc(self):
         self.slavebase = "testNotSkippedFunc.slave"
         self.masterbase = "testNotSkippedFunc.master"
-        sb = self.makeSlaveBuilder()
+        self.makeSlaveBuilder()
         step = self.makeStep(SuccessStep, doStepIf=lambda s: True)
         d = self.runStep(step)
         def _checkResults(results):
@@ -947,7 +945,7 @@ class ConditionalStepTest(StepTester, unittest.TestCase):
     def testSkippedFunc(self):
         self.slavebase = "testSkippedFunc.slave"
         self.masterbase = "testSkippedFunc.master"
-        sb = self.makeSlaveBuilder()
+        self.makeSlaveBuilder()
         step = self.makeStep(SuccessStep, doStepIf=lambda s: False)
         d = self.runStep(step)
         def _checkResults(results):

@@ -3,13 +3,15 @@ import signal
 import shutil, os, errno
 from cStringIO import StringIO
 from twisted.internet import defer, reactor, protocol
-from twisted.python import log, util
+from twisted.python import log, util, failure
 
-from buildbot import master, interfaces
+from buildbot import master, interfaces, db
+from buildbot.eventual import flushEventualQueue
 from buildbot.slave import bot
 from buildbot.buildslave import BuildSlave
 from buildbot.process.builder import Builder
-from buildbot.process.base import BuildRequest, Build
+from buildbot.process.base import Build
+from buildbot.buildrequest import BuildRequest
 from buildbot.process.buildstep import BuildStep
 from buildbot.sourcestamp import SourceStamp
 from buildbot.status import builder
@@ -66,26 +68,49 @@ def rmtree(d):
         if e.errno != errno.ENOENT:
             raise
 
-class RunMixin:
+
+class MasterMixin:
     master = None
+    basedir = None
+    slave_basedir = None
+    def create_master(self):
+        assert not self.master, "you called create_master twice"
+        # probably because you subclassed RunMixin instead of MasterMixin
+        self.slaves = {}
+        if self.basedir is None:
+            self.basedir = self.mktemp()
+        basedir = self.basedir
+        os.makedirs(basedir)
+        spec = db.DB("sqlite3", os.path.join(basedir, "state.sqlite"))
+        db.create_db(spec)
+        self.master = master.BuildMaster(basedir, db=spec)
+        self.master.readConfig = True
+        self.master.startService()
+        self.status = self.master.getStatus()
+        self.control = interfaces.IControl(self.master)
 
     def rmtree(self, d):
         rmtree(d)
 
-    def setUp(self):
-        self.slaves = {}
-        self.rmtree("basedir")
-        os.mkdir("basedir")
-        self.master = master.BuildMaster("basedir")
-        self.status = self.master.getStatus()
-        self.control = interfaces.IControl(self.master)
+    def tearDown(self):
+        log.msg("doing tearDown")
+        #d.addCallback(flushEventualQueue)
+        if not self.master:
+            return
+        d = self.shutdownAllSlaves()
+        d.addCallback(self.wait_until_idle)
+        d.addCallback(lambda ign: self.master.stopService())
+        d.addCallback(self.wait_until_idle)
+        d.addCallback(lambda ign: log.msg("tearDown done"))
+        return d
 
     def connectOneSlave(self, slavename, opts={}):
         port = self.master.slavePort._port.getHost().port
-        self.rmtree("slavebase-%s" % slavename)
-        os.mkdir("slavebase-%s" % slavename)
+        basedir = self.slave_basedir or os.path.dirname(self.mktemp())
+        self.slavebase = os.path.join(basedir, "slavebase-%s" % slavename)
+        os.mkdir(self.slavebase)
         slave = MyBuildSlave("localhost", port, slavename, "sekrit",
-                             "slavebase-%s" % slavename,
+                             self.slavebase,
                              keepalive=0, usePTY=False, debugOpts=opts)
         slave.info = {"admin": "one"}
         self.slaves[slavename] = slave
@@ -107,11 +132,12 @@ class RunMixin:
     def connectSlave2(self):
         # this takes over for bot1, so it has to share the slavename
         port = self.master.slavePort._port.getHost().port
-        self.rmtree("slavebase-bot2")
-        os.mkdir("slavebase-bot2")
+        slavebase = os.path.join(os.path.dirname(self.mktemp()),
+                                 "slavebase-bot2")
+        os.mkdir(slavebase)
         # this uses bot1, really
         slave = MyBuildSlave("localhost", port, "bot1", "sekrit",
-                             "slavebase-bot2", keepalive=0, usePTY=False)
+                             slavebase, keepalive=0, usePTY=False)
         slave.info = {"admin": "two"}
         self.slaves['bot2'] = slave
         slave.startService()
@@ -119,10 +145,11 @@ class RunMixin:
     def connectSlaveFastTimeout(self):
         # this slave has a very fast keepalive timeout
         port = self.master.slavePort._port.getHost().port
-        self.rmtree("slavebase-bot1")
-        os.mkdir("slavebase-bot1")
+        slavebase = os.path.join(os.path.dirname(self.mktemp()),
+                                 "slavebase-bot1")
+        os.mkdir(slavebase)
         slave = MyBuildSlave("localhost", port, "bot1", "sekrit",
-                             "slavebase-bot1", keepalive=2, usePTY=False,
+                             slavebase, keepalive=2, usePTY=False,
                              keepaliveTimeout=1)
         slave.info = {"admin": "one"}
         self.slaves['bot1'] = slave
@@ -131,12 +158,12 @@ class RunMixin:
         return d
 
     # things to start builds
-    def requestBuild(self, builder):
+    def requestBuild(self, buildername, ss=None, reason="reason"):
         # returns a Deferred that fires with an IBuildStatus object when the
         # build is finished
-        req = BuildRequest("forced build", SourceStamp(), 'test_builder')
-        self.control.getBuilder(builder).requestBuild(req)
-        return req.waitUntilFinished()
+        if ss is None:
+            ss = SourceStamp()
+        return run_one_build(self.control, buildername, ss, reason)
 
     def failUnlessBuildSucceeded(self, bs):
         if bs.getResults() != builder.SUCCESS:
@@ -158,20 +185,6 @@ class RunMixin:
                     log.msg(l.getTextWithHeaders())
                 log.msg("--- STOP ---")
         log.msg("logBuildResults finished")
-
-    def tearDown(self):
-        log.msg("doing tearDown")
-        d = self.shutdownAllSlaves()
-        d.addCallback(self._tearDown_1)
-        d.addCallback(self._tearDown_2)
-        return d
-    def _tearDown_1(self, res):
-        if self.master:
-            return defer.maybeDeferred(self.master.stopService)
-    def _tearDown_2(self, res):
-        self.master = None
-        log.msg("tearDown done")
-        
 
     # various forms of slave death
 
@@ -215,11 +228,31 @@ class RunMixin:
         # the slave has died, its host sent a FIN. The .notifyOnDisconnect
         # callbacks will terminate the current step, so the build should be
         # flunked (no further steps should be started).
-        self.slaves[slavename].bf.continueTrying = 0
-        bot = self.slaves[slavename].getServiceNamed("bot")
+        s = self.slaves[slavename]
+        s.bf.continueTrying = 0
+        bot = s.getServiceNamed("bot")
         broker = bot.builders[buildername].remote.broker
         broker.transport.loseConnection()
         del self.slaves[slavename]
+        #return s.waitUntilDisconnected()
+        return self.master.botmaster.waitUntilBuilderDetached(buildername)
+
+    def wait_until_idle(self, ign=None):
+        done_d = defer.Deferred()
+        d = flushEventualQueue()
+        def _check(ign):
+            if (not self.master.db.has_pending_operations()
+                and self.master.botmaster.loop.is_quiet()
+                and self.master.scheduler_manager.is_quiet()
+                ):
+                done_d.callback(None)
+                return
+            d2 = defer.Deferred()
+            d2.addCallback(flushEventualQueue)
+            d2.addCallback(_check)
+            reactor.callLater(0.01, d2.callback, None)
+        d.addCallback(_check)
+        return done_d
 
     def disappearSlave(self, slavename="bot1", buildername="dummy",
                        allowReconnect=False):
@@ -246,13 +279,21 @@ class RunMixin:
         # connection, and sees two connections at once.
         raise NotImplementedError
 
+class RunMixin(MasterMixin):
+    def setUp(self):
+        self.create_master()
+
+
+class FakeDB:
+    def subscribe_to(self, category, f):
+        pass
 
 def setupBuildStepStatus(basedir):
     """Return a BuildStep with a suitable BuildStepStatus object, ready to
     use."""
     os.mkdir(basedir)
     botmaster = None
-    s0 = builder.Status(botmaster, basedir)
+    s0 = builder.Status(botmaster, FakeDB(), basedir)
     s1 = s0.builderAdded("buildername", "buildername")
     s2 = builder.BuildStatus(s1, 1)
     s3 = builder.BuildStepStatus(s2)
@@ -509,3 +550,55 @@ class TestFlagMixin:
     def getFlag(self, flagname):
         self.failIfFlagNotSet(flagname, "flag '%s' not set" % flagname)
         return _flags.get(flagname)
+
+
+class ShouldFailMixin:
+
+    def shouldFail(self, expected_failure, which, substring,
+                   callable, *args, **kwargs):
+        assert substring is None or isinstance(substring, str)
+        d = defer.maybeDeferred(callable, *args, **kwargs)
+        def done(res):
+            if isinstance(res, failure.Failure):
+                if not res.check(expected_failure):
+                    log.err(res) # make the whole thing visible
+                    self.fail("'%s' was supposed to raise %s, not raise %s"
+                              " (see test.log for full exception)"
+                              % (which, expected_failure, res))
+                res.trap(expected_failure)
+                if substring:
+                    self.failUnless(substring in str(res),
+                                    "%s: substring '%s' not in '%s'"
+                                    % (which, substring, str(res)))
+                # make the Failure available to a subsequent callback, but
+                # keep it from triggering an errback
+                return [res]
+            else:
+                self.fail("%s was supposed to raise %s, not get '%s'" %
+                          (which, expected_failure, res))
+        d.addBoth(done)
+        return d
+
+class StallMixin:
+    def stall(self, res, timeout):
+        d = defer.Deferred()
+        reactor.callLater(timeout, d.callback, res)
+        return d
+
+def run_one_build(c, builderName, ss, reason):
+    # this used to be:
+    #req = base.BuildRequest(reason, ss, builderName)
+    #d = req.waitUntilFinished()
+    #c.getBuilder(builderName).requestBuild(req)
+
+    bss = c.submitBuildSet([builderName], ss, reason)
+    d = bss.waitUntilFinished()
+    def _get_buildstatus(build_set_status):
+        build_request_statuses = build_set_status.getBuildRequests()
+        build_request_status = build_request_statuses[0]
+        build_statuses = build_request_status.getBuilds()
+        build_status = build_statuses[0]
+        return build_status
+    d.addCallback(_get_buildstatus)
+    return d
+

@@ -2,7 +2,7 @@ from twisted.trial import unittest
 from twisted.internet import reactor, defer
 from twisted.python import log
 
-from buildbot.test.runutils import RunMixin
+from buildbot.test.runutils import MasterMixin
 from buildbot.sourcestamp import SourceStamp
 
 config_base = """
@@ -29,19 +29,21 @@ c['builders'] = [
 c['slavePortnum'] = 0
 """
 
-class DependingScheduler(RunMixin, unittest.TestCase):
+class DependingScheduler(MasterMixin, unittest.TestCase):
     '''Test an upstream and a dependent scheduler while reconfiguring.'''
 
     def testReconfig(self):
-        self.reconfigured = 0
-        self.master.loadConfig(config_base % (1, 'prop value', 'dep prop value'))
         self.prop_value = 'prop value'
         self.dep_prop_value = 'dep prop value'
-        self.master.readConfig = True
-        self.master.startService()
-        d = self.connectSlave(builders=['upstream', 'depend'])
+        self.basedir = "reconfig/DependingScheduler/Reconfig"
+        self.reconfigured = 0
+
+        self.create_master()
+        d = self.master.loadConfig(config_base % (1, self.prop_value, self.dep_prop_value))
+        d.addCallback(lambda ign: self.connectSlave(builders=['upstream', 'depend']))
         d.addCallback(self._triggerUpstream)
         return d
+
     def _triggerUpstream(self, res):
         log.msg("trigger upstream")
         ss = SourceStamp()
@@ -62,8 +64,10 @@ class DependingScheduler(RunMixin, unittest.TestCase):
         log.msg("starting tests")
         ub = self.status.getBuilder('upstream').getLastFinishedBuild()
         tb = self.status.getBuilder('depend').getLastFinishedBuild()
-        self.assertEqual(ub.getProperty('prop'), self.prop_value)
+        self.assert_(ub.getProperties().has_key('prop'), ub.getProperties().asList())
+        self.assertEqual(ub.getProperty('prop'), self.prop_value, ub.getProperties().asList())
         self.assertEqual(ub.getNumber(), self.reconfigured)
+        self.assert_(tb.getProperties().has_key('dep prop'), ub.getProperties().asList())
         self.assertEqual(tb.getProperty('dep prop'), self.dep_prop_value)
         self.assertEqual(tb.getNumber(), self.reconfigured)
 

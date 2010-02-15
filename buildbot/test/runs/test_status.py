@@ -9,11 +9,13 @@ from twisted.trial import unittest
 
 from buildbot import interfaces
 from buildbot.sourcestamp import SourceStamp
-from buildbot.process.base import BuildRequest, Build
+from buildbot.process.base import Build
 from buildbot.status import builder, base, words
 from buildbot.status.web.base import createJinjaEnv
 from buildbot.changes.changes import Change
 from buildbot.process.builder import Builder
+from buildbot.test.runutils import run_one_build
+from buildbot.test.pollmixin import PollMixin
 from time import sleep
 
 import jinja2
@@ -339,8 +341,8 @@ class Mail(unittest.TestCase):
         b1.setText(["snarkleack", "polarization", "failed"])
         b1.blamelist = ["dev3", "dev3", "dev3", "dev4",
                         "Thomas_Walters"]
-        b1.source.changes = (Change(who = 'author1', files = ['file1'], comments = 'comment1', revision = 123),
-                             Change(who = 'author2', files = ['file2'], comments = 'comment2', revision = 456))
+        b1.source.changes = (Change(who = 'author1', files = ['file1'], comments = 'comment1', revision = "123"),
+                             Change(who = 'author2', files = ['file2'], comments = 'comment2', revision = "456"))
         b1.testlogs = [MyLog(basedir, 'compile', "Compile log here\n"),
                        MyLog(basedir, 'test', "Test log here\nTest 1 failed\nTest 2 failed\nTest 3 failed\nTest 4 failed\n")]
 
@@ -375,8 +377,8 @@ class Mail(unittest.TestCase):
         b1.setText(["snarkleack", "polarization", "failed"])
         b1.blamelist = ["dev3", "dev3", "dev3", "dev4",
                         "Thomas_Walters"]
-        b1.source.changes = (Change(who = 'author1', files = ['file1'], comments = 'comment1', revision = 123),
-                             Change(who = 'author2', files = ['file2'], comments = 'comment2', revision = 456))
+        b1.source.changes = (Change(who = 'author1', files = ['file1'], comments = 'comment1', revision = "123"),
+                             Change(who = 'author2', files = ['file2'], comments = 'comment2', revision = "456"))
         b1.testlogs = [MyLog(basedir, 'compile', "Compile log here\n"),
                        MyLog(basedir, 'test', "Test log here\nTest 1 failed\nTest 2 failed\nTest 3 failed\nTest 4 failed\n")]
 
@@ -409,8 +411,8 @@ class Mail(unittest.TestCase):
         b1.setText(["snarkleack", "polarization", "failed"])
         b1.blamelist = ["dev3", "dev3", "dev3", "dev4",
                         "Thomas_Walters"]
-        b1.source.changes = (Change(who = 'author1', files = ['file1'], comments = 'comment1', revision = 123),
-                             Change(who = 'author2', files = ['file2'], comments = 'comment2', revision = 456))
+        b1.source.changes = (Change(who = 'author1', files = ['file1'], comments = 'comment1', revision = "123"),
+                             Change(who = 'author2', files = ['file2'], comments = 'comment2', revision = "456"))
         b1.testlogs = [MyLog(basedir, 'compile', "Compile log here\n"),
                        MyLog(basedir, 'test', "Test log here\nTest 1 failed\nTest 2 failed\nTest 3 failed\nTest 4 failed\n")]
         b1.source.patch = (0, '--- /dev/null\n+++ a_file\n', None)
@@ -733,6 +735,7 @@ class Log(unittest.TestCase):
             line0 = lines.next()
             self.failUnlessEqual(line0, "Some text\n")
             line1 = lines.next()
+            del line1
             line2 = lines.next()
             self.failUnlessEqual(line2, "And Some More\n")
 
@@ -967,6 +970,7 @@ class CompressLog(unittest.TestCase):
     # compression is not supported unless bz2 is installed
     try:
         import bz2 #@UnusedImport
+        del bz2 # hush pyflakes
     except:
         skip = "compression not supported (no bz2 module available)"
 
@@ -1107,16 +1111,16 @@ class VerifyChangeAdded(RunMixin, unittest.TestCase):
         self.t1 = t1 = STarget(["builder"])
         s.subscribe(t1)
 
-        m.loadConfig(config_2)
-        m.readConfig = True
-        m.startService()
+        d = m.loadConfig(config_2)
+        def _then(ign):
+            cm = self.master.change_svc
+            c = Change("bob", ["Makefile", "foo/bar.c"], "changed stuff")
+            cm.addChange(c)
+            self.failUnlessEqual(t1.events[-1], ("changeAdded", c))
+        d.addCallback(_then)
+        return d
 
-        cm = self.master.change_svc
-        c = Change("bob", ["Makefile", "foo/bar.c"], "changed stuff")
-        cm.addChange(c)
-        self.failUnlessEqual(t1.events[-1], ("changeAdded", c))
-
-class Subscription(RunMixin, unittest.TestCase):
+class Subscription(RunMixin, unittest.TestCase, PollMixin):
     # verify that StatusTargets can subscribe/unsubscribe properly
 
     def testSlave(self):
@@ -1130,39 +1134,41 @@ class Subscription(RunMixin, unittest.TestCase):
         self.t3 = t3 = STarget(["builder", "build", "step"])
         s.subscribe(t3)
 
-        m.loadConfig(config_2)
-        m.readConfig = True
-        m.startService()
+        d = m.loadConfig(config_2)
+        def _started(ign):
+            self.failUnlessEqual(len(t1.events), 4)
+            self.failUnlessEqual(t1.events[0][0:2], ("builderAdded", "dummy"))
+            self.failUnlessEqual(t1.events[1],
+                                 ("builderChangedState", "dummy", "offline"))
+            self.failUnlessEqual(t1.events[2][0:2], ("builderAdded", "testdummy"))
+            self.failUnlessEqual(t1.events[3],
+                                 ("builderChangedState", "testdummy", "offline"))
+            t1.events = []
 
-        self.failUnlessEqual(len(t1.events), 4)
-        self.failUnlessEqual(t1.events[0][0:2], ("builderAdded", "dummy"))
-        self.failUnlessEqual(t1.events[1],
-                             ("builderChangedState", "dummy", "offline"))
-        self.failUnlessEqual(t1.events[2][0:2], ("builderAdded", "testdummy"))
-        self.failUnlessEqual(t1.events[3],
-                             ("builderChangedState", "testdummy", "offline"))
-        t1.events = []
+            self.failUnlessEqual(s.getBuilderNames(), ["dummy", "testdummy"])
+            self.failUnlessEqual(s.getBuilderNames(categories=['test']),
+                                 ["testdummy"])
+            self.s1 = s1 = s.getBuilder("dummy")
+            self.failUnlessEqual(s1.getName(), "dummy")
+            self.failUnlessEqual(s1.getState(), ("offline", []))
+            self.failUnlessEqual(s1.getCurrentBuilds(), [])
+            self.failUnlessEqual(s1.getLastFinishedBuild(), None)
+            self.failUnlessEqual(s1.getBuild(-1), None)
+            #self.failUnlessEqual(s1.getEvent(-1), foo("created"))
 
-        self.failUnlessEqual(s.getBuilderNames(), ["dummy", "testdummy"])
-        self.failUnlessEqual(s.getBuilderNames(categories=['test']),
-                             ["testdummy"])
-        self.s1 = s1 = s.getBuilder("dummy")
-        self.failUnlessEqual(s1.getName(), "dummy")
-        self.failUnlessEqual(s1.getState(), ("offline", []))
-        self.failUnlessEqual(s1.getCurrentBuilds(), [])
-        self.failUnlessEqual(s1.getLastFinishedBuild(), None)
-        self.failUnlessEqual(s1.getBuild(-1), None)
-        #self.failUnlessEqual(s1.getEvent(-1), foo("created"))
-
-        # status targets should, upon being subscribed, immediately get a
-        # list of all current builders matching their category
-        self.t2 = t2 = STarget([])
-        s.subscribe(t2)
-        self.failUnlessEqual(len(t2.events), 2)
-        self.failUnlessEqual(t2.events[0][0:2], ("builderAdded", "dummy"))
-        self.failUnlessEqual(t2.events[1][0:2], ("builderAdded", "testdummy"))
-
-        d = self.connectSlave(builders=["dummy", "testdummy"])
+            # status targets should, upon being subscribed, immediately get a
+            # list of all current builders matching their category
+            self.t2 = t2 = STarget([])
+            s.subscribe(t2)
+            self.failUnlessEqual(len(t2.events), 2)
+            self.failUnlessEqual(t2.events[0][0:2], ("builderAdded", "dummy"))
+            self.failUnlessEqual(t2.events[1][0:2], ("builderAdded", "testdummy"))
+        d.addCallback(_started)
+        d.addCallback(lambda ign:
+                      self.connectSlave(builders=["dummy", "testdummy"]))
+        def _wait():
+            return len(t1.events) == 3
+        d.addCallback(lambda ign: self.poll(_wait))
         d.addCallback(self._testSlave_1, t1)
         return d
 
@@ -1177,11 +1183,11 @@ class Subscription(RunMixin, unittest.TestCase):
         t1.events = []
 
         c = interfaces.IControl(self.master)
-        req = BuildRequest("forced build for testing", SourceStamp(), 'test_builder')
-        c.getBuilder("dummy").requestBuild(req)
-        d = req.waitUntilFinished()
+        d = run_one_build(c, "dummy", SourceStamp(), "forced build for testing")
         d2 = self.master.botmaster.waitUntilBuilderIdle("dummy")
-        dl = defer.DeferredList([d, d2])
+        def _wait():
+            return len(t1.events) == 4
+        dl = defer.DeferredList([d, d2, self.poll(_wait)])
         dl.addCallback(self._testSlave_2)
         return dl
 
@@ -1265,9 +1271,7 @@ class Subscription(RunMixin, unittest.TestCase):
         self.t4 = t4 = STarget(["builder", "build", "eta"])
         self.master.getStatus().subscribe(t4)
         c = interfaces.IControl(self.master)
-        req = BuildRequest("forced build for testing", SourceStamp(), 'test_builder')
-        c.getBuilder("dummy").requestBuild(req)
-        d = req.waitUntilFinished()
+        d = run_one_build(c, "dummy", SourceStamp(), "forced build for testing")
         d2 = self.master.botmaster.waitUntilBuilderIdle("dummy")
         dl = defer.DeferredList([d, d2])
         dl.addCallback(lambda ign: self.shutdownAllSlaves())
@@ -1358,15 +1362,15 @@ class ContactTester(unittest.TestCase):
         my_builder = MyBuilder("builder78")
         my_build = MyIrcBuild(my_builder, 23, builder.SUCCESS)
         my_build.changes = (
-            Change(who = 'author1', files = ['file1'], comments = 'comment1', revision = 123),
-            Change(who = 'author2', files = ['file2'], comments = 'comment2', revision = 456),
+            Change(who = 'author1', files = ['file1'], comments = 'comment1', revision = "123"),
+            Change(who = 'author2', files = ['file2'], comments = 'comment2', revision = "456"),
             )
 
         irc.command_NOTIFY("on started", "mynick")
 
         irc.message = ""
         irc.buildStarted(my_builder.getName(), my_build)
-        self.failUnlessEqual(irc.message, "build #23 of builder78 started including [123, 456]", "Start notification generated with notify_events=['started']")
+        self.failUnlessEqual(irc.message, "build #23 of builder78 started, including [123, 456]", "Start notification generated with notify_events=['started']")
 
         irc.message = ""
         irc.buildFinished(my_builder.getName(), my_build, None)
@@ -1378,7 +1382,7 @@ class ContactTester(unittest.TestCase):
         my_builder = MyBuilder("builder834")
         my_build = MyIrcBuild(my_builder, 862, builder.SUCCESS)
         my_build.changes = (
-            Change(who = 'author1', files = ['file1'], comments = 'comment1', revision = 943),
+            Change(who = 'author1', files = ['file1'], comments = 'comment1', revision = "943"),
             )
 
         irc.command_NOTIFY("on finished", "mynick")
@@ -1397,7 +1401,7 @@ class ContactTester(unittest.TestCase):
         my_builder = MyBuilder("builder834")
         my_build = MyIrcBuild(my_builder, 862, builder.SUCCESS)
         my_build.changes = (
-            Change(who = 'author1', files = ['file1'], comments = 'comment1', revision = 943),
+            Change(who = 'author1', files = ['file1'], comments = 'comment1', revision = "943"),
             )
 
         irc.command_NOTIFY("on success", "mynick")
@@ -1426,7 +1430,7 @@ class ContactTester(unittest.TestCase):
         my_builder = MyBuilder("builder834")
         my_build = MyIrcBuild(my_builder, 862, builder.FAILURE)
         my_build.changes = (
-            Change(who = 'author1', files = ['file1'], comments = 'comment1', revision = 943),
+            Change(who = 'author1', files = ['file1'], comments = 'comment1', revision = "943"),
             )
 
         irc.command_NOTIFY("on failure", "mynick")
@@ -1457,7 +1461,7 @@ class ContactTester(unittest.TestCase):
         my_builder = MyBuilder("builder834")
         my_build = MyIrcBuild(my_builder, 862, builder.EXCEPTION)
         my_build.changes = (
-            Change(who = 'author1', files = ['file1'], comments = 'comment1', revision = 943),
+            Change(who = 'author1', files = ['file1'], comments = 'comment1', revision = "943"),
             )
 
         irc.command_NOTIFY("on exception", "mynick")
@@ -1493,7 +1497,7 @@ class ContactTester(unittest.TestCase):
         my_builder = MyBuilder("builder834")
         my_build = MyIrcBuild(my_builder, 862, builder.FAILURE)
         my_build.changes = (
-            Change(who = 'author1', files = ['file1'], comments = 'comment1', revision = 943),
+            Change(who = 'author1', files = ['file1'], comments = 'comment1', revision = "943"),
             )
 
         previous_build = MyIrcBuild(my_builder, 861, previous_result)
@@ -1677,7 +1681,7 @@ class ContactTester(unittest.TestCase):
         my_builder = MyBuilder("builder834")
         my_build = MyIrcBuild(my_builder, 862, builder.SUCCESS)
         my_build.changes = (
-            Change(who = 'author1', files = ['file1'], comments = 'comment1', revision = 943),
+            Change(who = 'author1', files = ['file1'], comments = 'comment1', revision = "943"),
             )
 
         irc.message = ""
