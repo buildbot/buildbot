@@ -271,7 +271,7 @@ class Maker:
     def create_db(self):
         dbspec = make_dbspec(self.config["db"], self.basedir)
         from buildbot.db import create_db
-        print "creating database"
+        if not self.config['quiet']: print "creating database"
         create_db(dbspec)
 
     def populate_if_missing(self, target, source, overwrite=False):
@@ -469,17 +469,16 @@ def upgradeMaster(config):
     # if we still have a changes.pck, then we need to migrate it
     changes_pickle = os.path.join(basedir, "changes.pck")
     if os.path.exists(changes_pickle):
-        print "migrating changes.pck to database"
-        migrate_changes_pickle_to_db(changes_pickle, db)
-        print "moving old changes.pck to changes.pck.old"
+        if not config['quiet']: print "migrating changes.pck to database"
+        migrate_changes_pickle_to_db(changes_pickle, db, silent=config['quiet'])
+        if not config['quiet']: print "moving old changes.pck to changes.pck.old"
         os.rename(changes_pickle, changes_pickle+".old")
     db.stop()
 
     rc = m.check_master_cfg()
     if rc:
         return rc
-    if not config['quiet']:
-        print "upgrade complete"
+    if not config['quiet']: print "upgrade complete"
     return 0
 
 
