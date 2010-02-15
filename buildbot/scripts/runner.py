@@ -268,6 +268,12 @@ class Maker:
             f.write(open(source, "rt").read())
             f.close()
 
+    def create_db(self):
+        dbspec = make_dbspec(self.config["db"], self.basedir)
+        from buildbot.db import create_db
+        print "creating database"
+        create_db(dbspec)
+
     def populate_if_missing(self, target, source, overwrite=False):
         new_contents = open(source, "rt").read()
         if os.path.exists(target):
@@ -350,7 +356,7 @@ class Maker:
             # the config file. Note that this BuildMaster instance is never
             # started, so it won't actually do anything with the
             # configuration.
-            m.loadConfig(open(master_cfg, "r"))
+            m.loadConfig(open(master_cfg, "r"), check_synchronously_only=True)
         except:
             f = failure.Failure()
             if not self.quiet:
@@ -365,9 +371,35 @@ class Maker:
             return 1
         return 0
 
+DB_HELP = """
+    The --db string is evaluated to build the DB object, which specifies
+    which database the buildmaster should use to hold scheduler state and
+    status information. The default (which creates an SQLite database in
+    BASEDIR/state.sqlite) is equivalent to:
+
+      --db='DB("sqlite3", basedir+"/state.sqlite"))'
+
+    To use a remote MySQL database instead, use something like:
+
+      --db='DB("MySQLdb", host="dbhost", user="bbuser", passwd="bbpasswd", db="bbdb")'
+"""
+
+def make_dbspec(dbstring, basedir):
+    from buildbot.master import DB
+    localsyms = {"basedir": basedir, "DB": DB}
+    exec "db = %s" % dbstring in localsyms
+    dbspec = localsyms["db"]
+    if dbspec is None:
+        dbspec = DB("sqlite3", os.path.join(basedir, "state.sqlite"))
+    return dbspec
+
 class UpgradeMasterOptions(MakerBase):
     optFlags = [
         ["replace", "r", "Replace any modified files without confirmation."],
+        ]
+    optParameters = [
+        ["db", None, "None",
+         "which DB to use for scheduler/status state. See below for syntax."],
         ]
 
     def getSynopsis(self):
@@ -387,15 +419,36 @@ class UpgradeMasterOptions(MakerBase):
     .new file (for example, if index.html has been modified, this command
     will create index.html.new). You can then look at the new version and
     decide how to merge its contents into your modified file.
+"""+DB_HELP+"""
+    When upgrading from a pre-0.8.0 release (which did not use a database),
+    this command will create the given database and migrate data from the old
+    pickle files into it, then move the pickle files out of the way (e.g. to
+    changes.pck.old). To revert to an older release, rename the pickle files
+    back. When you are satisfied with the new version, you can delete the old
+    pickle files.
     """
 
+def migrate_changes_pickle_to_db(fn, db):
+    from cPickle import load
+    print "migrating Changes pickle to db"
+
+    # 'source' will be an old b.c.changes.ChangeMaster instance, with a
+    # .changes attribute
+    source = load(open(fn,"rb"))
+
+    print " (%d Change objects)" % len(source.changes)
+    # about 150 changes per second on my laptop
+    for c in source.changes:
+        if not c.revision:
+            continue
+        db.addChangeToDatabase(c)
+
 def upgradeMaster(config):
-    basedir = config['basedir']
+    basedir = os.path.expanduser(config['basedir'])
     m = Maker(config)
     # TODO: check Makefile
     # TODO: check TAC file
     # check web files: index.html, default.css, robots.txt
-    webdir = os.path.join(basedir, "public_html")
     m.upgrade_public_html({
           'bg_gradient.jpg' : util.sibpath(__file__, "../status/web/files/bg_gradient.jpg"),
           'default.css' : util.sibpath(__file__, "../status/web/files/default.css"),
@@ -407,12 +460,27 @@ def upgradeMaster(config):
     # if index.html exists, use it to override the root page tempalte
     m.move_if_present(os.path.join(basedir, "public_html/index.html"),
                       os.path.join(basedir, "templates/root.html"))
-    
+
+    dbspec = make_dbspec(config["db"], basedir)
+    # TODO: check that TAC file specifies the right spec
+    from buildbot.db import create_or_upgrade_db
+    db = create_or_upgrade_db(dbspec)
+    db.start()
+    # if we still have a changes.pck, then we need to migrate it
+    changes_pickle = os.path.join(basedir, "changes.pck")
+    if os.path.exists(changes_pickle):
+        print "migrating changes.pck to database"
+        migrate_changes_pickle_to_db(changes_pickle, db)
+        print "moving old changes.pck to changes.pck.old"
+        os.rename(changes_pickle, changes_pickle+".old")
+    db.stop()
+
     rc = m.check_master_cfg()
     if rc:
         return rc
     if not config['quiet']:
         print "upgrade complete"
+    return 0
 
 
 class MasterOptions(MakerBase):
@@ -426,6 +494,8 @@ class MasterOptions(MakerBase):
          "size at which to rotate twisted log files"],
         ["log-count", "l", "None",
          "limit the number of kept old twisted log files"],
+        ["db", None, "None # use default sqlite",
+         "which DB to use for scheduler/status state. See below for syntax."],
         ]
     def getSynopsis(self):
         return "Usage:    buildbot create-master [options] [<basedir>]"
@@ -439,7 +509,12 @@ class MasterOptions(MakerBase):
     code which eventually defines a dictionary named 'BuildmasterConfig'.
     The elements of this dictionary are used to configure the Buildmaster.
     See doc/config.xhtml for details about what can be controlled through
-    this interface."""
+    this interface.
+""" + DB_HELP + """
+    The --db string is stored verbatim in the buildbot.tac file, and
+    evaluated as 'buildbot start' time to pass a DBConnector instance into
+    the newly-created BuildMaster object.
+    """
 
     def postOptions(self):
         MakerBase.postOptions(self)
@@ -453,12 +528,13 @@ class MasterOptions(MakerBase):
 
 masterTAC = """
 from twisted.application import service
-from buildbot.master import BuildMaster
+from buildbot.master import BuildMaster, DB
 
 basedir = r'%(basedir)s'
 configfile = r'%(config)s'
 rotateLength = %(log-size)s
 maxRotatedFiles = %(log-count)s
+db = %(db)s
 
 application = service.Application('buildmaster')
 try:
@@ -470,7 +546,7 @@ try:
 except ImportError:
   # probably not yet twisted 8.2.0 and beyond, can't set log yet
   pass
-BuildMaster(basedir, configfile).setServiceParent(application)
+BuildMaster(basedir, configfile, db).setServiceParent(application)
 
 """
 
@@ -487,6 +563,7 @@ def createMaster(config):
           'robots.txt' : util.sibpath(__file__, "../status/web/files/robots.txt"),
       })
     m.makefile()
+    m.create_db()
 
     if not m.quiet: print "buildmaster configured in %s" % m.basedir
 
@@ -779,8 +856,7 @@ class SendChangeOptions(OptionsWithOptionsFile):
         ("username", "u", None, "Username performing the commit"),
         ("branch", "b", None, "Branch specifier"),
         ("category", "c", None, "Category of repository"),
-        ("revision", "r", None, "Revision specifier (string)"),
-        ("revision_number", "n", None, "Revision specifier (integer)"),
+        ("revision", "r", None, "Revision specifier"),
         ("revision_file", None, None, "Filename containing revision spec"),
         ("property", "p", None,
          "A property for the change, in the format: name:value"),
@@ -821,9 +897,6 @@ def sendchange(config, runReactor=False):
         when = float(config.get('when'))
     else:
         when = None
-    # SVN and P4 use numeric revisions
-    if config.get("revision_number"):
-        revision = int(config['revision_number'])
     if config.get("revision_file"):
         revision = open(config["revision_file"],"r").read()
 
@@ -1134,5 +1207,5 @@ def run():
         doTryServer(so)
     elif command == "checkconfig":
         doCheckConfig(so)
-
+    sys.exit(0)
 
