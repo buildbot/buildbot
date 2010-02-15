@@ -177,26 +177,27 @@ except ImportError:
 
 log_WebpartsRecursive = False # Set to True to list pages being checked
 
-class CustomResolver(etree.Resolver):
-    '''Use cached DTDs to avoid network access
+if etree:
+    class CustomResolver(etree.Resolver):
+        '''Use cached DTDs to avoid network access
 
-       from http://www.hoboes.com/Mimsy/hacks/caching-dtds-using-lxml-and-etree/
-    '''
+           from http://www.hoboes.com/Mimsy/hacks/caching-dtds-using-lxml-and-etree/
+        '''
 
-    if log_WebpartsRecursive:
-        print "\nCaching DTDs in: %s" % cache
+        if log_WebpartsRecursive:
+            print "\nCaching DTDs in: %s" % cache
 
-    def resolve(self, URL, id, context):
-        #determine cache filename
-        url = urlparse.urlparse(URL)
-        dtdPath = util.sibpath(__file__,
-                               url[1] + '.' + url[2].replace('/', '.'))
-        #cache if necessary
-        if not os.path.exists(dtdPath):
-            raise ValueError("URL '%s' is not cached in '%s'" % (URL, dtdPath))
+        def resolve(self, URL, id, context):
+            #determine cache filename
+            url = urlparse.urlparse(URL)
+            dtdPath = util.sibpath(__file__,
+                                   url[1] + '.' + url[2].replace('/', '.'))
+            #cache if necessary
+            if not os.path.exists(dtdPath):
+                raise ValueError("URL '%s' is not cached in '%s'" % (URL, dtdPath))
 
-        #resolve the cached file
-        return self.resolve_file(open(dtdPath), context, base_url=URL)
+            #resolve the cached file
+            return self.resolve_file(open(dtdPath), context, base_url=URL)
 
 recursive_extraconfig = """
 from buildbot.status import html
