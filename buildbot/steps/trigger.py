@@ -1,6 +1,7 @@
 from buildbot.process.buildstep import LoggingBuildStep, SUCCESS, FAILURE, EXCEPTION
 from buildbot.process.properties import Properties
-from buildbot.scheduler import Triggerable
+from buildbot.schedulers.triggerable import Triggerable
+from twisted.python import log
 from twisted.internet import defer
 
 class Trigger(LoggingBuildStep):
@@ -104,9 +105,7 @@ class Trigger(LoggingBuildStep):
 
         if unknown_schedulers:
             self.step_status.setText(['no scheduler:'] + unknown_schedulers)
-            rc = FAILURE
         else:
-            rc = SUCCESS
             self.step_status.setText(['triggered'] + triggered_schedulers)
 
         if self.waitForFinish:
@@ -116,12 +115,13 @@ class Trigger(LoggingBuildStep):
 
         def cb(rclist):
             rc = SUCCESS # (this rc is not the same variable as that above)
-            for was_cb, buildsetstatus in rclist:
+            for was_cb, results in rclist:
                 # TODO: make this algo more configurable
                 if not was_cb:
                     rc = EXCEPTION
+                    log.err(results)
                     break
-                if buildsetstatus.getResults() == FAILURE:
+                if results == FAILURE:
                     rc = FAILURE
             return self.finished(rc)
 

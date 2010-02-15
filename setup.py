@@ -200,6 +200,7 @@ setup_args = {
               "buildbot.process",
               "buildbot.clients",
               "buildbot.slave",
+              "buildbot.schedulers",
               "buildbot.scripts",
               "buildbot.test",
               "buildbot.test.runs",

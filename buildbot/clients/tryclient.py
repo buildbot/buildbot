@@ -8,7 +8,6 @@ from twisted.python import log
 from twisted.python.procutils import which
 
 from buildbot.sourcestamp import SourceStamp
-from buildbot.scripts import runner
 from buildbot.util import now
 from buildbot.status import builder
 
@@ -507,7 +506,7 @@ class Try(pb.Referenceable):
             # now run this command and feed the contents of 'job' into stdin
 
             pp = RemoteTryPP(self.jobfile)
-            p = reactor.spawnProcess(pp, argv[0], argv, os.environ)
+            reactor.spawnProcess(pp, argv[0], argv, os.environ)
             d = pp.d
             return d
         if self.connect == "pb":
@@ -554,6 +553,7 @@ class Try(pb.Referenceable):
         d = self.running = defer.Deferred()
         if self.buildsetStatus:
             self._getStatus_1()
+            return self.running
         # contact the status port
         # we're probably using the ssh style
         master = self.getopt("master")
@@ -697,7 +697,7 @@ class Try(pb.Referenceable):
             if text:
                 t += " (%s)" % " ".join(text)
             print t
-            if self.results[n] != builder.SUCCESS:
+            if code != builder.SUCCESS:
                 happy = False
 
         if happy:
@@ -772,6 +772,3 @@ class Try(pb.Referenceable):
     def cleanup(self, res=None):
         if self.buildsetStatus:
             self.buildsetStatus.broker.transport.loseConnection()
-
-
-    
