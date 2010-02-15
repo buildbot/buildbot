@@ -208,7 +208,7 @@ class P4Source(base.ChangeSource, util.ComparableMixin):
             c = changes.Change(who=who,
                                files=branch_files[branch],
                                comments=comments,
-                               revision=num,
+                               revision=str(num),
                                when=when,
                                branch=branch)
             self.parent.addChange(c)

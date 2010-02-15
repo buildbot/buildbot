@@ -3,8 +3,6 @@ from cPickle import dump
 
 from zope.interface import implements
 from twisted.python import log
-from twisted.internet import defer
-from twisted.application import service
 from twisted.web import html
 
 from buildbot import interfaces, util
@@ -25,6 +23,12 @@ class Change:
     will be filled in for you (to the current time) if you omit it, which is
     suitable for ChangeSources which have no way of getting more accurate
     timestamps.
+
+    The revision= and branch= values must be ASCII bytestrings, since they
+    will eventually be used in a ShellCommand and passed to os.exec(), which
+    requires bytestrings. These values will also be stored in a database,
+    possibly as unicode, so they must be safely convertable back and forth.
+    This restriction may be relaxed in the future.
 
     Changes should be submitted to ChangeMaster.addChange() in
     chronologically increasing order. Out-of-order changes will probably
@@ -47,10 +51,14 @@ class Change:
         if links is None:
             links = []
         self.links = links
+        if revision is not None:
+            assert isinstance(revision, str), type(revision)
         self.revision = revision
         if when is None:
             when = util.now()
         self.when = when
+        if branch is not None:
+            assert isinstance(branch, str), type(branch)
         self.branch = branch
         self.category = category
         self.revlink = revlink
@@ -66,6 +74,8 @@ class Change:
         # Older Changes won't have a 'properties' attribute in them
         if not hasattr(self, 'properties'):
             self.properties = Properties()
+        if not hasattr(self, 'revlink'):
+            self.revlink = ""
 
     def asText(self):
         data = ""
@@ -153,126 +163,22 @@ class Change:
         return data
 
 
-class ChangeMaster(service.MultiService):
-
-    """This is the master-side service which receives file change
-    notifications from CVS. It keeps a log of these changes, enough to
-    provide for the HTML waterfall display, and to tell
-    temporarily-disconnected bots what they missed while they were
-    offline.
-
-    Change notifications come from two different kinds of sources. The first
-    is a PB service (servicename='changemaster', perspectivename='change'),
-    which provides a remote method called 'addChange', which should be
-    called with a dict that has keys 'filename' and 'comments'.
-
-    The second is a list of objects derived from the ChangeSource class.
-    These are added with .addSource(), which also sets the .changemaster
-    attribute in the source to point at the ChangeMaster. When the
-    application begins, these will be started with .start() . At shutdown
-    time, they will be terminated with .stop() . They must be persistable.
-    They are expected to call self.changemaster.addChange() with Change
-    objects.
-
-    There are several different variants of the second type of source:
-    
-      - L{buildbot.changes.mail.MaildirSource} watches a maildir for CVS
-        commit mail. It uses DNotify if available, or polls every 10
-        seconds if not.  It parses incoming mail to determine what files
-        were changed.
-
-      - L{buildbot.changes.freshcvs.FreshCVSSource} makes a PB
-        connection to the CVSToys 'freshcvs' daemon and relays any
-        changes it announces.
-    
-    """
-
-    implements(interfaces.IEventSource)
-
-    debug = False
-    # todo: use Maildir class to watch for changes arriving by mail
-
-    changeHorizon = 0
+class ChangeMaster:
+    # this is a stub, retained to allow the "buildbot upgrade-master" tool to
+    # read old changes.pck pickle files and convert their contents into the
+    # new database format. This is only instantiated by that tool, or by
+    # test_db.py which tests that tool. The functionality that previously
+    # lived here has been moved into buildbot.changes.manager.ChangeManager
 
     def __init__(self):
-        service.MultiService.__init__(self)
         self.changes = []
         # self.basedir must be filled in by the parent
         self.nextNumber = 1
 
-    def addSource(self, source):
-        assert interfaces.IChangeSource.providedBy(source)
-        assert service.IService.providedBy(source)
-        if self.debug:
-            print "ChangeMaster.addSource", source
-        source.setServiceParent(self)
-
-    def removeSource(self, source):
-        assert source in self
-        if self.debug:
-            print "ChangeMaster.removeSource", source, source.parent
-        d = defer.maybeDeferred(source.disownServiceParent)
-        return d
-
     def addChange(self, change):
-        """Deliver a file change event. The event should be a Change object.
-        This method will timestamp the object as it is received."""
-        log.msg("adding change, who %s, %d files, rev=%s, branch=%s, "
-                "comments %s, category %s" % (change.who, len(change.files),
-                                              change.revision, change.branch,
-                                              change.comments, change.category))
         change.number = self.nextNumber
         self.nextNumber += 1
         self.changes.append(change)
-        self.parent.addChange(change)
-        self.pruneChanges()
-
-    def pruneChanges(self):
-        if self.changeHorizon and len(self.changes) > self.changeHorizon:
-            log.msg("pruning %i changes" % (len(self.changes) - self.changeHorizon))
-            self.changes = self.changes[-self.changeHorizon:]
-
-    def eventGenerator(self, branches=[], categories=[], committers=[]):
-        for i in range(len(self.changes)-1, -1, -1):
-            c = self.changes[i]
-            if (not branches or c.branch in branches) and (
-                not categories or c.category in categories) and (
-                not committers or c.who in committers):
-                yield c
-
-    def getChangeNumbered(self, num):
-        if not self.changes:
-            return None
-        first = self.changes[0].number
-        if first + len(self.changes)-1 != self.changes[-1].number:
-            log.msg(self,
-                    "lost a change somewhere: [0] is %d, [%d] is %d" % \
-                    (self.changes[0].number,
-                     len(self.changes) - 1,
-                     self.changes[-1].number))
-            for c in self.changes:
-                log.msg("c[%d]: " % c.number, c)
-            return None
-        offset = num - first
-        log.msg(self, "offset", offset)
-        if 0 <= offset <= len(self.changes):
-            return self.changes[offset]
-        else:
-            return None
-
-    def __getstate__(self):
-        d = service.MultiService.__getstate__(self)
-        del d['parent']
-        del d['services'] # lose all children
-        del d['namedServices']
-        return d
-
-    def __setstate__(self, d):
-        self.__dict__ = d
-        # self.basedir must be set by the parent
-        self.services = [] # they'll be repopulated by readConfig
-        self.namedServices = {}
-
 
     def saveYourself(self):
         filename = os.path.join(self.basedir, "changes.pck")
@@ -284,17 +190,11 @@ class ChangeMaster(service.MultiService):
                 if os.path.exists(filename):
                     os.unlink(filename)
             os.rename(tmpfilename, filename)
-        except Exception, e:
+        except Exception:
             log.msg("unable to save changes")
             log.err()
 
-    def stopService(self):
-        self.saveYourself()
-        return service.MultiService.stopService(self)
-
-class TestChangeMaster(ChangeMaster):
-    """A ChangeMaster for use in tests that does not save itself"""
-    def stopService(self):
-        return service.MultiService.stopService(self)
-
+class OldChangeMaster(ChangeMaster):
+    # this is a reminder that the ChangeMaster class is old
+    pass
 # vim: set ts=4 sts=4 sw=4 et:
