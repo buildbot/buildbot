@@ -530,11 +530,8 @@ masterTAC = """
 from twisted.application import service
 from buildbot.master import BuildMaster, DB
 
-basedir = r'%(basedir)s'
-configfile = r'%(config)s'
 rotateLength = %(log-size)s
 maxRotatedFiles = %(log-count)s
-db = %(db)s
 
 application = service.Application('buildmaster')
 try:
@@ -546,7 +543,13 @@ try:
 except ImportError:
   # probably not yet twisted 8.2.0 and beyond, can't set log yet
   pass
-BuildMaster(basedir, configfile, db).setServiceParent(application)
+
+basedir = r'%(basedir)s'
+configfile = r'%(config)s'
+db = %(db)s
+
+m = BuildMaster(basedir, configfile, db)
+m.setServiceParent(application)
 
 """
 
@@ -635,15 +638,6 @@ slaveTAC = """
 from twisted.application import service
 from buildbot.slave.bot import BuildSlave
 
-basedir = r'%(basedir)s'
-buildmaster_host = '%(host)s'
-port = %(port)d
-slavename = '%(name)s'
-passwd = '%(passwd)s'
-keepalive = %(keepalive)d
-usepty = %(usepty)d
-umask = %(umask)s
-maxdelay = %(maxdelay)d
 rotateLength = %(log-size)s
 maxRotatedFiles = %(log-count)s
 
@@ -657,6 +651,17 @@ try:
 except ImportError:
   # probably not yet twisted 8.2.0 and beyond, can't set log yet
   pass
+
+basedir = r'%(basedir)s'
+buildmaster_host = '%(host)s'
+port = %(port)d
+slavename = '%(name)s'
+passwd = '%(passwd)s'
+keepalive = %(keepalive)d
+usepty = %(usepty)d
+umask = %(umask)s
+maxdelay = %(maxdelay)d
+
 s = BuildSlave(buildmaster_host, port, slavename, passwd, basedir,
                keepalive, usepty, umask=umask, maxdelay=maxdelay)
 s.setServiceParent(application)
