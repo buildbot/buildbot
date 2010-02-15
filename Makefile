@@ -22,6 +22,19 @@ TEST=buildbot.test
 test:
 	$(PP) $(TRIAL) $(TRIALARGS) $(TEST)
 
+test-coverage:
+	$(PP) $(TRIAL) --reporter=bwverbose-coverage $(TEST)
+
+PYTHON=python
+COVERAGE_OMIT = --omit /System,/Library,/usr/lib,buildbot/test,simplejson
+coverage-output-text:
+	$(PYTHON) contrib/coverage2text.py
+coverage-output:
+	rm -rf coverage-html
+	coverage html -d coverage-html $(COVERAGE_OMIT)
+	cp .coverage coverage-html/coverage.data
+	@echo "now point your browser at coverage-html/index.html"
+
 
 #debuild -uc -us
 
