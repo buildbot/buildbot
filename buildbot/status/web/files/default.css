@@ -1,4 +1,4 @@
-body {
+body.interface {
 	margin-left: 30px;
 	margin-right: 30px;
 	margin-top: 20px;
@@ -509,7 +509,6 @@ span.stderr {
 }
 
 span.header {
-	padding: 1em;
 	color: blue;
 }
 
