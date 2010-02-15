@@ -36,7 +36,11 @@
 # ***** END LICENSE BLOCK *****
 
 import sys, time, collections, base64
-import simplejson
+try:
+    import simplejson
+    json = simplejson # this hushes pyflakes
+except ImportError:
+    import json
 from twisted.python import log, reflect, threadable
 from twisted.internet import defer, reactor
 from twisted.enterprise import adbapi
@@ -572,7 +576,7 @@ class DBConnector(util.ComparableMixin):
                                   " VALUES (?,?)"),
                       (change.number, filename))
         for propname,propvalue in change.properties.properties.items():
-            encoded_value = simplejson.dumps(propvalue)
+            encoded_value = json.dumps(propvalue)
             t.execute(self.quoteq("INSERT INTO change_properties"
                                   " (changeid, property_name, property_value)"
                                   " VALUES (?,?,?)"),
@@ -796,7 +800,7 @@ class DBConnector(util.ComparableMixin):
         t.execute(q, (id,))
         retval = Properties()
         for key, valuepair in t.fetchall():
-            value, source = simplejson.loads(valuepair)
+            value, source = json.loads(valuepair)
             retval.setProperty(str(key), value, source)
         return retval
 
@@ -826,7 +830,7 @@ class DBConnector(util.ComparableMixin):
                 t.execute(q)
                 max_changeid = _one_or_else(t.fetchall(), 0)
                 state = scheduler.get_initial_state(max_changeid)
-                state_json = simplejson.dumps(state)
+                state_json = json.dumps(state)
                 q = self.quoteq("INSERT INTO schedulers"
                                 " (schedulerid, name, state)"
                                 "  VALUES (?,?,?)")
@@ -839,10 +843,10 @@ class DBConnector(util.ComparableMixin):
         t.execute(q, (schedulerid,))
         state_json = _one_or_else(t.fetchall())
         assert state_json is not None
-        return simplejson.loads(state_json)
+        return json.loads(state_json)
 
     def scheduler_set_state(self, schedulerid, t, state):
-        state_json = simplejson.dumps(state)
+        state_json = json.dumps(state)
         q = self.quoteq("UPDATE schedulers SET state=? WHERE schedulerid=?")
         t.execute(q, (state_json, schedulerid))
 
@@ -890,7 +894,7 @@ class DBConnector(util.ComparableMixin):
                               " VALUES (?,?,?,?,?)"),
                   (bsid, external_idstring, reason, ssid, now))
         for propname, propvalue in properties.properties.items():
-            encoded_value = simplejson.dumps(propvalue)
+            encoded_value = json.dumps(propvalue)
             t.execute(self.quoteq("INSERT INTO buildset_properties"
                                   " (buildsetid, property_name, property_value)"
                                   " VALUES (?,?,?)"),
@@ -1190,7 +1194,7 @@ class DBConnector(util.ComparableMixin):
     def _txn_generic_get(self, t, key, default):
         q = self.quoteq("SELECT value FROM generic WHERE `key`=?")
         t.execute(q, (key,))
-        return _one_or_else(t.fetchall(), default, simplejson.loads)
+        return _one_or_else(t.fetchall(), default, json.loads)
 
     def generic_set(self, key, value, t=None):
         if t:
@@ -1202,10 +1206,10 @@ class DBConnector(util.ComparableMixin):
         t.execute(q, (key,))
         if t.fetchall():
             q = self.quoteq("UPDATE generic SET value=? WHERE `key`=?")
-            t.execute(q, (simplejson.dumps(value), key))
+            t.execute(q, (json.dumps(value), key))
         else:
             q = self.quoteq("INSERT INTO generic (`key`, value) VALUES (?,?)")
-            t.execute(q, (key, simplejson.dumps(value)))
+            t.execute(q, (key, json.dumps(value)))
 
     # test/debug methods
 
