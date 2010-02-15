@@ -27,6 +27,10 @@ docs/images/status.png
 .project
 .pydevproject
 .settings
+docs/buildbot
+docs/version.texinfo
+docs/docs.tgz
+docs/latest
 twisted/plugins/dropin.cache
 .coverage
 coverage-html
