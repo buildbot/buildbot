@@ -36,11 +36,13 @@
 # ***** END LICENSE BLOCK *****
 
 import sys, time, collections, base64
+
 try:
     import simplejson
     json = simplejson # this hushes pyflakes
 except ImportError:
     import json
+
 from twisted.python import log, reflect, threadable
 from twisted.internet import defer, reactor
 from twisted.enterprise import adbapi
@@ -247,9 +249,28 @@ class DB:
     """This just records the desired database type and connect() arguments.
     It defines the database that should be used."""
     def __init__(self, dbapiName, *connargs, **connkw):
+        # special-case 'sqlite3', replacing it with the available implementation
+        if dbapiName == 'sqlite3':
+            dbapiName = get_sqlite_dbapi_name()
+
         self.dbapiName = dbapiName
         self.connargs = connargs
         self.connkw = connkw
+
+def get_sqlite_dbapi_name():
+    # see which dbapi we can use, and import it as 'buildbot.db.sqlite3'
+    sqlite_dbapi_name = None
+    try:
+        from pysqlite2 import dbapi2 as sqlite3
+        sqlite_dbapi_name = "pysqlite2.dbapi2"
+    except ImportError:
+        # don't use built-in sqlite3 on 2.5 -- it has *bad* bugs
+        if sys.version_info >= (2,6):
+            import sqlite3
+            sqlite_dbapi_name = "pysqlite2.dbapi2"
+        else:
+            raise
+    return sqlite_dbapi_name
 
 def create_db(spec):
     """This is used by the create-master and upgrade-master subcommands, to

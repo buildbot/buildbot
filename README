@@ -57,8 +57,9 @@ REQUIREMENTS:
 
  sqlite3: http://pypi.python.org/pypi/pysqlite
 
-  sqlite3 is required for python-2.4 and earlier (already included
-  in python-2.5 and later)
+  sqlite3 is required for python-2.5 and earlier (already included
+  in python-2.5 and later, but the version in python-2.5 has nasty
+  bugs)
 
  simplejson: http://pypi.python.org/pypi/simplejson
 

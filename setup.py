@@ -246,12 +246,13 @@ else:
         'twisted >= 2.0.0',
         'Jinja2',
     ]
-    # Python-2.5 and up includes sqlite3
-    if not py_25:
-        setup_args['install_requires'].append('sqlite3')
     # Python-2.6 and up includes json
     if not py_26:
         setup_args['install_requires'].append('simplejson')
+
+    # Python-2.6 and up includes a working A sqlite (py25's is broken)
+    if not py_26:
+        setup_args['install_requires'].append('pysqlite')
 
     entry_points={
         'console_scripts': [

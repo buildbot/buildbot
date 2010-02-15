@@ -37,7 +37,7 @@
 
 import os
 from twisted.trial import unittest
-from twisted.python import failure
+from twisted.python import failure, reflect
 from twisted.internet import defer, reactor
 from twisted.application import service
 from buildbot import db, master
@@ -47,8 +47,7 @@ from buildbot.scripts import runner
 from buildbot.changes.changes import OldChangeMaster, Change
 from buildbot.changes.manager import ChangeManager
 from buildbot.test.pollmixin import PollMixin
-import sqlite3
-
+from buildbot.test.runutils import RunMixin
 
 class ShouldFailMixin:
 
@@ -139,7 +138,8 @@ class Create(Base, unittest.TestCase, ShouldFailMixin):
             os.makedirs(basedir)
         fn = self._fn = os.path.join(basedir, "oldversion.sqlite")
         spec = db.DB("sqlite3", fn)
-        conn = sqlite3.connect(fn)
+        dbapi = reflect.namedModule(db.get_sqlite_dbapi_name())
+        conn = dbapi.connect(fn)
         c = conn.cursor()
         c.execute("CREATE TABLE version (version INTEGER);")
         c.execute("INSERT INTO version VALUES (0);")
@@ -442,8 +442,6 @@ class Scheduling(unittest.TestCase):
         d.addCallback(_build_not_sleep)
 
         return d
-
-from runutils import RunMixin
 
 config_1 = """
 from buildbot.process import factory
