@@ -2409,6 +2409,9 @@ build. If new changes are made during this interval, the timer will be
 restarted, so really the build will be started after a change and then
 after this many seconds of inactivity.
 
+If treeStableTimer is @code{None}, then a separate build is started
+immediately for each Change.
+
 @item fileIsImportant
 A callable which takes one argument, a Change instance, and returns
 @code{True} if the change is worth building, and @code{False} if
@@ -2768,12 +2771,25 @@ nightly_factory.addStep(trigger.Trigger(schedulerNames=['package-all-platforms']
 
 @bcindex c['mergeRequests']
 
-By default, buildbot merges BuildRequests that have the compatible
-SourceStamps. This behaviour can be customized with the
-@code{c['mergeRequests']} configuration key.  This key specifies a function
-which is called with three arguments: a @code{Builder} and two
-@code{BuildRequest} objects.  It should return true if the requests can be
-merged.  For example:
+By default, buildbot merges BuildRequests that have compatible
+SourceStamps.
+
+This can be disabled for any particular Builder by passing
+@code{mergeRequests=False} to the BuilderConfig definition,
+@pxref{Defining Builders}. For example:
+
+@example
+c['builders'] = [
+  BuilderConfig(name='test-i386', slavename='bot-i386', builddir='test-i386',
+                factory=f, mergeRequests=False),
+ ]
+@end example
+
+For more precise control, this behaviour can be customized with the
+buildmaster's @code{c['mergeRequests']} configuration key. This key
+specifies a function which is called with three arguments: a
+@code{Builder} and two @code{BuildRequest} objects. It should return
+true if the requests can be merged. For example:
 
 @example
 def mergeRequests(builder, req1, req2):
@@ -3402,6 +3418,21 @@ c['builders'] = [
         env=@{'PATH': '/opt/local/bin:/opt/app/bin:/usr/local/bin:/usr/bin'@}),
 ]
 @end example
+
+@item mergeRequests
+This boolean defaults to True, which means that the Builder might
+attempt to merge @code{BuildRequest}s into a single build. If False,
+the Builder will never attempt to merge requests.
+
+Merging requests helps to reduce the total number of builds, but loses
+information about which exact change might have caused a build
+problem. Requests can only be merged for compatible SourceStamps, for
+example two Changes that occur on the same branch, or two requests to
+build 'HEAD' (i.e. the latest checkin) on the same branch.
+
+The buildmaster's @code{c['mergeRequests']} hook function is evaluated
+only if the Builder's @code{mergeRequests} key is True, so merging
+only takes place if both allow it. @pxref{Merging BuildRequests}.
 
 @end table
 

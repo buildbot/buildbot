@@ -506,6 +506,8 @@ class ShellCommand:
         self.process = None
         self.startTime = time.time()
 
+        for arg in argv: assert isinstance(arg, str), (type(arg), arg)
+
         p = reactor.spawnProcess(self.pp, argv[0], argv,
                                  self.environ,
                                  self.workdir,

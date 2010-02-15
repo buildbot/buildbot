@@ -1,12 +1,11 @@
 # -*- test-case-name: buildbot.test.test_run -*-
 
-import os
+import os, time
 signal = None
 try:
     import signal
 except ImportError:
     pass
-from cPickle import load
 import warnings
 
 from zope.interface import implements
@@ -15,22 +14,26 @@ from twisted.python.failure import Failure
 from twisted.internet import defer, reactor
 from twisted.spread import pb
 from twisted.cred import portal, checkers
-from twisted.application import service, strports
-from twisted.persisted import styles
+from twisted.application import service, strports, internet
 
 import buildbot
 # sibling imports
 from buildbot.util import now, safeTranslate
 from buildbot.pbutil import NewCredPerspective
 from buildbot.process.builder import Builder, IDLE
-from buildbot.process.base import BuildRequest
-from buildbot.status.builder import Status
-from buildbot.changes.changes import Change, ChangeMaster, TestChangeMaster
+from buildbot.buildrequest import BuildRequest
+from buildbot.status.builder import Status, BuildSetStatus
+from buildbot.changes.changes import Change
+from buildbot.changes.manager import ChangeManager
 from buildbot.sourcestamp import SourceStamp
 from buildbot.buildslave import BuildSlave
 from buildbot import interfaces, locks
 from buildbot.process.properties import Properties
 from buildbot.config import BuilderConfig
+from buildbot.process.builder import BuilderControl
+from buildbot.db import open_db, DB # DB is used by buildbot.tac
+from buildbot.schedulers.manager import SchedulerManager
+from buildbot.loop import DelegateLoop
 
 ########################################
 
@@ -43,8 +46,9 @@ class BotMaster(service.MultiService):
 
     debug = 0
 
-    def __init__(self):
+    def __init__(self, db):
         service.MultiService.__init__(self)
+        self.db = db
         self.builders = {}
         self.builderNames = []
         # builders maps Builder names to instances of bb.p.builder.Builder,
@@ -71,6 +75,45 @@ class BotMaster(service.MultiService):
         # self.prioritizeBuilders is the callable override for builder order
         # traversal
         self.prioritizeBuilders = None
+
+        self.loop = DelegateLoop(self._get_processors)
+        self.loop.setServiceParent(self)
+
+    def setMasterName(self, name, incarnation):
+        self.master_name = name
+        self.master_incarnation = incarnation
+
+    def _sortfunc(self, b1, b2):
+        t1 = b1.getOldestRequestTime()
+        t2 = b2.getOldestRequestTime()
+        # If t1 or t2 is None, then there are no build requests,
+        # so sort it at the end
+        if t1 is None:
+            return 1
+        if t2 is None:
+            return -1
+        return cmp(t1, t2)
+
+    def _sort_builders(self, parent, builders):
+        return sorted(builders, self._sortfunc)
+
+    def _get_processors(self):
+        builders = self.builders.values()
+        sorter = self.prioritizeBuilders or self._sort_builders
+        try:
+            builders = sorter(self.parent, builders)
+        except:
+            log.msg("Exception prioritizing builders")
+            log.err(Failure())
+            # leave them in the original order
+        return [b.run for b in builders]
+
+    def trigger_add_buildrequest(self, category, *brids):
+        # a buildrequest has been added or resubmitted
+        self.loop.trigger()
+    def triggerNewBuildCheck(self):
+        # called when a build finishes, or a slave attaches
+        self.loop.trigger()
 
     # these four are convenience functions for testing
 
@@ -181,50 +224,32 @@ class BotMaster(service.MultiService):
         return allBuilders
 
     def setBuilders(self, builders):
+        # TODO: remove self.builders and just use the Service hierarchy to
+        # keep track of active builders. We could keep self.builderNames to
+        # retain ordering, if it seems important.
         self.builders = {}
         self.builderNames = []
-        for b in builders:
-            for slavename in b.slavenames:
-                # this is actually validated earlier
-                assert slavename in self.slaves
-            self.builders[b.name] = b
-            self.builderNames.append(b.name)
-            b.setBotmaster(self)
-        d = self._updateAllSlaves()
+        d = defer.DeferredList([b.disownServiceParent() for b in list(self)
+                                if isinstance(b, Builder)],
+                               fireOnOneErrback=True)
+        def _add(ign):
+            log.msg("setBuilders._add: %s %s" % (list(self), builders))
+            for b in builders:
+                for slavename in b.slavenames:
+                    # this is actually validated earlier
+                    assert slavename in self.slaves
+                self.builders[b.name] = b
+                self.builderNames.append(b.name)
+                b.setBotmaster(self)
+                b.setServiceParent(self)
+        d.addCallback(_add)
+        d.addCallback(lambda ign: self._updateAllSlaves())
         return d
 
     def _updateAllSlaves(self):
         """Notify all buildslaves about changes in their Builders."""
         dl = [s.updateSlave() for s in self.slaves.values()]
         return defer.DeferredList(dl)
-
-    def maybeStartAllBuilds(self):
-        builders = self.builders.values()
-        if self.prioritizeBuilders is not None:
-            try:
-                builders = self.prioritizeBuilders(self.parent, builders)
-            except:
-                log.msg("Exception prioritizing builders")
-                log.err(Failure())
-                return
-        else:
-            def _sortfunc(b1, b2):
-                t1 = b1.getOldestRequestTime()
-                t2 = b2.getOldestRequestTime()
-                # If t1 or t2 is None, then there are no build requests,
-                # so sort it at the end
-                if t1 is None:
-                    return 1
-                if t2 is None:
-                    return -1
-                return cmp(t1, t2)
-            builders.sort(_sortfunc)
-        try:
-            for b in builders:
-                b.maybeStartBuild()
-        except:
-            log.msg("Exception starting builds")
-            log.err(Failure())
 
     def shouldMergeRequests(self, builder, req1, req2):
         """Determine whether two BuildRequests should be merged for
@@ -247,7 +272,7 @@ class BotMaster(service.MultiService):
         for b in self.builders.values():
             b.builder_status.addPointEvent(["master", "shutdown"])
             b.builder_status.saveYourself()
-        return service.Service.stopService(self)
+        return service.MultiService.stopService(self)
 
     def getLockByID(self, lockid):
         """Convert a Lock identifier into an actual Lock instance.
@@ -363,14 +388,13 @@ class Dispatcher:
 # service hierarchy:
 #  BuildMaster
 #   BotMaster
-#   ChangeMaster
+#   ChangeManager
 #    all IChangeSource objects
 #   StatusClientService
 #   TCPClient(self.ircFactory)
 #   TCPServer(self.slaveFactory) -> dispatcher.requestAvatar
 #   TCPServer(self.site)
 #   UNIXServer(ResourcePublisher(self.site))
-
 
 class BuildMaster(service.MultiService):
     debug = 0
@@ -382,11 +406,14 @@ class BuildMaster(service.MultiService):
     change_svc = None
     properties = Properties()
 
-    def __init__(self, basedir, configFileName="master.cfg"):
+    def __init__(self, basedir, configFileName="master.cfg", db=None):
         service.MultiService.__init__(self)
         self.setName("buildmaster")
         self.basedir = basedir
         self.configFileName = configFileName
+        if db is None:
+            db = DB("sqlite3", os.path.join(basedir, "state.sqlite"))
+        self.db = open_db(db)
 
         # the dispatcher is the realm in which all inbound connections are
         # looked up: slave builders, change notifications, status clients, and
@@ -404,25 +431,41 @@ class BuildMaster(service.MultiService):
         self.slavePortnum = None
         self.slavePort = None
 
-        self.botmaster = BotMaster()
+        self.change_svc = ChangeManager()
+        self.change_svc.setServiceParent(self)
+        self.dispatcher.changemaster = self.change_svc
+
+        try:
+            hostname = os.uname()[1] # only on unix
+        except AttributeError:
+            hostname = "?"
+        self.master_name = "%s:%s" % (hostname, os.path.abspath(self.basedir))
+        self.master_incarnation = "pid%d-boot%d" % (os.getpid(), time.time())
+        self.botmaster = BotMaster(self.db)
+        self.db.subscribe_to("add-buildrequest",
+                             self.botmaster.trigger_add_buildrequest)
         self.botmaster.setName("botmaster")
+        self.botmaster.setMasterName(self.master_name, self.master_incarnation)
         self.botmaster.setServiceParent(self)
         dispatcher.botmaster = self.botmaster
 
-        self.status = Status(self.botmaster, self.basedir)
+        sm = SchedulerManager(self, self.db, self.change_svc)
+        self.db.subscribe_to("add-change", sm.trigger_add_change)
+        self.db.subscribe_to("modify-buildset", sm.trigger_modify_buildset)
+        self.scheduler_manager = sm
+        sm.setServiceParent(self)
+        # it'd be nice if TimerService let us set now=False
+        t = internet.TimerService(30, sm.trigger)
+        t.setServiceParent(self)
+        # should we try to remove this? Periodic() requires at least one kick
 
+        self.status = Status(self.botmaster, self.db, self.basedir)
         self.statusTargets = []
-
-        # this ChangeMaster is a dummy, only used by tests. In the real
-        # buildmaster, where the BuildMaster instance is activated
-        # (startService is called) by twistd, this attribute is overwritten.
-        self.useChanges(TestChangeMaster())
 
         self.readConfig = False
 
     def startService(self):
         service.MultiService.startService(self)
-        self.loadChanges() # must be done before loading the config file
         if not self.readConfig:
             # TODO: consider catching exceptions during this call to
             # loadTheConfigFile and bailing (reactor.stop) if it fails,
@@ -435,29 +478,6 @@ class BuildMaster(service.MultiService):
         for b in self.botmaster.builders.values():
             b.builder_status.addPointEvent(["master", "started"])
             b.builder_status.saveYourself()
-
-    def useChanges(self, changes):
-        if self.change_svc:
-            # TODO: can return a Deferred
-            self.change_svc.disownServiceParent()
-        self.change_svc = changes
-        self.change_svc.basedir = self.basedir
-        self.change_svc.setName("changemaster")
-        self.dispatcher.changemaster = self.change_svc
-        self.change_svc.setServiceParent(self)
-
-    def loadChanges(self):
-        filename = os.path.join(self.basedir, "changes.pck")
-        try:
-            changes = load(open(filename, "rb"))
-            styles.doUpgrade()
-        except IOError:
-            log.msg("changes.pck missing, using new one")
-            changes = ChangeMaster()
-        except EOFError:
-            log.msg("corrupted changes.pck, using new one")
-            changes = ChangeMaster()
-        self.useChanges(changes)
 
     def _handleSIGHUP(self, *args):
         reactor.callLater(0, self.loadTheConfigFile)
@@ -485,21 +505,26 @@ class BuildMaster(service.MultiService):
             return
 
         try:
-            self.loadConfig(f)
+            d = self.loadConfig(f)
         except:
             log.msg("error during loadConfig")
             log.err()
             log.msg("The new config file is unusable, so I'll ignore it.")
             log.msg("I will keep using the previous config file instead.")
         f.close()
+        return d # for unit tests
 
-    def loadConfig(self, f):
+    def loadConfig(self, f, check_synchronously_only=False):
         """Internal function to load a specific configuration file. Any
         errors in the file will be signalled by raising an exception.
 
-        @return: a Deferred that will fire (with None) when the configuration
-        changes have been completed. This may involve a round-trip to each
-        buildslave that was involved."""
+        If check_synchronously_only=True, I will return (with None)
+        synchronously, after checking the config file for sanity, or raise an
+        exception. I may also emit some DeprecationWarnings.
+
+        If check_synchronously_only=False, I will return a Deferred that
+        fires (with None) when the configuration changes have been completed.
+        This may involve a round-trip to each buildslave that was involved."""
 
         localDict = {'basedir': os.path.expanduser(self.basedir)}
         try:
@@ -574,7 +599,7 @@ class BuildMaster(service.MultiService):
             if changeHorizon is not None and not isinstance(changeHorizon, int):
                 raise ValueError("changeHorizon needs to be an int")
 
-        except KeyError, e:
+        except KeyError:
             log.msg("config dictionary is missing a required parameter")
             log.msg("leaving old configuration in place")
             raise
@@ -694,10 +719,6 @@ class BuildMaster(service.MultiService):
                     unscheduled_buildernames.remove(b)
 
             if s.name in schedulernames:
-                # TODO: schedulers share a namespace with other Service
-                # children of the BuildMaster node, like status plugins, the
-                # Manhole, the ChangeMaster, and the BotMaster (although most
-                # of these don't have names)
                 msg = ("Schedulers must have unique names, but "
                        "'%s' was a duplicate" % (s.name,))
                 raise ValueError(msg)
@@ -743,6 +764,8 @@ class BuildMaster(service.MultiService):
         if type(slavePortnum) is int:
             slavePortnum = "tcp:%d" % slavePortnum
 
+        if check_synchronously_only:
+            return
         # now we're committed to implementing the new configuration, so do
         # it atomically
         # TODO: actually, this is spread across a couple of Deferreds, so it
@@ -813,7 +836,8 @@ class BuildMaster(service.MultiService):
         d.addCallback(lambda res: self.loadConfig_status(status))
 
         # Schedulers are added after Builders in case they start right away
-        d.addCallback(lambda res: self.loadConfig_Schedulers(schedulers))
+        d.addCallback(lambda res:
+                      self.scheduler_manager.updateSchedulers(schedulers))
         # and Sources go after Schedulers for the same reason
         d.addCallback(lambda res: self.loadConfig_Sources(change_sources))
 
@@ -839,7 +863,8 @@ class BuildMaster(service.MultiService):
             self.readConfig = True
             log.msg("configuration update complete")
         d.addCallback(_done)
-        d.addCallback(lambda res: self.botmaster.maybeStartAllBuilds())
+        d.addCallback(lambda res: self.botmaster.triggerNewBuildCheck())
+        d.addErrback(log.err)
         return d
 
     def loadConfig_Slaves(self, new_slaves):
@@ -867,32 +892,7 @@ class BuildMaster(service.MultiService):
         return d
 
     def allSchedulers(self):
-        return [child for child in self
-                if interfaces.IScheduler.providedBy(child)]
-
-
-    def loadConfig_Schedulers(self, newschedulers):
-        oldschedulers = self.allSchedulers()
-        removed = [s for s in oldschedulers if s not in newschedulers]
-        added = [s for s in newschedulers if s not in oldschedulers]
-        dl = [defer.maybeDeferred(s.disownServiceParent) for s in removed]
-        def addNewOnes(res):
-            log.msg("adding %d new schedulers, removed %d" % 
-                    (len(added), len(dl)))
-            for s in added:
-                s.setServiceParent(self)
-        d = defer.DeferredList(dl, fireOnOneErrback=1)
-        d.addCallback(addNewOnes)
-        if removed or added:
-            # notify Downstream schedulers to potentially pick up
-            # new schedulers now that we have removed and added some
-            def updateDownstreams(res):
-                log.msg("notifying downstream schedulers of changes")
-                for s in newschedulers:
-                    if interfaces.IDownstreamScheduler.providedBy(s):
-                        s.checkUpstreamScheduler()
-            d.addCallback(updateDownstreams)
-        return d
+        return list(self.scheduler_manager)
 
     def loadConfig_Builders(self, newBuilderData):
         somethingChanged = False
@@ -987,26 +987,30 @@ class BuildMaster(service.MultiService):
 
 
     def addChange(self, change):
-        for s in self.allSchedulers():
-            s.addChange(change)
+        self.db.addChangeToDatabase(change)
         self.status.changeAdded(change)
 
-    def submitBuildSet(self, bs):
-        # determine the set of Builders to use
-        builders = []
-        for name in bs.builderNames:
-            b = self.botmaster.builders.get(name)
-            if b:
-                if b not in builders:
-                    builders.append(b)
-                continue
-            # TODO: add aliases like 'all'
-            raise KeyError("no such builder named '%s'" % name)
+    def triggerSlaveManager(self):
+        self.botmaster.triggerNewBuildCheck()
 
-        # now tell the BuildSet to create BuildRequests for all those
-        # Builders and submit them
-        bs.start(builders)
-        self.status.buildsetSubmitted(bs.status)
+    def submitBuildSet(self, builderNames, ss, reason, props=None, now=False):
+        # determine the set of Builders to use
+        for name in builderNames:
+            b = self.botmaster.builders.get(name)
+            if not b:
+                raise KeyError("no such builder named '%s'" % name)
+            if now and not b.slaves:
+                raise interfaces.NoSlaveError
+        if props is None:
+            props = Properties()
+        bsid = self.db.runInteractionNow(self._txn_submitBuildSet,
+                                         builderNames, ss, reason, props)
+        return BuildSetStatus(bsid, self.status, self.db)
+
+    def _txn_submitBuildSet(self, t, builderNames, ss, reason, props):
+        ssid = self.db.get_sourcestampid(ss, t)
+        bsid = self.db.create_buildset(ssid, reason, props, builderNames, t)
+        return bsid
 
 
 class Control:
@@ -1016,14 +1020,14 @@ class Control:
         self.master = master
 
     def addChange(self, change):
-        self.master.change_svc.addChange(change)
+        self.master.addChange(change)
 
-    def submitBuildSet(self, bs):
-        self.master.submitBuildSet(bs)
+    def submitBuildSet(self, builderNames, ss, reason, props=None, now=False):
+        return self.master.submitBuildSet(builderNames, ss, reason, props, now)
 
     def getBuilder(self, name):
         b = self.master.botmaster.builders[name]
-        return interfaces.IBuilderControl(b)
+        return BuilderControl(b, self)
 
 components.registerAdapter(Control, BuildMaster, interfaces.IControl)
 

@@ -28,7 +28,7 @@ class ConfigLoader(master.BuildMaster):
             # Add the temp directory to the library path so local modules work
             sys.path.append(tempdir)
             configFile = open(configFileName, "r")
-            self.loadConfig(configFile)
+            self.loadConfig(configFile, check_synchronously_only=True)
         except:
             os.chdir(dir)
             configFile.close()

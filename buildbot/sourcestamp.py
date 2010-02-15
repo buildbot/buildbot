@@ -10,7 +10,10 @@ class SourceStamp(util.ComparableMixin):
     step use its default branch. There are three possibilities for the
     remaining elements:
      - (revision=REV, patchspec=None, changes=None): build REV. If REV is
-       None, build the HEAD revision from the given branch.
+       None, build the HEAD revision from the given branch. Note that REV
+       must always be a string: SVN, Perforce, and other systems which use
+       integers should provide a string here, but the Source checkout step
+       will integerize it when making comparisons.
      - (revision=REV, patchspec=(LEVEL, DIFF), changes=None): checkout REV,
        then apply a patch to the source, with C{patch -pPATCHLEVEL <DIFF}.
        If REV is None, checkout HEAD and patch it.
@@ -25,6 +28,7 @@ class SourceStamp(util.ComparableMixin):
     revision = None
     patch = None
     changes = ()
+    ssid = None # filled in by db.get_sourcestampid()
 
     compare_attrs = ('branch', 'revision', 'patch', 'changes')
 
@@ -32,6 +36,20 @@ class SourceStamp(util.ComparableMixin):
 
     def __init__(self, branch=None, revision=None, patch=None,
                  changes=None):
+        if branch is not None:
+            assert isinstance(branch, str), type(branch)
+        if revision is not None:
+            if isinstance(revision, int):
+                revision = str(revision)
+            assert isinstance(revision, str), type(revision)
+        if patch is not None:
+            patch_level = patch[0]
+            assert isinstance(patch_level, int), type(patch_level)
+            patch_diff = patch[1]
+            assert isinstance(patch_diff, str), type(patch_diff)
+            if len(patch) > 2:
+                patch_subdir = patch[2]
+                assert isinstance(patch_subdir, str)
         self.branch = branch
         self.revision = revision
         self.patch = patch
@@ -39,7 +57,11 @@ class SourceStamp(util.ComparableMixin):
             self.changes = tuple(changes)
             # set branch and revision to most recent change
             self.branch = changes[-1].branch
-            self.revision = changes[-1].revision
+            if self.branch is not None:
+                assert isinstance(self.branch, str), type(self.branch)
+            self.revision = str(changes[-1].revision)
+            if self.revision is not None:
+                assert isinstance(self.revision, str), type(self.revision)
 
     def canBeMergedWith(self, other):
         if other.branch != self.branch:
@@ -84,10 +106,11 @@ class SourceStamp(util.ComparableMixin):
         return newsource
 
     def getAbsoluteSourceStamp(self, got_revision):
-        return SourceStamp(branch=self.branch, revision=got_revision, patch=self.patch)
+        return SourceStamp(branch=self.branch, revision=got_revision,
+                           patch=self.patch)
 
     def getText(self):
-        # TODO: this won't work for VC's with huge 'revision' strings
+        # note: this won't work for VC systems with huge 'revision' strings
         if self.revision is None:
             return [ "latest" ]
         text = [ str(self.revision) ]

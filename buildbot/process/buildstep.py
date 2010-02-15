@@ -11,7 +11,7 @@ from twisted.web.util import formatFailure
 from buildbot import interfaces, locks
 from buildbot.status import progress
 from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE, SKIPPED, \
-     EXCEPTION
+     EXCEPTION, RETRY
 
 """
 BuildStep and RemoteCommand classes for master-side representation of the
@@ -1067,7 +1067,7 @@ class LoggingBuildStep(BuildStep):
         self.step_status.setText(self.describe(True) +
                                  ["failed", "slave", "lost"])
         self.step_status.setText2(["failed", "slave", "lost"])
-        return self.finished(FAILURE)
+        return self.finished(RETRY)
 
     # to refine the status output, override one or more of the following
     # methods. Change as little as possible: start with the first ones on

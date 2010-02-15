@@ -1,4 +1,4 @@
-from buildbot.util import now, safeTranslate
+from buildbot.util import safeTranslate
 
 
 class BuilderConfig:
@@ -24,7 +24,7 @@ class BuilderConfig:
                 env=None):
 
         # name is required, and can't start with '_'
-        if not name or type(name) is not str:
+        if not name or type(name) not in (str, unicode):
             raise ValueError("builder's name is required")
         if name[0] == '_':
             raise ValueError("builder names must not start with an "

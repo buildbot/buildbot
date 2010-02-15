@@ -26,10 +26,6 @@ class GridStatusMixin(object):
         else:
             return "BuildBot"
 
-    def getChangemaster(self, request):
-        # TODO: this wants to go away, access it through IStatus
-        return request.site.buildbot_service.getChangeSvc()
-
     # handle reloads through an http header
     # TODO: send this as a real header, rather than a tag
     def get_reload_time(self, request):

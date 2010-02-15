@@ -4,10 +4,9 @@ import os, cgi, sys
 import jinja2
 from zope.interface import Interface
 from twisted.web import resource, static
-from twisted.web.static import redirectTo
 from twisted.python import log
 from buildbot.status import builder
-from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE, SKIPPED, EXCEPTION
+from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE, SKIPPED, EXCEPTION, RETRY
 from buildbot import version, util
 from buildbot.process.properties import Properties
 
@@ -39,6 +38,7 @@ css_classes = {SUCCESS: "success",
                FAILURE: "failure",
                SKIPPED: "skipped",
                EXCEPTION: "exception",
+               RETRY: "retry",
                None: "",
                }
 
@@ -234,9 +234,6 @@ class HtmlResource(resource.Resource, ContextMixin):
 
     def getBuildmaster(self, request):
         return request.site.buildbot_service.master
-
-    def getChangemaster(self, request):
-        return request.site.buildbot_service.getChangeSvc()
 
 
 class StaticHTML(HtmlResource):

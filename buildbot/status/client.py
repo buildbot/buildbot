@@ -40,8 +40,9 @@ class RemoteBuildSet(pb.Referenceable):
 
     def remote_getBuildRequests(self):
         """Returns a list of (builderName, BuildRequest) tuples."""
-        return [(br.getBuilderName(), IRemote(br))
-                for br in self.b.getBuildRequests()]
+        return [(bname, IRemote(br))
+                for (bname, br)
+                in self.b.getBuilderNamesAndBuildRequests().items()]
 
     def remote_isFinished(self):
         return self.b.isFinished()

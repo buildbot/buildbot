@@ -297,7 +297,7 @@ class WaterfallStatusResource(HtmlResource):
         else:
             return "BuildBot"
 
-    def getChangemaster(self, request):
+    def getChangeManager(self, request):
         # TODO: this wants to go away, access it through IStatus
         return request.site.buildbot_service.getChangeSvc()
 
@@ -465,8 +465,8 @@ class WaterfallStatusResource(HtmlResource):
         # first step is to walk backwards in time, asking each column
         # (commit, all builders) if they have any events there. Build up the
         # array of events, and stop when we have a reasonable number.
-            
-        commit_source = self.getChangemaster(request)
+
+        commit_source = self.getChangeManager(request)
 
         lastEventTime = util.now()
         sources = [commit_source] + builders

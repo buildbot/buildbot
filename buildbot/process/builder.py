@@ -1,16 +1,18 @@
 
 import random, weakref
 from zope.interface import implements
-from twisted.python import log, components
+from twisted.python import log
 from twisted.python.failure import Failure
 from twisted.spread import pb
-from twisted.internet import reactor, defer
+from twisted.application import service, internet
+from twisted.internet import defer
 
-from buildbot import interfaces
+from buildbot import interfaces, util
 from buildbot.status.progress import Expectations
-from buildbot.util import now
+from buildbot.status.builder import RETRY
 from buildbot.process import base
 from buildbot.process.properties import Properties
+from buildbot.eventual import eventually
 
 (ATTACHING, # slave attached, still checking hostinfo/etc
  IDLE, # idle, available for use
@@ -37,9 +39,9 @@ class AbstractSlaveBuilder(pb.Referenceable):
     def __repr__(self):
         r = ["<", self.__class__.__name__]
         if self.builder_name:
-            r.extend([" builder=", self.builder_name])
+            r.extend([" builder=", repr(self.builder_name)])
         if self.slave:
-            r.extend([" slave=", self.slave.slavename])
+            r.extend([" slave=", repr(self.slave.slavename)])
         r.append(">")
         return ''.join(r)
 
@@ -73,7 +75,7 @@ class AbstractSlaveBuilder(pb.Referenceable):
 
     def buildFinished(self):
         self.state = IDLE
-        reactor.callLater(0, self.builder.botmaster.maybeStartAllBuilds)
+        self.builder.triggerNewBuildCheck()
 
     def attached(self, slave, remote, commands):
         """
@@ -176,6 +178,9 @@ class Ping:
 
     def ping(self, remote):
         assert not self.running
+        if not remote:
+            # clearly the ping must fail
+            return defer.succeed(False)
         self.running = True
         log.msg("sending ping")
         self.d = defer.Deferred()
@@ -222,9 +227,9 @@ class SlaveBuilder(AbstractSlaveBuilder):
         self.state = IDLE
         if self.slave:
             d = self.slave.buildFinished(self)
-            d.addCallback(lambda x: reactor.callLater(0, self.builder.botmaster.maybeStartAllBuilds))
+            d.addCallback(lambda x: self.builder.triggerNewBuildCheck())
         else:
-            reactor.callLater(0, self.builder.botmaster.maybeStartAllBuilds)
+            self.builder.triggerNewBuildCheck()
 
 
 class LatentSlaveBuilder(AbstractSlaveBuilder):
@@ -296,7 +301,7 @@ class LatentSlaveBuilder(AbstractSlaveBuilder):
         return AbstractSlaveBuilder.ping(self, status)
 
 
-class Builder(pb.Referenceable):
+class Builder(pb.Referenceable, service.MultiService):
     """I manage all Builds of a given type.
 
     Each Builder is created by an entry in the config file (the c['builders']
@@ -346,6 +351,7 @@ class Builder(pb.Referenceable):
                       slavename(s), builddir, slavebuilddir, factory, locks.
         @type  builder_status: L{buildbot.status.builder.BuilderStatus}
         """
+        service.MultiService.__init__(self)
         self.name = setup['name']
         self.slavenames = []
         if setup.has_key('slavename'):
@@ -371,9 +377,9 @@ class Builder(pb.Referenceable):
         self.buildHorizon = setup.get('buildHorizon')
         self.logHorizon = setup.get('logHorizon')
         self.eventHorizon = setup.get('eventHorizon')
+        self.mergeRequests = setup.get('mergeRequests', True)
 
         # build/wannabuild slots: Build objects move along this sequence
-        self.buildable = []
         self.building = []
         # old_building holds active builds that were stolen from a predecessor
         self.old_building = weakref.WeakKeyDictionary()
@@ -392,13 +398,19 @@ class Builder(pb.Referenceable):
         self.builder_status.buildHorizon = self.buildHorizon
         self.builder_status.logHorizon = self.logHorizon
         self.builder_status.eventHorizon = self.eventHorizon
+        t = internet.TimerService(10*60, self.reclaimAllBuilds)
+        t.setServiceParent(self)
 
         # for testing, to help synchronize tests
         self.watchers = {'attach': [], 'detach': [], 'detach_all': [],
                          'idle': []}
+        self.run_count = 0
 
     def setBotmaster(self, botmaster):
         self.botmaster = botmaster
+        self.db = botmaster.db
+        self.master_name = botmaster.master_name
+        self.master_incarnation = botmaster.master_incarnation
 
     def compareToSetup(self, setup):
         diffs = []
@@ -432,30 +444,140 @@ class Builder(pb.Referenceable):
         return diffs
 
     def __repr__(self):
-        return "<Builder '%s' at %d>" % (self.name, id(self))
+        return "<Builder '%r' at %d>" % (self.name, id(self))
+
+    def triggerNewBuildCheck(self):
+        self.botmaster.triggerNewBuildCheck()
+
+    def run(self):
+        """Check for work to be done. This should be called any time I might
+        be able to start a job:
+
+         - when the Builder is first created
+         - when a new job has been added to the [buildrequests] DB table
+         - when a slave has connected
+
+        If I have both an available slave and the database contains a
+        BuildRequest that I can handle, I will claim the BuildRequest and
+        start the build. When the build finishes, I will retire the
+        BuildRequest.
+        """
+        # overall plan:
+        #  move .expectations to DB
+
+        assert self.running
+        log.msg("Builder.run %s: %s" % (self, self.slaves))
+        self.run_count += 1
+
+        available_slaves = [sb for sb in self.slaves if sb.isAvailable()]
+        if not available_slaves:
+            self.updateBigStatus()
+            return
+        d = self.db.runInteraction(self._claim_buildreqs, available_slaves)
+        d.addCallback(self._start_builds)
+        return d
+
+    # slave-managers must refresh their claim on a build at least once an
+    # hour, less any inter-manager clock skew
+    RECLAIM_INTERVAL = 1*3600
+
+    def _claim_buildreqs(self, t, available_slaves):
+        # return a dict mapping slave -> (brid,ssid)
+        now = util.now()
+        old = now - self.RECLAIM_INTERVAL
+        requests = self.db.get_unclaimed_buildrequests(self.name, old,
+                                                       self.master_name,
+                                                       self.master_incarnation,
+                                                       t)
+
+        assignments = {}
+        while requests and available_slaves:
+            sb = self._choose_slave(available_slaves)
+            if not sb:
+                log.msg("%s: want to start build, but we don't have a remote"
+                        % self)
+                break
+            available_slaves.remove(sb)
+            breq = self._choose_build(requests)
+            if not breq:
+                log.msg("%s: went to start build, but nextBuild said not to"
+                        % self)
+                break
+            requests.remove(breq)
+            merged_requests = [breq]
+            for other_breq in requests[:]:
+                if (self.mergeRequests and
+                    self.botmaster.shouldMergeRequests(self, breq, other_breq)
+                    ):
+                    requests.remove(other_breq)
+                    merged_requests.append(other_breq)
+            assignments[sb] = merged_requests
+            brids = [br.id for br in merged_requests]
+            self.db.claim_buildrequests(now, self.master_name,
+                                        self.master_incarnation, brids, t)
+        return assignments
+
+    def _choose_slave(self, available_slaves):
+        # note: this might return None if the nextSlave() function decided to
+        # not give us anything
+        if self.nextSlave:
+            try:
+                return self.nextSlave(self, available_slaves)
+            except:
+                log.msg("Exception choosing next slave")
+                log.err(Failure())
+            return None
+        if self.CHOOSE_SLAVES_RANDOMLY:
+            return random.choice(available_slaves)
+        return available_slaves[0]
+
+    def _choose_build(self, buildable):
+        if self.nextBuild:
+            try:
+                return self.nextBuild(self, buildable)
+            except:
+                log.msg("Exception choosing next build")
+                log.err(Failure())
+            return None
+        return buildable[0]
+
+    def _start_builds(self, assignments):
+        # because _claim_buildreqs runs in a separate thread, we might have
+        # lost a slave by this point. We treat that case the same as if we
+        # lose the slave right after the build starts: the initial ping
+        # fails.
+        for (sb, requests) in assignments.items():
+            build = self.buildFactory.newBuild(requests)
+            build.setBuilder(self)
+            build.setLocks(self.locks)
+            if len(self.env) > 0:
+                build.setSlaveEnvironment(self.env)
+            self.startBuild(build, sb)
+        self.updateBigStatus()
+
+
+    def getBuildable(self):
+        return self.db.runInteractionNow(self._getBuildable)
+    def _getBuildable(self, t):
+        now = util.now()
+        old = now - self.RECLAIM_INTERVAL
+        return self.db.get_unclaimed_buildrequests(self.name, old,
+                                                   self.master_name,
+                                                   self.master_incarnation,
+                                                   t)
 
     def getOldestRequestTime(self):
         """Returns the timestamp of the oldest build request for this builder.
 
         If there are no build requests, None is returned."""
-        if self.buildable:
-            return self.buildable[0].getSubmitTime()
-        else:
-            return None
-
-    def submitBuildRequest(self, req):
-        req.setSubmitTime(now())
-        self.buildable.append(req)
-        req.requestSubmitted(self)
-        self.builder_status.addBuildRequest(req.status)
-        self.botmaster.maybeStartAllBuilds()
+        buildable = self.getBuildable()
+        if buildable:
+            # TODO: this is sorted by priority first, not strictly reqtime
+            return buildable[0].getSubmitTime()
+        return None
 
     def cancelBuildRequest(self, req):
-        if req in self.buildable:
-            self.buildable.remove(req)
-            self.builder_status.removeBuildRequest(req.status, cancelled=True)
-            return True
-        return False
+        pass # TODO: rework
 
     def consumeTheSoulOfYourPredecessor(self, old):
         """Suck the brain out of an old Builder.
@@ -470,12 +592,9 @@ class Builder(pb.Referenceable):
 
         log.msg("consumeTheSoulOfYourPredecessor: %s feeding upon %s" %
                 (self, old))
-        # we claim all the pending builds, removing them from the old
-        # Builder's queue. This insures that the old Builder will not start
-        # any new work.
-        log.msg(" stealing %s buildrequests" % len(old.buildable))
-        self.buildable.extend(old.buildable)
-        old.buildable = []
+        # all pending builds are stored in the DB, so we don't have to do
+        # anything to claim them. The old builder will be stopService'd,
+        # which should make sure they don't start any new work
 
         # old.building (i.e. builds which are still running) is not migrated
         # directly: it keeps track of builds which were in progress in the
@@ -523,6 +642,16 @@ class Builder(pb.Referenceable):
 
         return # all done
 
+    def reclaimAllBuilds(self):
+        now = util.now()
+        brids = set()
+        for b in self.building:
+            brids.update([br.id for br in b.requests])
+        for b in self.old_building:
+            brids.update([br.id for br in b.requests])
+        self.db.claim_buildrequests(now, self.master_name,
+                                    self.master_incarnation, brids)
+
     def getBuild(self, number):
         for b in self.building:
             if b.build_status.number == number:
@@ -538,7 +667,7 @@ class Builder(pb.Referenceable):
         watchers = self.watchers[name]
         self.watchers[name] = []
         for w in watchers:
-            reactor.callLater(0, w.callback, fire_with)
+            eventually(w.callback, fire_with)
 
     def addLatentSlave(self, slave):
         assert interfaces.ILatentBuildSlave.providedBy(slave)
@@ -550,7 +679,7 @@ class Builder(pb.Referenceable):
             self.builder_status.addPointEvent(
                 ['added', 'latent', slave.slavename])
             self.slaves.append(sb)
-            reactor.callLater(0, self.botmaster.maybeStartAllBuilds)
+            self.triggerNewBuildCheck()
 
     def attached(self, slave, remote, commands):
         """This is invoked by the BuildSlave when the self.slavename bot
@@ -657,73 +786,6 @@ class Builder(pb.Referenceable):
             self.builder_status.setBigState("idle")
             self.fireTestEvent('idle')
 
-    def maybeStartBuild(self):
-        log.msg("maybeStartBuild %s: %i request(s), %i slave(s)" %
-                (self, len(self.buildable), len(self.slaves)))
-        if not self.buildable:
-            self.updateBigStatus()
-            return # nothing to do
-
-        # pick an idle slave
-        available_slaves = [sb for sb in self.slaves if sb.isAvailable()]
-        if not available_slaves:
-            self.updateBigStatus()
-            return
-        if self.nextSlave:
-            sb = None
-            try:
-                sb = self.nextSlave(self, available_slaves)
-            except:
-                log.msg("Exception choosing next slave")
-                log.err(Failure())
-
-            if not sb:
-                self.updateBigStatus()
-                return
-        elif self.CHOOSE_SLAVES_RANDOMLY:
-            sb = random.choice(available_slaves)
-        else:
-            sb = available_slaves[0]
-
-        # there is something to build, and there is a slave on which to build
-        # it. Grab the oldest request, see if we can merge it with anything
-        # else.
-        if not self.nextBuild:
-            req = self.buildable.pop(0)
-        else:
-            try:
-                req = self.nextBuild(self, self.buildable)
-                if not req:
-                    # Nothing to do
-                    self.updateBigStatus()
-                    return
-                self.buildable.remove(req)
-            except:
-                log.msg("Exception choosing next build")
-                log.err(Failure())
-                self.updateBigStatus()
-                return
-        self.builder_status.removeBuildRequest(req.status)
-        mergers = []
-        botmaster = self.botmaster
-        for br in self.buildable[:]:
-            if botmaster.shouldMergeRequests(self, req, br):
-                self.buildable.remove(br)
-                self.builder_status.removeBuildRequest(br.status)
-                mergers.append(br)
-        requests = [req] + mergers
-
-        # Create a new build from our build factory and set ourself as the
-        # builder.
-        build = self.buildFactory.newBuild(requests)
-        build.setBuilder(self)
-        build.setLocks(self.locks)
-        if len(self.env) > 0:
-            build.setSlaveEnvironment(self.env)
-
-        # start it
-        self.startBuild(build, sb)
-
     def startBuild(self, build, sb):
         """Start a build on the given slave.
         @param build: the L{base.Build} to start
@@ -773,12 +835,11 @@ class Builder(pb.Referenceable):
         # BuildStatus that it has started, which will announce it to the
         # world (through our BuilderStatus object, which is its parent).
         # Finally it will start the actual build process.
+        bids = [self.db.build_started(req.id, bs.number) for req in build.requests]
         d = build.startBuild(bs, self.expectations, sb)
-        d.addCallback(self.buildFinished, sb)
+        d.addCallback(self.buildFinished, sb, bids)
         d.addErrback(log.err) # this shouldn't happen. if it does, the slave
-                                # will be wedged
-        for req in build.requests:
-            req.buildStarted(build, bs)
+                              # will be wedged
         return build # this is the IBuildControl
 
     def _startBuildFailed(self, why, build, sb):
@@ -792,13 +853,10 @@ class Builder(pb.Referenceable):
 
         log.msg("re-queueing the BuildRequest")
         self.building.remove(build)
-        for req in build.requests:
-            self.buildable.insert(0, req) # the interrupted build gets first
-                                            # priority
-            self.builder_status.addBuildRequest(req.status)
+        self._resubmit_buildreqs(build).addErrback(log.err)
 
 
-    def buildFinished(self, build, sb):
+    def buildFinished(self, build, sb, bids):
         """This is called when the Build has finished (either success or
         failure). Any exceptions during the build are reported with
         results=FAILURE, not with an errback."""
@@ -806,9 +864,20 @@ class Builder(pb.Referenceable):
         # by the time we get here, the Build has already released the slave
         # (which queues a call to maybeStartBuild)
 
+        self.db.builds_finished(bids)
+
+        results = build.build_status.getResults()
         self.building.remove(build)
-        for req in build.requests:
-            req.finished(build.build_status)
+        if results == RETRY:
+            self._resubmit_buildreqs(build).addErrback(log.err) # returns Deferred
+        else:
+            brids = [br.id for br in build.requests]
+            self.db.retire_buildrequests(brids, results)
+        self.triggerNewBuildCheck()
+
+    def _resubmit_buildreqs(self, build):
+        brids = [br.id for br in build.requests]
+        return self.db.resubmit_buildrequests(brids)
 
     def setExpectations(self, progress):
         """Mark the build as successful and update expectations for the next
@@ -831,22 +900,18 @@ class Builder(pb.Referenceable):
             self.remote.callRemote("shutdown")
 
 
-class BuilderControl(components.Adapter):
+class BuilderControl:
     implements(interfaces.IBuilderControl)
 
-    def requestBuild(self, req):
-        """Submit a BuildRequest to this Builder."""
-        self.original.submitBuildRequest(req)
+    def __init__(self, builder, parent):
+        self.original = builder
+        self.parent = parent # the IControl object
 
-    def requestBuildSoon(self, req):
-        """Submit a BuildRequest like requestBuild, but raise a
-        L{buildbot.interfaces.NoSlaveError} if no slaves are currently
-        available, so it cannot be used to queue a BuildRequest in the hopes
-        that a slave will eventually connect. This method is appropriate for
-        use by things like the web-page 'Force Build' button."""
-        if not self.original.slaves:
-            raise interfaces.NoSlaveError
-        self.requestBuild(req)
+    def submitBuildRequest(self, ss, reason, props=None, now=False):
+        bss = self.parent.submitBuildSet([self.original.name], ss, reason,
+                                         props, now)
+        brs = bss.getBuildRequests()[0]
+        return brs
 
     def rebuildBuild(self, bs, reason="<rebuild, no reason given>", extraProperties=None):
         if not bs.isFinished():
@@ -867,7 +932,7 @@ class BuilderControl(components.Adapter):
     def getPendingBuilds(self):
         # return IBuildRequestControl objects
         retval = []
-        for r in self.original.buildable:
+        for r in self.original.getBuildable():
             retval.append(BuildRequestControl(self.original, r))
 
         return retval
@@ -891,8 +956,6 @@ class BuilderControl(components.Adapter):
             if not success:
                 return False
         return True
-
-components.registerAdapter(BuilderControl, Builder, interfaces.IBuilderControl)
 
 class BuildRequestControl:
     implements(interfaces.IBuildRequestControl)

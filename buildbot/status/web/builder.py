@@ -1,6 +1,5 @@
 
-from twisted.web.error import NoResource
-from twisted.web import html, static
+from twisted.web import html
 from twisted.web.util import Redirect
 
 import re, urllib, time
@@ -10,7 +9,6 @@ from buildbot.status.web.base import HtmlResource, BuildLineMixin, \
     path_to_build, path_to_slave, path_to_builder, path_to_change, \
     path_to_root, getAndCheckProperties, ICurrentBox, build_get_class, \
     map_branches, path_to_authfail
-from buildbot.process.base import BuildRequest
 from buildbot.sourcestamp import SourceStamp
 
 from buildbot.status.web.build import BuildsResource, StatusResourceBuild
@@ -51,7 +49,6 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
           
     def content(self, req, cxt):
         b = self.builder_status
-        status = self.getStatus(req)
 
         cxt['name'] = b.getName()
         
@@ -147,12 +144,10 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
         # buildbot.changes.changes.Change instance which is tedious at this
         # stage to compute
         s = SourceStamp(branch=branch, revision=revision)
-        br = BuildRequest(r, s, builderName=self.builder_status.getName(),
-                           properties=properties)
         try:
             c = interfaces.IControl(self.getBuildmaster(req))
             bc = c.getBuilder(self.builder_status.getName())
-            bc.requestBuildSoon(br)
+            bc.submitBuildRequest(s, r, properties, now=True)
         except interfaces.NoSlaveError:
             # TODO: tell the web user that their request could not be
             # honored

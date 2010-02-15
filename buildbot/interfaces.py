@@ -270,7 +270,9 @@ class IBuildSetStatus(Interface):
         """Return a Deferred that fires (with this IBuildSetStatus object)
         when all builds have finished."""
     def getResults():
-        pass
+        """Return SUCCESS/FAILURE, or None if the buildset is not finished
+        yet"""
+
 
 class IBuildRequestStatus(Interface):
     """I represent a request to build a particular set of source code on a
@@ -1019,24 +1021,27 @@ class IControl(Interface):
         themselves whether the change is interesting or not, and may initiate
         a build as a result."""
 
-    def submitBuildSet(buildset):
-        """Submit a BuildSet object, which will eventually be run on all of
-        the builders listed therein."""
+    def submitBuildSet(builderNames, ss, reason, props=None, now=False):
+        """Create a BuildSet, which will eventually cause a build of the
+        given SourceStamp to be run on all of the named builders. This
+        returns a BuildSetStatus object, which can be used to keep track of
+        the builds that are performed.
+
+        If now=True, and the builder has no slave attached, NoSlaveError will
+        be raised instead of queueing the request for later action."""
 
     def getBuilder(name):
         """Retrieve the IBuilderControl object for the given Builder."""
 
 class IBuilderControl(Interface):
-    def requestBuild(request):
-        """Queue a L{buildbot.process.base.BuildRequest} object for later
-        building."""
+    def submitBuildRequest(ss, reason, props=None, now=False):
+        """Create a BuildRequest, which will eventually cause a build of the
+        given SourceStamp to be run on this builder. This returns a
+        BuildRequestStatus object, which can be used to keep track of the
+        builds that are performed.
 
-    def requestBuildSoon(request):
-        """Submit a BuildRequest like requestBuild, but raise a
-        L{buildbot.interfaces.NoSlaveError} if no slaves are currently
-        available, so it cannot be used to queue a BuildRequest in the hopes
-        that a slave will eventually connect. This method is appropriate for
-        use by things like the web-page 'Force Build' button."""
+        If now=True, and I have no slave attached, NoSlaveError will be
+        raised instead of queueing the request for later action."""
 
     def resubmitBuild(buildStatus, reason="<rebuild, no reason given>"):
         """Rebuild something we've already built before. This submits a
