@@ -45,9 +45,9 @@ by a single run, however we guarantee that there will be at least one full
 run that begins after the last ring. At all times, at most one processing
 function will be active.
 
-The processing functions are expected to be e.g. Schedulers, which examine a
-database for work to do. The 'doorbell' will be rung by other code that
-writes into the database (possibly in a separate process).
+The processing functions are expected to be callables like Scheduler methods,
+which examine a database for work to do. The 'doorbell' will be rung by other
+code that writes into the database (possibly in a separate process).
 
 If the Deferred returned by the processing function fires with a number, the
 event loop will call that function again at or after the given time

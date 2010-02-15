@@ -91,6 +91,9 @@ class Now(service.Service):
 
 class Loop(unittest.TestCase):
     def test_create(self):
+        # SoonAndAgain will re-trigger the loop on its first run, so the
+        # entire loop should run twice, which means every Processor should
+        # have count==2 at the end
         l = loop.Loop()
         l.startService()
         c = SingleFileChecker()
@@ -111,6 +114,8 @@ class Loop(unittest.TestCase):
         done = []
         l = loop.Loop()
         l.startService()
+        # monkey-patch the instance to have a 'loop_done' method
+        # which just modifies 'done' to indicate that it was called
         l.loop_done = lambda: done.append(1)
         c = SingleFileChecker()
         processors = [Soon(), Soon(), SoonAndAgain(), Now()]
@@ -128,6 +133,7 @@ class Loop(unittest.TestCase):
         return d
 
     def test_delegate(self):
+        # Test the DelegateLoop class, performing about the same test as above
         processors = [Soon(), Soon(), SoonAndAgain(), Now()]
         def get_processors():
             return [p.run for p in processors]
