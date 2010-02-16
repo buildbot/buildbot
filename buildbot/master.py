@@ -298,15 +298,6 @@ class DebugPerspective(NewCredPerspective):
     def detached(self, mind):
         pass
 
-    def perspective_requestBuild(self, buildername, reason, branch, revision, properties={}):
-        c = interfaces.IControl(self.master)
-        bc = c.getBuilder(buildername)
-        ss = SourceStamp(branch, revision)
-        bpr = Properties()
-        bpr.update(properties, "remote requestBuild")
-        br = BuildRequest(reason, ss, builderName=buildername, properties=bpr)
-        bc.requestBuild(br)
-
     def perspective_pingBuilder(self, buildername):
         c = interfaces.IControl(self.master)
         bc = c.getBuilder(buildername)
@@ -1030,6 +1021,3 @@ class Control:
         return BuilderControl(b, self)
 
 components.registerAdapter(Control, BuildMaster, interfaces.IControl)
-
-# so anybody who can get a handle on the BuildMaster can cause a build with:
-#  IControl(master).getBuilder("full-2.3").requestBuild(buildrequest)

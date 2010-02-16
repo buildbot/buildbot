@@ -7,7 +7,7 @@ from twisted.spread import pb
 from twisted.application import service, internet
 from twisted.internet import defer
 
-from buildbot import interfaces, util
+from buildbot import interfaces, util, buildrequest
 from buildbot.status.progress import Expectations
 from buildbot.status.builder import RETRY
 from buildbot.process import base
@@ -925,9 +925,7 @@ class BuilderControl:
             properties = Properties()
             properties.updateFromProperties(bs.getProperties())
             properties.updateFromProperties(extraProperties)
-        req = base.BuildRequest(reason, ss, self.original.name,
-                                properties=properties)
-        self.requestBuild(req)
+        self.submitBuildRequest(ss, reason, props=properties)
 
     def getPendingBuilds(self):
         # return IBuildRequestControl objects
