@@ -20,6 +20,7 @@
 #
 # Contributor(s):
 #   Brian Warner <warner@lothar.com>
+#   Chris AtLee <catlee@mozilla.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,7 +36,7 @@
 #
 # ***** END LICENSE BLOCK *****
 
-import sys, time, collections, base64, textwrap
+import sys, time, collections, base64, textwrap, os, cgi, re
 
 try:
     import simplejson
@@ -280,6 +281,61 @@ class DB:
         self.dbapiName = dbapiName
         self.connargs = connargs
         self.connkw = connkw
+
+    @classmethod
+    def from_url(cls, url, basedir=None):
+        """Parses a URL of the format
+        driver://[username:password@]host:port/database[?args]
+
+        and returns a DB object representing this URL
+        """
+        match = re.match(r"""
+        ^(?P<driver>\w+)://
+        (
+            ((?P<user>\w+)(:(?P<passwd>\S+))?@)?
+            ((?P<host>[-A-Za-z0-9.]+)(:(?P<port>\d+))?)?/
+            (?P<database>\S+?)(\?(?P<args>.*))?
+        )?$""", url, re.X)
+        if not match:
+            raise ValueError("Malformed url")
+
+        d = match.groupdict()
+        driver = d['driver']
+        user = d['user']
+        passwd = d['passwd']
+        host = d['host']
+        port = d['port']
+        if port is not None:
+            port = int(port)
+        database = d['database']
+        args = {}
+        if d['args']:
+            for key, value in cgi.parse_qsl(d['args']):
+                args[key] = value
+
+        if driver == "sqlite":
+            # user, passwd, host, and port must all be None
+            if not user == passwd == host == port == None:
+                raise ValueError("user, passwd, host, port must all be None")
+            if not database:
+                database = ":memory:"
+            else:
+                database = database % dict(basedir=basedir)
+                database = os.path.join(basedir, database)
+            return cls("sqlite3", database, **args)
+        elif driver == "mysql":
+            args['host'] = host
+            args['db'] = database
+            if user:
+                args['user'] = user
+            if passwd:
+                args['passwd'] = passwd
+            if port:
+                args['port'] = port
+
+            return cls("MySQLdb", **args)
+        else:
+            raise ValueError("Unsupported dbapi %s" % driver)
 
 def get_sqlite_dbapi_name():
     # see which dbapi we can use, and import it as 'buildbot.db.sqlite3'
