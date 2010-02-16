@@ -1,9 +1,10 @@
 # -*- test-case-name: buildbot.test.test_sourcestamp -*-
 
 from zope.interface import implements
+from twisted.persisted import styles
 from buildbot import util, interfaces
 
-class SourceStamp(util.ComparableMixin):
+class SourceStamp(util.ComparableMixin, styles.Versioned):
     """This is a tuple of (branch, revision, patchspec, changes).
 
     C{branch} is always valid, although it may be None to let the Source
@@ -22,6 +23,8 @@ class SourceStamp(util.ComparableMixin):
        CHANGES is a tuple of L{buildbot.changes.changes.Change} instances,
        and all must be on the same branch.
     """
+
+    persistenceVersion = 1
 
     # all four of these are publically visible attributes
     branch = None
@@ -139,5 +142,15 @@ class SourceStamp(util.ComparableMixin):
         result['branch'] = self.branch
         result['changes'] = [c.asDict() for c in getattr(self, 'changes', [])]
         return result
+
+    def upgradeToVersion1(self):
+        # version 0 was untyped; in version 1 and later, types matter.
+        print "upgrading sourcestamp to version 1"
+        if self.branch is not None and not isinstance(self.branch, str):
+            self.branch = str(self.branch)
+        if self.revision is not None and not isinstance(self.revision, str):
+            self.revision = str(self.revision)
+        if self.patch is not None and not isinstance(self.patch, str):
+            self.patch = str(self.patch)
 
 # vim: set ts=4 sts=4 sw=4 et:
