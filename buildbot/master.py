@@ -1,11 +1,8 @@
 # -*- test-case-name: buildbot.test.test_run -*-
 
-import os, time
-signal = None
-try:
-    import signal
-except ImportError:
-    pass
+import os
+import signal
+import time
 import warnings
 
 from zope.interface import implements
@@ -464,7 +461,7 @@ class BuildMaster(service.MultiService):
             # the config file, and it would be nice for the user to discover
             # this quickly.
             self.loadTheConfigFile()
-        if signal and hasattr(signal, "SIGHUP"):
+        if hasattr(signal, "SIGHUP"):
             signal.signal(signal.SIGHUP, self._handleSIGHUP)
         for b in self.botmaster.builders.values():
             b.builder_status.addPointEvent(["master", "started"])
