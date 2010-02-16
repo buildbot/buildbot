@@ -51,16 +51,13 @@ class Change:
         if links is None:
             links = []
         self.links = links
-        if revision is not None:
-            assert isinstance(revision, str), type(revision)
-        self.revision = revision
+
+        self.revision = util.none_or_str(revision)
         if when is None:
             when = util.now()
         self.when = when
-        if branch is not None:
-            assert isinstance(branch, str), type(branch)
-        self.branch = branch
-        self.category = category
+        self.branch = util.none_or_str(branch)
+        self.category = util.none_or_str(category)
         self.revlink = revlink
         self.properties = Properties()
         self.properties.update(properties, "Change")

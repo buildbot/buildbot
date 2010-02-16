@@ -28,6 +28,12 @@ d5 = {'files': ["Project/foo.c"],
       'who': "trillian",
       'comments': "Some changes in Project",
       'category': "categoryA"}
+d6 = {'files': ["Project/foo.c"],
+      'who': u"trillian",
+      'comments': u"Some changes in Project",
+      'category': u"categoryA",
+      'revision': u"1234",
+      'branch': u"master"}
 
 class TestChangePerspective(unittest.TestCase):
 
@@ -103,6 +109,14 @@ class TestChangePerspective(unittest.TestCase):
         self.failUnlessEqual(c1.comments, "mixed changes")
 
     def testCategory(self):
+        p = pb.ChangePerspective(self, None)
+        p.perspective_addChange(d5)
+        self.failUnlessEqual(len(self.changes), 1)
+        c1 = self.changes[0]
+        self.failUnlessEqual(c1.category, "categoryA")
+
+    def testUnicode(self):
+        "Be resilient to unicode input"
         p = pb.ChangePerspective(self, None)
         p.perspective_addChange(d5)
         self.failUnlessEqual(len(self.changes), 1)

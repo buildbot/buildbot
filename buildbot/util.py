@@ -192,3 +192,10 @@ class DictOfSets:
         if key in self.d:
             return self.d.pop(key)
         return set()
+
+def none_or_str(x):
+    """Cast X to a str if it is not None"""
+    if x is not None and not isinstance(x, str):
+        return str(x)
+    return x
+
