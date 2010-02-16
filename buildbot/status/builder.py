@@ -2455,7 +2455,8 @@ class Status:
 
     def builderRemoved(self, name):
         for t in self.watchers:
-            t.builderRemoved(name)
+            if hasattr(t, 'builderRemoved'):
+                t.builderRemoved(name)
 
     def slaveConnected(self, name):
         for t in self.watchers:
@@ -2469,11 +2470,13 @@ class Status:
 
     def buildsetSubmitted(self, bss):
         for t in self.watchers:
-            t.buildsetSubmitted(bss)
+            if hasattr(t, 'buildsetSubmitted'):
+                t.buildsetSubmitted(bss)
 
     def changeAdded(self, change):
         for t in self.watchers:
-            t.changeAdded(change)
+            if hasattr(t, 'changeAdded'):
+                t.changeAdded(change)
 
     def asDict(self):
         result = {}
