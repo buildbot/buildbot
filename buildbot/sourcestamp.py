@@ -145,7 +145,6 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
 
     def upgradeToVersion1(self):
         # version 0 was untyped; in version 1 and later, types matter.
-        print "upgrading sourcestamp to version 1"
         if self.branch is not None and not isinstance(self.branch, str):
             self.branch = str(self.branch)
         if self.revision is not None and not isinstance(self.revision, str):
