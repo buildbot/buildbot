@@ -15,6 +15,8 @@ docs.tgz: buildbot.html images-png
 	rm -rf $(VERSION)
 	makeinfo --html --output $(VERSION) buildbot.texinfo
 	cp buildbot.html $(VERSION)/full.html
+	mkdir $(VERSION)/images
+	cp images/*.png $(VERSION)/images
 	tar -zcf $@ $(VERSION)
 
 buildbot.ps: buildbot.texinfo images-eps
@@ -29,6 +31,7 @@ buildbot.ps: buildbot.texinfo images-eps
 images:
 	$(MAKE) -C images all
 images-png:
-	$(MAKE) -C images images-png
+	# rule disabled, since the .png's are in git
+	#$(MAKE) -C images images-png
 images-eps:
 	$(MAKE) -C images images-eps

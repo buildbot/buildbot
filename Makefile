@@ -45,7 +45,7 @@ deb-snapshot:
 
 .PHONY: docs apidocs some-apidocs paper
 docs:
-	$(MAKE) -C docs buildbot.info buildbot.html
+	$(MAKE) -C docs
 
 apidocs:
 	PYTHONPATH=.:$(T) python docs/epyrun -o docs/reference
