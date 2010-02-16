@@ -1,0 +1,313 @@
+@cindex introduction
+
+The BuildBot is a system to automate the compile/test cycle required by most
+software projects to validate code changes. By automatically rebuilding and
+testing the tree each time something has changed, build problems are
+pinpointed quickly, before other developers are inconvenienced by the
+failure. The guilty developer can be identified and harassed without human
+intervention. By running the builds on a variety of platforms, developers
+who do not have the facilities to test their changes everywhere before
+checkin will at least know shortly afterwards whether they have broken the
+build or not. Warning counts, lint checks, image size, compile time, and
+other build parameters can be tracked over time, are more visible, and
+are therefore easier to improve.
+
+The overall goal is to reduce tree breakage and provide a platform to
+run tests or code-quality checks that are too annoying or pedantic for
+any human to waste their time with. Developers get immediate (and
+potentially public) feedback about their changes, encouraging them to
+be more careful about testing before checkin.
+
+Features:
+
+@itemize @bullet
+@item
+run builds on a variety of slave platforms
+@item
+arbitrary build process: handles projects using C, Python, whatever
+@item
+minimal host requirements: python and Twisted
+@item
+slaves can be behind a firewall if they can still do checkout
+@item
+status delivery through web page, email, IRC, other protocols
+@item
+track builds in progress, provide estimated completion time
+@item
+flexible configuration by subclassing generic build process classes
+@item
+debug tools to force a new build, submit fake Changes, query slave status
+@item
+released under the GPL
+@end itemize
+
+@menu
+* History and Philosophy::
+* System Architecture::
+* Control Flow::
+@end menu
+
+
+@node History and Philosophy
+@section History and Philosophy
+
+@cindex Philosophy of operation
+
+The Buildbot was inspired by a similar project built for a development
+team writing a cross-platform embedded system. The various components
+of the project were supposed to compile and run on several flavors of
+unix (linux, solaris, BSD), but individual developers had their own
+preferences and tended to stick to a single platform. From time to
+time, incompatibilities would sneak in (some unix platforms want to
+use @code{string.h}, some prefer @code{strings.h}), and then the tree
+would compile for some developers but not others. The buildbot was
+written to automate the human process of walking into the office,
+updating a tree, compiling (and discovering the breakage), finding the
+developer at fault, and complaining to them about the problem they had
+introduced. With multiple platforms it was difficult for developers to
+do the right thing (compile their potential change on all platforms);
+the buildbot offered a way to help.
+
+Another problem was when programmers would change the behavior of a
+library without warning its users, or change internal aspects that
+other code was (unfortunately) depending upon. Adding unit tests to
+the codebase helps here: if an application's unit tests pass despite
+changes in the libraries it uses, you can have more confidence that
+the library changes haven't broken anything. Many developers
+complained that the unit tests were inconvenient or took too long to
+run: having the buildbot run them reduces the developer's workload to
+a minimum.
+
+In general, having more visibility into the project is always good,
+and automation makes it easier for developers to do the right thing.
+When everyone can see the status of the project, developers are
+encouraged to keep the tree in good working order. Unit tests that
+aren't run on a regular basis tend to suffer from bitrot just like
+code does: exercising them on a regular basis helps to keep them
+functioning and useful.
+
+The current version of the Buildbot is additionally targeted at
+distributed free-software projects, where resources and platforms are
+only available when provided by interested volunteers. The buildslaves
+are designed to require an absolute minimum of configuration, reducing
+the effort a potential volunteer needs to expend to be able to
+contribute a new test environment to the project. The goal is for
+anyone who wishes that a given project would run on their favorite
+platform should be able to offer that project a buildslave, running on
+that platform, where they can verify that their portability code
+works, and keeps working.
+
+@node System Architecture
+@comment  node-name,  next,  previous,  up
+@section System Architecture
+
+The Buildbot consists of a single @code{buildmaster} and one or more
+@code{buildslaves}, connected in a star topology. The buildmaster
+makes all decisions about what, when, and how to build. It sends
+commands to be run on the build slaves, which simply execute the
+commands and return the results. (certain steps involve more local
+decision making, where the overhead of sending a lot of commands back
+and forth would be inappropriate, but in general the buildmaster is
+responsible for everything).
+
+The buildmaster is usually fed @code{Changes} by some sort of version control
+system (@pxref{Change Sources}), which may cause builds to be run. As the
+builds are performed, various status messages are produced, which are then sent
+to any registered Status Targets (@pxref{Status Targets}).
+
+@c @image{FILENAME, WIDTH, HEIGHT, ALTTEXT, EXTENSION}
+@image{images/overview,,,Overview Diagram,}
+
+The buildmaster is configured and maintained by the ``buildmaster
+admin'', who is generally the project team member responsible for
+build process issues. Each buildslave is maintained by a ``buildslave
+admin'', who do not need to be quite as involved. Generally slaves are
+run by anyone who has an interest in seeing the project work well on
+their favorite platform.
+
+@menu
+* BuildSlave Connections::
+* Buildmaster Architecture::
+* Status Delivery Architecture::
+@end menu
+
+@node BuildSlave Connections
+@subsection BuildSlave Connections
+
+The buildslaves are typically run on a variety of separate machines,
+at least one per platform of interest. These machines connect to the
+buildmaster over a TCP connection to a publically-visible port. As a
+result, the buildslaves can live behind a NAT box or similar
+firewalls, as long as they can get to buildmaster. The TCP connections
+are initiated by the buildslave and accepted by the buildmaster, but
+commands and results travel both ways within this connection. The
+buildmaster is always in charge, so all commands travel exclusively
+from the buildmaster to the buildslave.
+
+To perform builds, the buildslaves must typically obtain source code
+from a CVS/SVN/etc repository. Therefore they must also be able to
+reach the repository. The buildmaster provides instructions for
+performing builds, but does not provide the source code itself.
+
+@image{images/slaves,,,BuildSlave Connections,}
+
+@node Buildmaster Architecture
+@subsection Buildmaster Architecture
+
+The Buildmaster consists of several pieces:
+
+@image{images/master,,,BuildMaster Architecture,}
+
+@itemize @bullet
+
+@item
+Change Sources, which create a Change object each time something is
+modified in the VC repository. Most ChangeSources listen for messages
+from a hook script of some sort. Some sources actively poll the
+repository on a regular basis. All Changes are fed to the Schedulers.
+
+@item
+Schedulers, which decide when builds should be performed. They collect
+Changes into BuildRequests, which are then queued for delivery to
+Builders until a buildslave is available.
+
+@item
+Builders, which control exactly @emph{how} each build is performed
+(with a series of BuildSteps, configured in a BuildFactory). Each
+Build is run on a single buildslave.
+
+@item
+Status plugins, which deliver information about the build results
+through protocols like HTTP, mail, and IRC.
+
+@end itemize
+
+Each Builder is configured with a list of BuildSlaves that it will use
+for its builds. These buildslaves are expected to behave identically:
+the only reason to use multiple BuildSlaves for a single Builder is to
+provide a measure of load-balancing.
+
+Within a single BuildSlave, each Builder creates its own SlaveBuilder
+instance. These SlaveBuilders operate independently from each other.
+Each gets its own base directory to work in. It is quite common to
+have many Builders sharing the same buildslave. For example, there
+might be two buildslaves: one for i386, and a second for PowerPC.
+There may then be a pair of Builders that do a full compile/test run,
+one for each architecture, and a lone Builder that creates snapshot
+source tarballs if the full builders complete successfully. The full
+builders would each run on a single buildslave, whereas the tarball
+creation step might run on either buildslave (since the platform
+doesn't matter when creating source tarballs). In this case, the
+mapping would look like:
+
+@example
+Builder(full-i386)  ->  BuildSlaves(slave-i386)
+Builder(full-ppc)   ->  BuildSlaves(slave-ppc)
+Builder(source-tarball) -> BuildSlaves(slave-i386, slave-ppc)
+@end example
+
+and each BuildSlave would have two SlaveBuilders inside it, one for a
+full builder, and a second for the source-tarball builder.
+
+Once a SlaveBuilder is available, the Builder pulls one or more
+BuildRequests off its incoming queue. (It may pull more than one if it
+determines that it can merge the requests together; for example, there
+may be multiple requests to build the current HEAD revision). These
+requests are merged into a single Build instance, which includes the
+SourceStamp that describes what exact version of the source code
+should be used for the build. The Build is then randomly assigned to a
+free SlaveBuilder and the build begins.
+
+The behaviour when BuildRequests are merged can be customized, @pxref{Merging
+BuildRequests}.
+
+@node Status Delivery Architecture
+@subsection Status Delivery Architecture
+
+The buildmaster maintains a central Status object, to which various
+status plugins are connected. Through this Status object, a full
+hierarchy of build status objects can be obtained.
+
+@image{images/status,,,Status Delivery,}
+
+The configuration file controls which status plugins are active. Each
+status plugin gets a reference to the top-level Status object. From
+there they can request information on each Builder, Build, Step, and
+LogFile. This query-on-demand interface is used by the html.Waterfall
+plugin to create the main status page each time a web browser hits the
+main URL.
+
+The status plugins can also subscribe to hear about new Builds as they
+occur: this is used by the MailNotifier to create new email messages
+for each recently-completed Build.
+
+The Status object records the status of old builds on disk in the
+buildmaster's base directory. This allows it to return information
+about historical builds.
+
+There are also status objects that correspond to Schedulers and
+BuildSlaves. These allow status plugins to report information about
+upcoming builds, and the online/offline status of each buildslave.
+
+
+@node Control Flow
+@comment  node-name,  next,  previous,  up
+@section Control Flow
+
+A day in the life of the buildbot:
+
+@itemize @bullet
+
+@item
+A developer commits some source code changes to the repository. A hook
+script or commit trigger of some sort sends information about this
+change to the buildmaster through one of its configured Change
+Sources. This notification might arrive via email, or over a network
+connection (either initiated by the buildmaster as it ``subscribes''
+to changes, or by the commit trigger as it pushes Changes towards the
+buildmaster). The Change contains information about who made the
+change, what files were modified, which revision contains the change,
+and any checkin comments.
+
+@item
+The buildmaster distributes this change to all of its configured
+Schedulers. Any ``important'' changes cause the ``tree-stable-timer''
+to be started, and the Change is added to a list of those that will go
+into a new Build. When the timer expires, a Build is started on each
+of a set of configured Builders, all compiling/testing the same source
+code. Unless configured otherwise, all Builds run in parallel on the
+various buildslaves.
+
+@item
+The Build consists of a series of Steps. Each Step causes some number
+of commands to be invoked on the remote buildslave associated with
+that Builder. The first step is almost always to perform a checkout of
+the appropriate revision from the same VC system that produced the
+Change. The rest generally perform a compile and run unit tests. As
+each Step runs, the buildslave reports back command output and return
+status to the buildmaster.
+
+@item
+As the Build runs, status messages like ``Build Started'', ``Step
+Started'', ``Build Finished'', etc, are published to a collection of
+Status Targets. One of these targets is usually the HTML ``Waterfall''
+display, which shows a chronological list of events, and summarizes
+the results of the most recent build at the top of each column.
+Developers can periodically check this page to see how their changes
+have fared. If they see red, they know that they've made a mistake and
+need to fix it. If they see green, they know that they've done their
+duty and don't need to worry about their change breaking anything.
+
+@item
+If a MailNotifier status target is active, the completion of a build
+will cause email to be sent to any developers whose Changes were
+incorporated into this Build. The MailNotifier can be configured to
+only send mail upon failing builds, or for builds which have just
+transitioned from passing to failing. Other status targets can provide
+similar real-time notification via different communication channels,
+like IRC.
+
+@end itemize
+
+
+

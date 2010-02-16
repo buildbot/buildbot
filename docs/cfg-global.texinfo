@@ -1,0 +1,351 @@
+The keys in this section affect the operations of the buildmaster globally.
+
+@menu
+* Project Definitions::
+* Log Handling::
+* Data Lifetime::
+* Merging BuildRequests::
+* Prioritizing Builders::
+* Setting the PB Port for Slaves::
+* Defining Global Properties::
+* Debug Options::
+@end menu
+
+@node Project Definitions
+@subsection Project Definitions
+
+There are a couple of basic settings that you use to tell the buildbot
+what project it is working on. This information is used by status
+reporters to let users find out more about the codebase being
+exercised by this particular Buildbot installation.
+
+@example
+c['projectName'] = "Buildbot"
+c['projectURL'] = "http://buildbot.sourceforge.net/"
+c['buildbotURL'] = "http://localhost:8010/"
+@end example
+
+@bcindex c['projectName']
+@code{projectName} is a short string will be used to describe the
+project that this buildbot is working on. For example, it is used as
+the title of the waterfall HTML page.
+
+@bcindex c['projectURL']
+@code{projectURL} is a string that gives a URL for the project as a
+whole. HTML status displays will show @code{projectName} as a link to
+@code{projectURL}, to provide a link from buildbot HTML pages to your
+project's home page.
+
+@bcindex c['buildbotURL']
+The @code{buildbotURL} string should point to the location where the buildbot's
+internal web server is visible. This typically uses the port number set when
+you create the @code{Waterfall} object: the buildbot needs your help to figure
+out a suitable externally-visible host name.
+
+When status notices are sent to users (either by email or over IRC),
+@code{buildbotURL} will be used to create a URL to the specific build
+or problem that they are being notified about. It will also be made
+available to queriers (over IRC) who want to find out where to get
+more information about this buildbot.
+
+@node Log Handling
+@subsection Log Handling
+
+@example
+c['logCompressionLimit'] = 16384
+c['logCompressionMethod'] = 'gz'
+c['logMaxSize'] = 1024*1024 # 1M
+c['logMaxTailSize'] = 32768
+@end example
+
+@bcindex c['logCompressionLimit']
+The @code{logCompressionLimit} enables compression of build logs on
+disk for logs that are bigger than the given size, or disables that
+completely if set to @code{False}. The default value is 4k, which should
+be a reasonable default on most file systems. This setting has no impact
+on status plugins, and merely affects the required disk space on the
+master for build logs.
+
+@bcindex c['logCompressionMethod']
+The @code{logCompressionMethod} controls what type of compression is used for
+build logs.  The default is 'bz2', the other valid option is 'gz'.  'bz2'
+offers better compression at the expense of more CPU time.
+
+@bcindex c['logMaxSize']
+The @code{logMaxSize} parameter sets an upper limit (in bytes) to how large
+logs from an individual build step can be.  The default value is None, meaning
+no upper limit to the log size.  Any output exceeding @code{logMaxSize} will be
+truncated, and a message to this effect will be added to the log's HEADER
+channel.
+
+@bcindex c['logMaxTailSize']
+If @code{logMaxSize} is set, and the output from a step exceeds the maximum,
+the @code{logMaxTailSize} parameter controls how much of the end of the build
+log will be kept.  The effect of setting this parameter is that the log will
+contain the first @code{logMaxSize} bytes and the last @code{logMaxTailSize}
+bytes of output.  Don't set this value too high, as the the tail of the log is
+kept in memory.
+
+@node Data Lifetime
+@subsection Data Lifetime
+
+@example
+c['changeHorizon'] = 200
+c['buildHorizon'] = 100
+c['eventHorizon'] = 50
+c['logHorizon'] = 40
+c['buildCacheSize'] = 15
+@end example
+
+@bcindex c['logHorizon']
+@bcindex c['buildCacheSize']
+@bcindex c['changeHorizon']
+@bcindex c['buildHorizon']
+@bcindex c['eventHorizon']
+
+Buildbot stores historical information on disk in the form of "Pickle" files
+and compressed logfiles.  In a large installation, these can quickly consume
+disk space, yet in many cases developers never consult this historical
+information.  
+
+The @code{c['changeHorizon']} key determines how many changes the master will
+keep a record of. One place these changes are displayed is on the waterfall
+page.  This parameter defaults to 0, which means keep all changes indefinitely.
+
+The @code{buildHorizon} specifies the minimum number of builds for each builder
+which should be kept on disk.  The @code{eventHorizon} specifies the minumum
+number of events to keep -- events mostly describe connections and
+disconnections of slaves, and are seldom helpful to developers.  The
+@code{logHorizon} gives the minimum number of builds for which logs should be
+maintained; this parameter must be less than @code{buildHorizon}. Builds older
+than @code{logHorizon} but not older than @code{buildHorizon} will maintain
+their overall status and the status of each step, but the logfiles will be
+deleted.
+
+Finally, the @code{buildCacheSize} gives the number of builds for each builder
+which are cached in memory.  This number should be larger than the number of
+builds required for commonly-used status displays (the waterfall or grid
+views), so that those displays do not miss the cache on a refresh.
+
+@node Merging BuildRequests
+@subsection Merging BuildRequests
+
+@bcindex c['mergeRequests']
+
+By default, buildbot merges BuildRequests that have compatible
+SourceStamps.
+
+This can be disabled for any particular Builder by passing
+@code{mergeRequests=False} to the BuilderConfig definition, @pxref{Builders}.
+For example:
+
+@example
+c['builders'] = [
+  BuilderConfig(name='test-i386', slavename='bot-i386', builddir='test-i386',
+                factory=f, mergeRequests=False),
+ ]
+@end example
+
+For more precise control, this behaviour can be customized with the
+buildmaster's @code{c['mergeRequests']} configuration key. This key
+specifies a function which is called with three arguments: a
+@code{Builder} and two @code{BuildRequest} objects. It should return
+true if the requests can be merged. For example:
+
+@example
+def mergeRequests(builder, req1, req2):
+    """Don't merge buildrequest at all"""
+    return False
+c['mergeRequests'] = mergeRequests
+@end example
+
+In many cases, the details of the SourceStamps and BuildRequests are important.
+In this example, only BuildRequests with the same "reason" are merged; thus
+developers forcing builds for different reasons will see distinct builds.
+
+@example
+def mergeRequests(builder, req1, req2):
+    if req1.source.canBeMergedWith(req2.source) and  req1.reason == req2.reason:
+       return True
+    return False
+c['mergeRequests'] = mergeRequests
+@end example
+
+@node Prioritizing Builders
+@subsection Prioritizing Builders
+
+@bcindex c['prioritizeBuilders']
+
+By default, buildbot will attempt to start builds on builders in order from the
+builder with the oldest pending request to the newest. This behaviour can be
+customized with the @code{c['prioritizeBuilders']} configuration key.
+This key specifies a function which is called with two arguments: a
+@code{BuildMaster} and a list of @code{Builder} objects. It
+should return a list of @code{Builder} objects in the desired order.
+It may also remove items from the list if builds should not be started
+on those builders.
+
+@example
+def prioritizeBuilders(buildmaster, builders):
+    """Prioritize builders.  'finalRelease' builds have the highest
+    priority, so they should be built before running tests, or
+    creating builds."""
+    builderPriorities = @{
+        "finalRelease": 0,
+        "test": 1,
+        "build": 2,
+    @}
+    builders.sort(key=lambda b: builderPriorities.get(b.name, 0))
+    return builders
+
+c['prioritizeBuilders'] = prioritizeBuilders
+@end example
+
+@node Setting the PB Port for Slaves
+@subsection Setting the PB Port for Slaves
+
+@bcindex c['slavePortnum']
+
+@example
+c['slavePortnum'] = 10000
+@end example
+
+The buildmaster will listen on a TCP port of your choosing for
+connections from buildslaves. It can also use this port for
+connections from remote Change Sources, status clients, and debug
+tools. This port should be visible to the outside world, and you'll
+need to tell your buildslave admins about your choice.
+
+It does not matter which port you pick, as long it is externally
+visible, however you should probably use something larger than 1024,
+since most operating systems don't allow non-root processes to bind to
+low-numbered ports. If your buildmaster is behind a firewall or a NAT
+box of some sort, you may have to configure your firewall to permit
+inbound connections to this port.
+
+@code{c['slavePortnum']} is a @emph{strports} specification string,
+defined in the @code{twisted.application.strports} module (try
+@command{pydoc twisted.application.strports} to get documentation on
+the format). This means that you can have the buildmaster listen on a
+localhost-only port by doing:
+
+@example
+c['slavePortnum'] = "tcp:10000:interface=127.0.0.1"
+@end example
+
+This might be useful if you only run buildslaves on the same machine,
+and they are all configured to contact the buildmaster at
+@code{localhost:10000}.
+
+@node Defining Global Properties
+@subsection Defining Global Properties
+@bcindex c['properties']
+@cindex Properties
+
+The @code{'properties'} configuration key defines a dictionary
+of properties that will be available to all builds started by the
+buildmaster:
+
+@example
+c['properties'] = @{
+    'Widget-version' : '1.2',
+    'release-stage' : 'alpha'
+@}
+@end example
+
+@node Debug Options
+@subsection Debug Options
+
+@bcindex c['debugPassword']
+If you set @code{c['debugPassword']}, then you can connect to the
+buildmaster with the diagnostic tool launched by @code{buildbot
+debugclient MASTER:PORT}. From this tool, you can reload the config
+file, manually force builds, and inject changes, which may be useful
+for testing your buildmaster without actually commiting changes to
+your repository (or before you have the Change Sources set up). The
+debug tool uses the same port number as the slaves do:
+@code{c['slavePortnum']}, and is authenticated with this password.
+
+@example
+c['debugPassword'] = "debugpassword"
+@end example
+
+@bcindex c['manhole']
+If you set @code{c['manhole']} to an instance of one of the classes in
+@code{buildbot.manhole}, you can telnet or ssh into the buildmaster
+and get an interactive Python shell, which may be useful for debugging
+buildbot internals. It is probably only useful for buildbot
+developers. It exposes full access to the buildmaster's account
+(including the ability to modify and delete files), so it should not
+be enabled with a weak or easily guessable password.
+
+There are three separate @code{Manhole} classes. Two of them use SSH,
+one uses unencrypted telnet. Two of them use a username+password
+combination to grant access, one of them uses an SSH-style
+@file{authorized_keys} file which contains a list of ssh public keys.
+
+@table @code
+@item manhole.AuthorizedKeysManhole
+You construct this with the name of a file that contains one SSH
+public key per line, just like @file{~/.ssh/authorized_keys}. If you
+provide a non-absolute filename, it will be interpreted relative to
+the buildmaster's base directory.
+
+@item manhole.PasswordManhole
+This one accepts SSH connections but asks for a username and password
+when authenticating. It accepts only one such pair.
+
+
+@item manhole.TelnetManhole
+This accepts regular unencrypted telnet connections, and asks for a
+username/password pair before providing access. Because this
+username/password is transmitted in the clear, and because Manhole
+access to the buildmaster is equivalent to granting full shell
+privileges to both the buildmaster and all the buildslaves (and to all
+accounts which then run code produced by the buildslaves), it is
+highly recommended that you use one of the SSH manholes instead.
+
+@end table
+
+@example
+# some examples:
+from buildbot import manhole
+c['manhole'] = manhole.AuthorizedKeysManhole(1234, "authorized_keys")
+c['manhole'] = manhole.PasswordManhole(1234, "alice", "mysecretpassword")
+c['manhole'] = manhole.TelnetManhole(1234, "bob", "snoop_my_password_please")
+@end example
+
+The @code{Manhole} instance can be configured to listen on a specific
+port. You may wish to have this listening port bind to the loopback
+interface (sometimes known as ``lo0'', ``localhost'', or 127.0.0.1) to
+restrict access to clients which are running on the same host.
+
+@example
+from buildbot.manhole import PasswordManhole
+c['manhole'] = PasswordManhole("tcp:9999:interface=127.0.0.1","admin","passwd")
+@end example
+
+To have the @code{Manhole} listen on all interfaces, use
+@code{"tcp:9999"} or simply 9999. This port specification uses
+@code{twisted.application.strports}, so you can make it listen on SSL
+or even UNIX-domain sockets if you want.
+
+Note that using any Manhole requires that the TwistedConch package be
+installed, and that you be using Twisted version 2.0 or later.
+
+The buildmaster's SSH server will use a different host key than the
+normal sshd running on a typical unix host. This will cause the ssh
+client to complain about a ``host key mismatch'', because it does not
+realize there are two separate servers running on the same host. To
+avoid this, use a clause like the following in your @file{.ssh/config}
+file:
+
+@example
+Host remotehost-buildbot
+ HostName remotehost
+ HostKeyAlias remotehost-buildbot
+ Port 9999
+ # use 'user' if you use PasswordManhole and your name is not 'admin'.
+ # if you use AuthorizedKeysManhole, this probably doesn't matter.
+ User admin
+@end example
