@@ -1,0 +1,50 @@
+This chapter is the official repository for the collected wisdom of the
+Buildbot hackers.
+
+It contains some sparse documentation of the inner workings of Buildbot, but of
+course, the final reference for that is the source itself.
+
+More importantly, this chapter represents the official repository of all
+agreed-on patterns for use in Buildbot.  In this case, the source is a
+@i{terrible} reference, because much of it is old and crusty.  But we are
+trying to do things the new, better way, and those new, better ways are
+described here.
+
+@menu
+* Buildmaster Service Hierarchy::
+* The Event Loop::
+* String Types::
+* Subscription Interfaces::
+* Twisted Idioms::
+* Testing Idioms and Utilities::
+@end menu
+
+@node Buildmaster Service Hierarchy
+@section Buildmaster Service Hierarchy
+
+TODO
+
+@node The Event Loop
+@section The Event Loop
+
+TODO
+
+@node String Types
+@section String Types
+
+TODO
+
+@node Subscription Interfaces
+@section Subscription Interfaces
+
+TODO use @code{buildbot.eventually}
+
+@node Twisted Idioms
+@section Twisted Idioms
+
+TODO
+
+@node Testing Idioms and Utilities
+@section Testing Idioms and Utilities
+
+TODO

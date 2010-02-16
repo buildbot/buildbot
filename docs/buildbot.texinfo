@@ -56,6 +56,7 @@ provided the copyright notice and this notice are preserved.
 * Configuration::               Controlling the buildbot.
 * Command-line Tool::           The 'buildbot' utility
 * Resources::                   Getting help
+* Developer Information::       Stuff Buildbot hackers should know
 * Index::                       Concept Index
 @end menu
 
@@ -82,6 +83,10 @@ provided the copyright notice and this notice are preserved.
 @node Resources
 @chapter Resources
 @include resources.texinfo
+
+@node Developer Information
+@chapter Developer Information
+@include developer.texinfo
 
 @node Index
 @unnumbered Index
