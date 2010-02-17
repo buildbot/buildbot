@@ -101,7 +101,7 @@ class Create(unittest.TestCase, StallMixin):
         tacfile = open(tac,"rt").read()
         self.failUnlessIn("basedir", tacfile)
         self.failUnlessIn("configfile = r'master.cfg'", tacfile)
-        self.failUnlessIn("BuildMaster(basedir, configfile, db)", tacfile)
+        self.failUnlessIn("BuildMaster(basedir, configfile)", tacfile)
 
         cfg = os.path.join(basedir, "master.cfg")
         self.failIfExists(cfg)

@@ -269,8 +269,8 @@ class Maker:
             f.close()
 
     def create_db(self):
-        dbspec = make_dbspec(self.config["db"], self.basedir)
-        from buildbot.db import create_db
+        from buildbot.db import create_db, DB
+        dbspec = DB.from_url(self.config["db"], self.basedir)
         if not self.config['quiet']: print "creating database"
         create_db(dbspec)
 
@@ -378,27 +378,19 @@ DB_HELP = """
     BASEDIR/state.sqlite) is equivalent to:
 
       --db='DB("sqlite3", basedir+"/state.sqlite"))'
+      --db='sqlite:///state.sqlite'
 
     To use a remote MySQL database instead, use something like:
 
-      --db='DB("MySQLdb", host="dbhost", user="bbuser", passwd="bbpasswd", db="bbdb")'
+      --db='mysql://bbuser:bbpasswd@dbhost/bbdb'
 """
-
-def make_dbspec(dbstring, basedir):
-    from buildbot.master import DB
-    localsyms = {"basedir": basedir, "DB": DB}
-    exec "db = %s" % dbstring in localsyms
-    dbspec = localsyms["db"]
-    if dbspec is None:
-        dbspec = DB("sqlite3", os.path.join(basedir, "state.sqlite"))
-    return dbspec
 
 class UpgradeMasterOptions(MakerBase):
     optFlags = [
         ["replace", "r", "Replace any modified files without confirmation."],
         ]
     optParameters = [
-        ["db", None, "None",
+        ["db", None, "sqlite:///state.sqlite",
          "which DB to use for scheduler/status state. See below for syntax."],
         ]
 
@@ -461,9 +453,9 @@ def upgradeMaster(config):
     m.move_if_present(os.path.join(basedir, "public_html/index.html"),
                       os.path.join(basedir, "templates/root.html"))
 
-    dbspec = make_dbspec(config["db"], basedir)
+    from buildbot.db import create_or_upgrade_db, DB
+    dbspec = DB.from_url(config["db"], basedir)
     # TODO: check that TAC file specifies the right spec
-    from buildbot.db import create_or_upgrade_db
     db = create_or_upgrade_db(dbspec)
     db.start()
     # if we still have a changes.pck, then we need to migrate it
@@ -493,7 +485,7 @@ class MasterOptions(MakerBase):
          "size at which to rotate twisted log files"],
         ["log-count", "l", "None",
          "limit the number of kept old twisted log files"],
-        ["db", None, "None # use default sqlite",
+        ["db", None, "sqlite:///state.sqlite",
          "which DB to use for scheduler/status state. See below for syntax."],
         ]
     def getSynopsis(self):
@@ -527,7 +519,7 @@ class MasterOptions(MakerBase):
 
 masterTAC = """
 from twisted.application import service
-from buildbot.master import BuildMaster, DB
+from buildbot.master import BuildMaster
 
 rotateLength = %(log-size)s
 maxRotatedFiles = %(log-count)s
@@ -545,9 +537,8 @@ except ImportError:
 
 basedir = r'%(basedir)s'
 configfile = r'%(config)s'
-db = %(db)s
 
-m = BuildMaster(basedir, configfile, db)
+m = BuildMaster(basedir, configfile)
 m.setServiceParent(application)
 
 """
