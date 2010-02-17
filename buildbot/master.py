@@ -627,6 +627,8 @@ class BuildMaster(service.MultiService):
                     "reserved name '%s' used for a bot" % s.slavename)
         if config.has_key('interlocks'):
             raise KeyError("c['interlocks'] is no longer accepted")
+        assert self.db_url is None or db_url == self.db_url, \
+                "Cannot change db_url after master has started"
 
         assert isinstance(change_sources, (list, tuple))
         for s in change_sources:
@@ -783,7 +785,6 @@ class BuildMaster(service.MultiService):
         self.buildHorizon = buildHorizon
 
         # Set up the database
-        # TODO: Warn if this changes
         d.addCallback(lambda res: self.loadConfig_Database(db_url))
 
         # self.slaves: Disconnect any that were attached and removed from the
@@ -873,7 +874,6 @@ class BuildMaster(service.MultiService):
         # should we try to remove this? Periodic() requires at least one kick
 
     def loadConfig_Database(self, db_url):
-        assert self.db_url is None or db_url == self.db_url, "Cannot change db_url after master has started"
         self.db_url = db_url
         db_spec = DB.from_url(db_url, self.basedir)
         self.loadDatabase(db_spec)

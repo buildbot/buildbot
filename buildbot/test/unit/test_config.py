@@ -400,6 +400,16 @@ c['buildbotURL'] = 'http://dummy.example.com/buildbot'
 BuildmasterConfig = c
 """
 
+dburlCfg = emptyCfg + \
+"""
+c['db_url'] = "sqlite:///orig.sqlite"
+"""
+
+dburlCfg1 = emptyCfg + \
+"""
+c['db_url'] = "sqlite:///new.sqlite"
+"""
+
 class TestDBUrl(unittest.TestCase):
     def testSQLiteRelative(self):
         basedir = "/foo/bar"
@@ -1270,6 +1280,40 @@ c['changeHorizon'] = 5
             self.failUnlessEqual(len(list(self.buildmaster.change_svc)), 1)
             self.failUnlessEqual(self.buildmaster.change_svc.changeHorizon, 5)
         d.addCallback(_check1)
+        return d
+
+    def testDBUrl(self):
+        self.basedir = "config/configtest/DBUrl"
+        if not os.path.exists(self.basedir):
+            os.makedirs(self.basedir)
+        self.buildmaster = BuildMaster(self.basedir)
+        self.buildmaster.readConfig = True
+        self.buildmaster.setServiceParent(self.serviceparent)
+        spec = db.DB.from_url("sqlite:///orig.sqlite", basedir=self.basedir)
+        db.create_db(spec)
+        d = self.buildmaster.loadConfig(dburlCfg)
+        def _check(ign):
+            self.failUnlessEqual(self.buildmaster.db_url, "sqlite:///orig.sqlite")
+        d.addCallback(_check)
+        return d
+
+    def testDBUrlChange(self):
+        self.basedir = "config/configtest/DBUrlChange"
+        if not os.path.exists(self.basedir):
+            os.makedirs(self.basedir)
+        self.buildmaster = BuildMaster(self.basedir)
+        self.buildmaster.readConfig = True
+        self.buildmaster.setServiceParent(self.serviceparent)
+        spec = db.DB.from_url("sqlite:///orig.sqlite", basedir=self.basedir)
+        db.create_db(spec)
+        d = self.buildmaster.loadConfig(dburlCfg)
+        def _check(ign):
+            self.failUnlessEqual(self.buildmaster.db_url, "sqlite:///orig.sqlite")
+        d.addCallback(_check)
+
+        d.addCallback(lambda ign: self.shouldFail(AssertionError, "loadConfig",
+            "Cannot change db_url after master has started",
+            self.buildmaster.loadConfig, dburlCfg1))
         return d
 
 class ConfigElements(unittest.TestCase):
