@@ -18,20 +18,26 @@ class Scheduling(MasterMixin, StallMixin, PollMixin, unittest.TestCase):
     def testPeriodic1(self):
         self.basedir = 'scheduler/Scheduling/testPeriodic1'
         self.create_master()
+        # updateSchedulers itself fires the first trigger
         d = self.setSchedulers(scheduler.Periodic("quickly", ["a","b"], 2))
-        d.addCallback(lambda ign: self.master.scheduler_manager.trigger())
-        d.addCallback(self.stall, 2)
-        d.addCallback(lambda ign: self.master.scheduler_manager.when_quiet())
+        # there should be one buildset submitted at startup, and another a
+        # few seconds later. We wait until we've seen at least two.
+        def _pollf():
+            bsids = self.master.db.get_active_buildset_ids()
+            return bool(len(bsids) > 1)
+        d.addCallback(lambda ign: self.poll(_pollf, 0.1))
         d.addCallback(self._testPeriodic1_1)
         return d
     def _testPeriodic1_1(self, res):
         bsids = self.master.db.get_active_buildset_ids()
         self.failUnless(len(bsids) > 1)
 
-        (external_idstring, reason, ssid, complete, results) = self.master.db.get_buildset_info(bsids[0])
+        (external_idstring, reason, ssid,
+         complete, results) = self.master.db.get_buildset_info(bsids[0])
         reqs = self.master.db.get_buildrequestids_for_buildset(bsids[0])
         self.failUnlessEqual(sorted(reqs.keys()), ["a","b"])
         self.failUnlessEqual(reason, "The Periodic scheduler named 'quickly' triggered this build")
+    testPeriodic1.timeout = 20
 
     def testNightly(self):
         # now == 15-Nov-2005, 00:05:36 AM . By using mktime, this is

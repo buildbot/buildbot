@@ -99,13 +99,14 @@ class Periodic(_Base, TimedBuildMixin):
         if last_build is None:
             self.start_HEAD_build(t)
             self.update_last_build(t, now)
-            return None
+            last_build = now
         when = last_build + self.periodicBuildTimer
         if when < now:
             self.start_HEAD_build(t)
             self.update_last_build(t, now)
-            return None
-        return when - now + 1.0
+            last_build = now
+            when = now + self.periodicBuildTimer
+        return when + 1.0
 
 
 class Nightly(_Base, ClassifierMixin, TimedBuildMixin):

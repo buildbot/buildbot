@@ -18,11 +18,9 @@ import buildbot
 from buildbot.util import now, safeTranslate
 from buildbot.pbutil import NewCredPerspective
 from buildbot.process.builder import Builder, IDLE
-from buildbot.buildrequest import BuildRequest
 from buildbot.status.builder import Status, BuildSetStatus
 from buildbot.changes.changes import Change
 from buildbot.changes.manager import ChangeManager
-from buildbot.sourcestamp import SourceStamp
 from buildbot.buildslave import BuildSlave
 from buildbot import interfaces, locks
 from buildbot.process.properties import Properties
@@ -442,10 +440,20 @@ class BuildMaster(service.MultiService):
         self.db.subscribe_to("modify-buildset", sm.trigger_modify_buildset)
         self.scheduler_manager = sm
         sm.setServiceParent(self)
-        # it'd be nice if TimerService let us set now=False
-        t = internet.TimerService(30, sm.trigger)
-        t.setServiceParent(self)
-        # should we try to remove this? Periodic() requires at least one kick
+        # TODO: this will turn into a config knob somehow. Set it if you are
+        # using multiple buildmasters that share a common database, such that
+        # the masters need to discover what each other is doing by polling
+        # the database. TODO: this will turn into the DBNotificationServer.
+        just_poll = False
+        if just_poll:
+            # it'd be nice if TimerService let us set now=False
+            t1 = internet.TimerService(30, sm.trigger)
+            t1.setServiceParent(self)
+            t2 = internet.TimerService(30, self.botmaster.loop.trigger)
+            t2.setServiceParent(self)
+        # adding schedulers (like when loadConfig happens) will trigger the
+        # scheduler loop at least once, which we need to jump-start things
+        # like Periodic.
 
         self.status = Status(self.botmaster, self.db, self.basedir)
         self.statusTargets = []
