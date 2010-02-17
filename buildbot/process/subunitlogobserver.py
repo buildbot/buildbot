@@ -1,10 +1,7 @@
 # -*- test-case-name: buildbot.test.test_buildstep -*-
 
 from unittest import TestResult
-
-from buildbot.steps.shell import ShellCommand
 from buildbot.process import buildstep
-
 
 class DiscardStream:
     """A trivial thunk used to discard passthrough content."""

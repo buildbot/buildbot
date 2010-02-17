@@ -7,10 +7,9 @@ from twisted.spread import pb
 from twisted.application import service, internet
 from twisted.internet import defer
 
-from buildbot import interfaces, util, buildrequest
+from buildbot import interfaces, util
 from buildbot.status.progress import Expectations
 from buildbot.status.builder import RETRY
-from buildbot.process import base
 from buildbot.process.properties import Properties
 from buildbot.eventual import eventually
 
