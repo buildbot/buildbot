@@ -90,11 +90,15 @@ class _Base(service.MultiService, ComparableMixin):
 
     def get_state(self, t):
         return self.parent.db.scheduler_get_state(self.schedulerid, t)
+    
     def set_state(self, t, state):
         self.parent.db.scheduler_set_state(self.schedulerid, t, state)
 
     def listBuilderNames(self):
         return self.builderNames
+
+    def getPendingBuildTimes(self):
+        return []
 
     def create_buildset(self, ssid, reason, t, props=_None, builderNames=None):
         db = self.parent.db
@@ -175,9 +179,6 @@ class Scheduler(_Base, ClassifierMixin):
 
     def get_initial_state(self, max_changeid):
         return {"last_processed": max_changeid}
-
-    def getPendingBuildTimes(self):
-        return []
 
     def changeIsRelevant(self, change):
         if change.branch != self.branch:
@@ -325,9 +326,6 @@ class Dependent(_Base):
         # be called whenever that upstream Scheduler adds a buildset to the
         # DB.
         self.upstream_name = upstream.name
-
-    def getPendingBuildTimes(self):
-        return []
 
     def buildSetSubmitted(self, bsid, t):
         db = self.parent.db

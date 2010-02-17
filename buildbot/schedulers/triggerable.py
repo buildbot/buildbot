@@ -54,9 +54,6 @@ class Triggerable(_Base):
     def get_initial_state(self, max_changeid):
         return {}
 
-    def getPendingBuildTimes(self):
-        return []
-
     def trigger(self, ss, set_props=None):
         """Trigger this scheduler. Returns a deferred that will fire when the
         buildset is finished.
