@@ -33,8 +33,9 @@ class BuildStatusStatusResource(HtmlResource):
 
         # Display each step, starting by the last one.
         for i in range(len(build.getSteps()) - 1, -1, -1):
-            if build.getSteps()[i].getText():
-                rows.append(IBox(build.getSteps()[i]).getBox(request).td(align="center"))
+            step = build.getSteps()[i]
+            if step.isStarted() and step.getText():
+                rows.append(IBox(step).getBox(request).td(align="center"))
 
         # Display the bottom box with the build number in it.
         ctx['build'] = IBox(build).getBox(request).td(align="center")
