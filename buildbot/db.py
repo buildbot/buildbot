@@ -291,7 +291,7 @@ def get_sqlite_dbapi_name():
         # don't use built-in sqlite3 on 2.5 -- it has *bad* bugs
         if sys.version_info >= (2,6):
             import sqlite3
-            sqlite_dbapi_name = "pysqlite2.dbapi2"
+            sqlite_dbapi_name = "sqlite3"
         else:
             raise
     return sqlite_dbapi_name
