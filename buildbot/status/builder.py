@@ -2200,7 +2200,7 @@ class Status:
     """
     implements(interfaces.IStatus)
 
-    def __init__(self, botmaster, db, basedir):
+    def __init__(self, botmaster, basedir):
         """
         @type  botmaster: L{buildbot.master.BotMaster}
         @param botmaster: the Status object uses C{.botmaster} to get at
@@ -2215,7 +2215,7 @@ class Status:
                         pickles) can be stored
         """
         self.botmaster = botmaster
-        self.db = db
+        self.db = None
         self.basedir = basedir
         self.watchers = []
         assert os.path.isdir(basedir)
@@ -2227,11 +2227,13 @@ class Status:
         self.logMaxTailSize = None
 
         self._buildreq_observers = util.DictOfSets()
-        self.db.subscribe_to("add-build", self._db_builds_changed)
         self._buildset_success_waiters = util.DictOfSets()
         self._buildset_finished_waiters = util.DictOfSets()
-        self.db.subscribe_to("modify-buildset", self._db_buildsets_changed)
 
+    def setDB(self, db):
+        self.db = db
+        self.db.subscribe_to("add-build", self._db_builds_changed)
+        self.db.subscribe_to("modify-buildset", self._db_buildsets_changed)
 
     # methods called by our clients
 

@@ -28,7 +28,7 @@ from buildbot import interfaces, locks
 from buildbot.process.properties import Properties
 from buildbot.config import BuilderConfig
 from buildbot.process.builder import BuilderControl
-from buildbot.db import open_db, DB # DB is used by buildbot.tac
+from buildbot.db import open_db, DB
 from buildbot.schedulers.manager import SchedulerManager
 from buildbot.loop import DelegateLoop
 
@@ -43,9 +43,8 @@ class BotMaster(service.MultiService):
 
     debug = 0
 
-    def __init__(self, db):
+    def __init__(self):
         service.MultiService.__init__(self)
-        self.db = db
         self.builders = {}
         self.builderNames = []
         # builders maps Builder names to instances of bb.p.builder.Builder,
@@ -399,9 +398,6 @@ class BuildMaster(service.MultiService):
         self.setName("buildmaster")
         self.basedir = basedir
         self.configFileName = configFileName
-        if db is None:
-            db = DB("sqlite3", os.path.join(basedir, "state.sqlite"))
-        self.db = open_db(db)
 
         # the dispatcher is the realm in which all inbound connections are
         # looked up: slave builders, change notifications, status clients, and
@@ -429,26 +425,20 @@ class BuildMaster(service.MultiService):
             hostname = "?"
         self.master_name = "%s:%s" % (hostname, os.path.abspath(self.basedir))
         self.master_incarnation = "pid%d-boot%d" % (os.getpid(), time.time())
-        self.botmaster = BotMaster(self.db)
-        self.db.subscribe_to("add-buildrequest",
-                             self.botmaster.trigger_add_buildrequest)
+
+        self.botmaster = BotMaster()
         self.botmaster.setName("botmaster")
         self.botmaster.setMasterName(self.master_name, self.master_incarnation)
         self.botmaster.setServiceParent(self)
-        dispatcher.botmaster = self.botmaster
+        self.dispatcher.botmaster = self.botmaster
 
-        sm = SchedulerManager(self, self.db, self.change_svc)
-        self.db.subscribe_to("add-change", sm.trigger_add_change)
-        self.db.subscribe_to("modify-buildset", sm.trigger_modify_buildset)
-        self.scheduler_manager = sm
-        sm.setServiceParent(self)
-        # it'd be nice if TimerService let us set now=False
-        t = internet.TimerService(30, sm.trigger)
-        t.setServiceParent(self)
-        # should we try to remove this? Periodic() requires at least one kick
-
-        self.status = Status(self.botmaster, self.db, self.basedir)
+        self.status = Status(self.botmaster, self.basedir)
         self.statusTargets = []
+
+        self.db = None
+        self.db_url = None
+        if db:
+            self.loadDatabase(db)
 
         self.readConfig = False
 
@@ -536,7 +526,7 @@ class BuildMaster(service.MultiService):
                       "buildbotURL", "properties", "prioritizeBuilders",
                       "eventHorizon", "buildCacheSize", "logHorizon", "buildHorizon",
                       "changeHorizon", "logMaxSize", "logMaxTailSize",
-                      "logCompressionMethod",
+                      "logCompressionMethod", "db_url",
                       )
         for k in config.keys():
             if k not in known_keys:
@@ -551,6 +541,7 @@ class BuildMaster(service.MultiService):
             #change_source = config['change_source']
 
             # optional
+            db_url = config.get("db_url", "sqlite:///state.sqlite")
             debugPassword = config.get('debugPassword')
             manhole = config.get('manhole')
             status = config.get('status', [])
@@ -791,6 +782,10 @@ class BuildMaster(service.MultiService):
         self.logHorizon = logHorizon
         self.buildHorizon = buildHorizon
 
+        # Set up the database
+        # TODO: Warn if this changes
+        d.addCallback(lambda res: self.loadConfig_Database(db_url))
+
         # self.slaves: Disconnect any that were attached and removed from the
         # list. Update self.checker with the new list of passwords, including
         # debug/change/status.
@@ -854,6 +849,34 @@ class BuildMaster(service.MultiService):
         d.addCallback(lambda res: self.botmaster.triggerNewBuildCheck())
         d.addErrback(log.err)
         return d
+
+    def loadDatabase(self, db_spec):
+        if self.db:
+            return
+        self.db = open_db(db_spec)
+
+        self.botmaster.db = self.db
+        self.status.setDB(self.db)
+
+        self.db.subscribe_to("add-buildrequest",
+                             self.botmaster.trigger_add_buildrequest)
+
+        sm = SchedulerManager(self, self.db, self.change_svc)
+        self.db.subscribe_to("add-change", sm.trigger_add_change)
+        self.db.subscribe_to("modify-buildset", sm.trigger_modify_buildset)
+
+        self.scheduler_manager = sm
+        sm.setServiceParent(self)
+        # it'd be nice if TimerService let us set now=False
+        t = internet.TimerService(30, sm.trigger)
+        t.setServiceParent(self)
+        # should we try to remove this? Periodic() requires at least one kick
+
+    def loadConfig_Database(self, db_url):
+        assert self.db_url is None or db_url == self.db_url, "Cannot change db_url after master has started"
+        self.db_url = db_url
+        db_spec = DB.from_url(db_url, self.basedir)
+        self.loadDatabase(db_spec)
 
     def loadConfig_Slaves(self, new_slaves):
         # set up the Checker with the names and passwords of all valid bots
