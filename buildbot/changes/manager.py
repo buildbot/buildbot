@@ -45,7 +45,7 @@ from buildbot import interfaces, util
 class ChangeManager(service.MultiService):
 
     """This is the master-side service which receives file change
-    notifications from CVS. It keeps a log of these changes, enough to
+    notifications from a VCS. It keeps a log of these changes, enough to
     provide for the HTML waterfall display, and to tell
     temporarily-disconnected bots what they missed while they were
     offline.
@@ -55,13 +55,13 @@ class ChangeManager(service.MultiService):
     which provides a remote method called 'addChange', which should be
     called with a dict that has keys 'filename' and 'comments'.
 
-    The second is a list of objects derived from the ChangeSource class.
-    These are added with .addSource(), which also sets the .changemaster
-    attribute in the source to point at the ChangeMaster. When the
-    application begins, these will be started with .start() . At shutdown
-    time, they will be terminated with .stop() . They must be persistable.
-    They are expected to call self.changemaster.addChange() with Change
-    objects.
+    The second is a list of objects derived from the 
+    L{buildbot.changes.base.ChangeSource} class. These are added with 
+    .addSource(), which also sets the .changemaster attribute in the source 
+    to point at the ChangeMaster. When the application begins, these will 
+    be started with .start() . At shutdown time, they will be terminated 
+    with .stop() . They must be persistable. They are expected to call 
+    self.changemaster.addChange() with Change objects.
 
     There are several different variants of the second type of source:
 
