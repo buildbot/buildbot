@@ -11,6 +11,8 @@ from twisted.application import service, internet
 from twisted.spread import pb
 from twisted.web.server import Site
 from twisted.web.distrib import ResourcePublisher
+from buildbot import db
+from buildbot.master import BuildMaster
 from buildbot.process.builder import Builder
 from buildbot.process.factory import BasicBuildFactory, ArgumentsInTheWrongPlace
 from buildbot.changes.pb import PBChangeSource
@@ -397,6 +399,103 @@ c['projectURL'] = 'http://dummy.example.com'
 c['buildbotURL'] = 'http://dummy.example.com/buildbot'
 BuildmasterConfig = c
 """
+
+dburlCfg = emptyCfg + \
+"""
+c['db_url'] = "sqlite:///orig.sqlite"
+"""
+
+dburlCfg1 = emptyCfg + \
+"""
+c['db_url'] = "sqlite:///new.sqlite"
+"""
+
+class TestDBUrl(unittest.TestCase):
+    # a dburl of "sqlite:///.." can use either the third-party sqlite3
+    # module, or the stdlib pysqlite2.dbapi2 module, depending upon the
+    # version of python in use
+    SQLITE_NAMES = ["sqlite3", "pysqlite2.dbapi2"]
+
+    def testSQLiteRelative(self):
+        basedir = "/foo/bar"
+        d = db.DB.from_url("sqlite:///state.sqlite", basedir=basedir)
+        self.failUnlessIn(d.dbapiName, self.SQLITE_NAMES)
+        self.failUnlessEqual(d.connargs, (os.path.join(basedir, "state.sqlite"),))
+
+    def testSQLiteBasedir(self):
+        basedir = "/foo/bar"
+        d = db.DB.from_url("sqlite:///%(basedir)s/baz/state.sqlite", basedir=basedir)
+        self.failUnlessIn(d.dbapiName, self.SQLITE_NAMES)
+        self.failUnlessEqual(d.connargs, (os.path.join(basedir, "baz/state.sqlite"),))
+
+    def testSQLiteAbsolute(self):
+        basedir = "/foo/bar"
+        d = db.DB.from_url("sqlite:////tmp/state.sqlite", basedir=basedir)
+        self.failUnlessIn(d.dbapiName, self.SQLITE_NAMES)
+        self.failUnlessEqual(d.connargs, ("/tmp/state.sqlite",))
+
+    def testSQLiteMemory(self):
+        basedir = "/foo/bar"
+        d = db.DB.from_url("sqlite://", basedir=basedir)
+        self.failUnlessIn(d.dbapiName, self.SQLITE_NAMES)
+        self.failUnlessEqual(d.connargs, (":memory:",))
+
+    def testSQLiteArgs(self):
+        basedir = "/foo/bar"
+        d = db.DB.from_url("sqlite:///state.sqlite?foo=bar", basedir=basedir)
+        self.failUnlessIn(d.dbapiName, self.SQLITE_NAMES)
+        self.failUnlessEqual(d.connargs, (os.path.join(basedir, "state.sqlite"),))
+        self.failUnlessEqual(d.connkw, dict(foo="bar"))
+
+    def testBadUrls(self):
+        self.failUnlessRaises(ValueError, db.DB.from_url, "state.sqlite")
+        self.failUnlessRaises(ValueError, db.DB.from_url, "sqlite/state.sqlite")
+        self.failUnlessRaises(ValueError, db.DB.from_url, "sqlite:/state.sqlite")
+        self.failUnlessRaises(ValueError, db.DB.from_url, "sqlite:state.sqlite")
+        self.failUnlessRaises(ValueError, db.DB.from_url, "mysql://foo")
+        self.failUnlessRaises(ValueError, db.DB.from_url, "unknowndb://foo/bar")
+        self.failUnlessRaises(ValueError, db.DB.from_url, "mysql://somehost.com:badport/db")
+
+    def testMysql(self):
+        basedir = "/foo/bar"
+        d = db.DB.from_url("mysql://somehost.com/database_name", basedir=basedir)
+        self.failUnlessEqual(d.dbapiName, "MySQLdb")
+        self.failUnlessEqual(d.connkw, dict(host="somehost.com", db="database_name"))
+
+    def testMysqlPort(self):
+        basedir = "/foo/bar"
+        d = db.DB.from_url("mysql://somehost.com:9000/database_name", basedir=basedir)
+        self.failUnlessEqual(d.dbapiName, "MySQLdb")
+        self.failUnlessEqual(d.connkw, dict(host="somehost.com",
+            db="database_name", port=9000))
+
+    def testMysqlLocal(self):
+        basedir = "/foo/bar"
+        d = db.DB.from_url("mysql:///database_name", basedir=basedir)
+        self.failUnlessEqual(d.dbapiName, "MySQLdb")
+        self.failUnlessEqual(d.connkw, dict(host=None, db="database_name"))
+
+    def testMysqlAuth(self):
+        basedir = "/foo/bar"
+        d = db.DB.from_url("mysql://user:password@somehost.com/database_name",
+                basedir=basedir)
+        self.failUnlessEqual(d.dbapiName, "MySQLdb")
+        self.failUnlessEqual(d.connkw, dict(host="somehost.com", db="database_name",
+            user="user", passwd="password"))
+
+    def testMysqlAuthNoPass(self):
+        basedir = "/foo/bar"
+        d = db.DB.from_url("mysql://user@somehost.com/database_name", basedir=basedir)
+        self.failUnlessEqual(d.dbapiName, "MySQLdb")
+        self.failUnlessEqual(d.connkw, dict(host="somehost.com", db="database_name",
+            user="user"))
+
+    def testMysqlArgs(self):
+        basedir = "/foo/bar"
+        d = db.DB.from_url("mysql://somehost.com/database_name?foo=bar", basedir=basedir)
+        self.failUnlessEqual(d.dbapiName, "MySQLdb")
+        self.failUnlessEqual(d.connkw, dict(host="somehost.com", db="database_name",
+            foo="bar"))
 
 class ConfigTest(MasterMixin, unittest.TestCase, ShouldFailMixin, StallMixin):
     def setUp(self):
@@ -1163,6 +1262,40 @@ c['changeHorizon'] = 5
             self.failUnlessEqual(len(list(self.master.change_svc)), 1)
             self.failUnlessEqual(self.master.change_svc.changeHorizon, 5)
         d.addCallback(_check1)
+        return d
+
+    def testDBUrl(self):
+        self.basedir = "config/configtest/DBUrl"
+        self.slaves = {}
+        os.makedirs(self.basedir)
+        self.master = BuildMaster(self.basedir)
+        self.master.readConfig = True
+        self.master.startService()
+        spec = db.DB.from_url("sqlite:///orig.sqlite", basedir=self.basedir)
+        db.create_db(spec)
+        d = self.master.loadConfig(dburlCfg)
+        def _check(ign):
+            self.failUnlessEqual(self.master.db_url, "sqlite:///orig.sqlite")
+        d.addCallback(_check)
+        return d
+
+    def testDBUrlChange(self):
+        self.basedir = "config/configtest/DBUrlChange"
+        self.slaves = {}
+        os.makedirs(self.basedir)
+        self.master = BuildMaster(self.basedir)
+        self.master.readConfig = True
+        self.master.startService()
+        spec = db.DB.from_url("sqlite:///orig.sqlite", basedir=self.basedir)
+        db.create_db(spec)
+        d = self.master.loadConfig(dburlCfg)
+        def _check(ign):
+            self.failUnlessEqual(self.master.db_url, "sqlite:///orig.sqlite")
+        d.addCallback(_check)
+
+        d.addCallback(lambda ign: self.shouldFail(AssertionError, "loadConfig",
+            "Cannot change db_url after master has started",
+            self.master.loadConfig, dburlCfg1))
         return d
 
 class ConfigElements(unittest.TestCase):

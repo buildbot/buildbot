@@ -304,7 +304,7 @@ class GetLock(unittest.TestCase):
         # BotMaster.locks, but they're small and shouldn't really cause a
         # problem.
 
-        b = master.BotMaster(None)
+        b = master.BotMaster()
         l1 = locks.MasterLock("one")
         l1a = locks.MasterLock("one")
         l2 = locks.MasterLock("one", maxCount=4)

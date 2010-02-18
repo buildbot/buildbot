@@ -81,9 +81,10 @@ class MasterMixin:
             self.basedir = self.mktemp()
         basedir = self.basedir
         os.makedirs(basedir)
-        spec = db.DB("sqlite3", os.path.join(basedir, "state.sqlite"))
+        self.master = master.BuildMaster(basedir, **kwargs)
+        spec = db.DB.from_url("sqlite:///state.sqlite", basedir=basedir)
         db.create_db(spec)
-        self.master = master.BuildMaster(basedir, db=spec, **kwargs)
+        self.master.loadDatabase(spec)
         self.master.readConfig = True
         self.master.startService()
         self.status = self.master.getStatus()
@@ -293,7 +294,7 @@ def setupBuildStepStatus(basedir):
     use."""
     os.mkdir(basedir)
     botmaster = None
-    s0 = builder.Status(botmaster, FakeDB(), basedir)
+    s0 = builder.Status(botmaster, basedir)
     s1 = s0.builderAdded("buildername", "buildername")
     s2 = builder.BuildStatus(s1, 1)
     s3 = builder.BuildStepStatus(s2)

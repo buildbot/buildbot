@@ -1,6 +1,7 @@
 The keys in this section affect the operations of the buildmaster globally.
 
 @menu
+* Database Specification::
 * Project Definitions::
 * Log Handling::
 * Data Lifetime::
@@ -10,6 +11,26 @@ The keys in this section affect the operations of the buildmaster globally.
 * Defining Global Properties::
 * Debug Options::
 @end menu
+
+@node Database Specification
+@subsection Database Specification
+
+Buildbot requires a connection to a database to maintain certain state
+information, such as tracking pending build requests.  By default this is
+stored in a sqlite file called 'state.sqlite' in the base directory of your
+master.  This can be overridden with the @code{db_url} parameter.
+
+This parameter is of the form:
+
+driver://[username:password@@]host:port/database[?args]
+
+For sqlite databases, since there is no host and port, relative paths are
+specified with @code{sqlite:///} and absolute paths with @code{sqlite:////}
+
+@example
+c['db_url'] = "sqlite:///state.sqlite"
+c['db_url'] = "mysql://user:pass@@somehost.com/database_name"
+@end example
 
 @node Project Definitions
 @subsection Project Definitions

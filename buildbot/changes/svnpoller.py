@@ -20,10 +20,6 @@ def _assert(condition, msg):
         return True
     raise AssertionError(msg)
 
-def dbgMsg(myString):
-    log.msg(myString)
-    return 1
-
 # these split_file_* functions are available for use as values to the
 # split_file= argument.
 def split_file_alwaystrunk(path):
@@ -292,7 +288,6 @@ class SVNPoller(base.ChangeSource, util.ComparableMixin):
         try:
             doc = xml.dom.minidom.parseString(output)
         except xml.parsers.expat.ExpatError:
-            dbgMsg("_process_changes: ExpatError in %s" % output)
             log.msg("SVNPoller._determine_prefix_2: ExpatError in '%s'"
                     % output)
             raise
@@ -331,8 +326,7 @@ class SVNPoller(base.ChangeSource, util.ComparableMixin):
         try:
             doc = xml.dom.minidom.parseString(output)
         except xml.parsers.expat.ExpatError:
-            dbgMsg("_process_changes: ExpatError in %s" % output)
-            log.msg("SVNPoller._parse_changes: ExpatError in '%s'" % output)
+            log.msg("SVNPoller.parse_logs: ExpatError in '%s'" % output)
             raise
         logentries = doc.getElementsByTagName("logentry")
         return logentries
@@ -411,7 +405,7 @@ class SVNPoller(base.ChangeSource, util.ComparableMixin):
                 if revision:
                     revlink = self.revlinktmpl % urllib.quote_plus(revision)
 
-            dbgMsg("Adding change revision %s" % (revision,))
+            log.msg("Adding change revision %s" % (revision,))
             # TODO: the rest of buildbot may not be ready for unicode 'who'
             # values
             author   = self._get_text(el, "author")
@@ -473,15 +467,13 @@ class SVNPoller(base.ChangeSource, util.ComparableMixin):
             self.parent.addChange(c)
 
     def finished_ok(self, res):
-        log.msg("SVNPoller finished polling")
-        dbgMsg('_finished : %s' % res)
+        log.msg("SVNPoller finished polling %s" % res)
         assert self.working
         self.working = False
         return res
 
     def finished_failure(self, f):
-        log.msg("SVNPoller failed")
-        dbgMsg('_finished : %s' % f)
+        log.msg("SVNPoller failed %s" % f)
         assert self.working
         self.working = False
         return None # eat the failure

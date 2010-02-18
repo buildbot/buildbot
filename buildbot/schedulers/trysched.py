@@ -58,10 +58,6 @@ class TryBase(_Base):
         # triggered by external events, not DB changes or timers
         return None
 
-    def getPendingBuildTimes(self):
-        # we can't predict what the developers are going to do in the future
-        return []
-
     def filterBuilderList(self, builderNames):
         # self.builderNames is the configured list of builders
         # available for try.  If the user supplies a list of builders,

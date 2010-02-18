@@ -38,7 +38,7 @@ class _WebpartsTest(BaseWeb):
         self.master = m = SimpleMaster(self.basedir)
         # use upgradeMaster to populate public_html/ with default.css
         runner.upgradeMaster({'basedir': self.basedir, 'quiet': True,
-                              'db': None})
+            'db': "sqlite:///state.sqlite"})
         m.startService()
         d = m.loadConfig(config)
         def _started(ign):
