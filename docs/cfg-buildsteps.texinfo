@@ -501,8 +501,7 @@ like some build outputs that can be reused between builds.
 svn:ignore properties and global-ignores in subversion/config.
 
 @item always_purge
-(optional): if set to True, always purge local changes after each
-build. This is everything that would appear in a @code{svn status}.
+(optional): if set to True, always purge local changes before updating. This deletes unversioned files and reverts everything that would appear in a @code{svn status}.
 
 @item depth
 (optional): Specify depth argument to achieve sparse checkout.  Only available if slave has Subversion 1.5 or higher.
