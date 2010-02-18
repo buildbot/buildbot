@@ -410,6 +410,16 @@ dburlCfg1 = emptyCfg + \
 c['db_url'] = "sqlite:///new.sqlite"
 """
 
+dbPollIntervalCfg = emptyCfg + \
+"""
+c['db_poll_interval'] = 2*60 # two minutes
+"""
+
+dbPollIntervalCfg2 = emptyCfg + \
+"""
+c['db_poll_interval'] = 3*60 # three minutes
+"""
+
 class TestDBUrl(unittest.TestCase):
     # a dburl of "sqlite:///.." can use either the third-party sqlite3
     # module, or the stdlib pysqlite2.dbapi2 module, depending upon the
@@ -1276,6 +1286,9 @@ c['changeHorizon'] = 5
         d = self.master.loadConfig(dburlCfg)
         def _check(ign):
             self.failUnlessEqual(self.master.db_url, "sqlite:///orig.sqlite")
+            timers = self.get_timers()
+            self.failIf(self.get_timers(),
+                        "default should have no timers, but: %s" % timers)
         d.addCallback(_check)
         return d
 
@@ -1296,6 +1309,43 @@ c['changeHorizon'] = 5
         d.addCallback(lambda ign: self.shouldFail(AssertionError, "loadConfig",
             "Cannot change db_url after master has started",
             self.master.loadConfig, dburlCfg1))
+        return d
+
+    def get_timers(self):
+        return [s for s in list(self.master) if isinstance(s, internet.TimerService)]
+
+    def testDBPollInterval(self):
+        self.basedir = "config/configtest/DBPollInterval"
+        self.slaves = {}
+        os.makedirs(self.basedir)
+        spec = db.DB.from_url("sqlite:///state.sqlite", basedir=self.basedir)
+        db.create_db(spec)
+        self.master = BuildMaster(self.basedir)
+        self.master.readConfig = True
+        self.master.startService()
+        d = self.master.loadConfig(dbPollIntervalCfg)
+        def _check(ign):
+            self.failUnless(len(self.get_timers()) >= 2, list(self.master))
+        d.addCallback(_check)
+        return d
+
+    def testDBPollIntervalChange(self):
+        self.basedir = "config/configtest/DBPollIntervalChange"
+        self.slaves = {}
+        os.makedirs(self.basedir)
+        spec = db.DB.from_url("sqlite:///state.sqlite", basedir=self.basedir)
+        db.create_db(spec)
+        self.master = BuildMaster(self.basedir)
+        self.master.readConfig = True
+        self.master.startService()
+        d = self.master.loadConfig(dbPollIntervalCfg)
+        def _check(ign):
+            self.failUnless(len(self.get_timers()) >= 2, list(self.master))
+        d.addCallback(_check)
+
+        d.addCallback(lambda ign: self.shouldFail(AssertionError, "loadConfig",
+            "Cannot change db_poll_interval after master has started",
+            self.master.loadConfig, dbPollIntervalCfg2))
         return d
 
 class ConfigElements(unittest.TestCase):
