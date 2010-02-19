@@ -24,7 +24,7 @@ master = "localhost:9989"
 username = "myloginname"
 
 # Remember that for this to work, your buildmaster's master.cfg needs to have
-# a c['sources'] list which includes a pb.PBChangeSource instance.
+# a c['change_source'] list which includes a pb.PBChangeSource instance.
 
 os.chdir(os.getenv("ARCH_TREE_ROOT"))
 filelist = ",,bb-files"
