@@ -727,31 +727,6 @@ c['change_source'] = [PBChangeSource(),
         d.addCallback(_check1)
         return d
 
-    def testSources(self):
-        # test backwards compatibility. c['sources'] is deprecated.
-        self.basedir = "config/configtest/sources"
-        self.create_master()
-        master = self.master
-        d = master.loadConfig(emptyCfg)
-        def _check0(ign):
-            self.failUnlessEqual(list(master.change_svc), [])
-        d.addCallback(_check0)
-
-        sourcesCfg = emptyCfg + \
-"""
-from buildbot.changes.pb import PBChangeSource
-c['sources'] = [PBChangeSource()]
-"""
-
-        d.addCallback(lambda ign: master.loadConfig(sourcesCfg))
-        def _check1(res):
-            self.failUnlessEqual(len(list(self.master.change_svc)), 1)
-            s1 = list(self.master.change_svc)[0]
-            self.failUnless(isinstance(s1, PBChangeSource))
-            self.failUnless(s1.parent)
-        d.addCallback(_check1)
-        return d
-
     def shouldBeFailure(self, res, *expected):
         self.failUnless(isinstance(res, failure.Failure),
                         "we expected this to fail, not produce %s" % (res,))
