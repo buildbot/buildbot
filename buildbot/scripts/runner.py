@@ -518,9 +518,12 @@ class MasterOptions(MakerBase):
 
 
 masterTAC = """
+import os
+
 from twisted.application import service
 from buildbot.master import BuildMaster
 
+basedir = r'%(basedir)s'
 rotateLength = %(log-size)s
 maxRotatedFiles = %(log-count)s
 
@@ -528,14 +531,13 @@ application = service.Application('buildmaster')
 try:
   from twisted.python.logfile import LogFile
   from twisted.python.log import ILogObserver, FileLogObserver
-  logfile = LogFile.fromFullPath("twistd.log", rotateLength=rotateLength,
+  logfile = LogFile.fromFullPath(os.path.join(basedir, "twistd.log"), rotateLength=rotateLength,
                                  maxRotatedFiles=maxRotatedFiles)
   application.setComponent(ILogObserver, FileLogObserver(logfile).emit)
 except ImportError:
   # probably not yet twisted 8.2.0 and beyond, can't set log yet
   pass
 
-basedir = r'%(basedir)s'
 configfile = r'%(config)s'
 
 m = BuildMaster(basedir, configfile)
@@ -625,9 +627,12 @@ class SlaveOptions(MakerBase):
                                    " or None")
 
 slaveTAC = """
+import os
+
 from twisted.application import service
 from buildbot.slave.bot import BuildSlave
 
+basedir = r'%(basedir)s'
 rotateLength = %(log-size)s
 maxRotatedFiles = %(log-count)s
 
@@ -635,14 +640,13 @@ application = service.Application('buildslave')
 try:
   from twisted.python.logfile import LogFile
   from twisted.python.log import ILogObserver, FileLogObserver
-  logfile = LogFile.fromFullPath("twistd.log", rotateLength=rotateLength,
+  logfile = LogFile.fromFullPath(os.path.join(basedir, "twistd.log"), rotateLength=rotateLength,
                                  maxRotatedFiles=maxRotatedFiles)
   application.setComponent(ILogObserver, FileLogObserver(logfile).emit)
 except ImportError:
   # probably not yet twisted 8.2.0 and beyond, can't set log yet
   pass
 
-basedir = r'%(basedir)s'
 buildmaster_host = '%(host)s'
 port = %(port)d
 slavename = '%(name)s'
