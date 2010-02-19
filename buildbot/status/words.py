@@ -3,6 +3,7 @@
 # protocols: irc, etc)
 
 import re, shlex
+from string import join, capitalize, lower
 
 from zope.interface import Interface, implements
 from twisted.internet import protocol, reactor
@@ -23,8 +24,6 @@ try:
     have_ssl = True
 except ImportError:
     have_ssl = False
-
-from string import join, capitalize, lower
 
 class UsageError(ValueError):
     def __init__(self, string = "Invalid usage", *more):
