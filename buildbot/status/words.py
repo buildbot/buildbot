@@ -393,7 +393,7 @@ class Contact:
             self.send("Build details are at %s" % buildurl)
 
     def command_FORCE(self, args, who):
-        args = shlex.split(args) # TODO: this requires python2.3 or newer
+        args = shlex.split(args)
         if not args:
             raise UsageError("try 'force build WHICH <REASON>'")
         what = args.pop(0)
