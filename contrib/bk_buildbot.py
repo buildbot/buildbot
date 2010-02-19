@@ -18,7 +18,7 @@ import sys
 import os
 import re
 if sys.version_info < (2, 6):
-     import sets
+    import sets
 
 # We have hackish "-d" handling here rather than in the Options
 # subclass below because a common error will be to not have twisted in
@@ -107,7 +107,7 @@ class ChangeSender:
                  'revision': revision}
 
         if opts.get('category'):
-             changes['category'] = opts.get('category')
+            changes['category'] = opts.get('category')
 
         return changes
 

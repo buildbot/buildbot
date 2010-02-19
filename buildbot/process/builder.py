@@ -837,8 +837,8 @@ class Builder(pb.Referenceable, service.MultiService):
         bids = [self.db.build_started(req.id, bs.number) for req in build.requests]
         d = build.startBuild(bs, self.expectations, sb)
         d.addCallback(self.buildFinished, sb, bids)
-        d.addErrback(log.err) # this shouldn't happen. if it does, the slave
-                              # will be wedged
+        # this shouldn't happen. if it does, the slave will be wedged
+        d.addErrback(log.err)
         return build # this is the IBuildControl
 
     def _startBuildFailed(self, why, build, sb):

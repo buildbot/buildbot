@@ -157,8 +157,8 @@ class Run(MasterMixin, StallMixin, unittest.TestCase):
             cm.addChange(c)
             return flushEventualQueue()
         d.addCallback(_then)
-        d.addCallback(self.stall, 1.0) # needs time to finish. TODO: why is
-                                       # flushEventualQueue not sufficient?
+        # needs time to finish. TODO: why is flushEventualQueue not sufficient?
+        d.addCallback(self.stall, 1.0)
         # we used to check that the Scheduler is now waiting, but when its
         # state moved into the database, that became a nuisance
         def _check(ign):

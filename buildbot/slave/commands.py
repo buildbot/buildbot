@@ -1754,7 +1754,7 @@ class BK(SourceBase):
 
         revision_arg = ''
         if self.args['revision']:
-             revision_arg = "-r%s" % self.args['revision']
+            revision_arg = "-r%s" % self.args['revision']
 
         d = self.builder.basedir
 
