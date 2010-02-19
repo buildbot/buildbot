@@ -635,27 +635,6 @@ class ConfigTest(MasterMixin, unittest.TestCase, ShouldFailMixin, StallMixin):
             # files that have not yet been updated to 0.7.6 . This
             # compatibility (and this test) is scheduled for removal in 0.8.0
         d.addCallback(_check1)
-        botsCfg = (emptyCfg +
-                   "c['bots'] = [('bot1', 'pw1'), ('bot2', 'pw2')]\n")
-        d.addCallback(lambda ign: master.loadConfig(botsCfg))
-        def _check2(ign):
-            self.failUnlessEqual(master.checker.users,
-                                 {"change": "changepw",
-                                  "bot1": "pw1",
-                                  "bot2": "pw2"})
-        d.addCallback(_check2)
-        d.addCallback(lambda ign: master.loadConfig(botsCfg))
-        def _check3(ign):
-            self.failUnlessEqual(master.checker.users,
-                                 {"change": "changepw",
-                                  "bot1": "pw1",
-                                  "bot2": "pw2"})
-        d.addCallback(_check3)
-        d.addCallback(lambda ign: master.loadConfig(emptyCfg))
-        def _check4(ign):
-            self.failUnlessEqual(master.checker.users,
-                                 {"change": "changepw"})
-        d.addCallback(_check4)
         slavesCfg = (emptyCfg +
                      "from buildbot.buildslave import BuildSlave\n"
                      "c['slaves'] = [BuildSlave('bot1','pw1'), "
@@ -745,31 +724,6 @@ c['change_source'] = [PBChangeSource(),
             self.failUnless(s1.parent)
             self.failUnless(isinstance(s2, SyncmailMaildirSource))
             self.failUnless(s2.parent)
-        d.addCallback(_check1)
-        return d
-
-    def testSources(self):
-        # test backwards compatibility. c['sources'] is deprecated.
-        self.basedir = "config/configtest/sources"
-        self.create_master()
-        master = self.master
-        d = master.loadConfig(emptyCfg)
-        def _check0(ign):
-            self.failUnlessEqual(list(master.change_svc), [])
-        d.addCallback(_check0)
-
-        sourcesCfg = emptyCfg + \
-"""
-from buildbot.changes.pb import PBChangeSource
-c['sources'] = [PBChangeSource()]
-"""
-
-        d.addCallback(lambda ign: master.loadConfig(sourcesCfg))
-        def _check1(res):
-            self.failUnlessEqual(len(list(self.master.change_svc)), 1)
-            s1 = list(self.master.change_svc)[0]
-            self.failUnless(isinstance(s1, PBChangeSource))
-            self.failUnless(s1.parent)
         d.addCallback(_check1)
         return d
 

@@ -108,7 +108,6 @@ a suitable @code{MaildirSource}.
 @node Configuring Change Sources
 @subsection Configuring Change Sources
 
-@bcindex c['sources']
 @bcindex c['change_source']
 
 The @code{master.cfg} configuration file has a dictionary key named

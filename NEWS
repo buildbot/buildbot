@@ -29,6 +29,9 @@ TODO - make this true
 
 *** Removed buildbot.status.html.Waterfall (deprecated in 0.7.6)
 
+*** BuildmasterConfig no longer accepts 'bots' and 'sources' as keys
+(deprecated in 0.7.6). Use 'slaves' and 'change_source' instead.
+
 * Release 0.7.12 (January 21, 2010)
 
 ** New 'console' display

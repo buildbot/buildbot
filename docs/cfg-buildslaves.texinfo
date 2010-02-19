@@ -48,11 +48,6 @@ from buildbot.buildslave import BuildSlave
 c['slaves'] = [BuildSlave("bot-linux", "linuxpassword", max_builds=2)]
 @end example
 
-Historical note: in buildbot-0.7.5 and earlier, the @code{c['bots']}
-key was used instead, and it took a list of (name, password) tuples.
-This key is accepted for backwards compatibility, but is deprecated as
-of 0.7.6 and will go away in some future release.
-
 @menu
 * When Buildslaves Go Missing::
 * Latent Buildslaves::
