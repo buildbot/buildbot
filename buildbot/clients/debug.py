@@ -169,13 +169,3 @@ class DebugWidget:
 
     def run(self):
         reactor.run()
-
-if __name__ == '__main__':
-    master = "localhost:8007"
-    if len(sys.argv) > 1:
-        master = sys.argv[1]
-    passwd = "debugpw"
-    if len(sys.argv) > 2:
-        passwd = sys.argv[2]
-    d = DebugWidget(master, passwd)
-    d.run()
