@@ -202,6 +202,12 @@ SUPPORT:
  list reachable through http://buildbot.net/, so that everyone can see them.
 
 
+CONTRIBUTE:
+
+ If you are considering contributing to Buildbot please look at
+ http://buildbot.net/trac/wiki/Development to understand the workflow.
+
+
 COPYING:
 
     Buildbot is free software: you can redistribute it and/or modify it under
