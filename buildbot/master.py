@@ -520,8 +520,7 @@ class BuildMaster(service.MultiService):
             log.err("config file must define BuildmasterConfig")
             raise
 
-        known_keys = ("bots", "slaves",
-                      "sources", "change_source",
+        known_keys = ("slaves", "change_source",
                       "schedulers", "builders", "mergeRequests",
                       "slavePortnum", "debugPassword", "logCompressionLimit",
                       "manhole", "status", "projectName", "projectURL",
@@ -586,25 +585,21 @@ class BuildMaster(service.MultiService):
             log.msg("leaving old configuration in place")
             raise
 
-        #if "bots" in config:
-        #    raise KeyError("c['bots'] is no longer accepted")
+        if "sources" in config:
+            m = ("c['sources'] is deprecated as of 0.7.6 and is no longer "
+                 "accepted in >= 0.8.0 . Please use c['change_source'] instead.")
+            raise KeyError(m)
+
+        if "bots" in config:
+            m = ("c['bots'] is deprecated as of 0.7.6 and is no longer "
+                 "accepted in >= 0.8.0 . Please use c['slaves'] instead.")
+            raise KeyError(m)
 
         slaves = config.get('slaves', [])
-        if "bots" in config:
-            m = ("c['bots'] is deprecated as of 0.7.6 and will be "
-                 "removed by 0.8.0 . Please use c['slaves'] instead.")
-            log.msg(m)
-            warnings.warn(m, DeprecationWarning)
-            for name, passwd in config['bots']:
-                slaves.append(BuildSlave(name, passwd))
-
-        if "bots" not in config and "slaves" not in config:
-            log.msg("config dictionary must have either 'bots' or 'slaves'")
+        if "slaves" not in config:
+            log.msg("config dictionary must have a 'slaves' key")
             log.msg("leaving old configuration in place")
-            raise KeyError("must have either 'bots' or 'slaves'")
-
-        #if "sources" in config:
-        #    raise KeyError("c['sources'] is no longer accepted")
+            raise KeyError("must have a 'slaves' key")
 
         if changeHorizon is not None:
             self.change_svc.changeHorizon = changeHorizon
@@ -614,13 +609,6 @@ class BuildMaster(service.MultiService):
             change_sources = change_source
         else:
             change_sources = [change_source]
-        if "sources" in config:
-            m = ("c['sources'] is deprecated as of 0.7.6 and will be "
-                 "removed by 0.8.0 . Please use c['change_source'] instead.")
-            log.msg(m)
-            warnings.warn(m, DeprecationWarning)
-            for s in config['sources']:
-                change_sources.append(s)
 
         # do some validation first
         for s in slaves:
@@ -898,7 +886,7 @@ class BuildMaster(service.MultiService):
         self.loadDatabase(db_spec, db_poll_interval)
 
     def loadConfig_Slaves(self, new_slaves):
-        # set up the Checker with the names and passwords of all valid bots
+        # set up the Checker with the names and passwords of all valid slaves
         self.checker.users = {} # violates abstraction, oh well
         for s in new_slaves:
             self.checker.addUser(s.slavename, s.password)
