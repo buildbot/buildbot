@@ -48,6 +48,7 @@ from buildbot.changes.changes import OldChangeMaster, Change
 from buildbot.changes.manager import ChangeManager
 from buildbot.test.pollmixin import PollMixin
 from buildbot.test.runutils import RunMixin
+from buildbot.eventual import flushEventualQueue
 
 class ShouldFailMixin:
 
@@ -285,6 +286,7 @@ class Scheduling(unittest.TestCase):
             self.failUnlessEqual(all[0].name, "one")
             self.failUnlessEqual(all[1].builderNames, ["builder-two-other"])
         d.addCallback(_check4)
+        d.addCallback(flushEventualQueue)
         return d
 
     def stall(self, res, timeout):

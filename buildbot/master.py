@@ -11,18 +11,17 @@ from twisted.python.failure import Failure
 from twisted.internet import defer, reactor
 from twisted.spread import pb
 from twisted.cred import portal, checkers
-from twisted.application import service, strports, internet
+from twisted.application import service, strports
+from twisted.application.internet import TimerService
 
 import buildbot
 # sibling imports
 from buildbot.util import now, safeTranslate
 from buildbot.pbutil import NewCredPerspective
 from buildbot.process.builder import Builder, IDLE
-from buildbot.buildrequest import BuildRequest
 from buildbot.status.builder import Status, BuildSetStatus
 from buildbot.changes.changes import Change
 from buildbot.changes.manager import ChangeManager
-from buildbot.sourcestamp import SourceStamp
 from buildbot.buildslave import BuildSlave
 from buildbot import interfaces, locks
 from buildbot.process.properties import Properties
@@ -383,6 +382,8 @@ class Dispatcher:
 #   TCPServer(self.site)
 #   UNIXServer(ResourcePublisher(self.site))
 
+class _Unset: pass  # marker
+
 class BuildMaster(service.MultiService):
     debug = 0
     manhole = None
@@ -437,6 +438,7 @@ class BuildMaster(service.MultiService):
 
         self.db = None
         self.db_url = None
+        self.db_poll_interval = _Unset
         if db:
             self.loadDatabase(db)
 
@@ -542,6 +544,7 @@ class BuildMaster(service.MultiService):
 
             # optional
             db_url = config.get("db_url", "sqlite:///state.sqlite")
+            db_poll_interval = config.get("db_poll_interval", None)
             debugPassword = config.get('debugPassword')
             manhole = config.get('manhole')
             status = config.get('status', [])
@@ -629,6 +632,10 @@ class BuildMaster(service.MultiService):
             raise KeyError("c['interlocks'] is no longer accepted")
         assert self.db_url is None or db_url == self.db_url, \
                 "Cannot change db_url after master has started"
+        assert db_poll_interval is None or isinstance(db_poll_interval, int), \
+               "db_poll_interval must be an integer: seconds between polls"
+        assert self.db_poll_interval is _Unset or db_poll_interval == self.db_poll_interval, \
+               "Cannot change db_poll_interval after master has started"
 
         assert isinstance(change_sources, (list, tuple))
         for s in change_sources:
@@ -785,7 +792,8 @@ class BuildMaster(service.MultiService):
         self.buildHorizon = buildHorizon
 
         # Set up the database
-        d.addCallback(lambda res: self.loadConfig_Database(db_url))
+        d.addCallback(lambda res:
+                      self.loadConfig_Database(db_url, db_poll_interval))
 
         # self.slaves: Disconnect any that were attached and removed from the
         # list. Update self.checker with the new list of passwords, including
@@ -851,7 +859,7 @@ class BuildMaster(service.MultiService):
         d.addErrback(log.err)
         return d
 
-    def loadDatabase(self, db_spec):
+    def loadDatabase(self, db_spec, db_poll_interval=None):
         if self.db:
             return
         self.db = open_db(db_spec)
@@ -868,15 +876,26 @@ class BuildMaster(service.MultiService):
 
         self.scheduler_manager = sm
         sm.setServiceParent(self)
-        # it'd be nice if TimerService let us set now=False
-        t = internet.TimerService(30, sm.trigger)
-        t.setServiceParent(self)
-        # should we try to remove this? Periodic() requires at least one kick
 
-    def loadConfig_Database(self, db_url):
+        # Set db_poll_interval (perhaps to 30 seconds) if you are using
+        # multiple buildmasters that share a common database, such that the
+        # masters need to discover what each other is doing by polling the
+        # database. TODO: this will be replaced by the DBNotificationServer.
+        if db_poll_interval:
+            # it'd be nice if TimerService let us set now=False
+            t1 = TimerService(db_poll_interval, sm.trigger)
+            t1.setServiceParent(self)
+            t2 = TimerService(db_poll_interval, self.botmaster.loop.trigger)
+            t2.setServiceParent(self)
+        # adding schedulers (like when loadConfig happens) will trigger the
+        # scheduler loop at least once, which we need to jump-start things
+        # like Periodic.
+
+    def loadConfig_Database(self, db_url, db_poll_interval):
         self.db_url = db_url
+        self.db_poll_interval = db_poll_interval
         db_spec = DB.from_url(db_url, self.basedir)
-        self.loadDatabase(db_spec)
+        self.loadDatabase(db_spec, db_poll_interval)
 
     def loadConfig_Slaves(self, new_slaves):
         # set up the Checker with the names and passwords of all valid bots

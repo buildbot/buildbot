@@ -73,7 +73,7 @@ class MasterMixin:
     master = None
     basedir = None
     slave_basedir = None
-    def create_master(self):
+    def create_master(self, **kwargs):
         assert not self.master, "you called create_master twice"
         # probably because you subclassed RunMixin instead of MasterMixin
         self.slaves = {}
@@ -81,7 +81,7 @@ class MasterMixin:
             self.basedir = self.mktemp()
         basedir = self.basedir
         os.makedirs(basedir)
-        self.master = master.BuildMaster(basedir)
+        self.master = master.BuildMaster(basedir, **kwargs)
         spec = db.DB.from_url("sqlite:///state.sqlite", basedir=basedir)
         db.create_db(spec)
         self.master.loadDatabase(spec)
