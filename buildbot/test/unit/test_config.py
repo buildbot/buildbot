@@ -635,27 +635,6 @@ class ConfigTest(MasterMixin, unittest.TestCase, ShouldFailMixin, StallMixin):
             # files that have not yet been updated to 0.7.6 . This
             # compatibility (and this test) is scheduled for removal in 0.8.0
         d.addCallback(_check1)
-        botsCfg = (emptyCfg +
-                   "c['bots'] = [('bot1', 'pw1'), ('bot2', 'pw2')]\n")
-        d.addCallback(lambda ign: master.loadConfig(botsCfg))
-        def _check2(ign):
-            self.failUnlessEqual(master.checker.users,
-                                 {"change": "changepw",
-                                  "bot1": "pw1",
-                                  "bot2": "pw2"})
-        d.addCallback(_check2)
-        d.addCallback(lambda ign: master.loadConfig(botsCfg))
-        def _check3(ign):
-            self.failUnlessEqual(master.checker.users,
-                                 {"change": "changepw",
-                                  "bot1": "pw1",
-                                  "bot2": "pw2"})
-        d.addCallback(_check3)
-        d.addCallback(lambda ign: master.loadConfig(emptyCfg))
-        def _check4(ign):
-            self.failUnlessEqual(master.checker.users,
-                                 {"change": "changepw"})
-        d.addCallback(_check4)
         slavesCfg = (emptyCfg +
                      "from buildbot.buildslave import BuildSlave\n"
                      "c['slaves'] = [BuildSlave('bot1','pw1'), "
