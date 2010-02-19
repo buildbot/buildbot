@@ -437,7 +437,7 @@ class WebpartsRecursive(_WebpartsTest, unittest.TestCase):
                 print "Empty: %s" % url
             return
 
-        from lxml import etree, html
+        from lxml import html
 
         try:
             # parse & validate xhtml
