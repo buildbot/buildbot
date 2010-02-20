@@ -284,10 +284,14 @@ class DB:
 
     @classmethod
     def from_url(cls, url, basedir=None):
-        """Parses a URL of the format
-        driver://[username:password@]host:port/database[?args]
+        """
+        Parses a URL of the format
+          driver://[username:password@]host:port/database[?args]
+        and returns a DB object representing this URL.  Percent-
+        substitution will be performed, replacing %(basedir)s with
+        the basedir argument.
 
-        and returns a DB object representing this URL
+        raises ValueError on an invalid URL.
         """
         match = re.match(r"""
         ^(?P<driver>\w+)://
