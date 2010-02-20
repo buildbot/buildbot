@@ -64,7 +64,7 @@ class BuilderConfig:
         self.slavebuilddir = slavebuilddir
 
         # remainder are optional
-        assert isinstance(category, str)
+        assert category is None or isinstance(category, str)
         self.category = category
         self.nextSlave = nextSlave
         self.nextBuild = nextBuild
