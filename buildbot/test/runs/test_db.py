@@ -225,14 +225,18 @@ class MigrateChanges(Base, unittest.TestCase):
 class Scheduling(unittest.TestCase):
     def setUp(self):
         unittest.TestCase.setUp(self)
+        self.harness_basedir = None
         self.parent = service.MultiService()
         self.parent.startService()
 
     def tearDown(self):
         unittest.TestCase.tearDown(self)
+        if self.harness_basedir:
+            shutil.rmtree(self.harness_basedir)
         return defer.maybeDeferred(self.parent.stopService)
 
     def build_harness(self, basedir):
+        self.harness_basedir = basedir
         m = FakeMaster()
         m.setServiceParent(self.parent)
         if not os.path.isdir(basedir):
