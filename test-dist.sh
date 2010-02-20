@@ -30,6 +30,7 @@ for f in `git ls-files`; do
     echo $f | grep -q "\.mailmap" && continue
     echo $f | grep -q "\.git" && continue
     echo $f | grep -q "^docs/PyCon" && continue
+    echo $f | grep -q "^twisted" && continue
     if ! grep -q $f distfiles; then
         echo "NOT FOUND: $f";
     fi

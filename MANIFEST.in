@@ -1,10 +1,13 @@
 
 include MANIFEST.in README README.w32 NEWS CREDITS COPYING
+
 include docs/examples/*.cfg
-include docs/buildbot.texinfo docs/buildbot.info* docs/buildbot.html
+include docs/*.texinfo docs/buildbot.info* docs/buildbot.html
 include docs/*.png docs/images/*.png docs/images/*.svg docs/images/*.txt docs/images/*.ai
 include docs/images/icon.blend docs/images/Makefile
 include docs/epyrun docs/gen-reference docs/Makefile
+include docs/version.py
+
 include buildbot/broken_test/unit/mail/* buildbot/broken_test/unit/subdir/*
 include buildbot/scripts/sample.cfg
 include buildbot/status/web/files/*
