@@ -162,13 +162,6 @@ if sys.platform == "win32":
     scripts.append("contrib/windows/buildbot.bat")
     scripts.append("contrib/windows/buildbot_service.py")
 
-testmsgs = []
-for f in os.listdir("buildbot/broken_test/unit/mail"):
-    if f.endswith("~"):
-        continue
-    if re.search(r'\.\d+$', f):
-        testmsgs.append("buildbot/broken_test/unit/mail/%s" % f)
-
 setup_args = {
     'name': "buildbot",
     'version': version,
@@ -203,10 +196,6 @@ setup_args = {
               "buildbot.schedulers",
               "buildbot.scripts",
               "buildbot.test",
-              "buildbot.broken_test",
-              "buildbot.broken_test.runs",
-              "buildbot.broken_test.unit",
-              "buildbot.broken_test.vc",
               ],
     'data_files': [("buildbot", ["buildbot/buildbot.png"]),
                 ("buildbot/clients", ["buildbot/clients/debug.glade"]),
@@ -217,14 +206,6 @@ setup_args = {
                   ]),
                 include("buildbot/status/web/templates", '*.html'),
                 ("buildbot/scripts", ["buildbot/scripts/sample.cfg"]),
-                ("buildbot/broken_test/unit/mail", testmsgs),
-                ("buildbot/broken_test/unit/subdir", ["buildbot/broken_test/unit/subdir/emit.py"]),
-                ("buildbot/broken_test/runs", [
-                    'buildbot/broken_test/runs/www.w3.org..TR.xhtml1.DTD.xhtml-lat1.ent',
-                    'buildbot/broken_test/runs/www.w3.org..TR.xhtml1.DTD.xhtml-special.ent',
-                    'buildbot/broken_test/runs/www.w3.org..TR.xhtml1.DTD.xhtml-symbol.ent',
-                    'buildbot/broken_test/runs/www.w3.org..TR.xhtml1.DTD.xhtml1-transitional.dtd',
-                    ]),
                 ],
     'scripts': scripts,
     'cmdclass': {'install_data': install_data_twisted,
