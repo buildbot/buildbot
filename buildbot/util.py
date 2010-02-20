@@ -96,7 +96,7 @@ class ComparableMixin:
         if result:
             return result
 
-        result = cmp(self.__class__, them.__class__)
+        result = cmp(self.__class__.__name__, them.__class__.__name__)
         if result:
             return result
 
