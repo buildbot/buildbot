@@ -5,13 +5,13 @@ include docs/buildbot.texinfo docs/buildbot.info* docs/buildbot.html
 include docs/*.png docs/images/*.png docs/images/*.svg docs/images/*.txt docs/images/*.ai
 include docs/images/icon.blend docs/images/Makefile
 include docs/epyrun docs/gen-reference docs/Makefile
-include buildbot/test/unit/mail/* buildbot/test/unit/subdir/*
+include buildbot/broken_test/unit/mail/* buildbot/broken_test/unit/subdir/*
 include buildbot/scripts/sample.cfg
 include buildbot/status/web/files/*
 include buildbot/status/web/templates/*.html buildbot/status/web/templates/*.xml
 include buildbot/clients/debug.glade
 include buildbot/buildbot.png
-include buildbot/test/runs/www.w3.org*
+include buildbot/broken_test/runs/www.w3.org*
 include ChangeLog*
 include test-dist.sh
 
