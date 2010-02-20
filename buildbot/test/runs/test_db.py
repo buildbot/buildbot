@@ -553,15 +553,3 @@ class Building(RunMixin, unittest.TestCase, PollMixin):
             return d
         d.addCallback(_then)
         return d
-
-    test_2 = test_one
-    test_3 = test_one
-    test_4 = test_one
-    test_5 = test_one
-    test_6 = test_one
-    test_7 = test_one
-    test_8 = test_one
-    test_9 = test_one
-    test_a = test_one
-    test_b = test_one
-    test_c = test_one
