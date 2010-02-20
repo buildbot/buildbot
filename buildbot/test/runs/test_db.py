@@ -83,7 +83,7 @@ class Base:
         for d in self.dbs:
             d.close()
 
-class Create(Base, unittest.TestCase, ShouldFailMixin):
+class Create(Base, unittest.TestCase, ShouldFailMixin): # XXX disabled - bug #724
 
     def test_create(self):
         basedir = "db/create"
@@ -152,7 +152,7 @@ class Create(Base, unittest.TestCase, ShouldFailMixin):
                             db.open_db, spec)
         return d
 
-class Generic(Base, unittest.TestCase):
+class Generic(Base, unittest.TestCase): # XXX disabled - bug #724
     def test_generic(self):
         basedir = "db/generic"
         if not os.path.isdir(basedir):
@@ -180,7 +180,7 @@ class FakeMaster(service.MultiService):
     def triggerSlaveManager(self):
         self._triggerSlaveManager_calls += 1
 
-class MigrateChanges(Base, unittest.TestCase):
+class MigrateChanges(Base, unittest.TestCase): # XXX disabled - bug #724
     def create_pickle(self):
         # ugh, what was I thinking? pickles? with class instances? ick.
         cm = OldChangeMaster()
@@ -557,3 +557,8 @@ class Building(RunMixin, unittest.TestCase, PollMixin):
             return d
         d.addCallback(_then)
         return d
+
+# XXX disable Base-based tests (bug #724)
+del Create
+del Generic
+del MigrateChanges
