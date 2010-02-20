@@ -269,8 +269,8 @@ class Maker:
             f.close()
 
     def create_db(self):
-        from buildbot.db import create_db, DB
-        dbspec = DB.from_url(self.config["db"], self.basedir)
+        from buildbot.db import create_db, DBSpec
+        dbspec = DBSpec.from_url(self.config["db"], self.basedir)
         if not self.config['quiet']: print "creating database"
         create_db(dbspec)
 
@@ -377,7 +377,7 @@ DB_HELP = """
     status information. The default (which creates an SQLite database in
     BASEDIR/state.sqlite) is equivalent to:
 
-      --db='DB("sqlite3", basedir+"/state.sqlite"))'
+      --db='DBSpec("sqlite3", basedir+"/state.sqlite"))'
       --db='sqlite:///state.sqlite'
 
     To use a remote MySQL database instead, use something like:
@@ -453,8 +453,8 @@ def upgradeMaster(config):
     m.move_if_present(os.path.join(basedir, "public_html/index.html"),
                       os.path.join(basedir, "templates/root.html"))
 
-    from buildbot.db import create_or_upgrade_db, DB
-    dbspec = DB.from_url(config["db"], basedir)
+    from buildbot.db import create_or_upgrade_db, DBSpec
+    dbspec = DBSpec.from_url(config["db"], basedir)
     # TODO: check that TAC file specifies the right spec
     db = create_or_upgrade_db(dbspec)
     db.start()

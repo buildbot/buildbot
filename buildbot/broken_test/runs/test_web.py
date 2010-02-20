@@ -26,7 +26,7 @@ class SimpleMaster(master.BuildMaster):
     control over the loading of the config file."""
 
     def __init__(self, basedir):
-        spec = db.DB("sqlite3", os.path.join(basedir, "state.sqlite"))
+        spec = db.DBSpec("sqlite3", os.path.join(basedir, "state.sqlite"))
         db.create_db(spec)
         master.BuildMaster.__init__(self, basedir, db=spec)
         self.readConfig = True

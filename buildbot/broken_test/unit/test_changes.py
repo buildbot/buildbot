@@ -157,7 +157,7 @@ class Sender(unittest.TestCase):
         basedir = "changes/Sender/sender"
         if not os.path.exists(basedir):
             os.makedirs(basedir)
-        spec = db.DB("sqlite3", os.path.join(basedir, "state.sqlite"))
+        spec = db.DBSpec("sqlite3", os.path.join(basedir, "state.sqlite"))
         db.create_db(spec)
         self.master = master.BuildMaster(basedir, db=spec)
         self.master.readConfig = True

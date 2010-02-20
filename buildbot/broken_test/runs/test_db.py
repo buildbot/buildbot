@@ -89,7 +89,7 @@ class Create(Base, unittest.TestCase, ShouldFailMixin): # XXX disabled - bug #72
         basedir = "db/create"
         if not os.path.isdir(basedir):
             os.makedirs(basedir)
-        spec = db.DB("sqlite3", os.path.join(basedir, "db1.sqlite"))
+        spec = db.DBSpec("sqlite3", os.path.join(basedir, "db1.sqlite"))
         db.create_db(spec)
         db1 = db.open_db(spec)
         self.dbs.add(db1)
@@ -115,7 +115,7 @@ class Create(Base, unittest.TestCase, ShouldFailMixin): # XXX disabled - bug #72
         # sqlite databases spring into existence the moment you look at them,
         # so what we test here is that open_db() will not silently use such
         # an empty database.
-        spec = db.DB("sqlite3", fn)
+        spec = db.DBSpec("sqlite3", fn)
         db1 = db.DBConnector(spec) # should work
         self.dbs.add(db1)
         d = self.shouldFail(db.DatabaseNotReadyError, "must_exist",
@@ -127,7 +127,7 @@ class Create(Base, unittest.TestCase, ShouldFailMixin): # XXX disabled - bug #72
         basedir = "db/must_not_exist"
         if not os.path.isdir(basedir):
             os.makedirs(basedir)
-        spec = db.DB("sqlite3", os.path.join(basedir, "existing.sqlite"))
+        spec = db.DBSpec("sqlite3", os.path.join(basedir, "existing.sqlite"))
         db.create_db(spec)
         d = self.shouldFail(db.DBAlreadyExistsError, "must_not_exist",
                             "Refusing to touch an existing database",
@@ -139,7 +139,7 @@ class Create(Base, unittest.TestCase, ShouldFailMixin): # XXX disabled - bug #72
         if not os.path.isdir(basedir):
             os.makedirs(basedir)
         fn = self._fn = os.path.join(basedir, "oldversion.sqlite")
-        spec = db.DB("sqlite3", fn)
+        spec = db.DBSpec("sqlite3", fn)
         dbapi = reflect.namedModule(db.get_sqlite_dbapi_name())
         conn = dbapi.connect(fn)
         c = conn.cursor()
@@ -157,7 +157,7 @@ class Generic(Base, unittest.TestCase): # XXX disabled - bug #724
         basedir = "db/generic"
         if not os.path.isdir(basedir):
             os.makedirs(basedir)
-        spec = db.DB("sqlite3", os.path.join(basedir, "db1.sqlite"))
+        spec = db.DBSpec("sqlite3", os.path.join(basedir, "db1.sqlite"))
         db.create_db(spec)
         db1 = db.open_db(spec)
         self.dbs.add(db1)
@@ -203,7 +203,7 @@ class MigrateChanges(Base, unittest.TestCase): # XXX disabled - bug #724
 
     def test_migrate(self):
         fn = self.create_pickle()
-        spec = db.DB("sqlite3", "db/migrate/state.sqlite")
+        spec = db.DBSpec("sqlite3", "db/migrate/state.sqlite")
         db.create_db(spec)
         the_db = db.open_db(spec)
         self.dbs.add(the_db)
@@ -241,7 +241,7 @@ class Scheduling(unittest.TestCase):
         m.setServiceParent(self.parent)
         if not os.path.isdir(basedir):
             os.makedirs(basedir)
-        spec = db.DB("sqlite3", os.path.join(basedir, "state.sqlite"))
+        spec = db.DBSpec("sqlite3", os.path.join(basedir, "state.sqlite"))
         db.create_db(spec)
         m.db = db.open_db(spec)
         m.change_svc = cm = ChangeManager()
@@ -489,7 +489,7 @@ class Building(RunMixin, unittest.TestCase, PollMixin):
         # This eventually needs to be merged into RunMixin.
         os.makedirs(self.basedir)
         self.slaves = {}
-        spec = db.DB("sqlite3", os.path.join(self.basedir, "state.sqlite"))
+        spec = db.DBSpec("sqlite3", os.path.join(self.basedir, "state.sqlite"))
         db.create_db(spec)
         self.master = master.BuildMaster(self.basedir, db=spec)
         return self.master

@@ -423,7 +423,7 @@ class VCBase(SignalMixin):
         self.helper = VCS.getHelper(self.vc_name)
 
         basedir = os.path.dirname(self.mktemp())
-        spec = db.DB("sqlite3", os.path.join(basedir, "state.sqlite"))
+        spec = db.DBSpec("sqlite3", os.path.join(basedir, "state.sqlite"))
         db.create_db(spec)
         self.master = master.BuildMaster(basedir)
         self.slavebase = os.path.abspath(os.path.join(basedir, "slavebase"))

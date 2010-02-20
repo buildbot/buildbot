@@ -27,7 +27,7 @@ from buildbot import interfaces, locks
 from buildbot.process.properties import Properties
 from buildbot.config import BuilderConfig
 from buildbot.process.builder import BuilderControl
-from buildbot.db import open_db, DB
+from buildbot.db import open_db, DBSpec
 from buildbot.schedulers.manager import SchedulerManager
 from buildbot.loop import DelegateLoop
 
@@ -882,7 +882,7 @@ class BuildMaster(service.MultiService):
     def loadConfig_Database(self, db_url, db_poll_interval):
         self.db_url = db_url
         self.db_poll_interval = db_poll_interval
-        db_spec = DB.from_url(db_url, self.basedir)
+        db_spec = DBSpec.from_url(db_url, self.basedir)
         self.loadDatabase(db_spec, db_poll_interval)
 
     def loadConfig_Slaves(self, new_slaves):

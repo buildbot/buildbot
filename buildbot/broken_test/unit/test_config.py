@@ -1148,7 +1148,7 @@ c['changeHorizon'] = 5
         self.master = BuildMaster(self.basedir)
         self.master.readConfig = True
         self.master.startService()
-        spec = db.DB.from_url("sqlite:///orig.sqlite", basedir=self.basedir)
+        spec = db.DBSpec.from_url("sqlite:///orig.sqlite", basedir=self.basedir)
         db.create_db(spec)
         d = self.master.loadConfig(dburlCfg)
         def _check(ign):
@@ -1166,7 +1166,7 @@ c['changeHorizon'] = 5
         self.master = BuildMaster(self.basedir)
         self.master.readConfig = True
         self.master.startService()
-        spec = db.DB.from_url("sqlite:///orig.sqlite", basedir=self.basedir)
+        spec = db.DBSpec.from_url("sqlite:///orig.sqlite", basedir=self.basedir)
         db.create_db(spec)
         d = self.master.loadConfig(dburlCfg)
         def _check(ign):
@@ -1185,7 +1185,7 @@ c['changeHorizon'] = 5
         self.basedir = "config/configtest/DBPollInterval"
         self.slaves = {}
         os.makedirs(self.basedir)
-        spec = db.DB.from_url("sqlite:///state.sqlite", basedir=self.basedir)
+        spec = db.DBSpec.from_url("sqlite:///state.sqlite", basedir=self.basedir)
         db.create_db(spec)
         self.master = BuildMaster(self.basedir)
         self.master.readConfig = True
@@ -1200,7 +1200,7 @@ c['changeHorizon'] = 5
         self.basedir = "config/configtest/DBPollIntervalChange"
         self.slaves = {}
         os.makedirs(self.basedir)
-        spec = db.DB.from_url("sqlite:///state.sqlite", basedir=self.basedir)
+        spec = db.DBSpec.from_url("sqlite:///state.sqlite", basedir=self.basedir)
         db.create_db(spec)
         self.master = BuildMaster(self.basedir)
         self.master.readConfig = True

@@ -82,7 +82,7 @@ class MasterMixin:
         basedir = self.basedir
         os.makedirs(basedir)
         self.master = master.BuildMaster(basedir, **kwargs)
-        spec = db.DB.from_url("sqlite:///state.sqlite", basedir=basedir)
+        spec = db.DBSpec.from_url("sqlite:///state.sqlite", basedir=basedir)
         db.create_db(spec)
         self.master.loadDatabase(spec)
         self.master.readConfig = True
