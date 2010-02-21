@@ -196,6 +196,7 @@ setup_args = {
               "buildbot.schedulers",
               "buildbot.scripts",
               "buildbot.test",
+              "buildbot.util",
               ],
     'data_files': [("buildbot", ["buildbot/buildbot.png"]),
                 ("buildbot/clients", ["buildbot/clients/debug.glade"]),
