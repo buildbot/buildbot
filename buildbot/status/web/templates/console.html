@@ -140,7 +140,7 @@ function checkMouseLeave(element, event) {
     <td width="1%">
     </td>
   {% for c in categories %}
-      <td class='DevStatus {{ alt_class.next() }} {{ "first" if loop.first}} {{ "last" if loop.last}}' width='{{ c.size }}%'>
+      <td class='DevStatus {{ alt_class.next() }} {{ "first" if loop.first else '' }} {{ "last" if loop.last else '' }}' width='{{ c.size }}%'>
         {{ c.name }}
       </td>
   {% endfor %}
