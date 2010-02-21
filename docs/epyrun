@@ -182,7 +182,7 @@ def main():
 
     sys.argv[1:1] = [
         '-n', 'BuildBot %s' % buildbot.version,
-        '-u', 'http://buildbot.sourceforge.net/', '--no-private']
+        '-u', 'http://buildbot.net/trac', '--no-private']
 
     # Make it easy to profile epyrun
     if 0:
