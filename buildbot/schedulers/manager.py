@@ -37,7 +37,7 @@
 
 from twisted.internet import defer
 from twisted.python import log
-from buildbot import loop
+from buildbot.util import loop
 from buildbot.util import defaultdict
 from buildbot.util.eventual import eventually
 

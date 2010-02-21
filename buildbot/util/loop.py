@@ -35,19 +35,24 @@
 #
 # ***** END LICENSE BLOCK *****
 
-"""One-at-a-time notification-triggered Deferred event loop. Each such loop
-has a 'doorbell' named trigger() and a set of processing functions. At some
-point after the doorbell is rung, each function will be run in turn, one at a
-time. Each function can return a Deferred, and the next function will not be
-run until the previous one's Deferred has fired. If the doorbell is rung
-during a run, the loop will be run again later. Multiple rings may be handled
-by a single run, however we guarantee that there will be at least one full
-run that begins after the last ring. At all times, at most one processing
-function will be active.
+"""
+One-at-a-time notification-triggered Deferred event loop. Each such loop has a
+'doorbell' named trigger() and a set of processing functions.  The processing
+functions are expected to be callables like Scheduler methods, which examine a
+database for work to do. The doorbell will be rung by other code that writes
+into the database (possibly in a separate process).
 
-The processing functions are expected to be callables like Scheduler methods,
-which examine a database for work to do. The 'doorbell' will be rung by other
-code that writes into the database (possibly in a separate process).
+At some point after the doorbell is rung, each function will be run in turn,
+one at a time.  Each function can return a Deferred, and the next function will
+not be run until the previous one's Deferred has fired.  That is, at all times,
+at most one processing function will be active. 
+
+If the doorbell is rung during a run, the loop will be run again later.
+Multiple rings may be handled by a single run, but the class guarantees that
+there will be at least one full run that begins after the last ring.  The
+relative order of processing functions within a run is not preserved.  If a
+processing function is added to the loop more than once, it will still only be
+called once per run.
 
 If the Deferred returned by the processing function fires with a number, the
 event loop will call that function again at or after the given time
@@ -87,14 +92,10 @@ class LoopBase(service.MultiService):
         self._loop_running = False
         self._everything_needs_to_run = False
         self._wakeup_timer = None
-        # all processors must be hashable, since we use the processor as an
-        # index for self._timers . This precludes the use of
-        # ComparableMixin-based instances or their methods (since they
-        # override __hash__, and lists are frequently used as values of their
-        # compare_attrs).
         self._timers = {}
         self._when_quiet_waiters = set()
         self._start_timer = None
+        self._reactor = reactor # seam for tests to use t.i.t.Clock
 
     def stopService(self):
         if self._start_timer and self._start_timer.active():
@@ -123,7 +124,7 @@ class LoopBase(service.MultiService):
         if self._loop_running:
             return
         self._loop_running = True
-        self._start_timer = reactor.callLater(0, self._loop_start)
+        self._start_timer = self._reactor.callLater(0, self._loop_start)
 
     # subclasses must implement get_processors()
 
@@ -134,10 +135,10 @@ class LoopBase(service.MultiService):
             self._remaining = list(self.get_processors())
         else:
             self._remaining = []
-            now = time.time()
+            now = self._reactor.seconds()
             all_processors = self.get_processors()
             for p in list(self._timers.keys()):
-                if self._timers[p] < now:
+                if self._timers[p] <= now:
                     del self._timers[p]
                     # don't run a processor that was removed while it still
                     # had a timer running
@@ -169,7 +170,7 @@ class LoopBase(service.MultiService):
             # we're really idle, so notify waiters (used by unit tests)
             while self._when_quiet_waiters:
                 d = self._when_quiet_waiters.pop()
-                reactor.callLater(0, d.callback, None)
+                self._reactor.callLater(0, d.callback, None)
         self.loop_done()
 
     def loop_done(self):
@@ -180,7 +181,7 @@ class LoopBase(service.MultiService):
 
     def _set_timer(self, res, p):
         if isinstance(res, (int, float)):
-            now = time.time()
+            now = self._reactor.seconds()
             assert res > now # give me absolute time, not an interval
             # don't wake up right away. By doing this here instead of in
             # _set_wakeup_timer, we avoid penalizing unrelated jobs which
@@ -198,11 +199,11 @@ class LoopBase(service.MultiService):
         # to avoid waking too frequently, this could be:
         #  delay=max(when-now,OCD_MINIMUM_DELAY)
         # but that delays unrelated jobs that want to wake few seconds apart
-        delay = when - time.time()
+        delay = when - self._reactor.seconds()
         if self._wakeup_timer:
             self._wakeup_timer.reset(delay)
         else:
-            self._wakeup_timer = reactor.callLater(delay, self._wakeup)
+            self._wakeup_timer = self._reactor.callLater(delay, self._wakeup)
 
     def _wakeup(self):
         self._wakeup_timer = None

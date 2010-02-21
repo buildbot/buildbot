@@ -76,4 +76,44 @@ TODO
 @node Testing Idioms and Utilities
 @section Testing Idioms and Utilities
 
-TODO
+@menu
+* Keeping State in Tests::
+@end menu
+
+@node Keeping State in Tests
+@subsection Keeping State in Tests
+
+Python does not allow assignment to anything but the innermost local scope or
+the global scope with the @code{global} keyword.  This presents a problem when
+creating nested functions:
+
+@example
+def test_localVariable(self):
+    cb_called = False
+    def cb():
+        cb_called = True
+    cb()
+    self.assertTrue(cb_called) # will fail!
+@end example
+
+The @code{cb_called = True} assigns to a @i{different variable} than
+@code{cb_called = False}.  In production code, it's usually best to work around
+such problems, but in tests this is often the clearest way to express the
+behavior under test.
+
+The solution is to change something in a common mutable object.  While a simple
+list can serve as such a mutable object, this leads to code that is hard to
+read.  Instead, use @code{State}:
+
+@example
+from buildbot.test.state import State
+
+def test_localVariable(self):
+    state = State(cb_called=False)
+    def cb():
+        state.cb_called = True
+    cb()
+    self.assertTrue(state.cb_called) # passes
+@end example
+
+This is almost as readable as the first example, but it actually works. 
