@@ -411,8 +411,10 @@ def open_db(spec):
     db.start()
     ver = db.get_version()
     if ver is None:
+        db.stop()
         raise DatabaseNotReadyError("cannot use empty database")
     if ver != 1:
+        db.stop()
         raise DatabaseNotReadyError("db is at version %d, I only know 1" % ver)
     log.msg("using db version %d" % ver)
     return db

@@ -126,6 +126,71 @@ class DBSpec(unittest.TestCase):
                 connkw=dict(host='somehost.com', db='dbname', user="user",
                             port=8000, foo="moo"))
 
+class DBSpec_funcs(unittest.TestCase):
+
+    def setUp(self):
+        # sqlite does not allow multiple connections to an in-memory database, so
+        # we have to set up an on-disk sqlite file
+        self.dbfile = os.path.abspath("dbspec_funcs.sqlite")
+        if os.path.exists(self.dbfile):
+            os.unlink(self.dbfile)
+        self.dbspec = db.DBSpec.from_url("sqlite:///" + self.dbfile)
+        self.conns = []
+
+    def tearDown(self):
+        # be careful to stop all connector
+        for conn in self.conns:
+            conn.stop()
+        # and delete the underlying file
+        if os.path.exists(self.dbfile):
+            os.unlink(self.dbfile)
+        # double-check we haven't left a ThreadPool open
+        assert len(threading.enumerate()) < 4
+
+    # track a connector that must be closed
+    def trackConn(self, conn):
+        self.conns.append(conn)
+        return conn
+
+    # put together a fake database, with just a version table
+    def makeFakeDB(self):
+        conn = self.trackConn(db.DBConnector(self.dbspec))
+        conn.start()
+        conn.runQueryNow("CREATE TABLE version (`version` integer)")
+        conn.runQueryNow("INSERT INTO version values (1)")
+        conn.stop()
+
+    ## tests
+
+    def test_open_db_missingFails(self):
+        self.assertRaises(db.DatabaseNotReadyError, db.open_db, self.dbspec)
+
+    def test_open_db_existingOK(self):
+        self.makeFakeDB()
+        conn = self.trackConn(db.open_db(self.dbspec))
+        self.assertEqual(conn.get_version(), 1)
+        conn.stop()
+
+    def test_create_db_missingOK(self):
+        db.create_db(self.dbspec) # note this does not return a DBConnector
+        conn = self.trackConn(db.DBConnector(self.dbspec))
+        conn.start()
+        self.assertEqual(conn.runQueryNow("SELECT * from version"), [(1,)])
+        conn.stop()
+
+    def test_create_db_existingFails(self):
+        self.makeFakeDB()
+        self.assertRaises(db.DBAlreadyExistsError, db.create_db, self.dbspec)
+
+    def test_create_or_upgrade_db_missingOK(self):
+        conn = self.trackConn(db.create_or_upgrade_db(self.dbspec))
+        self.assertEqual(conn.runQueryNow("SELECT * from version"), [(1,)])
+
+    def test_create_or_upgrade_db_existingOK(self):
+        self.makeFakeDB()
+        conn = self.trackConn(db.create_or_upgrade_db(self.dbspec))
+        self.assertEqual(conn.runQueryNow("SELECT * from version"), [(1,)])
+
 class DBConnector_Basic(unittest.TestCase):
     """
     Basic tests of the DBConnector class - all start with an empty DB
@@ -138,6 +203,8 @@ class DBConnector_Basic(unittest.TestCase):
 
     def tearDown(self):
         self.dbc.stop()
+        # double-check we haven't left a ThreadPool open
+        assert len(threading.enumerate()) < 4
 
     def test_quoteq_format(self):
         self.dbc.paramstyle = "format" # override default
