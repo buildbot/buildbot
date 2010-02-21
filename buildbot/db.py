@@ -390,6 +390,7 @@ def create_or_upgrade_db(spec):
         pass
     # so here we've got a pre-existing database, of unknown version
     db = DBConnector(spec)
+    db.start()
     ver = db.get_version()
     # this will eventually have a structure like follows:
     #if ver == 1:
@@ -407,6 +408,7 @@ def create_or_upgrade_db(spec):
 def open_db(spec):
     # this will only open a pre-existing database of the current version
     db = DBConnector(spec)
+    db.start()
     ver = db.get_version()
     if ver is None:
         raise DatabaseNotReadyError("cannot use empty database")
@@ -467,6 +469,12 @@ class DBConnector(util.ComparableMixin):
         connkw = spec.connkw.copy()
         connkw["cp_reconnect"] = True
         connkw["cp_noisy"] = True
+        if 'sqlite' in spec.dbapiName:
+            # This disables sqlite's obsessive checks that a given connection is
+            # only used in one thread; this is justified by the Twisted ticket
+            # regarding the errors you get on connection shutdown if you do *not*
+            # add this parameter: http://twistedmatrix.com/trac/ticket/3629
+            connkw['check_same_thread'] = False
         #connkw["cp_min"] = connkw["cp_max"] = 1
         log.msg("creating database connector: %s %s %s" % \
                 (spec.dbapiName, spec.connargs, connkw))
@@ -486,19 +494,23 @@ class DBConnector(util.ComparableMixin):
 
         self._pending_operation_count = 0
 
+        self._started = False
+
     def getCurrentTime(self):
         return time.time()
 
     def start(self):
-        # this only needs to be called from non-reactor contexts, like
-        # runner.upgradeMaster and other CLI commands
+        # this only *needs* to be called in reactorless environments (which
+        # should be eliminated anyway).  but it doesn't hurt anyway
         self._pool.start()
+        self._started = True
 
     def stop(self):
         """Call this when you're done with me"""
-        # this only needs to be called from non-reactor contexts, like
-        # runner.upgradeMaster and other CLI commands
+        if not self._started:
+            return
         self._pool.close()
+        self._started = False
         del self._pool
 
     def quoteq(self, query):
@@ -530,6 +542,7 @@ class DBConnector(util.ComparableMixin):
 
     def runQueryNow(self, *args, **kwargs):
         # synchronous+blocking version of runQuery()
+        assert self._started
         return self.runInteractionNow(self._runQuery, *args, **kwargs)
 
     def _runQuery(self, c, *args, **kwargs):
@@ -556,6 +569,7 @@ class DBConnector(util.ComparableMixin):
 
     def runInteractionNow(self, interaction, *args, **kwargs):
         # synchronous+blocking version of runInteraction()
+        assert self._started
         start = self.getCurrentTime()
         t = self._start_operation()
         try:
@@ -605,11 +619,12 @@ class DBConnector(util.ComparableMixin):
         self._subscribers[category].add(observer)
 
     def runQuery(self, *args, **kwargs):
+        assert self._started
         self._pending_operation_count += 1
         start = self.getCurrentTime()
-        t = self._start_operation()
+        #t = self._start_operation()
         d = self._pool.runQuery(*args, **kwargs)
-        d.addBoth(self._runQuery_done, start, t)
+        #d.addBoth(self._runQuery_done, start, t)
         return d
     def _runQuery_done(self, res, start, t):
         self._end_operation(t)
@@ -624,6 +639,7 @@ class DBConnector(util.ComparableMixin):
             self._query_times.popleft()
 
     def runInteraction(self, *args, **kwargs):
+        assert self._started
         self._pending_operation_count += 1
         start = self.getCurrentTime()
         t = self._start_operation()

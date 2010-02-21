@@ -394,7 +394,7 @@ class BuildMaster(service.MultiService):
     change_svc = None
     properties = Properties()
 
-    def __init__(self, basedir, configFileName="master.cfg", db=None):
+    def __init__(self, basedir, configFileName="master.cfg", db_spec=None):
         service.MultiService.__init__(self)
         self.setName("buildmaster")
         self.basedir = basedir
@@ -439,8 +439,8 @@ class BuildMaster(service.MultiService):
         self.db = None
         self.db_url = None
         self.db_poll_interval = _Unset
-        if db:
-            self.loadDatabase(db)
+        if db_spec:
+            self.loadDatabase(db_spec)
 
         self.readConfig = False
 

@@ -1,4 +1,5 @@
 import os
+import threading
 
 from zope.interface import implements
 from twisted.trial import unittest
@@ -124,3 +125,60 @@ class DBSpec(unittest.TestCase):
         self.failUnlessConnection(d, 'MySQLdb',
                 connkw=dict(host='somehost.com', db='dbname', user="user",
                             port=8000, foo="moo"))
+
+class DBConnector_Basic(unittest.TestCase):
+    """
+    Basic tests of the DBConnector class - all start with an empty DB
+    """
+
+    def setUp(self):
+        # use an in-memory sqlite database to test
+        self.dbc = db.DBConnector(db.DBSpec.from_url("sqlite://"))
+        self.dbc.start()
+
+    def tearDown(self):
+        self.dbc.stop()
+
+    # TODO: why is this method here??
+    def test_getCurrentTime(self):
+        self.assertTrue(self.dbc.getCurrentTime() > 0)
+
+    def test_quoteq_identity(self):
+        # FYI, sqlite uses qmark, so this test is somewhat tautalogical
+        assert self.dbc.paramstyle == "qmark"
+        self.assertEqual(
+                self.dbc.quoteq("SELECT * from developers where name='?'"),
+                "SELECT * from developers where name='?'")
+
+    def test_runQueryNow_simple(self):
+        self.assertEqual(self.dbc.runQueryNow("SELECT 1"),
+                         [(1,)])
+
+    def test_runQueryNow_exception(self):
+        self.assertRaises(Exception, lambda :
+            self.dbc.runQueryNow("EAT * FROM cookies"))
+
+    def test_runInterationNow_simple(self):
+        def inter(cursor, *args, **kwargs):
+            self.assertEqual(cursor.execute("SELECT 1").fetchall(),
+                             [(1,)])
+        self.dbc.runInteractionNow(inter)
+
+    def test_runInterationNow_args(self):
+        def inter(cursor, *args, **kwargs):
+            self.assertEqual((args, kwargs), ((1, 2), dict(three=4)))
+            cursor.execute("SELECT 1")
+        self.dbc.runInteractionNow(inter, 1, 2, three=4)
+
+    def test_runInterationNow_exception(self):
+        def inter(cursor):
+            cursor.execute("GET * WHERE golden")
+        self.assertRaises(Exception, lambda : 
+            self.dbc.runInteractionNow(inter))
+
+    def test_runQuery_simple(self):
+        d = self.dbc.runQuery("SELECT 1")
+        def cb(res):
+            self.assertEqual(res, [(1,)])
+        d.addCallback(cb)
+        return d
