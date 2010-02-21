@@ -53,7 +53,7 @@ from buildbot.sourcestamp import SourceStamp
 from buildbot.buildrequest import BuildRequest
 from buildbot.process.properties import Properties
 from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE
-from buildbot.eventual import eventually
+from buildbot.util.eventual import eventually
 
 TABLES = [
     # the schema here is defined as version 1

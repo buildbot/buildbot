@@ -6,7 +6,7 @@ from twisted.persisted import styles
 from twisted.internet import reactor, defer, threads
 from twisted.protocols import basic
 from buildbot.process.properties import Properties
-from buildbot.eventual import eventually
+from buildbot.util.eventual import eventually
 
 import weakref
 import os, shutil, sys, re, urllib, itertools

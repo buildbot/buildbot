@@ -39,7 +39,7 @@ from twisted.internet import defer
 from twisted.python import log
 from buildbot import loop
 from buildbot.util import defaultdict
-from buildbot.eventual import eventually
+from buildbot.util.eventual import eventually
 
 class SchedulerManager(loop.MultiServiceLoop):
     def __init__(self, master, db, change_svc):

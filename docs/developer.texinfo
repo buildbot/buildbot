@@ -12,6 +12,7 @@ described here.
 
 @menu
 * Buildmaster Service Hierarchy::
+* Utilities::
 * The Event Loop::
 * String Types::
 * Subscription Interfaces::
@@ -23,6 +24,34 @@ described here.
 @section Buildmaster Service Hierarchy
 
 TODO
+
+@node Utilities
+@section Utilities
+
+@menu
+* buildbot.util.eventual::
+@end menu
+
+@node buildbot.util.eventual
+@subsection buildbot.util.eventual
+
+This package provides a simple way to say "please do this later":
+
+@example
+from buildbot.util.eventual import eventually
+def do_what_I_say(what, where):
+    # ...
+eventually(do_what_I_say, "clean up", "your bedroom")
+@end example
+
+The package defines "later" as "next time the reactor has control", so this is
+a good way to avoid long loops that block other activity in the reactor.
+Callables given to @code{eventually} are guaranteed to be called in the same
+order as the calls to @code{eventually}.  Any errors from the callable are
+logged, but will not affect other callables.
+
+If you need a deferred that will fire "later", use @code{fireEventually}.  This
+function returns a deferred that will not errback.
 
 @node The Event Loop
 @section The Event Loop

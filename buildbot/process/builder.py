@@ -11,7 +11,7 @@ from buildbot import interfaces, util
 from buildbot.status.progress import Expectations
 from buildbot.status.builder import RETRY
 from buildbot.process.properties import Properties
-from buildbot.eventual import eventually
+from buildbot.util.eventual import eventually
 
 (ATTACHING, # slave attached, still checking hostinfo/etc
  IDLE, # idle, available for use
