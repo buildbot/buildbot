@@ -29,7 +29,7 @@ from buildbot.config import BuilderConfig
 from buildbot.process.builder import BuilderControl
 from buildbot.db import open_db, DBSpec
 from buildbot.schedulers.manager import SchedulerManager
-from buildbot.loop import DelegateLoop
+from buildbot.util.loop import DelegateLoop
 
 ########################################
 
