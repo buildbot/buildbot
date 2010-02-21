@@ -1,8 +1,6 @@
 Utility scripts, things contributed by users but not strictly a part of
 buildbot:
 
-debugclient.py (and debug.*): debugging gui for buildbot
-
 fakechange.py: connect to a running bb and submit a fake change to trigger
                builders
 
