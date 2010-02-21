@@ -139,16 +139,25 @@ class DBConnector_Basic(unittest.TestCase):
     def tearDown(self):
         self.dbc.stop()
 
-    # TODO: why is this method here??
-    def test_getCurrentTime(self):
-        self.assertTrue(self.dbc.getCurrentTime() > 0)
+    def test_quoteq_format(self):
+        self.dbc.paramstyle = "format" # override default
+        self.assertEqual(
+                self.dbc.quoteq("SELECT * from developers where name='?'"),
+                "SELECT * from developers where name='%s'")
 
-    def test_quoteq_identity(self):
-        # FYI, sqlite uses qmark, so this test is somewhat tautalogical
-        assert self.dbc.paramstyle == "qmark"
+    def test_quoteq_qmark(self):
+        assert self.dbc.paramstyle == "qmark" # default for sqlite
         self.assertEqual(
                 self.dbc.quoteq("SELECT * from developers where name='?'"),
                 "SELECT * from developers where name='?'")
+
+    def test_paramlist_single(self):
+        self.dbc.paramstyle = "format" # override default
+        self.assertEqual(self.dbc.parmlist(1), "(%s)")
+
+    def test_paramlist_multiple(self):
+        self.dbc.paramstyle = "format" # override default
+        self.assertEqual(self.dbc.parmlist(3), "(%s,%s,%s)")
 
     def test_runQueryNow_simple(self):
         self.assertEqual(self.dbc.runQueryNow("SELECT 1"),

@@ -496,7 +496,8 @@ class DBConnector(util.ComparableMixin):
 
         self._started = False
 
-    def getCurrentTime(self):
+    def _getCurrentTime(self):
+        # this is a seam for use in testing
         return time.time()
 
     def start(self):
@@ -514,7 +515,8 @@ class DBConnector(util.ComparableMixin):
         del self._pool
 
     def quoteq(self, query):
-        """Given a query that contains qmark-style placeholders, like::
+        """
+        Given a query that contains qmark-style placeholders, like::
          INSERT INTO foo (col1, col2) VALUES (?,?)
         replace the '?' with '%s' if the backend uses format-style
         placeholders, like::
@@ -526,6 +528,12 @@ class DBConnector(util.ComparableMixin):
         return query
 
     def parmlist(self, count):
+        """
+        When passing long lists of values to e.g., an INSERT query, it is
+        tedious to pass long strings of ? placeholders.  This function will
+        create a parenthesis-enclosed list of COUNT placeholders.  Note that
+        the placeholders have already had quoteq() applied.
+        """
         p = self.quoteq("?")
         return "(" + ",".join([p]*count) + ")"
 
@@ -570,7 +578,7 @@ class DBConnector(util.ComparableMixin):
     def runInteractionNow(self, interaction, *args, **kwargs):
         # synchronous+blocking version of runInteraction()
         assert self._started
-        start = self.getCurrentTime()
+        start = self._getCurrentTime()
         t = self._start_operation()
         try:
             return self._runInteractionNow(interaction, *args, **kwargs)
@@ -621,7 +629,7 @@ class DBConnector(util.ComparableMixin):
     def runQuery(self, *args, **kwargs):
         assert self._started
         self._pending_operation_count += 1
-        start = self.getCurrentTime()
+        start = self._getCurrentTime()
         #t = self._start_operation()
         d = self._pool.runQuery(*args, **kwargs)
         #d.addBoth(self._runQuery_done, start, t)
@@ -633,7 +641,7 @@ class DBConnector(util.ComparableMixin):
         return res
 
     def _add_query_time(self, start):
-        elapsed = self.getCurrentTime() - start
+        elapsed = self._getCurrentTime() - start
         self._query_times.append(elapsed)
         if len(self._query_times) > self.MAX_QUERY_TIMES:
             self._query_times.popleft()
@@ -641,7 +649,7 @@ class DBConnector(util.ComparableMixin):
     def runInteraction(self, *args, **kwargs):
         assert self._started
         self._pending_operation_count += 1
-        start = self.getCurrentTime()
+        start = self._getCurrentTime()
         t = self._start_operation()
         d = self._pool.runInteraction(*args, **kwargs)
         d.addBoth(self._runInteraction_done, start, t)
@@ -1005,7 +1013,7 @@ class DBConnector(util.ComparableMixin):
     def create_buildset(self, ssid, reason, properties, builderNames, t,
                         external_idstring=None):
         # this creates both the BuildSet and the associated BuildRequests
-        now = self.getCurrentTime()
+        now = self._getCurrentTime()
         t.execute("SELECT id FROM buildsets ORDER BY id DESC LIMIT 1")
         bsid = _one_or_else(t.fetchall(), 0) + 1
         t.execute(self.quoteq("INSERT INTO buildsets"
@@ -1154,7 +1162,7 @@ class DBConnector(util.ComparableMixin):
     def build_started(self, brid, buildnumber):
         return self.runInteractionNow(self._txn_build_started, brid, buildnumber)
     def _txn_build_started(self, t, brid, buildnumber):
-        now = self.getCurrentTime()
+        now = self._getCurrentTime()
         t.execute("SELECT id FROM builds ORDER BY id DESC LIMIT 1")
         bid = _one_or_else(t.fetchall(), 0) + 1
         t.execute(self.quoteq("INSERT INTO builds (id, number, brid, start_time)"
@@ -1166,7 +1174,7 @@ class DBConnector(util.ComparableMixin):
     def builds_finished(self, bids):
         return self.runInteractionNow(self._txn_build_finished, bids)
     def _txn_build_finished(self, t, bids):
-        now = self.getCurrentTime()
+        now = self._getCurrentTime()
         q = self.quoteq("UPDATE builds SET finish_time = ?"
                         " WHERE id IN " + self.parmlist(len(bids)))
         qargs = [now] + list(bids)
@@ -1207,7 +1215,7 @@ class DBConnector(util.ComparableMixin):
     def retire_buildrequests(self, brids, results):
         return self.runInteractionNow(self._txn_retire_buildreqs, brids,results)
     def _txn_retire_buildreqs(self, t, brids, results):
-        now = self.getCurrentTime()
+        now = self._getCurrentTime()
         #q = self.db.quoteq("DELETE FROM buildrequests WHERE id IN "
         #                   + self.db.parmlist(len(brids)))
         q = self.quoteq("UPDATE buildrequests"
