@@ -152,22 +152,6 @@ class Create(Base, unittest.TestCase, ShouldFailMixin): # XXX disabled - bug #72
                             db.open_db, spec)
         return d
 
-class Generic(Base, unittest.TestCase): # XXX disabled - bug #724
-    def test_generic(self):
-        basedir = "db/generic"
-        if not os.path.isdir(basedir):
-            os.makedirs(basedir)
-        spec = db.DBSpec("sqlite3", os.path.join(basedir, "db1.sqlite"))
-        db.create_db(spec)
-        db1 = db.open_db(spec)
-        self.dbs.add(db1)
-        db1.generic_set("key1", {"value": "is json"})
-        self.failUnlessEqual(db1.generic_get("key1"), {"value": "is json"})
-        self.failUnlessEqual(db1.generic_get("missing", 123), 123)
-        db1.generic_set("key1", ["newvalue"])
-        self.failUnlessEqual(db1.generic_get("key1"), ["newvalue"])
-
-
 class FakeMaster(service.MultiService):
     def __init__(self):
         service.MultiService.__init__(self)
@@ -560,5 +544,4 @@ class Building(RunMixin, unittest.TestCase, PollMixin):
 
 # XXX disable Base-based tests (bug #724)
 del Create
-del Generic
 del MigrateChanges

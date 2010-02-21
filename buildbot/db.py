@@ -80,13 +80,6 @@ TABLES = [
     """),
 
     textwrap.dedent("""
-        CREATE TABLE generic (
-            `key` VARCHAR(256) PRIMARY KEY NOT NULL,
-            `value` VARCHAR(1024) NOT NULL
-        );
-    """),
-
-    textwrap.dedent("""
         CREATE TABLE changes_nextid (next_changeid INTEGER);
     """),
     textwrap.dedent("""
@@ -1294,33 +1287,6 @@ class DBConnector(util.ComparableMixin):
             complete = bool(complete)
             return (external_idstring, reason, ssid, complete, results)
         return None # shouldn't happen
-
-    # general-purpose key-value (JSON) store, for use by e.g. ChangeSources
-
-    def generic_get(self, key, default=None, t=None):
-        if t:
-            return self._txn_generic_get(t, key, default)
-        else:
-            return self.runInteractionNow(self._txn_generic_get, key, default)
-    def _txn_generic_get(self, t, key, default):
-        q = self.quoteq("SELECT value FROM generic WHERE `key`=?")
-        t.execute(q, (key,))
-        return _one_or_else(t.fetchall(), default, json.loads)
-
-    def generic_set(self, key, value, t=None):
-        if t:
-            return self._txn_generic_set(t, key, value)
-        else:
-            return self.runInteractionNow(self._txn_generic_set, key, value)
-    def _txn_generic_set(self, t, key, value):
-        q = self.quoteq("SELECT value FROM generic WHERE `key`=?")
-        t.execute(q, (key,))
-        if t.fetchall():
-            q = self.quoteq("UPDATE generic SET value=? WHERE `key`=?")
-            t.execute(q, (json.dumps(value), key))
-        else:
-            q = self.quoteq("INSERT INTO generic (`key`, value) VALUES (?,?)")
-            t.execute(q, (key, json.dumps(value)))
 
     # test/debug methods
 
