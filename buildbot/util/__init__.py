@@ -56,27 +56,6 @@ def formatInterval(eta):
     eta_parts.append("%d secs" % eta)
     return ", ".join(eta_parts)
 
-class CancelableDeferred(Deferred):
-    """I am a version of Deferred that can be canceled by calling my
-    .cancel() method. After being canceled, no callbacks or errbacks will be
-    executed.
-    """
-    def __init__(self):
-        Deferred.__init__(self)
-        self.canceled = 0
-    def cancel(self):
-        self.canceled = 1
-    def _runCallbacks(self):
-        if self.canceled:
-            self.callbacks = []
-            return
-        Deferred._runCallbacks(self)
-
-def ignoreStaleRefs(failure):
-    """d.addErrback(util.ignoreStaleRefs)"""
-    failure.trap(pb.DeadReferenceError, pb.PBConnectionLost)
-    return None
-
 class _None:
     pass
 
