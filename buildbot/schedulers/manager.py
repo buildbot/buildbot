@@ -38,7 +38,7 @@
 from twisted.internet import defer
 from twisted.python import log
 from buildbot.util import loop
-from buildbot.util import defaultdict
+from buildbot.util import collections
 from buildbot.util.eventual import eventually
 
 class SchedulerManager(loop.MultiServiceLoop):
@@ -47,7 +47,7 @@ class SchedulerManager(loop.MultiServiceLoop):
         self.master = master
         self.db = db
         self.change_svc = change_svc
-        self.upstream_subscribers = defaultdict(list)
+        self.upstream_subscribers = collections.defaultdict(list)
 
     def updateSchedulers(self, newschedulers):
         """Add and start any Scheduler that isn't already a child of ours.
@@ -91,7 +91,7 @@ class SchedulerManager(loop.MultiServiceLoop):
         def _attach(ign):
             for s in added:
                 s.setServiceParent(self)
-            self.upstream_subscribers = defaultdict(list)
+            self.upstream_subscribers = collections.defaultdict(list)
             for s in list(self):
                 if s.upstream_name:
                     self.upstream_subscribers[s.upstream_name].append(s)

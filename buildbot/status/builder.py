@@ -6,6 +6,7 @@ from twisted.persisted import styles
 from twisted.internet import reactor, defer, threads
 from twisted.protocols import basic
 from buildbot.process.properties import Properties
+from buildbot.util import collections
 from buildbot.util.eventual import eventually
 
 import weakref
@@ -2230,9 +2231,9 @@ class Status:
         self.logMaxSize = None
         self.logMaxTailSize = None
 
-        self._buildreq_observers = util.DictOfSets()
-        self._buildset_success_waiters = util.DictOfSets()
-        self._buildset_finished_waiters = util.DictOfSets()
+        self._buildreq_observers = collections.KeyedSets()
+        self._buildset_success_waiters = collections.KeyedSets()
+        self._buildset_finished_waiters = collections.KeyedSets()
 
     def setDB(self, db):
         self.db = db
@@ -2514,7 +2515,7 @@ class Status:
         self._buildreq_observers.add(brid, observer)
 
     def _buildrequest_unsubscribe(self, brid, observer):
-        self._buildreq_observers.remove(brid, observer)
+        self._buildreq_observers.discard(brid, observer)
 
     def _buildset_waitUntilSuccess(self, bsid):
         d = defer.Deferred()

@@ -48,6 +48,7 @@ from twisted.python import log, reflect, threadable
 from twisted.internet import defer, reactor
 from twisted.enterprise import adbapi
 from buildbot import util
+from buildbot.util import collections as bbcollections
 from buildbot.changes.changes import Change
 from buildbot.sourcestamp import SourceStamp
 from buildbot.buildrequest import BuildRequest
@@ -492,7 +493,7 @@ class DBConnector(util.ComparableMixin):
         self._sourcestamp_cache = util.LRUCache()
         self._active_operations = set() # protected by synchronized=
         self._pending_notifications = []
-        self._subscribers = util.defaultdict(set)
+        self._subscribers = bbcollections.defaultdict(set)
 
         self._pending_operation_count = 0
 

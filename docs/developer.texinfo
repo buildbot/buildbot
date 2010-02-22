@@ -29,8 +29,24 @@ TODO
 @section Utilities
 
 @menu
+* buildbot.util.collections::
 * buildbot.util.eventual::
 @end menu
+
+@node buildbot.util.collections
+@subsection buildbot.util.collections
+
+This package provides a few useful collection objects.
+
+For compatibility, it provides a clone of the Python
+@code{collections.defaultdict} for use in Python-2.4.  In later versions, this
+is simply a reference to the built-in @code{defaultdict}, so buildbot code can
+simply use @code{buildbot.util.collections.defaultdict} everywhere.
+
+It also provides a @code{KeyedSets} class that can represent any numbers of
+sets, keyed by name (or anything hashable, really).  The object is specially
+tuned to contain many different keys over its lifetime without wasting memory.
+See the docstring for more information.
 
 @node buildbot.util.eventual
 @subsection buildbot.util.eventual

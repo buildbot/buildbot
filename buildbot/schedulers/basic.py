@@ -41,7 +41,8 @@ from twisted.application import service
 
 from buildbot import interfaces
 from buildbot.process.properties import Properties
-from buildbot.util import defaultdict, ComparableMixin
+from buildbot.util import ComparableMixin
+from buildbot.util import collections
 from buildbot.sourcestamp import SourceStamp
 from buildbot.status.builder import SUCCESS, WARNINGS
 
@@ -296,7 +297,7 @@ class AnyBranchScheduler(Scheduler):
         res = db.scheduler_get_classified_changes(self.schedulerid, t)
         (important, unimportant) = res
         def _twolists(): return [], [] # important, unimportant
-        branch_changes = defaultdict(_twolists)
+        branch_changes = collections.defaultdict(_twolists)
         for c in important:
             branch_changes[c.branch][0].append(c)
         for c in unimportant:
