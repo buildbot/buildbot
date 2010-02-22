@@ -26,24 +26,7 @@ def naturalSort(l):
     return l
 
 def now():
-    #return int(time.time())
     return time.time()
-
-def earlier(old, new):
-    # minimum of two things, but "None" counts as +infinity
-    if old:
-        if new < old:
-            return new
-        return old
-    return new
-
-def later(old, new):
-    # maximum of two things, but "None" counts as -infinity
-    if old:
-        if new > old:
-            return new
-        return old
-    return new
 
 def formatInterval(eta):
     eta_parts = []
@@ -56,18 +39,17 @@ def formatInterval(eta):
     eta_parts.append("%d secs" % eta)
     return ", ".join(eta_parts)
 
-class _None:
-    pass
-
 class ComparableMixin:
     """Specify a list of attributes that are 'important'. These will be used
     for all comparison operations."""
 
     compare_attrs = []
 
+    class _None: pass
+
     def __hash__(self):
         alist = [self.__class__] + \
-                [getattr(self, name, _None) for name in self.compare_attrs]
+                [getattr(self, name, self._None) for name in self.compare_attrs]
         return hash(tuple(map(str,alist)))
 
     def __cmp__(self, them):
@@ -80,15 +62,9 @@ class ComparableMixin:
             return result
 
         assert self.compare_attrs == them.compare_attrs
-        self_list= [getattr(self, name, _None) for name in self.compare_attrs]
-        them_list= [getattr(them, name, _None) for name in self.compare_attrs]
+        self_list= [getattr(self, name, self._None) for name in self.compare_attrs]
+        them_list= [getattr(them, name, self._None) for name in self.compare_attrs]
         return cmp(self_list, them_list)
-
-def to_text(s):
-    if isinstance(s, (str, unicode)):
-        return s
-    else:
-        return str(s)
 
 # Remove potentially harmful characters from builder name if it is to be
 # used as the build dir.
@@ -113,6 +89,13 @@ def remove_userpassword(url):
     return protocol + '://' + repo_url
 
 class LRUCache:
+    """
+    A simple least-recently-used cache, with a fixed maximum size.  Note that
+    an item's memory will not necessarily be free if other code maintains a reference
+    to it, but this class will "lose track" of it all the same.  Without caution, this
+    can lead to duplicate items in memory simultaneously.
+    """
+
     synchronized = ["get", "add"]
 
     def __init__(self, max_size=50):
@@ -122,18 +105,22 @@ class LRUCache:
 
     def get(self, id):
         thing = self._cache.get(id, None)
-        if thing:
+        if thing is not None:
             self._cached_ids.remove(id)
             self._cached_ids.append(id)
         return thing
+    __getitem__ = get
 
     def add(self, id, thing):
         if id in self._cache:
+            self._cached_ids.remove(id)
+            self._cached_ids.append(id)
             return
         while len(self._cached_ids) >= self._max_size:
             del self._cache[self._cached_ids.pop(0)]
         self._cache[id] = thing
         self._cached_ids.append(id)
+    __setitem__ = add
 
 threadable.synchronize(LRUCache)
 

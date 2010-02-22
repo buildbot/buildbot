@@ -33,6 +33,53 @@ TODO
 * buildbot.util.eventual::
 @end menu
 
+Several small utilities are available at the top-level @code{buildbot.util}
+package.  As always, see the API documentation for more information.
+
+@table @code
+
+@item natualSort
+
+This function sorts strings "naturally", with embedded numbers sorted
+numerically.  This ordering is good for objects which might have a numeric
+suffix, e.g., @code{winslave1}, @code{winslave2}, ..
+
+@item formatInterval
+
+This function will return a human-readable string describing a length of time,
+given a number of seconds.
+
+@item ComparableMixin
+
+This mixin class adds comparability to a subclass.  Use it like this:
+
+@example
+class Widget(FactoryProduct, ComparableMixin):
+    compare_attrs = [ 'radius', 'thickness' ]
+    # ...
+@end example
+
+Any attributes not in @code{compare_attrs} will not be considered when
+comparing objects.  This is particularly useful in implementing buildbot's
+reconfig logic, where a simple comparison between the new and existing objects
+can determine whether the new object should replace the existing object.
+
+@item safeTranslate
+
+This function will filter out some inappropriate characters for filenames; it
+is suitable for adapting strings from the configuration for use as filenames.
+It is not suitable for use with strings from untrusted sources.
+
+@item LRUCache
+
+This is a simple least-recently-used cache.  Its constructor takes a maximum
+size.  When the cache grows beyond this size, the least-recently used items
+will be automatically removed from the cache.  The class has @code{get} and
+@code{add} methods, and can also be accessed via dictionary syntax
+(@code{lru['id']}).
+
+@end table
+
 @node buildbot.util.collections
 @subsection buildbot.util.collections
 

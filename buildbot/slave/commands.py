@@ -61,6 +61,14 @@ class Obfuscated:
     def __repr__(self):
         return `self.fake`
 
+    @staticmethod
+    def to_text(s):
+        if isinstance(s, (str, unicode)):
+            return s
+        else:
+            return str(s)
+
+    @staticmethod
     def get_real(command):
         rv = command
         if type(command) == types.ListType:
@@ -69,10 +77,10 @@ class Obfuscated:
                 if isinstance(elt, Obfuscated):
                     rv.append(elt.real)
                 else:
-                    rv.append(to_text(elt))
+                    rv.append(Obfuscated.to_text(elt))
         return rv
-    get_real = staticmethod(get_real)
 
+    @staticmethod
     def get_fake(command):
         rv = command
         if type(command) == types.ListType:
@@ -81,9 +89,8 @@ class Obfuscated:
                 if isinstance(elt, Obfuscated):
                     rv.append(elt.fake)
                 else:
-                    rv.append(to_text(elt))
+                    rv.append(Obfuscated.to_text(elt))
         return rv
-    get_fake = staticmethod(get_fake)
 
 class AbandonChain(Exception):
     """A series of chained steps can raise this exception to indicate that

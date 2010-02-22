@@ -15,6 +15,22 @@ from buildbot.status.web.base import Box, HtmlResource, IBox, ICurrentBox, \
      map_branches
 
 
+def earlier(old, new):
+    # minimum of two things, but "None" counts as +infinity
+    if old:
+        if new < old:
+            return new
+        return old
+    return new
+
+def later(old, new):
+    # maximum of two things, but "None" counts as -infinity
+    if old:
+        if new > old:
+            return new
+        return old
+    return new
+
 
 class CurrentBox(components.Adapter):
     # this provides the "current activity" box, just above the builder name
@@ -542,14 +558,14 @@ class WaterfallStatusResource(HtmlResource):
                         log.msg("pushing", event.getText(), event)
                     events.append(event)
                     starts, finishes = event.getTimes()
-                    firstTimestamp = util.earlier(firstTimestamp, starts)
+                    firstTimestamp = earlier(firstTimestamp, starts)
                     event = get_event_from(sourceGenerators[c])
                 if debug:
                     log.msg("finished span")
 
                 if event:
                     # this is the last pre-span event for this source
-                    lastTimestamp = util.later(lastTimestamp,
+                    lastTimestamp = later(lastTimestamp,
                                                event.getTimes()[0])
                 if debugGather:
                     log.msg(" got %s from %s" % (events, sourceNames[c]))
