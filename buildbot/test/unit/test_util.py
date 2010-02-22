@@ -59,8 +59,8 @@ class safeTranslate(unittest.TestCase):
                          str("speed_slow_quality_high"))
 
     def test_unicode_pathological(self):
-        self.assertEqual(util.safeTranslate(u"\N{AFGHANI SIGN}"),
-                         str("\xd8\x8b")) # yuck!
+        self.assertEqual(util.safeTranslate(u"\u0109"),
+                         str("\xc4\x89")) # yuck!
 
 class remove_userpassword(unittest.TestCase):
 
