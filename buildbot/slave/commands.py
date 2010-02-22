@@ -12,7 +12,7 @@ from twisted.python.procutils import which
 
 from buildbot.slave.interfaces import ISlaveCommand
 from buildbot.slave.registry import registerSlaveCommand
-from buildbot.util import to_text, remove_userpassword
+from buildbot.util import remove_userpassword
 
 # this used to be a CVS $-style "Revision" auto-updated keyword, but since I
 # moved to Darcs as the primary repository, this is updated manually each
