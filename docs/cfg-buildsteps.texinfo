@@ -891,6 +891,7 @@ common build steps.
 * Using ShellCommands::
 * Configure::
 * Compile::
+* Visual C++::
 * Test::
 * TreeSize::
 * PerlModuleTest::
@@ -1195,6 +1196,92 @@ directoryLeavePattern = "make.*: Leaving directory"
 as well, and collect them into a separate logfile, along with the
 source code filenames involved).
 
+@node Visual C++
+@subsubsection Visual C++
+
+@bsindex buildbot.steps.vstudio.VC6
+@bsindex buildbot.steps.vstudio.VC7
+@bsindex buildbot.steps.vstudio.VC8
+@bsindex buildbot.steps.vstudio.VS2003
+@bsindex buildbot.steps.vstudio.VS2005
+
+This step is meant to handle compilation using Microsoft compilers. 
+VC++ 6-8, VS2003, and VS2005 are supported. This step will take care
+of setting up a clean compilation environment, parse the generated
+output in real time and deliver as detailed as possible information
+about the compilation executed.
+
+All of the classes are in @code{buildbot.steps.vstudio}.  The available classes are:
+
+@table @code
+
+@item VC6
+
+@item VC7
+
+@item VC8
+
+@item VS2003
+
+@item VC2005
+
+@end table
+
+The available constructor arguments are
+
+@table @code
+@item mode
+The mode default to @code{"rebuild"}, which means that first all the
+remaining object files will be cleaned by the compiler. The alternate
+value is @code{"build"}, where only the updated files will be recompiled.
+
+@item projectfile
+This is a mandatory argument which specifies the project file to be used
+during the compilation.
+
+@item config
+This argument defaults to @code{"release"} an gives to the compiler the
+configuration to use.
+
+@item installdir
+This is the place where the compiler is installed. The default value is
+compiler specific and is the default place where the compiler is installed.
+
+@item useenv
+This boolean parameter, defaulting to @code{False} instruct the compiler
+to use its own settings or the one defined through the environment
+variables @code{%PATH%}, @code{%INCLUDE%}, and @code{%LIB%}. If any of
+the @code{INCLUDE} or @code{LIB} parameter is defined, this parameter
+automatically switches to @code{True}.
+
+@item PATH
+This is a list of path to be added to the PATH environment
+variable. The default value is the one defined in the compiler options.
+
+@item INCLUDE
+This is a list of path where the compiler will first look for include
+files. Then comes the default paths defined in the compiler options.
+
+@item LIB
+This is a list of path where the compiler will first look for
+libraries. Then comes the default path defined in the compiler options.
+
+@item arch
+That one is only available with the class VS2005 (VC8). It gives the
+target architecture of the built artifact. It defaults to @code{"x86''}.
+@end table
+
+Here is an example on how to use this step:
+
+@example
+from buildbot.steps.VisualStudio import VS2005
+
+f.addStep(VS2005(
+        projectfile="project.sln", config="release",
+        arch="x64", mode="build",
+        INCLUDE=[r'D:\WINDDK\Include\wnet'],
+        LIB=[r'D:\WINDDK\lib\wnet\amd64']))
+@end example
 
 @node Test
 @subsubsection Test

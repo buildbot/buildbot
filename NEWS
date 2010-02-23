@@ -3,6 +3,10 @@ Major User visible changes in Buildbot.             -*- outline -*-
 
 * Next Release (add significant changes here)
 
+** New Steps
+
+*** Visual Studio / VC++ Compile Steps
+
 ** New /json web status
 
 This view has lots of useful information perfectly formed for serving as input
@@ -28,6 +32,9 @@ TODO - make this true
 ** Removals
 
 *** Removed buildbot.status.html.Waterfall (deprecated in 0.7.6)
+
+Note that this does not remove the waterfall -- just an old version of it which
+did not include the rest of the WebStatus pages.
 
 *** BuildmasterConfig no longer accepts 'bots' and 'sources' as keys
 (deprecated in 0.7.6). Use 'slaves' and 'change_source' instead.
