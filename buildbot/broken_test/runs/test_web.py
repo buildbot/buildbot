@@ -26,9 +26,14 @@ class SimpleMaster(master.BuildMaster):
     control over the loading of the config file."""
 
     def __init__(self, basedir):
-        spec = db.DBSpec("sqlite3", os.path.join(basedir, "state.sqlite"))
-        db.create_db(spec)
-        master.BuildMaster.__init__(self, basedir, db=spec)
+        # create the db here, for lack of somewhere better to do it
+        dbfile = os.path.join(basedir, "state.sqlite")
+        if os.path.exists(dbfile):
+            os.unlink(dbfile)
+        dbspec = db.DBSpec.from_url("sqlite:///state.sqlite", basedir=basedir)
+        db.create_db(dbspec)
+
+        master.BuildMaster.__init__(self, basedir)
         self.readConfig = True
 
 components.registerAdapter(master.Control, SimpleMaster, interfaces.IControl)
@@ -51,6 +56,8 @@ BuildmasterConfig = c = {
 c['builders'] = [
     BuilderConfig(name='builder1', slavename='bot1name', factory=BuildFactory()),
 ]
+
+c['db_url'] = 'sqlite:///state.sqlite'
 """
 
 
