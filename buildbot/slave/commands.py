@@ -3152,10 +3152,10 @@ class P4(P4Base):
         return d
 
     def parseGotRevision(self):
-        rv = None
         if self.revision:
-            rv = str(self.revision)
-        return rv
+            return str(self.revision)
+        else:
+            return P4Base.parseGotRevision(self)
 
 registerSlaveCommand("p4", P4, command_version)
 
@@ -3210,9 +3210,9 @@ class P4Sync(P4Base):
         return self._doVC(force=True)
 
     def parseGotRevision(self):
-        rv = None
         if self.revision:
-            rv = str(self.revision)
-        return rv
+            return str(self.revision)
+        else:
+            return P4Base.parseGotRevision(self)
 
 registerSlaveCommand("p4sync", P4Sync, command_version)
