@@ -12,7 +12,8 @@ from twisted.internet import reactor, defer, protocol
 from twisted.internet.interfaces import IReactorUNIX
 from twisted.web import client
 
-from buildbot import master, interfaces, sourcestamp, db
+from buildbot import master, interfaces, sourcestamp
+from buildbot.db import dbspec
 from buildbot.buildrequest import BuildRequest
 from buildbot.status import html, builder
 from buildbot.status.web import waterfall, xmlrpc
@@ -30,8 +31,8 @@ class SimpleMaster(master.BuildMaster):
         dbfile = os.path.join(basedir, "state.sqlite")
         if os.path.exists(dbfile):
             os.unlink(dbfile)
-        dbspec = db.DBSpec.from_url("sqlite:///state.sqlite", basedir=basedir)
-        db.create_db(dbspec)
+        spec = dbspec.DBSpec.from_url("sqlite:///state.sqlite", basedir=basedir)
+        spec.create_db()
 
         master.BuildMaster.__init__(self, basedir)
         self.readConfig = True

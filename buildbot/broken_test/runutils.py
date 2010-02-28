@@ -5,8 +5,9 @@ from cStringIO import StringIO
 from twisted.internet import defer, reactor, protocol
 from twisted.python import log, util, failure
 
-from buildbot import master, interfaces, db
-from buildbot.eventual import flushEventualQueue
+from buildbot import master, interfaces
+from buildbot.db import dbspec
+from buildbot.util.eventual import flushEventualQueue
 from buildbot.slave import bot
 from buildbot.buildslave import BuildSlave
 from buildbot.process.builder import Builder
@@ -82,8 +83,8 @@ class MasterMixin:
         basedir = self.basedir
         os.makedirs(basedir)
         self.master = master.BuildMaster(basedir, **kwargs)
-        spec = db.DBSpec.from_url("sqlite:///state.sqlite", basedir=basedir)
-        db.create_db(spec)
+        spec = dbspec.DBSpec.from_url("sqlite:///state.sqlite", basedir=basedir)
+        spec.create_db()
         self.master.loadDatabase(spec)
         self.master.readConfig = True
         self.master.startService()

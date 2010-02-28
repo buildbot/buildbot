@@ -11,7 +11,7 @@ from twisted.application import service, internet
 from twisted.spread import pb
 from twisted.web.server import Site
 from twisted.web.distrib import ResourcePublisher
-from buildbot import db
+from buildbot.db import dbspec
 from buildbot.master import BuildMaster
 from buildbot.process.builder import Builder
 from buildbot.process.factory import BasicBuildFactory, ArgumentsInTheWrongPlace
@@ -1148,8 +1148,8 @@ c['changeHorizon'] = 5
         self.master = BuildMaster(self.basedir)
         self.master.readConfig = True
         self.master.startService()
-        spec = db.DBSpec.from_url("sqlite:///orig.sqlite", basedir=self.basedir)
-        db.create_db(spec)
+        spec = dbspec.DBSpec.from_url("sqlite:///orig.sqlite", basedir=self.basedir)
+        spec.create_db()
         d = self.master.loadConfig(dburlCfg)
         def _check(ign):
             self.failUnlessEqual(self.master.db_url, "sqlite:///orig.sqlite")
@@ -1166,8 +1166,8 @@ c['changeHorizon'] = 5
         self.master = BuildMaster(self.basedir)
         self.master.readConfig = True
         self.master.startService()
-        spec = db.DBSpec.from_url("sqlite:///orig.sqlite", basedir=self.basedir)
-        db.create_db(spec)
+        spec = dbspec.DBSpec.from_url("sqlite:///orig.sqlite", basedir=self.basedir)
+        spec.create_db()
         d = self.master.loadConfig(dburlCfg)
         def _check(ign):
             self.failUnlessEqual(self.master.db_url, "sqlite:///orig.sqlite")
@@ -1185,8 +1185,8 @@ c['changeHorizon'] = 5
         self.basedir = "config/configtest/DBPollInterval"
         self.slaves = {}
         os.makedirs(self.basedir)
-        spec = db.DBSpec.from_url("sqlite:///state.sqlite", basedir=self.basedir)
-        db.create_db(spec)
+        spec = dbspec.DBSpec.from_url("sqlite:///state.sqlite", basedir=self.basedir)
+        spec.create_db()
         self.master = BuildMaster(self.basedir)
         self.master.readConfig = True
         self.master.startService()
@@ -1200,8 +1200,8 @@ c['changeHorizon'] = 5
         self.basedir = "config/configtest/DBPollIntervalChange"
         self.slaves = {}
         os.makedirs(self.basedir)
-        spec = db.DBSpec.from_url("sqlite:///state.sqlite", basedir=self.basedir)
-        db.create_db(spec)
+        spec = dbspec.DBSpec.from_url("sqlite:///state.sqlite", basedir=self.basedir)
+        spec.create_db()
         self.master = BuildMaster(self.basedir)
         self.master.readConfig = True
         self.master.startService()

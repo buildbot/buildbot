@@ -27,7 +27,7 @@ from buildbot import interfaces, locks
 from buildbot.process.properties import Properties
 from buildbot.config import BuilderConfig
 from buildbot.process.builder import BuilderControl
-from buildbot.db import open_db, DBSpec
+from buildbot.db.dbspec import DBSpec
 from buildbot.schedulers.manager import SchedulerManager
 from buildbot.util.loop import DelegateLoop
 
@@ -850,7 +850,7 @@ class BuildMaster(service.MultiService):
     def loadDatabase(self, db_spec, db_poll_interval=None):
         if self.db:
             return
-        self.db = open_db(db_spec)
+        self.db = db_spec.open_db()
 
         self.botmaster.db = self.db
         self.status.setDB(self.db)

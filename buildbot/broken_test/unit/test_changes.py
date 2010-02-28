@@ -4,7 +4,8 @@ import os
 from twisted.trial import unittest
 from twisted.internet import defer, reactor
 
-from buildbot import master, db
+from buildbot import master
+from buildbot.db import dbspec
 from buildbot.changes import pb
 from buildbot.scripts import runner
 
@@ -157,9 +158,9 @@ class Sender(unittest.TestCase):
         basedir = "changes/Sender/sender"
         if not os.path.exists(basedir):
             os.makedirs(basedir)
-        spec = db.DBSpec("sqlite3", os.path.join(basedir, "state.sqlite"))
-        db.create_db(spec)
-        self.master = master.BuildMaster(basedir, db=spec)
+        spec = dbspec.DBSpec("sqlite3", os.path.join(basedir, "state.sqlite"))
+        spec.create_db()
+        self.master = master.BuildMaster(basedir, db_spec=spec)
         self.master.readConfig = True
         self.master.startService()
         d = self.master.loadConfig(config_sender)

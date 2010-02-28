@@ -41,7 +41,8 @@ from twisted.trial import unittest
 from twisted.python import failure, reflect
 from twisted.internet import defer, reactor
 from twisted.application import service
-from buildbot import db, master
+from buildbot.db import dbspec, connector
+from buildbot import master
 from buildbot.schedulers.manager import SchedulerManager
 from buildbot.schedulers.basic import Scheduler
 from buildbot.scripts import runner
@@ -49,7 +50,7 @@ from buildbot.changes.changes import OldChangeMaster, Change
 from buildbot.changes.manager import ChangeManager
 from buildbot.broken_test.pollmixin import PollMixin
 from buildbot.broken_test.runutils import RunMixin
-from buildbot.eventual import flushEventualQueue
+from buildbot.util.eventual import flushEventualQueue
 
 class ShouldFailMixin:
 
@@ -89,16 +90,16 @@ class Create(Base, unittest.TestCase, ShouldFailMixin): # XXX disabled - bug #72
         basedir = "db/create"
         if not os.path.isdir(basedir):
             os.makedirs(basedir)
-        spec = db.DBSpec("sqlite3", os.path.join(basedir, "db1.sqlite"))
-        db.create_db(spec)
-        db1 = db.open_db(spec)
+        spec = dbspec.DBSpec("sqlite3", os.path.join(basedir, "db1.sqlite"))
+        spec.create_db()
+        db1 = spec.open_db()
         self.dbs.add(db1)
         version = db1.runQueryNow("SELECT version FROM version")[0][0]
         self.failUnlessEqual(version, 1)
         d = db1.runQuery("SELECT version FROM version")
         d.addCallback(lambda r: self.failUnlessEqual(r[0][0], 1, r))
         def _then(ign):
-            db2 = db.DBConnector(spec)
+            db2 = connector.DBConnector(spec)
             self.dbs.add(db2)
             version = db2.runQueryNow("SELECT version FROM version")[0][0]
             self.failUnlessEqual(version, 1)
@@ -115,8 +116,8 @@ class Create(Base, unittest.TestCase, ShouldFailMixin): # XXX disabled - bug #72
         # sqlite databases spring into existence the moment you look at them,
         # so what we test here is that open_db() will not silently use such
         # an empty database.
-        spec = db.DBSpec("sqlite3", fn)
-        db1 = db.DBConnector(spec) # should work
+        spec = dbspec.DBSpec("sqlite3", fn)
+        db1 = connector.DBConnector(spec) # should work
         self.dbs.add(db1)
         d = self.shouldFail(db.DatabaseNotReadyError, "must_exist",
                             "cannot use empty database",
@@ -127,11 +128,11 @@ class Create(Base, unittest.TestCase, ShouldFailMixin): # XXX disabled - bug #72
         basedir = "db/must_not_exist"
         if not os.path.isdir(basedir):
             os.makedirs(basedir)
-        spec = db.DBSpec("sqlite3", os.path.join(basedir, "existing.sqlite"))
-        db.create_db(spec)
+        spec = dbspec.DBSpec("sqlite3", os.path.join(basedir, "existing.sqlite"))
+        spec.create_db()
         d = self.shouldFail(db.DBAlreadyExistsError, "must_not_exist",
                             "Refusing to touch an existing database",
-                            db.create_db, spec)
+                            spec.create_db)
         return d
 
     def test_old_version(self):
@@ -139,7 +140,7 @@ class Create(Base, unittest.TestCase, ShouldFailMixin): # XXX disabled - bug #72
         if not os.path.isdir(basedir):
             os.makedirs(basedir)
         fn = self._fn = os.path.join(basedir, "oldversion.sqlite")
-        spec = db.DBSpec("sqlite3", fn)
+        spec = dbspec.DBSpec("sqlite3", fn)
         dbapi = reflect.namedModule(db.get_sqlite_dbapi_name())
         conn = dbapi.connect(fn)
         c = conn.cursor()
@@ -187,9 +188,9 @@ class MigrateChanges(Base, unittest.TestCase): # XXX disabled - bug #724
 
     def test_migrate(self):
         fn = self.create_pickle()
-        spec = db.DBSpec("sqlite3", "db/migrate/state.sqlite")
-        db.create_db(spec)
-        the_db = db.open_db(spec)
+        spec = dbspec.DBSpec("sqlite3", "db/migrate/state.sqlite")
+        spec.create_db()
+        the_db = spec.open_db()
         self.dbs.add(the_db)
         runner.migrate_changes_pickle_to_db(fn, the_db, silent=True)
         m = ChangeManager()
@@ -225,9 +226,9 @@ class Scheduling(unittest.TestCase):
         m.setServiceParent(self.parent)
         if not os.path.isdir(basedir):
             os.makedirs(basedir)
-        spec = db.DBSpec("sqlite3", os.path.join(basedir, "state.sqlite"))
-        db.create_db(spec)
-        m.db = db.open_db(spec)
+        spec = dbspec.DBSpec("sqlite3", os.path.join(basedir, "state.sqlite"))
+        spec.create_db()
+        m.db = spec.open_db()
         m.change_svc = cm = ChangeManager()
         cm.setServiceParent(m)
         sm = SchedulerManager(m, m.db, cm)
@@ -473,8 +474,8 @@ class Building(RunMixin, unittest.TestCase, PollMixin):
         # This eventually needs to be merged into RunMixin.
         os.makedirs(self.basedir)
         self.slaves = {}
-        spec = db.DBSpec("sqlite3", os.path.join(self.basedir, "state.sqlite"))
-        db.create_db(spec)
+        spec = dbspec.DBSpec("sqlite3", os.path.join(self.basedir, "state.sqlite"))
+        spec.create_db()
         self.master = master.BuildMaster(self.basedir, db=spec)
         return self.master
 

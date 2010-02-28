@@ -14,7 +14,8 @@ from twisted.web import client, static, server
 from twisted.python import log
 #log.startLogging(sys.stderr)
 
-from buildbot import master, interfaces, db
+from buildbot import master, interfaces
+from buildbot.db import dbspec
 from buildbot.buildrequest import BuildRequest
 from buildbot.slave import bot, commands
 from buildbot.slave.commands import rmdirRecursive
@@ -423,8 +424,8 @@ class VCBase(SignalMixin):
         self.helper = VCS.getHelper(self.vc_name)
 
         basedir = os.path.dirname(self.mktemp())
-        spec = db.DBSpec("sqlite3", os.path.join(basedir, "state.sqlite"))
-        db.create_db(spec)
+        spec = dbspec.DBSpec("sqlite3", os.path.join(basedir, "state.sqlite"))
+        spec.create_db()
         self.master = master.BuildMaster(basedir)
         self.slavebase = os.path.abspath(os.path.join(basedir, "slavebase"))
         assert not os.path.exists(self.slavebase)
