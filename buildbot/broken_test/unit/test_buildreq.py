@@ -9,7 +9,7 @@ from buildbot.status.builder import SUCCESS, FAILURE
 from buildbot.changes.changes import Change
 from buildbot.process.properties import Properties
 from buildbot.broken_test.runutils import MasterMixin, StallMixin
-from buildbot.eventual import fireEventually, flushEventualQueue
+from buildbot.util.eventual import fireEventually, flushEventualQueue
 
 class Request(unittest.TestCase):
     def testMerge(self):

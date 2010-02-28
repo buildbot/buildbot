@@ -272,7 +272,7 @@ class Maker:
         from buildbot.db.dbspec import DBSpec
         spec = DBSpec.from_url(self.config["db"], self.basedir)
         if not self.config['quiet']: print "creating database"
-        spec.create_db(spec)
+        spec.create_db()
 
     def populate_if_missing(self, target, source, overwrite=False):
         new_contents = open(source, "rt").read()
@@ -456,7 +456,7 @@ def upgradeMaster(config):
     from buildbot.db.dbspec import DBSpec
     spec = DBSpec.from_url(config["db"], basedir)
     # TODO: check that TAC file specifies the right spec
-    db = create_or_upgrade_db(spec)
+    db = spec.create_or_upgrade_db()
     db.start()
     # if we still have a changes.pck, then we need to migrate it
     changes_pickle = os.path.join(basedir, "changes.pck")

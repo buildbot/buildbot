@@ -9,7 +9,7 @@ from buildbot.sourcestamp import SourceStamp
 from buildbot.changes import changes
 from buildbot.status import builder
 from buildbot.process.builder import IDLE, BUILDING
-from buildbot.eventual import fireEventually, flushEventualQueue
+from buildbot.util.eventual import fireEventually, flushEventualQueue
 
 from buildbot.broken_test.runutils import MasterMixin, TestFlagMixin, StallMixin
 from buildbot.broken_test.pollmixin import PollMixin
