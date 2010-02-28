@@ -31,7 +31,7 @@ import sys
 
 from twisted.spread import pb
 from twisted.cred import credentials
-from twisted.internet import reactor
+from twisted.internet import reactor, defer
 
 from optparse import OptionParser
 
@@ -59,30 +59,38 @@ def connectFailed(error):
     return error
 
 
-def addChange(remote, changei):
-    logging.debug("addChange %s, %s" % (repr(remote), repr(changei)))
-    try:
-        c = changei.next()
-    except StopIteration:
-        remote.broker.transport.loseConnection()
-        return None
+def addChanges(remote, changei):
+    logging.debug("addChanges %s, %s" % (repr(remote), repr(changei)))
+    def addChange(c):
+        logging.info("New revision: %s" % c['revision'][:8])
+        for key, value in c.iteritems():
+            logging.debug("  %s: %s" % (key, value))
 
-    logging.info("New revision: %s" % c['revision'][:8])
-    for key, value in c.iteritems():
-        logging.debug("  %s: %s" % (key, value))
+        d = remote.callRemote('addChange', c)
+        return d
 
-    d = remote.callRemote('addChange', c)
+    finished_d = defer.Deferred()
+    def iter():
+        try:
+            c = changei.next()
+            d = addChange(c)
+            # handle successful completion by re-iterating, but not immediately
+            # as that will blow out the Python stack
+            def cb(_):
+                reactor.callLater(0, iter)
+            d.addCallback(cb)
+            # and pass errors along to the outer deferred
+            d.addErrback(finished_d.errback)
+        except StopIteration:
+            remote.broker.transport.loseConnection()
+            finished_d.callback(None)
 
-    # tail recursion in Twisted can blow out the stack, so we
-    # insert a callLater to delay things
-    def recurseLater(x):
-        reactor.callLater(0, addChange, remote, changei)
-    d.addCallback(recurseLater)
-    return d
+    iter()
+    return finished_d
 
 
 def connected(remote):
-    return addChange(remote, changes.__iter__())
+    return addChanges(remote, changes.__iter__())
 
 
 def grab_commit_info(c, rev):
