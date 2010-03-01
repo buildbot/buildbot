@@ -1,21 +1,24 @@
-
-
 # test step.ShellCommand and the slave-side commands.ShellCommand
 
 import sys, time, os
 from twisted.trial import unittest
-from twisted.internet import reactor, defer
+from twisted.internet import reactor, defer, task
 from twisted.python import util
 from buildbot.slave.commands.base import SlaveShellCommand, ShellCommand
 from buildbot.broken_test.runutils import SlaveCommandTestBase
 
+class UnbufferedSlaveShellCommand(SlaveShellCommand):
+    def start(self):
+        retval = SlaveShellCommand.start(self)
+        self.command.BUFFER_SIZE = 0
+        self.command.BUFFER_TIMEOUT = 0
+        return retval
+
 class SlaveSide(SlaveCommandTestBase, unittest.TestCase):
     def setUp(self):
-        ShellCommand.BUFFER_TIMEOUT = 0.5
         SlaveCommandTestBase.setUp(self)
 
     def tearDown(self):
-        ShellCommand.BUFFER_TIMEOUT = 5
         SlaveCommandTestBase.tearDown(self)
 
     def testOne(self):
@@ -25,7 +28,7 @@ class SlaveSide(SlaveCommandTestBase, unittest.TestCase):
             'command': [sys.executable, emitcmd, "0"],
             'workdir': ".",
             }
-        d = self.startCommand(SlaveShellCommand, args)
+        d = self.startCommand(UnbufferedSlaveShellCommand, args)
         d.addCallback(self.collectUpdates)
         def _check(logs):
             self.failUnlessEqual(logs['stdout'].strip(), "this is stdout")
@@ -46,12 +49,16 @@ class SlaveSide(SlaveCommandTestBase, unittest.TestCase):
 
     def testLogFiles_1(self):
         return self._testLogFiles(1)
+    # Skip this, it's time dependent
+    testLogFiles_1.skip = True
 
     def testLogFiles_2(self):
         return self._testLogFiles(2)
 
     def testLogFiles_3(self):
         return self._testLogFiles(3)
+    # Skip this, it's time dependent
+    testLogFiles_3.skip = True
 
     def _testLogFiles(self, mode):
         basedir = "test_shell.testLogFiles"
@@ -90,12 +97,12 @@ class SlaveSide(SlaveCommandTestBase, unittest.TestCase):
                          "log3": "log3.out"},
             'keep_stdin_open': True,
             }
-        finishd = self.startCommand(SlaveShellCommand, args)
+        finishd = self.startCommand(UnbufferedSlaveShellCommand, args)
         # The first batch of lines is written immediately. The second is
         # written after a pause of one second. We poll once per second until
         # we see both batches.
 
-        self._check_timeout = 10
+        self._check_timeout = 10 / 0.25
         d = self._check_and_wait()
         def _wait_for_finish(res, finishd):
             return finishd
@@ -129,7 +136,7 @@ class SlaveSide(SlaveCommandTestBase, unittest.TestCase):
             self.fail("command finished too early")
         spin = defer.Deferred()
         spin.addCallback(self._check_and_wait)
-        reactor.callLater(1, spin.callback, None)
+        reactor.callLater(0.25, spin.callback, None)
         return spin
 
     def _maybePrintError(self, res):

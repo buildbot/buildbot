@@ -512,13 +512,19 @@ class ShellCommand:
 
 
     def _chunkForSend(self, data):
-        # limit the chunks that we send over PB to 128k, since it has a
-        # hardwired string-size limit of 640k.
+        """
+        limit the chunks that we send over PB to 128k, since it has a hardwired
+        string-size limit of 640k.
+        """
         LIMIT = self.CHUNK_LIMIT
         for i in range(0, len(data), LIMIT):
             yield data[i:i+LIMIT]
 
     def _collapseMsg(self, msg):
+        """
+        Take msg, which is a dictionary of lists of output chunks, and
+        concatentate all the chunks into a single string
+        """
         retval = {}
         for log in msg:
             data = "".join(msg[log])
@@ -529,6 +535,9 @@ class ShellCommand:
         return retval
 
     def _sendMessage(self, msg):
+        """
+        Collapse and send msg to the master
+        """
         if not msg:
             return
         msg = self._collapseMsg(msg)
@@ -539,28 +548,46 @@ class ShellCommand:
         self._sendBuffers()
 
     def _sendBuffers(self):
+        """
+        Send all the content in our buffers.
+        """
         msg = {}
-        n = 0
+        msg_size = 0
         lastlog = None
-        #log.msg("Sending %i bytes" % self.buflen)
         while self.buffered:
+            # Grab the next bits from the buffer
             logname, data = self.buffered.popleft()
+
+            # If this log is different than the last one, then we have to send
+            # out the message so far.  This is because the message is
+            # transferred as a dictionary, which makes the ordering of keys
+            # unspecified, and makes it impossible to interleave data from
+            # different logs.  A future enhancement could be to change the
+            # master to support a list of (logname, data) tuples instead of a
+            # dictionary. TODO: In 0.8.0?
+            # On our first pass through this loop lastlog is None
             if lastlog is None:
                 lastlog = logname
             elif logname != lastlog:
                 self._sendMessage(msg)
                 msg = {}
-                n = 0
+                msg_size = 0
             lastlog = logname
 
             logdata = msg.setdefault(logname, [])
+
+            # Chunkify the log data to make sure we're not sending more than
+            # CHUNK_LIMIT at a time
             for chunk in self._chunkForSend(data):
                 logdata.append(chunk)
-                n += len(chunk)
-                if n > self.CHUNK_LIMIT:
+                msg_size += len(chunk)
+                if msg_size > self.CHUNK_LIMIT:
+                    # We've gone beyond the chunk limit, so send out our
+                    # message.  At worst this results in a message slightly
+                    # larger than (2*CHUNK_LIMIT)-1
                     self._sendMessage(msg)
                     msg = {}
-                    n = 0
+                    msg_size = 0
         self.buflen = 0
         self._sendMessage(msg)
         if self.buftimer:
@@ -569,6 +596,12 @@ class ShellCommand:
             self.buftimer = None
 
     def _addToBuffers(self, logname, data):
+        """
+        Add data to the buffer for logname
+        Start a timer to send the buffers if BUFFER_TIMEOUT elapses.
+        If adding data causes the buffer size to grow beyond BUFFER_SIZE, then
+        the buffers will be sent.
+        """
         n = len(data)
 
         self.buflen += n

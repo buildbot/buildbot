@@ -1,13 +1,18 @@
 # -*- test-case-name: buildbot.broken_test.test_slavecommand -*-
 
 from twisted.trial import unittest
-from twisted.internet import reactor, interfaces
+from twisted.internet import reactor, interfaces, task
 from twisted.python import runtime, failure, util
 
 import os, sys
 
 from buildbot.slave.commands import base, utils
 SlaveShellCommand = base.SlaveShellCommand
+
+clock = task.Clock()
+
+class TimelessSlaveShellCommand(base.SlaveShellCommand):
+    _reactor = clock
 
 from buildbot.broken_test.runutils import SignalMixin, FakeSlaveBuilder
 
@@ -124,7 +129,7 @@ class ShellBase(SignalMixin):
             os.unlink(targetfile)
         cmd = "%s %s 0" % (sys.executable, self.emitcmd)
         args = {'command': cmd, 'workdir': '.', 'timeout': 60}
-        c = SlaveShellCommand(self.builder, None, args)
+        c = TimelessSlaveShellCommand(self.builder, None, args)
         d = c.start()
         expected = [('stdout', "this is stdout\n"),
                     ('stderr', "this is stderr\n")]
@@ -141,7 +146,7 @@ class ShellBase(SignalMixin):
     def testShell2(self):
         cmd = [sys.executable, self.emitcmd, "0"]
         args = {'command': cmd, 'workdir': '.', 'timeout': 60}
-        c = SlaveShellCommand(self.builder, None, args)
+        c = TimelessSlaveShellCommand(self.builder, None, args)
         d = c.start()
         expected = [('stdout', "this is stdout\n"),
                     ('stderr', "this is stderr\n")]
@@ -151,7 +156,7 @@ class ShellBase(SignalMixin):
     def testShellRC(self):
         cmd = [sys.executable, self.emitcmd, "1"]
         args = {'command': cmd, 'workdir': '.', 'timeout': 60}
-        c = SlaveShellCommand(self.builder, None, args)
+        c = TimelessSlaveShellCommand(self.builder, None, args)
         d = c.start()
         expected = [('stdout', "this is stdout\n"),
                     ('stderr', "this is stderr\n")]
@@ -162,7 +167,7 @@ class ShellBase(SignalMixin):
         cmd = "%s %s 0" % (sys.executable, self.emitcmd)
         args = {'command': cmd, 'workdir': '.',
                 'env': {'EMIT_TEST': "envtest"}, 'timeout': 60}
-        c = SlaveShellCommand(self.builder, None, args)
+        c = TimelessSlaveShellCommand(self.builder, None, args)
         d = c.start()
         expected = [('stdout', "this is stdout\n"),
                     ('stderr', "this is stderr\n"),
@@ -177,7 +182,7 @@ class ShellBase(SignalMixin):
             os.unlink(targetfile)
         cmd = "%s %s 0" % (sys.executable, self.subemitcmd)
         args = {'command': cmd, 'workdir': "subdir", 'timeout': 60}
-        c = SlaveShellCommand(self.builder, None, args)
+        c = TimelessSlaveShellCommand(self.builder, None, args)
         d = c.start()
         expected = [('stdout', "this is stdout in subdir\n"),
                     ('stderr', "this is stderr\n")]
@@ -192,7 +197,7 @@ class ShellBase(SignalMixin):
                 'workdir': '.', 'timeout': 10,
                 'env': {"LC_ALL": "C"},
                 }
-        c = SlaveShellCommand(self.builder, None, args)
+        c = TimelessSlaveShellCommand(self.builder, None, args)
         d = c.start()
         d.addCallback(self._testShellMissingCommand_1)
         return d
@@ -206,9 +211,10 @@ class ShellBase(SignalMixin):
     def testTimeout(self):
         args = {'command': [sys.executable, self.sleepcmd, "10"],
                 'workdir': '.', 'timeout': 2}
-        c = SlaveShellCommand(self.builder, None, args)
+        c = TimelessSlaveShellCommand(self.builder, None, args)
         d = c.start()
         d.addCallback(self._testTimeout_1)
+        clock.advance(5)
         return d
     def _testTimeout_1(self, res):
         self.failIfEqual(self.getrc(), 0)
@@ -226,10 +232,11 @@ class ShellBase(SignalMixin):
     def testInterrupt1(self):
         args = {'command': [sys.executable, self.sleepcmd, "10"],
                 'workdir': '.', 'timeout': 20}
-        c = SlaveShellCommand(self.builder, None, args)
+        c = TimelessSlaveShellCommand(self.builder, None, args)
         d = c.start()
-        reactor.callLater(1, c.interrupt)
+        clock.callLater(1, c.interrupt)
         d.addCallback(self._testInterrupt1_1)
+        clock.advance(1)
         return d
     def _testInterrupt1_1(self, res):
         self.failIfEqual(self.getrc(), 0)
@@ -250,16 +257,16 @@ class Shell(ShellBase, unittest.TestCase):
         # test the backup timeout. This doesn't work under a PTY, because the
         # transport.loseConnection we do in the timeout handler actually
         # *does* kill the process.
-        args = {'command': [sys.executable, self.sleepcmd, "5"],
+        args = {'command': [sys.executable, self.sleepcmd, "0"],
                 'workdir': '.', 'timeout': 20}
-        c = SlaveShellCommand(self.builder, None, args)
+        c = TimelessSlaveShellCommand(self.builder, None, args)
         d = c.start()
         c.command.BACKUP_TIMEOUT = 1
         # make it unable to kill the child, by changing the signal it uses
         # from SIGKILL to the do-nothing signal 0.
         c.command.KILL = None
-        reactor.callLater(1, c.interrupt)
-        d.addBoth(self._testInterrupt2_1)
+        d.addCallback(lambda ign: c.interrupt())
+        d.addCallback(lambda ign: clock.advance(3))
         return d
     def _testInterrupt2_1(self, res):
         # the slave should raise a TimeoutError exception. In a normal build
@@ -271,21 +278,6 @@ class Shell(ShellBase, unittest.TestCase):
         self.failUnless(res.check(base.TimeoutError))
         self.checkrc(-1)
         return
-        # the command is still actually running. Start another command, to
-        # make sure that a) the old command's output doesn't interfere with
-        # the new one, and b) the old command's actual termination doesn't
-        # break anything
-        args = {'command': [sys.executable, self.sleepcmd, "5"],
-                'workdir': '.', 'timeout': 20}
-        c = SlaveShellCommand(self.builder, None, args)
-        d = c.start()
-        d.addCallback(self._testInterrupt2_2)
-        return d
-    def _testInterrupt2_2(self, res):
-        self.checkrc(0)
-        # N.B.: under windows, the trial process hangs out for another few
-        # seconds. I assume that the win32eventreactor is waiting for one of
-        # the lingering child processes to really finish.
     if runtime.platformType != 'posix':
         testInterrupt2.skip = "interrupt doesn't appear to work under windows"
 

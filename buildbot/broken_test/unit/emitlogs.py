@@ -30,7 +30,6 @@ def write(i):
     sys.stdout.flush()
 
 write(0)
-time.sleep(1)
 write(1)
 sys.stdin.read(1)
 write(2)
