@@ -6,7 +6,7 @@ from twisted.internet import defer, reactor, protocol
 from twisted.python import log, util, failure
 
 from buildbot import master, interfaces
-from buildbot.db import dbspec
+from buildbot.db import dbspec, schema
 from buildbot.util.eventual import flushEventualQueue
 from buildbot.slave import bot
 from buildbot.buildslave import BuildSlave
@@ -84,7 +84,10 @@ class MasterMixin:
         os.makedirs(basedir)
         self.master = master.BuildMaster(basedir, **kwargs)
         spec = dbspec.DBSpec.from_url("sqlite:///state.sqlite", basedir=basedir)
-        spec.create_db()
+
+        sm = schema.DBSchemaManager(spec, basedir)
+        sm.upgrade(quiet=True)
+
         self.master.loadDatabase(spec)
         self.master.readConfig = True
         self.master.startService()

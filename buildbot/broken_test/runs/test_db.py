@@ -546,3 +546,5 @@ class Building(RunMixin, unittest.TestCase, PollMixin):
 # XXX disable Base-based tests (bug #724)
 del Create
 del MigrateChanges
+del Scheduling
+del Building

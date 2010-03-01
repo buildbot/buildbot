@@ -129,65 +129,30 @@ class DBSpec(unittest.TestCase):
 class DBSpec_methods(unittest.TestCase):
 
     def setUp(self):
-        # sqlite does not allow multiple connections to an in-memory database, so
-        # we have to set up an on-disk sqlite file
-        self.dbfile = os.path.abspath("dbspec_methods.sqlite")
-        if os.path.exists(self.dbfile):
-            os.unlink(self.dbfile)
-        self.spec = dbspec.DBSpec.from_url("sqlite:///" + self.dbfile)
-        self.conns = []
+        self.spec = dbspec.DBSpec.from_url("sqlite://")
+        self.pools = []
 
     def tearDown(self):
-        # be careful to stop all connectors
-        for conn in self.conns:
-            conn.stop()
-        # and delete the underlying file
-        if os.path.exists(self.dbfile):
-            os.unlink(self.dbfile)
+        # be careful to stop all pools
+        for pool in self.pools:
+            pool.stop()
         # double-check we haven't left a ThreadPool open
         assert len(threading.enumerate()) < 4
 
-    # track a connector that must be closed
-    def trackConn(self, conn):
-        self.conns.append(conn)
-        return conn
+    # track a pool that must be closed
+    def trackPool(self, pool):
+        self.pools.append(pool)
+        return pool
 
-    # put together a fake database, with just a version table
-    def makeFakeDB(self):
-        conn = self.trackConn(connector.DBConnector(self.spec))
-        conn.start()
-        conn.runQueryNow("CREATE TABLE version (`version` integer)")
-        conn.runQueryNow("INSERT INTO version values (1)")
-        conn.stop()
+    # note that sync connections need not be cleaned up
 
     ## tests
 
-    def test_open_db_missingFails(self):
-        self.assertRaises(exceptions.DatabaseNotReadyError, self.spec.open_db)
+    def test_get_dbapi_has_connect(self):
+        self.assertTrue(hasattr(self.spec.get_dbapi(), 'connect'))
 
-    def test_open_db_existingOK(self):
-        self.makeFakeDB()
-        conn = self.trackConn(self.spec.open_db())
-        self.assertEqual(conn.get_version(), 1)
-        conn.stop()
+    def test_get_sync_connection_has_cursor(self):
+        self.assertTrue(hasattr(self.spec.get_sync_connection(), 'cursor'))
 
-    def test_create_db_missingOK(self):
-        self.spec.create_db() # note this does not return a DBConnector
-        conn = self.trackConn(connector.DBConnector(self.spec))
-        conn.start()
-        self.assertEqual(conn.runQueryNow("SELECT * from version"), [(1,)])
-        conn.stop()
-
-    def test_create_db_existingFails(self):
-        self.makeFakeDB()
-        self.assertRaises(exceptions.DBAlreadyExistsError, self.spec.create_db)
-
-    def test_create_or_upgrade_db_missingOK(self):
-        conn = self.trackConn(self.spec.create_or_upgrade_db())
-        self.assertEqual(conn.runQueryNow("SELECT * from version"), [(1,)])
-
-    def test_create_or_upgrade_db_existingOK(self):
-        self.makeFakeDB()
-        conn = self.trackConn(self.spec.create_or_upgrade_db())
-        self.assertEqual(conn.runQueryNow("SELECT * from version"), [(1,)])
-
+    def test_get_async_connection_pool_has_runInteraction(self):
+        self.assertTrue(hasattr(self.spec.get_async_connection_pool(), 'runInteraction'))

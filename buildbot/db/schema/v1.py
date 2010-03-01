@@ -36,25 +36,21 @@
 #
 # ***** END LICENSE BLOCK *****
 
-import sys, time, collections, base64, textwrap, os, cgi, re
+import cPickle
+import textwrap
+import os
 
+from twisted.persisted import styles
 try:
     import simplejson
     json = simplejson # this hushes pyflakes
 except ImportError:
     import json
 
-from twisted.python import log, reflect, threadable
-from twisted.internet import defer, reactor
-from twisted.enterprise import adbapi
-from buildbot import util
-from buildbot.util import collections as bbcollections
-from buildbot.changes.changes import Change
-from buildbot.sourcestamp import SourceStamp
-from buildbot.buildrequest import BuildRequest
-from buildbot.process.properties import Properties
-from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE
-from buildbot.util.eventual import eventually
+from buildbot.db import util
+
+# This is version 1, so it introduces a lot of new tables over version 0,
+# which had no database.
 
 TABLES = [
     # the schema here is defined as version 1
@@ -62,9 +58,6 @@ TABLES = [
         CREATE TABLE version (
             version INTEGER NOT NULL -- contains one row, currently set to 1
         );
-    """),
-    textwrap.dedent("""
-        INSERT INTO version VALUES (1);
     """),
 
     # last_access is used for logging, to record the last time that each
@@ -82,9 +75,6 @@ TABLES = [
 
     textwrap.dedent("""
         CREATE TABLE changes_nextid (next_changeid INTEGER);
-    """),
-    textwrap.dedent("""
-        INSERT INTO changes_nextid VALUES (1);
     """),
 
     textwrap.dedent("""
@@ -249,5 +239,103 @@ TABLES = [
             `finish_time` INTEGER
         );
     """),
+]
 
-    ]
+class Upgrader(object):
+    def __init__(self, dbapi, conn, basedir, quiet=False):
+        self.dbapi = dbapi
+        self.conn = conn
+        self.basedir = basedir
+        self.quiet = quiet
+
+    def upgrade(self):
+        self.add_tables()
+        self.migrate_changes()
+        self.set_version()
+
+    def add_tables(self):
+        # first, add all of the tables
+        c = self.conn.cursor()
+        for t in TABLES:
+            try:
+                c.execute(t)
+            except:
+                print >>sys.stderr, "error executing SQL query: %s" % t
+                raise
+
+    def _addChangeToDatabase(self, change, cursor):
+        # strip None from any of these values, just in case
+        def remove_none(x):
+            if x is None: return ""
+            return x
+        values = tuple(remove_none(x) for x in
+                         (change.number, change.who,
+                          change.comments, change.isdir,
+                          change.branch, change.revision, change.revlink,
+                          change.when, change.category))
+        q = util.sql_insert(self.dbapi, 'changes',
+            """changeid author comments is_dir branch revision
+               revlink when_timestamp category""".split())
+        cursor.execute(q, values)
+
+        for link in change.links:
+            cursor.execute(util.sql_insert(self.dbapi, 'change_links', ('changeid', 'link')),
+                          (change.number, link))
+        for filename in change.files:
+            cursor.execute(util.sql_insert(self.dbapi, 'change_files', ('changeid', 'filename')),
+                          (change.number, filename))
+        for propname,propvalue in change.properties.properties.items():
+            encoded_value = json.dumps(propvalue)
+            cursor.execute(util.sql_insert(self.dbapi, 'change_properties',
+                                  ('changeid', 'property_name', 'property_value')),
+                          (change.number, propname, encoded_value))
+
+    def migrate_changes(self):
+        # if we still have a changes.pck, then we need to migrate it
+        changes_pickle = os.path.join(self.basedir, "changes.pck")
+        if os.path.exists(changes_pickle):
+            if not self.quiet: print "migrating changes.pck to database"
+
+            # 'source' will be an old b.c.changes.ChangeMaster instance, with a
+            # .changes attribute
+            source = cPickle.load(open(changes_pickle,"rb"))
+            styles.doUpgrade()
+
+            if not self.quiet: print " (%d Change objects)" % len(source.changes)
+
+            # first, scan for changes without a number.  If we find any, then we'll
+            # renumber the changes sequentially
+            have_unnumbered = False
+            for c in source.changes:
+                if c.revision and c.number is None:
+                    have_unnumbered = True
+                    break
+            if have_unnumbered:
+                n = 1
+                for c in source.changes:
+                    if c.revision:
+                        c.number = n
+                        n = n + 1
+
+            # insert the changes
+            cursor = self.conn.cursor()
+            for c in source.changes:
+                if not c.revision:
+                    continue
+                self._addChangeToDatabase(c, cursor)
+
+            # update next_changeid
+            max_changeid = max([ c.number for c in source.changes if c.revision ] + [ 0 ])
+            cursor.execute("""INSERT into changes_nextid VALUES (%d)""" % (max_changeid+1))
+
+            if not self.quiet:
+                print "moving changes.pck to changes.pck.old; delete it or keep it as a backup"
+            os.rename(changes_pickle, changes_pickle+".old")
+        else:
+            c = self.conn.cursor()
+            c.execute("""INSERT into changes_nextid VALUES (1)""")
+
+    def set_version(self):
+        c = self.conn.cursor()
+        c.execute("""INSERT INTO version VALUES (1)""")
+

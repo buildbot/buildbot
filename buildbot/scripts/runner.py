@@ -7,6 +7,7 @@ import traceback
 from twisted.python import usage, util, runtime
 
 from buildbot.interfaces import BuildbotNotRunningError
+from buildbot.db import schema
 
 # the create/start/stop commands should all be run as the same user,
 # preferably a separate 'buildbot' account.
@@ -269,10 +270,15 @@ class Maker:
             f.close()
 
     def create_db(self):
-        from buildbot.db.dbspec import DBSpec
-        spec = DBSpec.from_url(self.config["db"], self.basedir)
+        from buildbot.db import dbspec, exceptions
+        spec = dbspec.DBSpec.from_url(self.config["db"], self.basedir)
         if not self.config['quiet']: print "creating database"
-        spec.create_db()
+
+        # upgrade from "nothing"
+        sm = schema.DBSchemaManager(spec, self.basedir)
+        if sm.get_db_version() != 0:
+            raise exceptions.DBAlreadyExistsError
+        sm.upgrade()
 
     def populate_if_missing(self, target, source, overwrite=False):
         new_contents = open(source, "rt").read()
@@ -420,21 +426,6 @@ class UpgradeMasterOptions(MakerBase):
     pickle files.
     """
 
-def migrate_changes_pickle_to_db(fn, db, silent=False):
-    from cPickle import load
-    if not silent: print "migrating Changes pickle to db"
-
-    # 'source' will be an old b.c.changes.ChangeMaster instance, with a
-    # .changes attribute
-    source = load(open(fn,"rb"))
-
-    if not silent: print " (%d Change objects)" % len(source.changes)
-    # about 150 changes per second on my laptop
-    for c in source.changes:
-        if not c.revision:
-            continue
-        db.addChangeToDatabase(c)
-
 def upgradeMaster(config):
     basedir = os.path.expanduser(config['basedir'])
     m = Maker(config)
@@ -453,19 +444,16 @@ def upgradeMaster(config):
     m.move_if_present(os.path.join(basedir, "public_html/index.html"),
                       os.path.join(basedir, "templates/root.html"))
 
-    from buildbot.db.dbspec import DBSpec
-    spec = DBSpec.from_url(config["db"], basedir)
+    from buildbot.db import schema, connector, dbspec
+    spec = dbspec.DBSpec.from_url(config["db"], basedir)
     # TODO: check that TAC file specifies the right spec
-    db = spec.create_or_upgrade_db()
+
+    # upgrade the db
+    sm = schema.DBSchemaManager(spec, basedir)
+    sm.upgrade()
+
+    db = connector.DBConnector(spec)
     db.start()
-    # if we still have a changes.pck, then we need to migrate it
-    changes_pickle = os.path.join(basedir, "changes.pck")
-    if os.path.exists(changes_pickle):
-        if not config['quiet']: print "migrating changes.pck to database"
-        migrate_changes_pickle_to_db(changes_pickle, db, silent=config['quiet'])
-        if not config['quiet']: print "moving old changes.pck to changes.pck.old"
-        os.rename(changes_pickle, changes_pickle+".old")
-    db.stop()
 
     rc = m.check_master_cfg()
     if rc:

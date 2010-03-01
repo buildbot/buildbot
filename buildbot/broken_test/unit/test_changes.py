@@ -5,7 +5,7 @@ from twisted.trial import unittest
 from twisted.internet import defer, reactor
 
 from buildbot import master
-from buildbot.db import dbspec
+from buildbot.db import dbspec, schema
 from buildbot.changes import pb
 from buildbot.scripts import runner
 
@@ -159,7 +159,10 @@ class Sender(unittest.TestCase):
         if not os.path.exists(basedir):
             os.makedirs(basedir)
         spec = dbspec.DBSpec("sqlite3", os.path.join(basedir, "state.sqlite"))
-        spec.create_db()
+
+        sm = schema.DBSchemaManager(spec, basedir)
+        sm.upgrade()
+
         self.master = master.BuildMaster(basedir, db_spec=spec)
         self.master.readConfig = True
         self.master.startService()

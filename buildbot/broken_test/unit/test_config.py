@@ -11,7 +11,7 @@ from twisted.application import service, internet
 from twisted.spread import pb
 from twisted.web.server import Site
 from twisted.web.distrib import ResourcePublisher
-from buildbot.db import dbspec
+from buildbot.db import dbspec, schema
 from buildbot.master import BuildMaster
 from buildbot.process.builder import Builder
 from buildbot.process.factory import BasicBuildFactory, ArgumentsInTheWrongPlace
@@ -1149,7 +1149,10 @@ c['changeHorizon'] = 5
         self.master.readConfig = True
         self.master.startService()
         spec = dbspec.DBSpec.from_url("sqlite:///orig.sqlite", basedir=self.basedir)
-        spec.create_db()
+
+        sm = schema.DBSchemaManager(spec, self.basedir)
+        sm.upgrade()
+
         d = self.master.loadConfig(dburlCfg)
         def _check(ign):
             self.failUnlessEqual(self.master.db_url, "sqlite:///orig.sqlite")
@@ -1167,7 +1170,10 @@ c['changeHorizon'] = 5
         self.master.readConfig = True
         self.master.startService()
         spec = dbspec.DBSpec.from_url("sqlite:///orig.sqlite", basedir=self.basedir)
-        spec.create_db()
+
+        sm = schema.DBSchemaManager(spec, self.basedir)
+        sm.upgrade()
+
         d = self.master.loadConfig(dburlCfg)
         def _check(ign):
             self.failUnlessEqual(self.master.db_url, "sqlite:///orig.sqlite")
@@ -1186,7 +1192,10 @@ c['changeHorizon'] = 5
         self.slaves = {}
         os.makedirs(self.basedir)
         spec = dbspec.DBSpec.from_url("sqlite:///state.sqlite", basedir=self.basedir)
-        spec.create_db()
+
+        sm = schema.DBSchemaManager(spec, self.basedir)
+        sm.upgrade()
+
         self.master = BuildMaster(self.basedir)
         self.master.readConfig = True
         self.master.startService()
@@ -1201,7 +1210,10 @@ c['changeHorizon'] = 5
         self.slaves = {}
         os.makedirs(self.basedir)
         spec = dbspec.DBSpec.from_url("sqlite:///state.sqlite", basedir=self.basedir)
-        spec.create_db()
+
+        sm = schema.DBSchemaManager(spec, self.basedir)
+        sm.upgrade()
+
         self.master = BuildMaster(self.basedir)
         self.master.readConfig = True
         self.master.startService()

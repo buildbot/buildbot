@@ -96,27 +96,14 @@ class DBConnector(util.ComparableMixin):
         self._spec = spec
 
         # this is for synchronous calls: runQueryNow, runInteractionNow
-        self._dbapi = reflect.namedModule(spec.dbapiName)
+        self._dbapi = spec.get_dbapi()
         self._nonpool = None
 
         # pass queries in with "?" placeholders. If the backend uses a
         # different style, we'll replace them.
         self.paramstyle = self._dbapi.paramstyle
 
-        connkw = spec.connkw.copy()
-        connkw["cp_reconnect"] = True
-        connkw["cp_noisy"] = True
-        if 'sqlite' in spec.dbapiName:
-            # This disables sqlite's obsessive checks that a given connection is
-            # only used in one thread; this is justified by the Twisted ticket
-            # regarding the errors you get on connection shutdown if you do *not*
-            # add this parameter: http://twistedmatrix.com/trac/ticket/3629
-            connkw['check_same_thread'] = False
-        #connkw["cp_min"] = connkw["cp_max"] = 1
-        log.msg("creating database connector: %s %s %s" % \
-                (spec.dbapiName, spec.connargs, connkw))
-        self._pool = adbapi.ConnectionPool(spec.dbapiName,
-                                           *spec.connargs, **connkw)
+        self._pool = spec.get_async_connection_pool()
         self._pool.transactionFactory = MyTransaction
         # the pool must be started before it can be used. The real
         # buildmaster process will do this at reactor start. CLI tools (like
@@ -225,8 +212,7 @@ class DBConnector(util.ComparableMixin):
 
     def _runInteractionNow(self, interaction, *args, **kwargs):
         if not self._nonpool:
-            spec = self._spec
-            self._nonpool = self._dbapi.connect(*spec.connargs, **spec.connkw)
+            self._nonpool = self._spec.get_sync_connection()
         c = self._nonpool.cursor()
         try:
             result = interaction(c, *args, **kwargs)

@@ -13,7 +13,7 @@ from twisted.internet.interfaces import IReactorUNIX
 from twisted.web import client
 
 from buildbot import master, interfaces, sourcestamp
-from buildbot.db import dbspec
+from buildbot.db import dbspec, schema
 from buildbot.buildrequest import BuildRequest
 from buildbot.status import html, builder
 from buildbot.status.web import waterfall, xmlrpc
@@ -32,7 +32,9 @@ class SimpleMaster(master.BuildMaster):
         if os.path.exists(dbfile):
             os.unlink(dbfile)
         spec = dbspec.DBSpec.from_url("sqlite:///state.sqlite", basedir=basedir)
-        spec.create_db()
+
+        sm = schema.DBSchemaManager(spec, basedir)
+        sm.upgrade()
 
         master.BuildMaster.__init__(self, basedir)
         self.readConfig = True
