@@ -15,11 +15,12 @@ class DBConnector_Basic(unittest.TestCase):
         # use an in-memory sqlite database to test
         self.dbc = connector.DBConnector(dbspec.DBSpec.from_url("sqlite://"))
         self.dbc.start()
+        self.start_thdcount = len(threading.enumerate())
 
     def tearDown(self):
         self.dbc.stop()
         # double-check we haven't left a ThreadPool open
-        assert len(threading.enumerate()) < 4
+        assert len(threading.enumerate()) - self.start_thdcount < 2
 
     def test_quoteq_format(self):
         self.dbc.paramstyle = "format" # override default
