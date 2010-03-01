@@ -1,5 +1,6 @@
 from twisted.python import reflect
-from buildbot.db.schema import current
+
+# note that schema modules are not loaded unless an upgrade is taking place
 
 CURRENT_VERSION = 1
 
