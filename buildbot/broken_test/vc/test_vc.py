@@ -17,8 +17,9 @@ from twisted.python import log
 from buildbot import master, interfaces
 from buildbot.db import dbspec, schema
 from buildbot.buildrequest import BuildRequest
-from buildbot.slave import bot, commands
-from buildbot.slave.commands import rmdirRecursive
+from buildbot.slave import bot
+from buildbot.slave.commands.utils import rmdirRecursive
+from buildbot.slave.commands.base import ShellCommand
 from buildbot.status.builder import SUCCESS, FAILURE
 from buildbot.process import base
 from buildbot.process.properties import Properties
@@ -3276,7 +3277,7 @@ class Patch(VCBase, unittest.TestCase):
             usePTY = False
             def sendUpdate(self, status):
                 pass
-        c = commands.ShellCommand(FakeBuilder(), command, self.workdir,
+        c = ShellCommand(FakeBuilder(), command, self.workdir,
                                   sendRC=False, initialStdin=p0_diff)
         d = c.start()
         d.addCallback(self._testPatch_1)

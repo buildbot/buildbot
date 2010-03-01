@@ -6,8 +6,8 @@ from twisted.python import runtime, failure, util
 
 import os, sys
 
-from buildbot.slave import commands
-SlaveShellCommand = commands.SlaveShellCommand
+from buildbot.slave.commands import base, utils
+SlaveShellCommand = base.SlaveShellCommand
 
 from buildbot.broken_test.runutils import SignalMixin, FakeSlaveBuilder
 
@@ -48,7 +48,7 @@ class Utilities(unittest.TestCase):
         self.touch(d, "a/d/3.txt", 0)
         os.chmod(os.path.join(d, "a/d"), 0)
 
-        commands.rmdirRecursive(d)
+        utils.rmdirRecursive(d)
         self.failIf(os.path.exists(d))
 
 
@@ -268,7 +268,7 @@ class Shell(ShellBase, unittest.TestCase):
         # status. In our test environment, it isn't such a big deal.
         self.failUnless(isinstance(res, failure.Failure),
                         "res is not a Failure: %s" % (res,))
-        self.failUnless(res.check(commands.TimeoutError))
+        self.failUnless(res.check(base.TimeoutError))
         self.checkrc(-1)
         return
         # the command is still actually running. Start another command, to

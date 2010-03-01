@@ -31,7 +31,8 @@ from buildbot.status import builder
 from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE, SKIPPED
 from buildbot.broken_test.runutils import RunMixin, rmtree, run_one_build
 from buildbot.broken_test.runutils import makeBuildStep, StepTester
-from buildbot.slave import commands, registry
+from buildbot.slave.commands import registry
+from buildbot.slave.commands.base import command_version, Command
 
 
 class MyShellCommand(shell.ShellCommand):
@@ -377,7 +378,7 @@ class SlaveVersion(RunMixin, unittest.TestCase):
         return d
 
     def checkCompare(self, s):
-        cver = commands.command_version
+        cver = command_version
         # this insures that we are getting the version correctly
         self.failUnlessEqual(s.slaveVersion("svn", None), cver)
         # and that non-existent commands do not provide a version
@@ -407,7 +408,7 @@ class _SimpleBuildStep(buildstep.BuildStep):
         d = self.runCommand(cmd)
         d.addCallback(lambda res: self.finished(SUCCESS))
 
-class _SimpleCommand(commands.Command):
+class _SimpleCommand(Command):
     def start(self):
         self.builder.flag = True
         self.builder.flag_args = self.args

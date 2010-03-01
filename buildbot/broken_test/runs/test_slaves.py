@@ -727,7 +727,7 @@ c['builders'] = [
 ]
 """
 
-from buildbot.slave.commands import waitCommandRegistry
+from buildbot.slave.commands.base import waitCommandRegistry
 
 class Reconfig(RunMixin, StallMixin, unittest.TestCase):
 

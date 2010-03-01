@@ -9,7 +9,7 @@ from buildbot.sourcestamp import SourceStamp
 from buildbot.process import base
 from buildbot.process.properties import WithProperties, Properties
 from buildbot.status import builder
-from buildbot.slave.commands import rmdirRecursive
+from buildbot.slave.commands.utils import rmdirRecursive
 from buildbot.broken_test.runutils import RunMixin, run_one_build
 from buildbot.buildrequest import BuildRequest
 

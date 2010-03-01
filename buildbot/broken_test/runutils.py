@@ -308,7 +308,7 @@ def setupBuildStepStatus(basedir):
     return s3
 
 def fake_slaveVersion(command, oldversion=None):
-    from buildbot.slave.registry import commandRegistry
+    from buildbot.slave.commands.registry import commandRegistry
     return commandRegistry[command]
 
 class FakeBuildMaster:

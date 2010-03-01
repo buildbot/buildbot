@@ -13,7 +13,7 @@ from buildbot.util.eventual import fireEventually, flushEventualQueue
 
 from buildbot.broken_test.runutils import MasterMixin, TestFlagMixin, StallMixin
 from buildbot.broken_test.pollmixin import PollMixin
-from buildbot.slave.commands import waitCommandRegistry
+from buildbot.slave.commands.base import waitCommandRegistry
 
 
 config_base = """

@@ -6,7 +6,7 @@ import sys, time, os
 from twisted.trial import unittest
 from twisted.internet import reactor, defer
 from twisted.python import util
-from buildbot.slave.commands import SlaveShellCommand
+from buildbot.slave.commands.base import SlaveShellCommand
 from buildbot.broken_test.runutils import SlaveCommandTestBase
 
 class SlaveSide(SlaveCommandTestBase, unittest.TestCase):
