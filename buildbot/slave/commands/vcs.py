@@ -231,7 +231,7 @@ class SourceBase(Command):
                 self.doClobber(d, self.workdir)
                 d.addCallback(lambda res: self.doVCFull())
                 d.addBoth(self.maybeDoVCRetry)
-                reactor.callLater(delay, d.callback, None)
+                self._reactor.callLater(delay, d.callback, None)
                 return d
         return res
 

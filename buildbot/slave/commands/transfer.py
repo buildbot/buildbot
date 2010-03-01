@@ -51,7 +51,7 @@ class SlaveFileUploadCommand(Command):
         self.sendStatus({'header': "sending %s" % self.path})
 
         d = defer.Deferred()
-        reactor.callLater(0, self._loop, d)
+        self._reactor.callLater(0, self._loop, d)
         def _close(res):
             # close the file, but pass through any errors from _loop
             d1 = self.writer.callRemote("close")
@@ -186,7 +186,7 @@ class SlaveDirectoryUploadCommand(SlaveFileUploadCommand):
         self.sendStatus({'header': "sending %s" % self.path})
 
         d = defer.Deferred()
-        reactor.callLater(0, self._loop, d)
+        self._reactor.callLater(0, self._loop, d)
         def unpack(res):
             # unpack the archive, but pass through any errors from _loop
             d1 = self.writer.callRemote("unpack")
@@ -270,7 +270,7 @@ class SlaveFileDownloadCommand(Command):
                 log.msg('Cannot open file %r for download' % self.path)
 
         d = defer.Deferred()
-        reactor.callLater(0, self._loop, d)
+        self._reactor.callLater(0, self._loop, d)
         def _close(res):
             # close the file, but pass through any errors from _loop
             d1 = self.reader.callRemote('close')

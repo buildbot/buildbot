@@ -6,10 +6,18 @@ import sys, time, os
 from twisted.trial import unittest
 from twisted.internet import reactor, defer
 from twisted.python import util
-from buildbot.slave.commands.base import SlaveShellCommand
+from buildbot.slave.commands.base import SlaveShellCommand, ShellCommand
 from buildbot.broken_test.runutils import SlaveCommandTestBase
 
 class SlaveSide(SlaveCommandTestBase, unittest.TestCase):
+    def setUp(self):
+        ShellCommand.BUFFER_TIMEOUT = 0.5
+        SlaveCommandTestBase.setUp(self)
+
+    def tearDown(self):
+        ShellCommand.BUFFER_TIMEOUT = 5
+        SlaveCommandTestBase.tearDown(self)
+
     def testOne(self):
         self.setUpBuilder("test_shell.testOne")
         emitcmd = util.sibpath(__file__, "emit.py")

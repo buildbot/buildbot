@@ -2,6 +2,7 @@
 
 import os, signal, types, time
 from stat import ST_CTIME, ST_MTIME, ST_SIZE
+from collections import deque
 
 from zope.interface import implements
 from twisted.internet.protocol import ProcessProtocol
@@ -243,9 +244,18 @@ class ShellCommand:
     KILL = "KILL"
     CHUNK_LIMIT = 128*1024
 
+    # Don't send any data until at least BUFFER_SIZE bytes have been collected
+    # or BUFFER_TIMEOUT elapsed
+    BUFFER_SIZE = 64*1024
+    BUFFER_TIMEOUT = 5
+
     # For sending elapsed time:
     startTime = None
     elapsedTime = None
+
+    # For scheduling future events
+    _reactor = reactor
+
     # I wish we had easy access to CLOCK_MONOTONIC in Python:
     # http://www.opengroup.org/onlinepubs/000095399/functions/clock_getres.html
     # Then changes to the system clock during a run wouldn't effect the "elapsed
@@ -310,6 +320,9 @@ class ShellCommand:
         self.keepStdout = keepStdout
         self.keepStderr = keepStderr
 
+        self.buffered = deque()
+        self.buflen = 0
+        self.buftimer = None
 
         if usePTY == "slave-config":
             self.usePTY = self.builder.usePTY
@@ -370,9 +383,9 @@ class ShellCommand:
             os.makedirs(self.workdir)
         log.msg("ShellCommand._startCommand")
         if self.notreally:
-            self.sendStatus({'header': "command '%s' in dir %s" % \
-                             (self.fake_command, self.workdir)})
-            self.sendStatus({'header': "(not really)\n"})
+            self._addToBuffers('header', "command '%s' in dir %s" % \
+                             (self.fake_command, self.workdir))
+            self._addToBuffers('header', "(not really)\n")
             self.finished(None, 0)
             return
 
@@ -410,23 +423,23 @@ class ShellCommand:
         # obtain the same results. If there are spaces in the arguments, too
         # bad.
         log.msg(" " + display)
-        self.sendStatus({'header': display+"\n"})
+        self._addToBuffers('header', display+"\n")
 
         # then comes the secondary information
         msg = " in dir %s" % (self.workdir,)
         if self.timeout:
             msg += " (timeout %d secs)" % (self.timeout,)
         log.msg(" " + msg)
-        self.sendStatus({'header': msg+"\n"})
+        self._addToBuffers('header', msg+"\n")
 
         msg = " watching logfiles %s" % (self.logfiles,)
         log.msg(" " + msg)
-        self.sendStatus({'header': msg+"\n"})
+        self._addToBuffers('header', msg+"\n")
 
         # then the obfuscated command array for resolving unambiguity
         msg = " argv: %s" % (self.fake_command,)
         log.msg(" " + msg)
-        self.sendStatus({'header': msg+"\n"})
+        self._addToBuffers('header', msg+"\n")
 
         # then the environment, since it sometimes causes problems
         if self.logEnviron:
@@ -436,23 +449,23 @@ class ShellCommand:
             for name in env_names:
                 msg += "  %s=%s\n" % (name, self.environ[name])
             log.msg(" environment: %s" % (self.environ,))
-            self.sendStatus({'header': msg})
+            self._addToBuffers('header', msg)
 
         if self.initialStdin:
             msg = " writing %d bytes to stdin" % len(self.initialStdin)
             log.msg(" " + msg)
-            self.sendStatus({'header': msg+"\n"})
+            self._addToBuffers('header', msg+"\n")
 
         if self.keepStdinOpen:
             msg = " leaving stdin open"
         else:
             msg = " closing stdin"
         log.msg(" " + msg)
-        self.sendStatus({'header': msg+"\n"})
+        self._addToBuffers('header', msg+"\n")
 
         msg = " using PTY: %s" % bool(self.usePTY)
         log.msg(" " + msg)
-        self.sendStatus({'header': msg+"\n"})
+        self._addToBuffers('header', msg+"\n")
 
         # this will be buffered until connectionMade is called
         if self.initialStdin:
@@ -470,7 +483,7 @@ class ShellCommand:
         # called right after we return, but somehow before connectionMade
         # were called, then kill() would blow up).
         self.process = None
-        self.startTime = time.time()
+        self.startTime = self._reactor.seconds()
 
         for arg in argv: assert isinstance(arg, str), (type(arg), arg)
 
@@ -489,10 +502,10 @@ class ShellCommand:
         # which would let us connect stdin to /dev/null .
 
         if self.timeout:
-            self.timer = reactor.callLater(self.timeout, self.doTimeout)
+            self.timer = self._reactor.callLater(self.timeout, self.doTimeout)
 
         if self.maxTime:
-            self.maxTimer = reactor.callLater(self.maxTime, self.doMaxTimeout)
+            self.maxTimer = self._reactor.callLater(self.maxTime, self.doMaxTimeout)
 
         for w in self.logFileWatchers:
             w.start()
@@ -505,10 +518,70 @@ class ShellCommand:
         for i in range(0, len(data), LIMIT):
             yield data[i:i+LIMIT]
 
+    def _collapseMsg(self, msg):
+        retval = {}
+        for log in msg:
+            data = "".join(msg[log])
+            if isinstance(log, tuple) and log[0] == 'log':
+                retval['log'] = (log[1], data)
+            else:
+                retval[log] = data
+        return retval
+
+    def _sendMessage(self, msg):
+        if not msg:
+            return
+        msg = self._collapseMsg(msg)
+        self.sendStatus(msg)
+
+    def _bufferTimeout(self):
+        self.buftimer = None
+        self._sendBuffers()
+
+    def _sendBuffers(self):
+        msg = {}
+        n = 0
+        lastlog = None
+        #log.msg("Sending %i bytes" % self.buflen)
+        while self.buffered:
+            logname, data = self.buffered.popleft()
+            if lastlog is None:
+                lastlog = logname
+            elif logname != lastlog:
+                self._sendMessage(msg)
+                msg = {}
+                n = 0
+            lastlog = logname
+
+            logdata = msg.setdefault(logname, [])
+            for chunk in self._chunkForSend(data):
+                logdata.append(chunk)
+                n += len(chunk)
+                if n > self.CHUNK_LIMIT:
+                    self._sendMessage(msg)
+                    msg = {}
+                    n = 0
+        self.buflen = 0
+        self._sendMessage(msg)
+        if self.buftimer:
+            if self.buftimer.active():
+                self.buftimer.cancel()
+            self.buftimer = None
+
+    def _addToBuffers(self, logname, data):
+        n = len(data)
+
+        self.buflen += n
+        self.buffered.append((logname, data))
+        if self.buflen > self.BUFFER_SIZE:
+            self._sendBuffers()
+        elif not self.buftimer:
+            self.buftimer = self._reactor.callLater(self.BUFFER_TIMEOUT, self._bufferTimeout)
+
     def addStdout(self, data):
         if self.sendStdout:
-            for chunk in self._chunkForSend(data):
-                self.sendStatus({'stdout': chunk})
+            self._addToBuffers('stdout', data)
+
         if self.keepStdout:
             self.stdout += data
         if self.timer:
@@ -516,25 +589,26 @@ class ShellCommand:
 
     def addStderr(self, data):
         if self.sendStderr:
-            for chunk in self._chunkForSend(data):
-                self.sendStatus({'stderr': chunk})
+            self._addToBuffers('stderr', data)
+
         if self.keepStderr:
             self.stderr += data
         if self.timer:
             self.timer.reset(self.timeout)
 
     def addLogfile(self, name, data):
-        for chunk in self._chunkForSend(data):
-            self.sendStatus({'log': (name, chunk)})
+        self._addToBuffers( ('log', name), data)
+
         if self.timer:
             self.timer.reset(self.timeout)
 
     def finished(self, sig, rc):
-        self.elapsedTime = time.time() - self.startTime
+        self.elapsedTime = self._reactor.seconds() - self.startTime
         log.msg("command finished with signal %s, exit code %s, elapsedTime: %0.6f" % (sig,rc,self.elapsedTime))
         for w in self.logFileWatchers:
             # this will send the final updates
             w.stop()
+        self._sendBuffers()
         if sig is not None:
             rc = -1
         if self.sendRC:
@@ -549,6 +623,9 @@ class ShellCommand:
         if self.maxTimer:
             self.maxTimer.cancel()
             self.maxTimer = None
+        if self.buftimer:
+            self.buftimer.cancel()
+            self.buftimer = None
         d = self.deferred
         self.deferred = None
         if d:
@@ -557,6 +634,7 @@ class ShellCommand:
             log.msg("Hey, command %s finished twice" % self)
 
     def failed(self, why):
+        self._sendBuffers()
         log.msg("ShellCommand.failed: command failed: %s" % (why,))
         if self.timer:
             self.timer.cancel()
@@ -564,6 +642,9 @@ class ShellCommand:
         if self.maxTimer:
             self.maxTimer.cancel()
             self.maxTimer = None
+        if self.buftimer:
+            self.buftimer.cancel()
+            self.buftimer = None
         d = self.deferred
         self.deferred = None
         if d:
@@ -584,12 +665,16 @@ class ShellCommand:
     def kill(self, msg):
         # This may be called by the timeout, or when the user has decided to
         # abort this build.
+        self._sendBuffers()
         if self.timer:
             self.timer.cancel()
             self.timer = None
         if self.maxTimer:
             self.maxTimer.cancel()
             self.maxTimer = None
+        if self.buftimer:
+            self.buftimer.cancel()
+            self.buftimer = None
         if hasattr(self.process, "pid") and self.process.pid is not None:
             msg += ", killing pid %s" % self.process.pid
         log.msg(msg)
@@ -652,7 +737,7 @@ class ShellCommand:
 
         # finished ought to be called momentarily. Just in case it doesn't,
         # set a timer which will abandon the command.
-        self.timer = reactor.callLater(self.BACKUP_TIMEOUT,
+        self.timer = self._reactor.callLater(self.BACKUP_TIMEOUT,
                                        self.doBackupTimeout)
 
     def doBackupTimeout(self):
@@ -734,6 +819,8 @@ class Command:
     interrupted = False
     running = False # set by Builder, cleared on shutdown or when the
                     # Deferred fires
+
+    _reactor = reactor
 
     def __init__(self, builder, stepId, args):
         self.builder = builder
@@ -865,6 +952,7 @@ class SlaveShellCommand(Command):
                          usePTY=args.get('usePTY', "slave-config"),
                          logEnviron=args.get('logEnviron', True),
                          )
+        c._reactor = self._reactor
         self.command = c
         d = self.command.start()
         return d
@@ -891,7 +979,7 @@ class DummyCommand(Command):
     def start(self):
         self.d = defer.Deferred()
         log.msg("  starting dummy command [%s]" % self.stepId)
-        self.timer = reactor.callLater(1, self.doStatus)
+        self.timer = self._reactor.callLater(1, self.doStatus)
         return self.d
 
     def interrupt(self):
@@ -906,7 +994,7 @@ class DummyCommand(Command):
         log.msg("  sending intermediate status")
         self.sendStatus({'stdout': 'data'})
         timeout = self.args.get('timeout', 5) + 1
-        self.timer = reactor.callLater(timeout - 1, self.finished)
+        self.timer = self._reactor.callLater(timeout - 1, self.finished)
 
     def finished(self):
         log.msg("  dummy command finished [%s]" % self.stepId)
@@ -944,7 +1032,7 @@ class WaitCommand(Command):
                 return res
             d.addBoth(_done)
             d.addCallbacks(self.finished, self.failed)
-        reactor.callLater(0, _called)
+        self._reactor.callLater(0, _called)
         return self.d
 
     def interrupt(self):
