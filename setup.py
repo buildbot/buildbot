@@ -211,7 +211,7 @@ setup_args = {
                   ]),
                 include("buildbot/status/web/templates", '*.html'),
                 ("buildbot/scripts", ["buildbot/scripts/sample.cfg"]),
-                ("buildbot/db/schema", ["tables.sql"]),
+                include("buildbot/db/schema", "*.sql"),
                 ],
     'scripts': scripts,
     'cmdclass': {'install_data': install_data_twisted,
