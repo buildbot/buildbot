@@ -9,6 +9,7 @@
 @defcodeindex bs
 @defcodeindex st
 @defcodeindex bc
+@defcodeindex dv
 @c %**end of header
 
 @c these indices are for classes useful in a master.cfg config file
@@ -17,6 +18,7 @@
 @c @bfindex : Build Factories
 @c @bsindex : Build Steps
 @c @stindex : Status Targets
+@c @dvindex : Developer Reference
 
 @c @bcindex : keys that make up BuildmasterConfig
 

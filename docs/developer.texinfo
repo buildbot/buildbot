@@ -13,11 +13,13 @@ described here.
 @menu
 * Buildmaster Service Hierarchy::
 * Utilities::
+* The Database::
 * The Event Loop::
 * String Types::
 * Subscription Interfaces::
 * Twisted Idioms::
 * Testing Idioms and Utilities::
+* Developer Class Index::
 @end menu
 
 @node Buildmaster Service Hierarchy
@@ -116,6 +118,101 @@ logged, but will not affect other callables.
 If you need a deferred that will fire "later", use @code{fireEventually}.  This
 function returns a deferred that will not errback.
 
+@node The Database
+@section The Database
+
+@dvindex buildbot.db.dbspec.DBSpec
+@dvindex buildbot.db.connector.DBConnector
+
+Buildbot stores its state in a database, using the Python DBAPI to access it.
+
+A database is specified with the @code{buildbot.db.dbspec.DBSpec} class, which
+encapsulates all of the parameters necessary to create a DBAPI connection.  The
+DBSpec class can create either a single synchronous connection, or a twisted
+adbapi connection pool.
+
+Most uses of the database in Buildbot are done through the
+@code{buildbot.db.connector.DBConnector} class, which wraps the DBAPI to
+provide purpose-specific functions.
+
+The database schema is managed by a special class, described in the next
+section.
+
+@menu
+* Database Schema::
+* Changing the Schema::
+@end menu
+
+@node Database Schema
+@subsection Database Schema
+
+@dvindex buildbot.db.schema.DBSchemaManager
+
+The SQL for the database schema is available in
+@code{buildbot/db/schema/tables.sql}.  However, note that this file is not used
+for new installations or upgrades of the Buildbot database.
+
+Instead, the @code{buildbot.db.schema.DBSchemaManager} handles this task.  The
+operation of this class centers around a linear sequence of database versions.
+Versions start at 0, which is the old pickle-file format.  The manager has
+methods to query the version of the database, and the current version from the
+source code.  It also has an @code{upgrade} method which will upgrade the
+database to the latest version.  This operation is currently irreversible.
+
+There is no operation to "install" the latest schema.  Instead, a fresh install
+of buildbot begins with an (empty) version-0 database, and upgrades to the
+current version.  This trades a bit of efficiency at install time for
+assurances that the upgrade code is well-tested.
+
+@node Changing the Schema
+@subsection Changing the Schema
+
+To make a change to the database schema, follow these steps:
+
+@enumerate
+
+@item
+
+Increment @code{CURRENT_VERSION} in @code{buildbot/db/schema/manager.py} by
+one.  This is your new version number.
+
+@item
+
+Create @file{buildbot/db/schema/vN.py}, where N is your version number, by
+copying the previous script and stripping it down.  This script should define a
+subclass of @code{buildbot.db.schema.base.Updater} named @code{Updater}. 
+
+The class must define the method @code{upgrade}, which takes no arguments.  It
+should upgrade the database from the previous version to your version,
+including incrementing the number in the @code{VERSION} table, probably with an
+@code{UPDATE} query.
+
+Consult the API documentation for the base class for information on the
+attributes that are available.
+
+@item
+
+Edit @file{buildbot/test/unit/test_db_schema_master.py}.  If your upgrade
+involves moving data from the basedir into the database proper, then edit
+@code{fill_basedir} to add some test data.
+
+Add code to @code{assertDatabaseOKEmpty} to check that your upgrade works on an
+empty database.
+
+Add code to @code{assertDatabaseOKFull} to check that your upgrade works on a
+database with pre-existing data.  Do this even if your changes do not move any
+data from the basedir.
+
+Run the tests to find the bugs you introduced in step 2.
+
+@item
+
+Increment the version number in the @code{test_get_current_version} test in the
+same file.  Only do this after you've finished the previous step - a failure of
+this test is a good reminder that testing isn't done yet.
+
+@end enumerate
+
 @node The Event Loop
 @section The Event Loop
 
@@ -180,3 +277,7 @@ def test_localVariable(self):
 @end example
 
 This is almost as readable as the first example, but it actually works. 
+
+@node Developer Class Index
+@section Developer Class Index
+@printindex dv
