@@ -20,7 +20,7 @@ class DBConnector_Basic(unittest.TestCase):
     def tearDown(self):
         self.dbc.stop()
         # double-check we haven't left a ThreadPool open
-        assert len(threading.enumerate()) - self.start_thdcount < 2
+        assert len(threading.enumerate()) - self.start_thdcount < 1
 
     def test_quoteq_format(self):
         self.dbc.paramstyle = "format" # override default

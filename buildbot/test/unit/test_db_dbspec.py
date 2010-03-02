@@ -131,13 +131,14 @@ class DBSpec_methods(unittest.TestCase):
     def setUp(self):
         self.spec = dbspec.DBSpec.from_url("sqlite://")
         self.pools = []
+        self.start_thdcount = len(threading.enumerate())
 
     def tearDown(self):
         # be careful to stop all pools
         for pool in self.pools:
-            pool.stop()
+            pool.close()
         # double-check we haven't left a ThreadPool open
-        assert len(threading.enumerate()) < 4
+        assert len(threading.enumerate()) - self.start_thdcount < 1
 
     # track a pool that must be closed
     def trackPool(self, pool):
@@ -155,4 +156,7 @@ class DBSpec_methods(unittest.TestCase):
         self.assertTrue(hasattr(self.spec.get_sync_connection(), 'cursor'))
 
     def test_get_async_connection_pool_has_runInteraction(self):
-        self.assertTrue(hasattr(self.spec.get_async_connection_pool(), 'runInteraction'))
+        pool = self.spec.get_async_connection_pool()
+        self.trackPool(pool)
+        pool.start()
+        self.assertTrue(hasattr(pool, 'runInteraction'))
