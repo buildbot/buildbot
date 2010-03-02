@@ -80,7 +80,7 @@
   <td><b><a href="{{ s.link|e }}">{{ s.name|e }}</a></b></td>
   {% if s.connected %}
     <td class="idle">connected</td>
-    <td>{{ s.admin|email if s.admin }}</td>
+    <td>{{ s.admin|email if s.admin else ""}}</td>
   {% else %}
     <td class="offline">offline</td> 
     <td/>
