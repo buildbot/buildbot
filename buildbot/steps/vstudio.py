@@ -24,7 +24,7 @@ class MSLogLineObserver(LogLineObserver):
     _re_delimitor = re.compile(r'^(\d+>)?-{5}.+-{5}$')
     _re_file = re.compile(r'^(\d+>)?[^ ]+\.(cpp|c)$')
     _re_warning = re.compile(r' : warning [A-Z]+[0-9]+:')
-    _re_error = re.compile(r' error [A-Z]+[0-9]+: ')
+    _re_error = re.compile(r' error [A-Z]+[0-9]+\s?: ')
 
     nbFiles = 0
     nbProjects = 0
@@ -105,7 +105,10 @@ class VisualStudio(ShellCommand):
             self.useenv = True
             self.LIB = kwargs['LIB']
             del kwargs['LIB']
-            
+        if 'PATH' in kwargs:
+            self.PATH = kwargs['PATH']
+            del kwargs['PATH']            
+
         # always upcall !
         ShellCommand.__init__(self, **kwargs)
 
@@ -299,6 +302,7 @@ class VC8(VisualStudio):
         addEnvPath(cmd.args['env'], "PATH", VCInstallDir + '\\PlatformSDK\\bin')
         addEnvPath(cmd.args['env'], "PATH", VSInstallDir + '\\SDK\\v2.0\\bin')
         addEnvPath(cmd.args['env'], "PATH", VCInstallDir + '\\VCPackages')
+        addEnvPath(cmd.args['env'], "PATH", r'C:\WINDOWS\System32')
 
         addEnvPath(cmd.args['env'], "INCLUDE", VCInstallDir + '\\INCLUDE')
         addEnvPath(cmd.args['env'], "INCLUDE", VCInstallDir + '\\ATLMFC\\include')
