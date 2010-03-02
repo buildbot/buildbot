@@ -5,6 +5,9 @@ from twisted.internet import reactor, defer
 from twisted.python import log
 
 class _SimpleCallQueue(object):
+
+    _reactor = reactor
+
     def __init__(self):
         self._events = []
         self._flushObservers = []
@@ -14,7 +17,7 @@ class _SimpleCallQueue(object):
     def append(self, cb, args, kwargs):
         self._events.append((cb, args, kwargs))
         if not self._timer:
-            self._timer = reactor.callLater(0, self._turn)
+            self._timer = self._reactor.callLater(0, self._turn)
 
     def _turn(self):
         self._timer = None
@@ -30,7 +33,7 @@ class _SimpleCallQueue(object):
                 log.err()
         self._in_turn = False
         if self._events and not self._timer:
-            self._timer = reactor.callLater(0, self._turn)
+            self._timer = self._reactor.callLater(0, self._turn)
         if not self._events:
             observers, self._flushObservers = self._flushObservers, []
             for o in observers:
@@ -79,3 +82,13 @@ def flushEventualQueue(_ignored=None):
     test method.
     """
     return _theSimpleQueue.flush()
+
+def _setReactor(r=None):
+    """This sets the reactor used to schedule future events to r.  If r is None
+    (the default), the reactor is reset to its default value.
+
+    This should only be used for unit tests.
+    """
+    if r is None:
+        r = reactor
+    _theSimpleQueue._reactor = r

@@ -107,6 +107,12 @@ class MasterMixin:
         d.addCallback(lambda ign: self.master.stopService())
         d.addCallback(self.wait_until_idle)
         d.addCallback(lambda ign: log.msg("tearDown done"))
+
+        # Unset our master instance so that future invocations of this TestCase
+        # will work as expected (e.g. when doing trial -u)
+        def _done(ign):
+            self.master = None
+        d.addCallback(_done)
         return d
 
     def connectOneSlave(self, slavename, opts={}):

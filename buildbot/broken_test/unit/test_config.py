@@ -23,6 +23,7 @@ from buildbot.steps.shell import Compile, Test, ShellCommand
 from buildbot.status import base
 from buildbot.steps import dummy, maxq, python, python_twisted, shell, \
      source, transfer
+from buildbot.util import eventual
 words = None
 try:
     from buildbot.status import words
@@ -789,6 +790,7 @@ c['schedulers'] = [s1, Dependent('downstream', s1, ['builder1'])]
         d.addCallback(_check1)
 
         d.addCallback(lambda ign: master.loadConfig(buildersCfg))
+        d.addCallback(eventual.flushEventualQueue)
         def _check2(ign):
             self.failUnlessEqual(bm.builderNames, ["builder1"])
             self.failUnlessEqual(bm.builders.keys(), ["builder1"])
@@ -812,6 +814,7 @@ c['schedulers'] = [s1, Dependent('downstream', s1, ['builder1'])]
         d.addCallback(_check2)
         # make sure a reload of the same data doesn't interrupt the Builder
         d.addCallback(lambda ign: master.loadConfig(buildersCfg))
+        d.addCallback(eventual.flushEventualQueue)
         def _check3(ign):
             self.failUnlessEqual(bm.builderNames, ["builder1"])
             self.failUnlessEqual(bm.builders.keys(), ["builder1"])
@@ -824,6 +827,7 @@ c['schedulers'] = [s1, Dependent('downstream', s1, ['builder1'])]
 
         # but changing something should result in a new Builder
         d.addCallback(lambda ign: master.loadConfig(buildersCfg2))
+        d.addCallback(eventual.flushEventualQueue)
         def _check4(ign):
             self.failUnlessEqual(bm.builderNames, ["builder1"])
             self.failUnlessEqual(bm.builders.keys(), ["builder1"])
@@ -836,6 +840,7 @@ c['schedulers'] = [s1, Dependent('downstream', s1, ['builder1'])]
 
         # adding new builder
         d.addCallback(lambda ign: master.loadConfig(buildersCfg3))
+        d.addCallback(eventual.flushEventualQueue)
         def _check5(ign):
             self.failUnlessEqual(bm.builderNames, ["builder1", "builder2"])
             self.failUnlessListsEquivalent(bm.builders.keys(),
@@ -846,6 +851,7 @@ c['schedulers'] = [s1, Dependent('downstream', s1, ['builder1'])]
 
         # changing first builder should leave it at the same place in the list
         d.addCallback(lambda ign: master.loadConfig(buildersCfg4))
+        d.addCallback(eventual.flushEventualQueue)
         def _check6(ign):
             self.failUnlessEqual(bm.builderNames, ["builder1", "builder2"])
             self.failUnlessListsEquivalent(bm.builders.keys(),
@@ -855,6 +861,7 @@ c['schedulers'] = [s1, Dependent('downstream', s1, ['builder1'])]
         d.addCallback(_check6)
 
         d.addCallback(lambda ign: master.loadConfig(buildersCfg5))
+        d.addCallback(eventual.flushEventualQueue)
         def _check6a(ign):
             self.failUnlessEqual(bm.builderNames, ["builder1", "builder2"])
             self.failUnlessListsEquivalent(bm.builders.keys(),
@@ -863,6 +870,7 @@ c['schedulers'] = [s1, Dependent('downstream', s1, ['builder1'])]
 
         # and removing it should make the Builder go away
         d.addCallback(lambda ign: master.loadConfig(emptyCfg))
+        d.addCallback(eventual.flushEventualQueue)
         def _check7(ign):
             self.failUnlessEqual(bm.builderNames, [])
             self.failUnlessEqual(bm.builders, {})
@@ -1063,6 +1071,7 @@ c['schedulers'] = [s1, Dependent('downstream', s1, ['builder1'])]
 
         # create a Builder that uses Locks
         d.addCallback(lambda ign: master.loadConfig(lockCfg1a))
+        d.addCallback(eventual.flushEventualQueue)
         def _check1(ign):
             self.b1 = botmaster.builders["builder1"]
             self.failUnlessEqual(len(self.b1.locks), 2)
@@ -1070,12 +1079,14 @@ c['schedulers'] = [s1, Dependent('downstream', s1, ['builder1'])]
 
         # reloading the same config should not change the Builder
         d.addCallback(lambda ign: master.loadConfig(lockCfg1a))
+        d.addCallback(eventual.flushEventualQueue)
         def _check2(ign):
             self.failUnlessIdentical(self.b1, botmaster.builders["builder1"])
         d.addCallback(_check2)
 
         # but changing the set of locks used should change it
         d.addCallback(lambda ign: master.loadConfig(lockCfg1b))
+        d.addCallback(eventual.flushEventualQueue)
         def _check3(ign):
             self.failIfIdentical(self.b1, botmaster.builders["builder1"])
             self.b1 = botmaster.builders["builder1"]
@@ -1084,6 +1095,7 @@ c['schedulers'] = [s1, Dependent('downstream', s1, ['builder1'])]
 
         # similar test with step-scoped locks
         d.addCallback(lambda ign: master.loadConfig(lockCfg2a))
+        d.addCallback(eventual.flushEventualQueue)
 
         def _check4(ign):
             self.b1 = botmaster.builders["builder1"]
@@ -1091,11 +1103,13 @@ c['schedulers'] = [s1, Dependent('downstream', s1, ['builder1'])]
 
         # reloading the same config should not change the Builder
         d.addCallback(lambda ign: master.loadConfig(lockCfg2a))
+        d.addCallback(eventual.flushEventualQueue)
         def _check5(ign):
             self.failUnlessIdentical(self.b1, botmaster.builders["builder1"])
 
         # but changing the set of locks used should change it
         d.addCallback(lambda ign: master.loadConfig(lockCfg2b))
+        d.addCallback(eventual.flushEventualQueue)
         def _check6(ign):
             self.failIfIdentical(self.b1, botmaster.builders["builder1"])
             self.b1 = botmaster.builders["builder1"]
@@ -1103,6 +1117,7 @@ c['schedulers'] = [s1, Dependent('downstream', s1, ['builder1'])]
 
         # remove the locks entirely
         d.addCallback(lambda ign: master.loadConfig(lockCfg2c))
+        d.addCallback(eventual.flushEventualQueue)
         def _check7(ign):
             self.failIfIdentical(self.b1, master.botmaster.builders["builder1"])
         d.addCallback(_check7)
