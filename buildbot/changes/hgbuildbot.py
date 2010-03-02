@@ -30,6 +30,9 @@
 #                                        # inrepo:  branch = mercurial branch
 #
 #   branch = branchname                  # if set, branch is always branchname
+#
+#   fork = True|False                    # if mercurial should fork before 
+#                                        # notifying the master
 
 import os
 
@@ -46,20 +49,35 @@ try:
 except ImportError:
     pass
 
-from buildbot.clients import sendchange
-from twisted.internet import defer, reactor
-
-
 def hook(ui, repo, hooktype, node=None, source=None, **kwargs):
     # read config parameters
     master = ui.config('hgbuildbot', 'master')
     if master:
         branchtype = ui.config('hgbuildbot', 'branchtype')
         branch = ui.config('hgbuildbot', 'branch')
+        fork = ui.configbool('hgbuildbot', 'fork', False)
     else:
         ui.write("* You must add a [hgbuildbot] section to .hg/hgrc in "
                  "order to use buildbot hook\n")
         return
+
+    if hooktype != "changegroup":
+        ui.status("hgbuildbot: hooktype %s not supported.\n" % hooktype)
+        return
+
+    if fork:
+        child_pid = os.fork()
+        if child_pid == 0:
+            #child
+            pass
+        else:
+            #parent
+            ui.status("Notifying buildbot...\n")
+            return
+
+    # only import inside the fork if forked
+    from buildbot.clients import sendchange
+    from twisted.internet import defer, reactor
 
     if branch is None:
         if branchtype is not None:
@@ -68,47 +86,49 @@ def hook(ui, repo, hooktype, node=None, source=None, **kwargs):
             if branchtype == 'inrepo':
                 branch = workingctx(repo).branch()
 
-    if hooktype == 'changegroup':
-        s = sendchange.Sender(master, None)
-        d = defer.Deferred()
-        reactor.callLater(0, d.callback, None)
-        # process changesets
-        def _send(res, c):
+    s = sendchange.Sender(master, None)
+    d = defer.Deferred()
+    reactor.callLater(0, d.callback, None)
+    # process changesets
+    def _send(res, c):
+        if not fork:
             ui.status("rev %s sent\n" % c['revision'])
-            return s.send(c['branch'], c['revision'], c['comments'],
-                          c['files'], c['username'])
+        return s.send(c['branch'], c['revision'], c['comments'],
+                      c['files'], c['username'])
 
-        try:    # first try Mercurial 1.1+ api
-            start = repo[node].rev()
-            end = len(repo)
-        except TypeError:   # else fall back to old api
-            start = repo.changelog.rev(bin(node))
-            end = repo.changelog.count()
+    try:    # first try Mercurial 1.1+ api
+        start = repo[node].rev()
+        end = len(repo)
+    except TypeError:   # else fall back to old api
+        start = repo.changelog.rev(bin(node))
+        end = repo.changelog.count()
 
-        for rev in xrange(start, end):
-            # send changeset
-            node = repo.changelog.node(rev)
-            manifest, user, (time, timezone), files, desc, extra = repo.changelog.read(node)
-            parents = filter(lambda p: not p == nullid, repo.changelog.parents(node))
-            if branchtype == 'inrepo':
-                branch = extra['branch']
-            # merges don't always contain files, but at least one file is required by buildbot
-            if len(parents) > 1 and not files:
-                files = ["merge"]
-            change = {
-                'master': master,
-                'username': user,
-                'revision': hex(node),
-                'comments': desc,
-                'files': files,
-                'branch': branch
-            }
-            d.addCallback(_send, change)
+    for rev in xrange(start, end):
+        # send changeset
+        node = repo.changelog.node(rev)
+        manifest, user, (time, timezone), files, desc, extra = repo.changelog.read(node)
+        parents = filter(lambda p: not p == nullid, repo.changelog.parents(node))
+        if branchtype == 'inrepo':
+            branch = extra['branch']
+        # merges don't always contain files, but at least one file is required by buildbot
+        if len(parents) > 1 and not files:
+            files = ["merge"]
+        change = {
+            'master': master,
+            'username': user,
+            'revision': hex(node),
+            'comments': desc,
+            'files': files,
+            'branch': branch
+        }
+        d.addCallback(_send, change)
 
-        d.addCallbacks(s.printSuccess, s.printFailure)
-        d.addBoth(s.stop)
-        s.run()
+    d.addCallbacks(s.printSuccess, s.printFailure)
+    d.addBoth(s.stop)
+    s.run()
+
+    if fork:
+        os._exit(os.EX_OK)
     else:
-        ui.status(_('hgbuildbot: hook %s not supported\n') % hooktype)
-    return
+        return
 
