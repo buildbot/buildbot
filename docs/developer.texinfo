@@ -211,6 +211,10 @@ Increment the version number in the @code{test_get_current_version} test in the
 same file.  Only do this after you've finished the previous step - a failure of
 this test is a good reminder that testing isn't done yet.
 
+@item
+
+Finally, make the corresponding changes to @file{buildbot/db/schema/tables.sql}.
+
 @end enumerate
 
 @node The Event Loop
