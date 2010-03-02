@@ -48,6 +48,7 @@ except ImportError:
     import json
 
 from buildbot.db import util
+from buildbot.db.schema import base
 
 # This is version 1, so it introduces a lot of new tables over version 0,
 # which had no database.
@@ -241,13 +242,7 @@ TABLES = [
     """),
 ]
 
-class Upgrader(object):
-    def __init__(self, dbapi, conn, basedir, quiet=False):
-        self.dbapi = dbapi
-        self.conn = conn
-        self.basedir = basedir
-        self.quiet = quiet
-
+class Upgrader(base.Upgrader):
     def upgrade(self):
         self.add_tables()
         self.migrate_changes()
