@@ -84,6 +84,8 @@ from twisted.internet import reactor, defer
 from twisted.application import service
 from twisted.python import log
 
+from buildbot.util.eventual import eventually
+
 class LoopBase(service.MultiService):
     OCD_MINIMUM_DELAY = 5.0
 
@@ -157,8 +159,9 @@ class LoopBase(service.MultiService):
         d.addErrback(log.err)
         d.addBoth(self._one_done)
         return None # no long Deferred chains
+
     def _one_done(self, ignored):
-        self._loop_next()
+        eventually(self._loop_next)
 
     def _loop_done(self):
         if self._everything_needs_to_run:

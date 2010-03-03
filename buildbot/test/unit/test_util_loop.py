@@ -42,7 +42,7 @@ from twisted.python import log
 
 from buildbot.test.state import State
 
-from buildbot.util import loop
+from buildbot.util import loop, eventual
 
 class TestLoopMixin(object):
     def setUpTestLoop(self, skipConstructor=False):
@@ -52,6 +52,7 @@ class TestLoopMixin(object):
         self.results = []
 
     def tearDownTestLoop(self):
+        eventual._setReactor(None)
         assert self.loop.is_quiet()
         return self.loop.stopService()
 
@@ -100,6 +101,15 @@ class Loop(unittest.TestCase, TestLoopMixin):
             self.assertEqual(sorted(res), ['x', 'y', 'z'])
         return self.whenQuiet(check)
 
+    def test_big_multi_processor(self):
+        for i in range(300):
+            self.loop.add(self.make_cb(i))
+        def check(res):
+            self.assertEqual(sorted(res), range(300))
+        self.loop.trigger()
+        d = self.whenQuiet(check)
+        return d
+
     def test_simple_selfTrigger(self):
         self.loop.add(self.make_cb('c', selfTrigger=3))
         self.loop.trigger()
@@ -137,6 +147,7 @@ class Loop(unittest.TestCase, TestLoopMixin):
 
     def test_sleep(self):
         reactor = self.loop._reactor = task.Clock()
+        eventual._setReactor(reactor)
         state = State(count=5)
         def proc():
             self.results.append(reactor.seconds())
@@ -145,8 +156,12 @@ class Loop(unittest.TestCase, TestLoopMixin):
                 return defer.succeed(reactor.seconds() + 10.0)
         self.loop.add(proc)
         self.loop.trigger()
-        reactor.pump((0,) + (1,)*50) # run for 50 fake seconds
-        self.assertEqual(self.results, [ 0.0, 10.0, 20.0, 30.0, 40.0 ])
+        def check(ign):
+            reactor.pump((0,) + (1,)*50) # run for 50 fake seconds
+            self.assertEqual(self.results, [ 0.0, 10.0, 20.0, 30.0, 40.0 ])
+        d = eventual.flushEventualQueue()
+        d.addCallback(check)
+        return d
 
     def test_loop_done(self):
         # monkey-patch the instance to have a 'loop_done' method
