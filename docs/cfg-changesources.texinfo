@@ -655,6 +655,13 @@ If you use @code{branch=} like this, you'll need to put a separate
 able to use the same .hgrc for all your repositories, stored in
 @file{~/.hgrc} or @file{/etc/mercurial/hgrc}.
 
+As twisted needs to hook some Signals, and that some web server are
+strictly forbiding that, the parameter @code{fork} in the
+@code{[hgbuildbot]} section will instruct mercurial to fork before
+sending the change request. Then as the created process will be of short
+life, it is considered as safe to disable the signal restriction in
+the Apache setting like that @code{WSGIRestrictSignal Off}. Refer to the
+documentation of your web server for other way to do the same.
 
 @node Bzr Hook
 @subsubsection Bzr Hook
