@@ -619,6 +619,9 @@ class BuildStep:
             raise TypeError(why)
         self._pendingLogObservers = []
 
+    def describe(self, done=False):
+        return [self.name]
+
     def setBuild(self, build):
         # subclasses which wish to base their behavior upon qualities of the
         # Build (e.g. use the list of changed files to run unit tests only on
@@ -733,6 +736,10 @@ class BuildStep:
     def _startStep_2(self, res):
         if self.progress:
             self.progress.start()
+
+        # Set the step's text here so that the stepStarted notification sees
+        # the correct description
+        self.step_status.setText(self.describe(False))
         self.step_status.stepStarted()
         try:
             skip = None
@@ -991,9 +998,6 @@ class LoggingBuildStep(BuildStep):
         self.logfiles.update(logfiles)
         self.lazylogfiles = lazylogfiles
         self.addLogObserver('stdio', OutputProgressObserver("output"))
-
-    def describe(self, done=False):
-        raise NotImplementedError("implement this in a subclass")
 
     def addLogFile(self, logname, filename):
         """

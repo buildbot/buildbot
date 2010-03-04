@@ -340,6 +340,7 @@ def makeBuildStep(basedir, step_class=BuildStep, **kwargs):
     b.build_status = bss.getBuild()
     b.setupProperties()
     s.slaveVersion = fake_slaveVersion
+    s.step_status.setText(s.describe(False))
     return s
 
 
