@@ -129,24 +129,29 @@ class ShellCommand(LoggingBuildStep):
                      'tests' ...)
         """
 
-        if done and self.descriptionDone is not None:
-            return list(self.descriptionDone)
-        if self.description is not None:
-            return list(self.description)
+        try:
+            if done and self.descriptionDone is not None:
+                return list(self.descriptionDone)
+            if self.description is not None:
+                return list(self.description)
 
-        properties = self.build.getProperties()
-        words = self.command
-        if isinstance(words, (str, unicode)):
-            words = words.split()
-        # render() each word to handle WithProperties objects
-        words = properties.render(words)
-        if len(words) < 1:
+            properties = self.build.getProperties()
+            words = self.command
+            if isinstance(words, (str, unicode)):
+                words = words.split()
+            # render() each word to handle WithProperties objects
+            words = properties.render(words)
+            if len(words) < 1:
+                return ["???"]
+            if len(words) == 1:
+                return ["'%s'" % words[0]]
+            if len(words) == 2:
+                return ["'%s" % words[0], "%s'" % words[1]]
+            return ["'%s" % words[0], "%s" % words[1], "...'"]
+        except:
+            log.msg("Error describing step")
+            log.err()
             return ["???"]
-        if len(words) == 1:
-            return ["'%s'" % words[0]]
-        if len(words) == 2:
-            return ["'%s" % words[0], "%s'" % words[1]]
-        return ["'%s" % words[0], "%s" % words[1], "...'"]
 
     def setupEnvironment(self, cmd):
         # merge in anything from Build.slaveEnvironment
