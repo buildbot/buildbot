@@ -11,9 +11,7 @@
 {%- endmacro -%}
 
 {%- macro chunks(entries) -%}
-{%- for entry in entries -%}
-      <span class="{{ entry.type }}">{{ entry.text|e }}</span>
-{% endfor -%}
+{%- for entry in entries -%}<span class="{{ entry.type }}">{{ entry.text|e }}</span>{% endfor -%}
 {%- endmacro -%}
 
 {%- macro page_footer() -%}
