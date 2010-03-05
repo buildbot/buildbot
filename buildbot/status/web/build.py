@@ -74,13 +74,13 @@ class StatusResourceBuild(HtmlResource):
             step = {'name': s.getName() }
             cxt['steps'].append(step)
             
-            time_to_run = 0
             (start, end) = s.getTimes()
             if start and end:
-                time_to_run = end - start
+                time_to_run = util.formatInterval(end - start)
+            else:
+                time_to_run = "running"
               
-            # todo: format to 1h 5m 17s
-            step['time_to_run'] = '%.1f' % time_to_run            
+            step['time_to_run'] = time_to_run
 
             if s.isFinished():
                 step['css_class'] = css_classes[s.getResults()[0]]
