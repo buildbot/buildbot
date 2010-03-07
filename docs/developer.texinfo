@@ -26,7 +26,43 @@ described here.
 @node Buildmaster Service Hierarchy
 @section Buildmaster Service Hierarchy
 
-TODO
+Buildbot uses Twisted's service hierarchy heavily.  The hierarchy looks like
+this:
+
+@itemize
+
+@item BuildMaster
+@dvindex buildbot.master.BuildMaster
+
+This is the top-level service.
+
+@itemize
+
+@item BotMaster
+@dvindex buildbot.master.BotMaster
+
+The BotMaster manages all of the slaves.  BuildSlave instances are added as
+child services of the BotMaster.
+
+@item ChangeManager
+@dvindex buildbot.changes.manager.ChangeManager
+
+The ChangeManager manages the active change sources, as well as the stream of
+changes received from those sources.
+
+@item SchedulerManager
+@dvindex buildbot.schedulers.manager.SchedulerManager
+
+The SchedulerManager manages the active schedulers and handles inter-scheduler
+notifications.
+
+@item IStatusReceiver implementations
+
+Objects from the 'status' configuration key are attached directly to the buildmaster.
+
+@end itemize
+
+@end itemize
 
 @node Utilities
 @section Utilities
@@ -280,7 +316,30 @@ yields
 @node Twisted Idioms
 @section Twisted Idioms
 
-TODO
+@menu
+* Helpful Twisted Classes::
+@end menu
+
+@node Helpful Twisted Classes
+@subsection Helpful Twisted Classes
+
+Twisted has some useful, but little-known classes.  They are listed here with
+brief descriptions, but you should consult the API documentation or source code
+for the full details.
+
+@itemize
+
+@item twisted.internet.task.LoopingCall
+
+Calls an asynchronous function repeatedly at set intervals.
+
+@item twisted.application.internet.TimerService
+
+Similar to @code{t.i.t.LoopingCall}, but implemented as a service that will
+automatically start an dstop the function calls when the service is started and
+stopped.
+
+@end itemize
 
 @node Testing Idioms and Utilities
 @section Testing Idioms and Utilities

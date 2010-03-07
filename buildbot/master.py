@@ -372,17 +372,6 @@ class Dispatcher:
 
 ########################################
 
-# service hierarchy:
-#  BuildMaster
-#   BotMaster
-#   ChangeManager
-#    all IChangeSource objects
-#   StatusClientService
-#   TCPClient(self.ircFactory)
-#   TCPServer(self.slaveFactory) -> dispatcher.requestAvatar
-#   TCPServer(self.site)
-#   UNIXServer(ResourcePublisher(self.site))
-
 class _Unset: pass  # marker
 
 class BuildMaster(service.MultiService):
