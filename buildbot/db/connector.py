@@ -39,12 +39,6 @@
 
 import sys, time, collections, base64, os, re
 
-try:
-    import simplejson
-    json = simplejson # this hushes pyflakes
-except ImportError:
-    import json
-
 from twisted.python import log, reflect, threadable
 from twisted.internet import defer, reactor
 from twisted.enterprise import adbapi
@@ -56,6 +50,7 @@ from buildbot.buildrequest import BuildRequest
 from buildbot.process.properties import Properties
 from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE
 from buildbot.util.eventual import eventually
+from buildbot.util import json
 
 # Don't auto-resubmit queries that encounter a broken connection: let them
 # fail. Use the "notification doorbell" thing to provide the retry. Set

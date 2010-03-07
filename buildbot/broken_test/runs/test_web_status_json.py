@@ -7,12 +7,7 @@ from twisted.web import client, error
 from buildbot.status import html
 from buildbot.status.web.status_json import JsonStatusResource
 from buildbot.broken_test.runutils import MasterMixin
-
-try:
-    import simplejson
-    json = simplejson # this hushes pyflakes
-except ImportError:
-    import json
+from buildbot.util import json
 
 
 base_config = """

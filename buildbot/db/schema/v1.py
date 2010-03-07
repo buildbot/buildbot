@@ -41,14 +41,10 @@ import textwrap
 import os
 
 from twisted.persisted import styles
-try:
-    import simplejson
-    json = simplejson # this hushes pyflakes
-except ImportError:
-    import json
 
 from buildbot.db import util
 from buildbot.db.schema import base
+from buildbot.util import json
 
 # This is version 1, so it introduces a lot of new tables over version 0,
 # which had no database.

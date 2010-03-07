@@ -7,14 +7,10 @@ import datetime
 import os
 import re
 
-try:
-    import simplejson
-    json = simplejson # this hushes pyflakes
-except ImportError:
-    import json
+from twisted.web import error, html, resource
 
 from buildbot.status.web.base import HtmlResource
-from twisted.web import error, html, resource
+from buildbot.util import json
 
 
 _IS_INT = re.compile('^[-+]?\d+$')

@@ -70,6 +70,7 @@ Objects from the 'status' configuration key are attached directly to the buildma
 @menu
 * buildbot.util.collections::
 * buildbot.util.eventual::
+* buildbot.util.json::
 @end menu
 
 Several small utilities are available at the top-level @code{buildbot.util}
@@ -154,6 +155,13 @@ logged, but will not affect other callables.
 
 If you need a deferred that will fire "later", use @code{fireEventually}.  This
 function returns a deferred that will not errback.
+
+@node buildbot.util.json
+@subsection buildbot.util.json
+
+This package is just an import of the best available JSON module.  Use it
+instead of a more complex conditional import of @code{simplejson} or
+@code{json}.
 
 @node The Database
 @section The Database

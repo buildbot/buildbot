@@ -131,3 +131,19 @@ def none_or_str(x):
         return str(x)
     return x
 
+# place a working json module at 'buildbot.util.json'.  Code is from
+# Paul Wise <pabs@debian.org>:
+#   http://lists.debian.org/debian-python/2010/02/msg00016.html
+try:
+    import json # python 2.6
+except ImportError:
+    import simplejson as json # python 2.4 to 2.5
+try:
+    _tmp = json.loads
+except AttributeError:
+    import warnings
+    import sys
+    warnings.warn("Use simplejson, not the old json module.")
+    sys.modules.pop('json') # get rid of the bad json module
+    import simplejson as json
+
