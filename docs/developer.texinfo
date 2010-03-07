@@ -17,6 +17,7 @@ described here.
 * The Event Loop::
 * String Types::
 * Subscription Interfaces::
+* Jinja Web Templates::
 * Twisted Idioms::
 * Testing Idioms and Utilities::
 * Developer Class Index::
@@ -231,6 +232,50 @@ TODO
 @section Subscription Interfaces
 
 TODO use @code{buildbot.eventually}
+
+@node Jinja Web Templates
+@section Jinja Web Templates
+
+Buildbot uses Jinja2 to render its web interface.  The authoritative source for
+this templating engine is @uref{http://jinja.pocoo.org/2/documentation/, its
+own documentation}, of course, but a few notes are in order for those who are
+making only minor modifications.
+
+@heading Whitespace
+
+Jinja directives are enclosed in @code{@{% .. %@}}, and sometimes also have
+dashes.  These dashes strip whitespace in the output.  For example:
+
+@example
+@{% for entry in entries %@}
+  <li>@{@{ entry @}@}</li>
+@{% endfor %@}
+@end example
+
+will produce output with too much whitespace:
+
+@example
+
+  <li>pigs</li>
+
+
+  <li>cows</li>
+
+@end example
+
+But adding the dashes will collapse that whitespace completely:
+
+@example
+@{% for entry in entries -%@}
+  <li>@{@{ entry @}@}</li>
+@{%- endfor %@}
+@end example
+
+yields
+
+@example
+<li>pigs</li><li>cows</li>
+@end example
 
 @node Twisted Idioms
 @section Twisted Idioms
