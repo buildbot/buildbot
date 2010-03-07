@@ -93,21 +93,6 @@ CREATE TABLE patches (
     `patch_base64` TEXT NOT NULL, -- encoded bytestring
     `subdir` TEXT -- usually NULL
 );
-CREATE TABLE scheduler_changes (
-    `schedulerid` INTEGER,
-    `changeid` INTEGER,
-    `important` SMALLINT
-);
-CREATE TABLE scheduler_upstream_buildsets (
-    `buildsetid` INTEGER,
-    `schedulerid` INTEGER,
-    `active` SMALLINT
-);
-CREATE TABLE schedulers (
-    `schedulerid` INTEGER PRIMARY KEY, -- joins to other tables
-    `name` VARCHAR(256) UNIQUE NOT NULL,
-    `state` VARCHAR(1024) NOT NULL -- JSON-encoded state dictionary
-);
 CREATE TABLE sourcestamp_changes (
     `sourcestampid` INTEGER NOT NULL,
     `changeid` INTEGER NOT NULL
@@ -118,6 +103,43 @@ CREATE TABLE sourcestamps (
     `revision` VARCHAR(256) default NULL,
     `patchid` INTEGER default NULL
 );
+
+--
+-- Scheduler Tables
+--
+
+-- This table records the "state" for each scheduler.  This state is, at least,
+-- the last change that was analyzed, but is stored in an opaque JSON object.
+-- Note that schedulers are never deleted.
+CREATE TABLE schedulers (
+    `schedulerid` INTEGER PRIMARY KEY, -- joins to other tables
+    `name` VARCHAR(256) UNIQUE NOT NULL,
+    `state` VARCHAR(1024) NOT NULL -- JSON-encoded state dictionary
+);
+
+-- This stores "classified" changes that have not yet been "processed".  That
+-- is, the scheduler has looked at these changes and determined that something
+-- should be done, but that hasn't happened yet.  Rows are "retired" from this
+-- table as soon as the scheduler is done with the change.
+CREATE TABLE scheduler_changes (
+    `schedulerid` INTEGER,
+    `changeid` INTEGER,
+    `important` SMALLINT
+);
+
+-- This stores buildsts in which a particular scheduler is interested.
+-- On every run, a scheduler checks its upstream buildsets for completion
+-- and reacts accordingly.  Records are never deleted from this table, but
+-- active is set to 0 when the record is no longer necessary.
+CREATE TABLE scheduler_upstream_buildsets (
+    `buildsetid` INTEGER,
+    `schedulerid` INTEGER,
+    `active` SMALLINT
+);
+
+--
+-- Schema Information
+--
 
 -- database version; each upgrade script should change this
 CREATE TABLE version (
