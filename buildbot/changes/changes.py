@@ -44,7 +44,7 @@ class Change:
 
     def __init__(self, who, files, comments, isdir=0, links=None,
                  revision=None, when=None, branch=None, category=None,
-                 revlink='', properties={}):
+                 revlink='', properties={}, repository='', project=''):
         self.who = who
         self.comments = comments
         self.isdir = isdir
@@ -61,6 +61,8 @@ class Change:
         self.revlink = revlink
         self.properties = Properties()
         self.properties.update(properties, "Change")
+        self.repository = repository
+        self.project = project
 
         # keep a sorted list of the files, for easier display
         self.files = files[:]
@@ -77,6 +79,10 @@ class Change:
     def asText(self):
         data = ""
         data += self.getFileContents()
+        if self.repository:
+            data += "On: %s\n" % self.repository
+        if self.project:
+            data += "For: %s\n" % self.project
         data += "At: %s\n" % self.getTime()
         data += "Changed By: %s\n" % self.who
         data += "Comments: %s" % self.comments
@@ -104,7 +110,10 @@ class Change:
                    'branch'    : self.branch,
                    'comments'  : self.comments,
                    'properties': self.properties.asList(),
-                   'number'    : self.number }
+                   'number'    : self.number,
+                   'repository'    : self.repository,
+                   'project'    : self.project,
+                   }
 
         return kwargs
 
@@ -121,6 +130,8 @@ class Change:
         result['files'] = self.files
         result['revlink'] = self.revlink
         result['properties'] = self.properties.asList()
+        result['repository'] = self.repository
+        result['project'] = self.project
         return result
 
     def getShortAuthor(self):

@@ -52,7 +52,9 @@ class SourceStampTest(unittest.TestCase):
                     'revision': 'rev2',
                     'revlink': '',
                     'when': 23,
-                    'who': 'nobody'
+                    'who': 'nobody',
+                    'project' : '',
+                    'repository' : '',
                 },
                 {
                     'branch': 'br3',
@@ -64,7 +66,9 @@ class SourceStampTest(unittest.TestCase):
                     'revision': 'rev3',
                     'revlink': '',
                     'when': 42,
-                    'who': 'nob'
+                    'who': 'nob',
+                    'project' : '',
+                    'repository' : '',
                 }
             ],
           })

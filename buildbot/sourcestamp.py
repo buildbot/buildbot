@@ -24,7 +24,7 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
        and all must be on the same branch.
     """
 
-    persistenceVersion = 1
+    persistenceVersion = 2
 
     # all four of these are publically visible attributes
     branch = None
@@ -33,12 +33,12 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
     changes = ()
     ssid = None # filled in by db.get_sourcestampid()
 
-    compare_attrs = ('branch', 'revision', 'patch', 'changes')
+    compare_attrs = ('branch', 'revision', 'patch', 'changes', 'project', 'repository')
 
     implements(interfaces.ISourceStamp)
 
     def __init__(self, branch=None, revision=None, patch=None,
-                 changes=None):
+                 changes=None, project='', repository=''):
         if branch is not None:
             assert isinstance(branch, str), type(branch)
         if revision is not None:
@@ -56,6 +56,8 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
         self.branch = branch
         self.revision = revision
         self.patch = patch
+        self.project = project
+        self.repository = repository
         if changes:
             self.changes = tuple(changes)
             # set branch and revision to most recent change
@@ -151,5 +153,10 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
             self.revision = str(self.revision)
         if self.patch is not None and not isinstance(self.patch, str):
             self.patch = str(self.patch)
+
+    def upgradeToVersion2(self):
+        # version 1 did not have project or repository; just set them to a default ''
+        self.project = ''
+        self.repository = ''
 
 # vim: set ts=4 sts=4 sw=4 et:

@@ -1,4 +1,4 @@
-{% macro change(who, at, branch, rev, files, comments, properties, revlink, number) %}
+{% macro change(who, at, branch, rev, files, comments, properties, revlink, number, repository, project) %}
 
 <h3>Change {{ number }}</h3>
 
@@ -10,6 +10,18 @@
   <tr class="{{ row_class.next() }}">
     <td class="left">Changed at</td><td><b>{{ at }}</b></td>
   </tr>
+
+{% if repository %}
+  <tr class="{{ row_class.next() }}">
+    <td class="left">Repository</td><td><b>{{ repository|e }}</b></td>
+  </tr>
+{% endif %}
+
+{% if project %}
+  <tr class="{{ row_class.next() }}">
+    <td class="left">Project</td><td><b>{{ project|e }}</b></td>
+  </tr>
+{% endif %}
 
 {% if branch %}
   <tr class="{{ row_class.next() }}">
