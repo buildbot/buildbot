@@ -125,14 +125,19 @@ class DBSchemaManager(unittest.TestCase):
 
         # do a byte-for-byte comparison of the changes table and friends
         c.execute("""SELECT changeid, author, comments, is_dir, branch, revision,
-                    revlink, when_timestamp, category FROM changes order by revision""")
+                    revlink, when_timestamp, category, repository, project
+                    FROM changes order by revision""")
         res = c.fetchall()
         if res != [
-            (1, u'dustin', 'hi, mom', 1, u'', u'1233', u'http://buildbot.net', 1267419122, u''),
-            (2, u'warner', u'', 0, u'schedulerdb', u'1234', u'http://pypi.com', 1267419123, u'new'),
-            (3, u'catlee', u'', 0, u'', u'1235', u'', 1267419132, u''),
+            (1, u'dustin', 'hi, mom', 1, u'', u'1233',
+                u'http://buildbot.net', 1267419122, u'', u'', u''),
+            (2, u'warner', u'', 0, u'schedulerdb', u'1234',
+                u'http://pypi.com', 1267419123, u'new', u'', u''),
+            (3, u'catlee', u'', 0, u'', u'1235',
+                u'', 1267419132, u'', u'', u''),
             # note change by bhearsum is missing because its revision=None
-            (4, u'marcusl', u'', 0, u'jinja', u'1239', u'', 1267419134, u'cool'),
+            (4, u'marcusl', u'', 0, u'jinja', u'1239',
+                u'', 1267419134, u'cool', u'', u''),
             ]:
             pprint.pprint(res)
             errs.append("changes table does not match expectations")
@@ -184,7 +189,7 @@ class DBSchemaManager(unittest.TestCase):
     def test_get_current_version(self):
         # this is as much a reminder to write tests for the new version
         # as a test of the (very trivial) method
-        self.assertEqual(self.sm.get_current_version(), 1)
+        self.assertEqual(self.sm.get_current_version(), 2)
 
     def test_get_db_version_empty(self):
         self.assertEqual(self.sm.get_db_version(), 0)

@@ -78,7 +78,15 @@ CREATE TABLE changes (
     `revision` VARCHAR(256), -- CVS uses NULL. too short for darcs?
     `revlink` VARCHAR(256) NULL,
     `when_timestamp` INTEGER NOT NULL, -- copied from incoming Change
-    `category` VARCHAR(256) NULL
+    `category` VARCHAR(256) NULL,
+
+    -- repository specifies, along with revision and branch, the
+    -- source tree in which this change was detected.
+    `repository` text not null default '',
+
+    -- project names the project this source code represents.  It is used
+    -- later to filter changes
+    `project` text not nul default '',
 );
 CREATE TABLE changes_nextid (next_changeid INTEGER);
 CREATE TABLE last_access (
@@ -99,6 +107,8 @@ CREATE TABLE sourcestamp_changes (
 );
 CREATE TABLE sourcestamps (
     `id` INTEGER PRIMARY KEY,
+    `repository` TEXT not null default '',
+    `project` TEXT not null default '',
     `branch` VARCHAR(256) default NULL,
     `revision` VARCHAR(256) default NULL,
     `patchid` INTEGER default NULL
