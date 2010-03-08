@@ -108,7 +108,7 @@ class BuildSlavesResource(HtmlResource):
             info['connected'] = slave.isConnected()
             
             if slave.isConnected():
-                info['admin'] = unicode(slave.getAdmin(), 'utf-8')
+                info['admin'] = unicode(slave.getAdmin() or '', 'utf-8')
                 last = slave.lastMessageReceived()
                 if last:
                     info['last_heard_from_age'] = abbreviate_age(time.time() - last)
