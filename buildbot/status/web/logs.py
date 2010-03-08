@@ -65,7 +65,7 @@ class TextLog(Resource):
             if not self.asText:
                 # jinja only works with unicode, or pure ascii, so assume utf-8 in logs
                 if not isinstance(entry, unicode):
-                    entry = unicode(entry, 'utf-8')
+                    entry = unicode(entry, 'utf-8', 'replace')
                 html_entries.append(dict(type = builder.ChunkTypes[type], 
                                          text = entry,
                                          is_header = is_header))
