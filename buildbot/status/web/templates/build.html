@@ -15,7 +15,7 @@ Build #{{ b.getNumber() }}
   <h2>Build In Progress:</h2>
 
   {% if when_time %}
-    <p>ETA: {{ when }}s ({{ when_time }})</p>
+    <p>ETA: {{ when_time }} [{{ when }}]</p>
   {% endif %}
   
   {% if authz.advertiseAction('stopBuild') %}
@@ -98,7 +98,7 @@ Build #{{ b.getNumber() }}
   <li>
     <div class="{{ s.css_class }} result">
       <a href="{{ s.link }}">{{ s.name }}</a> 
-      {{ s.text }}&nbsp;<span style="float:right">({{ s.time_to_run }})</span>
+      {{ s.text }}&nbsp;<span style="float:right">{{ '( ' + s.time_to_run + ' )' if s.time_to_run else '' }}</span>
     </div>
 
     <ol>

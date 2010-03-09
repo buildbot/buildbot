@@ -16,7 +16,7 @@
   {% for b in current %}
     <li><a href="{{ b.link }}">{{ b.num }}</a>
     {% if b.when %}
-      ETA: {{ b.when_time }} [{{ b.when }}s]
+      ETA: {{ b.when_time }} [{{ b.when }}]
     {% endif %}
 
     {{ b.current_step }}

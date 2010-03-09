@@ -37,7 +37,7 @@ class StatusResourceBuild(HtmlResource):
         if not b.isFinished():
             when = b.getETA()
             if when is not None:
-                cxt['when'] = when
+                cxt['when'] = util.formatInterval(when)
                 cxt['when_time'] = time.strftime("%H:%M:%S",
                                                 time.localtime(time.time() + when))
                 
@@ -73,21 +73,17 @@ class StatusResourceBuild(HtmlResource):
         for s in b.getSteps():
             step = {'name': s.getName() }
             cxt['steps'].append(step)
-            
-            (start, end) = s.getTimes()
-            if start and end:
-                time_to_run = util.formatInterval(end - start)
-            else:
-                time_to_run = "running"
-              
-            step['time_to_run'] = time_to_run
 
             if s.isFinished():
                 step['css_class'] = css_classes[s.getResults()[0]]
+                (start, end) = s.getTimes()
+                step['time_to_run'] = util.formatInterval(end - start)
             elif s.isStarted():
                 step['css_class'] = "running"
-            else: 
+                step['time_to_run'] = "running"
+            else:
                 step['css_class'] = "not_started"
+                step['time_to_run'] = ""
 
             step['link'] = req.childLink("steps/%s" % urllib.quote(s.getName()))
             step['text'] = " ".join(s.getText())

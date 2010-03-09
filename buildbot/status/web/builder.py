@@ -31,8 +31,9 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
         b['num'] = build.getNumber()
         b['link'] = path_to_build(req, build)
 
-        when = b['when'] = build.getETA()
+        when = build.getETA()
         if when is not None:
+            b['when'] = util.formatInterval(when)
             b['when_time'] = time.strftime("%H:%M:%S",
                                       time.localtime(time.time() + when))
                     
