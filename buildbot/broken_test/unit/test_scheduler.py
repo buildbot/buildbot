@@ -312,6 +312,7 @@ class Scheduling(MasterMixin, StallMixin, PollMixin, unittest.TestCase):
         def _then(ign):
             job1 = tryclient.createJobfile("buildsetID",
                                            "branch1", "123", 1, "diff",
+                                           "repository", "project",
                                            ["a", "b"])
             self.pushJob(jobdir_abs, job1)
         d.addCallback(_then)

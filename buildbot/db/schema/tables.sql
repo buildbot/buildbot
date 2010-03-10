@@ -107,11 +107,11 @@ CREATE TABLE sourcestamp_changes (
 );
 CREATE TABLE sourcestamps (
     `id` INTEGER PRIMARY KEY,
-    `repository` TEXT not null default '',
-    `project` TEXT not null default '',
     `branch` VARCHAR(256) default NULL,
     `revision` VARCHAR(256) default NULL,
-    `patchid` INTEGER default NULL
+    `patchid` INTEGER default NULL,
+    `repository` TEXT not null default '',
+    `project` TEXT not null default ''
 );
 
 --
