@@ -38,6 +38,14 @@ Build #{{ b.getNumber() }}
 <table class="info" width="100%">
 {% set ss_class = cycler('alt','') %}
 
+{% if ss.project %}
+  <tr class="{{ ss_class.next() }}"><td class="left">Project</td><td>{{ ss.project|e }}</td></tr>
+{% endif %}
+
+{% if ss.repository %}
+  <tr class="{{ ss_class.next() }}"><td class="left">Repository</td><td>{{ ss.repository|e }}</td></tr>
+{% endif %}
+
 {% if ss.branch %}
   <tr class="{{ ss_class.next() }}"><td class="left">Branch</td><td>{{ ss.branch|e }}</td></tr>
 {% endif %}

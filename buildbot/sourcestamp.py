@@ -5,7 +5,7 @@ from twisted.persisted import styles
 from buildbot import util, interfaces
 
 class SourceStamp(util.ComparableMixin, styles.Versioned):
-    """This is a tuple of (branch, revision, patchspec, changes).
+    """This is a tuple of (branch, revision, patchspec, changes, project, repository).
 
     C{branch} is always valid, although it may be None to let the Source
     step use its default branch. There are three possibilities for the
@@ -26,11 +26,13 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
 
     persistenceVersion = 2
 
-    # all four of these are publically visible attributes
+    # all six of these are publically visible attributes
     branch = None
     revision = None
     patch = None
     changes = ()
+    project = ''
+    revision = ''
     ssid = None # filled in by db.get_sourcestampid()
 
     compare_attrs = ('branch', 'revision', 'patch', 'changes', 'project', 'repository')
@@ -67,10 +69,18 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
             self.revision = str(changes[-1].revision)
             if self.revision is not None:
                 assert isinstance(self.revision, str), type(self.revision)
+            if not self.project:
+                self.project = changes[-1].project
+            if not self.repository:
+                self.repository = changes[-1].repository
 
     def canBeMergedWith(self, other):
+        if other.repository != self.repository:
+            return False
         if other.branch != self.branch:
             return False # the builds are completely unrelated
+        if other.project != self.project:
+            return False
 
         if self.changes and other.changes:
             # TODO: consider not merging these. It's a tradeoff between
@@ -112,13 +122,19 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
 
     def getAbsoluteSourceStamp(self, got_revision):
         return SourceStamp(branch=self.branch, revision=got_revision,
-                           patch=self.patch)
+                           patch=self.patch, repository=self.repository,
+                           project=self.project)
 
     def getText(self):
         # note: this won't work for VC systems with huge 'revision' strings
+        text = []
+        if self.project:
+            text.append("for %s" % self.project)
+        if self.repository:
+            text.append("in %s" % self.repository)
         if self.revision is None:
-            return [ "latest" ]
-        text = [ str(self.revision) ]
+            return text + [ "latest" ]
+        text.append(str(self.revision))
         if self.branch:
             text.append("in '%s'" % self.branch)
         if self.patch:
@@ -133,6 +149,8 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
             d['branch'] = self.branch            
         if self.patch:
             d['patch'] = True
+        d['repository'] = self.repository
+        d['project'] = self.project
         return d
 
     def asDict(self):
@@ -143,6 +161,8 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
         result['patch'] = self.patch
         result['branch'] = self.branch
         result['changes'] = [c.asDict() for c in getattr(self, 'changes', [])]
+        result['project'] = self.project
+        result['repository'] = self.repository
         return result
 
     def upgradeToVersion1(self):
