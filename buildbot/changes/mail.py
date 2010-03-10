@@ -590,7 +590,8 @@ class BzrLaunchpadEmailMaildirSource(MaildirSource):
         #log.msg("parse(): rev=%s who=%s files=%s comments='%s' when=%s branch=%s" % (rev, who, d['files'], d['comments'], time.asctime(time.localtime(when)), branch))
         if rev and who:
             return changes.Change(who, d['files'], d['comments'],
-                                  when=when, revision=rev, branch=branch)
+                                  when=when, revision=rev, branch=branch, 
+                                  repository=repository or '')
         else:
             return None
 

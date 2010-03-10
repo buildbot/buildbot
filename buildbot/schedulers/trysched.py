@@ -121,18 +121,30 @@ class Try_Jobdir(TryBase):
             raise BadJobfile("unable to parse netstrings")
         s = p.strings
         ver = s.pop(0)
-        if ver != "1":
+        if ver == "1":
+            buildsetID, branch, baserev, patchlevel, diff = s[:5]
+            builderNames = s[5:]
+            if branch == "":
+                branch = None
+            if baserev == "":
+                baserev = None
+            patchlevel = int(patchlevel)
+            patch = (patchlevel, diff)
+            ss = SourceStamp("Old client", branch, baserev, patch)
+        elif ver == "2": # introduced the repository and project property
+            buildsetID, branch, baserev, patchlevel, diff, repository, project = s[:7]
+            builderNames = s[7:]
+            if branch == "":
+                branch = None
+            if baserev == "":
+                baserev = None
+            patchlevel = int(patchlevel)
+            patch = (patchlevel, diff)
+            ss = SourceStamp(branch, baserev, patch, repository=repository,
+                             project=project)
+        else:
             raise BadJobfile("unknown version '%s'" % ver)
-        jobid, branch, baserev, patchlevel, diff = s[:5]
-        builderNames = s[5:]
-        if branch == "":
-            branch = None
-        if baserev == "":
-            baserev = None
-        patchlevel = int(patchlevel)
-        patch = (patchlevel, diff)
-        ss = SourceStamp(branch, baserev, patch)
-        return builderNames, ss, jobid
+        return builderNames, ss, buildsetID
 
     def messageReceived(self, filename):
         md = os.path.join(self.parent.parent.basedir, self.jobdir)
@@ -211,15 +223,16 @@ class Try_Userpass_Perspective(pbutil.NewCredPerspective):
         self.parent = parent
         self.username = username
 
-    def perspective_try(self, branch, revision, patch, builderNames,
-                        properties={}):
+    def perspective_try(self, branch, revision, patch, repository, project,
+                        builderNames, properties={}, ):
         log.msg("user %s requesting build on builders %s" % (self.username,
                                                              builderNames))
         # build the intersection of the request and our configured list
         builderNames = self.parent.filterBuilderList(builderNames)
         if not builderNames:
             return
-        ss = SourceStamp(branch, revision, patch)
+        ss = SourceStamp(branch, revision, patch, repository=repository,
+                         project=project)
         reason = "'try' job from user %s" % self.username
 
         # roll the specified props in with our inherited props

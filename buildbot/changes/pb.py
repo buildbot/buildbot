@@ -28,15 +28,17 @@ class ChangePerspective(NewCredPerspective):
             pathnames.append(path)
 
         if pathnames:
-            change = changes.Change(changedict['who'],
-                                    pathnames,
-                                    changedict['comments'],
+            change = changes.Change(who=changedict['who'],
+                                    files=pathnames,
+                                    comments=changedict['comments'],
                                     branch=changedict.get('branch'),
                                     revision=changedict.get('revision'),
                                     revlink=changedict.get('revlink', ''),
                                     category=changedict.get('category'),
                                     when=changedict.get('when'),
-                                    properties=changedict.get('properties', {})
+                                    properties=changedict.get('properties', {}),
+                                    repository=changedict.get('repository', ''),
+                                    project=changedict.get('project', ''),
                                     )
             self.changemaster.addChange(change)
 
