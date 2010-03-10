@@ -45,13 +45,16 @@ master = "localhost:9989"
 
 category = None
 
+# When converting strings to unicode, assume this encoding. 
+# (set with --encoding)
+
+encoding = 'utf8'
 
 # The GIT_DIR environment variable must have been set up so that any
 # git commands that are executed will operate on the repository we're
 # installed in.
 
 changes = []
-
 
 def connectFailed(error):
     logging.error("Could not connect to %s: %s"
@@ -107,13 +110,13 @@ def grab_commit_info(c, rev):
         m = re.match(r"^:.*[MAD]\s+(.+)$", line)
         if m:
             logging.debug("Got file: %s" % m.group(1))
-            files.append(m.group(1))
+            files.append(unicode(m.group(1), encoding=encoding))
             continue
 
         m = re.match(r"^Author:\s+(.+)$", line)
         if m:
             logging.debug("Got author: %s" % m.group(1))
-            c['who'] = m.group(1)
+            c['who'] = unicode(m.group(1), encoding=encoding)
 
         if re.match(r"^Merge: .*$", line):
             files.append('merge')
@@ -134,11 +137,11 @@ def gen_changes(input, branch):
 
         m = re.match(r"^([0-9a-f]+) (.*)$", line.strip())
         c = {'revision': m.group(1),
-             'comments': m.group(2),
-             'branch': branch,
+             'comments': unicode(m.group(2), encoding=encoding),
+             'branch': unicode(branch, encoding=encoding),
         }
         if category:
-            c['category'] = category
+            c['category'] = unicode(category, encoding=encoding)
         grab_commit_info(c, m.group(1))
         changes.append(c)
 
@@ -182,7 +185,7 @@ def gen_update_branch_changes(oldrev, newrev, refname, branch):
     if baserev != oldrev:
         c = {'revision': baserev,
              'comments': "Rewind branch",
-             'branch': branch,
+             'branch': unicode(branch, encoding=encoding),
              'who': "dummy",
         }
         logging.info("Branch %s was rewound to %s" % (branch, baserev[:8]))
@@ -195,14 +198,14 @@ def gen_update_branch_changes(oldrev, newrev, refname, branch):
 
             file = re.match(r"^:.*[MAD]\s*(.+)$", line).group(1)
             logging.debug("  Rewound file: %s" % file)
-            files.append(file)
+            files.append(unicode(file, encoding=encoding))
 
         status = f.close()
         if status:
             logging.warning("git diff exited with status %d" % status)
 
         if category:
-            c['category'] = category
+            c['category'] = unicode(category, encoding=encoding)
 
         if files:
             c['files'] = files
@@ -281,6 +284,11 @@ def parse_options():
             help=master_help)
     parser.add_option("-c", "--category", action="store",
                       type="string", help="Scheduler category to notify.")
+    encoding_help = ("Encoding to use when converting strings to "
+                     "unicode. Default is %(encoding)s." % 
+                     { "encoding" : encoding })
+    parser.add_option("-e", "--encoding", action="store", type="string", 
+                      help=encoding_help)
     options, args = parser.parse_args()
     return options
 
@@ -314,6 +322,9 @@ try:
 
     if options.category:
         category = options.category
+
+    if options.encoding:
+        encoding = options.encoding
 
     process_changes()
 except SystemExit:
