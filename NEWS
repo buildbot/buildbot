@@ -7,6 +7,27 @@ Major User visible changes in Buildbot.             -*- outline -*-
 
 *** Visual Studio / VC++ Compile Steps
 
+** New Change/SourceStamp attributes 'project' and 'repository'
+
+These attributes can be used to further refine matching by schedulers.
+Repository completes the SourceStamp: the tuple of (repository, branch,
+revision) completely specifies a source code tree.  Likewise, the project
+attribute can be used to support building several distinct projects within one
+buildmaster, replacing the use of category for this purpose.  Matching can be
+done using regular expressions, so it's even possible to support nested
+projects!
+
+** Scheduler requires keyword arguments
+
+If you are creating your Scheduler like this:
+
+  Scheduler("mysched", "mybranch", 0, ["foo", "bar"])
+
+then it's time to change that to specify each of the arguments with a keyword:
+
+  Scheduler(name="mysched", branch="mybranch",
+        treeStableTimer=0, builderNames=["foo", "bar"])
+
 ** New /json web status
 
 This view has lots of useful information perfectly formed for serving as input
