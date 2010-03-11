@@ -17,7 +17,7 @@ from buildbot.process.builder import Builder
 from buildbot.process.factory import BasicBuildFactory, ArgumentsInTheWrongPlace
 from buildbot.changes.pb import PBChangeSource
 from buildbot.changes.mail import SyncmailMaildirSource
-from buildbot.schedulers.basic import Scheduler
+from buildbot.schedulers import basic
 from buildbot.steps.source import CVS, Darcs
 from buildbot.steps.shell import Compile, Test, ShellCommand
 from buildbot.status import base
@@ -384,7 +384,7 @@ BuildmasterConfig = c
 
 schedulersCfg = \
 """
-from buildbot.schedulers.basic import Scheduler, Dependent
+from buildbot.schedulers import basic
 from buildbot.process.factory import BasicBuildFactory
 from buildbot.buildslave import BuildSlave
 from buildbot.config import BuilderConfig
@@ -393,7 +393,8 @@ c['slaves'] = [BuildSlave('bot1', 'pw1')]
 f1 = BasicBuildFactory('cvsroot', 'cvsmodule')
 b1 = BuilderConfig(name='builder1', slavename='bot1', factory=f1)
 c['builders'] = [b1]
-c['schedulers'] = [Scheduler('full', None, 60, ['builder1'])]
+c['schedulers'] = [basic.Scheduler(name='full', branch=None,
+                treeStableTimer=60, builderNames=['builder1'])]
 c['slavePortnum'] = 9999
 c['projectName'] = 'dummy project'
 c['projectURL'] = 'http://dummy.example.com'
@@ -663,7 +664,8 @@ c['change_source'] = [PBChangeSource(),
         # c['schedulers'] must be a list
         badcfg = schedulersCfg + \
 """
-c['schedulers'] = Scheduler('full', None, 60, ['builder1'])
+c['schedulers'] = basic.Scheduler(name='full', branch=None,
+                treeStableTimer=60, builderNames=['builder1'])
 """
         d.addCallback(_test, badcfg, "one Scheduler instance", AssertionError,
                       "c['schedulers'] must be a list of Scheduler instances")
@@ -679,7 +681,8 @@ c['schedulers'] = ['oops', 'problem']
         # c['schedulers'] must point at real builders
         badcfg = schedulersCfg + \
 """
-c['schedulers'] = [Scheduler('full', None, 60, ['builder-bogus'])]
+c['schedulers'] = [basic.Scheduler(name='full', branch=None,
+                treeStableTimer=60, builderNames=['builder-bogus'])]
 """
         d.addCallback(_test, badcfg, "Scheduler with bogus builder",
                       AssertionError,
@@ -688,7 +691,8 @@ c['schedulers'] = [Scheduler('full', None, 60, ['builder-bogus'])]
         # builderNames= must be a list
         badcfg = schedulersCfg + \
 """
-c['schedulers'] = [Scheduler('full', None, 60, 'builder1')]
+c['schedulers'] = [basic.Scheduler(name='full', branch=None,
+                    treeStableTimer=60, builderNames='builder1')]
 """
         d.addCallback(_test, badcfg, "Scheduler with non-list", AssertionError,
                       "must be a list of Builder description names")
@@ -696,7 +700,8 @@ c['schedulers'] = [Scheduler('full', None, 60, 'builder1')]
         # builderNames= must be a list of strings, not dicts
         badcfg = schedulersCfg + \
 """
-c['schedulers'] = [Scheduler('full', None, 60, [b1])]
+c['schedulers'] = [basic.Scheduler(name='full', branch=None,
+                treeStableTimer=60, builderNames=[b1])]
 """
         d.addCallback(_test, badcfg, "Scheduler with list of non-names",
                       AssertionError,
@@ -705,7 +710,8 @@ c['schedulers'] = [Scheduler('full', None, 60, [b1])]
         # builderNames= must be a list of strings, not a dict
         badcfg = schedulersCfg + \
 """
-c['schedulers'] = [Scheduler('full', None, 60, b1)]
+c['schedulers'] = [basic.Scheduler(name='full', branch=None,
+                treeStableTimer=60, builderNames=b1)]
 """
         d.addCallback(_test, badcfg, "Scheduler with single non-name",
                       AssertionError,
@@ -714,8 +720,10 @@ c['schedulers'] = [Scheduler('full', None, 60, b1)]
         # each Scheduler must have a unique name
         badcfg = schedulersCfg + \
 """
-c['schedulers'] = [Scheduler('dup', None, 60, []),
-                   Scheduler('dup', None, 60, [])]
+c['schedulers'] = [basic.Scheduler(name='dup', branch=None,
+                        treeStableTimer=60, builderNames=[]),
+                   basic.Scheduler(name='dup', branch=None,
+                        treeStableTimer=60, builderNames=[])]
 """
         d.addCallback(_test, badcfg, "non-unique Scheduler names", ValueError,
                       "Schedulers must have unique names")
@@ -737,7 +745,7 @@ c['schedulers'] = [Scheduler('dup', None, 60, []),
         sch = self.master.allSchedulers()
         self.failUnlessEqual(len(sch), 1)
         s = sch[0]
-        self.failUnless(isinstance(s, Scheduler))
+        self.failUnless(isinstance(s, basic.Scheduler))
         self.failUnlessEqual(s.name, "full")
         self.failUnlessEqual(s.branch, None)
         self.failUnlessEqual(s.treeStableTimer, 60)
@@ -745,8 +753,10 @@ c['schedulers'] = [Scheduler('dup', None, 60, []),
 
         newcfg = schedulersCfg + \
 """
-s1 = Scheduler('full', None, 60, ['builder1'])
-c['schedulers'] = [s1, Dependent('downstream', s1, ['builder1'])]
+s1 = basic.Scheduler(name='full', branch=None,
+            treeStableTimer=60, builderNames=['builder1'])
+c['schedulers'] = [s1, basic.Dependent(name='downstream', upstream=s1,
+            builderNames=['builder1'])]
 """
         d = self.master.loadConfig(newcfg)
         d.addCallback(self._testSchedulers_2, newcfg)
@@ -755,7 +765,7 @@ c['schedulers'] = [s1, Dependent('downstream', s1, ['builder1'])]
         sch = self.master.allSchedulers()
         self.failUnlessEqual(len(sch), 2)
         s = sch[0]
-        self.failUnless(isinstance(s, scheduler.Scheduler))
+        self.failUnless(isinstance(s, basic.Scheduler))
         s = sch[1]
         self.failUnless(isinstance(s, scheduler.Dependent))
         self.failUnlessEqual(s.name, "downstream")
@@ -1245,16 +1255,16 @@ c['changeHorizon'] = 5
 class ConfigElements(unittest.TestCase):
     # verify that ComparableMixin is working
     def testSchedulers(self):
-        s1 = scheduler.Scheduler(name='quick', branch=None,
+        s1 = basic.Scheduler(name='quick', branch=None,
                                  treeStableTimer=30,
                                  builderNames=['quick'])
-        s1a = scheduler.Scheduler(name='quick', branch=None,
+        s1a = basic.Scheduler(name='quick', branch=None,
                                   treeStableTimer=30,
                                   builderNames=['quick'])
-        s2 = scheduler.Scheduler(name="all", branch=None,
+        s2 = basic.Scheduler(name="all", branch=None,
                                  treeStableTimer=5*60,
                                  builderNames=["a", "b"])
-        s2a = scheduler.Scheduler(name="all", branch=None,
+        s2a = basic.Scheduler(name="all", branch=None,
                                   treeStableTimer=5*60,
                                   builderNames=["a", "b"])
         s3 = scheduler.Try_Userpass("try", ["a","b"], port=9989,

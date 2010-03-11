@@ -46,14 +46,15 @@ base_config = """
 from buildbot.changes.pb import PBChangeSource
 from buildbot.status import html
 from buildbot.buildslave import BuildSlave
-from buildbot.scheduler import Scheduler
+from buildbot.schedulers import basic
 from buildbot.process.factory import BuildFactory
 from buildbot.config import BuilderConfig
 
 BuildmasterConfig = c = {
     'change_source': PBChangeSource(),
     'slaves': [BuildSlave('bot1name', 'bot1passwd')],
-    'schedulers': [Scheduler('name', None, 60, ['builder1'])],
+    'schedulers': [basic.Scheduler(name='name', branch=None,
+                treeStableTimer=60, builderNames=['builder1'])],
     'slavePortnum': 0,
     }
 c['builders'] = [
@@ -323,13 +324,13 @@ from buildbot.status import html
 from buildbot.changes import mail
 from buildbot.process import factory
 from buildbot.steps import dummy
-from buildbot.scheduler import Scheduler
+from buildbot.schedulers import basic
 from buildbot.changes.base import ChangeSource
 from buildbot.buildslave import BuildSlave
 from buildbot.config import BuilderConfig
 s = factory.s
 
-class DiscardScheduler(Scheduler):
+class DiscardScheduler(basic.Scheduler):
     def addChange(self, change):
         pass
 class DummyChangeSource(ChangeSource):
@@ -338,7 +339,8 @@ class DummyChangeSource(ChangeSource):
 BuildmasterConfig = c = {}
 c['slaves'] = [BuildSlave('bot1', 'sekrit'), BuildSlave('bot2', 'sekrit')]
 c['change_source'] = DummyChangeSource()
-c['schedulers'] = [DiscardScheduler('discard', None, 60, ['b1'])]
+c['schedulers'] = [DiscardScheduler(name='discard', branch=None,
+                treeStableTimer=60, builderNames=['b1'])]
 c['slavePortnum'] = 0
 c['status'] = [html.WebStatus(http_port=0)]
 

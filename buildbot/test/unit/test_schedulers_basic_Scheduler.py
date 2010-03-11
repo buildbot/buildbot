@@ -38,31 +38,3 @@ class Scheduler(unittest.TestCase):
                 treeStableTimer=60,
                 builderNames=['tbuild'])
         self.assertEqual(sch.name, "tsched")
-
-    def test_changeIsRelevant_branch_None(self):
-        sch = self.makeScheduler(branch=None)
-        changes = [
-            state.State(branch="release"),
-            state.State(branch="maintenance"),
-            state.State(branch=None),
-        ]
-        relevant = map(sch.changeIsRelevant, changes)
-        self.assertEqual(relevant, [
-            False,
-            False,
-            True,
-        ])
-
-    def test_changeIsRelevant_branch_set(self):
-        sch = self.makeScheduler(branch="release")
-        changes = [
-            state.State(branch="release"),
-            state.State(branch="maintenance"),
-            state.State(branch=None),
-        ]
-        relevant = map(sch.changeIsRelevant, changes)
-        self.assertEqual(relevant, [
-            True,
-            False,
-            False,
-        ])

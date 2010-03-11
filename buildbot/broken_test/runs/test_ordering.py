@@ -8,7 +8,7 @@ nextslave_config = """
 from buildbot.process import factory
 from buildbot.steps import dummy
 from buildbot.buildslave import BuildSlave
-from buildbot.scheduler import Scheduler
+from buildbot.schedulers.basic import Scheduler
 from buildbot.config import BuilderConfig
 
 f1 = factory.BuildFactory([dummy.Dummy(timeout=0)])
@@ -20,7 +20,7 @@ def nextSlave(builder, slaves):
 
 BuildmasterConfig = c = {}
 c['slaves'] = [BuildSlave('bot1', 'sekrit'), BuildSlave('bot2', 'sekrit')]
-c['schedulers'] = [Scheduler('dummy', None, 0, ['dummy'])]
+c['schedulers'] = [Scheduler('dummy', branch=None, treeStableTimer=0, builderNames=['dummy'])]
 c['builders'] = [
     BuilderConfig(name='dummy', slavenames=['bot1', 'bot2'],
                   factory=f1, nextSlave=nextSlave),
@@ -64,7 +64,7 @@ nextbuild_config = """
 from buildbot.process import factory
 from buildbot.steps import dummy
 from buildbot.buildslave import BuildSlave
-from buildbot.scheduler import Scheduler
+from buildbot.schedulers import basic
 from buildbot.config import BuilderConfig
 
 f1 = factory.BuildFactory([dummy.Dummy(timeout=0)])
@@ -75,7 +75,8 @@ def nextBuild(builder, requests):
 
 BuildmasterConfig = c = {}
 c['slaves'] = [BuildSlave('bot1', 'sekrit')]
-c['schedulers'] = [Scheduler('dummy', None, 0, ['dummy'])]
+c['schedulers'] = [basic.Scheduler(name='dummy', branch=None,
+                    treeStableTimer=0, builderNames=['dummy'])]
 c['builders'] = [
     BuilderConfig(name='dummy', slavenames=['bot1'], factory=f1, nextBuild=nextBuild),
 ]
@@ -127,7 +128,7 @@ prioritizebuilders_config = """
 from buildbot.process import factory
 from buildbot.steps import dummy
 from buildbot.buildslave import BuildSlave
-from buildbot.scheduler import Scheduler
+from buildbot.schedulers import basic
 from buildbot.config import BuilderConfig
 
 f1 = factory.BuildFactory([dummy.Dummy(timeout=0)])
@@ -140,7 +141,8 @@ def prioritizeBuilders(buildmaster, builders):
 
 BuildmasterConfig = c = {}
 c['slaves'] = [BuildSlave('bot1', 'sekrit')]
-c['schedulers'] = [Scheduler('dummy', None, 0, ['dummy1', 'dummy2'])]
+c['schedulers'] = [basic.Scheduler(name='dummy', branch=None,
+        treeStableTimer=0, builderNames=['dummy1', 'dummy2'])]
 c['builders'] = [
     BuilderConfig(name='dummy1', slavename='bot1', factory=f1),
     BuilderConfig(name='dummy2', slavename='bot1', factory=f1),

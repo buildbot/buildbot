@@ -48,11 +48,11 @@ from buildbot import pbutil
 from buildbot.sourcestamp import SourceStamp
 from buildbot.changes.maildir import MaildirService
 from buildbot.process.properties import Properties
-from buildbot.schedulers.basic import _Base
+from buildbot.schedulers import base
 from buildbot.status.builder import BuildSetStatus
 
 
-class TryBase(_Base):
+class TryBase(base.BaseScheduler):
 
     def run(self):
         # triggered by external events, not DB changes or timers
@@ -93,8 +93,8 @@ class Try_Jobdir(TryBase):
     compare_attrs = ( 'name', 'builderNames', 'jobdir', 'properties' )
 
     def __init__(self, name, builderNames, jobdir,
-                 properties={}, categories=None):
-        _Base.__init__(self, name, builderNames, properties, categories)
+                 properties={}):
+        base.BaseScheduler.__init__(self, name, builderNames, properties)
         self.jobdir = jobdir
         self.watcher = MaildirService()
         self.watcher.setServiceParent(self)
@@ -192,8 +192,8 @@ class Try_Userpass(TryBase):
     implements(portal.IRealm)
 
     def __init__(self, name, builderNames, port, userpass,
-                 properties={}, categories=None):
-        _Base.__init__(self, name, builderNames, properties, categories)
+                 properties={}):
+        base.BaseScheduler.__init__(self, name, builderNames, properties)
         if type(port) is int:
             port = "tcp:%d" % port
         self.port = port

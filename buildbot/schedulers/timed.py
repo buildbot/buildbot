@@ -39,7 +39,7 @@ import time
 from twisted.internet import defer
 from twisted.python import log
 from buildbot.sourcestamp import SourceStamp
-from buildbot.schedulers.basic import _Base, ClassifierMixin
+from buildbot.schedulers import base
 
 class TimedBuildMixin:
 
@@ -56,7 +56,7 @@ class TimedBuildMixin:
         state["last_build"] = when
         self.set_state(t, state)
 
-class Periodic(_Base, TimedBuildMixin):
+class Periodic(base.BaseScheduler, TimedBuildMixin):
     """Instead of watching for Changes, this Scheduler can just start a build
     at fixed intervals. The C{periodicBuildTimer} parameter sets the number
     of seconds to wait between such periodic builds. The first build will be
@@ -68,8 +68,8 @@ class Periodic(_Base, TimedBuildMixin):
                      'properties')
 
     def __init__(self, name, builderNames, periodicBuildTimer,
-                 branch=None, properties={}, categories=None):
-        _Base.__init__(self, name, builderNames, properties, categories)
+            branch=None, properties={}):
+        base.BaseScheduler.__init__(self, name, builderNames, properties)
         self.periodicBuildTimer = periodicBuildTimer
         self.branch = branch
         self.reason = ("The Periodic scheduler named '%s' triggered this build"
@@ -109,7 +109,7 @@ class Periodic(_Base, TimedBuildMixin):
         return when + 1.0
 
 
-class Nightly(_Base, ClassifierMixin, TimedBuildMixin):
+class Nightly(base.BaseScheduler, base.ClassifierMixin, TimedBuildMixin):
     """Imitate 'cron' scheduling. This can be used to schedule a nightly
     build, or one which runs are certain times of the day, week, or month.
 
@@ -174,11 +174,11 @@ class Nightly(_Base, ClassifierMixin, TimedBuildMixin):
     def __init__(self, name, builderNames, minute=0, hour='*',
                  dayOfMonth='*', month='*', dayOfWeek='*',
                  branch=None, fileIsImportant=None, onlyIfChanged=False,
-                 properties={}, categories=None):
+                 properties={}):
         # Setting minute=0 really makes this an 'Hourly' scheduler. This
         # seemed like a better default than minute='*', which would result in
         # a build every 60 seconds.
-        _Base.__init__(self, name, builderNames, properties, categories)
+        base.BaseScheduler.__init__(self, name, builderNames, properties)
         self.minute = minute
         self.hour = hour
         self.dayOfMonth = dayOfMonth
@@ -209,7 +209,7 @@ class Nightly(_Base, ClassifierMixin, TimedBuildMixin):
         d = defer.succeed(None)
         db = self.parent.db
         if self.onlyIfChanged:
-            # classify_changes comes from ClassifierMixin, same as Scheduler.
+            # classify_changes comes from base.ClassifierMixin, same as Scheduler.
             d.addCallback(lambda ign: db.runInteraction(self.classify_changes))
         d.addCallback(lambda ign: db.runInteraction(self._check_timer))
         return d

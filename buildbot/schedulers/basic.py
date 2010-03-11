@@ -36,118 +36,23 @@
 # ***** END LICENSE BLOCK *****
 
 import time
-from zope.interface import implements
-from twisted.application import service
 
 from buildbot import interfaces
-from buildbot.process.properties import Properties
-from buildbot.util import ComparableMixin
-from buildbot.util import collections
+from buildbot.util import collections, NotABranch
 from buildbot.sourcestamp import SourceStamp
 from buildbot.status.builder import SUCCESS, WARNINGS
+from buildbot.schedulers import filter, base
 
-class _None:
-    pass
-
-class _Base(service.MultiService, ComparableMixin):
-    implements(interfaces.IScheduler)
-    # subclasses must set .compare_attrs
-
-    upstream_name = None # set to be notified about upstream buildsets
-
-    def __init__(self, name, builderNames, properties, categories):
-        service.MultiService.__init__(self)
-        self.name = name
-        self.properties = Properties()
-        self.properties.update(properties, "Scheduler")
-        self.properties.setProperty("scheduler", name, "Scheduler")
-        errmsg = ("The builderNames= argument to Scheduler must be a list "
-                  "of Builder description names (i.e. the 'name' key of the "
-                  "Builder specification dictionary)")
-        assert isinstance(builderNames, (list, tuple)), errmsg
-        for b in builderNames:
-            assert isinstance(b, str), errmsg
-        self.builderNames = builderNames
-        self.categories = categories
-        # I will acquire a .schedulerid value before I'm started
-
-    def compareToOther(self, them):
-        # like ComparableMixin.__cmp__, but only used by our manager
-        result = cmp(type(self), type(them))
-        if result:
-            return result
-        result = cmp(self.__class__, them.__class__)
-        if result:
-            return result
-        assert self.compare_attrs == them.compare_attrs
-        self_list = [getattr(self, name, _None) for name in self.compare_attrs]
-        them_list = [getattr(them, name, _None) for name in self.compare_attrs]
-        return cmp(self_list, them_list)
-
-    def get_initial_state(self, max_changeid):
-        # override this if you pay attention to Changes, probably to:
-        #return {"last_processed": max_changeid}
-        return {}
-
-    def get_state(self, t):
-        return self.parent.db.scheduler_get_state(self.schedulerid, t)
-    
-    def set_state(self, t, state):
-        self.parent.db.scheduler_set_state(self.schedulerid, t, state)
-
-    def listBuilderNames(self):
-        return self.builderNames
-
-    def getPendingBuildTimes(self):
-        return []
-
-    def create_buildset(self, ssid, reason, t, props=_None, builderNames=None):
-        db = self.parent.db
-        if props is _None:
-            props = self.properties
-        if builderNames is None:
-            builderNames = self.builderNames
-        bsid = db.create_buildset(ssid, reason, props, builderNames, t)
-        # notify downstream schedulers so they can watch for it to complete
-        self.parent.publish_buildset(self.name, bsid, t)
-        return bsid
-
-class ClassifierMixin:
-
-    def classify_changes(self, t):
-        db = self.parent.db
-        cm = self.parent.change_svc
-        state = self.get_state(t)
-        last_processed = state["last_processed"]
-
-        changes = cm.getChangesGreaterThan(last_processed, t)
-        for c in changes:
-            if self.changeIsRelevant(c):
-                important = True
-                if self.fileIsImportant:
-                    important = self.fileIsImportant(c)
-                db.scheduler_classify_change(self.schedulerid, c.number,
-                                             bool(important), t)
-        # now that we've recorded a decision about each, we can update the
-        # last_processed record
-        if changes:
-            max_changeid = max([c.number for c in changes])
-            state["last_processed"] = max_changeid # retain other keys
-            self.set_state(t, state)
-
-class Scheduler(_Base, ClassifierMixin):
+class Scheduler(base.BaseScheduler, base.ClassifierMixin):
     fileIsImportant = None
-    compare_attrs = ('name', 'treeStableTimer', 'builderNames', 'branch',
-                     'fileIsImportant', 'properties', 'categories')
+    compare_attrs = ('name', 'treeStableTimer', 'builderNames',
+                     'fileIsImportant', 'properties', 'change_filter')
 
-    def __init__(self, name, branch, treeStableTimer, builderNames,
-                 fileIsImportant=None, properties={}, categories=None):
+    def __init__(self, name, shouldntBeSet=NotABranch, treeStableTimer=None,
+                builderNames=None, branch=NotABranch, fileIsImportant=None,
+                properties={}, categories=None, change_filter=None):
         """
         @param name: the name of this Scheduler
-        @param branch: The branch name that the Scheduler should pay
-                       attention to. Any Change that is not in this branch
-                       will be ignored. It can be set to None to only pay
-                       attention to the default branch.
         @param treeStableTimer: the duration, in seconds, for which the tree
                                 must remain unchanged before a build is
                                 triggered. This is intended to avoid builds
@@ -168,10 +73,21 @@ class Scheduler(_Base, ClassifierMixin):
 
         @param properties: properties to apply to all builds started from
                            this scheduler
+        
+        @param change_filter: a buildbot.schedulers.filter.ChangeFilter instance
+                              used to filter changes for this scheduler
+
+        @param branch: The branch name that the Scheduler should pay
+                       attention to. Any Change that is not in this branch
+                       will be ignored. It can be set to None to only pay
+                       attention to the default branch.
         @param categories: A list of categories of changes to accept
         """
+        assert shouldntBeSet is NotABranch, \
+                "pass arguments to Scheduler using keyword arguments"
 
-        _Base.__init__(self, name, builderNames, properties, categories)
+        base.BaseScheduler.__init__(self, name, builderNames, properties)
+        self.make_filter(change_filter=change_filter, branch=branch, categories=categories)
         self.treeStableTimer = treeStableTimer
         self.branch = branch
         if fileIsImportant:
@@ -180,14 +96,6 @@ class Scheduler(_Base, ClassifierMixin):
 
     def get_initial_state(self, max_changeid):
         return {"last_processed": max_changeid}
-
-    def changeIsRelevant(self, change):
-        if change.branch != self.branch:
-            return False
-        if self.categories is not None:
-            if change.category not in self.categories:
-                return False
-        return True
 
     def run(self):
         db = self.parent.db
@@ -254,9 +162,10 @@ class Scheduler(_Base, ClassifierMixin):
 
 class AnyBranchScheduler(Scheduler):
     compare_attrs = ('name', 'treeStableTimer', 'builderNames',
-                     'fileIsImportant', 'properties', 'categories')
+                     'fileIsImportant', 'properties', 'change_filter')
     def __init__(self, name, treeStableTimer, builderNames,
-                 fileIsImportant=None, properties={}, categories=None):
+                 fileIsImportant=None, properties={}, categories=None,
+                 change_filter=None):
         """
         @param name: the name of this Scheduler
         @param treeStableTimer: the duration, in seconds, for which the tree
@@ -277,20 +186,19 @@ class AnyBranchScheduler(Scheduler):
 
         @param properties: properties to apply to all builds started from
                            this scheduler
+
+        @param change_filter: a buildbot.schedulers.filter.ChangeFilter instance
+                              used to filter changes for this scheduler
+
         @param categories: A list of categories of changes to accept
         """
 
-        _Base.__init__(self, name, builderNames, properties, categories)
+        base.BaseScheduler.__init__(self, name, builderNames, properties)
+        self.make_filter(change_filter=change_filter, categories=categories)
         self.treeStableTimer = treeStableTimer
         if fileIsImportant:
             assert callable(fileIsImportant)
             self.fileIsImportant = fileIsImportant
-
-    def changeIsRelevant(self, change):
-        if self.categories is not None:
-            if change.category not in self.categories:
-                return False
-        return True
 
     def _process_changes(self, t):
         db = self.parent.db
@@ -313,16 +221,14 @@ class AnyBranchScheduler(Scheduler):
             return min(delays)
         return None
 
-class Dependent(_Base):
+class Dependent(base.BaseScheduler):
     # register with our upstream, so they'll tell us when they submit a
     # buildset
-    compare_attrs = ('name', 'upstream_name', 'builderNames', 'properties',
-                     'categories')
+    compare_attrs = ('name', 'upstream_name', 'builderNames', 'properties')
 
-    def __init__(self, name, upstream, builderNames,
-                 properties={}, categories=None):
+    def __init__(self, name, upstream, builderNames, properties={}):
         assert interfaces.IScheduler.providedBy(upstream)
-        _Base.__init__(self, name, builderNames, properties, categories)
+        base.BaseScheduler.__init__(self, name, builderNames, properties)
         # by setting self.upstream_name, our buildSetSubmitted() method will
         # be called whenever that upstream Scheduler adds a buildset to the
         # DB.

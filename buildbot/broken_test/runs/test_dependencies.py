@@ -7,7 +7,7 @@ from buildbot.status import base
 from buildbot.changes.changes import Change
 
 config_1 = """
-from buildbot import scheduler
+from buildbot.schedulers import basic
 from buildbot.process import factory
 from buildbot.steps import dummy
 from buildbot.buildslave import BuildSlave
@@ -30,13 +30,13 @@ def fimp1(c):
 def fimp2(c):
     return not fimp1(c)
 
-s1 = scheduler.Scheduler('upstream1', None, None, ['slowpass', 'fastfail'],
+s1 = basic.Scheduler('upstream1', branch=None, treeStableTimer=None, builderNames=['slowpass', 'fastfail'],
                          fileIsImportant=fimp1)
-s2 = scheduler.Dependent('downstream2', s1, ['b3', 'b4'])
-s3 = scheduler.Scheduler('upstream3', None, None, ['fastpass', 'slowpass'],
+s2 = basic.Dependent('downstream2', upstream=s1, builderNames=['b3', 'b4'])
+s3 = basic.Scheduler('upstream3', branch=None, treeStableTimer=None, builderNames=['fastpass', 'slowpass'],
                          fileIsImportant=fimp2)
-s4 = scheduler.Dependent('downstream4', s3, ['b3', 'b4'])
-s5 = scheduler.Dependent('downstream5', s4, ['b5'])
+s4 = basic.Dependent('downstream4', upstream=s3, builderNames=['b3', 'b4'])
+s5 = basic.Dependent('downstream5', upstream=s4, builderNames=['b5'])
 c['schedulers'] = [s1, s2, s3, s4, s5]
 
 f_fastpass = factory.BuildFactory([s(dummy.Dummy, timeout=1)])
