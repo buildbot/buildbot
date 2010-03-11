@@ -221,6 +221,9 @@ class BonsaiPoller(base.ChangeSource):
         @type   pollInterval:   int
         @param  pollInterval:   The time (in seconds) between queries for
                                 changes
+
+        @type project: string
+        @param project: project to attach to all Changes from this changesource
         """
 
         self.bonsaiURL = bonsaiURL

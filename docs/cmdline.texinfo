@@ -570,7 +570,16 @@ included in this Change must be on the same branch.
 @item --category
 (or option @code{category}) This provides the (string) category specifier. If
 omitted, it defaults to None, indicating ``no category''. The category property
-is used by Schedulers to filter what changes they listen to.
+can be used by Schedulers to filter what changes they listen to.
+
+@item --project
+(or option @code{project}) This provides the (string) project to which this
+change applies, and defaults to ''.  The project can be used by schedulers to
+decide which builders should respond to a particular change.
+
+@item --repository
+(or option @code{repository}) This provides the repository from which this
+change came, and defaults to ''.
 
 @item --revision_number
 This provides a (numeric) revision number for the change, used for VC systems

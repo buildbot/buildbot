@@ -277,6 +277,14 @@ running on.
 If the build was started from a scheduler, then this property will
 contain the name of that scheduler.
 
+@item repository
+
+The repository of the sourcestamp for this build
+
+@item project
+
+The project of the sourcestamp for this build
+
 @end table
 
 @node Source Checkout
