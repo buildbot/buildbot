@@ -100,7 +100,9 @@ modnames = []
 def addMod(arg, path, files):
     for fn in files:
         file = os.path.join(path, fn).replace('%s__init__'%os.sep, '')
-        if file[-3:] == '.py' and not file.count('%stest%s' % (os.sep,os.sep)):
+        if file.count('%stest%s' % (os.sep,os.sep)): continue
+        if file.count('%sbroken_test%s' % (os.sep,os.sep)): continue
+        if file[-3:] == '.py':
             modName = file[:-3].replace(os.sep,'.')
             try:
                 #print 'pre-loading', modName
@@ -173,6 +175,8 @@ def main():
 
     if 'buildbot.test' in modnames:
         modnames.remove('buildbot.test')
+    if 'buildbot.broken_test' in modnames:
+        modnames.remove('buildbot.broken_test')
     ##if 'twisted' in modnames:
     ##    modnames.remove('twisted')
 

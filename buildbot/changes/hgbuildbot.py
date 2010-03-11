@@ -62,8 +62,8 @@ def hook(ui, repo, hooktype, node=None, source=None, **kwargs):
         branchtype = ui.config('hgbuildbot', 'branchtype')
         branch = ui.config('hgbuildbot', 'branch')
         fork = ui.configbool('hgbuildbot', 'fork', False)
-        stripcount = int(ui.config('notify','strip') or # notify also has this setting
-                    ui.config('hgbuildbot','strip',3)))
+        # notify also has this setting
+        stripcount = int(ui.config('notify','strip') or ui.config('hgbuildbot','strip',3))
         category = ui.config('hgbuildbot', 'category', None)
         project = ui.config('hgbuildbot', 'project', '')
     else:
