@@ -14,6 +14,8 @@ class SourceStampTest(unittest.TestCase):
             'patch': None,
             'branch':  None,
             'changes': [],
+            'project': '',
+            'repository': '',
           })
 
     def testAsDictBranch(self):
@@ -24,6 +26,8 @@ class SourceStampTest(unittest.TestCase):
             'patch': None,
             'branch':  'Br',
             'changes': [],
+            'project': '',
+            'repository': '',
           })
 
     def testAsDictChanges(self):
@@ -41,6 +45,8 @@ class SourceStampTest(unittest.TestCase):
             'revision': 'rev3',
             'patch': (1,'Pat'),
             'branch': 'br3',
+            'project': '',
+            'repository':'',
             'changes': [
                 {
                     'branch': 'br2',
