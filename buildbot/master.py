@@ -483,6 +483,7 @@ class BuildMaster(service.MultiService):
             log.err()
             log.msg("The new config file is unusable, so I'll ignore it.")
             log.msg("I will keep using the previous config file instead.")
+            return # sorry unit tests
         f.close()
         return d # for unit tests
 
