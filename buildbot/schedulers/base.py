@@ -115,8 +115,13 @@ class ClassifierMixin:
     """
 
     def make_filter(self, change_filter=None, branch=NotABranch, categories=None):
-        if change_filter and (branch is not NotABranch or categories is not None):
-            raise RuntimeError("cannot specify both change_filter and either branch or categories")
+        if change_filter:
+            if (branch is not NotABranch or categories is not None):
+                raise RuntimeError("cannot specify both change_filter and either branch or categories")
+            self.change_filter = change_filter
+            return
+
+        # build a change filter from the deprecated category and branch args
         cfargs = {}
         if branch is not NotABranch: cfargs['branch'] = branch
         if categories: cfargs['category'] = categories
