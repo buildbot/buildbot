@@ -6,12 +6,19 @@ from email.Message import Message
 from email.Utils import formatdate
 from email.MIMEText import MIMEText
 from email.MIMEMultipart import MIMEMultipart
+from StringIO import StringIO
 import urllib
 
 from zope.interface import implements
-from twisted.internet import defer
-from twisted.mail.smtp import sendmail
+from twisted.internet import defer, reactor
+from twisted.mail.smtp import sendmail, ESMTPSenderFactory
 from twisted.python import log as twlog
+
+try:
+    from twisted.internet import ssl
+    from OpenSSL.SSL import SSLv3_METHOD
+except ImportError:
+    pass
 
 from buildbot import interfaces, util
 from buildbot.status import base
@@ -97,7 +104,6 @@ def defaultMessage(mode, name, build, results, master_status):
     text += "\n"
     return { 'body' : text, 'type' : 'plain' }
 
-
 class MailNotifier(base.StatusReceiverMultiService):
     """This is a status notifier which sends email to a list of recipients
     upon the completion of each build. It can be configured to only send out
@@ -130,7 +136,8 @@ class MailNotifier(base.StatusReceiverMultiService):
                  lookup=None, extraRecipients=[],
                  sendToInterestedUsers=True, customMesg=None,
                  messageFormatter=defaultMessage, extraHeaders=None,
-                 addPatch=True):
+                 addPatch=True, useTls=False, 
+                 smtp_user=None, smtp_password=None, smtp_port=25):
         """
         @type  fromaddr: string
         @param fromaddr: the email address to be used in the 'From' header.
@@ -220,6 +227,22 @@ class MailNotifier(base.StatusReceiverMultiService):
                              best to avoid putting 'To', 'From', 'Date',
                              'Subject', or 'CC' in here. Both the names and
                              values may be WithProperties instances.
+
+        @type useTls: boolean
+        @param useTls: Send emails using TLS and authenticate with the 
+                       smtp host. Defaults to False.
+
+        @type smtp_user: string
+        @param smtp_user: The user that will attempt to authenticate with the
+                          relayhost when useTls is True.
+
+        @type smtp_password: string
+        @param smtp_password: The password that smtp_user will use when
+                              authenticating with relayhost.
+
+        @type smtp_port: int
+        @param smtp_port: The port that will be used when connecting to the
+                          relayhost. Defaults to 25.
         """
 
         base.StatusReceiverMultiService.__init__(self)
@@ -248,6 +271,10 @@ class MailNotifier(base.StatusReceiverMultiService):
             assert isinstance(extraHeaders, dict)
         self.extraHeaders = extraHeaders
         self.addPatch = addPatch
+        self.useTls = useTls
+        self.smtp_user = smtp_user
+        self.smtp_password = smtp_password
+        self.smtp_port = smtp_port
         self.watched = []
         self.master_status = None
 
@@ -489,7 +516,27 @@ class MailNotifier(base.StatusReceiverMultiService):
 
         return self.sendMessage(m, list(recipients))
 
+    def tls_sendmail(self, s, recipients):
+        client_factory = ssl.ClientContextFactory()
+        client_factory.method = SSLv3_METHOD
+
+        result = defer.Deferred()
+
+        
+        sender_factory = ESMTPSenderFactory(
+            self.smtp_user, self.smtp_password,
+            self.fromaddr, recipients, StringIO(s),
+            result, contextFactory=client_factory)
+
+        reactor.connectTCP(self.relayhost, self.smtp_port, sender_factory)
+        
+        return result
+
     def sendMessage(self, m, recipients):
         s = m.as_string()
         twlog.msg("sending mail (%d bytes) to" % len(s), recipients)
-        return sendmail(self.relayhost, self.fromaddr, recipients, s)
+        if self.useTls:
+            return self.tls_sendmail(s, recipients)
+        else:
+            return sendmail(self.relayhost, self.fromaddr, recipients, s,
+                            port=self.smtp_port)
