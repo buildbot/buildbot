@@ -15,7 +15,7 @@
 {%- endmacro %}
 
 
-{% macro stamp_td(rev, branch=None, patch=False) -%}
+{% macro stamp_td(rev, branch=None, patch=False, project='', repository='') -%}
   <td valign="bottom" class="sourcestamp">    
     {{- rev|shortrev }}
     {%- if branch %} in {{ branch }}{% endif %}

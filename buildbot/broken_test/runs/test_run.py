@@ -44,16 +44,18 @@ c['slavePortnum'] = 0
 """
 
 config_run = config_base + """
-from buildbot.scheduler import Scheduler
-c['schedulers'] = [Scheduler('quick', None, 120, ['quick'])]
+from buildbot.schedulers import basic
+c['schedulers'] = [basic.Scheduler(name='quick', branch=None,
+            treeStableTimer=120, builderNames=['quick'])]
 """
 
 config_can_build = config_base + """
 from buildbot.buildslave import BuildSlave
 c['slaves'] = [ BuildSlave('bot1', 'sekrit') ]
 
-from buildbot.scheduler import Scheduler
-c['schedulers'] = [Scheduler('dummy', None, None, ['dummy'])]
+from buildbot.schedulers import basic
+c['schedulers'] = [basic.Scheduler(name='dummy', branch=None,
+            treeStableTimer=None, builderNames=['dummy'])]
 
 c['builders'] = [
     BuilderConfig(name='dummy', slavename='bot1',
@@ -65,8 +67,9 @@ config_graceful_shutdown_idle = config_base + """
 from buildbot.buildslave import BuildSlave
 c['slaves'] = [ BuildSlave('bot1', 'sekrit', max_builds=2) ]
 
-from buildbot.scheduler import Scheduler
-c['schedulers'] = [Scheduler('dummy', None, None, ['dummy'])]
+from buildbot.schedulers import basic
+c['schedulers'] = [basic.Scheduler(name='dummy', branch=None,
+            treeStableTimer=None, builderNames=['dummy'])]
 
 c['builders'].append({'name': 'dummy', 'slavename': 'bot1',
                       'builddir': 'dummy', 'factory': f3})
@@ -76,8 +79,9 @@ config_graceful_shutdown_busy = config_base + """
 from buildbot.buildslave import BuildSlave
 c['slaves'] = [ BuildSlave('bot1', 'sekrit', max_builds=2) ]
 
-from buildbot.scheduler import Scheduler
-c['schedulers'] = [Scheduler('dummy', None, None, ['dummy', 'dummy2'])]
+from buildbot.schedulers import basic
+c['schedulers'] = [basic.Scheduler(name='dummy', branch=None,
+        treeStableTimer=None, builderNames=['dummy', 'dummy2'])]
 
 c['builders'].append({'name': 'dummy', 'slavename': 'bot1',
                       'builddir': 'dummy', 'factory': f3})
@@ -95,8 +99,9 @@ config_concurrency = config_base + """
 from buildbot.buildslave import BuildSlave
 c['slaves'] = [ BuildSlave('bot1', 'sekrit', max_builds=1) ]
 
-from buildbot.scheduler import Scheduler
-c['schedulers'] = [Scheduler('dummy', None, None, ['dummy', 'dummy2'])]
+from buildbot.schedulers import basic
+c['schedulers'] = [basic.Scheduler(name='dummy', branch=None,
+            treeStableTimer=None, builderNames=['dummy', 'dummy2'])]
 
 c['builders'] = c['builders'] + [
     BuilderConfig(name='dummy', slavename='bot1', factory=f3),
@@ -646,7 +651,9 @@ from buildbot.steps.dummy import Dummy
 from buildbot.broken_test.runutils import SetTestFlagStep
 from buildbot.process.properties import WithProperties
 c['schedulers'] = [
-    Scheduler('triggerer', None, None, ['triggerer'], properties={'dyn':'dyn'}),
+    Scheduler(name='triggerer', branch=None,
+        treeStableTimer=None, builderNames=['triggerer'],
+        properties={'dyn':'dyn'}),
     Triggerable('triggeree', ['triggeree'])
 ]
 triggerer = factory.BuildFactory()
@@ -775,12 +782,13 @@ class PropertyPropagation(MasterMixin, PollMixin, TestFlagMixin, unittest.TestCa
         return d
 
     config_schprop = config_base + """
-from buildbot.scheduler import Scheduler
+from buildbot.schedulers import basic
 from buildbot.steps.dummy import Dummy
 from buildbot.broken_test.runutils import SetTestFlagStep
 from buildbot.process.properties import WithProperties
 c['schedulers'] = [
-    Scheduler('mysched', None, None, ['flagcolor'], properties={'color':'red'}),
+    basic.Scheduler(name='mysched', branch=None, treeStableTimer=None,
+        builderNames=['flagcolor'], properties={'color':'red'}),
 ]
 factory = factory.BuildFactory([
     s(SetTestFlagStep, flagname='testresult',
@@ -801,12 +809,13 @@ c['builders'] = [{'name': 'flagcolor', 'slavename': 'bot1',
         return d
 
     config_changeprop = config_base + """
-from buildbot.scheduler import Scheduler
+from buildbot.schedulers import basic
 from buildbot.steps.dummy import Dummy
 from buildbot.broken_test.runutils import SetTestFlagStep
 from buildbot.process.properties import WithProperties
 c['schedulers'] = [
-    Scheduler('mysched', None, 0.1, ['flagcolor'], properties={'color':'red'}),
+    basic.Scheduler(name='mysched', branch=None, 
+        treeStableTimer=0.1, builderNames=['flagcolor'], properties={'color':'red'}),
 ]
 factory = factory.BuildFactory([
     s(SetTestFlagStep, flagname='testresult',
@@ -827,12 +836,13 @@ c['builders'] = [{'name': 'flagcolor', 'slavename': 'bot1',
         return d
 
     config_slaveprop = config_base + """
-from buildbot.scheduler import Scheduler
+from buildbot.schedulers import basic
 from buildbot.steps.dummy import Dummy
 from buildbot.broken_test.runutils import SetTestFlagStep
 from buildbot.process.properties import WithProperties
 c['schedulers'] = [
-    Scheduler('mysched', None, 0.1, ['flagcolor'])
+    basic.Scheduler(name='mysched', branch=None, 
+        treeStableTimer=0.1, builderNames=['flagcolor'])
 ]
 c['slaves'] = [BuildSlave('bot1', 'sekrit', properties={'color':'orange'})]
 factory = factory.BuildFactory([
@@ -852,15 +862,17 @@ c['builders'] = [{'name': 'flagcolor', 'slavename': 'bot1',
         return d
 
     config_trigger = config_base + """
-from buildbot.scheduler import Triggerable, Scheduler
+from buildbot.schedulers import triggerable, basic
 from buildbot.steps.trigger import Trigger
 from buildbot.steps.dummy import Dummy
 from buildbot.broken_test.runutils import SetTestFlagStep
 from buildbot.process.properties import WithProperties
 c['schedulers'] = [
-    Scheduler('triggerer', None, 0.1, ['triggerer'],
+    basic.Scheduler(name='triggerer', branch=None,
+        treeStableTimer=0.1, builderNames=['triggerer'],
         properties={'color':'mauve', 'pls_trigger':'triggeree'}),
-    Triggerable('triggeree', ['triggeree'], properties={'color':'invisible'})
+    triggerable.Triggerable(name='triggeree',
+            builderNames=['triggeree'], properties={'color':'invisible'})
 ]
 triggerer = factory.BuildFactory([
     s(SetTestFlagStep, flagname='testresult', value='wrongone'),
@@ -888,8 +900,9 @@ c['builders'] = [{'name': 'triggerer', 'slavename': 'bot1',
 
 
 config_test_flag = config_base + """
-from buildbot.scheduler import Scheduler
-c['schedulers'] = [Scheduler('quick', None, None, ['dummy'])]
+from buildbot.schedulers import basic
+c['schedulers'] = [basic.Scheduler(name='quick', branch=None,
+            treeStableTimer=None, builderNames=['dummy'])]
 
 from buildbot.broken_test.runutils import SetTestFlagStep
 f3 = factory.BuildFactory([
@@ -933,10 +946,13 @@ class TestFlag(MasterMixin, TestFlagMixin, unittest.TestCase):
 # such that buildSetSubmitted failed.
 
 config_test_builder = config_base + """
-from buildbot.scheduler import Scheduler
-c['schedulers'] = [Scheduler('quick', 'dummy', None, ['dummy']),
-                   Scheduler('quick2', 'dummy2', None, ['dummy2']),
-                   Scheduler('quick3', 'dummy3', None, ['dummy3'])]
+from buildbot.schedulers import basic
+c['schedulers'] = [basic.Scheduler(name='quick', branch='dummy',
+                        treeStableTimer=None, builderNames=['dummy']),
+                   basic.Scheduler(name='quick2', branch='dummy2',
+                        treeStableTimer=None, builderNames=['dummy2']),
+                   basic.Scheduler(name='quick3', branch='dummy3',
+                        treeStableTimer=None, builderNames=['dummy3'])]
 
 from buildbot.steps.shell import ShellCommand
 f3 = factory.BuildFactory([
@@ -1024,7 +1040,6 @@ config_priority = """
 from buildbot.process import factory
 from buildbot.steps import dummy
 from buildbot.buildslave import BuildSlave
-from buildbot.scheduler import Scheduler
 
 f1 = factory.BuildFactory([
     dummy.Dummy(timeout=1),

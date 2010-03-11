@@ -147,3 +147,10 @@ except AttributeError:
     sys.modules.pop('json') # get rid of the bad json module
     import simplejson as json
 
+# changes and schedulers consider None to be a legitimate name for a branch,
+# which makes default function keyword arguments hard to handle.  This value
+# is always false.
+class NotABranch:
+    def __nonzero__(self):
+        return False
+NotABranch = NotABranch()

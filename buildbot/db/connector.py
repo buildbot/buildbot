@@ -301,14 +301,16 @@ class DBConnector(util.ComparableMixin):
                         " (changeid, author,"
                         "  comments, is_dir,"
                         "  branch, revision, revlink,"
-                        "  when_timestamp, category)"
-                        " VALUES (?,?, ?,?, ?,?,?, ?,?)")
+                        "  when_timestamp, category,"
+                        "  repository, project)"
+                        " VALUES (?,?, ?,?, ?,?,?, ?,?, ?,?)")
         # TODO: map None to.. empty string?
 
         values = (change.number, change.who,
                   change.comments, change.isdir,
                   change.branch, change.revision, change.revlink,
-                  change.when, change.category)
+                  change.when, change.category, change.repository,
+                  change.project)
         t.execute(q, values)
 
         for link in change.links:
@@ -369,7 +371,8 @@ class DBConnector(util.ComparableMixin):
     def _txn_getChangeNumberedNow(self, t, changeid):
         q = self.quoteq("SELECT author, comments,"
                         " is_dir, branch, revision, revlink,"
-                        " when_timestamp, category"
+                        " when_timestamp, category,"
+                        " repository, project"
                         " FROM changes WHERE changeid = ?")
         t.execute(q, (changeid,))
         rows = t.fetchall()
@@ -377,7 +380,7 @@ class DBConnector(util.ComparableMixin):
             return None
         (who, comments,
          isdir, branch, revision, revlink,
-         when, category) = rows[0]
+         when, category, repository, project) = rows[0]
         branch = str_or_none(branch)
         revision = str_or_none(revision)
         q = self.quoteq("SELECT link FROM change_links WHERE changeid=?")
@@ -399,7 +402,7 @@ class DBConnector(util.ComparableMixin):
         c = Change(who=who, files=files, comments=comments, isdir=isdir,
                    links=links, revision=revision, when=when,
                    branch=branch, category=category, revlink=revlink,
-                   properties=properties)
+                   properties=properties, repository=repository, project=project)
         c.number = changeid
         return c
 
@@ -412,7 +415,8 @@ class DBConnector(util.ComparableMixin):
             return defer.succeed(c)
         d1 = self.runQuery(self.quoteq("SELECT author, comments,"
                                        " is_dir, branch, revision, revlink,"
-                                       " when_timestamp, category"
+                                       " when_timestamp, category,"
+                                       " repository, project"
                                        " FROM changes WHERE changeid = ?"),
                            (changeid,))
         d2 = self.runQuery(self.quoteq("SELECT link FROM change_links"
@@ -435,7 +439,7 @@ class DBConnector(util.ComparableMixin):
             return None
         (who, comments,
          isdir, branch, revision, revlink,
-         when, category) = rows[0]
+         when, category, repository, project) = rows[0]
         branch = str_or_none(branch)
         revision = str_or_none(revision)
         links = [row[0] for row in link_rows]
@@ -447,7 +451,7 @@ class DBConnector(util.ComparableMixin):
         c = Change(who=who, files=files, comments=comments, isdir=isdir,
                    links=links, revision=revision, when=when,
                    branch=branch, category=category, revlink=revlink,
-                   properties=properties)
+                   properties=properties, repository=repository, project=project)
         c.number = changeid
         self._change_cache.add(changeid, c)
         return c
@@ -492,13 +496,13 @@ class DBConnector(util.ComparableMixin):
 
     def _txn_getSourceStampNumbered(self, t, ssid):
         assert isinstance(ssid, (int, long))
-        t.execute(self.quoteq("SELECT branch,revision,patchid"
+        t.execute(self.quoteq("SELECT branch,revision,patchid,project,repository"
                               " FROM sourcestamps WHERE id=?"),
                   (ssid,))
         r = t.fetchall()
         if not r:
             return None
-        (branch_u, revision_u, patchid) = r[0]
+        (branch_u, revision_u, patchid, project, repository) = r[0]
         branch = str_or_none(branch_u)
         revision = str_or_none(revision_u)
 
@@ -525,7 +529,7 @@ class DBConnector(util.ComparableMixin):
         if r:
             changes = [self.getChangeNumberedNow(changeid, t)
                        for (changeid,) in r]
-        ss = SourceStamp(branch, revision, patch, changes)
+        ss = SourceStamp(branch, revision, patch, changes, project=project, repository=repository)
         ss.ssid = ssid
         return ss
 
@@ -619,9 +623,9 @@ class DBConnector(util.ComparableMixin):
         t.execute("SELECT id FROM sourcestamps ORDER BY id DESC LIMIT 1")
         ss.ssid = _one_or_else(t.fetchall(), 0) + 1
         t.execute(self.quoteq("INSERT INTO sourcestamps"
-                              " (id, branch, revision, patchid)"
-                              " VALUES (?,?,?,?)"),
-                  (ss.ssid, ss.branch, ss.revision, patchid))
+                              " (id, branch, revision, patchid, project, repository)"
+                              " VALUES (?,?,?,?,?,?)"),
+                  (ss.ssid, ss.branch, ss.revision, patchid, ss.project, ss.repository))
         q2 = self.quoteq("INSERT INTO sourcestamp_changes"
                          " (sourcestampid, changeid) VALUES (?,?)")
         for c in ss.changes:

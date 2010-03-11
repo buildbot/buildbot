@@ -36,18 +36,18 @@
 # ***** END LICENSE BLOCK *****
 
 from twisted.internet import reactor, defer
-from buildbot.schedulers.basic import _Base
+from buildbot.schedulers import base
 from buildbot.process.properties import Properties
 
-class Triggerable(_Base):
+class Triggerable(base.BaseScheduler):
     """This scheduler doesn't do anything until it is triggered by a Trigger
     step in a factory. In general, that step will not complete until all of
     the builds that I fire have finished.
     """
 
     compare_attrs = ('name', 'builderNames', 'properties')
-    def __init__(self, name, builderNames, properties={}, categories=None):
-        _Base.__init__(self, name, builderNames, properties, categories)
+    def __init__(self, name, builderNames, properties={}):
+        base.BaseScheduler.__init__(self, name, builderNames, properties)
         self._waiters = {}
         self.reason = "Triggerable(%s)" % name
 

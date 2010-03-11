@@ -300,9 +300,11 @@ class DebugPerspective(NewCredPerspective):
         bc.ping()
 
     def perspective_fakeChange(self, file, revision=None, who="fakeUser",
-                               branch=None):
+                               branch=None, repository="", 
+                               project=""):
         change = Change(who, [file], "some fake comments\n",
-                        branch=branch, revision=revision)
+                        branch=branch, revision=revision,
+                        repository=repository, project=project)
         c = interfaces.IControl(self.master)
         c.addChange(change)
 
@@ -481,6 +483,7 @@ class BuildMaster(service.MultiService):
             log.err()
             log.msg("The new config file is unusable, so I'll ignore it.")
             log.msg("I will keep using the previous config file instead.")
+            return # sorry unit tests
         f.close()
         return d # for unit tests
 

@@ -33,6 +33,12 @@
 #
 #   fork = True|False                    # if mercurial should fork before 
 #                                        # notifying the master
+#
+#   strip = 3                            # number of path to strip for local 
+#                                        # repo path to form 'repository'
+#
+#   category = None                      # category property
+#   project = ''                         # project this repository belong to
 
 import os
 
@@ -56,6 +62,10 @@ def hook(ui, repo, hooktype, node=None, source=None, **kwargs):
         branchtype = ui.config('hgbuildbot', 'branchtype')
         branch = ui.config('hgbuildbot', 'branch')
         fork = ui.configbool('hgbuildbot', 'fork', False)
+        stripcount = int(ui.config('notify','strip') or # notify also has this setting
+                    ui.config('hgbuildbot','strip',3)))
+        category = ui.config('hgbuildbot', 'category', None)
+        project = ui.config('hgbuildbot', 'project', '')
     else:
         ui.write("* You must add a [hgbuildbot] section to .hg/hgrc in "
                  "order to use buildbot hook\n")
@@ -94,7 +104,8 @@ def hook(ui, repo, hooktype, node=None, source=None, **kwargs):
         if not fork:
             ui.status("rev %s sent\n" % c['revision'])
         return s.send(c['branch'], c['revision'], c['comments'],
-                      c['files'], c['username'])
+                      c['files'], c['username'], category=category,
+                      repository=repository, project=project)
 
     try:    # first try Mercurial 1.1+ api
         start = repo[node].rev()
@@ -102,6 +113,8 @@ def hook(ui, repo, hooktype, node=None, source=None, **kwargs):
     except TypeError:   # else fall back to old api
         start = repo.changelog.rev(bin(node))
         end = repo.changelog.count()
+
+    repository = strip(repo.root, stripcount)
 
     for rev in xrange(start, end):
         # send changeset
@@ -132,3 +145,17 @@ def hook(ui, repo, hooktype, node=None, source=None, **kwargs):
     else:
         return
 
+# taken from the mercurial notify extension
+def strip(path, count):
+    '''Strip the count first slash of the path'''
+
+    # First normalize it
+    path = '/'.join(path.split(os.sep))
+    # and strip it part after part
+    while count > 0:
+        c = path.find('/')
+        if c == -1:
+            break
+        path = path[c + 1:]
+        count -= 1
+    return path

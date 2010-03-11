@@ -137,6 +137,19 @@ that @code{ChangeSource}. Files which are outside this sub-tree are
 ignored by the changesource: it does not generate Changes for those
 files.
 
+@heading Repository and Project
+
+ChangeSources will, in general, automatically provide the proper 'repository'
+attribute for any changes they produce.  For systems which operate on URL-like
+specifiers, this is a repository URL. Other ChangeSources adapt the concept as
+necessary.
+
+Many ChangeSources allow you to specify a project, as well.  This attribute is
+useful when building from several distinct codebases in the same buildmaster:
+the project string can serve to differentiate the different codebases.
+Schedulers can filter on project, so you can configure different builders to
+run for each project.
+
 @node CVSToys - PBService
 @subsection CVSToys - PBService
 
@@ -663,6 +676,11 @@ life, it is considered as safe to disable the signal restriction in
 the Apache setting like that @code{WSGIRestrictSignal Off}. Refer to the
 documentation of your web server for other way to do the same.
 
+The @code{category} parameter sets the category for any changes generated from
+the hook.  Likewise, the @code{project} parameter sets the project.  Changes'
+@code{repository} attributes are formed from the Mercurial repo path by
+stripping @code{strip} slashes.
+
 @node Bzr Hook
 @subsubsection Bzr Hook
 
@@ -797,7 +815,6 @@ changed since the last query.
 
 Please take a look at the BonsaiPoller docstring for details about the
 arguments it accepts.
-
 
 @node SVNPoller
 @subsection SVNPoller

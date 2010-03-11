@@ -83,8 +83,8 @@ class Scheduling(MasterMixin, StallMixin, PollMixin, unittest.TestCase):
     def testOffBranch(self):
         self.basedir = 'scheduler/Scheduling/OffBranch'
         self.create_master()
-        s = scheduler.Scheduler("b1", "branch1", 2, ["a","b"],
-                                fileIsImportant=self.isImportant)
+        s = scheduler.Scheduler("b1", branch="branch1", treeStableTimer=2,
+                builderNames=["a","b"], fileIsImportant=self.isImportant)
         d = self.setSchedulers(s)
 
         def _addChange(ign, c):
@@ -105,8 +105,8 @@ class Scheduling(MasterMixin, StallMixin, PollMixin, unittest.TestCase):
     def testImportantChanges(self):
         self.basedir = 'scheduler/Scheduling/ImportantChanges'
         self.create_master()
-        s = scheduler.Scheduler("b1", "branch1", 2, ["a","b"],
-                                fileIsImportant=self.isImportant)
+        s = scheduler.Scheduler("b1", branch="branch1", treeStableTimer=2,
+                builderNames=["a","b"], fileIsImportant=self.isImportant)
 
         # Hijack run to prevent changes from being processed
         oldrun = s.run
@@ -312,6 +312,7 @@ class Scheduling(MasterMixin, StallMixin, PollMixin, unittest.TestCase):
         def _then(ign):
             job1 = tryclient.createJobfile("buildsetID",
                                            "branch1", "123", 1, "diff",
+                                           "repository", "project",
                                            ["a", "b"])
             self.pushJob(jobdir_abs, job1)
         d.addCallback(_then)
@@ -384,11 +385,12 @@ class Scheduling(MasterMixin, StallMixin, PollMixin, unittest.TestCase):
         # the DB and fires a build. We use a subclass which leaves them in
         # the DB, so we can look at them later.
 
-        s1 = NotScheduler("b1", "branch1", 2, ["a","b"],
-                          categories=["categoryA", "both"])
-        s2 = NotScheduler("b2", "branch1", 2, ["a","b"],
-                          categories=["categoryB", "both"])
-        s3 = NotScheduler("b3", "branch1", 2, ["a","b"])
+        s1 = NotScheduler("b1", branch="branch1", treeStableTimer=2,
+                builderNames=["a","b"], categories=["categoryA", "both"])
+        s2 = NotScheduler("b2", branch="branch1", treeStableTimer=2,
+                builderNames=["a","b"], categories=["categoryB", "both"])
+        s3 = NotScheduler("b3", branch="branch1", treeStableTimer=2,
+                builderNames=["a","b"])
         d = self.setSchedulers(s1, s2, s3)
 
         c0 = Change("carol", ["important"], "branch1", branch="branch1",

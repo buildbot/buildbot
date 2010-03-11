@@ -157,6 +157,8 @@ class Build:
         props.setProperty("buildnumber", self.build_status.number, "Build")
         props.setProperty("branch", self.source.branch, "Build")
         props.setProperty("revision", self.source.revision, "Build")
+        props.setProperty("repository", self.source.repository, "Build")
+        props.setProperty("project", self.source.project, "Build")
 
     def setupSlaveBuilder(self, slavebuilder):
         self.slavebuilder = slavebuilder

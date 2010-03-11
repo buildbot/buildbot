@@ -14,7 +14,7 @@ from buildbot.status import builder
 class SourceStampExtractor:
 
     def __init__(self, treetop, branch):
-        self.treetop = treetop
+        self.treetop = treetop # also is repository
         self.branch = branch
         self.exe = which(self.vcexe)[0]
 
@@ -42,8 +42,9 @@ class SourceStampExtractor:
     def readPatch(self, res, patchlevel):
         self.patch = (patchlevel, res)
     def done(self, res):
-        # TODO: figure out the branch too
-        ss = SourceStamp(self.branch, self.baserev, self.patch)
+        # TODO: figure out the branch and project too
+        ss = SourceStamp(self.branch, self.baserev, self.patch, 
+                         repository=self.treetop)
         return ss
 
 class CVSExtractor(SourceStampExtractor):
@@ -331,14 +332,17 @@ def getSourceStamp(vctype, treetop, branch=None):
 def ns(s):
     return "%d:%s," % (len(s), s)
 
-def createJobfile(bsid, branch, baserev, patchlevel, diff, builderNames):
+def createJobfile(bsid, branch, baserev, patchlevel, diff, repository, 
+                  project, builderNames):
     job = ""
-    job += ns("1")
+    job += ns("2")
     job += ns(bsid)
     job += ns(branch)
     job += ns(str(baserev))
     job += ns("%d" % patchlevel)
     job += ns(diff)
+    job += ns(repository)
+    job += ns(project)
     for bn in builderNames:
         job += ns(bn)
     return job
@@ -424,6 +428,7 @@ class Try(pb.Referenceable):
         self.connect = self.getopt('connect')
         assert self.connect, "you must specify a connect style: ssh or pb"
         self.builderNames = self.getopt('builders')
+        self.project = self.getopt('project', '')
 
     def getopt(self, config_name, default=None):
         value = self.config.get(config_name)
@@ -478,14 +483,15 @@ class Try(pb.Referenceable):
                 revspec = ""
             self.jobfile = createJobfile(self.bsid,
                                          ss.branch or "", revspec,
-                                         patchlevel, diff,
-                                         self.builderNames)
+                                         patchlevel, diff, ss.repository,
+                                         self.project, self.builderNames)
 
     def fakeDeliverJob(self):
         # Display the job to be delivered, but don't perform delivery.
         ss = self.sourcestamp
-        print ("Job:\n\tBranch: %s\n\tRevision: %s\n\tBuilders: %s\n%s"
-               % (ss.branch,
+        print ("Job:\n\tRepository: %s\n\tProject: %s\n\tBranch: %s\n\t"
+               "Revision: %s\n\tBuilders: %s\n%s"
+               % (ss.repository, self.project, ss.branch,
                   ss.revision,
                   self.builderNames,
                   ss.patch[1]))
@@ -530,6 +536,8 @@ class Try(pb.Referenceable):
                               ss.branch,
                               ss.revision,
                               ss.patch,
+                              ss.repository,
+                              self.project,
                               self.builderNames,
                               self.config.get('properties', {}))
         d.addCallback(self._deliverJob_pb2)

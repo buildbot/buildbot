@@ -106,6 +106,12 @@ class ISourceStamp(Interface):
                    in the given changes
     @type changes: tuple of L{buildbot.changes.changes.Change} instances,
                    all of which are on the same branch
+
+    @cvar project: project this source code represents
+    @type project: string
+
+    @cvar repository: repository from which source was drawn
+    @type repository: string
     """
 
     def canBeMergedWith(self, other):

@@ -14,14 +14,15 @@ base_config = """
 from buildbot.changes.pb import PBChangeSource
 from buildbot.status import html
 from buildbot.buildslave import BuildSlave
-from buildbot.scheduler import Scheduler
+from buildbot.schedulers import basic
 from buildbot.process.factory import BuildFactory
 from buildbot.config import BuilderConfig
 
 BuildmasterConfig = c = {
     'change_source': PBChangeSource(),
     'slaves': [BuildSlave('bot1name', 'bot1passwd')],
-    'schedulers': [Scheduler('name', None, 60, ['builder1'])],
+    'schedulers': [basic.Scheduler(name='name', branch=None,
+                    treeStableTimer=60, builderNames=['builder1'])],
     'slavePortnum': 0,
     }
 c['builders'] = [
