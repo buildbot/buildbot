@@ -37,8 +37,8 @@ class ChangePerspective(NewCredPerspective):
                                     category=changedict.get('category'),
                                     when=changedict.get('when'),
                                     properties=changedict.get('properties', {}),
-                                    repository=changedict.get('repository', ''),
-                                    project=changedict.get('project', ''),
+                                    repository=changedict.get('repository', '') or '',
+                                    project=changedict.get('project', '') or '',
                                     )
             self.changemaster.addChange(change)
 
