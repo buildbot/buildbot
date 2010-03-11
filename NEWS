@@ -46,9 +46,7 @@ configuration details.
 ** Cleanup, Bug Fixes, and Test Fixes
 
 Thanks to help from a number of devoted contributors, this version of Buildbot
-has seen a lot of house-cleaning, and even passes all of its own unit tests!
-
-TODO - make this true
+has seen a lot of house-cleaning, and even passes all of its own unit tests!  
 
 ** Removals
 
