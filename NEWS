@@ -35,7 +35,9 @@ to JavaScript status displays.  See /json/help for details.
 
 ** Jinja
 
-TODO - write this :)
+All web status is now generated using the Jinja templating engine, which gives
+buildbot a much more attractive and maintainable appearance.  Buildbot's output
+is also now XHTML-compliant!
 
 ** Authorization Framework
 
