@@ -647,6 +647,17 @@ mn = MailNotifier(fromaddr="buildbot@@example.org",
                   extraRecipients=['listaddr@@example.org'])
 @end example
 
+If your SMTP host only allows you to send emails if you authenticate
+over TLS. This can also be done:
+
+@example
+mn = MailNotifier(fromaddr="myuser@@gmail.com",
+                  sendToInterestedUsers=False,
+                  extraRecipients=["listaddr@@example.org"],
+                  useTls=True, relayhost="smtp.gmail.com", smtpPort=587,
+                  smtpUser="myuser@@gmail.com", smtpPassword="mypassword")
+@end example
+
 In some cases it is desirable to have different information then what is
 provided in a standard MailNotifier message. For this purpose MailNotifier
 provides the argument @code{messageFormatter} (a function) which allows for the
@@ -812,6 +823,24 @@ Defaults to True.
 @item relayhost
 (string). The host to which the outbound SMTP connection should be
 made. Defaults to 'localhost'
+
+@item smtpPort
+(int). The port that will be used on outbound SMTP
+connections. Defaults to 25.
+
+@item useTls
+(boolean). When this argument is @code{True} (default is @code{False})
+@code{MailNotifier} sends emails using TLS and authenticates with the
+@code{ralayhost}. When using TLS the arguments @code{smtUser} and
+@code{smtpPassword} must also be specified.
+
+@item smtpUser
+(string). The user name to use when authenticating with the
+@code{relayhost}. Only used when @code{useTls} is @code{True}.
+
+@item smtpPassword
+(string). The password that will be used when authenticating with the
+@code{relayhost}. Only used when @code{useTls} is @code{True}.
 
 @item lookup
 (implementor of @code{IEmailLookup}). Object which provides
