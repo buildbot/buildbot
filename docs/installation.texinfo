@@ -152,7 +152,7 @@ create-master} command to create the directory and populate it with
 startup files:
 
 @example
-buildbot create-master @var{basedir}
+buildbot create-master -r @var{basedir}
 @end example
 
 You will need to create a configuration file (@pxref{Configuration})

@@ -32,7 +32,6 @@ class GitHubBuildBot(resource.Resource):
     Hook.
     """
     isLeaf = True
-    github = None
     master = None
     port = None
     
@@ -46,14 +45,18 @@ class GitHubBuildBot(resource.Resource):
         """
         try:
             payload = json.loads(request.args['payload'][0])
+            user = payload['repository']['owner']['name']
+            repo = payload['repository']['name']
+            repo_url = payload['repository']['url']
+            self.private = payload['repository']['private']
             logging.debug("Payload: " + str(payload))
-            self.process_change(payload)
+            self.process_change(payload, user, repo, repo_url)
         except Exception:
             logging.error("Encountered an exception:")
             for msg in traceback.format_exception(*sys.exc_info()):
                 logging.error(msg.strip())
 
-    def process_change(self, payload, user, repo, github_url):
+    def process_change(self, payload, user, repo, repo_url):
         """
         Consumes the JSON as a python object and actually starts the build.
         
@@ -90,8 +93,7 @@ class GitHubBuildBot(resource.Resource):
                             + " <" + commit['author']['email'] + ">",
                      'files': files,
                      'links': [commit['url']],
-                     'properties': {'repository':
-                                    self.repo_url(user, repo, github_url)},
+                     'properties': {'repository': repo_url},
                 }
                 changes.append(change)
         

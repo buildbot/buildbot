@@ -1,4 +1,3 @@
-
 # this is just a convenience for developers, and to automate the release
 # process a little bit. This Makefile is not included in the source tarball.
 
@@ -35,8 +34,6 @@ coverage-output:
 	cp .coverage coverage-html/coverage.data
 	@echo "now point your browser at coverage-html/index.html"
 
-
-#debuild -uc -us
 
 deb-snapshot:
 	debchange --newversion `PYTHONPATH=. python -c "import buildbot; print buildbot.version"`.`date +%Y.%m.%d.%H.%M.%S` \
