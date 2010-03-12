@@ -137,7 +137,7 @@ class MailNotifier(base.StatusReceiverMultiService):
                  sendToInterestedUsers=True, customMesg=None,
                  messageFormatter=defaultMessage, extraHeaders=None,
                  addPatch=True, useTls=False, 
-                 smtp_user=None, smtp_password=None, smtp_port=25):
+                 smtpUser=None, smtpPassword=None, smtpPort=25):
         """
         @type  fromaddr: string
         @param fromaddr: the email address to be used in the 'From' header.
@@ -232,17 +232,17 @@ class MailNotifier(base.StatusReceiverMultiService):
         @param useTls: Send emails using TLS and authenticate with the 
                        smtp host. Defaults to False.
 
-        @type smtp_user: string
-        @param smtp_user: The user that will attempt to authenticate with the
-                          relayhost when useTls is True.
+        @type smtpUser: string
+        @param smtpUser: The user that will attempt to authenticate with the
+                         relayhost when useTls is True.
 
-        @type smtp_password: string
-        @param smtp_password: The password that smtp_user will use when
-                              authenticating with relayhost.
+        @type smtpPassword: string
+        @param smtpPassword: The password that smtpUser will use when
+                             authenticating with relayhost.
 
-        @type smtp_port: int
-        @param smtp_port: The port that will be used when connecting to the
-                          relayhost. Defaults to 25.
+        @type smtpPort: int
+        @param smtpPort: The port that will be used when connecting to the
+                         relayhost. Defaults to 25.
         """
 
         base.StatusReceiverMultiService.__init__(self)
@@ -272,9 +272,9 @@ class MailNotifier(base.StatusReceiverMultiService):
         self.extraHeaders = extraHeaders
         self.addPatch = addPatch
         self.useTls = useTls
-        self.smtp_user = smtp_user
-        self.smtp_password = smtp_password
-        self.smtp_port = smtp_port
+        self.smtpUser = smtpUser
+        self.smtpPassword = smtpPassword
+        self.smtpPort = smtpPort
         self.watched = []
         self.master_status = None
 
@@ -524,11 +524,11 @@ class MailNotifier(base.StatusReceiverMultiService):
 
         
         sender_factory = ESMTPSenderFactory(
-            self.smtp_user, self.smtp_password,
+            self.smtpUser, self.smtpPassword,
             self.fromaddr, recipients, StringIO(s),
             result, contextFactory=client_factory)
 
-        reactor.connectTCP(self.relayhost, self.smtp_port, sender_factory)
+        reactor.connectTCP(self.relayhost, self.smtpPort, sender_factory)
         
         return result
 
@@ -539,4 +539,4 @@ class MailNotifier(base.StatusReceiverMultiService):
             return self.tls_sendmail(s, recipients)
         else:
             return sendmail(self.relayhost, self.fromaddr, recipients, s,
-                            port=self.smtp_port)
+                            port=self.smtpPort)
