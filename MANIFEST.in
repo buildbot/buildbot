@@ -8,6 +8,7 @@ include docs/images/icon.blend docs/images/Makefile
 include docs/epyrun docs/gen-reference docs/Makefile
 include docs/version.py
 
+include buildbot/db/schema/tables.sql
 include buildbot/scripts/sample.cfg
 include buildbot/status/web/files/*
 include buildbot/status/web/templates/*.html buildbot/status/web/templates/*.xml
