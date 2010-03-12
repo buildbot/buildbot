@@ -26,6 +26,8 @@ from buildbot.status.builder import FAILURE, SUCCESS, Results
 
 VALID_EMAIL = re.compile("[a-zA-Z0-9\.\_\%\-\+]+@[a-zA-Z0-9\.\_\%\-]+.[a-zA-Z]{2,6}")
 
+ENCODING = 'utf8'
+
 class Domain(util.ComparableMixin):
     implements(interfaces.IEmailLookup)
     compare_attrs = ["domain"]
@@ -403,10 +405,10 @@ class MailNotifier(base.StatusReceiverMultiService):
 
     def createEmail(self, msgdict, builderName, projectName, results, 
                     patch=None, logs=None):
-        text = msgdict['body']
+        text = msgdict['body'].encode(ENCODING)
         type = msgdict['type']
         if 'subject' in msgdict:
-            subject = msgdict['subject']
+            subject = msgdict['subject'].encode(ENCODING)
         else:
             subject = self.subject % { 'result': Results[results],
                                        'projectName': projectName,
@@ -418,10 +420,10 @@ class MailNotifier(base.StatusReceiverMultiService):
 
         if patch or logs:
             m = MIMEMultipart()
-            m.attach(MIMEText(text, type))
+            m.attach(MIMEText(text, type, ENCODING))
         else:
             m = Message()
-            m.set_payload(text)
+            m.set_payload(text, ENCODING)
             m.set_type("text/%s" % type)
 
         m['Date'] = formatdate(localtime=True)
@@ -430,7 +432,7 @@ class MailNotifier(base.StatusReceiverMultiService):
         # m['To'] is added later
 
         if patch:
-            a = MIMEText(patch[1])
+            a = MIMEText(patch[1].encode(ENCODING), _charset=ENCODING)
             a.add_header('Content-Disposition', "attachment",
                          filename="source patch")
             m.attach(a)
@@ -439,7 +441,8 @@ class MailNotifier(base.StatusReceiverMultiService):
                 name = "%s.%s" % (log.getStep().getName(),
                                   log.getName())
                 if self._shouldAttachLog(log.getName()) or self._shouldAttachLog(name):
-                    a = MIMEText(log.getText())
+                    a = MIMEText(log.getText().encode(ENCODING), 
+                                 _charset=ENCODING)
                     a.add_header('Content-Disposition', "attachment",
                                  filename=name)
                     m.attach(a)
