@@ -170,7 +170,7 @@ class StatusResourceBuild(HtmlResource):
         name = req.args.get("username", ["<unknown>"])[0]
         comments = req.args.get("comments", ["<no reason specified>"])[0]
         reason = ("The web-page 'rebuild' button was pressed by "
-                  "'%s': %s\n" % (html.escape(name), html.escape(comments)))
+                  "'%s': %s\n" % (name, comments))
         extraProperties = getAndCheckProperties(req)
         if not bc or not b.isFinished() or extraProperties is None:
             log.msg("could not rebuild: bc=%s, isFinished=%s"
