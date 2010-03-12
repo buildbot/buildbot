@@ -3,7 +3,7 @@ import re
 from twisted.trial import unittest
 
 from buildbot.schedulers import filter
-from buildbot.test.state import State
+from buildbot.test.fake.state import State
 
 class Change(State):
     project = ''
