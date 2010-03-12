@@ -466,6 +466,8 @@ class MasterOptions(MakerBase):
     optFlags = [
         ["force", "f",
          "Re-use an existing directory (will not overwrite master.cfg file)"],
+        ["relocatable", "r",
+         "Create a relocatable buildbot.tac"],
         ]
     optParameters = [
         ["config", "c", "master.cfg", "name of the buildmaster config file"],
@@ -480,8 +482,11 @@ class MasterOptions(MakerBase):
         return "Usage:    buildbot create-master [options] [<basedir>]"
 
     longdesc = """
-    This command creates a buildmaster working directory and buildbot.tac
-    file. The master will live in <dir> and create various files there.
+    This command creates a buildmaster working directory and buildbot.tac file.
+    The master will live in <dir> and create various files there.  If
+    --relocatable is given, then the resulting buildbot.tac file will be
+    written such that its containing directory is assumed to be the basedir.
+    This is generally a good idea.
 
     At runtime, the master will read a configuration file (named
     'master.cfg' by default) in its basedir. This file should contain python
@@ -515,6 +520,11 @@ basedir = r'%(basedir)s'
 rotateLength = %(log-size)s
 maxRotatedFiles = %(log-count)s
 
+# if this is a relocatable tac file, get the directory containing the TAC
+if basedir == '.':
+    import os.path
+    basedir = os.path.abspath(os.path.dirname(__file__))
+
 application = service.Application('buildmaster')
 try:
   from twisted.python.logfile import LogFile
@@ -537,6 +547,8 @@ def createMaster(config):
     m = Maker(config)
     m.mkdir()
     m.chdir()
+    if config['relocatable']:
+        config['basedir'] = '.'
     contents = masterTAC % config
     m.makeTAC(contents)
     m.sampleconfig(util.sibpath(__file__, "sample.cfg"))
@@ -553,6 +565,8 @@ def createMaster(config):
 class SlaveOptions(MakerBase):
     optFlags = [
         ["force", "f", "Re-use an existing directory"],
+        ["relocatable", "r",
+         "Create a relocatable buildbot.tac"],
         ]
     optParameters = [
 #        ["name", "n", None, "Name for this build slave"],
@@ -624,6 +638,11 @@ basedir = r'%(basedir)s'
 rotateLength = %(log-size)s
 maxRotatedFiles = %(log-count)s
 
+# if this is a relocatable tac file, get the directory containing the TAC
+if basedir == '.':
+    import os.path
+    basedir = os.path.abspath(os.path.dirname(__file__))
+
 application = service.Application('buildslave')
 try:
   from twisted.python.logfile import LogFile
@@ -654,6 +673,8 @@ def createSlave(config):
     m = Maker(config)
     m.mkdir()
     m.chdir()
+    if config['relocatable']:
+        config['basedir'] = '.'
     try:
         master = config['master']
         host, port = re.search(r'(.+):(\d+)', master).groups()

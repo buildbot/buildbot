@@ -22,8 +22,12 @@ buildmaster administrators:
 This creates a new directory and populates it with files that allow it
 to be used as a buildmaster's base directory.
 
+You will usually want to use the @code{-r} option to create a relocatable
+@code{buildbot.tac}.  This allows you to move the master directory without
+editing this file.
+
 @example
-buildbot create-master BASEDIR
+buildbot create-master -r BASEDIR
 @end example
 
 @heading create-slave
@@ -33,8 +37,10 @@ be used as a buildslave's base directory. You must provide several
 arguments, which are used to create the initial @file{buildbot.tac}
 file.
 
+The @code{-r} option is advisable here, just like for @code{create-master}.
+
 @example
-buildbot create-slave @var{BASEDIR} @var{MASTERHOST}:@var{PORT} @var{SLAVENAME} @var{PASSWORD}
+buildbot create-slave -r @var{BASEDIR} @var{MASTERHOST}:@var{PORT} @var{SLAVENAME} @var{PASSWORD}
 @end example
 
 @heading start
