@@ -38,6 +38,7 @@ def defaultMessage(mode, name, build, results, master_status):
     """Generate a buildbot mail message and return a tuple of message text
         and type."""
     result = Results[results]
+    ss = build.getSourceStamp()
 
     text = ""
     if mode == "all":
@@ -50,7 +51,11 @@ def defaultMessage(mode, name, build, results, master_status):
         text += "The Buildbot has detected a restored build"
     else:    
         text += "The Buildbot has detected a new failure"
-    text += " of %s on %s.\n" % (name, master_status.getProjectName())
+    if ss and ss.project:
+        project = ss.project
+    else:
+        project = master_status.getProjectName()
+    text += " on builder %s while building %s.\n" % (name, project)
     if master_status.getURLForThing(build):
         text += "Full details are available at:\n %s\n" % master_status.getURLForThing(build)
     text += "\n"
@@ -62,7 +67,6 @@ def defaultMessage(mode, name, build, results, master_status):
     text += "Build Reason: %s\n" % build.getReason()
 
     source = ""
-    ss = build.getSourceStamp()
     if ss and ss.branch:
         source += "[branch %s] " % ss.branch
     if ss and ss.revision:
