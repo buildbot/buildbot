@@ -614,3 +614,5 @@ def run_one_build(c, builderName, ss, reason):
     d.addCallback(_get_buildstatus)
     return d
 
+# convenient access to *new* test utilities
+from buildbot.test.util.monkeypatches import monkeypatch

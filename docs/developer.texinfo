@@ -417,6 +417,7 @@ stopped.
 
 @menu
 * Keeping State in Tests::
+* Better Debugging through Monkeypatching::
 @end menu
 
 @node Keeping State in Tests
@@ -456,6 +457,20 @@ def test_localVariable(self):
 @end example
 
 This is almost as readable as the first example, but it actually works. 
+
+@node Better Debugging through Monkeypatching
+@subsection Better Debugging through Monkeypatching
+@dvindex buildbot.test.util.monkeypatches
+
+The module @code{buildbot.test.util.monkeypatches} contains a few
+monkey-patches to Twisted that detect errors a bit better.  These patches
+shouldn't affect correct behavior, so it's worthwhile including something like
+this in the header of every test file:
+
+@example
+from buildbot.test.util.monkeypatches import monkeypatch
+monkeypatch()
+@end example
 
 @node Developer Class Index
 @section Developer Class Index

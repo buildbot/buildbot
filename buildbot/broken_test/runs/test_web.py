@@ -6,7 +6,7 @@ from HTMLParser import HTMLParser
 from twisted.python import components
 
 from twisted.trial import unittest
-from buildbot.broken_test.runutils import RunMixin
+from buildbot.broken_test.runutils import RunMixin, monkeypatch
 
 from twisted.internet import reactor, defer, protocol
 from twisted.internet.interfaces import IReactorUNIX
@@ -21,6 +21,8 @@ from buildbot.changes.changes import Change
 from buildbot.process import base
 from buildbot.process.buildstep import BuildStep
 from buildbot.broken_test.runutils import setupBuildStepStatus
+
+monkeypatch()
 
 class SimpleMaster(master.BuildMaster):
     """This BuildMaster variant uses a local sqlite DB, and gives more

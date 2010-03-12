@@ -41,8 +41,11 @@ from twisted.application import service
 from twisted.python import log
 
 from buildbot.test.fake.state import State
+from buildbot.test.util.monkeypatches import monkeypatch
 
 from buildbot.util import loop, eventual
+
+monkeypatch()
 
 class TestLoopMixin(object):
     def setUpTestLoop(self, skipConstructor=False):
