@@ -32,6 +32,7 @@ BuildmasterConfig = c = {
     'projectUrl': 'example.com/yay',
     'projectName': 'Pouet',
     'buildbotURL': 'build.example.com/yo',
+}
 """
 
 

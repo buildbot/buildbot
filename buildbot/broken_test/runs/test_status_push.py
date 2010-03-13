@@ -30,6 +30,7 @@ from buildbot.buildslave import BuildSlave
 from buildbot.config import BuilderConfig
 from buildbot.process import factory
 from buildbot.schedulers import basic
+from buildbot.status.persistent_queue import IQueue
 from buildbot.status import html
 from buildbot.status.status_push import StatusPush, HttpStatusPush
 from buildbot.steps import dummy
@@ -54,11 +55,18 @@ BuildmasterConfig = c = {
     'projectName': 'Pouet',
     'buildbotURL': 'build.example.com/yo',
 }
+
+def doNothing(self):
+    # Creates self.fake_queue to store the object.
+    assert IQueue.providedBy(self.queue)
+    if not hasattr(self, 'fake_queue'):
+        self.fake_queue = []
+    items = self.queue.popChunk()
+    self.fake_queue.extend(items)
+    self.queueNextServerPush()
 """
 
 config_no_http = (config_base + """
-def doNothing():
-    pass
 c['status'] = [StatusPush(serverPushCb=doNothing)]
 """)
 
@@ -67,8 +75,6 @@ c['status'] = [HttpStatusPush('http://127.0.0.1:<PORT>/receiver')]
 """)
 
 config_no_http_no_filter = (config_base + """
-def doNothing():
-    pass
 c['status'] = [StatusPush(serverPushCb=doNothing, filter=False)]
 """)
 
@@ -780,7 +786,7 @@ class StatusPushTestBase(MasterMixin, unittest.TestCase):
         FindItem(items, 'buildFinished', 'payload', 'build', 'steps',
                 None, 'times', [345, None])
 
-        for i in range(len(expected)):
+        for i in range(min(len(expected), len(items))):
             self.assertEqual(expected[i], items[i], str(i))
         self.assertEqual(len(expected), len(items))
 
@@ -813,7 +819,9 @@ class StatusPushTest(StatusPushTestBase):
                              for (k, v) in items.iteritems()])
             else:
                 return items
-        self.verifyItems(TupleToList(self.status_push.queue.items()),
+        self.assertEqual(0, self.status_push.queue.nbItems())
+        # Grabs fake_queue created in DoNothing().
+        self.verifyItems(TupleToList(self.status_push.fake_queue),
                          self.expected)
 
 

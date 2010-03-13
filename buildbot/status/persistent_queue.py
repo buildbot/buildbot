@@ -380,4 +380,48 @@ class PersistentQueue(object):
     def maxItems(self):
         return self.primaryQueue.maxItems() + self.secondaryQueue.maxItems()
 
+
+class IndexedQueue(object):
+    """Adds functionality to a IQueue object to track its usage.
+
+    Adds a new member function getIndex() and modify popChunk() and
+    insertBackChunk() to keep a virtual pointer to the queue's first entry
+    index."""
+    implements(IQueue)
+
+    def __init__(self, queue):
+        # Copy all the member functions from the other object that this class
+        # doesn't already define.
+        assert IQueue.providedBy(queue)
+        def Filter(m):
+            return (m[0] != '_' and callable(getattr(queue, m))
+                    and not hasattr(self, m))
+        for member in filter(Filter, dir(queue)):
+            setattr(self, member, getattr(queue, member))
+        self.queue = queue
+        self._index = 0
+
+    def getIndex(self):
+        return self._index
+
+    def popChunk(self, *args, **kwargs):
+        items = self.queue.popChunk(*args, **kwargs)
+        self._index += len(items)
+        return items
+
+    def insertBackChunk(self, items):
+        self._index -= len(items)
+        ret = self.queue.insertBackChunk(items)
+        self._index += len(ret)
+        return ret
+
+
+def ToIndexedQueue(queue):
+    """If the IQueue wasn't already a IndexedQueue, makes it an IndexedQueue."""
+    if not IQueue.providedBy(queue):
+        raise TypeError("queue doesn't implement IQueue", queue)
+    if isinstance(queue, IndexedQueue):
+        return queue
+    return IndexedQueue(queue)
+
 # vim: set ts=4 sts=4 sw=4 et:

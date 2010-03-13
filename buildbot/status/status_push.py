@@ -16,19 +16,20 @@ except ImportError:
 
 from buildbot.master import BuildMaster
 from buildbot.status.base import StatusReceiverMultiService
-from buildbot.status.persistent_queue import DiskQueue, IQueue, MemoryQueue, \
-        PersistentQueue
+from buildbot.status.persistent_queue import DiskQueue, IndexedQueue, \
+        IQueue, MemoryQueue, PersistentQueue
 from buildbot.status.web.status_json import FilterOut
 from twisted.internet import defer, reactor
 from twisted.python import log
 from twisted.web import client
 
 
+
 class StatusPush(StatusReceiverMultiService):
     """Event streamer to a abstract channel.
 
-    It uses IQueue to batch network requests and queue the data when
-    the server is temporarily down.
+    It uses IQueue to batch push requests and queue the data when
+    the receiver is down.
     When a PersistentQueue object is used, the items are saved to disk on master
     shutdown so they can be pushed back when the master is restarted.
     """
@@ -36,16 +37,19 @@ class StatusPush(StatusReceiverMultiService):
     def __init__(self, serverPushCb, queue=None, path=None, filter=True,
                  bufferDelay=0.1, retryDelay=1, waterLevel=0):
         """
-        @serverPushCb: callback to be used. It should call
-        self.queueNextServerPush() when it's done to queue the next push.
+        @serverPushCb: callback to be used. It receives 'self' as parameter. It
+        should call self.queueNextServerPush() when it's done to queue the next
+        push. It is guaranteed that the queue is not empty when this function is
+        called.
         @queue: a item queue that implements IQueue.
         @path: path to save config.
         @filter: when True (default), removes all "", None, False, [] or {}
         entries.
         @bufferDelay: amount of time events are queued before sending, to
-        reduce the number of network requests. This is the delay between the end
-        of a request to initializing a new one.
-        @retryDelay: amount of time between retries when the server is down.
+        reduce the number of push requests rate. This is the delay between the
+        end of a request to initializing a new one.
+        @retryDelay: amount of time between retries when no items were pushed on
+        last serverPushCb call.
         @waterLevel: number of items that will trigger an immediate retry when
         the server is up. Disabled if 0.
         """
@@ -55,24 +59,28 @@ class StatusPush(StatusReceiverMultiService):
         self.queue = queue
         if self.queue is None:
             self.queue = MemoryQueue()
+        self.queue = IndexedQueue(self.queue)
         self.path = path
         self.filter = filter
         self.bufferDelay = bufferDelay
         self.retryDelay = retryDelay
         self.waterLevel = waterLevel
-        self.serverPushCb = serverPushCb
-        self.stopped = False
-        assert IQueue.providedBy(self.queue)
-        if not callable(self.serverPushCb):
+        if not callable(serverPushCb):
             raise NotImplementedError('Please pass serverPushCb parameter.')
+        def hookPushCb(self):
+            # Update the index so we know if the next push succeed or not, don't
+            # update the value when the queue is empty.
+            if not self.queue.nbItems():
+                return
+            self.lastIndex = self.queue.getIndex()
+            return serverPushCb(self)
+        self.serverPushCb = hookPushCb
 
         # Other defaults.
-
         # IDelayedCall object that represents the next queued push.
         self.task = None
-        # When False, self.retryDelay should be used instead of
-        # self.bufferDelay.
-        self.isServerUp = True
+        self.stopped = False
+        self.lastIndex = -1
         self.state = {}
         self.state['started'] = str(datetime.datetime.utcnow())
         self.state['next_id'] = 1
@@ -94,6 +102,10 @@ class StatusPush(StatusReceiverMultiService):
         self.status.subscribe(self)
         self.initialPush()
 
+    def wasLastPushSuccessful(self):
+        """Returns if the "virtual pointer" in the queue advanced."""
+        return self.lastIndex < self.queue.getIndex()
+
     def queueNextServerPush(self):
         """Queue the next push or call it immediately.
 
@@ -102,7 +114,7 @@ class StatusPush(StatusReceiverMultiService):
         should be called immediately. If a status push is already queued, ignore
         the current call."""
         # Determine the delay.
-        if self.isServerUp:
+        if self.wasLastPushSuccessful():
             if (self.stopped or
                     (self.waterLevel != 0 and
                         self.queue.nbItems() > self.waterLevel)):
@@ -123,6 +135,7 @@ class StatusPush(StatusReceiverMultiService):
 
         # Cleanup a previously queued task if necessary.
         if self.task:
+            # Warning: we could be running inside the task.
             if self.task.active() and delay != 0:
                 # There was already a task queue, don't requeue it, just let it
                 # go.
@@ -138,31 +151,33 @@ class StatusPush(StatusReceiverMultiService):
         # Do the queue/direct call.
         if delay:
             # Call in delay seconds.
-            self.task = reactor.callLater(delay, self.serverPushCb)
+            self.task = reactor.callLater(delay, self.serverPushCb, self)
         elif self.stopped:
+            if not self.queue.nbItems():
+                return
             # Call right now, we're shutting down.
             @defer.deferredGenerator
             def BlockForEverythingBeingSent():
-                d = self.serverPushCb()
+                d = self.serverPushCb(self)
                 if d:
-                  x = defer.waitForDeferred(d)
-                  yield x
-                  x.getResult()
+                    x = defer.waitForDeferred(d)
+                    yield x
+                    x.getResult()
             return BlockForEverythingBeingSent()
         else:
             # Call right now, delay == 0.
-            return self.serverPushCb()
+            return self.serverPushCb(self)
 
     def stopService(self):
         """Shutting down."""
         self.finalPush()
-
         self.stopped = True
         if (self.task and self.task.active()):
             # We don't have time to wait, force an immediate call.
             self.task.cancel()
             self.task = None
-        if self.isServerUp:
+            d = self.queueNextServerPush()
+        elif self.wasLastPushSuccessful():
             d = self.queueNextServerPush()
         else:
             d = defer.succeed(None)
@@ -174,7 +189,7 @@ class StatusPush(StatusReceiverMultiService):
             json.dump(self.state, open(state_path, 'w'), sort_keys=True,
                       indent=2)
         # Make sure all Deferreds are called on time and in a sane order.
-        defers = [d, StatusReceiverMultiService.stopService(self)]
+        defers = filter(None, [d, StatusReceiverMultiService.stopService(self)])
         return defer.DeferredList(defers)
 
     def push(self, event, **objs):
@@ -322,54 +337,41 @@ class HttpStatusPush(StatusPush):
 
         if not 'waterLevel' in kwargs:
             kwargs['waterLevel'] = 50
-        StatusPush.__init__(self, serverPushCb=self.pushHttp, queue=queue,
-                            path=path, **kwargs)
+        # Use the unbounded method.
+        StatusPush.__init__(self, serverPushCb=HttpStatusPush.pushHttp,
+                            queue=queue, path=path, **kwargs)
 
     def popChunk(self):
         """Pops items from the pending list.
 
         They must be queued back on failure."""
-        queue = self.queue.popChunk(self.chunkSize)
-        if not queue:
-            return None
+        items = self.queue.popChunk(self.chunkSize)
         if self.debug:
-            packets = json.dumps(queue, indent=2, sort_keys=True)
+            packets = json.dumps(items, indent=2, sort_keys=True)
         else:
-            packets = json.dumps(queue, separators=(',',':'))
-        return (urllib.urlencode({'packets': packets}), queue)
+            packets = json.dumps(items, separators=(',',':'))
+        return (urllib.urlencode({'packets': packets}), items)
 
     def pushHttp(self):
         """Do the HTTP POST to the server."""
-        tmp = self.popChunk()
-        if not tmp:
-            # Spurious call. Wait for more data before queuing another push.
-            return
-        encoded_packets = tmp[0]
-        queue = tmp[1]
+        (encoded_packets, items) = self.popChunk()
 
         def Success(result):
             """Queue up next push."""
-            log.msg('Sent %d items. %s' % (len(queue), str(result)))
-            self.isServerUp = True
-            if self.queue.nbItems():
-                # If there are items waiting, start another task. Otherwise wait
-                # for the next event push.
-                # TODO(maruel): Test it works when there are a *lot* of queued
-                # items on shutdown.
-                self.queueNextServerPush()
+            log.msg('Sent %d events to %s' % (len(items), self.serverUrl))
+            self.queueNextServerPush()
 
         def Failure(result):
             """Insert back items not sent and queue up next push."""
             # Server is now down.
-            log.msg('Failed to push %d items to %s: %s' %
-                    (len(queue), self.serverUrl, str(result)))
-            self.queue.insertBackChunk(queue)
+            log.msg('Failed to push %d events to %s: %s' %
+                    (len(items), self.serverUrl, str(result)))
+            self.queue.insertBackChunk(items)
             if self.stopped:
                 # Bad timing, was being called on shutdown and the server died
                 # on us. Make sure the queue is saved since we just queued back
                 # items.
                 self.queue.save()
-            self.isServerUp = False
             self.queueNextServerPush()
 
         # Trigger the HTTP POST request.
