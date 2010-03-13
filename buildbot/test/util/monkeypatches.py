@@ -1,7 +1,10 @@
-# Import this module and call the monkeypatch() method to add a bunch of useful
-# Twisted monkeypatches that help to catch stupid errors.
+def add_debugging_monkeypatches():
+    """
+    DO NOT CALL THIS DIRECTLY
 
-def monkeypatch_startService():
+    This adds a few "harmless" monkeypatches which make it easier to debug
+    failing tests.  It is called automatically by buildbot.test.__init__.
+    """
     from twisted.application.service import Service
     old_startService = Service.startService
     old_stopService = Service.stopService
@@ -13,6 +16,3 @@ def monkeypatch_startService():
         return old_stopService(self)
     Service.startService = startService
     Service.stopService = stopService
-
-def monkeypatch():
-    monkeypatch_startService()

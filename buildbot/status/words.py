@@ -882,6 +882,10 @@ class IRC(base.StatusReceiverMultiService):
                                   noticeOnChannel = noticeOnChannel,
                                   showBlameList = showBlameList)
 
+        # don't set up an actual ClientContextFactory if we're running tests.
+        if self.in_test_harness:
+            return
+
         if useSSL:
             # SSL client needs a ClientContextFactory for some SSL mumbo-jumbo
             if not have_ssl:

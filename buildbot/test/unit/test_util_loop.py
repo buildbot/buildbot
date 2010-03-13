@@ -39,13 +39,11 @@ from twisted.trial import unittest
 from twisted.internet import reactor, defer, task
 from twisted.application import service
 from twisted.python import log
+from twisted.python import monkey
 
 from buildbot.test.fake.state import State
-from buildbot.test.util.monkeypatches import monkeypatch
 
 from buildbot.util import loop, eventual
-
-monkeypatch()
 
 class TestLoopMixin(object):
     def setUpTestLoop(self, skipConstructor=False):
@@ -171,7 +169,8 @@ class Loop(unittest.TestCase, TestLoopMixin):
         # which just modifies 'done' to indicate that it was called
         def loop_done():
             self.results.append("done")
-        self.loop.loop_done = loop_done
+        self.patch(self.loop, "loop_done", loop_done)
+
         self.loop.add(self.make_cb('t', selfTrigger=2))
         self.loop.trigger()
         def check(res):

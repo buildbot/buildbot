@@ -588,6 +588,8 @@ class LatentSlave(RunMixin, unittest.TestCase, PollMixin, StallMixin):
         # bot 1 is NOT substantiated.
         self.assertIdentical(self.bot1.slave, None)
         self.failIf(self.bot1.substantiated)
+        # but we need to re-start the service or tearDown will get confused
+        self.bot1.startService()
 
     def testPing(self):
         # While a latent slave pings normally when it is substantiated, (as
