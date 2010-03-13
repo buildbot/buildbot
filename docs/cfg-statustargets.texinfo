@@ -1069,6 +1069,48 @@ status client can connect and retrieve status information.
 status client. The @code{port} argument can also be a strports
 specification string.
 
+@node StatusPush
+@subsection StatusPush
+
+@cindex StatusPush
+@stindex buildbot.status.status_push.StatusPush
+
+
+@example
+def Process(self):
+  print str(self.queue.popChunk())
+  self.queueNextServerPush()
+
+import buildbot.status.status_push
+sp = buildbot.status.status_push.StatusPush(serverPushCb=Process,
+                                            bufferDelay=0.5,
+                                            retryDelay=5)
+c['status'].append(sp)
+@end example
+
+StatusPush batches events normally processed and sends it to the
+serverPushCb callback every bufferDelay seconds. The callback
+should pop items from the queue and then queue the next callback.
+If no items were poped from self.queue, retryDelay seconds will be
+waited instead.
+
+@subsection HttpStatusPush
+
+@cindex HttpStatusPush
+@stindex buildbot.status.status_push.HttpStatusPush
+
+
+@example
+import buildbot.status.status_push
+sp = buildbot.status.status_push.HttpStatusPush(
+        serverUrl="http://example.com/submit")
+c['status'].append(sp)
+@end example
+
+HttpStatusPush builds on StatusPush and sends HTTP requests to
+serverUrl, with all the items json-encoded. It is useful to create a
+status front end outside of buildbot for better scalability.
+
 @node Writing New Status Plugins
 @subsection Writing New Status Plugins
 

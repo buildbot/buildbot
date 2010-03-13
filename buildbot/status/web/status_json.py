@@ -19,8 +19,8 @@ _IS_INT = re.compile('^[-+]?\d+$')
 FLAGS = """\
   - as_text
     - By default, application/json is used. Setting as_text=1 change the type
-      to text/plain and implicitly set compact=0. Mainly useful to look at the
-      result in a web browser.
+      to text/plain and implicitly sets compact=0 and filter=1. Mainly useful to
+      look at the result in a web browser.
   - compact
     - By default, the json data is compact and defaults to 1. For easier to read
       indented output, set compact=0.
@@ -28,6 +28,10 @@ FLAGS = """\
     - By default, most children data is listed. You can do a random selection
       of data by using select=<sub-url> multiple times to coagulate data.
       "select=" includes the actual url otherwise it is skipped.
+  - filter
+    - Filters out null, false, and empty string, list and dict. This reduce the
+      amount of useless data sent.
+
 """
 
 EXAMPLES = """\
@@ -102,6 +106,22 @@ error.PageRedirect.asDict = TwistedWebErrorAsDict
 error.ErrorPage.asDict = TwistedWebErrorPageAsDict
 error.NoResource.asDict = TwistedWebErrorPageAsDict
 error.ForbiddenResource.asDict = TwistedWebErrorPageAsDict
+
+
+def FilterOut(data):
+    """Returns a copy with None, False, "", [], () and {} removed.
+    Warning: converts tuple to list."""
+    if isinstance(data, (list, tuple)):
+        # Recurse in every items and filter them out.
+        items = map(FilterOut, data)
+        if not filter(lambda x: not x in ('', False, None, [], {}, ()), items):
+            return None
+        return items
+    elif isinstance(data, dict):
+        return dict(filter(lambda x: not x[1] in ('', False, None, [], {}, ()),
+                           [(k, FilterOut(v)) for (k, v) in data.iteritems()]))
+    else:
+        return data
 
 
 class JsonResource(resource.Resource):
@@ -198,6 +218,9 @@ class JsonResource(resource.Resource):
         else:
             data = self.asDict(request)
         as_text = RequestArgToBool(request, 'as_text', False)
+        filter_out = RequestArgToBool(request, 'filter', as_text)
+        if filter_out:
+            data = FilterOut(data)
         if RequestArgToBool(request, 'compact', not as_text):
             return json.dumps(data, sort_keys=True, separators=(',',':'))
         else:
@@ -383,7 +406,8 @@ class AllBuildsJsonResource(JsonResource):
     def asDict(self, request):
         results = {}
         # If max > buildCacheSize, it'll trash the cache...
-        max = int(RequestArg(request, 'max', self.builder_status.buildCacheSize))
+        max = int(RequestArg(request, 'max',
+                             self.builder_status.buildCacheSize))
         for i in range(0, max):
             child = self.getChildWithDefault(-i, request)
             if not isinstance(child, BuildJsonResource):
@@ -406,8 +430,8 @@ class BuildsJsonResource(AllBuildsJsonResource):
         return self.children['_all'].getChildWithDefault(path, request)
 
     def asDict(self, request):
-        # This would load all the pickles and is way too heavy, especially that it
-        # would trash the cache:
+        # This would load all the pickles and is way too heavy, especially that
+        # it would trash the cache:
         # self.children['builds'].asDict(request)
         # TODO(maruel) This list should also need to be cached but how?
         builds = dict([
@@ -546,9 +570,34 @@ class SlaveJsonResource(JsonResource):
     def __init__(self, status, slave_status):
         JsonResource.__init__(self, status)
         self.slave_status = slave_status
+        self.name = self.slave_status.getName()
+        self.builders = None
+
+    def getBuilders(self):
+        if self.builders is None:
+            # Figure out all the builders to which it's attached
+            self.builders = []
+            for builderName in self.status.getBuilderNames():
+                if self.name in self.status.getBuilder(builderName).slavenames:
+                    self.builders.append(builderName)
+        return self.builders
 
     def asDict(self, request):
-        return self.slave_status.asDict()
+        results = self.slave_status.asDict()
+        # Enhance it by adding more informations.
+        results['builders'] = {}
+        for builderName in self.getBuilders():
+            builds = []
+            builder_status = self.status.getBuilder(builderName)
+            for i in range(1, builder_status.buildCacheSize - 1):
+                build_status = builder_status.getBuild(-i)
+                if not build_status or not build_status.isFinished():
+                    # If not finished, it will appear in runningBuilds.
+                    break
+                if build_status.getSlavename() == self.name:
+                    builds.append(build_status.getNumber())
+            results['builders'][builderName] = builds
+        return results
 
 
 class SlavesJsonResource(JsonResource):

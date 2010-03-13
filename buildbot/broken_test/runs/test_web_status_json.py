@@ -24,11 +24,15 @@ BuildmasterConfig = c = {
     'schedulers': [basic.Scheduler(name='name', branch=None,
                     treeStableTimer=60, builderNames=['builder1'])],
     'slavePortnum': 0,
-    }
-c['builders'] = [
-    BuilderConfig(name='builder1', slavename='bot1name', factory=BuildFactory()),
-]
-c['status'] = [html.WebStatus(http_port=0)]
+    'builders': [
+            BuilderConfig(name='builder1', slavename='bot1name',
+                          factory=BuildFactory()),
+        ],
+    'status': [html.WebStatus(http_port=0)],
+    'projectUrl': 'example.com/yay',
+    'projectName': 'Pouet',
+    'buildbotURL': 'build.example.com/yo',
+}
 """
 
 
@@ -66,12 +70,43 @@ class TestStatusJson(MasterMixin, unittest.TestCase):
         d = self.startup()
         def _check(page):
             data = json.loads(page)
-            self.assertEqual(len(data), 4)
-            self.assertEqual(len(data['builders']), 1)
-            self.assertEqual(len(data['change_sources']), 1)
-            self.assertEqual(len(data['project']), 2)
-            self.assertEqual(len(data['slaves']), 1)
-        d.addCallback(lambda ign: self.getPage('/json', _check))
+            EXPECTED = {
+                'builders': {
+                    'builder1': {
+                        'basedir': 'builder1',
+                        'cachedBuilds': [],
+                        'category': None,
+                        'currentBuilds': [],
+                        'pendingBuilds': [],
+                        'slaves': ['bot1name'],
+                        'state': 'offline'
+                    }
+                },
+                'change_sources': {
+                    '0': {
+                        'description': 'PBChangeSource listener on all-purpose slaveport'
+                    }
+                },
+                'project': {
+                    'buildbotURL': 'build.example.com/yo',
+                    'projectName': 'Pouet',
+                    'projectURL': None
+                },
+                'slaves': {
+                    'bot1name': {
+                        'access_uri': None,
+                        'admin': None,
+                        'builders': {u'builder1': []},
+                        'connected': False,
+                        'host': None,
+                        'name': u'bot1name',
+                        'runningBuilds': [],
+                        'version': None
+                    }
+                }
+            }
+            self.assertEqual(EXPECTED, data)
+        d.addCallback(lambda _: self.getPage('/json', _check))
         return d
 
     def testHelp(self):
