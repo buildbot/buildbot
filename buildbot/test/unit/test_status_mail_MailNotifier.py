@@ -11,7 +11,7 @@ class FakeLog(object):
         return 'log-name'
 
     def getStep(self):
-        class FakeStep():
+        class FakeStep(object):
             def getName(self):
                 return 'step-name'
         return FakeStep()
