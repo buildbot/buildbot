@@ -111,8 +111,8 @@ class Change:
                    'comments'  : self.comments,
                    'properties': self.properties.asList(),
                    'number'    : self.number,
-                   'repository'    : self.repository,
-                   'project'    : self.project,
+                   'repository': self.repository,
+                   'project'   : self.project,
                    }
 
         return kwargs
