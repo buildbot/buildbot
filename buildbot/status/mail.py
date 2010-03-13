@@ -19,6 +19,8 @@ from buildbot.status.builder import FAILURE, SUCCESS, Results
 
 VALID_EMAIL = re.compile("[a-zA-Z0-9\.\_\%\-\+]+@[a-zA-Z0-9\.\_\%\-]+.[a-zA-Z]{2,6}")
 
+ENCODING = 'utf8'
+
 class Domain(util.ComparableMixin):
     implements(interfaces.IEmailLookup)
     compare_attrs = ["domain"]
@@ -370,35 +372,27 @@ class MailNotifier(base.StatusReceiverMultiService):
 
         return attrs
 
-    def buildMessage(self, name, build, results):
-        if self.customMesg:
-            # the customMesg stuff can be *huge*, so we prefer not to load it
-            attrs = self.getCustomMesgData(self.mode, name, build, results, self.master_status)
-            text, type = self.customMesg(attrs)
-            msgdict = { 'body' : text, 'type' : type }
-        else:
-            msgdict = self.messageFormatter(self.mode, name, build, results, self.master_status)
-
-        text = msgdict['body']
+    def createEmail(self, msgdict, builderName, projectName, results, 
+                    patch=None, logs=None):
+        text = msgdict['body'].encode(ENCODING)
         type = msgdict['type']
         if 'subject' in msgdict:
-            subject = msgdict['subject']
+            subject = msgdict['subject'].encode(ENCODING)
         else:
             subject = self.subject % { 'result': Results[results],
-                                       'projectName': self.master_status.getProjectName(),
-                                       'builder': name,
+                                       'projectName': projectName,
+                                       'builder': builderName,
                                        }
 
 
         assert type in ('plain', 'html'), "'%s' message type must be 'plain' or 'html'." % type
 
-        ss = build.getSourceStamp()
-        if (ss and ss.patch and self.addPatch) or self.addLogs:
+        if patch or logs:
             m = MIMEMultipart()
-            m.attach(MIMEText(text, type))
+            m.attach(MIMEText(text, type, ENCODING))
         else:
             m = Message()
-            m.set_payload(text)
+            m.set_payload(text, ENCODING)
             m.set_type("text/%s" % type)
 
         m['Date'] = formatdate(localtime=True)
@@ -406,18 +400,18 @@ class MailNotifier(base.StatusReceiverMultiService):
         m['From'] = self.fromaddr
         # m['To'] is added later
 
-        if ss and ss.patch and self.addPatch:
-            patch = ss.patch
-            a = MIMEText(patch[1])
+        if patch:
+            a = MIMEText(patch[1].encode(ENCODING), _charset=ENCODING)
             a.add_header('Content-Disposition', "attachment",
                          filename="source patch")
             m.attach(a)
-        if self.addLogs:
-            for log in build.getLogs():
+        if logs:
+            for log in logs:
                 name = "%s.%s" % (log.getStep().getName(),
                                   log.getName())
                 if self._shouldAttachLog(log.getName()) or self._shouldAttachLog(name):
-                    a = MIMEText(log.getText())
+                    a = MIMEText(log.getText().encode(ENCODING), 
+                                 _charset=ENCODING)
                     a.add_header('Content-Disposition', "attachment",
                                  filename=name)
                     m.attach(a)
@@ -433,6 +427,28 @@ class MailNotifier(base.StatusReceiverMultiService):
                           "not adding it.")
                     continue
                 m[k] = properties.render(v)
+
+        return m
+
+    def buildMessage(self, name, build, results):
+        if self.customMesg:
+            # the customMesg stuff can be *huge*, so we prefer not to load it
+            attrs = self.getCustomMesgData(self.mode, name, build, results, self.master_status)
+            text, type = self.customMesg(attrs)
+            msgdict = { 'body' : text, 'type' : type }
+        else:
+            msgdict = self.messageFormatter(self.mode, name, build, results, self.master_status)
+
+        patch = None
+        ss = build.getSourceStamp()
+        if ss and ss.patch and self.addPatch:
+            patch == ss.patch
+        logs = None
+        if self.addLogs:
+            logs = build.getLogs()
+            twlog.err("LOG: %s" % str(logs))
+        m = self.createEmail(msgdict, name, self.master_status.getProjectName(),
+                             results, patch, logs)
 
         # now, who is this message going to?
         dl = []
