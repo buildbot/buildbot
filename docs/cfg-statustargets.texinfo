@@ -41,6 +41,8 @@ methods. See the docstrings in @file{buildbot/interfaces.py} for full details.
 * MailNotifier::
 * IRC Bot::
 * PBListener::
+* StatusPush::
+* HttpStatusPush::
 * Writing New Status Plugins::
 * Status Target Index::
 @end menu
@@ -1094,6 +1096,7 @@ should pop items from the queue and then queue the next callback.
 If no items were poped from self.queue, retryDelay seconds will be
 waited instead.
 
+@node HttpStatusPush
 @subsection HttpStatusPush
 
 @cindex HttpStatusPush
