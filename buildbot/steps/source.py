@@ -705,6 +705,7 @@ class Git(Source):
                  branch="master",
                  submodules=False,
                  ignore_ignores=None,
+                 shallow=False,
                  **kwargs):
         """
         @type  repourl: string
@@ -719,17 +720,21 @@ class Git(Source):
         @param submodules: Whether or not to update (and initialize)
                        git submodules.
 
+        @type  shallow: boolean
+        @param shallow: Use a shallow or clone, if possible
         """
         Source.__init__(self, **kwargs)
         self.addFactoryArguments(repourl=repourl,
                                  branch=branch,
                                  submodules=submodules,
                                  ignore_ignores=ignore_ignores,
+                                 shallow=shallow,
                                  )
         self.args.update({'repourl': repourl,
                           'branch': branch,
                           'submodules': submodules,
                           'ignore_ignores': ignore_ignores,
+                          'shallow': shallow,
                           })
 
     def computeSourceRevision(self, changes):

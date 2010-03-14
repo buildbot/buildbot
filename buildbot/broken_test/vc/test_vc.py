@@ -3136,6 +3136,12 @@ class Git(VCBase, unittest.TestCase):
         d = self.do_vctest()
         return d
 
+    def testCheckoutShallow(self):
+        self.helper.vcargs = { 'repourl': self.helper.gitrepo,
+                               'shallow': True }
+        d = self.do_vctest()
+        return d
+
     def testPatch(self):
         self.helper.vcargs = { 'repourl': self.helper.gitrepo,
                                'branch': "master" }
