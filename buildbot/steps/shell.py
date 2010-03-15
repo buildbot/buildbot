@@ -208,7 +208,12 @@ class ShellCommand(LoggingBuildStep):
 
         # create the actual RemoteShellCommand instance now
         kwargs = properties.render(self.remote_kwargs)
-        kwargs['command'] = properties.render(self.command)
+        command = properties.render(self.command)
+        if isinstance(command, unicode):
+            command = command.encode("utf-8")
+        elif not isinstance(command, str):
+            command = [a.encode("utf-8") if isinstance(a, unicode) else a for a in command]
+        kwargs['command'] = command
         kwargs['logfiles'] = self.logfiles
 
         # check for the usePTY flag
