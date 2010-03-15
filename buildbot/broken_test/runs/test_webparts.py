@@ -224,8 +224,8 @@ c['status'] = [ws]
 
 c['slaves'] = [BuildSlave('bot1', 'sekrit'), BuildSlave('bot2', 'sekrit')]
 c['change_source'] = DummyChangeSource()
-c['schedulers'] = [DiscardScheduler('discard1', None, 60, ['builder1']),
-                   DiscardScheduler('discard2', 'release', 30, ['builder1'])]
+c['schedulers'] = [DiscardScheduler(name='discard1', branch=None, treeStableTimer=60, builderNames=['builder1']),
+                   DiscardScheduler(name='discard2', branch='release', treeStableTimer=30, builderNames=['builder1'])]
 c['slavePortnum'] = 0
 
 f = factory.BuildFactory([s(dummy.RemoteDummy, timeout=1)])
