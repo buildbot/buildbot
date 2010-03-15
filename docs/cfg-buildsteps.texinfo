@@ -860,6 +860,14 @@ branch will be used.
 (optional): when purging changes, don't use .gitignore and
 .git/info/exclude.
 
+@item submodules
+(optional): when initializing/updating a Git repository, this decides whether
+or not buildbot should consider git submodules.  Default: False.
+
+@item shallow
+(optional): instructs git to attempt shallow clones (@code{--depth 1}).  If the
+user/scheduler asks for a specific revision, this parameter is ignored.
+
 @end table
 
 
