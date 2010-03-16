@@ -1,4 +1,4 @@
-import sys
+import sys, re
 
 from twisted.trial import unittest
 from twisted.internet import task, defer
@@ -214,7 +214,7 @@ class TestShellCommand(unittest.TestCase):
         d = s.start()
         def check(ign):
             headers = "".join([update.values()[0] for update in b.updates if update.keys() == ["header"] ])
-            self.failUnless("PATH=" not in headers)
+            self.failUnless(not re.match('\bPATH=',headers))
         d.addCallback(check)
         return d
 
