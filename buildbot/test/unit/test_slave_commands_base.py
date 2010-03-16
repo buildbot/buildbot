@@ -206,6 +206,18 @@ class TestShellCommand(unittest.TestCase):
         d.addCallback(check)
         return d
 
+    def testUnsetEnvironVar(self):
+        basedir = "test_slave_commands_base.shellcommand.start"
+        b = FakeSlaveBuilder(False, basedir)
+        s = ShellCommand(b, stdoutCommand('hello'), basedir, environ={"PATH":None})
+
+        d = s.start()
+        def check(ign):
+            headers = "".join([update.values()[0] for update in b.updates if update.keys() == ["header"] ])
+            self.failUnless("PATH=" not in headers)
+        d.addCallback(check)
+        return d
+
 class TestLogging(unittest.TestCase):
     def testSendStatus(self):
         basedir = "test_slave_commands_base.logging.sendStatus"
