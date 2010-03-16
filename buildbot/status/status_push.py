@@ -35,7 +35,8 @@ class StatusPush(StatusReceiverMultiService):
     """
 
     def __init__(self, serverPushCb, queue=None, path=None, filter=True,
-                 bufferDelay=0.1, retryDelay=1, waterLevel=0):
+                 bufferDelay=0.5, retryDelay=5, waterLevel=None,
+                 blackList=None):
         """
         @serverPushCb: callback to be used. It receives 'self' as parameter. It
         should call self.queueNextServerPush() when it's done to queue the next
@@ -51,7 +52,8 @@ class StatusPush(StatusReceiverMultiService):
         @retryDelay: amount of time between retries when no items were pushed on
         last serverPushCb call.
         @waterLevel: number of items that will trigger an immediate retry when
-        the server is up. Disabled if 0.
+        the server is up. Disabled if None.
+        @blackList: events that shouldn't be sent.
         """
         StatusReceiverMultiService.__init__(self)
 
@@ -75,6 +77,7 @@ class StatusPush(StatusReceiverMultiService):
             self.lastIndex = self.queue.getIndex()
             return serverPushCb(self)
         self.serverPushCb = hookPushCb
+        self.blackList = blackList
 
         # Other defaults.
         # IDelayedCall object that represents the next queued push.
@@ -116,7 +119,7 @@ class StatusPush(StatusReceiverMultiService):
         # Determine the delay.
         if self.wasLastPushSuccessful():
             if (self.stopped or
-                    (self.waterLevel != 0 and
+                    (self.waterLevel and
                         self.queue.nbItems() > self.waterLevel)):
                 # Already at high water level so don't wait, we already have
                 # enough items to push.
@@ -200,6 +203,8 @@ class StatusPush(StatusReceiverMultiService):
         - Queued to disk when the sink server is down
         - Pushed (along the other queued items) to the server
         """
+        if self.blackList and event in self.blackList:
+            return
         # First, generate the packet.
         packet = {}
         packet['id'] = self.state['next_id']
@@ -311,7 +316,8 @@ class HttpStatusPush(StatusPush):
     """Event streamer to a HTTP server."""
 
     def __init__(self, serverUrl, debug=None, maxMemoryItems=None,
-                 maxDiskItems=None, chunkSize=200, **kwargs):
+                 maxDiskItems=None, chunkSize=200, maxHttpRequestSize=None,
+                 **kwargs):
         """
         @serverUrl: Base URL to be used to push events notifications.
         @maxMemoryItems: Maximum number of items to keep queued in memory.
@@ -319,11 +325,13 @@ class HttpStatusPush(StatusPush):
         use disk at all.
         @debug: Save the json with nice formatting.
         @chunkSize: maximum number of items to send in each at each HTTP POST.
+        @maxHttpRequestSize: limits the size of encoded data for AE.
         """
         # Parameters.
         self.serverUrl = serverUrl
         self.debug = debug
         self.chunkSize = chunkSize
+        self.maxHttpRequestSize = maxHttpRequestSize
         if maxDiskItems != 0:
             # The queue directory is determined by the server url.
             path = ('events_' +
@@ -345,12 +353,27 @@ class HttpStatusPush(StatusPush):
         """Pops items from the pending list.
 
         They must be queued back on failure."""
-        items = self.queue.popChunk(self.chunkSize)
-        if self.debug:
-            packets = json.dumps(items, indent=2, sort_keys=True)
-        else:
-            packets = json.dumps(items, separators=(',',':'))
-        return (urllib.urlencode({'packets': packets}), items)
+        chunkSize = self.chunkSize
+        while True:
+            items = self.queue.popChunk(chunkSize)
+            if self.debug:
+                packets = json.dumps(items, indent=2, sort_keys=True)
+            else:
+                packets = json.dumps(items, separators=(',',':'))
+            data = urllib.urlencode({'packets': packets})
+            if (not self.maxHttpRequestSize or
+                len(data) < self.maxHttpRequestSize):
+                return (data, items)
+
+            if chunkSize == 1:
+                # This packet is just too large. Drop this packet.
+                log.msg("ERROR: packet %s was dropped, too large: %d > %d" %
+                        (items[0]['id'], len(data), self.maxHttpRequestSize))
+                chunkSize = self.chunkSize
+            else:
+                # Try with half the packets.
+                chunkSize /= 2
+                self.queue.insertBackChunk(items)
 
     def pushHttp(self):
         """Do the HTTP POST to the server."""
