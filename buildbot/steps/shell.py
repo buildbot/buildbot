@@ -212,7 +212,9 @@ class ShellCommand(LoggingBuildStep):
         if isinstance(command, unicode):
             command = command.encode("utf-8")
         elif not isinstance(command, str):
-            command = [a.encode("utf-8") if isinstance(a, unicode) else a for a in command]
+            for i, a in enumerate(command):
+                if isinstance(a, unicode):
+                    command[i] = a.encode("utf-8")
         kwargs['command'] = command
         kwargs['logfiles'] = self.logfiles
 
