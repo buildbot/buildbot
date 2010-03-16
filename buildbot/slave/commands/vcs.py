@@ -1863,7 +1863,7 @@ class P4Sync(P4Base):
                          sendRC=False, timeout=self.timeout,
                          maxTime=self.maxTime, usePTY=False)
         self.command = c
-        return c.start()c
+        return c.start()
 
     def doVCUpdate(self):
         return self._doVC(force=False)
@@ -1878,45 +1878,3 @@ class P4Sync(P4Base):
             return P4Base.parseGotRevision(self)
 
 registerSlaveCommand("p4sync", P4Sync, command_version)
-
-class AndroidRepo(SourceBase):
-    header = "repo operation"
-
-    def setup(self, args):
-        SourceBase.setup(self, args)
-        self.vcexe = getCommand("repo")
-        self.manifestpath = args['manifestpath']
-        self.revision = args['revision']
-        if not self.branch:
-            self.branch = "master"
-    
-    def _fullSrcdir(self):
-        return os.path.join(self.builder.basedir, self.srcdir)
-
-    def _dovccmd(self, command, cb=None, **kwargs):
-        c = ShellCommand(self.builder, [self.vcexe] + command, self._fullSrcdir(),
-                         sendRC=False, timeout=self.timeout,
-                         maxTime=self.maxTime, usePTY=False, **kwargs)
-        self.command = c
-        d = c.start()
-        if cb:
-            d.addCallback(self._abandonOnFailure)
-            d.addCallback(cb)
-        return d
-
-    def _didInit(self):
-        return self.doVCUpdate()
-
-    def doVCFull(self):
-        os.makedirs(self._fullSrcdir())
-        
-        command = ['init', '-u', self.manifestpath, '-b', self.revision]
-        return self._dovccmd(command, self._didInit)
-
-    def _didSync(self):
-        return defer.succeed(0)
-
-    def doVCUpdate(self):
-        return self._dovccmd(['sync'], self._didSync)
-
-registerSlaveCommand("androidrepo", AndroidRepo, command_version)
