@@ -406,13 +406,15 @@ class IndexedQueue(object):
 
     def popChunk(self, *args, **kwargs):
         items = self.queue.popChunk(*args, **kwargs)
-        self._index += len(items)
+        if items:
+            self._index += len(items)
         return items
 
     def insertBackChunk(self, items):
         self._index -= len(items)
         ret = self.queue.insertBackChunk(items)
-        self._index += len(ret)
+        if ret:
+            self._index += len(ret)
         return ret
 
 

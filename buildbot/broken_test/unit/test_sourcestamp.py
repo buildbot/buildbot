@@ -10,6 +10,7 @@ class SourceStampTest(unittest.TestCase):
         EXPECTED = {
             'revision': None,
             'branch':  None,
+            'hasPatch': False,
             'changes': [],
             'project': '',
             'repository': '',
@@ -20,6 +21,7 @@ class SourceStampTest(unittest.TestCase):
         EXPECTED = {
             'revision': 'Rev',
             'branch':  'Br',
+            'hasPatch': False,
             'changes': [],
             'project': '',
             'repository': '',
@@ -41,6 +43,7 @@ class SourceStampTest(unittest.TestCase):
         EXPECTED = {
             'revision': 'rev3',
             'branch': 'br3',
+            'hasPatch': True,
             'project': '',
             'repository':'',
             'changes': [

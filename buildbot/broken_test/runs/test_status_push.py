@@ -194,6 +194,7 @@ EXPECTED = [
                             'who': 'bob'
                         },
                     ],
+                    'hasPatch': False,
                     'project': '',
                     'repository': '',
                     # BUG!!
@@ -333,6 +334,7 @@ EXPECTED = [
                             'who': 'bob'
                         },
                     ],
+                    'hasPatch': False,
                     'project': '',
                     'repository': '',
                     # BUG!!
