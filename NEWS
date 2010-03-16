@@ -1,7 +1,12 @@
 Major User visible changes in Buildbot.             -*- outline -*-
   (see ChangeLog for a detailed list of changes)
 
-* Release 0.8.0beta1
+* master
+
+** Builders can setup properties
+
+There is a new parameter to the builders to setup properties on a
+builder basis.
 
 ** ShellCommands expands environment variable
 
@@ -13,6 +18,8 @@ then, on the slave side the variable FOO will have the same value as
 the alread existing BAR variable on the slave. This is mostly used to
 expand variable like this: "PATH": "/my/directory:${PATH}" where PATH
 will have "/my/directory" prepended to it.
+
+* Release 0.8.0beta1
 
 ** New Steps
 
