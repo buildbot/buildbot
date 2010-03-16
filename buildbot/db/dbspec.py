@@ -37,7 +37,7 @@
 #
 # ***** END LICENSE BLOCK *****
 
-import sys, os, cgi, re
+import sys, os, cgi, re, time
 
 from twisted.python import log, reflect
 from twisted.internet import defer, reactor
@@ -46,10 +46,50 @@ from twisted.enterprise import adbapi
 from buildbot.db.connector import DBConnector
 from buildbot.db.exceptions import *
 
+class ExpiringConnectionPool(adbapi.ConnectionPool):
+    """
+    A Connection pool that expires connections after a certain amount of idle
+    time.
+    """
+    def __init__(self, dbapiName, max_idle=60, *args, **kwargs):
+        """
+        @param max_idle: reconnect connections that have been idle more than
+                         this number of seconds.
+        """
+
+        log.msg("Using expiring pool with max_idle=%i" % max_idle)
+
+        adbapi.ConnectionPool.__init__(self, dbapiName, *args, **kwargs)
+        self.max_idle = max_idle
+
+        self.connection_lastused = {}
+
+    def connect(self):
+        tid = self.threadID()
+        now = time.time()
+        lastused = self.connection_lastused.get(tid)
+        if lastused and lastused + self.max_idle < now:
+            conn = self.connections.get(tid)
+            if self.noisy:
+                log.msg("expiring old connection")
+            self.disconnect(conn)
+
+        conn = adbapi.ConnectionPool.connect(self)
+        self.connection_lastused[tid] = now
+        return conn
+
+    def disconnect(self, conn):
+        adbapi.ConnectionPool.disconnect(self, conn)
+        tid = self.threadID()
+        del self.connection_lastused[tid]
+
 class DBSpec(object):
     """
     A specification for the database type and other connection parameters.
     """
+
+    # List of connkw arguments that are applicable to the connection pool only
+    pool_args = ["max_idle"]
     def __init__(self, dbapiName, *connargs, **connkw):
         # special-case 'sqlite3', replacing it with the available implementation
         if dbapiName == 'sqlite3':
@@ -113,6 +153,8 @@ class DBSpec(object):
                 args['passwd'] = passwd
             if port:
                 args['port'] = port
+            if 'max_idle' in args:
+                args['max_idle'] = int(args['max_idle'])
 
             return cls("MySQLdb", **args)
         else:
@@ -147,7 +189,11 @@ class DBSpec(object):
         DBAPI connection object.
         """
         dbapi = self.get_dbapi()
-        conn = dbapi.connect(*self.connargs, **self.connkw)
+        connkw = self.connkw.copy()
+        for arg in self.pool_args:
+            if arg in connkw:
+                del connkw[arg]
+        conn = dbapi.connect(*self.connargs, **connkw)
         return conn
 
     def get_async_connection_pool(self):
@@ -168,4 +214,9 @@ class DBSpec(object):
             connkw['check_same_thread'] = False
         log.msg("creating adbapi pool: %s %s %s" % \
                 (self.dbapiName, self.connargs, connkw))
-        return adbapi.ConnectionPool(self.dbapiName, *self.connargs, **connkw)
+
+        # MySQL needs support for expiring idle connections
+        if self.dbapiName == 'MySQLdb':
+            return ExpiringConnectionPool(self.dbapiName, *self.connargs, **connkw)
+        else:
+            return adbapi.ConnectionPool(self.dbapiName, *self.connargs, **connkw)

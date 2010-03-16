@@ -29,8 +29,36 @@ specified with @code{sqlite:///} and absolute paths with @code{sqlite:////}
 
 @example
 c['db_url'] = "sqlite:///state.sqlite"
-c['db_url'] = "mysql://user:pass@@somehost.com/database_name"
+c['db_url'] = "mysql://user:pass@@somehost.com/database_name?max_idle=300"
 @end example
+
+When using a MySQL database, multiple buildbot masters can share the same
+database.  Keep in mind that there is a single namespace for schedulers and
+builders for all masters using the same database.  One suggested configuration
+is to have one buildbot master configured with just the schedulers and change
+sources, and then other masters configured with just the builders.  To enable
+this mode, you will need to set the @code{multiMaster} option so that buildbot
+doesn't complain about missing schedulers or builders.  You'll also need to set
+@code{db_poll_interval} so the masters with builders check the database for new
+builds at the configured interval.
+
+The @code{max_idle} argument for MySQL connections should be set to something
+less than the wait_timeout configured for your server.  This ensures that
+connections are closed and re-opened after the configured amount of idle time.
+If you see errors such as @code{_mysql_exceptions.OperationalError: (2006,
+'MySQL server has gone away')}, this means your @code{max_idle} setting is
+probably too high. @code{show global variables like 'wait_timeout';} will show
+what the currently configured wait_timeout is on your MySQL server.
+
+@example
+# Enable multiMaster mode; disables warnings about unknown builders and
+# schedulers
+c['multiMaster'] = True
+# Check for new build requests every 60 seconds
+c['db_poll_interval'] = 60
+@end example
+
+
 
 @node Project Definitions
 @subsection Project Definitions
