@@ -1,6 +1,6 @@
 # -*- test-case-name: buildbot.test.test_slavecommand -*-
 
-import os, signal, types, time
+import os, signal, types, time, re
 from stat import ST_CTIME, ST_MTIME, ST_SIZE
 from collections import deque
 
@@ -301,13 +301,14 @@ class ShellCommand:
                     # turned in to a string.
                     ppath = os.pathsep.join(ppath)
 
-                if self.environ.has_key('PYTHONPATH'):
-                    # special case, prepend the builder's items to the
-                    # existing ones. This will break if you send over empty
-                    # strings, so don't do that.
-                    ppath = ppath + os.pathsep + self.environ['PYTHONPATH']
+                environ['PYTHONPATH'] = ppath + os.pathsep + "${PYTHONPATH}"
 
-                environ['PYTHONPATH'] = ppath
+            # do substitution on variable values matching patern: ${name}
+            p = re.compile('\${([0-9a-zA-Z_]*)}')
+            def subst(match):
+                return self.environ.get(match.group(1), "")
+            for key in environ.keys():
+                environ[key] = p.sub(subst, environ[key])
 
             self.environ.update(environ)
         self.initialStdin = initialStdin

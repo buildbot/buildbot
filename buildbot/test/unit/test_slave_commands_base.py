@@ -189,6 +189,23 @@ class TestShellCommand(unittest.TestCase):
         d.addCallback(check)
         return d
 
+    def testEnvironExpandVar(self):
+        basedir = "test_slave_commands_base.shellcommand.start"
+        b = FakeSlaveBuilder(False, basedir)
+        environ = {"EXPND": "-${PATH}-",
+                   "DOESNT_EXPAND": "-${---}-",
+                   "DOESNT_FIND": "-${DOESNT_EXISTS}-"}
+        s = ShellCommand(b, stdoutCommand('hello'), basedir, environ=environ)
+
+        d = s.start()
+        def check(ign):
+            headers = "".join([update.values()[0] for update in b.updates if update.keys() == ["header"] ])
+            self.failUnless("EXPND=-$" not in headers)
+            self.failUnless("DOESNT_FIND=--\n" in headers)
+            self.failUnless("DOESNT_EXPAND=-${---}-\n"  in headers)
+        d.addCallback(check)
+        return d
+
 class TestLogging(unittest.TestCase):
     def testSendStatus(self):
         basedir = "test_slave_commands_base.logging.sendStatus"

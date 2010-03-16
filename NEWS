@@ -3,6 +3,17 @@ Major User visible changes in Buildbot.             -*- outline -*-
 
 * Release 0.8.0beta1
 
+** ShellCommands expands environment variable
+
+If you pass to a shell command an environment variable like this:
+
+ShellCommand(..., env={"FOO": "${BAR}"})
+
+then, on the slave side the variable FOO will have the same value as
+the alread existing BAR variable on the slave. This is mostly used to
+expand variable like this: "PATH": "/my/directory:${PATH}" where PATH
+will have "/my/directory" prepended to it.
+
 ** New Steps
 
 *** Visual Studio / VC++ Compile Steps
