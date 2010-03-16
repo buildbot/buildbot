@@ -307,10 +307,16 @@ class ShellCommand:
             p = re.compile('\${([0-9a-zA-Z_]*)}')
             def subst(match):
                 return self.environ.get(match.group(1), "")
+            newenv = {}
+            for key in self.environ.keys():
+                # setting a key to None will delete it from the slave environment
+                if key not in environ or environ[key] is not None:
+                    newenv[key] = self.environ[key]
             for key in environ.keys():
-                environ[key] = p.sub(subst, environ[key])
+                if environ[key] is not None:
+                    newenv[key] = p.sub(subst, environ[key])
 
-            self.environ.update(environ)
+            self.environ = newenv
         self.initialStdin = initialStdin
         self.keepStdinOpen = keepStdinOpen
         self.logEnviron = logEnviron
