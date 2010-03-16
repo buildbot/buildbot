@@ -1262,3 +1262,23 @@ class Monotone(Source):
         assert slavever, "slave is too old, does not know about monotone"
         cmd = LoggedRemoteCommand("monotone", self.args)
         self.startCommand(cmd)
+
+class AndroidRepo(Source):
+    """Check out a repo manifest from a git server at 'manifest_path'."""
+
+    name = "repo"
+    
+    def __init__(self, manifestpath, revision, **kwargs):
+        Source.__init__(self, **kwargs)
+        self.addFactoryArguments(manifestpath=manifestpath, revision=revision)
+        self.args.update({"manifestpath":manifestpath,"revision":revision}}
+
+    def computeSourceRevision(self, changes):
+        if not changes:
+            return None
+        return changes[-1].revision
+
+    def startVC(self, **kwargs):
+        cmd = LoggedRemoteCommand("repo", self.args)
+        self.startCommand(cmd)
+
