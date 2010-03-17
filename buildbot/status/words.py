@@ -855,6 +855,8 @@ class IRC(base.StatusReceiverMultiService):
     connect to a single IRC server and am known by a single nickname on that
     server, however I can join multiple channels."""
 
+    in_test_harness = False
+
     compare_attrs = ["host", "port", "nick", "password",
                      "channels", "allowForce", "useSSL",
                      "categories"]
