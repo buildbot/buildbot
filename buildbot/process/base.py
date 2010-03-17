@@ -158,7 +158,7 @@ class Build:
         props.setProperty("revision", self.source.revision, "Build")
         props.setProperty("repository", self.source.repository, "Build")
         props.setProperty("project", self.source.project, "Build")
-        self.builder.setProperties(props)
+        self.builder.setupProperties(props)
 
     def setupSlaveBuilder(self, slavebuilder):
         self.slavebuilder = slavebuilder
