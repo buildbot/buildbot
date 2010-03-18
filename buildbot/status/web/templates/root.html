@@ -1,4 +1,5 @@
 {% extends 'layout.html' %}
+{% import 'forms.html' as forms %}
 
 {% block content %}
 
@@ -43,6 +44,15 @@
 
   <li class="{{ item_class.next() }}"><a href="about">About</a> this Buildbot</li>
 </ul>
+
+{%- if authz.advertiseAction('cleanShutdown') -%}
+{%- if shutting_down -%}
+Master is shutting down<br/>
+{{ forms.cancel_clean_shutdown(cancel_shutdown_url, authz) }}
+{%- else -%}
+{{ forms.clean_shutdown(shutdown_url, authz) }}
+{%- endif -%}
+{%- endif -%}
 
 <p><i>This and other pages can be overridden and customized.</i></p>
 

@@ -128,6 +128,32 @@
  </form>
 {% endmacro %}
 
+{% macro clean_shutdown(shutdown_url, authz) %}
+  <form method="post" action="{{ shutdown_url }}" class='command clean_shutdown'>
+  <p>To cause this master to shut down cleanly, push the 'Clean Shutdown' button.</p>
+  <p>No other builds will be started on this master, and the master will
+  stop once all current builds are finished.</p>
+
+  {% if authz.needAuthForm('gracefulShutdown') %}
+    {{ auth() }}
+  {% endif %}
+
+  <input type="submit" value="Clean Shutdown" />
+ </form>
+{% endmacro %}
+
+{% macro cancel_clean_shutdown(cancel_shutdown_url, authz) %}
+  <form method="post" action="{{ cancel_shutdown_url }}" class='command cancel_clean_shutdown'>
+  <p>To cancel a previously initiated shutdown, push the 'Cancel Shutdown' button.</p>
+
+  {% if authz.needAuthForm('gracefulShutdown') %}
+    {{ auth() }}
+  {% endif %}
+
+  <input type="submit" value="Cancel Shutdown" />
+ </form>
+{% endmacro %}
+
 {% macro ping_builder(ping_url, authz) %}
   <form method="post" action="{{ ping_url }}" class='command ping_builder'>
     <p>To ping the buildslave(s), push the 'Ping' button</p>
