@@ -566,6 +566,8 @@ class SVN(Source):
         self.args['revision'] = revision
         self.args['patch'] = patch
 
+	self.args['always_purge'] = self.always_purge
+
         #Set up depth if specified
         if self.depth is not None:
             if self.slaveVersionIsOlderThan("svn","2.9"):
