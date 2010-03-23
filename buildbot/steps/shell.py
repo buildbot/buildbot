@@ -263,32 +263,19 @@ class TreeSize(ShellCommand):
 class SetProperty(ShellCommand):
     name = "setproperty"
 
-    def __init__(self, **kwargs):
-        self.property = None
-        self.extract_fn = None
-        self.strip = True
-        
-        if kwargs.has_key('property') and kwargs.has_key('extract_fn'):
-            raise AssertionError('must only set property or extract_fn')
+    def __init__(self, property=None, extract_fn=None, strip=True, **kwargs):
+        self.property = property
+        self.extract_fn = extract_fn
+        self.strip = strip
 
-        if kwargs.has_key('property'):
-            self.property = kwargs['property']
-            del kwargs['property']
-        if kwargs.has_key('extract_fn'):
-            self.extract_fn = kwargs['extract_fn']
-            del kwargs['extract_fn']
-        if kwargs.has_key('strip'):
-            self.strip = kwargs['strip']
-            del kwargs['strip']
+        assert (property is not None) ^ (extract_fn is not None), \
+                "Exactly one of property and extract_fn must be set"
 
         ShellCommand.__init__(self, **kwargs)
 
         self.addFactoryArguments(property=self.property)
         self.addFactoryArguments(extract_fn=self.extract_fn)
         self.addFactoryArguments(strip=self.strip)
-
-        assert self.property or self.extract_fn, \
-            "SetProperty step needs either property= or extract_fn="
 
         self.property_changes = {}
 
