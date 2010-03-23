@@ -43,6 +43,7 @@ class Build:
     reason = "changes"
     finished = False
     results = None
+    stopped = False
 
     def __init__(self, requests):
         self.requests = requests
@@ -325,6 +326,8 @@ class Build:
         """This method is called to obtain the next BuildStep for this build.
         When it returns None (or raises a StopIteration exception), the build
         is complete."""
+        if self.stopped:
+            return None
         if not self.steps:
             return None
         if self.terminate:
@@ -420,14 +423,8 @@ class Build:
             return
         # TODO: include 'reason' in this point event
         self.builder.builder_status.addPointEvent(['interrupt'])
+        self.stopped = True
         self.currentStep.interrupt(reason)
-        if 0:
-            # TODO: maybe let its deferred do buildFinished
-            if self.currentStep and self.currentStep.progress:
-                # XXX: really .fail or something
-                self.currentStep.progress.finish()
-            text = ["stopped", reason]
-            self.buildFinished(text, FAILURE)
 
     def allStepsDone(self):
         if self.result == FAILURE:
