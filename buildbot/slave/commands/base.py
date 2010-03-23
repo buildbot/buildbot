@@ -289,7 +289,6 @@ class ShellCommand:
         self.workdir = workdir
         if not os.path.exists(workdir):
             os.makedirs(workdir)
-        self.environ = os.environ.copy()
         if environ:
             if environ.has_key('PYTHONPATH'):
                 ppath = environ['PYTHONPATH']
@@ -306,17 +305,19 @@ class ShellCommand:
             # do substitution on variable values matching patern: ${name}
             p = re.compile('\${([0-9a-zA-Z_]*)}')
             def subst(match):
-                return self.environ.get(match.group(1), "")
+                return os.environ.get(match.group(1), "")
             newenv = {}
-            for key in self.environ.keys():
+            for key in os.environ.keys():
                 # setting a key to None will delete it from the slave environment
                 if key not in environ or environ[key] is not None:
-                    newenv[key] = self.environ[key]
+                    newenv[key] = os.environ[key]
             for key in environ.keys():
                 if environ[key] is not None:
                     newenv[key] = p.sub(subst, environ[key])
 
             self.environ = newenv
+        else: # not environ
+            self.environ = os.environ.copy()
         self.initialStdin = initialStdin
         self.keepStdinOpen = keepStdinOpen
         self.logEnviron = logEnviron
