@@ -267,6 +267,9 @@ class SetProperty(ShellCommand):
         self.property = None
         self.extract_fn = None
         self.strip = True
+        
+        if kwargs.has_key('property') and kwargs.has_key('extract_fn'):
+            raise AssertionError('must only set property or extract_fn')
 
         if kwargs.has_key('property'):
             self.property = kwargs['property']
