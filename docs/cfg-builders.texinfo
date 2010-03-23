@@ -125,11 +125,6 @@ The buildmaster's @code{c['mergeRequests']} hook function is evaluated
 only if the Builder's @code{mergeRequests} key is True, so merging
 only takes place if both allow it. @pxref{Merging BuildRequests}.
 
-@item properties
-A builder may be given a dictionnary of @pxref{Build Properties}
-specific for this builder in this parameter. Those values can be used
-later on like other properties. @pxref{WithProperties}.
-
 @end table
 
 

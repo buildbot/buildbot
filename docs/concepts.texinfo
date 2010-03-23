@@ -748,8 +748,6 @@ through Force Build or sendchange.
 A buildslave can pass properties on to the builds it performs.
 @item builds --
 A build automatically sets a number of properties on itself.
-@item builders --
-A builder can set properties to all the build it runs.
 @item steps --
 Steps of a build can set properties that are available to subsequent
 steps.  In particular, source steps set a number of properties.
