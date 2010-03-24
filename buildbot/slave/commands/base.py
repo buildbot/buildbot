@@ -11,6 +11,7 @@ from twisted.python import log, runtime
 
 from buildbot.slave.interfaces import ISlaveCommand
 from buildbot.slave.commands.registry import registerSlaveCommand
+from buildbot import util
 
 # this used to be a CVS $-style "Revision" auto-updated keyword, but since I
 # moved to Darcs as the primary repository, this is updated manually each
@@ -491,7 +492,7 @@ class ShellCommand:
         # called right after we return, but somehow before connectionMade
         # were called, then kill() would blow up).
         self.process = None
-        self.startTime = self._reactor.seconds()
+        self.startTime = util.now(self._reactor)
 
         for arg in argv: assert isinstance(arg, str), (type(arg), arg)
 
@@ -644,7 +645,7 @@ class ShellCommand:
             self.timer.reset(self.timeout)
 
     def finished(self, sig, rc):
-        self.elapsedTime = self._reactor.seconds() - self.startTime
+        self.elapsedTime = util.now(self._reactor) - self.startTime
         log.msg("command finished with signal %s, exit code %s, elapsedTime: %0.6f" % (sig,rc,self.elapsedTime))
         for w in self.logFileWatchers:
             # this will send the final updates
