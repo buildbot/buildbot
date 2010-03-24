@@ -337,6 +337,9 @@ This summarizes each BuildSlave, including which Builders are
 configured to use it, whether the buildslave is currently connected or
 not, and host information retrieved from the buildslave itself.
 
+A ``no_builders=1`` URL argument will omit the builders column.  This is
+useful if each buildslave is assigned to a large number of builders.
+
 @item /one_line_per_build
 
 This page shows one line of text for each build, merging information
