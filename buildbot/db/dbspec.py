@@ -45,6 +45,7 @@ from twisted.enterprise import adbapi
 
 from buildbot.db.connector import DBConnector
 from buildbot.db.exceptions import *
+from buildbot import util
 
 class ExpiringConnectionPool(adbapi.ConnectionPool):
     """
@@ -66,7 +67,7 @@ class ExpiringConnectionPool(adbapi.ConnectionPool):
 
     def connect(self):
         tid = self.threadID()
-        now = time.time()
+        now = util.now()
         lastused = self.connection_lastused.get(tid)
         if lastused and lastused + self.max_idle < now:
             conn = self.connections.get(tid)
@@ -178,15 +179,15 @@ class DBSpec(object):
 
     def get_dbapi(self):
         """
-        Get the dbapi module used for this connection (for things like exceptions
-        and module-global attributes
+        Get the dbapi module used for this connection (for things like
+        exceptions and module-global attributes
         """
         return reflect.namedModule(self.dbapiName)
 
     def get_sync_connection(self):
         """
-        Get a synchronous connection to the specified database.  This returns a simple
-        DBAPI connection object.
+        Get a synchronous connection to the specified database.  This returns
+        a simple DBAPI connection object.
         """
         dbapi = self.get_dbapi()
         connkw = self.connkw.copy()
@@ -198,7 +199,8 @@ class DBSpec(object):
 
     def get_async_connection_pool(self):
         """
-        Get an asynchronous (adbapi) connection pool for the specified database.
+        Get an asynchronous (adbapi) connection pool for the specified
+        database.
         """
 
         # add some connection keywords
@@ -220,3 +222,6 @@ class DBSpec(object):
             return ExpiringConnectionPool(self.dbapiName, *self.connargs, **connkw)
         else:
             return adbapi.ConnectionPool(self.dbapiName, *self.connargs, **connkw)
+
+    def get_maxidle(self):
+        return self.connkw.get("max_idle")

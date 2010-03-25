@@ -93,6 +93,8 @@ class DBConnector(util.ComparableMixin):
         # this is for synchronous calls: runQueryNow, runInteractionNow
         self._dbapi = spec.get_dbapi()
         self._nonpool = None
+        self._nonpool_lastused = None
+        self._nonpool_max_idle = spec.get_maxidle()
 
         # pass queries in with "?" placeholders. If the backend uses a
         # different style, we'll replace them.
@@ -117,7 +119,7 @@ class DBConnector(util.ComparableMixin):
 
     def _getCurrentTime(self):
         # this is a seam for use in testing
-        return time.time()
+        return util.now()
 
     def start(self):
         # this only *needs* to be called in reactorless environments (which
@@ -205,23 +207,38 @@ class DBConnector(util.ComparableMixin):
             self._end_operation(t)
             self._add_query_time(start)
 
-    def _runInteractionNow(self, interaction, *args, **kwargs):
+    def get_sync_connection(self):
+        # This is a wrapper around spec.get_sync_connection that maintains a
+        # single connection to the database for synchronous usage.  It will get
+        # a new connection if the existing one has been idle for more than
+        # max_idle seconds.
+        if self._nonpool_max_idle is not None:
+            now = util.now()
+            if self._nonpool_lastused and self._nonpool_lastused + self._nonpool_max_idle < now:
+                self._nonpool = None
+
         if not self._nonpool:
             self._nonpool = self._spec.get_sync_connection()
-        c = self._nonpool.cursor()
+
+        self._nonpool_lastused = util.now()
+        return self._nonpool
+
+    def _runInteractionNow(self, interaction, *args, **kwargs):
+        conn = self.get_sync_connection()
+        c = conn.cursor()
         try:
             result = interaction(c, *args, **kwargs)
             c.close()
-            self._nonpool.commit()
+            conn.commit()
             return result
         except:
             excType, excValue, excTraceback = sys.exc_info()
             try:
-                self._nonpool.rollback()
-                c2 = self._nonpool.cursor()
+                conn.rollback()
+                c2 = conn.cursor()
                 c2.execute(self._pool.good_sql)
                 c2.close()
-                self._nonpool.commit()
+                conn.commit()
             except:
                 log.msg("rollback failed, will reconnect next query")
                 log.err()
