@@ -579,9 +579,31 @@ class DBConnector(util.ComparableMixin):
         for scheduler in added:
             name = scheduler.name
             assert name
-            q = self.quoteq("SELECT schedulerid FROM schedulers WHERE name=?")
-            t.execute(q, (name,))
-            sid = _one_or_else(t.fetchall())
+            class_name = "%s.%s" % (scheduler.__class__.__module__,
+                    scheduler.__class__.__name__)
+            q = self.quoteq("""
+                SELECT schedulerid, class_name FROM schedulers WHERE
+                    name=? AND
+                    (class_name=? OR class_name='')
+                    """)
+            t.execute(q, (name, class_name))
+            row = t.fetchone()
+            if row:
+                sid, db_class_name = row
+                if db_class_name == '':
+                    # We're updating from an old schema where the class name
+                    # wasn't stored.
+                    # Update this row's class name and move on
+                    q = self.quoteq("""UPDATE schedulers SET class_name=?
+                        WHERE schedulerid=?""")
+                    t.execute(q, (class_name, sid))
+                elif db_class_name != class_name:
+                    # A different scheduler is being used with this name.
+                    # Ignore the old scheduler and create a new one
+                    sid = None
+            else:
+                sid = None
+
             if sid is None:
                 # create a new row, with the next-highest schedulerid and the
                 # latest changeid (so it won't try to process all of the old
@@ -599,9 +621,9 @@ class DBConnector(util.ComparableMixin):
                 state = scheduler.get_initial_state(max_changeid)
                 state_json = json.dumps(state)
                 q = self.quoteq("INSERT INTO schedulers"
-                                " (schedulerid, name, state)"
-                                "  VALUES (?,?,?)")
-                t.execute(q, (sid, name, state_json))
+                                " (schedulerid, name, class_name, state)"
+                                "  VALUES (?,?,?,?)")
+                t.execute(q, (sid, name, class_name, state_json))
             log.msg("scheduler '%s' got id %d" % (scheduler.name, sid))
             scheduler.schedulerid = sid
 
