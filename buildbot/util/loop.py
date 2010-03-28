@@ -116,7 +116,11 @@ class LoopBase(service.MultiService):
         return d
 
     def trigger(self):
-        assert self.running
+        # if we're triggered while not running, ignore it.  We'll automatically
+        # trigger when the service starts
+        if not self.running:
+            print "loop triggered while service disabled; ignoring trigger"
+            return
         self._mark_runnable(run_everything=True)
 
     def _mark_runnable(self, run_everything):
