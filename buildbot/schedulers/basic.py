@@ -165,7 +165,7 @@ class AnyBranchScheduler(Scheduler):
                      'fileIsImportant', 'properties', 'change_filter')
     def __init__(self, name, treeStableTimer, builderNames,
                  fileIsImportant=None, properties={}, categories=None,
-                 branches=None, change_filter=None):
+                 branches=NotABranch, change_filter=None):
         """
         @param name: the name of this Scheduler
         @param treeStableTimer: the duration, in seconds, for which the tree
