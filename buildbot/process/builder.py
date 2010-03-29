@@ -377,6 +377,7 @@ class Builder(pb.Referenceable, service.MultiService):
         self.logHorizon = setup.get('logHorizon')
         self.eventHorizon = setup.get('eventHorizon')
         self.mergeRequests = setup.get('mergeRequests', True)
+        self.properties = setup.get('properties', {})
 
         # build/wannabuild slots: Build objects move along this sequence
         self.building = []
@@ -854,6 +855,11 @@ class Builder(pb.Referenceable, service.MultiService):
         self.building.remove(build)
         self._resubmit_buildreqs(build).addErrback(log.err)
 
+    def setupProperties(self, props):
+        props.setProperty("buildername", self.name, "Builder")
+        if len(self.properties) > 0:
+            for propertyname in self.properties:
+                props.setProperty(propertyname, self.properties[propertyname], "Builder")
 
     def buildFinished(self, build, sb, bids):
         """This is called when the Build has finished (either success or

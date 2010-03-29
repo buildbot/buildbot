@@ -166,7 +166,7 @@ EXPECTED = [
                 'number': 0,
                 'properties': [
                     ['branch', None, 'Build'],
-                    ['buildername', 'dummy', 'Build'],
+                    ['buildername', 'dummy', 'Builder'],
                     ['buildnumber', 0, 'Build'],
                     ['project', '', 'Build'],
                     ['repository', '', 'Build'],
@@ -260,7 +260,7 @@ EXPECTED = [
             },
             'properties': [
                 ['branch', None, 'Build'],
-                ['buildername', 'dummy', 'Build'],
+                ['buildername', 'dummy', 'Builder'],
                 ['buildnumber', 0, 'Build'],
                 ['project', '', 'Build'],
                 ['repository', '', 'Build'],
@@ -286,7 +286,7 @@ EXPECTED = [
             },
             'properties': [
                 ['branch', None, 'Build'],
-                ['buildername', 'dummy', 'Build'],
+                ['buildername', 'dummy', 'Builder'],
                 ['buildnumber', 0, 'Build'],
                 ['project', '', 'Build'],
                 ['repository', '', 'Build'],
@@ -306,7 +306,7 @@ EXPECTED = [
                 'number': 0,
                 'properties': [
                     ['branch', None, 'Build'],
-                    ['buildername', 'dummy', 'Build'],
+                    ['buildername', 'dummy', 'Builder'],
                     ['buildnumber', 0, 'Build'],
                     ['project', '', 'Build'],
                     ['repository', '', 'Build'],
@@ -481,7 +481,7 @@ EXPECTED_SHORT = [
                 'builderName': 'dummy',
                 'properties': [
                     ['branch', None, 'Build'],
-                    ['buildername', 'dummy', 'Build'],
+                    ['buildername', 'dummy', 'Builder'],
                     ['buildnumber', 0, 'Build'],
                     ['project', '', 'Build'],
                     ['repository', '', 'Build'],
@@ -530,7 +530,7 @@ EXPECTED_SHORT = [
             },
             'properties': [
                 ['branch', None, 'Build'],
-                ['buildername', 'dummy', 'Build'],
+                ['buildername', 'dummy', 'Builder'],
                 ['buildnumber', 0, 'Build'],
                 ['project', '', 'Build'],
                 ['repository', '', 'Build'],
@@ -552,7 +552,7 @@ EXPECTED_SHORT = [
             },
             'properties': [
                 ['branch', None, 'Build'],
-                ['buildername', 'dummy', 'Build'],
+                ['buildername', 'dummy', 'Builder'],
                 ['buildnumber', 0, 'Build'],
                 ['project', '', 'Build'],
                 ['repository', '', 'Build'],
@@ -569,7 +569,7 @@ EXPECTED_SHORT = [
                 'builderName': 'dummy',
                 'properties': [
                     ['branch', None, 'Build'],
-                    ['buildername', 'dummy', 'Build'],
+                    ['buildername', 'dummy', 'Builder'],
                     ['buildnumber', 0, 'Build'],
                     ['project', '', 'Build'],
                     ['repository', '', 'Build'],
