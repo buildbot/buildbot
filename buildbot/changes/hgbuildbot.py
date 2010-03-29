@@ -92,7 +92,7 @@ def hook(ui, repo, hooktype, node=None, source=None, **kwargs):
     if branch is None:
         if branchtype is not None:
             if branchtype == 'dirname':
-                branch = os.path.basename(os.getcwd())
+                branch = os.path.basename(repo.root)
             if branchtype == 'inrepo':
                 branch = workingctx(repo).branch()
 
