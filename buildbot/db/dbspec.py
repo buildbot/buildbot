@@ -224,4 +224,7 @@ class DBSpec(object):
             return adbapi.ConnectionPool(self.dbapiName, *self.connargs, **connkw)
 
     def get_maxidle(self):
-        return self.connkw.get("max_idle")
+        default = None
+        if self.dbapiName == "MySQLdb":
+            default = 60
+        return self.connkw.get("max_idle", default)
