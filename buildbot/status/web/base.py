@@ -1,6 +1,6 @@
 
 import urlparse, urllib, time, re
-import os, cgi, sys
+import os, cgi, sys, locale
 import jinja2
 from zope.interface import Interface
 from twisted.web import resource, static
@@ -162,7 +162,7 @@ class ContextMixin(object):
                     version = version,
                     time = time.strftime("%a %d %b %Y %H:%M:%S",
                                         time.localtime(util.now())),
-                    tz = time.tzname[time.localtime()[-1]],
+                    tz = unicode(time.tzname[time.localtime()[-1]], locale.getdefaultlocale()[1]),
                     metatags = [],
                     title = self.getTitle(request),
                     welcomeurl = rootpath)
