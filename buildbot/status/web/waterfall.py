@@ -4,7 +4,7 @@ from zope.interface import implements
 from twisted.python import log, components
 import urllib
 
-import time
+import time, locale
 import operator
 
 from buildbot import interfaces, util
@@ -387,7 +387,7 @@ class WaterfallStatusResource(HtmlResource):
                       self.buildGrid(request, builders)            
             
         # start the table: top-header material
-        ctx['tz'] = time.tzname[time.localtime()[-1]]
+        ctx['tz'] = unicode(time.tzname[time.localtime()[-1]], locale.getdefaultlocale()[1])
         ctx['changes_url'] = request.childLink("../changes")
         
         bn = ctx['builders'] = []
