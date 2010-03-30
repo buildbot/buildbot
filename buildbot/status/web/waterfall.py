@@ -387,7 +387,12 @@ class WaterfallStatusResource(HtmlResource):
                       self.buildGrid(request, builders)            
             
         # start the table: top-header material
-        ctx['tz'] = unicode(time.tzname[time.localtime()[-1]], locale.getdefaultlocale()[1])
+        locale_enc = locale.getdefaultlocale()[1]
+        if locale_enc is not None:
+            locale_tz = unicode(time.tzname[time.localtime()[-1]], locale_enc)
+        else:
+            locale_tz = unicode(time.tzname[time.localtime()[-1]])
+        ctx['tz'] = locale_tz
         ctx['changes_url'] = request.childLink("../changes")
         
         bn = ctx['builders'] = []

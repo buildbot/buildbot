@@ -155,6 +155,11 @@ class ContextMixin(object):
     def getContext(self, request):
         status = self.getStatus(request)
         rootpath = path_to_root(request)
+        locale_enc = locale.getdefaultlocale()[1]
+        if locale_enc is not None:
+            locale_tz = unicode(time.tzname[time.localtime()[-1]], locale_enc)
+        else:
+            locale_tz = unicode(time.tzname[time.localtime()[-1]])
         return dict(project_url = status.getProjectURL(),
                     project_name = status.getProjectName(),
                     stylesheet = rootpath + 'default.css',
@@ -162,7 +167,7 @@ class ContextMixin(object):
                     version = version,
                     time = time.strftime("%a %d %b %Y %H:%M:%S",
                                         time.localtime(util.now())),
-                    tz = unicode(time.tzname[time.localtime()[-1]], locale.getdefaultlocale()[1]),
+                    tz = locale_tz,
                     metatags = [],
                     title = self.getTitle(request),
                     welcomeurl = rootpath)
