@@ -586,7 +586,10 @@ def changelinkfilter(changelink):
     
     def replace_from_tuple(t):
         search, url_replace = t[:2]
-        title_replace = (' title="%s"' % t[2]) if len(t) == 3 else '' 
+        if len(t) == 3:
+            title_replace = ' title="%s"' % t[2]
+        else:
+            title_replace = ''
         
         search_re = re.compile(search)
         link_replace_re = jinja2.Markup(r'<a href="%s"%s>\g<0></a>' % (url_replace, title_replace))        
