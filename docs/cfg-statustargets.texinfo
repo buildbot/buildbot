@@ -527,11 +527,39 @@ BuilderStatus object.  The @code{stopBuild} action supplies a BuildStatus
 object.  The @code{cancelPendingBuild} action supplies a BuildRequest.  The
 remainder do not supply any extra arguments.
 
-@heading Miscellaneous Options
+@heading URL-decorating options
+
+These arguments adds an URL link to various places in the WebStatus,
+such as revisions, repositories, projects and, optionally, ticket/bug references
+in change comments.
+
+@subheading revlink
+
+The @code{revlink} is similarly used to create links from revision
+ids to a web-view of your source control system. This will either be
+a string, a dict from string (repository ids) to strings, or a callable.
+
+The string should use '%s' to insert
+the revision id in the url. I.e. for Buildbot on github: 
+@code{revlink='http://github.com/djmitche/buildbot/tree/%s'}
+(The revision id will be URL encoded before inserted in the replacement string)
+
+The callable takes the revision id and repository argument, and should return
+an URL to the revision. 
+
+
+@subheading changecommentlink
 
 The @code{changecommentlink} argument can be used to create links to
-ticket-ids from change comments (i.e. #123). The argument should
-be a tuple of three strings where the first element is a regex that
+ticket-ids from change comments (i.e. #123). 
+
+The argument can either be a tuple of three strings, a dictionary mapping 
+strings (project names) to tuples or a callable taking a changetext 
+(a @code{jinja2.Markup} instance) and a project name, returning a the
+same change text with additional links/html tags added to it.
+
+If the tuple is used, it should contain three strings where the first 
+element is a regex that
 searches for strings (with match groups), the second is a replace-string
 that, when substituted with \1 etc, yields the URL and the third
 is the title attribute of the link.
@@ -539,11 +567,16 @@ is the title attribute of the link.
 So, for Trac tickets (#42, etc): 
 @code{changecommentlink(r"#(\d+)", r"http://buildbot.net/trac/ticket/\1", r"Ticket \g<0>")} .
 
-The @code{revlink} is similarly used to create links from revision
-ids to a web-view of your source control system. The Use %s to insert
-the revision id in the url. I.e. for Buildbot on github: 
-@code{revlink='http://github.com/djmitche/buildbot/tree/%s'}
-(The revision id will be URL encoded before inserted in the replacement string)
+@subheading projects
+
+A dictionary from strings to strings, mapping project names to URLs,
+or a callable taking a project name and returning an URL.
+
+@subheading repositories
+
+Same as the projects arg above, a dict or callable mapping project names
+to URLs.
+
 
 @heading Display-Specific Options
 
