@@ -129,6 +129,13 @@ class DBConnector(util.ComparableMixin):
 
     def stop(self):
         """Call this when you're done with me"""
+
+        # Close our synchronous connection if we've got one
+        if self._nonpool:
+            self._nonpool.close()
+            self._nonpool = None
+            self._nonpool_lastused = None
+
         if not self._started:
             return
         self._pool.close()
@@ -414,12 +421,11 @@ class DBConnector(util.ComparableMixin):
 
         p = self.get_properties_from_db("change_properties", "changeid",
                                         changeid, t)
-        properties = p.properties
-
         c = Change(who=who, files=files, comments=comments, isdir=isdir,
                    links=links, revision=revision, when=when,
                    branch=branch, category=category, revlink=revlink,
-                   properties=properties, repository=repository, project=project)
+                   repository=repository, project=project)
+        c.properties.updateFromProperties(p)
         c.number = changeid
         return c
 
@@ -442,16 +448,14 @@ class DBConnector(util.ComparableMixin):
         d3 = self.runQuery(self.quoteq("SELECT filename FROM change_files"
                                        " WHERE changeid=?"),
                            (changeid,))
-        d4 = self.runQuery(self.quoteq("SELECT property_name,property_value"
-                                       " FROM change_properties"
-                                       " WHERE changeid=?"),
-                           (changeid,))
+        d4 = self.runInteraction(self._txn_get_properties_from_db,
+                "change_properties", "changeid", changeid)
         d = defer.gatherResults([d1,d2,d3,d4])
         d.addCallback(self._getChangeByNumber_query_done, changeid)
         return d
 
     def _getChangeByNumber_query_done(self, res, changeid):
-        (rows, link_rows, file_rows, prop_rows) = res
+        (rows, link_rows, file_rows, properties) = res
         if not rows:
             return None
         (who, comments,
@@ -463,12 +467,12 @@ class DBConnector(util.ComparableMixin):
         links.sort()
         files = [row[0] for row in file_rows]
         files.sort()
-        properties = dict(prop_rows)
 
         c = Change(who=who, files=files, comments=comments, isdir=isdir,
                    links=links, revision=revision, when=when,
                    branch=branch, category=category, revlink=revlink,
-                   properties=properties, repository=repository, project=project)
+                   repository=repository, project=project)
+        c.properties.updateFromProperties(properties)
         c.number = changeid
         self._change_cache.add(changeid, c)
         return c
