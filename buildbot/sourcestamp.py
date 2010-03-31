@@ -171,8 +171,8 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
             self.branch = str(self.branch)
         if self.revision is not None and not isinstance(self.revision, str):
             self.revision = str(self.revision)
-        if self.patch is not None and not isinstance(self.patch, str):
-            self.patch = str(self.patch)
+        if self.patch is not None:
+            self.patch = ( int(self.patch[0]), str(self.patch[1]) )
 
     def upgradeToVersion2(self):
         # version 1 did not have project or repository; just set them to a default ''
