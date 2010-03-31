@@ -49,7 +49,7 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
             assert isinstance(revision, str), type(revision)
         if patch is not None:
             patch_level = patch[0]
-            assert isinstance(patch_level, int), type(patch_level)
+            patch_level = int(patch_level)
             patch_diff = patch[1]
             assert isinstance(patch_diff, str), type(patch_diff)
             if len(patch) > 2:
