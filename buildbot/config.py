@@ -21,7 +21,8 @@ class BuilderConfig:
                 nextSlave=None,
                 nextBuild=None,
                 locks=None,
-                env=None):
+                env=None,
+                properties=None):
 
         # name is required, and can't start with '_'
         if not name or type(name) not in (str, unicode):
@@ -70,6 +71,7 @@ class BuilderConfig:
         self.nextBuild = nextBuild
         self.locks = locks
         self.env = env
+        self.properties = properties
 
     def getConfigDict(self):
         rv = {
@@ -89,4 +91,6 @@ class BuilderConfig:
             rv['locks'] = self.locks
         if self.env:
             rv['env'] = self.env
+        if self.properties:
+            rv['properties'] = self.properties
         return rv

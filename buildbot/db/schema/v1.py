@@ -39,6 +39,7 @@
 import cPickle
 import textwrap
 import os
+import sys
 
 from twisted.persisted import styles
 

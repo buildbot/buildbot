@@ -93,6 +93,8 @@ class DBConnector(util.ComparableMixin):
         # this is for synchronous calls: runQueryNow, runInteractionNow
         self._dbapi = spec.get_dbapi()
         self._nonpool = None
+        self._nonpool_lastused = None
+        self._nonpool_max_idle = spec.get_maxidle()
 
         # pass queries in with "?" placeholders. If the backend uses a
         # different style, we'll replace them.
@@ -117,7 +119,7 @@ class DBConnector(util.ComparableMixin):
 
     def _getCurrentTime(self):
         # this is a seam for use in testing
-        return time.time()
+        return util.now()
 
     def start(self):
         # this only *needs* to be called in reactorless environments (which
@@ -127,6 +129,13 @@ class DBConnector(util.ComparableMixin):
 
     def stop(self):
         """Call this when you're done with me"""
+
+        # Close our synchronous connection if we've got one
+        if self._nonpool:
+            self._nonpool.close()
+            self._nonpool = None
+            self._nonpool_lastused = None
+
         if not self._started:
             return
         self._pool.close()
@@ -205,23 +214,38 @@ class DBConnector(util.ComparableMixin):
             self._end_operation(t)
             self._add_query_time(start)
 
-    def _runInteractionNow(self, interaction, *args, **kwargs):
+    def get_sync_connection(self):
+        # This is a wrapper around spec.get_sync_connection that maintains a
+        # single connection to the database for synchronous usage.  It will get
+        # a new connection if the existing one has been idle for more than
+        # max_idle seconds.
+        if self._nonpool_max_idle is not None:
+            now = util.now()
+            if self._nonpool_lastused and self._nonpool_lastused + self._nonpool_max_idle < now:
+                self._nonpool = None
+
         if not self._nonpool:
             self._nonpool = self._spec.get_sync_connection()
-        c = self._nonpool.cursor()
+
+        self._nonpool_lastused = util.now()
+        return self._nonpool
+
+    def _runInteractionNow(self, interaction, *args, **kwargs):
+        conn = self.get_sync_connection()
+        c = conn.cursor()
         try:
             result = interaction(c, *args, **kwargs)
             c.close()
-            self._nonpool.commit()
+            conn.commit()
             return result
         except:
             excType, excValue, excTraceback = sys.exc_info()
             try:
-                self._nonpool.rollback()
-                c2 = self._nonpool.cursor()
+                conn.rollback()
+                c2 = conn.cursor()
                 c2.execute(self._pool.good_sql)
                 c2.close()
-                self._nonpool.commit()
+                conn.commit()
             except:
                 log.msg("rollback failed, will reconnect next query")
                 log.err()
@@ -397,12 +421,11 @@ class DBConnector(util.ComparableMixin):
 
         p = self.get_properties_from_db("change_properties", "changeid",
                                         changeid, t)
-        properties = p.properties
-
         c = Change(who=who, files=files, comments=comments, isdir=isdir,
                    links=links, revision=revision, when=when,
                    branch=branch, category=category, revlink=revlink,
-                   properties=properties, repository=repository, project=project)
+                   repository=repository, project=project)
+        c.properties.updateFromProperties(p)
         c.number = changeid
         return c
 
@@ -425,16 +448,14 @@ class DBConnector(util.ComparableMixin):
         d3 = self.runQuery(self.quoteq("SELECT filename FROM change_files"
                                        " WHERE changeid=?"),
                            (changeid,))
-        d4 = self.runQuery(self.quoteq("SELECT property_name,property_value"
-                                       " FROM change_properties"
-                                       " WHERE changeid=?"),
-                           (changeid,))
+        d4 = self.runInteraction(self._txn_get_properties_from_db,
+                "change_properties", "changeid", changeid)
         d = defer.gatherResults([d1,d2,d3,d4])
         d.addCallback(self._getChangeByNumber_query_done, changeid)
         return d
 
     def _getChangeByNumber_query_done(self, res, changeid):
-        (rows, link_rows, file_rows, prop_rows) = res
+        (rows, link_rows, file_rows, properties) = res
         if not rows:
             return None
         (who, comments,
@@ -446,12 +467,12 @@ class DBConnector(util.ComparableMixin):
         links.sort()
         files = [row[0] for row in file_rows]
         files.sort()
-        properties = dict(prop_rows)
 
         c = Change(who=who, files=files, comments=comments, isdir=isdir,
                    links=links, revision=revision, when=when,
                    branch=branch, category=category, revlink=revlink,
-                   properties=properties, repository=repository, project=project)
+                   repository=repository, project=project)
+        c.properties.updateFromProperties(properties)
         c.number = changeid
         self._change_cache.add(changeid, c)
         return c
@@ -562,9 +583,31 @@ class DBConnector(util.ComparableMixin):
         for scheduler in added:
             name = scheduler.name
             assert name
-            q = self.quoteq("SELECT schedulerid FROM schedulers WHERE name=?")
-            t.execute(q, (name,))
-            sid = _one_or_else(t.fetchall())
+            class_name = "%s.%s" % (scheduler.__class__.__module__,
+                    scheduler.__class__.__name__)
+            q = self.quoteq("""
+                SELECT schedulerid, class_name FROM schedulers WHERE
+                    name=? AND
+                    (class_name=? OR class_name='')
+                    """)
+            t.execute(q, (name, class_name))
+            row = t.fetchone()
+            if row:
+                sid, db_class_name = row
+                if db_class_name == '':
+                    # We're updating from an old schema where the class name
+                    # wasn't stored.
+                    # Update this row's class name and move on
+                    q = self.quoteq("""UPDATE schedulers SET class_name=?
+                        WHERE schedulerid=?""")
+                    t.execute(q, (class_name, sid))
+                elif db_class_name != class_name:
+                    # A different scheduler is being used with this name.
+                    # Ignore the old scheduler and create a new one
+                    sid = None
+            else:
+                sid = None
+
             if sid is None:
                 # create a new row, with the next-highest schedulerid and the
                 # latest changeid (so it won't try to process all of the old
@@ -582,9 +625,9 @@ class DBConnector(util.ComparableMixin):
                 state = scheduler.get_initial_state(max_changeid)
                 state_json = json.dumps(state)
                 q = self.quoteq("INSERT INTO schedulers"
-                                " (schedulerid, name, state)"
-                                "  VALUES (?,?,?)")
-                t.execute(q, (sid, name, state_json))
+                                " (schedulerid, name, class_name, state)"
+                                "  VALUES (?,?,?,?)")
+                t.execute(q, (sid, name, class_name, state_json))
             log.msg("scheduler '%s' got id %d" % (scheduler.name, sid))
             scheduler.schedulerid = sid
 

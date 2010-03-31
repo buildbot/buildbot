@@ -68,7 +68,8 @@ class OneBuildSlaveResource(HtmlResource, BuildLineMixin):
                         this_url = "../../../" + path_to_slave(request, slave),
                         access_uri = slave.getAccessURI()),
                         admin = unicode(slave.getAdmin() or '', 'utf-8'),
-                        host = unicode(slave.getHost() or '', 'utf-8'))
+                        host = unicode(slave.getHost() or '', 'utf-8'),
+                        show_builder_column = True)
         template = request.site.buildbot_service.templates.get_template("buildslave.html")
         data = template.render(**ctx)
         return data
@@ -81,6 +82,10 @@ class BuildSlavesResource(HtmlResource):
     def content(self, request, ctx):
         s = self.getStatus(request)
 
+        #?no_builders=1 disables build column
+        show_builder_column = not (request.args.get('no_builders', '0')[0])=='1'
+        ctx['show_builder_column'] = show_builder_column
+
         used_by_builder = {}
         for bname in s.getBuilderNames():
             b = s.getBuilder(bname)
@@ -89,7 +94,7 @@ class BuildSlavesResource(HtmlResource):
                 if slavename not in used_by_builder:
                     used_by_builder[slavename] = []
                 used_by_builder[slavename].append(bname)
-                
+
         slaves = ctx['slaves'] = []
         for name in util.naturalSort(s.getSlaveNames()):
             info = {}
@@ -99,10 +104,11 @@ class BuildSlavesResource(HtmlResource):
             info['running_builds'] = len(slave_status.getRunningBuilds())
             info['link'] = request.childLink(urllib.quote(name,''))
             info['name'] = name
-            
-            info['builders'] = []
-            for b in used_by_builder.get(name, []):
-                info['builders'].append(dict(link=request.childLink("../builders/%s" % b), name=b))
+
+            if show_builder_column:
+                info['builders'] = []
+                for b in used_by_builder.get(name, []):
+                    info['builders'].append(dict(link=request.childLink("../builders/%s" % b), name=b))
                                         
             info['version'] = slave.getVersion()
             info['connected'] = slave.isConnected()

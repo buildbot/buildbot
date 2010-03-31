@@ -58,3 +58,25 @@ class TestShellCommandProperties(unittest.TestCase):
 
         # This shouldn't raise an exception
         b.setupBuild(None)
+
+class TestSetProperty(unittest.TestCase):
+    def testGoodStep(self):
+        f = BuildFactory()
+        f.addStep(SetProperty(command=["echo", "value"], property="propname"))
+
+        ss = SourceStamp()
+
+        req = BuildRequest("Testing", ss, None)
+
+        b = f.newBuild([req])
+        b.build_status = FakeBuildStatus()
+        b.slavebuilder = FakeSlaveBuilder()
+
+        # This shouldn't raise an exception
+        b.setupBuild(None)
+
+    def testErrorBothSet(self):
+        self.assertRaises(AssertionError, SetProperty, command=["echo", "value"], property="propname", extract_fn=lambda x:{"propname": "hello"})
+
+    def testErrorNoneSet(self):
+        self.assertRaises(AssertionError, SetProperty, command=["echo", "value"])

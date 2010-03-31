@@ -860,6 +860,14 @@ branch will be used.
 (optional): when purging changes, don't use .gitignore and
 .git/info/exclude.
 
+@item submodules
+(optional): when initializing/updating a Git repository, this decides whether
+or not buildbot should consider git submodules.  Default: False.
+
+@item shallow
+(optional): instructs git to attempt shallow clones (@code{--depth 1}).  If the
+user/scheduler asks for a specific revision, this parameter is ignored.
+
 @end table
 
 
@@ -984,6 +992,19 @@ f.addStep(ShellCommand(
               command=["make", "test"],
               env=@{'PYTHONPATH': ["/usr/local/lib/python2.3",
                                    "/home/buildbot/lib/python"] @}))
+@end example
+
+Those variables support expansion so that if you just want to prepend
+@file{/home/buildbot/bin} to the PATH environment variable, you can do
+it by putting the value @code{$@{PATH@}} at the end of the string like
+in the example below. Variables that doesn't exists on the slave will be
+replaced by @code{""}.
+
+
+@example
+f.addStep(ShellCommand(
+              command=["make", "test"],
+              env=@{'PATH': "/home/buildbot/bin:$@{PATH@}"@}))
 @end example
 
 @item want_stdout

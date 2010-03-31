@@ -165,7 +165,7 @@ class AnyBranchScheduler(Scheduler):
                      'fileIsImportant', 'properties', 'change_filter')
     def __init__(self, name, treeStableTimer, builderNames,
                  fileIsImportant=None, properties={}, categories=None,
-                 change_filter=None):
+                 branches=NotABranch, change_filter=None):
         """
         @param name: the name of this Scheduler
         @param treeStableTimer: the duration, in seconds, for which the tree
@@ -190,11 +190,12 @@ class AnyBranchScheduler(Scheduler):
         @param change_filter: a buildbot.schedulers.filter.ChangeFilter instance
                               used to filter changes for this scheduler
 
-        @param categories: A list of categories of changes to accept
+        @param branches: (deprecated)
+        @param categories: (deprecated)
         """
 
         base.BaseScheduler.__init__(self, name, builderNames, properties)
-        self.make_filter(change_filter=change_filter, categories=categories)
+        self.make_filter(change_filter=change_filter, branch=branches, categories=categories)
         self.treeStableTimer = treeStableTimer
         if fileIsImportant:
             assert callable(fileIsImportant)

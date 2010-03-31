@@ -1026,8 +1026,21 @@ class Git(SourceBase):
         return self.doVCUpdate()
 
     def doVCFull(self):
-        os.makedirs(self._fullSrcdir())
-        return self._dovccmd(['init'], self._didInit)
+        # If they didn't ask for a specific revision, we can get away with a
+        # shallow clone.
+        if not self.args.get('revision') and self.args.get('shallow'):
+            cmd = [self.vcexe, 'clone', '--depth', '1', self.repourl,
+                   self._fullSrcdir()]
+            c = ShellCommand(self.builder, cmd, self.builder.basedir,
+                             sendRC=False, timeout=self.timeout,
+                             maxTime=self.maxTime, usePTY=False)
+            self.command = c
+            cmdexec = c.start()
+            cmdexec.addCallback(self._didInit)
+            return cmdexec
+        else:
+            os.makedirs(self._fullSrcdir())
+            return self._dovccmd(['init'], self._didInit)
 
     def parseGotRevision(self):
         command = ['rev-parse', 'HEAD']

@@ -129,7 +129,7 @@ class VisualStudio(ShellCommand):
         if cmd.args['env'] is None:
             cmd.args['env'] = {}
 
-        # setup the custom one
+        # setup the custom one, those one goes first
         for path in self.PATH:
             addEnvPath(cmd.args['env'], "PATH", path)
         for path in self.INCLUDE:
@@ -302,7 +302,7 @@ class VC8(VisualStudio):
         addEnvPath(cmd.args['env'], "PATH", VCInstallDir + '\\PlatformSDK\\bin')
         addEnvPath(cmd.args['env'], "PATH", VSInstallDir + '\\SDK\\v2.0\\bin')
         addEnvPath(cmd.args['env'], "PATH", VCInstallDir + '\\VCPackages')
-        addEnvPath(cmd.args['env'], "PATH", r'C:\WINDOWS\System32')
+        addEnvPath(cmd.args['env'], "PATH", r'${PATH}')
 
         addEnvPath(cmd.args['env'], "INCLUDE", VCInstallDir + '\\INCLUDE')
         addEnvPath(cmd.args['env'], "INCLUDE", VCInstallDir + '\\ATLMFC\\include')

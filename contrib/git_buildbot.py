@@ -45,6 +45,11 @@ master = "localhost:9989"
 
 category = None
 
+# When sending the notification, send this repository iff
+# it's set (via --repository)
+
+repository = None
+
 # When converting strings to unicode, assume this encoding. 
 # (set with --encoding)
 
@@ -140,8 +145,13 @@ def gen_changes(input, branch):
              'comments': unicode(m.group(2), encoding=encoding),
              'branch': unicode(branch, encoding=encoding),
         }
+
         if category:
             c['category'] = unicode(category, encoding=encoding)
+
+        if repository:
+            c['repository'] = unicode(repository, encoding=encoding)
+
         grab_commit_info(c, m.group(1))
         changes.append(c)
 
@@ -206,6 +216,9 @@ def gen_update_branch_changes(oldrev, newrev, refname, branch):
 
         if category:
             c['category'] = unicode(category, encoding=encoding)
+
+        if repository:
+            c['repository'] = unicode(repository, encoding=encoding)
 
         if files:
             c['files'] = files
@@ -284,6 +297,8 @@ def parse_options():
             help=master_help)
     parser.add_option("-c", "--category", action="store",
                       type="string", help="Scheduler category to notify.")
+    parser.add_option("-r", "--repository", action="store",
+                      type="string", help="Git repository URL to send.")
     encoding_help = ("Encoding to use when converting strings to "
                      "unicode. Default is %(encoding)s." % 
                      { "encoding" : encoding })
@@ -322,6 +337,9 @@ try:
 
     if options.category:
         category = options.category
+
+    if options.repository:
+        repository = options.repository
 
     if options.encoding:
         encoding = options.encoding

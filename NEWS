@@ -1,6 +1,13 @@
 Major User visible changes in Buildbot.             -*- outline -*-
   (see ChangeLog for a detailed list of changes)
 
+* master
+
+** Builders can setup properties
+
+There is a new parameter to the builders to setup properties on a
+builder basis.
+
 * Release 0.8.0beta1
 
 ** New Steps
@@ -16,6 +23,17 @@ attribute can be used to support building several distinct projects within one
 buildmaster, replacing the use of category for this purpose.  Matching can be
 done using regular expressions, so it's even possible to support nested
 projects!
+
+** ShellCommands expand environment variables
+
+If you pass to a shell command an environment variable like this:
+
+ShellCommand(..., env={"FOO": "${BAR}"})
+
+then, on the slave side the variable FOO will have the same value as
+the alread existing BAR variable on the slave. This is mostly used to
+expand variable like this: "PATH": "/my/directory:${PATH}" where PATH
+will have "/my/directory" prepended to it.
 
 ** Scheduler requires keyword arguments
 

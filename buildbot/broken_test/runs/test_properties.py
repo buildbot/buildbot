@@ -24,6 +24,8 @@ class FakeBuilder:
     statusbag = None
     name = "fakebuilder"
     botmaster = FakeBotMaster()
+    def setupProperties(self, props):
+        props.setProperty('buildername', self.name, 'Builder')
 class FakeSlave:
     slavename = "bot12"
     properties = Properties(slavename="bot12")

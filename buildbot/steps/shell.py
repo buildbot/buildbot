@@ -208,7 +208,14 @@ class ShellCommand(LoggingBuildStep):
 
         # create the actual RemoteShellCommand instance now
         kwargs = properties.render(self.remote_kwargs)
-        kwargs['command'] = properties.render(self.command)
+        command = properties.render(self.command)
+        if isinstance(command, unicode):
+            command = command.encode("utf-8")
+        elif not isinstance(command, str):
+            for i, a in enumerate(command):
+                if isinstance(a, unicode):
+                    command[i] = a.encode("utf-8")
+        kwargs['command'] = command
         kwargs['logfiles'] = self.logfiles
 
         # check for the usePTY flag
@@ -256,29 +263,19 @@ class TreeSize(ShellCommand):
 class SetProperty(ShellCommand):
     name = "setproperty"
 
-    def __init__(self, **kwargs):
-        self.property = None
-        self.extract_fn = None
-        self.strip = True
+    def __init__(self, property=None, extract_fn=None, strip=True, **kwargs):
+        self.property = property
+        self.extract_fn = extract_fn
+        self.strip = strip
 
-        if kwargs.has_key('property'):
-            self.property = kwargs['property']
-            del kwargs['property']
-        if kwargs.has_key('extract_fn'):
-            self.extract_fn = kwargs['extract_fn']
-            del kwargs['extract_fn']
-        if kwargs.has_key('strip'):
-            self.strip = kwargs['strip']
-            del kwargs['strip']
+        assert (property is not None) ^ (extract_fn is not None), \
+                "Exactly one of property and extract_fn must be set"
 
         ShellCommand.__init__(self, **kwargs)
 
         self.addFactoryArguments(property=self.property)
         self.addFactoryArguments(extract_fn=self.extract_fn)
         self.addFactoryArguments(strip=self.strip)
-
-        assert self.property or self.extract_fn, \
-            "SetProperty step needs either property= or extract_fn="
 
         self.property_changes = {}
 

@@ -41,6 +41,8 @@ methods. See the docstrings in @file{buildbot/interfaces.py} for full details.
 * MailNotifier::
 * IRC Bot::
 * PBListener::
+* StatusPush::
+* HttpStatusPush::
 * Writing New Status Plugins::
 * Status Target Index::
 @end menu
@@ -334,6 +336,9 @@ etc.
 This summarizes each BuildSlave, including which Builders are
 configured to use it, whether the buildslave is currently connected or
 not, and host information retrieved from the buildslave itself.
+
+A ``no_builders=1`` URL argument will omit the builders column.  This is
+useful if each buildslave is assigned to a large number of builders.
 
 @item /one_line_per_build
 
@@ -1068,6 +1073,49 @@ status client can connect and retrieve status information.
 @code{buildbot statusgui} (@pxref{statusgui}) is an example of such a
 status client. The @code{port} argument can also be a strports
 specification string.
+
+@node StatusPush
+@subsection StatusPush
+
+@cindex StatusPush
+@stindex buildbot.status.status_push.StatusPush
+
+
+@example
+def Process(self):
+  print str(self.queue.popChunk())
+  self.queueNextServerPush()
+
+import buildbot.status.status_push
+sp = buildbot.status.status_push.StatusPush(serverPushCb=Process,
+                                            bufferDelay=0.5,
+                                            retryDelay=5)
+c['status'].append(sp)
+@end example
+
+StatusPush batches events normally processed and sends it to the
+serverPushCb callback every bufferDelay seconds. The callback
+should pop items from the queue and then queue the next callback.
+If no items were poped from self.queue, retryDelay seconds will be
+waited instead.
+
+@node HttpStatusPush
+@subsection HttpStatusPush
+
+@cindex HttpStatusPush
+@stindex buildbot.status.status_push.HttpStatusPush
+
+
+@example
+import buildbot.status.status_push
+sp = buildbot.status.status_push.HttpStatusPush(
+        serverUrl="http://example.com/submit")
+c['status'].append(sp)
+@end example
+
+HttpStatusPush builds on StatusPush and sends HTTP requests to
+serverUrl, with all the items json-encoded. It is useful to create a
+status front end outside of buildbot for better scalability.
 
 @node Writing New Status Plugins
 @subsection Writing New Status Plugins

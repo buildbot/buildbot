@@ -1,4 +1,4 @@
-import sys
+import sys, re
 
 from twisted.trial import unittest
 from twisted.internet import task, defer
@@ -186,6 +186,35 @@ class TestShellCommand(unittest.TestCase):
         def check(ign):
             headers = "".join([update.values()[0] for update in b.updates if update.keys() == ["header"] ])
             self.failUnless("FOO=BAR\n" not in headers)
+        d.addCallback(check)
+        return d
+
+    def testEnvironExpandVar(self):
+        basedir = "test_slave_commands_base.shellcommand.start"
+        b = FakeSlaveBuilder(False, basedir)
+        environ = {"EXPND": "-${PATH}-",
+                   "DOESNT_EXPAND": "-${---}-",
+                   "DOESNT_FIND": "-${DOESNT_EXISTS}-"}
+        s = ShellCommand(b, stdoutCommand('hello'), basedir, environ=environ)
+
+        d = s.start()
+        def check(ign):
+            headers = "".join([update.values()[0] for update in b.updates if update.keys() == ["header"] ])
+            self.failUnless("EXPND=-$" not in headers)
+            self.failUnless("DOESNT_FIND=--\n" in headers)
+            self.failUnless("DOESNT_EXPAND=-${---}-\n"  in headers)
+        d.addCallback(check)
+        return d
+
+    def testUnsetEnvironVar(self):
+        basedir = "test_slave_commands_base.shellcommand.start"
+        b = FakeSlaveBuilder(False, basedir)
+        s = ShellCommand(b, stdoutCommand('hello'), basedir, environ={"PATH":None})
+
+        d = s.start()
+        def check(ign):
+            headers = "".join([update.values()[0] for update in b.updates if update.keys() == ["header"] ])
+            self.failUnless(not re.match('\bPATH=',headers))
         d.addCallback(check)
         return d
 

@@ -7,28 +7,27 @@ from buildbot.changes.changes import Change
 
 class SourceStampTest(unittest.TestCase):
     def testAsDictEmpty(self):
-        s = SourceStamp()
-        r = s.asDict()
-        self.assertEqual(r, {
+        EXPECTED = {
             'revision': None,
-            'patch': None,
             'branch':  None,
+            'hasPatch': False,
             'changes': [],
             'project': '',
             'repository': '',
-          })
+          }
+        self.assertEqual(EXPECTED, SourceStamp().asDict())
 
     def testAsDictBranch(self):
-        s = SourceStamp(branch='Br', revision='Rev')
-        r = s.asDict()
-        self.assertEqual(r, {
+        EXPECTED = {
             'revision': 'Rev',
-            'patch': None,
             'branch':  'Br',
+            'hasPatch': False,
             'changes': [],
             'project': '',
             'repository': '',
-          })
+          }
+        self.assertEqual(EXPECTED,
+                         SourceStamp(branch='Br', revision='Rev').asDict())
 
     def testAsDictChanges(self):
         changes = [
@@ -39,12 +38,12 @@ class SourceStampTest(unittest.TestCase):
         s = SourceStamp(branch='Br', revision='Rev', patch=(1,'Pat'),
                         changes=changes)
         r = s.asDict()
-        r['changes'][0]['when'] = 23
-        r['changes'][1]['when'] = 42
-        self.assertEqual(r, {
+        del r['changes'][0]['when']
+        del r['changes'][1]['when']
+        EXPECTED = {
             'revision': 'rev3',
-            'patch': (1,'Pat'),
             'branch': 'br3',
+            'hasPatch': True,
             'project': '',
             'repository':'',
             'changes': [
@@ -57,10 +56,9 @@ class SourceStampTest(unittest.TestCase):
                     'properties': [],
                     'revision': 'rev2',
                     'revlink': '',
-                    'when': 23,
-                    'who': 'nobody',
                     'project' : '',
                     'repository' : '',
+                    'who': 'nobody'
                 },
                 {
                     'branch': 'br3',
@@ -71,12 +69,12 @@ class SourceStampTest(unittest.TestCase):
                     'properties': [],
                     'revision': 'rev3',
                     'revlink': '',
-                    'when': 42,
                     'who': 'nob',
                     'project' : '',
                     'repository' : '',
                 }
             ],
-          })
+          }
+        self.assertEqual(EXPECTED, r)
 
 # vim: set ts=4 sts=4 sw=4 et:

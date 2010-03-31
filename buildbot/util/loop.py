@@ -85,6 +85,7 @@ from twisted.application import service
 from twisted.python import log
 
 from buildbot.util.eventual import eventually
+from buildbot import util
 
 class LoopBase(service.MultiService):
     OCD_MINIMUM_DELAY = 5.0
@@ -115,7 +116,11 @@ class LoopBase(service.MultiService):
         return d
 
     def trigger(self):
-        assert self.running
+        # if we're triggered while not running, ignore it.  We'll automatically
+        # trigger when the service starts
+        if not self.running:
+            print "loop triggered while service disabled; ignoring trigger"
+            return
         self._mark_runnable(run_everything=True)
 
     def _mark_runnable(self, run_everything):
@@ -137,7 +142,7 @@ class LoopBase(service.MultiService):
             self._remaining = list(self.get_processors())
         else:
             self._remaining = []
-            now = self._reactor.seconds()
+            now = util.now(self._reactor)
             all_processors = self.get_processors()
             for p in list(self._timers.keys()):
                 if self._timers[p] <= now:
@@ -184,7 +189,7 @@ class LoopBase(service.MultiService):
 
     def _set_timer(self, res, p):
         if isinstance(res, (int, float)):
-            now = self._reactor.seconds()
+            now = util.now(self._reactor)
             assert res > now # give me absolute time, not an interval
             # don't wake up right away. By doing this here instead of in
             # _set_wakeup_timer, we avoid penalizing unrelated jobs which
@@ -202,7 +207,7 @@ class LoopBase(service.MultiService):
         # to avoid waking too frequently, this could be:
         #  delay=max(when-now,OCD_MINIMUM_DELAY)
         # but that delays unrelated jobs that want to wake few seconds apart
-        delay = when - self._reactor.seconds()
+        delay = when - util.now(self._reactor)
         if self._wakeup_timer:
             self._wakeup_timer.reset(delay)
         else:

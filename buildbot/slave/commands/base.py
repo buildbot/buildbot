@@ -1,6 +1,6 @@
 # -*- test-case-name: buildbot.test.test_slavecommand -*-
 
-import os, signal, types, time
+import os, signal, types, time, re
 from stat import ST_CTIME, ST_MTIME, ST_SIZE
 from collections import deque
 
@@ -11,6 +11,7 @@ from twisted.python import log, runtime
 
 from buildbot.slave.interfaces import ISlaveCommand
 from buildbot.slave.commands.registry import registerSlaveCommand
+from buildbot import util
 
 # this used to be a CVS $-style "Revision" auto-updated keyword, but since I
 # moved to Darcs as the primary repository, this is updated manually each
@@ -289,7 +290,6 @@ class ShellCommand:
         self.workdir = workdir
         if not os.path.exists(workdir):
             os.makedirs(workdir)
-        self.environ = os.environ.copy()
         if environ:
             if environ.has_key('PYTHONPATH'):
                 ppath = environ['PYTHONPATH']
@@ -301,15 +301,24 @@ class ShellCommand:
                     # turned in to a string.
                     ppath = os.pathsep.join(ppath)
 
-                if self.environ.has_key('PYTHONPATH'):
-                    # special case, prepend the builder's items to the
-                    # existing ones. This will break if you send over empty
-                    # strings, so don't do that.
-                    ppath = ppath + os.pathsep + self.environ['PYTHONPATH']
+                environ['PYTHONPATH'] = ppath + os.pathsep + "${PYTHONPATH}"
 
-                environ['PYTHONPATH'] = ppath
+            # do substitution on variable values matching patern: ${name}
+            p = re.compile('\${([0-9a-zA-Z_]*)}')
+            def subst(match):
+                return os.environ.get(match.group(1), "")
+            newenv = {}
+            for key in os.environ.keys():
+                # setting a key to None will delete it from the slave environment
+                if key not in environ or environ[key] is not None:
+                    newenv[key] = os.environ[key]
+            for key in environ.keys():
+                if environ[key] is not None:
+                    newenv[key] = p.sub(subst, environ[key])
 
-            self.environ.update(environ)
+            self.environ = newenv
+        else: # not environ
+            self.environ = os.environ.copy()
         self.initialStdin = initialStdin
         self.keepStdinOpen = keepStdinOpen
         self.logEnviron = logEnviron
@@ -483,7 +492,7 @@ class ShellCommand:
         # called right after we return, but somehow before connectionMade
         # were called, then kill() would blow up).
         self.process = None
-        self.startTime = self._reactor.seconds()
+        self.startTime = util.now(self._reactor)
 
         for arg in argv: assert isinstance(arg, str), (type(arg), arg)
 
@@ -636,7 +645,7 @@ class ShellCommand:
             self.timer.reset(self.timeout)
 
     def finished(self, sig, rc):
-        self.elapsedTime = self._reactor.seconds() - self.startTime
+        self.elapsedTime = util.now(self._reactor) - self.startTime
         log.msg("command finished with signal %s, exit code %s, elapsedTime: %0.6f" % (sig,rc,self.elapsedTime))
         for w in self.logFileWatchers:
             # this will send the final updates

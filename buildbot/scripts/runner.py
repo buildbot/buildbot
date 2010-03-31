@@ -7,7 +7,6 @@ import traceback
 from twisted.python import usage, util, runtime
 
 from buildbot.interfaces import BuildbotNotRunningError
-from buildbot.db import schema
 
 # the create/start/stop commands should all be run as the same user,
 # preferably a separate 'buildbot' account.
@@ -270,7 +269,7 @@ class Maker:
             f.close()
 
     def create_db(self):
-        from buildbot.db import dbspec, exceptions
+        from buildbot.db import dbspec, exceptions, schema
         spec = dbspec.DBSpec.from_url(self.config["db"], self.basedir)
         if not self.config['quiet']: print "creating database"
 

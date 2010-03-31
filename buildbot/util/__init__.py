@@ -25,8 +25,11 @@ def naturalSort(l):
     l = [ i[1] for i in keyed_l ]
     return l
 
-def now():
-    return time.time()
+def now(_reactor=None):
+    if _reactor and hasattr(_reactor, "seconds"):
+        return _reactor.seconds()
+    else:
+        return time.time()
 
 def formatInterval(eta):
     eta_parts = []

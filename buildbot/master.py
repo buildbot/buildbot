@@ -520,7 +520,8 @@ class BuildMaster(service.MultiService):
                       "buildbotURL", "properties", "prioritizeBuilders",
                       "eventHorizon", "buildCacheSize", "logHorizon", "buildHorizon",
                       "changeHorizon", "logMaxSize", "logMaxTailSize",
-                      "logCompressionMethod", "db_url",
+                      "logCompressionMethod", "db_url", "multiMaster",
+                      "db_poll_interval",
                       )
         for k in config.keys():
             if k not in known_keys:
@@ -572,6 +573,8 @@ class BuildMaster(service.MultiService):
             changeHorizon = config.get("changeHorizon")
             if changeHorizon is not None and not isinstance(changeHorizon, int):
                 raise ValueError("changeHorizon needs to be an int")
+
+            multiMaster = config.get("multiMaster", False)
 
         except KeyError:
             log.msg("config dictionary is missing a required parameter")
@@ -682,8 +685,10 @@ class BuildMaster(service.MultiService):
         schedulernames = []
         for s in schedulers:
             for b in s.listBuilderNames():
-                assert b in buildernames, \
-                       "%s uses unknown builder %s" % (s, b)
+                # Skip checks for builders in multimaster mode
+                if not multiMaster:
+                    assert b in buildernames, \
+                           "%s uses unknown builder %s" % (s, b)
                 if b in unscheduled_buildernames:
                     unscheduled_buildernames.remove(b)
 
@@ -693,7 +698,8 @@ class BuildMaster(service.MultiService):
                 raise ValueError(msg)
             schedulernames.append(s.name)
 
-        if unscheduled_buildernames:
+        # Skip the checks for builders in multimaster mode
+        if not multiMaster and unscheduled_buildernames:
             log.msg("Warning: some Builders have no Schedulers to drive them:"
                     " %s" % (unscheduled_buildernames,))
 

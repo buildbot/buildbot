@@ -1,1 +1,6 @@
-cd .. && python docs/epyrun -o docs/reference  --exclude="buildbot\\.test"
+#!/bin/bash
+echo $(dirname $0)
+cd $(dirname $0)
+cd ..
+# excludes buildbot.test and buildbot.broken_test
+PYTHONPATH=$PYTHONPATH:. python docs/epyrun -o docs/reference --exclude="buildbot\\..*test"

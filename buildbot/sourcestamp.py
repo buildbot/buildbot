@@ -158,7 +158,7 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
         # Constant
         result['revision'] = self.revision
         # TODO(maruel): Make the patch content a suburl.
-        result['patch'] = self.patch
+        result['hasPatch']= self.patch is not None
         result['branch'] = self.branch
         result['changes'] = [c.asDict() for c in getattr(self, 'changes', [])]
         result['project'] = self.project

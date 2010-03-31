@@ -3,7 +3,7 @@
 import os, warnings, exceptions
 
 from twisted.trial import unittest
-from twisted.python import failure
+from twisted.python import failure, log
 from twisted.internet import defer
 
 from buildbot import scheduler
@@ -27,10 +27,9 @@ from buildbot.util import eventual
 words = None
 try:
     from buildbot.status import words
-    class NotIRC(words.IRC):
-        # don't actually start it
-        def startService(self):
-            return
+    class IRC_noconnect(words.IRC):
+        """A subclass that doesn't try to connect to IRC servers when started"""
+        in_test_harness = 1
 except ImportError:
     pass
 from buildbot.broken_test.runutils import ShouldFailMixin, StallMixin, MasterMixin
@@ -127,26 +126,26 @@ c['builders'] = [
 
 ircBase = emptyCfg + \
 """
-from buildbot.broken_test.unit.test_config import NotIRC
+from buildbot.broken_test.unit.test_config import IRC_noconnect
 """
 
 ircCfg1 = emptyCfg + \
 """
-from buildbot.broken_test.unit.test_config import NotIRC
-c['status'] = [NotIRC('irc.us.freenode.net', 'buildbot', ['twisted'])]
+from buildbot.broken_test.unit.test_config import IRC_noconnect
+c['status'] = [IRC_noconnect('irc.us.freenode.net', 'buildbot', ['twisted'])]
 """
 
 ircCfg2 = emptyCfg + \
 """
-from buildbot.broken_test.unit.test_config import NotIRC
-c['status'] = [NotIRC('irc.us.freenode.net', 'buildbot', ['twisted']),
-               NotIRC('irc.example.com', 'otherbot', ['chan1', 'chan2'])]
+from buildbot.broken_test.unit.test_config import IRC_noconnect
+c['status'] = [IRC_noconnect('irc.us.freenode.net', 'buildbot', ['twisted']),
+               IRC_noconnect('irc.example.com', 'otherbot', ['chan1', 'chan2'])]
 """
 
 ircCfg3 = emptyCfg + \
 """
-from buildbot.broken_test.unit.test_config import NotIRC
-c['status'] = [NotIRC('irc.us.freenode.net', 'buildbot', ['knotted'])]
+from buildbot.broken_test.unit.test_config import IRC_noconnect
+c['status'] = [IRC_noconnect('irc.us.freenode.net', 'buildbot', ['knotted'])]
 """
 
 webCfg1 = emptyCfg + \
@@ -923,7 +922,7 @@ c['schedulers'] = [s1, basic.Dependent(name='downstream', upstream=s1,
 
     def checkIRC(self, m, expected):
         ircs = {}
-        for irc in self.servers(m, NotIRC):
+        for irc in self.servers(m, IRC_noconnect):
             ircs[irc.host] = (irc.nick, irc.channels)
         self.failUnlessEqual(ircs, expected)
 
