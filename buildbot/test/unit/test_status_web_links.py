@@ -39,10 +39,12 @@ class RevisionLinks(unittest.TestCase):
         self._test(env)
 
     def test_callable(self):
-        def my_revlink(repo, rev):
+        def my_revlink(rev, repo):
             import urllib
-            if not repo or not rev:
+            if not rev:
                 return None
+            if not repo:
+                repo = 'main'
             rev = urllib.quote(rev)
             repo = urllib.quote(repo)
             return 'http://myserver.net/repos/%s/rev/%s' % (repo, rev)
