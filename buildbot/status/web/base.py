@@ -302,7 +302,6 @@ WEEK = 7*DAY
 MONTH = 30*DAY
 
 def plural(word, words, num):
-
     if int(num) == 1:
         return "%d %s" % (num, word)
     else:
@@ -339,8 +338,6 @@ class BuildLineMixin:
         except KeyError:
             rev = "??"
         rev = str(rev)
-        if len(rev) > 40:
-            rev = rev[0:40] + "..."
         css_class = css_classes.get(results, "")
 
         if type(text) == list:
@@ -374,22 +371,24 @@ def map_branches(branches):
 
 # jinja utilities 
 
-def createJinjaEnv(revlink=None, changecommentlink=None):
+def createJinjaEnv(revlink=None, changecommentlink=None,
+                     repositories=None, projects=None):
     ''' Create a jinja environment changecommentlink is used to
         render HTML in the WebStatus and for mail changes
     
-        @type changecommentlink: tuple (2 strings) or C{None}
-        @param changecommentlink: a regular expression and replacement string that is applied
-                     to all change comments. The first element represents what to search
-                     for and the second yields an url (the <a href=""></a> is added outside this)
-                     I.e. for Trac: (r'#(\d+)', r'http://buildbot.net/trac/ticket/\1') 
+        @type changecommentlink: C{None}, tuple (2 or 3 strings), dict (string -> 2- or 3-tuple) or callable
+        @param changecommentlink: see changelinkfilter()
 
-        @type revlink: string or C{None}
-        @param revlink: a replacement string that is applied to all revisions and
-                        will, if set, create a link to the result of the replacement.
-                        Use %s to insert the revision id in the url. 
-                        I.e. for Buildbot on github: ('http://github.com/djmitche/buildbot/tree/%s') 
-                        (The revision id will be URL encoded before inserted in the replacement string)
+        @type revlink: C{None}, format-string, dict (repository -> format string) or callable
+        @param revlink: see revlinkfilter()
+        
+        @type repositories: C{None} or dict (string -> url)
+        @param repositories: an (optinal) mapping from repository identifiers
+             (as given by Change sources) to URLs. Is used to create a link
+             on every place where a repository is listed in the WebStatus.
+
+        @type projects: C{None} or dict (string -> url)
+        @param projects: similar to repositories, but for projects.
     '''
     
     # See http://buildbot.net/trac/ticket/658
@@ -404,17 +403,17 @@ def createJinjaEnv(revlink=None, changecommentlink=None):
                              trim_blocks=True,
                              undefined=AlmostStrictUndefined)
     
-    env.filters['urlencode'] = urllib.quote
-    env.filters['email'] = emailfilter
-    env.filters['user'] = userfilter
-    env.filters['shortrev'] = shortrevfilter(revlink, env)
-    env.filters['revlink'] = revlinkfilter(revlink, env)
+    env.filters.update(dict(
+        urlencode = urllib.quote,
+        email = emailfilter,
+        user = userfilter,
+        shortrev = shortrevfilter(revlink, env),
+        revlink = revlinkfilter(revlink, env),
+        changecomment = changelinkfilter(changecommentlink), 
+        repolink = dictlinkfilter(repositories),
+        projectlink = dictlinkfilter(projects)
+        ))
     
-    if changecommentlink:
-        env.filters['changecomment'] = addlinkfilter(*changecommentlink) 
-    else:
-        env.filters['changecomment'] = jinja2.escape
-            
     return env    
 
 def emailfilter(value):
@@ -440,48 +439,87 @@ def userfilter(value):
     if m:
         user = jinja2.escape(m.group(1))
         email = emailfilter(m.group(2))        
-        email = jinja2.Markup('<div class="email">%s</div>') % email
-        return jinja2.Markup('<div class="user">%s%s</div>' % (user, email))
+        return jinja2.Markup('<div class="user">%s<div class="email">%s</div></div>' % (user, email))
     else:
-        return jinja2.escape(value)
+        return emailfilter(value) # filter for emails here for safety
+        
+def _revlinkcfg(replace, templates):
+    '''Helper function that returns suitable macros and functions
+       for building revision links depending on replacement mechanism
+'''
+   
+    assert not replace or callable(replace) or isinstance(replace, dict) or \
+           isinstance(replace, str) or isinstance(replace, unicode)
+    
+    if not replace:
+        return lambda rev, repo: None
+    else:
+        if callable(replace):
+            return  lambda rev, repo: replace(rev, repo)
+        elif isinstance(replace, dict): # TODO: test for [] instead
+            def filter(rev, repo):
+                url = replace.get(repo)
+                if url:
+                    return url % urllib.quote(rev)
+                else:
+                    return None
+                
+            return filter
+        else:
+            return lambda rev, repo: replace % urllib.quote(rev)            
+    
+    assert False, '_replace has a bad type, but we should never get here'
+
+
+def _revlinkmacros(replace, templates): 
+    '''return macros for use with revision links, depending 
+        on whether revlinks are configured or not'''
+
+    macros = templates.get_template("revmacros.html").module
+
+    if not replace:
+        id = macros.id
+        short = macros.shorten        
+    else:
+        id = macros.id_replace
+        short = macros.shorten_replace            
+
+    return (id, short)
         
 
 def shortrevfilter(replace, templates):
     ''' Returns a function which shortens the revisison string 
-        to 12-chars (Mercurial short-id)
+        to 12-chars (chosen as this is the Mercurial short-id length) 
         and add link if replacement string is set. 
         
         (The full id is still visible in HTML, for mouse-over events etc.)
 
-        TODO: Add a 'source' argument to SourceStamp and apply it here
-
-        @param replace: a python format string with an %s
+        @param replace: see revlinkfilter()
         @param templates: a jinja2 environment
     ''' 
     
-    def filter(value):
-        if not value:
+    url_f = _revlinkcfg(replace, templates)  
+        
+    def filter(rev, repo):
+        if not rev:
             return u''
-
-        macros = templates.get_template("revmacros.html").module
-        value = unicode(value)
+            
+        id_html, short_html = _revlinkmacros(replace, templates)
+        rev = unicode(rev)
+        url = url_f(rev, repo)
+        rev = jinja2.escape(rev)
+        shortrev = rev[:12] # TODO: customize this depending on vc type
         
-        if replace:
-            id_html = macros.id_replace
-            short_html = macros.shorten_replace            
-            url = replace % urllib.quote(value)
+        if shortrev == rev:
+            if url:
+                return id_html(rev=rev, url=url) 
+            else:
+                return rev
         else:
-            id_html = macros.id
-            short_html = macros.shorten
-            url = None
- 
-        value = jinja2.escape(value)
-        short = value[:12]
-        
-        if short == value:
-            return id_html(rev=value, url=url) 
-        else:
-            return short_html(short=short, rev=value, url=url)
+            if url:
+                return short_html(short=shortrev, rev=rev, url=url)
+            else:
+                return shortrev + '...'
         
     return filter
 
@@ -489,48 +527,126 @@ def shortrevfilter(replace, templates):
 def revlinkfilter(replace, templates):
     ''' Returns a function which adds an url link to a 
         revision identifiers.
+   
+        Takes same params as shortrevfilter()
         
-        @param replace: a python format string with an %s
+        @param replace: either a python format string with an %s,
+                        or a dict mapping repositories to format strings,
+                        or a callable taking (revision, repository) arguments
+                          and return an URL (or None, if no URL is available),
+                        or None, in which case revisions do not get decorated 
+                          with links
+   
         @param templates: a jinja2 environment
     ''' 
-        
-    def filter(value):
-        if not value:
+
+    url_f = _revlinkcfg(replace, templates)
+  
+    def filter(rev, repo):
+        if not rev:
             return u''
         
-        macros = templates.get_template("revmacros.html").module    
-        value = unicode(value)
-
-        if replace:
-            html = macros.id_replace
-            url = replace % urllib.quote(value)
+        rev = unicode(rev)
+        url = url_f(rev, repo)
+        if url:
+            id_html, _ = _revlinkmacros(replace, templates)
+            return id_html(rev=rev, url=url)
         else:
-            html = macros.id  
-            url = None
-            
-        return html(rev=value, url=url)
+            return jinja2.escape(rev)
     
     return filter
      
 
-def addlinkfilter(search, url_replace, title_replace=''):
+def changelinkfilter(changelink):
     ''' Returns function that does regex search/replace in 
         comments to add links to bug ids and similar.
         
-        @param search: a regex to match what we look for 
-        @param url_replace: an url with regex refs (\g<0>, \1, \2, etc) that becomes the 'href' attribute
-        @param title_replace: similar to url_replace, but for the 'title' attribute
+        @param changelink: 
+            Either C{None}
+            or: a tuple (2 or 3 elements) 
+                1. a regex to match what we look for 
+                2. an url with regex refs (\g<0>, \1, \2, etc) that becomes the 'href' attribute
+                3. (optional) an title string with regex ref regex 
+            or: a dict mapping projects to above tuples
+                (no links will be added if the project isn't found)
+            or: a callable taking (changehtml, project) args 
+                (where the changetext is HTML escaped in the 
+                form of a jinja2.Markup instance) and
+                returning another jinja2.Markup instance with 
+                the same change text plus any HTML tags added to it.            
     '''
-    
-    regex = re.compile(search)
-    link_replace = jinja2.Markup(r'<a href="%s" title="%s">\g<0></a>' % 
-                                 (url_replace, title_replace))
-    
-    def filter(value):
-        return regex.sub(link_replace, value)
-    
-    return filter
 
+    assert not changelink or isinstance(changelink, dict) or \
+        isinstance(changelink, tuple) or callable(changelink)
+    
+    def replace_from_tuple(t):
+        search, url_replace = t[:2]
+        title_replace = (' title="%s"' % t[2]) if len(t) == 3 else '' 
+        
+        search_re = re.compile(search)
+        link_replace_re = jinja2.Markup(r'<a href="%s"%s>\g<0></a>' % (url_replace, title_replace))        
+
+        def filter(text, project):
+            text = jinja2.escape(text)
+            html = search_re.sub(link_replace_re, text)
+            return html
+
+        return filter
+    
+    if not changelink:
+        return lambda project, text: jinja2.escape(text)
+
+    elif isinstance(changelink, dict):
+        def dict_filter(text, project):
+            # TODO: Optimize and cache return value from replace_from_tuple so
+            #       we only compile regex once per project, not per view
+            
+            t = changelink.get(project)
+            if t:
+                return replace_from_tuple(t)(text, project)
+            else:
+                return jinja2.escape(text)
+            
+        return dict_filter
+        
+    elif isinstance(changelink, tuple):
+        return replace_from_tuple(changelink)
+            
+    elif callable(changelink):
+        def checked_callable_filter(text, project):
+            text = jinja2.escape(text)
+            html = changelink(text, project)
+            assert isinstance(html, jinja2.Markup)
+            return html 
+        
+        return checked_callable_filter
+        
+    assert False, 'changelink has unsupported type, but that is checked before'
+
+
+def dictlinkfilter(links):
+    '''A filter that encloses the given value in a link tag
+       given that the value exists in the dictionary'''
+
+    assert not links or callable(links) or isinstance(links, dict)
+       
+    if not links:
+        return jinja2.escape
+
+    def filter(key):
+        if callable(links):
+            url = links(key)            
+        else:
+            url = links.get(key)
+
+        safe_key = jinja2.escape(key)
+            
+        if url:
+            return jinja2.Markup(r'<a href="%s">%s</a>' % (url, safe_key)) 
+        else:
+            return safe_key
+        
+    return filter
 
 class AlmostStrictUndefined(jinja2.StrictUndefined):
     ''' An undefined that allows boolean testing but 

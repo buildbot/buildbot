@@ -58,10 +58,7 @@ class StatusResourceBuild(HtmlResource):
         except KeyError:
             pass
         if got_revision:
-            got_revision = str(got_revision)
-            if len(got_revision) > 40:
-                got_revision = "[revision string too long]"
-            cxt['got_revision'] = got_revision
+            cxt['got_revision'] = str(got_revision)
 
         try:
             cxt['slave_url'] = path_to_slave(req, status.getSlave(b.getSlavename()))

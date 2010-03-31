@@ -132,7 +132,8 @@ class WebStatus(service.MultiService):
                  public_html="public_html", site=None, numbuilds=20,
                  num_events=200, num_events_max=None, auth=None,
                  order_console_by_time=False, changecommentlink=None,
-                 revlink=None, authz=None):
+                 revlink=None, projects=None, repositories=None,
+                 authz=None):
         """Run a web server that provides Buildbot status.
 
         @type  http_port: int or L{twisted.application.strports} string
@@ -205,19 +206,24 @@ class WebStatus(service.MultiService):
                      view according to the time they were created (for VCS like Git) or
                      according to their integer revision numbers (for VCS like SVN).
 
-        @type changecommentlink: tuple (3 strings) or C{None}
-        @param changecommentlink: a regular expression and replacement string that is applied
-                     to all change comments. The first element represents what to search
-                     for, the second should yield an url (for use in the href attribute of a link)
-                     and the third gives the title attribute
-                     I.e. for Trac: (r'#(\d+)', r'http://buildbot.net/trac/ticket/\1', r'Ticket \g<0>') 
+        @type changecommentlink: callable, dict, tuple (2 or 3 strings) or C{None}
+        @param changecommentlink: adds links to ticket/bug ids in change comments,
+            see buildbot.status.web.base.changecommentlink for details
+        
+        @type revlink: callable, dict, string or C{None}
+        @param revlink: decorations revision ids with links to a web-view, 
+            see buildbot.status.web.base.revlink for details
+        
+        @type projects: callable, dict or c{None}
+        @param projects: maps project identifiers to URLs, so that any project listed
+            is automatically decorated with a link to it's front page.
+            see buildbot.status.web.base.dictlink for details
+            
+        @type repositories: callable, dict or c{None}
+        @param repositories: maps repository identifiers to URLs, so that any project listed
+            is automatically decorated with a link to it's web view.
+            see buildbot.status.web.base.dictlink for details
 
-        @type revlink: string or C{None}
-        @param revlink: a replacement string that is applied to all revisions and
-                        will, if set, create a link to the result of the replacement.
-                        Use %s to insert the revision id in the url. 
-                        I.e. for Buildbot on github: ('http://github.com/djmitche/buildbot/tree/%s') 
-                        (The revision id will be URL encoded before inserted in the replacement string)
         """
 
         service.MultiService.__init__(self)
@@ -277,7 +283,8 @@ class WebStatus(service.MultiService):
         self.site.buildbot_service = self
 
         # Set up the jinja templating engine.
-        self.templates = createJinjaEnv(revlink, changecommentlink)
+        self.templates = createJinjaEnv(revlink, changecommentlink,
+                                        repositories, projects)
 
         # keep track of cached connections so we can break them when we shut
         # down. See ticket #102 for more details.

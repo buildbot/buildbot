@@ -26,7 +26,7 @@ Build #{{ b.getNumber() }}
   <h2>Results:</h2>
 
   <p class="{{ result_css }} result">   
-  {{ b.getText()|join(' ')|capitalize }}
+    {{ b.getText()|join(' ')|capitalize }}
   </p>
    
   {% if b.getTestResults() %}
@@ -35,15 +35,16 @@ Build #{{ b.getNumber() }}
 {% endif %}
 
 <h2>SourceStamp:</h2>
+
 <table class="info" width="100%">
 {% set ss_class = cycler('alt','') %}
 
 {% if ss.project %}
-  <tr class="{{ ss_class.next() }}"><td class="left">Project</td><td>{{ ss.project|e }}</td></tr>
+  <tr class="{{ ss_class.next() }}"><td class="left">Project</td><td>{{ ss.project|projectlink }}</td></tr>
 {% endif %}
 
 {% if ss.repository %}
-  <tr class="{{ ss_class.next() }}"><td class="left">Repository</td><td>{{ ss.repository|e }}</td></tr>
+  <tr class="{{ ss_class.next() }}"><td class="left">Repository</td><td>{{ ss.repository|repolink }}</td></tr>
 {% endif %}
 
 {% if ss.branch %}
@@ -51,7 +52,11 @@ Build #{{ b.getNumber() }}
 {% endif %}
 
 {% if ss.revision %}
-  <tr class="{{ ss_class.next() }}"><td class="left">Revision</td><td>{{ ss.revision|revlink }}</td></tr>
+  <tr class="{{ ss_class.next() }}"><td class="left">Revision</td><td>{{ ss.revision|revlink(ss.repostiory) }}</td></tr>
+{% endif %}
+
+{% if got_revision %}
+  <tr class="{{ ss_class.next() }}"><td class="left">Got Revision</td><td>{{ got_revision|revlink(ss.repository) }}</td></tr>
 {% endif %}
 
 {% if ss.patch %}
@@ -64,10 +69,6 @@ Build #{{ b.getNumber() }}
 
 {% if most_recent_rev_build %}
   <tr class="{{ ss_class.next() }}"><td class="left" colspan="2">Build of most recent revision</td></tr>
-{% endif %}
-    
-{% if got_revision %}
-  <tr class="{{ ss_class.next() }}"><td class="left">Got Revision</td><td>{{ got_revision|revlink }}</td></tr>
 {% endif %}
 
 </table>
@@ -183,7 +184,9 @@ Build #{{ b.getNumber() }}
   <h2>All Changes:</h2>
   <ol>
   {% for c in ss.changes %}
-    <li>{{ change(**c.html_dict()) }}</li>
+    <li><h3>Change #{{ c.number }}</h3>
+      {{ change(c.html_dict()) }}
+    </li>
   {% else %}
     <li>no changes</li>
   {% endfor %}  

@@ -111,8 +111,8 @@ class Change:
                    'comments'  : self.comments,
                    'properties': self.properties.asList(),
                    'number'    : self.number,
-                   'repository': self.repository,
-                   'project'   : self.project,
+                   'repository': getattr(self, 'repository', None),
+                   'project'   : getattr(self, 'project', None)
                    }
 
         return kwargs
@@ -128,10 +128,10 @@ class Change:
         result['revision'] = self.revision
         result['when'] = self.when
         result['files'] = self.files
-        result['revlink'] = self.revlink
+        result['revlink'] = getattr(self, 'revlink', None)
         result['properties'] = self.properties.asList()
-        result['repository'] = self.repository
-        result['project'] = self.project
+        result['repository'] = getattr(self, 'repository', None)
+        result['project'] = getattr(self, 'project', None)
         return result
 
     def getShortAuthor(self):

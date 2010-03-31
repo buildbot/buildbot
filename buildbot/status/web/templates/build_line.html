@@ -1,6 +1,6 @@
 {% macro build_line(b, include_builder=False) %}
   <small>({{ b.time }})</small>
-  Rev: {{ b.rev|shortrev }}
+  Rev: {{ b.rev|shortrev(b.rev_repo) }}
   <span class="{{ b.class }}">{{ b.results }}</span>
   {% if include_builder %}
     <a href="{{ b.builderurl }}">{{ b.builder_name }}</a>
@@ -12,7 +12,7 @@
 {% macro build_tr(b, include_builder=False, loop=None) %}
   <tr class="{{ loop.cycle('alt', '') if loop }}">
     <td>{{ b.time }}</td>
-    <td>{{ b.rev|shortrev }}</td>
+    <td>{{ b.rev|shortrev(b.rev_repo) }}</td>
     <td class="{{ b.class }}">{{ b.results }}</td>
   {%- if include_builder %}    
     <td><a href="{{ b.builderurl }}">{{ b.builder_name }}</a></td>

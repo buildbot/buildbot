@@ -1,10 +1,14 @@
 {# both macro pairs must have the same signature #}
 
 {% macro id_replace(rev, url) -%}
-  <span class="revision"><a href="{{ url }}">{{ rev }}</a></span>
+  <span class="revision" title="Revision {{ rev }}"><a href="{{ url }}">
+  {%- if rev|length > 40 %}{{ rev[:40] }}...
+  {%- else %}{{ rev }}
+  {%- endif -%}  
+  </a></span>
 {%- endmacro %}
 
-{% macro shorten_replace(short, rev, url) -%}
+{% macro shorten_replace(short, rev, url) %}
   <div class="revision">
       <div class="short" title="Revision {{ rev }}">
           <a href="{{ url }}">{{ short }}...</a>
@@ -16,10 +20,14 @@
 {% endmacro %}
 
 {% macro id(rev, url) -%}
-  <span class="revision">{{ rev }}</span>
+  <span class="revision" title="Revision {{ rev }}">
+  {%- if rev|length > 40 %}{{ rev[:40] }}...
+  {%- else %}{{ rev }}
+  {%- endif -%}
+  </span>
 {%- endmacro %}
 
-{% macro shorten(short, rev, url) -%}
+{% macro shorten(short, rev, url) %}
   <div class="revision">
       <div class="short" title="Revision {{ rev }}">{{ short }}...</div> 
       <div class="full">{{ rev }}</div>

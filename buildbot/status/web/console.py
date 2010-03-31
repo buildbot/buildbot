@@ -43,27 +43,30 @@ class ANYBRANCH: pass # a flag value, used below
 class DevRevision:
     """Helper class that contains all the information we need for a revision."""
 
-    def __init__(self, revision, who, comments, date, revlink, when):
-        self.revision = revision
-        self.comments = comments
-        self.who = who
-        self.date = date
-        self.revlink = revlink
-        self.when = when
+    def __init__(self, change):
+        self.revision = change.revision
+        self.comments = change.comments
+        self.who = change.who
+        self.date = change.getTime()
+        self.revlink = getattr(change, 'revlink', None)
+        self.when = change.when
+        self.repository = change.repository
+        self.project = change.project
 
 
 class DevBuild:
     """Helper class that contains all the information we need for a build."""
 
-    def __init__(self, revision, results, number, isFinished, text, eta, details, when):
+    def __init__(self, revision, build, details):
         self.revision = revision
-        self.results = results 
-        self.number = number
-        self.isFinished = isFinished
-        self.text = text
-        self.eta = eta
+        self.results =  build.getResults(), 
+        self.number = build.getNumber()
+        self.isFinished = build.isFinished()
+        self.text = build.getText()
+        self.eta = build.getETA()
         self.details = details
-        self.when = when
+        self.when = build.getTimes()[0]
+        self.source = build.getSourceStamp()
 
 
 class ConsoleStatusResource(HtmlResource):
@@ -71,12 +74,10 @@ class ConsoleStatusResource(HtmlResource):
     Every change is a line in the page, and it shows the result of the first
     build with this change for each slave."""
 
-    def __init__(self, css=None, orderByTime=False):
+    def __init__(self, orderByTime=False):
         HtmlResource.__init__(self)
 
         self.status = None
-
-        self.css = css
 
         if orderByTime:
             self.comparator = TimeRevisionComparator()
@@ -171,7 +172,7 @@ class ConsoleStatusResource(HtmlResource):
         return allChanges
 
     def stripRevisions(self, allChanges, numRevs, branch, devName):
-        """Returns a subset of changesn from allChanges that matches the query.
+        """Returns a subset of changes from allChanges that matches the query.
 
         allChanges is the list of all changes we know about.
         numRevs is the number of changes we will inspect from allChanges. We
@@ -193,12 +194,8 @@ class ConsoleStatusResource(HtmlResource):
                 break
             change = allChanges[i]
             if branch == ANYBRANCH or branch == change.branch:
-                if not devName or change.who in devName:
-                    
-                    rev = DevRevision(change.revision, change.who,
-                                      change.comments, change.getTime(),
-                                      getattr(change, 'revlink', None),
-                                      change.when)
+                if not devName or change.who in devName:                    
+                    rev = DevRevision(change)
                     revisions.append(rev)
 
         return revisions
@@ -276,14 +273,7 @@ class ConsoleStatusResource(HtmlResource):
             # user that his change might have broken the source update.
             if got_rev and got_rev != -1:
                 details = self.getBuildDetails(request, builderName, build)
-                devBuild = DevBuild(got_rev, build.getResults(),
-                                             build.getNumber(),
-                                             build.isFinished(),
-                                             build.getText(),
-                                             build.getETA(),
-                                             details,
-                                             build.getTimes()[0])
-
+                devBuild = DevBuild(got_rev, build, details)
                 builds.append(devBuild)
 
                 # Now break if we have enough builds.
@@ -299,15 +289,7 @@ class ConsoleStatusResource(HtmlResource):
 
     def getChangeForBuild(self, build, revision):
         if not build or not build.getChanges(): # Forced build
-            devBuild = DevBuild(revision, build.getResults(),
-                                build.getNumber(),
-                                build.isFinished(),
-                                build.getText(),
-                                build.getETA(),
-                                None,
-                                build.getTimes()[0])
-
-            return devBuild
+            return DevBuild(revision, build, None)
         
         for change in build.getChanges():
             if change.revision == revision:
@@ -560,11 +542,13 @@ class ConsoleStatusResource(HtmlResource):
             r = {}
             
             # Fill the dictionnary with these new information
-            r["id"] = revision.revision
-            r["link"] = revision.revlink 
-            r["who"] = revision.who
-            r["date"] = revision.date
-            r["comments"] = revision.comments
+            r['id'] = revision.revision
+            r['link'] = revision.revlink 
+            r['who'] = revision.who
+            r['date'] = revision.date
+            r['comments'] = revision.comments
+            r['repository'] = revision.repository
+            r['project'] = revision.project
 
             # Display the status for all builders.
             (builds, details) = self.displayStatusLine(builderList,

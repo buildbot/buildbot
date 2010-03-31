@@ -12,7 +12,7 @@ class ChangeResource(HtmlResource):
         self.title = "Change #%d" % num
         
     def content(self, req, cxt):
-        cxt.update(self.change.html_dict())
+        cxt['c'] = self.change.html_dict()
         template = req.site.buildbot_service.templates.get_template("change.html")
         data = template.render(cxt)
         return data      
