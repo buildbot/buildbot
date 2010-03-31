@@ -621,13 +621,11 @@ def changelinkfilter(changelink):
         return replace_from_tuple(changelink)
             
     elif callable(changelink):
-        def checked_callable_filter(text, project):
+        def callable_filter(text, project):
             text = jinja2.escape(text)
-            html = changelink(text, project)
-            assert isinstance(html, jinja2.Markup)
-            return html 
+            return changelink(text, project)
         
-        return checked_callable_filter
+        return callable_filter
         
     assert False, 'changelink has unsupported type, but that is checked before'
 
