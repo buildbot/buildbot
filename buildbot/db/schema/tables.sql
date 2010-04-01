@@ -1,5 +1,5 @@
 CREATE TABLE buildrequests (
-    `id` INTEGER PRIMARY KEY NOT NULL,
+    `id` INTEGER PRIMARY KEY AUTOINCREMENT,
 
     -- every BuildRequest has a BuildSet
     -- the sourcestampid and reason live in the BuildSet
@@ -33,7 +33,7 @@ CREATE TABLE buildrequests (
     `complete_at` INTEGER
 );
 CREATE TABLE builds (
-    `id` INTEGER PRIMARY KEY NOT NULL,
+    `id` INTEGER PRIMARY KEY AUTOINCREMENT,
     `number` INTEGER NOT NULL, -- BuilderStatus.getBuild(number)
     -- 'number' is scoped to both the local buildmaster and the buildername
     `brid` INTEGER NOT NULL, -- matches buildrequests.id
@@ -46,7 +46,7 @@ CREATE TABLE buildset_properties (
     `property_value` VARCHAR(1024) NOT NULL -- too short?
 );
 CREATE TABLE buildsets (
-    `id` INTEGER PRIMARY KEY NOT NULL,
+    `id` INTEGER PRIMARY KEY AUTOINCREMENT,
     `external_idstring` VARCHAR(256),
     `reason` VARCHAR(256),
     `sourcestampid` INTEGER NOT NULL,
@@ -70,7 +70,7 @@ CREATE TABLE change_properties (
     `property_value` VARCHAR(1024) NOT NULL -- too short?
 );
 CREATE TABLE changes (
-    `changeid` INTEGER PRIMARY KEY NOT NULL, -- also serves as 'change number'
+    `changeid` INTEGER PRIMARY KEY AUTOINCREMENT, -- also serves as 'change number'
     `author` VARCHAR(1024) NOT NULL,
     `comments` VARCHAR(1024) NOT NULL, -- too short?
     `is_dir` SMALLINT NOT NULL, -- old, for CVS
@@ -86,9 +86,9 @@ CREATE TABLE changes (
 
     -- project names the project this source code represents.  It is used
     -- later to filter changes
-    `project` text not nul default '',
+    `project` text not null default ''
 );
-CREATE TABLE changes_nextid (next_changeid INTEGER);
+
 CREATE TABLE last_access (
     `who` VARCHAR(256) NOT NULL, -- like 'buildbot-0.8.0'
     `writing` INTEGER NOT NULL, -- 1 if you are writing, 0 if you are reading
@@ -96,7 +96,7 @@ CREATE TABLE last_access (
     `last_access` TIMESTAMP     -- seconds since epoch
 );
 CREATE TABLE patches (
-    `id` INTEGER PRIMARY KEY,
+    `id` INTEGER PRIMARY KEY AUTOINCREMENT,
     `patchlevel` INTEGER NOT NULL,
     `patch_base64` TEXT NOT NULL, -- encoded bytestring
     `subdir` TEXT -- usually NULL
@@ -106,7 +106,7 @@ CREATE TABLE sourcestamp_changes (
     `changeid` INTEGER NOT NULL
 );
 CREATE TABLE sourcestamps (
-    `id` INTEGER PRIMARY KEY,
+    `id` INTEGER PRIMARY KEY AUTOINCREMENT,
     `branch` VARCHAR(256) default NULL,
     `revision` VARCHAR(256) default NULL,
     `patchid` INTEGER default NULL,
@@ -122,7 +122,7 @@ CREATE TABLE sourcestamps (
 -- the last change that was analyzed, but is stored in an opaque JSON object.
 -- Note that schedulers are never deleted.
 CREATE TABLE schedulers (
-    `schedulerid` INTEGER PRIMARY KEY, -- joins to other tables
+    `schedulerid` INTEGER PRIMARY KEY AUTOINCREMENT, -- joins to other tables
     `name` VARCHAR(256) NOT NULL, -- the scheduler's name according to master.cfg
     `class_name` VARCHAR(256) NOT NULL, -- the scheduler's class
     `state` VARCHAR(1024) NOT NULL -- JSON-encoded state dictionary

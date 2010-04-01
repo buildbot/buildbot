@@ -2,7 +2,7 @@ from twisted.python import reflect
 
 # note that schema modules are not loaded unless an upgrade is taking place
 
-CURRENT_VERSION = 3
+CURRENT_VERSION = 4
 
 class DBSchemaManager(object):
     """

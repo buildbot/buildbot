@@ -6,5 +6,7 @@ class Upgrader(object):
         self.basedir = basedir
         self.quiet = quiet
 
+        self.dbapiName = dbapi.__name__
+
     def upgrade(self):
         raise NotImplementedError

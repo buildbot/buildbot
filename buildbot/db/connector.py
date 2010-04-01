@@ -309,40 +309,22 @@ class DBConnector(util.ComparableMixin):
         self._change_cache.add(change.number, change)
 
     def _txn_addChangeToDatabase(self, t, change):
-        t.execute("SELECT next_changeid FROM changes_nextid")
-        r = t.fetchall()
-        if not r:
-            new_next_changeid = old_next_changeid = 1
-            q = "INSERT INTO changes_nextid (next_changeid) VALUES (?)"
-            t.execute(self.quoteq(q), (old_next_changeid,))
-        else:
-            new_next_changeid = old_next_changeid = r[0][0]
-
-        if change.number is None:
-            change.number = old_next_changeid
-            new_next_changeid = old_next_changeid + 1
-        else:
-            new_next_changeid = max(old_next_changeid, change.number+1)
-
-        if new_next_changeid > old_next_changeid:
-            q = "UPDATE changes_nextid SET next_changeid = ? WHERE 1"
-            t.execute(self.quoteq(q), (new_next_changeid,))
-
         q = self.quoteq("INSERT INTO changes"
-                        " (changeid, author,"
+                        " (author,"
                         "  comments, is_dir,"
                         "  branch, revision, revlink,"
                         "  when_timestamp, category,"
                         "  repository, project)"
-                        " VALUES (?,?, ?,?, ?,?,?, ?,?, ?,?)")
+                        " VALUES (?, ?,?, ?,?,?, ?,?, ?,?)")
         # TODO: map None to.. empty string?
 
-        values = (change.number, change.who,
+        values = (change.who,
                   change.comments, change.isdir,
                   change.branch, change.revision, change.revlink,
                   change.when, change.category, change.repository,
                   change.project)
         t.execute(q, values)
+        change.number = t.lastrowid
 
         for link in change.links:
             t.execute(self.quoteq("INSERT INTO change_links (changeid, link) "
@@ -616,15 +598,9 @@ class DBConnector(util.ComparableMixin):
                 sid = None
 
             if sid is None:
-                # create a new row, with the next-highest schedulerid and the
-                # latest changeid (so it won't try to process all of the old
-                # changes)
-                q = ("SELECT schedulerid FROM schedulers"
-                     " ORDER BY schedulerid DESC LIMIT 1")
-                t.execute(q)
-                max_sid = _one_or_else(t.fetchall(), 0)
-                sid = max_sid + 1
-                # new Schedulers are supposed to ignore pre-existing Changes
+                # create a new row, with the latest changeid (so it won't try
+                # to process all of the old changes) new Schedulers are
+                # supposed to ignore pre-existing Changes
                 q = ("SELECT changeid FROM changes"
                      " ORDER BY changeid DESC LIMIT 1")
                 t.execute(q)
@@ -632,9 +608,10 @@ class DBConnector(util.ComparableMixin):
                 state = scheduler.get_initial_state(max_changeid)
                 state_json = json.dumps(state)
                 q = self.quoteq("INSERT INTO schedulers"
-                                " (schedulerid, name, class_name, state)"
-                                "  VALUES (?,?,?,?)")
-                t.execute(q, (sid, name, class_name, state_json))
+                                " (name, class_name, state)"
+                                "  VALUES (?,?,?)")
+                t.execute(q, (name, class_name, state_json))
+                sid = t.lastrowid
             log.msg("scheduler '%s' got id %d" % (scheduler.name, sid))
             scheduler.schedulerid = sid
 
@@ -664,18 +641,16 @@ class DBConnector(util.ComparableMixin):
             subdir = None
             if len(ss.patch) > 2:
                 subdir = ss.patch[2]
-            t.execute("SELECT id FROM patches ORDER BY id DESC LIMIT 1")
-            patchid = _one_or_else(t.fetchall(), 0) + 1
             q = self.quoteq("INSERT INTO patches"
-                            " (id, patchlevel, patch_base64, subdir)"
-                            " VALUES (?,?,?,?)")
-            t.execute(q, (patchid, patchlevel, base64.b64encode(diff), subdir))
-        t.execute("SELECT id FROM sourcestamps ORDER BY id DESC LIMIT 1")
-        ss.ssid = _one_or_else(t.fetchall(), 0) + 1
+                            " (patchlevel, patch_base64, subdir)"
+                            " VALUES (?,?,?)")
+            t.execute(q, (patchlevel, base64.b64encode(diff), subdir))
+            patchid = t.lastrowid
         t.execute(self.quoteq("INSERT INTO sourcestamps"
-                              " (id, branch, revision, patchid, project, repository)"
-                              " VALUES (?,?,?,?,?,?)"),
-                  (ss.ssid, ss.branch, ss.revision, patchid, ss.project, ss.repository))
+                              " (branch, revision, patchid, project, repository)"
+                              " VALUES (?,?,?,?,?)"),
+                  (ss.branch, ss.revision, patchid, ss.project, ss.repository))
+        ss.ssid = t.lastrowid
         q2 = self.quoteq("INSERT INTO sourcestamp_changes"
                          " (sourcestampid, changeid) VALUES (?,?)")
         for c in ss.changes:
@@ -686,13 +661,12 @@ class DBConnector(util.ComparableMixin):
                         external_idstring=None):
         # this creates both the BuildSet and the associated BuildRequests
         now = self._getCurrentTime()
-        t.execute("SELECT id FROM buildsets ORDER BY id DESC LIMIT 1")
-        bsid = _one_or_else(t.fetchall(), 0) + 1
         t.execute(self.quoteq("INSERT INTO buildsets"
-                              " (id, external_idstring, reason,"
+                              " (external_idstring, reason,"
                               "  sourcestampid, submitted_at)"
-                              " VALUES (?,?,?,?,?)"),
-                  (bsid, external_idstring, reason, ssid, now))
+                              " VALUES (?,?,?,?)"),
+                  (external_idstring, reason, ssid, now))
+        bsid = t.lastrowid
         for propname, propvalue in properties.properties.items():
             encoded_value = json.dumps(propvalue)
             t.execute(self.quoteq("INSERT INTO buildset_properties"
@@ -701,12 +675,11 @@ class DBConnector(util.ComparableMixin):
                       (bsid, propname, encoded_value))
         brids = []
         for bn in builderNames:
-            t.execute("SELECT id FROM buildrequests ORDER BY id DESC LIMIT 1")
-            brid = _one_or_else(t.fetchall(), 0) + 1
             t.execute(self.quoteq("INSERT INTO buildrequests"
-                                  " (id, buildsetid, buildername, submitted_at)"
-                                  " VALUES (?,?,?,?)"),
-                      (brid, bsid, bn, now))
+                                  " (buildsetid, buildername, submitted_at)"
+                                  " VALUES (?,?,?)"),
+                      (bsid, bn, now))
+            brid = t.lastrowid
             brids.append(brid)
         self.notify("add-buildset", bsid)
         self.notify("add-buildrequest", *brids)
@@ -835,11 +808,10 @@ class DBConnector(util.ComparableMixin):
         return self.runInteractionNow(self._txn_build_started, brid, buildnumber)
     def _txn_build_started(self, t, brid, buildnumber):
         now = self._getCurrentTime()
-        t.execute("SELECT id FROM builds ORDER BY id DESC LIMIT 1")
-        bid = _one_or_else(t.fetchall(), 0) + 1
-        t.execute(self.quoteq("INSERT INTO builds (id, number, brid, start_time)"
-                              " VALUES (?,?,?,?)"),
-                  (bid, buildnumber, brid, now))
+        t.execute(self.quoteq("INSERT INTO builds (number, brid, start_time)"
+                              " VALUES (?,?,?)"),
+                  (buildnumber, brid, now))
+        bid = t.lastrowid
         self.notify("add-build", bid)
         return bid
 
