@@ -371,7 +371,7 @@ class DBConnector(util.ComparableMixin):
                 args.extend(list(branches))
             if categories:
                 pieces.append("category IN %s" % self.parmlist(len(categories)))
-                args.extend(list(branches))
+                args.extend(list(categories))
             if committers:
                 pieces.append("author IN %s" % self.parmlist(len(committers)))
                 args.extend(list(committers))
