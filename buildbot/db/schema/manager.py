@@ -27,7 +27,7 @@ class DBSchemaManager(object):
         try:
             c.execute("SELECT version FROM version")
             rows = c.fetchall()
-            assert len(rows) == 1, "multiple rows in version table!"
+            assert len(rows) == 1, "%i rows in version table! (should only be 1)" % len(rows)
             return rows[0][0]
         except (self.dbapi.OperationalError, self.dbapi.ProgrammingError):
             # no version table = version 0
