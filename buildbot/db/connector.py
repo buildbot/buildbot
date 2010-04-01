@@ -311,12 +311,19 @@ class DBConnector(util.ComparableMixin):
     def _txn_addChangeToDatabase(self, t, change):
         t.execute("SELECT next_changeid FROM changes_nextid")
         r = t.fetchall()
-        new_next_changeid = old_next_changeid = r[0][0]
+        if not r:
+            new_next_changeid = old_next_changeid = 1
+            q = "INSERT INTO changes_nextid (next_changeid) VALUES (?)"
+            t.execute(self.quoteq(q), (old_next_changeid,))
+        else:
+            new_next_changeid = old_next_changeid = r[0][0]
+
         if change.number is None:
             change.number = old_next_changeid
             new_next_changeid = old_next_changeid + 1
         else:
             new_next_changeid = max(old_next_changeid, change.number+1)
+
         if new_next_changeid > old_next_changeid:
             q = "UPDATE changes_nextid SET next_changeid = ? WHERE 1"
             t.execute(self.quoteq(q), (new_next_changeid,))
