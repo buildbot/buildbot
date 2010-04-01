@@ -123,9 +123,12 @@ CREATE TABLE sourcestamps (
 -- Note that schedulers are never deleted.
 CREATE TABLE schedulers (
     `schedulerid` INTEGER PRIMARY KEY, -- joins to other tables
-    `name` VARCHAR(256) UNIQUE NOT NULL,
+    `name` VARCHAR(256) NOT NULL, -- the scheduler's name according to master.cfg
+    `class_name` VARCHAR(256) NOT NULL, -- the scheduler's class
     `state` VARCHAR(1024) NOT NULL -- JSON-encoded state dictionary
 );
+CREATE UNIQUE INDEX `name_and_class` ON schedulers (`name`, `class_name`);
+
 
 -- This stores "classified" changes that have not yet been "processed".  That
 -- is, the scheduler has looked at these changes and determined that something
