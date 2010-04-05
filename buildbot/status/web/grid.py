@@ -2,6 +2,7 @@ from __future__ import generators
 
 from buildbot.status.web.base import HtmlResource
 from buildbot.status.web.base import build_get_class, path_to_builder, path_to_build
+from buildbot.sourcestamp import SourceStamp
 
 class ANYBRANCH: pass # a flag value, used below
 
@@ -142,8 +143,8 @@ class GridStatusResource(HtmlResource, GridStatusMixin):
         cxt.update({'categories': categories,
                     'branch': branch,
                     'ANYBRANCH': ANYBRANCH,
-                    'stamps': stamps,
-                    })
+                    'stamps': map(SourceStamp.asDict, stamps)
+                   })
         
         sortedBuilderNames = status.getBuilderNames()[:]
         sortedBuilderNames.sort()
@@ -201,7 +202,7 @@ class TransposedGridStatusResource(HtmlResource, GridStatusMixin):
         cxt.update({'categories': categories,
                     'branch': branch,
                     'ANYBRANCH': ANYBRANCH,
-                    'stamps': stamps,
+                    'stamps': map(SourceStamp.asDict, stamps),
                     })
 
         sortedBuilderNames = status.getBuilderNames()[:]

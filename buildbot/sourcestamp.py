@@ -141,18 +141,6 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
             text.append("[patch]")
         return text
 
-    def getHTMLDict(self):
-        if self.revision is None:
-            return dict(rev='latest')
-        d = dict(rev=self.revision)
-        if self.branch:
-            d['branch'] = self.branch            
-        if self.patch:
-            d['patch'] = True
-        d['repository'] = self.repository
-        d['project'] = self.project
-        return d
-
     def asDict(self):
         result = {}
         # Constant

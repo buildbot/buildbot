@@ -18,7 +18,7 @@
 
 {% for i in range %}
  <tr>
- {{ grid.stamp_td(**stamps[i].getHTMLDict()) }}
+ {{ grid.stamp_td(stamps[i]) }}
  {% for b in builder_builds %}
    {{ grid.build_td(b[i]) }}
  {% endfor %}
