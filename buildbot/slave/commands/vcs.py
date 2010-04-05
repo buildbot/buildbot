@@ -1588,10 +1588,13 @@ class Mercurial(SourceBase):
                 if sys.platform == "win32":
                     oldurl = oldurl.lower().replace('\\', '/')
                     repourl = self.repourl.lower().replace('\\', '/')
-                    if repourl.startswith('file://'):
-                        repourl = repourl.split('file://')[1]
                 else:
                     repourl = self.repourl
+
+                if repourl.startswith('file://'):
+                    repourl = repourl.split('file://')[1]
+                if oldurl.startswith('file://'):
+                    oldurl = oldurl.split('file://')[1]
 
                 oldurl = remove_userpassword(oldurl)
                 repourl = remove_userpassword(repourl)
