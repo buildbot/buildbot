@@ -6,7 +6,9 @@
   {% pluralize categories %}
    <b>Categories:</b><br/>
   {% endtrans %}
-  {{ categories|e|join('<br/>') }}
+  {% for c in categories %}
+    {{ c|e }}<br/>
+  {% endfor %}
  {% endif %}
 
  {% if branch != ANYBRANCH %}

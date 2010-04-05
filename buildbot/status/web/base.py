@@ -408,6 +408,8 @@ def createJinjaEnv(revlink=None, changecommentlink=None,
                              trim_blocks=True,
                              undefined=AlmostStrictUndefined)
     
+    env.install_null_translations() # needed until we have a proper i18n backend
+    
     env.filters.update(dict(
         urlencode = urllib.quote,
         email = emailfilter,
