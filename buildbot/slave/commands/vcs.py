@@ -1424,6 +1424,7 @@ class Mercurial(SourceBase):
         self.branchType = args.get('branchType', 'dirname')
         self.stdout = ""
         self.stderr = ""
+        self.clobbercount = 0 # n times we've clobbered
 
     def sourcedirIsUpdateable(self):
         return os.path.isdir(os.path.join(self.builder.basedir,
@@ -1470,6 +1471,11 @@ class Mercurial(SourceBase):
         return cmd1
 
     def _clobber(self, dummy, dirname):
+        self.clobbercount += 1
+
+        if self.clobbercount > 3:
+            raise Exception, "Too many clobber attempts. Aborting step"
+
         def _vcfull(res):
             return self.doVCFull()
 
