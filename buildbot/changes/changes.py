@@ -89,8 +89,10 @@ class Change:
         data += "Properties: \n%s\n\n" % self.getProperties()
         return data
 
-    def html_dict(self):
+    def asDict(self):
         '''returns a dictonary with suitable info for html/mail rendering'''
+        result = {}
+        
         files = []
         for file in self.files:
             link = filter(lambda s: s.find(file) != -1, self.links)
@@ -101,24 +103,7 @@ class Change:
             files.append(dict(url=url, name=file))
         
         files = sorted(files, cmp=lambda a,b: a['name'] < b['name'])
-
-        kwargs = { 'who'       : self.who,
-                   'at'        : self.getTime(),
-                   'files'     : files,
-                   'rev'       : self.revision,
-                   'revlink'   : getattr(self, 'revlink', None),
-                   'branch'    : self.branch,
-                   'comments'  : self.comments,
-                   'properties': self.properties.asList(),
-                   'number'    : self.number,
-                   'repository': getattr(self, 'repository', None),
-                   'project'   : getattr(self, 'project', None)
-                   }
-
-        return kwargs
-
-    def asDict(self):
-        result = {}
+        
         # Constant
         result['number'] = self.number
         result['branch'] = self.branch
@@ -126,8 +111,10 @@ class Change:
         result['who'] = self.getShortAuthor()
         result['comments'] = self.comments
         result['revision'] = self.revision
+        result['rev'] = self.revision
         result['when'] = self.when
-        result['files'] = self.files
+        result['at'] = self.getTime()
+        result['files'] = files
         result['revlink'] = getattr(self, 'revlink', None)
         result['properties'] = self.properties.asList()
         result['repository'] = getattr(self, 'repository', None)

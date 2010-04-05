@@ -174,7 +174,7 @@ def customHTMLMailMessage(attrs):
                                                           attrs['result'].title()))
     text.append("<h4>Recent Changes:</h4>")
     for c in attrs['changes']:
-        text.append(template.module.change(**c.html_dict()))
+        text.append(template.module.change(c.asDict()))
 
     name, url, lines, status = attrs['logs'][-1]
     text.append("<h4>Last %d lines of '%s':</h4>" % (logLines, name))

@@ -185,7 +185,7 @@ Build #{{ b.getNumber() }}
   <ol>
   {% for c in ss.changes %}
     <li><h3>Change #{{ c.number }}</h3>
-      {{ change(c.html_dict()) }}
+      {{ change(c.asDict()) }}
     </li>
   {% else %}
     <li>no changes</li>
