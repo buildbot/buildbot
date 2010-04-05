@@ -265,22 +265,13 @@ class WebStatus(service.MultiService):
 
         self.orderConsoleByTime = order_console_by_time
 
-        # If we were given a site object, go ahead and use it.
-        if site:
-            self.site = site
-        else:
-            # this will be replaced once we've been attached to a parent (and
-            # thus have a basedir and can reference BASEDIR)
-            root = static.Data("placeholder", "text/plain")
-            self.site = server.Site(root)
-        self.childrenToBeAdded = {}
+        # If we were given a site object, go ahead and use it. (if not, we add one later)
+        self.site = site
 
+        # create the web site page structure
+        self.childrenToBeAdded = {}
         self.setupUsualPages(numbuilds=numbuilds, num_events=num_events,
                              num_events_max=num_events_max)
-
-        # the following items are accessed by HtmlResource when it renders
-        # each page.
-        self.site.buildbot_service = self
 
         # Set up the jinja templating engine.
         self.templates = createJinjaEnv(revlink, changecommentlink,
@@ -290,13 +281,6 @@ class WebStatus(service.MultiService):
         # down. See ticket #102 for more details.
         self.channels = weakref.WeakKeyDictionary()
 
-        if self.http_port is not None:
-            s = strports.service(self.http_port, self.site)
-            s.setServiceParent(self)
-        if self.distrib_port is not None:
-            f = pb.PBServerFactory(distrib.ResourcePublisher(self.site))
-            s = strports.service(self.distrib_port, f)
-            s.setServiceParent(self)
 
     def setupUsualPages(self, numbuilds, num_events, num_events_max):
         #self.putChild("", IndexOrWaterfallRedirection())
@@ -336,6 +320,35 @@ class WebStatus(service.MultiService):
         # parent=None), any remaining HTTP clients of this WebStatus will still
         # be able to get reasonable results.
         self.master = parent
+
+        if not self.site:
+            class MySite(server.Site):
+                def _openLogFile(self, path):
+                    try:
+                        # TODO: Use same log rotate parameters as twistd.log (from buildbot.tac)
+                        from twisted.python.logfile import LogFile
+                        return LogFile.fromFullPath(path, rotateLength=1 * 1000 * 1000, maxRotatedFiles=10)
+                    except ImportError, e:
+                        log.msg("WebStatus: Unable to set up rotating http.log: %s" % e)
+                        return server.Site._openLogFile(self, path)
+
+            # this will be replaced once we've been attached to a parent (and
+            # thus have a basedir and can reference BASEDIR)
+            root = static.Data("placeholder", "text/plain")
+            httplog = os.path.abspath(os.path.join(self.master.basedir, "http.log"))
+            self.site = MySite(root, logPath=httplog)
+
+        # the following items are accessed by HtmlResource when it renders
+        # each page.
+        self.site.buildbot_service = self
+
+        if self.http_port is not None:
+            s = strports.service(self.http_port, self.site)
+            s.setServiceParent(self)
+        if self.distrib_port is not None:
+            f = pb.PBServerFactory(distrib.ResourcePublisher(self.site))
+            s = strports.service(self.distrib_port, f)
+            s.setServiceParent(self)
 
         self.setupSite()
 
