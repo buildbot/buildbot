@@ -19,7 +19,7 @@ from buildbot.status.web.olpb import OneLinePerBuild
 from buildbot.status.web.grid import GridStatusResource, TransposedGridStatusResource
 from buildbot.status.web.changes import ChangesResource
 from buildbot.status.web.builder import BuildersResource
-from buildbot.status.web.buildstatus import BuildStatusStatusResource 
+from buildbot.status.web.buildstatus import BuildStatusStatusResource
 from buildbot.status.web.slaves import BuildSlavesResource
 from buildbot.status.web.status_json import JsonStatusResource
 from buildbot.status.web.xmlrpc import XMLRPCServer
@@ -86,23 +86,23 @@ class WebStatus(service.MultiService):
 
     All URLs for pages which are not defined here are used to look
     for files in PUBLIC_HTML, which defaults to BASEDIR/public_html.
-    This means that /robots.txt or /favicon.ico can be placed in 
+    This means that /robots.txt or /favicon.ico can be placed in
     that directory
-    
+
     This webserver uses the jinja2 template system to generate the web pages
-    (see http://jinja.pocoo.org/2/) and by default loads pages from the 
+    (see http://jinja.pocoo.org/2/) and by default loads pages from the
     buildbot.status.web.templates package. Any file here can be overridden by placing
-    a corresponding file in the master's 'templates' directory. 
-    
-    The main customization points are layout.html which loads style sheet 
-    (css) and provides header and footer content, and root.html, which 
-    generates the root page. 
-    
+    a corresponding file in the master's 'templates' directory.
+
+    The main customization points are layout.html which loads style sheet
+    (css) and provides header and footer content, and root.html, which
+    generates the root page.
+
     All of the resources provided by this service use relative URLs to reach
     each other. The only absolute links are the c['projectURL'] links at the
     top and bottom of the page, and the buildbot home-page link at the
     bottom.
-    
+
     Buildbot uses some generic classes to identify the type of object, and
     some more specific classes for the various kinds of those types. It does
     this by specifying both in the class attributes where applicable,
@@ -209,16 +209,16 @@ class WebStatus(service.MultiService):
         @type changecommentlink: callable, dict, tuple (2 or 3 strings) or C{None}
         @param changecommentlink: adds links to ticket/bug ids in change comments,
             see buildbot.status.web.base.changecommentlink for details
-        
+
         @type revlink: callable, dict, string or C{None}
-        @param revlink: decorations revision ids with links to a web-view, 
+        @param revlink: decorations revision ids with links to a web-view,
             see buildbot.status.web.base.revlink for details
-        
+
         @type projects: callable, dict or c{None}
         @param projects: maps project identifiers to URLs, so that any project listed
             is automatically decorated with a link to it's front page.
             see buildbot.status.web.base.dictlink for details
-            
+
         @type repositories: callable, dict or c{None}
         @param repositories: maps repository identifiers to URLs, so that any project listed
             is automatically decorated with a link to it's web view.
