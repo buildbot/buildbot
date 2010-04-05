@@ -68,5 +68,5 @@
 {%- endmacro %} 
 
 {% macro box_contents(who, url, title) -%}
-<a href="{{ url }}" title="{{ title }}">{{ who|user }}</a>
+<a href="{{ url }}" title="{{ title|e }}">{{ who|user }}</a>
 {%- endmacro %}
