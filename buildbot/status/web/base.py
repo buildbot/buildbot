@@ -602,7 +602,7 @@ def changelinkfilter(changelink):
         return filter
     
     if not changelink:
-        return lambda project, text: jinja2.escape(text)
+        return lambda text, project: jinja2.escape(text)
 
     elif isinstance(changelink, dict):
         def dict_filter(text, project):
