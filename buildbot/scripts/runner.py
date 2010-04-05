@@ -435,6 +435,7 @@ def upgradeMaster(config):
           'bg_gradient.jpg' : util.sibpath(__file__, "../status/web/files/bg_gradient.jpg"),
           'default.css' : util.sibpath(__file__, "../status/web/files/default.css"),
           'robots.txt' : util.sibpath(__file__, "../status/web/files/robots.txt"),
+          'favicon.ico' : util.sibpath(__file__, "../status/web/files/favicon.ico"),
       })
     m.populate_if_missing(os.path.join(basedir, "master.cfg.sample"),
                           util.sibpath(__file__, "sample.cfg"),
@@ -555,6 +556,7 @@ def createMaster(config):
           'bg_gradient.jpg' : util.sibpath(__file__, "../status/web/files/bg_gradient.jpg"),
           'default.css' : util.sibpath(__file__, "../status/web/files/default.css"),
           'robots.txt' : util.sibpath(__file__, "../status/web/files/robots.txt"),
+          'favicon.ico' : util.sibpath(__file__, "../status/web/files/favicon.ico"),
       })
     m.makefile()
     m.create_db()

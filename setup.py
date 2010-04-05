@@ -211,6 +211,7 @@ setup_args = {
                  ["buildbot/status/web/files/default.css",
                   "buildbot/status/web/files/bg_gradient.jpg",
                   "buildbot/status/web/files/robots.txt",
+                  "buildbot/status/web/files/favicon.ico",
                   ]),
                 include("buildbot/status/web/templates", '*.html'),
                 ("buildbot/scripts", ["buildbot/scripts/sample.cfg"]),
