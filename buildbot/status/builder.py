@@ -1571,7 +1571,6 @@ class BuilderStatus(styles.Versioned):
         #self.currentBig = None
         #self.currentSmall = None
         self.currentBuilds = []
-        self.pendingBuilds = []
         self.nextBuild = None
         self.watchers = []
         self.buildCache = weakref.WeakValueDictionary()
@@ -1596,7 +1595,7 @@ class BuilderStatus(styles.Versioned):
             b.saveYourself()
             # TODO: push a 'hey, build was interrupted' event
         del d['currentBuilds']
-        del d['pendingBuilds']
+        d.pop('pendingBuilds', None)
         del d['currentBigState']
         del d['basedir']
         del d['status']
@@ -1610,7 +1609,6 @@ class BuilderStatus(styles.Versioned):
         self.buildCache = weakref.WeakValueDictionary()
         self.buildCache_LRU = []
         self.currentBuilds = []
-        self.pendingBuilds = []
         self.watchers = []
         self.slavenames = []
         # self.basedir must be filled in by our parent
@@ -1778,7 +1776,9 @@ class BuilderStatus(styles.Versioned):
         return [self.status.getSlave(name) for name in self.slavenames]
 
     def getPendingBuilds(self):
-        return self.pendingBuilds
+        db = self.status.db
+        return [BuildRequestStatus(brid, self.status, db)
+                for brid in db.get_pending_brids_for_builder(self.name)]
 
     def getCurrentBuilds(self):
         return self.currentBuilds
@@ -1892,12 +1892,18 @@ class BuilderStatus(styles.Versioned):
                 break
 
     def subscribe(self, receiver):
-        # will get builderChangedState, buildStarted, and buildFinished
+        # will get builderChangedState, buildStarted, buildFinished,
+        # requestSubmitted, requestCancelled. Note that a request which is
+        # resubmitted (due to a slave disconnect) will cause requestSubmitted
+        # to be invoked multiple times.
         self.watchers.append(receiver)
         self.publishState(receiver)
+        # our parent Status provides requestSubmitted and requestCancelled
+        self.status._builder_subscribe(self.name, receiver)
 
     def unsubscribe(self, receiver):
         self.watchers.remove(receiver)
+        self.status._builder_unsubscribe(self.name, receiver)
 
     ## Builder interface (methods called by the Builder which feeds us)
 
@@ -1956,17 +1962,6 @@ class BuilderStatus(styles.Versioned):
         s = BuildStatus(self, number)
         s.waitUntilFinished().addCallback(self._buildFinished)
         return s
-
-    def addBuildRequest(self, brstatus):
-        self.pendingBuilds.append(brstatus)
-        for w in self.watchers:
-            w.requestSubmitted(brstatus)
-
-    def removeBuildRequest(self, brstatus, cancelled=False):
-        self.pendingBuilds.remove(brstatus)
-        if cancelled:
-            for w in self.watchers:
-                w.requestCancelled(self, brstatus)
 
     # buildStarted is called by our child BuildStatus instances
     def buildStarted(self, s):
@@ -2235,6 +2230,7 @@ class Status:
         self.logMaxSize = None
         self.logMaxTailSize = None
 
+        self._builder_observers = collections.KeyedSets()
         self._buildreq_observers = collections.KeyedSets()
         self._buildset_success_waiters = collections.KeyedSets()
         self._buildset_finished_waiters = collections.KeyedSets()
@@ -2242,7 +2238,10 @@ class Status:
     def setDB(self, db):
         self.db = db
         self.db.subscribe_to("add-build", self._db_builds_changed)
+        self.db.subscribe_to("add-buildset", self._db_buildset_added)
         self.db.subscribe_to("modify-buildset", self._db_buildsets_changed)
+        self.db.subscribe_to("add-buildrequest", self._db_buildrequest_added)
+        self.db.subscribe_to("cancel-buildrequest", self._db_buildrequest_cancelled)
 
     # methods called by our clients
 
@@ -2479,11 +2478,6 @@ class Status:
             if hasattr(t, 'slaveDisconnected'):
                 t.slaveDisconnected(name)
 
-    def buildsetSubmitted(self, bss):
-        for t in self.watchers:
-            if hasattr(t, 'buildsetSubmitted'):
-                t.buildsetSubmitted(bss)
-
     def changeAdded(self, change):
         for t in self.watchers:
             if hasattr(t, 'changeAdded'):
@@ -2522,6 +2516,12 @@ class Status:
     def _buildrequest_unsubscribe(self, brid, observer):
         self._buildreq_observers.discard(brid, observer)
 
+    def _db_buildset_added(self, category, bsid):
+        bss = BuildSetStatus(bsid, self, self.db)
+        for t in self.watchers:
+            if hasattr(t, 'buildsetSubmitted'):
+                t.buildsetSubmitted(bss)
+
     def _buildset_waitUntilSuccess(self, bsid):
         d = defer.Deferred()
         self._buildset_success_waiters.add(bsid, d)
@@ -2552,5 +2552,31 @@ class Status:
         if finished:
             for d in self._buildset_finished_waiters.pop(bsid):
                 eventually(d.callback, bss)
+
+    def _builder_subscribe(self, buildername, watcher):
+        # should get requestSubmitted and requestCancelled
+        self._builder_observers.add(buildername, watcher)
+
+    def _builder_unsubscribe(self, buildername, watcher):
+        self._builder_observers.discard(buildername, watcher)
+
+    def _db_buildrequest_added(self, category, *brids):
+        self._handle_buildrequest_event("added", brids)
+    def _db_buildrequest_cancelled(self, category, *brids):
+        self._handle_buildrequest_event("cancelled", brids)
+    def _handle_buildrequest_event(self, mode, brids):
+        for brid in brids:
+            buildername = self.db.get_buildername_for_brid(brid)
+            if buildername in self._builder_observers:
+                brs = BuildRequestStatus(brid, self, self.db)
+                for observer in self._builder_observers[buildername]:
+                    if mode == "added":
+                        if hasattr(observer, 'requestSubmitted'):
+                            eventually(observer.requestSubmitted, brs)
+                    else:
+                        if hasattr(observer, 'requestCancelled'):
+                            eventually(observer.requestCancelled, brs)
+
+
 
 # vim: set ts=4 sts=4 sw=4 et:
