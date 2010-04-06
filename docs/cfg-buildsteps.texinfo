@@ -368,8 +368,48 @@ you don't provide this, it defaults to @code{None}, which means VC
 operations should not be retried. This is provided to make life easier
 for buildslaves which are stuck behind poor network connections.
 
+@item repository
+The name of this parameter might varies depending on the Source step you
+are running. The concept explained here is common to all steps and
+applies to @code{repourl} as well as for @code{baseURL} (when
+aplicable). Buildbot, now being aware of the repository name via the
+ChangeSource step might in some cases not need the repository url. There
+are multiple way to pass it through to this step, those correspond to
+the type of the parameter given to this step:
+
+@table @code
+@item None
+In the case where no paraneter is specified, the repository url will be
+taken exactly from the Change property. You are looking for that one if
+your ChangeSource step has all informations about how to reach the
+Change.
+
+@item string
+The parameter might be a string, in this case, this string will be taken
+as the repository url, and nothing more. the value coming from the
+ChangeSource step will be forgotten.
+
+@item format string
+If the parameter is a string containing @code{%s}, then this the
+repository property from the Change will be place in place of the
+@code{%s}. This is usefull when the ChangeSource step knows where the
+repository resides locally, but don't know the scheme used to access
+it. For instance @code{ssh://server/%s} makes sense if the the
+repository property is the local path of the repository.
+
+@item dict
+In this case, the repository URL will be the value indexed by the
+repository property in the dict given as parameter.
+
+@item callable
+The callable given as parameter will take the repository property from
+the Change and its return value will be used as repository URL.
+
+@end table
 @end table
 
+Note that this is quite similar to the mechanism used by the WebStatus
+for the @code{changecommentlink}, @code{projects} or @code{repositories} parameter.
 
 My habit as a developer is to do a @code{cvs update} and @code{make} each
 morning. Problems can occur, either because of bad code being checked in, or
