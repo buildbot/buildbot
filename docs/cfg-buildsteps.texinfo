@@ -475,6 +475,14 @@ useful for specifying a branch to work on. Defaults to @code{HEAD}.
 @item global_options
 a list of flags to be put before the verb in the CVS command.
 
+@item checkout_options
+@item export_options
+@item extra_options
+a list of flags to be put after the verb in the CVS command.
+@code{checkout_options} is only used for checkout operations,
+@code{export_options} is only used for export operations, and
+@code{extra_options} is used for both.
+
 @item checkoutDelay
 if set, the number of seconds to put between the timestamp of the last
 known Change and the value used for the @code{-D} option. Defaults to

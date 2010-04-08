@@ -319,7 +319,7 @@ class CVS(Source):
 
     def __init__(self, cvsroot=None, cvsmodule="",
                  global_options=[], branch=None, checkoutDelay=None,
-                 checkout_options=[],
+                 checkout_options=[], export_options=[], extra_options=[],
                  login=None,
                  **kwargs):
 
@@ -378,6 +378,16 @@ class CVS(Source):
         @param checkout_options: these arguments are inserted in the cvs
                                command line, after 'checkout' but before
                                branch or revision specifiers.
+
+        @type  export_options: list of strings
+        @param export_options: these arguments are inserted in the cvs
+                               command line, after 'export' but before
+                               branch or revision specifiers.
+
+        @type  extra_options: list of strings
+        @param extra_options: these arguments are inserted in the cvs
+                               command line, after 'checkout' or 'export' but before
+                               branch or revision specifiers.
                                """
 
         self.checkoutDelay = checkoutDelay
@@ -389,6 +399,8 @@ class CVS(Source):
                                  cvsmodule=cvsmodule,
                                  global_options=global_options,
                                  checkout_options=checkout_options,
+                                 export_options=export_options,
+                                 extra_options=extra_options,
                                  branch=branch,
                                  checkoutDelay=checkoutDelay,
                                  login=login,
@@ -397,6 +409,8 @@ class CVS(Source):
         self.args.update({'cvsmodule': cvsmodule,
                           'global_options': global_options,
                           'checkout_options':checkout_options,
+                          'export_options':export_options,
+                          'extra_options':extra_options,
                           'login': login,
                           })
 
@@ -428,6 +442,18 @@ class CVS(Source):
                                                    self.args['mode']))
                 log.msg(m)
                 raise BuildSlaveTooOldError(m)
+
+        if self.slaveVersionIsOlderThan("cvs", "2.10"):
+            if self.args['extra_options'] or self.args['export_options']:
+                m = ("This buildslave (%s) does not support export_options "
+                     "or extra_options arguments to the CVS step."
+                     % (self.build.slavename))
+                log.msg(m)
+                raise BuildSlaveTooOldError(m)
+            # the unwanted args are empty, and will probably be ignored by
+            # the slave, but delete them just to be safe
+            del self.args['export_options']
+            del self.args['extra_options']
 
         if branch is None:
             branch = "HEAD"
