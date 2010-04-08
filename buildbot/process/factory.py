@@ -32,7 +32,8 @@ class BuildFactory(util.ComparableMixin):
     """
     buildClass = Build
     useProgress = 1
-    compare_attrs = ['buildClass', 'steps', 'useProgress']
+    workdir = "build"
+    compare_attrs = ['buildClass', 'steps', 'useProgress', 'workdir']
 
     def __init__(self, steps=None):
         if steps is None:
@@ -50,6 +51,7 @@ class BuildFactory(util.ComparableMixin):
         """
         b = self.buildClass(request)
         b.useProgress = self.useProgress
+        b.workdir = self.workdir
         b.setStepFactories(self.steps)
         return b
 

@@ -269,7 +269,10 @@ class Build:
                 raise
             step.setBuild(self)
             step.setBuildSlave(self.slavebuilder.slave)
-            step.setDefaultWorkdir(self.workdir)
+            if callable (self.workdir):
+                step.setDefaultWorkdir (self.workdir (self.source))
+            else:
+                step.setDefaultWorkdir (self.workdir)
             name = step.name
             if stepnames.has_key(name):
                 count = stepnames[name]
