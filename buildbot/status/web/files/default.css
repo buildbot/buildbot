@@ -4,7 +4,7 @@ body.interface {
 	margin-top: 20px;
 	margin-bottom: 50px;
 	padding: 0;
-	background: url(/bg_gradient.jpg) repeat-x;
+	background: url("./bg_gradient.jpg") repeat-x;
 	font-family: Verdana, Cursor;
 	font-size: 10px;
 	font-weight: bold;
