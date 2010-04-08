@@ -175,19 +175,19 @@ class Source(LoggingBuildStep):
         s = self.build.getSourceStamp()
         if not repository:
             assert s.repository
-            return s.repository
+            return str(s.repository)
         else:
             if callable(repository):
-                return repository(s.repository)
+                return str(repository(s.repository))
             elif isinstance(repository, dict):
-                return repository.get(s.repository)
+                return str(repository.get(s.repository))
             else: # string or unicode
                 try:
-                    repourl = repository % s.repository
+                    repourl = str(repository % s.repository)
                 except TypeError:
                     # that's the backward compatibility case
                     repourl = repository
-                return repourl
+                return str(repourl)
 
     def start(self):
         if self.notReally:
