@@ -348,6 +348,15 @@ class Contact:
 
         self.send(r)
 
+    def changeAdded(self, change):
+        pass
+
+    def slaveConnected(self, slaveName):
+        pass
+
+    def slaveDisconnected(self, slaveName):
+        pass
+
     def notify_for_finished(self, build):
         results = build.getResults()
 
