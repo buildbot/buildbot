@@ -13,6 +13,7 @@ from twisted.application import internet
 
 from buildbot import interfaces, util
 from buildbot import version
+from buildbot.interfaces import IStatusReceiver
 from buildbot.sourcestamp import SourceStamp
 from buildbot.status import base
 from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE, EXCEPTION
@@ -57,7 +58,8 @@ class IrcBuildRequest:
         d = s.waitUntilFinished()
         d.addCallback(self.parent.watchedBuildFinished)
 
-class Contact:
+class Contact(base.StatusReceiver):
+    implements(IStatusReceiver)
     """I hold the state for a single user's interaction with the buildbot.
 
     This base class provides all the basic behavior (the queries and
@@ -70,6 +72,7 @@ class Contact:
     """
 
     def __init__(self, channel):
+        #StatusReceiver.__init__(self) doesn't exist
         self.channel = channel
         self.notify_events = {}
         self.subscribed = 0
@@ -284,10 +287,6 @@ class Contact:
         log.msg('[Contact] BuildRequest for %s submitted to Builder %s' %
             (brstatus.getSourceStamp(), brstatus.builderName))
 
-    def requestCancelled(self, brstatus):
-        # nothing happens with this notification right now
-        pass
-
     def builderRemoved(self, builderName):
         log.msg('[Contact] Builder %s removed' % (builderName))
 
@@ -347,15 +346,6 @@ class Contact:
             r += '  blamelist: ' + ', '.join([c.who for c in build.changes])
 
         self.send(r)
-
-    def changeAdded(self, change):
-        pass
-
-    def slaveConnected(self, slaveName):
-        pass
-
-    def slaveDisconnected(self, slaveName):
-        pass
 
     def notify_for_finished(self, build):
         results = build.getResults()
@@ -593,6 +583,8 @@ class Contact:
         reactor.callLater(timeout, self.act, response)
 
 class IRCContact(Contact):
+    implements(IStatusReceiver)
+
     # this is the IRC-specific subclass of Contact
 
     def __init__(self, channel, dest):
@@ -860,6 +852,7 @@ class IrcStatusFactory(ThrottledClientFactory):
 
 
 class IRC(base.StatusReceiverMultiService):
+    implements(IStatusReceiver)
     """I am an IRC bot which can be queried for status information. I
     connect to a single IRC server and am known by a single nickname on that
     server, however I can join multiple channels."""
