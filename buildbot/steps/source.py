@@ -165,7 +165,7 @@ class Source(LoggingBuildStep):
 
     def computeRepositoryURL(self, repository):
         '''
-        Helper function thatthe repository URL based on the parameter the
+        Helper function that the repository URL based on the parameter the
         source step took and the Change 'repository' property
         '''
 
