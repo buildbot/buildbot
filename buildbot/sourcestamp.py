@@ -32,7 +32,7 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
     patch = None
     changes = ()
     project = ''
-    revision = ''
+    repository = ''
     ssid = None # filled in by db.get_sourcestampid()
 
     compare_attrs = ('branch', 'revision', 'patch', 'changes', 'project', 'repository')
@@ -117,6 +117,8 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
         newsource = SourceStamp(branch=self.branch,
                                 revision=self.revision,
                                 patch=self.patch,
+                                project=self.project,
+                                repository=self.repository,
                                 changes=changes)
         return newsource
 
