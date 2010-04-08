@@ -245,7 +245,11 @@ class BotMaster(service.MultiService):
 
     def _updateAllSlaves(self):
         """Notify all buildslaves about changes in their Builders."""
-        dl = [s.updateSlave() for s in self.slaves.values()]
+        dl = []
+        for s in self.slaves.values():
+            d = s.updateSlave()
+            d.addErrback(log.err)
+            dl.append(d)
         return defer.DeferredList(dl)
 
     def shouldMergeRequests(self, builder, req1, req2):
