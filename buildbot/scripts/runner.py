@@ -540,6 +540,8 @@ configfile = r'%(config)s'
 
 m = BuildMaster(basedir, configfile)
 m.setServiceParent(application)
+m.log_rotation.rotateLength = rotateLength
+m.log_rotation.maxRotatedFiles = maxRotatedFiles
 
 """
 

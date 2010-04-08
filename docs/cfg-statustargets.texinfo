@@ -527,6 +527,22 @@ BuilderStatus object.  The @code{stopBuild} action supplies a BuildStatus
 object.  The @code{cancelPendingBuild} action supplies a BuildRequest.  The
 remainder do not supply any extra arguments.
 
+@heading Logging configuration
+
+The WebStatus uses a separate log file (http.log) to avoid clutter
+buildbot's default log (twistd.log) with request/response messages.
+This log is also, by default, rotated in the same way as the twistd.log
+file, but you can also customize the rotation logic with the following
+parameters if you need a different behaviour.
+
+@subheading rotateLength
+
+An integer defining the file size at which log files are rotated. 
+
+@subheading maxRotatedFiles
+
+The maximum number of old log files to keep. 
+
 @heading URL-decorating options
 
 These arguments adds an URL link to various places in the WebStatus,

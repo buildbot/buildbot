@@ -376,6 +376,12 @@ class Dispatcher:
 
 class _Unset: pass  # marker
 
+class LogRotation: 
+    '''holds log rotation parameters (for WebStatus)'''
+    def __init__(self):
+        self.rotateLength = 1 * 1000 * 1000 
+        self.maxRotatedFiles = 10
+
 class BuildMaster(service.MultiService):
     debug = 0
     manhole = None
@@ -435,6 +441,9 @@ class BuildMaster(service.MultiService):
             self.loadDatabase(db_spec)
 
         self.readConfig = False
+        
+        # create log_rotation object and set default parameters (used by WebStatus
+        self.log_rotation = LogRotation()
 
     def startService(self):
         service.MultiService.startService(self)

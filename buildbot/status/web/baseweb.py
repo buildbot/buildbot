@@ -133,7 +133,7 @@ class WebStatus(service.MultiService):
                  num_events=200, num_events_max=None, auth=None,
                  order_console_by_time=False, changecommentlink=None,
                  revlink=None, projects=None, repositories=None,
-                 authz=None):
+                 authz=None, logRotateLength=None, maxRotatedFiles=None):
         """Run a web server that provides Buildbot status.
 
         @type  http_port: int or L{twisted.application.strports} string
@@ -224,6 +224,16 @@ class WebStatus(service.MultiService):
             is automatically decorated with a link to it's web view.
             see buildbot.status.web.base.dictlink for details
 
+        @type logRotateLength: None or int
+        @param logRotateLength: file size at which the http.log is rotated/reset.
+            If not set, the value set in the buildbot.tac will be used, 
+             falling back to the BuildMaster's default value (1 Mb).
+        
+        @type maxRotatedFiles: None or int
+        @param maxRotatedFiles: number of old http.log files to keep during log rotation.
+            If not set, the value set in the buildbot.tac will be used, 
+             falling back to the BuildMaster's default value (10 files).        
+    
         """
 
         service.MultiService.__init__(self)
@@ -268,6 +278,10 @@ class WebStatus(service.MultiService):
         # If we were given a site object, go ahead and use it. (if not, we add one later)
         self.site = site
 
+        # store the log settings until we create the site object
+        self.logRotateLength = logRotateLength
+        self.maxRotatedFiles = maxRotatedFiles        
+
         # create the web site page structure
         self.childrenToBeAdded = {}
         self.setupUsualPages(numbuilds=numbuilds, num_events=num_events,
@@ -280,6 +294,7 @@ class WebStatus(service.MultiService):
         # keep track of cached connections so we can break them when we shut
         # down. See ticket #102 for more details.
         self.channels = weakref.WeakKeyDictionary()
+        
 
 
     def setupUsualPages(self, numbuilds, num_events, num_events_max):
@@ -320,14 +335,26 @@ class WebStatus(service.MultiService):
         # parent=None), any remaining HTTP clients of this WebStatus will still
         # be able to get reasonable results.
         self.master = parent
+        
+        def either(a,b): # a if a else b for py2.4
+            if a:
+                return a
+            else:
+                return b
+        
+        rotateLength = either(self.logRotateLength, self.master.log_rotation.rotateLength)
+        maxRotatedFiles = either(self.maxRotatedFiles, self.master.log_rotation.maxRotatedFiles)
 
         if not self.site:
-            class MySite(server.Site):
+            
+            class RotateLogSite(server.Site):
                 def _openLogFile(self, path):
                     try:
                         # TODO: Use same log rotate parameters as twistd.log (from buildbot.tac)
                         from twisted.python.logfile import LogFile
-                        return LogFile.fromFullPath(path, rotateLength=1 * 1000 * 1000, maxRotatedFiles=10)
+                        log.msg("Setting up http.log rotating %i files of %i bytes each" % 
+                                (maxRotatedFiles, rotateLength))            
+                        return LogFile.fromFullPath(path, rotateLength=rotateLength, maxRotatedFiles=maxRotatedFiles)
                     except ImportError, e:
                         log.msg("WebStatus: Unable to set up rotating http.log: %s" % e)
                         return server.Site._openLogFile(self, path)
@@ -336,7 +363,7 @@ class WebStatus(service.MultiService):
             # thus have a basedir and can reference BASEDIR)
             root = static.Data("placeholder", "text/plain")
             httplog = os.path.abspath(os.path.join(self.master.basedir, "http.log"))
-            self.site = MySite(root, logPath=httplog)
+            self.site = RotateLogSite(root, logPath=httplog)
 
         # the following items are accessed by HtmlResource when it renders
         # each page.
