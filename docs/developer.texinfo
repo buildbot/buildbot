@@ -58,7 +58,9 @@ notifications.
 
 @item IStatusReceiver implementations
 
-Objects from the 'status' configuration key are attached directly to the buildmaster.
+Objects from the 'status' configuration key are attached directly to the
+buildmaster. These classes should inherit from StatusReceiver or
+StatusReceiverMultiService and include an 'implements(IStatusReceiver)' stanza.
 
 @end itemize
 
