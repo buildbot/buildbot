@@ -19,7 +19,7 @@ described here.
 * Subscription Interfaces::
 * Web Status::
 * Twisted Idioms::
-* Testing Idioms and Utilities::
+* Buildbot Tests::
 * Developer Class Index::
 @end menu
 
@@ -414,13 +414,138 @@ stopped.
 
 @end itemize
 
-@node Testing Idioms and Utilities
-@section Testing Idioms and Utilities
+@node Buildbot Tests
+@section Buildbot Tests
 
 @menu
+* Toward Better Buildbot Tests::
 * Keeping State in Tests::
 * Better Debugging through Monkeypatching::
 @end menu
+
+@node Toward Better Buildbot Tests
+@subsection Toward Better Buildbot Tests
+
+In general, we are trying to ensure that new tests are @i{good}.  So what makes a good test?
+
+@heading Independent of Time
+
+Tests that depend on wall time will fail. As a bonus, they run very slowly. Do
+not use @code{reactor.callLater} to wait "long enough" for something to happen.
+
+For testing things that themselves depend on time, consider using
+@code{twisted.internet.tasks.Clock}.  This may mean passing a clock instance to
+the code under test, and propagating that instance as necessary to ensure that
+all of the code using @code{callLater} uses it.  Refactoring code for
+testability is difficult, but wortwhile.
+
+For testing things that do not depend on time, but for which you cannot detect
+the "end" of an operation: add a way to detect the end of the operation!
+
+@heading Clean Code
+
+Make your tests readable. This is no place to skimp on comments! Others will
+attempt to learn about the expected behavior of your class by reading the
+tests. As a side note, if you use a @code{Deferred} chain in your test, write
+the callbacks as nested functions, rather than using object methods with funny
+names:
+
+@example
+def testSomething(self):
+  d = doThisFirst()
+  def andThisNext(res):
+    pass # ...
+  d.addCallback(andThisNext)
+  return d
+@end example
+
+This isolates the entire test into one indented block. It is OK to add methods
+for common functionality, but give them real names and explain in detail what
+they do.
+
+@heading Good Name
+
+Your test module should be named after the package or class it tests, replacing
+@code{.} with @code{_} and omitting the buildbot_. For example,
+@code{test_status_web_authz_Authz.py} tests the Authz class in
+@code{buildbot/status/web/authz.py}. Modules with only one class, or a few
+trivial classes, can be tested in a single test module. For more complex
+situations, prefer to use multiple test modules.
+
+Test method names should follow the pattern test_METHOD_CONDITION where METHOD
+is the method being tested, and CONDITION is the condition under which it's
+tested. Since we can't always test a single method, this is not a hard-and-fast
+rule.
+
+@heading Assert Only One Thing
+
+Each test should have a single assertion. This may require a little bit of work
+to get several related pieces of information into a single Python object for
+comparison. The problem with multiple assertions is that, if the first
+assertion fails, the remainder are not tested.  The test results then do not
+tell the entire story.
+
+If you need to make two unrelated assertions, you should be running two tests.
+
+@heading Use Mocks and Stubs
+
+Mocks assert that they are called correctly. Stubs provide a predictable base
+on which to run the code under test. See
+@url{http://en.wikipedia.org/wiki/Mock_object,Mock Object} and
+@url{http://en.wikipedia.org/wiki/Method_stub,Method Stub}.
+
+One of the difficulties with Buildbot is that interfaces are unstable and
+poorly documented, which makes it difficult to design stubs.  A common
+repository for stubs, however, will allow any interface changes to be reflected
+in only one place in the test code.
+
+@heading Small Tests
+
+The shorter each test is, the better. Test as little code as possible in each test.
+
+It is fine, and in fact encouraged, to write the code under test in such a way
+as to facilitate this. As an illustrative example, if you are testing a new
+Step subclass, but your tests require instantiating a BuildMaster, you're
+probably doing something wrong! (Note that this rule is almost universally
+violated in the existing buildbot tests).
+
+This also applies to test modules.  Several short, easily-digested test modules
+are preferred over a 1000-line monster.
+
+@heading Isolation
+
+Each test should be maximally independent of other tests. Do not leave files
+laying around after your test has finished, and do not assume that some other
+test has run beforehand. It's fine to use caching techniques to avoid repeated,
+lengthy setup times.
+
+@heading Be Correct
+
+Tests should be as robust as possible, which at a basic level means using the
+available frameworks correctly. All deferreds should have callbacks and be
+chained properly. Error conditions should be checked properly. Race conditions
+should not exist (see "Independent of Time", above).
+
+@heading Be Helpful
+
+Note that tests will pass most of the time, but the moment when they are most
+useful is when they fail.
+
+When the test fails, it should produce output that is helpful to the person
+chasing it down. This is particularly important when the tests are run
+remotely, in which case the person chasing down the bug does not have access to
+the system on which the test fails. A test which fails sporadically with no
+more information than "AssertionFailed?" is a prime candidate for deletion if
+the error isn't obvious. Making the error obvious also includes adding comments
+describing the ways a test might fail.
+
+@heading Mixins
+
+Do not define setUp and tearDown directly in a mixin. This is the path to
+madness. Instead, define a @code{myMixinNameSetUp} and
+@code{myMixinNameTearDown}, and call them explicitlyi from the subclass's
+@code{setUp} and @code{tearDown}. This makes it perfectly clear what is being
+set up and torn down from a simple analysis of the test case.
 
 @node Keeping State in Tests
 @subsection Keeping State in Tests
