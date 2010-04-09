@@ -351,6 +351,8 @@ class Dispatcher:
         afactory = self.names.get(avatarID)
         if afactory:
             p = afactory.getPerspective()
+        elif avatarID == "change":
+            raise ValueError("no PBChangeSource installed")
         elif avatarID == "debug":
             p = DebugPerspective()
             p.master = self.master
