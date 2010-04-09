@@ -355,6 +355,8 @@ class WebStatus(service.MultiService):
                                 (maxRotatedFiles, rotateLength))            
                         if hasattr(LogFile, "fromFullPath"): # not present in Twisted-2.5.0
                             return LogFile.fromFullPath(path, rotateLength=rotateLength, maxRotatedFiles=maxRotatedFiles)
+                        else:
+                            log.msg("WebStatus: rotated http logs are not supported on this version of Twisted")
                     except ImportError, e:
                         log.msg("WebStatus: Unable to set up rotating http.log: %s" % e)
 
