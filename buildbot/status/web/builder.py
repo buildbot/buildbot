@@ -303,7 +303,7 @@ class BuildersResource(HtmlResource):
                 online += 1
                 
         cxt['authz'] = self.getAuthz(req)
-        cxt['num_building'] = online
+        cxt['num_building'] = building
         cxt['num_online'] = online
 
         template = req.site.buildbot_service.templates.get_template("builders.html")
