@@ -442,7 +442,7 @@ class BuildMaster(service.MultiService):
 
         self.readConfig = False
         
-        # create log_rotation object and set default parameters (used by WebStatus
+        # create log_rotation object and set default parameters (used by WebStatus)
         self.log_rotation = LogRotation()
 
     def startService(self):

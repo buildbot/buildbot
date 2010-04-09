@@ -352,7 +352,7 @@ class WebStatus(service.MultiService):
                     try:
                         # TODO: Use same log rotate parameters as twistd.log (from buildbot.tac)
                         from twisted.python.logfile import LogFile
-                        log.msg("Setting up http.log rotating %i files of %i bytes each" % 
+                        log.msg("Setting up http.log rotating %s files of %s bytes each" %
                                 (maxRotatedFiles, rotateLength))            
                         return LogFile.fromFullPath(path, rotateLength=rotateLength, maxRotatedFiles=maxRotatedFiles)
                     except ImportError, e:
