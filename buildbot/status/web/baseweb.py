@@ -350,14 +350,16 @@ class WebStatus(service.MultiService):
             class RotateLogSite(server.Site):
                 def _openLogFile(self, path):
                     try:
-                        # TODO: Use same log rotate parameters as twistd.log (from buildbot.tac)
                         from twisted.python.logfile import LogFile
                         log.msg("Setting up http.log rotating %s files of %s bytes each" %
                                 (maxRotatedFiles, rotateLength))            
-                        return LogFile.fromFullPath(path, rotateLength=rotateLength, maxRotatedFiles=maxRotatedFiles)
+                        if hasattr(LogFile, fromFullPath): # not present in Twisted-2.5.0
+                            return LogFile.fromFullPath(path, rotateLength=rotateLength, maxRotatedFiles=maxRotatedFiles)
                     except ImportError, e:
                         log.msg("WebStatus: Unable to set up rotating http.log: %s" % e)
-                        return server.Site._openLogFile(self, path)
+
+                    # if all else fails, just call the parent method
+                    return server.Site._openLogFile(self, path)
 
             # this will be replaced once we've been attached to a parent (and
             # thus have a basedir and can reference BASEDIR)
