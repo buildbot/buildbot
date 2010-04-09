@@ -4,6 +4,7 @@ import os
 import signal
 import time
 import warnings
+import textwrap
 
 from zope.interface import implements
 from twisted.python import log, components
@@ -864,7 +865,12 @@ class BuildMaster(service.MultiService):
         # make sure it's up to date
         sm = schema.DBSchemaManager(db_spec, self.basedir)
         if not sm.is_current():
-            raise exceptions.DatabaseNotReadyError
+            raise exceptions.DatabaseNotReadyError, textwrap.dedent("""
+                The Buildmaster database needs to be upgraded before this version of buildbot
+                can run.  Use the following command-line
+                    buildbot upgrade-master path/to/master
+                to upgrade the database, and try starting the buildmaster again.  You may want
+                to make a backup of your buildmaster before doing so.""")
 
         self.db = connector.DBConnector(db_spec)
         self.db.start()
