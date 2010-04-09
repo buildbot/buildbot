@@ -6,6 +6,19 @@ def getCommand(name):
     possibles = which(name)
     if not possibles:
         raise RuntimeError("Couldn't find executable for '%s'" % name)
+    #
+    # Under windows, if there is more than one executable "thing"
+    # that matches (e.g. *.bat, *.cmd and *.exe), we not just use
+    # the first in alphabet (*.bat/*.cmd) if there is a *.exe.
+    # e.g. under MSysGit/Windows, there is both a git.cmd and a
+    # git.exe on path, but we want the git.exe, since the git.cmd
+    # does not seem to work properly with regard to errors raised
+    # and catched in buildbot slave command (vcs.py)
+    #
+    if os.name == "nt" and len(possibles) > 1:
+        possibles_exe = which(name + ".exe")
+        if possibles_exe:
+            return possibles_exe[0]
     return possibles[0]
 
 def rmdirRecursive(dir):
