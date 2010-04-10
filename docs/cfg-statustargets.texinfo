@@ -616,35 +616,106 @@ status. The following table lists the methods that can be invoked
 using this interface.
 
 @table @code
+@item getAllBuilders()
+
+Return a list of the names of all builders.
+
+@item getLastBuildResults(builder_name)
+
+Return the build result for the last completed build by the given builder.  The
+result is a string, one of "success", "warnings", "failure", "skipped",
+"exception", or "retry".
+
+@item getLastBuilds(builder_name, num_builds)
+
+Get the last NUM_BUILDS builds completed by the named builder.  The return value is an array, with each build represented as an array with the following items
+
+@itemize
+@item builder name
+@item build number
+@item start time (seconds since epoch)
+@item end time (seconds since epoch)
+@item branch
+@item revision
+@item result (same format as @code{getLastBuildResults})
+@item text
+@item reasons (list of strings giving reasosn for that steps failed)
+@end itemize
+
+@item getLastBuildsAllBuilders(num_builds)
+
+Similar to @code{getLastBuilds}, but returns the last builds for all builders.
+This method can consume a lot of buildmaster CPU and disk resources.
+
 @item getAllBuildsInInterval(start, stop)
 
-Return a list of builds that have completed after the 'start'
-timestamp and before the 'stop' timestamp. This looks at all Builders.
-
-The timestamps are integers, interpreted as standard unix timestamps
-(seconds since epoch).
-
-Each Build is returned as a tuple in the form: @code{(buildername,
-buildnumber, build_end, branchname, revision, results, text)}
-
-The buildnumber is an integer. 'build_end' is an integer (seconds
-since epoch) specifying when the build finished.
-
-The branchname is a string, which may be an empty string to indicate
-None (i.e. the default branch). The revision is a string whose meaning
-is specific to the VC system in use, and comes from the 'got_revision'
-build property. The results are expressed as a string, one of
-('success', 'warnings', 'failure', 'exception'). The text is a list of
-short strings that ought to be joined by spaces and include slightly
-more data about the results of the build.
+Return a list of builds that have completed after the 'start' timestamp and
+before the 'stop' timestamp, both given as seconds since the epoch. This looks
+at all builders.  Each build is returned in a format similar to, but not the
+same as that for @code{getLastBuilds}.  In particular, the start time and
+reasons are omitted.
 
 @item getBuild(builder_name, build_number)
 
 Return information about a specific build.
 
-This returns a dictionary (aka ``struct'' in XMLRPC terms) with
-complete information about the build. It does not include the contents
-of the log files, but it has just about everything else.
+This returns a dictionary (a struct in XMLRPC terms) with complete information
+about the build. Because it extracts log information, this call is a very
+heavyweight operation for the buildmaster.
+
+Keys include:
+
+@table @code
+@item builder_name
+@item url
+@item reason
+@item slavename
+@item results
+@item text
+@item reasons
+
+Just as for @code{getLastBuilds}, above.
+
+@item number
+
+The build number
+
+@item branch
+@item revision
+@item start
+@item end
+
+@item steps
+
+See below.
+
+@item full_error
+@item logs
+
+See below.
+@end table
+
+The @code{steps} key is a list of information about each step in the build, with keys
+
+@table @code
+@item name
+@item start
+@item end
+@item results
+
+This is a list of (integer result, text) that is probably not useful to callers.
+
+@item text
+@end table
+
+The @code{full_error} and @code{logs} keys contains most of the build's
+logfiles, in an odd format.  The @code{full_error} key contains a hash keyed by
+step name, but containing only failed logs.  The values are the text of an
+arbitrary one of the logs for each failing step.
+
+The @code{logs} key is a list of logs, each of which is represented by a hash
+with keys @code{name}, in the format @code{stepname/logname}, and @code{text},
+which is always the constant string @code{HUGE}.
 
 @end table
 
