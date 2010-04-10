@@ -58,15 +58,18 @@ c['multiMaster'] = True
 c['db_poll_interval'] = 60
 @end example
 
-
-
 @node Project Definitions
 @subsection Project Definitions
 
-There are a couple of basic settings that you use to tell the buildbot
-what project it is working on. This information is used by status
-reporters to let users find out more about the codebase being
-exercised by this particular Buildbot installation.
+There are a couple of basic settings that you use to tell the buildbot what it
+is working on. This information is used by status reporters to let users find
+out more about the codebase being exercised by this particular Buildbot
+installation.
+
+Note that these parameters were added long before Buildbot became able to build
+multiple projects in a single buildmaster, and thus assume that there is only
+one project.  While the configuration parameter names may be confusing, a
+suitable choice of name and URL should help users avoid any confusion.
 
 @example
 c['projectName'] = "Buildbot"

@@ -311,6 +311,29 @@ full test suite.
 The Change also has a @code{comments} attribute, which is a string
 containing any checkin comments.
 
+@heading Project
+
+A change's @i{project}, by default the empty string, describes the source code
+that changed.  It is a free-form string which the buildbot administrator can
+use to flexibly discriminate among changes.
+
+Generally, a project is an independently-buildable unit of source.  This field
+can be used to apply different build steps to different projects.  For example,
+an open-source application might build its Windows client from a separate
+codebase than its POSIX server.  In this case, the change sources should be
+configured to attach an appropriate project string (say, "win-client" and
+"server") to changes from each codebase.  Schedulers would then examine these
+strings and trigger the appropriate builders for each project.
+
+@heading Repository
+
+A change occurs within the context of a specific repository.  This is generally
+specified with a string, and for most version-control systems, this string
+takes the form of a URL.
+
+Changes can be filtered on repository, but more often this field is used as a
+hint for the build steps to figure out which code to check out.
+
 @heading Revision
 
 Each Change can have a @code{revision} attribute, which describes how
