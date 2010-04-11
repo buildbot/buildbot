@@ -87,6 +87,7 @@ f.addSteps(all_steps)
 @heading Attributes
 
 @table @code
+
 @item useProgress
 (defaults to True): if True, the buildmaster keeps track of how long
 each step takes, so it can provide estimates of how long future builds
@@ -94,6 +95,52 @@ will take. If builds are not expected to take a consistent amount of
 time (such as incremental builds in which a random set of files are
 recompiled or tested each time), this should be set to False to
 inhibit progress-tracking.
+
+@item workdir
+(defaults to 'build'): workdir given to every build step created by
+this factory as default. The workdir can be overridden in a build step
+definition.
+If this attribute is set to a string, that string will be used
+for constructing the workdir (buildslave base + builder builddir +
+workdir). If this attributed is set to a Python callable, that
+callable will be called with SourceStamp as single parameter and
+is supposed to return a string which will be used as above.
+The latter is useful in scenarios with multiple repositories
+submitting changes to BuildBot. In this case you likely will want
+to have a dedicated workdir per repository, since otherwise a
+sourcing step with mode = "update" will fail as a workdir with
+a working copy of repository A can't be "updated" for changes
+from a repository B. Here is an example how you can achive
+workdir-per-repo:
+
+@example
+#
+# pre-repository working directory
+#
+def workdir (source_stamp):
+    return hashlib.md5 (source_stamp.repository).hexdigest ()[:8]
+
+build = factory.BuildFactory()
+build.workdir = workdir
+
+build.addStep (Git (mode = "update"))
+...
+builders.append ({'name': 'mybuilder',
+                  'slavename': 'myslave',
+                  'builddir': 'mybuilder',
+                  'factory': build})
+
+# You'll end up with workdirs like:
+#
+# Repo1 => <buildslave-base>/mybuilder/a78890ba
+# Repo2	=> <buildslave-base>/mybuilder/0823ba88
+# ...
+@end example
+
+You could make the workdir() function compute other paths, based on
+parts of the repo URL in the sourcestamp, or lookup in a lookup table
+based on repo URL. As long as there is a permanent 1:1 mapping between
+repos and workdir this will work.
 @end table
 
 @heading Implementation Note
