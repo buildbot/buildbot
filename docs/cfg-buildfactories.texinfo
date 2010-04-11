@@ -125,10 +125,10 @@ build.workdir = workdir
 
 build.addStep (Git (mode = "update"))
 ...
-builders.append ({'name': 'mybuilder',
+builders.append (@{'name': 'mybuilder',
                   'slavename': 'myslave',
                   'builddir': 'mybuilder',
-                  'factory': build})
+                  'factory': build@})
 
 # You'll end up with workdirs like:
 #
