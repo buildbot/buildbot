@@ -117,7 +117,7 @@
 {% macro graceful_shutdown(shutdown_url, authz) %}
   <form method="post" action="{{ shutdown_url }}" class='command graceful_shutdown'>
   
-  <p>To cause this slave to shut down gracefull whent it is idle,
+  <p>To cause this slave to shut down gracefully when it is idle,
     push the 'Graceful Shutdown' button</p>
     
   {% if authz.needAuthForm('gracefulShutdown') %}
