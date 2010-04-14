@@ -122,7 +122,9 @@ my_filter = ChangeFilter(branch_fn = my_branch_fn)
 The special argument @code{filter_fn} can be used to specify a function that is
 given the entire Change object, and returns a boolean.
 
-A Change passes the filter only if @i{all} arguments are satisfied.
+A Change passes the filter only if @i{all} arguments are satisfied.  If no
+filter object is given to a scheduler, then all changes will be built (subject
+to any other restrictions the scheduler enforces).
 
 @node Scheduler Scheduler
 @subsection Scheduler Scheduler

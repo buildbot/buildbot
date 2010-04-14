@@ -1,0 +1,15 @@
+Planned stuff:
+
+* Web UI as first-class citizen
+    + Tomas, Marcus: JS, ETA, better interactivity
+    + Flexible filtering for SourceStamps
+* Build status in DB
+* Expand Latent-Slave support
+* Project/Repository
+    + Support for cross-project builds and dependencies
+    + Dynamic manipulation of SourceStamps
+* Build coordination
+    + Beyond Dependent and Triggerable
+* Windows compatibility
+* VC mode cleanup (#669)
+* Expanded notification framework
