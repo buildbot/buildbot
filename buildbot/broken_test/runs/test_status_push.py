@@ -133,13 +133,16 @@ EXPECTED = [
         "event": "changeAdded",
         "payload": {
             'change': {
+                "at": "n0w - 1",
                 "category": None,
-                "files": ["Makefile", "foo/bar.c"],
+                "files": [{'name': "Makefile", 'url': None},
+                          {'name': "foo/bar.c", 'url': None}],
                 "who": "bob",
                 "when": "n0w",
                 "number": 1,
                 "comments": "changed stuff",
                 "branch": None,
+                "rev": None,
                 "revlink": "",
                 "properties": [],
                 "revision": None,
@@ -180,14 +183,17 @@ EXPECTED = [
                     'branch': None,
                     'changes': [
                         {
+                            "at": "n0w - 1",
                             'branch': None,
                             'category': None,
                             'comments': 'changed stuff',
-                            'files': ['Makefile', 'foo/bar.c'],
+                            "files": [{'name': "Makefile", 'url': None},
+                                      {'name': "foo/bar.c", 'url': None}],
                             'number': 1,
                             'project': '',
                             'properties': [],
                             'repository': '',
+                            'rev': None,
                             'revision': None,
                             'revlink': '',
                             'when': 'yesterday',
@@ -320,14 +326,17 @@ EXPECTED = [
                     'branch': None,
                     'changes': [
                         {
+                            "at": "n0w - 1",
                             'branch': None,
                             'category': None,
                             'comments': 'changed stuff',
-                            'files': ['Makefile', 'foo/bar.c'],
+                            "files": [{'name': "Makefile", 'url': None},
+                                      {'name': "foo/bar.c", 'url': None}],
                             'number': 1,
                             'project': '',
                             'properties': [],
                             'repository': '',
+                            'rev': None,
                             'revision': None,
                             'revlink': '',
                             'when': 'yesterday',
@@ -458,7 +467,9 @@ EXPECTED_SHORT = [
         "event": "changeAdded",
         "payload": {
             'change': {
-                "files": ["Makefile", "foo/bar.c"],
+                "at": "n0w - 1",
+                "files": [{'name': "Makefile"},
+                          {'name': "foo/bar.c"}],
                 "who": "bob",
                 "when": "n0w",
                 "number": 1,
@@ -494,8 +505,10 @@ EXPECTED_SHORT = [
                 'sourceStamp': {
                     'changes': [
                         {
+                            "at": "n0w - 1",
                             'comments': 'changed stuff',
-                            'files': ['Makefile', 'foo/bar.c'],
+                            "files": [{'name': "Makefile"},
+                                      {'name': "foo/bar.c"}],
                             'number': 1,
                             'when': 'yesterday',
                             'who': 'bob'
@@ -582,8 +595,10 @@ EXPECTED_SHORT = [
                 'sourceStamp': {
                     'changes': [
                         {
+                            "at": "n0w - 1",
                             'comments': 'changed stuff',
-                            'files': ['Makefile', 'foo/bar.c'],
+                            "files": [{'name': "Makefile"},
+                                      {'name': "foo/bar.c"}],
                             'number': 1,
                             'when': 'yesterday',
                             'who': 'bob'
@@ -742,6 +757,8 @@ class StatusPushTestBase(MasterMixin, unittest.TestCase):
             self.assertEqual('Pouet', item.pop('project'))
             self.assertEqual(i + 1, item.pop('id'))
 
+        FindItem(items, 'changeAdded', 'payload', 'change', 'at',
+                'n0w - 1')
         FindItem(items, 'changeAdded', 'payload', 'change', 'when',
                 'n0w')
         FindItem(items, 'requestSubmitted', 'payload', 'request',
@@ -751,6 +768,11 @@ class StatusPushTestBase(MasterMixin, unittest.TestCase):
                 'changes', None, 'when', 'yesterday')
         FindItem(items, 'buildFinished', 'payload', 'build', 'sourceStamp',
                 'changes', None, 'when', 'yesterday')
+
+        FindItem(items, 'buildStarted', 'payload', 'build', 'sourceStamp',
+                'changes', None, 'at', 'n0w - 1')
+        FindItem(items, 'buildFinished', 'payload', 'build', 'sourceStamp',
+                'changes', None, 'at', 'n0w - 1')
 
         FindItem(items, 'buildStarted', 'payload', 'build', 'requests',
                 None, 'submittedAt', 'yesterday')
