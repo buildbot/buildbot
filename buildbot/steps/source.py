@@ -501,9 +501,7 @@ class SVN(Source):
                        combining the access method (HTTP, ssh, local file),
                        the repository host/port, the repository path, the
                        sub-tree within the repository, and the branch to
-                       check out. Using C{svnurl} does not enable builds of
-                       alternate branches: use C{baseURL} to enable this.
-                       Use exactly one of C{svnurl} and C{baseURL}.
+                       check out. Use exactly one of C{svnurl} and C{baseURL}.
 
         @param baseURL: if branches are enabled, this is the base URL to
                         which a branch name will be appended. It should
@@ -516,11 +514,14 @@ class SVN(Source):
                               to C{baseURL} and the result handed to
                               the SVN command.
 
+        @type  username: string
         @param username: username to pass to svn's --username
-        @param password: username to pass to svn's --password
+
+        @type  password: string
+        @param password: password to pass to svn's --password
         """
 
-        if not kwargs.has_key('workdir') and directory is not None:
+        if not 'workdir' in kwargs and directory is not None:
             # deal with old configs
             warn("Please use workdir=, not directory=", DeprecationWarning)
             kwargs['workdir'] = directory
@@ -547,12 +548,11 @@ class SVN(Source):
                                  keep_on_purge=keep_on_purge,
                                  ignore_ignores=ignore_ignores,
                                  always_purge=always_purge,
-				 depth=depth,
+                                 depth=depth,
                                  )
 
         if svnurl and baseURL:
-            raise ValueError("you must use exactly one of svnurl and baseURL")
-
+            raise ValueError("you must use either svnurl OR baseURL")
 
     def computeSourceRevision(self, changes):
         if not changes or None in [c.revision for c in changes]:
@@ -612,10 +612,10 @@ class SVN(Source):
                 raise BuildSlaveTooOldError("old slave can't do patch")
 
         if self.svnurl:
-            assert not branch # we need baseURL= to use branches
             self.args['svnurl'] = self.computeRepositoryURL(self.svnurl)
         else:
-            self.args['svnurl'] = self.computeRepositoryURL(self.baseURL) + branch
+            self.args['svnurl'] = (self.computeRepositoryURL(self.baseURL) +
+                                   branch)
         self.args['revision'] = revision
         self.args['patch'] = patch
 
@@ -625,9 +625,8 @@ class SVN(Source):
         if self.depth is not None:
             if self.slaveVersionIsOlderThan("svn","2.9"):
                 m = ("This buildslave (%s) does not support svn depth "
-			     "arguments.  "
-			     "Refusing to build. "
-			     "Please upgrade the buildslave." % (self.build.slavename))
+                     "arguments.  Refusing to build. "
+                     "Please upgrade the buildslave." % (self.build.slavename))
                 raise BuildSlaveTooOldError(m)
             else: 
                 self.args['depth'] = self.depth
@@ -639,14 +638,17 @@ class SVN(Source):
                      "Refusing to build. Please upgrade the buildslave to "
                      "buildbot-0.7.10 or newer." % (self.build.slavename,))
                 raise BuildSlaveTooOldError(m)
-            if self.username is not None: self.args['username'] = self.username
-            if self.password is not None: self.args['password'] = self.password
+            if self.username is not None:
+                self.args['username'] = self.username
+            if self.password is not None:
+                self.args['password'] = self.password
 
         if self.extra_args is not None:
             self.args['extra_args'] = self.extra_args
 
         revstuff = []
-        if branch is not None and branch != self.branch:
+        #revstuff.append(self.args['svnurl'])
+        if self.args['svnurl'].find('trunk') == -1:
             revstuff.append("[branch]")
         if revision is not None:
             revstuff.append("r%s" % revision)

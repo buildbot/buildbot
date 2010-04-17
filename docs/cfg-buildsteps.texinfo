@@ -503,8 +503,8 @@ The @code{SVN} build step performs a
 There are two basic ways of setting up the checkout step, depending
 upon whether you are using multiple branches or not.
 
-If all of your builds use the same branch, then you should create the
-@code{SVN} step with the @code{svnurl} argument:
+The most versatile way to create the @code{SVN} step is with the
+@code{svnurl} argument:
 
 @table @code
 @item svnurl
@@ -520,9 +520,13 @@ Subversion repository which is accessible through HTTP at a URL of
 to your @code{SVN} step.
 @end table
 
-If, on the other hand, you are building from multiple branches, then
-you should create the @code{SVN} step with the @code{baseURL} and
-@code{defaultBranch} arguments instead:
+The @code{svnurl} argument can be considered as a universal means to
+create the @code{SVN} step as it ignores the branch information in the
+SourceStamp.
+
+Alternatively, if you are building from multiple branches, then you
+should preferentially create the @code{SVN} step with the
+@code{baseURL} and @code{defaultBranch} arguments instead:
 
 @table @code
 @item baseURL
@@ -534,6 +538,10 @@ name will be appended. It should probably end in a slash.
 does not provide one of its own. This will be appended to
 @code{baseURL} to create the string that will be passed to the
 @code{svn checkout} command.
+
+It is possible to mix to have a mix of @code{SVN} steps that use
+either the @code{svnurl} or @code{baseURL} arguments but not both at
+the same time.
 
 @item username
 (optional): if specified, this will be passed to the @code{svn}
