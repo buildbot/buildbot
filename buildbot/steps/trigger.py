@@ -90,13 +90,11 @@ class Trigger(LoggingBuildStep):
         triggered_schedulers = []
 
         # TODO: don't fire any schedulers if we discover an unknown one
-        dl = []
         for scheduler in self.schedulerNames:
             scheduler = properties.render(scheduler)
             if all_schedulers.has_key(scheduler):
                 sch = all_schedulers[scheduler]
                 if isinstance(sch, Triggerable):
-                    dl.append(sch.trigger(ss, set_props=props_to_set))
                     triggered_schedulers.append(scheduler)
                 else:
                     unknown_schedulers.append(scheduler)
@@ -105,8 +103,13 @@ class Trigger(LoggingBuildStep):
 
         if unknown_schedulers:
             self.step_status.setText(['no scheduler:'] + unknown_schedulers)
-        else:
-            self.step_status.setText(['triggered'] + triggered_schedulers)
+            return self.finished(FAILURE)
+
+        dl = []
+        for scheduler in triggered_schedulers:
+            sch = all_schedulers[scheduler]
+            dl.append(sch.trigger(ss, set_props=props_to_set))
+        self.step_status.setText(['triggered'] + triggered_schedulers)
 
         if self.waitForFinish:
             d = defer.DeferredList(dl, consumeErrors=1)
