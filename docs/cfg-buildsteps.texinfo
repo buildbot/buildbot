@@ -1492,7 +1492,8 @@ This buildstep is similar to ShellCommand, except that it captures the
 output of the command into a property.  It is usually used like this:
 
 @example
-f.addStep(SetProperty(command="uname -a", property="uname"))
+from buildbot.steps import shell
+f.addStep(shell.SetProperty(command="uname -a", property="uname"))
 @end example
 
 This runs @code{uname -a} and captures its stdout, stripped of leading
