@@ -57,7 +57,7 @@ class FeedResource(XmlResource):
         self.title = title
         self.projectName = self.status.getProjectName()
         self.link = self.status.getBuildbotURL()
-        self.description = 'List of FAILED builds'
+        self.description = 'List of builds'
         self.pubdate = time.gmtime(int(time.time()))
         self.user = self.getEnv(['USER', 'USERNAME'], 'buildmaster')
         self.hostname = self.getEnv(['HOSTNAME', 'COMPUTERNAME'],
@@ -97,6 +97,9 @@ class FeedResource(XmlResource):
         if showCategories:
             builders = [b for b in builders if b.category in showCategories]
 
+
+        failures_only = request.args.get("failures_only","false")
+
         maxFeeds = 25
 
         # Copy all failed builds in a new list.
@@ -119,10 +122,9 @@ class FeedResource(XmlResource):
 
                 results = build.getResults()
 
-                # only add entries for failed builds!
-                if results == FAILURE:
-                    totalbuilds += 1
-                    builds.append(build)
+                if failures_only == "false" or results == FAILURE:
+	            totalbuilds += 1
+	            builds.append(build)
 
                 # stop for this builder when our total nr. of feeds is reached
                 if totalbuilds >= maxFeeds:
@@ -174,8 +176,9 @@ class FeedResource(XmlResource):
                 if len(got_revision) > 40:
                     got_revision = "[revision string too long]"
                 source += "(Got Revision: %s)" % got_revision
-            title = ('%s failed on "%s"' %
-                     (source, build.getBuilder().getName()))
+            failflag = (build.getResults() != FAILURE)
+            title = ('%s %s on "%s"' %
+                     (source, ["failed","succeeded"][failflag], build.getBuilder().getName()))
 
             
             # Add information about the failing steps.
