@@ -56,26 +56,27 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
         slaves = b.getSlaves()
         connected_slaves = [s for s in slaves if s.isConnected()]
 
-        cxt['current'] = [self.builder(x, req) for x in b.getCurrentBuilds()]        
-            
-        cxt['pending'] = []        
+        cxt['current'] = [self.builder(x, req) for x in b.getCurrentBuilds()]
+
+        cxt['pending'] = []
         for pb in b.getPendingBuilds():
+            source = pb.getSourceStamp()
             changes = []
 
-            if pb.source.changes:
-                for c in pb.source.changes:
+            if source.changes:
+                for c in source.changes:
                     changes.append({ 'url' : path_to_change(req, c),
                                             'who' : c.who})
-            if pb.source.revision:
-                reason = pb.source.revision
+            if source.revision:
+                reason = source.revision
             else:
                 reason = "no changes specified"
-                    
+
             cxt['pending'].append({
                 'when': time.strftime("%b %d %H:%M:%S", time.localtime(pb.getSubmitTime())),
                 'delay': util.formatInterval(util.now() - pb.getSubmitTime()),
                 'reason': reason,
-                'id': id(pb),
+                'id': pb.brid,
                 'changes' : changes
                 })
 
@@ -183,7 +184,7 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
             c = interfaces.IControl(self.getBuildmaster(req))
             bc = c.getBuilder(self.builder_status.getName())
             for build_req in bc.getPendingBuilds():
-                if cancel_all or id(build_req.original_request.status) == request_id:
+                if cancel_all or (build_req.brid == request_id):
                     log.msg("Cancelling %s" % build_req)
                     if authz.actionAllowed('cancelPendingBuild', req, build_req):
                         build_req.cancel()

@@ -966,6 +966,7 @@ class BuildRequestControl:
     def __init__(self, builder, request):
         self.original_builder = builder
         self.original_request = request
+        self.brid = request.id
 
     def subscribe(self, observer):
         raise NotImplementedError
@@ -974,4 +975,4 @@ class BuildRequestControl:
         raise NotImplementedError
 
     def cancel(self):
-        self.original_builder.cancelBuildRequest(self.original_request.id)
+        self.original_builder.cancelBuildRequest(self.brid)
