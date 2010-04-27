@@ -552,11 +552,10 @@ will then tell the buildslave to shutdown.
 @node Maintenance
 @section Maintenance
 
-It is a good idea to check the buildmaster's status page every once in
-a while, to see if your buildslave is still online. Eventually the
-buildbot will probably be enhanced to send you email (via the
-@file{info/admin} email address) when the slave has been offline for
-more than a few hours.
+The buildmaster can be configured to send out email notifications when a
+slave has been offline for a while.  Be sure to configure the buildmaster
+with a contact email address for each slave so these notifications are sent
+to someone who can bring it back online.
 
 If you find you can no longer provide a buildslave to the project, please
 let the project admins know, so they can put out a call for a
@@ -577,6 +576,10 @@ top directory. You can use something like the following:
 @@weekly cd BASEDIR && find . -mindepth 2 i-path './public_html/*' -prune -o -type f -mtime +14 -exec rm @{@} \;
 @@weekly cd BASEDIR && find twistd.log* -mtime +14 -exec rm @{@} \;
 @end example
+
+Alternatively, you can configure a maximum number of old logs to be kept
+using the @code{--log-count} command line option when running @code{buildbot
+create-slave} or @code{buildbot create-master}.
 
 @node Troubleshooting
 @section Troubleshooting
