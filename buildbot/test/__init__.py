@@ -1,2 +1,2 @@
-import util.monkeypatches
-util.monkeypatches.add_debugging_monkeypatches()
+from buildbot.test.util import monkeypatches
+monkeypatches.add_debugging_monkeypatches()
