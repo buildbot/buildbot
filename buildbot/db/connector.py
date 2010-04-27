@@ -892,6 +892,40 @@ class DBConnector(util.ComparableMixin):
         self.notify("retire-buildrequest", *brids)
         self.notify("modify-buildset", *bsids)
 
+    def cancel_buildrequests(self, brids):
+        return self.runInteractionNow(self._txn_cancel_buildrequest, brids)
+    def _txn_cancel_buildrequest(self, t, brids):
+        # TODO: we aren't entirely sure if it'd be safe to just delete the
+        # buildrequest: what else might be waiting on it that would then just
+        # hang forever?. _check_buildset() should handle it well (an empty
+        # buildset will appear complete and SUCCESS-ful). But we haven't
+        # thought it through enough to be sure. So for now, "cancel" means
+        # "mark as complete and FAILURE".
+        if True:
+            now = self._getCurrentTime()
+            q = self.quoteq("UPDATE buildrequests"
+                            " SET complete=1, results=?, complete_at=?"
+                            " WHERE id IN " + self.parmlist(len(brids)))
+            t.execute(q, [FAILURE, now]+brids)
+        else:
+            q = self.quoteq("DELETE FROM buildrequests"
+                            " WHERE id IN " + self.parmlist(len(brids)))
+            t.execute(q, brids)
+
+        # now, does this cause any buildsets to complete?
+        q = self.quoteq("SELECT bs.id"
+                        " FROM buildsets AS bs, buildrequests AS br"
+                        " WHERE br.buildsetid=bs.id AND bs.complete=0"
+                        "  AND br.id in "
+                        + self.parmlist(len(brids)))
+        t.execute(q, brids)
+        bsids = [bsid for (bsid,) in t.fetchall()]
+        for bsid in bsids:
+            self._check_buildset(t, bsid, now)
+
+        self.notify("cancel-buildrequest", *brids)
+        self.notify("modify-buildset", *bsids)
+
     def _check_buildset(self, t, bsid, now):
         q = self.quoteq("SELECT br.complete,br.results"
                         " FROM buildsets AS bs, buildrequests AS br"

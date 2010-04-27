@@ -576,8 +576,8 @@ class Builder(pb.Referenceable, service.MultiService):
             return buildable[0].getSubmitTime()
         return None
 
-    def cancelBuildRequest(self, req):
-        pass # TODO: rework
+    def cancelBuildRequest(self, brid):
+        return self.db.cancel_buildrequests([brid])
 
     def consumeTheSoulOfYourPredecessor(self, old):
         """Suck the brain out of an old Builder.
@@ -974,4 +974,4 @@ class BuildRequestControl:
         raise NotImplementedError
 
     def cancel(self):
-        self.original_builder.cancelBuildRequest(self.original_request)
+        self.original_builder.cancelBuildRequest(self.original_request.id)
