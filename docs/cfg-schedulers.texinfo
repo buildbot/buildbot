@@ -491,7 +491,7 @@ This class is only useful in conjunction with the @code{Trigger} step.
 Here is a fully-worked example:
 
 @example
-from buildbot.schedulesr import basic, timed, triggerable
+from buildbot.schedulers import basic, timed, triggerable
 from buildbot.process import factory
 from buildbot.steps import trigger
 
