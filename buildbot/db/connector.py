@@ -1010,7 +1010,7 @@ class DBConnector(util.ComparableMixin):
         # "pending" means unclaimed and incomplete. When a build is returned
         # to the pool (self.resubmit_buildrequests), the claimed_at= field is
         # reset to zero.
-        t.execute(self.quoteq("SELECT buildsetid FROM buildrequests"
+        t.execute(self.quoteq("SELECT id FROM buildrequests"
                               " WHERE buildername=? AND"
                               "  complete=0 AND claimed_at=0"),
                   (buildername,))
