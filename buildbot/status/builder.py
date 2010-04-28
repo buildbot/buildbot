@@ -771,7 +771,7 @@ class BuildRequestStatus:
     def asDict(self):
         result = {}
         # Constant
-        result['source'] = self.source.asDict()
+        result['source'] = self.getSourceStamp().asDict()
         result['builderName'] = self.getBuilderName()
         result['submittedAt'] = self.getSubmitTime()
 
