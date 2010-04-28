@@ -1214,12 +1214,12 @@ class P4(Source):
         self.args['p4port'] = p4port
         self.args['p4user'] = p4user
         self.args['p4passwd'] = p4passwd
-        self.args['p4base'] = self.computeRepositoryURL(p4base)
         self.args['p4extra_views'] = p4extra_views
         self.p4client = p4client
 
     def setBuild(self, build):
         Source.setBuild(self, build)
+        self.args['p4base'] = self.computeRepositoryURL(p4base)
         self.args['p4client'] = self.p4client % {
             'slave': build.slavename,
             'builder': build.builder.name,
