@@ -37,10 +37,10 @@
 #
 # ***** END LICENSE BLOCK *****
 
-import sys, time, collections, base64, os, re
+import sys, collections, base64
 
-from twisted.python import log, reflect, threadable
-from twisted.internet import defer, reactor
+from twisted.python import log, threadable
+from twisted.internet import defer
 from twisted.enterprise import adbapi
 from buildbot import util
 from buildbot.util import collections as bbcollections
@@ -272,7 +272,7 @@ class DBConnector(util.ComparableMixin):
         assert self._started
         self._pending_operation_count += 1
         start = self._getCurrentTime()
-        #t = self._start_operation()
+        #t = self._start_operation()   # why is this commented out? -warner
         d = self._pool.runQuery(*args, **kwargs)
         #d.addBoth(self._runQuery_done, start, t)
         return d
@@ -770,6 +770,19 @@ class DBConnector(util.ComparableMixin):
         br.bsid = bsid
         return br
 
+    def get_buildername_for_brid(self, brid):
+        assert isinstance(brid, (int, long))
+        return self.runInteractionNow(self._txn_get_buildername_for_brid, brid)
+    def _txn_get_buildername_for_brid(self, t, brid):
+        assert isinstance(brid, (int, long))
+        t.execute(self.quoteq("SELECT buildername FROM buildrequests"
+                              " WHERE id=?"),
+                  (brid,))
+        r = t.fetchall()
+        if not r:
+            return None
+        return r[0][0]
+
     def get_unclaimed_buildrequests(self, buildername, old, master_name,
                                     master_incarnation, t):
         t.execute(self.quoteq("SELECT br.id"
@@ -879,6 +892,40 @@ class DBConnector(util.ComparableMixin):
         self.notify("retire-buildrequest", *brids)
         self.notify("modify-buildset", *bsids)
 
+    def cancel_buildrequests(self, brids):
+        return self.runInteractionNow(self._txn_cancel_buildrequest, brids)
+    def _txn_cancel_buildrequest(self, t, brids):
+        # TODO: we aren't entirely sure if it'd be safe to just delete the
+        # buildrequest: what else might be waiting on it that would then just
+        # hang forever?. _check_buildset() should handle it well (an empty
+        # buildset will appear complete and SUCCESS-ful). But we haven't
+        # thought it through enough to be sure. So for now, "cancel" means
+        # "mark as complete and FAILURE".
+        if True:
+            now = self._getCurrentTime()
+            q = self.quoteq("UPDATE buildrequests"
+                            " SET complete=1, results=?, complete_at=?"
+                            " WHERE id IN " + self.parmlist(len(brids)))
+            t.execute(q, [FAILURE, now]+brids)
+        else:
+            q = self.quoteq("DELETE FROM buildrequests"
+                            " WHERE id IN " + self.parmlist(len(brids)))
+            t.execute(q, brids)
+
+        # now, does this cause any buildsets to complete?
+        q = self.quoteq("SELECT bs.id"
+                        " FROM buildsets AS bs, buildrequests AS br"
+                        " WHERE br.buildsetid=bs.id AND bs.complete=0"
+                        "  AND br.id in "
+                        + self.parmlist(len(brids)))
+        t.execute(q, brids)
+        bsids = [bsid for (bsid,) in t.fetchall()]
+        for bsid in bsids:
+            self._check_buildset(t, bsid, now)
+
+        self.notify("cancel-buildrequest", *brids)
+        self.notify("modify-buildset", *bsids)
+
     def _check_buildset(self, t, bsid, now):
         q = self.quoteq("SELECT br.complete,br.results"
                         " FROM buildsets AS bs, buildrequests AS br"
@@ -955,6 +1002,19 @@ class DBConnector(util.ComparableMixin):
             complete = bool(complete)
             return (external_idstring, reason, ssid, complete, results)
         return None # shouldn't happen
+
+    def get_pending_brids_for_builder(self, buildername):
+        return self.runInteractionNow(self._txn_get_pending_brids_for_builder,
+                                      buildername)
+    def _txn_get_pending_brids_for_builder(self, t, buildername):
+        # "pending" means unclaimed and incomplete. When a build is returned
+        # to the pool (self.resubmit_buildrequests), the claimed_at= field is
+        # reset to zero.
+        t.execute(self.quoteq("SELECT buildsetid FROM buildrequests"
+                              " WHERE buildername=? AND"
+                              "  complete=0 AND claimed_at=0"),
+                  (buildername,))
+        return [brid for (brid,) in t.fetchall()]
 
     # test/debug methods
 
