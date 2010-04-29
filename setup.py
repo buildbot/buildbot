@@ -202,6 +202,7 @@ setup_args = {
               "buildbot.test",
               "buildbot.test.fake",
               "buildbot.test.unit",
+              "buildbot.test.util",
               "buildbot.test.regressions",
               ],
     'data_files': [("buildbot", ["buildbot/buildbot.png"]),
