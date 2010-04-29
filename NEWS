@@ -1,18 +1,27 @@
 Major User visible changes in Buildbot.             -*- outline -*-
   (see ChangeLog for a detailed list of changes)
 
-* master
+* Release 0.8.0
 
-** Builders can setup properties
+** (NOTE!) Scheduler requires keyword arguments
 
-There is a new parameter to the builders to setup properties on a
-builder basis.
+If you are creating your Scheduler like this:
 
-* Release 0.8.0beta1
+  Scheduler("mysched", "mybranch", 0, ["foo", "bar"])
 
-** New Steps
+then it's time to change that to specify each of the arguments with a keyword:
 
-*** Visual Studio / VC++ Compile Steps
+  Scheduler(name="mysched", branch="mybranch",
+        treeStableTimer=0, builderNames=["foo", "bar"])
+
+** Database Backend
+
+Scheduler, change, and build request information is now stored in a database -
+by default, in SQLite, although MySQL is also supported.  With this change,
+scheduled builds will persist over buildmaster restarts, as will
+interrelationships between schedulers (e.g., Triggerable and Dependent).
+
+** Visual Studio / VC++ Compile Steps
 
 ** New Change/SourceStamp attributes 'project' and 'repository'
 
@@ -35,16 +44,10 @@ the alread existing BAR variable on the slave. This is mostly used to
 expand variable like this: "PATH": "/my/directory:${PATH}" where PATH
 will have "/my/directory" prepended to it.
 
-** Scheduler requires keyword arguments
+** Builders can setup properties
 
-If you are creating your Scheduler like this:
-
-  Scheduler("mysched", "mybranch", 0, ["foo", "bar"])
-
-then it's time to change that to specify each of the arguments with a keyword:
-
-  Scheduler(name="mysched", branch="mybranch",
-        treeStableTimer=0, builderNames=["foo", "bar"])
+There is a new parameter to the builders to setup properties on a
+per-builder basis.
 
 ** New /json web status
 
