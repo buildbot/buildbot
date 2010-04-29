@@ -66,6 +66,11 @@ The web-based status displays now provide fine-grained control over who can
 do what - force builds, stop builds, cancel builds, etc.  See the manual for
 configuration details.
 
+** Mercurial uses full revisions
+
+Mercurial now sets got_revision to the full 40-character revision id instead of
+the short IDs.
+
 ** Cleanup, Bug Fixes, and Test Fixes
 
 Thanks to help from a number of devoted contributors, this version of Buildbot
