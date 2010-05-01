@@ -252,8 +252,8 @@ class StaticHTML(HtmlResource):
         template = request.site.buildbot_service.templates.get_template("empty.html")
         return template.render(**cxt)
 
-# DirectoryLister isn't available in Twisted-2.5.0, so we just skip
-# this particular feature.
+# DirectoryLister isn't available in Twisted-2.5.0, and isn't compatible with what
+# we need until 9.0.0, so we just skip this particular feature.
 have_DirectoryLister = False
 if hasattr(static, 'DirectoryLister'):
     have_DirectoryLister = True
@@ -296,7 +296,7 @@ class StaticFile(static.File):
                                    self.defaultType)
         else:
             return static.Data("""
-   Directory Listings require Twisted-8.0.0 or later
+   Directory Listings require Twisted-9.0.0 or later
                 """, "text/plain")
         
 
