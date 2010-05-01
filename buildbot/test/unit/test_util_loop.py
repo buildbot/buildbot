@@ -39,7 +39,6 @@ from twisted.trial import unittest
 from twisted.internet import reactor, defer, task
 from twisted.application import service
 from twisted.python import log
-from twisted.python import monkey
 
 from buildbot.test.fake.state import State
 

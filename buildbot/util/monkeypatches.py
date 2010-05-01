@@ -1,3 +1,5 @@
+from twisted.trial import unittest
+
 def add_debugging_monkeypatches():
     """
     DO NOT CALL THIS DIRECTLY
@@ -16,3 +18,10 @@ def add_debugging_monkeypatches():
         return old_stopService(self)
     Service.startService = startService
     Service.stopService = stopService
+
+    # make unittest.TestCase have a patch method, even if it just skips
+    # the test.
+    def nopatch(self, *args):
+        raise unittest.SkipTest('unittest.patch is not available')
+    if not hasattr(unittest.TestCase, 'patch'):
+        unittest.TestCase.patch = nopatch
