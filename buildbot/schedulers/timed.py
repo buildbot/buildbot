@@ -196,8 +196,15 @@ class Nightly(base.BaseScheduler, base.ClassifierMixin, TimedBuildMixin):
             self.fileIsImportant = fileIsImportant
         self._start_time = time.time()
 
+        # this scheduler does not support filtering, but ClassifierMixin needs a
+        # filter anyway
+        self.make_filter()
+
     def get_initial_state(self, max_changeid):
-        return {"last_build": None}
+        return {
+            "last_build": None,
+            "last_processed": max_changeid,
+        }
 
     def getPendingBuildTimes(self):
         now = time.time()
@@ -208,9 +215,9 @@ class Nightly(base.BaseScheduler, base.ClassifierMixin, TimedBuildMixin):
     def run(self):
         d = defer.succeed(None)
         db = self.parent.db
-        if self.onlyIfChanged:
-            # classify_changes comes from base.ClassifierMixin, same as Scheduler.
-            d.addCallback(lambda ign: db.runInteraction(self.classify_changes))
+        # always call classify_changes, so that we can keep last_processed
+        # up to date, in case we are configured with onlyIfChanged.
+        d.addCallback(lambda ign: db.runInteraction(self.classify_changes))
         d.addCallback(lambda ign: db.runInteraction(self._check_timer))
         return d
 
