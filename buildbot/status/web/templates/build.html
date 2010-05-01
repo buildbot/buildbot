@@ -136,7 +136,7 @@ Build #{{ b.getNumber() }}
 
 {% for p in properties %}
   <tr class="{{ loop.cycle('alt', '') }}">
-    <td class="left">{{ p.name|e|capitalize }}</td>
+    <td class="left">{{ p.name|e }}</td>
   {% if p.short_value %}
     <td>{{ p.short_value|e }} .. [property value too long]</td>
   {% else %}
