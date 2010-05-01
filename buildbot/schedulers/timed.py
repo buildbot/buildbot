@@ -196,8 +196,15 @@ class Nightly(base.BaseScheduler, base.ClassifierMixin, TimedBuildMixin):
             self.fileIsImportant = fileIsImportant
         self._start_time = time.time()
 
+        # this scheduler does not support filtering, but ClassifierMixin needs a
+        # filter anyway
+        self.make_filter()
+
     def get_initial_state(self, max_changeid):
-        return {"last_build": None}
+        return {
+            "last_build": None,
+            "last_processed": max_changeid,
+        }
 
     def getPendingBuildTimes(self):
         now = time.time()
@@ -208,9 +215,9 @@ class Nightly(base.BaseScheduler, base.ClassifierMixin, TimedBuildMixin):
     def run(self):
         d = defer.succeed(None)
         db = self.parent.db
-        if self.onlyIfChanged:
-            # classify_changes comes from base.ClassifierMixin, same as Scheduler.
-            d.addCallback(lambda ign: db.runInteraction(self.classify_changes))
+        # always call classify_changes, so that we can keep last_processed
+        # up to date, in case we are configured with onlyIfChanged.
+        d.addCallback(lambda ign: db.runInteraction(self.classify_changes))
         d.addCallback(lambda ign: db.runInteraction(self._check_timer))
         return d
 
@@ -222,11 +229,16 @@ class Nightly(base.BaseScheduler, base.ClassifierMixin, TimedBuildMixin):
             next = self._calculateNextRunTimeFrom(self._start_time)
         else:
             next = self._calculateNextRunTimeFrom(last_build)
-        if next < now:
-            self._maybe_start_build(t)
-            self.update_last_build(t, now)
-        else:
+
+        # not ready to fire yet
+        if next >= now:
             return next + 1.0
+
+        self._maybe_start_build(t)
+        self.update_last_build(t, now)
+
+        # reschedule for the next timer
+        return self._check_timer(t)
 
     def _maybe_start_build(self, t):
         if self.onlyIfChanged:
@@ -288,7 +300,7 @@ class Nightly(base.BaseScheduler, base.ClassifierMixin, TimedBuildMixin):
     def _calculateNextRunTimeFrom(self, now):
         dateTime = time.localtime(now)
 
-        # Remove seconds by advancing to at least the next minue
+        # Remove seconds by advancing to at least the next minute
         dateTime = self._addTime(dateTime, 60-dateTime[5])
 
         # Now we just keep adding minutes until we find something that matches
