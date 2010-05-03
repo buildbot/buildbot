@@ -143,14 +143,14 @@ class Build:
         buildmaster = self.builder.botmaster.parent
         props.updateFromProperties(buildmaster.properties)
 
-        # get any properties from requests (this is the path through
-        # which schedulers will send us properties)
-        for rq in self.requests:
-            props.updateFromProperties(rq.properties)
-
-        # and finally, from the SourceStamp, which has properties via Change
+        # from the SourceStamp, which has properties via Change
         for change in self.source.changes:
             props.updateFromProperties(change.properties)
+
+        # and finally, get any properties from requests (this is the path
+        # through which schedulers will send us properties)
+        for rq in self.requests:
+            props.updateFromProperties(rq.properties)
 
         # now set some properties of our own, corresponding to the
         # build itself
