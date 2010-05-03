@@ -369,6 +369,19 @@ class DBConnector(util.ComparableMixin):
         for (changeid,) in rows:
             yield self.getChangeNumberedNow(changeid)
 
+    def getLatestChangeNumberNow(self, t=None):
+        if t:
+            return self._txn_getLatestChangeNumber(t)
+        else:
+            return self.runInteractionNow(self._txn_getLatestChangeNumber)
+    def _txn_getLatestChangeNumber(self, t):
+        q = self.quoteq("SELECT max(changeid) from changes")
+        t.execute(q)
+        row = t.fetchone()
+        if not row:
+            return 0
+        return row[0]
+
     def getChangeNumberedNow(self, changeid, t=None):
         # this is a synchronous/blocking version of getChangeByNumber
         assert changeid >= 0
