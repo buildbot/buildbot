@@ -131,7 +131,12 @@ class ClassifierMixin:
         db = self.parent.db
         cm = self.parent.change_svc
         state = self.get_state(t)
-        last_processed = state["last_processed"]
+        state_changed = False
+        last_processed = state.get("last_processed", None)
+
+        if last_processed is None:
+            last_processed = state['last_processed'] = cm.getLatestChangeNumberNow(t)
+            state_changed = True
 
         changes = cm.getChangesGreaterThan(last_processed, t)
         for c in changes:
@@ -146,4 +151,7 @@ class ClassifierMixin:
         if changes:
             max_changeid = max([c.number for c in changes])
             state["last_processed"] = max_changeid # retain other keys
+            state_changed = True
+
+        if state_changed:
             self.set_state(t, state)
