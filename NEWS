@@ -21,6 +21,10 @@ by default, in SQLite, although MySQL is also supported.  With this change,
 scheduled builds will persist over buildmaster restarts, as will
 interrelationships between schedulers (e.g., Triggerable and Dependent).
 
+Upgrading to the new database backend is easy, although it brings additional
+requirements on the buildmaster.  See the Buildbot documentation for more
+information.
+
 ** Visual Studio / VC++ Compile Steps
 
 ** New Change/SourceStamp attributes 'project' and 'repository'

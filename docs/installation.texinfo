@@ -191,8 +191,26 @@ incompatibilities (by loading it and printing any errors or deprecation
 warnings that occur). Each buildbot release tries to be compatible
 with configurations that worked cleanly (i.e. without deprecation
 warnings) on the previous release: any functions or classes that are
-to be removed will first be deprecated in a release, to give users a
-chance to start using their replacement.
+to be removed will first be deprecated in a release, to give you a
+chance to start using the replacement.
+
+The @code{upgrade-master} command is idempotent. It is safe to run it
+multiple times. After each upgrade of the buildbot code, you should
+use @code{upgrade-master} on all your buildmasters.
+
+In general, Buildbot slaves and masters can be upgraded independently, although
+some new features will not be available, depending on the master and slave
+versions.
+
+@heading Version-specific Notes
+
+@menu
+* Upgrading a Buildmaster to Buildbot-0.7.6::
+* Upgrading a Buildmaster to Buildbot-0.8.0::
+@end menu
+
+@node Upgrading a Buildmaster to Buildbot-0.7.6
+@subsection Upgrading a Buildmaster to Buildbot-0.7.6
 
 The 0.7.6 release introduced the @file{public_html/} directory, which
 contains @file{index.html} and other files served by the
@@ -202,10 +220,19 @@ already exist. It will not modify existing copies, but it will write a
 new copy in e.g. @file{index.html.new} if the new version differs from
 the version that already exists.
 
-The @code{upgrade-master} command is idempotent. It is safe to run it
-multiple times. After each upgrade of the buildbot code, you should
-use @code{upgrade-master} on all your buildmasters.
+@node Upgrading a Buildmaster to Buildbot-0.8.0
+@subsection Upgrading a Buildmaster to Buildbot-0.8.0
 
+Buildbot-0.8.0 introduces a database backend, which is SQLite by default.  The
+@code{upgrade-master} command will automatically create and populate this
+database with the changes the buildmaster has seen.  Note that, as of this
+release, build history is @i{not} contained in the database, and is thus not
+migrated.
+
+The upgrade process renames the Changes pickle (@code{$basedir/changes.pck}) to
+@code{changes.pck.old} once the upgrade is complete.  To reverse the upgrade,
+simply downgrade Buildbot and move this file back to its original name.  You
+may also wish to delete the state database (@code{state.sqlite}).
 
 @node Creating a buildslave
 @section Creating a buildslave
