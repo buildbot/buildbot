@@ -806,19 +806,34 @@ class Builder(pb.Referenceable, service.MultiService):
         self.updateBigStatus()
         log.msg("starting build %s using slave %s" % (build, sb))
         d = sb.prepare(self.builder_status)
-        def _ping(ign):
-            # ping the slave to make sure they're still there. If they've
-            # fallen off the map (due to a NAT timeout or something), this
-            # will fail in a couple of minutes, depending upon the TCP
-            # timeout.
-            #
-            # TODO: This can unnecessarily suspend the starting of a build, in
-            # situations where the slave is live but is pushing lots of data to
-            # us in a build.
-            log.msg("starting build %s.. pinging the slave %s" % (build, sb))
-            return sb.ping()
-        d.addCallback(_ping)
-        d.addCallback(self._startBuild_1, build, sb)
+
+        def _prepared(ready):
+            # If prepare returns True then it is ready and we start a build
+            # If it returns false then we don't start a new build.
+            d = defer.succeed(ready)
+
+            if not ready:
+                #FIXME: We should perhaps trigger a check to see if there is
+                # any other way to schedule the work
+                return d
+
+            def _ping(ign):
+                # ping the slave to make sure they're still there. If they've
+                # fallen off the map (due to a NAT timeout or something), this
+                # will fail in a couple of minutes, depending upon the TCP
+                # timeout.
+                #
+                # TODO: This can unnecessarily suspend the starting of a build, in
+                # situations where the slave is live but is pushing lots of data to
+                # us in a build.
+                log.msg("starting build %s.. pinging the slave %s" % (build, sb))
+                return sb.ping()
+            d.addCallback(_ping)
+            d.addCallback(self._startBuild_1, build, sb)
+
+            return d
+
+        d.addCallback(_prepared)
         return d
 
     def _startBuild_1(self, res, build, sb):
