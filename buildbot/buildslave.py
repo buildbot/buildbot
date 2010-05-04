@@ -473,7 +473,7 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
     substantiated = False
     substantiation_deferred = None
     build_wait_timer = None
-    _start_result = _shutdown_callback_handle = None
+    _shutdown_callback_handle = None
 
     def __init__(self, name, password, max_builds=None,
                  notify_on_missing=[], missing_timeout=60*20,
@@ -499,7 +499,7 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
         if self.substantiated:
             self._clearBuildWaitTimer()
             self._setBuildWaitTimer()
-            return defer.succeed(self)
+            return defer.succeed(True)
         if self.substantiation_deferred is None:
             if self.parent and not self.missing_timer:
                 # start timer.  if timer times out, fail deferred
@@ -518,8 +518,13 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
         d = self.start_instance()
         self._shutdown_callback_handle = reactor.addSystemEventTrigger(
             'before', 'shutdown', self._soft_disconnect, fast=True)
-        def stash_reply(result):
-            self._start_result = result
+        def start_instance_result(result):
+            # If we don't report success, then preparation failed.
+            if not result:
+                log.msg("Slave '%s' doesn not want to substantiate at this time" % (self.slavename,))
+                self.substantiation_deferred.callback(False)
+                self.substantiation_deferred = None
+            return result
         def clean_up(failure):
             if self.missing_timer is not None:
                 self.missing_timer.cancel()
@@ -529,7 +534,7 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
                 del self._shutdown_callback_handle
                 reactor.removeSystemEventTrigger(handle)
             return failure
-        d.addCallbacks(stash_reply, clean_up)
+        d.addCallbacks(start_instance_result, clean_up)
         return d
 
     def attached(self, bot):
@@ -686,13 +691,15 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
             return why
         d.addCallbacks(_sent, _set_failed)
         def _substantiated(res):
+            log.msg("Slave %s substantiated \o/" % self.slavename)
             self.substantiated = True
+            if not self.substantiation_deferred:
+                log.msg("No substantiation deferred for %s" % self.slavename)
             if self.substantiation_deferred:
+                log.msg("Firing %s substantiation deferred with success" % self.slavename)
                 d = self.substantiation_deferred
                 del self.substantiation_deferred
-                res = self._start_result
-                del self._start_result
-                d.callback(res)
+                d.callback(True)
             # note that the missing_timer is already handled within
             # ``attached``
             if not self.building:
