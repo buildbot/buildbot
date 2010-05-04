@@ -119,7 +119,7 @@ class AbstractSlaveBuilder(pb.Referenceable):
         return why
 
     def prepare(self, builder_status):
-        return defer.succeed(None)
+        return defer.succeed(True)
 
     def ping(self, status=None):
         """Ping the slave to make sure it is still there. Returns a Deferred
