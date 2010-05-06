@@ -140,7 +140,7 @@ CREATE TABLE scheduler_changes (
     `important` SMALLINT
 );
 
--- This stores buildsts in which a particular scheduler is interested.
+-- This stores buildsets in which a particular scheduler is interested.
 -- On every run, a scheduler checks its upstream buildsets for completion
 -- and reacts accordingly.  Records are never deleted from this table, but
 -- active is set to 0 when the record is no longer necessary.
