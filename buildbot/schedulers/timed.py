@@ -50,6 +50,13 @@ class TimedBuildMixin:
         ssid = db.get_sourcestampid(ss, t)
         self.create_buildset(ssid, self.reason, t)
 
+    def start_requested_build(self, t, relevant_changes):
+        # start a build with the requested list of changes on self.branch
+        db = self.parent.db
+        ss = SourceStamp(branch=self.branch, changes=relevant_changes)
+        ssid = db.get_sourcestampid(ss, t)
+        self.create_buildset(ssid, self.reason, t)
+
     def update_last_build(self, t, when):
         # and record when we did it
         state = self.get_state(t)
@@ -249,9 +256,11 @@ class Nightly(base.BaseScheduler, base.ClassifierMixin, TimedBuildMixin):
                 log.msg("Nightly Scheduler <%s>: "
                         "skipping build - No important change" % self.name)
                 return
-            self.start_HEAD_build(t)
+            relevant_changes = [c for c in (important + unimportant) if
+                                c.branch == self.branch]
+            self.start_requested_build(t, relevant_changes)
             # retire the changes
-            changeids = [c.number for c in (important + unimportant)]
+            changeids = [c.number for c in relevant_changes]
             db.scheduler_retire_changes(self.schedulerid, changeids, t)
         else:
             # start it unconditionally
