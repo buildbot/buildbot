@@ -259,7 +259,10 @@ class Upgrader(base.Upgrader):
         # strip None from any of these values, just in case
         def remove_none(x):
             if x is None: return ""
-            return x
+            elif isinstance(x, str):
+                return x.decode("utf8", "replace")
+            else:
+                return x
         values = tuple(remove_none(x) for x in
                          (change.number, change.who,
                           change.comments, change.isdir,
