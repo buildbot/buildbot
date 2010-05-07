@@ -346,10 +346,6 @@ class MailNotifier(base.StatusReceiverMultiService):
         if self.mode == "change":
             prev = build.getPreviousBuild()
             if not prev or prev.getResults() == results:
-                if prev:
-                    print prev.getResults()
-                else:
-                    print "no prev"
                 return
         # for testing purposes, buildMessage returns a Deferred that fires
         # when the mail has been sent. To help unit tests, we return that

@@ -916,9 +916,13 @@ provoked the message.
 (string). Default to 'all'. One of:
 @table @code
 @item all
-Send mail about all builds, bothpassing and failing
+Send mail about all builds, both passing and failing
+@item change
+Only send mail about builds which change status
 @item failing
 Only send mail about builds which fail
+@item passing
+Only send mail about builds which succeed
 @item problem
 Only send mail about a build which failed when the previous build has passed.
 If your builds usually pass, then this will only send mail when a problem
