@@ -1201,6 +1201,7 @@ class P4(Source):
         @param p4client: The perforce client to use for this buildslave.
         """
 
+        self.p4base = p4base
         self.branch = defaultBranch
         Source.__init__(self, **kwargs)
         self.addFactoryArguments(p4base=p4base,
@@ -1219,7 +1220,7 @@ class P4(Source):
 
     def setBuild(self, build):
         Source.setBuild(self, build)
-        self.args['p4base'] = self.computeRepositoryURL(p4base)
+        self.args['p4base'] = self.computeRepositoryURL(self.p4base)
         self.args['p4client'] = self.p4client % {
             'slave': build.slavename,
             'builder': build.builder.name,
