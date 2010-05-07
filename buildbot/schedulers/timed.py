@@ -258,6 +258,11 @@ class Nightly(base.BaseScheduler, base.ClassifierMixin, TimedBuildMixin):
                 return
             relevant_changes = [c for c in (important + unimportant) if
                                 c.branch == self.branch]
+            if not relevant_changes:
+                log.msg("Nightly Scheduler <%s>: "
+                        "skipping build - No relevant change on branch" %
+                        self.name)
+                return
             self.start_requested_build(t, relevant_changes)
             # retire the changes
             changeids = [c.number for c in relevant_changes]
