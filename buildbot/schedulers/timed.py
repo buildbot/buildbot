@@ -130,22 +130,25 @@ class Nightly(base.BaseScheduler, base.ClassifierMixin, TimedBuildMixin):
     For example, the following master.cfg clause will cause a build to be
     started every night at 3:00am::
 
-     s = Nightly('nightly', ['builder1', 'builder2'], hour=3, minute=0)
+     s = Nightly(name='nightly', builderNames=['builder1', 'builder2'],
+                 hour=3, minute=0)
      c['schedules'].append(s)
 
     This scheduler will perform a build each monday morning at 6:23am and
     again at 8:23am::
 
-     s = Nightly('BeforeWork', ['builder1'],
+     s = Nightly(name='BeforeWork', builderNames=['builder1'],
                  dayOfWeek=0, hour=[6,8], minute=23)
 
     The following runs a build every two hours::
 
-     s = Nightly('every2hours', ['builder1'], hour=range(0, 24, 2))
+     s = Nightly(name='every2hours', builderNames=['builder1'],
+                 hour=range(0, 24, 2))
 
     And this one will run only on December 24th::
 
-     s = Nightly('SleighPreflightCheck', ['flying_circuits', 'radar'],
+     s = Nightly(name='SleighPreflightCheck',
+                 builderNames=['flying_circuits', 'radar'],
                  month=12, dayOfMonth=24, hour=12, minute=0)
 
     For dayOfWeek and dayOfMonth, builds are triggered if the date matches
@@ -166,7 +169,8 @@ class Nightly(base.BaseScheduler, base.ClassifierMixin, TimedBuildMixin):
              if fn.endswith('.c') or fn.endswith('.h'):
                  return True
          return False
-     s = Nightly('nightly-when-changed', ['builder1'], hour=3, minute=0,
+     s = Nightly(name='nightly-when-changed', builderNames=['builder1'],
+                 hour=3, minute=0,
                  onlyIfChanged=True, fileIsImportant=isSourceFile)
 
     onlyIfChanged defaults to False, which means a build will be performed
@@ -258,6 +262,11 @@ class Nightly(base.BaseScheduler, base.ClassifierMixin, TimedBuildMixin):
                 return
             relevant_changes = [c for c in (important + unimportant) if
                                 c.branch == self.branch]
+            if not relevant_changes:
+                log.msg("Nightly Scheduler <%s>: "
+                        "skipping build - No relevant change on branch" %
+                        self.name)
+                return
             self.start_requested_build(t, relevant_changes)
             # retire the changes
             changeids = [c.number for c in relevant_changes]
