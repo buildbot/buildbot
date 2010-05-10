@@ -275,9 +275,9 @@ class Upgrader(base.Upgrader):
     def _addChangeToDatabase(self, change, cursor):
         # strip None from any of these values, just in case
         def remove_none(x):
-            if x is None: return ""
+            if x is None: return u""
             elif isinstance(x, str):
-                return x.decode("utf8", "replace")
+                return x.decode("utf8")
             else:
                 return x
         values = tuple(remove_none(x) for x in
