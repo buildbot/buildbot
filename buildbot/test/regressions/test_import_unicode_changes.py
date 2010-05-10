@@ -46,6 +46,15 @@ class TestUnicodeChanges(unittest.TestCase):
         self.assertEquals(c.who, u"Frosty the \N{SNOWMAN}")
         self.assertEquals(c.comments, u"Frosty the \N{SNOWMAN}")
 
+    def testNonUnicodeChange(self):
+        # Create changes.pck
+        changes = [Change(who="\xff\xff\x00", files=["foo"],
+            comments="\xff\xff\x00", branch="b1", revision=12345)]
+        cPickle.dump(Thing(changes=changes), open(os.path.join(self.basedir, "changes.pck"), "w"))
+
+        sm = manager.DBSchemaManager(self.spec, self.basedir)
+        self.assertRaises(UnicodeDecodeError, sm.upgrade)
+
 class TestMySQLDBUnicodeChanges(TestUnicodeChanges):
     def setUp(self):
         self.basedir = "MySQLDBUnicodeChanges"
