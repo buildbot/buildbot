@@ -286,8 +286,8 @@ class Upgrader(base.Upgrader):
                               change.comments, change.isdir,
                               change.branch, change.revision, change.revlink,
                               change.when, change.category))
-        except UnicodeDecodeError:
-            raise UnicodeError("Trying to import change data as UTF-8 failed.  Please look at contrib/fix_changes_pickle_encoding.py")
+        except UnicodeDecodeError, e:
+            raise UnicodeError("Trying to import change data as UTF-8 failed.  Please look at contrib/fix_changes_pickle_encoding.py: %s" % str(e))
 
         q = util.sql_insert(self.dbapi, 'changes',
             """changeid author comments is_dir branch revision
