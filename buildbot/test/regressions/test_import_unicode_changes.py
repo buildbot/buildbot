@@ -21,7 +21,12 @@ class TestUnicodeChanges(unittest.TestCase):
         if os.path.exists(self.basedir):
             shutil.rmtree(self.basedir)
         os.makedirs(self.basedir)
-        self.db = None
+
+        # Now try the upgrade process, which will import the old changes.
+        self.spec = DBSpec.from_url("sqlite:///state.sqlite", self.basedir)
+
+        self.db = DBConnector(self.spec)
+        self.db.start()
 
     def tearDown(self):
         if self.db:
@@ -33,15 +38,34 @@ class TestUnicodeChanges(unittest.TestCase):
             files=["foo"], comments=u"Frosty the \N{SNOWMAN}".encode("utf8"), branch="b1", revision=12345)]
         cPickle.dump(Thing(changes=changes), open(os.path.join(self.basedir, "changes.pck"), "w"))
 
-        # Now try the upgrade process, which will import the old changes.
-        spec = DBSpec.from_url("sqlite:///state.sqlite", self.basedir)
-
-        sm = manager.DBSchemaManager(spec, self.basedir)
+        sm = manager.DBSchemaManager(self.spec, self.basedir)
         sm.upgrade()
-        self.db = DBConnector(spec)
-        self.db.start()
 
         c = self.db.getChangeNumberedNow(1)
 
         self.assertEquals(c.who, u"Frosty the \N{SNOWMAN}")
         self.assertEquals(c.comments, u"Frosty the \N{SNOWMAN}")
+
+class TestMySQLDBUnicodeChanges(TestUnicodeChanges):
+    def setUp(self):
+        self.basedir = "MySQLDBUnicodeChanges"
+        if os.path.exists(self.basedir):
+            shutil.rmtree(self.basedir)
+        os.makedirs(self.basedir)
+
+        # Now try the upgrade process, which will import the old changes.
+        self.spec = DBSpec.from_url("mysql://buildbot_test:buildbot_test@localhost/buildbot_test", self.basedir)
+
+        self.db = DBConnector(self.spec)
+        self.db.start()
+
+        result = self.db.runQueryNow("SHOW TABLES")
+        for row in result:
+            self.db.runQueryNow("DROP TABLE %s" % row[0])
+        self.db.runQueryNow("COMMIT")
+
+try:
+    import MySQLdb
+    conn = MySQLdb.connect(user="buildbot_test", db="buildbot_test", passwd="buildbot_test", use_unicode=True, charset='utf8')
+except:
+    TestMySQLDBUnicodeChanges.skip = True

@@ -88,43 +88,43 @@ class DBSpec(unittest.TestCase):
         basedir = "/foo/bar"
         d = dbspec.DBSpec.from_url("mysql://somehost.com/dbname", basedir=basedir)
         self.failUnlessConnection(d, 'MySQLdb',
-                connkw=dict(host='somehost.com', db='dbname'))
+                connkw=dict(host='somehost.com', db='dbname', use_unicode=True, charset='utf8'))
 
     def test_fromURL_mysqlNoBasedir(self):
         d = dbspec.DBSpec.from_url("mysql://somehost.com/dbname")
         self.failUnlessConnection(d, 'MySQLdb',
-                connkw=dict(host='somehost.com', db='dbname'))
+                connkw=dict(host='somehost.com', db='dbname', use_unicode=True, charset='utf8'))
 
     def test_fromURL_mysqlPort(self):
         d = dbspec.DBSpec.from_url("mysql://somehost.com:9000/dbname")
         self.failUnlessConnection(d, 'MySQLdb',
-                connkw=dict(host='somehost.com', db='dbname', port=9000))
+                connkw=dict(host='somehost.com', db='dbname', port=9000, use_unicode=True, charset='utf8'))
 
     def test_fromURL_mysqlLocal(self):
         d = dbspec.DBSpec.from_url("mysql:///database_name")
         self.failUnlessConnection(d, 'MySQLdb',
-                connkw=dict(host=None, db='database_name'))
+                connkw=dict(host=None, db='database_name', use_unicode=True, charset='utf8'))
 
     def test_fromURL_mysqlAuth(self):
         d = dbspec.DBSpec.from_url("mysql://user:pass@somehost.com/dbname")
         self.failUnlessConnection(d, 'MySQLdb',
-                connkw=dict(host='somehost.com', db='dbname', user="user", passwd="pass"))
+                connkw=dict(host='somehost.com', db='dbname', user="user", passwd="pass", use_unicode=True, charset='utf8'))
 
     def test_fromURL_mysqlAuthNoPass(self):
         d = dbspec.DBSpec.from_url("mysql://user@somehost.com/dbname")
         self.failUnlessConnection(d, 'MySQLdb',
-                connkw=dict(host='somehost.com', db='dbname', user="user"))
+                connkw=dict(host='somehost.com', db='dbname', user="user", use_unicode=True, charset='utf8'))
 
     def test_fromURL_mysqlAuthNoPassPort(self):
         d = dbspec.DBSpec.from_url("mysql://user@somehost.com:8000/dbname")
         self.failUnlessConnection(d, 'MySQLdb',
-                connkw=dict(host='somehost.com', db='dbname', user="user", port=8000))
+                connkw=dict(host='somehost.com', db='dbname', user="user", port=8000, use_unicode=True, charset='utf8'))
 
     def test_fromURL_mysqlAuthNoPassPortArgs(self):
         d = dbspec.DBSpec.from_url("mysql://user@somehost.com:8000/dbname?foo=moo")
         self.failUnlessConnection(d, 'MySQLdb',
                 connkw=dict(host='somehost.com', db='dbname', user="user",
-                            port=8000, foo="moo"))
+                            port=8000, foo="moo", use_unicode=True, charset='utf8'))
 
 class DBSpec_methods(unittest.TestCase):
 

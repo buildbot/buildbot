@@ -116,7 +116,7 @@ TABLES = [
     textwrap.dedent("""
         CREATE TABLE schedulers (
             `schedulerid` INTEGER PRIMARY KEY, -- joins to other tables
-            `name` VARCHAR(256) UNIQUE NOT NULL,
+            `name` VARCHAR(127) UNIQUE NOT NULL,
             `state` VARCHAR(1024) NOT NULL -- JSON-encoded state dictionary
         );
     """),
@@ -241,9 +241,26 @@ TABLES = [
 
 class Upgrader(base.Upgrader):
     def upgrade(self):
+        self.test_unicode()
         self.add_tables()
         self.migrate_changes()
         self.set_version()
+
+    def test_unicode(self):
+        # first, create a test table
+        c = self.conn.cursor()
+        c.execute("CREATE TABLE test_unicode (`name` VARCHAR(100))")
+        q = util.sql_insert(self.dbapi, 'test_unicode', ["name"])
+        try:
+            val = u"Frosty the \N{SNOWMAN}"
+            c.execute(q, [val])
+            c.execute("SELECT * FROM test_unicode")
+            row = c.fetchall()[0]
+            if row[0] != val:
+                print "EEEEERRRORORRORO!!!!"
+        finally:
+            pass
+            c.execute("DROP TABLE test_unicode")
 
     def add_tables(self):
         # first, add all of the tables

@@ -157,7 +157,7 @@ class DBSpec(object):
             if 'max_idle' in args:
                 args['max_idle'] = int(args['max_idle'])
 
-            return cls("MySQLdb", **args)
+            return cls("MySQLdb", use_unicode=True, charset="utf8", **args)
         else:
             raise ValueError("Unsupported dbapi %s" % driver)
 

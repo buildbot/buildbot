@@ -218,7 +218,7 @@ class MySQLDBSchemaManager(DBSchemaManager):
             shutil.rmtree(self.basedir)
         os.makedirs(self.basedir)
 
-        self.conn = MySQLdb.connect(user="buildbot_test", db="buildbot_test", passwd="buildbot_test")
+        self.conn = MySQLdb.connect(user="buildbot_test", db="buildbot_test", passwd="buildbot_test", use_unicode=True, charset='utf8')
         # Drop all previous tables
         cur = self.conn.cursor()
         cur.execute("SHOW TABLES")
@@ -233,6 +233,6 @@ class MySQLDBSchemaManager(DBSchemaManager):
 
 try:
     import MySQLdb
-    conn = MySQLdb.connect(user="buildbot_test", db="buildbot_test", passwd="buildbot_test")
+    conn = MySQLdb.connect(user="buildbot_test", db="buildbot_test", passwd="buildbot_test", use_unicode=True, charset='utf8')
 except:
     MySQLDBSchemaManager.skip = True
