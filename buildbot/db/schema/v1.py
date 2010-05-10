@@ -257,7 +257,7 @@ class Upgrader(base.Upgrader):
             c.execute("SELECT * FROM test_unicode")
             row = c.fetchall()[0]
             if row[0] != val:
-                print "EEEEERRRORORRORO!!!!"
+                raise UnicodeError("Your database doesn't support unicode data; for MySQL, set the default collation to utf8_general_ci.")
         finally:
             pass
             c.execute("DROP TABLE test_unicode")
