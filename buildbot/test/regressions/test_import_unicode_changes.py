@@ -36,7 +36,8 @@ class TestUnicodeChanges(unittest.TestCase):
         # Create changes.pck
         changes = [Change(who=u"Frosty the \N{SNOWMAN}".encode("utf8"),
             files=["foo"], comments=u"Frosty the \N{SNOWMAN}".encode("utf8"), branch="b1", revision=12345)]
-        cPickle.dump(Thing(changes=changes), open(os.path.join(self.basedir, "changes.pck"), "w"))
+        cPickle.dump(Thing(changes=changes), open(os.path.join(self.basedir,
+            "changes.pck"), "w"))
 
         sm = manager.DBSchemaManager(self.spec, self.basedir)
         sm.upgrade()
@@ -50,7 +51,8 @@ class TestUnicodeChanges(unittest.TestCase):
         # Create changes.pck
         changes = [Change(who="\xff\xff\x00", files=["foo"],
             comments="\xff\xff\x00", branch="b1", revision=12345)]
-        cPickle.dump(Thing(changes=changes), open(os.path.join(self.basedir, "changes.pck"), "w"))
+        cPickle.dump(Thing(changes=changes), open(os.path.join(self.basedir,
+            "changes.pck"), "w"))
 
         sm = manager.DBSchemaManager(self.spec, self.basedir)
         self.assertRaises(UnicodeDecodeError, sm.upgrade)
@@ -59,7 +61,8 @@ class TestUnicodeChanges(unittest.TestCase):
         # Create changes.pck
         changes = [Change(who="Frosty the Snowman",
             files=["foo"], comments="Frosty the Snowman", branch="b1", revision=12345)]
-        cPickle.dump(Thing(changes=changes), open(os.path.join(self.basedir, "changes.pck"), "w"))
+        cPickle.dump(Thing(changes=changes), open(os.path.join(self.basedir,
+            "changes.pck"), "w"))
 
         sm = manager.DBSchemaManager(self.spec, self.basedir)
         sm.upgrade()
@@ -77,7 +80,8 @@ class TestMySQLDBUnicodeChanges(TestUnicodeChanges):
         os.makedirs(self.basedir)
 
         # Now try the upgrade process, which will import the old changes.
-        self.spec = DBSpec.from_url("mysql://buildbot_test:buildbot_test@localhost/buildbot_test", self.basedir)
+        self.spec = DBSpec.from_url(
+                "mysql://buildbot_test:buildbot_test@localhost/buildbot_test", self.basedir)
 
         self.db = DBConnector(self.spec)
         self.db.start()
@@ -89,6 +93,7 @@ class TestMySQLDBUnicodeChanges(TestUnicodeChanges):
 
 try:
     import MySQLdb
-    conn = MySQLdb.connect(user="buildbot_test", db="buildbot_test", passwd="buildbot_test", use_unicode=True, charset='utf8')
+    conn = MySQLdb.connect(user="buildbot_test", db="buildbot_test",
+            passwd="buildbot_test", use_unicode=True, charset='utf8')
 except:
     TestMySQLDBUnicodeChanges.skip = True
