@@ -55,7 +55,7 @@ class TestUnicodeChanges(unittest.TestCase):
             "changes.pck"), "w"))
 
         sm = manager.DBSchemaManager(self.spec, self.basedir)
-        self.assertRaises(UnicodeDecodeError, sm.upgrade)
+        self.assertRaises(UnicodeError, sm.upgrade)
 
     def testAsciiChange(self):
         # Create changes.pck
