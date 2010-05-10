@@ -552,10 +552,11 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
             self._substantiate()
 
     def _substantiation_failed(self, failure):
-        d = self.substantiation_deferred
-        self.substantiation_deferred = None
         self.missing_timer = None
-        d.errback(failure)
+        if self.substantiation_deferred:
+            d = self.substantiation_deferred
+            self.substantiation_deferred = None
+            d.errback(failure)
         self.insubstantiate()
         # notify people, but only if we're still in the config
         if not self.parent or not self.notify_on_missing:
