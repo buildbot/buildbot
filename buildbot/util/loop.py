@@ -207,7 +207,7 @@ class LoopBase(service.MultiService):
         # to avoid waking too frequently, this could be:
         #  delay=max(when-now,OCD_MINIMUM_DELAY)
         # but that delays unrelated jobs that want to wake few seconds apart
-        delay = when - util.now(self._reactor)
+        delay = max(0, when - util.now(self._reactor))
         if self._wakeup_timer:
             self._wakeup_timer.reset(delay)
         else:
