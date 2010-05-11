@@ -8,15 +8,18 @@ def recode_changes(changes, old_encoding):
     """Returns a new list of changes, with the change attributes re-encoded
     as UTF-8 bytestrings"""
     retval = []
+    nconvert = 0
     for c in changes:
         for attr in ("who", "comments", "revlink", "category", "branch", "revision"):
             a = getattr(c, attr)
             if isinstance(a, str):
                 try:
-                    setattr(c, attr, a.decode(old_encoding).encode("utf8"))
+                    setattr(c, attr, a.decode(old_encoding))
+                    nconvert += 1
                 except UnicodeDecodeError:
-                    raise UnicodeError("Error decoding %s: %s as %s" % (attr, a, old_encoding))
+                    raise UnicodeError("Error decoding %s of change #%s as %s:\n%s" % (attr, c.number, old_encoding, a))
         retval.append(c)
+    print "converted %d strings" % nconvert
     return retval
 
 if __name__ == '__main__':
@@ -37,6 +40,7 @@ if __name__ == '__main__':
     else:
         parser.error("Need at least one argument")
 
+    print "opening %s" % (changes_file,)
     try:
         fp = open(changes_file)
     except IOError, e:
@@ -45,6 +49,7 @@ if __name__ == '__main__':
     changes = load(fp)
     fp.close()
 
+    print "decoding bytestrings in %s using %s" % (changes_file, old_encoding)
     changes.changes = recode_changes(changes.changes, old_encoding)
 
     changes_backup = changes_file + ".old"
@@ -53,5 +58,6 @@ if __name__ == '__main__':
         i += 1
         changes_backup = changes_file + ".old.%i" % i
 
+    print "backing up %s to %s" % (changes_file, changes_backup)
     os.rename(changes_file, changes_backup)
     dump(changes, open(changes_file, "w"))
