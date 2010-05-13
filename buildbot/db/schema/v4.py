@@ -66,8 +66,8 @@ class Upgrader(base.Upgrader):
         schema = """
             CREATE TABLE schedulers (
                 %(schedulerid_col)s, -- joins to other tables
-                `name` VARCHAR(256) NOT NULL, -- the scheduler's name according to master.cfg
-                `class_name` VARCHAR(256) NOT NULL, -- the scheduler's class
+                `name` VARCHAR(100) NOT NULL, -- the scheduler's name according to master.cfg
+                `class_name` VARCHAR(100) NOT NULL, -- the scheduler's class
                 `state` VARCHAR(1024) NOT NULL -- JSON-encoded state dictionary
             );
         """ % locals()

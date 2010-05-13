@@ -116,7 +116,7 @@ TABLES = [
     textwrap.dedent("""
         CREATE TABLE schedulers (
             `schedulerid` INTEGER PRIMARY KEY, -- joins to other tables
-            `name` VARCHAR(256) UNIQUE NOT NULL,
+            `name` VARCHAR(127) UNIQUE NOT NULL,
             `state` VARCHAR(1024) NOT NULL -- JSON-encoded state dictionary
         );
     """),
@@ -241,9 +241,26 @@ TABLES = [
 
 class Upgrader(base.Upgrader):
     def upgrade(self):
+        self.test_unicode()
         self.add_tables()
         self.migrate_changes()
         self.set_version()
+
+    def test_unicode(self):
+        # first, create a test table
+        c = self.conn.cursor()
+        c.execute("CREATE TABLE test_unicode (`name` VARCHAR(100))")
+        q = util.sql_insert(self.dbapi, 'test_unicode', ["name"])
+        try:
+            val = u"Frosty the \N{SNOWMAN}"
+            c.execute(q, [val])
+            c.execute("SELECT * FROM test_unicode")
+            row = c.fetchall()[0]
+            if row[0] != val:
+                raise UnicodeError("Your database doesn't support unicode data; for MySQL, set the default collation to utf8_general_ci.")
+        finally:
+            pass
+            c.execute("DROP TABLE test_unicode")
 
     def add_tables(self):
         # first, add all of the tables
@@ -258,13 +275,20 @@ class Upgrader(base.Upgrader):
     def _addChangeToDatabase(self, change, cursor):
         # strip None from any of these values, just in case
         def remove_none(x):
-            if x is None: return ""
-            return x
-        values = tuple(remove_none(x) for x in
-                         (change.number, change.who,
-                          change.comments, change.isdir,
-                          change.branch, change.revision, change.revlink,
-                          change.when, change.category))
+            if x is None: return u""
+            elif isinstance(x, str):
+                return x.decode("utf8")
+            else:
+                return x
+        try:
+            values = tuple(remove_none(x) for x in
+                             (change.number, change.who,
+                              change.comments, change.isdir,
+                              change.branch, change.revision, change.revlink,
+                              change.when, change.category))
+        except UnicodeDecodeError, e:
+            raise UnicodeError("Trying to import change data as UTF-8 failed.  Please look at contrib/fix_changes_pickle_encoding.py: %s" % str(e))
+
         q = util.sql_insert(self.dbapi, 'changes',
             """changeid author comments is_dir branch revision
                revlink when_timestamp category""".split())

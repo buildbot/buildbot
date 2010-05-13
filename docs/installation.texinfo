@@ -234,6 +234,29 @@ The upgrade process renames the Changes pickle (@code{$basedir/changes.pck}) to
 simply downgrade Buildbot and move this file back to its original name.  You
 may also wish to delete the state database (@code{state.sqlite}).
 
+@heading Change Encoding Issues
+
+The upgrade process assumes that strings in your Changes pickle are encoded in
+UTF-8 (or plain ASCII).  If this is not the case, and if there are non-UTF-8
+characters in the pickle, the upgrade will fail with a suitable error message.
+If this occurs, you have two options.  If the change history is not important
+to your purpose, you can simply delete @code{changes.pck}.
+
+If you would like to keep the change history, then you will need to figure out
+which encoding is in use, and use @code{contrib/fix_changes_pickle_encoding.py}
+to rewrite the changes pickle into Unicode before upgrading the master.  A
+typical invocation (with Mac-Roman encoding) might look like:
+
+@example
+$ python $buildbot/contrib/fix_changes_pickle_encoding.py changes.pck macroman
+decoding bytestrings in changes.pck using macroman
+converted 11392 strings
+backing up changes.pck to changes.pck.old
+@end example
+
+If your Changes pickle uses multiple encodings, you're on your own, but the
+script in contrib may provide a good starting point for the fix.
+
 @node Creating a buildslave
 @section Creating a buildslave
 
