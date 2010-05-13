@@ -52,12 +52,16 @@ class Change:
             links = []
         self.links = links
 
-        self.revision = util.none_or_str(revision)
+        def none_or_unicode(x):
+            if x is None: return x
+            return unicode(x)
+
+        self.revision = none_or_unicode(revision)
         if when is None:
             when = util.now()
         self.when = when
-        self.branch = util.none_or_str(branch)
-        self.category = util.none_or_str(category)
+        self.branch = none_or_unicode(branch)
+        self.category = none_or_unicode(category)
         self.revlink = revlink
         self.properties = Properties()
         self.properties.update(properties, "Change")
@@ -188,6 +192,28 @@ class ChangeMaster:
         except Exception:
             log.msg("unable to save changes")
             log.err()
+
+    # This method is used by contrib/fix_changes_pickle_encoding.py to recode all
+    # bytestrings in an old changes.pck into unicode strings
+    def recode_changes(self, old_encoding, quiet=False):
+        """Processes the list of changes, with the change attributes re-encoded
+        as UTF-8 bytestrings"""
+        nconvert = 0
+        for c in self.changes:
+            # give revision special handling, in case it is an integer
+            if isinstance(c.revision, int):
+                c.revision = unicode(c.revision)
+
+            for attr in ("who", "comments", "revlink", "category", "branch", "revision"):
+                a = getattr(c, attr)
+                if isinstance(a, str):
+                    try:
+                        setattr(c, attr, a.decode(old_encoding))
+                        nconvert += 1
+                    except UnicodeDecodeError:
+                        raise UnicodeError("Error decoding %s of change #%s as %s:\n%r" %
+                                        (attr, c.number, old_encoding, a))
+        if not quiet: print "converted %d strings" % nconvert
 
 class OldChangeMaster(ChangeMaster):
     # this is a reminder that the ChangeMaster class is old
