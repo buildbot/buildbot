@@ -4,7 +4,7 @@ import cPickle
 
 from twisted.trial import unittest
 
-from buildbot.changes.changes import Change
+from buildbot.changes.changes import Change, OldChangeMaster
 
 from buildbot.db.schema import manager
 from buildbot.db.dbspec import DBSpec
@@ -43,7 +43,7 @@ class TestUnicodeChanges(unittest.TestCase):
             "changes.pck"), "w"))
 
         sm = manager.DBSchemaManager(self.spec, self.basedir)
-        sm.upgrade()
+        sm.upgrade(quiet=True)
 
         c = self.db.getChangeNumberedNow(1)
 
@@ -58,7 +58,7 @@ class TestUnicodeChanges(unittest.TestCase):
             "changes.pck"), "w"))
 
         sm = manager.DBSchemaManager(self.spec, self.basedir)
-        self.assertRaises(UnicodeError, sm.upgrade)
+        self.assertRaises(UnicodeError, lambda : sm.upgrade(quiet=True))
 
     def testAsciiChange(self):
         # Create changes.pck
@@ -68,7 +68,7 @@ class TestUnicodeChanges(unittest.TestCase):
             "changes.pck"), "w"))
 
         sm = manager.DBSchemaManager(self.spec, self.basedir)
-        sm.upgrade()
+        sm.upgrade(quiet=True)
 
         c = self.db.getChangeNumberedNow(1)
 
@@ -77,19 +77,21 @@ class TestUnicodeChanges(unittest.TestCase):
 
     def testUTF16Change(self):
         # Create changes.pck
-        changes = [Change(who=u"Frosty the \N{SNOWMAN}".encode("utf16"),
+        cm = OldChangeMaster()
+        cm.changes = [Change(who=u"Frosty the \N{SNOWMAN}".encode("utf16"),
             files=["foo"], comments=u"Frosty the \N{SNOWMAN}".encode("utf16"),
             branch="b1", revision=12345)]
-        cPickle.dump(Thing(changes=changes), open(os.path.join(self.basedir,
-            "changes.pck"), "w"))
 
-        # Run fix_changes_pickle_encoding.py
-        contrib_dir = os.path.join(os.path.dirname(buildbot.__file__), "../contrib")
-        retval = os.system("python %s/fix_changes_pickle_encoding.py %s utf16" % (contrib_dir, os.path.join(self.basedir, "changes.pck")))
-        self.assertEquals(retval, 0)
+        # instead of running contrib/fix_changes_pickle_encoding.py, we just call
+        # the changemanager's recode_changes directly - it's the function at the
+        # heart of the script anyway.
+        cm.recode_changes('utf16', quiet=True)
+
+        # and dump the recoded changemanager to changes.pck before trying a schema upgrade
+        cPickle.dump(cm, open(os.path.join(self.basedir, "changes.pck"), "w"))
 
         sm = manager.DBSchemaManager(self.spec, self.basedir)
-        sm.upgrade()
+        sm.upgrade(quiet=True)
 
         c = self.db.getChangeNumberedNow(1)
 
