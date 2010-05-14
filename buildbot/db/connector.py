@@ -362,10 +362,6 @@ class DBConnector(util.ComparableMixin):
             q += " AND ".join(pieces)
         q += " ORDER BY changeid DESC"
         rows = self.runQueryNow(q, tuple(args))
-        # will this work? do I need to finish fetching everything by using
-        # list(rows)? or can I use it as an iterator and fetch things as
-        # needed? will the queries in getChangeNumberedNow() interfere with
-        # that iterator?
         for (changeid,) in rows:
             yield self.getChangeNumberedNow(changeid)
 
