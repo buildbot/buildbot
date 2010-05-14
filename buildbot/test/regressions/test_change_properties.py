@@ -21,7 +21,7 @@ class TestChangeProperties(unittest.TestCase):
         self.spec = DBSpec.from_url("sqlite:///state.sqlite", self.basedir)
 
         self.sm = manager.DBSchemaManager(self.spec, self.basedir)
-        self.sm.upgrade()
+        self.sm.upgrade(quiet=True)
         self.db = DBConnector(self.spec)
         self.db.start()
 
