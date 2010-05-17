@@ -209,12 +209,6 @@ class ShellCommand(LoggingBuildStep):
         # create the actual RemoteShellCommand instance now
         kwargs = properties.render(self.remote_kwargs)
         command = properties.render(self.command)
-        if isinstance(command, unicode):
-            command = command.encode("utf-8")
-        elif not isinstance(command, str):
-            for i, a in enumerate(command):
-                if isinstance(a, unicode):
-                    command[i] = a.encode("utf-8")
         kwargs['command'] = command
         kwargs['logfiles'] = self.logfiles
 

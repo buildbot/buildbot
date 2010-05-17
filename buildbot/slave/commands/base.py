@@ -283,6 +283,13 @@ class ShellCommand:
 
         self.builder = builder
         self.command = Obfuscated.get_real(command)
+        if isinstance(self.command, (tuple, list)):
+            for i, a in enumerate(self.command):
+                if isinstance(a, unicode):
+                    self.command[i] = a.encode(self.builder.unicode_encoding)
+        elif isinstance(self.command, unicode):
+            self.command = self.command.encode(self.builder.unicode_encoding)
+
         self.fake_command = Obfuscated.get_fake(command)
         self.sendStdout = sendStdout
         self.sendStderr = sendStderr
