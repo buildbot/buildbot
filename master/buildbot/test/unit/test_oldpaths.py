@@ -29,3 +29,11 @@ class OldImportPaths(unittest.TestCase):
 
     def test_scheduler_Try_Userpass(self):
         from buildbot.scheduler import Try_Userpass
+
+    def test_changes_changes_ChangeMaster(self):
+        # this must exist to open old changes pickles
+        from buildbot.changes.changes import ChangeMaster
+
+    def test_changes_changes_Change(self):
+        # this must exist to open old changes pickles
+        from buildbot.changes.changes import Change
