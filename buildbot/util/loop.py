@@ -159,8 +159,9 @@ class LoopBase(service.MultiService):
             return self._loop_done()
         p = self._remaining.pop(0)
         self._timers.pop(p, None)
+        now = util.now(self._reactor)
         d = defer.maybeDeferred(p)
-        d.addCallback(self._set_timer, p)
+        d.addCallback(self._set_timer, now, p)
         d.addErrback(log.err)
         d.addBoth(self._one_done)
         return None # no long Deferred chains
@@ -187,9 +188,8 @@ class LoopBase(service.MultiService):
         # start a new one
         pass
 
-    def _set_timer(self, res, p):
+    def _set_timer(self, res, now, p):
         if isinstance(res, (int, float)):
-            now = util.now(self._reactor)
             assert res > now # give me absolute time, not an interval
             # don't wake up right away. By doing this here instead of in
             # _set_wakeup_timer, we avoid penalizing unrelated jobs which

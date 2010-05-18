@@ -1,5 +1,6 @@
 
 import os.path
+import sys
 
 import buildbot
 
@@ -265,11 +266,12 @@ class Bot(pb.Referenceable, service.MultiService):
     usePTY = None
     name = "bot"
 
-    def __init__(self, basedir, usePTY, not_really=0):
+    def __init__(self, basedir, usePTY, not_really=0, unicode_encoding=None):
         service.MultiService.__init__(self)
         self.basedir = basedir
         self.usePTY = usePTY
         self.not_really = not_really
+        self.unicode_encoding = unicode_encoding or sys.getfilesystemencoding() or 'ascii'
         self.builders = {}
 
     def startService(self):
@@ -299,6 +301,7 @@ class Bot(pb.Referenceable, service.MultiService):
             else:
                 b = SlaveBuilder(name, self.not_really)
                 b.usePTY = self.usePTY
+                b.unicode_encoding = self.unicode_encoding
                 b.setServiceParent(self)
                 b.setBuilddir(builddir)
                 self.builders[name] = b
@@ -476,11 +479,11 @@ class BuildSlave(service.MultiService):
 
     def __init__(self, buildmaster_host, port, name, passwd, basedir,
                  keepalive, usePTY, keepaliveTimeout=30, umask=None,
-                 maxdelay=300, debugOpts={}):
+                 maxdelay=300, debugOpts={}, unicode_encoding=None):
         log.msg("Creating BuildSlave -- buildbot.version: %s" % buildbot.version)
         service.MultiService.__init__(self)
         self.debugOpts = debugOpts.copy()
-        bot = self.botClass(basedir, usePTY)
+        bot = self.botClass(basedir, usePTY, unicode_encoding=unicode_encoding)
         bot.setServiceParent(self)
         self.bot = bot
         if keepalive == 0:

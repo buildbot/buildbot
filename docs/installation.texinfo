@@ -394,6 +394,7 @@ with symlinks.
 
 @menu
 * Buildslave Options::
+* Other Buildslave Configuration::
 @end menu
 
 @node Buildslave Options
@@ -455,6 +456,31 @@ This is the size in bytes when to rotate the Twisted log files.
 This is the number of log rotations to keep around. You can either
 specify a number or @code{None} (the default) to keep all
 @file{twistd.log} files around.
+
+@end table
+
+@node Other Buildslave Configuration
+@subsection Other Buildslave Configuration
+
+@table @code
+
+@item unicode_encoding
+This represents the encoding that buildbot should use when converting unicode
+commandline arguments into byte strings in order to pass to the operating
+system when spawning new processes.
+
+The default value is what python's sys.getfilesystemencoding() returns, which
+on Windows is 'mbcs', on Mac OSX is 'utf-8', and on Unix depends on your locale
+settings.
+
+If you need a different encoding, this can be changed in your build slave's
+buildbot.tac file by adding a unicode_encoding argument to BuildSlave:
+
+@example
+s = BuildSlave(buildmaster_host, port, slavename, passwd, basedir,
+               keepalive, usepty, umask=umask, maxdelay=maxdelay,
+               unicode_encoding='utf-8')
+@end example
 
 @end table
 
