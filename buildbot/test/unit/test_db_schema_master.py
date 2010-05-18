@@ -8,7 +8,7 @@ from zope.interface import implements
 from twisted.trial import unittest
 
 from buildbot.db.schema import manager
-from buildbot.test.fake import fakedb
+from buildbot.db import dbspec
 
 class Thing(object):
     # simple object-with-attributes for use in faking pickled objects
@@ -23,9 +23,7 @@ class DBSchemaManager(unittest.TestCase):
             shutil.rmtree(self.basedir)
         os.makedirs(self.basedir)
 
-        # use an in-memory DB for speed
-        self.conn = fakedb.get_sqlite_memory_connection()
-        self.spec = fakedb.FakeDBSpec(conn=self.conn)
+        self.spec = dbspec.DBSpec.from_url("sqlite:///state.sqlite", self.basedir)
 
         self.sm = manager.DBSchemaManager(self.spec, self.basedir)
 
@@ -36,7 +34,7 @@ class DBSchemaManager(unittest.TestCase):
         assert that the database is an upgrade of an empty db
         """
         errs = []
-        c = self.conn.cursor()
+        c = self.spec.get_sync_connection().cursor()
 
         # check the version
         c.execute("SELECT * FROM version")
@@ -100,7 +98,7 @@ class DBSchemaManager(unittest.TestCase):
         assert that the database is an upgrade of the db created by fill_basedir
         """
         errs = []
-        c = self.conn.cursor()
+        c = self.spec.get_sync_connection().cursor()
 
         # check the version
         c.execute("SELECT * FROM version")
@@ -173,16 +171,17 @@ class DBSchemaManager(unittest.TestCase):
     def test_get_current_version(self):
         # this is as much a reminder to write tests for the new version
         # as a test of the (very trivial) method
-        self.assertEqual(self.sm.get_current_version(), 4)
+        self.assertEqual(self.sm.get_current_version(), 5)
 
     def test_get_db_version_empty(self):
         self.assertEqual(self.sm.get_db_version(), 0)
 
     def test_get_db_version_int(self):
-        c = self.conn.cursor()
+        conn = self.spec.get_sync_connection()
+        c = conn.cursor()
         c.execute("CREATE TABLE version (`version` integer)")
         c.execute("INSERT INTO version values (17)")
-        self.assertEqual(self.sm.get_db_version(), 17)
+        self.assertEqual(self.sm.get_db_version(conn), 17)
 
     def test_is_current_empty(self):
         self.assertFalse(self.sm.is_current())
@@ -202,7 +201,7 @@ class DBSchemaManager(unittest.TestCase):
 
     def test_scheduler_name_uniqueness(self):
         self.sm.upgrade(quiet=True)
-        c = self.conn.cursor()
+        c = self.spec.get_sync_connection().cursor()
         c.execute("""INSERT INTO schedulers (`name`, `class_name`, `state`)
                                              VALUES ('s1', 'Nightly', '')""")
         c.execute("""INSERT INTO schedulers (`name`, `class_name`, `state`)
@@ -218,16 +217,14 @@ class MySQLDBSchemaManager(DBSchemaManager):
             shutil.rmtree(self.basedir)
         os.makedirs(self.basedir)
 
-        self.conn = MySQLdb.connect(user="buildbot_test", db="buildbot_test", passwd="buildbot_test", use_unicode=True, charset='utf8')
+        self.spec = dbspec.DBSpec.from_url("mysql://buildbot_test:buildbot_test@localhost/buildbot_test")
+
         # Drop all previous tables
-        cur = self.conn.cursor()
+        cur = self.spec.get_sync_connection().cursor()
         cur.execute("SHOW TABLES")
         for row in cur.fetchall():
             cur.execute("DROP TABLE %s" % row[0])
         cur.execute("COMMIT")
-
-        self.spec = fakedb.FakeDBSpec(conn=self.conn)
-        self.spec.get_dbapi = lambda: MySQLdb
 
         self.sm = manager.DBSchemaManager(self.spec, self.basedir)
 
