@@ -422,7 +422,13 @@ class ShellCommand:
                 argv = ['/bin/sh', '-c', self.command]
             display = self.fake_command
         else:
-            if runtime.platformType  == 'win32' and not self.command[0].lower().endswith(".exe"):
+            # On windows, CreateProcess requires an absolute path to the executable.
+            # When we call spawnProcess below, we pass argv[0] as the executable.
+            # So, for .exe's that we have absolute paths to, we can call directly
+            # Otherwise, we should run under COMSPEC (usually cmd.exe) to
+            # handle path searching, etc.
+            if runtime.platformType == 'win32' and not \
+                    (self.command[0].lower().endswith(".exe") and os.path.isabs(self.command[0])):
                 argv = os.environ['COMSPEC'].split() # allow %COMSPEC% to have args
                 if '/c' not in argv: argv += ['/c']
                 argv += list(self.command)
