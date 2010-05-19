@@ -821,6 +821,19 @@ class Builder(pb.Referenceable, service.MultiService):
             if not ready:
                 #FIXME: We should perhaps trigger a check to see if there is
                 # any other way to schedule the work
+                log.msg("slave %s can't build %s after all" % (build, sb))
+
+                # release the slave. This will queue a call to maybeStartBuild, which
+                # will fire after other notifyOnDisconnect handlers have marked the
+                # slave as disconnected (so we don't try to use it again).
+                # sb.buildFinished()
+
+                log.msg("re-queueing the BuildRequest %s" % build)
+                self.building.remove(build)
+                self._resubmit_buildreqs(build).addErrback(log.err)
+
+                self.triggerNewBuildCheck()
+
                 return d
 
             def _ping(ign):
