@@ -283,6 +283,17 @@ class ShellCommand:
 
         self.builder = builder
         self.command = Obfuscated.get_real(command)
+
+        # We need to take unicode commands and arguments and encode them using
+        # the appropriate encoding for the slave.  This is mostly platform
+        # specific, but can be overridden in the slave's buildbot.tac file.
+        #
+        # Encoding the command line here ensures that the called executables
+        # receive arguments as bytestrings encoded with an appropriate
+        # platform-specific encoding.  It also plays nicely with twisted's
+        # spawnProcess which checks that arguments are regular strings or
+        # unicode strings that can be encoded as ascii (which generates a
+        # warning).
         if isinstance(self.command, (tuple, list)):
             for i, a in enumerate(self.command):
                 if isinstance(a, unicode):
