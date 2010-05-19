@@ -1,6 +1,6 @@
 # -*- test-case-name: buildbot.test.test_slavecommand -*-
 
-import os, signal, types, time, re
+import os, signal, types, time, re, traceback
 from stat import ST_CTIME, ST_MTIME, ST_SIZE
 from collections import deque
 
@@ -390,6 +390,9 @@ class ShellCommand:
         except:
             log.msg("error in ShellCommand._startCommand")
             log.err()
+            self._addToBuffers('stderr', "error in ShellCommand._startCommand\n")
+            self._addToBuffers('stderr', traceback.format_exc())
+            self._sendBuffers()
             # pretend it was a shell error
             self.deferred.errback(AbandonChain(-1))
         return self.deferred

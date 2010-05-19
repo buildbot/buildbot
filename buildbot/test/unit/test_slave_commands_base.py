@@ -162,6 +162,14 @@ class TestShellCommand(unittest.TestCase):
         def check(err):
             self.flushLoggedErrors()
             err.trap(AbandonChain)
+            stderr = []
+            # Here we're checking that the exception starting up the command
+            # actually gets propogated back to the master.
+            for u in b.updates:
+                if 'stderr' in u:
+                    stderr.append(u['stderr'])
+            stderr = "".join(stderr)
+            self.failUnless("TypeError" in stderr, stderr)
         d.addBoth(check)
         return d
 
