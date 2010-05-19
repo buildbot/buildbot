@@ -250,6 +250,12 @@ class LatentSlaveBuilder(AbstractSlaveBuilder):
             self.slave.disconnect()
             # TODO: should failover to a new Build
             return f
+        def substantiation_cancelled(res):
+            # if res is False, latent slave cancelled subtantiation
+            if not res:
+                self.state = LATENT
+            return res
+        d.addCallback(substantiation_cancelled)
         d.addErrback(substantiation_failed)
         return d
 
