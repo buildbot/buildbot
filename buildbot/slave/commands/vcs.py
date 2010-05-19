@@ -1695,7 +1695,7 @@ class P4Base(SourceBase):
         if self.p4user:
             command.extend(['-u', self.p4user])
         if self.p4passwd:
-            command.extend(['-P', self.p4passwd])
+            command.extend(['-P', Obfuscated(self.p4passwd, "XXXXXXXX")])
         if self.p4client:
             command.extend(['-c', self.p4client])
         # add '-s submitted' for bug #626
@@ -1777,7 +1777,7 @@ class P4(P4Base):
         if self.p4user:
             command.extend(['-u', self.p4user])
         if self.p4passwd:
-            command.extend(['-P', self.p4passwd])
+            command.extend(['-P', Obfuscated(self.p4passwd, "XXXXXXXX")])
         if self.p4client:
             command.extend(['-c', self.p4client])
         command.extend(['sync'])
@@ -1820,7 +1820,7 @@ class P4(P4Base):
         if self.p4user:
             command.extend(['-u', self.p4user])
         if self.p4passwd:
-            command.extend(['-P', self.p4passwd])
+            command.extend(['-P', Obfuscated(self.p4passwd, "XXXXXXXX")])
         command.extend(['client', '-i'])
         log.msg(client_spec)
         c = ShellCommand(self.builder, command, self.builder.basedir,
@@ -1870,7 +1870,7 @@ class P4Sync(P4Base):
         if self.p4user:
             command.extend(['-u', self.p4user])
         if self.p4passwd:
-            command.extend(['-P', self.p4passwd])
+            command.extend(['-P', Obfuscated(self.p4passwd, "XXXXXXXX")])
         if self.p4client:
             command.extend(['-c', self.p4client])
         command.extend(['sync'])

@@ -1,6 +1,6 @@
 # -*- test-case-name: buildbot.test.test_slavecommand -*-
 
-import os, signal, types, time, re
+import os, signal, types, time, re, traceback
 from stat import ST_CTIME, ST_MTIME, ST_SIZE
 from collections import deque
 
@@ -283,6 +283,17 @@ class ShellCommand:
 
         self.builder = builder
         self.command = Obfuscated.get_real(command)
+
+        # We need to take unicode commands and arguments and encode them using
+        # the appropriate encoding for the slave.  This is mostly platform
+        # specific, but can be overridden in the slave's buildbot.tac file.
+        #
+        # Encoding the command line here ensures that the called executables
+        # receive arguments as bytestrings encoded with an appropriate
+        # platform-specific encoding.  It also plays nicely with twisted's
+        # spawnProcess which checks that arguments are regular strings or
+        # unicode strings that can be encoded as ascii (which generates a
+        # warning).
         if isinstance(self.command, (tuple, list)):
             for i, a in enumerate(self.command):
                 if isinstance(a, unicode):
@@ -390,6 +401,9 @@ class ShellCommand:
         except:
             log.msg("error in ShellCommand._startCommand")
             log.err()
+            self._addToBuffers('stderr', "error in ShellCommand._startCommand\n")
+            self._addToBuffers('stderr', traceback.format_exc())
+            self._sendBuffers()
             # pretend it was a shell error
             self.deferred.errback(AbandonChain(-1))
         return self.deferred
@@ -419,7 +433,13 @@ class ShellCommand:
                 argv = ['/bin/sh', '-c', self.command]
             display = self.fake_command
         else:
-            if runtime.platformType  == 'win32' and not self.command[0].lower().endswith(".exe"):
+            # On windows, CreateProcess requires an absolute path to the executable.
+            # When we call spawnProcess below, we pass argv[0] as the executable.
+            # So, for .exe's that we have absolute paths to, we can call directly
+            # Otherwise, we should run under COMSPEC (usually cmd.exe) to
+            # handle path searching, etc.
+            if runtime.platformType == 'win32' and not \
+                    (self.command[0].lower().endswith(".exe") and os.path.isabs(self.command[0])):
                 argv = os.environ['COMSPEC'].split() # allow %COMSPEC% to have args
                 if '/c' not in argv: argv += ['/c']
                 argv += list(self.command)
