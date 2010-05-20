@@ -119,19 +119,6 @@ class GitPoller(base.ChangeSource):
         
         return output
 
-    def _get_commit_timestamp(self, rev):
-        # unix timestamp
-        args = ['log', rev, '--no-walk', r'--format=%ct']
-        output = self._get_git_output(args)
-        
-        try:
-            stamp = float(output)
-        except Exception, e:
-            log.msg('gitpoller: caught exception converting output \'%s\' to timestamp' % output)
-            raise e
-        
-        return stamp
-        
     def _get_commit_files(self, rev):
         args = ['log', rev, '--name-only', '--no-walk', r'--format=%n']
         fileList = self._get_git_output(args).split()
@@ -176,7 +163,6 @@ class GitPoller(base.ChangeSource):
             c = changes.Change(who = self._get_commit_name(rev),
                                files = self._get_commit_files(rev),
                                comments = self._get_commit_comments(rev),
-                               when = self._get_commit_timestamp(rev),
                                branch = self.branch)
             self.parent.addChange(c)
             self.lastChange = self.lastPoll
