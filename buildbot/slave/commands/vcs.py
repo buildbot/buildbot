@@ -1,4 +1,4 @@
-import os, re, sys, shutil, time
+import os, re, sys, shutil, time, unicodedata
 
 from xml.dom.minidom import parseString
 
@@ -1823,6 +1823,10 @@ class P4(P4Base):
             command.extend(['-P', Obfuscated(self.p4passwd, "XXXXXXXX")])
         command.extend(['client', '-i'])
         log.msg(client_spec)
+
+        # Clean client spec to plain ascii
+        client_spec=unicodedata.normalize('NFKD',client_spec).encode('ascii','ignore')
+
         c = ShellCommand(self.builder, command, self.builder.basedir,
                          environ=env, sendRC=False, timeout=self.timeout,
                          maxTime=self.maxTime, initialStdin=client_spec,
