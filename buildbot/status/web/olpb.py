@@ -46,23 +46,25 @@ class OneLinePerBuild(HtmlResource, BuildLineMixin):
         cxt['num_builds'] = numbuilds
         cxt['branches'] =  branches
         cxt['builders'] = builders
-        
-        got = 0
+
+        builds = cxt['builds'] = []
+        for build in g:
+            builds.append(self.get_line_values(req, build))
+
+        cxt['authz'] = self.getAuthz(req)
+
+        # get information on the builders - mostly just a count
         building = 0
         online = 0
-
-        builders = cxt['builds'] = []
-        for build in g:
-            got += 1
-            builders.append(self.get_line_values(req, build))
-            builder_status = build.getBuilder().getState()[0]
+        for bn in builders:
+            builder = status.getBuilder(bn)
+            builder_status = builder.getState()[0]
             if builder_status == "building":
                 building += 1
                 online += 1
             elif builder_status != "offline":
                 online += 1
 
-        cxt['authz'] = self.getAuthz(req)
         cxt['num_online'] = online
         cxt['num_building'] = building
 
