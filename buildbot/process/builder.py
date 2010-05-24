@@ -654,10 +654,10 @@ class Builder(pb.Referenceable, service.MultiService):
 
     def getBuild(self, number):
         for b in self.building:
-            if b.build_status.number == number:
+            if b.build_status and b.build_status.number == number:
                 return b
         for b in self.old_building.keys():
-            if b.build_status.number == number:
+            if b.build_status and b.build_status.number == number:
                 return b
         return None
 
