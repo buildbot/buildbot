@@ -13,7 +13,7 @@ from buildbot.changes import base
 from buildbot.changes.changes import Change
 
 import xml.dom.minidom
-import urllib
+import os, urllib
 
 def _assert(condition, msg):
     if condition:
@@ -183,6 +183,9 @@ class SVNPoller(base.ChangeSource, util.ComparableMixin):
 
         self.revlinktmpl = revlinktmpl
 
+        self.environ = os.environ.copy() # include environment variables
+                                         # required for ssh-agent auth
+
         self.svnbin = svnbin
         self.pollinterval = pollinterval
         self.histmax = histmax
@@ -272,7 +275,7 @@ class SVNPoller(base.ChangeSource, util.ComparableMixin):
 
     def getProcessOutput(self, args):
         # this exists so we can override it during the unit tests
-        d = utils.getProcessOutput(self.svnbin, args, {})
+        d = utils.getProcessOutput(self.svnbin, args, self.environ)
         return d
 
     def get_root(self):
