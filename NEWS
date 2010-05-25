@@ -1,7 +1,7 @@
 Major User visible changes in Buildbot.             -*- outline -*-
   (see ChangeLog for a detailed list of changes)
 
-* Release 0.8.0
+* Release 0.8.0 (May 25, 2010)
 
 ** (NOTE!) Scheduler requires keyword arguments
 
