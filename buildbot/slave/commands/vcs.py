@@ -1823,6 +1823,19 @@ class P4(P4Base):
             command.extend(['-P', Obfuscated(self.p4passwd, "XXXXXXXX")])
         command.extend(['client', '-i'])
         log.msg(client_spec)
+
+        # from bdbaddog in github comments:
+        # I'm pretty sure the issue is that perforce client specs can't be
+        # non-ascii (unless you configure at initial config to be unicode). I
+        # floated a question to perforce mailing list.  From reading the
+        # internationalization notes..
+        #   http://www.perforce.com/perforce/doc.092/user/i18nnotes.txt
+        # I'm 90% sure that's the case.
+        # (http://github.com/bdbaddog/buildbot/commit/8420149b2b804efcf5f81a13e18aa62da0424d21)
+
+        # Clean client spec to plain ascii
+        client_spec=client_spec.encode('ascii','ignore')
+
         c = ShellCommand(self.builder, command, self.builder.basedir,
                          environ=env, sendRC=False, timeout=self.timeout,
                          maxTime=self.maxTime, initialStdin=client_spec,

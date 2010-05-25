@@ -215,6 +215,7 @@ setup_args = {
                   "buildbot/status/web/files/favicon.ico",
                   ]),
                 include("buildbot/status/web/templates", '*.html'),
+                include("buildbot/status/web/templates", '*.xml'),
                 ("buildbot/scripts", ["buildbot/scripts/sample.cfg"]),
                 ],
     'scripts': scripts,

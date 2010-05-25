@@ -32,10 +32,10 @@ from buildbot.status.builder import FAILURE
 class XmlResource(resource.Resource):
     contentType = "text/xml; charset=UTF-8"
     docType = ''
-        
+
     def getChild(self, name, request):
         return self
-    
+
     def render(self, request):
         data = self.content(request)
         request.setHeader("content-type", self.contentType)
@@ -51,7 +51,7 @@ class FeedResource(XmlResource):
     description = 'Dummy rss'
     status = None
 
-    def __init__(self, status, categories = None, title = None):
+    def __init__(self, status, categories=None, title=None):
         self.status = status
         self.categories = categories
         self.title = title
@@ -97,8 +97,7 @@ class FeedResource(XmlResource):
         if showCategories:
             builders = [b for b in builders if b.category in showCategories]
 
-
-        failures_only = request.args.get("failures_only","false")
+        failures_only = request.args.get("failures_only", "false")
 
         maxFeeds = 25
 
@@ -123,8 +122,8 @@ class FeedResource(XmlResource):
                 results = build.getResults()
 
                 if failures_only == "false" or results == FAILURE:
-	            totalbuilds += 1
-	            builds.append(build)
+                    totalbuilds += 1
+                    builds.append(build)
 
                 # stop for this builder when our total nr. of feeds is reached
                 if totalbuilds >= maxFeeds:
@@ -144,7 +143,7 @@ class FeedResource(XmlResource):
 
     def content(self, request):
         builds = self.getBuilds(request)
-        
+
         build_cxts = []
 
         for build in builds:
@@ -152,7 +151,8 @@ class FeedResource(XmlResource):
             finishedTime = time.gmtime(int(finished))
             link = re.sub(r'index.html', "", self.status.getURLForThing(build))
 
-            # title: trunk r22191 (plus patch) failed on 'i686-debian-sarge1 shared gcc-3.3.5'
+            # title: trunk r22191 (plus patch) failed on
+            # 'i686-debian-sarge1 shared gcc-3.3.5'
             ss = build.getSourceStamp()
             source = ""
             if ss.branch:
@@ -178,9 +178,9 @@ class FeedResource(XmlResource):
                 source += "(Got Revision: %s)" % got_revision
             failflag = (build.getResults() != FAILURE)
             title = ('%s %s on "%s"' %
-                     (source, ["failed","succeeded"][failflag], build.getBuilder().getName()))
+                     (source, ["failed","succeeded"][failflag],
+                      build.getBuilder().getName()))
 
-            
             # Add information about the failing steps.
             failed_steps = []
             log_lines = []
@@ -190,7 +190,8 @@ class FeedResource(XmlResource):
 
                     # Add the last 30 lines of each log.
                     for log in s.getLogs():
-                        log_lines.append('Last lines of build log "%s":' % log.getName())
+                        log_lines.append('Last lines of build log "%s":' %
+                                         log.getName())
                         log_lines.append([])
                         try:
                             logdata = log.getText()
@@ -200,9 +201,9 @@ class FeedResource(XmlResource):
 
                         log_lines.extend(logdata.split('\n')[-30:])
 
-
             bc = {}
-            bc['date'] = time.strftime("%a, %d %b %Y %H:%M:%S GMT", finishedTime)
+            bc['date'] = time.strftime("%a, %d %b %Y %H:%M:%S GMT",
+                                       finishedTime)
             bc['summary_link'] = ('%sbuilders/%s' %
                                   (self.link,
                                    build.getBuilder().getName()))            
@@ -213,24 +214,25 @@ class FeedResource(XmlResource):
             bc['title'] = title
             bc['link'] = link
             bc['log_lines'] = log_lines
-    
+
             if finishedTime is not None:
                 bc['rfc822_pubdate'] = time.strftime("%a, %d %b %Y %H:%M:%S GMT",
                                               finishedTime)
                 bc['rfc3339_pubdate'] = time.strftime("%Y-%m-%dT%H:%M:%SZ",
                                                finishedTime)
-                
+
                 # Every RSS/Atom item must have a globally unique ID
-                guid = ('tag:%s@%s,%s:%s' % (self.user, self.hostname,
-                                             time.strftime("%Y-%m-%d", finishedTime),
-                                             time.strftime("%Y%m%d%H%M%S", finishedTime)))
-                bc['guid'] = guid            
-            
+                guid = ('tag:%s@%s,%s:%s' %
+                        (self.user, self.hostname,
+                         time.strftime("%Y-%m-%d", finishedTime),
+                         time.strftime("%Y%m%d%H%M%S", finishedTime)))
+                bc['guid'] = guid
+
             build_cxts.append(bc)
 
         title = self.title
         if not title:
-            title = 'Build status of ' + self.projectName
+            title = 'Build status of %s' % self.projectName
 
         cxt = {}
         cxt['title'] = title
@@ -240,10 +242,10 @@ class FeedResource(XmlResource):
         cxt['description'] = self.description
         if self.pubdate is not None:
             cxt['rfc822_pubdate'] = time.strftime("%a, %d %b %Y %H:%M:%S GMT",
-                                           self.pubdate)
+                                                  self.pubdate)
             cxt['rfc3339_pubdate'] = time.strftime("%Y-%m-%dT%H:%M:%SZ",
                                                    self.pubdate)
-        
+
         cxt['builds'] = build_cxts
         template = request.site.buildbot_service.templates.get_template(self.template_file)
         return template.render(**cxt).encode('utf-8').strip()
@@ -261,4 +263,3 @@ class Atom10StatusResource(FeedResource):
 
     def __init__(self, status, categories=None, title=None):
         FeedResource.__init__(self, status, categories, title)
-
