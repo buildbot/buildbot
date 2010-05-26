@@ -1138,7 +1138,7 @@ A build has started
 A build has finished
 @item success
 A build finished successfully
-@item failed
+@item failure
 A build failed
 @item exception
 A build generated and exception
