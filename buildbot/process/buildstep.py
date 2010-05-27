@@ -1012,7 +1012,17 @@ class LoggingBuildStep(BuildStep):
                     all output being put into our self.stdio_log LogFile
         """
         log.msg("ShellCommand.startCommand(cmd=%s)" % (cmd,))
-        log.msg("  cmd.args = %r" % (cmd.args))
+        args = cmd.args
+        if "patch" in cmd.args:
+          # Don't print the patch in the logs, it's often too large and not
+          # useful.
+          args = cmd.args.copy()
+          # This is usually a tuple so convert it to a list to be able to modify
+          # it.
+          patch = list(args['patch'][:])
+          patch[1] = "(%s bytes)" % len(patch[1])
+          args['patch'] = patch
+        log.msg("  cmd.args = %r" % (args))
         self.cmd = cmd # so we can interrupt it
         self.step_status.setText(self.describe(False))
 
