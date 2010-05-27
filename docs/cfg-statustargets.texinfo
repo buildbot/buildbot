@@ -59,10 +59,11 @@ server and retrieve information about every build the buildbot knows
 about, as well as find out what the buildbot is currently working on.
 
 The first page you will see is the ``Welcome Page'', which contains
-links to all the other useful pages. This page is simply served from
-the @file{public_html/index.html} file in the buildmaster's base
-directory, where it is created by the @command{buildbot create-master}
-command along with the rest of the buildmaster.
+links to all the other useful pages. By default, this page is served from
+the @file{status/web/templates/root.html} file in buildbot's library area.
+If you'd like to override this page or the other templates found there,
+copy the files you're interested in into a @file{templates/} directory in
+the buildmaster's base directory.
 
 One of the most complex resource provided by @code{WebStatus} is the
 ``Waterfall Display'', which shows a time-based chart of events. This
@@ -86,18 +87,20 @@ in great detail below.
 
 @heading Configuration
 
-When the buildmaster is created, a subdirectory named
-@file{public_html/} is created in its base directory. By default, @code{WebStatus}
-will serve files from this directory: for example, when a user points
-their browser at the buildbot's @code{WebStatus} URL, they will see
-the contents of the @file{public_html/index.html} file. Likewise,
-@file{public_html/robots.txt}, @file{public_html/buildbot.css}, and
-@file{public_html/favicon.ico} are all useful things to have in there.
-The first time a buildmaster is created, the @file{public_html}
+Buildbot now uses a templating system for the web interface. The source
+of these templates can be found in the @file{status/web/templates/} directory
+in buildbot's library area. You can override these templates by creating
+alternate versions in a @file{templates/} directory within the buildmaster's
+base directory.
+
+The first time a buildmaster is created, the @file{public_html/}
 directory is populated with some sample files, which you will probably
 want to customize for your own project. These files are all static:
 the buildbot does not modify them in any way as it serves them to HTTP
 clients.
+
+Note that templates in @file{templates/} take precedence over static files in
+@file{public_html/}.
 
 @example
 from buildbot.status.html import WebStatus
