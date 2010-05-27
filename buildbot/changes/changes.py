@@ -14,7 +14,7 @@ class Change:
     a change comment for the group as a whole.
 
     If the version control system supports sequential repository- (or
-    branch-) wide change numbers (like SVN, P4, and Arch), then revision=
+    branch-) wide change numbers (like SVN, P4, and Bzr), then revision=
     should be set to that number. The highest such number will be used at
     checkout time to get the correct set of files.
 

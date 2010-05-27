@@ -846,6 +846,7 @@ class Arch(Source):
                         that comes from the repository. If not, the
                         repository's default will be used.
         """
+        warn("Support for Arch will be removed in 0.8.2", DeprecationWarning)
         self.branch = version
         self.url = url
         Source.__init__(self, **kwargs)
