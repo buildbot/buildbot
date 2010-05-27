@@ -26,9 +26,11 @@ class MaildirSource(MaildirService, util.ComparableMixin):
     compare_attrs = ["basedir", "pollinterval", "prefix"]
     name = None
 
-    def __init__(self, maildir, prefix=None):
+    def __init__(self, maildir, prefix=None, category=None, repository=None):
         MaildirService.__init__(self, maildir)
         self.prefix = prefix
+        self.category = category
+        self.repository = repository
         if prefix and not prefix.endswith("/"):
             log.msg("%s: you probably want your prefix=('%s') to end with "
                     "a slash")
@@ -153,7 +155,7 @@ class SyncmailMaildirSource(MaildirSource):
 
         # calculate a "revision" based on that timestamp
         theCurrentTime =  datetime.datetime.utcfromtimestamp(float(when))
-        rev = theCurrentTime.isoformat()
+        rev = theCurrentTime.strftime('%Y-%m-%d %H:%M:%S')
 
         subject = m["subject"]
         # syncmail puts the repository-relative directory in the subject:
@@ -238,7 +240,9 @@ class SyncmailMaildirSource(MaildirSource):
         comments = comments.rstrip() + "\n"
 
         change = changes.Change(who, files, comments, isdir, when=when,
-                                branch=branch, revision=rev)
+                                branch=branch, revision=rev,
+                                category=self.category,
+                                repository=self.repository)
 
         return change
 
