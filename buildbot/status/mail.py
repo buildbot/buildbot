@@ -371,8 +371,6 @@ class MailNotifier(base.StatusReceiverMultiService):
                          logf.getText().splitlines(),
                          logStatus))
 
-        properties = build.getProperties()
-                
         attrs = {'builderName': name,
                  'projectName': master_status.getProjectName(),
                  'mode': mode,
@@ -380,7 +378,7 @@ class MailNotifier(base.StatusReceiverMultiService):
                  'buildURL': master_status.getURLForThing(build),
                  'buildbotURL': master_status.getBuildbotURL(),
                  'buildText': build.getText(),
-                 'buildProperties': properties,
+                 'buildProperties': build.getProperties(),
                  'slavename': build.getSlavename(),
                  'reason':  build.getReason(),
                  'responsibleUsers': build.getResponsibleUsers(),
@@ -399,7 +397,7 @@ class MailNotifier(base.StatusReceiverMultiService):
 
         return attrs
 
-    def createEmail(self, msgdict, builderName, projectName, results, 
+    def createEmail(self, msgdict, builderName, projectName, results, build,
                     patch=None, logs=None):
         text = msgdict['body'].encode(ENCODING)
         type = msgdict['type']
@@ -446,6 +444,7 @@ class MailNotifier(base.StatusReceiverMultiService):
         # Add any extra headers that were requested, doing WithProperties
         # interpolation if necessary
         if self.extraHeaders:
+            properties = build.getProperties()
             for k,v in self.extraHeaders.items():
                 k = properties.render(k)
                 if k in m:
@@ -475,7 +474,7 @@ class MailNotifier(base.StatusReceiverMultiService):
             logs = build.getLogs()
             twlog.err("LOG: %s" % str(logs))
         m = self.createEmail(msgdict, name, self.master_status.getProjectName(),
-                             results, patch, logs)
+                             results, build, patch, logs)
 
         # now, who is this message going to?
         dl = []
