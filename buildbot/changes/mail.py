@@ -26,7 +26,7 @@ class MaildirSource(MaildirService, util.ComparableMixin):
     compare_attrs = ["basedir", "pollinterval", "prefix"]
     name = None
 
-    def __init__(self, maildir, prefix=None, category=None, repository=None):
+    def __init__(self, maildir, prefix=None, category='', repository=''):
         MaildirService.__init__(self, maildir)
         self.prefix = prefix
         self.category = category
