@@ -1,6 +1,16 @@
 Major User visible changes in Buildbot.             -*- outline -*-
   (see ChangeLog for a detailed list of changes)
 
+* NEXT RELEASE
+
+* Deprecations
+
+** Arch, Bazaar, and Monotone to be removed in 0.8.2
+
+This decision isn't final, but support for these VC's will be removed in
+version 0.8.2 unless a maintainers steps forward to document, test, and update
+them.
+
 * Release 0.8.0 (May 25, 2010)
 
 ** (NOTE!) Scheduler requires keyword arguments

@@ -1307,6 +1307,7 @@ class Monotone(Source):
     def __init__(self, server_addr=None, branch=None, db_path="monotone.db",
                  monotone="monotone",
                  **kwargs):
+        warn("Support for Monotone will be removed in 0.8.2", DeprecationWarning)
         Source.__init__(self, **kwargs)
         self.addFactoryArguments(server_addr=server_addr,
                                  branch=branch,
