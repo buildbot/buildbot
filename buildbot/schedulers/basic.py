@@ -41,7 +41,7 @@ from buildbot import interfaces
 from buildbot.util import collections, NotABranch
 from buildbot.sourcestamp import SourceStamp
 from buildbot.status.builder import SUCCESS, WARNINGS
-from buildbot.schedulers import filter, base
+from buildbot.schedulers import base
 
 class Scheduler(base.BaseScheduler, base.ClassifierMixin):
     fileIsImportant = None

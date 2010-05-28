@@ -1,10 +1,8 @@
 import os
-import threading
 import shutil
 import cPickle
 import pprint
 
-from zope.interface import implements
 from twisted.trial import unittest
 
 from buildbot.db.schema import manager

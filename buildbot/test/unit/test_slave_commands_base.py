@@ -3,7 +3,7 @@ import sys, re
 from twisted.trial import unittest
 from twisted.internet import task, defer
 
-from buildbot.slave.commands.base import SlaveShellCommand, ShellCommand, Obfuscated, \
+from buildbot.slave.commands.base import ShellCommand, Obfuscated, \
     DummyCommand, WaitCommand, waitCommandRegistry, AbandonChain
 from buildbot.slave.commands.utils import getCommand
 

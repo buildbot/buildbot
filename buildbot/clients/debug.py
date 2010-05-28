@@ -6,7 +6,7 @@ from twisted.python import util
 from twisted.spread import pb
 from twisted.cred import credentials
 import gtk.glade #@UnresolvedImport
-import sys, re
+import re
 
 class DebugWidget:
     def __init__(self, master="localhost:8007", passwd="debugpw"):

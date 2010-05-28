@@ -1,10 +1,8 @@
-import os
 import threading
 
-from zope.interface import implements
 from twisted.trial import unittest
 
-from buildbot.db import dbspec, exceptions, connector
+from buildbot.db import dbspec, connector
 
 class DBConnector_Basic(unittest.TestCase):
     """

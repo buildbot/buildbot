@@ -1,6 +1,4 @@
-import os
 
-from buildbot.db import util
 from buildbot.db.schema import base
 
 class Upgrader(base.Upgrader):

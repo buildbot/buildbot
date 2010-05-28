@@ -1,4 +1,3 @@
-import types
 
 from twisted.trial import unittest
 

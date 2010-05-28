@@ -15,10 +15,9 @@ try:
 except ImportError:
     import json
 
-from buildbot.master import BuildMaster
 from buildbot.status.base import StatusReceiverMultiService
 from buildbot.status.persistent_queue import DiskQueue, IndexedQueue, \
-        IQueue, MemoryQueue, PersistentQueue
+        MemoryQueue, PersistentQueue
 from buildbot.status.web.status_json import FilterOut
 from twisted.internet import defer, reactor
 from twisted.python import log

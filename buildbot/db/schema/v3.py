@@ -1,5 +1,4 @@
 from buildbot.db.schema import base
-from buildbot.db.exceptions import DatabaseNotReadyError
 
 class Upgrader(base.Upgrader):
     def upgrade(self):

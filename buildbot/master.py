@@ -3,7 +3,6 @@
 import os
 import signal
 import time
-import warnings
 import textwrap
 
 from zope.interface import implements
@@ -23,7 +22,6 @@ from buildbot.process.builder import Builder, IDLE
 from buildbot.status.builder import Status, BuildSetStatus
 from buildbot.changes.changes import Change
 from buildbot.changes.manager import ChangeManager
-from buildbot.buildslave import BuildSlave
 from buildbot import interfaces, locks
 from buildbot.process.properties import Properties
 from buildbot.config import BuilderConfig

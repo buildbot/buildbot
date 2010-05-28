@@ -1,7 +1,5 @@
 # -*- test-case-name: buildbot.test.test_util -*-
 
-from twisted.internet.defer import Deferred
-from twisted.spread import pb
 from twisted.python import threadable
 import time, re, string
 
@@ -157,3 +155,8 @@ class NotABranch:
     def __nonzero__(self):
         return False
 NotABranch = NotABranch()
+
+__all__ = [
+    'naturalSort', 'now', 'formatInterval', 'ComparableMixin', 'json',
+    'safeTranslate', 'remove_userpassword', 'LRUCache', 'none_or_str',
+    'NotABranch']

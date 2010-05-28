@@ -10,8 +10,6 @@ from buildbot.db.schema import manager
 from buildbot.db.dbspec import DBSpec
 from buildbot.db.connector import DBConnector
 
-import buildbot
-
 class Thing:
     def __init__(self, **kwargs):
         self.__dict__.update(kwargs)
