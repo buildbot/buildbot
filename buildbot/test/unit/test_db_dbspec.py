@@ -1,10 +1,9 @@
 import os
 import threading
 
-from zope.interface import implements
 from twisted.trial import unittest
 
-from buildbot.db import dbspec, exceptions, connector
+from buildbot.db import dbspec
 
 class DBSpec(unittest.TestCase):
     # a dburl of "sqlite:///.." can use either the third-party sqlite3

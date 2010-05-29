@@ -1,4 +1,3 @@
-from unittest import TestResult
 
 from buildbot.steps.shell import ShellCommand
 

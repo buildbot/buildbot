@@ -42,7 +42,6 @@
 
 import os
 
-from mercurial.i18n import gettext as _ #@UnresolvedImport
 from mercurial.node import bin, hex, nullid #@UnresolvedImport
 from mercurial.context import workingctx #@UnresolvedImport
 

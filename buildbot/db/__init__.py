@@ -7,6 +7,3 @@
 #  a scheduler_upstream_buildsets row that is not active
 #  a build that references a non-existent buildrequest
 
-from buildbot.db.connector import DBConnector
-from buildbot.db.dbspec import DBSpec
-from buildbot.db.exceptions import DBAlreadyExistsError, DatabaseNotReadyError

@@ -10,6 +10,10 @@
 Steps specific to the rpm format.
 """
 
-from rpmbuild import RpmBuild
-from rpmspec import RpmSpec
-from rpmlint import RpmLint
+from buildbot.steps.package.rpm.rpmbuild import RpmBuild
+from buildbot.steps.package.rpm.rpmspec import RpmSpec
+from buildbot.steps.package.rpm.rpmlint import RpmLint
+
+__all__ = ['RpmBuild', 'RpmSpec', 'RpmLint']
+
+

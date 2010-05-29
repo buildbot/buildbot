@@ -79,7 +79,7 @@ Any errors in the processing functions are written to log.err and then
 ignored.
 """
 
-import time
+
 from twisted.internet import reactor, defer
 from twisted.application import service
 from twisted.python import log

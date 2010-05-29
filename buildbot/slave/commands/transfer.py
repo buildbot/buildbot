@@ -1,7 +1,7 @@
 import os, tarfile, tempfile
 
 from twisted.python import log
-from twisted.internet import reactor, defer
+from twisted.internet import defer
 
 from buildbot.slave.commands.base import Command, command_version
 from buildbot.slave.commands.registry import registerSlaveCommand

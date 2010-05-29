@@ -3,7 +3,7 @@ import os, re, sys, shutil, time
 from xml.dom.minidom import parseString
 
 from twisted.python import log, failure, runtime
-from twisted.internet import defer, reactor
+from twisted.internet import defer
 
 from buildbot.slave.commands.base import Command, ShellCommand, AbandonChain, command_version, Obfuscated
 from buildbot.slave.commands.registry import registerSlaveCommand

@@ -40,11 +40,8 @@
 import sys, os, cgi, re, time
 
 from twisted.python import log, reflect
-from twisted.internet import defer, reactor
 from twisted.enterprise import adbapi
 
-from buildbot.db.connector import DBConnector
-from buildbot.db.exceptions import *
 from buildbot import util
 
 class ExpiringConnectionPool(adbapi.ConnectionPool):

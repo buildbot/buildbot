@@ -1,6 +1,6 @@
 # -*- test-case-name: buildbot.test.test_slavecommand -*-
 
-import os, signal, types, time, re, traceback
+import os, signal, types, re, traceback
 from stat import ST_CTIME, ST_MTIME, ST_SIZE
 from collections import deque
 
