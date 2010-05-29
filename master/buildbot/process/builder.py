@@ -34,6 +34,7 @@ class AbstractSlaveBuilder(pb.Referenceable):
         self.remote = None
         self.slave = None
         self.builder_name = None
+        self.locks = None
 
     def __repr__(self):
         r = ["<", self.__class__.__name__]
@@ -110,6 +111,7 @@ class AbstractSlaveBuilder(pb.Referenceable):
     def _attached3(self, res):
         # now we say they're really attached
         self.state = IDLE
+
         return self
 
     def _attachFailure(self, why, where):
@@ -119,6 +121,8 @@ class AbstractSlaveBuilder(pb.Referenceable):
         return why
 
     def prepare(self, builder_status):
+        if not self.slave.acquireLocks():
+            return defer.succeed(False)
         return defer.succeed(True)
 
     def ping(self, status=None):
@@ -242,6 +246,10 @@ class LatentSlaveBuilder(AbstractSlaveBuilder):
                                                          self.builder_name))
 
     def prepare(self, builder_status):
+        # If we can't lock, then don't bother trying to substantiate
+        if not self.slave.acquireLocks():
+            return defer.succeed(False)
+
         log.msg("substantiating slave %s" % (self,))
         d = self.substantiate()
         def substantiation_failed(f):
@@ -832,6 +840,7 @@ class Builder(pb.Referenceable, service.MultiService):
                 self.building.remove(build)
                 self._resubmit_buildreqs(build).addErrback(log.err)
 
+                sb.slave.releaseLocks()
                 self.triggerNewBuildCheck()
 
                 return d
@@ -918,6 +927,9 @@ class Builder(pb.Referenceable, service.MultiService):
         else:
             brids = [br.id for br in build.requests]
             self.db.retire_buildrequests(brids, results)
+
+        sb.slave.releaseLocks()
+
         self.triggerNewBuildCheck()
 
     def _resubmit_buildreqs(self, build):
