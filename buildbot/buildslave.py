@@ -14,6 +14,7 @@ from buildbot.status.builder import SlaveStatus
 from buildbot.status.mail import MailNotifier
 from buildbot.interfaces import IBuildSlave, ILatentBuildSlave
 from buildbot.process.properties import Properties
+from buildbot.locks import LockAccess
 
 import sys
 if sys.version_info[:3] < (2,4,0):
@@ -34,7 +35,7 @@ class AbstractBuildSlave(NewCredPerspective, service.MultiService):
 
     def __init__(self, name, password, max_builds=None,
                  notify_on_missing=[], missing_timeout=3600,
-                 properties={}):
+                 properties={}, locks=None):
         """
         @param name: botname this machine will supply when it connects
         @param password: password this machine will supply when
@@ -45,6 +46,9 @@ class AbstractBuildSlave(NewCredPerspective, service.MultiService):
         @param properties: properties that will be applied to builds run on
                            this slave
         @type properties: dictionary
+        @param locks: A list of locks that must be acquired before this slave
+                      can be used
+        @type locks: dictionary
         """
         service.MultiService.__init__(self)
         self.slavename = name
@@ -55,6 +59,7 @@ class AbstractBuildSlave(NewCredPerspective, service.MultiService):
         self.slave_commands = None
         self.slavebuilders = {}
         self.max_builds = max_builds
+        self.access = locks
 
         self.properties = Properties()
         self.properties.update(properties, "BuildSlave")
@@ -80,6 +85,9 @@ class AbstractBuildSlave(NewCredPerspective, service.MultiService):
         assert self.password == new.password
         assert self.__class__ == new.__class__
         self.max_builds = new.max_builds
+        self.access = new.access
+        if self.botmaster:
+            self.updateLocks()
 
     def __repr__(self):
         if self.botmaster:
@@ -91,9 +99,56 @@ class AbstractBuildSlave(NewCredPerspective, service.MultiService):
             return "<%s '%s', (no builders yet)>" % \
                 (self.__class__.__name__, self.slavename)
 
+    def updateLocks(self):
+        # convert locks into their real form
+        locks = []
+        for access in self.access:
+            if not isinstance(access, LockAccess):
+                access = access.defaultAccess()
+            lock = self.botmaster.getLockByID(access.lockid)
+            locks.append((lock, access))
+        self.locks = [(l.getLock(self), la) for l, la in locks]
+
+    def locksAvailable(self):
+        """
+        I am called to see if all the locks I depend on are available,
+        in which I return True, otherwise I return False
+        """
+        if not self.locks:
+            return True
+        for lock, access in self.locks:
+            if not lock.isAvailable(access):
+                return False
+        return True
+
+    def acquireLocks(self):
+        """
+        I am called when a build is preparing to run. I try to claim all
+        the locks that are needed for a build to happen. If I can't, then
+        my caller should give up the build and try to get another slave
+        to look at it.
+        """
+        log.msg("acquireLocks(slave %s, locks %s)" % (self, self.locks))
+        if not self.locksAvailable():
+            log.msg("slave %s can't lock, giving up" % (self, ))
+            return False
+        # all locks are available, claim them all
+        for lock, access in self.locks:
+            lock.claim(self, access)
+        return True
+
+    def releaseLocks(self):
+        """
+        I am called to release any locks after a build has finished
+        """
+        log.msg("releaseLocks(%s): %s" % (self, self.locks))
+        for lock, access in self.locks:
+            lock.release(self, access)
+
     def setBotmaster(self, botmaster):
         assert not self.botmaster, "BuildSlave already has a botmaster"
         self.botmaster = botmaster
+        self.updateLocks()
         self.startMissingTimer()
 
     def stopMissingTimer(self):
@@ -356,6 +411,10 @@ class AbstractBuildSlave(NewCredPerspective, service.MultiService):
                                if sb.isBusy()]
             if len(active_builders) >= self.max_builds:
                 return False
+
+        if not self.locksAvailable():
+            return False
+
         return True
 
     def _mail_missing_message(self, subject, text):
@@ -478,10 +537,10 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
     def __init__(self, name, password, max_builds=None,
                  notify_on_missing=[], missing_timeout=60*20,
                  build_wait_timeout=60*10,
-                 properties={}):
+                 properties={}, locks=None):
         AbstractBuildSlave.__init__(
             self, name, password, max_builds, notify_on_missing,
-            missing_timeout, properties)
+            missing_timeout, properties, locks)
         self.building = set()
         self.build_wait_timeout = build_wait_timeout
 
