@@ -445,6 +445,8 @@ class Builder(pb.Referenceable, service.MultiService):
             diffs.append('factory changed')
         if setup.get('locks', []) != self.locks:
             diffs.append('locks changed from %s to %s' % (self.locks, setup.get('locks')))
+        if setup.get('env', {}) != self.env:
+            diffs.append('env changed from %s to %s' % (self.env, setup.get('env', {})))
         if setup.get('nextSlave') != self.nextSlave:
             diffs.append('nextSlave changed from %s to %s' % (self.nextSlave, setup.get('nextSlave')))
         if setup.get('nextBuild') != self.nextBuild:
