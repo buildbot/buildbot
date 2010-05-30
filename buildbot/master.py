@@ -27,7 +27,8 @@ from buildbot.process.properties import Properties
 from buildbot.config import BuilderConfig
 from buildbot.process.builder import BuilderControl
 from buildbot.db.dbspec import DBSpec
-from buildbot.db import connector, schema, exceptions
+from buildbot.db import connector, exceptions
+from buildbot.db.schema.manager import DBSchemaManager
 from buildbot.schedulers.manager import SchedulerManager
 from buildbot.util.loop import DelegateLoop
 
@@ -865,7 +866,7 @@ class BuildMaster(service.MultiService):
             return
 
         # make sure it's up to date
-        sm = schema.DBSchemaManager(db_spec, self.basedir)
+        sm = DBSchemaManager(db_spec, self.basedir)
         if not sm.is_current():
             raise exceptions.DatabaseNotReadyError, textwrap.dedent("""
                 The Buildmaster database needs to be upgraded before this version of buildbot
