@@ -25,8 +25,10 @@
 # R0912: Too many branches (N/12)
 # R0913: Too many arguments (N/5)
 # R0914: Too many local variables (N/15)
+# R0915: Too many statements (N/50)
 # W0102: Dangerous default value %s as argument Used when a mutable value as
 # list or dictionary  is detected in a default value for an argument.
+# W0141: Used builtin function 'N'
 # W0142: Used * or * magic* Used when a function or method is called using *args
 # or **kwargs to dispatch arguments. This doesn't improve readility and should
 # be used with care.
@@ -40,13 +42,13 @@
 # defined through  the "global" statement but no assigment to this variable is
 # done.
 # W0603: Using the global statement Used when you use the "global" statement to
-# update a global variable. PyLint just try to discourage this usage. That
-# doesn't mean  you can not use it !
+# update a global variable.
+# W0613: Unused argument ''
 # W0622: Redefining built-in %r Used when a variable or function override a
 # built-in.
 # W0704: Except doesn't do anything Used when an except clause does nothing but
 # "pass" and there is no "else" clause.
-disable-msg=C0103,C0111,C0301,C0302,I0011,R0201,R0801,R0902,R0903,R0904,R0912,R0913,R0914,W0102,W0142,W0212,W0232,W0511,W0602,W0603,W0622,W0704
+disable-msg=C0103,C0111,C0301,C0302,I0011,R0201,R0801,R0902,R0903,R0904,R0912,R0913,R0914,R0915,W0102,W0141,W0142,W0212,W0232,W0511,W0602,W0603,W0613,W0622,W0704
 
 [REPORTS]
 # Include message's id in output
