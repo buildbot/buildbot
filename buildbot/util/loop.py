@@ -99,6 +99,7 @@ class LoopBase(service.MultiService):
         self._when_quiet_waiters = set()
         self._start_timer = None
         self._reactor = reactor # seam for tests to use t.i.t.Clock
+        self._remaining = []
 
     def stopService(self):
         if self._start_timer and self._start_timer.active():
@@ -127,18 +128,21 @@ class LoopBase(service.MultiService):
         if run_everything:
             self._everything_needs_to_run = True
             # timers are now redundant, so cancel any existing ones
-            self._timers.clear() ; self._set_wakeup_timer()
+            self._timers.clear()
+            self._set_wakeup_timer()
         if self._loop_running:
             return
         self._loop_running = True
         self._start_timer = self._reactor.callLater(0, self._loop_start)
 
-    # subclasses must implement get_processors()
+    def get_processors(self):
+        raise Exception('subclasses must implement get_processors()')
 
     def _loop_start(self):
         if self._everything_needs_to_run:
             self._everything_needs_to_run = False
-            self._timers.clear() ; self._set_wakeup_timer()
+            self._timers.clear()
+            self._set_wakeup_timer()
             self._remaining = list(self.get_processors())
         else:
             self._remaining = []

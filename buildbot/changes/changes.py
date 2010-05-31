@@ -96,7 +96,7 @@ class Change:
     def asDict(self):
         '''returns a dictonary with suitable info for html/mail rendering'''
         result = {}
-        
+
         files = []
         for file in self.files:
             link = filter(lambda s: s.find(file) != -1, self.links)
@@ -105,9 +105,9 @@ class Change:
             else:
                 url = None
             files.append(dict(url=url, name=file))
-        
-        files = sorted(files, cmp=lambda a,b: a['name'] < b['name'])
-        
+
+        files = sorted(files, cmp=lambda a, b: a['name'] < b['name'])
+
         # Constant
         result['number'] = self.number
         result['branch'] = self.branch
@@ -213,7 +213,8 @@ class ChangeMaster:
                     except UnicodeDecodeError:
                         raise UnicodeError("Error decoding %s of change #%s as %s:\n%r" %
                                         (attr, c.number, old_encoding, a))
-        if not quiet: print "converted %d strings" % nconvert
+        if not quiet:
+            print "converted %d strings" % nconvert
 
 class OldChangeMaster(ChangeMaster):
     # this is a reminder that the ChangeMaster class is old
