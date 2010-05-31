@@ -128,6 +128,7 @@ latent buildslaves, and a concrete implementation for AWS EC2.
 
 @menu
 * Amazon Web Services Elastic Compute Cloud ("AWS EC2")::
+* Libvirt::
 * Dangers with Latent Buildslaves::
 * Writing New Latent Buildslaves::
 @end menu
@@ -347,6 +348,58 @@ instance.  It defaults to 10 minutes.
 
 "keypair_name" and "security_name" allow you to specify different names for
 these AWS EC2 values.  They both default to "latent_buildbot_slave".
+
+@node Libvirt
+@subsection Libvirt
+
+@url{http://www.libvirt.org/,,libvirt} is a virtualization API for interacting
+with the virtualization capabilities of recent versions of Linux and other OSes.
+It is LGPL and comes with a stable C API, and python bindings.
+
+This means we know have an API which when tied to buildbot allows us to have slaves
+that run under Xen, QEMU, KVM, LXC, OpenVZ, User Mode Linux, VirtualBox and VMWare.
+
+@heading Setting up libvirt
+
+We won't show you how to set up libvirt, but there are a few things you should keep
+in mind.
+
+@itemize @bullet
+@item
+If you are using the system libvirt, your buildbot master user will need to be in the
+libvirtd group.
+
+@item
+You need to think carefully about your virtual network *first*. Will NAT be enough?
+What IP will my VM's need to connect to for connecting to the master?
+@end itemize
+
+@heading Configuring your base image
+
+You need to create a base image for your builds that has everything needed to build
+your software. You need to configure base image with a buildbot slave that is configured
+to connect to the master on boot.
+
+If you want to have multiple slaves using the same base image it can be annoying to duplicate
+the image just to change the buildbot credentials. One option is to use libvirt's DHCP
+server to allocate an identity to the slave: DHCP sets a hostname, and the slave takes its
+identity from that.
+
+Doing all this is really beyond the scope of the manual, but there is a vmbuilder script
+and a network.xml file to create such a DHCP server in contrib/ that should get you started.
+
+@heading Configuring your Master
+
+If you want to add a simple on demand VM to your setup, you only need the following. We
+set the username to minion1, the password to sekrit. The base image is caleld base_image
+and a copy of it will be made for the duration of the VM's life. That copy will be thrown
+away every time a build is complete.
+
+@example
+from buildbot.libvirtbuildslave import LibVirtBuildSlave
+c['slaves'] = [LibVirtBuildSlave('minion1', 'sekrit',
+                                   '/home/buildbot/images/minion1', '/home/buildbot/images/base_image')]
+@end example
 
 @node Dangers with Latent Buildslaves
 @subsubsection Dangers with Latent Buildslaves
