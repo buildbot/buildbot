@@ -13,7 +13,7 @@ def naturalSort(l):
     def try_int(s):
         try:
             return int(s)
-        except:
+        except ValueError:
             return s
     def key_func(item):
         return [try_int(s) for s in re.split('(\d+)', item)]
@@ -46,12 +46,13 @@ class ComparableMixin:
 
     compare_attrs = []
 
-    class _None: pass
+    class _None:
+        pass
 
     def __hash__(self):
         alist = [self.__class__] + \
                 [getattr(self, name, self._None) for name in self.compare_attrs]
-        return hash(tuple(map(str,alist)))
+        return hash(tuple(map(str, alist)))
 
     def __cmp__(self, them):
         result = cmp(type(self), type(them))
@@ -63,8 +64,10 @@ class ComparableMixin:
             return result
 
         assert self.compare_attrs == them.compare_attrs
-        self_list= [getattr(self, name, self._None) for name in self.compare_attrs]
-        them_list= [getattr(them, name, self._None) for name in self.compare_attrs]
+        self_list = [getattr(self, name, self._None)
+                     for name in self.compare_attrs]
+        them_list = [getattr(them, name, self._None)
+                     for name in self.compare_attrs]
         return cmp(self_list, them_list)
 
 # Remove potentially harmful characters from builder name if it is to be

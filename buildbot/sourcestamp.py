@@ -45,11 +45,8 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
             if isinstance(revision, int):
                 revision = str(revision)
         if patch is not None:
-            patch_level = patch[0]
-            patch_level = int(patch_level)
-            patch_diff = patch[1]
-            if len(patch) > 2:
-                patch_subdir = patch[2]
+            assert len(patch) > 2
+            assert int(patch[0]) != -1
         self.branch = branch
         self.revision = revision
         self.patch = patch
@@ -139,7 +136,7 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
         # Constant
         result['revision'] = self.revision
         # TODO(maruel): Make the patch content a suburl.
-        result['hasPatch']= self.patch is not None
+        result['hasPatch'] = self.patch is not None
         result['branch'] = self.branch
         result['changes'] = [c.asDict() for c in getattr(self, 'changes', [])]
         result['project'] = self.project

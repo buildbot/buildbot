@@ -318,7 +318,6 @@ class AbstractBuildSlave(NewCredPerspective, service.MultiService):
             # however, these hacks are pretty internal, so don't blow up if
             # they fail or are unavailable
             log.msg("failed to accelerate the shutdown process")
-            pass
         log.msg("waiting for slave to finish disconnecting")
 
         return d

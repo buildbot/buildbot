@@ -23,10 +23,10 @@ class BaseLock:
     description = "<BaseLock>"
 
     def __init__(self, name, maxCount=1):
-        self.name = name        # Name of the lock
-        self.waiting = []       # Current queue, tuples (LockAccess, deferred)
-        self.owners = []        # Current owners, tuples (owner, LockAccess)
-        self.maxCount=maxCount  # maximal number of counting owners
+        self.name = name          # Name of the lock
+        self.waiting = []         # Current queue, tuples (LockAccess, deferred)
+        self.owners = []          # Current owners, tuples (owner, LockAccess)
+        self.maxCount = maxCount  # maximal number of counting owners
 
     def __repr__(self):
         return self.description
