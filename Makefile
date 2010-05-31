@@ -66,3 +66,5 @@ FLAKES=buildbot
 pyflakes:
 	pyflakes $(FLAKES) |sort |uniq
 
+pylint:
+	pylint buildbot
