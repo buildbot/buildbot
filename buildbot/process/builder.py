@@ -556,21 +556,22 @@ class Builder(pb.Referenceable, service.MultiService):
         self.updateBigStatus()
 
 
-    def getBuildable(self):
-        return self.db.runInteractionNow(self._getBuildable)
-    def _getBuildable(self, t):
+    def getBuildable(self, limit=None):
+        return self.db.runInteractionNow(self._getBuildable, limit)
+    def _getBuildable(self, t, limit):
         now = util.now()
         old = now - self.RECLAIM_INTERVAL
         return self.db.get_unclaimed_buildrequests(self.name, old,
                                                    self.master_name,
                                                    self.master_incarnation,
-                                                   t)
+                                                   t,
+                                                   limit)
 
     def getOldestRequestTime(self):
         """Returns the timestamp of the oldest build request for this builder.
 
         If there are no build requests, None is returned."""
-        buildable = self.getBuildable()
+        buildable = self.getBuildable(1)
         if buildable:
             # TODO: this is sorted by priority first, not strictly reqtime
             return buildable[0].getSubmitTime()

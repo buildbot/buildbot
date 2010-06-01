@@ -793,16 +793,19 @@ class DBConnector(util.ComparableMixin):
         return r[0][0]
 
     def get_unclaimed_buildrequests(self, buildername, old, master_name,
-                                    master_incarnation, t):
-        t.execute(self.quoteq("SELECT br.id"
-                              " FROM buildrequests AS br, buildsets AS bs"
-                              " WHERE br.buildername=? AND br.complete=0"
-                              " AND br.buildsetid=bs.id"
-                              " AND (br.claimed_at<?"
-                              "      OR (br.claimed_by_name=?"
-                              "          AND br.claimed_by_incarnation!=?))"
-                              " ORDER BY br.priority DESC,bs.submitted_at ASC"),
-                  (buildername, old, master_name, master_incarnation))
+                                    master_incarnation, t, limit=None):
+        q = ("SELECT br.id"
+             " FROM buildrequests AS br, buildsets AS bs"
+             " WHERE br.buildername=? AND br.complete=0"
+             " AND br.buildsetid=bs.id"
+             " AND (br.claimed_at<?"
+             "      OR (br.claimed_by_name=?"
+             "          AND br.claimed_by_incarnation!=?))"
+             " ORDER BY br.priority DESC,bs.submitted_at ASC")
+        if limit:
+            q += " LIMIT %s" % limit
+        t.execute(self.quoteq(q),
+                (buildername, old, master_name, master_incarnation))
         requests = [self.getBuildRequestWithNumber(brid, t)
                     for (brid,) in t.fetchall()]
         return requests
