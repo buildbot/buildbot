@@ -42,6 +42,7 @@ class BotMaster(service.MultiService):
     """
 
     debug = 0
+    reactor = reactor
 
     def __init__(self):
         service.MultiService.__init__(self)
@@ -119,7 +120,7 @@ class BotMaster(service.MultiService):
                         self.cleanShutdown()
                         return
                 log.msg("Stopping reactor")
-                reactor.stop()
+                self.reactor.stop()
         d.addCallback(shutdown)
         return d
 
