@@ -2235,6 +2235,16 @@ class Status:
         self._buildset_success_waiters = collections.KeyedSets()
         self._buildset_finished_waiters = collections.KeyedSets()
 
+    @property
+    def shuttingDown(self):
+        return self.botmaster.shuttingDown
+
+    def cleanShutdown(self):
+        return self.botmaster.cleanShutdown()
+
+    def cancelCleanShutdown(self):
+        return self.botmaster.cancelCleanShutdown()
+
     def setDB(self, db):
         self.db = db
         self.db.subscribe_to("add-build", self._db_builds_changed)

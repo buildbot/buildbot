@@ -16,7 +16,7 @@ from twisted.application.internet import TimerService
 
 import buildbot
 # sibling imports
-from buildbot.util import now, safeTranslate
+from buildbot.util import now, safeTranslate, eventual
 from buildbot.pbutil import NewCredPerspective
 from buildbot.process.builder import Builder, IDLE
 from buildbot.status.builder import Status, BuildSetStatus
@@ -42,6 +42,7 @@ class BotMaster(service.MultiService):
     """
 
     debug = 0
+    reactor = reactor
 
     def __init__(self):
         service.MultiService.__init__(self)
@@ -75,9 +76,59 @@ class BotMaster(service.MultiService):
         self.loop = DelegateLoop(self._get_processors)
         self.loop.setServiceParent(self)
 
+        self.shuttingDown = False
+
     def setMasterName(self, name, incarnation):
         self.master_name = name
         self.master_incarnation = incarnation
+
+    def cleanShutdown(self):
+        if self.shuttingDown:
+            return
+        log.msg("Initiating clean shutdown")
+        self.shuttingDown = True
+
+        # Wait for all builds to finish
+        l = []
+        for builder in self.builders.values():
+            for build in builder.builder_status.getCurrentBuilds():
+                l.append(build.waitUntilFinished())
+        if len(l) == 0:
+            log.msg("No running jobs, starting shutdown immediately")
+            self.loop.trigger()
+            d = self.loop.when_quiet()
+        else:
+            log.msg("Waiting for %i build(s) to finish" % len(l))
+            d = defer.DeferredList(l)
+            d.addCallback(lambda ign: self.loop.when_quiet())
+
+        # Flush the eventual queue
+        d.addCallback(eventual.flushEventualQueue)
+
+        # Finally, shut the whole process down
+        def shutdown(ign):
+            # Double check that we're still supposed to be shutting down
+            # The shutdown may have been cancelled!
+            if self.shuttingDown:
+                # Check that there really aren't any running builds
+                for builder in self.builders.values():
+                    n = len(builder.builder_status.getCurrentBuilds())
+                    if n > 0:
+                        log.msg("Not shutting down, builder %s has %i builds running" % (builder, n))
+                        log.msg("Trying shutdown sequence again")
+                        self.shuttingDown = False
+                        self.cleanShutdown()
+                        return
+                log.msg("Stopping reactor")
+                self.reactor.stop()
+        d.addCallback(shutdown)
+        return d
+
+    def cancelCleanShutdown(self):
+        if not self.shuttingDown:
+            return
+        log.msg("Cancelling clean shutdown")
+        self.shuttingDown = False
 
     def _sortfunc(self, b1, b2):
         t1 = b1.getOldestRequestTime()
@@ -94,6 +145,8 @@ class BotMaster(service.MultiService):
         return sorted(builders, self._sortfunc)
 
     def _get_processors(self):
+        if self.shuttingDown:
+            return []
         builders = self.builders.values()
         sorter = self.prioritizeBuilders or self._sort_builders
         try:

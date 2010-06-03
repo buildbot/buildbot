@@ -398,7 +398,10 @@ class WebStatus(service.MultiService):
             os.mkdir(htmldir)
 
         root = StaticFile(htmldir)
-        root.putChild("", RootPage())
+        root_page = RootPage()
+        root.putChild("", root_page)
+        root.putChild("shutdown", root_page)
+        root.putChild("cancel_shutdown", root_page)
 
         for name, child_resource in self.childrenToBeAdded.iteritems():
             root.putChild(name, child_resource)

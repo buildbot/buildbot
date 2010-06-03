@@ -170,7 +170,9 @@ class ContextMixin(object):
                     tz = locale_tz,
                     metatags = [],
                     title = self.getTitle(request),
-                    welcomeurl = rootpath)
+                    welcomeurl = rootpath,
+                    authz = self.getAuthz(request),
+                    )
 
     def getStatus(self, request):
         return request.site.buildbot_service.getStatus()    
