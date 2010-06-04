@@ -10,11 +10,6 @@ from buildbot.db.schema import manager
 from buildbot.db.dbspec import DBSpec
 from buildbot.db.connector import DBConnector
 
-class Thing:
-    def __init__(self, **kwargs):
-        self.__dict__.update(kwargs)
-
-
 class TestUnicodeChanges(unittest.TestCase):
     def setUp(self):
         self.basedir = "UnicodeChanges"
@@ -32,12 +27,17 @@ class TestUnicodeChanges(unittest.TestCase):
         if self.db:
             self.db.stop()
 
+    def mkchanges(self, changes):
+        cm = OldChangeMaster()
+        cm.changes = changes
+        return cm
+
     def testUnicodeChange(self):
         # Create changes.pck
         changes = [Change(who=u"Frosty the \N{SNOWMAN}".encode("utf8"),
             files=["foo"], comments=u"Frosty the \N{SNOWMAN}".encode("utf8"),
             branch="b1", revision=12345)]
-        cPickle.dump(Thing(changes=changes), open(os.path.join(self.basedir,
+        cPickle.dump(self.mkchanges(changes), open(os.path.join(self.basedir,
             "changes.pck"), "w"))
 
         sm = manager.DBSchemaManager(self.spec, self.basedir)
@@ -52,7 +52,7 @@ class TestUnicodeChanges(unittest.TestCase):
         # Create changes.pck
         changes = [Change(who="\xff\xff\x00", files=["foo"],
             comments="\xff\xff\x00", branch="b1", revision=12345)]
-        cPickle.dump(Thing(changes=changes), open(os.path.join(self.basedir,
+        cPickle.dump(self.mkchanges(changes), open(os.path.join(self.basedir,
             "changes.pck"), "w"))
 
         sm = manager.DBSchemaManager(self.spec, self.basedir)
@@ -62,7 +62,7 @@ class TestUnicodeChanges(unittest.TestCase):
         # Create changes.pck
         changes = [Change(who="Frosty the Snowman",
             files=["foo"], comments="Frosty the Snowman", branch="b1", revision=12345)]
-        cPickle.dump(Thing(changes=changes), open(os.path.join(self.basedir,
+        cPickle.dump(self.mkchanges(changes), open(os.path.join(self.basedir,
             "changes.pck"), "w"))
 
         sm = manager.DBSchemaManager(self.spec, self.basedir)
