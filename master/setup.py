@@ -192,8 +192,6 @@ setup_args = {
               "buildbot.steps.package.rpm",
               "buildbot.process",
               "buildbot.clients",
-              "buildbot.slave",
-              "buildbot.slave.commands",
               "buildbot.schedulers",
               "buildbot.scripts",
               "buildbot.db",

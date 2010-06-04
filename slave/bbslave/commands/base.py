@@ -1,4 +1,3 @@
-# -*- test-case-name: buildbot.test.test_slavecommand -*-
 
 import os, signal, types, re, traceback
 from stat import ST_CTIME, ST_MTIME, ST_SIZE
@@ -9,9 +8,9 @@ from twisted.internet.protocol import ProcessProtocol
 from twisted.internet import reactor, defer, task
 from twisted.python import log, runtime
 
-from buildbot.slave.interfaces import ISlaveCommand
-from buildbot.slave.commands.registry import registerSlaveCommand
-from buildbot import util
+from bbslave.interfaces import ISlaveCommand
+from bbslave.commands.registry import registerSlaveCommand
+from bbslave import util
 
 # this used to be a CVS $-style "Revision" auto-updated keyword, but since I
 # moved to Darcs as the primary repository, this is updated manually each

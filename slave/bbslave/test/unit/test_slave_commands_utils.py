@@ -4,7 +4,7 @@ import shutil
 from twisted.trial import unittest
 import twisted.python.procutils
 
-from buildbot.slave.commands import utils
+from bbslave.commands import utils
 
 class GetCommand(unittest.TestCase):
 
