@@ -494,6 +494,10 @@ on which to run the code under test. See
 @url{http://en.wikipedia.org/wiki/Mock_object,Mock Object} and
 @url{http://en.wikipedia.org/wiki/Method_stub,Method Stub}.
 
+Mock objects can be constructed easily using the aptly-named
+@url{http://www.voidspace.org.uk/python/mock/,mock} module, which is a
+requirement for Buildbot's tests.
+
 One of the difficulties with Buildbot is that interfaces are unstable and
 poorly documented, which makes it difficult to design stubs.  A common
 repository for stubs, however, will allow any interface changes to be reflected
