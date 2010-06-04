@@ -28,7 +28,8 @@ class TestUnicodeChanges(unittest.TestCase):
             self.db.stop()
 
     def mkchanges(self, changes):
-        cm = OldChangeMaster()
+        import buildbot.changes.changes
+        cm = buildbot.changes.changes.OldChangeMaster()
         cm.changes = changes
         return cm
 
@@ -120,4 +121,4 @@ try:
     conn = MySQLdb.connect(user="buildbot_test", db="buildbot_test",
             passwd="buildbot_test", use_unicode=True, charset='utf8')
 except:
-    TestMySQLDBUnicodeChanges.skip = True
+    TestMySQLDBUnicodeChanges.skip = "MySQLdb not installed"
