@@ -444,17 +444,16 @@ def upgradeMaster(config):
     m.move_if_present(os.path.join(basedir, "public_html/index.html"),
                       os.path.join(basedir, "templates/root.html"))
 
-    from buildbot.db import schema, connector, dbspec
+    from buildbot.db import connector, dbspec
     spec = dbspec.DBSpec.from_url(config["db"], basedir)
     # TODO: check that TAC file specifies the right spec
 
     # upgrade the db
-    sm = schema.DBSchemaManager(spec, basedir)
+    from buildbot.db.schema import manager
+    sm = manager.DBSchemaManager(spec, basedir)
     sm.upgrade()
 
-    db = connector.DBConnector(spec)
-    db.start()
-
+    # check the configuration
     rc = m.check_master_cfg()
     if rc:
         return rc
