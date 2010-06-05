@@ -7,14 +7,14 @@ from twisted.internet import reactor, defer
 from twisted.application import service, internet
 from twisted.cred import credentials
 
-import bbslave
-from bbslave.util import now
-from bbslave.pbutil import ReconnectingPBClientFactory
-from bbslave.commands import registry
+import buildslave
+from buildslave.util import now
+from buildslave.pbutil import ReconnectingPBClientFactory
+from buildslave.commands import registry
 
 # make sure the standard commands get registered. This import is performed
 # for its side-effects.
-from bbslave.commands import base, transfer, vcs
+from buildslave.commands import base, transfer, vcs
 
 class NoCommandRunning(pb.Error):
     pass
@@ -341,7 +341,7 @@ class Bot(pb.Referenceable, service.MultiService):
 
     def remote_getVersion(self):
         """Send our version back to the Master"""
-        return bbslave.version
+        return buildslave.version
 
 
 
@@ -478,7 +478,7 @@ class BuildSlave(service.MultiService):
     def __init__(self, buildmaster_host, port, name, passwd, basedir,
                  keepalive, usePTY, keepaliveTimeout=30, umask=None,
                  maxdelay=300, debugOpts={}, unicode_encoding=None):
-        log.msg("Creating BuildSlave -- version: %s" % bbslave.version)
+        log.msg("Creating BuildSlave -- version: %s" % buildslave.version)
         service.MultiService.__init__(self)
         self.debugOpts = debugOpts.copy()
         bot = self.botClass(basedir, usePTY, unicode_encoding=unicode_encoding)

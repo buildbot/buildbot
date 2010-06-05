@@ -1,5 +1,4 @@
-
-include MANIFEST.in README README.w32 NEWS CREDITS COPYING UPGRADING
+include MANIFEST.in README NEWS CREDITS COPYING UPGRADING
 
 include docs/examples/*.cfg
 include docs/*.texinfo docs/buildbot.info* docs/buildbot.html

@@ -5,10 +5,10 @@ from xml.dom.minidom import parseString
 from twisted.python import log, failure, runtime
 from twisted.internet import defer
 
-from bbslave.commands.base import Command, ShellCommand, AbandonChain, command_version, Obfuscated
-from bbslave.commands.registry import registerSlaveCommand
-from bbslave.commands.utils import getCommand, rmdirRecursive
-from bbslave.util import remove_userpassword
+from buildslave.commands.base import Command, ShellCommand, AbandonChain, command_version, Obfuscated
+from buildslave.commands.registry import registerSlaveCommand
+from buildslave.commands.utils import getCommand, rmdirRecursive
+from buildslave.util import remove_userpassword
 
 class SourceBase(Command):
     """Abstract base class for Version Control System operations (checkout

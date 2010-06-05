@@ -3,8 +3,8 @@ import os, tarfile, tempfile
 from twisted.python import log
 from twisted.internet import defer
 
-from bbslave.commands.base import Command, command_version
-from bbslave.commands.registry import registerSlaveCommand
+from buildslave.commands.base import Command, command_version
+from buildslave.commands.registry import registerSlaveCommand
 
 class SlaveFileUploadCommand(Command):
     """

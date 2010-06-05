@@ -8,9 +8,9 @@ from twisted.internet.protocol import ProcessProtocol
 from twisted.internet import reactor, defer, task
 from twisted.python import log, runtime
 
-from bbslave.interfaces import ISlaveCommand
-from bbslave.commands.registry import registerSlaveCommand
-from bbslave import util
+from buildslave.interfaces import ISlaveCommand
+from buildslave.commands.registry import registerSlaveCommand
+from buildslave import util
 
 # this used to be a CVS $-style "Revision" auto-updated keyword, but since I
 # moved to Darcs as the primary repository, this is updated manually each

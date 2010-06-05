@@ -3,9 +3,9 @@ import sys, re
 from twisted.trial import unittest
 from twisted.internet import task, defer
 
-from bbslave.commands.base import ShellCommand, Obfuscated, \
+from buildslave.commands.base import ShellCommand, Obfuscated, \
     DummyCommand, WaitCommand, waitCommandRegistry, AbandonChain
-from bbslave.commands.utils import getCommand
+from buildslave.commands.utils import getCommand
 
 class FakeSlaveBuilder:
     debug = False

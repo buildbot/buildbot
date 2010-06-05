@@ -7,9 +7,9 @@ def registerSlaveCommand(name, factory, version):
 
     @type  name:    string
     @param name:    name under which the slave command will be registered; used
-                    for L{bbslave.bot.SlaveBuilder.remote_startCommand}
+                    for L{buildslave.bot.SlaveBuilder.remote_startCommand}
                     
-    @type  factory: L{bbslave.commands.Command}
+    @type  factory: L{buildslave.commands.Command}
     @type  version: string
     @param version: version string of the factory code
     """

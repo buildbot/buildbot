@@ -14,7 +14,7 @@ import sys
 import os
 from distutils.core import setup
 
-from bbslave import version
+from buildslave import version
 
 # TODO: slave script
 scripts = ["bin/buildbot"]
@@ -23,7 +23,7 @@ if sys.platform == "win32":
     scripts.append("contrib/windows/buildbot_service.py")
 
 setup_args = {
-    'name': "bbslave",
+    'name': "buildslave",
     'version': version,
     'description': "BuildBot Slave Daemon",
     'long_description': "See the 'buildbot' project for details",
@@ -42,10 +42,12 @@ setup_args = {
         'Topic :: Software Development :: Testing',
         ],
 
-    'packages': ["bbslave",
-              "bbslave.commands",
-              # TODO: tests
-              ],
+    'packages': [
+        "buildslave",
+        "buildslave.commands",
+        "buildslave.test",
+        "buildslave.test.unit",
+    ],
     'scripts': scripts,
     }
 
