@@ -4,7 +4,7 @@ import os, sys, time
 class Follower:
     def follow(self):
         from twisted.internet import reactor
-        from buildbot.scripts.reconfig import LogWatcher
+        from buildbot.scripts.logwatcher import LogWatcher
         self.rc = 0
         print "Following twistd.log until startup finished.."
         lw = LogWatcher("twistd.log")

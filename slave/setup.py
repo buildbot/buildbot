@@ -16,17 +16,17 @@ from distutils.core import setup
 
 from buildslave import version
 
-# TODO: slave script
-scripts = ["bin/buildbot"]
-if sys.platform == "win32":
-    scripts.append("contrib/windows/buildbot.bat")
-    scripts.append("contrib/windows/buildbot_service.py")
+scripts = ["bin/buildslave"]
+# TODO: windows stuff??
+#if sys.platform == "win32":
+#    scripts.append("contrib/windows/buildslave.bat")
+#    scripts.append("contrib/windows/buildslave_service.py")
 
 setup_args = {
     'name': "buildslave",
     'version': version,
     'description': "BuildBot Slave Daemon",
-    'long_description': "See the 'buildbot' project for details",
+    'long_description': "See the 'buildbot' package for details",
     'author': "Brian Warner",
     'author_email': "warner-buildbot@lothar.com",
     'maintainer': "Dustin J. Mitchell",
@@ -48,7 +48,6 @@ setup_args = {
         "buildslave.test",
         "buildslave.test.unit",
     ],
-    'scripts': scripts,
     }
 
 try:
@@ -56,16 +55,17 @@ try:
     # to the setup args.
     import setuptools #@UnusedImport
 except ImportError:
-    pass
+    setup_args['scripts'] = [
+        'bin/buildslave'
+    ]
 else:
-    ## dependencies
     setup_args['install_requires'] = [
         'twisted >= 2.0.0',
     ]
-    entry_points={
+    setup_args['entry_points'] = {
         'console_scripts': [
-            # TODO: conflicts with master
-            'buildbot = buildbot.scripts.runner:run'],
-        },
+            'buildslave = buildslave.scripts.runner:run',
+        ],
+    }
 
 setup(**setup_args)
