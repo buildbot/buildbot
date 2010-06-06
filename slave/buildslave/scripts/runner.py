@@ -31,13 +31,15 @@ class Maker:
             if not self.quiet:
                 print "updating existing installation"
             return
-        if not self.quiet: print "mkdir", self.basedir
+        if not self.quiet:
+            print "mkdir", self.basedir
         os.mkdir(self.basedir)
 
     def mkinfo(self):
         path = os.path.join(self.basedir, "info")
         if not os.path.exists(path):
-            if not self.quiet: print "mkdir", path
+            if not self.quiet:
+                print "mkdir", path
             os.mkdir(path)
         created = False
         admin = os.path.join(path, "admin")
@@ -64,7 +66,8 @@ class Maker:
             print "Please edit the files in %s appropriately." % path
 
     def chdir(self):
-        if not self.quiet: print "chdir", self.basedir
+        if not self.quiet:
+            print "chdir", self.basedir
         os.chdir(self.basedir)
 
     def makeTAC(self, contents, secret=False):
@@ -148,7 +151,8 @@ def createSlave(config):
     m.makeTAC(contents, secret=True)
     m.mkinfo()
 
-    if not m.quiet: print "buildslave configured in %s" % m.basedir
+    if not m.quiet:
+        print "buildslave configured in %s" % m.basedir
 
 
 
