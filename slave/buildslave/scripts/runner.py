@@ -323,10 +323,10 @@ class Options(usage.Options):
         # the following are all admin commands
         ['create-slave', None, SlaveOptions,
          "Create and populate a directory for a new buildslave"],
-        ['start', None, StartOptions, "Start a buildmaster or buildslave"],
-        ['stop', None, StopOptions, "Stop a buildmaster or buildslave"],
+        ['start', None, StartOptions, "Start a buildslave"],
+        ['stop', None, StopOptions, "Stop a buildslave"],
         ['restart', None, RestartOptions,
-         "Restart a buildmaster or buildslave"],
+         "Restart a buildslave"],
         ]
 
     def opt_version(self):

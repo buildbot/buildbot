@@ -8,6 +8,15 @@ from twisted.python import usage, util, runtime
 
 from buildbot.interfaces import BuildbotNotRunningError
 
+def isBuildmasterDir(dir):
+    buildbot_tac = os.path.join(dir, "buildbot.tac")
+    if not os.path.isfile(buildbot_tac):
+        print "no buildbot.tac"
+        return False
+
+    contents = open(buildbot_tac, "r").read()
+    return "Application('buildmaster')" in contents
+
 # the create/start/stop commands should all be run as the same user,
 # preferably a separate 'buildbot' account.
 
@@ -122,9 +131,9 @@ class MakerBase(OptionsWithOptionsFile):
 
 makefile_sample = """# -*- makefile -*-
 
-# This is a simple makefile which lives in a buildmaster/buildslave
+# This is a simple makefile which lives in a buildmaster
 # directory (next to the buildbot.tac file). It allows you to start/stop the
-# master or slave by doing 'make start' or 'make stop'.
+# master by doing 'make start' or 'make stop'.
 
 # The 'reconfig' target will tell a buildmaster to reload its config file.
 
@@ -269,12 +278,13 @@ class Maker:
             f.close()
 
     def create_db(self):
-        from buildbot.db import dbspec, exceptions, schema
+        from buildbot.db import dbspec, exceptions
         spec = dbspec.DBSpec.from_url(self.config["db"], self.basedir)
         if not self.config['quiet']: print "creating database"
 
         # upgrade from "nothing"
-        sm = schema.DBSchemaManager(spec, self.basedir)
+        from buildbot.db.schema import manager
+        sm = manager.DBSchemaManager(spec, self.basedir)
         if sm.get_db_version() != 0:
             raise exceptions.DBAlreadyExistsError
         sm.upgrade()
@@ -524,6 +534,8 @@ if basedir == '.':
     import os.path
     basedir = os.path.abspath(os.path.dirname(__file__))
 
+# note: this line is matched against to check that this is a buildmaster
+# directory; do not edit it.
 application = service.Application('buildmaster')
 try:
   from twisted.python.logfile import LogFile
@@ -564,143 +576,15 @@ def createMaster(config):
 
     if not m.quiet: print "buildmaster configured in %s" % m.basedir
 
-class SlaveOptions(MakerBase):
-    optFlags = [
-        ["force", "f", "Re-use an existing directory"],
-        ["relocatable", "r",
-         "Create a relocatable buildbot.tac"],
-        ]
-    optParameters = [
-#        ["name", "n", None, "Name for this build slave"],
-#        ["passwd", "p", None, "Password for this build slave"],
-#        ["basedir", "d", ".", "Base directory to use"],
-#        ["master", "m", "localhost:8007",
-#         "Location of the buildmaster (host:port)"],
-
-        ["keepalive", "k", 600,
-         "Interval at which keepalives should be sent (in seconds)"],
-        ["usepty", None, 0,
-         "(1 or 0) child processes should be run in a pty (default 0)"],
-        ["umask", None, "None",
-         "controls permissions of generated files. Use --umask=022 to be world-readable"],
-        ["maxdelay", None, 300,
-         "Maximum time between connection attempts"],
-        ["log-size", "s", "1000000",
-         "size at which to rotate twisted log files"],
-        ["log-count", "l", "None",
-         "limit the number of kept old twisted log files"],
-        ]
-    
-    longdesc = """
-    This command creates a buildslave working directory and buildbot.tac
-    file. The bot will use the <name> and <passwd> arguments to authenticate
-    itself when connecting to the master. All commands are run in a
-    build-specific subdirectory of <basedir>. <master> is a string of the
-    form 'hostname:port', and specifies where the buildmaster can be reached.
-
-    <name>, <passwd>, and <master> will be provided by the buildmaster
-    administrator for your bot. You must choose <basedir> yourself.
-    """
-
-    def getSynopsis(self):
-        return "Usage:    buildbot create-slave [options] <basedir> <master> <name> <passwd>"
-
-    def parseArgs(self, *args):
-        if len(args) < 4:
-            raise usage.UsageError("command needs more arguments")
-        basedir, master, name, passwd = args
-        if master[:5] == "http:":
-            raise usage.UsageError("<master> is not a URL - do not use URL")
-        self['basedir'] = basedir
-        self['master'] = master
-        self['name'] = name
-        self['passwd'] = passwd
-
-    def postOptions(self):
-        MakerBase.postOptions(self)
-        self['usepty'] = int(self['usepty'])
-        self['keepalive'] = int(self['keepalive'])
-        self['maxdelay'] = int(self['maxdelay'])
-        if self['master'].find(":") == -1:
-            raise usage.UsageError("--master must be in the form host:portnum")
-        if not re.match('^\d+$', self['log-size']):
-            raise usage.UsageError("log-size parameter needs to be an int")
-        if not re.match('^\d+$', self['log-count']) and \
-                self['log-count'] != 'None':
-            raise usage.UsageError("log-count parameter needs to be an int "+
-                                   " or None")
-
-slaveTAC = """
-import os
-
-from twisted.application import service
-from buildbot.slave.bot import BuildSlave
-
-basedir = r'%(basedir)s'
-rotateLength = %(log-size)s
-maxRotatedFiles = %(log-count)s
-
-# if this is a relocatable tac file, get the directory containing the TAC
-if basedir == '.':
-    import os.path
-    basedir = os.path.abspath(os.path.dirname(__file__))
-
-application = service.Application('buildslave')
-try:
-  from twisted.python.logfile import LogFile
-  from twisted.python.log import ILogObserver, FileLogObserver
-  logfile = LogFile.fromFullPath(os.path.join(basedir, "twistd.log"), rotateLength=rotateLength,
-                                 maxRotatedFiles=maxRotatedFiles)
-  application.setComponent(ILogObserver, FileLogObserver(logfile).emit)
-except ImportError:
-  # probably not yet twisted 8.2.0 and beyond, can't set log yet
-  pass
-
-buildmaster_host = '%(host)s'
-port = %(port)d
-slavename = '%(name)s'
-passwd = '%(passwd)s'
-keepalive = %(keepalive)d
-usepty = %(usepty)d
-umask = %(umask)s
-maxdelay = %(maxdelay)d
-
-s = BuildSlave(buildmaster_host, port, slavename, passwd, basedir,
-               keepalive, usepty, umask=umask, maxdelay=maxdelay)
-s.setServiceParent(application)
-
-"""
-
-def createSlave(config):
-    m = Maker(config)
-    m.mkdir()
-    m.chdir()
-    if config['relocatable']:
-        config['basedir'] = '.'
-    try:
-        master = config['master']
-        host, port = re.search(r'(.+):(\d+)', master).groups()
-        config['host'] = host
-        config['port'] = int(port)
-    except:
-        print "unparseable master location '%s'" % master
-        print " expecting something more like localhost:8007"
-        raise
-    contents = slaveTAC % config
-
-    m.makeTAC(contents, secret=True)
-
-    m.makefile()
-    m.mkinfo()
-
-    if not m.quiet: print "buildslave configured in %s" % m.basedir
-
-
-
 def stop(config, signame="TERM", wait=False):
     import signal
     basedir = config['basedir']
     quiet = config['quiet']
+
+    if not isBuildmasterDir(config['basedir']):
+        print "not a buildmaster directory"
+        sys.exit(1)
+
     os.chdir(basedir)
     try:
         f = open("twistd.pid", "rt")
@@ -734,7 +618,13 @@ def stop(config, signame="TERM", wait=False):
         print "never saw process go away"
 
 def restart(config):
+    basedir = config['basedir']
     quiet = config['quiet']
+
+    if not isBuildmasterDir(config['basedir']):
+        print "not a buildmaster directory"
+        sys.exit(1)
+
     from buildbot.scripts.startup import start
     try:
         stop(config, wait=True)
@@ -1123,12 +1013,10 @@ class Options(usage.Options):
          "Create and populate a directory for a new buildmaster"],
         ['upgrade-master', None, UpgradeMasterOptions,
          "Upgrade an existing buildmaster directory for the current version"],
-        ['create-slave', None, SlaveOptions,
-         "Create and populate a directory for a new buildslave"],
-        ['start', None, StartOptions, "Start a buildmaster or buildslave"],
-        ['stop', None, StopOptions, "Stop a buildmaster or buildslave"],
+        ['start', None, StartOptions, "Start a buildmaster"],
+        ['stop', None, StopOptions, "Stop a buildmaster"],
         ['restart', None, RestartOptions,
-         "Restart a buildmaster or buildslave"],
+         "Restart a buildmaster"],
 
         ['reconfig', None, ReconfigOptions,
          "SIGHUP a buildmaster to make it re-read the config file"],
@@ -1190,10 +1078,13 @@ def run():
         createMaster(so)
     elif command == "upgrade-master":
         upgradeMaster(so)
-    elif command == "create-slave":
-        createSlave(so)
     elif command == "start":
         from buildbot.scripts.startup import start
+
+        if not isBuildmasterDir(so['basedir']):
+            print "not a buildmaster directory"
+            sys.exit(1)
+
         start(so)
     elif command == "stop":
         stop(so, wait=True)
