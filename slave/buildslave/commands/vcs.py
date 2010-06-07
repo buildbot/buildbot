@@ -229,6 +229,8 @@ class SourceBase(Command):
                 # we are going to do a full checkout, so a clobber is
                 # required first
                 self.doClobber(d, self.workdir)
+                if self.srcdir:
+                    self.doClobber(d, self.srcdir)
                 d.addCallback(lambda res: self.doVCFull())
                 d.addBoth(self.maybeDoVCRetry)
                 self._reactor.callLater(delay, d.callback, None)
