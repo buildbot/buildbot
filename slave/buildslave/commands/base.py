@@ -588,6 +588,7 @@ class ShellCommand:
         msg = {}
         msg_size = 0
         lastlog = None
+        logdata = []
         while self.buffered:
             # Grab the next bits from the buffer
             logname, data = self.buffered.popleft()
@@ -598,7 +599,7 @@ class ShellCommand:
             # unspecified, and makes it impossible to interleave data from
             # different logs.  A future enhancement could be to change the
             # master to support a list of (logname, data) tuples instead of a
-            # dictionary. TODO: In 0.8.0?
+            # dictionary.
             # On our first pass through this loop lastlog is None
             if lastlog is None:
                 lastlog = logname
@@ -613,17 +614,20 @@ class ShellCommand:
             # Chunkify the log data to make sure we're not sending more than
             # CHUNK_LIMIT at a time
             for chunk in self._chunkForSend(data):
+                if len(chunk) == 0: continue
                 logdata.append(chunk)
                 msg_size += len(chunk)
-                if msg_size > self.CHUNK_LIMIT:
+                if msg_size >= self.CHUNK_LIMIT:
                     # We've gone beyond the chunk limit, so send out our
                     # message.  At worst this results in a message slightly
                     # larger than (2*CHUNK_LIMIT)-1
                     self._sendMessage(msg)
                     msg = {}
+                    logdata = msg.setdefault(logname, [])
                     msg_size = 0
         self.buflen = 0
-        self._sendMessage(msg)
+        if logdata:
+            self._sendMessage(msg)
         if self.buftimer:
             if self.buftimer.active():
                 self.buftimer.cancel()
