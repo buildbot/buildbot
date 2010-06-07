@@ -230,4 +230,4 @@ try:
     import MySQLdb
     conn = MySQLdb.connect(user="buildbot_test", db="buildbot_test", passwd="buildbot_test", use_unicode=True, charset='utf8')
 except:
-    MySQLDBSchemaManager.skip = True
+    MySQLDBSchemaManager.skip = "MySQLdb not installed"
