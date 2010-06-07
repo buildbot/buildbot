@@ -1,0 +1,2 @@
+include MANIFEST.in README NEWS COPYING UPGRADING
+include bin/buildslave
