@@ -194,7 +194,7 @@ class DBSpec(object):
                 raise ValueError("user, passwd, host, port must all be None")
             if not database:
                 database = ":memory:"
-            else:
+            elif basedir:
                 database = database % dict(basedir=basedir)
                 database = os.path.join(basedir, database)
             return cls("sqlite3", database, **args)
