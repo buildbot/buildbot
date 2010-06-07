@@ -51,66 +51,16 @@ Buildbot home page.
 
 REQUIREMENTS:
 
- Python: http://www.python.org
+  Briefly: python, Twisted, Jinja, simplejson, and SQLite.  Simplejson and
+  SQLite are included with recent versions of Python.
 
-   Buildbot requires python-2.4 or later. It is also tested against
-   python-2.5 and python-2.6.
-
- sqlite3: http://pypi.python.org/pypi/pysqlite
-
-  sqlite3 is required for python-2.5 and earlier (already included
-  in python-2.5 and later, but the version in python-2.5 has nasty
-  bugs)
-
- simplejson: http://pypi.python.org/pypi/simplejson
-
-  simplejson is required for python-2.5 and earlier (already included
-  as json in python-2.6 and later)
-
- Jinja2: http://jinja.pocoo.org/2
-
-  Jinja2 is a general purpose templating language and is used by Buildbot
-  to generate the HTML output.
-
- ZopeInterface: http://www.zope.org/Products/ZopeInterface
-
-   Twisted requires ZopeInterface to be installed. Version 3.0.1final is
-   known to work with Twisted.
-
- Twisted: http://twistedmatrix.com
-
-   Both the buildmaster and the buildslaves require Twisted-2.5.x or later.
-   As always, the most recent version is recommended. It has been tested
-   against Twisted-2.5.0 and Twisted-8.0.1 through Twisted-8.2.0.
-
-   Certain versions of Twisted are delivered as a collection of subpackages.
-   You'll need at least "Twisted" (the core package), and you'll also want
-   TwistedMail, TwistedWeb, and TwistedWords (for sending email, serving a
-   web status page, and delivering build status via IRC, respectively). You
-   might also want TwistedConch (for the encrypted Manhole debug port).
+  See http://djmitche.github.com/buildbot/docs/current/Requirements.html for
+  details.
 
 INSTALLATION:
 
 Please read the User's Manual in docs/buildbot.info or docs/buildbot.html for
 complete instructions. This file only contains a brief summary.
-
- RUNNING THE UNIT TESTS
-
-If you would like to run the unit test suite, use a command like this:
-
- PYTHONPATH=. trial buildbot.test
-
-This should a whole bunch of tests, depending upon what VC tools you have
-irstalled. On my desktop machine it takes about six minutes to complete.
-Nothing should fail (at least under unix), a few might be skipped. If any of
-the tests fail, you should stop and investigate the cause before continuing the
-installation process, as it will probably be easier to track down the bug
-early. There are a few known failures under windows and OS-X, but please report
-these to the mailing list so we can isolate and resolve them.
-
-Neither CVS nor SVN support file based repositories on network filesystem
-(or network drives in Windows parlance). Therefore it is recommended to run
-all unit tests on local hard disks.
 
  INSTALLING THE LIBRARIES:
 
@@ -142,7 +92,7 @@ will be run inside this directory.
 
 Now run the 'buildbot' command as follows:
 
- buildbot create-slave WORKDIR MASTERHOST:PORT SLAVENAME PASSWORD
+ buildslave create-slave WORKDIR MASTERHOST:PORT SLAVENAME PASSWORD
 
 This will create a file called "buildbot.tac", which bundles up all the state
 needed by the build slave application. Twisted has a tool called "twistd"
@@ -153,7 +103,7 @@ background). /usr/bin/buildbot is a front end which runs twistd for you.
 Once you've set up the directory with the .tac file, you start it running
 like this:
 
- buildbot start WORKDIR
+ buildslave start WORKDIR
 
 This will start the build slave in the background and finish, so you don't
 need to put it in the background yourself with "&". The process ID of the
@@ -163,7 +113,7 @@ to make sure the buildslave has started.
 
 To shut down the build slave, use:
 
- buildbot stop WORKDIR
+ buildslave stop WORKDIR
 
 
  RUNNING BEHIND A NAT BOX:

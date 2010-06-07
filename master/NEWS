@@ -11,6 +11,14 @@ This decision isn't final, but support for these VC's will be removed in
 version 0.8.2 unless a maintainers steps forward to document, test, and update
 them.
 
+** Support for starting buildmaster from Makefiles to be removed in 0.8.2
+
+In a little-used feature, 'buildbot start' would run 'make start' if a
+Makefile.buildbot existed in the master directory.  This functionality will be
+removed in Buildbot-0.8.2, and the create-master command will no longer create
+a Makefile.sample.  Of course, Buildbot still supports build processes on the
+slave using make!
+
 * Release 0.8.0 (May 25, 2010)
 
 ** (NOTE!) Scheduler requires keyword arguments

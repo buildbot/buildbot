@@ -1,4 +1,5 @@
 @menu
+* Buildbot Components::
 * Requirements::
 * Installing the code::
 * Creating a buildmaster::
@@ -11,18 +12,38 @@
 * Troubleshooting::
 @end menu
 
+@node Buildbot Components
+@section Buildbot Components
+
+Buildbot is shipped in two components: the buildmaster (called @code{buildbot}
+for legacy reasons) and the buildslave.  The buildslave component has far fewer
+requirements, and is more broadly compatible than the buildmaster.  You will
+need to carefully pick the environment in which to run your buildmaster, but
+the buildslave should be able to run just about anywhere.
+
+It is possible to install the buildmaster and buildslave on the same system,
+although for anything but the smallest installation this arrangement will not
+be very efficient.
+
 @node Requirements
 @section Requirements
 
-At a bare minimum, you'll need the following (for both the buildmaster
-and a buildslave):
+@menu
+* Common Requirements::
+* Buildmaster Requirements::
+@end menu
+
+@node Common Requirements
+@subsection Common Requirements
+
+At a bare minimum, you'll need the following for both the buildmaster and a
+buildslave:
 
 @itemize @bullet
 @item
 Python: http://www.python.org
 
-Buildbot requires python-2.3 or later, and is primarily developed
-against python-2.4. It is also tested against python-2.5 .
+Buildbot requires python-2.4 or later.
 
 @item
 Twisted: http://twistedmatrix.com
@@ -41,48 +62,59 @@ that Twisted requires ZopeInterface to be installed as well.
 
 @end itemize
 
-Certain other packages may be useful on the system running the
-buildmaster:
-
-@itemize @bullet
-@item
-CVSToys: http://purl.net/net/CVSToys
-
-If your buildmaster uses FreshCVSSource to receive change notification
-from a cvstoys daemon, it will require CVSToys be installed (tested
-with CVSToys-1.0.10). If the it doesn't use that source (i.e. if you
-only use a mail-parsing change source, or the SVN notification
-script), you will not need CVSToys.
-
-@end itemize
-
-And of course, your project's build process will impose additional
+Of course, your project's build process will impose additional
 requirements on the buildslaves. These hosts must have all the tools
 necessary to compile and test your project's source code.
 
+@node Buildmaster Requirements
+@subsection Buildmaster Requirements
+
+@itemize @bullet
+@item
+sqlite3: http://pypi.python.org/pypi/pysqlite
+
+The sqlite3 package is required for python-2.5 and earlier (it is already
+included in python-2.5 and later, but the version in python-2.5 has nasty bugs)
+
+@item
+simplejson: http://pypi.python.org/pypi/simplejson
+
+The simplejson package is required for python-2.5 and earlier (it is already
+included as json in python-2.6 and later)
+
+@item
+Jinja2: http://jinja.pocoo.org/2
+
+Jinja2 is a general purpose templating language and is used by Buildbot
+to generate the HTML output.
+
+@end itemize
 
 @node Installing the code
 @section Installing the code
 
 @cindex installation
 
-The Buildbot is installed using the standard python @code{distutils}
-module. After unpacking the tarball, the process is:
+Buildbot and Buildslave are installed using the standard python
+@code{distutils} process. For either component, after unpacking the tarball,
+the process is:
 
 @example
 python setup.py build
 python setup.py install
 @end example
 
-where the install step may need to be done as root. This will put the
-bulk of the code in somewhere like
-/usr/lib/python2.3/site-packages/buildbot . It will also install the
-@code{buildbot} command-line tool in /usr/bin/buildbot.
+where the install step may need to be done as root. This will put the bulk of
+the code in somewhere like @code{/usr/lib/python2.3/site-packages/buildbot}. It
+will also install the @code{buildbot} command-line tool in
+@code{/usr/bin/buildbot}.
 
-To test this, shift to a different directory (like /tmp), and run:
+To test this, shift to a different directory (like @code{/tmp}), and run:
 
 @example
 buildbot --version
+# or
+buildslave --version
 @end example
 
 If it shows you the versions of Buildbot and Twisted, the install went
@@ -98,28 +130,17 @@ If you wish, you can run the buildbot unit test suite like this:
 
 @example
 PYTHONPATH=. trial buildbot.test
+# or
+PYTHONPATH=. trial buildslave.test
 @end example
 
-This should run up to 192 tests, depending upon what VC tools you have
-installed. On my desktop machine it takes about five minutes to
-complete. Nothing should fail, a few might be skipped. If any of the
-tests fail, you should stop and investigate the cause before
-continuing the installation process, as it will probably be easier to
-track down the bug early.
+Nothing should fail, a few might be skipped. If any of the tests fail, you
+should stop and investigate the cause before continuing the installation
+process, as it will probably be easier to track down the bug early.
 
 If you cannot or do not wish to install the buildbot into a site-wide
 location like @file{/usr} or @file{/usr/local}, you can also install
-it into the account's home directory. Do the install command like
-this:
-
-@example
-python setup.py install --home=~
-@end example
-
-That will populate @file{~/lib/python} and create
-@file{~/bin/buildbot}. Make sure this lib directory is on your
-@code{PYTHONPATH}.
-
+it into the account's home directory or any other location using a tool like @url{http://pypi.python.org/pypi/virtualenv,virtualenv}.
 
 @node Creating a buildmaster
 @section Creating a buildmaster
@@ -351,10 +372,10 @@ the hostname and port number of the buildmaster, i.e. buildbot.example.org:8007
 @item
 Create the buildslave
 
-Now run the 'buildbot' command as follows:
+Now run the 'buildslave' command as follows:
 
 @example
-buildbot create-slave @var{BASEDIR} @var{MASTERHOST}:@var{PORT} @var{SLAVENAME} @var{PASSWORD}
+buildslave create-slave @var{BASEDIR} @var{MASTERHOST}:@var{PORT} @var{SLAVENAME} @var{PASSWORD}
 @end example
 
 This will create the base directory and a collection of files inside,
@@ -401,13 +422,13 @@ with symlinks.
 @subsection Buildslave Options
 
 There are a handful of options you might want to use when creating the
-buildslave with the @command{buildbot create-slave <options> DIR <params>}
-command. You can type @command{buildbot create-slave --help} for a summary.
-To use these, just include them on the @command{buildbot create-slave}
+buildslave with the @command{buildslave create-slave <options> DIR <params>}
+command. You can type @command{buildslave create-slave --help} for a summary.
+To use these, just include them on the @command{buildslave create-slave}
 command line, like this:
 
 @example
-buildbot create-slave --umask=022 ~/buildslave buildmaster.example.org:42012 myslavename mypasswd
+buildslave create-slave --umask=022 ~/buildslave buildmaster.example.org:42012 myslavename mypasswd
 @end example
 
 @table @code
@@ -490,10 +511,13 @@ s = BuildSlave(buildmaster_host, port, slavename, passwd, basedir,
 
 Both the buildmaster and the buildslave run as daemon programs. To
 launch them, pass the working directory to the @code{buildbot}
-command:
+and @code{buildslave} commands, as appropriate:
 
 @example
+# start a master
 buildbot start @var{BASEDIR}
+# start a slave
+buildslave start @var{SLAVE_BASEDIR}
 @end example
 
 The @var{BASEDIR} is option and can be omitted if the current directory
@@ -543,19 +567,6 @@ are for @file{/usr/local} or @file{~/bin} to not be on your
 @code{PATH}, or for @code{PYTHONPATH} to not be set correctly.
 Sometimes @code{HOME} is messed up too.
 
-To modify the way the daemons are started (perhaps you want to set
-some environment variables first, or perform some cleanup each time),
-you can create a file named @file{Makefile.buildbot} in the base
-directory. When the @file{buildbot} front-end tool is told to
-@command{start} the daemon, and it sees this file (and
-@file{/usr/bin/make} exists), it will do @command{make -f
-Makefile.buildbot start} instead of its usual action (which involves
-running @command{twistd}). When the buildmaster or buildslave is
-installed, a @file{Makefile.sample} is created which implements the
-same behavior as the the @file{buildbot} tool uses, so if you want to
-customize the process, just copy @file{Makefile.sample} to
-@file{Makefile.buildbot} and edit it as necessary.
-
 Some distributions may include conveniences to make starting buildbot
 at boot time easy.  For instance, with the default buildbot package in
 Debian-based distributions, you may only need to modify
@@ -583,6 +594,8 @@ To stop a buildmaster or buildslave manually, use:
 
 @example
 buildbot stop @var{BASEDIR}
+# or
+buildslave stop @var{SLAVE_BASEDIR}
 @end example
 
 This simply looks for the @file{twistd.pid} file and kills whatever
@@ -609,6 +622,12 @@ use the @code{restart} shortcut, which does both steps for you:
 
 @example
 buildbot restart @var{BASEDIR}
+@end example
+
+Buildslaves can similarly be restarted with:
+
+@example
+buildslave restart @var{BASEDIR}
 @end example
 
 There are certain configuration changes that are not handled cleanly
@@ -665,7 +684,6 @@ Here are a few hints on diagnosing common problems.
 @menu
 * Starting the buildslave::
 * Connecting to the buildmaster::
-* Forcing Builds::
 @end menu
 
 @node Starting the buildslave
@@ -702,26 +720,8 @@ exponentially-increasing backoff. Each attempt (and the time of the
 next attempt) will be logged. If you get impatient, just manually stop
 and re-start the buildslave.
 
-When the buildmaster is restarted, all slaves will be disconnected,
-and will attempt to reconnect as usual. The reconnect time will depend
-upon how long the buildmaster is offline (i.e. how far up the
-exponential backoff curve the slaves have travelled). Again,
-@code{buildbot stop @var{BASEDIR}; buildbot start @var{BASEDIR}} will
+When the buildmaster is restarted, all slaves will be disconnected, and will
+attempt to reconnect as usual. The reconnect time will depend upon how long the
+buildmaster is offline (i.e. how far up the exponential backoff curve the
+slaves have travelled). Again, @code{buildslave restart @var{BASEDIR}} will
 speed up the process.
-
-@node Forcing Builds
-@subsection Forcing Builds
-
-From the buildmaster's main status web page, you can force a build to be run on
-your build slave if you set the proper authorization options in your
-@code{master.cfg} file @pxref{WebStatus Configuration Parameters}.
-
-Figure out which column is for a builder that runs on your slave, click on that
-builder's name, and the page that comes up will have a "Force Build" button.
-Fill in the form, hit the button, and a moment later you should see your
-slave's @file{twistd.log} filling with commands being run. Using @code{pstree}
-or @code{top} should also reveal the cvs/make/gcc/etc processes being run by
-the buildslave. Note that the same web page should also show the @file{admin}
-and @file{host} information files that you configured earlier.
-
-
