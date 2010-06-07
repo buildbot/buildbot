@@ -39,7 +39,7 @@ class TestUnicodeChanges(unittest.TestCase):
             files=["foo"], comments=u"Frosty the \N{SNOWMAN}".encode("utf8"),
             branch="b1", revision=12345)]
         cPickle.dump(self.mkchanges(changes), open(os.path.join(self.basedir,
-            "changes.pck"), "w"))
+            "changes.pck"), "wb"))
 
         sm = manager.DBSchemaManager(self.spec, self.basedir)
         sm.upgrade(quiet=True)
@@ -54,21 +54,17 @@ class TestUnicodeChanges(unittest.TestCase):
         changes = [Change(who="\xff\xff\x00", files=["foo"],
             comments="\xff\xff\x00", branch="b1", revision=12345)]
         cPickle.dump(self.mkchanges(changes), open(os.path.join(self.basedir,
-            "changes.pck"), "w"))
+            "changes.pck"), "wb"))
 
         sm = manager.DBSchemaManager(self.spec, self.basedir)
-        try:
-            self.assertRaises(UnicodeError, lambda : sm.upgrade(quiet=True))
-        except ImportError:
-            print sys.modules
-            raise
+        self.assertRaises(UnicodeError, lambda : sm.upgrade(quiet=True))
 
     def testAsciiChange(self):
         # Create changes.pck
         changes = [Change(who="Frosty the Snowman",
             files=["foo"], comments="Frosty the Snowman", branch="b1", revision=12345)]
         cPickle.dump(self.mkchanges(changes), open(os.path.join(self.basedir,
-            "changes.pck"), "w"))
+            "changes.pck"), "wb"))
 
         sm = manager.DBSchemaManager(self.spec, self.basedir)
         sm.upgrade(quiet=True)
@@ -91,7 +87,7 @@ class TestUnicodeChanges(unittest.TestCase):
         cm.recode_changes('utf16', quiet=True)
 
         # and dump the recoded changemanager to changes.pck before trying a schema upgrade
-        cPickle.dump(cm, open(os.path.join(self.basedir, "changes.pck"), "w"))
+        cPickle.dump(cm, open(os.path.join(self.basedir, "changes.pck"), "wb"))
 
         sm = manager.DBSchemaManager(self.spec, self.basedir)
         sm.upgrade(quiet=True)

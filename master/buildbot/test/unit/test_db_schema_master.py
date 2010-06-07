@@ -88,7 +88,7 @@ class DBSchemaManager(unittest.TestCase):
 
         # embed it in a Changes object and pickle it up
         changesource = Thing(changes=changes)
-        f = open(os.path.join(self.basedir, "changes.pck"), "w")
+        f = open(os.path.join(self.basedir, "changes.pck"), "wb")
         f.write(cPickle.dumps(changesource))
 
     def assertDatabaseOKFull(self):
