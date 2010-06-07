@@ -37,8 +37,9 @@ class DBSpec(unittest.TestCase):
     def test_fromURL_sqlitePercentSub(self):
         basedir = "/foo/bar"
         d = dbspec.DBSpec.from_url("sqlite:///%(basedir)s/x/state.sqlite", basedir=basedir)
+        # no os.path.join here - it's string interpolation
         self.failUnlessConnection(d, self.SQLITE_NAMES, 
-                connargs=(os.path.join(basedir, os.path.join("x", "state.sqlite")),))
+                connargs=("%s/x/state.sqlite" % basedir,))
 
     def test_fromURL_sqliteAbsolutePath(self):
         basedir = "/foo/bar"
