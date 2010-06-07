@@ -38,7 +38,7 @@ class DBSpec(unittest.TestCase):
         basedir = "/foo/bar"
         d = dbspec.DBSpec.from_url("sqlite:///%(basedir)s/x/state.sqlite", basedir=basedir)
         self.failUnlessConnection(d, self.SQLITE_NAMES, 
-                connargs=(os.path.join(basedir, "x/state.sqlite"),))
+                connargs=(os.path.join(basedir, os.path.join("x", "state.sqlite")),))
 
     def test_fromURL_sqliteAbsolutePath(self):
         basedir = "/foo/bar"
