@@ -3,6 +3,13 @@ Major User visible changes in Buildbot.             -*- outline -*-
 
 * NEXT RELEASE
 
+* Slave Split into separate component
+
+Installing 'buildbot' will no longer allow you to run a slave - for that,
+you'll now need the 'buildslave' component, which is available by easy_install.
+This is merely a packaging change - the buildslave and buildbot components are
+completely inter-compatible, just as they always have been.
+
 * Deprecations
 
 ** Arch, Bazaar, and Monotone to be removed in 0.8.2
