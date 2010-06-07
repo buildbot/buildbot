@@ -153,9 +153,14 @@ class TestShellCommand(unittest.TestCase):
         d = s.start()
         def check(ign):
             self.failUnless({'stdout': 'hello\n'} not in b.updates, ppupdates(b.updates))
-            self.failUnless({'rc': -1} in b.updates, ppupdates(b.updates))
+            # windows returns rc 1, because exit status cannot indicate "signalled";
+            # posix returns rc -1 for "signalled"
+            exprc = -1
+            if sys.platform.startswith('win'):
+                exprc = 1
+            self.failUnless({'rc': exprc} in b.updates, ppupdates(b.updates))
         d.addCallback(check)
-        clock.advance(6)
+        clock.advance(6) # should knock out maxTime
         return d
 
     def testBadCommand(self):
