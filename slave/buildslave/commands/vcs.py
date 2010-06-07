@@ -1598,7 +1598,7 @@ class Mercurial(SourceBase):
 
                 log.msg("Repo cloned from: '%s'" % oldurl)
 
-                if sys.platform == "win32":
+                if runtime.platformType  == 'win32':
                     oldurl = oldurl.lower().replace('\\', '/')
                     repourl = self.repourl.lower().replace('\\', '/')
                 else:
