@@ -193,7 +193,7 @@ class TestShellCommand(unittest.TestCase):
         d = s.start()
         def check(ign):
             headers = "".join([update.values()[0] for update in b.updates if update.keys() == ["header"] ])
-            self.failUnless(nl("FOO=BAR\n") in headers, "got:\n" + headers)
+            self.failUnless("FOO=BAR" in headers, "got:\n" + headers)
         d.addCallback(check)
         return d
 
@@ -205,7 +205,7 @@ class TestShellCommand(unittest.TestCase):
         d = s.start()
         def check(ign):
             headers = "".join([update.values()[0] for update in b.updates if update.keys() == ["header"] ])
-            self.failUnless(nl("FOO=BAR\n") not in headers, "got:\n" + headers)
+            self.failUnless("FOO=BAR" not in headers, "got:\n" + headers)
         d.addCallback(check)
         return d
 
