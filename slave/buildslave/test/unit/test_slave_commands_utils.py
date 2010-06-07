@@ -95,10 +95,10 @@ class RmdirRecursive(unittest.TestCase):
         self.assertFalse(os.path.exists(self.target))
 
     def test_rmdirRecursive_symlink(self):
-        # this was intended as a regressio ntest for #792, but doesn't seem
+        # this was intended as a regression test for #792, but doesn't seem
         # to trigger it.  It can't hurt to check it, all the same.
         if sys.platform.startswith('win'):
-            raise unittest.Skiptest("no symlinks on this platform")
+            raise unittest.SkipTest("no symlinks on this platform")
         os.mkdir("noperms")
         open("noperms/x", "w")
         os.chmod("noperms/x", 0)
