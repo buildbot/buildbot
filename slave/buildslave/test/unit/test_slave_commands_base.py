@@ -4,6 +4,7 @@ import pprint
 from twisted.trial import unittest
 from twisted.internet import task, defer
 
+from buildslave.test.util import nl
 from buildslave.commands.base import ShellCommand, Obfuscated, \
     DummyCommand, WaitCommand, waitCommandRegistry, AbandonChain
 from buildslave.commands.utils import getCommand
@@ -30,6 +31,12 @@ def stdoutCommand(output):
 def stderrCommand(output):
     return [sys.executable, '-c', 'import sys; sys.stdout.write("%s\\n")' % output]
 
+# windows returns rc 1, because exit status cannot indicate "signalled";
+# posix returns rc -1 for "signalled"
+FATAL_RC = -1
+if sys.platform.startswith('win'):
+    FATAL_RC = 1
+
 class TestShellCommand(unittest.TestCase):
     def testStart(self):
         basedir = "test_slave_commands_base.shellcommand.start"
@@ -38,7 +45,7 @@ class TestShellCommand(unittest.TestCase):
 
         d = s.start()
         def check(ign):
-            self.failUnless({'stdout': 'hello\n'} in b.updates, ppupdates(b.updates))
+            self.failUnless({'stdout': nl('hello\n')} in b.updates, ppupdates(b.updates))
             self.failUnless({'rc': 0} in b.updates, ppupdates(b.updates))
         d.addCallback(check)
         return d
@@ -50,7 +57,7 @@ class TestShellCommand(unittest.TestCase):
 
         d = s.start()
         def check(ign):
-            self.failIf({'stdout': 'hello\n'} in b.updates, ppupdates(b.updates))
+            self.failIf({'stdout': nl('hello\n')} in b.updates, ppupdates(b.updates))
             self.failUnless({'rc': 0} in b.updates, ppupdates(b.updates))
         d.addCallback(check)
         return d
@@ -62,9 +69,9 @@ class TestShellCommand(unittest.TestCase):
 
         d = s.start()
         def check(ign):
-            self.failUnless({'stdout': 'hello\n'} in b.updates, ppupdates(b.updates))
+            self.failUnless({'stdout': nl('hello\n')} in b.updates, ppupdates(b.updates))
             self.failUnless({'rc': 0} in b.updates, ppupdates(b.updates))
-            self.failUnlessEquals(s.stdout, 'hello\n')
+            self.failUnlessEquals(s.stdout, nl('hello\n'))
         d.addCallback(check)
         return d
 
@@ -75,7 +82,7 @@ class TestShellCommand(unittest.TestCase):
 
         d = s.start()
         def check(ign):
-            self.failIf({'stderr': 'hello\n'} not in b.updates, ppupdates(b.updates))
+            self.failIf({'stderr': nl('hello\n')} not in b.updates, ppupdates(b.updates))
             self.failUnless({'rc': 0} in b.updates, ppupdates(b.updates))
         d.addCallback(check)
         return d
@@ -87,7 +94,7 @@ class TestShellCommand(unittest.TestCase):
 
         d = s.start()
         def check(ign):
-            self.failIf({'stderr': 'hello\n'} in b.updates, ppupdates(b.updates))
+            self.failIf({'stderr': nl('hello\n')} in b.updates, ppupdates(b.updates))
             self.failUnless({'rc': 0} in b.updates, ppupdates(b.updates))
         d.addCallback(check)
         return d
@@ -99,9 +106,9 @@ class TestShellCommand(unittest.TestCase):
 
         d = s.start()
         def check(ign):
-            self.failUnless({'stderr': 'hello\n'} in b.updates, ppupdates(b.updates))
+            self.failUnless({'stderr': nl('hello\n')} in b.updates, ppupdates(b.updates))
             self.failUnless({'rc': 0} in b.updates, ppupdates(b.updates))
-            self.failUnlessEquals(s.stderr, 'hello\n')
+            self.failUnlessEquals(s.stderr, nl('hello\n'))
         d.addCallback(check)
         return d
 
@@ -112,9 +119,9 @@ class TestShellCommand(unittest.TestCase):
 
         d = s.start()
         def check(ign):
-            self.failUnless({'stdout': 'hello\n'} in b.updates, ppupdates(b.updates))
+            self.failUnless({'stdout': nl('hello\n')} in b.updates, ppupdates(b.updates))
             self.failUnless({'rc': 0} in b.updates, ppupdates(b.updates))
-            self.failUnlessEquals(s.stdout, 'hello\n')
+            self.failUnlessEquals(s.stdout, nl('hello\n'))
         d.addCallback(check)
         return d
 
@@ -125,7 +132,7 @@ class TestShellCommand(unittest.TestCase):
 
         d = s.start()
         def check(ign):
-            self.failUnless({'stdout': 'hello\n'} in b.updates, ppupdates(b.updates))
+            self.failUnless({'stdout': nl('hello\n')} in b.updates, ppupdates(b.updates))
             self.failUnless({'rc': 0} in b.updates, ppupdates(b.updates))
         d.addCallback(check)
         return d
@@ -138,8 +145,8 @@ class TestShellCommand(unittest.TestCase):
         s._reactor = clock
         d = s.start()
         def check(ign):
-            self.failUnless({'stdout': 'hello\n'} not in b.updates, ppupdates(b.updates))
-            self.failUnless({'rc': -1} in b.updates, ppupdates(b.updates))
+            self.failUnless({'stdout': nl('hello\n')} not in b.updates, ppupdates(b.updates))
+            self.failUnless({'rc': FATAL_RC} in b.updates, ppupdates(b.updates))
         d.addCallback(check)
         clock.advance(6)
         return d
@@ -152,13 +159,8 @@ class TestShellCommand(unittest.TestCase):
         s._reactor = clock
         d = s.start()
         def check(ign):
-            self.failUnless({'stdout': 'hello\n'} not in b.updates, ppupdates(b.updates))
-            # windows returns rc 1, because exit status cannot indicate "signalled";
-            # posix returns rc -1 for "signalled"
-            exprc = -1
-            if sys.platform.startswith('win'):
-                exprc = 1
-            self.failUnless({'rc': exprc} in b.updates, ppupdates(b.updates))
+            self.failUnless({'stdout': nl('hello\n')} not in b.updates, ppupdates(b.updates))
+            self.failUnless({'rc': FATAL_RC} in b.updates, ppupdates(b.updates))
         d.addCallback(check)
         clock.advance(6) # should knock out maxTime
         return d
@@ -191,7 +193,7 @@ class TestShellCommand(unittest.TestCase):
         d = s.start()
         def check(ign):
             headers = "".join([update.values()[0] for update in b.updates if update.keys() == ["header"] ])
-            self.failUnless("FOO=BAR\n" in headers, "got:\n" + headers)
+            self.failUnless(nl("FOO=BAR\n") in headers, "got:\n" + headers)
         d.addCallback(check)
         return d
 
@@ -203,7 +205,7 @@ class TestShellCommand(unittest.TestCase):
         d = s.start()
         def check(ign):
             headers = "".join([update.values()[0] for update in b.updates if update.keys() == ["header"] ])
-            self.failUnless("FOO=BAR\n" not in headers, "got:\n" + headers)
+            self.failUnless(nl("FOO=BAR\n") not in headers, "got:\n" + headers)
         d.addCallback(check)
         return d
 
@@ -219,8 +221,8 @@ class TestShellCommand(unittest.TestCase):
         def check(ign):
             headers = "".join([update.values()[0] for update in b.updates if update.keys() == ["header"] ])
             self.failUnless("EXPND=-$" not in headers, "got:\n" + headers)
-            self.failUnless("DOESNT_FIND=--\n" in headers, "got:\n" + headers)
-            self.failUnless("DOESNT_EXPAND=-${---}-\n"  in headers, "got:\n" + headers)
+            self.failUnless("DOESNT_FIND=--" in headers, "got:\n" + headers)
+            self.failUnless("DOESNT_EXPAND=-${---}-"  in headers, "got:\n" + headers)
         d.addCallback(check)
         return d
 
@@ -241,8 +243,8 @@ class TestLogging(unittest.TestCase):
         basedir = "test_slave_commands_base.logging.sendStatus"
         b = FakeSlaveBuilder(False, basedir)
         s = ShellCommand(b, stdoutCommand('hello'), basedir)
-        s.sendStatus({'stdout': 'hello\n'})
-        self.failUnlessEqual(b.updates, [{'stdout': 'hello\n'}], ppupdates(b.updates))
+        s.sendStatus({'stdout': nl('hello\n')})
+        self.failUnlessEqual(b.updates, [{'stdout': nl('hello\n')}], ppupdates(b.updates))
 
     def testSendBuffered(self):
         basedir = "test_slave_commands_base.logging.sendBuffered"
