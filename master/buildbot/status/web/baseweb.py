@@ -27,6 +27,7 @@ from buildbot.status.web.about import AboutBuildbot
 from buildbot.status.web.authz import Authz
 from buildbot.status.web.auth import AuthFailResource
 from buildbot.status.web.root import RootPage
+from buildbot.status.web.change_hook import ChangeHookResource
 
 # this class contains the WebStatus class.  Basic utilities are in base.py,
 # and specific pages are each in their own module.
@@ -80,6 +81,9 @@ class WebStatus(service.MultiService):
      /one_line_per_build/BUILDERNAME : same, but only for a single builder
      /about : describe this buildmaster (Buildbot and support library versions)
      /xmlrpc : (not yet implemented) an XMLRPC server with build status
+     /change_hook[/DIALECT] : accepts changes from external sources, optionally
+                              choosing the dialect that will be permitted
+                              (i.e. github format, etc..)
 
      and more!  see the manual.
 
@@ -133,7 +137,8 @@ class WebStatus(service.MultiService):
                  num_events=200, num_events_max=None, auth=None,
                  order_console_by_time=False, changecommentlink=None,
                  revlink=None, projects=None, repositories=None,
-                 authz=None, logRotateLength=None, maxRotatedFiles=None):
+                 authz=None, logRotateLength=None, maxRotatedFiles=None,
+                 change_hook=False, change_hook_target = None):
         """Run a web server that provides Buildbot status.
 
         @type  http_port: int or L{twisted.application.strports} string
@@ -232,7 +237,12 @@ class WebStatus(service.MultiService):
         @type maxRotatedFiles: None or int
         @param maxRotatedFiles: number of old http.log files to keep during log rotation.
             If not set, the value set in the buildbot.tac will be used, 
-             falling back to the BuildMaster's default value (10 files).        
+             falling back to the BuildMaster's default value (10 files).       
+        
+        @type  enable_change_hook: None or boolean
+        @param enable_change_hook: enables or disables the change_hook url. 
+                                   Default is off.
+        
     
         """
 
@@ -295,6 +305,8 @@ class WebStatus(service.MultiService):
         # down. See ticket #102 for more details.
         self.channels = weakref.WeakKeyDictionary()
         
+        # do we want to allow change_hook
+        self.change_hook = change_hook
 
 
     def setupUsualPages(self, numbuilds, num_events, num_events_max):
@@ -316,6 +328,7 @@ class WebStatus(service.MultiService):
         self.putChild("xmlrpc", XMLRPCServer())
         self.putChild("about", AboutBuildbot())
         self.putChild("authfail", AuthFailResource())
+        self.putChild("change_hook", ChangeHookResource())
 
     def __repr__(self):
         if self.http_port is None:
