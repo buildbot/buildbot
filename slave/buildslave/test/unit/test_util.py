@@ -31,3 +31,26 @@ class remove_userpassword(unittest.TestCase):
 
     def test_win32file_path(self):
         self.assertUrl('c:\\repos\\my-repo', 'c:\\repos\\my-repo')
+
+class TestObfuscated(unittest.TestCase):
+    def testSimple(self):
+        c = util.Obfuscated('real', '****')
+        self.failUnlessEqual(str(c), '****')
+        self.failUnlessEqual(repr(c), "'****'")
+
+    def testObfuscatedCommand(self):
+        cmd = ['echo', util.Obfuscated('password', '*******')]
+
+        self.failUnlessEqual(['echo', 'password'], util.Obfuscated.get_real(cmd))
+        self.failUnlessEqual(['echo', '*******'], util.Obfuscated.get_fake(cmd))
+
+    def testObfuscatedNonString(self):
+        cmd = ['echo', 1]
+        self.failUnlessEqual(['echo', '1'], util.Obfuscated.get_real(cmd))
+        self.failUnlessEqual(['echo', '1'], util.Obfuscated.get_fake(cmd))
+
+    def testObfuscatedNonList(self):
+        cmd = 1
+        self.failUnlessEqual(1, util.Obfuscated.get_real(cmd))
+        self.failUnlessEqual(1, util.Obfuscated.get_fake(cmd))
+

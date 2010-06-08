@@ -5,10 +5,11 @@ from xml.dom.minidom import parseString
 from twisted.python import log, failure, runtime
 from twisted.internet import defer
 
-from buildslave.commands.base import Command, ShellCommand, AbandonChain, command_version, Obfuscated
+from buildslave.commands.base import Command, AbandonChain, command_version
+from buildslave import runprocess
 from buildslave.commands.registry import registerSlaveCommand
 from buildslave.commands.utils import getCommand, rmdirRecursive
-from buildslave.util import remove_userpassword
+from buildslave.util import remove_userpassword, Obfuscated
 
 class SourceBase(Command):
     """Abstract base class for Version Control System operations (checkout
@@ -20,7 +21,7 @@ class SourceBase(Command):
 
         - ['mode']:     one of update/copy/clobber/export, defaults to 'update'
 
-        - ['revision']: If not None, this is an int or string which indicates
+        - ['revision']: (required) If not None, this is an int or string which indicates
                         which sources (along a time-like axis) should be used.
                         It is the thing you provide as the CVS -r or -D
                         argument.
@@ -263,7 +264,7 @@ class SourceBase(Command):
             rmdirRecursive(d)
             return defer.succeed(0)
         command = ["rm", "-rf", d]
-        c = ShellCommand(self.builder, command, self.builder.basedir,
+        c = runprocess.RunProcess(self.builder, command, self.builder.basedir,
                          sendRC=0, timeout=self.timeout, maxTime=self.maxTime,
                          usePTY=False)
 
@@ -294,7 +295,7 @@ class SourceBase(Command):
             # permission) by running 'find' instead
             command = ["find", os.path.join(self.builder.basedir, dirname),
                                 '-exec', 'chmod', 'u+rwx', '{}', ';' ]
-        c = ShellCommand(self.builder, command, self.builder.basedir,
+        c = runprocess.RunProcess(self.builder, command, self.builder.basedir,
                          sendRC=0, timeout=self.timeout, maxTime=self.maxTime,
                          usePTY=False)
 
@@ -323,7 +324,7 @@ class SourceBase(Command):
             log.msg("cp target '%s' already exists -- cp will not do what you think!" % todir)
 
         command = ['cp', '-R', '-P', '-p', fromdir, todir]
-        c = ShellCommand(self.builder, command, self.builder.basedir,
+        c = runprocess.RunProcess(self.builder, command, self.builder.basedir,
                          sendRC=False, timeout=self.timeout, maxTime=self.maxTime,
                          usePTY=False)
         self.command = c
@@ -359,7 +360,7 @@ class SourceBase(Command):
             dir = os.path.join(dir, root)
 
         # now apply the patch
-        c = ShellCommand(self.builder, command, dir,
+        c = runprocess.RunProcess(self.builder, command, dir,
                          sendRC=False, timeout=self.timeout,
                          maxTime=self.maxTime, initialStdin=diff, usePTY=False)
         self.command = c
@@ -402,7 +403,7 @@ class BK(SourceBase):
 
         # Revision is ignored since the BK free client doesn't support it.
         command = [self.vcexe, 'pull']
-        c = ShellCommand(self.builder, command, d,
+        c = runprocess.RunProcess(self.builder, command, d,
                          sendRC=False, timeout=self.timeout,
                          keepStdout=True, usePTY=False)
         self.command = c
@@ -418,7 +419,7 @@ class BK(SourceBase):
 
         command = [self.vcexe, 'clone', revision_arg] + self.bk_args + \
                    [self.bkurl, self.srcdir]
-        c = ShellCommand(self.builder, command, d,
+        c = runprocess.RunProcess(self.builder, command, d,
                          sendRC=False, timeout=self.timeout,
                          keepStdout=True, usePTY=False)
         self.command = c
@@ -429,12 +430,12 @@ class BK(SourceBase):
         Get the (shell) command used to determine BK revision number
         of checked-out code
 
-        return: list of strings, passable as the command argument to ShellCommand
+        return: list of strings, passable as the command argument to RunProcess
         """
         return [self.vcexe, "changes", "-r+", "-d:REV:"]
 
     def parseGotRevision(self):
-        c = ShellCommand(self.builder,
+        c = runprocess.RunProcess(self.builder,
                          self.getBKVersionCommand(),
                          os.path.join(self.builder.basedir, self.srcdir),
                          environ=self.env,
@@ -504,7 +505,7 @@ class CVS(SourceBase):
             d = self.builder.basedir
             command = ([self.vcexe, '-d', self.cvsroot] + self.global_options
                        + ['login'])
-            c = ShellCommand(self.builder, command, d,
+            c = runprocess.RunProcess(self.builder, command, d,
                              sendRC=False, timeout=self.timeout,
                              maxTime=self.maxTime,
                              initialStdin=self.login+"\n", usePTY=False)
@@ -527,7 +528,7 @@ class CVS(SourceBase):
             command += ['-r', self.branch]
         if self.revision:
             command += ['-D', self.revision]
-        c = ShellCommand(self.builder, command, d,
+        c = runprocess.RunProcess(self.builder, command, d,
                          sendRC=False, timeout=self.timeout,
                          maxTime=self.maxTime, usePTY=False)
         self.command = c
@@ -555,7 +556,7 @@ class CVS(SourceBase):
             command += ['-D', self.revision]
         command += [self.cvsmodule]
 
-        c = ShellCommand(self.builder, command, d,
+        c = runprocess.RunProcess(self.builder, command, d,
                          sendRC=False, timeout=self.timeout,
                          maxTime=self.maxTime, usePTY=False)
         self.command = c
@@ -612,7 +613,7 @@ class SVN(SourceBase):
         fullCmd = [self.vcexe, command, '--non-interactive', '--no-auth-cache']
         fullCmd.extend(self.svn_args)
         fullCmd.extend(args)
-        c = ShellCommand(self.builder, fullCmd, rootdir,
+        c = runprocess.RunProcess(self.builder, fullCmd, rootdir,
                          environ=self.env, sendRC=False, timeout=self.timeout,
                          maxTime=self.maxTime, usePTY=False, **kwargs)
         self.command = c
@@ -680,7 +681,7 @@ class SVN(SourceBase):
         Get the (shell) command used to determine SVN revision number
         of checked-out code
 
-        return: list of strings, passable as the command argument to ShellCommand
+        return: list of strings, passable as the command argument to RunProcess
         """
         # svn checkout operations finish with 'Checked out revision 16657.'
         # svn update operations finish the line 'At revision 16654.'
@@ -691,7 +692,7 @@ class SVN(SourceBase):
         return [svnversion_command, "."]
 
     def parseGotRevision(self):
-        c = ShellCommand(self.builder,
+        c = runprocess.RunProcess(self.builder,
                          self.getSvnVersionCommand(),
                          os.path.join(self.builder.basedir, self.srcdir),
                          environ=self.env,
@@ -746,7 +747,7 @@ class Darcs(SourceBase):
         # update: possible for mode in ('copy', 'update')
         d = os.path.join(self.builder.basedir, self.srcdir)
         command = [self.vcexe, 'pull', '--all', '--verbose']
-        c = ShellCommand(self.builder, command, d,
+        c = runprocess.RunProcess(self.builder, command, d,
                          sendRC=False, timeout=self.timeout,
                          maxTime=self.maxTime, usePTY=False)
         self.command = c
@@ -768,7 +769,7 @@ class Darcs(SourceBase):
             command.append(n)
         command.append(self.repourl)
 
-        c = ShellCommand(self.builder, command, d,
+        c = runprocess.RunProcess(self.builder, command, d,
                          sendRC=False, timeout=self.timeout,
                          maxTime=self.maxTime, usePTY=False)
         self.command = c
@@ -784,7 +785,7 @@ class Darcs(SourceBase):
     def parseGotRevision(self):
         # we use 'darcs context' to find out what we wound up with
         command = [self.vcexe, "changes", "--context"]
-        c = ShellCommand(self.builder, command,
+        c = runprocess.RunProcess(self.builder, command,
                          os.path.join(self.builder.basedir, self.srcdir),
                          environ=self.env,
                          sendStdout=False, sendStderr=False, sendRC=False,
@@ -839,7 +840,7 @@ class Monotone(SourceBase):
         command = [self.monotone, "update",
                    "-r", self.revision,
                    "-b", self.branch]
-        c = ShellCommand(self.builder, command, self.full_srcdir,
+        c = runprocess.RunProcess(self.builder, command, self.full_srcdir,
                          sendRC=False, timeout=self.timeout,
                          maxTime=self.maxTime, usePTY=False)
         self.command = c
@@ -854,7 +855,7 @@ class Monotone(SourceBase):
                    "-r", self.revision,
                    "-b", self.branch,
                    self.full_srcdir]
-        c = ShellCommand(self.builder, command, self.builder.basedir,
+        c = runprocess.RunProcess(self.builder, command, self.builder.basedir,
                          sendRC=False, timeout=self.timeout,
                          maxTime=self.maxTime, usePTY=False)
         self.command = c
@@ -876,7 +877,7 @@ class Monotone(SourceBase):
                                        % (self.full_db_path,)})
             command = [self.monotone, "db", "init",
                        "--db=" + self.full_db_path]
-        c = ShellCommand(self.builder, command, self.builder.basedir,
+        c = runprocess.RunProcess(self.builder, command, self.builder.basedir,
                          sendRC=False, timeout=self.timeout,
                          maxTime=self.maxTime, usePTY=False)
         self.command = c
@@ -889,7 +890,7 @@ class Monotone(SourceBase):
     def _didDbInit(self, res):
         command = [self.monotone, "--db=" + self.full_db_path,
                    "pull", "--ticker=dot", self.server_addr, self.branch]
-        c = ShellCommand(self.builder, command, self.builder.basedir,
+        c = runprocess.RunProcess(self.builder, command, self.builder.basedir,
                          sendRC=False, timeout=self._pull_timeout,
                          maxTime=self.maxTime, usePTY=False)
         self.sendStatus({"header": "pulling %s from %s\n"
@@ -940,7 +941,7 @@ class Git(SourceBase):
         return os.path.isdir(os.path.join(self._fullSrcdir(), ".git"))
 
     def _dovccmd(self, command, cb=None, **kwargs):
-        c = ShellCommand(self.builder, [self.vcexe] + command, self._fullSrcdir(),
+        c = runprocess.RunProcess(self.builder, [self.vcexe] + command, self._fullSrcdir(),
                          sendRC=False, timeout=self.timeout,
                          maxTime=self.maxTime, usePTY=False, **kwargs)
         self.command = c
@@ -1044,7 +1045,7 @@ class Git(SourceBase):
         if not self.args.get('revision') and self.args.get('shallow'):
             cmd = [self.vcexe, 'clone', '--depth', '1', self.repourl,
                    self._fullSrcdir()]
-            c = ShellCommand(self.builder, cmd, self.builder.basedir,
+            c = runprocess.RunProcess(self.builder, cmd, self.builder.basedir,
                              sendRC=False, timeout=self.timeout,
                              maxTime=self.maxTime, usePTY=False)
             self.command = c
@@ -1108,7 +1109,7 @@ class Arch(SourceBase):
         command = [self.vcexe, 'replay']
         if self.revision:
             command.append(self.revision)
-        c = ShellCommand(self.builder, command, d,
+        c = runprocess.RunProcess(self.builder, command, d,
                          sendRC=False, timeout=self.timeout,
                          maxTime=self.maxTime, usePTY=False)
         self.command = c
@@ -1121,7 +1122,7 @@ class Arch(SourceBase):
         # when it is done, and all further actions must refer to this name.
 
         command = [self.vcexe, 'register-archive', '--force', self.url]
-        c = ShellCommand(self.builder, command, self.builder.basedir,
+        c = runprocess.RunProcess(self.builder, command, self.builder.basedir,
                          sendRC=False, keepStdout=True, timeout=self.timeout,
                          maxTime=self.maxTime, usePTY=False)
         self.command = c
@@ -1155,7 +1156,7 @@ class Arch(SourceBase):
         command = [self.vcexe, 'get', '--archive', self.archive,
                    '--no-pristine',
                    ver, self.srcdir]
-        c = ShellCommand(self.builder, command, self.builder.basedir,
+        c = runprocess.RunProcess(self.builder, command, self.builder.basedir,
                          sendRC=False, timeout=self.timeout,
                          maxTime=self.maxTime, usePTY=False)
         self.command = c
@@ -1168,7 +1169,7 @@ class Arch(SourceBase):
     def _didGet(self, res):
         d = os.path.join(self.builder.basedir, self.srcdir)
         command = [self.vcexe, 'build-config', self.buildconfig]
-        c = ShellCommand(self.builder, command, d,
+        c = runprocess.RunProcess(self.builder, command, d,
                          sendRC=False, timeout=self.timeout,
                          maxTime=self.maxTime, usePTY=False)
         self.command = c
@@ -1181,7 +1182,7 @@ class Arch(SourceBase):
         # 'tla logs --full' gives us ARCHIVE/BRANCH--REVISION
         # 'tla logs' gives us REVISION
         command = [self.vcexe, "logs", "--full", "--reverse"]
-        c = ShellCommand(self.builder, command,
+        c = runprocess.RunProcess(self.builder, command,
                          os.path.join(self.builder.basedir, self.srcdir),
                          environ=self.env,
                          sendStdout=False, sendStderr=False, sendRC=False,
@@ -1229,7 +1230,7 @@ class Bazaar(Arch):
             ver += "--%s" % self.revision
         command = [self.vcexe, 'get', '--no-pristine',
                    ver, self.srcdir]
-        c = ShellCommand(self.builder, command, self.builder.basedir,
+        c = runprocess.RunProcess(self.builder, command, self.builder.basedir,
                          sendRC=False, timeout=self.timeout,
                          maxTime=self.maxTime, usePTY=False)
         self.command = c
@@ -1242,7 +1243,7 @@ class Bazaar(Arch):
     def parseGotRevision(self):
         # using code from tryclient.BazExtractor
         command = [self.vcexe, "tree-id"]
-        c = ShellCommand(self.builder, command,
+        c = runprocess.RunProcess(self.builder, command,
                          os.path.join(self.builder.basedir, self.srcdir),
                          environ=self.env,
                          sendStdout=False, sendStderr=False, sendRC=False,
@@ -1302,7 +1303,7 @@ class Bzr(SourceBase):
         # update: possible for mode in ('copy', 'update')
         srcdir = os.path.join(self.builder.basedir, self.srcdir)
         command = [self.vcexe, 'update']
-        c = ShellCommand(self.builder, command, srcdir,
+        c = runprocess.RunProcess(self.builder, command, srcdir,
                          sendRC=False, timeout=self.timeout,
                          maxTime=self.maxTime, usePTY=False)
         self.command = c
@@ -1331,7 +1332,7 @@ class Bzr(SourceBase):
         command.append(self.repourl)
         command.append(self.srcdir)
 
-        c = ShellCommand(self.builder, command, d,
+        c = runprocess.RunProcess(self.builder, command, d,
                          sendRC=False, timeout=self.timeout,
                          maxTime=self.maxTime, usePTY=False)
         self.command = c
@@ -1347,14 +1348,14 @@ class Bzr(SourceBase):
             command.append(str(self.revision))
         command.append(self.repourl)
         command.append(tmpdir)
-        c = ShellCommand(self.builder, command, self.builder.basedir,
+        c = runprocess.RunProcess(self.builder, command, self.builder.basedir,
                          sendRC=False, timeout=self.timeout,
                          maxTime=self.maxTime, usePTY=False)
         self.command = c
         d = c.start()
         def _export(res):
             command = [self.vcexe, 'export', srcdir]
-            c = ShellCommand(self.builder, command, tmpdir,
+            c = runprocess.RunProcess(self.builder, command, tmpdir,
                              sendRC=False, timeout=self.timeout,
                              maxTime=self.maxTime, usePTY=False)
             self.command = c
@@ -1366,7 +1367,7 @@ class Bzr(SourceBase):
         # Don't send stderr. When there is no shared repo, this might confuse
         # users, as they will see a bzr error message. But having no shared
         # repo is not an error, just an indication that we need to make one.
-        c = ShellCommand(self.builder, [self.vcexe, 'info', '.'],
+        c = runprocess.RunProcess(self.builder, [self.vcexe, 'info', '.'],
                          self.builder.basedir,
                          sendStderr=False, sendRC=False, usePTY=False)
         d = c.start()
@@ -1374,7 +1375,7 @@ class Bzr(SourceBase):
             if type(res) is int and res != 0:
                 log.msg("No shared repo found, creating it")
                 # bzr info fails, try to create shared repo.
-                c = ShellCommand(self.builder, [self.vcexe, 'init-repo', '.'],
+                c = runprocess.RunProcess(self.builder, [self.vcexe, 'init-repo', '.'],
                                  self.builder.basedir,
                                  sendRC=False, usePTY=False)
                 self.command = c
@@ -1398,7 +1399,7 @@ class Bzr(SourceBase):
 
     def parseGotRevision(self):
         command = [self.vcexe, "version-info"]
-        c = ShellCommand(self.builder, command,
+        c = runprocess.RunProcess(self.builder, command,
                          os.path.join(self.builder.basedir, self.srcdir),
                          environ=self.env,
                          sendStdout=False, sendStderr=False, sendRC=False,
@@ -1446,7 +1447,7 @@ class Mercurial(SourceBase):
     def doVCUpdate(self):
         d = os.path.join(self.builder.basedir, self.srcdir)
         command = [self.vcexe, 'pull', '--verbose', self.repourl]
-        c = ShellCommand(self.builder, command, d,
+        c = runprocess.RunProcess(self.builder, command, d,
                          sendRC=False, timeout=self.timeout,
                          maxTime=self.maxTime, keepStdout=True, usePTY=False)
         self.command = c
@@ -1475,7 +1476,7 @@ class Mercurial(SourceBase):
             command.extend(['--rev', self.args.get('revision')])
         command.extend([self.repourl, d])
 
-        c = ShellCommand(self.builder, command, self.builder.basedir,
+        c = runprocess.RunProcess(self.builder, command, self.builder.basedir,
                          sendRC=False, timeout=self.timeout,
                          maxTime=self.maxTime, usePTY=False)
         self.command = c
@@ -1500,7 +1501,7 @@ class Mercurial(SourceBase):
     def _purge(self, dummy, dirname):
         d = os.path.join(self.builder.basedir, self.srcdir)
         purge = [self.vcexe, 'purge', '--all']
-        purgeCmd = ShellCommand(self.builder, purge, d,
+        purgeCmd = runprocess.RunProcess(self.builder, purge, d,
                                 sendStdout=False, sendStderr=False,
                                 keepStdout=True, keepStderr=True, usePTY=False)
 
@@ -1529,7 +1530,7 @@ class Mercurial(SourceBase):
 
         d = os.path.join(self.builder.basedir, self.srcdir)
         parentscmd = [self.vcexe, 'identify', '--num', '--branch']
-        cmd = ShellCommand(self.builder, parentscmd, d,
+        cmd = runprocess.RunProcess(self.builder, parentscmd, d,
                            sendStdout=False, sendStderr=False,
                            keepStdout=True, keepStderr=True, usePTY=False)
 
@@ -1579,7 +1580,7 @@ class Mercurial(SourceBase):
 
         def _checkRepoURL(res):
             parentscmd = [self.vcexe, 'paths', 'default']
-            cmd2 = ShellCommand(self.builder, parentscmd, d,
+            cmd2 = runprocess.RunProcess(self.builder, parentscmd, d,
                                sendStdout=False, sendStderr=False,
                                keepStdout=True, keepStderr=True, usePTY=False)
 
@@ -1650,7 +1651,7 @@ class Mercurial(SourceBase):
             updatecmd.extend(['--rev', self.args['revision']])
         else:
             updatecmd.extend(['--rev', self.args.get('branch',  'default')])
-        self.command = ShellCommand(self.builder, updatecmd,
+        self.command = runprocess.RunProcess(self.builder, updatecmd,
             self.builder.basedir, sendRC=False,
             timeout=self.timeout, maxTime=self.maxTime, usePTY=False)
         return self.command.start()
@@ -1658,7 +1659,7 @@ class Mercurial(SourceBase):
     def parseGotRevision(self):
         # we use 'hg identify' to find out what we wound up with
         command = [self.vcexe, "identify", "--id", "--debug"] # get full rev id
-        c = ShellCommand(self.builder, command,
+        c = runprocess.RunProcess(self.builder, command,
                          os.path.join(self.builder.basedir, self.srcdir),
                          environ=self.env,
                          sendStdout=False, sendStderr=False, sendRC=False,
@@ -1702,7 +1703,7 @@ class P4Base(SourceBase):
             command.extend(['-c', self.p4client])
         # add '-s submitted' for bug #626
         command.extend(['changes', '-s', 'submitted', '-m', '1', '#have'])
-        c = ShellCommand(self.builder, command, self.builder.basedir,
+        c = runprocess.RunProcess(self.builder, command, self.builder.basedir,
                          environ=self.env, timeout=self.timeout,
                          maxTime=self.maxTime, sendStdout=True,
                          sendStderr=False, sendRC=False, keepStdout=True,
@@ -1788,7 +1789,7 @@ class P4(P4Base):
         if self.revision:
             command.extend(['@' + str(self.revision)])
         env = {}
-        c = ShellCommand(self.builder, command, self.builder.basedir,
+        c = runprocess.RunProcess(self.builder, command, self.builder.basedir,
                          environ=env, sendRC=False, timeout=self.timeout,
                          maxTime=self.maxTime, keepStdout=True, usePTY=False)
         self.command = c
@@ -1838,7 +1839,7 @@ class P4(P4Base):
         # Clean client spec to plain ascii
         client_spec=client_spec.encode('ascii','ignore')
 
-        c = ShellCommand(self.builder, command, self.builder.basedir,
+        c = runprocess.RunProcess(self.builder, command, self.builder.basedir,
                          environ=env, sendRC=False, timeout=self.timeout,
                          maxTime=self.maxTime, initialStdin=client_spec,
                          usePTY=False)
@@ -1894,7 +1895,7 @@ class P4Sync(P4Base):
         if self.revision:
             command.extend(['@' + self.revision])
         env = {}
-        c = ShellCommand(self.builder, command, d, environ=env,
+        c = runprocess.RunProcess(self.builder, command, d, environ=env,
                          sendRC=False, timeout=self.timeout,
                          maxTime=self.maxTime, usePTY=False)
         self.command = c

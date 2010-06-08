@@ -1,3 +1,4 @@
+import types
 import time
 
 def remove_userpassword(url):
@@ -19,4 +20,47 @@ def now(_reactor=None):
         return _reactor.seconds()
     else:
         return time.time()
+
+class Obfuscated:
+    """An obfuscated string in a command"""
+    def __init__(self, real, fake):
+        self.real = real
+        self.fake = fake
+
+    def __str__(self):
+        return self.fake
+
+    def __repr__(self):
+        return `self.fake`
+
+    @staticmethod
+    def to_text(s):
+        if isinstance(s, (str, unicode)):
+            return s
+        else:
+            return str(s)
+
+    @staticmethod
+    def get_real(command):
+        rv = command
+        if type(command) == types.ListType:
+            rv = []
+            for elt in command:
+                if isinstance(elt, Obfuscated):
+                    rv.append(elt.real)
+                else:
+                    rv.append(Obfuscated.to_text(elt))
+        return rv
+
+    @staticmethod
+    def get_fake(command):
+        rv = command
+        if type(command) == types.ListType:
+            rv = []
+            for elt in command:
+                if isinstance(elt, Obfuscated):
+                    rv.append(elt.fake)
+                else:
+                    rv.append(Obfuscated.to_text(elt))
+        return rv
 
