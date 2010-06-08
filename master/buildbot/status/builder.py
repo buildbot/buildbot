@@ -1,7 +1,7 @@
 # -*- test-case-name: buildbot.test.test_status -*-
 
 from zope.interface import implements
-from twisted.python import log
+from twisted.python import log, runtime
 from twisted.persisted import styles
 from twisted.internet import reactor, defer, threads
 from twisted.protocols import basic
@@ -10,7 +10,7 @@ from buildbot.util import collections
 from buildbot.util.eventual import eventually
 
 import weakref
-import os, shutil, sys, re, urllib, itertools
+import os, shutil, re, urllib, itertools
 import gc
 from cPickle import load, dump
 from cStringIO import StringIO
@@ -539,7 +539,7 @@ class LogFile:
             filename = self.getFilename() + '.bz2'
         else:
             filename = self.getFilename() + '.gz'
-        if sys.platform == 'win32':
+        if runtime.platformType  == 'win32':
             # windows cannot rename a file on top of an existing one, so
             # fall back to delete-first. There are ways this can fail and
             # lose the builder's history, so we avoid using it in the
@@ -1481,7 +1481,7 @@ class BuildStatus(styles.Versioned):
         tmpfilename = filename + ".tmp"
         try:
             dump(self, open(tmpfilename, "wb"), -1)
-            if sys.platform == 'win32':
+            if runtime.platformType  == 'win32':
                 # windows cannot rename a file on top of an existing one, so
                 # fall back to delete-first. There are ways this can fail and
                 # lose the builder's history, so we avoid using it in the
@@ -1664,7 +1664,7 @@ class BuilderStatus(styles.Versioned):
         tmpfilename = filename + ".tmp"
         try:
             dump(self, open(tmpfilename, "wb"), -1)
-            if sys.platform == 'win32':
+            if runtime.platformType  == 'win32':
                 # windows cannot rename a file on top of an existing one
                 if os.path.exists(filename):
                     os.unlink(filename)

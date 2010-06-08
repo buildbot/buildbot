@@ -3,6 +3,7 @@ import pprint
 
 from twisted.trial import unittest
 from twisted.internet import task, defer
+from twisted.python import runtime
 
 from buildslave.test.util import nl
 from buildslave.commands.base import ShellCommand, Obfuscated, \
@@ -36,7 +37,7 @@ def stderrCommand(output):
 # windows returns rc 1, because exit status cannot indicate "signalled";
 # posix returns rc -1 for "signalled"
 FATAL_RC = -1
-if sys.platform.startswith('win'):
+if runtime.platformType  == 'win32':
     FATAL_RC = 1
 
 class TestShellCommand(unittest.TestCase):

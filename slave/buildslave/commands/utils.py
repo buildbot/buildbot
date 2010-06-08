@@ -1,7 +1,7 @@
 import os
-import sys
 
 from twisted.python.procutils import which
+from twisted.python import runtime
 
 def getCommand(name):
     possibles = which(name)
@@ -16,13 +16,13 @@ def getCommand(name):
     # does not seem to work properly with regard to errors raised
     # and catched in buildbot slave command (vcs.py)
     #
-    if sys.platform.startswith('win') and len(possibles) > 1:
+    if runtime.platformType  == 'win32' and len(possibles) > 1:
         possibles_exe = which(name + ".exe")
         if possibles_exe:
             return possibles_exe[0]
     return possibles[0]
 
-if sys.platform.startswith('win'):
+if runtime.platformType  == 'win32':
     def rmdirRecursive(dir):
         """This is a replacement for shutil.rmtree that works better under
         windows. Thanks to Bear at the OSAF for the code."""
