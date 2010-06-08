@@ -8,7 +8,6 @@ from twisted.python import runtime
 from buildslave.test.util import nl
 from buildslave.commands.base import ShellCommand, Obfuscated, \
     DummyCommand, WaitCommand, waitCommandRegistry, AbandonChain
-from buildslave.commands.utils import getCommand
 from twisted.python import runtime
 
 
@@ -297,13 +296,6 @@ class TestObfuscated(unittest.TestCase):
         cmd = 1
         self.failUnlessEqual(1, Obfuscated.get_real(cmd))
         self.failUnlessEqual(1, Obfuscated.get_fake(cmd))
-
-class TestUtils(unittest.TestCase):
-    def testGetCommand(self):
-        self.failUnlessEqual(sys.executable, getCommand(sys.executable))
-
-    def testGetBadCommand(self):
-        self.failUnlessRaises(RuntimeError, getCommand, "bad_command_that_really_would_never_exist.bat")
 
 class TestDummy(unittest.TestCase):
     def testDummy(self):
