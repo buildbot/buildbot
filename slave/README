@@ -27,7 +27,7 @@ testing before checkin.
 
 Buildslave:
 
-This package contains only the buildslave implementation.  The buildslave
+This package contains only the buildslave implementation.  The buildbot
 package contains the buildmaster.
 
 See http://buildbot.net for more information.
