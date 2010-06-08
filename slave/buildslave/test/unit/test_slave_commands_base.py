@@ -8,6 +8,8 @@ from buildslave.test.util import nl
 from buildslave.commands.base import ShellCommand, Obfuscated, \
     DummyCommand, WaitCommand, waitCommandRegistry, AbandonChain
 from buildslave.commands.utils import getCommand
+from twisted.python import runtime
+
 
 class FakeSlaveBuilder:
     debug = False
@@ -109,19 +111,6 @@ class TestShellCommand(unittest.TestCase):
             self.failUnless({'stderr': nl('hello\n')} in b.updates, ppupdates(b.updates))
             self.failUnless({'rc': 0} in b.updates, ppupdates(b.updates))
             self.failUnlessEquals(s.stderr, nl('hello\n'))
-        d.addCallback(check)
-        return d
-
-    def testKeepStdout(self):
-        basedir = "test_slave_commands_base.shellcommand.keepstdout"
-        b = FakeSlaveBuilder(False, basedir)
-        s = ShellCommand(b, stdoutCommand('hello'), basedir, keepStdout=True)
-
-        d = s.start()
-        def check(ign):
-            self.failUnless({'stdout': nl('hello\n')} in b.updates, ppupdates(b.updates))
-            self.failUnless({'rc': 0} in b.updates, ppupdates(b.updates))
-            self.failUnlessEquals(s.stdout, nl('hello\n'))
         d.addCallback(check)
         return d
 
