@@ -23,7 +23,7 @@ scripts = ["bin/buildslave"]
 #    scripts.append("contrib/windows/buildslave_service.py")
 
 setup_args = {
-    'name': "buildslave",
+    'name': "buildbot-slave",
     'version': version,
     'description': "BuildBot Slave Daemon",
     'long_description': "See the 'buildbot' package for details",
