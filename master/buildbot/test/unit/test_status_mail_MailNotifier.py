@@ -1,4 +1,4 @@
-import mock
+from mock import Mock
 from twisted.trial import unittest
 
 from buildbot.status.builder import SUCCESS
@@ -20,32 +20,35 @@ class FakeLog(object):
     def getText(self):
         return self.text
 
-class TestMailNotifier(unittest.TestCase):
-    def make_build(self):
-        # we may eventually need to add some attributes here
-        b = mock.Mock()
 
+class TestMailNotifier(unittest.TestCase):
     def test_createEmail_message_without_patch_and_log_contains_unicode(self):
-        build = self.make_build()
-        msgdict = dict(body=u'Unicode body with non-ascii (\u00E5\u00E4\u00F6).',
-                       type='plain')
+        build = Mock()
+        msgdict = create_msgdict()
         mn = MailNotifier('from@example.org')
-        m = mn.createEmail(msgdict, u'builder-n\u00E5me', u'project-n\u00E5me', SUCCESS, build)
+        m = mn.createEmail(msgdict, u'builder-n\u00E5me', u'project-n\u00E5me',
+                           SUCCESS, build)
         try:
             m.as_string()
         except UnicodeEncodeError:
             self.fail('Failed to call as_string() on email message.')
 
     def test_createEmail_message_with_patch_and_log_contains_unicode(self):
-        build = self.make_build()
-        msgdict = dict(body=u'Unicode body with non-ascii (\u00E5\u00E4\u00F6).',
-                       type='plain')
+        build = Mock()
+        msgdict = create_msgdict()
         patch = ['', u'\u00E5\u00E4\u00F6', '']
         logs = [FakeLog(u'Unicode log with non-ascii (\u00E5\u00E4\u00F6).')]
         mn = MailNotifier('from@example.org', addLogs=True)
-        m = mn.createEmail(msgdict, u'builder-n\u00E5me', u'project-n\u00E5me', SUCCESS,
+        m = mn.createEmail(msgdict, u'builder-n\u00E5me',
+                           u'project-n\u00E5me', SUCCESS,
                            build, patch, logs)
         try:
             m.as_string()
         except UnicodeEncodeError:
             self.fail('Failed to call as_string() on email message.')
+
+
+def create_msgdict():
+    unibody = u'Unicode body with non-ascii (\u00E5\u00E4\u00F6).'
+    msg_dict = dict(body=unibody, type='plain')
+    return msg_dict
