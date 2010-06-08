@@ -510,7 +510,3 @@ class BuildSlave(service.MultiService):
         self.bf.continueTrying = 0
         self.bf.stopTrying()
         service.MultiService.stopService(self)
-        # now kill the TCP connection
-        # twisted >2.0.1 does this for us, and leaves _connection=None
-        if self.connection._connection:
-            self.connection._connection.disconnect()
