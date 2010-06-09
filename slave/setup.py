@@ -47,6 +47,7 @@ setup_args = {
         "buildslave.commands",
         "buildslave.test",
         "buildslave.test.fake",
+        "buildslave.test.util",
         "buildslave.test.unit",
     ],
     }

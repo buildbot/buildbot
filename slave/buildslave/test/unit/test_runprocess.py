@@ -5,7 +5,7 @@ from twisted.trial import unittest
 from twisted.internet import task, defer
 from twisted.python import runtime
 
-from buildslave.test.util import nl
+from buildslave.test.util.misc import nl
 from buildslave.test.fake.slavebuilder import FakeSlaveBuilder
 from buildslave.exceptions import AbandonChain
 from buildslave import runprocess

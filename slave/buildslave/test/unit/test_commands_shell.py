@@ -7,7 +7,7 @@ from twisted.internet import task, defer
 from twisted.python import runtime
 
 from buildslave.test.fake.slavebuilder import FakeSlaveBuilder
-from buildslave.test.util import nl
+from buildslave.test.util.misc import nl
 from buildslave.commands.registry import commandRegistry
 from buildslave.commands import shell # for side-effect
 
