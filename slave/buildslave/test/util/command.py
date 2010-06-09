@@ -1,41 +1,44 @@
 import os
 import shutil
 
+from twisted.python import runtime
+
 from buildslave.test.fake import slavebuilder, runprocess
-import buildslave.runprocess
 from buildslave.commands import utils
+import buildslave.runprocess
 
 class CommandTestMixin:
     """
     Support for testing Command subclasses.
     """
 
-    def make_command(self, cmdclass, args):
+    def make_command(self, cmdclass, args, makedirs=False):
         """
         Create a new command object, creating the necessary arguments.  The
         cmdclass argument is the Command class, and args is the args dict
         to pass to its constructor.
 
-        If args has a 'workdir' key with value None, it will be replaced by a
-        freshly created workdir.
+        This always creates the SlaveBuilder with a basedir of 'basedir', and
+        a workdir of 'workdir'.  If makedirs is True, it will create these
+        directories.
 
         The resulting command is returned, but as a side-effect, the following
         attributes are set:
 
             self.cmd -- the command
             self.builder -- the (fake) SlaveBuilder
-            self.workdir -- the workdir created if args['workdir'] is None
         """
 
-        # set up the workdir
-        self.workdir = None
-        if 'workdir' in args and args['workdir'] is None:
-            self.workdir = args['workdir'] = os.path.abspath('commmand-test-workdir')
-            if os.path.exists(self.workdir):
-                shutil.rmtree(self.workdir)
-            os.makedirs(self.workdir)
+        # set up the workdir and basedir
+        self.makedirs = makedirs
+        if makedirs:
+            basedir_abs = os.path.abspath(os.path.join('basedir'))
+            workdir_abs = os.path.abspath(os.path.join('basedir', 'workdir'))
+            if os.path.exists(basedir_abs):
+                shutil.rmtree(basedir_abs)
+            os.makedirs(workdir_abs)
 
-        b = self.builder = slavebuilder.FakeSlaveBuilder()
+        b = self.builder = slavebuilder.FakeSlaveBuilder(basedir='basedir')
         self.cmd = cmdclass(b, 'fake-stepid', args)
         return self.cmd
 
@@ -45,8 +48,10 @@ class CommandTestMixin:
         any additional cleanup required.
         """
         # note: Twisted-2.5.0 does not have addCleanup, or we could use that here..
-        if hasattr(self, 'workdir') and self.workdir and os.path.exists(self.workdir):
-            shutil.rmtree(self.workdir)
+        if hasattr(self, 'makedirs') and self.makedirs:
+            basedir_abs = os.path.abspath(os.path.join('basedir'))
+            if os.path.exists(basedir_abs):
+                shutil.rmtree(basedir_abs)
 
         # finish up the runprocess
         if hasattr(self, 'runprocess_patched') and self.runprocess_patched:

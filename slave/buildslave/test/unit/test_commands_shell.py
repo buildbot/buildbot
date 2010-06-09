@@ -1,6 +1,4 @@
-import sys, re
-import pprint
-import time
+import os
 
 from twisted.trial import unittest
 from twisted.internet import task, defer
@@ -27,7 +25,7 @@ class TestSlaveShellCommand(CommandTestMixin, unittest.TestCase):
 
     def test_simple(self):
         self.patch_runprocess(
-            Expect([ 'echo', 'hello' ], '/slavebuilder/basedir/workdir')
+            Expect([ 'echo', 'hello' ], os.path.join('basedir', 'workdir'))
             + { 'hdr' : 'headers' } + { 'stdout' : 'hello\n' } + { 'rc' : 0 }
             + 0,
         )
