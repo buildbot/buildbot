@@ -46,6 +46,8 @@ class FakeRunProcess:
     This class is first programmed with the set of instances that are expected,
     and with their expected results.  It will raise an AssertionError if the
     expected behavior is not seen.
+
+    Note that this handles sendStderr/sendStdout and keepStderr/keepStdout properly.
     """
 
     @classmethod
@@ -81,7 +83,7 @@ class FakeRunProcess:
 
         if not self._expectations:
             raise AssertionError("unexpected instantiation: %s" % (kwargs,))
-        exp = self._expectations.pop()
+        exp = self._exp = self._expectations.pop()
         if exp.kwargs != kwargs:
             msg = [ ]
             for key in sorted(list(set(exp.kwargs.keys()) | set(kwargs.keys()))):
@@ -102,14 +104,38 @@ class FakeRunProcess:
                 raise AssertionError("\n".join(msg))
 
         self._builder = builder
-        self._status_updates = exp.status_updates
-        self._result = exp.result
+        self.stdout = ''
+        self.stderr = ''
 
     def start(self):
-        # send the updates and return an already-fired deferred
-        for upd in self._status_updates:
+        # figure out the stdio-related parameters
+        keepStdout = self._exp.kwargs.get('keepStdout', False)
+        keepStderr = self._exp.kwargs.get('keepStderr', False)
+        sendStdout = self._exp.kwargs.get('sendStdout', True)
+        sendStderr = self._exp.kwargs.get('sendStderr', True)
+        if keepStdout:
+            self.stdout = ''
+        if keepStderr:
+            self.stderr = ''
+
+        # send the updates, accounting for the stdio parameters
+        for upd in self._exp.status_updates:
+            if 'stdout' in upd:
+                if keepStdout:
+                    self.stdout += upd['stdout']
+                if not sendStdout:
+                    del upd['stdout']
+            if 'stderr' in upd:
+                if keepStderr:
+                    self.stderr += upd['stderr']
+                if not sendStderr:
+                    del upd['stderr']
+            if not upd:
+                continue
             self._builder.sendUpdate(upd)
-        if self._result[0] == 'e':
-            return defer.fail(self._result[1])
+
+        # and return an already-fired deferred
+        if self._exp.result[0] == 'e':
+            return defer.fail(self._exp.result[1])
         else:
-            return defer.succeed(self._result[1])
+            return defer.succeed(self._exp.result[1])

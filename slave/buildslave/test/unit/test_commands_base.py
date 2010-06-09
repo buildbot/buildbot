@@ -41,6 +41,9 @@ class DummyCommand(Command):
 
 class TestDummyCommand(CommandTestMixin, unittest.TestCase):
 
+    def setUp(self):
+        self.setUpCommand()
+
     def tearDown(self):
         self.tearDownCommand()
 

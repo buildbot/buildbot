@@ -18,9 +18,9 @@ class CommandTestMixin:
         cmdclass argument is the Command class, and args is the args dict
         to pass to its constructor.
 
-        This always creates the SlaveBuilder with a basedir of 'basedir', and
-        a workdir of 'workdir'.  If makedirs is True, it will create these
-        directories.
+        This always creates the SlaveBuilder with a basedir (self.basedir).  If
+        makedirs is true, it will create the basedir and a workdir directory
+        inside (named 'workdir').
 
         The resulting command is returned, but as a side-effect, the following
         attributes are set:
@@ -32,15 +32,26 @@ class CommandTestMixin:
         # set up the workdir and basedir
         self.makedirs = makedirs
         if makedirs:
-            basedir_abs = os.path.abspath(os.path.join('basedir'))
-            workdir_abs = os.path.abspath(os.path.join('basedir', 'workdir'))
+            basedir_abs = os.path.abspath(os.path.join(self.basedir))
+            workdir_abs = os.path.abspath(os.path.join(self.basedir, 'workdir'))
             if os.path.exists(basedir_abs):
                 shutil.rmtree(basedir_abs)
             os.makedirs(workdir_abs)
 
-        b = self.builder = slavebuilder.FakeSlaveBuilder(basedir='basedir')
+        b = self.builder = slavebuilder.FakeSlaveBuilder(basedir=self.basedir)
         self.cmd = cmdclass(b, 'fake-stepid', args)
         return self.cmd
+
+    def setUpCommand(self):
+        """
+        Get things ready to test a Command
+
+        Sets:
+            self.basedir -- the basedir
+            self.basedir_workdir -- os.path.join(self.basedir, 'workdir')
+        """
+        self.basedir = 'basedir'
+        self.basedir_workdir = os.path.join('basedir', 'workdir')
 
     def tearDownCommand(self):
         """
@@ -78,7 +89,7 @@ class CommandTestMixin:
         buildslave.runprocess.RunProcess.expect(*expectations)
         self.runprocess_patched = True
 
-    def patch_getcommand(self, name, result):
+    def patch_getCommand(self, name, result):
         """
         Patch utils.getCommand to return RESULT for NAME
         """
@@ -87,3 +98,9 @@ class CommandTestMixin:
             if n == name: return result
             return old_getCommand(n)
         self.patch(utils, 'getCommand', new_getCommand)
+
+    def clean_environ(self):
+        """
+        Temporarily clean out os.environ to { 'PWD' : '.' }
+        """
+        self.patch(os, 'environ', { 'PWD' : '.' })
