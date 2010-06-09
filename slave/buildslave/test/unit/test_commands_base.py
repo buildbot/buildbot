@@ -6,8 +6,8 @@ from twisted.trial import unittest
 from twisted.internet import task, defer
 from twisted.python import runtime
 
-from buildslave.test.fake.slavebuilder import FakeSlaveBuilder
-from buildslave.commands.base import Command, AbandonChain
+from buildslave.test.util.command import CommandTestMixin
+from buildslave.commands.base import Command
 
 # set up a fake Command subclass to test the handling in Command.  Think of
 # this as testing Command's subclassability.
@@ -21,7 +21,7 @@ class DummyCommand(Command):
 
     def start(self):
         self.started = True
-        self.sendStatus({'rc' : 13})
+        self.sendStatus(self.args)
         self.cmd_deferred = defer.Deferred()
         return self.cmd_deferred
 
@@ -39,13 +39,10 @@ class DummyCommand(Command):
         self.cmd_deferred = None
         d.errback(RuntimeError("forced failure"))
 
-class TestDummyCommand(unittest.TestCase):
+class TestDummyCommand(CommandTestMixin, unittest.TestCase):
 
-    def makeCommand(self, args):
-        b = self.builder = FakeSlaveBuilder()
-        self.stepid = str(time.time())
-        self.cmd = DummyCommand(b, self.stepid, args)
-        return self.cmd
+    def tearDown(self):
+        self.tearDownCommand()
 
     def assertState(self, setup_done, running, started, interrupted, msg=None):
         self.assertEqual(
@@ -62,11 +59,11 @@ class TestDummyCommand(unittest.TestCase):
             }, msg)
 
     def test_run(self):
-        cmd = self.makeCommand({})
+        cmd = self.make_command(DummyCommand, { 'stdout' : 'yay' })
         self.assertState(True, False, False, False, "setup called by constructor")
 
         # start the command
-        d = cmd.doStart()
+        d = self.run_command()
         self.assertState(True, True, True, False, "started and running both set")
 
         # allow the command to finish and check the result
@@ -76,16 +73,16 @@ class TestDummyCommand(unittest.TestCase):
         d.addCallback(check)
 
         def checkresult(_):
-            self.assertEqual(self.builder.updates, [ { 'rc' : 13 } ], "updates processed")
+            self.assertEqual(self.get_updates(), [ { 'stdout' : 'yay' } ], "updates processed")
         d.addCallback(checkresult)
         return d
 
     def test_run_failure(self):
-        cmd = self.makeCommand({})
+        cmd = self.make_command(DummyCommand, {})
         self.assertState(True, False, False, False, "setup called by constructor")
 
         # start the command
-        d = cmd.doStart()
+        d = self.run_command()
         self.assertState(True, True, True, False, "started and running both set")
 
         # fail the command with an exception, and check the result
@@ -95,16 +92,16 @@ class TestDummyCommand(unittest.TestCase):
         d.addErrback(check)
 
         def checkresult(_):
-            self.assertEqual(self.builder.updates, [ { 'rc' : 13 } ], "updates processed")
+            self.assertEqual(self.get_updates(), [ {} ], "updates processed")
         d.addCallback(checkresult)
         return d
 
     def test_run_interrupt(self):
-        cmd = self.makeCommand({})
+        cmd = self.make_command(DummyCommand, {})
         self.assertState(True, False, False, False, "setup called by constructor")
 
         # start the command
-        d = cmd.doStart()
+        d = self.run_command()
         self.assertState(True, True, True, False, "started and running both set")
 
         # interrupt the command
