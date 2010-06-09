@@ -7,7 +7,7 @@ class FakeSlaveBuilder:
     showing the updates.  Set debug to True to show updates as they happen.
     """
     debug = False
-    def __init__(self, usePTY=False, basedir="."):
+    def __init__(self, usePTY=False, basedir="/slavebuilder/basedir"):
         self.updates = []
         self.basedir = basedir
         self.usePTY = usePTY

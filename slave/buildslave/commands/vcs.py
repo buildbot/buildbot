@@ -8,7 +8,7 @@ from twisted.internet import defer
 from buildslave.commands.base import Command, AbandonChain, command_version
 from buildslave import runprocess
 from buildslave.commands.registry import registerSlaveCommand
-from buildslave.commands.utils import getCommand, rmdirRecursive
+from buildslave.commands import utils
 from buildslave.util import remove_userpassword, Obfuscated
 
 class SourceBase(Command):
@@ -261,7 +261,7 @@ class SourceBase(Command):
         if runtime.platformType != "posix":
             # if we're running on w32, use rmtree instead. It will block,
             # but hopefully it won't take too long.
-            rmdirRecursive(d)
+            utils.rmdirRecursive(d)
             return defer.succeed(0)
         command = ["rm", "-rf", d]
         c = runprocess.RunProcess(self.builder, command, self.builder.basedir,
@@ -339,7 +339,7 @@ class SourceBase(Command):
         if len(self.patch) >= 3:
             root = self.patch[2]
         command = [
-            getCommand("patch"),
+            utils.getCommand("patch"),
             '-p%d' % patchlevel,
             '--remove-empty-files',
             '--force',
@@ -381,7 +381,7 @@ class BK(SourceBase):
 
     def setup(self, args):
         SourceBase.setup(self, args)
-        self.vcexe = getCommand("bk")
+        self.vcexe = utils.getCommand("bk")
         self.bkurl = args['bkurl']
         self.sourcedata = '"%s\n"' % self.bkurl
 
@@ -482,7 +482,7 @@ class CVS(SourceBase):
 
     def setup(self, args):
         SourceBase.setup(self, args)
-        self.vcexe = getCommand("cvs")
+        self.vcexe = utils.getCommand("cvs")
         self.cvsroot = args['cvsroot']
         self.cvsmodule = args['cvsmodule']
         self.global_options = args.get('global_options', [])
@@ -588,7 +588,7 @@ class SVN(SourceBase):
 
     def setup(self, args):
         SourceBase.setup(self, args)
-        self.vcexe = getCommand("svn")
+        self.vcexe = utils.getCommand("svn")
         self.svnurl = args['svnurl']
         self.sourcedata = "%s\n" % self.svnurl
         self.keep_on_purge = args.get('keep_on_purge', [])
@@ -670,7 +670,7 @@ class SVN(SourceBase):
                 os.chmod(filepath, 0700)
                 os.remove(filepath)
             else:
-                rmdirRecursive(filepath)
+                utils.rmdirRecursive(filepath)
         # Now safe to update.
         revision = self.args['revision'] or 'HEAD'
         return self._dovccmd('update', ['--revision', str(revision)],
@@ -686,7 +686,7 @@ class SVN(SourceBase):
         # svn checkout operations finish with 'Checked out revision 16657.'
         # svn update operations finish the line 'At revision 16654.'
         # But we don't use those. Instead, run 'svnversion'.
-        svnversion_command = getCommand("svnversion")
+        svnversion_command = utils.getCommand("svnversion")
         # older versions of 'svnversion' (1.1.4) require the WC_PATH
         # argument, newer ones (1.3.1) do not.
         return [svnversion_command, "."]
@@ -730,7 +730,7 @@ class Darcs(SourceBase):
 
     def setup(self, args):
         SourceBase.setup(self, args)
-        self.vcexe = getCommand("darcs")
+        self.vcexe = utils.getCommand("darcs")
         self.repourl = args['repourl']
         self.sourcedata = "%s\n" % self.repourl
         self.revision = self.args.get('revision')
@@ -920,7 +920,7 @@ class Git(SourceBase):
 
     def setup(self, args):
         SourceBase.setup(self, args)
-        self.vcexe = getCommand("git")
+        self.vcexe = utils.getCommand("git")
         self.repourl = args['repourl']
         self.branch = args.get('branch')
         if not self.branch:
@@ -1083,7 +1083,7 @@ class Arch(SourceBase):
 
     def setup(self, args):
         SourceBase.setup(self, args)
-        self.vcexe = getCommand("tla")
+        self.vcexe = utils.getCommand("tla")
         self.archive = args.get('archive')
         self.url = args['url']
         self.version = args['version']
@@ -1210,7 +1210,7 @@ class Bazaar(Arch):
 
     def setup(self, args):
         Arch.setup(self, args)
-        self.vcexe = getCommand("baz")
+        self.vcexe = utils.getCommand("baz")
         # baz doesn't emit the repository name after registration (and
         # grepping through the output of 'baz archives' is too hard), so we
         # require that the buildmaster configuration to provide both the
@@ -1273,7 +1273,7 @@ class Bzr(SourceBase):
 
     def setup(self, args):
         SourceBase.setup(self, args)
-        self.vcexe = getCommand("bzr")
+        self.vcexe = utils.getCommand("bzr")
         self.repourl = args['repourl']
         self.sourcedata = "%s\n" % self.repourl
         self.revision = self.args.get('revision')
@@ -1431,7 +1431,7 @@ class Mercurial(SourceBase):
 
     def setup(self, args):
         SourceBase.setup(self, args)
-        self.vcexe = getCommand("hg")
+        self.vcexe = utils.getCommand("hg")
         self.repourl = args['repourl']
         self.clobberOnBranchChange = args.get('clobberOnBranchChange', True)
         self.sourcedata = "%s\n" % self.repourl
@@ -1873,7 +1873,7 @@ class P4Sync(P4Base):
 
     def setup(self, args):
         P4Base.setup(self, args)
-        self.vcexe = getCommand("p4")
+        self.vcexe = utils.getCommand("p4")
 
     def sourcedirIsUpdateable(self):
         return True
