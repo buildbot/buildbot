@@ -14,7 +14,7 @@ from buildslave.commands import registry
 
 # make sure the standard commands get registered. This import is performed
 # for its side-effects.
-from buildslave.commands import base, transfer, vcs, shell, dummy
+from buildslave.commands import base, transfer, vcs, shell, dummy, svn
 
 class NoCommandRunning(pb.Error):
     pass

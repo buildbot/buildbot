@@ -5,374 +5,17 @@ from xml.dom.minidom import parseString
 from twisted.python import log, failure, runtime
 from twisted.internet import defer
 
-from buildslave.commands.base import Command, AbandonChain, command_version
+from buildslave.commands.base import SourceBaseCommand, AbandonChain, command_version
 from buildslave import runprocess
 from buildslave.commands.registry import registerSlaveCommand
 from buildslave.commands import utils
 from buildslave.util import remove_userpassword, Obfuscated
 
-class SourceBase(Command):
-    """Abstract base class for Version Control System operations (checkout
-    and update). This class extracts the following arguments from the
-    dictionary received from the master:
-
-        - ['workdir']:  (required) the subdirectory where the buildable sources
-                        should be placed
-
-        - ['mode']:     one of update/copy/clobber/export, defaults to 'update'
-
-        - ['revision']: (required) If not None, this is an int or string which indicates
-                        which sources (along a time-like axis) should be used.
-                        It is the thing you provide as the CVS -r or -D
-                        argument.
-
-        - ['patch']:    If not None, this is a tuple of (striplevel, patch)
-                        which contains a patch that should be applied after the
-                        checkout has occurred. Once applied, the tree is no
-                        longer eligible for use with mode='update', and it only
-                        makes sense to use this in conjunction with a
-                        ['revision'] argument. striplevel is an int, and patch
-                        is a string in standard unified diff format. The patch
-                        will be applied with 'patch -p%d <PATCH', with
-                        STRIPLEVEL substituted as %d. The command will fail if
-                        the patch process fails (rejected hunks).
-
-        - ['timeout']:  seconds of silence tolerated before we kill off the
-                        command
-
-        - ['maxTime']:  seconds before we kill off the command
-
-        - ['retry']:    If not None, this is a tuple of (delay, repeats)
-                        which means that any failed VC updates should be
-                        reattempted, up to REPEATS times, after a delay of
-                        DELAY seconds. This is intended to deal with slaves
-                        that experience transient network failures.
-    """
-
-    sourcedata = ""
-
-    def setup(self, args):
-        # if we need to parse the output, use this environment. Otherwise
-        # command output will be in whatever the buildslave's native language
-        # has been set to.
-        self.env = os.environ.copy()
-        self.env['LC_MESSAGES'] = "C"
-
-        self.workdir = args['workdir']
-        self.mode = args.get('mode', "update")
-        self.revision = args.get('revision')
-        self.patch = args.get('patch')
-        self.timeout = args.get('timeout', 120)
-        self.maxTime = args.get('maxTime', None)
-        self.retry = args.get('retry')
-        # VC-specific subclasses should override this to extract more args.
-        # Make sure to upcall!
-
-    def start(self):
-        self.sendStatus({'header': "starting " + self.header + "\n"})
-        self.command = None
-
-        # self.srcdir is where the VC system should put the sources
-        if self.mode == "copy":
-            self.srcdir = "source" # hardwired directory name, sorry
-        else:
-            self.srcdir = self.workdir
-        self.sourcedatafile = os.path.join(self.builder.basedir,
-                                           self.srcdir,
-                                           ".buildbot-sourcedata")
-
-        d = defer.succeed(None)
-        self.maybeClobber(d)
-        if not (self.sourcedirIsUpdateable() and self.sourcedataMatches()):
-            # the directory cannot be updated, so we have to clobber it.
-            # Perhaps the master just changed modes from 'export' to
-            # 'update'.
-            d.addCallback(self.doClobber, self.srcdir)
-
-        d.addCallback(self.doVC)
-
-        if self.mode == "copy":
-            d.addCallback(self.doCopy)
-        if self.patch:
-            d.addCallback(self.doPatch)
-        d.addCallbacks(self._sendRC, self._checkAbandoned)
-        return d
-
-    def maybeClobber(self, d):
-        # do we need to clobber anything?
-        if self.mode in ("copy", "clobber", "export"):
-            d.addCallback(self.doClobber, self.workdir)
-
-    def interrupt(self):
-        self.interrupted = True
-        if self.command:
-            self.command.kill("command interrupted")
-
-    def doVC(self, res):
-        if self.interrupted:
-            raise AbandonChain(1)
-        if self.sourcedirIsUpdateable() and self.sourcedataMatches():
-            d = self.doVCUpdate()
-            d.addCallback(self.maybeDoVCFallback)
-        else:
-            d = self.doVCFull()
-            d.addBoth(self.maybeDoVCRetry)
-        d.addCallback(self._abandonOnFailure)
-        d.addCallback(self._handleGotRevision)
-        d.addCallback(self.writeSourcedata)
-        return d
-
-    def sourcedataMatches(self):
-        try:
-            olddata = self.readSourcedata()
-            if olddata != self.sourcedata:
-                return False
-        except IOError:
-            return False
-        return True
-
-    def sourcedirIsPatched(self):
-        return os.path.exists(os.path.join(self.builder.basedir,
-                                           self.workdir,
-                                           ".buildbot-patched"))
-
-    def _handleGotRevision(self, res):
-        d = defer.maybeDeferred(self.parseGotRevision)
-        d.addCallback(lambda got_revision:
-                      self.sendStatus({'got_revision': got_revision}))
-        return d
-
-    def parseGotRevision(self):
-        """Override this in a subclass. It should return a string that
-        represents which revision was actually checked out, or a Deferred
-        that will fire with such a string. If, in a future build, you were to
-        pass this 'got_revision' string in as the 'revision' component of a
-        SourceStamp, you should wind up with the same source code as this
-        checkout just obtained.
-
-        It is probably most useful to scan self.command.stdout for a string
-        of some sort. Be sure to set keepStdout=True on the VC command that
-        you run, so that you'll have something available to look at.
-
-        If this information is unavailable, just return None."""
-
-        return None
-
-    def readSourcedata(self):
-        return open(self.sourcedatafile, "r").read()
-
-    def writeSourcedata(self, res):
-        open(self.sourcedatafile, "w").write(self.sourcedata)
-        return res
-
-    def sourcedirIsUpdateable(self):
-        """Returns True if the tree can be updated."""
-        raise NotImplementedError("this must be implemented in a subclass")
-
-    def doVCUpdate(self):
-        """Returns a deferred with the steps to update a checkout."""
-        raise NotImplementedError("this must be implemented in a subclass")
-
-    def doVCFull(self):
-        """Returns a deferred with the steps to do a fresh checkout."""
-        raise NotImplementedError("this must be implemented in a subclass")
-
-    def maybeDoVCFallback(self, rc):
-        if type(rc) is int and rc == 0:
-            return rc
-        if self.interrupted:
-            raise AbandonChain(1)
-        msg = "update failed, clobbering and trying again"
-        self.sendStatus({'header': msg + "\n"})
-        log.msg(msg)
-        d = self.doClobber(None, self.srcdir)
-        d.addCallback(self.doVCFallback2)
-        return d
-
-    def doVCFallback2(self, res):
-        msg = "now retrying VC operation"
-        self.sendStatus({'header': msg + "\n"})
-        log.msg(msg)
-        d = self.doVCFull()
-        d.addBoth(self.maybeDoVCRetry)
-        d.addCallback(self._abandonOnFailure)
-        return d
-
-    def maybeDoVCRetry(self, res):
-        """We get here somewhere after a VC chain has finished. res could
-        be::
-
-         - 0: the operation was successful
-         - nonzero: the operation failed. retry if possible
-         - AbandonChain: the operation failed, someone else noticed. retry.
-         - Failure: some other exception, re-raise
-        """
-
-        if isinstance(res, failure.Failure):
-            if self.interrupted:
-                return res # don't re-try interrupted builds
-            res.trap(AbandonChain)
-        else:
-            if type(res) is int and res == 0:
-                return res
-            if self.interrupted:
-                raise AbandonChain(1)
-        # if we get here, we should retry, if possible
-        if self.retry:
-            delay, repeats = self.retry
-            if repeats >= 0:
-                self.retry = (delay, repeats-1)
-                msg = ("update failed, trying %d more times after %d seconds"
-                       % (repeats, delay))
-                self.sendStatus({'header': msg + "\n"})
-                log.msg(msg)
-                d = defer.Deferred()
-                # we are going to do a full checkout, so a clobber is
-                # required first
-                self.doClobber(d, self.workdir)
-                if self.srcdir:
-                    self.doClobber(d, self.srcdir)
-                d.addCallback(lambda res: self.doVCFull())
-                d.addBoth(self.maybeDoVCRetry)
-                self._reactor.callLater(delay, d.callback, None)
-                return d
-        return res
-
-    def doClobber(self, dummy, dirname, chmodDone=False):
-        # TODO: remove the old tree in the background
-##         workdir = os.path.join(self.builder.basedir, self.workdir)
-##         deaddir = self.workdir + ".deleting"
-##         if os.path.isdir(workdir):
-##             try:
-##                 os.rename(workdir, deaddir)
-##                 # might fail if deaddir already exists: previous deletion
-##                 # hasn't finished yet
-##                 # start the deletion in the background
-##                 # TODO: there was a solaris/NetApp/NFS problem where a
-##                 # process that was still running out of the directory we're
-##                 # trying to delete could prevent the rm-rf from working. I
-##                 # think it stalled the rm, but maybe it just died with
-##                 # permission issues. Try to detect this.
-##                 os.commands("rm -rf %s &" % deaddir)
-##             except:
-##                 # fall back to sequential delete-then-checkout
-##                 pass
-        d = os.path.join(self.builder.basedir, dirname)
-        if runtime.platformType != "posix":
-            # if we're running on w32, use rmtree instead. It will block,
-            # but hopefully it won't take too long.
-            utils.rmdirRecursive(d)
-            return defer.succeed(0)
-        command = ["rm", "-rf", d]
-        c = runprocess.RunProcess(self.builder, command, self.builder.basedir,
-                         sendRC=0, timeout=self.timeout, maxTime=self.maxTime,
-                         usePTY=False)
-
-        self.command = c
-        # sendRC=0 means the rm command will send stdout/stderr to the
-        # master, but not the rc=0 when it finishes. That job is left to
-        # _sendRC
-        d = c.start()
-        # The rm -rf may fail if there is a left-over subdir with chmod 000
-        # permissions. So if we get a failure, we attempt to chmod suitable
-        # permissions and re-try the rm -rf.
-        if chmodDone:
-            d.addCallback(self._abandonOnFailure)
-        else:
-            d.addCallback(lambda rc: self.doClobberTryChmodIfFail(rc, dirname))
-        return d
-
-    def doClobberTryChmodIfFail(self, rc, dirname):
-        assert isinstance(rc, int)
-        if rc == 0:
-            return defer.succeed(0)
-        # Attempt a recursive chmod and re-try the rm -rf after.
-
-        command = ["chmod", "-Rf", "u+rwx", os.path.join(self.builder.basedir, dirname)]
-        if sys.platform.startswith('freebsd'):
-            # Work around a broken 'chmod -R' on FreeBSD (it tries to recurse into a
-            # directory for which it doesn't have permission, before changing that
-            # permission) by running 'find' instead
-            command = ["find", os.path.join(self.builder.basedir, dirname),
-                                '-exec', 'chmod', 'u+rwx', '{}', ';' ]
-        c = runprocess.RunProcess(self.builder, command, self.builder.basedir,
-                         sendRC=0, timeout=self.timeout, maxTime=self.maxTime,
-                         usePTY=False)
-
-        self.command = c
-        d = c.start()
-        d.addCallback(self._abandonOnFailure)
-        d.addCallback(lambda dummy: self.doClobber(dummy, dirname, True))
-        return d
-
-    def doCopy(self, res):
-        # now copy tree to workdir
-        fromdir = os.path.join(self.builder.basedir, self.srcdir)
-        todir = os.path.join(self.builder.basedir, self.workdir)
-        if runtime.platformType != "posix":
-            self.sendStatus({'header': "Since we're on a non-POSIX platform, "
-            "we're not going to try to execute cp in a subprocess, but instead "
-            "use shutil.copytree(), which will block until it is complete.  "
-            "fromdir: %s, todir: %s\n" % (fromdir, todir)})
-            shutil.copytree(fromdir, todir)
-            return defer.succeed(0)
-
-        if not os.path.exists(os.path.dirname(todir)):
-            os.makedirs(os.path.dirname(todir))
-        if os.path.exists(todir):
-            # I don't think this happens, but just in case..
-            log.msg("cp target '%s' already exists -- cp will not do what you think!" % todir)
-
-        command = ['cp', '-R', '-P', '-p', fromdir, todir]
-        c = runprocess.RunProcess(self.builder, command, self.builder.basedir,
-                         sendRC=False, timeout=self.timeout, maxTime=self.maxTime,
-                         usePTY=False)
-        self.command = c
-        d = c.start()
-        d.addCallback(self._abandonOnFailure)
-        return d
-
-    def doPatch(self, res):
-        patchlevel = self.patch[0]
-        diff = self.patch[1]
-        root = None
-        if len(self.patch) >= 3:
-            root = self.patch[2]
-        command = [
-            utils.getCommand("patch"),
-            '-p%d' % patchlevel,
-            '--remove-empty-files',
-            '--force',
-            '--forward',
-        ]
-        dir = os.path.join(self.builder.basedir, self.workdir)
-        # Mark the directory so we don't try to update it later, or at least try
-        # to revert first.
-        marker = open(os.path.join(dir, ".buildbot-patched"), "w")
-        marker.write("patched\n")
-        marker.close()
-
-        # Update 'dir' with the 'root' option. Make sure it is a subdirectory
-        # of dir.
-        if (root and
-            os.path.abspath(os.path.join(dir, root)
-                            ).startswith(os.path.abspath(dir))):
-            dir = os.path.join(dir, root)
-
-        # now apply the patch
-        c = runprocess.RunProcess(self.builder, command, dir,
-                         sendRC=False, timeout=self.timeout,
-                         maxTime=self.maxTime, initialStdin=diff, usePTY=False)
-        self.command = c
-        d = c.start()
-        d.addCallback(self._abandonOnFailure)
-        return d
 
 
-
-class BK(SourceBase):
+class BK(SourceBaseCommand):
     """BitKeeper-specific VC operation. In addition to the arguments
-    handled by SourceBase, this command reads the following keys:
+    handled by SourceBaseCommand, this command reads the following keys:
 
     ['bkurl'] (required): the BK repository string
     """
@@ -380,7 +23,7 @@ class BK(SourceBase):
     header = "bk operation"
 
     def setup(self, args):
-        SourceBase.setup(self, args)
+        SourceBaseCommand.setup(self, args)
         self.vcexe = utils.getCommand("bk")
         self.bkurl = args['bkurl']
         self.sourcedata = '"%s\n"' % self.bkurl
@@ -461,9 +104,9 @@ registerSlaveCommand("bk", BK, command_version)
 
 
 
-class CVS(SourceBase):
+class CVS(SourceBaseCommand):
     """CVS-specific VC operation. In addition to the arguments handled by
-    SourceBase, this command reads the following keys:
+    SourceBaseCommand, this command reads the following keys:
 
     ['cvsroot'] (required): the CVSROOT repository string
     ['cvsmodule'] (required): the module to be retrieved
@@ -481,7 +124,7 @@ class CVS(SourceBase):
     header = "cvs operation"
 
     def setup(self, args):
-        SourceBase.setup(self, args)
+        SourceBaseCommand.setup(self, args)
         self.vcexe = utils.getCommand("cvs")
         self.cvsroot = args['cvsroot']
         self.cvsmodule = args['cvsmodule']
@@ -519,7 +162,7 @@ class CVS(SourceBase):
 
     def _didLogin(self, res):
         # now we really start
-        return SourceBase.start(self)
+        return SourceBaseCommand.start(self)
 
     def doVCUpdate(self):
         d = os.path.join(self.builder.basedir, self.srcdir)
@@ -571,9 +214,9 @@ class CVS(SourceBase):
 
 registerSlaveCommand("cvs", CVS, command_version)
 
-class SVN(SourceBase):
+class SVN(SourceBaseCommand):
     """Subversion-specific VC operation. In addition to the arguments
-    handled by SourceBase, this command reads the following keys:
+    handled by SourceBaseCommand, this command reads the following keys:
 
     ['svnurl'] (required): the SVN repository string
     ['username']:          Username passed to the svn command
@@ -587,7 +230,7 @@ class SVN(SourceBase):
     header = "svn operation"
 
     def setup(self, args):
-        SourceBase.setup(self, args)
+        SourceBaseCommand.setup(self, args)
         self.vcexe = utils.getCommand("svn")
         self.svnurl = args['svnurl']
         self.sourcedata = "%s\n" % self.svnurl
@@ -719,9 +362,9 @@ class SVN(SourceBase):
 
 registerSlaveCommand("svn", SVN, command_version)
 
-class Darcs(SourceBase):
+class Darcs(SourceBaseCommand):
     """Darcs-specific VC operation. In addition to the arguments
-    handled by SourceBase, this command reads the following keys:
+    handled by SourceBaseCommand, this command reads the following keys:
 
     ['repourl'] (required): the Darcs repository string
     """
@@ -729,7 +372,7 @@ class Darcs(SourceBase):
     header = "darcs operation"
 
     def setup(self, args):
-        SourceBase.setup(self, args)
+        SourceBaseCommand.setup(self, args)
         self.vcexe = utils.getCommand("darcs")
         self.repourl = args['repourl']
         self.sourcedata = "%s\n" % self.repourl
@@ -796,9 +439,9 @@ class Darcs(SourceBase):
 
 registerSlaveCommand("darcs", Darcs, command_version)
 
-class Monotone(SourceBase):
+class Monotone(SourceBaseCommand):
     """Monotone-specific VC operation.  In addition to the arguments handled
-    by SourceBase, this command reads the following keys:
+    by SourceBaseCommand, this command reads the following keys:
 
     ['server_addr'] (required): the address of the server to pull from
     ['branch'] (required): the branch the revision is on
@@ -810,7 +453,7 @@ class Monotone(SourceBase):
     header = "monotone operation"
 
     def setup(self, args):
-        SourceBase.setup(self, args)
+        SourceBaseCommand.setup(self, args)
         self.server_addr = args["server_addr"]
         self.branch = args["branch"]
         self.db_path = args["db_path"]
@@ -904,9 +547,9 @@ class Monotone(SourceBase):
 registerSlaveCommand("monotone", Monotone, command_version)
 
 
-class Git(SourceBase):
+class Git(SourceBaseCommand):
     """Git specific VC operation. In addition to the arguments
-    handled by SourceBase, this command reads the following keys:
+    handled by SourceBaseCommand, this command reads the following keys:
 
     ['repourl'] (required):    the upstream GIT repository string
     ['branch'] (optional):     which version (i.e. branch or tag) to
@@ -919,7 +562,7 @@ class Git(SourceBase):
     header = "git operation"
 
     def setup(self, args):
-        SourceBase.setup(self, args)
+        SourceBaseCommand.setup(self, args)
         self.vcexe = utils.getCommand("git")
         self.repourl = args['repourl']
         self.branch = args.get('branch')
@@ -1067,9 +710,9 @@ class Git(SourceBase):
 
 registerSlaveCommand("git", Git, command_version)
 
-class Arch(SourceBase):
+class Arch(SourceBaseCommand):
     """Arch-specific (tla-specific) VC operation. In addition to the
-    arguments handled by SourceBase, this command reads the following keys:
+    arguments handled by SourceBaseCommand, this command reads the following keys:
 
     ['url'] (required): the repository string
     ['version'] (required): which version (i.e. branch) to retrieve
@@ -1082,7 +725,7 @@ class Arch(SourceBase):
     buildconfig = None
 
     def setup(self, args):
-        SourceBase.setup(self, args)
+        SourceBaseCommand.setup(self, args)
         self.vcexe = utils.getCommand("tla")
         self.archive = args.get('archive')
         self.url = args['url']
@@ -1262,9 +905,9 @@ class Bazaar(Arch):
 registerSlaveCommand("bazaar", Bazaar, command_version)
 
 
-class Bzr(SourceBase):
+class Bzr(SourceBaseCommand):
     """bzr-specific VC operation. In addition to the arguments
-    handled by SourceBase, this command reads the following keys:
+    handled by SourceBaseCommand, this command reads the following keys:
 
     ['repourl'] (required): the Bzr repository string
     """
@@ -1272,7 +915,7 @@ class Bzr(SourceBase):
     header = "bzr operation"
 
     def setup(self, args):
-        SourceBase.setup(self, args)
+        SourceBaseCommand.setup(self, args)
         self.vcexe = utils.getCommand("bzr")
         self.repourl = args['repourl']
         self.sourcedata = "%s\n" % self.repourl
@@ -1289,7 +932,7 @@ class Bzr(SourceBase):
     def start(self):
         def cont(res):
             # Continue with start() method in superclass.
-            return SourceBase.start(self)
+            return SourceBaseCommand.start(self)
 
         if self.forceSharedRepo:
             d = self.doForceSharedRepo();
@@ -1419,9 +1062,9 @@ class Bzr(SourceBase):
 
 registerSlaveCommand("bzr", Bzr, command_version)
 
-class Mercurial(SourceBase):
+class Mercurial(SourceBaseCommand):
     """Mercurial specific VC operation. In addition to the arguments
-    handled by SourceBase, this command reads the following keys:
+    handled by SourceBaseCommand, this command reads the following keys:
 
     ['repourl'] (required): the Mercurial repository string
     ['clobberOnBranchChange']: Document me. See ticket #462.
@@ -1430,7 +1073,7 @@ class Mercurial(SourceBase):
     header = "mercurial operation"
 
     def setup(self, args):
-        SourceBase.setup(self, args)
+        SourceBaseCommand.setup(self, args)
         self.vcexe = utils.getCommand("hg")
         self.repourl = args['repourl']
         self.clobberOnBranchChange = args.get('clobberOnBranchChange', True)
@@ -1674,7 +1317,7 @@ class Mercurial(SourceBase):
 registerSlaveCommand("hg", Mercurial, command_version)
 
 
-class P4Base(SourceBase):
+class P4Base(SourceBaseCommand):
     """Base class for P4 source-updaters
 
     ['p4port'] (required): host:port for server to access
@@ -1683,7 +1326,7 @@ class P4Base(SourceBase):
     ['p4client'] (optional): client spec to use
     """
     def setup(self, args):
-        SourceBase.setup(self, args)
+        SourceBaseCommand.setup(self, args)
         self.p4port = args['p4port']
         self.p4client = args['p4client']
         self.p4user = args['p4user']
