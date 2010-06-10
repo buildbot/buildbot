@@ -52,3 +52,11 @@ class SourceCommandTestMixin(command.CommandTestMixin):
                 self.builder.basedir)
             return r.start()
         cmd.doCopy = doCopy
+
+    def check_sourcedata(self, _, expected_sourcedata):
+        """
+        Assert that the sourcedata (from the patched functions - see
+        make_command) is correct.  Use this as a deferred callback.
+        """
+        self.assertEqual(self.sourcedata, expected_sourcedata)
+        return _

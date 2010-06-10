@@ -103,11 +103,3 @@ class CommandTestMixin:
         Temporarily clean out os.environ to { 'PWD' : '.' }
         """
         self.patch(os, 'environ', { 'PWD' : '.' })
-
-    def check_sourcedata(self, _, expected_sourcedata):
-        """
-        Assert that the sourcedata (from the patched sourcedata_fns - see
-        make_command) is correct.  Use this as a deferred callback.
-        """
-        self.assertEqual(self.sourcedata, expected_sourcedata)
-        return _
