@@ -4,10 +4,10 @@ from twisted.trial import unittest
 from twisted.python import runtime
 
 from buildslave.test.fake.runprocess import Expect
-from buildslave.test.util.command import CommandTestMixin
+from buildslave.test.util.sourcecommand import SourceCommandTestMixin
 from buildslave.commands import svn
 
-class TestSVN(CommandTestMixin, unittest.TestCase):
+class TestSVN(SourceCommandTestMixin, unittest.TestCase):
 
     def setUp(self):
         self.setUpCommand()
@@ -24,23 +24,16 @@ class TestSVN(CommandTestMixin, unittest.TestCase):
             mode='copy',
             revision=None,
             svnurl='http://svn.local/app/trunk',
-        ), patch_sourcedata_fns=True)
+        ))
 
         exp_environ = dict(PWD='.', LC_MESSAGES='C')
-        expects = []
-        # SourceBaseCommand won't use rm -rf on windows..
-        if runtime.platformType == 'posix':
-            expects.extend([
-                Expect([ 'rm', '-rf', self.basedir_workdir ],
-                    self.basedir,
-                    sendRC=0, timeout=120, usePTY=False)
-                    + 0,
-                Expect([ 'rm', '-rf', os.path.join(self.basedir, 'source') ],
-                    self.basedir,
-                    sendRC=0, timeout=120, usePTY=False)
-                    + 0,
-            ])
-        expects.extend([
+        expects = [
+            Expect([ 'clobber', 'workdir' ],
+                self.basedir)
+                + 0,
+            Expect([ 'clobber', 'source' ],
+                self.basedir)
+                + 0,
             Expect([ 'path/to/svn', 'checkout', '--non-interactive', '--no-auth-cache',
                      '--revision', 'HEAD', 'http://svn.local/app/trunk', 'source' ],
                 self.basedir,
@@ -54,11 +47,10 @@ class TestSVN(CommandTestMixin, unittest.TestCase):
                 sendStderr=False, sendStdout=False)
                 + { 'stdout' : '9753\n' }
                 + 0,
-            Expect([ 'cp', '-R', '-P', '-p', 'basedir/source', 'basedir/workdir' ],
-                self.basedir,
-                sendRC=False, timeout=120, usePTY=False)
+            Expect([ 'copy', 'source', 'workdir'],
+                self.basedir)
                 + 0,
-        ])
+        ]
         self.patch_runprocess(*expects)
 
         d = self.run_command()

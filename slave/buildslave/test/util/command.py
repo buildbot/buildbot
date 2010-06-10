@@ -36,7 +36,7 @@ class CommandTestMixin:
         if hasattr(self, 'runprocess_patched') and self.runprocess_patched:
             runprocess.FakeRunProcess.test_done()
 
-    def make_command(self, cmdclass, args, makedirs=False, patch_sourcedata_fns=False):
+    def make_command(self, cmdclass, args, makedirs=False):
         """
         Create a new command object, creating the necessary arguments.  The
         cmdclass argument is the Command class, and args is the args dict
@@ -51,10 +51,6 @@ class CommandTestMixin:
 
             self.cmd -- the command
             self.builder -- the (fake) SlaveBuilder
-
-        If patch_sourcedata_fns is true, then the resulting command's
-        writeSourceata and readSourcedata methods are patched to write and read
-        self.sourcedata instead.
         """
 
         # set up the workdir and basedir
@@ -68,16 +64,6 @@ class CommandTestMixin:
 
         b = self.builder = slavebuilder.FakeSlaveBuilder(basedir=self.basedir)
         self.cmd = cmdclass(b, 'fake-stepid', args)
-
-        if patch_sourcedata_fns:
-            self.sourcedata = ''
-            def readSourcedata():
-                return self.sourcedata
-            self.patch(self.cmd, 'readSourcedata', readSourcedata)
-            def writeSourcedata(res):
-                self.sourcedata = self.cmd.sourcedata
-                return res
-            self.patch(self.cmd, 'writeSourcedata', writeSourcedata)
 
         return self.cmd
 
