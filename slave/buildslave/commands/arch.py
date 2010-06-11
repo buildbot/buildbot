@@ -1,8 +1,9 @@
 import os
+import re
 
 from twisted.python import log
 
-from buildslave.commands.base import SourceBaseCommand
+from buildslave.commands.base import SourceBaseCommand, AbandonChain
 from buildslave import runprocess
 from buildslave.commands import utils
 
@@ -21,9 +22,13 @@ class Arch(SourceBaseCommand):
     header = "arch operation"
     buildconfig = None
 
-    def setup(self, args):
+    def setup(self, args, no_getCommand=False):
         SourceBaseCommand.setup(self, args)
-        self.vcexe = utils.getCommand("tla")
+
+        # avoid doing this if used via a subclass
+        if not no_getCommand:
+            self.vcexe = utils.getCommand("tla")
+
         self.archive = args.get('archive')
         self.url = args['url']
         self.version = args['version']
@@ -124,7 +129,7 @@ class Arch(SourceBaseCommand):
         command = [self.vcexe, "logs", "--full", "--reverse"]
         c = runprocess.RunProcess(self.builder, command,
                          os.path.join(self.builder.basedir, self.srcdir),
-                         environ=self.env,
+                         environ=self.env, timeout=self.timeout,
                          sendStdout=False, sendStderr=False, sendRC=False,
                          keepStdout=True, usePTY=False)
         d = c.start()
@@ -148,7 +153,7 @@ class Bazaar(Arch):
     """
 
     def setup(self, args):
-        Arch.setup(self, args)
+        Arch.setup(self, args, no_getCommand=True)
         self.vcexe = utils.getCommand("baz")
         # baz doesn't emit the repository name after registration (and
         # grepping through the output of 'baz archives' is too hard), so we
@@ -184,7 +189,7 @@ class Bazaar(Arch):
         command = [self.vcexe, "tree-id"]
         c = runprocess.RunProcess(self.builder, command,
                          os.path.join(self.builder.basedir, self.srcdir),
-                         environ=self.env,
+                         environ=self.env, timeout=self.timeout,
                          sendStdout=False, sendStderr=False, sendRC=False,
                          keepStdout=True, usePTY=False)
         d = c.start()
