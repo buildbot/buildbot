@@ -8,17 +8,16 @@ commandRegistry = {
     "downloadFile" : "buildslave.commands.transfer.SlaveFileDownloadCommand",
     "svn" : "buildslave.commands.svn.SVN",
     "bk" : "buildslave.commands.bk.BK",
-    "cvs" : "buildslave.commands.vcs.CVS",
-    "svn" : "buildslave.commands.vcs.SVN",
-    "darcs" : "buildslave.commands.vcs.Darcs",
-    "monotone" : "buildslave.commands.vcs.Monotone",
-    "git" : "buildslave.commands.vcs.Git",
-    "arch" : "buildslave.commands.vcs.Arch",
-    "bazaar" : "buildslave.commands.vcs.Bazaar",
-    "bzr" : "buildslave.commands.vcs.Bzr",
-    "hg" : "buildslave.commands.vcs.Mercurial",
-    "p4" : "buildslave.commands.vcs.P4",
-    "p4sync" : "buildslave.commands.vcs.P4Sync",
+    "cvs" : "buildslave.commands.cvs.CVS",
+    "darcs" : "buildslave.commands.darcs.Darcs",
+    "monotone" : "buildslave.commands.monotone.Monotone",
+    "git" : "buildslave.commands.git.Git",
+    "arch" : "buildslave.commands.arch.Arch",
+    "bazaar" : "buildslave.commands.arch.Bazaar", # subclass of Arch
+    "bzr" : "buildslave.commands.bzr.Bzr",
+    "hg" : "buildslave.commands.hg.Mercurial",
+    "p4" : "buildslave.commands.p4.P4",
+    "p4sync" : "buildslave.commands.p4.P4Sync",
 }
 
 def getFactory(command):

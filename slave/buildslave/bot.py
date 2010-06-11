@@ -12,10 +12,6 @@ from buildslave.util import now
 from buildslave.pbutil import ReconnectingPBClientFactory
 from buildslave.commands import registry, base
 
-# make sure the standard commands get registered. This import is performed
-# for its side-effects.
-from buildslave.commands import base, transfer, vcs, shell, dummy, svn
-
 class NoCommandRunning(pb.Error):
     pass
 class WrongCommandRunning(pb.Error):
