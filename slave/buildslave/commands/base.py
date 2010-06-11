@@ -10,7 +10,6 @@ from twisted.python import log, failure, runtime
 
 from buildslave.interfaces import ISlaveCommand
 from buildslave import runprocess
-from buildslave.commands.registry import registerSlaveCommand
 from buildslave.exceptions import AbandonChain
 from buildslave.commands import utils
 

@@ -1,6 +1,5 @@
 import os
 
-from buildslave.commands.registry import registerSlaveCommand
 from buildslave.commands import base
 from buildslave import runprocess
 
@@ -81,5 +80,3 @@ class SlaveShellCommand(base.Command):
 
     def closeStdin(self):
         self.command.closeStdin()
-
-registerSlaveCommand("shell", SlaveShellCommand, base.command_version)

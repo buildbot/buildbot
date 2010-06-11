@@ -7,7 +7,6 @@ from twisted.internet import defer
 
 from buildslave.commands.base import SourceBaseCommand, AbandonChain, command_version
 from buildslave import runprocess
-from buildslave.commands.registry import registerSlaveCommand
 from buildslave.commands import utils
 from buildslave.util import remove_userpassword, Obfuscated
 
@@ -98,9 +97,6 @@ class BK(SourceBaseCommand):
             return r
         d.addCallback(_parse)
         return d
-
-registerSlaveCommand("bk", BK, command_version)
-
 
 
 
@@ -211,8 +207,6 @@ class CVS(SourceBaseCommand):
         # the local system having a clock that is
         # reasonably-well-synchronized with the repository.
         return time.strftime("%Y-%m-%d %H:%M:%S +0000", time.gmtime())
-
-registerSlaveCommand("cvs", CVS, command_version)
 
 class SVN(SourceBaseCommand):
     """Subversion-specific VC operation. In addition to the arguments
@@ -360,8 +354,6 @@ class SVN(SourceBaseCommand):
         return d
 
 
-registerSlaveCommand("svn", SVN, command_version)
-
 class Darcs(SourceBaseCommand):
     """Darcs-specific VC operation. In addition to the arguments
     handled by SourceBaseCommand, this command reads the following keys:
@@ -436,8 +428,6 @@ class Darcs(SourceBaseCommand):
         d = c.start()
         d.addCallback(lambda res: c.stdout)
         return d
-
-registerSlaveCommand("darcs", Darcs, command_version)
 
 class Monotone(SourceBaseCommand):
     """Monotone-specific VC operation.  In addition to the arguments handled
@@ -543,8 +533,6 @@ class Monotone(SourceBaseCommand):
 
     def _didPull(self, res, callback):
         return callback()
-
-registerSlaveCommand("monotone", Monotone, command_version)
 
 
 class Git(SourceBaseCommand):
@@ -708,8 +696,6 @@ class Git(SourceBaseCommand):
             return hash
         return self._dovccmd(command, _parse, keepStdout=True)
 
-registerSlaveCommand("git", Git, command_version)
-
 class Arch(SourceBaseCommand):
     """Arch-specific (tla-specific) VC operation. In addition to the
     arguments handled by SourceBaseCommand, this command reads the following keys:
@@ -841,8 +827,6 @@ class Arch(SourceBaseCommand):
         d.addCallback(_parse)
         return d
 
-registerSlaveCommand("arch", Arch, command_version)
-
 class Bazaar(Arch):
     """Bazaar (/usr/bin/baz) is an alternative client for Arch repositories.
     It is mostly option-compatible, but archive registration is different
@@ -901,8 +885,6 @@ class Bazaar(Arch):
             return baserev
         d.addCallback(_parse)
         return d
-
-registerSlaveCommand("bazaar", Bazaar, command_version)
 
 
 class Bzr(SourceBaseCommand):
@@ -1059,8 +1041,6 @@ class Bzr(SourceBaseCommand):
                 return None
         d.addCallback(_parse)
         return d
-
-registerSlaveCommand("bzr", Bzr, command_version)
 
 class Mercurial(SourceBaseCommand):
     """Mercurial specific VC operation. In addition to the arguments
@@ -1314,8 +1294,6 @@ class Mercurial(SourceBaseCommand):
         d.addCallback(_parse)
         return d
 
-registerSlaveCommand("hg", Mercurial, command_version)
-
 
 class P4Base(SourceBaseCommand):
     """Base class for P4 source-updaters
@@ -1498,8 +1476,6 @@ class P4(P4Base):
         else:
             return P4Base.parseGotRevision(self)
 
-registerSlaveCommand("p4", P4, command_version)
-
 
 class P4Sync(P4Base):
     """A partial P4 source-updater. Requires manual setup of a per-slave P4
@@ -1555,5 +1531,3 @@ class P4Sync(P4Base):
             return str(self.revision)
         else:
             return P4Base.parseGotRevision(self)
-
-registerSlaveCommand("p4sync", P4Sync, command_version)

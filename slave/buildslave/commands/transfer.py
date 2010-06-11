@@ -4,7 +4,6 @@ from twisted.python import log
 from twisted.internet import defer
 
 from buildslave.commands.base import Command, command_version
-from buildslave.commands.registry import registerSlaveCommand
 
 class SlaveFileUploadCommand(Command):
     """
@@ -129,8 +128,6 @@ class SlaveFileUploadCommand(Command):
             self.sendStatus({'stderr': self.stderr, 'rc': self.rc})
         return res
 
-registerSlaveCommand("uploadFile", SlaveFileUploadCommand, command_version)
-
 
 class SlaveDirectoryUploadCommand(SlaveFileUploadCommand):
     """
@@ -207,8 +204,6 @@ class SlaveDirectoryUploadCommand(SlaveFileUploadCommand):
         else:
             self.sendStatus({'stderr': self.stderr, 'rc': self.rc})
         return res
-
-registerSlaveCommand("uploadDirectory", SlaveDirectoryUploadCommand, command_version)
 
 
 class SlaveFileDownloadCommand(Command):
@@ -352,8 +347,3 @@ class SlaveFileDownloadCommand(Command):
         else:
             self.sendStatus({'stderr': self.stderr, 'rc': self.rc})
         return res
-
-registerSlaveCommand("downloadFile", SlaveFileDownloadCommand, command_version)
-
-
-

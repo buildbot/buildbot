@@ -3,9 +3,8 @@ from xml.dom.minidom import parseString
 
 from twisted.python import log
 
-from buildslave.commands.base import SourceBaseCommand, command_version
+from buildslave.commands.base import SourceBaseCommand
 from buildslave import runprocess
-from buildslave.commands.registry import registerSlaveCommand
 from buildslave.commands import utils
 from buildslave.util import Obfuscated
 
@@ -153,6 +152,3 @@ class SVN(SourceBaseCommand):
             return got_version
         d.addCallback(_parse)
         return d
-
-
-registerSlaveCommand("svn", SVN, command_version)

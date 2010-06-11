@@ -53,8 +53,7 @@ class RemoteCommand(pb.Referenceable):
                                passed to
                                L{buildbot.slave.bot.SlaveBuilder.remote_startCommand}
                                and needs to have been registered
-                               slave-side by
-                               L{buildbot.slave.registry.registerSlaveCommand}
+                               slave-side in L{buildbot.slave.registry}
         @type  args:           dict
         @param args:           arguments to send to the remote command
         """
