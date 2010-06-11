@@ -69,8 +69,7 @@ class SVN(SourceBaseCommand):
             return self._purgeAndUpdate()
         revision = self.args['revision'] or 'HEAD'
         # update: possible for mode in ('copy', 'update')
-        return self._dovccmd('update', ['--revision', str(revision)],
-                             keepStdout=True)
+        return self._dovccmd('update', ['--revision', str(revision)])
 
     def doVCFull(self):
         revision = self.args['revision'] or 'HEAD'
@@ -80,8 +79,7 @@ class SVN(SourceBaseCommand):
         else:
             # mode=='clobber', or copy/update on a broken workspace
             command = 'checkout'
-        return self._dovccmd(command, args, rootdir=self.builder.basedir,
-                             keepStdout=True)
+        return self._dovccmd(command, args, rootdir=self.builder.basedir)
 
     def _purgeAndUpdate(self):
         """svn revert has several corner cases that make it unpractical.
@@ -132,7 +130,7 @@ class SVN(SourceBaseCommand):
         c = runprocess.RunProcess(self.builder,
                          self.getSvnVersionCommand(),
                          os.path.join(self.builder.basedir, self.srcdir),
-                         environ=self.env,
+                         environ=self.env, timeout=self.timeout,
                          sendStdout=False, sendStderr=False, sendRC=False,
                          keepStdout=True, usePTY=False)
         d = c.start()

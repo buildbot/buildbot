@@ -37,14 +37,12 @@ class TestSVN(SourceCommandTestMixin, unittest.TestCase):
             Expect([ 'path/to/svn', 'checkout', '--non-interactive', '--no-auth-cache',
                      '--revision', 'HEAD', 'http://svn.local/app/trunk', 'source' ],
                 self.basedir,
-                                                # TODO: why does it need keepStdout here?
-                sendRC=False, timeout=120, usePTY=False, keepStdout=True, environ=exp_environ)
+                sendRC=False, timeout=120, usePTY=False, environ=exp_environ)
                 + 0,
             Expect([ 'path/to/svnversion', '.' ],
                 os.path.join(self.basedir, 'source'),
-                # TODO: no timeout?
-                sendRC=False, usePTY=False, keepStdout=True, environ=exp_environ,
-                sendStderr=False, sendStdout=False)
+                sendRC=False, timeout=120, usePTY=False, keepStdout=True,
+                environ=exp_environ, sendStderr=False, sendStdout=False)
                 + { 'stdout' : '9753\n' }
                 + 0,
             Expect([ 'copy', 'source', 'workdir'],
