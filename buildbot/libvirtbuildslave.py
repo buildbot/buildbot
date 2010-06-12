@@ -230,7 +230,7 @@ class LibVirtSlave(AbstractLatentBuildSlave):
         d.addCallback(_disconnect)
 
         def _disconnected(res):
-            log.msg("We forced disconnection (%s), cleaning up and triggering new build" % name)
+            log.msg("We forced disconnection (%s), cleaning up and triggering new build" % self.name)
             if self.base_image:
                 os.remove(self.image)
             self.botmaster.triggerNewBuildCheck()
