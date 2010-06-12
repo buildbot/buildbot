@@ -13,6 +13,7 @@ class Bzr(SourceBaseCommand):
     handled by SourceBaseCommand, this command reads the following keys:
 
     ['repourl'] (required): the Bzr repository string
+    ['forceSharedRepo']: force this to a shared repo
     """
 
     header = "bzr operation"
