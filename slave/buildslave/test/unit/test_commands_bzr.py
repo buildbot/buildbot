@@ -1,4 +1,5 @@
 import os
+import textwrap
 
 from twisted.trial import unittest
 from twisted.python import runtime
@@ -26,6 +27,13 @@ class TestBzr(SourceCommandTestMixin, unittest.TestCase):
         ))
 
         exp_environ = dict(PWD='.', LC_MESSAGES='C')
+        verinfo = textwrap.dedent("""\
+            revision-id: pqm@pqm.ubuntu.com-20071211175118-s94sizduj201hrs5
+            date: 2007-12-11 17:51:18 +0000
+            build-date: 2007-12-13 13:14:51 +1000
+            revno: 3104
+            branch-nick: bzr.dev
+        """)
         expects = [
             Expect([ 'clobber', 'workdir' ],
                 self.basedir)
@@ -42,7 +50,7 @@ class TestBzr(SourceCommandTestMixin, unittest.TestCase):
                 os.path.join(self.basedir, 'source'),
                 sendRC=False, usePTY=False, keepStdout=True,
                 environ=exp_environ, sendStderr=False, sendStdout=False)
-                + { 'stdout' : '9753\n' }
+                + { 'stdout' : verinfo }
                 + 0,
             Expect([ 'copy', 'source', 'workdir'],
                 self.basedir)
