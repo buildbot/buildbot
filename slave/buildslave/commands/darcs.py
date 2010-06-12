@@ -73,7 +73,7 @@ class Darcs(SourceBaseCommand):
         command = [self.vcexe, "changes", "--context"]
         c = runprocess.RunProcess(self.builder, command,
                          os.path.join(self.builder.basedir, self.srcdir),
-                         environ=self.env,
+                         environ=self.env, timeout=self.timeout,
                          sendStdout=False, sendStderr=False, sendRC=False,
                          keepStdout=True, usePTY=False)
         d = c.start()
