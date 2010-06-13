@@ -45,7 +45,7 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
             if isinstance(revision, int):
                 revision = str(revision)
         if patch is not None:
-            assert len(patch) > 2
+            assert len(patch) == 2
             assert int(patch[0]) != -1
         self.branch = branch
         self.revision = revision
