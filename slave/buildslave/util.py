@@ -33,6 +33,11 @@ class Obfuscated:
     def __repr__(self):
         return `self.fake`
 
+    def __eq__(self, other):
+        return other.__class__ is self.__class__ and \
+                    other.real == self.real and \
+                    other.fake == self.fake
+
     @staticmethod
     def to_text(s):
         if isinstance(s, (str, unicode)):
