@@ -46,7 +46,7 @@ class TestMonotone(SourceCommandTestMixin, unittest.TestCase):
                 + 0,
             Expect(['path/to/mtn', '--db=/var/slave/mtn/monotone.db', 'checkout',
                     '-r', 'e831aa7c1baa0c545c5d1917364ff299cd79e174', '-b', 'net.venge.monotone',
-                    '/tmp/trialtemp/basedir/source'],
+                    'source'],
                 self.basedir,
                 sendRC=False, timeout=120, usePTY=False)
                 + 0,

@@ -49,7 +49,7 @@ class Monotone(SourceBaseCommand):
         command = [self.monotone, "update",
                    "-r", self.revision,
                    "-b", self.branch]
-        c = runprocess.RunProcess(self.builder, command, self.full_srcdir,
+        c = runprocess.RunProcess(self.builder, command, self.srcdir,
                          sendRC=False, timeout=self.timeout,
                          maxTime=self.maxTime, usePTY=False)
         self.command = c
@@ -63,7 +63,7 @@ class Monotone(SourceBaseCommand):
                    "checkout",
                    "-r", self.revision,
                    "-b", self.branch,
-                   self.full_srcdir]
+                   self.srcdir]
         c = runprocess.RunProcess(self.builder, command, self.builder.basedir,
                          sendRC=False, timeout=self.timeout,
                          maxTime=self.maxTime, usePTY=False)
