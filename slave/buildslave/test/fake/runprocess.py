@@ -91,16 +91,17 @@ class FakeRunProcess:
                     if key in default_values:
                         if default_values[key] == kwargs[key]:
                             continue # default values are expected
-                        msg.append('%s: expected default (%r), got %r' %
+                        msg.append('%s: expected default (%r),\n  got %r' %
                                     (key, default_values[key], kwargs[key]))
                     else:
                         msg.append('%s: unexpected arg, value = %r' % (key, kwargs[key]))
                 elif key not in kwargs:
                     msg.append('%s: did not get expected arg' % (key,))
                 elif exp.kwargs[key] != kwargs[key]:
-                    msg.append('%s: expected %r, got %r' % (key, exp.kwargs[key], kwargs[key]))
+                    msg.append('%s: expected %r,\n  got %r' % (key, exp.kwargs[key], kwargs[key]))
             if msg:
-                msg.insert(0, 'did not get expected __init__ arguments:')
+                msg.insert(0, 'did not get expected __init__ arguments for\n '
+                              + " ".join(kwargs.get('command', ['unknown command'])))
                 self._expectations[:] = [] # don't expect any more instances, since we're failing
                 raise AssertionError("\n".join(msg))
 
