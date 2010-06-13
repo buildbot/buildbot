@@ -19,7 +19,7 @@ class CommandTestMixin:
             self.basedir_workdir -- os.path.join(self.basedir, 'workdir')
         """
         self.basedir = os.path.abspath('basedir')
-        self.basedir_workdir = os.path.join('basedir', 'workdir')
+        self.basedir_workdir = os.path.join(self.basedir, 'workdir')
 
     def tearDownCommand(self):
         """
