@@ -87,7 +87,7 @@ class TestP4(SourceCommandTestMixin, unittest.TestCase):
 
         d = self.run_command()
         d.addCallback(self.check_sourcedata, "['p4dserv:1666', 'buildbot_test_10', " +
-               "'//mydepot/myproj/', 'mytrunk', [], '%s', 'copy', 'workdir']"
-               % self.basedir)
+               "'//mydepot/myproj/', 'mytrunk', [], %s, 'copy', 'workdir']"
+               % `self.basedir`)
         return d
 
