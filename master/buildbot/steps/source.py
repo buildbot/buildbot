@@ -1305,7 +1305,7 @@ class Monotone(Source):
     name = "monotone"
 
     def __init__(self, server_addr=None, branch=None, db_path="monotone.db",
-                 monotone="monotone",
+                 monotone=None,
                  **kwargs):
         warn("Support for Monotone will be removed in 0.8.2", DeprecationWarning)
         Source.__init__(self, **kwargs)
@@ -1316,8 +1316,9 @@ class Monotone(Source):
                                  )
         assert branch, "branch must be specified"
         self.args.update({"branch": branch,
-                          "db_path": db_path,
-                          "monotone": monotone})
+                          "db_path": db_path})
+        if monotone:
+            self.args["monotone"] = monotone
 
     def computeSourceRevision(self, changes):
         if not changes:
