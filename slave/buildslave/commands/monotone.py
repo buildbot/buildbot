@@ -12,8 +12,8 @@ class Monotone(SourceBaseCommand):
     ['server_addr'] (required): the address of the server to pull from
     ['branch'] (required): the branch the revision is on
     ['db_path'] (required): the local database path to use
-    ['revision'] (required): the revision to check out
-    ['monotone']: (required): path to monotone executable
+    ['revision'] (required): the revision to check out (None not allowed)
+    ['monotone']: path to monotone executable
     """
 
     header = "monotone operation"
@@ -24,9 +24,9 @@ class Monotone(SourceBaseCommand):
         self.branch = args["branch"]
         self.db_path = args["db_path"]
         self.revision = args["revision"]
-        self.monotone = args["monotone"]
+        self.monotone = args.get("monotone", utils.getCommand('mtn'))
         self._made_fulls = False
-        self._pull_timeout = args["timeout"]
+        self._pull_timeout = self.timeout
 
     def _makefulls(self):
         if not self._made_fulls:
