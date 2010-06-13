@@ -40,7 +40,7 @@ class P4Base(SourceBaseCommand):
         c = runprocess.RunProcess(self.builder, command, self.builder.basedir,
                          environ=self.env, timeout=self.timeout,
                          maxTime=self.maxTime, sendStdout=True,
-                         sendStderr=False, sendRC=False, keepStdout=True,
+                         sendRC=False, keepStdout=True,
                          usePTY=False)
         self.command = c
         d = c.start()
@@ -61,10 +61,11 @@ class P4(P4Base):
     """A P4 source-updater.
 
     ['p4port'] (required): host:port for server to access
-    ['p4user'] (optional): user to use for access
-    ['p4passwd'] (optional): passwd to try for the user
-    ['p4client'] (optional): client spec to use
-    ['p4extra_views'] (optional): additional client views to use
+    ['p4user'] (required): user to use for access
+    ['p4passwd'] (required): passwd to try for the user
+    ['p4client'] (required): client spec to use
+    ['p4extra_views'] (required): additional client views to use
+    ['p4base'] (required): view into the Perforce depot without branch name or trailing "..."
     """
 
     header = "p4"
@@ -125,7 +126,7 @@ class P4(P4Base):
         env = {}
         c = runprocess.RunProcess(self.builder, command, self.builder.basedir,
                          environ=env, sendRC=False, timeout=self.timeout,
-                         maxTime=self.maxTime, keepStdout=True, usePTY=False)
+                         maxTime=self.maxTime, usePTY=False)
         self.command = c
         d = c.start()
         d.addCallback(self._abandonOnFailure)
