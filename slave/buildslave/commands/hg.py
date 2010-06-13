@@ -2,7 +2,7 @@ import os, re
 
 from twisted.python import log, runtime
 
-from buildslave.commands.base import SourceBaseCommand
+from buildslave.commands.base import SourceBaseCommand, AbandonChain
 from buildslave import runprocess
 from buildslave.commands import utils
 from buildslave.util import remove_userpassword
@@ -56,14 +56,13 @@ class Mercurial(SourceBaseCommand):
         return res
 
     def doVCFull(self):
-        d = os.path.join(self.builder.basedir, self.srcdir)
         command = [self.vcexe, 'clone', '--verbose', '--noupdate']
 
         # if got revision, clobbering and in dirname, only clone to specific revision
         # (otherwise, do full clone to re-use .hg dir for subsequent builds)
         if self.args.get('revision') and self.mode == 'clobber' and self.branchType == 'dirname':
             command.extend(['--rev', self.args.get('revision')])
-        command.extend([self.repourl, d])
+        command.extend([self.repourl, self.srcdir])
 
         c = runprocess.RunProcess(self.builder, command, self.builder.basedir,
                          sendRC=False, timeout=self.timeout,
@@ -91,7 +90,6 @@ class Mercurial(SourceBaseCommand):
         d = os.path.join(self.builder.basedir, self.srcdir)
         purge = [self.vcexe, 'purge', '--all']
         purgeCmd = runprocess.RunProcess(self.builder, purge, d,
-                                sendStdout=False, sendStderr=False,
                                 keepStdout=True, keepStderr=True, usePTY=False)
 
         def _clobber(res):
@@ -120,22 +118,26 @@ class Mercurial(SourceBaseCommand):
         d = os.path.join(self.builder.basedir, self.srcdir)
         parentscmd = [self.vcexe, 'identify', '--num', '--branch']
         cmd = runprocess.RunProcess(self.builder, parentscmd, d,
-                           sendStdout=False, sendStderr=False,
-                           keepStdout=True, keepStderr=True, usePTY=False)
+                           sendRC=False, timeout=self.timeout, keepStdout=True,
+                           keepStderr=True, usePTY=False)
 
         self.clobber = None
 
         def _parseIdentify(res):
             if res != 0:
-                msg = "'hg identify' failed: %s\n%s" % (cmd.stdout, cmd.stderr)
+                msg = "'hg identify' failed."
                 self.sendStatus({'header': msg + "\n"})
                 log.msg(msg)
-                return res
+                raise AbandonChain(-1)
 
             log.msg('Output: %s' % cmd.stdout)
 
             match = re.search(r'^(.+) (.+)$', cmd.stdout)
-            assert match
+            if not match:
+                msg = "'hg identify' did not give a recognizable output"
+                self.sendStatus({'header': msg + "\n"})
+                log.msg(msg)
+                raise AbandonChain(-1)
 
             rev = match.group(1)
             current_branch = match.group(2)
@@ -170,8 +172,8 @@ class Mercurial(SourceBaseCommand):
         def _checkRepoURL(res):
             parentscmd = [self.vcexe, 'paths', 'default']
             cmd2 = runprocess.RunProcess(self.builder, parentscmd, d,
-                               sendStdout=False, sendStderr=False,
-                               keepStdout=True, keepStderr=True, usePTY=False)
+                               keepStdout=True, keepStderr=True, usePTY=False,
+                               timeout=self.timeout, sendRC=False)
 
             def _parseRepoURL(res):
                 if res == 1:
@@ -180,7 +182,7 @@ class Mercurial(SourceBaseCommand):
                         log.msg(msg)
                         return 0
                     else:
-                        msg = "'hg paths default' failed: %s\n%s" % (cmd2.stdout, cmd2.stderr)
+                        msg = "'hg paths default' failed."
                         log.msg(msg)
                         return 1
 
@@ -233,9 +235,7 @@ class Mercurial(SourceBaseCommand):
         return c
 
     def _update2(self, res):
-        d = os.path.join(self.builder.basedir, self.srcdir)
-
-        updatecmd=[self.vcexe, 'update', '--clean', '--repository', d]
+        updatecmd=[self.vcexe, 'update', '--clean', '--repository', self.srcdir]
         if self.args.get('revision'):
             updatecmd.extend(['--rev', self.args['revision']])
         else:
@@ -250,8 +250,8 @@ class Mercurial(SourceBaseCommand):
         command = [self.vcexe, "identify", "--id", "--debug"] # get full rev id
         c = runprocess.RunProcess(self.builder, command,
                          os.path.join(self.builder.basedir, self.srcdir),
-                         environ=self.env,
-                         sendStdout=False, sendStderr=False, sendRC=False,
+                         environ=self.env, timeout=self.timeout,
+                         sendRC=False,
                          keepStdout=True, usePTY=False)
         d = c.start()
         def _parse(res):
