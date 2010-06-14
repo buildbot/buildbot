@@ -10,7 +10,8 @@ from buildbot import util, interfaces
 import logging
 import traceback
 import sys
-
+from buildbot.process.properties import Properties
+from buildbot.changes.changes import Change
 try:
     import json
 except ImportError:
@@ -18,9 +19,14 @@ except ImportError:
 
 
 class ChangeHookResource(resource.Resource):
-
+     # this is a cheap sort of template thingy
+    contentType = "text/html; charset=utf-8"
+    
     def getChild(self, name, request):
         return self
+
+    def render_GET(self, request):
+        self.render_POST(request)
 
     def render_POST(self, request):
         """
@@ -38,11 +44,13 @@ class ChangeHookResource(resource.Resource):
             if not changes:
                 logging.warning("No changes found")
                 return
-            self.submitChanges( changes )
+            self.submitChanges( changes, request )
+	    return "changes %s" % changes
         except Exception:
             logging.error("Encountered an exception in change_hook:")
             for msg in traceback.format_exception(*sys.exc_info()):
                 logging.error(msg.strip())
+	
   
     def getChanges(self, request):
         """
@@ -64,9 +72,9 @@ class ChangeHookResource(resource.Resource):
             return
         
         changes = []
-        if uriRE.group():
-            # means we have a dialect in the url
-            dialect = uriRE.group()
+        if uriRE.group(1):
+            # means we have a dielect in the url
+            dialect = uriRE.group(1)
             try:
                 # note, this should be safe, only alphanumerics and _ are
                 # allowed in the dialect name
@@ -81,11 +89,11 @@ class ChangeHookResource(resource.Resource):
                 
         return changes        
                 
-    def submitChanges(self, changes):
+    def submitChanges(self, changes, request):
         # get a control object
-        changeMaster = self.getBuildmaster(req).change_svc
+        changeMaster = request.site.buildbot_service.master.change_svc
         for onechange in changes:
-            changeMaster.addChanges( changes )
+            changeMaster.addChange( onechange )
         
     
     def getChangesBase(self, request):
@@ -96,7 +104,8 @@ class ChangeHookResource(resource.Resource):
         
         files and links will be de-json'd, the rest are interpreted as strings
         """
-        
+        args = request.args
+
         # first, convert files and links
         files = None
         if args.get('files'):
@@ -119,14 +128,14 @@ class ChangeHookResource(resource.Resource):
         category = args.get('category')
         revlink = args.get('revlink')
         properties = Properties()
-        properties.update(properties, "Change")
+        # properties.update(properties, "Change")
         repository = args.get('repository')
         project = args.get('project')
               
         ourchange = Change(who = who, files = files, comments = comments, isdir = isdir, links = links,
                         revision=revision, when = when, branch = branch, category = category,
-                        revlink = revlink, properties = properties, repository = repository,project = project)  
-        return [ourchange]
+                        revlink = revlink, repository = repository, project = project)  
+	return [ourchange]
 
 
 
