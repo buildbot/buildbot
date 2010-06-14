@@ -57,10 +57,10 @@ class ChangeHookResource(resource.Resource):
         
         if DIALECT is unspecified, a sample implementation is provided
         """
-        uriRE = re.search(r'^/change_hook/?([a-zA-Z0-9_]*)', self.uri)
+        uriRE = re.search(r'^/change_hook/?([a-zA-Z0-9_]*)', request.uri)
         
         if not uriRE:
-            logging.debug("URI doesn't match change_hook regex: %s" % self.uri)
+            logging.debug("URI doesn't match change_hook regex: %s" % request.uri)
             return
         
         changes = []
