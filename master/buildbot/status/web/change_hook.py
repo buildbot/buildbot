@@ -9,6 +9,7 @@ import re
 from buildbot import util, interfaces
 import logging
 import traceback
+import sys
 
 try:
     import json
