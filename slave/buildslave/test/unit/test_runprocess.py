@@ -1,5 +1,6 @@
 import sys
 import re
+import os
 
 from twisted.trial import unittest
 from twisted.internet import task, defer
@@ -265,3 +266,23 @@ class TestLogging(unittest.TestCase):
         s._addToBuffers('stdout', data)
         self.failUnlessEqual(len(b.updates), 1)
 
+class TestLogFileWatcher(unittest.TestCase):
+    def makeRP(self):
+        b = FakeSlaveBuilder(False, 'base')
+        rp = runprocess.RunProcess(b, stdoutCommand('hello'), b.basedir)
+        return rp
+
+    def test_statFile_missing(self):
+        rp = self.makeRP()
+        if os.path.exists('statfile.log'):
+            os.remove('statfile.log')
+        lf = runprocess.LogFileWatcher(rp, 'test', 'statfile.log', False)
+        self.assertFalse(lf.statFile(), "statfile.log doesn't exist")
+
+    def test_statFile_exists(self):
+        rp = self.makeRP()
+        open('statfile.log', 'w').write('hi')
+        lf = runprocess.LogFileWatcher(rp, 'test', 'statfile.log', False)
+        st = lf.statFile()
+        self.assertEqual(st and st[2], 2, "statfile.log exists and size is correct")
+        os.remove('statfile.log')

@@ -8,10 +8,11 @@ import signal
 import types
 import re
 import traceback
+import stat
 from collections import deque
 
 from twisted.python import runtime, log
-from twisted.internet import reactor, defer, protocol
+from twisted.internet import reactor, defer, protocol, task
 
 from buildslave import util
 from buildslave.exceptions import AbandonChain
@@ -55,7 +56,7 @@ class LogFileWatcher:
     def statFile(self):
         if os.path.exists(self.logfile):
             s = os.stat(self.logfile)
-            return (s[ST_CTIME], s[ST_MTIME], s[ST_SIZE])
+            return (s[stat.ST_CTIME], s[stat.ST_MTIME], s[stat.ST_SIZE])
         return None
 
     def poll(self):
