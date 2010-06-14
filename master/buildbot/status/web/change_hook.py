@@ -8,6 +8,7 @@ from buildbot.status.builder import FAILURE
 import re
 from buildbot import util, interfaces
 import logging
+import traceback
 
 try:
     import json
