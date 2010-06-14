@@ -59,7 +59,7 @@ class DevBuild:
 
     def __init__(self, revision, build, details):
         self.revision = revision
-        self.results =  build.getResults(), 
+        self.results =  build.getResults()
         self.number = build.getNumber()
         self.isFinished = build.isFinished()
         self.text = build.getText()
