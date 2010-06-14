@@ -15,9 +15,7 @@ except ImportError:
 
 
 class ChangeHookResource(resource.Resource):
-     # this is a cheap sort of template thingy
-    contentType = "text/html; charset=utf-8"
-    
+
     def getChild(self, name, request):
         return self
 
@@ -64,7 +62,7 @@ class ChangeHookResource(resource.Resource):
         
         changes = []
         if uriRE.group():
-            # means we have a dielect in the url
+            # means we have a dialect in the url
             dialect = uriRE.group()
             try:
                 # note, this should be safe, only alphanumerics and _ are
@@ -124,8 +122,7 @@ class ChangeHookResource(resource.Resource):
               
         ourchange = Change(who = who, files = files, comments = comments, isdir = isdir, links = links,
                         revision=revision, when = when, branch = branch, category = category,
-                        revlink = revlink, properties = properties, repository = repository
-                        project = project)  
+                        revlink = revlink, properties = properties, repository = repository,project = project)  
         return [ourchange]
 
 
