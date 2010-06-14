@@ -45,6 +45,7 @@ setup_args = {
     'packages': [
         "buildslave",
         "buildslave.commands",
+        "buildslave.scripts",
         "buildslave.test",
         "buildslave.test.unit",
     ],
