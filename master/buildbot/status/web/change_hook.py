@@ -7,6 +7,7 @@ from twisted.web import resource
 from buildbot.status.builder import FAILURE
 import re
 from buildbot import util, interfaces
+import logging
 
 try:
     import json
