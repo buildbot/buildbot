@@ -34,23 +34,24 @@ class TestP4(SourceCommandTestMixin, unittest.TestCase):
         ))
 
         exp_environ = dict(PWD='.', LC_MESSAGES='C')
-        client_spec = textwrap.dedent("""\
-                Client: buildbot_test_10
+        # can't use textwrap.dedent here, because in 2.4 it converts \t to 8x' '
+        client_spec = """\
+Client: buildbot_test_10
 
-                Owner: jimmy
+Owner: jimmy
 
-                Description:
-                \tCreated by jimmy
+Description:
+\tCreated by jimmy
 
-                Root:\t%s
+Root:\t%s
 
-                Options:\tallwrite rmdir
+Options:\tallwrite rmdir
 
-                LineEnd:\tlocal
+LineEnd:\tlocal
 
-                View:
-                \t//mydepot/myproj/mytrunk/... //buildbot_test_10/source/...
-        """ % self.basedir)
+View:
+\t//mydepot/myproj/mytrunk/... //buildbot_test_10/source/...
+""" % self.basedir
         expects = [
             Expect([ 'clobber', 'workdir' ],
                 self.basedir)
