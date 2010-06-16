@@ -2,6 +2,10 @@ Major User visible changes in Buildslave.             -*- outline -*-
    see the git log for a detailed list of changes:
    http://github.com/djmitche/buildbot/commits/master
 
-* NEXT RELEASE
+* Buildbot 0.8.1
 
 ** First release of buildslave as a separate package
+
+** Fixes
+
+*** Delete srcdir before retrying git clone (ticket #884)
