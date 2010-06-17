@@ -71,7 +71,8 @@ class GitPoller(base.ChangeSource):
         self.running = True
 
     def stopService(self):
-        self.loop.stop()
+        if self.running:
+            self.loop.stop()
         self.running = False
         return base.ChangeSource.stopService(self)
 
