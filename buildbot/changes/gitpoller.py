@@ -21,6 +21,7 @@ class GitPoller(base.ChangeSource):
     loop = None
     volatile = ['loop']
     working = False
+    running = False
     
     def __init__(self, repourl, branch='master', workdir=None, pollinterval=10*60, gitbin='git'):
         """
@@ -66,14 +67,20 @@ class GitPoller(base.ChangeSource):
             os.system(self.gitbin + ' clone ' + self.repourl + ' ' + self.workdir)
         
         reactor.callLater(0, self.loop.start, self.pollinterval)
+        
+        self.running = True
 
     def stopService(self):
         self.loop.stop()
+        self.running = False
         return base.ChangeSource.stopService(self)
 
     def describe(self):
-        str = 'GitPoller watching the remote git repository %s, branch: %s ' \
-                % (self.repourl, self.branch)
+        status = ""
+        if not self.running:
+            status = "[STOPPED]"
+        str = 'GitPoller watching the remote git repository %s, branch: %s %s' \
+                % (self.repourl, self.branch, status)
         return str
 
     def poll(self):
@@ -83,8 +90,9 @@ class GitPoller(base.ChangeSource):
             self.working = True
             d = self._get_changes()
             d.addCallback(self._process_changes)
+            d.addCallbacks(self._changes_finished_ok, self._changes_finished_failure)
             d.addCallback(self._catch_up)
-            d.addCallbacks(self._finished_ok, self._finished_failure)
+            d.addCallbacks(self._catch_up_finished_ok, self._catch_up__finished_failure)
         return
 
     def _get_git_output(self, args):
@@ -106,8 +114,8 @@ class GitPoller(base.ChangeSource):
                     raise
         
         if p.returncode != 0:
-            raise Exception('call \'%s\' exited with error \'%s\', output: \'%s\'' % 
-                            (args, p.returncode, output))
+            raise EnvironmentError('call \'%s\' exited with error \'%s\', output: \'%s\'' % 
+                                    (args, p.returncode, output))
         return output
 
     def _get_commit_comments(self, rev):
@@ -115,7 +123,7 @@ class GitPoller(base.ChangeSource):
         output = self._get_git_output(args)
         
         if len(output.strip()) == 0:
-            raise Exception('could not get commit comment for rev %s' % rev)
+            raise EnvironmentError('could not get commit comment for rev %s' % rev)
         
         return output
 
@@ -129,7 +137,7 @@ class GitPoller(base.ChangeSource):
         output = self._get_git_output(args)
         
         if len(output.strip()) == 0:
-            raise Exception('could not get commit name for rev %s' % rev)
+            raise EnvironmentError('could not get commit name for rev %s' % rev)
 
         return output
 
@@ -171,22 +179,50 @@ class GitPoller(base.ChangeSource):
         log.msg('gitpoller: catching up to FETCH_HEAD')
         
         args = ['reset', '--hard', 'FETCH_HEAD']
-        d = utils.getProcessOutput(self.gitbin, args, env={}, errortoo=1 )
+        d = utils.getProcessOutputAndValue(self.gitbin, args, env={})
         return d;
 
-    def _finished_ok(self, res):
+    def _changes_finished_ok(self, res):
         assert self.working
-        self.working = False
-        
         # check for failure -- this is probably never hit but the twisted docs
         # are not clear enough to be sure. it is being kept "just in case"
         if isinstance(res, failure.Failure):
-            log.msg('gitpoller: repo poll failed: %s' % res)
+            return self._changes_finished_failure(res)
+
         return res
 
-    def _finished_failure(self, res):
+    def _changes_finished_failure(self, res):
         log.msg('gitpoller: repo poll failed: %s' % res)
         assert self.working
+        # eat the failure to continue along the defered chain 
+        # - we still want to catch up
+        return None
+        
+    def _catch_up_finished_ok(self, res):
+        assert self.working
+
+        # check for failure -- this is probably never hit but the twisted docs
+        # are not clear enough to be sure. it is being kept "just in case"
+        if isinstance(res, failure.Failure):
+            return self._catch_up__finished_failure(res)
+            
+        elif isinstance(res, tuple):
+            (stdout, stderr, code) = res
+            if code != 0:
+                e = EnvironmentError('catch up failed with exit code: %d' % code)
+                return self._catch_up__finished_failure(failure.Failure(e))
+        
         self.working = False
-        return None # eat the failure
+        return res
+
+    def _catch_up__finished_failure(self, res):
+        assert self.working
+        assert isinstance(res, failure.Failure)
+        self.working = False
+
+        log.msg('gitpoller: catch up failed: %s' % res)
+        log.msg('gitpoller: stopping service - please resolve issues in local repo: %s' %
+                self.workdir)
+        self.stopService()
+        return res
         
