@@ -66,7 +66,7 @@ class SubunitShellCommand(ShellCommand):
         ob = self.ioObverser
         problems = ""
         for test, err in ob.errors + ob.failures:
-            problems += "%s\n%s" % (test, err)
+            problems += "%s\n%s" % (test.id(), err)
         if problems:
             self.addCompleteLog("problems", problems)
         warnings = ob.warningio.getvalue()
