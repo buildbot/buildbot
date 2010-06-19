@@ -130,12 +130,13 @@ class ShellCommand(LoggingBuildStep):
         """
 
         try:
-            if done and self.descriptionDone is not None:
-                return list(self.descriptionDone)
-            if self.description is not None:
-                return list(self.description)
-
             properties = self.build.getProperties()
+
+            if done and self.descriptionDone is not None:
+                return properties.render(self.descriptionDone)
+            if self.description is not None:
+                return properties.render(self.description)
+
             words = self.command
             if isinstance(words, (str, unicode)):
                 words = words.split()
