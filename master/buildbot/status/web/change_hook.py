@@ -23,8 +23,8 @@ class ChangeHookResource(resource.Resource):
      # this is a cheap sort of template thingy
     contentType = "text/html; charset=utf-8"
     
-    def __init__(self, dialects=None):
-        self.dialects = options
+    def __init__(self, dialects=[]):
+        self.dialects = dialects
     
     def getChild(self, name, request):
         return self
