@@ -317,7 +317,7 @@ class WebStatus(service.MultiService):
         
         # do we want to allow change_hook
         self.change_hook = change_hook
-	self.change_hook_dialects = change_hook_dialects
+        self.change_hook_dialects = change_hook_dialects
 
 
     def setupUsualPages(self, numbuilds, num_events, num_events_max):
@@ -340,9 +340,9 @@ class WebStatus(service.MultiService):
         self.putChild("about", AboutBuildbot())
         self.putChild("authfail", AuthFailResource())
         if hasattr(self, "change_hook_dialects"):
-		self.putChild("change_hook", ChangeHookResource(dialects = self.change_hook_dialects))
-	else:
-		self.putChild("change_hook", ChangeHookResource())
+            self.putChild("change_hook", ChangeHookResource(dialects = self.change_hook_dialects))
+        else:
+            self.putChild("change_hook", ChangeHookResource())
 
     def __repr__(self):
         if self.http_port is None:
