@@ -138,7 +138,7 @@ class WebStatus(service.MultiService):
                  order_console_by_time=False, changecommentlink=None,
                  revlink=None, projects=None, repositories=None,
                  authz=None, logRotateLength=None, maxRotatedFiles=None,
-                 change_hook=False, change_hook_target = None):
+                 change_hook=False, change_hook_dialect = None):
         """Run a web server that provides Buildbot status.
 
         @type  http_port: int or L{twisted.application.strports} string
@@ -242,6 +242,16 @@ class WebStatus(service.MultiService):
         @type  enable_change_hook: None or boolean
         @param enable_change_hook: enables or disables the change_hook url. 
                                    Default is off.
+                                   
+        @type  change_hook_dialects: None or dict
+        @param change_hook_dialects: Whitelists valid dialects. In the format of
+                                     {"dialect1": "Option1", "dialect2", None}
+                                     Where the values are options that will be passed
+                                     to the dialect
+                                     
+                                     To enable the DEFAULT handler, use a key of DEFAULT
+                                     
+                                     
         
     
         """
@@ -307,6 +317,7 @@ class WebStatus(service.MultiService):
         
         # do we want to allow change_hook
         self.change_hook = change_hook
+        self.change_hook_dialects = change_hook_dialects
 
 
     def setupUsualPages(self, numbuilds, num_events, num_events_max):
@@ -328,7 +339,7 @@ class WebStatus(service.MultiService):
         self.putChild("xmlrpc", XMLRPCServer())
         self.putChild("about", AboutBuildbot())
         self.putChild("authfail", AuthFailResource())
-        self.putChild("change_hook", ChangeHookResource())
+        self.putChild("change_hook", ChangeHookResource(change_hook_dialects = self.change_hook_dialects))
 
     def __repr__(self):
         if self.http_port is None:

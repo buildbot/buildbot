@@ -12,6 +12,7 @@ import traceback
 import sys
 from buildbot.process.properties import Properties
 from buildbot.changes.changes import Change
+from twisted.python.reflect import namedModule
 try:
     import json
 except ImportError:
@@ -21,6 +22,9 @@ except ImportError:
 class ChangeHookResource(resource.Resource):
      # this is a cheap sort of template thingy
     contentType = "text/html; charset=utf-8"
+    
+    def __init__(self, dialects=None):
+        self.dialects = options
     
     def getChild(self, name, request):
         return self
@@ -75,17 +79,24 @@ class ChangeHookResource(resource.Resource):
         if uriRE.group(1):
             # means we have a dielect in the url
             dialect = uriRE.group(1)
-            try:
-                # note, this should be safe, only alphanumerics and _ are
-                # allowed in the dialect name
-                tempModule = __import__('buildbot.status.web.hooks.' + dialect)
-                changes = tempModule.getChanges(request)
-            except:
-                logging.error("Encountered an exception in change_hook:")
-                for msg in traceback.format_exception(*sys.exc_info()):
-                    logging.error(msg.strip())
+            if dialect in self.dialects.keys():
+                try:
+                    # note, this should be safe, only alphanumerics and _ are
+                    # allowed in the dialect name
+                    tempModule = namedModule('buildbot.status.web.hooks.' + dialect)
+                    changes = tempModule.getChanges(request,self.dialects[dialect])
+                except:
+                    logging.error("Encountered an exception in change_hook:")
+                    for msg in traceback.format_exception(*sys.exc_info()):
+                        logging.error(msg.strip())
+            else:
+                logging.error("Invalid dialect specified %s" % dialect)
         else:
-            changes = self.getChangesBase(request)
+            if 'DEFAULT' in self.dialects.keys():
+                changes = self.getChangesBase(request)
+
+            else:
+                logging.error("Tried to use the DEFAULT dialect, but it wasn't whitelisted")
                 
         return changes        
                 
@@ -104,33 +115,44 @@ class ChangeHookResource(resource.Resource):
         
         files and links will be de-json'd, the rest are interpreted as strings
         """
+        
+        def firstOrNothing( value ):
+            """
+            Small helper function to return the first value (if value is a list)
+            or return the whole thing otherwise
+            """
+            if ( type(value) == type([])):
+                return value[0]
+            else:
+                return value
+            
         args = request.args
 
         # first, convert files and links
         files = None
         if args.get('files'):
-            files = json.loads( args.get('files') )
+            files = json.loads( args.get('files')[0] )
         else:
             files = []
                 
         links = None
         if args.get('links'):
-            links = json.loads( args.get('links') )
+            links = json.loads( args.get('links')[0] )
         else:
             links = []
             
-        revision = args.get('revision')
-        when     = args.get('when')
-        who = args.get('who')
-        comments = args.get('comments')
-        isdir = args.get('isdir',0)
-        branch = args.get('branch')
-        category = args.get('category')
-        revlink = args.get('revlink')
+        revision = firstOrNothing(args.get('revision'))
+        when     = firstOrNothing(args.get('when'))
+        who = firstOrNothing(args.get('who'))
+        comments = firstOrNothing(args.get('comments'))
+        isdir = firstOrNothing(args.get('isdir',0))
+        branch = firstOrNothing(args.get('branch'))
+        category = firstOrNothing(args.get('category'))
+        revlink = firstOrNothing(args.get('revlink'))
         properties = Properties()
         # properties.update(properties, "Change")
-        repository = args.get('repository')
-        project = args.get('project')
+        repository = firstOrNothing(args.get('repository'))
+        project = firstOrNothing(args.get('project'))
               
         ourchange = Change(who = who, files = files, comments = comments, isdir = isdir, links = links,
                         revision=revision, when = when, branch = branch, category = category,
