@@ -286,8 +286,8 @@ class MailNotifier(base.StatusReceiverMultiService):
 
         # you should either limit on builders or categories, not both
         if self.builders != None and self.categories != None:
-            twlog.err("Please specify only builders to ignore or categories to include")
-            raise # FIXME: the asserts above do not raise some Exception either
+            twlog.err("Please specify only builders or categories to include not both.")
+            raise interfaces.ParameterError("Please specify only builders or categories to include not both.")
 
         if customMesg:
             twlog.msg("customMesg is deprecated; please use messageFormatter instead")
