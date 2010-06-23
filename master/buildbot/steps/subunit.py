@@ -23,7 +23,7 @@ class SubunitShellCommand(ShellCommand):
 
         count = failures + errors
 
-        text = []
+        text = [self.name]
         text2 = ""
 
         if not count:
