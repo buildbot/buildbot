@@ -37,7 +37,7 @@ class SubunitShellCommand(ShellCommand):
                 text += ["no tests", "run"]
         else:
             results = FAILURE
-            text.append("tests")
+            #text.append("tests")
             if failures:
                 text.append("%d %s" % \
                             (failures,
