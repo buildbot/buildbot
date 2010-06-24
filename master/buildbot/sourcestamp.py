@@ -41,14 +41,10 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
 
     def __init__(self, branch=None, revision=None, patch=None,
                  changes=None, project='', repository=''):
-        if revision is not None:
-            if isinstance(revision, int):
-                revision = str(revision)
         if patch is not None:
             assert len(patch) == 2
             assert int(patch[0]) != -1
         self.branch = branch
-        self.revision = revision
         self.patch = patch
         self.project = project
         self.repository = repository
@@ -56,11 +52,17 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
             self.changes = tuple(changes)
             # set branch and revision to most recent change
             self.branch = changes[-1].branch
-            self.revision = str(changes[-1].revision)
+            revision = changes[-1].revision
             if not self.project:
                 self.project = changes[-1].project
             if not self.repository:
                 self.repository = changes[-1].repository
+
+        if revision is not None:
+            if isinstance(revision, int):
+                revision = str(revision)
+
+        self.revision = revision
 
     def canBeMergedWith(self, other):
         if other.repository != self.repository:
