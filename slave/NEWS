@@ -9,3 +9,5 @@ Major User visible changes in Buildslave.             -*- outline -*-
 ** Fixes
 
 *** Delete srcdir before retrying git clone (ticket #884)
+
+*** Fix setup.py to install a launcher script properly in all cases.

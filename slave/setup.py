@@ -49,6 +49,7 @@ setup_args = {
         "buildslave.test",
         "buildslave.test.unit",
     ],
+    'scripts': scripts
     }
 
 try:
