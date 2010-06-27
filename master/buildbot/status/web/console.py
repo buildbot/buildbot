@@ -19,8 +19,11 @@ def getResultsClass(results, prevResults, inProgress):
     if results is None:
         return "notstarted"
 
-    if results == builder.SUCCESS or results == builder.WARNINGS:
+    if results == builder.SUCCESS:
         return "success"
+
+    if results == builder.WARNINGS:
+        return "warnings"
 
     if results == builder.FAILURE:
         if not prevResults:
