@@ -52,6 +52,12 @@ setup_args = {
     'scripts': scripts
     }
 
+# set zip_safe to false to force Windows installs to always unpack eggs
+# into directories, which seems to work better --
+# see http://buildbot.net/trac/ticket/907
+if sys.platform == "win32":
+    setup_args['zip_safe'] = False
+
 try:
     # If setuptools is installed, then we'll add setuptools-specific arguments
     # to the setup args.

@@ -222,6 +222,12 @@ setup_args = {
                  'sdist_test': SdistTestCommand},
     }
 
+# set zip_safe to false to force Windows installs to always unpack eggs
+# into directories, which seems to work better --
+# see http://buildbot.net/trac/ticket/907
+if sys.platform == "win32":
+    setup_args['zip_safe'] = False
+
 py_25 = sys.version_info[0] > 2 or (sys.version_info[0] == 2 and sys.version_info[1] >= 5)
 py_26 = sys.version_info[0] > 2 or (sys.version_info[0] == 2 and sys.version_info[1] >= 6)
 
