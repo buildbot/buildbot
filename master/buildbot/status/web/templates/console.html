@@ -107,14 +107,16 @@ function checkMouseLeave(element, event) {
         </div>
       </td>
       <td width="33%" align="right" class="right_align">
-        <script type="text/javascript"> <![CDATA[
+      <script type="text/javascript"> 
+// <![CDATA[
           function reload_page() {
             name_value = document.getElementById('namebox').value
             if (document.location.href.lastIndexOf('?') == -1)
               document.location.href = document.location.href+ '?name=' + name_value;
             else
               document.location.href = document.location.href+ '&name=' + name_value;
-          } ]]> 
+          }
+// ]]> 
         </script>
         <input id='namebox' name='name' type='text' style='color:#999;'
             onblur='this.value = this.value || this.defaultValue; this.style.color = "#999";'
@@ -190,7 +192,7 @@ function checkMouseLeave(element, event) {
         <tr>    
     {% for b in r.builds[c.name] %}
           <td class='DevStatusBox'>
-            <a href='#' onclick='showBuildBox("{{ b.url|urlencode }}", event); return false;' 
+            <a href='#' onclick='showBuildBox("{{ b.url }}", event); return false;' 
                title='{{ b.title }}' class='DevStatusBox {{ b.color }} {{ b.tag }}' 
                target="_blank"></a>
           </td>
@@ -240,17 +242,17 @@ function checkMouseLeave(element, event) {
 </div>
 
 
+<iframe id="frameBox" style="display: none;"></iframe>
+  
 <script type="text/javascript">
 // replace 'onload="updateDiv(event);" with this, as iframe doesn't have onload event in xhtml
 window.onload = function() {
-  document.getElementById('myframe').onload = function(event) {
+  document.getElementById('frameBox').onload = function(event) {
     updateDiv(event);
   };
 }; 
 </script>
 
-<iframe id="frameBox" style="display: none;"></iframe>
-  
 {% endblock %}
 
 
