@@ -466,7 +466,6 @@ class Builder(pb.Referenceable, service.MultiService):
         #  move .expectations to DB
 
         assert self.running
-        log.msg("Builder.run %s: %s" % (self, self.slaves))
         self.run_count += 1
 
         available_slaves = [sb for sb in self.slaves if sb.isAvailable()]

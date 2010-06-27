@@ -856,7 +856,13 @@ def message_formatter(mode, name, build, results, master_status):
     text.append("Blamelist: %s" % ",".join(build.getResponsibleUsers()))
     if ss.changes:
         text.append('<h4>Recent Changes:</h4>')
-        text.extend([c.asHTML() for c in ss.changes])
+        text.append('See the <b>All Changes</b> section of the build log'
+                    ' for changes in this build: <a href="%s">%s</a>'
+                    % (master_status.getURLForThing(build),
+                       master_status.getURLForThing(build))
+                    )
+    text.append('<br>')
+    text.append('<br>')
 
     logs = list()
     for log in build.getLogs():
@@ -1058,8 +1064,9 @@ A change object has the following useful information:
 @item comments
 (str) comments reguarding the change.
 @end table
-The @code{Change} methods asText and asHTML return a list of strings with
-the above information formatted.
+The @code{Change} methods asText and asDict can be used to format the
+information above.  asText returns a list of strings and asDict returns
+a dictonary suitable for html/mail rendering.
 @item Log information
 @example
 logs = list()

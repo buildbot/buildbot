@@ -277,7 +277,7 @@ class SourceBaseCommand(Command):
             raise AbandonChain(1)
         if self.sourcedirIsUpdateable() and self.sourcedataMatches():
             d = self.doVCUpdate()
-            d.addCallback(self.maybeDoVCFallback)
+            d.addBoth(self.maybeDoVCFallback)
         else:
             d = self.doVCFull()
             d.addBoth(self.maybeDoVCRetry)
