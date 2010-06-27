@@ -32,12 +32,14 @@
     </div>
     {% endblock %}
 
+    {%- block barecontent -%}
     <hr/>
 
     <div class="content">
       {%- block content -%}     
       {%- endblock -%}
     </div>
+    {%- endblock -%}
 
     {%- block footer -%} 
     <div class="footer" style="clear:both">
