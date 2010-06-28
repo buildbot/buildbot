@@ -67,4 +67,8 @@ class GitOutputParsing(unittest.TestCase):
     def test_get_commit_files(self):
         filesStr = 'file1\nfile2'
         self._perform_git_output_test(self.gp._get_commit_files, filesStr, 
-                                      filesStr.split(), emptyRaisesException=False)
+                                      filesStr.split(), emptyRaisesException=False)    
+        
+    def test_get_commit_timestamp(self):
+        stampStr = '1273258009'
+        self._perform_git_output_test(self.gp._get_commit_timestamp, stampStr, float(stampStr))
