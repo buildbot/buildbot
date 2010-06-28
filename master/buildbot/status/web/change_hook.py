@@ -7,17 +7,12 @@ from twisted.web import resource
 from buildbot.status.builder import FAILURE
 import re
 from buildbot import util, interfaces
-import logging
 import traceback
 import sys
 from buildbot.process.properties import Properties
 from buildbot.changes.changes import Change
 from twisted.python.reflect import namedModule
-try:
-    import json
-except ImportError:
-    import simplejson as json
-
+from twisted.python.log import msg,err
 
 class ChangeHookResource(resource.Resource):
      # this is a cheap sort of template thingy
@@ -30,11 +25,16 @@ class ChangeHookResource(resource.Resource):
         return self
 
     def render_GET(self, request):
+        """
+        Reponds to events and starts the build process
+          different implementations can decide on what methods they will accept
+        """
         self.render_POST(request)
 
     def render_POST(self, request):
         """
-        Reponds only to POST events and starts the build process
+        Reponds to events and starts the build process
+          different implementations can decide on what methods they will accept
         
         :arguments:
             request
@@ -43,18 +43,16 @@ class ChangeHookResource(resource.Resource):
         try:
 
             changes = self.getChanges( request )
-            logging.debug("Payload: " + str(request.args))
+            msg("Payload: " + str(request.args))
             
             if not changes:
-                logging.warning("No changes found")
+                msg("No changes found")
                 return
             self.submitChanges( changes, request )
-	    return "changes %s" % changes
+            return "changes %s" % changes
         except Exception:
-            logging.error("Encountered an exception in change_hook:")
-            for msg in traceback.format_exception(*sys.exc_info()):
-                logging.error(msg.strip())
-	
+            err("Encountered an exception in change_hook:")
+
   
     def getChanges(self, request):
         """
@@ -72,31 +70,28 @@ class ChangeHookResource(resource.Resource):
         uriRE = re.search(r'^/change_hook/?([a-zA-Z0-9_]*)', request.uri)
         
         if not uriRE:
-            logging.debug("URI doesn't match change_hook regex: %s" % request.uri)
+            msg("URI doesn't match change_hook regex: %s" % request.uri)
             return
         
         changes = []
+        
+        # Was there a dialect provided?
         if uriRE.group(1):
-            # means we have a dielect in the url
             dialect = uriRE.group(1)
-            if dialect in self.dialects.keys():
-                try:
-                    # note, this should be safe, only alphanumerics and _ are
-                    # allowed in the dialect name
-                    tempModule = namedModule('buildbot.status.web.hooks.' + dialect)
-                    changes = tempModule.getChanges(request,self.dialects[dialect])
-                except:
-                    logging.error("Encountered an exception in change_hook:")
-                    for msg in traceback.format_exception(*sys.exc_info()):
-                        logging.error(msg.strip())
-            else:
-                logging.error("Invalid dialect specified %s" % dialect)
         else:
-            if 'DEFAULT' in self.dialects.keys():
-                changes = self.getChangesBase(request)
-
-            else:
-                logging.error("Tried to use the DEFAULT dialect, but it wasn't whitelisted")
+            dialect = 'base'
+            
+        if dialect in self.dialects.keys():
+            try:
+                # note, this should be safe, only alphanumerics and _ are
+                # allowed in the dialect name
+                tempModule = namedModule('buildbot.status.web.hooks.' + dialect)
+                changes = tempModule.getChanges(request,self.dialects[dialect])
+            except:
+                err("Encountered an exception in change_hook:")
+        else:
+            msg("The dialect specified %s wasn't whitelisted in change_hook" % dialect)
+            msg("Note: if dialect is 'base' then it's possible your URL is malformed and we didn't regex it properly")
                 
         return changes        
                 
@@ -107,57 +102,4 @@ class ChangeHookResource(resource.Resource):
             changeMaster.addChange( onechange )
         
     
-    def getChangesBase(self, request):
-        """
-        Consumes a naive build notification (the default for now)
-        basically, set POST variables to match commit object parameters:
-        revision, revlink, comments, branch, who, files, links
-        
-        files and links will be de-json'd, the rest are interpreted as strings
-        """
-        
-        def firstOrNothing( value ):
-            """
-            Small helper function to return the first value (if value is a list)
-            or return the whole thing otherwise
-            """
-            if ( type(value) == type([])):
-                return value[0]
-            else:
-                return value
-            
-        args = request.args
-
-        # first, convert files and links
-        files = None
-        if args.get('files'):
-            files = json.loads( args.get('files')[0] )
-        else:
-            files = []
-                
-        links = None
-        if args.get('links'):
-            links = json.loads( args.get('links')[0] )
-        else:
-            links = []
-            
-        revision = firstOrNothing(args.get('revision'))
-        when     = firstOrNothing(args.get('when'))
-        who = firstOrNothing(args.get('who'))
-        comments = firstOrNothing(args.get('comments'))
-        isdir = firstOrNothing(args.get('isdir',0))
-        branch = firstOrNothing(args.get('branch'))
-        category = firstOrNothing(args.get('category'))
-        revlink = firstOrNothing(args.get('revlink'))
-        properties = Properties()
-        # properties.update(properties, "Change")
-        repository = firstOrNothing(args.get('repository'))
-        project = firstOrNothing(args.get('project'))
-              
-        ourchange = Change(who = who, files = files, comments = comments, isdir = isdir, links = links,
-                        revision=revision, when = when, branch = branch, category = category,
-                        revlink = revlink, repository = repository, project = project)  
-	return [ourchange]
-
-
-
+    
