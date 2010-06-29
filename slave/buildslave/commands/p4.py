@@ -66,6 +66,7 @@ class P4(P4Base):
     ['p4client'] (required): client spec to use
     ['p4extra_views'] (required): additional client views to use
     ['p4base'] (required): view into the Perforce depot without branch name or trailing "..."
+    ['p4line_end'] (optional): value of the LineEnd client specification property
     """
 
     header = "p4"
@@ -74,6 +75,7 @@ class P4(P4Base):
         P4Base.setup(self, args)
         self.p4base = args['p4base']
         self.p4extra_views = args['p4extra_views']
+        self.p4line_end = args.get('p4line_end', None)
         self.p4mode = args['mode']
         self.p4branch = args['branch']
 
@@ -88,6 +90,7 @@ class P4(P4Base):
             self.p4base,
             self.p4branch,
             self.p4extra_views,
+            self.p4line_end,
 
             # Local side of view spec (srcdir is made from these).
             self.builder.basedir,
@@ -142,7 +145,10 @@ class P4(P4Base):
         client_spec += "Description:\n\tCreated by %s\n\n" % self.p4user
         client_spec += "Root:\t%s\n\n" % self.builder.basedir
         client_spec += "Options:\tallwrite rmdir\n\n"
-        client_spec += "LineEnd:\tlocal\n\n"
+        if self.p4line_end:
+            client_spec += "LineEnd:\t%s\n\n" % self.p4line_end
+        else:
+            client_spec += "LineEnd:\tlocal\n\n"
 
         # Setup a view
         client_spec += "View:\n\t%s" % (self.p4base)
