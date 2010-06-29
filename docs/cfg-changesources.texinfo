@@ -24,6 +24,7 @@ work around this, but true support for multi-tree builds remains elusive.
 * BonsaiPoller::
 * SVNPoller::
 * Bzr Poller::
+* Web Hooks via WebStatus Module::
 * Change Source Index::
 @end menu
 
@@ -51,6 +52,8 @@ sendchange} run in a loginfo script)
 @item pb.PBChangeSource (listening for connections from a long-running
 @code{contrib/viewcvspoll.py} polling process which examines the ViewCVS
 database directly
+@item change_hook in WebStatus (
+@code{status.web.change_hook})
 @end itemize
 
 @item SVN
@@ -62,12 +65,16 @@ database directly
 process
 @item mail.SVNCommitEmailMaildirSource (watching for email sent by commit-email.pl)
 @item svnpoller.SVNPoller (polling the SVN repository)
+@item change_hook in WebStatus (
+@code{status.web.change_hook})
 @end itemize
 
 @item Darcs
 @itemize @bullet
 @item pb.PBChangeSource (listening for connections from
 @code{contrib/darcs_buildbot.py} in a commit script
+@item change_hook in WebStatus (
+@code{status.web.change_hook})
 @end itemize
 
 @item Mercurial
@@ -77,12 +84,16 @@ process
 @item pb.PBChangeSource (listening for connections from
 @code{buildbot/changes/hgbuildbot.py} run as an in-process 'changegroup'
 hook)
+@item change_hook in WebStatus (
+@code{status.web.change_hook})
 @end itemize
 
 @item Arch/Bazaar
 @itemize @bullet
 @item pb.PBChangeSource (listening for connections from
 @code{contrib/arch_buildbot.py} run in a commit hook)
+@item change_hook in WebStatus (
+@code{status.web.change_hook})
 @end itemize
 
 @item Bzr (the newer Bazaar)
@@ -90,20 +101,27 @@ hook)
 @item pb.PBChangeSource (listening for connections from
 @code{contrib/bzr_buildbot.py} run in a post-change-branch-tip or commit hook)
 @item @code{contrib/bzr_buildbot.py}'s BzrPoller (polling the Bzr repository)
+@item change_hook in WebStatus (
+@code{status.web.change_hook})
 @end itemize
 
 @item Git
 @itemize @bullet
 @item pb.PBChangeSource (listening for connections from
 @code{contrib/git_buildbot.py} run in the post-receive hook)
+@item change_hook in WebStatus (
+@code{status.web.change_hook})
 @end itemize
 
 @end table
 
-All VC systems can be driven by a PBChangeSource and the
+All VC systems can be driven by a PBChangeSource, and the
 @code{buildbot sendchange} tool run from some form of commit script.
 If you write an email parsing function, they can also all be driven by
-a suitable @code{MaildirSource}.
+a suitable @code{MaildirSource}. Additionally, handlers for web-based
+notification (i.e. from github) can be used with WebStatus' change_hook
+module. The interface is simple, so adding your own handlers (and sharing!)
+should be a breeze.
 
 @node Configuring Change Sources
 @subsection Configuring Change Sources

@@ -135,6 +135,7 @@ they provide.
 * Buildbot Web Resources::
 * WebStatus Configuration Parameters::
 * XMLRPC server::
+* Web-based source change notification @code{change_hook}
 @end menu
 
 @node Buildbot Web Resources
@@ -386,6 +387,11 @@ by other programs, rather than humans.
 This runs an XML-RPC server which can be used to query status
 information about various builds. See @ref{XMLRPC server} for more
 details.
+
+@item /change_hook
+
+This provides an endpoint for web-based source change notification (i.e. github).
+See @ref{Change_hook} for more details.
 
 @end table
 
@@ -721,6 +727,28 @@ with keys @code{name}, in the format @code{stepname/logname}, and @code{text},
 which is always the constant string @code{HUGE}.
 
 @end table
+
+@node Change_hook
+@subsubsection Change_hook source notification hooks
+
+The /change_hook url is a magic URL which will accept HTTP requests and translate
+them into changes for buildbot. Implementations (such as a trivial json-based endpoint
+and a github implementation) can be found in @code{master/buildbot/status/web/hooks}.
+The format of the url is /change_hook/DIALECT where DIALECT is a package within the 
+hooks directory. Change_hook is disabled by default and each DIALECT has to be enabled
+separately, for security reasons
+
+An example WebStatus configuration line which enables change_hook and two DIALECTS:
+@code{c['status'].append(html.WebStatus(http_port=8010,allowForce=True,
+								change_hook=True,
+								change_hook_dialects={'base': True,
+													'github': {'option1':True,
+															   'option2':False}}))
+}
+
+Within the WebStatus arguments, the @code{change_hook} key enables/disables the module
+and @code{change_hook_dialects} whitelists DIALECTs where the keys are the module names
+and the values are optional arguments which will be passed to the hooks.
 
 @node MailNotifier
 @subsection MailNotifier
