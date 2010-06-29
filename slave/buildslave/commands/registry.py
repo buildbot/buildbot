@@ -1,17 +1,29 @@
+from twisted.python import reflect
 
-commandRegistry = {}
+commandRegistry = {
+    # command name : fully qualified factory name (callable)
+    "shell" : "buildslave.commands.shell.SlaveShellCommand",
+    "uploadFile" : "buildslave.commands.transfer.SlaveFileUploadCommand",
+    "uploadDirectory" : "buildslave.commands.transfer.SlaveDirectoryUploadCommand",
+    "downloadFile" : "buildslave.commands.transfer.SlaveFileDownloadCommand",
+    "svn" : "buildslave.commands.svn.SVN",
+    "bk" : "buildslave.commands.bk.BK",
+    "cvs" : "buildslave.commands.cvs.CVS",
+    "darcs" : "buildslave.commands.darcs.Darcs",
+    "monotone" : "buildslave.commands.monotone.Monotone",
+    "git" : "buildslave.commands.git.Git",
+    "arch" : "buildslave.commands.arch.Arch",
+    "bazaar" : "buildslave.commands.arch.Bazaar", # subclass of Arch
+    "bzr" : "buildslave.commands.bzr.Bzr",
+    "hg" : "buildslave.commands.hg.Mercurial",
+    "p4" : "buildslave.commands.p4.P4",
+    "p4sync" : "buildslave.commands.p4.P4Sync",
+}
 
-def registerSlaveCommand(name, factory, version):
-    """
-    Register a slave command with the registry, making it available in slaves.
+def getFactory(command):
+    factory_name = commandRegistry[command]
+    factory = reflect.namedObject(factory_name)
+    return factory
 
-    @type  name:    string
-    @param name:    name under which the slave command will be registered; used
-                    for L{buildslave.bot.SlaveBuilder.remote_startCommand}
-                    
-    @type  factory: L{buildslave.commands.Command}
-    @type  version: string
-    @param version: version string of the factory code
-    """
-    assert not commandRegistry.has_key(name)
-    commandRegistry[name] = (factory, version)
+def getAllCommandNames():
+    return commandRegistry.keys()

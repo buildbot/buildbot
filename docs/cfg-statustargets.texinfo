@@ -803,8 +803,19 @@ mn = MailNotifier(fromaddr="buildbot@@example.org",
                   extraRecipients=['listaddr@@example.org'])
 @end example
 
-If your SMTP host only allows you to send emails if you authenticate
-over TLS. This can also be done:
+If your SMTP host requires authentication before it allows you to send emails,
+this can also be done by specifying ``smtpUser'' and ``smptPassword'':
+
+@example
+mn = MailNotifier(fromaddr="myuser@@gmail.com",
+                  sendToInterestedUsers=False,
+                  extraRecipients=["listaddr@@example.org"],
+                  relayhost="smtp.gmail.com", smtpPort=587,
+                  smtpUser="myuser@@gmail.com", smtpPassword="mypassword")
+@end example
+
+If you want to require Transport Layer Security (TLS), then you can also
+set ``useTls'':
 
 @example
 mn = MailNotifier(fromaddr="myuser@@gmail.com",
@@ -884,7 +895,13 @@ def message_formatter(mode, name, build, results, master_status):
     text.append("Blamelist: %s" % ",".join(build.getResponsibleUsers()))
     if ss.changes:
         text.append('<h4>Recent Changes:</h4>')
-        text.extend([c.asHTML() for c in ss.changes])
+        text.append('See the <b>All Changes</b> section of the build log'
+                    ' for changes in this build: <a href="%s">%s</a>'
+                    % (master_status.getURLForThing(build),
+                       master_status.getURLForThing(build))
+                    )
+    text.append('<br>')
+    text.append('<br>')
 
     logs = list()
     for log in build.getLogs():
@@ -991,16 +1008,16 @@ connections. Defaults to 25.
 @item useTls
 (boolean). When this argument is @code{True} (default is @code{False})
 @code{MailNotifier} sends emails using TLS and authenticates with the
-@code{ralayhost}. When using TLS the arguments @code{smtUser} and
+@code{relayhost}. When using TLS the arguments @code{smtpUser} and
 @code{smtpPassword} must also be specified.
 
 @item smtpUser
 (string). The user name to use when authenticating with the
-@code{relayhost}. Only used when @code{useTls} is @code{True}.
+@code{relayhost}. 
 
 @item smtpPassword
 (string). The password that will be used when authenticating with the
-@code{relayhost}. Only used when @code{useTls} is @code{True}.
+@code{relayhost}.
 
 @item lookup
 (implementor of @code{IEmailLookup}). Object which provides
@@ -1086,8 +1103,9 @@ A change object has the following useful information:
 @item comments
 (str) comments reguarding the change.
 @end table
-The @code{Change} methods asText and asHTML return a list of strings with
-the above information formatted.
+The @code{Change} methods asText and asDict can be used to format the
+information above.  asText returns a list of strings and asDict returns
+a dictonary suitable for html/mail rendering.
 @item Log information
 @example
 logs = list()

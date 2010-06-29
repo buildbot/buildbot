@@ -2,6 +2,7 @@ import os, sys
 import shutil
 
 from twisted.trial import unittest
+from twisted.python import runtime
 import twisted.python.procutils
 
 from buildslave.commands import utils
@@ -54,7 +55,7 @@ class GetCommand(unittest.TestCase):
             'xeyes.exe' : [ r'c:\program files\xeyes.exe' ],
         })
         # this one will work out differently depending on platform..
-        if sys.platform.startswith('win'):
+        if runtime.platformType  == 'win32':
             self.assertEqual(utils.getCommand('xeyes'), r'c:\program files\xeyes.exe')
         else:
             self.assertEqual(utils.getCommand('xeyes'), r'c:\program files\xeyes.com')
@@ -97,7 +98,7 @@ class RmdirRecursive(unittest.TestCase):
     def test_rmdirRecursive_symlink(self):
         # this was intended as a regression test for #792, but doesn't seem
         # to trigger it.  It can't hurt to check it, all the same.
-        if sys.platform.startswith('win'):
+        if runtime.platformType  == 'win32':
             raise unittest.SkipTest("no symlinks on this platform")
         os.mkdir("noperms")
         open("noperms/x", "w")

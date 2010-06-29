@@ -10,11 +10,7 @@ from twisted.cred import credentials
 import buildslave
 from buildslave.util import now
 from buildslave.pbutil import ReconnectingPBClientFactory
-from buildslave.commands import registry
-
-# make sure the standard commands get registered. This import is performed
-# for its side-effects.
-from buildslave.commands import base, transfer, vcs
+from buildslave.commands import registry, base
 
 class NoCommandRunning(pb.Error):
     pass
@@ -160,7 +156,7 @@ class SlaveBuilder(pb.Referenceable, service.Service):
             self.stopCommand()
 
         try:
-            factory, version = registry.commandRegistry[command]
+            factory = registry.getFactory(command)
         except KeyError:
             raise UnknownCommand, "unrecognized SlaveCommand '%s'" % command
         self.command = factory(self, stepId, args)
@@ -280,9 +276,10 @@ class Bot(pb.Referenceable, service.MultiService):
         return filter(lambda d: os.path.isdir(d), os.listdir(self.basedir))
 
     def remote_getCommands(self):
-        commands = {}
-        for name, (factory, version) in registry.commandRegistry.items():
-            commands[name] = version
+        commands = dict([
+            (n, base.command_version)
+            for n in registry.getAllCommandNames()
+        ])
         return commands
 
     def remote_setBuilderList(self, wanted):
@@ -510,7 +507,3 @@ class BuildSlave(service.MultiService):
         self.bf.continueTrying = 0
         self.bf.stopTrying()
         service.MultiService.stopService(self)
-        # now kill the TCP connection
-        # twisted >2.0.1 does this for us, and leaves _connection=None
-        if self.connection._connection:
-            self.connection._connection.disconnect()

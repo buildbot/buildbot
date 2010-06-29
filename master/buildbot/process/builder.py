@@ -465,8 +465,11 @@ class Builder(pb.Referenceable, service.MultiService):
         # overall plan:
         #  move .expectations to DB
 
-        assert self.running
-        log.msg("Builder.run %s: %s" % (self, self.slaves))
+        # if we're not running, we may still be called from leftovers from
+        # a run of the loop, so just ignore the call.
+        if not self.running:
+            return
+
         self.run_count += 1
 
         available_slaves = [sb for sb in self.slaves if sb.isAvailable()]

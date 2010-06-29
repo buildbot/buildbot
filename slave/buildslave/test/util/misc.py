@@ -1,4 +1,4 @@
-import sys
+import os
 
 def nl(s):
     """Convert the given string to the native newline format, assuming it is
@@ -6,7 +6,4 @@ def nl(s):
     appropriate expectation in a failUnlessEqual"""
     if not isinstance(s, basestring):
         return s
-    if sys.platform.startswith('win'):
-        return s.replace('\n', '\r\n')
-    else:
-        return s
+    return s.replace('\n', os.linesep)

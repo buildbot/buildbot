@@ -22,6 +22,9 @@ class LatentBuildSlaveFailedToSubstantiate(Exception):
 class BuildbotNotRunningError(Exception):
     pass
 
+class ParameterError(Exception):
+    pass
+
 class IChangeSource(Interface):
     """Object which feeds Change objects to the changemaster. When files or
     directories are changed and the version control system provides some

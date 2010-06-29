@@ -18,12 +18,12 @@ from buildslave import version
 
 scripts = ["bin/buildslave"]
 # TODO: windows stuff??
-#if sys.platform == "win32":
-#    scripts.append("contrib/windows/buildslave.bat")
+if sys.platform == "win32":
+    scripts.append("../contrib/windows/buildslave.bat")
 #    scripts.append("contrib/windows/buildslave_service.py")
 
 setup_args = {
-    'name': "buildslave",
+    'name': "buildbot-slave",
     'version': version,
     'description': "BuildBot Slave Daemon",
     'long_description': "See the 'buildbot' package for details",
@@ -45,10 +45,20 @@ setup_args = {
     'packages': [
         "buildslave",
         "buildslave.commands",
+        "buildslave.scripts",
         "buildslave.test",
+        "buildslave.test.fake",
+        "buildslave.test.util",
         "buildslave.test.unit",
     ],
+    'scripts': scripts
     }
+
+# set zip_safe to false to force Windows installs to always unpack eggs
+# into directories, which seems to work better --
+# see http://buildbot.net/trac/ticket/907
+if sys.platform == "win32":
+    setup_args['zip_safe'] = False
 
 try:
     # If setuptools is installed, then we'll add setuptools-specific arguments

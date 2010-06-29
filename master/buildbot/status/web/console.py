@@ -22,6 +22,9 @@ def getResultsClass(results, prevResults, inProgress):
     if results == builder.SUCCESS:
         return "success"
 
+    if results == builder.WARNINGS:
+        return "warnings"
+
     if results == builder.FAILURE:
         if not prevResults:
             # This is the bottom box. We don't know if the previous one failed

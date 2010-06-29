@@ -2,7 +2,7 @@ import sys, os, time
 from cPickle import dump
 
 from zope.interface import implements
-from twisted.python import log
+from twisted.python import log, runtime
 from twisted.web import html
 
 from buildbot import interfaces, util
@@ -184,7 +184,7 @@ class ChangeMaster:
         tmpfilename = filename + ".tmp"
         try:
             dump(self, open(tmpfilename, "wb"))
-            if sys.platform == 'win32':
+            if runtime.platformType  == 'win32':
                 # windows cannot rename a file on top of an existing one
                 if os.path.exists(filename):
                     os.unlink(filename)
