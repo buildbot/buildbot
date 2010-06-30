@@ -1141,15 +1141,36 @@ be used.
 The @code{GitPoller} has only been tested with @code{git} version 
 @code{1.7.0.3} - your mileage may vary.
 
-Please take a look at the GitPoller docstring for more details about the
-arguments it accepts.
+@code{GitPoller} accepts the following arguments:
 
+@table @code
+@item repourl
+the git-url that describes the remote repository, e.g. @code{git@@example.com:foobaz/myrepo.git}
+(see the @code{git fetch} help for more info on git-url formats)
+
+@item branch
+the desired branch to fetch, will default to @code{'master'}
+
+@item workdir
+the directory where the poller should keep its local repository. will default to @code{<tempdir>/gitpoller_work}
+                
+@item pollinterval
+interval in seconds between polls, default is 10 minutes
+
+@item gitbin
+path to the git binary, defaults to just @code{'git'}
+
+@item usetimestamps
+parse each revision's commit timestamp (default is @code{True}), or ignore it in favor of the current time (so recently processed commits appear together in the waterfall page)
+@end table
+
+@heading Example
 @example
 from buildbot.changes.gitpoller import GitPoller
 c['change_source'] = GitPoller('git@@example.com:foobaz/myrepo.git',
                                branch='great_new_feature')
 @end example
-
+                  
 @node Change Source Index
 @subsection Change Source Index
 @printindex cs

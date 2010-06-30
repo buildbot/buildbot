@@ -23,7 +23,9 @@ class GitPoller(base.ChangeSource):
     working = False
     running = False
     
-    def __init__(self, repourl, branch='master', workdir=None, pollinterval=10*60, gitbin='git'):
+    def __init__(self, repourl, branch='master', 
+                 workdir=None, pollinterval=10*60, 
+                 gitbin='git', usetimestamps=True):
         """
         @type  repourl: string
         @param repourl: the url that describes the remote repository,
@@ -34,13 +36,18 @@ class GitPoller(base.ChangeSource):
         
         @type  workdir: string
         @param workdir: the directory where the poller should keep its local repository.
-                        will default to tempdir/gitpoller_work
+                        will default to <tempdir>/gitpoller_work
                         
         @type  pollinterval: int
         @param pollinterval: interval in seconds between polls, default is 10 minutes
         
         @type  gitbin: string
-        @param path to the git binary, defaults to just 'git'
+        @param gitbin: path to the git binary, defaults to just 'git'
+        
+        @type  usetimestamps: boolean
+        @param usetimestamps: parse each revision's commit timestamp (default True), or
+                              ignore it in favor of the current time (to appear together
+                              in the waterfall page)
         """
         
         self.repourl = repourl
@@ -50,6 +57,7 @@ class GitPoller(base.ChangeSource):
         self.lastPoll = time.time()
         self.gitbin = gitbin
         self.workdir = workdir;
+        self.usetimestamps = usetimestamps
         
         if self.workdir == None:
             self.workdir = tempfile.gettempdir() + '/gitpoller_work'
@@ -79,7 +87,7 @@ class GitPoller(base.ChangeSource):
     def describe(self):
         status = ""
         if not self.running:
-            status = "[STOPPED]"
+            status = "[STOPPED - check log]"
         str = 'GitPoller watching the remote git repository %s, branch: %s %s' \
                 % (self.repourl, self.branch, status)
         return str
@@ -182,10 +190,15 @@ class GitPoller(base.ChangeSource):
         log.msg('gitpoller: processing %d changes' % revCount )
 
         for rev in revList:
+            if self.usetimestamps:
+                commit_timestamp = self._get_commit_timestamp(rev)
+            else:
+                commit_timestamp = None # use current time
+                
             c = changes.Change(who = self._get_commit_name(rev),
                                files = self._get_commit_files(rev),
                                comments = self._get_commit_comments(rev),
-                               when = self._get_commit_timestamp(rev),
+                               when = commit_timestamp,
                                branch = self.branch)
             self.parent.addChange(c)
             self.lastChange = self.lastPoll
