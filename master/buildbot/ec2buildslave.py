@@ -106,8 +106,8 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
             key_pair = self.conn.get_all_key_pairs(keypair_name)[0]
             # key_pair.delete() # would be used to recreate
         except boto.exception.EC2ResponseError, e:
-            if e.code != 'InvalidKeyPair.NotFound':
-                if e.code == 'AuthFailure':
+            if 'InvalidKeyPair.NotFound' not in e.body:
+                if 'AuthFailure' in e.body:
                     print ('POSSIBLE CAUSES OF ERROR:\n'
                            '  Did you sign up for EC2?\n'
                            '  Did you put a credit card number in your AWS '
@@ -123,7 +123,7 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
         try:
             group = self.conn.get_all_security_groups(security_name)[0]
         except boto.exception.EC2ResponseError, e:
-            if e.code == 'InvalidGroup.NotFound':
+            if 'InvalidGroup.NotFound' in e.body:
                 self.security_group = self.conn.create_security_group(
                     security_name,
                     'Authorization to access the buildbot instance.')
