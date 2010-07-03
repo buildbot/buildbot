@@ -892,6 +892,10 @@ for each checkout directory to avoid incorrect synchronization. For
 this reason, Python percent substitution will be performed on this value
 to replace %(slave)s with the slave name and %(builder)s with the
 builder name. The default is "buildbot_%(slave)s_%(build)s".
+@item p4line_end
+(optional): The type of line ending handling P4 should use.  This is
+added directly to the cliet spec's LineEnd property.  The default is
+"local".
 @end table
 
 

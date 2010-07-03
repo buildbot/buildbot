@@ -11,14 +11,15 @@ import urllib
 
 from zope.interface import implements
 from twisted.internet import defer, reactor
-from twisted.mail.smtp import sendmail, ESMTPSenderFactory
+from twisted.mail.smtp import ESMTPSenderFactory
 from twisted.python import log as twlog
 
+have_ssl = True
 try:
     from twisted.internet import ssl
     from OpenSSL.SSL import SSLv3_METHOD
 except ImportError:
-    pass
+    have_ssl = False
 
 from buildbot import interfaces, util
 from buildbot.status import base
@@ -531,17 +532,26 @@ class MailNotifier(base.StatusReceiverMultiService):
 
         return self.sendMessage(m, list(recipients))
 
-    def tls_sendmail(self, s, recipients):
-        client_factory = ssl.ClientContextFactory()
-        client_factory.method = SSLv3_METHOD
-
+    def sendmail(self, s, recipients):
         result = defer.Deferred()
+        
+        if have_ssl and self.useTls:
+            client_factory = ssl.ClientContextFactory()
+            client_factory.method = SSLv3_METHOD
+        else:
+            client_factory = None
 
+        if self.smtpUser and self.smtpPassword:
+            useAuth = True
+        else:
+	    useAuth = False
         
         sender_factory = ESMTPSenderFactory(
             self.smtpUser, self.smtpPassword,
             self.fromaddr, recipients, StringIO(s),
-            result, contextFactory=client_factory)
+            result, contextFactory=client_factory,
+            requireTransportSecurity=self.useTls,
+            requireAuthentication=useAuth)
 
         reactor.connectTCP(self.relayhost, self.smtpPort, sender_factory)
         
@@ -550,8 +560,5 @@ class MailNotifier(base.StatusReceiverMultiService):
     def sendMessage(self, m, recipients):
         s = m.as_string()
         twlog.msg("sending mail (%d bytes) to" % len(s), recipients)
-        if self.useTls:
-            return self.tls_sendmail(s, recipients)
-        else:
-            return sendmail(self.relayhost, self.fromaddr, recipients, s,
-                            port=self.smtpPort)
+        return self.sendmail(s, recipients)
+

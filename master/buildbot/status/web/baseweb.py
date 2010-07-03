@@ -67,6 +67,7 @@ class WebStatus(service.MultiService):
      /builders/BUILDERNAME/builds/NUM/steps/STEPNAME: describes a single step
      /builders/BUILDERNAME/builds/NUM/steps/STEPNAME/logs/LOGNAME: a StatusLog
      /builders/_all/{force,stop}: force a build/stop building on all builders.
+     /buildstatus?builder=...&number=...: an embedded iframe for the console
      /changes : summarize all ChangeSources
      /changes/CHANGENUM: a page describing a single Change
      /schedulers/SCHEDULERNAME: a page describing a Scheduler, including
