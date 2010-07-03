@@ -461,6 +461,10 @@ stop all running builds
 
 cancel a build that has not yet started
 
+@item cleanShutdown
+
+shut down the master gracefully, without interrupting builds
+
 @end table
 
 For each of these actions, you can configure buildbot to never allow the
