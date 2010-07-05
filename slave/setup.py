@@ -19,7 +19,7 @@ from buildslave import version
 scripts = ["bin/buildslave"]
 # TODO: windows stuff??
 if sys.platform == "win32":
-    scripts.append("../contrib/windows/buildslave.bat")
+    scripts.append("contrib/windows/buildslave.bat")
 #    scripts.append("contrib/windows/buildslave_service.py")
 
 setup_args = {
