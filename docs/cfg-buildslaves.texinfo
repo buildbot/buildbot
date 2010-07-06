@@ -350,7 +350,7 @@ instance.  It defaults to 10 minutes.
 these AWS EC2 values.  They both default to "latent_buildbot_slave".
 
 @node Libvirt
-@subsection Libvirt
+@subsubsection Libvirt
 
 @url{http://www.libvirt.org/,,libvirt} is a virtualization API for interacting
 with the virtualization capabilities of recent versions of Linux and other OSes.
