@@ -51,15 +51,19 @@ Check the names for valid strings, and return None if a problem is found.
 Return a new Properties object containing each property found in req.
 """
     properties = Properties()
-    for i in (1,2,3):
+    i = 1
+    while True:
         pname = req.args.get("property%dname" % i, [""])[0]
         pvalue = req.args.get("property%dvalue" % i, [""])[0]
-        if pname and pvalue:
-            if not re.match(r'^[\w\.\-\/\~:]*$', pname) \
-                    or not re.match(r'^[\w\.\-\/\~:]*$', pvalue):
-                log.msg("bad property name='%s', value='%s'" % (pname, pvalue))
-                return None
-            properties.setProperty(pname, pvalue, "Force Build Form")
+        if not pname or not pvalue:
+            break
+        if not re.match(r'^[\w\.\-\/\~:]*$', pname) \
+                or not re.match(r'^[\w\.\-\/\~:]*$', pvalue):
+            log.msg("bad property name='%s', value='%s'" % (pname, pvalue))
+            return None
+        properties.setProperty(pname, pvalue, "Force Build Form")
+        i = i + 1
+
     return properties
 
 def build_get_class(b):

@@ -54,7 +54,7 @@ class SVNPoller(base.ChangeSource, util.ComparableMixin):
     def __init__(self, svnurl, split_file=None,
                  svnuser=None, svnpasswd=None,
                  pollinterval=10*60, histmax=100,
-                 svnbin='svn', revlinktmpl='', category=None):
+                 svnbin='svn', revlinktmpl='', category=None, project=None):
         """
         @type  svnurl: string
         @param svnurl: the SVN URL that describes the repository and
@@ -172,6 +172,11 @@ class SVNPoller(base.ChangeSource, util.ComparableMixin):
         @param category:     A single category associated with the changes that
                              could be used by schedulers watch for branches of a
                              certain name AND category.
+                             
+        @type  project       string
+        @param project       A single project that the changes are associated with
+                             the repository, added to the changes, for the use in 
+                             change filters
         """
 
         if svnurl.endswith("/"):
@@ -193,6 +198,7 @@ class SVNPoller(base.ChangeSource, util.ComparableMixin):
         self.overrun_counter = 0
         self.loop = LoopingCall(self.checksvn)
         self.category = category
+        self.project = project
 
     def split_file(self, path):
         # use getattr() to avoid turning this function into a bound method,
@@ -255,7 +261,10 @@ class SVNPoller(base.ChangeSource, util.ComparableMixin):
             return defer.succeed(None)
         self.working = True
 
-        log.msg("SVNPoller polling")
+        if self.project:
+            log.msg("SVNPoller polling " + self.project)
+        else:
+            log.msg("SVNPoller polling")
         if not self._prefix:
             # this sets self._prefix when it finishes. It fires with
             # self._prefix as well, because that makes the unit tests easier
@@ -461,7 +470,8 @@ class SVNPoller(base.ChangeSource, util.ComparableMixin):
                                branch=branch,
                                revlink=revlink,
                                category=self.category,
-                               repository=self.svnurl)
+                               repository=self.svnurl,
+                               project = self.project)
                     changes.append(c)
 
         return changes
