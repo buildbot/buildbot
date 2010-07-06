@@ -24,6 +24,7 @@ work around this, but true support for multi-tree builds remains elusive.
 * BonsaiPoller::
 * SVNPoller::
 * Bzr Poller::
+* GitPoller::
 * Change Source Index::
 @end menu
 
@@ -96,6 +97,7 @@ hook)
 @itemize @bullet
 @item pb.PBChangeSource (listening for connections from
 @code{contrib/git_buildbot.py} run in the post-receive hook)
+@item @code{gitpoller.GitPoller} (polling a remote git repository)
 @end itemize
 
 @end table
@@ -1129,6 +1131,51 @@ responsible for the change. set this value to True if this is pointed against
 a PQM-managed branch.
 @end table
 
+@node GitPoller
+@subsection GitPoller
+@csindex buildbot.changes.gitpoller.GitPoller
+
+If you cannot take advantage of post-receive hooks as provided by
+@code{contrib/git_buildbot.py} for example, then you can use the @code{GitPoller}.
+
+The @code{GitPoller} periodically fetches from a remote git repository and
+processes any changes. It requires its own working directory for operation, which
+can be specified via the @code{workdir} property. By default a temporary directory will
+be used.
+
+The @code{GitPoller} has only been tested with @code{git} version 
+@code{1.7.0.3} - your mileage may vary.
+
+@code{GitPoller} accepts the following arguments:
+
+@table @code
+@item repourl
+the git-url that describes the remote repository, e.g. @code{git@@example.com:foobaz/myrepo.git}
+(see the @code{git fetch} help for more info on git-url formats)
+
+@item branch
+the desired branch to fetch, will default to @code{'master'}
+
+@item workdir
+the directory where the poller should keep its local repository. will default to @code{<tempdir>/gitpoller_work}
+                
+@item pollinterval
+interval in seconds between polls, default is 10 minutes
+
+@item gitbin
+path to the git binary, defaults to just @code{'git'}
+
+@item usetimestamps
+parse each revision's commit timestamp (default is @code{True}), or ignore it in favor of the current time (so recently processed commits appear together in the waterfall page)
+@end table
+
+@heading Example
+@example
+from buildbot.changes.gitpoller import GitPoller
+c['change_source'] = GitPoller('git@@example.com:foobaz/myrepo.git',
+                               branch='great_new_feature')
+@end example
+                  
 @node Change Source Index
 @subsection Change Source Index
 @printindex cs
