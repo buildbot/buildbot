@@ -59,7 +59,9 @@ class AbstractBuildSlave(NewCredPerspective, service.MultiService):
         self.slave_commands = None
         self.slavebuilders = {}
         self.max_builds = max_builds
-        self.access = locks
+        self.access = []
+        if locks:
+            self.access = locks
 
         self.properties = Properties()
         self.properties.update(properties, "BuildSlave")
