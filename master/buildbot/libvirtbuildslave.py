@@ -1,9 +1,8 @@
 # Copyright 2010 Isotoma Limited
 
 import os
-from random import randrange
 
-from twisted.internet import defer, utils
+from twisted.internet import defer, utils, reactor, threads
 from twisted.python import log
 from buildbot.buildslave import AbstractBuildSlave, AbstractLatentBuildSlave
 
@@ -119,12 +118,12 @@ class Connection(object):
 
 class LibVirtSlave(AbstractLatentBuildSlave):
 
-    def __init__(self, name, password, hd_image, base_image = None, xml=None, max_builds=None, notify_on_missing=[],
+    def __init__(self, name, password, connection, hd_image, base_image = None, xml=None, max_builds=None, notify_on_missing=[],
                  missing_timeout=60*20, build_wait_timeout=60*10, properties={}, locks=None):
         AbstractLatentBuildSlave.__init__(self, name, password, max_builds, notify_on_missing,
                                           missing_timeout, build_wait_timeout, properties, locks)
         self.name = name
-        self.domain_name = None
+        self.connection = connection
         self.image = hd_image
         self.base_image = base_image
         self.xml = xml
@@ -178,14 +177,12 @@ class LibVirtSlave(AbstractLatentBuildSlave):
         if self.domain is not None:
              raise ValueError('domain active')
 
-        self.domain_name = "%s-%s" % (self.name, randrange(1000, 9999))
-
         d = self._prepare_base_image()
 
         def _start(res):
             if self.xml:
-                return connection.create(self.xml)
-            d = lookupByName(self.name)
+                return self.connection.create(self.xml)
+            d = self.connection.lookupByName(self.name)
             def _really_start(res):
                 return res.create()
             d.addCallback(_really_start)
@@ -201,7 +198,6 @@ class LibVirtSlave(AbstractLatentBuildSlave):
             log.msg("Cannot start a VM (%s), failing gracefully and triggering a new build check" % self.name)
             log.err(failure)
             self.domain = None
-            self.domain_name = None
             return False
         d.addErrback(_start_failed)
 
@@ -214,13 +210,13 @@ class LibVirtSlave(AbstractLatentBuildSlave):
         If the VM was using a cloned image, I remove the clone
         When everything is tidied up, I ask that bbot looks for work to do
         """
-        log.msg("Attempting to stop '%s', domain '%s'" % (self.name, self.domain_name))
+        log.msg("Attempting to stop '%s'" % self.name)
         if self.domain is None:
              log.msg("I don't think that domain is evening running, aborting")
              return defer.succeed(None)
 
-        domain, domain_name = self.domain, self.domain_name
-        self.domain_name, self.domain, = None, None
+        domain = self.domain
+        self.domain = None
 
         if self.graceful_shutdown and not fast:
             log.msg("Graceful shutdown chosen for %s" % self.name)
@@ -229,12 +225,12 @@ class LibVirtSlave(AbstractLatentBuildSlave):
             d = domain.destroy()
 
         def _disconnect(res):
-            log.msg("VM destroyed (%s): Forcing its connection closed." % domain_name)
+            log.msg("VM destroyed (%s): Forcing its connection closed." % self.name)
             return AbstractBuildSlave.disconnect(self)
         d.addCallback(_disconnect)
 
         def _disconnected(res):
-            log.msg("We forced disconnection (%s), cleaning up and triggering new build" % domain_name)
+            log.msg("We forced disconnection (%s), cleaning up and triggering new build" % self.name)
             if self.base_image:
                 os.remove(self.image)
             self.botmaster.triggerNewBuildCheck()
