@@ -35,28 +35,28 @@ class TestGit(SourceCommandTestMixin, unittest.TestCase):
                 + 0,
             # TODO: capture makedirs invocation here
             Expect([ 'path/to/git', 'init'],
-                os.path.join(self.basedir, 'source'),
+                self.basedir_source,
                 sendRC=False, timeout=120, usePTY=False)
                 + 0,
             Expect([ 'path/to/git', 'clean', '-f', '-d', '-x'],
-                os.path.join(self.basedir, 'source'),
+                self.basedir_source,
                 sendRC=False, timeout=120, usePTY=False)
                 + 0,
             Expect([ 'path/to/git', 'fetch', '-t',
                      'git://github.com/djmitche/buildbot.git', '+master' ],
-                os.path.join(self.basedir, 'source'),
+                self.basedir_source,
                 sendRC=False, timeout=120, usePTY=False)
                 + 0,
             Expect(['path/to/git', 'reset', '--hard', 'FETCH_HEAD'],
-                os.path.join(self.basedir, 'source'),
+                self.basedir_source,
                 sendRC=False, timeout=120, usePTY=False)
                 + 0,
             Expect(['path/to/git', 'branch', '-M', 'master'],
-                os.path.join(self.basedir, 'source'),
+                self.basedir_source,
                 sendRC=False, timeout=120, usePTY=False)
                 + 0,
             Expect([ 'path/to/git', 'rev-parse', 'HEAD' ],
-                os.path.join(self.basedir, 'source'),
+                self.basedir_source,
                 sendRC=False, timeout=120, usePTY=False, keepStdout=True)
                 + { 'stdout' : '4026d33b0532b11f36b0875f63699adfa8ee8662\n' }
                 + 0,

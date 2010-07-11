@@ -39,7 +39,7 @@ class TestDarcs(SourceCommandTestMixin, unittest.TestCase):
                 sendRC=False, timeout=120, usePTY=False)
                 + 0,
             Expect([ 'path/to/darcs', 'changes', '--context' ],
-                os.path.join(self.basedir, 'source'),
+                self.basedir_source,
                 sendRC=False, timeout=120, usePTY=False, keepStdout=True,
                 environ=exp_environ, sendStderr=False, sendStdout=False)
                 + { 'stdout' : example_changes }

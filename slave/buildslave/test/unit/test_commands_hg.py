@@ -39,13 +39,13 @@ class TestMercurial(SourceCommandTestMixin, unittest.TestCase):
                 sendRC=False, timeout=120, usePTY=False)
                 + 0,
             Expect(['path/to/hg', 'identify', '--num', '--branch'],
-                os.path.join(self.basedir, 'source'),
+                self.basedir_source,
                 sendRC=False, timeout=120, usePTY=False, keepStdout=True,
                 keepStderr=True)
                 + { 'stdout' : '-1 default\n' }
                 + 0,
             Expect(['path/to/hg', 'paths', 'default'],
-                os.path.join(self.basedir, 'source'),
+                self.basedir_source,
                 sendRC=False, timeout=120, usePTY=False, keepStdout=True,
                 keepStderr=True)
                 + { 'stdout' : 'http://bitbucket.org/nicolas17/pyboinc\n' }
@@ -56,7 +56,7 @@ class TestMercurial(SourceCommandTestMixin, unittest.TestCase):
                 sendRC=False, timeout=120, usePTY=False)
                 + 0,
             Expect(['path/to/hg', 'identify', '--id', '--debug'],
-                os.path.join(self.basedir, 'source'),
+                self.basedir_source,
                 sendRC=False, timeout=120, usePTY=False, environ=exp_environ,
                 keepStdout=True)
                 + { 'stdout' : 'b7ddc0b638fa11cdac7c0345c40c6f76d8a7166d' }

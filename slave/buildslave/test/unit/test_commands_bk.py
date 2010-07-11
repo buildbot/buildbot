@@ -39,7 +39,7 @@ class TestBK(SourceCommandTestMixin, unittest.TestCase):
                 sendRC=False, timeout=120, usePTY=False)
                 + 0,
             Expect(['path/to/bk', 'changes', '-r+', '-d:REV:'],
-                os.path.join(self.basedir, 'source'),
+                self.basedir_source,
                 sendRC=False, usePTY=False, timeout=120, sendStderr=False,
                 sendStdout=False, keepStdout=True, environ=exp_environ)
             + { 'stdout' : '1.114\n' } # TODO: is this what BK outputs?

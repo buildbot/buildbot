@@ -40,7 +40,7 @@ class TestSVN(SourceCommandTestMixin, unittest.TestCase):
                 sendRC=False, timeout=120, usePTY=False, environ=exp_environ)
                 + 0,
             Expect([ 'path/to/svnversion', '.' ],
-                os.path.join(self.basedir, 'source'),
+                self.basedir_source,
                 sendRC=False, timeout=120, usePTY=False, keepStdout=True,
                 environ=exp_environ, sendStderr=False, sendStdout=False)
                 + { 'stdout' : '9753\n' }

@@ -17,9 +17,11 @@ class CommandTestMixin:
         Sets:
             self.basedir -- the basedir (an abs path)
             self.basedir_workdir -- os.path.join(self.basedir, 'workdir')
+            self.basedir_source -- os.path.join(self.basedir, 'source')
         """
         self.basedir = os.path.abspath('basedir')
         self.basedir_workdir = os.path.join(self.basedir, 'workdir')
+        self.basedir_source = os.path.join(self.basedir, 'source')
 
     def tearDownCommand(self):
         """
