@@ -34,3 +34,5 @@ master/docs/latest
 twisted/plugins/dropin.cache
 .coverage
 coverage-html
+apidocs/reference
+apidocs/reference.tgz
