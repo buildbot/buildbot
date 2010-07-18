@@ -5,6 +5,7 @@
 * Creating a buildmaster::
 * Upgrading an Existing Buildmaster::
 * Creating a buildslave::
+* Upgrading an Existing Buildslave::
 * Launching the daemons::
 * Logfiles::
 * Shutdown::
@@ -503,6 +504,50 @@ s = BuildSlave(buildmaster_host, port, slavename, passwd, basedir,
 
 @end table
 
+@node Upgrading an Existing Buildslave
+@section Upgrading an Existing Buildslave
+
+If you have just installed a new version of Buildbot-slave, you may need to
+take some steps to upgrade it.
+
+@heading Version-specific Notes
+
+@menu
+* Upgrading a Buildslave to Buildbot-slave-0.8.1::
+@end menu
+
+@node Upgrading a Buildslave to Buildbot-slave-0.8.1
+@subsection Upgrading a Buildslave to Buildbot-slave-0.8.1
+
+Before Buildbot version 0.8.1, the Buildbot master and slave were part of the
+same distribution.  As of version 0.8.1, the buildslave is a separate
+distribution.
+
+As of this release, you will need to install @i{buildbot-slave} to run a slave.
+
+Any automatic startup scripts that had run @code{buildbot start} for previous versions
+should be changed to run @code{buildslave start} instead.
+
+Finally, the existing @code{buildbot.tac} for any buildslaves running older
+versions will need to be edited or replaced.  If the loss of cached buildslave
+state (e.g., for Source steps in copy mode) is not problematic, the easiest
+solution is to simply delete the slave directory and re-run @code{buildslave
+create-slave}.
+
+If deleting the slave directory is problematic, the change to
+@code{buildbot.tac} is simple.  On line 3, replace
+
+@example
+from buildbot.slave.bot import BuildSlave
+@end example
+
+with
+
+@example
+from buildslave.bot import BuildSlave
+@end example
+
+After this change, the buildslave should start as usual.
 
 @node Launching the daemons
 @section Launching the daemons
