@@ -75,7 +75,14 @@ my_filter = ChangeFilter(
     branch="devel")
 @end example
 
-There are four attributes of changes on which you can filter changes:
+and then add it to a scheduler with teh @code{change_filter} parameter:
+
+@example
+sch = SomeSchedulerClass(...,
+    change_filter=my_filter)
+@end example
+
+There are four attributes of changes on which you can filter:
 
 @itemize
 @item project
