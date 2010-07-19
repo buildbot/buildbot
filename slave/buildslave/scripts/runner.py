@@ -260,6 +260,35 @@ class RestartOptions(MakerBase):
     def getSynopsis(self):
         return "Usage:    buildslave restart [<basedir>]"
 
+class UpgradeSlaveOptions(MakerBase):
+    optFlags = [
+        ]
+    optParameters = [
+        ]
+
+    def getSynopsis(self):
+        return "Usage:    buildbot upgrade-slave [<basedir>]"
+
+    longdesc = """
+    This command takes an existing buildslave working directory and
+    upgrades it to the current version.
+    """
+
+def upgradeSlave(config):
+    basedir = os.path.expanduser(config['basedir'])
+    buildbot_tac = open(os.path.join(basedir, "buildbot.tac")).read()
+    new_buildbot_tac = buildbot_tac.replace(
+        "from buildbot.slave.bot import BuildSlave",
+        "from buildslave.bot import BuildSlave")
+    if new_buildbot_tac != buildbot_tac:
+        open(os.path.join(basedir, "buildbot.tac"), "w").write(new_buildbot_tac)
+        print "buildbot.tac updated"
+    else:
+        print "No changes made"
+
+    return 0
+
+
 class SlaveOptions(MakerBase):
     optFlags = [
         ["force", "f", "Re-use an existing directory"],
@@ -327,6 +356,8 @@ class Options(usage.Options):
         # the following are all admin commands
         ['create-slave', None, SlaveOptions,
          "Create and populate a directory for a new buildslave"],
+        ['upgrade-slave', None, UpgradeSlaveOptions,
+         "Upgrade an existing buildslave directory for the current version"],
         ['start', None, StartOptions, "Start a buildslave"],
         ['stop', None, StopOptions, "Stop a buildslave"],
         ['restart', None, RestartOptions,
@@ -363,6 +394,8 @@ def run():
 
     if command == "create-slave":
         createSlave(so)
+    elif command == "upgrade-slave":
+        upgradeSlave(so)
     elif command == "start":
         if not isBuildslaveDir(so['basedir']):
             print "not a buildslave directory"

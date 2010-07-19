@@ -508,7 +508,12 @@ s = BuildSlave(buildmaster_host, port, slavename, passwd, basedir,
 @section Upgrading an Existing Buildslave
 
 If you have just installed a new version of Buildbot-slave, you may need to
-take some steps to upgrade it.
+take some steps to upgrade it.  If you are upgrading to version 0.8.2 or later,
+you can run
+
+@example
+buildslave upgrade-slave /path/to/buildslave/dir
+@end example
 
 @heading Version-specific Notes
 
@@ -528,10 +533,14 @@ As of this release, you will need to install @i{buildbot-slave} to run a slave.
 Any automatic startup scripts that had run @code{buildbot start} for previous versions
 should be changed to run @code{buildslave start} instead.
 
-Finally, the existing @code{buildbot.tac} for any buildslaves running older
-versions will need to be edited or replaced.  If the loss of cached buildslave
-state (e.g., for Source steps in copy mode) is not problematic, the easiest
-solution is to simply delete the slave directory and re-run @code{buildslave
+If you are running a version later than 0.8.1, then you can skip the remainder
+of this section: the @code{upgrade-slave} command will take care of this.  If
+you are upgrading directly to 0.8.1, read on.
+
+The existing @code{buildbot.tac} for any buildslaves running older versions
+will need to be edited or replaced.  If the loss of cached buildslave state
+(e.g., for Source steps in copy mode) is not problematic, the easiest solution
+is to simply delete the slave directory and re-run @code{buildslave
 create-slave}.
 
 If deleting the slave directory is problematic, the change to
