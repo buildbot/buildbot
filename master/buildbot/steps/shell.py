@@ -439,9 +439,8 @@ class WarningCountingShellCommand(ShellCommand):
             for fileRe, warnRe, start, end in self.suppressions:
                 if ( (file == None or fileRe == None or fileRe.search(file)) and
                      (warnRe == None or  warnRe.search(text)) and
-                     lineNo != None and
-                     (start == None or start <= lineNo) and
-                     (end == None or end >= lineNo) ):
+                     ((start == None and end == None) or
+                      (lineNo != None and start <= lineNo and end >= lineNo)) ):
                     return
 
         warnings.append(line)
