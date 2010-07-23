@@ -139,7 +139,7 @@ class WebStatus(service.MultiService):
                  order_console_by_time=False, changecommentlink=None,
                  revlink=None, projects=None, repositories=None,
                  authz=None, logRotateLength=None, maxRotatedFiles=None,
-                 change_hook=False, change_hook_dialects = []):
+                 enable_change_hook=False, change_hook_dialects = []):
         """Run a web server that provides Buildbot status.
 
         @type  http_port: int or L{twisted.application.strports} string
