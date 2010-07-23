@@ -319,7 +319,7 @@ class WebStatus(service.MultiService):
         # do we want to allow change_hook
         self.change_hook = enable_change_hook
         self.change_hook_dialects = change_hook_dialects
-        if change_hook:
+        if enable_change_hook:
             self.putChild("change_hook", ChangeHookResource(dialects = self.change_hook_dialects))
 
     def setupUsualPages(self, numbuilds, num_events, num_events_max):
