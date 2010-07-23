@@ -40,18 +40,15 @@ class ChangeHookResource(resource.Resource):
             request
                 the http request object
         """
-        try:
 
-            changes = self.getChanges( request )
-            msg("Payload: " + str(request.args))
-            
-            if not changes:
-                msg("No changes found")
-                return
-            self.submitChanges( changes, request )
-            return "changes %s" % changes
-        except Exception:
-            err("Encountered an exception in change_hook:")
+        changes = self.getChanges( request )
+        msg("Payload: " + str(request.args))
+        
+        if not changes:
+            msg("No changes found")
+            return
+        self.submitChanges( changes, request )
+        return "changes %s" % changes
 
   
     def getChanges(self, request):
@@ -82,13 +79,14 @@ class ChangeHookResource(resource.Resource):
             dialect = 'base'
             
         if dialect in self.dialects.keys():
-            try:
+#            try:
                 # note, this should be safe, only alphanumerics and _ are
                 # allowed in the dialect name
-                tempModule = namedModule('buildbot.status.web.hooks.' + dialect)
-                changes = tempModule.getChanges(request,self.dialects[dialect])
-            except:
-                err("Encountered an exception in change_hook:")
+            tempModule = namedModule('buildbot.status.web.hooks.' + dialect)
+            changes = tempModule.getChanges(request,self.dialects[dialect])
+            msg("Got the following changes %s" % changes)
+#            except:
+#                err("Encountered an exception in change_hook:")
         else:
             msg("The dialect specified %s wasn't whitelisted in change_hook" % dialect)
             msg("Note: if dialect is 'base' then it's possible your URL is malformed and we didn't regex it properly")
