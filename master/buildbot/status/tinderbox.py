@@ -10,7 +10,7 @@ from buildbot.status import mail
 from buildbot.status.builder import SUCCESS, WARNINGS
 from buildbot.steps.shell import WithProperties
 
-import zlib, bz2, base64
+import zlib, bz2, base64, re
 
 # TODO: docs, maybe a test of some sort just to make sure it actually imports
 # and can format email without raising an exception.
@@ -48,6 +48,8 @@ class TinderboxMailNotifier(mail.MailNotifier):
 
         @type  tree: string
         @param tree: The Tinderbox tree to post to.
+                     When tree is a WithProperties instance it will be
+                     interpolated as such. See WithProperties for more detail
 
         @type  extraRecipients: tuple of string
         @param extraRecipients: E-mail addresses of recipients. This should at
@@ -110,6 +112,9 @@ class TinderboxMailNotifier(mail.MailNotifier):
                                    subject=subject,
                                    extraRecipients=extraRecipients,
                                    sendToInterestedUsers=False)
+        assert isinstance(tree, basestring) \
+            or isinstance(tree, WithProperties), \
+            "tree must be a string or a WithProperties instance"
         self.tree = tree
         self.binaryURL = binaryURL
         self.logCompression = logCompression
@@ -135,7 +140,15 @@ class TinderboxMailNotifier(mail.MailNotifier):
         # shortform
         t = "tinderbox:"
 
-        text += "%s tree: %s\n" % (t, self.tree)
+        if type(self.tree) is str:
+            # use the exact string given
+            text += "%s tree: %s\n" % (t, self.tree)
+        elif isinstance(self.tree, WithProperties):
+            # interpolate the WithProperties instance, use that
+            text += "%s tree: %s\n" % (t, build.getProperties().render(self.tree))
+        else:
+            raise Exception("tree is an unhandled value")
+
         # the start time
         # getTimes() returns a fractioned time that tinderbox doesn't understand
         builddate = int(build.getTimes()[0])
@@ -188,19 +201,47 @@ class TinderboxMailNotifier(mail.MailNotifier):
             # logs will always be appended
             logEncoding = ""
             tinderboxLogs = ""
-            for log in build.getLogs():
-                l = ""
-                if self.logCompression == "bzip2":
-                    compressedLog = bz2.compress(log.getText())
-                    l = base64.encodestring(compressedLog)
-                    logEncoding = "base64";
-                elif self.logCompression == "gzip":
-                    compressedLog = zlib.compress(log.getText())
-                    l = base64.encodestring(compressedLog)
-                    logEncoding = "base64";
-                else:
-                    l = log.getText()
-                tinderboxLogs += l
+            for bs in build.getSteps():
+                # Make sure that shortText is a regular string, so that bad
+                # data in the logs don't generate UnicodeDecodeErrors
+                shortText = "%s\n" % ' '.join(bs.getText()).encode('ascii', 'replace')
+                # ignore steps that haven't happened
+                if not re.match(".*[^\s].*", shortText):
+                    continue
+                # we ignore TinderboxPrint's here so we can do things like:
+                # ShellCommand(command=['echo', 'TinderboxPrint:', ...])
+                if re.match(".+TinderboxPrint.*", shortText):
+                    shortText = shortText.replace("TinderboxPrint",
+                                                  "Tinderbox Print")
+                logs = bs.getLogs()
+
+                tinderboxLogs += "======== BuildStep started ========\n"
+                tinderboxLogs += shortText
+                tinderboxLogs += "=== Output ===\n"
+                for log in logs:
+                    logText = log.getTextWithHeaders()
+                    # Because we pull in the log headers here we have to ignore
+                    # some of them. Basically, if we're TinderboxPrint'ing in
+                    # a ShellCommand, the only valid one(s) are at the start
+                    # of a line. The others are prendeded by whitespace, quotes,
+                    # or brackets/parentheses
+                    for line in logText.splitlines():
+                        if re.match(".+TinderboxPrint.*", line):
+                            line = line.replace("TinderboxPrint",
+                                                "Tinderbox Print")
+                        tinderboxLogs += line + "\n"
+
+                tinderboxLogs += "=== Output ended ===\n"
+                tinderboxLogs += "======== BuildStep ended ========\n"
+
+            if self.logCompression == "bzip2":
+                cLog = bz2.compress(tinderboxLogs)
+                tinderboxLogs = base64.encodestring(cLog)
+                logEncoding = "base64"
+            elif self.logCompression == "gzip":
+                cLog = zlib.compress(tinderboxLogs)
+                tinderboxLogs = base64.encodestring(cLog)
+                logEncoding = "base64"
 
             text += "%s logencoding: %s\n" % (t, logEncoding)
             text += "%s END\n\n" % t
