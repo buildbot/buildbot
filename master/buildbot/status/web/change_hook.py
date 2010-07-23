@@ -82,6 +82,7 @@ class ChangeHookResource(resource.Resource):
 #            try:
                 # note, this should be safe, only alphanumerics and _ are
                 # allowed in the dialect name
+            msg("Attempting to load module buildbot.status.web.hooks" + dialect)
             tempModule = namedModule('buildbot.status.web.hooks.' + dialect)
             changes = tempModule.getChanges(request,self.dialects[dialect])
             msg("Got the following changes %s" % changes)
