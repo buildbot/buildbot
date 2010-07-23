@@ -17,7 +17,7 @@ from twisted.python.log import msg,err
 class ChangeHookResource(resource.Resource):
      # this is a cheap sort of template thingy
     contentType = "text/html; charset=utf-8"
-    
+    children    = {}
     def __init__(self, dialects=[]):
         self.dialects = dialects
     
