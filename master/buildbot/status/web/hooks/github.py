@@ -180,7 +180,7 @@ def process_change(payload, user, repo, repo_url):
         changes = []
         newrev = payload['after']
         refname = payload['ref']
-        
+        logging.info( "in process_change" )
         # We only care about regular heads, i.e. branches
         match = re.match(r"^refs\/heads\/(.+)$", refname)
         if not match:
@@ -189,6 +189,15 @@ def process_change(payload, user, repo, repo_url):
         branch = match.group(1)
         # Find out if the branch was created, deleted or updated. Branches
         # being deleted aren't really interesting.
+#        {"removed":[],
+#        "modified":["setup.py"],
+#        "message":"Give some polite messages when trying to run lint/coverage without the modules being installed.",
+#        "added":[],
+#        "url":"http://github.com/PerilousApricot/WMCore/commit/71f79484bde30a1d2067719e13df8212c4032c2e",
+#        "timestamp":"2010-01-12T05:02:37-08:00",
+#        "id":"71f79484bde30a1d2067719e13df8212c4032c2e",
+#        "author":{"email":"metson","name":"metson"}}
+
         if re.match(r"^0*$", newrev):
             logging.info("Branch `%s' deleted, ignoring" % branch)
             return []
