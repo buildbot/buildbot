@@ -234,6 +234,6 @@ def process_change(payload, user, repo, repo_url):
                         branch   = branch,
                         revlink  = commit['url'], 
                         repository = repo_url)  
-                changes.append(change) 
+                changes.append(changeObject) 
             return changes
         
