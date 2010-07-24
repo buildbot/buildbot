@@ -213,7 +213,7 @@ def process_change(payload, user, repo, repo_url):
                 files.extend(commit['removed'])
                 # you know what sucks? this. converting
                 # from the github provided time to a unix timestamp
-                when =  time.mktime(datetime.strptime(\
+                when =  time.mktime(datetime.datetime.strptime(\
                                      commit['timestamp'][:-3] +\
                                      commit['timestamp'][-2:],\
                                     "%Y-%m-%dT%H:%M:%S%z").timetuple)
