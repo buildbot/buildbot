@@ -160,7 +160,7 @@ def getChanges(request, options = None):
             user = payload['repository']['owner']['name']
             repo = payload['repository']['name']
             repo_url = payload['repository']['url']
-            self.private = payload['repository']['private']
+            private = payload['repository']['private']
             logging.debug("Payload: " + str(payload))
             return process_change(payload, user, repo, repo_url)
         except Exception:
