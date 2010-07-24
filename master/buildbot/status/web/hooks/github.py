@@ -20,6 +20,8 @@ from twisted.spread import pb
 from twisted.cred import credentials
 from optparse import OptionParser
 from buildbot.changes.changes import Change
+import datetime
+import time
 
 
 try:
@@ -209,6 +211,12 @@ def process_change(payload, user, repo, repo_url):
                 files.extend(commit['added'])
                 files.extend(commit['modified'])
                 files.extend(commit['removed'])
+                # you know what sucks? this. converting
+                # from the github provided time to a unix timestamp
+                when =  time.mktime(datetime.strptime(\
+                                     commit['timestamp'][:-3] +\
+                                     commit['timestamp'][-2:],\
+                                    "%Y-%m-%dT%H:%M:%S%z").timetuple)
                 change = {'revision': commit['id'],
                      'revlink': commit['url'],
                      'comments': commit['message'],
@@ -230,7 +238,11 @@ def process_change(payload, user, repo, repo_url):
                         comments = commit['message'], 
                         links    = [commit['url']],
                         revision = commit['id'],
-                        when     = commit['timestamp'],
+                        # github gives this
+                        # "2010-07-23T11:47:57-07:00"
+                        # rowdy, but we need to strip the last colon
+                        # to inport to strptime
+                        when     = when,
                         branch   = branch,
                         revlink  = commit['url'], 
                         repository = repo_url)  
