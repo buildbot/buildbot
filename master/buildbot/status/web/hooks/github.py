@@ -221,6 +221,17 @@ def process_change(payload, user, repo, repo_url):
                 logging.info("New revision: %s" % change['revision'][:8])
                 for key, value in change.iteritems():
                     logging.debug("  %s: %s" % (key, value))
+                changeObject = Change(\
+                        who      = commit['author']['name'] 
+                                    + " <" + commit['author']['email'] + ">",
+                        files    = files,
+                        comments = commit['message'], 
+                        links    = [commit['url']],
+                        revision = commit['id'],
+                        when     = commit['timestamp'],
+                        branch   = branch,
+                        revlink  = commit['url'], 
+                        repository = repo_url)  
                 changes.append(change) 
             return changes
         
