@@ -98,6 +98,7 @@ class ChangeHookResource(resource.Resource):
         # get a control object
         changeMaster = request.site.buildbot_service.master.change_svc
         for onechange in changes:
+            msg("injecting change %s" % onechange)
             changeMaster.addChange( onechange )
         
     
