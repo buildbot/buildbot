@@ -587,13 +587,8 @@ decide which builders should respond to a particular change.
 (or option @code{repository}) This provides the repository from which this
 change came, and defaults to ''.
 
-@item --revision_number
-This provides a (numeric) revision number for the change, used for VC systems
-that use numeric transaction numbers (like Subversion).
-
 @item --revision
-This provides a (string) revision specifier, for VC systems that use
-strings (Arch would use something like patch-42 etc).
+This provides a revision specifier, appropriate to the VC system in use.
 
 @item --revision_file
 This provides a filename which will be opened and the contents used as
