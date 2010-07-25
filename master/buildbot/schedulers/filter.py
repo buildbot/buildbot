@@ -51,7 +51,7 @@ class ChangeFilter(ComparableMixin):
             chg_val = getattr(change, chg_attr, '')
             if filt_list is not None and chg_val not in filt_list:
                 return False
-            if filt_re is not None and not filt_re.match(chg_val):
+            if filt_re is not None and (chg_val is None or not filt_re.match(chg_val)):
                 return False
             if filt_fn is not None and not filt_fn(chg_val):
                 return False

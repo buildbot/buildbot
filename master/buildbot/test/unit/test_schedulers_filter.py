@@ -72,6 +72,13 @@ class ChangeFilter(unittest.TestCase):
         self.no(Change(category="boris"), "non-matching CATEGORY returns False")
         self.check()
 
+    def test_filter_change_branch_re(self): # regression - see #927
+        self.setfilter(branch_re = "^t.*")
+        self.yes(Change(branch="trunk"), "matching BRANCH returns True")
+        self.no(Change(branch="development"), "non-matching BRANCH returns False")
+        self.no(Change(branch=None), "branch=None returns False")
+        self.check()
+
     def test_filter_change_filt_re_compiled(self):
         self.setfilter(category_re = re.compile("^b.*", re.I))
         self.no(Change(category="albert"), "non-matching CATEGORY returns False")
