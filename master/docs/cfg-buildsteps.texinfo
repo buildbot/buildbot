@@ -1914,7 +1914,7 @@ class Frobinfy(LoggingBuildStep):
             frob_what="frobee",
             frob_how_many=None,
             frob_how=None,
-            **kwargs)
+            **kwargs):
 
         # check
         if frob_how_many is None:
@@ -1922,6 +1922,11 @@ class Frobinfy(LoggingBuildStep):
 
         # call parent
         LoggingBuildStep.__init__(self, **kwargs)
+
+        # set Frobnify attributes
+        self.frob_what = frob_what
+        self.frob_how_many = how_many
+        self.frob_how = frob_how
 
         # and record arguments for later
         self.addFactoryArguments(
@@ -1934,6 +1939,7 @@ class FastFrobnify(Frobnify):
             speed=5,
             **kwargs)
         Frobnify.__init__(self, **kwargs)
+        self.speed = speed
         self.addFactoryArguments(
             speed=speed)
 @end example
