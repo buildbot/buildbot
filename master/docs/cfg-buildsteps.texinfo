@@ -38,6 +38,7 @@ control each.
 * ShellCommand::
 * Python BuildSteps::
 * Transferring Files::
+* Transferring Strings::
 * Steps That Run on the Master::
 * Triggering Schedulers::
 * Writing New BuildSteps::
@@ -1795,6 +1796,31 @@ f.addStep(DirectoryUpload(slavesrc="docs",
 
 The DirectoryUpload step will create all necessary directories and
 transfers empty directories, too.
+
+@node Transferring Strings
+@subsection Transferring Strings
+
+@cindex String Transfer
+@bsindex buildbot.steps.transfer.StringDownload
+@bsindex buildbot.steps.transfer.JSONStringDownload
+@bsindex buildbot.steps.transfer.JSONPropertiesDownload
+
+Sometimes it is useful to transfer a calculated value from the master
+to the slave.  Instead of having to create a temporary file and then
+use @code{FileDownload}, you can use one of the string download steps.
+
+@code{StringDownload} works just like @code{FileDownload} except it
+takes a single argument, @code{s}, representing the string to download
+instead of a @code{mastersrc} argument.
+
+@code{JSONStringDownload} is similar, except it takes an @code{o}
+argument, which must be json serializable, and transfers that as a
+json-encoded string to the slave.
+
+@code{JSONPropertiesDownload} transfers a json-encoded string that
+represents a dictionary where @code{properties} maps to a dictionary
+of build property name to property value; and @code{sourcestamp}
+represents the build's sourcestamp.
 
 @node Steps That Run on the Master
 @subsection Steps That Run on the Master

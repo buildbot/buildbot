@@ -1,12 +1,17 @@
 # -*- test-case-name: buildbot.test.test_transfer -*-
 
 import os.path, tarfile, tempfile
+try:
+    from cStringIO import StringIO
+except ImportError:
+    from StringIO import StringIO
 from twisted.internet import reactor
 from twisted.spread import pb
 from twisted.python import log
 from buildbot.process.buildstep import RemoteCommand, BuildStep
 from buildbot.process.buildstep import SUCCESS, FAILURE, SKIPPED
 from buildbot.interfaces import BuildSlaveTooOldError
+from buildbot.util import json
 
 
 class _FileWriter(pb.Referenceable):
@@ -468,3 +473,120 @@ class FileDownload(_TransferBuildStep):
         d = self.runCommand(self.cmd)
         d.addCallback(self.finished).addErrback(self.failed)
 
+class StringDownload(_TransferBuildStep):
+    """
+    Download the first 'maxsize' bytes of a string, from the buildmaster to the
+    buildslave. Set the mode of the file
+
+    Arguments::
+
+     ['s']         string to transfer
+     ['slavedest'] filename of destination file at slave
+     ['workdir']   string with slave working directory relative to builder
+                   base dir, default 'build'
+     ['maxsize']   maximum size of the file, default None (=unlimited)
+     ['blocksize'] maximum size of each block being transfered
+     ['mode']      use this to set the access permissions of the resulting
+                   buildslave-side file. This is traditionally an octal
+                   integer, like 0644 to be world-readable (but not
+                   world-writable), or 0600 to only be readable by
+                   the buildslave account, or 0755 to be world-executable.
+                   The default (=None) is to leave it up to the umask of
+                   the buildslave process.
+    """
+    name = 'string_download'
+
+    def __init__(self, s, slavedest,
+                 workdir=None, maxsize=None, blocksize=16*1024, mode=None,
+                 **buildstep_kwargs):
+        BuildStep.__init__(self, **buildstep_kwargs)
+        self.addFactoryArguments(s=s,
+                                 slavedest=slavedest,
+                                 workdir=workdir,
+                                 maxsize=maxsize,
+                                 blocksize=blocksize,
+                                 mode=mode,
+                                 )
+
+        self.s = s
+        self.slavedest = slavedest
+        self.workdir = workdir
+        self.maxsize = maxsize
+        self.blocksize = blocksize
+        assert isinstance(mode, (int, type(None)))
+        self.mode = mode
+
+    def start(self):
+        properties = self.build.getProperties()
+
+        version = self.slaveVersion("downloadFile")
+        if not version:
+            m = "slave is too old, does not know about downloadFile"
+            raise BuildSlaveTooOldError(m)
+
+        # we are currently in the buildmaster's basedir, so any non-absolute
+        # paths will be interpreted relative to that
+        slavedest = properties.render(self.slavedest)
+        log.msg("StringDownload started, from master to slave %r" % slavedest)
+
+        self.step_status.setText(['downloading', "to",
+                                  os.path.basename(slavedest)])
+
+        # setup structures for reading the file
+        fp = StringIO(self.s)
+        fileReader = _FileReader(fp)
+
+        # default arguments
+        args = {
+            'slavedest': slavedest,
+            'maxsize': self.maxsize,
+            'reader': fileReader,
+            'blocksize': self.blocksize,
+            'workdir': self._getWorkdir(),
+            'mode': self.mode,
+            }
+
+        self.cmd = StatusRemoteCommand('downloadFile', args)
+        d = self.runCommand(self.cmd)
+        d.addCallback(self.finished).addErrback(self.failed)
+
+class JSONStringDownload(StringDownload):
+    """
+    Encode object o as a json string and save it on the buildslave
+
+    Arguments::
+
+     ['o']         object to encode and transfer
+    """
+    name = "json_download"
+    def __init__(self, o, slavedest, **buildstep_kwargs):
+        if 's' in buildstep_kwargs:
+            del buildstep_kwargs['s']
+        s = json.dumps(o)
+        StringDownload.__init__(self, s=s, slavedest=slavedest, **buildstep_kwargs)
+        self.addFactoryArguments(o=o)
+
+class JSONPropertiesDownload(StringDownload):
+    """
+    Download the current build properties as a json string and save it on the
+    buildslave
+    """
+    name = "json_properties_download"
+    def __init__(self, slavedest, **buildstep_kwargs):
+        self.super_class = StringDownload
+        if 's' in buildstep_kwargs:
+            del buildstep_kwargs['s']
+        StringDownload.__init__(self, s=None, slavedest=slavedest, **buildstep_kwargs)
+
+    def start(self):
+        properties = self.build.getProperties()
+        props = {}
+        for key, value, source in properties.asList():
+            props[key] = value
+
+        self.s = json.dumps(dict(
+                        properties=props,
+                        sourcestamp=self.build.getSourceStamp().asDict(),
+                    ),
+                )
+        return self.super_class.start(self)
