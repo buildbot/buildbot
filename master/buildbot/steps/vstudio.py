@@ -79,38 +79,41 @@ class VisualStudio(ShellCommand):
     INCLUDE = []
     LIB = []
     
-    def __init__(self, **kwargs):
-        # cleanup kwargs
-        if 'installdir' in kwargs:
-            self.installdir = kwargs['installdir']
-            del kwargs['installdir']
-        if 'mode' in kwargs:
-            self.config = kwargs['mode']
-            del kwargs['mode']
-        if 'projectfile' in kwargs:
-            self.projectfile = kwargs['projectfile']
-            del kwargs['projectfile']
-        if 'config' in kwargs:
-            self.config = kwargs['config']
-            del kwargs['config']
-        if 'useenv' in kwargs:
-            self.useenv = kwargs['useenv']
-            del kwargs['useenv']
-        # one of those next two forces the usage of env variables
-        if 'INCLUDE' in kwargs:
+    def __init__(self, 
+                installdir = None,
+                mode = "rebuild", 
+                projectfile = None,
+                config = None,
+                useenv = False,
+                INCLUDE = [],
+                LIB = [],
+                PATH = [],
+                **kwargs):
+        self.installdir = installdir
+        self.mode = mode
+        self.projectfile = projectfile
+        self.config = config
+        self.useenv = useenv
+        if len(INCLUDE) > 0:
+            self.INCLUDE = INCLUDE
             self.useenv = True
-            self.INCLUDE = kwargs['INCLUDE']
-            del kwargs['INCLUDE']
-        if 'LIB' in kwargs:
+        if len(LIB) > 0:
+            self.LIB = LIB
             self.useenv = True
-            self.LIB = kwargs['LIB']
-            del kwargs['LIB']
-        if 'PATH' in kwargs:
-            self.PATH = kwargs['PATH']
-            del kwargs['PATH']            
-
+        if len(PATH) > 0:
+            self.PATH = PATH
         # always upcall !
         ShellCommand.__init__(self, **kwargs)
+        self.addFactoryArguments(
+            installdir = installdir,
+            mode = mode,
+            projectfile = projectfile,
+            config = config,
+            useenv = useenv,
+            INCLUDE = INCLUDE,
+            LIB = LIB,
+            PATH = PATH
+        )
 
     def setupProgress(self):
         self.progressMetrics += ('projects', 'files', 'warnings',)
@@ -272,15 +275,12 @@ class VC8(VisualStudio):
     # Our ones
     arch = "x86"
 
-    def __init__(self, **kwargs):
-
-        # cleanup kwargs
-        if 'arch' in kwargs:
-            self.arch = kwargs['arch']
-            del kwargs['arch']
+    def __init__(self, arch = "x86", **kwargs):
+        self.arch = arch
 
         # always upcall !
         VisualStudio.__init__(self, **kwargs)
+        self.addFactoryArguments(arch = arch)
 
     def setupEnvironment(self, cmd):
         VisualStudio.setupEnvironment(self, cmd)
@@ -332,3 +332,21 @@ class VC8(VisualStudio):
 
 #alias VC8 as VS2005
 VS2005 = VC8
+
+class VCExpress9(VC8):
+    def start(self):
+        command = ["vcexpress"]
+        command.append(self.projectfile)
+        if self.mode == "rebuild":
+            command.append("/Rebuild")
+        else:
+            command.append("/Build")
+        command.append(self.config)
+        if self.useenv:
+            command.append("/UseEnv")
+        self.setCommand(command)
+        return VisualStudio.start(self)
+
+# Add first support for VC9 (Same as VC8)
+VC9 = VC8
+VS2008 = VC9
