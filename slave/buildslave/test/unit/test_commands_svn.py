@@ -54,3 +54,24 @@ class TestSVN(SourceCommandTestMixin, unittest.TestCase):
         d = self.run_command()
         d.addCallback(self.check_sourcedata, "http://svn.local/app/trunk\n")
         return d
+
+
+class TestGetUnversionedFiles(unittest.TestCase):
+    def test_getUnversionedFIles_does_not_list_externals(self):
+        svn_st_xml = """<?xml version="1.0"?>
+        <status>
+            <target path=".">
+                <entry path="svn_external_path">
+                    <wc-status props="none" item="external">
+                    </wc-status>
+                </entry>
+                <entry path="svn_external_path/unversioned_file">
+                    <wc-status props="none" item="unversioned">
+                    </wc-status>
+                </entry>
+            </target>
+        </status>
+        """
+        unversioned_files = list(svn.SVN.getUnversionedFiles(svn_st_xml, []))
+        self.assertEquals(["svn_external_path/unversioned_file"], unversioned_files)
+        
