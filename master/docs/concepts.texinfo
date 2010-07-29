@@ -707,13 +707,8 @@ Hassler logic to send them an email message instead.
 @node Live Status Clients
 @subsection Live Status Clients
 
-The Buildbot also offers a PB-based status client interface which can
-display real-time build status in a GUI panel on the developer's desktop.
-This interface is normally anonymous, but it could be configured to let the
-buildmaster know @emph{which} developer is using the status client. The
-status client could then be used as a message-delivery service, providing an
-alternative way to deliver low-latency high-interruption messages to the
-developer (like ``hey, you broke the build'').
+The Buildbot also offers a desktop status client interface which can display
+real-time build status in a GUI panel on the developer's desktop.
 
 @node Build Properties
 @section Build Properties
