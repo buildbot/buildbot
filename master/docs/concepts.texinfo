@@ -546,12 +546,6 @@ this might be changed, to have the @code{Build} define @emph{what}
 gets built, and a separate @code{BuildProcess} (provided by the
 Builder) to define @emph{how} it gets built.
 
-@code{BuildRequest} is created with optional @code{Properties}.  One
-of these, @code{owner}, is collected by the resultant @code{Build} and
-added to the set of @emph{interested users} to which status
-notifications will be sent, depending on the configuration for each
-status object.
-
 The @code{BuildRequest} may be mergeable with other compatible
 @code{BuildRequest}s. Builds that are triggered by incoming Changes
 will generally be mergeable. Builds that are triggered by user
@@ -661,14 +655,11 @@ test case which passed in one build and then failed in the next is a
 Problem. The Problem lasts until the test case starts passing again, at
 which point the Problem is said to be ``resolved''.
 
-If there appears to be a code change that went into the tree at the
-same time as the test started failing, that Change is marked as being
-resposible for the Problem, and the user who made the change is added
-to the Problem's ``Guilty'' list. In addition to this user, there may
-be others who share responsibility for the Problem (module owners,
-sponsoring developers). In addition to the Responsible Users, there
-may be a set of Interested Users, who take an interest in the fate of
-the Problem.
+If there appears to be a code change that went into the tree at the same time
+as the test started failing, that Change is marked as being resposible for the
+Problem, and the user who made the change is added to the Problem's blamelist.
+In addition to this user, there may be others who share responsibility for the
+Problem (module owners, sponsoring developers) - the Interested Users.
 
 Problems therefore have sets of Users who may want to be kept aware of
 the condition of the problem as it changes over time. If configured, the

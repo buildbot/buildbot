@@ -747,10 +747,12 @@ from success to failure. It can also be configured to include various
 build logs in each message.
 
 
-By default, the message will be sent to the Interested Users list
-(@pxref{Doing Things With Users}), which includes all developers who
-made changes in the build. You can add additional recipients with the
-extraRecipients argument.
+By default, the message will be sent to the Interested Users list (@pxref{Doing
+Things With Users}), which includes all developers who made changes in the
+build. You can add additional recipients with the extraRecipients argument.
+You can also add interested users by setting the @code{owners} build property
+to a list of users in the scheduler constructor (@pxref{Configuring
+Schedulers}).
 
 Each MailNotifier sends mail to a single set of recipients. To send
 different kinds of mail to different recipients, use multiple
