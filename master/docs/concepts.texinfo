@@ -633,41 +633,17 @@ nothing about email addresses or IRC nicknames, just user names.
 @node Doing Things With Users
 @subsection Doing Things With Users
 
-Each Change has a single User who is responsible for that Change. Most
-Builds have a set of Changes: the Build represents the first time these
-Changes have been built and tested by the Buildbot. The build has a
-``blamelist'' that consists of a simple union of the Users responsible
-for all the Build's Changes.
+Each change has a single user who is responsible for it. Most builds have a set
+of changes: the build generally represents the first time these changes have
+been built and tested by the Buildbot. The build has a ``blamelist'' that is
+the union of the users responsible for all the build's changes.
 
-The Build provides (through the IBuildStatus interface) a list of Users
-who are ``involved'' in the build. For now this is equal to the
-blamelist, but in the future it will be expanded to include a ``build
-sheriff'' (a person who is ``on duty'' at that time and responsible for
-watching over all builds that occur during their shift), as well as
-per-module owners who simply want to keep watch over their domain (chosen by
-subdirectory or a regexp matched against the filenames pulled out of the
-Changes). The Involved Users are those who probably have an interest in the
-results of any given build.
+The build provides a list of users who are interested in the build -- the
+``interested users''. Usually this is equal to the blamelist, but may also be
+expanded, e.g., to include the current build sherrif or a module's maintainer.
 
-In the future, Buildbot will acquire the concept of ``Problems'',
-which last longer than builds and have beginnings and ends. For example, a
-test case which passed in one build and then failed in the next is a
-Problem. The Problem lasts until the test case starts passing again, at
-which point the Problem is said to be ``resolved''.
-
-If there appears to be a code change that went into the tree at the same time
-as the test started failing, that Change is marked as being resposible for the
-Problem, and the user who made the change is added to the Problem's blamelist.
-In addition to this user, there may be others who share responsibility for the
-Problem (module owners, sponsoring developers) - the Interested Users.
-
-Problems therefore have sets of Users who may want to be kept aware of
-the condition of the problem as it changes over time. If configured, the
-Buildbot can pester everyone on the Responsible list with increasing
-harshness until the problem is resolved, with the most harshness reserved
-for the Guilty parties themselves. The Interested Users may merely be told
-when the problem starts and stops, as they are not actually responsible for
-fixing anything.
+If desired, the buildbot can notify the interested users until the problem is
+resolved.  
 
 @node Email Addresses
 @subsection Email Addresses
