@@ -317,8 +317,9 @@ class SlaveOptions(MakerBase):
     build-specific subdirectory of <basedir>. <master> is a string of the
     form 'hostname:port', and specifies where the buildmaster can be reached.
 
-    <name>, <passwd>, and <master> will be provided by the buildmaster
-    administrator for your bot. You must choose <basedir> yourself.
+    The appropriate values for <name>, <passwd>, and <master> should be
+    provided to you by the buildmaster administrator. You must choose <basedir>
+    yourself.
     """
 
     def getSynopsis(self):
