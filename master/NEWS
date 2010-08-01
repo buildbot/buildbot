@@ -8,6 +8,10 @@ Major User visible changes in Buildbot.             -*- outline -*-
 
 The Buildmaster now requires Jinja-2.1 or higher.
 
+** New Steps
+
+*** VC++ 9, VS2008, VCExpress9 - part of the vstudio suite of steps
+
 * Release 0.8.1 (June 16, 2010)
 
 ** Slave Split into separate component

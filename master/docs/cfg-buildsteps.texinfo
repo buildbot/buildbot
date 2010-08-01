@@ -1331,9 +1331,11 @@ source code filenames involved).
 @bsindex buildbot.steps.vstudio.VC8
 @bsindex buildbot.steps.vstudio.VS2003
 @bsindex buildbot.steps.vstudio.VS2005
+@bsindex buildbot.steps.vstudio.VS2008
+@bsindex buildbot.steps.vstudio.VCExpress9
 
 This step is meant to handle compilation using Microsoft compilers. 
-VC++ 6-8, VS2003, and VS2005 are supported. This step will take care
+VC++ 6-9, VS2003, VS2005, VS2008, and VCExpress9 are supported. This step will take care
 of setting up a clean compilation environment, parse the generated
 output in real time and deliver as detailed as possible information
 about the compilation executed.
@@ -1348,9 +1350,15 @@ All of the classes are in @code{buildbot.steps.vstudio}.  The available classes 
 
 @item VC8
 
+@item VC9
+
 @item VS2003
 
 @item VC2005
+
+@item VC2008
+
+@item VCExpress9
 
 @end table
 
