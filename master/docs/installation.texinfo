@@ -84,6 +84,8 @@ included as json in python-2.6 and later)
 @item
 Jinja2: http://jinja.pocoo.org/2
 
+Buildbot requires Jinja version 2.1 or higher
+
 Jinja2 is a general purpose templating language and is used by Buildbot
 to generate the HTML output.
 
