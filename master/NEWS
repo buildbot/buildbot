@@ -8,9 +8,18 @@ Major User visible changes in Buildbot.             -*- outline -*-
 
 The Buildmaster now requires Jinja-2.1 or higher.
 
+** New libvirt-based Latent Buildslave Support
+
+This extends the support already included for EC2 buildslaves to include any
+virtualization platform supported by libvirt.
+
 ** New Steps
 
 *** VC++ 9, VS2008, VCExpress9 - part of the vstudio suite of steps
+
+** Deprecations / Removals
+
+*** Removed sendchange's --revision_number argument (use --revision)
 
 * Release 0.8.1 (June 16, 2010)
 
