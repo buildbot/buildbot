@@ -139,12 +139,15 @@ def createSlave(config):
         config['basedir'] = '.'
     try:
         master = config['master']
-        host, port = re.search(r'(.+):(\d+)', master).groups()
+        port = None
+        host, port = re.search(r'^([^:]+)(?:[:](\d+))?', master).groups()
+        if port == None:
+            port = '9989'
         config['host'] = host
         config['port'] = int(port)
     except:
         print "unparseable master location '%s'" % master
-        print " expecting something more like localhost:8007"
+        print " expecting something more like localhost:8007 or localhost"
         raise
     contents = slaveTAC % config
 
@@ -315,7 +318,8 @@ class SlaveOptions(MakerBase):
     file. The bot will use the <name> and <passwd> arguments to authenticate
     itself when connecting to the master. All commands are run in a
     build-specific subdirectory of <basedir>. <master> is a string of the
-    form 'hostname:port', and specifies where the buildmaster can be reached.
+    form 'hostname[:port]', and specifies where the buildmaster can be reached.
+    port defaults to 9989
 
     The appropriate values for <name>, <passwd>, and <master> should be
     provided to you by the buildmaster administrator. You must choose <basedir>
@@ -341,8 +345,6 @@ class SlaveOptions(MakerBase):
         self['usepty'] = int(self['usepty'])
         self['keepalive'] = int(self['keepalive'])
         self['maxdelay'] = int(self['maxdelay'])
-        if self['master'].find(":") == -1:
-            raise usage.UsageError("master must be in the form host:portnum")
         if not re.match('^\d+$', self['log-size']):
             raise usage.UsageError("log-size parameter needs to be an int")
         if not re.match('^\d+$', self['log-count']) and \
