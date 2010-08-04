@@ -10,7 +10,7 @@ from buildbot.status import mail
 from buildbot.status.builder import SUCCESS, WARNINGS
 from buildbot.steps.shell import WithProperties
 
-import zlib, bz2, base64, re
+import gzip, bz2, base64, re, cStringIO
 
 # TODO: docs, maybe a test of some sort just to make sure it actually imports
 # and can format email without raising an exception.
@@ -205,6 +205,7 @@ class TinderboxMailNotifier(mail.MailNotifier):
                 # Make sure that shortText is a regular string, so that bad
                 # data in the logs don't generate UnicodeDecodeErrors
                 shortText = "%s\n" % ' '.join(bs.getText()).encode('ascii', 'replace')
+
                 # ignore steps that haven't happened
                 if not re.match(".*[^\s].*", shortText):
                     continue
@@ -239,7 +240,11 @@ class TinderboxMailNotifier(mail.MailNotifier):
                 tinderboxLogs = base64.encodestring(cLog)
                 logEncoding = "base64"
             elif self.logCompression == "gzip":
-                cLog = zlib.compress(tinderboxLogs)
+                cLog = cStringIO.StringIO()
+                gz = gzip.GzipFile(mode="w", fileobj=cLog)
+                gz.write(tinderboxLogs)
+                gz.close()
+                cLog = cLog.getvalue()
                 tinderboxLogs = base64.encodestring(cLog)
                 logEncoding = "base64"
 
