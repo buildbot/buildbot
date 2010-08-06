@@ -108,7 +108,7 @@ class ISourceStamp(Interface):
     @cvar patch: patch applied to the source, or None if no patch
     @type patch: None or tuple (level diff)
 
-    @cvar changes: the source step should check out hte latest revision
+    @cvar changes: the source step should check out the latest revision
                    in the given changes
     @type changes: tuple of L{buildbot.changes.changes.Change} instances,
                    all of which are on the same branch
