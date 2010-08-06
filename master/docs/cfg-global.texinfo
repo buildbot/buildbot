@@ -121,7 +121,7 @@ c['buildbotURL'] = "http://localhost:8010/"
 @end example
 
 @bcindex c['projectName']
-@code{projectName} is a short string will be used to describe the
+@code{projectName} is a short string that will be used to describe the
 project that this buildbot is working on. For example, it is used as
 the title of the waterfall HTML page.
 
