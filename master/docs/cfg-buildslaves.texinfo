@@ -22,8 +22,8 @@ describing the problem will be put in the log file (see @ref{Logfiles}).
 
 @example
 from buildbot.buildslave import BuildSlave
-c['slaves'] = [BuildSlave('bot-solaris', 'solarispasswd')
-               BuildSlave('bot-bsd', 'bsdpasswd')
+c['slaves'] = [BuildSlave('bot-solaris', 'solarispasswd'),
+               BuildSlave('bot-bsd', 'bsdpasswd'),
               ]
 @end example
 
