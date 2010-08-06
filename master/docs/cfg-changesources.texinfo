@@ -854,7 +854,7 @@ tuples. Use this to explain your repository's branch-naming policy to
 @code{SVNPoller}. This function must accept a single string and return
 a two-entry tuple. There are a few utility functions in
 @code{buildbot.changes.svnpoller} that can be used as a
-@code{split_file} function, see below for details.
+@code{split_file} function; see below for details.
 
 The default value always returns (None, path), which indicates that
 all files are on the trunk.
