@@ -22,6 +22,7 @@ from optparse import OptionParser
 from buildbot.changes.changes import Change
 import datetime
 import time
+from twisted.python.log import msg,err
 
 
 try:
@@ -53,12 +54,12 @@ class GitHubBuildBot(resource.Resource):
             repo = payload['repository']['name']
             repo_url = payload['repository']['url']
             self.private = payload['repository']['private']
-            logging.debug("Payload: " + str(payload))
+            msg("Payload: " + str(payload))
             self.process_change(payload, user, repo, repo_url)
         except Exception:
-            logging.error("Encountered an exception:")
+            err("Encountered an exception:")
             for msg in traceback.format_exception(*sys.exc_info()):
-                logging.error(msg.strip())
+                err(msg.strip())
 
     def process_change(self, payload, user, repo, repo_url):
         """
@@ -76,13 +77,13 @@ class GitHubBuildBot(resource.Resource):
         # We only care about regular heads, i.e. branches
         match = re.match(r"^refs\/heads\/(.+)$", refname)
         if not match:
-            logging.info("Ignoring refname `%s': Not a branch" % refname)
+            msg("Ignoring refname `%s': Not a branch" % refname)
 
         branch = match.group(1)
         # Find out if the branch was created, deleted or updated. Branches
         # being deleted aren't really interesting.
         if re.match(r"^0*$", newrev):
-            logging.info("Branch `%s' deleted, ignoring" % branch)
+            msg("Branch `%s' deleted, ignoring" % branch)
         else: 
             for commit in payload['commits']:
                 files = []
@@ -103,7 +104,7 @@ class GitHubBuildBot(resource.Resource):
         
         # Submit the changes, if any
         if not changes:
-            logging.warning("No changes found")
+            msg("No changes found")
             return
                     
         host, port = self.master.split(':')
@@ -185,7 +186,7 @@ def process_change(payload, user, repo, repo_url):
         changes = []
         newrev = payload['after']
         refname = payload['ref']
-        logging.info( "in process_change" )
+        msg( "in process_change" )
         # We only care about regular heads, i.e. branches
         match = re.match(r"^refs\/heads\/(.+)$", refname)
         if not match:
@@ -204,7 +205,7 @@ def process_change(payload, user, repo, repo_url):
 #        "author":{"email":"metson","name":"metson"}}
 
         if re.match(r"^0*$", newrev):
-            logging.info("Branch `%s' deleted, ignoring" % branch)
+            msg("Branch `%s' deleted, ignoring" % branch)
             return []
         else: 
             for commit in payload['commits']:
@@ -226,8 +227,9 @@ def process_change(payload, user, repo, repo_url):
                 minShift     = commit['timestamp'][-2:-1]
                 totalSeconds = hourShift * 60 * 60 + minShift *60
                 
-                logging.debug("TZ adjust .. hour: %s min: %s total: %s" % (hourShift, minShift, totalSeconds))     
-                logging.debug("Time before is %s" % commit['timestamp'])           
+                msg("TZ adjust .. hour: %s min: %s total: %s" % (hourShift, minShift, totalSeconds))     
+                msg("Time before is %s" % commit['timestamp'])    
+                msg("Time after conversion is %s " % time.localtime(when))       
                 if commit['timestamp'][-6] == '+':
                     # we need to go left to get back to UTC
                     when = str(float(when) - int(totalSeconds))
@@ -235,7 +237,7 @@ def process_change(payload, user, repo, repo_url):
                     when = str(float(when) + int(totalSeconds))
                 else:
                     raise RuntimeError, "Unknown timestamp from github"
-                logging.debug("Time after is %s " % time.localtime(when))
+                msg("Time after is %s " % time.localtime(when))
                 change = {'revision': commit['id'],
                      'revlink': commit['url'],
                      'comments': commit['message'],
