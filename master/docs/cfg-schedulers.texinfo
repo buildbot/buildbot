@@ -570,7 +570,8 @@ and then use the following scheduler in the buildmaster's config file:
 
 @example
 from buildbot.schedulers.trysched import Try_Jobdir
-s = Try_Jobdir("try1", ["full-linux", "full-netbsd", "full-OSX"],
+s = Try_Jobdir(name="try1",
+               builderNames=["full-linux", "full-netbsd", "full-OSX"],
                jobdir="jobdir")
 c['schedulers'] = [s]
 @end example
@@ -592,8 +593,10 @@ buildslave accounts depends upon it:
 
 @example
 from buildbot.schedulers.trysched import Try_Userpass
-s = Try_Userpass("try2", ["full-linux", "full-netbsd", "full-OSX"],
-                 port=8031, userpass=[("alice","pw1"), ("bob", "pw2")] )
+s = Try_Userpass(name="try2",
+                 builderNames=["full-linux", "full-netbsd", "full-OSX"],
+                 port=8031,
+                 userpass=[("alice","pw1"), ("bob", "pw2")] )
 c['schedulers'] = [s]
 @end example
 
