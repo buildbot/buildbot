@@ -11,6 +11,7 @@ repository for the user who initiated the build on the buildslave.
 
 import tempfile
 import logging
+import os
 import re
 import sys
 import traceback
@@ -176,9 +177,19 @@ def main():
             + "  a specific HOST handle in ~/.ssh/config for github "   
             + "[default: %default]", default='github.com',
         dest="github")
-        
+
+    parser.add_option("--pidfile",
+        help="Write the process identifier (PID) to this file on start."
+            + " The file is removed on clean exit. [default: %default]",
+        default=None,
+        dest="pidfile")
+
     (options, _) = parser.parse_args()
-    
+
+    if options.pidfile:
+        with open(options.pidfile, 'w') as f:
+            f.write(str(os.getpid()))
+
     levels = {
         'debug':logging.DEBUG,
         'info':logging.INFO,
@@ -199,6 +210,9 @@ def main():
     site = server.Site(github_bot)
     reactor.listenTCP(options.port, site)
     reactor.run()
-            
+
+    if options.pidfile and os.path.exists(options.pidfile):
+        os.unlink(options.pidfile)
+
 if __name__ == '__main__':
     main()
