@@ -126,7 +126,7 @@ def process_change(payload, user, repo, repo_url):
                 localWhen        = time.localtime(float(when))
                 err("localwhen is %s" % localWhen)
                 localPosixOffset = time.mktime(localWhen)
-                err("offset from utcwhen is %s" % (localPosixOffset - float(when))
+                err("offset from utcwhen is %s" % (localPosixOffset - float(when)))
                 change = {'revision': commit['id'],
                      'revlink': commit['url'],
                      'comments': commit['message'],
