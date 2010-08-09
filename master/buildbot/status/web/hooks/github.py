@@ -226,7 +226,8 @@ def process_change(payload, user, repo, repo_url):
                 minShift     = commit['timestamp'][-2:-1]
                 totalSeconds = hourShift * 60 * 60 + minShift *60
                 
-                logging.info("TZ adjust .. hour: %s min: %s total: %s" % (hourShift, minShift, totalSeconds))                
+                logging.debug("TZ adjust .. hour: %s min: %s total: %s" % (hourShift, minShift, totalSeconds))     
+                logging.debug("Time before is %s" % commit['timestamp'])           
                 if commit['timestamp'][-6] == '+':
                     # we need to go left to get back to UTC
                     when = str(float(when) - int(totalSeconds))
@@ -234,7 +235,7 @@ def process_change(payload, user, repo, repo_url):
                     when = str(float(when) + int(totalSeconds))
                 else:
                     raise RuntimeError, "Unknown timestamp from github"
-                
+                logging.debug("Time after is %s " % time.localtime(when))
                 change = {'revision': commit['id'],
                      'revlink': commit['url'],
                      'comments': commit['message'],
