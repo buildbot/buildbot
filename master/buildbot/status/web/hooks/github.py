@@ -45,8 +45,9 @@ def getChanges(request, options = None):
             repo_url = payload['repository']['url']
             private = payload['repository']['private']
             logging.debug("Payload: " + str(payload))
-            raise RuntimeError, "don't pollute github"
-            return process_change(payload, user, repo, repo_url)
+            changes = process_change(payload, user, repo, repo_url)
+            raise RuntimeError, "don't commit changes while testing"
+            return changes
         except Exception:
             logging.error("Encountered an exception:")
             for msg in traceback.format_exception(*sys.exc_info()):
