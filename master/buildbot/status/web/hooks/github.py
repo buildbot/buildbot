@@ -103,8 +103,8 @@ def process_change(payload, user, repo, repo_url):
                 #    the local timezone )
                 err("Timestamp is %s" % commit['timestamp'])
                 when =  calendar.timegm(time.strptime(\
-                                     (commit['timestamp'][:-6]),\
-                                    "%Y-%m-%dT%H:%M:%S"))
+                                     (commit['timestamp'][:-6] + ' UTC'),\
+                                    "%Y-%m-%dT%H:%M:%S %Z"))
                 # when is now a timestamp if we were at UTC
                 err("UTC when is %s" % str(when))
                 err("When astext is %s" % time.gmtime(int(when)))
