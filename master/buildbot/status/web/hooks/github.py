@@ -113,7 +113,7 @@ def process_change(payload, user, repo, repo_url):
                 hourShift    = commit['timestamp'][-5:-3]
                 minShift     = commit['timestamp'][-2:]
                 totalSeconds = int(hourShift) * 60 * 60 + int(minShift) *60
-                
+                err("hour %s min %s shift %s" % (hourShift, minShift, totalSeconds))
                 if commit['timestamp'][-6] == '+':
                     when = str(float(when) + int(totalSeconds))
                 elif commit['timestamp'][-6] == '-':
