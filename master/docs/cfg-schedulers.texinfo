@@ -480,6 +480,128 @@ by the @code{jobdir} parameter, while the latter listens for PB
 connections on a specific @code{port}, and authenticates against
 @code{userport}.
 
+@slindex buildbot.scheduler.Try_Jobdir
+@slindex buildbot.scheduler.Try_Userpass
+
+The buildmaster must have a @code{scheduler.Try} instance in
+the config file's @code{c['schedulers']} list. This lets the
+administrator control who may initiate these ``trial'' builds, which
+branches are eligible for trial builds, and which Builders should be
+used for them.
+
+The scheduler has various means to accept build requests.
+All of them enforce more security than the usual buildmaster ports do.
+Any source code being built can be used to compromise the buildslave
+accounts, but in general that code must be checked out from the VC
+repository first, so only people with commit privileges can get
+control of the buildslaves. The usual force-build control channels can
+waste buildslave time but do not allow arbitrary commands to be
+executed by people who don't have those commit privileges. However,
+the source code patch that is provided with the trial build does not
+have to go through the VC system first, so it is important to make
+sure these builds cannot be abused by a non-committer to acquire as
+much control over the buildslaves as a committer has. Ideally, only
+developers who have commit access to the VC repository would be able
+to start trial builds, but unfortunately the buildmaster does not, in
+general, have access to VC system's user list.
+
+As a result, the try scheduler requires a bit more configuration. There are
+currently two ways to set this up:
+
+@table @strong
+@item jobdir (ssh)
+
+This approach creates a command queue directory, called the
+``jobdir'', in the buildmaster's working directory. The buildmaster
+admin sets the ownership and permissions of this directory to only
+grant write access to the desired set of developers, all of whom must
+have accounts on the machine. The @code{buildbot try} command creates
+a special file containing the source stamp information and drops it in
+the jobdir, just like a standard maildir. When the buildmaster notices
+the new file, it unpacks the information inside and starts the builds.
+
+The config file entries used by 'buildbot try' either specify a local
+queuedir (for which write and mv are used) or a remote one (using scp
+and ssh).
+
+The advantage of this scheme is that it is quite secure, the
+disadvantage is that it requires fiddling outside the buildmaster
+config (to set the permissions on the jobdir correctly). If the
+buildmaster machine happens to also house the VC repository, then it
+can be fairly easy to keep the VC userlist in sync with the
+trial-build userlist. If they are on different machines, this will be
+much more of a hassle. It may also involve granting developer accounts
+on a machine that would not otherwise require them.
+
+To implement this, the buildslave invokes 'ssh -l username host
+buildbot tryserver ARGS', passing the patch contents over stdin. The
+arguments must include the inlet directory and the revision
+information.
+
+@item user+password (PB)
+
+In this approach, each developer gets a username/password pair, which
+are all listed in the buildmaster's configuration file. When the
+developer runs @code{buildbot try}, their machine connects to the
+buildmaster via PB and authenticates themselves using that username
+and password, then sends a PB command to start the trial build.
+
+The advantage of this scheme is that the entire configuration is
+performed inside the buildmaster's config file. The disadvantages are
+that it is less secure (while the ``cred'' authentication system does
+not expose the password in plaintext over the wire, it does not offer
+most of the other security properties that SSH does). In addition, the
+buildmaster admin is responsible for maintaining the username/password
+list, adding and deleting entries as developers come and go.
+
+@end table
+
+For example, to set up the ``jobdir'' style of trial build, using a
+command queue directory of @file{MASTERDIR/jobdir} (and assuming that
+all your project developers were members of the @code{developers} unix
+group), you would first set up that directory:
+
+@example
+mkdir -p MASTERDIR/jobdir MASTERDIR/jobdir/new MASTERDIR/jobdir/cur MASTERDIR/jobdir/tmp
+chgrp developers MASTERDIR/jobdir MASTERDIR/jobdir/*
+chmod g+rwx,o-rwx MASTERDIR/jobdir MASTERDIR/jobdir/*
+@end example
+
+and then use the following scheduler in the buildmaster's config file:
+
+@example
+from buildbot.scheduler import Try_Jobdir
+s = Try_Jobdir("try1", ["full-linux", "full-netbsd", "full-OSX"],
+               jobdir="jobdir")
+c['schedulers'] = [s]
+@end example
+
+Note that you must create the jobdir before telling the buildmaster to
+use this configuration, otherwise you will get an error. Also remember
+that the buildmaster must be able to read and write to the jobdir as
+well. Be sure to watch the @file{twistd.log} file (@pxref{Logfiles})
+as you start using the jobdir, to make sure the buildmaster is happy
+with it.
+
+To use the username/password form of authentication, create a
+@code{Try_Userpass} instance instead. It takes the same
+@code{builderNames} argument as the @code{Try_Jobdir} form, but
+accepts an addtional @code{port} argument (to specify the TCP port to
+listen on) and a @code{userpass} list of username/password pairs to
+accept. Remember to use good passwords for this: the security of the
+buildslave accounts depends upon it:
+
+@example
+from buildbot.scheduler import Try_Userpass
+s = Try_Userpass("try2", ["full-linux", "full-netbsd", "full-OSX"],
+                 port=8031, userpass=[("alice","pw1"), ("bob", "pw2")] )
+c['schedulers'] = [s]
+@end example
+
+Like most places in the buildbot, the @code{port} argument takes a
+strports specification. See @code{twisted.application.strports} for
+details.
+
 @node Triggerable Scheduler
 @subsection Triggerable Scheduler
 @cindex Triggers
