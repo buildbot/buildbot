@@ -213,9 +213,27 @@ def process_change(payload, user, repo, repo_url):
                 files.extend(commit['removed'])
                 # you know what sucks? this. converting
                 # from the github provided time to a unix timestamp
+                # python2.4 doesn't have the %z argument to strptime
+                # which means it won't accept a numeric timezone offset
+                
+                # this is time according to the local time
                 when =  time.mktime(time.strptime(\
-                                     (commit['timestamp'][:-3] + commit['timestamp'][-2:]),\
-                                    "%Y-%m-%dT%H:%M:%S%z"))
+                                     (commit['timestamp'][:-6]),\
+                                    "%Y-%m-%dT%H:%M:%S"))
+                # shift the time according to the offset
+                hourShift    = commit['timestamp'][-5:-4]
+                minShift     = commit['timestamp'][-2:-1]
+                totalSeconds = hourShift * 60 * 60 + minShift *60
+                
+                logging.info("TZ adjust .. hour: %s min: %s total: %s" % (hourShift, minShift, totalSeconds))                
+                if commmit['timestamp'][-6] == '+':
+                    # we need to go left to get back to UTC
+                    when -= totalSeconds
+                elif commmit['timestamp'][-6] == '-':
+                    when += totalSeconds
+                else:
+                    raise RuntimeError, "Unknown timestamp from github"
+                
                 change = {'revision': commit['id'],
                      'revlink': commit['url'],
                      'comments': commit['message'],
