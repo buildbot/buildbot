@@ -480,14 +480,13 @@ by the @code{jobdir} parameter, while the latter listens for PB
 connections on a specific @code{port}, and authenticates against
 @code{userport}.
 
-@slindex buildbot.scheduler.Try_Jobdir
-@slindex buildbot.scheduler.Try_Userpass
+@slindex buildbot.schedulers.trysched.Try_Jobdir
+@slindex buildbot.schedulers.trysched.Try_Userpass
 
-The buildmaster must have a @code{scheduler.Try} instance in
-the config file's @code{c['schedulers']} list. This lets the
-administrator control who may initiate these ``trial'' builds, which
-branches are eligible for trial builds, and which Builders should be
-used for them.
+The buildmaster must have a scheduler instance in the config file's
+@code{c['schedulers']} list to receive try requests. This lets the
+administrator control who may initiate these ``trial'' builds, which branches
+are eligible for trial builds, and which Builders should be used for them.
 
 The scheduler has various means to accept build requests.
 All of them enforce more security than the usual buildmaster ports do.
@@ -570,7 +569,7 @@ chmod g+rwx,o-rwx MASTERDIR/jobdir MASTERDIR/jobdir/*
 and then use the following scheduler in the buildmaster's config file:
 
 @example
-from buildbot.scheduler import Try_Jobdir
+from buildbot.schedulers.trysched import Try_Jobdir
 s = Try_Jobdir("try1", ["full-linux", "full-netbsd", "full-OSX"],
                jobdir="jobdir")
 c['schedulers'] = [s]
@@ -592,7 +591,7 @@ accept. Remember to use good passwords for this: the security of the
 buildslave accounts depends upon it:
 
 @example
-from buildbot.scheduler import Try_Userpass
+from buildbot.schedulers.trysched import Try_Userpass
 s = Try_Userpass("try2", ["full-linux", "full-netbsd", "full-OSX"],
                  port=8031, userpass=[("alice","pw1"), ("bob", "pw2")] )
 c['schedulers'] = [s]
