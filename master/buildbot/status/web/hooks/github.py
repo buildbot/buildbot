@@ -104,7 +104,7 @@ def process_change(payload, user, repo, repo_url):
                 # shift the time according to the offset
                 hourShift    = commit['timestamp'][-5:-3]
                 minShift     = commit['timestamp'][-2:]
-                totalSeconds = hourShift * 60 * 60 + minShift *60
+                totalSeconds = int(hourShift) * 60 * 60 + int(minShift) *60
                 
                 err("TZ adjust .. hour: %s min: %s total: %s" % (hourShift, minShift, totalSeconds))     
                 err("Time before is %s" % commit['timestamp'])    
