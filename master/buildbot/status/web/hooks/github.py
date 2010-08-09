@@ -119,7 +119,7 @@ def process_change(payload, user, repo, repo_url):
                     when = str(float(when) + int(totalSeconds))
                 else:
                     raise RuntimeError, "Unknown timestamp from github"
-                err("Time after is %s " % time.localtime(float(when))
+                err("Time after is %s " % time.localtime(float(when)))
                 err("the when is %s" % when)
                 change = {'revision': commit['id'],
                      'revlink': commit['url'],
