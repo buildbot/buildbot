@@ -166,6 +166,7 @@ def getChanges(request, options = None):
             repo_url = payload['repository']['url']
             private = payload['repository']['private']
             logging.debug("Payload: " + str(payload))
+            raise RuntimeError, "don't pollute github"
             return process_change(payload, user, repo, repo_url)
         except Exception:
             logging.error("Encountered an exception:")
