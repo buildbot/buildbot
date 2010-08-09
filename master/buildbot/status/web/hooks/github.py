@@ -47,7 +47,6 @@ def getChanges(request, options = None):
             logging.debug("Payload: " + str(payload))
             changes = process_change(payload, user, repo, repo_url)
             err("Changes: %s" % changes)
-            raise RuntimeError, "don't commit changes while testing"
             return changes
         except Exception:
             logging.error("Encountered an exception:")
