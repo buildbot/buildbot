@@ -226,10 +226,10 @@ def process_change(payload, user, repo, repo_url):
                 totalSeconds = hourShift * 60 * 60 + minShift *60
                 
                 logging.info("TZ adjust .. hour: %s min: %s total: %s" % (hourShift, minShift, totalSeconds))                
-                if commmit['timestamp'][-6] == '+':
+                if commit['timestamp'][-6] == '+':
                     # we need to go left to get back to UTC
                     when -= totalSeconds
-                elif commmit['timestamp'][-6] == '-':
+                elif commit['timestamp'][-6] == '-':
                     when += totalSeconds
                 else:
                     raise RuntimeError, "Unknown timestamp from github"
