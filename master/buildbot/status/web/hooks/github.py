@@ -23,7 +23,7 @@ from buildbot.changes.changes import Change
 import datetime
 import time
 from twisted.python.log import msg,err
-
+import calendar
 
 try:
     import json
@@ -46,6 +46,7 @@ def getChanges(request, options = None):
             private = payload['repository']['private']
             logging.debug("Payload: " + str(payload))
             changes = process_change(payload, user, repo, repo_url)
+            err("Changes: %s" % changes)
             raise RuntimeError, "don't commit changes while testing"
             return changes
         except Exception:
@@ -97,30 +98,35 @@ def process_change(payload, user, repo, repo_url):
                 # python2.4 doesn't have the %z argument to strptime
                 # which means it won't accept a numeric timezone offset
                 
-                # this is time according to the local time
-                when =  time.mktime(time.strptime(\
+                # first make a UTC-esque timestamp
+                #  do this in 2 steps, first, convert the timestamp directly
+                #    to UTC (i.e. 1970-01-01T00:00:00 is zero, regardless of
+                #    the local timezone )
+                err("Timestamp is %s" % commit['timestamp'])
+                when =  calendar.timegm(time.strptime(\
                                      (commit['timestamp'][:-6]),\
                                     "%Y-%m-%dT%H:%M:%S"))
-                # shift the time according to the offset
+                # when is now a timestamp if we were at UTC
+                err("UTC when is %s" % str(when))
+                err("When astext is %s" % time.gmtime(int(when)))
+                # shift the time according to the offset in the timestamp
                 hourShift    = commit['timestamp'][-5:-3]
                 minShift     = commit['timestamp'][-2:]
                 totalSeconds = int(hourShift) * 60 * 60 + int(minShift) *60
                 
-                err("TZ adjust .. hour: %s min: %s total: %s" % (hourShift, minShift, totalSeconds))     
-                err("Time before is %s" % commit['timestamp'])    
-                err("Time before conversion is %s " % time.localtime(float(when)))
-                err("the localtime is %s" % time.localtime())
-                err("the gmtime is %s" % time.gmtime())     
-                err("the when is %s" % when)
                 if commit['timestamp'][-6] == '+':
-                    # we need to go left to get back to UTC
-                    when = str(float(when) - int(totalSeconds))
-                elif commit['timestamp'][-6] == '-':
                     when = str(float(when) + int(totalSeconds))
+                elif commit['timestamp'][-6] == '-':
+                    when = str(float(when) - int(totalSeconds))
                 else:
                     raise RuntimeError, "Unknown timestamp from github"
-                err("Time after is %s " % time.localtime(float(when)))
-                err("the when is %s" % when)
+                
+                # now, when is a string of the number of seconds from UTC
+                # epoch. Take those seconds and make a local time out of it
+                localWhen        = time.localtime(float(when))
+                err("localwhen is %s" % localWhen)
+                localPosixOffset = time.mktime(localWhen)
+                err("offset from utcwhen is %s" % (localPosixOffset - when))
                 change = {'revision': commit['id'],
                      'revlink': commit['url'],
                      'comments': commit['message'],
@@ -142,11 +148,7 @@ def process_change(payload, user, repo, repo_url):
                         comments = commit['message'], 
                         links    = [commit['url']],
                         revision = commit['id'],
-                        # github gives this
-                        # "2010-07-23T11:47:57-07:00"
-                        # rowdy, but we need to strip the last colon
-                        # to inport to strptime
-                        when     = when,
+                        when     = localPosixOffset,
                         branch   = branch,
                         revlink  = commit['url'], 
                         repository = repo_url)  
