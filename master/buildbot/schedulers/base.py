@@ -111,7 +111,7 @@ class BaseScheduler(service.MultiService, ComparableMixin):
 
 class ClassifierMixin:
     """
-    Mixin to classify changes using self.filter, a filter.ChangeFilter instance.
+    Mixin to classify changes using self.change_filter, a filter.ChangeFilter instance.
     """
 
     def make_filter(self, change_filter=None, branch=NotABranch, categories=None):
