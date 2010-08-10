@@ -339,7 +339,7 @@ full checkout.
 @c directory or the working directory that is deleted each time?
 
 @item clobber
-specifes that the working directory should be deleted each time,
+specifies that the working directory should be deleted each time,
 necessitating a full checkout for each build. This insures a clean
 build off a complete checkout, avoiding any of the problems described
 above. This mode exercises the ``from-scratch'' build style.
@@ -370,33 +370,33 @@ operations should not be retried. This is provided to make life easier
 for buildslaves which are stuck behind poor network connections.
 
 @item repository
-The name of this parameter might varies depending on the Source step you
+The name of this parameter might vary depending on the Source step you
 are running. The concept explained here is common to all steps and
 applies to @code{repourl} as well as for @code{baseURL} (when
-aplicable). Buildbot, now being aware of the repository name via the
+applicable). Buildbot, now being aware of the repository name via the
 ChangeSource step might in some cases not need the repository URL. There
-are multiple way to pass it through to this step, those correspond to
+are multiple way to pass it through to this step, corresponding to
 the type of the parameter given to this step:
 
 @table @code
 @item None
-In the case where no paraneter is specified, the repository URL will be
-taken exactly from the Change property. You are looking for that one if
-your ChangeSource step has all informations about how to reach the
-Change.
+In the case where no parameter is specified, the repository URL will
+be taken directly from the Change property. This value should be used
+if your ChangeSource step has all the information about how to reach
+the Change.
 
 @item string
-The parameter might be a string, in this case, this string will be taken
-as the repository URL, and nothing more. the value coming from the
-ChangeSource step will be forgotten.
+The parameter might be a string. In this case, this string will be
+used as the full repository URL. The value coming from the
+ChangeSource step will be ignored.
 
 @item format string
-If the parameter is a string containing @code{%s}, then this the
-repository property from the Change will be place in place of the
+If the parameter is a string containing @code{%s}, then the repository
+property from the Change will be substituted in place of the
 @code{%s}. This is usefull when the ChangeSource step knows where the
-repository resides locally, but don't know the scheme used to access
-it. For instance @code{ssh://server/%s} makes sense if the the
-repository property is the local path of the repository.
+repository resides locally, but doesn't know the scheme used to access
+it. For instance, @code{ssh://server/%s} makes sense if the repository
+property is the local path of the repository.
 
 @item dict
 In this case, the repository URL will be the value indexed by the
@@ -537,9 +537,9 @@ name will be appended. It should probably end in a slash.
 
 @item defaultBranch
 (optional): this specifies the name of the branch to use when a Build
-does not provide one of its own. This will be appended to
-@code{baseURL} to create the string that will be passed to the
-@code{svn checkout} command.
+does not provide one of its own. This is a string that will be
+appended to @code{baseURL} to create the URL that will be passed to
+the @code{svn checkout} command.
 
 It is possible to mix to have a mix of @code{SVN} steps that use
 either the @code{svnurl} or @code{baseURL} arguments but not both at
