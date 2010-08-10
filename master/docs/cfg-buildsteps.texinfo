@@ -374,20 +374,20 @@ The name of this parameter might varies depending on the Source step you
 are running. The concept explained here is common to all steps and
 applies to @code{repourl} as well as for @code{baseURL} (when
 aplicable). Buildbot, now being aware of the repository name via the
-ChangeSource step might in some cases not need the repository url. There
+ChangeSource step might in some cases not need the repository URL. There
 are multiple way to pass it through to this step, those correspond to
 the type of the parameter given to this step:
 
 @table @code
 @item None
-In the case where no paraneter is specified, the repository url will be
+In the case where no paraneter is specified, the repository URL will be
 taken exactly from the Change property. You are looking for that one if
 your ChangeSource step has all informations about how to reach the
 Change.
 
 @item string
 The parameter might be a string, in this case, this string will be taken
-as the repository url, and nothing more. the value coming from the
+as the repository URL, and nothing more. the value coming from the
 ChangeSource step will be forgotten.
 
 @item format string
@@ -613,7 +613,7 @@ connects to the buildmaster's @code{PBChangeSource} over a TCP
 connection. (you can use the ``@code{buildbot sendchange}'' utility
 for this purpose, but you will still need an external program to
 decide what value should be passed to the @code{--branch=} argument).
-For example, a change to a file with the SVN url of
+For example, a change to a file with the SVN URL of
 ``svn://svn.example.org/MyProject/features/newthing/src/foo.c'' should
 be broken down into a Change instance with
 @code{branch='features/newthing'} and @code{file='src/foo.c'}.
