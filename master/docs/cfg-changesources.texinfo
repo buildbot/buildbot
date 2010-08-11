@@ -343,15 +343,15 @@ SHELL=/bin/sh
 new
 @end example
 
-If procmail is not setup on a system wide basis, then the following one-line .forward
-file will invoke it.
+If procmail is not setup on a system wide basis, then the following one-line
+@file{.forward} file will invoke it.
 
-@example{
+@example
 !/usr/bin/procmail
 @end example
 
 For MTAs which cannot put files into maildirs directly, the
-``safecat'' tool can be executed from a .forward file to accomplish
+@file{safecat} tool can be executed from a @file{.forward} file to accomplish
 the same thing.
 
 The Buildmaster uses the linux DNotify facility to receive immediate
@@ -366,7 +366,8 @@ The second component to setting up an email-based ChangeSource is to
 parse the actual notices. This is highly dependent upon the VC system
 and commit script in use.
 
-A couple of common tools used to create these change emails are:
+A couple of common tools used to create these change emails, along with the
+buildbot tools to parse them, are:
 
 @table @b
 
@@ -480,12 +481,12 @@ Version 1.11.x and 1.12.x report the directory path differently.
 The above example you put the buildbot_cvs_mail.py script under /cvsroot/CVSROOT. 
 It can be anywhere. Run the script with --help to see all the options.
 At the very least, the 
-options -e ( email ) and -P ( project ) should be specified. The line must end with '%@{sVv@}'
+options @code{-e} (email) and @code{-P} (project) should be specified. The line must end with @code{%@{sVv@}}
 This is expanded to the files that were modified.
 
 Additional entries can be added to support more modules.
 
-The following an abreviated form of buildbot_cvs_mail.py --help
+The following is an abreviated form of buildbot_cvs_mail.py --help
 
 @example
 
