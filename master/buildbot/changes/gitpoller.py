@@ -196,6 +196,7 @@ class GitPoller(base.ChangeSource):
                 commit_timestamp = None # use current time
                 
             c = changes.Change(who = self._get_commit_name(rev),
+                               revision = rev,
                                files = self._get_commit_files(rev),
                                comments = self._get_commit_comments(rev),
                                when = commit_timestamp,
