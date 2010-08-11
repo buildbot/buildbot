@@ -488,7 +488,7 @@ class BuildbotCVSMaildirSource(MaildirSource):
         # These are passed a property for later display
         tupleList = []
         links = []
-	while(fileList):
+        while(fileList):
             m = singleFileRE.match(fileList)
             if m:
                 curFile = path + '/' + m.group(1)

@@ -268,13 +268,13 @@ Subject: %(subject)s
 Date: %(date)s
 X-Mailer: Python buildbot-cvs-mail %(version)s
 ''' % vars
-	print >> s, 'Cvsmode: %s' % options.cvsmode
-	print >> s, 'Category: %s' % options.category
-	print >> s, 'CVSROOT: %s' % options.cvsroot
-	print >> s, 'Files: %s' % fileList
-	if options.path:
+        print >> s, 'Cvsmode: %s' % options.cvsmode
+        print >> s, 'Category: %s' % options.category
+        print >> s, 'CVSROOT: %s' % options.cvsroot
+        print >> s, 'Files: %s' % fileList
+        if options.path:
              print >> s, 'Path: %s' % options.path
-	print >> s, 'Project: %s' % options.project
+        print >> s, 'Project: %s' % options.project
         s.write(sys.stdin.read())
         print >> s
         resp = conn.sendmail(address, options.email, s.getvalue())
