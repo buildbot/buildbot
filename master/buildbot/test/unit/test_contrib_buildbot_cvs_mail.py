@@ -1,3 +1,4 @@
+import sys
 from mock import Mock, patch_object
 from buildbot.interfaces import ParameterError
 from twisted.trial import unittest
@@ -82,9 +83,11 @@ def checkOutput( stdout, regexList ):
     return misses
         
 class TestBuildbotCvsMail(unittest.TestCase):
+    buildbot_cvs_mail_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../contrib/buildbot_cvs_mail.py'))
+
     def test_buildbot_cvs_mail_from_cvs1_11(self):
         # Simulate CVS 1.11 
-        p = subprocess.Popen( ['../contrib/buildbot_cvs_mail.py', '--cvsroot=\"ext:example:/cvsroot\"',
+        p = subprocess.Popen( [ sys.executable, self.buildbot_cvs_mail_path, '--cvsroot=\"ext:example:/cvsroot\"',
                                '--email=buildbot@example.com', '-P', 'test', '-R', 'noreply@example.com', '-t',
                                'test', 'README', '1.1,1.2', 'hello.c', '2.2,2.3'],
                               stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -97,7 +100,7 @@ class TestBuildbotCvsMail(unittest.TestCase):
 
     def test_buildbot_cvs_mail_from_cvs1_12(self):
         # Simulate CVS 1.12, with --path option
-        p = subprocess.Popen( ['../contrib/buildbot_cvs_mail.py', '--cvsroot=\"ext:example.com:/cvsroot\"',
+        p = subprocess.Popen( [ sys.executable, self.buildbot_cvs_mail_path, '--cvsroot=\"ext:example.com:/cvsroot\"',
                                '--email=buildbot@example.com', '-P', 'test', '--path', 'test',
                                '-R', 'noreply@example.com', '-t', 
                                'README', '1.1', '1.2', 'hello.c', '2.2', '2.3'], 
