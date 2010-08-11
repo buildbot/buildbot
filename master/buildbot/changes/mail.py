@@ -339,8 +339,8 @@ class BonsaiMaildirSource(MaildirSource):
         return changes.Change(who, files, comments, when=timestamp,
                               branch=branch)
 
-class BuildbotCVSMaildirSource(MaildirSource):
-    name = "BuildbotCVSMaildirSource"
+class CVSMaildirSource(MaildirSource):
+    name = "CVSMaildirSource"
 
     def __init__(self, maildir, prefix=None, category='', repository='', urlmaker=None):
         """If urlmaker is defined, it will be called with three arguments:
@@ -461,7 +461,7 @@ class BuildbotCVSMaildirSource(MaildirSource):
         #  modified_file.c 1.1,1.2
 
         if fileList is None:
-           log.msg('BuildbotCVSMaildirSource Mail with no files. Ignoring')
+           log.msg('CVSMaildirSource Mail with no files. Ignoring')
            return            # We don't have any files. Email not from CVS
 
         if cvsmode == '1.11':
@@ -470,17 +470,17 @@ class BuildbotCVSMaildirSource(MaildirSource):
             if m:
                 path = m.group(1)
             else:
-                log.msg('BuildbotCVSMaildirSource can\'t get path from file list. Ignoring mail')
+                log.msg('CVSMaildirSource can\'t get path from file list. Ignoring mail')
                 return
             fileList = fileList[len(path):].strip()
             singleFileRE = re.compile( '(.+?),(NONE|(?:\d+\.(?:\d+\.\d+\.)*\d+)),(NONE|(?:\d+\.(?:\d+\.\d+\.)*\d+))(?: |$)')
         else: # 1.12
             singleFileRE = re.compile( '(.+?) (NONE|(?:\d+\.(?:\d+\.\d+\.)*\d+)) (NONE|(?:\d+\.(?:\d+\.\d+\.)*\d+))(?: |$)')
             if path is None:
-                log.msg("BuildbotCVSMaildirSource cvs 1.12 require path. Check cvs loginfo config")
+                log.msg("CVSMaildirSource cvs 1.12 require path. Check cvs loginfo config")
                 return
             
-        log.msg("BuildbotCVSMaildirSource processing filelist: %s" % fileList)
+        log.msg("CVSMaildirSource processing filelist: %s" % fileList)
         links = []
         while(fileList):
             m = singleFileRE.match(fileList)
@@ -493,7 +493,7 @@ class BuildbotCVSMaildirSource(MaildirSource):
                     links.append(self.urlmaker(curFile, oldRev, newRev ))
                 fileList = fileList[m.end():]
             else:
-                log.msg('BuildbotCVSMaildirSource no files matched regex. Ignoring')
+                log.msg('CVSMaildirSource no files matched regex. Ignoring')
                 return None   # bail - we couldn't parse the files that changed
         # Now get comments    
         while lines:

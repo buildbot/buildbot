@@ -6,7 +6,7 @@ from email import message_from_string
 from email.Utils import parseaddr, parsedate_tz, mktime_tz
 import datetime
 from buildbot.status.builder import SUCCESS, FAILURE
-from buildbot.changes.mail import MaildirSource, BuildbotCVSMaildirSource
+from buildbot.changes.mail import MaildirSource, CVSMaildirSource
 
 #
 # Sample message from CVS version 1.11
@@ -62,11 +62,11 @@ Changes for changes sake
 def fileToUrl( file, oldRev, newRev ):
     return 'http://example.com/cgi-bin/cvsweb.cgi/' + file + '?rev=' + newRev
 
-class TestMaildirSource(unittest.TestCase):
-    def test_BuildbotCVSMaildirSource_create_change_from_cvs1_11msg(self):
+class TestCVSMaildirSource(unittest.TestCase):
+    def test_CVSMaildirSource_create_change_from_cvs1_11msg(self):
         build = Mock()
         m = message_from_string(cvs1_11_msg)
-        src = BuildbotCVSMaildirSource('/dev/null', urlmaker=fileToUrl)
+        src = CVSMaildirSource('/dev/null', urlmaker=fileToUrl)
         try:
             change = src.parse( m )
         except UnicodeEncodeError:
@@ -86,10 +86,10 @@ class TestMaildirSource(unittest.TestCase):
         self.assert_(change.repository == ':ext:cvshost.example.com:/cvsroot')
         self.assert_(change.project == 'MyModuleName')
 
-    def test_BuildbotCVSMaildirSource_create_change_from_cvs1_12msg(self):
+    def test_CVSMaildirSource_create_change_from_cvs1_12msg(self):
         build = Mock()
         m = message_from_string(cvs1_12_msg)
-        src = BuildbotCVSMaildirSource('/dev/null', urlmaker=fileToUrl)
+        src = CVSMaildirSource('/dev/null', urlmaker=fileToUrl)
         try:
             change = src.parse( m )
         except UnicodeEncodeError:
