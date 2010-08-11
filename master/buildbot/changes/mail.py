@@ -352,9 +352,6 @@ class BuildbotCVSMaildirSource(MaildirSource):
     def parse(self, m, prefix=None):
         """Parse messages sent by the 'buildbot-cvs-mail' program.
         """
-        # Pretty much the same as freshcvs mail, not surprising since CVS is
-        # the one creating most of the text
-
         # The mail is sent from the person doing the checkin. Assume that the
         # local username is enough to identify them (this assumes a one-server
         # cvs-over-rsh environment rather than the server-dirs-shared-over-NFS
@@ -484,9 +481,6 @@ class BuildbotCVSMaildirSource(MaildirSource):
                 return
             
         log.msg("BuildbotCVSMaildirSource processing filelist: %s" % fileList)
-        # Contruct tuples for each file with the previous and new version of the file
-        # These are passed a property for later display
-        tupleList = []
         links = []
         while(fileList):
             m = singleFileRE.match(fileList)
@@ -495,7 +489,6 @@ class BuildbotCVSMaildirSource(MaildirSource):
                 oldRev = m.group(2)
                 newRev = m.group(3)
                 files.append( curFile )
-                tupleList.append((curFile, oldRev, newRev,))
                 if self.urlmaker:
                     links.append(self.urlmaker(curFile, oldRev, newRev ))
                 fileList = fileList[m.end():]
@@ -508,13 +501,11 @@ class BuildbotCVSMaildirSource(MaildirSource):
             comments += line
             
         comments = comments.rstrip() + "\n"
-        props = { 'fileTupleList' : tupleList }
         change = changes.Change(who, files, comments, isdir, when=when,
                                 branch=branch, revision=rev,
                                 category=category,
                                 repository=cvsroot,
                                 project=project,
-                                properties=props,
                                 links=links)
         return change
 

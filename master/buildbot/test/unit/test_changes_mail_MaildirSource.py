@@ -83,13 +83,6 @@ class TestMaildirSource(unittest.TestCase):
         self.assert_(change.when == mktime_tz(dateTuple))
         self.assert_(change.branch == None)
         self.assert_(change.revlink == '')
-        fileTupleList = change.properties.getProperty('fileTupleList')
-        self.assert_(fileTupleList != None)
-        fileTuple = fileTupleList[0]
-        self.assert_(len(fileTuple) == 3)
-        self.assert_(fileTuple[0] == 'base/module/src/make/GNUmakefile')
-        self.assert_(fileTuple[1] == '1.362')
-        self.assert_(fileTuple[2] == '1.363')
         self.assert_(change.repository == ':ext:cvshost.example.com:/cvsroot')
         self.assert_(change.project == 'MyModuleName')
 
@@ -114,17 +107,5 @@ class TestMaildirSource(unittest.TestCase):
         self.assert_(change.when == mktime_tz(dateTuple))
         self.assert_(change.branch == None)
         self.assert_(change.revlink == '')
-        fileTupleList = change.properties.getProperty('fileTupleList')
-        self.assert_(fileTupleList != None)
-        fileTuple = fileTupleList[0]
-        self.assert_(len(fileTuple) == 3)
-        self.assert_(fileTuple[0] == 'base/module/src/file1.cpp')
-        self.assert_(fileTuple[1] == '1.77')
-        self.assert_(fileTuple[2] == '1.78')
-        fileTuple = fileTupleList[1]
-        self.assert_(len(fileTuple) == 3)
-        self.assert_(fileTuple[0] == 'base/module/src/file2.cpp')
-        self.assert_(fileTuple[1] == '1.75')
-        self.assert_(fileTuple[2] == '1.76')
         self.assert_(change.repository == ':ext:cvshost.example.com:/cvsroot')
         self.assert_(change.project == 'MyModuleName')
