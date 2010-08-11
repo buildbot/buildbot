@@ -7,7 +7,7 @@ import os, re
 import time, calendar
 import datetime
 from email import message_from_file
-from email.Utils import parseaddr
+from email.Utils import parseaddr, parsedate_tz, mktime_tz
 from email.Iterators import body_line_iterator
 
 from zope.interface import implements
@@ -338,6 +338,185 @@ class BonsaiMaildirSource(MaildirSource):
         # return buildbot Change object
         return changes.Change(who, files, comments, when=timestamp,
                               branch=branch)
+
+class BuildbotCVSMaildirSource(MaildirSource):
+    name = "BuildbotCVSMaildirSource"
+
+    def __init__(self, maildir, prefix=None, category='', repository='', urlmaker=None):
+        """If urlmaker is defined, it will be called with three arguments:
+        filename, previous version, new version. It returns a url for that
+        file."""
+        MaildirSource.__init__(self, maildir, prefix, category, repository)
+        self.urlmaker = urlmaker
+        
+    def parse(self, m, prefix=None):
+        """Parse messages sent by the 'buildbot-cvs-mail' program.
+        """
+        # Pretty much the same as freshcvs mail, not surprising since CVS is
+        # the one creating most of the text
+
+        # The mail is sent from the person doing the checkin. Assume that the
+        # local username is enough to identify them (this assumes a one-server
+        # cvs-over-rsh environment rather than the server-dirs-shared-over-NFS
+        # model)
+        name, addr = parseaddr(m["from"])
+        if not addr:
+            return None # no From means this message isn't from buildbot-cvs-mail
+        at = addr.find("@")
+        if at == -1:
+            who = addr # might still be useful
+        else:
+            who = addr[:at]
+
+        # CVS accecpts RFC822 dates. buildbot-cvs-mail adds the date as
+        # part of the mail header, so use that.
+        # This assumes cvs is being access via ssh or pserver, so the time
+        # will be the CVS server's time.
+        
+        # calculate a "revision" based on that timestamp, or the current time
+        # if we're unable to parse the date.
+        log.msg('Processing CVS mail')
+        dateTuple = parsedate_tz(m["date"])
+        if dateTuple == None:
+            when = util.now()
+        else:
+            when = mktime_tz(dateTuple)
+            
+        theTime =  datetime.datetime.utcfromtimestamp(float(when))
+        rev = theTime.strftime('%Y-%m-%d %H:%M:%S')
+
+        catRE           = re.compile( '^Category:\s*(\S.*)')
+        cvsRE           = re.compile( '^CVSROOT:\s*(\S.*)')
+        cvsmodeRE       = re.compile( '^Cvsmode:\s*(\S.*)')
+        filesRE         = re.compile( '^Files:\s*(\S.*)')
+        modRE           = re.compile( '^Module:\s*(\S.*)')
+        pathRE          = re.compile( '^Path:\s*(\S.*)')
+        projRE          = re.compile( '^Project:\s*(\S.*)')
+        singleFileRE    = re.compile( '(.*) (NONE|\d(\.|\d)+) (NONE|\d(\.|\d)+)')
+        tagRE   = re.compile( '^\s+Tag:\s*(\S.*)')
+        updateRE = re.compile( '^Update of:\s*(\S.*)')
+        files = []
+        comments = ""
+        isdir = 0
+        branch = None
+
+        lines = list(body_line_iterator(m))
+        while lines:
+            line = lines.pop(0)
+            m = catRE.match(line)
+            if m:
+                category = m.group(1)
+                continue
+            m = cvsRE.match(line)
+            if m:
+                cvsroot = m.group(1)
+                continue
+            m = cvsmodeRE.match(line)
+            if m:
+                cvsmode = m.group(1)
+                continue
+            m = filesRE.match(line)
+            if m:
+                fileList = m.group(1)
+                continue
+            m = modRE.match(line)
+            if m:
+                module = m.group(1)
+                continue
+            m = pathRE.match(line)
+            if m:
+                path = m.group(1)
+                continue
+            m = projRE.match(line)
+            if m:
+                project = m.group(1)
+                continue
+            m = tagRE.match(line)
+            if m:
+                branch = m.group(1)
+                continue
+            m = updateRE.match(line)
+            if m:
+                updateof = m.group(1)
+                continue
+            if line == "Log Message:\n":
+                break
+
+        # CVS 1.11 lists files as:
+        #   repo/path file,old-version,new-version file2,old-version,new-version
+        # Version 1.12 lists files as:
+        #   file1 old-version new-version file2 old-version new-version
+        # 
+        # files consists of tuples of 'file-name old-version new-version'
+        # The versions are either dotted-decimal version numbers, ie 1.1
+        # or NONE. New files are of the form 'NONE NUMBER', while removed
+        # files are 'NUMBER NONE'. 'NONE' is a literal string
+        # Parsing this instead of files list in 'Added File:' etc
+        # makes it possible to handle files with embedded spaces, though
+        # it could fail if the filename was 'bad 1.1 1.2'
+        # For cvs version 1.11, we expect
+        #  my_module new_file.c,NONE,1.1
+        #  my_module removed.txt,1.2,NONE
+        #  my_module modified_file.c,1.1,1.2
+        # While cvs version 1.12 gives us       
+        #  new_file.c NONE 1.1
+        #  removed.txt 1.2 NONE
+        #  modified_file.c 1.1,1.2
+
+        if fileList is None:
+           log.msg('BuildbotCVSMaildirSource Mail with no files. Ignoring')
+           return            # We don't have any files. Email not from CVS
+
+        if cvsmode == '1.11':
+            # Please, no repo paths with spaces!
+            m = re.search('([^ ]*) ', fileList)
+            if m:
+                path = m.group(1)
+            else:
+                log.msg('BuildbotCVSMaildirSource can\'t get path from file list. Ignoring mail')
+                return
+            fileList = fileList[len(path):].strip()
+            singleFileRE = re.compile( '(.+?),(NONE|(?:\d+\.(?:\d+\.\d+\.)*\d+)),(NONE|(?:\d+\.(?:\d+\.\d+\.)*\d+))(?: |$)')
+        else: # 1.12
+            singleFileRE = re.compile( '(.+?) (NONE|(?:\d+\.(?:\d+\.\d+\.)*\d+)) (NONE|(?:\d+\.(?:\d+\.\d+\.)*\d+))(?: |$)')
+            if path is None:
+                log.msg("BuildbotCVSMaildirSource cvs 1.12 require path. Check cvs loginfo config")
+                return
+            
+        log.msg("BuildbotCVSMaildirSource processing filelist: %s" % fileList)
+        # Contruct tuples for each file with the previous and new version of the file
+        # These are passed a property for later display
+        tupleList = []
+        links = []
+	while(fileList):
+            m = singleFileRE.match(fileList)
+            if m:
+                curFile = path + '/' + m.group(1)
+                oldRev = m.group(2)
+                newRev = m.group(3)
+                files.append( curFile )
+                tupleList.append((curFile, oldRev, newRev,))
+                if self.urlmaker:
+                    links.append(self.urlmaker(curFile, oldRev, newRev ))
+                fileList = fileList[m.end():]
+            else:
+                log.msg('BuildbotCVSMaildirSource no files matched regex. Ignoring')
+                return None   # bail - we couldn't parse the files that changed
+        # Now get comments    
+        while lines:
+            line = lines.pop(0)
+            comments += line
+            
+        comments = comments.rstrip() + "\n"
+        props = { 'fileTupleList' : tupleList }
+        change = changes.Change(who, files, comments, isdir, when=when,
+                                branch=branch, revision=rev,
+                                category=category,
+                                repository=cvsroot,
+                                project=project,
+                                properties=props,
+                                links=links)
+        return change
 
 # svn "commit-email.pl" handler.  The format is very similar to freshcvs mail;
 # here's a sample:

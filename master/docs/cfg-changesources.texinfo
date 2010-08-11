@@ -44,6 +44,7 @@ that might be useful with them. All of these ChangeSources are in the
 @item CVS
 
 @itemize @bullet
+@item mail.BuildbotCVSMaildirSource (watching mail sent by buildbot script)
 @item freshcvs.FreshCVSSource (connected via TCP to the freshcvs daemon)
 @item mail.FCMaildirSource (watching for email sent by a freshcvs daemon)
 @item mail.BonsaiMaildirSource (watching for email sent by Bonsai)
@@ -269,6 +270,7 @@ c['change_source'] = SyncmailMaildirSource("~/maildir-buildbot",
 * Subscribing the Buildmaster::
 * Using Maildirs::
 * Parsing Email Change Messages::
+* BuildbotCVSMaildirSource::
 * FCMaildirSource::
 * SyncmailMaildirSource::
 * BonsaiMaildirSource::
@@ -326,6 +328,28 @@ slash, so something like @code{~/MAILDIR/} . qmail and postfix are
 maildir-capable MTAs, and procmail is a maildir-capable MDA (Mail
 Delivery Agent).
 
+Here is an example procmail config, located in ~/.procmailrc
+
+@example
+# .procmailrc
+# routes incoming mail to appropriate mailboxes
+PATH=/usr/bin:/usr/local/bin
+MAILDIR=$HOME/Mail
+LOGFILE=.procmail_log
+SHELL=/bin/sh
+
+:0
+*
+new
+@end example
+
+If procmail is not setup on a system wide basis, then the following one-line .forward
+file will invoke it.
+
+@example{
+!/usr/bin/procmail
+@end example
+
 For MTAs which cannot put files into maildirs directly, the
 ``safecat'' tool can be executed from a .forward file to accomplish
 the same thing.
@@ -348,6 +372,8 @@ A couple of common tools used to create these change emails are:
 
 @item CVS
 @table @samp
+@item Buildbot CVS MailNotifier
+@ref{BuildbotCVSMaildirSource}
 @item CVSToys MailNotifier
 @ref{FCMaildirSource}
 @item Bonsai notification
@@ -398,8 +424,143 @@ is ignored. If the filename @emph{does} start with the prefix, that
 prefix is stripped from the filename before any further processing is
 done. Thus the prefix usually ends with a slash.
 
+@node BuildbotCVSMaildirSource
+@subsubsection BuildbotCVSMaildirSource
+
+
+@csindex buildbot.changes.mail.BuildbotCVSMaildirSource
+
+This parser works with the buildbot_cvs_maildir.py script in the 
+contrib directory. 
+
+The script sends an email containing all the files submitted in
+one directory. It is invoked by using the CVSROOT/loginfo facility.
+
+The Buildbot's @code{BuildbotCVSMaildirSource} knows how to parse 
+these messages and turn them into Change objects. It takes two parameters, 
+the directory name of the maildir root, and an optional function to create
+a URL for each file. The function takes three parameters:
+
+@example
+ file   - file name
+ oldRev - old revision of the file
+ newRev - new revision of the file
+@end example
+
+It must return, oldly enough, a url for the file in question. For example:
+
+@example
+def fileToUrl( file, oldRev, newRev ):
+    return 'http://example.com/cgi-bin/cvsweb.cgi/' + file + '?rev=' + newRev
+
+from buildbot.changes.mail import BuildbotMaildirSource
+c['change_source'] = BuildbotCVSMaildirSource("/home/buildbot/Mail", urlmaker=fileToUrl)
+@end example
+
+@subheading Configuration of CVS and buildbot_cvs_mail.py
+
+CVS must be configured to invoke the buildbot_cvs_mail.py script when files
+are checked in. This is done via the CVS loginfo configuration file.
+
+To update this, first do:
+
+@example
+cvs checkout CVSROOT
+@end example
+
+cd to the CVSROOT directory and edit the file loginfo, adding a line like:
+
+@example
+SomeModule /cvsroot/CVSROOT/buildbot_cvs_mail.py --cvsroot :ext:example.com:/cvsroot -e buildbot -P SomeModule %%@{sVv@}
+@end example
+
+@emph{NOTE:} For cvs version 1.12.x, the '@code{--path %p}' option is required.
+Version 1.11.x and 1.12.x report the directory path differently.
+
+The above example you put the buildbot_cvs_mail.py script under /cvsroot/CVSROOT. 
+It can be anywhere. Run the script with --help to see all the options.
+At the very least, the 
+options -e ( email ) and -P ( project ) should be specified. The line must end with '%@{sVv@}'
+This is expanded to the files that were modified.
+
+Additional entries can be added to support more modules.
+
+The following an abreviated form of buildbot_cvs_mail.py --help
+
+@example
+
+Usage:
+
+    buildbot-cvs-mail [options] %@{sVv@}
+
+Where options are:
+
+    --category=category
+    -C
+        Catagory for change. This becomes the Change.cagatory attribute.
+        This may not make sense to specify it here, as category is meant
+        to distinguish the diffrent types of bots inside a same project,
+        such as "test", "docs", "full"
+        
+    --cvsroot=<path>
+    -c
+        CVSROOT for use by buildbot slaves to checkout code.
+        This becomes the Change.repository attribute. 
+        Exmaple: :ext:myhost:/cvsroot
+    
+    --email=email
+    -e email
+        Email address of the buildbot.
+
+    --fromhost=hostname
+    -f hostname
+        The hostname that email messages appear to be coming from.  The From:
+        header of the outgoing message will look like user@@hostname.  By
+        default, hostname is the machine's fully qualified domain name.
+
+    --help / -h
+        Print this text.
+
+    -m hostname
+    --mailhost=hostname
+        The hostname of an available SMTP server.  The default is
+        'localhost'.
+
+    --mailport=port
+        The port number of SMTP server.  The default is '25'.
+
+    --quiet / -q
+        Don't print as much status to stdout.
+
+    --path=path
+    -p path
+        The path for the files in this update. This comes from the %p parameter
+        in loginfo for CVS version 1.12.x. Do not use this for CVS version 1.11.x
+
+    --project=project
+    -P project
+        The project for the source. Use the CVS module being modified. This 
+        becomes the Change.project attribute.
+        
+    -R ADDR
+    --reply-to=ADDR
+      Add a "Reply-To: ADDR" header to the email message.
+
+    -t
+    --testing
+      Construct message and send to stdout for testing
+
+The rest of the command line arguments are:
+
+    %@{sVv@}
+        CVS %@{sVv@} loginfo expansion.  When invoked by CVS, this will be a single
+        string containing the files that are changing.
+@end example
+
+
 @node FCMaildirSource
 @subsubsection FCMaildirSource
+
 
 
 @csindex buildbot.changes.mail.FCMaildirSource
