@@ -70,7 +70,7 @@ keys.
 
 Python comments start with a hash character (``#''), tuples are defined with
 @code{(parenthesis, pairs)}, and lists (arrays) are defined with @code{[square,
-brackets]}. Tuples and listsk are mostly interchangeable. Dictionaries (data
+brackets]}. Tuples and lists are mostly interchangeable. Dictionaries (data
 structures which map ``keys'' to ``values'') are defined with curly braces:
 @code{@{'key1': 'value1', 'key2': 'value2'@} }. Function calls (and object
 instantiation) can use named parameters, like @code{w =
