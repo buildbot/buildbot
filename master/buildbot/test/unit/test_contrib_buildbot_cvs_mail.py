@@ -1,16 +1,10 @@
 import sys
-from mock import Mock, patch_object
-from buildbot.interfaces import ParameterError
-from twisted.trial import unittest
-
-from email import message_from_string
-from email.Utils import parseaddr, parsedate_tz, mktime_tz
 import datetime
-from buildbot.status.builder import SUCCESS, FAILURE
-from buildbot.changes.mail import MaildirSource, BuildbotCVSMaildirSource
 import re
-import shlex, subprocess
+import subprocess
 import os
+
+from twisted.trial import unittest
 
 test = '''
 Update of /cvsroot/test
@@ -71,32 +65,33 @@ golden_1_12_regex=[
     '^$',
     '^$' ]
 
-def checkOutput( stdout, regexList ):
-    misses = 0;
-    lineNo = 0
-    for line in stdout.splitlines():
-        m = re.search(regexList[lineNo], line)
-        if not m:
-            #print "line %d %s didn't match %s" % (lineNo, line, regexList[lineNo] )
-            misses += 1
-        lineNo += 1
-    return misses
-        
 class TestBuildbotCvsMail(unittest.TestCase):
     buildbot_cvs_mail_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../contrib/buildbot_cvs_mail.py'))
 
+    def assertOutputOk(self, p, stdout, regexList):
+        self.failUnlessEqual(p.returncode, 0, "subprocess exited uncleanly")
+        lines = stdout.splitlines()
+        self.failUnlessEqual(len(lines), len(regexList),
+                    "got wrong number of lines of output")
+
+        misses = []
+        for line, regex in zip(lines, regexList):
+            m = re.search(regex, line)
+            if not m:
+                misses.append((regex,line))
+        self.assertEqual(misses, [], "got non-matching lines")
+            
     def test_buildbot_cvs_mail_from_cvs1_11(self):
         # Simulate CVS 1.11 
         p = subprocess.Popen( [ sys.executable, self.buildbot_cvs_mail_path, '--cvsroot=\"ext:example:/cvsroot\"',
                                '--email=buildbot@example.com', '-P', 'test', '-R', 'noreply@example.com', '-t',
                                'test', 'README', '1.1,1.2', 'hello.c', '2.2,2.3'],
-                              stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                              stdin=subprocess.PIPE, stdout=subprocess.PIPE)
         
         stdoutdata, stderrdata = p.communicate(test)
         #print 'CVS 1.11 stdout: ', stdoutdata
 
-        misses = checkOutput( stdoutdata, golden_1_11_regex )
-        self.assert_(misses == 0 )
+        self.assertOutputOk(p, stdoutdata, golden_1_11_regex )
 
     def test_buildbot_cvs_mail_from_cvs1_12(self):
         # Simulate CVS 1.12, with --path option
@@ -104,10 +99,9 @@ class TestBuildbotCvsMail(unittest.TestCase):
                                '--email=buildbot@example.com', '-P', 'test', '--path', 'test',
                                '-R', 'noreply@example.com', '-t', 
                                'README', '1.1', '1.2', 'hello.c', '2.2', '2.3'], 
-                              stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                              stdin=subprocess.PIPE, stdout=subprocess.PIPE)
 
         stdoutdata, stderrdata = p.communicate(test)
         #print 'CVS 1.12 stdout: ', stdoutdata
 
-        misses = checkOutput( stdoutdata, golden_1_12_regex )
-        self.assert_(misses == 0 )
+        self.assertOutputOk(p, stdoutdata, golden_1_12_regex )

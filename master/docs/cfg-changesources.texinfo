@@ -431,11 +431,11 @@ done. Thus the prefix usually ends with a slash.
 
 @csindex buildbot.changes.mail.CVSMaildirSource
 
-This parser works with the buildbot_cvs_maildir.py script in the 
+This parser works with the @file{buildbot_cvs_maildir.py} script in the 
 contrib directory. 
 
 The script sends an email containing all the files submitted in
-one directory. It is invoked by using the CVSROOT/loginfo facility.
+one directory. It is invoked by using the @file{CVSROOT/loginfo} facility.
 
 The Buildbot's @code{CVSMaildirSource} knows how to parse 
 these messages and turn them into Change objects. It takes two parameters, 
@@ -472,7 +472,7 @@ cvs checkout CVSROOT
 cd to the CVSROOT directory and edit the file loginfo, adding a line like:
 
 @example
-SomeModule /cvsroot/CVSROOT/buildbot_cvs_mail.py --cvsroot :ext:example.com:/cvsroot -e buildbot -P SomeModule %%@{sVv@}
+SomeModule /cvsroot/CVSROOT/buildbot_cvs_mail.py --cvsroot :ext:example.com:/cvsroot -e buildbot -P SomeModule %@{sVv@}
 @end example
 
 @emph{NOTE:} For cvs version 1.12.x, the '@code{--path %p}' option is required.
