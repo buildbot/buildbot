@@ -827,6 +827,8 @@ class BuildStepStatus(styles.Versioned):
         self.finishedWatchers = []
         self.statistics = {}
 
+        self.waitingForLocks = False
+
     def getName(self):
         """Returns a short string with the name of this step. This string
         may have spaces in it."""
@@ -1045,6 +1047,12 @@ class BuildStepStatus(styles.Versioned):
     def checkLogfiles(self):
         # filter out logs that have been deleted
         self.logs = [ l for l in self.logs if l.hasContents() ]
+
+    def isWaitingForLocks(self):
+        return self.waitingForLocks
+
+    def setWaitingForLocks(self, waiting):
+        self.waitingForLocks = waiting
 
     # persistence
 
