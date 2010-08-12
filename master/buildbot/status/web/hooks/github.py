@@ -49,7 +49,7 @@ class fixedOffset(datetime.tzinfo):
 
     def dst(self, dt):
         return datetime.timedelta(0)
-def convertTime(self, myTestTimestamp):
+def convertTime(myTestTimestamp):
     #"1970-01-01T00:00:00+00:00"
     matcher = re.compile(r'(\d\d\d\d)-(\d\d)-(\d\d)T(\d\d):(\d\d):(\d\d)([-+])(\d\d):(\d\d)')
     result  = matcher.match(myTestTimestamp)
