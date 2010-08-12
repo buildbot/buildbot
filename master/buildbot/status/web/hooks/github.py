@@ -24,11 +24,52 @@ import datetime
 import time
 from twisted.python.log import msg,err
 import calendar
+import time
+import calendar
+import datetime
+import re
 
 try:
     import json
 except ImportError:
     import simplejson as json
+
+class fixedOffset(datetime.tzinfo):
+    """
+    fixed offset timezone
+    """
+    def __init__(self, minutes, hours, offsetSign = 1):
+        self.minutes = int(minutes) * offsetSign
+        self.hours   = int(hours)   * offsetSign
+        self.offset  = datetime.timedelta(minutes = self.minutes,
+                                         hours   = self.hours)
+
+    def utcoffset(self, dt):
+        return self.offset
+
+    def dst(self, dt):
+        return datetime.timedelta(0)
+def convertTime(self, myTestTimestamp):
+    #"1970-01-01T00:00:00+00:00"
+    matcher = re.compile(r'(\d\d\d\d)-(\d\d)-(\d\d)T(\d\d):(\d\d):(\d\d)([-+])(\d\d):(\d\d)')
+    result  = matcher.match(myTestTimestamp)
+    (year, month, day, hour, minute, second, offsetsign, houroffset, minoffset) = \
+        result.groups()
+    if offsetsign == '+':
+        offsetsign = 1
+    else:
+        offsetsign = -1
+    
+    offsetTimezone = fixedOffset( minoffset, houroffset, offsetsign )
+    myDatetime = datetime.datetime( int(year),
+                                    int(month),
+                                    int(day),
+                                    int(hour),
+                                    int(minute),
+                                    int(second),
+                                    0,
+                                    offsetTimezone)
+    return calendar.timegm( myDatetime.utctimetuple() )
 
 def getChanges(request, options = None):
         """
@@ -97,35 +138,12 @@ def process_change(payload, user, repo, repo_url):
                 # python2.4 doesn't have the %z argument to strptime
                 # which means it won't accept a numeric timezone offset
                 
-                # first make a UTC-esque timestamp
-                #  do this in 2 steps, first, convert the timestamp directly
-                #    to UTC (i.e. 1970-01-01T00:00:00 is zero, regardless of
-                #    the local timezone )
+
                 err("Timestamp is %s" % commit['timestamp'])
-                when =  calendar.timegm(time.strptime(\
-                                     (commit['timestamp'][:-6] + ' UTC'),\
-                                    "%Y-%m-%dT%H:%M:%S %Z"))
-                # when is now a timestamp if we were at UTC
-                err("UTC when is %s" % str(when))
-                err("When astext is %s" % time.gmtime(int(when)))
-                # shift the time according to the offset in the timestamp
-                hourShift    = commit['timestamp'][-5:-3]
-                minShift     = commit['timestamp'][-2:]
-                totalSeconds = int(hourShift) * 60 * 60 + int(minShift) *60
-                err("hour %s min %s shift %s" % (hourShift, minShift, totalSeconds))
-                if commit['timestamp'][-6] == '+':
-                    when = str(float(when) + int(totalSeconds))
-                elif commit['timestamp'][-6] == '-':
-                    when = str(float(when) - int(totalSeconds))
-                else:
-                    raise RuntimeError, "Unknown timestamp from github"
-                
-                # now, when is a string of the number of seconds from UTC
-                # epoch. Take those seconds and make a local time out of it
-                localWhen        = time.localtime(float(when))
-                err("localwhen is %s" % localWhen)
-                localPosixOffset = time.mktime(localWhen)
-                err("offset from utcwhen is %s" % (localPosixOffset - float(when)))
+                when =  convertTime( commit['timestamp '])
+                err("posx timestamp is %s" % when)
+                err("gmtimstamp is %s" % time.gmtime( when ))
+                err("localtimestamp is %s " % time.localtime( when ))
                 change = {'revision': commit['id'],
                      'revlink': commit['url'],
                      'comments': commit['message'],
@@ -147,7 +165,7 @@ def process_change(payload, user, repo, repo_url):
                         comments = commit['message'], 
                         links    = [commit['url']],
                         revision = commit['id'],
-                        when     = localPosixOffset,
+                        when     = when,
                         branch   = branch,
                         revlink  = commit['url'], 
                         repository = repo_url)  
