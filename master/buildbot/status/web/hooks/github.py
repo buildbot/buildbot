@@ -140,7 +140,7 @@ def process_change(payload, user, repo, repo_url):
                 
 
                 err("Timestamp is %s" % commit['timestamp'])
-                when =  convertTime( commit['timestamp '])
+                when =  convertTime( commit['timestamp'])
                 err("posx timestamp is %s" % when)
                 err("gmtimstamp is %s" % time.gmtime( when ))
                 err("localtimestamp is %s " % time.localtime( when ))
