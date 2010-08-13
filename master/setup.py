@@ -271,6 +271,9 @@ else:
     if not py_26:
         setup_args['install_requires'].append('pysqlite')
 
+    if os.getenv('NO_INSTALL_REQS'):
+        setup_args['install_requires'] = None
+
     entry_points={
         'console_scripts': [
             'buildbot = buildbot.scripts.runner:run'],
