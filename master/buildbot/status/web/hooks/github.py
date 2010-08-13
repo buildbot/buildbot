@@ -34,6 +34,7 @@ try:
 except ImportError:
     import simplejson as json
 
+# python is silly about how it handles timezones
 class fixedOffset(datetime.tzinfo):
     """
     fixed offset timezone
@@ -49,6 +50,7 @@ class fixedOffset(datetime.tzinfo):
 
     def dst(self, dt):
         return datetime.timedelta(0)
+    
 def convertTime(myTestTimestamp):
     #"1970-01-01T00:00:00+00:00"
     matcher = re.compile(r'(\d\d\d\d)-(\d\d)-(\d\d)T(\d\d):(\d\d):(\d\d)([-+])(\d\d):(\d\d)')
@@ -85,9 +87,8 @@ def getChanges(request, options = None):
             repo = payload['repository']['name']
             repo_url = payload['repository']['url']
             private = payload['repository']['private']
-            logging.debug("Payload: " + str(payload))
             changes = process_change(payload, user, repo, repo_url)
-            err("Changes: %s" % changes)
+            msg ("Received %s changes from github" % len(changes))
             return changes
         except Exception:
             logging.error("Encountered an exception:")
@@ -113,17 +114,6 @@ def process_change(payload, user, repo, repo_url):
             logging.info("Ignoring refname `%s': Not a branch" % refname)
 
         branch = match.group(1)
-        # Find out if the branch was created, deleted or updated. Branches
-        # being deleted aren't really interesting.
-#        {"removed":[],
-#        "modified":["setup.py"],
-#        "message":"Give some polite messages when trying to run lint/coverage without the modules being installed.",
-#        "added":[],
-#        "url":"http://github.com/PerilousApricot/WMCore/commit/71f79484bde30a1d2067719e13df8212c4032c2e",
-#        "timestamp":"2010-01-12T05:02:37-08:00",
-#        "id":"71f79484bde30a1d2067719e13df8212c4032c2e",
-#        "author":{"email":"metson","name":"metson"}}
-
         if re.match(r"^0*$", newrev):
             msg("Branch `%s' deleted, ignoring" % branch)
             return []
@@ -133,17 +123,7 @@ def process_change(payload, user, repo, repo_url):
                 files.extend(commit['added'])
                 files.extend(commit['modified'])
                 files.extend(commit['removed'])
-                # you know what sucks? this. converting
-                # from the github provided time to a unix timestamp
-                # python2.4 doesn't have the %z argument to strptime
-                # which means it won't accept a numeric timezone offset
-                
-
-                err("Timestamp is %s" % commit['timestamp'])
                 when =  convertTime( commit['timestamp'])
-                err("posx timestamp is %s" % when)
-                err("gmtimstamp is %s" % time.gmtime( when ))
-                err("localtimestamp is %s " % time.localtime( when ))
                 change = {'revision': commit['id'],
                      'revlink': commit['url'],
                      'comments': commit['message'],
@@ -155,10 +135,10 @@ def process_change(payload, user, repo, repo_url):
                      'properties': {'repository': repo_url},
                 }
     
-                logging.info("New revision: %s" % change['revision'][:8])
+                msg("New revision: %s" % change['revision'][:8])
                 for key, value in change.iteritems():
                     logging.debug("  %s: %s" % (key, value))
-                changeObject = Change(\
+                    changeObject = Change(\
                         who      = commit['author']['name'] 
                                     + " <" + commit['author']['email'] + ">",
                         files    = files,
