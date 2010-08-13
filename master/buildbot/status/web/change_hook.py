@@ -79,15 +79,11 @@ class ChangeHookResource(resource.Resource):
             dialect = 'base'
             
         if dialect in self.dialects.keys():
-#            try:
-                # note, this should be safe, only alphanumerics and _ are
-                # allowed in the dialect name
             msg("Attempting to load module buildbot.status.web.hooks" + dialect)
             tempModule = namedModule('buildbot.status.web.hooks.' + dialect)
             changes = tempModule.getChanges(request,self.dialects[dialect])
             msg("Got the following changes %s" % changes)
-#            except:
-#                err("Encountered an exception in change_hook:")
+
         else:
             msg("The dialect specified %s wasn't whitelisted in change_hook" % dialect)
             msg("Note: if dialect is 'base' then it's possible your URL is malformed and we didn't regex it properly")
