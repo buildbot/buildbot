@@ -24,7 +24,7 @@ work around this, but true support for multi-tree builds remains elusive.
 * BonsaiPoller::
 * SVNPoller::
 * Bzr Poller::
-* Web Hooks via WebStatus Module::
+* Change Hooks (HTTP Notifications)::
 * GoogleCodeAtomPoller::
 * GitPoller::
 * Change Source Index::
@@ -1197,6 +1197,13 @@ c['change_source'] = GitPoller('git@@example.com:foobaz/myrepo.git',
                                branch='great_new_feature')
 @end example
                   
+@node Change Hooks (HTTP Notifications)
+@subsection Change Hooks (HTTP Notifications)
+
+Buildbot already provides a web frontend, and that frontend can easily be used
+to receive HTTP push notifications of commits from services like github.  See
+@pxref{Change Hooks} for more information.
+
 @node GoogleCodeAtomPoller
 @subsection GoogleCodeAtomPoller
 
