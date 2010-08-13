@@ -139,7 +139,7 @@ class WebStatus(service.MultiService):
                  order_console_by_time=False, changecommentlink=None,
                  revlink=None, projects=None, repositories=None,
                  authz=None, logRotateLength=None, maxRotatedFiles=None,
-                 enable_change_hook=False, change_hook_dialects = []):
+                 enable_change_hook=False, change_hook_dialects = {}):
         """Run a web server that provides Buildbot status.
 
         @type  http_port: int or L{twisted.application.strports} string
@@ -318,8 +318,9 @@ class WebStatus(service.MultiService):
         
         # do we want to allow change_hook
         self.change_hook = enable_change_hook
-        self.change_hook_dialects = change_hook_dialects
-        if enable_change_hook:
+        self.change_hook_dialects = {}
+        if enable_change_hook and change_hook_dialects:
+            self.change_hook_dialects = change_hook_dialects
             self.putChild("change_hook", ChangeHookResource(dialects = self.change_hook_dialects))
 
     def setupUsualPages(self, numbuilds, num_events, num_events_max):
