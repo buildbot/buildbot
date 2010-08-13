@@ -139,12 +139,15 @@ def createSlave(config):
         config['basedir'] = '.'
     try:
         master = config['master']
-        host, port = re.search(r'(.+):(\d+)', master).groups()
+        port = None
+        host, port = re.search(r'^([^:]+)(?:[:](\d+))?', master).groups()
+        if port == None:
+            port = '9989'
         config['host'] = host
         config['port'] = int(port)
     except:
         print "unparseable master location '%s'" % master
-        print " expecting something more like localhost:8007"
+        print " expecting something more like localhost:8007 or localhost"
         raise
     contents = slaveTAC % config
 
@@ -260,6 +263,35 @@ class RestartOptions(MakerBase):
     def getSynopsis(self):
         return "Usage:    buildslave restart [<basedir>]"
 
+class UpgradeSlaveOptions(MakerBase):
+    optFlags = [
+        ]
+    optParameters = [
+        ]
+
+    def getSynopsis(self):
+        return "Usage:    buildbot upgrade-slave [<basedir>]"
+
+    longdesc = """
+    This command takes an existing buildslave working directory and
+    upgrades it to the current version.
+    """
+
+def upgradeSlave(config):
+    basedir = os.path.expanduser(config['basedir'])
+    buildbot_tac = open(os.path.join(basedir, "buildbot.tac")).read()
+    new_buildbot_tac = buildbot_tac.replace(
+        "from buildbot.slave.bot import BuildSlave",
+        "from buildslave.bot import BuildSlave")
+    if new_buildbot_tac != buildbot_tac:
+        open(os.path.join(basedir, "buildbot.tac"), "w").write(new_buildbot_tac)
+        print "buildbot.tac updated"
+    else:
+        print "No changes made"
+
+    return 0
+
+
 class SlaveOptions(MakerBase):
     optFlags = [
         ["force", "f", "Re-use an existing directory"],
@@ -286,10 +318,12 @@ class SlaveOptions(MakerBase):
     file. The bot will use the <name> and <passwd> arguments to authenticate
     itself when connecting to the master. All commands are run in a
     build-specific subdirectory of <basedir>. <master> is a string of the
-    form 'hostname:port', and specifies where the buildmaster can be reached.
+    form 'hostname[:port]', and specifies where the buildmaster can be reached.
+    port defaults to 9989
 
-    <name>, <passwd>, and <master> will be provided by the buildmaster
-    administrator for your bot. You must choose <basedir> yourself.
+    The appropriate values for <name>, <passwd>, and <master> should be
+    provided to you by the buildmaster administrator. You must choose <basedir>
+    yourself.
     """
 
     def getSynopsis(self):
@@ -311,8 +345,6 @@ class SlaveOptions(MakerBase):
         self['usepty'] = int(self['usepty'])
         self['keepalive'] = int(self['keepalive'])
         self['maxdelay'] = int(self['maxdelay'])
-        if self['master'].find(":") == -1:
-            raise usage.UsageError("master must be in the form host:portnum")
         if not re.match('^\d+$', self['log-size']):
             raise usage.UsageError("log-size parameter needs to be an int")
         if not re.match('^\d+$', self['log-count']) and \
@@ -327,6 +359,8 @@ class Options(usage.Options):
         # the following are all admin commands
         ['create-slave', None, SlaveOptions,
          "Create and populate a directory for a new buildslave"],
+        ['upgrade-slave', None, UpgradeSlaveOptions,
+         "Upgrade an existing buildslave directory for the current version"],
         ['start', None, StartOptions, "Start a buildslave"],
         ['stop', None, StopOptions, "Stop a buildslave"],
         ['restart', None, RestartOptions,
@@ -363,6 +397,8 @@ def run():
 
     if command == "create-slave":
         createSlave(so)
+    elif command == "upgrade-slave":
+        upgradeSlave(so)
     elif command == "start":
         if not isBuildslaveDir(so['basedir']):
             print "not a buildslave directory"

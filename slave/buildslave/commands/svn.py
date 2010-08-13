@@ -91,15 +91,23 @@ class SVN(SourceBaseCommand):
         return self._dovccmd('status', args, keepStdout=True, sendStdout=False,
                              cb=self._purgeAndUpdate2)
 
-    def _purgeAndUpdate2(self, res):
+    @staticmethod
+    def getUnversionedFiles(stdout, keep_on_purge):
         """Delete everything that shown up on status."""
-        result_xml = parseString(self.command.stdout)
+        result_xml = parseString(stdout)
         for entry in result_xml.getElementsByTagName('entry'):
-            filename = entry.getAttribute('path')
-            if filename in self.keep_on_purge:
+            (wc_status,) = entry.getElementsByTagName('wc-status')
+            if wc_status.getAttribute('item') == 'external':
                 continue
+            filename = entry.getAttribute('path')
+            if filename in keep_on_purge:
+                continue
+            yield filename
+            
+    def _purgeAndUpdate2(self, res):
+        for filename in self.getUnversionedFiles(self.command.stdout, self.keep_on_purge):
             filepath = os.path.join(self.builder.basedir, self.workdir,
-                                    filename)
+                        filename)
             self.sendStatus({'stdout': "%s\n" % filepath})
             if os.path.isfile(filepath):
                 os.chmod(filepath, 0700)

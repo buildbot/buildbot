@@ -2,10 +2,10 @@
 
 .PHONY: docs apidocs some-apidocs paper
 docs:
-	$(MAKE) -C docs
+	$(MAKE) -C master/docs
 
-reference:
-	cd docs; ./gen-reference
+apidocs:
+	$(MAKE) -C apidocs
 
 pylint:
 	cd master; $(MAKE) pylint

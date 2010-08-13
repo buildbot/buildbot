@@ -38,6 +38,7 @@ control each.
 * ShellCommand::
 * Python BuildSteps::
 * Transferring Files::
+* Transferring Strings::
 * Steps That Run on the Master::
 * Triggering Schedulers::
 * Writing New BuildSteps::
@@ -338,7 +339,7 @@ full checkout.
 @c directory or the working directory that is deleted each time?
 
 @item clobber
-specifes that the working directory should be deleted each time,
+specifies that the working directory should be deleted each time,
 necessitating a full checkout for each build. This insures a clean
 build off a complete checkout, avoiding any of the problems described
 above. This mode exercises the ``from-scratch'' build style.
@@ -369,33 +370,33 @@ operations should not be retried. This is provided to make life easier
 for buildslaves which are stuck behind poor network connections.
 
 @item repository
-The name of this parameter might varies depending on the Source step you
+The name of this parameter might vary depending on the Source step you
 are running. The concept explained here is common to all steps and
 applies to @code{repourl} as well as for @code{baseURL} (when
-aplicable). Buildbot, now being aware of the repository name via the
-ChangeSource step might in some cases not need the repository url. There
-are multiple way to pass it through to this step, those correspond to
+applicable). Buildbot, now being aware of the repository name via the
+ChangeSource step might in some cases not need the repository URL. There
+are multiple way to pass it through to this step, corresponding to
 the type of the parameter given to this step:
 
 @table @code
 @item None
-In the case where no paraneter is specified, the repository url will be
-taken exactly from the Change property. You are looking for that one if
-your ChangeSource step has all informations about how to reach the
-Change.
+In the case where no parameter is specified, the repository URL will
+be taken directly from the Change property. This value should be used
+if your ChangeSource step has all the information about how to reach
+the Change.
 
 @item string
-The parameter might be a string, in this case, this string will be taken
-as the repository url, and nothing more. the value coming from the
-ChangeSource step will be forgotten.
+The parameter might be a string. In this case, this string will be
+used as the full repository URL. The value coming from the
+ChangeSource step will be ignored.
 
 @item format string
-If the parameter is a string containing @code{%s}, then this the
-repository property from the Change will be place in place of the
+If the parameter is a string containing @code{%s}, then the repository
+property from the Change will be substituted in place of the
 @code{%s}. This is usefull when the ChangeSource step knows where the
-repository resides locally, but don't know the scheme used to access
-it. For instance @code{ssh://server/%s} makes sense if the the
-repository property is the local path of the repository.
+repository resides locally, but doesn't know the scheme used to access
+it. For instance, @code{ssh://server/%s} makes sense if the repository
+property is the local path of the repository.
 
 @item dict
 In this case, the repository URL will be the value indexed by the
@@ -536,9 +537,9 @@ name will be appended. It should probably end in a slash.
 
 @item defaultBranch
 (optional): this specifies the name of the branch to use when a Build
-does not provide one of its own. This will be appended to
-@code{baseURL} to create the string that will be passed to the
-@code{svn checkout} command.
+does not provide one of its own. This is a string that will be
+appended to @code{baseURL} to create the URL that will be passed to
+the @code{svn checkout} command.
 
 It is possible to mix to have a mix of @code{SVN} steps that use
 either the @code{svnurl} or @code{baseURL} arguments but not both at
@@ -612,7 +613,7 @@ connects to the buildmaster's @code{PBChangeSource} over a TCP
 connection. (you can use the ``@code{buildbot sendchange}'' utility
 for this purpose, but you will still need an external program to
 decide what value should be passed to the @code{--branch=} argument).
-For example, a change to a file with the SVN url of
+For example, a change to a file with the SVN URL of
 ``svn://svn.example.org/MyProject/features/newthing/src/foo.c'' should
 be broken down into a Change instance with
 @code{branch='features/newthing'} and @code{file='src/foo.c'}.
@@ -892,6 +893,10 @@ for each checkout directory to avoid incorrect synchronization. For
 this reason, Python percent substitution will be performed on this value
 to replace %(slave)s with the slave name and %(builder)s with the
 builder name. The default is "buildbot_%(slave)s_%(build)s".
+@item p4line_end
+(optional): The type of line ending handling P4 should use.  This is
+added directly to the cliet spec's LineEnd property.  The default is
+"local".
 @end table
 
 
@@ -1327,9 +1332,11 @@ source code filenames involved).
 @bsindex buildbot.steps.vstudio.VC8
 @bsindex buildbot.steps.vstudio.VS2003
 @bsindex buildbot.steps.vstudio.VS2005
+@bsindex buildbot.steps.vstudio.VS2008
+@bsindex buildbot.steps.vstudio.VCExpress9
 
 This step is meant to handle compilation using Microsoft compilers. 
-VC++ 6-8, VS2003, and VS2005 are supported. This step will take care
+VC++ 6-9, VS2003, VS2005, VS2008, and VCExpress9 are supported. This step will take care
 of setting up a clean compilation environment, parse the generated
 output in real time and deliver as detailed as possible information
 about the compilation executed.
@@ -1344,9 +1351,15 @@ All of the classes are in @code{buildbot.steps.vstudio}.  The available classes 
 
 @item VC8
 
+@item VC9
+
 @item VS2003
 
 @item VC2005
+
+@item VC2008
+
+@item VCExpress9
 
 @end table
 
@@ -1784,6 +1797,31 @@ f.addStep(DirectoryUpload(slavesrc="docs",
 The DirectoryUpload step will create all necessary directories and
 transfers empty directories, too.
 
+@node Transferring Strings
+@subsection Transferring Strings
+
+@cindex String Transfer
+@bsindex buildbot.steps.transfer.StringDownload
+@bsindex buildbot.steps.transfer.JSONStringDownload
+@bsindex buildbot.steps.transfer.JSONPropertiesDownload
+
+Sometimes it is useful to transfer a calculated value from the master
+to the slave.  Instead of having to create a temporary file and then
+use @code{FileDownload}, you can use one of the string download steps.
+
+@code{StringDownload} works just like @code{FileDownload} except it
+takes a single argument, @code{s}, representing the string to download
+instead of a @code{mastersrc} argument.
+
+@code{JSONStringDownload} is similar, except it takes an @code{o}
+argument, which must be json serializable, and transfers that as a
+json-encoded string to the slave.
+
+@code{JSONPropertiesDownload} transfers a json-encoded string that
+represents a dictionary where @code{properties} maps to a dictionary
+of build property name to property value; and @code{sourcestamp}
+represents the build's sourcestamp.
+
 @node Steps That Run on the Master
 @subsection Steps That Run on the Master
 @bsindex buildbot.steps.master.MasterShellCommand
@@ -1910,7 +1948,7 @@ class Frobinfy(LoggingBuildStep):
             frob_what="frobee",
             frob_how_many=None,
             frob_how=None,
-            **kwargs)
+            **kwargs):
 
         # check
         if frob_how_many is None:
@@ -1918,6 +1956,11 @@ class Frobinfy(LoggingBuildStep):
 
         # call parent
         LoggingBuildStep.__init__(self, **kwargs)
+
+        # set Frobnify attributes
+        self.frob_what = frob_what
+        self.frob_how_many = how_many
+        self.frob_how = frob_how
 
         # and record arguments for later
         self.addFactoryArguments(
@@ -1930,6 +1973,7 @@ class FastFrobnify(Frobnify):
             speed=5,
             **kwargs)
         Frobnify.__init__(self, **kwargs)
+        self.speed = speed
         self.addFactoryArguments(
             speed=speed)
 @end example

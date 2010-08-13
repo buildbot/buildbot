@@ -716,10 +716,14 @@ class DBConnector(util.ComparableMixin):
         return (important, unimportant)
 
     def scheduler_retire_changes(self, schedulerid, changeids, t):
-        t.execute(self.quoteq("DELETE FROM scheduler_changes"
-                              " WHERE schedulerid=? AND changeid IN ")
-                  + self.parmlist(len(changeids)),
-                  (schedulerid,) + tuple(changeids))
+        while changeids:
+            # sqlite has a maximum of 999 parameters, but we'll try to come in far
+            # short of that
+            batch, changeids = changeids[:100], changeids[100:]
+            t.execute(self.quoteq("DELETE FROM scheduler_changes"
+                                  " WHERE schedulerid=? AND changeid IN ")
+                      + self.parmlist(len(batch)),
+                      (schedulerid,) + tuple(batch))
 
     def scheduler_subscribe_to_buildset(self, schedulerid, bsid, t):
         # scheduler_get_subscribed_buildsets(schedulerid) will return

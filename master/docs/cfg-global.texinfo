@@ -2,6 +2,7 @@ The keys in this section affect the operations of the buildmaster globally.
 
 @menu
 * Database Specification::
+* Multi-master mode::
 * Project Definitions::
 * Log Handling::
 * Data Lifetime::
@@ -32,16 +33,6 @@ c['db_url'] = "sqlite:///state.sqlite"
 c['db_url'] = "mysql://user:pass@@somehost.com/database_name?max_idle=300"
 @end example
 
-When using a MySQL database, multiple buildbot masters can share the same
-database.  Keep in mind that there is a single namespace for schedulers and
-builders for all masters using the same database.  One suggested configuration
-is to have one buildbot master configured with just the schedulers and change
-sources, and then other masters configured with just the builders.  To enable
-this mode, you will need to set the @code{multiMaster} option so that buildbot
-doesn't complain about missing schedulers or builders.  You'll also need to set
-@code{db_poll_interval} so the masters with builders check the database for new
-builds at the configured interval.
-
 The @code{max_idle} argument for MySQL connections should be set to something
 less than the wait_timeout configured for your server.  This ensures that
 connections are closed and re-opened after the configured amount of idle time.
@@ -49,6 +40,58 @@ If you see errors such as @code{_mysql_exceptions.OperationalError: (2006,
 'MySQL server has gone away')}, this means your @code{max_idle} setting is
 probably too high. @code{show global variables like 'wait_timeout';} will show
 what the currently configured wait_timeout is on your MySQL server.
+
+@node Multi-master mode
+@subsection Multi-master mode
+
+Normally buildbot operates using a single master process that uses the
+configured database to save state.
+
+It is possible to configure buildbot to have multiple master processes that
+share state in the same database.  This has been well tested using a MySQL
+database.  There are several benefits of Multi-master mode:
+@itemize @bullet
+@item You can have large numbers of build slaves handling the same queue of
+      build requests.  There is a finite limit to the number of slaves you
+      can attach to a single master process.  By adding another master
+      which shares the queue of build requests, you can attach more slaves
+      to this additional master, and increase your build throughput.
+@item You can shut one master down to do maintenance, and other masters
+      will continue to do builds.
+@end itemize
+
+State that is shared in the database includes:
+@itemize @bullet
+@item List of changes
+@item Scheduler names and internal state
+@item Build requests, including the builder name
+@end itemize
+
+Because of this shared state, you are strongly encouraged to:
+@itemize @bullet
+@item Ensure that change branches correspond to exactly the schedulers you
+      have configured on those branches.  All schedulers on all masters
+      will see all new changes, regardless of which master initially
+      submitted the change.
+
+@item Ensure scheduler names are unique, and only run one instance of a
+      scheduler for each set of masters connecting to one database.
+
+@item Ensure builder names are unique for a given build factory implementation.
+      You can have the same builder name configured on many masters, but if the
+      build factories differ, you will get different results depending on which
+      master claims the build.
+@end itemize
+
+One suggested configuration is to have one buildbot master configured with
+just the scheduler and change sources; and then other masters configured
+with just the builders.
+
+To enable multi-master mode in this configuration, you will need to set the
+@code{multiMaster} option so that buildbot doesn't warn about missing
+schedulers or builders.  You will also need to set @code{db_poll_interval}
+to the masters with only builders check the database for new build requests
+at the configured interval.
 
 @example
 # Enable multiMaster mode; disables warnings about unknown builders and
@@ -78,7 +121,7 @@ c['buildbotURL'] = "http://localhost:8010/"
 @end example
 
 @bcindex c['projectName']
-@code{projectName} is a short string will be used to describe the
+@code{projectName} is a short string that will be used to describe the
 project that this buildbot is working on. For example, it is used as
 the title of the waterfall HTML page.
 

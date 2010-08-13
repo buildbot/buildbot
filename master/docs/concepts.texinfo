@@ -8,6 +8,7 @@ configure it properly.
 * BuildSet::
 * BuildRequest::
 * Builder::
+* Build::
 * Users::
 * Build Properties::
 @end menu
@@ -546,12 +547,6 @@ this might be changed, to have the @code{Build} define @emph{what}
 gets built, and a separate @code{BuildProcess} (provided by the
 Builder) to define @emph{how} it gets built.
 
-@code{BuildRequest} is created with optional @code{Properties}.  One
-of these, @code{owner}, is collected by the resultant @code{Build} and
-added to the set of @emph{interested users} to which status
-notifications will be sent, depending on the configuration for each
-status object.
-
 The @code{BuildRequest} may be mergeable with other compatible
 @code{BuildRequest}s. Builds that are triggered by incoming Changes
 will generally be mergeable. Builds that are triggered by user
@@ -562,6 +557,8 @@ the @emph{latest sources} of the same branch.
 @section Builder
 
 @cindex Builder
+@cindex BuildFactory
+@cindex BuildSlave
 
 The Buildmaster runs a collection of Builders, each of which handles a single
 type of build (e.g. full versus quick), on one or more build slaves.   Builders
@@ -570,29 +567,31 @@ separate column in the waterfall display. In general, each Builder runs
 independently (although various kinds of interlocks can cause one Builder to
 have an effect on another).
 
-Each @code{Builder} is a long-lived object which controls a sequence of Builds.
+Each builder is a long-lived object which controls a sequence of Builds.
 Each Builder is created when the config file is first parsed, and lives forever
 (or rather until it is removed from the config file). It mediates the
 connections to the buildslaves that do all the work, and is responsible for
-creating the @code{Build} objects that decide @emph{how} a build is performed
-(i.e., which steps are executed in what order).
+creating the Build objects - @pxref{Build}.
 
-Each @code{Builder} gets a unique name, and the path name of a
-directory where it gets to do all its work (there is a
-buildmaster-side directory for keeping status information, as well as
-a buildslave-side directory where the actual checkout/compile/test
-commands are executed). It also gets a @code{BuildFactory}, which is
-responsible for creating new @code{Build} instances: because the
-@code{Build} instance is what actually performs each build, choosing
-the @code{BuildFactory} is the way to specify what happens each time a
-build is done.
+Each builder gets a unique name, and the path name of a directory where it gets
+to do all its work (there is a buildmaster-side directory for keeping status
+information, as well as a buildslave-side directory where the actual
+checkout/compile/test commands are executed).
 
-Each @code{Builder} is associated with one of more @code{BuildSlaves}.
-A @code{Builder} which is used to perform OS-X builds (as opposed to
-Linux or Solaris builds) should naturally be associated with an
-OS-X-based buildslave.
+@heading Build Factories
 
-If multiple buildslaves are available for any given Builder, you will
+A builder also has a BuildFactory, which is responsible for creating new Build
+instances: because the Build instance is what actually performs each build,
+choosing the BuildFactory is the way to specify what happens each time a build
+is done (@pxref{Build}).
+
+@heading Build Slaves
+
+Each builder is associated with one of more BuildSlaves.  A builder which is
+used to perform Mac OS X builds (as opposed to Linux or Solaris builds) should
+naturally be associated with a Mac buildslave.
+
+If multiple buildslaves are available for any given builder, you will
 have some measure of redundancy: in case one slave goes offline, the
 others can still keep the Builder working. In addition, multiple
 buildslaves will allow multiple simultaneous builds for the same
@@ -606,6 +605,22 @@ lot of time trying (unsuccessfully) to reproduce a failure that only
 occurs on some of the buildslaves and not the others. Different
 platforms, operating systems, versions of major programs or libraries,
 all these things mean you should use separate Builders.
+
+@node Build
+@section Build
+
+@cindex Build
+@cindex BuildStep
+
+A build is a single compile or test run of a particular version of the source
+code, and is comprised of a series of steps.  It is ultimately up to you what
+constitutes a build, but for compiled software it is generally the checkout,
+configure, make, and make check sequence.  For interpreted projects like Python
+modules, a build is generally a checkout followed by an invocation of the
+bundled test suite.
+
+The builder which creates a build specifies its steps via a BuildFactory; the
+build then executes the steps and records their results.
 
 @node Users
 @section Users
@@ -639,44 +654,17 @@ nothing about email addresses or IRC nicknames, just user names.
 @node Doing Things With Users
 @subsection Doing Things With Users
 
-Each Change has a single User who is responsible for that Change. Most
-Builds have a set of Changes: the Build represents the first time these
-Changes have been built and tested by the Buildbot. The build has a
-``blamelist'' that consists of a simple union of the Users responsible
-for all the Build's Changes.
+Each change has a single user who is responsible for it. Most builds have a set
+of changes: the build generally represents the first time these changes have
+been built and tested by the Buildbot. The build has a ``blamelist'' that is
+the union of the users responsible for all the build's changes.
 
-The Build provides (through the IBuildStatus interface) a list of Users
-who are ``involved'' in the build. For now this is equal to the
-blamelist, but in the future it will be expanded to include a ``build
-sheriff'' (a person who is ``on duty'' at that time and responsible for
-watching over all builds that occur during their shift), as well as
-per-module owners who simply want to keep watch over their domain (chosen by
-subdirectory or a regexp matched against the filenames pulled out of the
-Changes). The Involved Users are those who probably have an interest in the
-results of any given build.
+The build provides a list of users who are interested in the build -- the
+``interested users''. Usually this is equal to the blamelist, but may also be
+expanded, e.g., to include the current build sherrif or a module's maintainer.
 
-In the future, Buildbot will acquire the concept of ``Problems'',
-which last longer than builds and have beginnings and ends. For example, a
-test case which passed in one build and then failed in the next is a
-Problem. The Problem lasts until the test case starts passing again, at
-which point the Problem is said to be ``resolved''.
-
-If there appears to be a code change that went into the tree at the
-same time as the test started failing, that Change is marked as being
-resposible for the Problem, and the user who made the change is added
-to the Problem's ``Guilty'' list. In addition to this user, there may
-be others who share responsibility for the Problem (module owners,
-sponsoring developers). In addition to the Responsible Users, there
-may be a set of Interested Users, who take an interest in the fate of
-the Problem.
-
-Problems therefore have sets of Users who may want to be kept aware of
-the condition of the problem as it changes over time. If configured, the
-Buildbot can pester everyone on the Responsible list with increasing
-harshness until the problem is resolved, with the most harshness reserved
-for the Guilty parties themselves. The Interested Users may merely be told
-when the problem starts and stops, as they are not actually responsible for
-fixing anything.
+If desired, the buildbot can notify the interested users until the problem is
+resolved.  
 
 @node Email Addresses
 @subsection Email Addresses
@@ -740,20 +728,15 @@ Hassler logic to send them an email message instead.
 @node Live Status Clients
 @subsection Live Status Clients
 
-The Buildbot also offers a PB-based status client interface which can
-display real-time build status in a GUI panel on the developer's desktop.
-This interface is normally anonymous, but it could be configured to let the
-buildmaster know @emph{which} developer is using the status client. The
-status client could then be used as a message-delivery service, providing an
-alternative way to deliver low-latency high-interruption messages to the
-developer (like ``hey, you broke the build'').
+The Buildbot also offers a desktop status client interface which can display
+real-time build status in a GUI panel on the developer's desktop.
 
 @node Build Properties
 @section Build Properties
 @cindex Properties
 
 Each build has a set of ``Build Properties'', which can be used by its
-BuildStep to modify their actions.  These properties, in the form of
+BuildSteps to modify their actions.  These properties, in the form of
 key-value pairs, provide a general framework for dynamically altering
 the behavior of a build based on its circumstances.
 
@@ -766,15 +749,15 @@ A scheduler can specify properties available to all the builds it
 starts.
 @item changes --
 A change can have properties attached to it. These are usually specified
-through Force Build or sendchange.
+through a change source (@pxref{Change Sources}), the "Force Build" form on the web interface (@pxref{WebStatus}), or sendchange (@pxref{sendchange}).
 @item buildslaves --
 A buildslave can pass properties on to the builds it performs.
 @item builds --
 A build automatically sets a number of properties on itself.
 @item builders --
-A builder can set properties to all the build it runs.
+A builder can set properties on all the builds it runs.
 @item steps --
-Steps of a build can set properties that are available to subsequent
+The steps of a build can set properties that are available to subsequent
 steps.  In particular, source steps set a number of properties.
 @end itemize
 
@@ -786,11 +769,11 @@ the @code{got_revision} property.  A later step could use this
 property to specify the name of a fully-built tarball, dropped in an
 easily-acessible directory for later testing.
 
-Some projects want to perform nightly builds as well as in response
-to committed changes.  Such a project would run two schedulers,
-both pointing to the same set of builders, but could provide an
-@code{is_nightly} property so that steps can distinguish the nightly
-builds, perhaps to run more resource-intensive tests.
+Some projects want to perform nightly builds as well as bulding in response to
+committed changes.  Such a project would run two schedulers, both pointing to
+the same set of builders, but could provide an @code{is_nightly} property so
+that steps can distinguish the nightly builds, perhaps to run more
+resource-intensive tests.
 
 Some projects have different build processes on different systems.
 Rather than create a build factory for each slave, the steps can use

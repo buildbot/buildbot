@@ -47,7 +47,7 @@ class TestBzr(SourceCommandTestMixin, unittest.TestCase):
                 sendRC=False, timeout=120, usePTY=False)
                 + 0,
             Expect(['path/to/bzr', 'version-info'],
-                os.path.join(self.basedir, 'source'),
+                self.basedir_source,
                 sendRC=False, usePTY=False, keepStdout=True,
                 environ=exp_environ, sendStderr=False, sendStdout=False)
                 + { 'stdout' : verinfo }

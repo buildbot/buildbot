@@ -130,12 +130,13 @@ class ShellCommand(LoggingBuildStep):
         """
 
         try:
-            if done and self.descriptionDone is not None:
-                return list(self.descriptionDone)
-            if self.description is not None:
-                return list(self.description)
-
             properties = self.build.getProperties()
+
+            if done and self.descriptionDone is not None:
+                return properties.render(self.descriptionDone)
+            if self.description is not None:
+                return properties.render(self.description)
+
             words = self.command
             if isinstance(words, (str, unicode)):
                 words = words.split()
@@ -439,9 +440,8 @@ class WarningCountingShellCommand(ShellCommand):
             for fileRe, warnRe, start, end in self.suppressions:
                 if ( (file == None or fileRe == None or fileRe.search(file)) and
                      (warnRe == None or  warnRe.search(text)) and
-                     lineNo != None and
-                     (start == None or start <= lineNo) and
-                     (end == None or end >= lineNo) ):
+                     ((start == None and end == None) or
+                      (lineNo != None and start <= lineNo and end >= lineNo)) ):
                     return
 
         warnings.append(line)

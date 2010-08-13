@@ -297,7 +297,22 @@ class Upgrader(base.Upgrader):
         for link in change.links:
             cursor.execute(util.sql_insert(self.dbapi, 'change_links', ('changeid', 'link')),
                           (change.number, link))
-        for filename in change.files:
+
+        # sometimes change.files contains nested lists -- why, I do not know!  But we deal with
+        # it all the same - see bug #915. We'll assume for now that change.files contains *either*
+        # lists of filenames or plain filenames, not both.
+        def flatten(l):
+            if l and type(l[0]) == list:
+                rv = []
+                for e in l:
+                    if type(e) == list:
+                        rv.extend(e)
+                    else:
+                        rv.append(e)
+                return rv
+            else:
+                return l
+        for filename in flatten(change.files):
             cursor.execute(util.sql_insert(self.dbapi, 'change_files', ('changeid', 'filename')),
                           (change.number, filename))
         for propname,propvalue in change.properties.properties.items():

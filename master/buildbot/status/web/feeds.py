@@ -198,8 +198,10 @@ class FeedResource(XmlResource):
                         except IOError:
                             # Probably the log file has been removed
                             logdata ='** log file not available **'
-
-                        log_lines.extend(logdata.split('\n')[-30:])
+                        unilist = list()
+                        for line in logdata.split('\n')[-30:]:
+                            unilist.append(unicode(line,'utf-8'))
+                        log_lines.extend(unilist)
 
             bc = {}
             bc['date'] = time.strftime("%a, %d %b %Y %H:%M:%S GMT",

@@ -467,6 +467,10 @@ stop all running builds
 
 cancel a build that has not yet started
 
+@item cleanShutdown
+
+shut down the master gracefully, without interrupting builds
+
 @end table
 
 For each of these actions, you can configure buildbot to never allow the
@@ -771,10 +775,12 @@ from success to failure. It can also be configured to include various
 build logs in each message.
 
 
-By default, the message will be sent to the Interested Users list
-(@pxref{Doing Things With Users}), which includes all developers who
-made changes in the build. You can add additional recipients with the
-extraRecipients argument.
+By default, the message will be sent to the Interested Users list (@pxref{Doing
+Things With Users}), which includes all developers who made changes in the
+build. You can add additional recipients with the extraRecipients argument.
+You can also add interested users by setting the @code{owners} build property
+to a list of users in the scheduler constructor (@pxref{Configuring
+Schedulers}).
 
 Each MailNotifier sends mail to a single set of recipients. To send
 different kinds of mail to different recipients, use multiple
@@ -858,77 +864,85 @@ below:
 @example
 from buildbot.status.builder import Results
 
-def message_formatter(mode, name, build, results, master_status):
+def html_message_formatter(mode, name, build, results, master_status):
     """Provide a customized message to BuildBot's MailNotifier.
-
+    
     The last 80 lines of the log are provided as well as the changes
     relevant to the build.  Message content is formatted as html.
     """
     result = Results[results]
-
+    
     limit_lines = 80
     text = list()
-    text.append('<h4>Build status: %s</h4>' % result.upper())
-    text.append("Buildslave for this Build: <b>%s</b>" % build.getSlavename())
-    text.append('<br>')
+    text.append(u'<h4>Build status: %s</h4>' % result.upper())
+    text.append(u'<table cellspacing="10"><tr>')
+    text.append(u"<td>Buildslave for this Build:</td><td><b>%s</b></td></tr>" % build.getSlavename())
     if master_status.getURLForThing(build):
-        text.append('Complete logs for all build steps: <a href="%s">%s</a>'
+        text.append(u'<tr><td>Complete logs for all build steps:</td><td><a href="%s">%s</a></td></tr>'
                     % (master_status.getURLForThing(build),
                        master_status.getURLForThing(build))
                     )
-    text.append('<br>')
-    text.append("Build Reason: %s" % build.getReason())
-    text.append('<br>')
-
-    source = ""
-    ss = build.getSourceStamp()
-    if ss.branch:
-        source += "[branch %s] " % ss.branch
-    if ss.revision:
-        source +=  ss.revision
-    else:
-        source += "HEAD"
-    if ss.patch:
-        source += " (plus patch)"
-    text.append("Build Source Stamp: <b>%s</b>" % source)
-    text.append('<br>')
-    text.append("Blamelist: %s" % ",".join(build.getResponsibleUsers()))
-    if ss.changes:
-        text.append('<h4>Recent Changes:</h4>')
-        text.append('See the <b>All Changes</b> section of the build log'
-                    ' for changes in this build: <a href="%s">%s</a>'
-                    % (master_status.getURLForThing(build),
-                       master_status.getURLForThing(build))
-                    )
-    text.append('<br>')
-    text.append('<br>')
-
-    logs = list()
-    for log in build.getLogs():
-        log_name = "%s.%s" % (log.getStep().getName(), log.getName())
-        log_status, dummy = log.getStep().getResults()
-        log_body = log.getText().splitlines() # Note: can be VERY LARGE
-        log_url = '%s/steps/%s/logs/%s' % (master_status.getURLForThing(build),
-                                           log.getStep().getName(),
-                                           log.getName())
-        logs.append((log_name, log_url, log_body, log_status))
-
-    name, url, content, logstatus = logs[-1]
-
-    text.append('<i>Detailed log of last build step:</i> <a href="%s">%s</a>'
-                % (url, url))
-    text.append('<br>')
-    text.append('<h4>Last %d lines of "%s":</h4>' % (limit_lines, name))
-    text.append('<p>')
-    text.append('<br>'.join([line for line in
-                             content[len(content)-limit_lines:]]))
-    text.append('</p>')
-    text.append('<br><br>')
-    text.append('<b>-The BuildBot</b>')
-    return @{
-        'body': "\n".join(text),
-        'type': 'html'
-        @}
+        text.append(u'<tr><td>Build Reason:</td><td>%s</td></tr>' % build.getReason())
+        source = u""
+        ss = build.getSourceStamp()
+        if ss.branch:
+            source += u"[branch %s] " % ss.branch
+        if ss.revision:
+            source +=  ss.revision
+        else:
+            source += u"HEAD"
+        if ss.patch:
+            source += u" (plus patch)"
+        text.append(u"<tr><td>Build Source Stamp:</td><td><b>%s</b></td></tr>" % source)
+        text.append(u"<tr><td>Blamelist:</td><td>%s</td></tr>" % ",".join(build.getResponsibleUsers()))
+        text.append(u'</table>')
+        if ss.changes:
+            text.append(u'<h4>Recent Changes:</h4>')
+            for c in ss.changes:
+                cd = c.asDict()
+                when = datetime.datetime.fromtimestamp(cd['when'] ).ctime()
+                text.append(u'<table cellspacing="10">')
+                text.append(u'<tr><td>Repository:</td><td>%s</td></tr>' % cd['repository'] )
+                text.append(u'<tr><td>Project:</td><td>%s</td></tr>' % cd['project'] )
+                text.append(u'<tr><td>Time:</td><td>%s</td></tr>' % when)
+                text.append(u'<tr><td>Changed by:</td><td>%s</td></tr>' % cd['who'] )
+                text.append(u'<tr><td>Comments:</td><td>%s</td></tr>' % cd['comments'] )
+                text.append(u'</table>')
+                files = cd['files']
+                if files:
+                    text.append(u'<table cellspacing="10"><tr><th align="left">Files</th><th>URL</th></tr>')
+                    for file in files:
+                        text.append(u'<tr><td>%s:</td><td>%s</td></tr>' % (file['name'], file['url']))
+                    text.append(u'</table>')
+        text.append(u'<br>')
+        # get log for last step 
+        logs = build.getLogs()
+        # logs within a step are in reverse order. Search back until we find stdio
+        for log in reversed(logs):
+            if log.getName() == 'stdio':
+                break
+        name = "%s.%s" % (log.getStep().getName(), log.getName())
+        status, dummy = log.getStep().getResults()
+        content = log.getText().splitlines() # Note: can be VERY LARGE
+        url = u'%s/steps/%s/logs/%s' % (master_status.getURLForThing(build),
+                                       log.getStep().getName(),
+                                       log.getName())
+        
+        text.append(u'<i>Detailed log of last build step:</i> <a href="%s">%s</a>'
+                    % (url, url))
+        text.append(u'<br>')
+        text.append(u'<h4>Last %d lines of "%s"</h4>' % (limit_lines, name))
+        unilist = list()
+        for line in content[len(content)-limit_lines:]:
+            unilist.append(cgi.escape(unicode(line,'utf-8')))
+        text.append(u'<pre>'.join([uniline for uniline in unilist]))
+        text.append(u'</pre>')
+        text.append(u'<br><br>')
+        text.append(u'<b>-The BuildBot</b>')
+        return @{
+            'body': u"\n".join(text),
+            'type': 'html'
+            @}
 
 mn = MailNotifier(fromaddr="buildbot@@example.org",
                   sendToInterestedUsers=False,

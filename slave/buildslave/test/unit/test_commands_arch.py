@@ -48,7 +48,7 @@ class TestArch(SourceCommandTestMixin, unittest.TestCase):
                 + { 'stdout' : '9753\n' }
                 + 0,
             Expect(['path/to/tla', 'logs', '--full', '--reverse'],
-                os.path.join(self.basedir, 'source'),
+                self.basedir_source,
                 timeout=120, sendRC=False, usePTY=False, keepStdout=True,
                 sendStdout=False, sendStderr=False, environ=exp_environ)
                 + { 'stdout' : 'funarchive/mainline--patch-22\n' }
@@ -104,7 +104,7 @@ class TestBazaar(SourceCommandTestMixin, unittest.TestCase):
                 + { 'stdout' : '9753\n' }
                 + 0,
             Expect(['path/to/baz', 'tree-id'],
-                os.path.join(self.basedir, 'source'),
+                self.basedir_source,
                 timeout=120, sendRC=False, usePTY=False, keepStdout=True,
                 sendStdout=False, sendStderr=False, environ=exp_environ)
                 + { 'stdout' : 'funarchive/mainline--patch-22\n' }

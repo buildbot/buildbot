@@ -198,6 +198,7 @@ class ChangeSender:
         changes = []
         for branch in files_per_branch.keys():
             d = {'who': who,
+                 'repository': repo,
                  'branch': branch,
                  'files': files_per_branch[branch],
                  'comments': message,

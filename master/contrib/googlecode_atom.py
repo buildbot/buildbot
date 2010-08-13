@@ -2,7 +2,26 @@
 # Author: Srivats P. <pstavirs>
 # Based on Mozilla's HgPoller
 #     http://bonsai.mozilla.org/cvsblame.cgi?file=/mozilla/tools/buildbot/buildbot/changes/Attic/hgpoller.py&revision=1.1.4.2
-# see http://code.google.com/p/pitaara/
+#
+# Description:
+#   Use this ChangeSource for projects hosted on http://code.google.com/
+#
+#   This ChangeSource uses the project's commit Atom feed. Depending upon the
+#   frequency of commits, you can tune the polling interval for the feed 
+#   (default is 1 hour)
+# 
+# Parameters:
+#   feedurl (MANDATORY): The Atom feed URL of the GoogleCode repo
+#   pollinterval (OPTIONAL): Polling frequency for the feed (in seconds)
+#
+# Example:
+# To poll the Ostinato project's commit feed every 3 hours, use -
+#   from googlecode_atom import GoogleCodeAtomPoller
+#   poller = GoogleCodeAtomPoller(
+#            feedurl="http://code.google.com/feeds/p/ostinato/hgchanges/basic",
+#            pollinterval=10800) 
+#   c['change_source'] = [ poller ]
+#
 
 from time import strptime
 from calendar import timegm 

@@ -1174,7 +1174,7 @@ class P4(Source):
     name = "p4"
 
     def __init__(self, p4base=None, defaultBranch=None, p4port=None, p4user=None,
-                 p4passwd=None, p4extra_views=[],
+                 p4passwd=None, p4extra_views=[], p4line_end='local',
                  p4client='buildbot_%(slave)s_%(builder)s', **kwargs):
         """
         @type  p4base: string
@@ -1202,6 +1202,9 @@ class P4(Source):
         @param p4extra_views: Extra views to be added to
                               the client that is being used.
 
+        @type  p4line_end: string
+        @param p4line_end: value of the LineEnd client specification property
+
         @type  p4client: string
         @param p4client: The perforce client to use for this buildslave.
         """
@@ -1215,12 +1218,14 @@ class P4(Source):
                                  p4user=p4user,
                                  p4passwd=p4passwd,
                                  p4extra_views=p4extra_views,
+                                 p4line_end=p4line_end,
                                  p4client=p4client,
                                  )
         self.args['p4port'] = p4port
         self.args['p4user'] = p4user
         self.args['p4passwd'] = p4passwd
         self.args['p4extra_views'] = p4extra_views
+        self.args['p4line_end'] = p4line_end
         self.p4client = p4client
 
     def setBuild(self, build):

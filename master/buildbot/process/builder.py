@@ -34,6 +34,7 @@ class AbstractSlaveBuilder(pb.Referenceable):
         self.remote = None
         self.slave = None
         self.builder_name = None
+        self.locks = None
 
     def __repr__(self):
         r = ["<", self.__class__.__name__]
@@ -110,6 +111,7 @@ class AbstractSlaveBuilder(pb.Referenceable):
     def _attached3(self, res):
         # now we say they're really attached
         self.state = IDLE
+
         return self
 
     def _attachFailure(self, why, where):
@@ -119,7 +121,9 @@ class AbstractSlaveBuilder(pb.Referenceable):
         return why
 
     def prepare(self, builder_status):
-        return defer.succeed(None)
+        if not self.slave.acquireLocks():
+            return defer.succeed(False)
+        return defer.succeed(True)
 
     def ping(self, status=None):
         """Ping the slave to make sure it is still there. Returns a Deferred
@@ -242,6 +246,10 @@ class LatentSlaveBuilder(AbstractSlaveBuilder):
                                                          self.builder_name))
 
     def prepare(self, builder_status):
+        # If we can't lock, then don't bother trying to substantiate
+        if not self.slave.acquireLocks():
+            return defer.succeed(False)
+
         log.msg("substantiating slave %s" % (self,))
         d = self.substantiate()
         def substantiation_failed(f):
@@ -250,6 +258,12 @@ class LatentSlaveBuilder(AbstractSlaveBuilder):
             self.slave.disconnect()
             # TODO: should failover to a new Build
             return f
+        def substantiation_cancelled(res):
+            # if res is False, latent slave cancelled subtantiation
+            if not res:
+                self.state = LATENT
+            return res
+        d.addCallback(substantiation_cancelled)
         d.addErrback(substantiation_failed)
         return d
 
@@ -431,6 +445,8 @@ class Builder(pb.Referenceable, service.MultiService):
             diffs.append('factory changed')
         if setup.get('locks', []) != self.locks:
             diffs.append('locks changed from %s to %s' % (self.locks, setup.get('locks')))
+        if setup.get('env', {}) != self.env:
+            diffs.append('env changed from %s to %s' % (self.env, setup.get('env', {})))
         if setup.get('nextSlave') != self.nextSlave:
             diffs.append('nextSlave changed from %s to %s' % (self.nextSlave, setup.get('nextSlave')))
         if setup.get('nextBuild') != self.nextBuild:
@@ -804,19 +820,48 @@ class Builder(pb.Referenceable, service.MultiService):
         self.updateBigStatus()
         log.msg("starting build %s using slave %s" % (build, sb))
         d = sb.prepare(self.builder_status)
-        def _ping(ign):
-            # ping the slave to make sure they're still there. If they've
-            # fallen off the map (due to a NAT timeout or something), this
-            # will fail in a couple of minutes, depending upon the TCP
-            # timeout.
-            #
-            # TODO: This can unnecessarily suspend the starting of a build, in
-            # situations where the slave is live but is pushing lots of data to
-            # us in a build.
-            log.msg("starting build %s.. pinging the slave %s" % (build, sb))
-            return sb.ping()
-        d.addCallback(_ping)
-        d.addCallback(self._startBuild_1, build, sb)
+
+        def _prepared(ready):
+            # If prepare returns True then it is ready and we start a build
+            # If it returns false then we don't start a new build.
+            d = defer.succeed(ready)
+
+            if not ready:
+                #FIXME: We should perhaps trigger a check to see if there is
+                # any other way to schedule the work
+                log.msg("slave %s can't build %s after all" % (build, sb))
+
+                # release the slave. This will queue a call to maybeStartBuild, which
+                # will fire after other notifyOnDisconnect handlers have marked the
+                # slave as disconnected (so we don't try to use it again).
+                # sb.buildFinished()
+
+                log.msg("re-queueing the BuildRequest %s" % build)
+                self.building.remove(build)
+                self._resubmit_buildreqs(build).addErrback(log.err)
+
+                sb.slave.releaseLocks()
+                self.triggerNewBuildCheck()
+
+                return d
+
+            def _ping(ign):
+                # ping the slave to make sure they're still there. If they've
+                # fallen off the map (due to a NAT timeout or something), this
+                # will fail in a couple of minutes, depending upon the TCP
+                # timeout.
+                #
+                # TODO: This can unnecessarily suspend the starting of a build, in
+                # situations where the slave is live but is pushing lots of data to
+                # us in a build.
+                log.msg("starting build %s.. pinging the slave %s" % (build, sb))
+                return sb.ping()
+            d.addCallback(_ping)
+            d.addCallback(self._startBuild_1, build, sb)
+
+            return d
+
+        d.addCallback(_prepared)
         return d
 
     def _startBuild_1(self, res, build, sb):
@@ -882,6 +927,9 @@ class Builder(pb.Referenceable, service.MultiService):
         else:
             brids = [br.id for br in build.requests]
             self.db.retire_buildrequests(brids, results)
+
+        sb.slave.releaseLocks()
+
         self.triggerNewBuildCheck()
 
     def _resubmit_buildreqs(self, build):

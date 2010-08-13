@@ -5,6 +5,7 @@
 * Creating a buildmaster::
 * Upgrading an Existing Buildmaster::
 * Creating a buildslave::
+* Upgrading an Existing Buildslave::
 * Launching the daemons::
 * Logfiles::
 * Shutdown::
@@ -49,9 +50,7 @@ Buildbot requires python-2.4 or later.
 Twisted: http://twistedmatrix.com
 
 Both the buildmaster and the buildslaves require Twisted-2.0.x or
-later. It has been tested against all releases of Twisted up to
-Twisted-2.5.0 (the most recent as of this writing). As always, the
-most recent version is recommended.
+later. As always, the most recent version is recommended.
 
 Twisted is delivered as a collection of subpackages. You'll need at
 least "Twisted" (the core package), and you'll also want TwistedMail,
@@ -84,6 +83,8 @@ included as json in python-2.6 and later)
 
 @item
 Jinja2: http://jinja.pocoo.org/2
+
+Buildbot requires Jinja version 2.1 or higher
 
 Jinja2 is a general purpose templating language and is used by Buildbot
 to generate the HTML output.
@@ -505,6 +506,59 @@ s = BuildSlave(buildmaster_host, port, slavename, passwd, basedir,
 
 @end table
 
+@node Upgrading an Existing Buildslave
+@section Upgrading an Existing Buildslave
+
+If you have just installed a new version of Buildbot-slave, you may need to
+take some steps to upgrade it.  If you are upgrading to version 0.8.2 or later,
+you can run
+
+@example
+buildslave upgrade-slave /path/to/buildslave/dir
+@end example
+
+@heading Version-specific Notes
+
+@menu
+* Upgrading a Buildslave to Buildbot-slave-0.8.1::
+@end menu
+
+@node Upgrading a Buildslave to Buildbot-slave-0.8.1
+@subsection Upgrading a Buildslave to Buildbot-slave-0.8.1
+
+Before Buildbot version 0.8.1, the Buildbot master and slave were part of the
+same distribution.  As of version 0.8.1, the buildslave is a separate
+distribution.
+
+As of this release, you will need to install @i{buildbot-slave} to run a slave.
+
+Any automatic startup scripts that had run @code{buildbot start} for previous versions
+should be changed to run @code{buildslave start} instead.
+
+If you are running a version later than 0.8.1, then you can skip the remainder
+of this section: the @code{upgrade-slave} command will take care of this.  If
+you are upgrading directly to 0.8.1, read on.
+
+The existing @code{buildbot.tac} for any buildslaves running older versions
+will need to be edited or replaced.  If the loss of cached buildslave state
+(e.g., for Source steps in copy mode) is not problematic, the easiest solution
+is to simply delete the slave directory and re-run @code{buildslave
+create-slave}.
+
+If deleting the slave directory is problematic, the change to
+@code{buildbot.tac} is simple.  On line 3, replace
+
+@example
+from buildbot.slave.bot import BuildSlave
+@end example
+
+with
+
+@example
+from buildslave.bot import BuildSlave
+@end example
+
+After this change, the buildslave should start as usual.
 
 @node Launching the daemons
 @section Launching the daemons

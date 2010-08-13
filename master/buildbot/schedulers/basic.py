@@ -115,7 +115,7 @@ class Scheduler(base.BaseScheduler, base.ClassifierMixin):
 
         If I decide that a build should be performed, I will add the
         appropriate BuildRequest to the database queue, and remove the
-        (retired) changes that went into it from the scheduler_changes tabke.
+        (retired) changes that went into it from the scheduler_changes table.
 
         Returns wakeup_delay: either None, or a float indicating when this
         scheduler wants to be woken up next. The Scheduler is responsible for

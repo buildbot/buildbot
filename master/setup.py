@@ -158,7 +158,9 @@ improve.
 """
 
 scripts = ["bin/buildbot"]
-if sys.platform == "win32":
+# sdist is usually run on a non-Windows platform, but the buildslave.bat file
+# still needs to get packaged.
+if 'sdist' in sys.argv or sys.platform == 'win32':
     scripts.append("contrib/windows/buildbot.bat")
     scripts.append("contrib/windows/buildbot_service.py")
 
@@ -241,7 +243,7 @@ else:
     ## dependencies
     setup_args['install_requires'] = [
         'twisted >= 2.0.0',
-        'Jinja2',
+        'Jinja2 >= 2.1',
     ]
     # Python-2.6 and up includes json
     if not py_26:

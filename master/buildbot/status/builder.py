@@ -1714,11 +1714,14 @@ class BuilderStatus(styles.Versioned):
         except EOFError:
             raise IndexError("corrupted build pickle %d" % number)
 
-    def prune(self):
-        gc.collect()
-
+    def prune(self, events_only=False):
         # begin by pruning our own events
         self.events = self.events[-self.eventHorizon:]
+
+        if events_only:
+            return
+
+        gc.collect()
 
         # get the horizons straight
         if self.buildHorizon:
@@ -1917,6 +1920,7 @@ class BuilderStatus(styles.Versioned):
         e.started = util.now()
         e.text = text
         self.events.append(e)
+        self.prune(events_only=True)
         return e # they are free to mangle it further
 
     def addPointEvent(self, text=[]):
@@ -1927,6 +1931,7 @@ class BuilderStatus(styles.Versioned):
         e.finished = 0
         e.text = text
         self.events.append(e)
+        self.prune(events_only=True)
         return e # for consistency, but they really shouldn't touch it
 
     def setBigState(self, state):
