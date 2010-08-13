@@ -7,7 +7,7 @@ from twisted.internet import defer
 
 from buildbot import interfaces
 from buildbot.status import mail
-from buildbot.status.builder import SUCCESS, WARNINGS
+from buildbot.status.builder import SUCCESS, WARNINGS, EXCEPTION
 from buildbot.steps.shell import WithProperties
 
 import gzip, bz2, base64, re, cStringIO
@@ -170,6 +170,9 @@ class TinderboxMailNotifier(mail.MailNotifier):
             text += res
         elif results == WARNINGS:
             res = "testfailed"
+            text += res
+        elif results == EXCEPTION:
+            res = "exception"
             text += res
         else:
             res += "busted"
