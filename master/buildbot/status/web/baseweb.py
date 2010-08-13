@@ -27,6 +27,7 @@ from buildbot.status.web.about import AboutBuildbot
 from buildbot.status.web.authz import Authz
 from buildbot.status.web.auth import AuthFailResource
 from buildbot.status.web.root import RootPage
+from buildbot.status.web.change_hook import ChangeHookResource
 
 # this class contains the WebStatus class.  Basic utilities are in base.py,
 # and specific pages are each in their own module.
@@ -81,6 +82,9 @@ class WebStatus(service.MultiService):
      /one_line_per_build/BUILDERNAME : same, but only for a single builder
      /about : describe this buildmaster (Buildbot and support library versions)
      /xmlrpc : (not yet implemented) an XMLRPC server with build status
+     /change_hook[/DIALECT] : accepts changes from external sources, optionally
+                              choosing the dialect that will be permitted
+                              (i.e. github format, etc..)
 
      and more!  see the manual.
 
@@ -134,7 +138,8 @@ class WebStatus(service.MultiService):
                  num_events=200, num_events_max=None, auth=None,
                  order_console_by_time=False, changecommentlink=None,
                  revlink=None, projects=None, repositories=None,
-                 authz=None, logRotateLength=None, maxRotatedFiles=None):
+                 authz=None, logRotateLength=None, maxRotatedFiles=None,
+                 change_hook_dialects = {}):
         """Run a web server that provides Buildbot status.
 
         @type  http_port: int or L{twisted.application.strports} string
@@ -233,7 +238,19 @@ class WebStatus(service.MultiService):
         @type maxRotatedFiles: None or int
         @param maxRotatedFiles: number of old http.log files to keep during log rotation.
             If not set, the value set in the buildbot.tac will be used, 
-             falling back to the BuildMaster's default value (10 files).        
+             falling back to the BuildMaster's default value (10 files).       
+        
+        @type  change_hook_dialects: None or dict
+        @param change_hook_dialects: If empty, disables change_hook support, otherwise      
+                                     whitelists valid dialects. In the format of
+                                     {"dialect1": "Option1", "dialect2", None}
+                                     Where the values are options that will be passed
+                                     to the dialect
+                                     
+                                     To enable the DEFAULT handler, use a key of DEFAULT
+                                     
+                                     
+        
     
         """
 
@@ -296,7 +313,11 @@ class WebStatus(service.MultiService):
         # down. See ticket #102 for more details.
         self.channels = weakref.WeakKeyDictionary()
         
-
+        # do we want to allow change_hook
+        self.change_hook_dialects = {}
+        if change_hook_dialects:
+            self.change_hook_dialects = change_hook_dialects
+            self.putChild("change_hook", ChangeHookResource(dialects = self.change_hook_dialects))
 
     def setupUsualPages(self, numbuilds, num_events, num_events_max):
         #self.putChild("", IndexOrWaterfallRedirection())
@@ -317,6 +338,7 @@ class WebStatus(service.MultiService):
         self.putChild("xmlrpc", XMLRPCServer())
         self.putChild("about", AboutBuildbot())
         self.putChild("authfail", AuthFailResource())
+
 
     def __repr__(self):
         if self.http_port is None:
