@@ -139,7 +139,7 @@ class WebStatus(service.MultiService):
                  order_console_by_time=False, changecommentlink=None,
                  revlink=None, projects=None, repositories=None,
                  authz=None, logRotateLength=None, maxRotatedFiles=None,
-                 enable_change_hook=False, change_hook_dialects = {}):
+                 change_hook_dialects = {}):
         """Run a web server that provides Buildbot status.
 
         @type  http_port: int or L{twisted.application.strports} string
@@ -240,12 +240,9 @@ class WebStatus(service.MultiService):
             If not set, the value set in the buildbot.tac will be used, 
              falling back to the BuildMaster's default value (10 files).       
         
-        @type  enable_change_hook: None or boolean
-        @param enable_change_hook: enables or disables the change_hook url. 
-                                   Default is off.
-                                   
         @type  change_hook_dialects: None or dict
-        @param change_hook_dialects: Whitelists valid dialects. In the format of
+        @param change_hook_dialects: If empty, disables change_hook support, otherwise      
+                                     whitelists valid dialects. In the format of
                                      {"dialect1": "Option1", "dialect2", None}
                                      Where the values are options that will be passed
                                      to the dialect
@@ -317,9 +314,8 @@ class WebStatus(service.MultiService):
         self.channels = weakref.WeakKeyDictionary()
         
         # do we want to allow change_hook
-        self.change_hook = enable_change_hook
         self.change_hook_dialects = {}
-        if enable_change_hook and change_hook_dialects:
+        if change_hook_dialects:
             self.change_hook_dialects = change_hook_dialects
             self.putChild("change_hook", ChangeHookResource(dialects = self.change_hook_dialects))
 
