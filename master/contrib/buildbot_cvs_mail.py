@@ -10,6 +10,7 @@
 # The script was re-written with the sole pupose of providing updates to
 # Buildbot master by Andy Howell
 #
+# Options handling done right by djmitche
 
 
 """
@@ -217,7 +218,7 @@ def main():
         send_mail(options)
     else:
         fork_and_send_mail(options)
-        
+
     if options.verbose:
         print 'Generating notification message... done.'
     return 0
@@ -227,4 +228,3 @@ if __name__ == '__main__':
     sys.exit(ret)
 
 # TODO: make sure tests really run
-# TODO: repository

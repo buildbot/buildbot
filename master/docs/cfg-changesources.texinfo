@@ -40,11 +40,17 @@ As a quick guide, here is a list of VC systems and the ChangeSources
 that might be useful with them. All of these ChangeSources are in the
 @code{buildbot.changes} module.
 
+@anchor{depr-src}
+@emph{NOTE:} The CVS change sources FreshCVSSource, FCMaildirSource,
+BonsaiMaildirSource and SyncmailMaildirSource are flagged as
+depreciated. If you are still using them, please send mail to
+the buildbot list.
+
 @table @code
 @item CVS
 
 @itemize @bullet
-@item mail.CVSMaildirSource (watching mail sent by buildbot script)
+@item mail.CVSMaildirSource (watching mail sent by @code{contrib/buildbot_cvs_mail.py} script)
 @item freshcvs.FreshCVSSource (connected via TCP to the freshcvs daemon)
 @item mail.FCMaildirSource (watching for email sent by a freshcvs daemon)
 @item mail.BonsaiMaildirSource (watching for email sent by Bonsai)
@@ -369,6 +375,11 @@ and commit script in use.
 A couple of common tools used to create these change emails, along with the
 buildbot tools to parse them, are:
 
+@emph{NOTE:} The CVS change sources FCMaildirSource,
+BonsaiMaildirSource and SyncmailMaildirSource are flagged as
+depreciated. If you are still using them, please send mail to
+the buildbot list.
+
 @table @b
 
 @item CVS
@@ -563,6 +574,7 @@ The rest of the command line arguments are:
 @subsubsection FCMaildirSource
 
 
+@xref{depr-src,,Depreciated}.
 
 @csindex buildbot.changes.mail.FCMaildirSource
 
@@ -588,6 +600,8 @@ c['change_source'] = FCMaildirSource("~/maildir-buildbot")
 @node SyncmailMaildirSource
 @subsubsection SyncmailMaildirSource
 
+@xref{depr-src,,Depreciated}.
+
 @csindex buildbot.changes.mail.SyncmailMaildirSource
 
 http://sourceforge.net/projects/cvs-syncmail
@@ -602,6 +616,8 @@ c['change_source'] = SyncmailMaildirSource("~/maildir-buildbot")
 
 @node BonsaiMaildirSource
 @subsubsection BonsaiMaildirSource
+
+@xref{depr-src,,Depreciated}.
 
 @csindex buildbot.changes.mail.BonsaiMaildirSource
 

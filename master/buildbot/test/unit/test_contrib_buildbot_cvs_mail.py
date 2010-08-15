@@ -105,3 +105,37 @@ class TestBuildbotCvsMail(unittest.TestCase):
         #print 'CVS 1.12 stdout: ', stdoutdata
 
         self.assertOutputOk(p, stdoutdata, golden_1_12_regex )
+
+    def test_buildbot_cvs_mail_no_args_exits_with_error(self):
+        p = subprocess.Popen( [ sys.executable, self.buildbot_cvs_mail_path ], 
+                                stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        ret = p.wait()
+        self.assert_(ret == 2)
+        
+    def test_buildbot_cvs_mail_without_email_opt_exits_with_error(self):
+        p = subprocess.Popen( [ sys.executable, self.buildbot_cvs_mail_path, '--cvsroot=\"ext:example.com:/cvsroot\"',
+                                '-P', 'test', '--path', 'test',
+                                '-R', 'noreply@example.com', '-t', 
+                                'README', '1.1', '1.2', 'hello.c', '2.2', '2.3'], 
+                              stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        ret = p.wait()
+        self.assert_(ret == 2)
+
+    def test_buildbot_cvs_mail_without_cvsroot_opt_exits_with_error(self):
+        p = subprocess.Popen( [ sys.executable, self.buildbot_cvs_mail_path, '--complete-garbage-opt=gomi',
+                                '--cvsroot=\"ext:example.com:/cvsroot\"',
+                                '--email=buildbot@example.com','-P', 'test', '--path', 'test',
+                                '-R', 'noreply@example.com', '-t', 
+                                'README', '1.1', '1.2', 'hello.c', '2.2', '2.3'], 
+                              stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        ret = p.wait()
+        self.assert_(ret == 2)
+
+    def test_buildbot_cvs_mail_with_unknown_opt_exits_with_error(self):
+        p = subprocess.Popen( [ sys.executable, self.buildbot_cvs_mail_path,
+                                '--email=buildbot@example.com','-P', 'test', '--path', 'test',
+                                '-R', 'noreply@example.com', '-t', 
+                                'README', '1.1', '1.2', 'hello.c', '2.2', '2.3'], 
+                              stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        ret = p.wait()
+        self.assert_(ret == 2)

@@ -342,12 +342,14 @@ class BonsaiMaildirSource(MaildirSource):
 class CVSMaildirSource(MaildirSource):
     name = "CVSMaildirSource"
 
-    def __init__(self, maildir, prefix=None, category='', repository='', urlmaker=None):
+    def __init__(self, maildir, prefix=None, category='',
+                 repository='', urlmaker=None, properties={}):
         """If urlmaker is defined, it will be called with three arguments:
         filename, previous version, new version. It returns a url for that
         file."""
         MaildirSource.__init__(self, maildir, prefix, category, repository)
         self.urlmaker = urlmaker
+        self.properties = properties
         
     def parse(self, m, prefix=None):
         """Parse messages sent by the 'buildbot-cvs-mail' program.
@@ -390,12 +392,15 @@ class CVSMaildirSource(MaildirSource):
         pathRE          = re.compile( '^Path:\s*(\S.*)')
         projRE          = re.compile( '^Project:\s*(\S.*)')
         singleFileRE    = re.compile( '(.*) (NONE|\d(\.|\d)+) (NONE|\d(\.|\d)+)')
-        tagRE   = re.compile( '^\s+Tag:\s*(\S.*)')
-        updateRE = re.compile( '^Update of:\s*(\S.*)')
-        files = []
+        tagRE           = re.compile( '^\s+Tag:\s*(\S.*)')
+        updateRE        = re.compile( '^Update of:\s*(\S.*)')
         comments = ""
-        isdir = 0
         branch = None
+        cvsroot = None
+        files = []
+        isdir = 0
+        path = None
+        project = None
 
         lines = list(body_line_iterator(m))
         while lines:
@@ -474,12 +479,13 @@ class CVSMaildirSource(MaildirSource):
                 return
             fileList = fileList[len(path):].strip()
             singleFileRE = re.compile( '(.+?),(NONE|(?:\d+\.(?:\d+\.\d+\.)*\d+)),(NONE|(?:\d+\.(?:\d+\.\d+\.)*\d+))(?: |$)')
-        else: # 1.12
+        elif cvsmode == '1.12':
             singleFileRE = re.compile( '(.+?) (NONE|(?:\d+\.(?:\d+\.\d+\.)*\d+)) (NONE|(?:\d+\.(?:\d+\.\d+\.)*\d+))(?: |$)')
             if path is None:
-                log.msg("CVSMaildirSource cvs 1.12 require path. Check cvs loginfo config")
-                return
-            
+                raise ValueError('CVSMaildirSource cvs 1.12 require path. Check cvs loginfo config')
+        else:
+            raise ValueError('Expected cvsmode 1.11 or 1.12. got: %s' % cvsmode)
+        
         log.msg("CVSMaildirSource processing filelist: %s" % fileList)
         links = []
         while(fileList):
@@ -501,12 +507,15 @@ class CVSMaildirSource(MaildirSource):
             comments += line
             
         comments = comments.rstrip() + "\n"
+        if comments == '\n':
+            comments = None
         change = changes.Change(who, files, comments, isdir, when=when,
                                 branch=branch, revision=rev,
                                 category=category,
                                 repository=cvsroot,
                                 project=project,
-                                links=links)
+                                links=links,
+                                properties=self.properties)
         return change
 
 # svn "commit-email.pl" handler.  The format is very similar to freshcvs mail;

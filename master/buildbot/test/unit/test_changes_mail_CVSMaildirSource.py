@@ -64,12 +64,11 @@ def fileToUrl( file, oldRev, newRev ):
 
 class TestCVSMaildirSource(unittest.TestCase):
     def test_CVSMaildirSource_create_change_from_cvs1_11msg(self):
-        build = Mock()
         m = message_from_string(cvs1_11_msg)
         src = CVSMaildirSource('/dev/null', urlmaker=fileToUrl)
         try:
             change = src.parse( m )
-        except UnicodeEncodeError:
+        except:
             self.fail('Failed to get change from email message.')
         self.assert_(change != None)
         self.assert_(change.who == 'andy')
@@ -85,14 +84,15 @@ class TestCVSMaildirSource(unittest.TestCase):
         self.assert_(change.revlink == '')
         self.assert_(change.repository == ':ext:cvshost.example.com:/cvsroot')
         self.assert_(change.project == 'MyModuleName')
+        propList = change.properties.asList()
+        self.assert_(len(propList) == 0 )
 
     def test_CVSMaildirSource_create_change_from_cvs1_12msg(self):
-        build = Mock()
         m = message_from_string(cvs1_12_msg)
         src = CVSMaildirSource('/dev/null', urlmaker=fileToUrl)
         try:
             change = src.parse( m )
-        except UnicodeEncodeError:
+        except:
             self.fail('Failed to get change from email message.')
         self.assert_(change != None)
         self.assert_(change.who == 'andy')
@@ -109,3 +109,92 @@ class TestCVSMaildirSource(unittest.TestCase):
         self.assert_(change.revlink == '')
         self.assert_(change.repository == ':ext:cvshost.example.com:/cvsroot')
         self.assert_(change.project == 'MyModuleName')
+        propList = change.properties.asList()
+        self.assert_(len(propList) == 0 )
+
+    def test_CVSMaildirSource_create_change_from_cvs1_12_with_no_path(self):
+        msg = cvs1_12_msg.replace('Path: base/module/src', '')
+        m = message_from_string(msg)
+        src = CVSMaildirSource('/dev/null')
+        try:
+            change = src.parse( m )
+        except ValueError:
+            pass
+        else:
+            self.fail('Expect ValueError.')
+
+    def test_CVSMaildirSource_create_change_with_bad_cvsmode(self):
+        # Branch is indicated afer 'Tag:' in modified file list
+        msg = cvs1_11_msg.replace('Cvsmode: 1.11', 'Cvsmode: 9.99')
+        m = message_from_string(msg)
+        src = CVSMaildirSource('/dev/null')
+        try:
+            change = src.parse( m )
+        except ValueError:
+            pass
+        else:
+            self.fail('Expected ValueError')
+
+    def test_CVSMaildirSource_create_change_with_branch(self):
+        # Branch is indicated afer 'Tag:' in modified file list
+        msg = cvs1_11_msg.replace('        GNUmakefile',
+                                  '      Tag: Test_Branch\n      GNUmakefile')
+        m = message_from_string(msg)
+        src = CVSMaildirSource('/dev/null')
+        try:
+            change = src.parse( m )
+        except:
+            self.fail('Failed to get change from email message.')
+        self.assert_(change.branch == 'Test_Branch')
+
+    def test_CVSMaildirSource_create_change_with_category(self):
+        msg = cvs1_11_msg.replace('Category: None', 'Category: Test category')
+        m = message_from_string(msg)
+        src = CVSMaildirSource('/dev/null')
+        try:
+            change = src.parse( m )
+        except:
+            self.fail('Failed to get change from email message.')
+        self.assert_(change.category == 'Test category')
+
+    def test_CVSMaildirSource_create_change_with_no_comment(self):
+        # Strip off comments
+        msg = cvs1_11_msg[:cvs1_11_msg.find('Commented out some stuff')]
+        m = message_from_string(msg)
+        src = CVSMaildirSource('/dev/null')
+        try:
+            change = src.parse( m )
+        except:
+            self.fail('Failed to get change from email message.')
+        self.assert_(change.comments == None )
+
+    def test_CVSMaildirSource_create_change_with_no_project(self):
+        msg = cvs1_11_msg.replace('Project: MyModuleName', '')
+        m = message_from_string(msg)
+        src = CVSMaildirSource('/dev/null')
+        try:
+            change = src.parse( m )
+        except:
+            self.fail('Failed to get change from email message.')
+        self.assert_(change.project == None )
+
+    def test_CVSMaildirSource_create_change_with_no_repository(self):
+        msg = cvs1_11_msg.replace('CVSROOT: :ext:cvshost.example.com:/cvsroot', '')
+        m = message_from_string(msg)
+        src = CVSMaildirSource('/dev/null')
+        try:
+            change = src.parse( m )
+        except:
+            self.fail('Failed to get change from email message.')
+        self.assert_(change.repository == None )
+
+    def test_CVSMaildirSource_create_change_with_property(self):
+        m = message_from_string(cvs1_11_msg)
+        propDict = { 'foo' : 'bar' }
+        src = CVSMaildirSource('/dev/null', urlmaker=fileToUrl, properties=propDict)
+        try:
+            change = src.parse( m )
+        except:
+            self.fail('Failed to get change from email message.')
+        self.assert_(change.properties.getProperty('foo') == 'bar')
+        self.assert_(change.properties.getPropertySource('foo') == 'Change')
