@@ -8,12 +8,6 @@ from twisted.spread.pb import PBClientFactory
 from twisted.internet import protocol
 from twisted.python import log
 
-class NewCredPerspective(pb.Avatar):
-    def attached(self, mind):
-        return self
-    def detached(self, mind):
-        pass
-
 class ReconnectingPBClientFactory(PBClientFactory,
                                   protocol.ReconnectingClientFactory):
     """Reconnecting client factory for PB brokers.
@@ -28,10 +22,6 @@ class ReconnectingPBClientFactory(PBClientFactory,
     f.startLogin() with the credentials and client, and override the
     gotPerspective method.
 
-    Instead of using the oldcred f.getPerspective (also one-shot), call
-    f.startGettingPerspective() with the same arguments, and override
-    gotPerspective.
-
     gotRootObject and gotPerspective will be called each time the object is
     received (once per successful connection attempt). You will probably want
     to use obj.notifyOnDisconnect to find out when the connection is lost.
@@ -42,11 +32,6 @@ class ReconnectingPBClientFactory(PBClientFactory,
     To use me, subclass, then hand an instance to a connector (like
     TCPClient).
     """
-
-    def __init__(self):
-        PBClientFactory.__init__(self)
-        self._doingLogin = False
-        self._doingGetPerspective = False
 
     def clientConnectionFailed(self, connector, reason):
         PBClientFactory.clientConnectionFailed(self, connector, reason)
@@ -66,34 +51,8 @@ class ReconnectingPBClientFactory(PBClientFactory,
     def clientConnectionMade(self, broker):
         self.resetDelay()
         PBClientFactory.clientConnectionMade(self, broker)
-        if self._doingLogin:
-            self.doLogin(self._root)
-        if self._doingGetPerspective:
-            self.doGetPerspective(self._root)
+        self.doLogin(self._root)
         self.gotRootObject(self._root)
-
-    # oldcred methods
-
-    def getPerspective(self, *args):
-        raise RuntimeError, "getPerspective is one-shot: use startGettingPerspective instead"
-
-    def startGettingPerspective(self, username, password, serviceName,
-                                perspectiveName=None, client=None):
-        self._doingGetPerspective = True
-        if perspectiveName == None:
-            perspectiveName = username
-        self._oldcredArgs = (username, password, serviceName,
-                             perspectiveName, client)
-
-    def doGetPerspective(self, root):
-        # oldcred getPerspective()
-        (username, password,
-         serviceName, perspectiveName, client) = self._oldcredArgs
-        d = self._cbAuthIdentity(root, username, password)
-        d.addCallback(self._cbGetPerspective,
-                      serviceName, perspectiveName, client)
-        d.addCallbacks(self.gotPerspective, self.failedToGetPerspective)
-
 
     # newcred methods
 
@@ -103,7 +62,6 @@ class ReconnectingPBClientFactory(PBClientFactory,
     def startLogin(self, credentials, client=None):
         self._credentials = credentials
         self._client = client
-        self._doingLogin = True
 
     def doLogin(self, root):
         # newcred login()
