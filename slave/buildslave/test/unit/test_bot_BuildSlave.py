@@ -9,8 +9,6 @@ from zope.interface import implements
 
 from buildslave import bot
 
-# TODO: remove [gG]etPerspective stuff from pbutil
-
 # I don't see any simple way to test the PB equipment without actually setting
 # up a TCP connection.  This just tests that the PB code will connect and can
 # execute a basic ping.  The rest is done without TCP (or PB) in other test modules.
@@ -101,7 +99,7 @@ class TestBuildSlave(unittest.TestCase):
         port = self.start_master(persp, on_attachment=call_print)
         self.buildslave = bot.BuildSlave("localhost", port,
                 "testy", "westy", self.basedir,
-                keepalive=10, keepaliveTimeout=5, usePTY=False)
+                keepalive=0, usePTY=False, umask=022)
         self.buildslave.startService()
 
         # and wait for the result of the print
