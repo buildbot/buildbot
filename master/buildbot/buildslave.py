@@ -7,9 +7,8 @@ from zope.interface import implements
 from twisted.python import log
 from twisted.internet import defer, reactor
 from twisted.application import service
-import twisted.spread.pb
+from twisted.spread import pb
 
-from buildbot.pbutil import NewCredPerspective
 from buildbot.status.builder import SlaveStatus
 from buildbot.status.mail import MailNotifier
 from buildbot.interfaces import IBuildSlave, ILatentBuildSlave
@@ -20,7 +19,7 @@ import sys
 if sys.version_info[:3] < (2,4,0):
     from sets import Set as set
 
-class AbstractBuildSlave(NewCredPerspective, service.MultiService):
+class AbstractBuildSlave(pb.Avatar, service.MultiService):
     """This is the master-side representative for a remote buildbot slave.
     There is exactly one for each slave described in the config file (the
     c['slaves'] list). When buildbots connect in (.attach), they get a
@@ -473,7 +472,7 @@ class AbstractBuildSlave(NewCredPerspective, service.MultiService):
             # it's because the connection was lost, that means the slave
             # shutdown as expected.
             def _errback(why):
-                if why.check(twisted.spread.pb.PBConnectionLost):
+                if why.check(pb.PBConnectionLost):
                     log.msg("Lost connection to %s" % self.slavename)
                 else:
                     log.err("Unexpected error when trying to shutdown %s" % self.slavename)
