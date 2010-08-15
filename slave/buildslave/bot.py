@@ -48,10 +48,9 @@ class SlaveBuilder(pb.Referenceable, service.Service):
     # when the step is started
     remoteStep = None
 
-    def __init__(self, name, not_really):
+    def __init__(self, name):
         #service.Service.__init__(self) # Service has no __init__ method
         self.setName(name)
-        self.not_really = not_really
 
     def __repr__(self):
         return "<SlaveBuilder '%s' at %d>" % (self.name, id(self))
@@ -231,11 +230,10 @@ class Bot(pb.Referenceable, service.MultiService):
     usePTY = None
     name = "bot"
 
-    def __init__(self, basedir, usePTY, not_really=0, unicode_encoding=None):
+    def __init__(self, basedir, usePTY, unicode_encoding=None):
         service.MultiService.__init__(self)
         self.basedir = basedir
         self.usePTY = usePTY
-        self.not_really = not_really
         self.unicode_encoding = unicode_encoding or sys.getfilesystemencoding() or 'ascii'
         self.builders = {}
 
@@ -262,7 +260,7 @@ class Bot(pb.Referenceable, service.MultiService):
                             % (name, b.builddir, builddir))
                     b.setBuilddir(builddir)
             else:
-                b = SlaveBuilder(name, self.not_really)
+                b = SlaveBuilder(name)
                 b.usePTY = self.usePTY
                 b.unicode_encoding = self.unicode_encoding
                 b.setServiceParent(self)
