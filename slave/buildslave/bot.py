@@ -243,9 +243,6 @@ class Bot(pb.Referenceable, service.MultiService):
         assert os.path.isdir(self.basedir)
         service.MultiService.startService(self)
 
-    def remote_getDirs(self):
-        return filter(lambda d: os.path.isdir(d), os.listdir(self.basedir))
-
     def remote_getCommands(self):
         commands = dict([
             (n, base.command_version)

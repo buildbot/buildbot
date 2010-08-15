@@ -427,9 +427,6 @@ reference to the master-side BuildSlave object in @code{self.perspective}.
 The slave-side object has the following remote methods:
 
 @table @code
-@item remote_getDirs
-Returns a list of subdirectories of the slave's basedir
-
 @item remote_getCommands
 Returns a list of @code{(name, version)} for all commands the slave recognizes
 
