@@ -440,13 +440,10 @@ arguments are described on the following pages.
 * SVN::
 * Darcs::
 * Mercurial::
-* Arch::
-* Bazaar::
 * Bzr::
 * P4::
 * Git::
 * BitKeeper::
-* Monotone::
 @end menu
 
 @node CVS
@@ -761,59 +758,6 @@ update to the branch.
 @end table
 
 
-@node Arch
-@subsubsection Arch
-
-@cindex Arch Checkout
-@bsindex buildbot.steps.source.Arch
-
-Because Arch is now deprecated in favor of bzr, this step is slated to be
-removed in Buildbot-0.8.2.
-
-The @code{Arch} build step performs an @uref{http://gnuarch.org/,
-Arch} checkout or update using the @code{tla} client.
-
-The step takes the following arguments:
-
-@table @code
-@item url
-(required): this specifies the URL at which the Arch source archive is
-available.
-
-@item version
-(required): this specifies which ``development line'' (like a branch)
-should be used. This provides the default branch name, but individual
-builds may specify a different one.
-
-@item archive
-(optional): Each repository knows its own archive name. If this
-parameter is provided, it must match the repository's archive name.
-The parameter is accepted for compatibility with the @code{Bazaar}
-step, below.
-
-@end table
-
-@node Bazaar
-@subsubsection Bazaar
-
-@cindex Bazaar Checkout
-@bsindex buildbot.steps.source.Bazaar
-
-
-@code{Bazaar} is an alternate implementation of the Arch VC system,
-which uses a client named @code{baz}. The checkout semantics are just
-different enough from @code{tla} that there is a separate BuildStep for
-it.
-
-Because Arch is now deprecated in favor of bzr, this step is slated to be
-removed in Buildbot-0.8.2.
-
-It takes exactly the same arguments as @code{Arch}, except that the
-@code{archive=} parameter is required. (baz does not emit the archive
-name when you do @code{baz register-archive}, so we must provide it
-ourselves).
-
-
 @node Bzr
 @subsubsection Bzr
 
@@ -959,37 +903,6 @@ BitKeeper source repository is available.
 (required unless @code{repourl} is provided): the base repository URL,
 to which a branch name will be appended. It should probably end in a
 slash.
-
-@end table
-
-@node Monotone
-@subsubsection Monotone
-
-@cindex Monotone Checkout
-@bsindex buildbot.steps.source.Monotone
-
-The @code{Monotone} build step gets source from a @uref{http://monotone.ca/, Monotone}
-repository.  Note that Monotone support in Buildbot is not currently maintained, has some
-serious deficiencies, and is slated to be removed in Buildbot-0.8.2.  If a maintainer steps
-forward, this removal may be avoided.
-
-Note that this step is incapable of building the "latest" commit on any branch,
-and will crash if made to do so.  It must always be given an explicit revision.
-
-The step takes the following arguments:
-
-@table @code
-@item server_addr
-(required): the address of the server to pull from
-
-@item branch
-(required): the branch to check out
-
-@item db_path
-(required): the local database path to use - an absolute path
-
-@item monotone
-the path to the @code{mtn} executable on the slave
 
 @end table
 

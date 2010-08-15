@@ -868,7 +868,7 @@ class TryOptions(OptionsWithOptionsFile):
          "Base revision to use instead of scanning a local tree."],
 
         ["vc", None, None,
-         "The VC system in use, one of: cvs,svn,tla,baz,darcs,p4"],
+         "The VC system in use, one of: cvs,svn,bzr,darcs,p4"],
         ["branch", None, None,
          "The branch in use, for VC systems that can't figure it out"
          " themselves"],

@@ -16,7 +16,7 @@ from buildslave.commands import utils
 # this used to be a CVS $-style "Revision" auto-updated keyword, but since I
 # moved to Darcs as the primary repository, this is updated manually each
 # time this file is changed. The last cvs_ver that was here was 1.51 .
-command_version = "2.9"
+command_version = "2.11"
 
 # version history:
 #  >=1.17: commands are interruptable
@@ -43,6 +43,7 @@ command_version = "2.9"
 #  >= 2.8: added username and password args to SVN class
 #  >= 2.9: add depth arg to SVN class
 #  >= 2.10: CVS can handle 'extra_options' and 'export_options'
+#  >= 2.11: Arch, Bazaar, and Monotone removed
 
 class Command:
     implements(ISlaveCommand)

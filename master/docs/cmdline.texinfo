@@ -224,14 +224,14 @@ The @command{try} command also needs to know how to take the
 developer's current tree and extract the (revision, patch)
 source-stamp pair. Each VC system uses a different process, so you
 start by telling the @command{try} command which VC system you are
-using, with an argument like @option{--vc=cvs} or @option{--vc=tla}.
+using, with an argument like @option{--vc=cvs} or @option{--vc=git}.
 This can also be provided as @code{try_vc} in
 @file{.buildbot/options}.
 
 @c The order of this list comes from the end of scripts/tryclient.py
 
-The following names are recognized: @code{cvs} @code{svn} @code{baz}
-@code{tla} @code{bzr} @code{hg} @code{darcs} @code{git} @code{p4}
+The following names are recognized: @code{cvs} @code{svn}
+@code{bzr} @code{hg} @code{darcs} @code{git} @code{p4}
 
 
 @heading finding the top of the tree
@@ -258,7 +258,7 @@ for each tree you use, so it may be more convenient to use the
 @code{try_topfile} approach instead.
 
 Other VC systems which work on full projects instead of individual
-directories (tla, baz, darcs, monotone, mercurial, git) do not require
+directories (darcs, mercurial, git) do not require
 @command{try} to know the top directory, so the @option{--try-topfile}
 and @option{--try-topdir} arguments will be ignored.
 @c is this true? I think I currently require topdirs all the time.
@@ -269,8 +269,7 @@ abort with an error message.
 @heading determining the branch name
 
 Some VC systems record the branch information in a way that ``try''
-can locate it, in particular Arch (both @command{tla} and
-@command{baz}). For the others, if you are using something other than
+can locate it.  For the others, if you are using something other than
 the default branch, you will have to tell the buildbot which branch
 your tree is using. You can do this with either the @option{--branch}
 argument, or a @option{try_branch} entry in the
@@ -303,19 +302,6 @@ the latest revision, then @emph{backwards} patches applied to bring it
 ``back'' to the version you actually checked out (plus your actual
 code changes), but this will still result in the correct tree being
 used for the build.
-
-@item baz
-@command{try} does a @code{baz tree-id} to determine the
-fully-qualified version and patch identifier for the tree
-(ARCHIVE/VERSION--patch-NN), and uses the VERSION--patch-NN component
-as the base revision. It then does a @code{baz diff} to obtain the
-patch.
-
-@item tla
-@command{try} does a @code{tla tree-version} to get the
-fully-qualified version identifier (ARCHIVE/VERSION), then takes the
-first line of @code{tla logs --reverse} to figure out the base
-revision. Then it does @code{tla changes --diffs} to obtain the patch.
 
 @item bzr
 @command{try} does a @code{bzr revision-info} to find the base revision,
@@ -361,7 +347,6 @@ the base revision.
 @c upstream repository. Perhaps we need to add a --remote option to
 @c specify the remote tracking branch to generate a diff against.
 
-@c TODO: monotone
 @end table
 
 @heading waiting for results
