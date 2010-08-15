@@ -435,14 +435,12 @@ class BotFactory(ReconnectingPBClientFactory):
 
 
 class BuildSlave(service.MultiService):
-    botClass = Bot
-
     def __init__(self, buildmaster_host, port, name, passwd, basedir,
                  keepalive, usePTY, keepaliveTimeout=30, umask=None,
                  maxdelay=300, unicode_encoding=None):
         log.msg("Creating BuildSlave -- version: %s" % buildslave.version)
         service.MultiService.__init__(self)
-        bot = self.botClass(basedir, usePTY, unicode_encoding=unicode_encoding)
+        bot = Bot(basedir, usePTY, unicode_encoding=unicode_encoding)
         bot.setServiceParent(self)
         self.bot = bot
         if keepalive == 0:
@@ -452,15 +450,6 @@ class BuildSlave(service.MultiService):
         bf.startLogin(credentials.UsernamePassword(name, passwd), client=bot)
         self.connection = c = internet.TCPClient(buildmaster_host, port, bf)
         c.setServiceParent(self)
-
-    def waitUntilDisconnected(self):
-        # utility method for testing. Returns a Deferred that will fire when
-        # we lose the connection to the master.
-        if not self.bf.perspective:
-            return defer.succeed(None)
-        d = defer.Deferred()
-        self.bf.perspective.notifyOnDisconnect(lambda res: d.callback(None))
-        return d
 
     def startService(self):
         if self.umask is not None:
