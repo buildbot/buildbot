@@ -92,9 +92,6 @@ class SlaveBuilder(pb.Referenceable, service.Service):
         log.msg("SlaveBuilder.remote_print(%s): message from master: %s" %
                 (self.name, message))
 
-    def remote_ping(self):
-        log.msg("SlaveBuilder.remote_ping(%s)" % self)
-
     def lostRemote(self, remote):
         log.msg("lost remote")
         self.remote = None
