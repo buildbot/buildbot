@@ -97,28 +97,27 @@ class AbstractSlaveBuilder(pb.Referenceable):
             assert self.slave == slave
         log.msg("Buildslave %s attached to %s" % (slave.slavename,
                                                   self.builder_name))
-        d = self.remote.callRemote("setMaster", self)
-        d.addErrback(self._attachFailure, "Builder.setMaster")
-        d.addCallback(self._attached2)
+        def _attachFailure(why, where):
+            log.msg(where)
+            log.err(why)
+            return why
+
+        d = defer.succeed(None)
+        def doSetMaster(res):
+            d = self.remote.callRemote("setMaster", self)
+            #d.addErrback(_attachFailure, "Builder.setMaster")
+            return d
+        d.addCallback(doSetMaster)
+        def doPrint(res):
+            d = self.remote.callRemote("print", "attached")
+            #d.addErrback(_attachFailure, "Builder.print 'attached'")
+            return d
+        d.addCallback(doPrint)
+        def setIdle(res):
+            self.state = IDLE
+            return self
+        d.addCallback(setIdle)
         return d
-
-    def _attached2(self, res):
-        d = self.remote.callRemote("print", "attached")
-        d.addErrback(self._attachFailure, "Builder.print 'attached'")
-        d.addCallback(self._attached3)
-        return d
-
-    def _attached3(self, res):
-        # now we say they're really attached
-        self.state = IDLE
-
-        return self
-
-    def _attachFailure(self, why, where):
-        assert isinstance(where, str)
-        log.msg(where)
-        log.err(why)
-        return why
 
     def prepare(self, builder_status):
         if not self.slave.acquireLocks():
@@ -758,8 +757,9 @@ class Builder(pb.Referenceable, service.MultiService):
         # TODO: make this .addSlaveEvent?
         # TODO: remove from self.slaves (except that detached() should get
         #       run first, right?)
+        print why
         self.builder_status.addPointEvent(['failed', 'connect',
-                                           slave.slave.slavename])
+                                           slave.slavename])
         # TODO: add an HTMLLogFile of the exception
         self.fireTestEvent('attach', why)
 
