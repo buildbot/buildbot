@@ -87,11 +87,10 @@ class SlaveBuilder(pb.Referenceable, service.Service):
     def remote_setMaster(self, remote):
         self.remote = remote
         self.remote.notifyOnDisconnect(self.lostRemote)
+
     def remote_print(self, message):
         log.msg("SlaveBuilder.remote_print(%s): message from master: %s" %
                 (self.name, message))
-        if message == "ping":
-            return self.remote_ping()
 
     def remote_ping(self):
         log.msg("SlaveBuilder.remote_ping(%s)" % self)
