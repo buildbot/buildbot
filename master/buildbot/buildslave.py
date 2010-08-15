@@ -208,8 +208,8 @@ class AbstractBuildSlave(NewCredPerspective, service.MultiService):
     def attached(self, bot):
         """This is called when the slave connects.
 
-        @return: a Deferred that fires with a suitable pb.IPerspective to
-                 give to the slave (i.e. 'self')"""
+        @return: a Deferred that fires when the attachment is complete
+        """
 
         if self.slave:
             # uh-oh, we've got a duplicate slave. The most likely

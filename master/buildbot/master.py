@@ -434,11 +434,11 @@ class Dispatcher:
             raise ValueError("no perspective for '%s'" % avatarID)
 
         d = defer.maybeDeferred(p.attached, mind)
-        d.addCallback(self._avatarAttached, mind)
+        def _avatarAttached(_, mind):
+            return (pb.IPerspective, p, lambda: p.detached(mind))
+        d.addCallback(_avatarAttached, mind)
         return d
 
-    def _avatarAttached(self, p, mind):
-        return (pb.IPerspective, p, lambda p=p,mind=mind: p.detached(mind))
 
 ########################################
 
