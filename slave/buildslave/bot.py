@@ -12,19 +12,8 @@ from buildslave.util import now
 from buildslave.pbutil import ReconnectingPBClientFactory
 from buildslave.commands import registry, base
 
-class NoCommandRunning(pb.Error):
-    pass
-class WrongCommandRunning(pb.Error):
-    pass
 class UnknownCommand(pb.Error):
     pass
-
-class Master:
-    def __init__(self, host, port, username, password):
-        self.host = host
-        self.port = port
-        self.username = username
-        self.password = password
 
 class SlaveBuild:
 
