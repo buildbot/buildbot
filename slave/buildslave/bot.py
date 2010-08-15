@@ -95,20 +95,6 @@ class SlaveBuilder(pb.Referenceable, service.Service):
 
     def remote_ping(self):
         log.msg("SlaveBuilder.remote_ping(%s)" % self)
-        if self.bot and self.bot.parent:
-            debugOpts = self.bot.parent.debugOpts
-            if debugOpts.get("stallPings"):
-                log.msg(" debug_stallPings")
-                timeout, timers = debugOpts["stallPings"]
-                d = defer.Deferred()
-                t = reactor.callLater(timeout, d.callback, None)
-                timers.append(t)
-                return d
-            if debugOpts.get("failPingOnce"):
-                log.msg(" debug_failPingOnce")
-                class FailPingError(pb.Error): pass
-                del debugOpts['failPingOnce']
-                raise FailPingError("debug_failPingOnce means we should fail")
 
     def lostRemote(self, remote):
         log.msg("lost remote")
@@ -451,22 +437,11 @@ class BotFactory(ReconnectingPBClientFactory):
 class BuildSlave(service.MultiService):
     botClass = Bot
 
-    # debugOpts is a dictionary used during unit tests.
-
-    # debugOpts['stallPings'] can be set to a tuple of (timeout, []). Any
-    # calls to remote_print will stall for 'timeout' seconds before
-    # returning. The DelayedCalls used to implement this are stashed in the
-    # list so they can be cancelled later.
-
-    # debugOpts['failPingOnce'] can be set to True to make the slaveping fail
-    # exactly once.
-
     def __init__(self, buildmaster_host, port, name, passwd, basedir,
                  keepalive, usePTY, keepaliveTimeout=30, umask=None,
-                 maxdelay=300, debugOpts={}, unicode_encoding=None):
+                 maxdelay=300, unicode_encoding=None):
         log.msg("Creating BuildSlave -- version: %s" % buildslave.version)
         service.MultiService.__init__(self)
-        self.debugOpts = debugOpts.copy()
         bot = self.botClass(basedir, usePTY, unicode_encoding=unicode_encoding)
         bot.setServiceParent(self)
         self.bot = bot
