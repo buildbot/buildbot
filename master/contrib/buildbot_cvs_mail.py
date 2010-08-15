@@ -183,7 +183,7 @@ parser.add_option("-R", "--reply-to", dest='replyto', metavar="ADDR",
             Add a "Reply-To: ADDR" header to the email message.
             """))
 parser.add_option("-t", "--testing", action="store_true", dest="amTesting", default=False)
-parser.set_defaults(smtp=smtplib)
+parser.set_defaults(smtplib=smtplib)
 
 def get_options():
     options, args = parser.parse_args()
