@@ -274,7 +274,7 @@ class Bot(pb.Referenceable, service.MultiService):
                 del(self.builders[name])
 
         for d in os.listdir(self.basedir):
-            if os.path.isdir(d):
+            if os.path.isdir(os.path.join(self.basedir, d)):
                 if d not in wanted_dirs:
                     log.msg("I have a leftover directory '%s' that is not "
                             "being used by the buildmaster: you can delete "

@@ -112,12 +112,13 @@ class TestBot(unittest.TestCase):
 
         def remove_my(_):
             d = self.bot.callRemote("setBuilderList", [
-                        ('yourbld', 'yourblddir') ])
+                        ('yourbld', 'yourblddir2') ]) # note new builddir
             def check(builders):
                 self.assertEqual(sorted(builders.keys()), sorted(['yourbld']))
                 # note that build dirs are not deleted..
                 self.assertTrue(os.path.exists(os.path.join(self.basedir, 'myblddir')))
                 self.assertTrue(os.path.exists(os.path.join(self.basedir, 'yourblddir')))
+                self.assertTrue(os.path.exists(os.path.join(self.basedir, 'yourblddir2')))
                 # 'your' should still be the same slavebuilder object
                 self.assertEqual(id(slavebuilders['your']), id(builders['yourbld']))
             d.addCallback(check)
