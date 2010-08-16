@@ -1008,18 +1008,22 @@ class LoggingBuildStep(BuildStep):
     progressMetrics = ('output',)
     logfiles = {}
 
-    parms = BuildStep.parms + ['logfiles', 'lazylogfiles']
+    parms = BuildStep.parms + ['logfiles', 'lazylogfiles', 'log_eval_func']
     cmd = None
 
-    def __init__(self, logfiles={}, lazylogfiles=False, *args, **kwargs):
+    def __init__(self, logfiles={}, lazylogfiles=False, log_eval_func=None,
+                 *args, **kwargs):
         BuildStep.__init__(self, *args, **kwargs)
         self.addFactoryArguments(logfiles=logfiles,
-                                 lazylogfiles=lazylogfiles)
+                                 lazylogfiles=lazylogfiles,
+                                 log_eval_func=log_eval_func)
         # merge a class-level 'logfiles' attribute with one passed in as an
         # argument
         self.logfiles = self.logfiles.copy()
         self.logfiles.update(logfiles)
         self.lazylogfiles = lazylogfiles
+        assert not log_eval_func or callable(log_eval_func)
+        self.log_eval_func = log_eval_func
         self.addLogObserver('stdio', OutputProgressObserver("output"))
 
     def addLogFile(self, logname, filename):
@@ -1144,9 +1148,10 @@ class LoggingBuildStep(BuildStep):
         Override this to, say, declare WARNINGS if there is any stderr
         activity, or to say that rc!=0 is not actually an error."""
 
+        if self.log_eval_func:
+            return self.log_eval_func(cmd, self.step_status)
         if cmd.rc != 0:
             return FAILURE
-        # if cmd.log.getStderr(): return WARNINGS
         return SUCCESS
 
     def getText(self, cmd, results):
@@ -1186,6 +1191,29 @@ class LoggingBuildStep(BuildStep):
         # get more control over the displayed text
         self.step_status.setText(self.getText(cmd, results))
         self.step_status.setText2(self.maybeGetText2(cmd, results))
+
+
+# Parses the logs for a list of regexs. Meant to be invoked like:
+# regexes = ((re.compile(...), FAILURE), (re.compile(...), WARNINGS))
+# self.addStep(ShellCommand,
+#   command=...,
+#   ...,
+#   log_eval_func=lambda c,s: regex_log_evaluator(c, s, regexs)
+# )
+def regex_log_evaluator(cmd, step_status, regexes):
+    worst = SUCCESS
+    for err, possible_status in regexes:
+        # worst_status returns the worse of the two status' passed to it.
+        # we won't be changing "worst" unless possible_status is worse than it,
+        # so we don't even need to check the log if that's the case
+        if worst_status(worst, possible_status) == possible_status:
+            if isinstance(err, (basestring)):
+                err = re.compile(".*%s.*" % err, re.DOTALL)
+            for l in cmd.logs:
+                if err.search(l.getText()):
+                    worst = possible_status
+    return worst
+
 
 # (WithProperties used to be available in this module)
 from buildbot.process.properties import WithProperties
