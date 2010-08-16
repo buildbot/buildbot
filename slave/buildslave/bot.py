@@ -48,6 +48,9 @@ class SlaveBuilder(pb.Referenceable, service.Service):
     # when the step is started
     remoteStep = None
 
+    # useful for replacing the reactor in tests
+    _reactor = reactor
+
     def __init__(self, name):
         #service.Service.__init__(self) # Service has no __init__ method
         self.setName(name)
@@ -221,8 +224,8 @@ class SlaveBuilder(pb.Referenceable, service.Service):
 
 
     def remote_shutdown(self):
-        print "slave shutting down on command from master"
-        reactor.stop()
+        log.msg("slave shutting down on command from master")
+        self._reactor.stop()
 
 
 class Bot(pb.Referenceable, service.MultiService):

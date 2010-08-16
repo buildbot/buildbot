@@ -4,6 +4,7 @@ import shutil
 from twisted.trial import unittest
 from twisted.internet import defer
 from zope.interface import implements
+import mock
 
 import buildslave
 from buildslave import bot
@@ -137,4 +138,43 @@ class TestBot(unittest.TestCase):
             return d
         d.addCallback(add_and_remove)
 
+        return d
+
+class TestSlaveBuilder(unittest.TestCase):
+
+    def setUp(self):
+        self.basedir = os.path.abspath("basedir")
+        if os.path.exists(self.basedir):
+            shutil.rmtree(self.basedir)
+        os.makedirs(self.basedir)
+
+        self.bot = bot.Bot(self.basedir, False)
+        self.bot.startService()
+
+        # get a SlaveBuilder object from the bot and wrap it as a fake remote
+        builders = self.bot.remote_setBuilderList([('sb', 'sb')])
+        self.sb = fakeremote.FakeRemote(builders['sb'])
+
+    def tearDown(self):
+        d = defer.succeed(None)
+        if self.bot and self.bot.running:
+            d.addCallback(lambda _ : self.bot.stopService())
+        if os.path.exists(self.basedir):
+            shutil.rmtree(self.basedir)
+        return d
+
+    def test_print(self):
+        return self.sb.callRemote("print", "Hello, SlaveBuilder.")
+
+    def test_setMaster(self):
+        # not much to check here - what the SlaveBuilder does with the
+        # master is not part of the interface (and, in fact, it does very little)
+        return self.sb.callRemote("setMaster", mock.Mock())
+
+    def test_shutdown(self):
+        self.patch(bot.SlaveBuilder, "_reactor", mock.Mock())
+        d = self.sb.callRemote("shutdown")
+        def check(_):
+            self.assertTrue(bot.SlaveBuilder._reactor.stop.called)
+        d.addCallback(check)
         return d
