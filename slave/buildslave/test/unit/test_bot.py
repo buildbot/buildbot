@@ -2,13 +2,12 @@ import os
 import shutil
 
 from twisted.trial import unittest
-from twisted.spread import pb
-from twisted.internet import reactor, defer
-from twisted.cred import checkers, portal
+from twisted.internet import defer
 from zope.interface import implements
 
 import buildslave
 from buildslave import bot
+from buildslave.test.util import fakeremote
 
 class TestBot(unittest.TestCase):
 
@@ -18,19 +17,15 @@ class TestBot(unittest.TestCase):
             shutil.rmtree(self.basedir)
         os.makedirs(self.basedir)
 
-        self.bot = bot.Bot(self.basedir, False)
-        self.bot.startService()
+        self.real_bot = bot.Bot(self.basedir, False)
+        self.real_bot.startService()
 
-        # patch on a callRemote method
-        def callRemote(meth, *args, **kwargs):
-            fn = getattr(self.bot, "remote_" + meth)
-            return defer.maybeDeferred(fn, *args, **kwargs)
-        self.bot.callRemote = callRemote
+        self.bot = fakeremote.FakeRemote(self.real_bot)
 
     def tearDown(self):
         d = defer.succeed(None)
-        if self.bot and self.bot.running:
-            d.addCallback(lambda _ : self.bot.stopService())
+        if self.real_bot and self.real_bot.running:
+            d.addCallback(lambda _ : self.real_bot.stopService())
         if os.path.exists(self.basedir):
             shutil.rmtree(self.basedir)
         return d
@@ -68,3 +63,11 @@ class TestBot(unittest.TestCase):
             self.assertEqual(info, {})
         d.addCallback(check)
         return d
+
+    def test_setBuilderList_empty(self):
+        d = self.bot.callRemote("setBuilderList", [])
+        def check(builders):
+            self.assertEqual(builders, {})
+        d.addCallback(check)
+        return d
+
