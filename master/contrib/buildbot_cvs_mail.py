@@ -45,10 +45,10 @@ COMMASPACE = ', '
 
 PROGRAM = sys.argv[0]
 
-class SmtplibMock():
+class SmtplibMock:
     """I stand in for smtplib for testing purposes.
     """
-    class SMTP():
+    class SMTP:
         """I stand in for smtplib.SMTP connection for testing purposes.
         I copy the message to stdout.
         """
