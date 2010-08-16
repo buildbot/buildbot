@@ -13,6 +13,13 @@ The Buildmaster now requires Jinja-2.1 or higher.
 This extends the support already included for EC2 buildslaves to include any
 virtualization platform supported by libvirt.
 
+** New Change source
+
+*** CVSMaildirSource
+
+This parses mail sent by buildbot_cvs_mail.py in contrib directory.
+See docs for more info.
+
 ** New Steps
 
 *** VC++ 9, VS2008, VCExpress9 - part of the vstudio suite of steps
@@ -20,6 +27,11 @@ virtualization platform supported by libvirt.
 ** Deprecations / Removals
 
 *** Removed sendchange's --revision_number argument (use --revision)
+*** Depreciating old CVS MairdirSources:
+    Please post to the list if you are using
+      FreshCVS   FCMaildirSource
+      Syncmail   SyncmailMaildirSource
+      Bonsai     BonsaiMaildirSource
 
 * Release 0.8.1 (June 16, 2010)
 
