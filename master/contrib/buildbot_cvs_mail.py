@@ -236,5 +236,3 @@ def main():
 if __name__ == '__main__':
     ret = main()
     sys.exit(ret)
-
-# TODO: make sure tests really run
