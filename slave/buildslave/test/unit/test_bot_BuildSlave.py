@@ -14,14 +14,13 @@ from buildslave import bot
 # execute a basic ping.  The rest is done without TCP (or PB) in other test modules.
 
 class MasterPerspective(pb.Avatar):
-    def __init__(self, fire_on_keepalive=None):
-        self.fire_on_keepalive = fire_on_keepalive
+    def __init__(self, on_keepalive=None):
+        self.on_keepalive = on_keepalive
 
     def perspective_keepalive(self):
-        if self.fire_on_keepalive:
-            d = self.fire_on_keepalive
-            self.fire_on_keepalive = None
-            d.callback(None)
+        if self.on_keepalive:
+            on_keepalive, self.on_keepalive = self.on_keepalive, None
+            on_keepalive()
 
 class MasterRealm:
     def __init__(self, perspective, on_attachment):
@@ -71,9 +70,13 @@ class TestBuildSlave(unittest.TestCase):
         return self.listeningport.socket.getsockname()[1]
 
     def test_keepalive_called(self):
-        # set up to call this deferred on receipt of a keepalive
+        # set up to fire this deferred on receipt of a keepalive
         d = defer.Deferred()
-        persp = MasterPerspective(fire_on_keepalive=d)
+        def on_keepalive():
+            # need to wait long enough for the remote_keepalive call to
+            # finish, but not for another one to queue up
+            reactor.callLater(0.01, d.callback, None)
+        persp = MasterPerspective(on_keepalive=on_keepalive)
 
         # start up the master and slave, with a very short keepalive
         port = self.start_master(persp)
