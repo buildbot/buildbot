@@ -29,7 +29,6 @@ __version__ = '$Revision: 1.3 $'
 
 import os
 import re
-import pwd
 import sys
 import time
 import getopt
@@ -40,6 +39,12 @@ import optparse
 
 from cStringIO import StringIO
 from email.Utils import formataddr
+
+try:
+    import pwd
+except:
+    # pwd is not available on Windows..
+    pwd = None
 
 COMMASPACE = ', '
 
@@ -72,9 +77,14 @@ def send_mail(options):
         # Create the smtp connection to the localhost
         conn = options.smtplib.SMTP()
         conn.connect(options.mailhost, options.mailport)
-        pwinfo = pwd.getpwuid(os.getuid())
-        user = pwinfo[0]
-        name = pwinfo[4]
+        if pwd:
+            pwinfo = pwd.getpwuid(os.getuid())
+            user = pwinfo[0]
+            name = pwinfo[4]
+        else:
+            user = 'cvs'
+            name = 'CVS'
+
         domain = options.fromhost or socket.getfqdn()
         address = '%s@%s' % (user, domain)
         s = StringIO()
