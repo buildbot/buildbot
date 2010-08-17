@@ -30,6 +30,7 @@ class MasterRealm:
     implements(portal.IRealm)
     def requestAvatar(self, avatarId, mind, *interfaces):
         assert pb.IPerspective in interfaces
+        self.mind = mind
         self.perspective.mind = mind
         d = defer.succeed(None)
         if self.on_attachment:
@@ -39,9 +40,13 @@ class MasterRealm:
         d.addCallback(returnAvatar)
         return d
 
+    def shutdown(self):
+        return self.mind.broker.transport.loseConnection()
+
 class TestBuildSlave(unittest.TestCase):
 
     def setUp(self):
+        self.realm = None
         self.buildslave = None
         self.listeningport = None
 
@@ -52,6 +57,8 @@ class TestBuildSlave(unittest.TestCase):
 
     def tearDown(self):
         d = defer.succeed(None)
+        if self.realm:
+            d.addCallback(lambda _ : self.realm.shutdown())
         if self.buildslave and self.buildslave.running:
             d.addCallback(lambda _ : self.buildslave.stopService())
         if self.listeningport:
