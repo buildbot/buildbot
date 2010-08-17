@@ -57,9 +57,11 @@ class Change:
             return unicode(x)
 
         self.revision = none_or_unicode(revision)
-        if when is None:
-            when = util.now()
-        self.when = when
+        now = util.now()
+        if when is None or when > now:
+            self.when = now
+        else:
+            self.when = when
         self.branch = none_or_unicode(branch)
         self.category = none_or_unicode(category)
         self.revlink = revlink
