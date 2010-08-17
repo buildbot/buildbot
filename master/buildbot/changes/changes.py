@@ -58,7 +58,12 @@ class Change:
 
         self.revision = none_or_unicode(revision)
         now = util.now()
-        if when is None or when > now:
+        if when is None:
+            self.when = now
+        elif when > now:
+            # this happens when the committing system has an incorrect clock, for example.
+            # handle it gracefully
+            log.msg("received a Change with when > now; assuming the change happened now")
             self.when = now
         else:
             self.when = when
