@@ -98,12 +98,7 @@
 
 {% if authz.advertiseAction('forceBuild') %}
   <h2>Force build</h2>
-  {% if connected_slaves %}
-    {{ forms.force_build(builder_url+"/force", authz, False) }}
-  {% else %}
-    <p>All buildslaves appear to be offline, so it's not possible
-    to force this build to execute at this time.</p>
-  {% endif %}
+  {{ forms.force_build(builder_url+"/force", authz, False) }}
 {% endif %}
 
 </div>
