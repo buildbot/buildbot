@@ -10,11 +10,11 @@ from buildbot.steps.transfer import StringDownload, JSONStringDownload, JSONProp
 
 class TestFileUpload(unittest.TestCase):
     def setUp(self):
-        self.fd, self.destfile = tempfile.mkstemp()
+        fd, self.destfile = tempfile.mkstemp()
+        os.close(fd)
         os.unlink(self.destfile)
 
     def tearDown(self):
-        os.close(self.fd)
         os.unlink(self.destfile)
 
     def testBasic(self):
