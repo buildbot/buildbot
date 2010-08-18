@@ -183,7 +183,7 @@ class SlaveBuilder(pb.Referenceable, service.Service):
 
     def _ackFailed(self, why, where):
         log.msg("SlaveBuilder._ackFailed:", where)
-        #log.err(why) # we don't really care
+        log.err(why) # we don't really care
 
 
     # this is fired by the Deferred attached to each Command

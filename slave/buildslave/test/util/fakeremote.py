@@ -11,3 +11,6 @@ class FakeRemote:
     def callRemote(self, meth, *args, **kwargs):
         fn = getattr(self.original, self.method_prefix + meth)
         return defer.maybeDeferred(fn, *args, **kwargs)
+
+    def notifyOnDisconnect(self, what): pass
+    def dontNotifyOnDisconnect(self, what): pass

@@ -6,9 +6,10 @@ from twisted.internet import defer
 from zope.interface import implements
 import mock
 
+from buildslave.test.util import fakeremote, command
+from buildslave.test.fake.runprocess import Expect
 import buildslave
 from buildslave import bot
-from buildslave.test.util import fakeremote
 
 class TestBot(unittest.TestCase):
 
@@ -140,7 +141,23 @@ class TestBot(unittest.TestCase):
 
         return d
 
-class TestSlaveBuilder(unittest.TestCase):
+class FakeStep(object):
+    "A fake master-side BuildStep that records its activities."
+    def __init__(self):
+        self.finished_d = defer.Deferred()
+        self.actions = []
+
+    def wait_for_finish(self):
+        return self.finished_d
+
+    def remote_update(self, updates):
+        self.actions.append(["update", updates])
+
+    def remote_complete(self, f):
+        self.actions.append(["complete", f])
+        self.finished_d.callback(None)
+
+class TestSlaveBuilder(command.CommandTestMixin, unittest.TestCase):
 
     def setUp(self):
         self.basedir = os.path.abspath("basedir")
@@ -182,3 +199,33 @@ class TestSlaveBuilder(unittest.TestCase):
 
     def test_startBuild(self):
         return self.sb.callRemote("startBuild")
+
+    def test_startCommand(self):
+        # set up a fake step to receive updates
+        st = FakeStep()
+
+        # patch runprocess to handle the 'echo', below
+        self.patch_runprocess(
+            Expect([ 'echo', 'hello' ], os.path.join(self.basedir, 'sb', 'workdir'))
+            + { 'hdr' : 'headers' } + { 'stdout' : 'hello\n' } + { 'rc' : 0 }
+            + 0,
+        )
+
+        d = defer.succeed(None)
+        def do_start(_):
+            return self.sb.callRemote("startCommand", fakeremote.FakeRemote(st),
+                                      "13", "shell", dict(
+                                                command=[ 'echo', 'hello' ],
+                                                workdir='workdir',
+                                            ))
+        d.addCallback(do_start)
+        d.addCallback(lambda _ : st.wait_for_finish())
+        def check(_):
+            self.assertEqual(st.actions, [
+                         ['update', [[{'hdr': 'headers'}, 0]]],
+                         ['update', [[{'stdout': 'hello\n'}, 0]]],
+                         ['update', [[{'rc': 0}, 0]]],
+                         ['complete', None],
+                    ])
+        d.addCallback(check)
+        return d
