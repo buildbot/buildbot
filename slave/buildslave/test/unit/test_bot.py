@@ -172,9 +172,13 @@ class TestSlaveBuilder(unittest.TestCase):
         return self.sb.callRemote("setMaster", mock.Mock())
 
     def test_shutdown(self):
+        # don't *actually* shut down the reactor - that would be silly
         self.patch(bot.SlaveBuilder, "_reactor", mock.Mock())
         d = self.sb.callRemote("shutdown")
         def check(_):
             self.assertTrue(bot.SlaveBuilder._reactor.stop.called)
         d.addCallback(check)
         return d
+
+    def test_startBuild(self):
+        return self.sb.callRemote("startBuild")

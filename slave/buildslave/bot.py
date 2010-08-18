@@ -15,14 +15,6 @@ from buildslave.commands import registry, base
 class UnknownCommand(pb.Error):
     pass
 
-class SlaveBuild:
-
-    """This is an object that can hold state from one step to another in the
-    same build. All SlaveCommands have access to it.
-    """
-    def __init__(self, builder):
-        self.builder = builder
-
 class SlaveBuilder(pb.Referenceable, service.Service):
 
     """This is the local representation of a single Builder: it handles a
@@ -36,9 +28,6 @@ class SlaveBuilder(pb.Referenceable, service.Service):
     # when they attach. We use it to detect when the connection to the master
     # is severed.
     remote = None
-
-    # .build points to a SlaveBuild object, a new one for each build
-    build = None
 
     # .command points to a SlaveCommand instance, and is set while the step
     # is running. We use it to implement the stopBuild method.
@@ -107,11 +96,9 @@ class SlaveBuilder(pb.Referenceable, service.Service):
     # the following are Commands that can be invoked by the master-side
     # Builder
     def remote_startBuild(self):
-        """This is invoked before the first step of any new build is run. It
-        creates a new SlaveBuild object, which holds slave-side state from
-        one step to the next."""
-        self.build = SlaveBuild(self)
-        log.msg("%s.startBuild" % self)
+        """This is invoked before the first step of any new build is run.  It
+        doesn't do much, but masters call it so it's still here."""
+        pass
 
     def remote_startCommand(self, stepref, stepId, command, args):
         """
