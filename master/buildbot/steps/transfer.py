@@ -27,7 +27,8 @@ class _FileWriter(pb.Referenceable):
             os.makedirs(dirname)
 
         self.destfile = destfile
-        self.fp = open(destfile, "wb")
+        fd, self.tmpname = tempfile.mkstemp(dir=dirname)
+        self.fp = os.fdopen(fd, 'wb')
         if mode is not None:
             os.chmod(destfile, mode)
         self.remaining = maxsize
@@ -54,6 +55,8 @@ class _FileWriter(pb.Referenceable):
         """
         self.fp.close()
         self.fp = None
+        os.rename(self.tmpname, self.destfile)
+        self.tmpname = None
 
     def __del__(self):
         # unclean shutdown, the file is probably truncated, so delete it
@@ -62,6 +65,8 @@ class _FileWriter(pb.Referenceable):
         if fp:
             fp.close()
             os.unlink(self.destfile)
+            if self.tmpname and os.path.exists(self.tmpname):
+                os.unlink(self.tmpname)
 
 
 def _extractall(self, path=".", members=None):
