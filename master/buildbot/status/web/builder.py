@@ -36,7 +36,7 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
             b['when'] = util.formatInterval(when)
             b['when_time'] = time.strftime("%H:%M:%S",
                                       time.localtime(time.time() + when))
-                    
+
         step = build.getCurrentStep()
         if step:
             b['current_step'] = step.getName()
@@ -47,12 +47,12 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
         b['stop_url'] = path_to_build(req, build) + '/stop'
 
         return b
-          
+
     def content(self, req, cxt):
         b = self.builder_status
 
         cxt['name'] = b.getName()
-        
+
         slaves = b.getSlaves()
         connected_slaves = [s for s in slaves if s.isConnected()]
 
@@ -267,7 +267,7 @@ class BuildersResource(HtmlResource):
 
         cxt['branches'] = branches
         bs = cxt['builders'] = []
-        
+
         building = 0
         online = 0
         base_builders_url = path_to_root(req) + "builders/"
@@ -288,7 +288,7 @@ class BuildersResource(HtmlResource):
                     label = None
                 if not label or len(str(label)) > 20:
                     label = "#%d" % b.getNumber()
-                
+
                 bld['build_label'] = label
                 bld['build_text'] = " ".join(b.getText())
                 bld['build_css_class'] = build_get_class(b)
@@ -302,14 +302,14 @@ class BuildersResource(HtmlResource):
                 online += 1
             elif builder_status != "offline":
                 online += 1
-                
+
         cxt['authz'] = self.getAuthz(req)
         cxt['num_building'] = building
         cxt['num_online'] = online
 
         template = req.site.buildbot_service.templates.get_template("builders.html")
         return template.render(**cxt)
-    
+
     def getChild(self, path, req):
         s = self.getStatus(req)
         if path in s.getBuilderNames():
