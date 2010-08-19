@@ -1,8 +1,55 @@
+This section describes command-line tools available after buildbot
+installation. Since version 0.8 the one-for-all @command{buildbot}
+command-line tool was divided into two parts namely @command{buildbot}
+and @command{buildslave}. The last one was separated from main
+command-line tool to minimize dependencies required for running a
+buildslave while leaving all other functions to @command{buildbot} tool.
+
+Every command-line tool has a list of global options and a set of commands
+which have their own options. One can run these tools in the following way:
+
+@example
+buildbot [global options] @var{command} [command options]
+@end example
+
+Global options are the same for both tools which perform the following
+actions:
+@table @code
+
+@item @code{--help}
+Print general help about available commands and global options and exit.
+All subsequent arguments are ignored.
+
+@item @code{--verbose}
+Set verbose output.
+
+@item @code{--version}
+Print current buildbot version and exit. All subsequent arguments are
+ignored.
+@end table
+
+One can also get help on any command by specifying @var{--help} as a
+command option:
+
+@example
+buildbot @var{command} --help
+@end example
+
+You can also use manual pages for @command{buildbot} and
+@command{buildslave} for quick reference on command-line options.
+
+@menu
+* buildbot::
+* buildslave::
+@end menu
+
+@node buildbot
+@section buildbot
+
 The @command{buildbot} command-line tool can be used to start or stop a
-buildmaster or buildbot, and to interact with a running buildmaster.
-Some of its subcommands are intended for buildmaster admins, while
-some are for developers who are editing the code that the buildbot is
-monitoring.
+buildmaster and to interact with a running buildmaster. Some of its
+subcommands are intended for buildmaster admins, while some are for
+developers who are editing the code that the buildbot is monitoring.
 
 @menu
 * Administrator Tools::
@@ -12,7 +59,7 @@ monitoring.
 @end menu
 
 @node Administrator Tools
-@section Administrator Tools
+@subsection Administrator Tools
 
 The following @command{buildbot} sub-commands are intended for
 buildmaster administrators:
@@ -30,24 +77,11 @@ editing this file.
 buildbot create-master -r BASEDIR
 @end example
 
-@heading create-slave
-
-This creates a new directory and populates it with files that let it
-be used as a buildslave's base directory. You must provide several
-arguments, which are used to create the initial @file{buildbot.tac}
-file.
-
-The @code{-r} option is advisable here, just like for @code{create-master}.
-
-@example
-buildbot create-slave -r @var{BASEDIR} @var{MASTERHOST}:@var{PORT} @var{SLAVENAME} @var{PASSWORD}
-@end example
-
 @heading start
 
-This starts a buildmaster or buildslave which was already created in
-the given base directory. The daemon is launched in the background,
-with events logged to a file named @file{twistd.log}.
+This starts a buildmaster which was already created in the given base
+directory. The daemon is launched in the background, with events logged
+to a file named @file{twistd.log}.
 
 @example
 buildbot start BASEDIR
@@ -55,8 +89,7 @@ buildbot start BASEDIR
 
 @heading stop
 
-This terminates the daemon (either buildmaster or buildslave) running
-in the given directory.
+This terminates the buildmaster running in the given directory.
 
 @example
 buildbot stop BASEDIR
@@ -72,7 +105,7 @@ buildbot sighup BASEDIR
 @end example
 
 @node Developer Tools
-@section Developer Tools
+@subsection Developer Tools
 
 These tools are provided for use by the developers who are working on
 the code that the buildbot is monitoring.
@@ -84,7 +117,7 @@ the code that the buildbot is monitoring.
 @end menu
 
 @node statuslog
-@subsection statuslog
+@subsubsection statuslog
 
 @example
 buildbot statuslog --master @var{MASTERHOST}:@var{PORT}
@@ -109,7 +142,7 @@ The @option{--master} option can also be provided by the
 config directory}).
 
 @node statusgui
-@subsection statusgui
+@subsubsection statusgui
 
 @cindex statusgui
 
@@ -127,7 +160,7 @@ boxes for each Builder that change color as events occur. It uses the same
 @command{buildbot statuslog} command (@pxref{statuslog}).
 
 @node try
-@subsection try
+@subsubsection try
 
 This lets a developer to ask the question ``What would happen if I
 committed this patch right now?''. It runs the unit test suite (across
@@ -147,7 +180,8 @@ detected (or the last success).
 
 There is an alternate form which accepts a pre-made patch file
 (typically the output of a command like 'svn diff'). This ``--diff''
-form does not require a local tree to run from. See @xref{try --diff}.
+form does not require a local tree to run from. See @xref{try}, concerning
+the ``--diff'' command option.
 
 For this command to work, several pieces must be in place: the @xref{Try
 Schedulers}, as well as some client-side configuration.
@@ -282,7 +316,7 @@ revision and computing a patch.
 
 @table @code
 
-@item CVS
+    @item CVS
 
 @command{try} pretends that the tree is up to date. It converts the
 current time into a @code{-D} time specification, uses it as the base
@@ -309,8 +343,8 @@ then a @code{bzr diff -r$base..} to obtain the patch.
 
 @item Mercurial
 @code{hg identify --debug} emits the full revision id (as opposed to
-the common 12-char truncated) which is a SHA1 hash of the current 
-revision's contents. This is used as the base revision. 
+the common 12-char truncated) which is a SHA1 hash of the current
+revision's contents. This is used as the base revision.
 @code{hg diff} then provides the patch relative to that
 revision. For @command{try} to work, your working directory must only
 have patches that are available from the same remotely-available
@@ -358,13 +392,6 @@ exiting. Unless you use the @option{--quiet} option (or
 @code{try_quiet=True}), it will emit a progress message every 60
 seconds until the builds have completed.
 
-@menu
-* try --diff::
-@end menu
-
-@node try --diff
-@subsubsection try --diff
-
 Sometimes you might have a patch from someone else that you want to
 submit to the buildbot. For example, a user may have created a patch
 to fix some specific bug and sent it to you by email. You've inspected
@@ -402,7 +429,7 @@ buildmaster (with @option{--connect}, @option{--tryhost}, etc).
 
 
 @node Other Tools
-@section Other Tools
+@subsection Other Tools
 
 These tools are generally used by buildmaster administrators.
 
@@ -412,7 +439,7 @@ These tools are generally used by buildmaster administrators.
 @end menu
 
 @node sendchange
-@subsection sendchange
+@subsubsection sendchange
 
 This command is used to tell the buildmaster about source changes. It
 is intended to be used from within a commit script, installed on the
@@ -477,7 +504,7 @@ change comments from stdin.
 
 
 @node debugclient
-@subsection debugclient
+@subsubsection debugclient
 
 @example
 buildbot debugclient --master @var{MASTERHOST}:@var{PORT} --passwd @var{DEBUGPW}
@@ -541,7 +568,7 @@ way and these buttons are no longer meaningful.
 
 
 @node .buildbot config directory
-@section .buildbot config directory
+@subsection .buildbot config directory
 
 Many of the @command{buildbot} tools must be told how to contact the
 buildmaster that they interact with. This specification can be
@@ -643,6 +670,42 @@ the requested build to complete.
 
 @end table
 
+@node buildslave
+@section buildslave
 
+@command{buildslave} command-line tool is used for buildslave management
+only and does not provide any additional functionality. One can create,
+start, stop and restart the buildslave.
 
+@heading create-slave
 
+This creates a new directory and populates it with files that let it
+be used as a buildslave's base directory. You must provide several
+arguments, which are used to create the initial @file{buildbot.tac}
+file.
+
+The @code{-r} option is advisable here, just like for @code{create-master}.
+
+@example
+buildslave create-slave -r @var{BASEDIR} @var{MASTERHOST}:@var{PORT} @var{SLAVENAME} @var{PASSWORD}
+@end example
+
+The create-slave options are described in @xref{Buildslave Options}.
+
+@heading start
+
+This starts a buildslave which was already created in the given base
+directory. The daemon is launched in the background, with events logged
+to a file named @file{twistd.log}.
+
+@example
+buildbot start BASEDIR
+@end example
+
+@heading stop
+
+This terminates the daemon buildslave running in the given directory.
+
+@example
+buildbot stop BASEDIR
+@end example
