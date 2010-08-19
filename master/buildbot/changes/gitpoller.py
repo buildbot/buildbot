@@ -200,7 +200,8 @@ class GitPoller(base.ChangeSource):
                                files = self._get_commit_files(rev),
                                comments = self._get_commit_comments(rev),
                                when = commit_timestamp,
-                               branch = self.branch)
+                               branch = self.branch,
+                               repository = self.repourl)
             self.parent.addChange(c)
             self.lastChange = self.lastPoll
             
