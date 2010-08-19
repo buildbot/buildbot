@@ -25,7 +25,8 @@ class GitPoller(base.ChangeSource):
     
     def __init__(self, repourl, branch='master', 
                  workdir=None, pollinterval=10*60, 
-                 gitbin='git', usetimestamps=True):
+                 gitbin='git', usetimestamps=True,
+                 project=''):
         """
         @type  repourl: string
         @param repourl: the url that describes the remote repository,
@@ -48,6 +49,9 @@ class GitPoller(base.ChangeSource):
         @param usetimestamps: parse each revision's commit timestamp (default True), or
                               ignore it in favor of the current time (to appear together
                               in the waterfall page)
+
+        @type  project: string
+        @param project: project name, defaults to ''
         """
         
         self.repourl = repourl
@@ -58,6 +62,7 @@ class GitPoller(base.ChangeSource):
         self.gitbin = gitbin
         self.workdir = workdir;
         self.usetimestamps = usetimestamps
+        self.project = project
         
         if self.workdir == None:
             self.workdir = tempfile.gettempdir() + '/gitpoller_work'
@@ -201,7 +206,8 @@ class GitPoller(base.ChangeSource):
                                comments = self._get_commit_comments(rev),
                                when = commit_timestamp,
                                branch = self.branch,
-                               repository = self.repourl)
+                               repository = self.repourl,
+                               project = self.project)
             self.parent.addChange(c)
             self.lastChange = self.lastPoll
             
