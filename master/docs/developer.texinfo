@@ -517,7 +517,28 @@ To ping a remote SlaveBuilder, the master calls the @code{print} method.
 @heading Building
 
 When a build starts, the msater calls the slave's @code{startBuild} method.
-The BuildStep classes will subsequently call the @code{startCommand} method.
+Each BuildStep instance will subsequently call the @code{startCommand} method,
+passing a reference to itself as the @code{stepRef} parameter.  The
+@code{startCommand} method returns immediately, and the end of the command is
+signalled with a call to a method on the master-side BuildStep object.
+
+@subheading master-side BuildStep methods
+
+@table @code
+@item remote_update
+Update information about the running command.  See below for the format.
+
+@item remote_complete
+Signal that the command is complete, either successfully or with a Twisted failure.
+
+@end table
+
+Updates from the slave are a list of individual update elements.  Each update
+element is, in turn, a list of the form @code{[data, 0]} where the 0 is present
+for historical reasons.  The data is a dictionary, with keys describing the
+contents, e.g., @code{header}, @code{stdout}, or the name of a logfile.  If the
+key is @code{rc}, then the value is the exit status of the command.  No further
+updates should be sent after an @code{rc}.
 
 @node Twisted Idioms
 @section Twisted Idioms

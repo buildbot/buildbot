@@ -74,7 +74,7 @@ class TestBuildSlave(unittest.TestCase):
             checkers.InMemoryUsernamePasswordDatabaseDontUse(testy="westy"))
         self.listeningport = reactor.listenTCP(0, pb.PBServerFactory(p))
         # return the dynamically allocated port number
-        return self.listeningport.socket.getsockname()[1]
+        return self.listeningport.getHost().port
 
     def test_keepalive_called(self):
         # set up to fire this deferred on receipt of a keepalive
@@ -87,7 +87,7 @@ class TestBuildSlave(unittest.TestCase):
 
         # start up the master and slave, with a very short keepalive
         port = self.start_master(persp)
-        self.buildslave = bot.BuildSlave("localhost", port,
+        self.buildslave = bot.BuildSlave("127.0.0.1", port,
                 "testy", "westy", self.basedir,
                 keepalive=0.1, keepaliveTimeout=0.05, usePTY=False)
         self.buildslave.startService()
@@ -107,7 +107,7 @@ class TestBuildSlave(unittest.TestCase):
         # start up the master and slave, with a very short keepalive
         persp = MasterPerspective()
         port = self.start_master(persp, on_attachment=call_print)
-        self.buildslave = bot.BuildSlave("localhost", port,
+        self.buildslave = bot.BuildSlave("127.0.0.1", port,
                 "testy", "westy", self.basedir,
                 keepalive=0, usePTY=False, umask=022)
         self.buildslave.startService()

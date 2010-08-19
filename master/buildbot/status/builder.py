@@ -2590,8 +2590,7 @@ class Status:
                             eventually(observer.requestSubmitted, brs)
                     else:
                         if hasattr(observer, 'requestCancelled'):
-                            eventually(observer.requestCancelled, brs)
-
-
+                            builder = self.getBuilder(buildername)
+                            eventually(observer.requestCancelled, builder, brs)
 
 # vim: set ts=4 sts=4 sw=4 et:

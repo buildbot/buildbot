@@ -1,10 +1,50 @@
+import tempfile, os
 from twisted.trial import unittest
 
 from mock import Mock
 
 from buildbot.process.properties import Properties
 from buildbot.util import json
-from buildbot.steps.transfer import StringDownload, JSONStringDownload, JSONPropertiesDownload
+from buildbot.steps.transfer import StringDownload, JSONStringDownload, JSONPropertiesDownload, \
+    FileUpload
+
+class TestFileUpload(unittest.TestCase):
+    def setUp(self):
+        fd, self.destfile = tempfile.mkstemp()
+        os.close(fd)
+        os.unlink(self.destfile)
+
+    def tearDown(self):
+        os.unlink(self.destfile)
+
+    def testBasic(self):
+        s = FileUpload(slavesrc=__file__, masterdest=self.destfile)
+        s.build = Mock()
+        s.build.getProperties.return_value = Properties()
+        s.build.getSlaveCommandVersion.return_value = 1
+
+        s.step_status = Mock()
+        s.buildslave = Mock()
+        s.remote = Mock()
+
+        s.start()
+
+        for c in s.remote.method_calls:
+            name, command, args = c
+            commandName = command[3]
+            kwargs = command[-1]
+            if commandName == 'uploadFile':
+                self.assertEquals(kwargs['slavesrc'], __file__)
+                writer = kwargs['writer']
+                writer.remote_write(open(__file__, "rb").read())
+                self.assert_(not os.path.exists(self.destfile))
+                writer.remote_close()
+                break
+        else:
+            self.assert_(False, "No uploadFile command found")
+
+        self.assertEquals(open(self.destfile, "rb").read(),
+                open(__file__, "rb").read())
 
 class TestStringDownload(unittest.TestCase):
     def testBasic(self):
