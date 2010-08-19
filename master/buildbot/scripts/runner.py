@@ -2,6 +2,10 @@
 
 # N.B.: don't import anything that might pull in a reactor yet. Some of our
 # subcommands want to load modules that need the gtk reactor.
+#
+# Also don't forget to mirror your changes on command-line options in manual
+# pages and texinfo documentation.
+
 import os, sys, stat, re, time
 import traceback
 from twisted.python import usage, util, runtime
@@ -25,7 +29,7 @@ def isBuildmasterDir(dir):
 
 class OptionsWithOptionsFile(usage.Options):
     # subclasses should set this to a list-of-lists in order to source the
-    # .buildbot/options file.  
+    # .buildbot/options file.
     # buildbotOptions = [ [ 'optfile-name', 'option-name' ], .. ]
     buildbotOptions = None
 
@@ -675,6 +679,8 @@ class DebugClientOptions(OptionsWithOptionsFile):
         [ 'debugMaster', 'passwd' ],
         [ 'master', 'master' ],
         ]
+    def getSynopsis(self):
+        return "Usage:    buildbot debugclient [options]"
 
     def parseArgs(self, *args):
         if len(args) > 0:
@@ -719,6 +725,14 @@ class StatusClientOptions(OptionsWithOptionsFile):
             self['master'] = args[0]
         if len(args) > 1:
             raise usage.UsageError("I wasn't expecting so many arguments")
+
+class StatusLogOptions(StatusClientOptions):
+    def getSynopsis(self):
+        return "Usage:    buildbot statuslog [options]"
+
+class StatusGuiOptions(StatusClientOptions):
+    def getSynopsis(self):
+        return "Usage:    buildbot statusgui [options]"
 
 def statuslog(config):
     from buildbot.clients import base
@@ -876,7 +890,7 @@ class TryOptions(OptionsWithOptionsFile):
         ["builder", "b", None,
          "Run the trial build on this Builder. Can be used multiple times."],
         ["properties", None, None,
-         "A set of properties made available in the build environment, format:prop=value,propb=valueb..."],
+         "A set of properties made available in the build environment, format:prop1=value1,prop2=value2..."],
 
         ["try-topfile", None, None,
          "Name of a file at the top of the tree, used to find the top. Only needed for SVN and CVS."],
@@ -949,6 +963,9 @@ class TryServerOptions(OptionsWithOptionsFile):
     optParameters = [
         ["jobdir", None, None, "the jobdir (maildir) for submitting jobs"],
         ]
+    def getSynopsis(self):
+        return "Usage:    buildbot tryserver [options]"
+
 
 def doTryServer(config):
     import md5
@@ -974,7 +991,7 @@ class CheckConfigOptions(OptionsWithOptionsFile):
     ]
 
     def getSynopsis(self):
-        return "Usage		:buildbot checkconfig [configFile]\n" + \
+        return "Usage:		buildbot checkconfig [configFile]\n" + \
          "		If not specified, 'master.cfg' will be used as 'configFile'"
 
     def parseArgs(self, *args):
@@ -1029,9 +1046,9 @@ class Options(usage.Options):
         ['debugclient', None, DebugClientOptions,
          "Launch a small debug panel GUI"],
 
-        ['statuslog', None, StatusClientOptions,
+        ['statuslog', None, StatusLogOptions,
          "Emit current builder status to stdout"],
-        ['statusgui', None, StatusClientOptions,
+        ['statusgui', None, StatusGuiOptions,
          "Display a small window showing current builder status"],
 
         #['force', None, ForceOptions, "Run a build"],
