@@ -190,6 +190,7 @@ c['buildHorizon'] = 100
 c['eventHorizon'] = 50
 c['logHorizon'] = 40
 c['buildCacheSize'] = 15
+c['changeCacheSize'] = 10000
 @end example
 
 @bcindex c['logHorizon']
@@ -197,6 +198,7 @@ c['buildCacheSize'] = 15
 @bcindex c['changeHorizon']
 @bcindex c['buildHorizon']
 @bcindex c['eventHorizon']
+@bcindex c['changeCacheSize']
 
 Buildbot stores historical information on disk in the form of "Pickle" files
 and compressed logfiles.  In a large installation, these can quickly consume
@@ -217,10 +219,17 @@ than @code{logHorizon} but not older than @code{buildHorizon} will maintain
 their overall status and the status of each step, but the logfiles will be
 deleted.
 
-Finally, the @code{buildCacheSize} gives the number of builds for each builder
+The @code{buildCacheSize} gives the number of builds for each builder
 which are cached in memory.  This number should be larger than the number of
 builds required for commonly-used status displays (the waterfall or grid
 views), so that those displays do not miss the cache on a refresh.
+
+Finally, the @code{changeCacheSize} gives the number of changes to cache in
+memory.  This should be larger than the number of changes that typically arrive
+in the span of a few minutes, otherwise your schedulers will be reloading
+changes from the database every time they run.  For distributed version control
+systems, like git or hg, several thousand changes may arrive at once, so
+setting @code{changeCacheSize} to something like 10,000 isn't unreasonable.
 
 @node Merging BuildRequests
 @subsection Merging BuildRequests
