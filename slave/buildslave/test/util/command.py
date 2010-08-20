@@ -82,6 +82,9 @@ class CommandTestMixin:
         """
         return self.builder.updates
 
+    def add_update(self, upd):
+        self.builder.updates.append(upd)
+
     def patch_runprocess(self, *expectations):
         """
         Patch a fake RunProcess class in, and set the given expectations.
