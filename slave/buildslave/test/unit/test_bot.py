@@ -7,7 +7,8 @@ from twisted.python import failure, log
 from zope.interface import implements
 import mock
 
-from buildslave.test.util import fakeremote, command
+from buildslave.test.util import command
+from buildslave.test.fake.remote import FakeRemote
 from buildslave.test.fake.runprocess import Expect
 import buildslave
 from buildslave import bot
@@ -23,7 +24,7 @@ class TestBot(unittest.TestCase):
         self.real_bot = bot.Bot(self.basedir, False)
         self.real_bot.startService()
 
-        self.bot = fakeremote.FakeRemote(self.real_bot)
+        self.bot = FakeRemote(self.real_bot)
 
     def tearDown(self):
         d = defer.succeed(None)
@@ -171,7 +172,7 @@ class TestSlaveBuilder(command.CommandTestMixin, unittest.TestCase):
 
         # get a SlaveBuilder object from the bot and wrap it as a fake remote
         builders = self.bot.remote_setBuilderList([('sb', 'sb')])
-        self.sb = fakeremote.FakeRemote(builders['sb'])
+        self.sb = FakeRemote(builders['sb'])
 
         self.setUpCommand()
 
@@ -218,7 +219,7 @@ class TestSlaveBuilder(command.CommandTestMixin, unittest.TestCase):
 
         d = defer.succeed(None)
         def do_start(_):
-            return self.sb.callRemote("startCommand", fakeremote.FakeRemote(st),
+            return self.sb.callRemote("startCommand", FakeRemote(st),
                                       "13", "shell", dict(
                                                 command=[ 'echo', 'hello' ],
                                                 workdir='workdir',
@@ -249,7 +250,7 @@ class TestSlaveBuilder(command.CommandTestMixin, unittest.TestCase):
 
         d = defer.succeed(None)
         def do_start(_):
-            return self.sb.callRemote("startCommand", fakeremote.FakeRemote(st),
+            return self.sb.callRemote("startCommand", FakeRemote(st),
                                       "13", "shell", dict(
                                                 command=[ 'sleep', '10' ],
                                                 workdir='workdir',
@@ -291,7 +292,7 @@ class TestSlaveBuilder(command.CommandTestMixin, unittest.TestCase):
 
         d = defer.succeed(None)
         def do_start(_):
-            return self.sb.callRemote("startCommand", fakeremote.FakeRemote(st),
+            return self.sb.callRemote("startCommand", FakeRemote(st),
                                       "13", "shell", dict(
                                                 workdir='workdir',
                                             ))
