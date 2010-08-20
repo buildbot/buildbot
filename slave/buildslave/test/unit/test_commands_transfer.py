@@ -42,7 +42,8 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
         datadir = os.path.join(self.basedir, 'workdir')
         if not os.path.exists(datadir):
             os.makedirs(datadir)
-        open(os.path.join(datadir, 'data'), "w").write("this is some data\n" * 10)
+        # note: use of 'wb' here ensures newlines aren't translated on the upload
+        open(os.path.join(datadir, 'data'), "wb").write("this is some data\n" * 10)
 
         d = self.run_command()
 
