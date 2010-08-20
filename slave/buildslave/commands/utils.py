@@ -1,5 +1,6 @@
 import os
 
+from twisted.python import log
 from twisted.python.procutils import which
 from twisted.python import runtime
 
