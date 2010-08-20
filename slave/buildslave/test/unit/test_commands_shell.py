@@ -6,13 +6,6 @@ from buildslave.test.fake.runprocess import Expect
 from buildslave.test.util.command import CommandTestMixin
 from buildslave.commands import shell
 
-def filter_hdr(updates):
-    def f(u):
-        if 'header' in u:
-            return 'hdr'
-        return u
-    return [ f(u) for u in updates ]
-
 class TestSlaveShellCommand(CommandTestMixin, unittest.TestCase):
 
     def setUp(self):
@@ -37,7 +30,7 @@ class TestSlaveShellCommand(CommandTestMixin, unittest.TestCase):
 
         # note that SlaveShellCommand does not add any extra updates of it own
         def check(_):
-            self.assertEqual(filter_hdr(self.get_updates()),
+            self.assertEqual(self.get_updates(),
                     [{'hdr': 'headers'}, {'stdout': 'hello\n'}, {'rc': 0}],
                     self.builder.show())
         d.addCallback(check)
