@@ -60,6 +60,8 @@ class Build:
 
         self.terminate = False
 
+        self._acquiringLock = None
+
     def setBuilder(self, builder):
         """
         Set the given builder as our builder.
@@ -229,18 +231,23 @@ class Build:
             d.callback(self)
             return d
 
+        self.build_status.buildStarted(self)
         self.acquireLocks().addCallback(self._startBuild_2)
         return d
 
     def acquireLocks(self, res=None):
-        log.msg("acquireLocks(step %s, locks %s)" % (self, self.locks))
+        self._acquiringLock = None
         if not self.locks:
             return defer.succeed(None)
+        if self.stopped:
+            return defer.succeed(None)
+        log.msg("acquireLocks(build %s, locks %s)" % (self, self.locks))
         for lock, access in self.locks:
             if not lock.isAvailable(access):
                 log.msg("Build %s waiting for lock %s" % (self, lock))
                 d = lock.waitUntilMaybeAvailable(self, access)
                 d.addCallback(self.acquireLocks)
+                self._acquiringLock = (lock, access, d)
                 return d
         # all locks are available, claim them all
         for lock, access in self.locks:
@@ -248,7 +255,6 @@ class Build:
         return defer.succeed(None)
 
     def _startBuild_2(self, res):
-        self.build_status.buildStarted(self)
         self.startNextStep()
 
     def setupBuild(self, expectations):
@@ -427,7 +433,16 @@ class Build:
         # TODO: include 'reason' in this point event
         self.builder.builder_status.addPointEvent(['interrupt'])
         self.stopped = True
-        self.currentStep.interrupt(reason)
+        if self.currentStep:
+            self.currentStep.interrupt(reason)
+
+        self.result = FAILURE
+        self.text.append("Interrupted")
+
+        if self._acquiringLock:
+            lock, access, d = self._acquiringLock
+            lock.stopWaitingUntilAvailable(self, access, d)
+            d.callback(None)
 
     def allStepsDone(self):
         if self.result == FAILURE:
@@ -476,9 +491,14 @@ class Build:
         self.deferred = None
 
     def releaseLocks(self):
-        log.msg("releaseLocks(%s): %s" % (self, self.locks))
+        if self.locks:
+            log.msg("releaseLocks(%s): %s" % (self, self.locks))
         for lock, access in self.locks:
-            lock.release(self, access)
+            if lock.isOwner(self, access):
+                lock.release(self, access)
+            else:
+                # This should only happen if we've been interrupted
+                assert self.stopped
 
     # IBuildControl
 

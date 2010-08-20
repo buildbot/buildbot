@@ -38,11 +38,14 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
                                       time.localtime(time.time() + when))
 
         step = build.getCurrentStep()
-        if step:
-            b['current_step'] = step.getName()
-        else:
+        # TODO: is this necessarily the case?
+        if not step:
             b['current_step'] = "[waiting for Lock]"
-            # TODO: is this necessarily the case?
+        else:
+            if step.isWaitingForLocks():
+                b['current_step'] = "%s [waiting for Lock]" % step.getName()
+            else:
+                b['current_step'] = step.getName()
 
         b['stop_url'] = path_to_build(req, build) + '/stop'
 

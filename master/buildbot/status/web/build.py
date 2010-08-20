@@ -33,25 +33,33 @@ class StatusResourceBuild(HtmlResource):
 
         cxt['b'] = b
         cxt['path_to_builder'] = path_to_builder(req, b.getBuilder())
-        
+
         if not b.isFinished():
+            step = b.getCurrentStep()
+            if not step:
+                cxt['current_step'] = "[waiting for Lock]"
+            else:
+                if step.isWaitingForLocks():
+                    cxt['current_step'] = "%s [waiting for Lock]" % step.getName()
+                else:
+                    cxt['current_step'] = step.getName()
             when = b.getETA()
             if when is not None:
                 cxt['when'] = util.formatInterval(when)
                 cxt['when_time'] = time.strftime("%H:%M:%S",
                                                 time.localtime(time.time() + when))
-                
-        else: 
+
+        else:
             cxt['result_css'] = css_classes[b.getResults()]
             if b.getTestResults():
                 cxt['tests_link'] = req.childLink("tests")
-                
+
         ss = cxt['ss'] = b.getSourceStamp()
-        
+
         if ss.branch is None and ss.revision is None and ss.patch is None and not ss.changes:
             cxt['most_recent_rev_build'] = True
-            
-        
+
+
         got_revision = None
         try:
             got_revision = b.getProperty("got_revision")
@@ -76,8 +84,12 @@ class StatusResourceBuild(HtmlResource):
                 (start, end) = s.getTimes()
                 step['time_to_run'] = util.formatInterval(end - start)
             elif s.isStarted():
-                step['css_class'] = "running"
-                step['time_to_run'] = "running"
+                if s.isWaitingForLocks():
+                    step['css_class'] = "waiting"
+                    step['time_to_run'] = "waiting for locks"
+                else:
+                    step['css_class'] = "running"
+                    step['time_to_run'] = "running"
             else:
                 step['css_class'] = "not_started"
                 step['time_to_run'] = ""
