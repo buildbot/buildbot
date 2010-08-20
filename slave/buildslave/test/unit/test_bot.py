@@ -2,7 +2,8 @@ import os
 import shutil
 
 from twisted.trial import unittest
-from twisted.internet import defer
+from twisted.internet import defer, reactor
+from twisted.python import failure, log
 from zope.interface import implements
 import mock
 
@@ -172,7 +173,11 @@ class TestSlaveBuilder(command.CommandTestMixin, unittest.TestCase):
         builders = self.bot.remote_setBuilderList([('sb', 'sb')])
         self.sb = fakeremote.FakeRemote(builders['sb'])
 
+        self.setUpCommand()
+
     def tearDown(self):
+        self.tearDownCommand()
+
         d = defer.succeed(None)
         if self.bot and self.bot.running:
             d.addCallback(lambda _ : self.bot.stopService())
@@ -227,5 +232,73 @@ class TestSlaveBuilder(command.CommandTestMixin, unittest.TestCase):
                          ['update', [[{'rc': 0}, 0]]],
                          ['complete', None],
                     ])
+        d.addCallback(check)
+        return d
+
+    def test_startCommand_interruptCommand(self):
+        # set up a fake step to receive updates
+        st = FakeStep()
+
+        # patch runprocess to pretend to sleep (it will really just hang forever,
+        # except that we interrupt it)
+        self.patch_runprocess(
+            Expect([ 'sleep', '10' ], os.path.join(self.basedir, 'sb', 'workdir'))
+            + { 'hdr' : 'headers' }
+            + { 'wait' : True }
+        )
+
+        d = defer.succeed(None)
+        def do_start(_):
+            return self.sb.callRemote("startCommand", fakeremote.FakeRemote(st),
+                                      "13", "shell", dict(
+                                                command=[ 'sleep', '10' ],
+                                                workdir='workdir',
+                                            ))
+        d.addCallback(do_start)
+
+        # wait a jiffy..
+        def do_wait(_):
+            d = defer.Deferred()
+            reactor.callLater(0.01, d.callback, None)
+            return d
+        d.addCallback(do_wait)
+
+        # and then interrupt the step
+        def do_interrupt(_):
+            return self.sb.callRemote("interruptCommand", "13", "tl/dr")
+        d.addCallback(do_interrupt)
+
+        d.addCallback(lambda _ : st.wait_for_finish())
+        def check(_):
+            self.assertEqual(st.actions, [
+                         ['update', [[{'hdr': 'headers'}, 0]]],
+                         ['update', [[{'hdr': 'killing'}, 0]]],
+                         ['update', [[{'rc': -1}, 0]]],
+                         ['complete', None],
+                    ])
+        d.addCallback(check)
+        return d
+
+    def test_startCommand_failure(self):
+        # similar to test_startCommand, but leave out some args so the slave
+        # generates a failure
+
+        # set up a fake step to receive updates
+        st = FakeStep()
+
+        # patch the log.err, otherwise trial will think something *actually* failed
+        self.patch(log, "err", lambda f : None)
+
+        d = defer.succeed(None)
+        def do_start(_):
+            return self.sb.callRemote("startCommand", fakeremote.FakeRemote(st),
+                                      "13", "shell", dict(
+                                                workdir='workdir',
+                                            ))
+        d.addCallback(do_start)
+        d.addCallback(lambda _ : st.wait_for_finish())
+        def check(_):
+            self.assertEqual(st.actions[0][0], 'complete')
+            self.assertTrue(isinstance(st.actions[0][1], failure.Failure))
         d.addCallback(check)
         return d

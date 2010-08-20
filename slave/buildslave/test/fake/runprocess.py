@@ -1,5 +1,5 @@
 from twisted.python import failure
-from twisted.internet import defer
+from twisted.internet import defer, reactor
 
 class Expect:
     """
@@ -119,6 +119,7 @@ class FakeRunProcess:
             self.stdout = ''
         if keepStderr:
             self.stderr = ''
+        finish_immediately = True
 
         # send the updates, accounting for the stdio parameters
         for upd in self._exp.status_updates:
@@ -132,14 +133,27 @@ class FakeRunProcess:
                     self.stderr += upd['stderr']
                 if not sendStderr:
                     del upd['stderr']
+            if 'wait' in upd:
+                finish_immediately = False
+                continue # don't send this update
             if not upd:
                 continue
             self._builder.sendUpdate(upd)
 
-        # and return an already-fired deferred
-        if self._exp.result[0] == 'e':
-            return defer.fail(self._exp.result[1])
-        else:
-            return defer.succeed(self._exp.result[1])
+        d = self.run_deferred = defer.Deferred()
 
-# TODO: test P4Sync
+        if finish_immediately:
+            self._finished()
+
+        return d
+
+    def _finished(self):
+        if self._exp.result[0] == 'e':
+            self.run_deferred.errback(self._exp.result[1])
+        else:
+            self.run_deferred.callback(self._exp.result[1])
+
+    def kill(self, reason):
+        self._builder.sendUpdate({'hdr' : 'killing'})
+        self._builder.sendUpdate({'rc' : -1})
+        self.run_deferred.callback(-1)
