@@ -64,7 +64,15 @@ developers who are editing the code that the buildbot is monitoring.
 The following @command{buildbot} sub-commands are intended for
 buildmaster administrators:
 
-@heading create-master
+@menu
+* create-master::
+* start: start (buildbot).
+* stop: stop (buildbot).
+* sighup::
+@end menu
+
+@node create-master
+@subsubsection create-master
 
 This creates a new directory and populates it with files that allow it
 to be used as a buildmaster's base directory.
@@ -77,7 +85,8 @@ editing this file.
 buildbot create-master -r BASEDIR
 @end example
 
-@heading start
+@node start (buildbot)
+@subsubsection start
 
 This starts a buildmaster which was already created in the given base
 directory. The daemon is launched in the background, with events logged
@@ -87,7 +96,8 @@ to a file named @file{twistd.log}.
 buildbot start BASEDIR
 @end example
 
-@heading stop
+@node stop (buildbot)
+@subsubsection stop
 
 This terminates the buildmaster running in the given directory.
 
@@ -95,7 +105,8 @@ This terminates the buildmaster running in the given directory.
 buildbot stop BASEDIR
 @end example
 
-@heading sighup
+@node sighup
+@subsubsection sighup
 
 This sends a SIGHUP to the buildmaster running in the given directory,
 which causes it to re-read its @file{master.cfg} file.
@@ -677,7 +688,14 @@ the requested build to complete.
 only and does not provide any additional functionality. One can create,
 start, stop and restart the buildslave.
 
-@heading create-slave
+@menu
+* create-slave::
+* start: start (buildslave).
+* stop: stop (buildslave).
+@end menu
+
+@node create-slave
+@subsection create-slave
 
 This creates a new directory and populates it with files that let it
 be used as a buildslave's base directory. You must provide several
@@ -692,7 +710,8 @@ buildslave create-slave -r @var{BASEDIR} @var{MASTERHOST}:@var{PORT} @var{SLAVEN
 
 The create-slave options are described in @xref{Buildslave Options}.
 
-@heading start
+@node start (buildslave)
+@subsection start
 
 This starts a buildslave which was already created in the given base
 directory. The daemon is launched in the background, with events logged
@@ -702,7 +721,8 @@ to a file named @file{twistd.log}.
 buildbot start BASEDIR
 @end example
 
-@heading stop
+@node stop (buildslave)
+@subsection stop
 
 This terminates the daemon buildslave running in the given directory.
 
