@@ -4,6 +4,14 @@ Major User visible changes in Buildbot.             -*- outline -*-
 
 * NEXT RELEASE
 
+** Command-line options changed
+To resolve conflicting command-line options (ticket #972) for sendchange
+command the following changes were done:
+
+ * `-m` option now means `--master`
+ * `-c` option now means `--comments`
+ * `-C` option now means `--category`
+
 ** Required Jinja Version
 
 The Buildmaster now requires Jinja-2.1 or higher.
