@@ -87,7 +87,7 @@ class SlaveFileUploadCommand(Command):
 
         if length <= 0:
             if self.stderr is None:
-                self.stderr = 'Maximum filesize reached, truncating file %r' \
+                self.stderr = 'Maximum filesize reached, truncating file \'%s\'' \
                                 % self.path
                 self.rc = 1
             data = ''
