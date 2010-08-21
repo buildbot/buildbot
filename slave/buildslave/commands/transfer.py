@@ -41,10 +41,10 @@ class SlaveFileUploadCommand(Command):
                 log.msg('Opened %r for upload' % self.path)
         except:
             self.fp = None
-            self.stderr = 'Cannot open file %r for upload' % self.path
+            self.stderr = "Cannot open file '%s' for upload" % self.path
             self.rc = 1
             if self.debug:
-                log.msg('Cannot open file %r for upload' % self.path)
+                log.msg("Cannot open file '%s' for upload" % self.path)
 
         self.sendStatus({'header': "sending %s" % self.path})
 
@@ -261,10 +261,10 @@ class SlaveFileDownloadCommand(Command):
         except IOError:
             # TODO: this still needs cleanup
             self.fp = None
-            self.stderr = 'Cannot open file %r for download' % self.path
+            self.stderr = "Cannot open file '%s' for download" % self.path
             self.rc = 1
             if self.debug:
-                log.msg('Cannot open file %r for download' % self.path)
+                log.msg("Cannot open file '%s' for download" % self.path)
 
         d = defer.Deferred()
         self._reactor.callLater(0, self._loop, d)
