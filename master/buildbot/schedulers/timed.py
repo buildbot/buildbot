@@ -226,9 +226,10 @@ class Nightly(base.BaseScheduler, base.ClassifierMixin, TimedBuildMixin):
     def run(self):
         d = defer.succeed(None)
         db = self.parent.db
-        # always call classify_changes, so that we can keep last_processed
-        # up to date, in case we are configured with onlyIfChanged.
-        d.addCallback(lambda ign: db.runInteraction(self.classify_changes))
+        if self.onlyIfChanged:
+            # call classify_changes, so that we can keep last_processed
+            # up to date, in case we are configured with onlyIfChanged.
+            d.addCallback(lambda ign: db.runInteraction(self.classify_changes))
         d.addCallback(lambda ign: db.runInteraction(self._check_timer))
         return d
 
@@ -252,8 +253,8 @@ class Nightly(base.BaseScheduler, base.ClassifierMixin, TimedBuildMixin):
         return self._check_timer(t)
 
     def _maybe_start_build(self, t):
+        db = self.parent.db
         if self.onlyIfChanged:
-            db = self.parent.db
             res = db.scheduler_get_classified_changes(self.schedulerid, t)
             (important, unimportant) = res
             if not important:
@@ -274,6 +275,12 @@ class Nightly(base.BaseScheduler, base.ClassifierMixin, TimedBuildMixin):
         else:
             # start it unconditionally
             self.start_HEAD_build(t)
+
+            # Retire any changes on this scheduler
+            res = db.scheduler_get_classified_changes(self.schedulerid, t)
+            (important, unimportant) = res
+            changeids = [c.number for c in important + unimportant]
+            db.scheduler_retire_changes(self.schedulerid, changeids, t)
 
     def _addTime(self, timetuple, secs):
         return time.localtime(time.mktime(timetuple)+secs)

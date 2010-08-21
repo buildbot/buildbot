@@ -1039,5 +1039,8 @@ class DBConnector(util.ComparableMixin):
     def has_pending_operations(self):
         return bool(self._pending_operation_count)
 
+    def setChangeCacheSize(self, max_size):
+        self._change_cache.setMaxSize(max_size)
+
 
 threadable.synchronize(DBConnector)

@@ -113,6 +113,9 @@ class LRUCache:
         self._cached_ids.append(id)
     __setitem__ = add
 
+    def setMaxSize(self, max_size):
+        self._max_size = max_size
+
 threadable.synchronize(LRUCache)
 
 

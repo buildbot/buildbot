@@ -5,7 +5,7 @@
 from twisted.spread import pb
 
 from twisted.spread.pb import PBClientFactory
-from twisted.internet import protocol
+from twisted.internet import protocol, reactor
 from twisted.python import log
 
 class ReconnectingPBClientFactory(PBClientFactory,
@@ -96,3 +96,4 @@ class ReconnectingPBClientFactory(PBClientFactory,
         # probably authorization
         self.stopTrying() # logging in harder won't help
         log.err(why)
+        reactor.stop()
