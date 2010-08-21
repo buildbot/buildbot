@@ -107,7 +107,8 @@ def _extractall(self, path=".", members=None):
 class _DirectoryWriter(_FileWriter):
     """
     A DirectoryWriter is implemented as a FileWriter, with an added post-processing
-    step to unpack the archive, once the transfer has completed.
+    step to unpack the archive, once the transfer has completed.  Note that the close()
+    method is not called!
     """
 
     def __init__(self, destroot, maxsize, compress, mode):
