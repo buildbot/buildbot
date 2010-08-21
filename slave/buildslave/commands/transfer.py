@@ -114,7 +114,7 @@ class SlaveFileUploadCommand(Command):
         if self.interrupted:
             return
         if self.stderr is None:
-            self.stderr = 'Upload of %r interrupted' % self.path
+            self.stderr = 'Upload of \'%s\' interrupted' % self.path
             self.rc = 1
         self.interrupted = True
         # the next _writeBlock call will notice the .interrupted flag
