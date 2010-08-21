@@ -40,7 +40,6 @@ class SlaveFileUploadCommand(Command):
             if self.debug:
                 log.msg('Opened %r for upload' % self.path)
         except:
-            # TODO: this needs cleanup
             self.fp = None
             self.stderr = 'Cannot open file %r for upload' % self.path
             self.rc = 1
@@ -52,7 +51,10 @@ class SlaveFileUploadCommand(Command):
         d = defer.Deferred()
         self._reactor.callLater(0, self._loop, d)
         def _close(res):
-            # close the file, but pass through any errors from _loop
+            # close the file
+            self.fp = None
+
+            # call close, but pass through any errors from _loop
             d1 = self.writer.callRemote("close")
             d1.addErrback(log.err)
             d1.addCallback(lambda ignored: res)

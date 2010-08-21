@@ -54,10 +54,10 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
         self.writer = FakeDirectoryWriter(self.add_update)
 
         # write 180 bytes of data to upload
-        datadir = os.path.join(self.basedir, 'workdir')
-        if os.path.exists(datadir):
-            shutil.rmtree(datadir)
-        os.makedirs(datadir)
+        self.datadir = os.path.join(self.basedir, 'workdir')
+        if os.path.exists(self.datadir):
+            shutil.rmtree(self.datadir)
+        os.makedirs(self.datadir)
 
         self.datafile = os.path.join(datadir, 'data')
         # note: use of 'wb' here ensures newlines aren't translated on the upload
@@ -65,6 +65,9 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
 
     def tearDown(self):
         self.tearDownCommand()
+
+        if os.path.exists(datadir):
+            shutil.rmtree(datadir)
 
     def test_simple(self):
         self.writer.count_writes = True    # get actual byte counts
@@ -187,6 +190,9 @@ class TestSlaveDirectoryUpload(CommandTestMixin, unittest.TestCase):
 
     def tearDown(self):
         self.tearDownCommand()
+
+        if os.path.exists(self.datadir):
+            shutil.rmtree(self.datadir)
 
     def test_simple(self):
         self.writer.keep_data = True 
