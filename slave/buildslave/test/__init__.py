@@ -1,3 +1,6 @@
+import sys
+
+import twisted
 from twisted.trial import unittest
 
 def add_debugging_monkeypatches():
@@ -29,3 +32,7 @@ def add_debugging_monkeypatches():
 add_debugging_monkeypatches()
 
 __all__ = []
+
+## print the Twisted and Python versions, for the sake of the metabuildbot
+print twisted.version
+print sys.version
