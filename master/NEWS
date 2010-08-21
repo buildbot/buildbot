@@ -10,6 +10,15 @@ This sets the number of changes that buildbot will keep in memory at once.
 Users of distributed version control systems should consider setting this to a
 high value (e.g. 10,000)
 
+** Command-line options changed
+
+To resolve conflicting command-line options (ticket #972) for sendchange
+command the following changes were done:
+
+ * `-m` option now means `--master`
+ * `-c` option now means `--comments`
+ * `-C` option now means `--category`
+
 ** Required Jinja Version
 
 The Buildmaster now requires Jinja-2.1 or higher.
