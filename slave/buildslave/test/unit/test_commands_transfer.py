@@ -59,15 +59,15 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
             shutil.rmtree(self.datadir)
         os.makedirs(self.datadir)
 
-        self.datafile = os.path.join(datadir, 'data')
+        self.datafile = os.path.join(self.datadir, 'data')
         # note: use of 'wb' here ensures newlines aren't translated on the upload
         open(self.datafile, "wb").write("this is some data\n" * 10)
 
     def tearDown(self):
         self.tearDownCommand()
 
-        if os.path.exists(datadir):
-            shutil.rmtree(datadir)
+        if os.path.exists(self.datadir):
+            shutil.rmtree(self.datadir)
 
     def test_simple(self):
         self.writer.count_writes = True    # get actual byte counts
