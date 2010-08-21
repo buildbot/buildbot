@@ -215,9 +215,10 @@ class TestSlaveDirectoryUpload(CommandTestMixin, unittest.TestCase):
             f = StringIO.StringIO(self.writer.data)
             a = tarfile.open(fileobj=f, name='check.tar')
             exp_names = [ '.', 'aa', 'bb' ]
-            if runtime.platform == "win32":
-                exp_names = [ './', 'aa', 'bb' ]
-            self.assertEqual(sorted(a.getnames()), exp_names)
+            got_names = sorted([ n.rstrip('/') for n in a.getnames() ])
+            self.assertEqual(got_names, exp_names, "expected archive contents")
+            a.close()
+            f.close()
         d.addCallback(check_tarfile)
 
         return d
