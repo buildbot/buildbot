@@ -19,9 +19,12 @@ command the following changes were done:
  * `-c` option now means `--comments`
  * `-C` option now means `--category`
 
-** Required Jinja Version
+** New Requirements
 
 The Buildmaster now requires Jinja-2.1 or higher.
+
+Both master and slave now require Twisted-8.0.0.  Although Twisted-2.5.0 may
+still work, it is not tested and not supported.
 
 ** New libvirt-based Latent Buildslave Support
 
