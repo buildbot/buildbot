@@ -1691,8 +1691,7 @@ creation time (@pxref{Buildslave Options}).
 
 To transfer complete directories from the buildslave to the master, there
 is a BuildStep named @code{DirectoryUpload}. It works like @code{FileUpload},
-just for directories. However it does not support the @code{maxsize},
-@code{blocksize} and @code{mode} arguments. As an example, let's assume an
+just for directories. As an example, let's assume a step has
 generated project documentation, which consists of many files (like the output
 of doxygen or epydoc). We want to move the entire documentation to the
 buildmaster, into a @code{~/public_html/docs} directory. On the slave-side
@@ -1709,6 +1708,14 @@ f.addStep(DirectoryUpload(slavesrc="docs",
 
 The DirectoryUpload step will create all necessary directories and
 transfers empty directories, too.
+
+The @code{maxsize} and @code{blocksize} parameters are the same as for
+@code{FileUpload}, although note that the size of the transferred data is
+implementation-dependent, and probably much larger than you expect due to the
+encoding used (currently tar).
+
+The optional @code{compress} argument can be given as @code{'gz'} or
+@code{'bz2'} to compress the datastream.
 
 @node Transferring Strings
 @subsection Transferring Strings

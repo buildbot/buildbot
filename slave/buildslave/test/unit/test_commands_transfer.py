@@ -1,4 +1,5 @@
 import os
+import sys
 import shutil
 import tarfile
 import StringIO
@@ -253,6 +254,10 @@ class TestSlaveDirectoryUpload(CommandTestMixin, unittest.TestCase):
         return self.test_simple('bz2')
     def test_simple_gz(self):
         return self.test_simple('gz')
+
+    # except bz2 can't operate in stream mode on py24
+    if sys.version_info <= (2,4):
+        test_simple_bz2.skip = "Testing bz2 is not supported on Python-2.4"
 
     # this is just a subclass of SlaveUpload, so the remaining permutations
     # are already tested
