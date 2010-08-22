@@ -369,7 +369,7 @@ class TestDownloadFile(CommandTestMixin, unittest.TestCase):
             reader=FakeRemote(self.fakemaster),
             maxsize=50,
             blocksize=32,
-            mode=0544,
+            mode=0777,
         ))
 
         d = self.run_command()
@@ -384,8 +384,6 @@ class TestDownloadFile(CommandTestMixin, unittest.TestCase):
             datafile = os.path.join(self.basedir, 'data')
             self.assertTrue(os.path.exists(datafile))
             self.assertEqual(open(datafile).read(), test_data[:50])
-            if runtime.platformType != 'win32':
-                self.assertEqual(os.stat(datafile).st_mode & 0777, 0544)
         d.addCallback(check)
         return d
 
