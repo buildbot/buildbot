@@ -16,7 +16,13 @@ exclude_lines =
     if 0:
     if __name__ == .__main__.:
     if runtime.platformType  == 'win32'
+
+include =
+    master/*
+    slave/*
+
 omit =
-    master/buildbot/test
-    master/buildbot/status/web/templates
-    slave/buildslave/test
+    # omit all of our tests
+    */test/*
+    # templates cause coverage errors
+    */templates/*
