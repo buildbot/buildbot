@@ -257,7 +257,7 @@ class TestSlaveDirectoryUpload(CommandTestMixin, unittest.TestCase):
 
     # except bz2 can't operate in stream mode on py24
     if sys.version_info <= (2,4):
-        test_simple_bz2.skip = "Testing bz2 is not supported on Python-2.4"
+        del test_simple_bz2
 
     # this is just a subclass of SlaveUpload, so the remaining permutations
     # are already tested
@@ -304,7 +304,7 @@ class TestDownloadFile(CommandTestMixin, unittest.TestCase):
             datafile = os.path.join(self.basedir, 'data')
             self.assertTrue(os.path.exists(datafile))
             self.assertEqual(open(datafile).read(), test_data)
-            if runtime.platform != 'win32':
+            if runtime.platformType != 'win32':
                 self.assertEqual(os.stat(datafile).st_mode & 0777, 0777)
         d.addCallback(check)
         return d
@@ -384,7 +384,7 @@ class TestDownloadFile(CommandTestMixin, unittest.TestCase):
             datafile = os.path.join(self.basedir, 'data')
             self.assertTrue(os.path.exists(datafile))
             self.assertEqual(open(datafile).read(), test_data[:50])
-            if runtime.platform != 'win32':
+            if runtime.platformType != 'win32':
                 self.assertEqual(os.stat(datafile).st_mode & 0777, 0544)
         d.addCallback(check)
         return d
