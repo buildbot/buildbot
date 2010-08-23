@@ -514,7 +514,7 @@ class MailNotifier(base.StatusReceiverMultiService):
         # if we're sending to interested users move the extra's to the CC
         # list so they can tell if they are also interested in the change
         # unless there are no interested users
-        if self.sendToInterestedUsers and len(recipients):
+        if self.sendToInterestedUsers and recipients:
             extra_recips = self.extraRecipients[:]
             extra_recips.sort()
             m['CC'] = ", ".join(extra_recips)
