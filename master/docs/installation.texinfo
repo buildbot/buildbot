@@ -65,6 +65,16 @@ Of course, your project's build process will impose additional
 requirements on the buildslaves. These hosts must have all the tools
 necessary to compile and test your project's source code.
 
+@heading Windows Support
+
+Buildbot - both master and slave - runs well natively on Windows.  The slave
+runs well on Cygwin, but because of problems with SQLite on Cygwin, the master
+does not.
+
+Buildbot's windows testing is limited to the most recent Twisted and Python
+versions.  For best results, use the most recent available versions of these
+libraries on Windows.
+
 @node Buildmaster Requirements
 @subsection Buildmaster Requirements
 
