@@ -495,7 +495,8 @@ class MailNotifier(base.StatusReceiverMultiService):
         return logname in self.addLogs
 
     def _gotRecipients(self, res, rlist, m):
-        recipients = set()
+        to_recipients = set()
+        cc_recipients = set()
 
         for r in rlist:
             if r is None: # getAddress didn't like this address
@@ -507,30 +508,23 @@ class MailNotifier(base.StatusReceiverMultiService):
                 r = r[:r.rindex('@')]
 
             if VALID_EMAIL.search(r):
-                recipients.add(r)
+                to_recipients.add(r)
             else:
                 twlog.msg("INVALID EMAIL: %r" + r)
 
-        # if we're sending to interested users move the extra's to the CC
-        # list so they can tell if they are also interested in the change
-        # unless there are no interested users
-        if self.sendToInterestedUsers and recipients:
-            extra_recips = self.extraRecipients[:]
-            extra_recips.sort()
-            m['CC'] = ", ".join(extra_recips)
+        # If we're sending to interested users put the extras in the
+        # CC list so they can tell if they are also interested in the
+        # change:
+        if self.sendToInterestedUsers and to_recipients:
+            cc_recipients.update(self.extraRecipients)
         else:
-            [recipients.add(r) for r in self.extraRecipients[:]]
+            to_recipients.update(self.extraRecipients)
 
-        rlist = list(recipients)
-        rlist.sort()
-        m['To'] = ", ".join(rlist)
+        m['To'] = ", ".join(sorted(to_recipients))
+        if cc_recipients:
+            m['CC'] = ", ".join(sorted(cc_recipients))
 
-        # The extras weren't part of the TO list so add them now
-        if self.sendToInterestedUsers:
-            for r in self.extraRecipients:
-                recipients.add(r)
-
-        return self.sendMessage(m, list(recipients))
+        return self.sendMessage(m, list(to_recipients | cc_recipients))
 
     def sendmail(self, s, recipients):
         result = defer.Deferred()
