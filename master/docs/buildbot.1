@@ -79,7 +79,7 @@ upgrade-master
 .B buildbot
 sendchange
 [
-.B \-\-master
+.BR \-m | \-\-master
 .I MASTER
 ]
 [
@@ -99,7 +99,7 @@ sendchange
 .I BRANCH
 ]
 [
-.BR \-c | \-\-category
+.BR \-C | \-\-category
 .I CATEGORY
 ]
 [
@@ -115,7 +115,7 @@ sendchange
 .I PROPERTY
 ]
 [
-.BR \-m | \-\-comments
+.BR \-c | \-\-comments
 .I MESSAGE
 ]
 [
@@ -347,6 +347,8 @@ Re-use an existing directory (will not overwrite master.cfg file)
 .TP
 .BR \-r | \-\-relocatable
 Create a relocatable buildbot.tac
+.TP \-n | \-\-no-logrotate
+Do not permit buildmaster rotate logs by itself.
 .TP
 .BR \-c | \-\-config
 Set name of the buildbot master config file to 

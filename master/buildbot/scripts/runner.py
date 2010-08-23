@@ -481,6 +481,8 @@ class MasterOptions(MakerBase):
          "Re-use an existing directory (will not overwrite master.cfg file)"],
         ["relocatable", "r",
          "Create a relocatable buildbot.tac"],
+        ["no-logrotate", "n",
+         "Do not permit buildmaster rotate logs by itself"]
         ]
     optParameters = [
         ["config", "c", "master.cfg", "name of the buildmaster config file"],
@@ -523,7 +525,7 @@ class MasterOptions(MakerBase):
                                    " or None")
 
 
-masterTAC = """
+masterTACTemplate = ["""
 import os
 
 from twisted.application import service
@@ -541,6 +543,8 @@ if basedir == '.':
 # note: this line is matched against to check that this is a buildmaster
 # directory; do not edit it.
 application = service.Application('buildmaster')
+""",
+"""
 try:
   from twisted.python.logfile import LogFile
   from twisted.python.log import ILogObserver, FileLogObserver
@@ -550,7 +554,8 @@ try:
 except ImportError:
   # probably not yet twisted 8.2.0 and beyond, can't set log yet
   pass
-
+""",
+"""
 configfile = r'%(config)s'
 
 m = BuildMaster(basedir, configfile)
@@ -558,7 +563,7 @@ m.setServiceParent(application)
 m.log_rotation.rotateLength = rotateLength
 m.log_rotation.maxRotatedFiles = maxRotatedFiles
 
-"""
+"""]
 
 def createMaster(config):
     m = Maker(config)
@@ -566,6 +571,10 @@ def createMaster(config):
     m.chdir()
     if config['relocatable']:
         config['basedir'] = '.'
+    if config['no-logrotate']:
+        masterTAC = "".join([masterTACTemplate[0]] + masterTACTemplate[2:])
+    else:
+        masterTAC = "".join(masterTACTemplate)
     contents = masterTAC % config
     m.makeTAC(contents)
     m.sampleconfig(util.sibpath(__file__, "sample.cfg"))

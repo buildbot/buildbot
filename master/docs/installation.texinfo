@@ -433,6 +433,11 @@ buildslave create-slave --umask=022 ~/buildslave buildmaster.example.org:42012 m
 @end example
 
 @table @code
+@item --no-logrotate
+This disables internal buildslave log management mechanism. With this option
+buildslave does not override the default logfile name and its behaviour giving
+a possibility to control those with command-line options of twistd daemon.
+
 @item --usepty
 This is a boolean flag that tells the buildslave whether to launch child
 processes in a PTY or with regular pipes (the default) when the master does not

@@ -12,6 +12,9 @@ command the following changes were done:
  * `-c` option now means `--comments`
  * `-C` option now means `--category`
 
+Added new `-n|--no-logrotate` flag to create-master command which disables
+internal logging and log rotation mechanism in buildbot.tac (ticket #973)
+
 ** Required Jinja Version
 
 The Buildmaster now requires Jinja-2.1 or higher.
