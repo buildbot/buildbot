@@ -115,6 +115,15 @@ class BaseLock:
         self.waiting.append((access, d))
         return d
 
+    def stopWaitingUntilAvailable(self, owner, access, d):
+        debuglog("%s stopWaitingUntilAvailable(%s)" % (self, owner))
+        assert isinstance(access, LockAccess)
+        assert (access, d) in self.waiting
+        self.waiting.remove( (access, d) )
+
+    def isOwner(self, owner, access):
+        return (owner, access) in self.owners
+
 
 class RealMasterLock(BaseLock):
     def __init__(self, lockid):

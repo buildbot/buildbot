@@ -134,7 +134,7 @@ they provide.
 @menu
 * Buildbot Web Resources::
 * WebStatus Configuration Parameters::
-* XMLRPC server::
+* Change Hooks::
 @end menu
 
 @node Buildbot Web Resources
@@ -381,11 +381,10 @@ by other programs, rather than humans.
 
 @table @code
 
-@item /xmlrpc
+@item /change_hook
 
-This runs an XML-RPC server which can be used to query status
-information about various builds. See @ref{XMLRPC server} for more
-details.
+This provides an endpoint for web-based source change notification (i.e. github).
+See @ref{Change Hooks} for more details.
 
 @end table
 
@@ -614,117 +613,30 @@ The @code{num_events} option gives the default number of events that the
 waterfall will display.  The @code{num_events_max} gives the maximum number of
 events displayed, even if the web browser requests more.
 
-@node XMLRPC server
-@subsubsection XMLRPC server
+@node Change Hooks
+@subsubsection Change Hooks
 
-When using WebStatus, the buildbot runs an XML-RPC server at
-@file{/xmlrpc} that can be used by other programs to query build
-status. The following table lists the methods that can be invoked
-using this interface.
+The /change_hook url is a magic URL which will accept HTTP requests and translate
+them into changes for buildbot. Implementations (such as a trivial json-based endpoint
+and a github implementation) can be found in @code{master/buildbot/status/web/hooks}.
+The format of the url is /change_hook/DIALECT where DIALECT is a package within the 
+hooks directory. Change_hook is disabled by default and each DIALECT has to be enabled
+separately, for security reasons
 
-@table @code
-@item getAllBuilders()
+An example WebStatus configuration line which enables change_hook and two DIALECTS:
 
-Return a list of the names of all builders.
+@example
+c['status'].append(html.WebStatus(http_port=8010,allowForce=True,
+                        change_hook=True,
+                        change_hook_dialects=@{
+                                'base': True,
+                                'github': @{'option1':True,
+                                            'option2':False@}@}))
+@end example
 
-@item getLastBuildResults(builder_name)
-
-Return the build result for the last completed build by the given builder.  The
-result is a string, one of "success", "warnings", "failure", "skipped",
-"exception", or "retry".
-
-@item getLastBuilds(builder_name, num_builds)
-
-Get the last NUM_BUILDS builds completed by the named builder.  The return value is an array, with each build represented as an array with the following items
-
-@itemize
-@item builder name
-@item build number
-@item start time (seconds since epoch)
-@item end time (seconds since epoch)
-@item branch
-@item revision
-@item result (same format as @code{getLastBuildResults})
-@item text
-@item reasons (list of strings giving reasosn for that steps failed)
-@end itemize
-
-@item getLastBuildsAllBuilders(num_builds)
-
-Similar to @code{getLastBuilds}, but returns the last builds for all builders.
-This method can consume a lot of buildmaster CPU and disk resources.
-
-@item getAllBuildsInInterval(start, stop)
-
-Return a list of builds that have completed after the 'start' timestamp and
-before the 'stop' timestamp, both given as seconds since the epoch. This looks
-at all builders.  Each build is returned in a format similar to, but not the
-same as that for @code{getLastBuilds}.  In particular, the start time and
-reasons are omitted.
-
-@item getBuild(builder_name, build_number)
-
-Return information about a specific build.
-
-This returns a dictionary (a struct in XMLRPC terms) with complete information
-about the build. Because it extracts log information, this call is a very
-heavyweight operation for the buildmaster.
-
-Keys include:
-
-@table @code
-@item builder_name
-@item url
-@item reason
-@item slavename
-@item results
-@item text
-@item reasons
-
-Just as for @code{getLastBuilds}, above.
-
-@item number
-
-The build number
-
-@item branch
-@item revision
-@item start
-@item end
-
-@item steps
-
-See below.
-
-@item full_error
-@item logs
-
-See below.
-@end table
-
-The @code{steps} key is a list of information about each step in the build, with keys
-
-@table @code
-@item name
-@item start
-@item end
-@item results
-
-This is a list of (integer result, text) that is probably not useful to callers.
-
-@item text
-@end table
-
-The @code{full_error} and @code{logs} keys contains most of the build's
-logfiles, in an odd format.  The @code{full_error} key contains a hash keyed by
-step name, but containing only failed logs.  The values are the text of an
-arbitrary one of the logs for each failing step.
-
-The @code{logs} key is a list of logs, each of which is represented by a hash
-with keys @code{name}, in the format @code{stepname/logname}, and @code{text},
-which is always the constant string @code{HUGE}.
-
-@end table
+Within the WebStatus arguments, the @code{change_hook} key enables/disables the module
+and @code{change_hook_dialects} whitelists DIALECTs where the keys are the module names
+and the values are optional arguments which will be passed to the hooks.
 
 @node MailNotifier
 @subsection MailNotifier

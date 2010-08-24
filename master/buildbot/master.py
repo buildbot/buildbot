@@ -434,11 +434,11 @@ class Dispatcher:
             raise ValueError("no perspective for '%s'" % avatarID)
 
         d = defer.maybeDeferred(p.attached, mind)
-        d.addCallback(self._avatarAttached, mind)
+        def _avatarAttached(_, mind):
+            return (pb.IPerspective, p, lambda: p.detached(mind))
+        d.addCallback(_avatarAttached, mind)
         return d
 
-    def _avatarAttached(self, p, mind):
-        return (pb.IPerspective, p, lambda p=p,mind=mind: p.detached(mind))
 
 ########################################
 
@@ -595,10 +595,10 @@ class BuildMaster(service.MultiService):
                       "slavePortnum", "debugPassword", "logCompressionLimit",
                       "manhole", "status", "projectName", "projectURL",
                       "buildbotURL", "properties", "prioritizeBuilders",
-                      "eventHorizon", "buildCacheSize", "logHorizon", "buildHorizon",
-                      "changeHorizon", "logMaxSize", "logMaxTailSize",
-                      "logCompressionMethod", "db_url", "multiMaster",
-                      "db_poll_interval",
+                      "eventHorizon", "buildCacheSize", "changeCacheSize",
+                      "logHorizon", "buildHorizon", "changeHorizon",
+                      "logMaxSize", "logMaxTailSize", "logCompressionMethod",
+                      "db_url", "multiMaster", "db_poll_interval",
                       )
         for k in config.keys():
             if k not in known_keys:
@@ -623,6 +623,7 @@ class BuildMaster(service.MultiService):
             buildbotURL = config.get('buildbotURL')
             properties = config.get('properties', {})
             buildCacheSize = config.get('buildCacheSize', None)
+            changeCacheSize = config.get('changeCacheSize', None)
             eventHorizon = config.get('eventHorizon', 50)
             logHorizon = config.get('logHorizon', None)
             buildHorizon = config.get('buildHorizon', None)
@@ -851,6 +852,7 @@ class BuildMaster(service.MultiService):
             self.botmaster.prioritizeBuilders = prioritizeBuilders
 
         self.buildCacheSize = buildCacheSize
+        self.changeCacheSize = changeCacheSize
         self.eventHorizon = eventHorizon
         self.logHorizon = logHorizon
         self.buildHorizon = buildHorizon
@@ -938,6 +940,8 @@ class BuildMaster(service.MultiService):
                 to make a backup of your buildmaster before doing so.""")
 
         self.db = connector.DBConnector(db_spec)
+        if self.changeCacheSize:
+            self.db.setChangeCacheSize(self.changeCacheSize)
         self.db.start()
 
         self.botmaster.db = self.db

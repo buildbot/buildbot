@@ -29,8 +29,8 @@ class SourceStampExtractor:
         return d
     def _didvc(self, res, cmd):
         (stdout, stderr, code) = res
-        # 'bzr diff' sets rc=1 if there were any differences. tla, baz, and
-        # cvs do something similar, so don't bother requring rc=0.
+        # 'bzr diff' sets rc=1 if there were any differences. 
+        # cvs does something similar, so don't bother requring rc=0.
         return stdout
 
     def get(self):
@@ -110,45 +110,6 @@ class SVNExtractor(SourceStampExtractor):
                          "SVN output: %s" % res)
     def getPatch(self, res):
         d = self.dovc(["diff", "-r%d" % self.baserev])
-        d.addCallback(self.readPatch, self.patchlevel)
-        return d
-
-class BazExtractor(SourceStampExtractor):
-    patchlevel = 1
-    vcexe = "baz"
-    def getBaseRevision(self):
-        d = self.dovc(["tree-id"])
-        d.addCallback(self.parseStatus)
-        return d
-    def parseStatus(self, res):
-        tid = res.strip()
-        slash = tid.index("/")
-        dd = tid.rindex("--")
-        self.branch = tid[slash+1:dd]
-        self.baserev = tid[dd+2:]
-    def getPatch(self, res):
-        d = self.dovc(["diff"])
-        d.addCallback(self.readPatch, self.patchlevel)
-        return d
-
-class TlaExtractor(SourceStampExtractor):
-    patchlevel = 1
-    vcexe = "tla"
-    def getBaseRevision(self):
-        # 'tla logs --full' gives us ARCHIVE/BRANCH--REVISION
-        # 'tla logs' gives us REVISION
-        d = self.dovc(["logs", "--full", "--reverse"])
-        d.addCallback(self.parseStatus)
-        return d
-    def parseStatus(self, res):
-        tid = res.split("\n")[0].strip()
-        slash = tid.index("/")
-        dd = tid.rindex("--")
-        self.branch = tid[slash+1:dd]
-        self.baserev = tid[dd+2:]
-
-    def getPatch(self, res):
-        d = self.dovc(["changes", "--diffs"])
         d.addCallback(self.readPatch, self.patchlevel)
         return d
 
@@ -310,12 +271,8 @@ def getSourceStamp(vctype, treetop, branch=None):
         e = CVSExtractor(treetop, branch)
     elif vctype == "svn":
         e = SVNExtractor(treetop, branch)
-    elif vctype == "baz":
-        e = BazExtractor(treetop, branch)
     elif vctype == "bzr":
         e = BzrExtractor(treetop, branch)
-    elif vctype == "tla":
-        e = TlaExtractor(treetop, branch)
     elif vctype == "hg":
         e = MercurialExtractor(treetop, branch)
     elif vctype == "p4":

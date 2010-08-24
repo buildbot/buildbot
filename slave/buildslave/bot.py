@@ -12,27 +12,8 @@ from buildslave.util import now
 from buildslave.pbutil import ReconnectingPBClientFactory
 from buildslave.commands import registry, base
 
-class NoCommandRunning(pb.Error):
-    pass
-class WrongCommandRunning(pb.Error):
-    pass
 class UnknownCommand(pb.Error):
     pass
-
-class Master:
-    def __init__(self, host, port, username, password):
-        self.host = host
-        self.port = port
-        self.username = username
-        self.password = password
-
-class SlaveBuild:
-
-    """This is an object that can hold state from one step to another in the
-    same build. All SlaveCommands have access to it.
-    """
-    def __init__(self, builder):
-        self.builder = builder
 
 class SlaveBuilder(pb.Referenceable, service.Service):
 
@@ -48,9 +29,6 @@ class SlaveBuilder(pb.Referenceable, service.Service):
     # is severed.
     remote = None
 
-    # .build points to a SlaveBuild object, a new one for each build
-    build = None
-
     # .command points to a SlaveCommand instance, and is set while the step
     # is running. We use it to implement the stopBuild method.
     command = None
@@ -59,10 +37,12 @@ class SlaveBuilder(pb.Referenceable, service.Service):
     # when the step is started
     remoteStep = None
 
-    def __init__(self, name, not_really):
+    # useful for replacing the reactor in tests
+    _reactor = reactor
+
+    def __init__(self, name):
         #service.Service.__init__(self) # Service has no __init__ method
         self.setName(name)
-        self.not_really = not_really
 
     def __repr__(self):
         return "<SlaveBuilder '%s' at %d>" % (self.name, id(self))
@@ -98,28 +78,10 @@ class SlaveBuilder(pb.Referenceable, service.Service):
     def remote_setMaster(self, remote):
         self.remote = remote
         self.remote.notifyOnDisconnect(self.lostRemote)
+
     def remote_print(self, message):
         log.msg("SlaveBuilder.remote_print(%s): message from master: %s" %
                 (self.name, message))
-        if message == "ping":
-            return self.remote_ping()
-
-    def remote_ping(self):
-        log.msg("SlaveBuilder.remote_ping(%s)" % self)
-        if self.bot and self.bot.parent:
-            debugOpts = self.bot.parent.debugOpts
-            if debugOpts.get("stallPings"):
-                log.msg(" debug_stallPings")
-                timeout, timers = debugOpts["stallPings"]
-                d = defer.Deferred()
-                t = reactor.callLater(timeout, d.callback, None)
-                timers.append(t)
-                return d
-            if debugOpts.get("failPingOnce"):
-                log.msg(" debug_failPingOnce")
-                class FailPingError(pb.Error): pass
-                del debugOpts['failPingOnce']
-                raise FailPingError("debug_failPingOnce means we should fail")
 
     def lostRemote(self, remote):
         log.msg("lost remote")
@@ -134,11 +96,9 @@ class SlaveBuilder(pb.Referenceable, service.Service):
     # the following are Commands that can be invoked by the master-side
     # Builder
     def remote_startBuild(self):
-        """This is invoked before the first step of any new build is run. It
-        creates a new SlaveBuild object, which holds slave-side state from
-        one step to the next."""
-        self.build = SlaveBuild(self)
-        log.msg("%s.startBuild" % self)
+        """This is invoked before the first step of any new build is run.  It
+        doesn't do much, but masters call it so it's still here."""
+        pass
 
     def remote_startCommand(self, stepref, stepId, command, args):
         """
@@ -223,7 +183,7 @@ class SlaveBuilder(pb.Referenceable, service.Service):
 
     def _ackFailed(self, why, where):
         log.msg("SlaveBuilder._ackFailed:", where)
-        #log.err(why) # we don't really care
+        log.err(why) # we don't really care
 
 
     # this is fired by the Deferred attached to each Command
@@ -251,8 +211,8 @@ class SlaveBuilder(pb.Referenceable, service.Service):
 
 
     def remote_shutdown(self):
-        print "slave shutting down on command from master"
-        reactor.stop()
+        log.msg("slave shutting down on command from master")
+        self._reactor.stop()
 
 
 class Bot(pb.Referenceable, service.MultiService):
@@ -260,20 +220,16 @@ class Bot(pb.Referenceable, service.MultiService):
     usePTY = None
     name = "bot"
 
-    def __init__(self, basedir, usePTY, not_really=0, unicode_encoding=None):
+    def __init__(self, basedir, usePTY, unicode_encoding=None):
         service.MultiService.__init__(self)
         self.basedir = basedir
         self.usePTY = usePTY
-        self.not_really = not_really
         self.unicode_encoding = unicode_encoding or sys.getfilesystemencoding() or 'ascii'
         self.builders = {}
 
     def startService(self):
         assert os.path.isdir(self.basedir)
         service.MultiService.startService(self)
-
-    def remote_getDirs(self):
-        return filter(lambda d: os.path.isdir(d), os.listdir(self.basedir))
 
     def remote_getCommands(self):
         commands = dict([
@@ -294,7 +250,7 @@ class Bot(pb.Referenceable, service.MultiService):
                             % (name, b.builddir, builddir))
                     b.setBuilddir(builddir)
             else:
-                b = SlaveBuilder(name, self.not_really)
+                b = SlaveBuilder(name)
                 b.usePTY = self.usePTY
                 b.unicode_encoding = self.unicode_encoding
                 b.setServiceParent(self)
@@ -308,7 +264,7 @@ class Bot(pb.Referenceable, service.MultiService):
                 del(self.builders[name])
 
         for d in os.listdir(self.basedir):
-            if os.path.isdir(d):
+            if os.path.isdir(os.path.join(self.basedir, d)):
                 if d not in wanted_dirs:
                     log.msg("I have a leftover directory '%s' that is not "
                             "being used by the buildmaster: you can delete "
@@ -460,25 +416,12 @@ class BotFactory(ReconnectingPBClientFactory):
 
 
 class BuildSlave(service.MultiService):
-    botClass = Bot
-
-    # debugOpts is a dictionary used during unit tests.
-
-    # debugOpts['stallPings'] can be set to a tuple of (timeout, []). Any
-    # calls to remote_print will stall for 'timeout' seconds before
-    # returning. The DelayedCalls used to implement this are stashed in the
-    # list so they can be cancelled later.
-
-    # debugOpts['failPingOnce'] can be set to True to make the slaveping fail
-    # exactly once.
-
     def __init__(self, buildmaster_host, port, name, passwd, basedir,
                  keepalive, usePTY, keepaliveTimeout=30, umask=None,
-                 maxdelay=300, debugOpts={}, unicode_encoding=None):
+                 maxdelay=300, unicode_encoding=None):
         log.msg("Creating BuildSlave -- version: %s" % buildslave.version)
         service.MultiService.__init__(self)
-        self.debugOpts = debugOpts.copy()
-        bot = self.botClass(basedir, usePTY, unicode_encoding=unicode_encoding)
+        bot = Bot(basedir, usePTY, unicode_encoding=unicode_encoding)
         bot.setServiceParent(self)
         self.bot = bot
         if keepalive == 0:
@@ -488,15 +431,6 @@ class BuildSlave(service.MultiService):
         bf.startLogin(credentials.UsernamePassword(name, passwd), client=bot)
         self.connection = c = internet.TCPClient(buildmaster_host, port, bf)
         c.setServiceParent(self)
-
-    def waitUntilDisconnected(self):
-        # utility method for testing. Returns a Deferred that will fire when
-        # we lose the connection to the master.
-        if not self.bf.perspective:
-            return defer.succeed(None)
-        d = defer.Deferred()
-        self.bf.perspective.notifyOnDisconnect(lambda res: d.callback(None))
-        return d
 
     def startService(self):
         if self.umask is not None:

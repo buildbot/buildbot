@@ -17,6 +17,8 @@ Build #{{ b.getNumber() }}
   {% if when_time %}
     <p>ETA: {{ when_time }} [{{ when }}]</p>
   {% endif %}
+
+  {{ current_step }}
   
   {% if authz.advertiseAction('stopBuild') %}
     <h2>Stop Build</h2>

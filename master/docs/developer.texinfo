@@ -18,6 +18,7 @@ described here.
 * String Types::
 * Subscription Interfaces::
 * Web Status::
+* Master-Slave API::
 * Twisted Idioms::
 * Buildbot Tests::
 * Developer Class Index::
@@ -385,6 +386,159 @@ user's authorization function could ensure that devs can only operate on their
 own builds.
 
 The available actions are listed in @pxref{WebStatus Configuration Parameters}.
+
+@node Master-Slave API
+@section Master-Slave API
+
+This section is a (very incomplete) description of the master-slave interface.
+The interface is based on Twisted's Perspective Broker.
+
+@heading Connection
+
+The slave connects to the master, using the parameters supplied to
+@code{buildslave create-slave}.  It uses a reconnecting process with an
+exponential backoff, and will automatically reconnect on disconnection.
+
+@dvindex buildslave.bot.Bot
+
+Once connected, the slave authenticates with the Twisted Cred (newcred)
+mechanism, using the username and password supplied to @code{buildslave
+create-slave}.  The "mind" is the slave bot instance (class
+@code{buildslave.bot.Bot}).
+
+@dvindex buildbot.master.Dispatcher
+@dvindex buildbot.buildslave.BuildSlave
+
+On the master side, the realm is implemented by
+@code{buildbot.master.Dispatcher}, which examines the username of incoming
+avatar requests.  There are special cases for @code{change}, @code{debug}, and
+@code{statusClient}, which are not discussed here.  For all other usernames,
+the botmaster is consulted, and if a slave with that name is configured, its
+@code{buildbot.buildslave.BuildSlave} instance is returned as the perspective.
+
+@heading Build Slaves
+
+At this point, the master-side BuildSlave object has a pointer to the remote,
+slave-side Bot object in @code{self.slave}, and the slave-side Bot object has a
+reference to the master-side BuildSlave object in @code{self.perspective}.
+
+@subheading Bot methods
+
+The slave-side object has the following remote methods:
+
+@table @code
+@item remote_getCommands
+Returns a list of @code{(name, version)} for all commands the slave recognizes
+
+@item remote_setBuilderList
+Given a list of builders and their build directories, ensures that those
+builders, and only those builders, are running.  This can be called after the
+initial connection is established, with a new list, to add or remove builders.
+
+This method returns a dictionary of @code{SlaveBuilder} objects - see below
+
+@item remote_print
+Adds a message to the slave logfile
+
+@item remote_getSlaveInfo
+Returns the contents of the slave's @file{info/} directory
+
+@item remote_getVersion
+Returns the slave's version
+
+@end table
+
+@subheading BuildSlave methods
+
+The master-side object has the following method:
+
+@table @code
+@item perspective_keepalive
+Does nothing - used to keep traffic flowing over the TCP connection
+
+@end table
+
+@heading Slave Builders
+
+@dvindex buildslave.bot.SlaveBuilder
+@dvindex buildbot.process.builder.Builder
+
+Each build slave has a set of builders which can run on it.  These are represented
+by distinct classes on the master and slave, just like the BuildSlave and Bot objects
+described above.
+
+On the slave side, builders are represented as instances of the
+@code{buildslave.bot.SlaveBuilder} class.  On the master side, they are
+represented by the @code{buildbot.process.builder.SlaveBuilder} class.  The
+following will refer to these as the slave-side and master-side SlaveBuilder
+classes.  Each object keeps a reference to its opposite in @code{self.remote}.
+
+@subheading slave-side SlaveBuilder methods
+
+@table @code
+@item remote_setMaster
+Provides a reference to the master-side SlaveBuilder
+
+@item remote_print
+Adds a message to the slave logfile; used to check round-trip connectivity
+
+@item remote_startBuild
+Indicates that a build is about to start, and that any subsequent
+commands are part of that build
+
+@item remote_startCommand
+Invokes a command on the slave side
+
+@item remote_interruptCommand
+Interrupts the currently-running command
+
+@item remote_shutdown
+Shuts down the slave cleanly
+
+@end table
+
+@subheading master-side SlaveBuilder methods
+
+The master side does not have any remotely-callable methods.
+
+@heading Setup
+
+After the initial connection and trading of a mind (Bot) for an avatar
+(BuildSlave), the master calls the Bot's @code{setBuilderList} method to set up
+the proper slave builders on the slave side.  This method returns a reference to
+each of the new slave-side SlaveBuilder objects.  Each of these is handed to the
+corresponding master-side SlaveBuilder object.  This immediately calls the remote
+@code{setMaster} method, then the @code{print} method.
+
+@heading Pinging
+
+To ping a remote SlaveBuilder, the master calls the @code{print} method.
+
+@heading Building
+
+When a build starts, the msater calls the slave's @code{startBuild} method.
+Each BuildStep instance will subsequently call the @code{startCommand} method,
+passing a reference to itself as the @code{stepRef} parameter.  The
+@code{startCommand} method returns immediately, and the end of the command is
+signalled with a call to a method on the master-side BuildStep object.
+
+@subheading master-side BuildStep methods
+
+@table @code
+@item remote_update
+Update information about the running command.  See below for the format.
+
+@item remote_complete
+Signal that the command is complete, either successfully or with a Twisted failure.
+
+@end table
+
+Updates from the slave are a list of individual update elements.  Each update
+element is, in turn, a list of the form @code{[data, 0]} where the 0 is present
+for historical reasons.  The data is a dictionary, with keys describing the
+contents, e.g., @code{header}, @code{stdout}, or the name of a logfile.  If the
+key is @code{rc}, then the value is the exit status of the command.  No further
+updates should be sent after an @code{rc}.
 
 @node Twisted Idioms
 @section Twisted Idioms

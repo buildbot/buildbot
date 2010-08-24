@@ -38,21 +38,23 @@ class SlaveFileUploadCommand(Command):
         try:
             self.fp = open(self.path, 'rb')
             if self.debug:
-                log.msg('Opened %r for upload' % self.path)
+                log.msg("Opened '%s' for upload" % self.path)
         except:
-            # TODO: this needs cleanup
             self.fp = None
-            self.stderr = 'Cannot open file %r for upload' % self.path
+            self.stderr = "Cannot open file '%s' for upload" % self.path
             self.rc = 1
             if self.debug:
-                log.msg('Cannot open file %r for upload' % self.path)
+                log.msg("Cannot open file '%s' for upload" % self.path)
 
         self.sendStatus({'header': "sending %s" % self.path})
 
         d = defer.Deferred()
         self._reactor.callLater(0, self._loop, d)
         def _close(res):
-            # close the file, but pass through any errors from _loop
+            # close the file
+            self.fp = None
+
+            # call close, but pass through any errors from _loop
             d1 = self.writer.callRemote("close")
             d1.addErrback(log.err)
             d1.addCallback(lambda ignored: res)
@@ -87,7 +89,7 @@ class SlaveFileUploadCommand(Command):
 
         if length <= 0:
             if self.stderr is None:
-                self.stderr = 'Maximum filesize reached, truncating file %r' \
+                self.stderr = 'Maximum filesize reached, truncating file \'%s\'' \
                                 % self.path
                 self.rc = 1
             data = ''
@@ -114,7 +116,7 @@ class SlaveFileUploadCommand(Command):
         if self.interrupted:
             return
         if self.stderr is None:
-            self.stderr = 'Upload of %r interrupted' % self.path
+            self.stderr = 'Upload of \'%s\' interrupted' % self.path
             self.rc = 1
         self.interrupted = True
         # the next _writeBlock call will notice the .interrupted flag
@@ -141,7 +143,7 @@ class SlaveDirectoryUploadCommand(SlaveFileUploadCommand):
         - ['blocksize']: max size for each data block
         - ['compress']:  one of [None, 'bz2', 'gz']
     """
-    debug = True
+    debug = False
 
     def setup(self, args):
         self.workdir = args['workdir']
@@ -246,7 +248,7 @@ class SlaveFileDownloadCommand(Command):
         try:
             self.fp = open(self.path, 'wb')
             if self.debug:
-                log.msg('Opened %r for download' % self.path)
+                log.msg("Opened '%s' for download" % self.path)
             if self.mode is not None:
                 # note: there is a brief window during which the new file
                 # will have the buildslave's default (umask) mode before we
@@ -259,10 +261,10 @@ class SlaveFileDownloadCommand(Command):
         except IOError:
             # TODO: this still needs cleanup
             self.fp = None
-            self.stderr = 'Cannot open file %r for download' % self.path
+            self.stderr = "Cannot open file '%s' for download" % self.path
             self.rc = 1
             if self.debug:
-                log.msg('Cannot open file %r for download' % self.path)
+                log.msg("Cannot open file '%s' for download" % self.path)
 
         d = defer.Deferred()
         self._reactor.callLater(0, self._loop, d)
@@ -302,7 +304,7 @@ class SlaveFileDownloadCommand(Command):
 
         if length <= 0:
             if self.stderr is None:
-                self.stderr = 'Maximum filesize reached, truncating file %r' \
+                self.stderr = "Maximum filesize reached, truncating file '%s'" \
                                 % self.path
                 self.rc = 1
             return True
@@ -330,7 +332,7 @@ class SlaveFileDownloadCommand(Command):
         if self.interrupted:
             return
         if self.stderr is None:
-            self.stderr = 'Download of %r interrupted' % self.path
+            self.stderr = "Download of '%s' interrupted" % self.path
             self.rc = 1
         self.interrupted = True
         # now we wait for the next read request to return. _readBlock will

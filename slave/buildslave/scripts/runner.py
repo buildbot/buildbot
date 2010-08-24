@@ -88,7 +88,7 @@ class Maker:
         if secret:
             os.chmod(tacfile, 0600)
 
-slaveTAC = """
+slaveTACTemplate = ["""
 import os
 
 from twisted.application import service
@@ -106,6 +106,8 @@ if basedir == '.':
 # note: this line is matched against to check that this is a buildslave
 # directory; do not edit it.
 application = service.Application('buildslave')
+""",
+"""
 try:
   from twisted.python.logfile import LogFile
   from twisted.python.log import ILogObserver, FileLogObserver
@@ -115,7 +117,8 @@ try:
 except ImportError:
   # probably not yet twisted 8.2.0 and beyond, can't set log yet
   pass
-
+""",
+"""
 buildmaster_host = '%(host)s'
 port = %(port)d
 slavename = '%(name)s'
@@ -129,7 +132,7 @@ s = BuildSlave(buildmaster_host, port, slavename, passwd, basedir,
                keepalive, usepty, umask=umask, maxdelay=maxdelay)
 s.setServiceParent(application)
 
-"""
+"""]
 
 def createSlave(config):
     m = Maker(config)
@@ -149,6 +152,11 @@ def createSlave(config):
         print "unparseable master location '%s'" % master
         print " expecting something more like localhost:8007 or localhost"
         raise
+
+    if config['no-logrotate']:
+        slaveTAC = "".join([slaveTACTemplate[0]] + slaveTACTemplate[2:])
+    else:
+        slaveTAC = "".join(slaveTACTemplate)
     contents = slaveTAC % config
 
     m.makeTAC(contents, secret=True)
@@ -270,7 +278,7 @@ class UpgradeSlaveOptions(MakerBase):
         ]
 
     def getSynopsis(self):
-        return "Usage:    buildbot upgrade-slave [<basedir>]"
+        return "Usage:    buildslave upgrade-slave [<basedir>]"
 
     longdesc = """
     This command takes an existing buildslave working directory and
@@ -297,6 +305,8 @@ class SlaveOptions(MakerBase):
         ["force", "f", "Re-use an existing directory"],
         ["relocatable", "r",
          "Create a relocatable buildbot.tac"],
+        ["no-logrotate", "n",
+         "Do not permit buildmaster rotate logs by itself"]
         ]
     optParameters = [
         ["keepalive", "k", 600,

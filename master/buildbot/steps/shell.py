@@ -638,12 +638,13 @@ class PerlModuleTest(Test):
         total = 0
         passed = 0
         failed = 0
-        rc = cmd.rc
+        rc = SUCCESS
+        if cmd.rc > 0:
+            rc = FAILURE
 
         # New version of Test::Harness?
-        try:
+        if "Test Summary Report" in lines:
             test_summary_report_index = lines.index("Test Summary Report")
-
             del lines[0:test_summary_report_index + 2]
 
             re_test_result = re.compile("^Result: (PASS|FAIL)$|Tests: \d+ Failed: (\d+)\)|Files=\d+, Tests=(\d+)")
@@ -652,16 +653,15 @@ class PerlModuleTest(Test):
             test_result_lines = [mo.groups() for mo in mos if mo]
 
             for line in test_result_lines:
-                if line[0] == 'PASS':
-                    rc = SUCCESS
-                elif line[0] == 'FAIL':
+                if line[0] == 'FAIL':
                     rc = FAILURE
-                elif line[1]:
+
+                if line[1]:
                     failed += int(line[1])
-                elif line[2]:
+                if line[2]:
                     total = int(line[2])
 
-        except ValueError: # Nope, it's the old version
+        else: # Nope, it's the old version
             re_test_result = re.compile("^(All tests successful)|(\d+)/(\d+) subtests failed|Files=\d+, Tests=(\d+),")
 
             mos = map(lambda line: re_test_result.search(line), lines)
@@ -677,7 +677,6 @@ class PerlModuleTest(Test):
 
                     test_totals_line = test_result_lines[1]
                     total_str = test_totals_line[3]
-                    rc = SUCCESS
                 else:
                     failed_str = test_result_line[1]
                     failed = int(failed_str)

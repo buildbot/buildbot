@@ -149,7 +149,7 @@ class MailNotifier(base.StatusReceiverMultiService):
         @type  fromaddr: string
         @param fromaddr: the email address to be used in the 'From' header.
         @type  sendToInterestedUsers: boolean
-        @param sendToInterestedUsers: if True (the default), send mail to all 
+        @param sendToInterestedUsers: if True (the default), send mail to all
                                       of the Interested Users. If False, only
                                       send mail to the extraRecipients list.
 
@@ -160,7 +160,9 @@ class MailNotifier(base.StatusReceiverMultiService):
                                 developers who made Changes that went into this
                                 build). It is a good idea to create a small
                                 mailing list and deliver to that, then let
-                                subscribers come and go as they please.
+                                subscribers come and go as they please.  The
+                                addresses in this list are used literally (they
+                                are not processed by lookup).
 
         @type  subject: string
         @param subject: a string to be used as the subject line of the message.
@@ -203,23 +205,23 @@ class MailNotifier(base.StatusReceiverMultiService):
 
         @type  lookup:    implementor of {IEmailLookup}
         @param lookup:    object which provides IEmailLookup, which is
-                          responsible for mapping User names (which come from
-                          the VC system) into valid email addresses. If not
-                          provided, the notifier will only be able to send mail
-                          to the addresses in the extraRecipients list. Most of
-                          the time you can use a simple Domain instance. As a
-                          shortcut, you can pass as string: this will be
-                          treated as if you had provided Domain(str). For
-                          example, lookup='twistedmatrix.com' will allow mail
-                          to be sent to all developers whose SVN usernames
-                          match their twistedmatrix.com account names.
-                          
+                          responsible for mapping User names for Interested
+                          Users (which come from the VC system) into valid
+                          email addresses. If not provided, the notifier will
+                          only be able to send mail to the addresses in the
+                          extraRecipients list. Most of the time you can use a
+                          simple Domain instance. As a shortcut, you can pass
+                          as string: this will be treated as if you had provided
+                          Domain(str). For example, lookup='twistedmatrix.com'
+                          will allow mail to be sent to all developers whose SVN
+                          usernames match their twistedmatrix.com account names.
+
         @type  customMesg: func
         @param customMesg: (this function is deprecated)
 
         @type  messageFormatter: func
         @param messageFormatter: function taking (mode, name, build, result,
-                                 master_status ) and returning a dictionary
+                                 master_status) and returning a dictionary
                                  containing two required keys "body" and "type",
                                  with a third optional key, "subject". The
                                  "body" key gives a string that contains the
@@ -495,7 +497,8 @@ class MailNotifier(base.StatusReceiverMultiService):
         return logname in self.addLogs
 
     def _gotRecipients(self, res, rlist, m):
-        recipients = set()
+        to_recipients = set()
+        cc_recipients = set()
 
         for r in rlist:
             if r is None: # getAddress didn't like this address
@@ -507,30 +510,23 @@ class MailNotifier(base.StatusReceiverMultiService):
                 r = r[:r.rindex('@')]
 
             if VALID_EMAIL.search(r):
-                recipients.add(r)
+                to_recipients.add(r)
             else:
                 twlog.msg("INVALID EMAIL: %r" + r)
 
-        # if we're sending to interested users move the extra's to the CC
-        # list so they can tell if they are also interested in the change
-        # unless there are no interested users
-        if self.sendToInterestedUsers and len(recipients):
-            extra_recips = self.extraRecipients[:]
-            extra_recips.sort()
-            m['CC'] = ", ".join(extra_recips)
+        # If we're sending to interested users put the extras in the
+        # CC list so they can tell if they are also interested in the
+        # change:
+        if self.sendToInterestedUsers and to_recipients:
+            cc_recipients.update(self.extraRecipients)
         else:
-            [recipients.add(r) for r in self.extraRecipients[:]]
+            to_recipients.update(self.extraRecipients)
 
-        rlist = list(recipients)
-        rlist.sort()
-        m['To'] = ", ".join(rlist)
+        m['To'] = ", ".join(sorted(to_recipients))
+        if cc_recipients:
+            m['CC'] = ", ".join(sorted(cc_recipients))
 
-        # The extras weren't part of the TO list so add them now
-        if self.sendToInterestedUsers:
-            for r in self.extraRecipients:
-                recipients.add(r)
-
-        return self.sendMessage(m, list(recipients))
+        return self.sendMessage(m, list(to_recipients | cc_recipients))
 
     def sendmail(self, s, recipients):
         result = defer.Deferred()

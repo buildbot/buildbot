@@ -169,7 +169,7 @@ class DBSchemaManager(unittest.TestCase):
     def test_get_current_version(self):
         # this is as much a reminder to write tests for the new version
         # as a test of the (very trivial) method
-        self.assertEqual(self.sm.get_current_version(), 5)
+        self.assertEqual(self.sm.get_current_version(), 6)
 
     def test_get_db_version_empty(self):
         self.assertEqual(self.sm.get_db_version(), 0)

@@ -54,11 +54,11 @@ multiple branch tags, but there is always a default branch. The
 timestamp may be an actual timestamp (such as the -D option to CVS),
 or it may be a monotonically-increasing transaction number (such as
 the change number used by SVN and P4, or the revision number used by
-Arch/Baz/Bazaar, or a labeled tag used in CVS)@footnote{many VC
+Bazaar, or a labeled tag used in CVS)@footnote{many VC
 systems provide more complexity than this: in particular the local
 views that P4 and ClearCase can assemble out of various source
 directories are more complex than we're prepared to take advantage of
-here}. The SHA1 revision ID used by Monotone, Mercurial, and Git is
+here}. The SHA1 revision ID used by Mercurial and Git is
 also a kind of revision stamp, in that it specifies a unique copy of
 the source tree, as does a Darcs ``context'' file.
 
@@ -113,10 +113,7 @@ attributes of the builder and do not change over time. Others are more
 variable: each build will have a different value. The repository is
 changed over time by a sequence of Changes, each of which represents a
 single developer making changes to some set of files. These Changes
-are cumulative@footnote{Monotone's @emph{multiple heads} feature
-violates this assumption of cumulative Changes, but in most situations
-the changes don't occur frequently enough for this to be a significant
-problem}.
+are cumulative.
 
 For normal builds, the Buildbot wants to get well-defined source trees
 that contain specific Changes, and exclude other Changes that may have
@@ -183,28 +180,6 @@ are specified in a single depot path, and revisions are
 depot-wide. When branches are used, the @code{p4base} and
 @code{defaultBranch} are concatenated together to produce the depot
 path.
-
-@uref{http://wiki.gnuarch.org/, Arch} and
-@uref{http://bazaar.canonical.com/, Bazaar} specify a repository by
-URL, as well as a @code{version} which is kind of like a branch name.
-Arch uses the word @code{archive} to represent the repository. Arch
-lets you push changes from one archive to another, removing the strict
-centralization required by CVS and SVN. It retains the distinction
-between repository and working directory that most other VC systems
-use. For complex multi-module directory structures, Arch has a
-built-in @code{build config} layer with which the checkout process has
-two steps. First, an initial bootstrap checkout is performed to
-retrieve a set of build-config files. Second, one of these files is
-used to figure out which archives/modules should be used to populate
-subdirectories of the initial checkout.
-
-Builders which use Arch and Bazaar therefore have a static archive
-@code{url}, and a default ``branch'' (which is a string that specifies
-a complete category--branch--version triple). Each build can have its
-own branch (the category--branch--version string) to override the
-default, as well as a revision number (which is turned into a
---patch-NN suffix when performing the checkout).
-
 
 @uref{http://bazaar-vcs.org, Bzr} (which is a descendant of
 Arch/Bazaar, and is frequently referred to as ``Bazaar'') has the same
@@ -274,15 +249,12 @@ specified branch.
 
 @heading Who
 
-Each Change has a @code{who} attribute, which specifies which
-developer is responsible for the change. This is a string which comes
-from a namespace controlled by the VC repository. Frequently this
-means it is a username on the host which runs the repository, but not
-all VC systems require this (Arch, for example, uses a fully-qualified
-@code{Arch ID}, which looks like an email address, as does Darcs).
-Each StatusNotifier will map the @code{who} attribute into something
-appropriate for their particular means of communication: an email
-address, an IRC handle, etc.
+Each Change has a @code{who} attribute, which specifies which developer is
+responsible for the change. This is a string which comes from a namespace
+controlled by the VC repository. Frequently this means it is a username on the
+host which runs the repository, but not all VC systems require this.  Each
+StatusNotifier will map the @code{who} attribute into something appropriate for
+their particular means of communication: an email address, an IRC handle, etc.
 
 @heading Files
 
@@ -354,8 +326,6 @@ consumed by the @code{computeSourceRevision} method in the appropriate
 @code{revision} is a large string, the output of @code{darcs changes --context}
 @item Mercurial
 @code{revision} is a short string (a hash ID), the output of @code{hg identify}
-@item Arch/Bazaar
-@code{revision} is the full revision ID (ending in --patch-%d)
 @item P4
 @code{revision} is an int, the transaction number
 @item Git
@@ -369,7 +339,7 @@ The Change might also have a @code{branch} attribute. This indicates
 that all of the Change's files are in the same named branch. The
 Schedulers get to decide whether the branch should be built or not.
 
-For VC systems like CVS, Arch, Monotone, and Git, the @code{branch}
+For VC systems like CVS, and Git, the @code{branch}
 name is unrelated to the filename. (that is, the branch name and the
 filename inhabit unrelated namespaces). For SVN, branches are
 expressed as subdirectories of the repository, so the file's
@@ -388,8 +358,6 @@ branch='branches/warner-newfeature', files=['src/foo.c']
 branch='warner-newfeature', files=['src/foo.c']
 @item Mercurial
 branch='warner-newfeature', files=['src/foo.c']
-@item Arch/Bazaar
-branch='buildbot--usebranches--0', files=['buildbot/master.py']
 @item Git
 branch='warner-newfeature', files=['src/foo.c']
 @end table
@@ -684,7 +652,7 @@ email address is a simple matter of appending
 despite the repository host being named ``cvs.project.org''), and some
 VC systems have full separation between the concept of a user and that
 of an account on the repository host (like Perforce). Some systems
-(like Arch) put a full contact email address in every change.
+(like Git) put a full contact email address in every change.
 
 To convert these names to addresses, the MailNotifier uses an EmailLookup
 object. This provides a .getAddress method which accepts a name and

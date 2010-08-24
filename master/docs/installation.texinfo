@@ -49,7 +49,7 @@ Buildbot requires python-2.4 or later.
 @item
 Twisted: http://twistedmatrix.com
 
-Both the buildmaster and the buildslaves require Twisted-2.0.x or
+Both the buildmaster and the buildslaves require Twisted-8.0.x or
 later. As always, the most recent version is recommended.
 
 Twisted is delivered as a collection of subpackages. You'll need at
@@ -64,6 +64,16 @@ that Twisted requires ZopeInterface to be installed as well.
 Of course, your project's build process will impose additional
 requirements on the buildslaves. These hosts must have all the tools
 necessary to compile and test your project's source code.
+
+@heading Windows Support
+
+Buildbot - both master and slave - runs well natively on Windows.  The slave
+runs well on Cygwin, but because of problems with SQLite on Cygwin, the master
+does not.
+
+Buildbot's windows testing is limited to the most recent Twisted and Python
+versions.  For best results, use the most recent available versions of these
+libraries on Windows.
 
 @node Buildmaster Requirements
 @subsection Buildmaster Requirements
@@ -433,6 +443,11 @@ buildslave create-slave --umask=022 ~/buildslave buildmaster.example.org:42012 m
 @end example
 
 @table @code
+@item --no-logrotate
+This disables internal buildslave log management mechanism. With this option
+buildslave does not override the default logfile name and its behaviour giving
+a possibility to control those with command-line options of twistd daemon.
+
 @item --usepty
 This is a boolean flag that tells the buildslave whether to launch child
 processes in a PTY or with regular pipes (the default) when the master does not

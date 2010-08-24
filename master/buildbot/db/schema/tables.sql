@@ -89,12 +89,6 @@ CREATE TABLE changes (
     `project` text not null default ''
 );
 
-CREATE TABLE last_access (
-    `who` VARCHAR(256) NOT NULL, -- like 'buildbot-0.8.0'
-    `writing` INTEGER NOT NULL, -- 1 if you are writing, 0 if you are reading
-    -- PRIMARY KEY (who, writing),
-    `last_access` TIMESTAMP     -- seconds since epoch
-);
 CREATE TABLE patches (
     `id` INTEGER PRIMARY KEY AUTOINCREMENT,
     `patchlevel` INTEGER NOT NULL,

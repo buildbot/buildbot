@@ -955,8 +955,10 @@ class DBConnector(util.ComparableMixin):
             if not complete:
                 # still waiting
                 is_complete = False
-            if r == FAILURE:
-                bs_results = r
+            # mark the buildset as a failure if anything worse than
+            # WARNINGS resulted from any one of the buildrequests
+            if r not in (SUCCESS, WARNINGS):
+                bs_results = FAILURE
         if is_complete:
             # they were all successful
             q = self.quoteq("UPDATE buildsets"
@@ -1036,6 +1038,9 @@ class DBConnector(util.ComparableMixin):
 
     def has_pending_operations(self):
         return bool(self._pending_operation_count)
+
+    def setChangeCacheSize(self, max_size):
+        self._change_cache.setMaxSize(max_size)
 
 
 threadable.synchronize(DBConnector)

@@ -1,3 +1,6 @@
+import sys
+
+import twisted
 from twisted.trial import unittest
 
 def add_debugging_monkeypatches():

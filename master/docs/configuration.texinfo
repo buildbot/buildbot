@@ -100,9 +100,12 @@ use. The config file is located in
 
 The config file is only read at specific points in time. It is first
 read when the buildmaster is launched. Once it is running, there are
-various ways to ask it to reload the config file. If you are on the
-system hosting the buildmaster, you can send a @code{SIGHUP} signal to
-it: the @command{buildbot} tool has a shortcut for this:
+various ways to ask it to reload the config file.
+
+@heading Reconfiguration
+
+If you are on the system hosting the buildmaster, you can send a @code{SIGHUP}
+signal to it: the @command{buildbot} tool has a shortcut for this:
 
 @example
 buildbot reconfig @var{BASEDIR}
@@ -111,6 +114,23 @@ buildbot reconfig @var{BASEDIR}
 This command will show you all of the lines from @file{twistd.log}
 that relate to the reconfiguration. If there are any problems during
 the config-file reload, they will be displayed in these lines.
+
+Buildbot's reconfiguration system is fragile for a few difficult-to-fix
+reasons:
+
+@itemize @bullet
+@item
+Any modules imported by the configuration file are not automatically reloaded.
+
+@item
+During the reconfiguration, active internal objects are divorced from the service
+hierarchy, leading to tracebacks in the web interface and other components. These
+are ordinarily transient, but with HTTP connection caching (either by the browser or
+an intervening proxy) they can last for a long time.
+
+@end itemize
+
+@heading Debug Client
 
 The debug tool (@code{buildbot debugclient --master HOST:PORT}) has a
 ``Reload .cfg'' button which will also trigger a reload. In the

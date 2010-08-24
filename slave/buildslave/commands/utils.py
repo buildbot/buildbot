@@ -1,5 +1,6 @@
 import os
 
+from twisted.python import log
 from twisted.python.procutils import which
 from twisted.python import runtime
 
@@ -35,6 +36,14 @@ if runtime.platformType  == 'win32':
 
         # Verify the directory is read/write/execute for the current user
         os.chmod(dir, 0700)
+
+        # os.listdir below only returns a list of unicode filenames if the parameter is unicode
+        # Thus, if a non-unicode-named dir contains a unicode filename, that filename will get garbled.
+        # So force dir to be unicode.
+        try:
+            dir = unicode(dir, "utf-8")
+        except:
+            log.msg("rmdirRecursive: decoding from UTF-8 failed")
 
         for name in os.listdir(dir):
             full_name = os.path.join(dir, name)

@@ -56,7 +56,7 @@ provided the copyright notice and this notice are preserved.
 * Installation::                Installing and setting up a Builbot system
 * Concepts::                    What goes on in the buildbot's little mind.
 * Configuration::               Controlling the buildbot.
-* Command-line Tool::           The 'buildbot' utility
+* Command-line Tools::          The 'buildbot' and 'buildslave' utilities
 * Resources::                   Getting help
 * Developer Information::       Stuff Buildbot hackers should know
 * Index::                       Concept Index
@@ -78,8 +78,8 @@ provided the copyright notice and this notice are preserved.
 @chapter Configuration
 @include configuration.texinfo
 
-@node Command-line Tool
-@chapter Command-line Tool
+@node Command-line Tools
+@chapter Command-line Tools
 @include cmdline.texinfo
 
 @node Resources

@@ -618,6 +618,9 @@ class BuildStep:
             raise TypeError(why)
         self._pendingLogObservers = []
 
+        self._acquiringLock = None
+        self.stopped = False
+
     def describe(self, done=False):
         return [self.name]
 
@@ -713,33 +716,45 @@ class BuildStep:
                 log.msg("Hey, lock %s is claimed by both a Step (%s) and the"
                         " parent Build (%s)" % (l, self, self.build))
                 raise RuntimeError("lock claimed by both Step and Build")
-        d = self.acquireLocks()
-        d.addCallback(self._startStep_2)
-        return self.deferred
-
-    def acquireLocks(self, res=None):
-        log.msg("acquireLocks(step %s, locks %s)" % (self, self.locks))
-        if not self.locks:
-            return defer.succeed(None)
-        for lock, access in self.locks:
-            if not lock.isAvailable(access):
-                log.msg("step %s waiting for lock %s" % (self, lock))
-                d = lock.waitUntilMaybeAvailable(self, access)
-                d.addCallback(self.acquireLocks)
-                return d
-        # all locks are available, claim them all
-        for lock, access in self.locks:
-            lock.claim(self, access)
-        return defer.succeed(None)
-
-    def _startStep_2(self, res):
-        if self.progress:
-            self.progress.start()
 
         # Set the step's text here so that the stepStarted notification sees
         # the correct description
         self.step_status.setText(self.describe(False))
         self.step_status.stepStarted()
+
+        d = self.acquireLocks()
+        d.addCallback(self._startStep_2)
+        return self.deferred
+
+    def acquireLocks(self, res=None):
+        self._acquiringLock = None
+        if not self.locks:
+            return defer.succeed(None)
+        if self.stopped:
+            return defer.succeed(None)
+        log.msg("acquireLocks(step %s, locks %s)" % (self, self.locks))
+        for lock, access in self.locks:
+            if not lock.isAvailable(access):
+                self.step_status.setWaitingForLocks(True)
+                log.msg("step %s waiting for lock %s" % (self, lock))
+                d = lock.waitUntilMaybeAvailable(self, access)
+                d.addCallback(self.acquireLocks)
+                self._acquiringLock = (lock, access, d)
+                return d
+        # all locks are available, claim them all
+        for lock, access in self.locks:
+            lock.claim(self, access)
+        self.step_status.setWaitingForLocks(False)
+        return defer.succeed(None)
+
+    def _startStep_2(self, res):
+        if self.stopped:
+            self.finished(FAILURE)
+            return
+
+        if self.progress:
+            self.progress.start()
+
         try:
             skip = None
             if isinstance(self.doStepIf, bool):
@@ -827,12 +842,20 @@ class BuildStep:
         local processing should be skipped, and the Step completed with an
         error status. The results text should say something useful like
         ['step', 'interrupted'] or ['remote', 'lost']"""
-        pass
+        self.stopped = True
+        if self._acquiringLock:
+            lock, access, d = self._acquiringLock
+            lock.stopWaitingUntilAvailable(self, access, d)
+            d.callback(None)
 
     def releaseLocks(self):
         log.msg("releaseLocks(%s): %s" % (self, self.locks))
         for lock, access in self.locks:
-            lock.release(self, access)
+            if lock.isOwner(self, access):
+                lock.release(self, access)
+            else:
+                # This should only happen if we've been interrupted
+                assert self.stopped
 
     def finished(self, results):
         if self.progress:
@@ -986,6 +1009,7 @@ class LoggingBuildStep(BuildStep):
     logfiles = {}
 
     parms = BuildStep.parms + ['logfiles', 'lazylogfiles']
+    cmd = None
 
     def __init__(self, logfiles={}, lazylogfiles=False, *args, **kwargs):
         BuildStep.__init__(self, *args, **kwargs)
@@ -1061,9 +1085,15 @@ class LoggingBuildStep(BuildStep):
         # TODO: consider adding an INTERRUPTED or STOPPED status to use
         # instead of FAILURE, might make the text a bit more clear.
         # 'reason' can be a Failure, or text
-        self.addCompleteLog('interrupt', str(reason))
-        d = self.cmd.interrupt(reason)
-        return d
+        BuildStep.interrupt(self, reason)
+        if self.step_status.isWaitingForLocks():
+            self.addCompleteLog('interrupt while waiting for locks', str(reason))
+        else:
+            self.addCompleteLog('interrupt', str(reason))
+
+        if self.cmd:
+            d = self.cmd.interrupt(reason)
+            return d
 
     def checkDisconnect(self, f):
         f.trap(error.ConnectionLost)

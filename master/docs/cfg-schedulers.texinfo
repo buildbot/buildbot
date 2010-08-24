@@ -178,13 +178,12 @@ triggered by an important change.  The default value of None means
 that all Changes are important.
 
 @item change_filter
-
 The change filter that will determine whch changes are recognized by this
-Scheduler.  Note that this is different from @code{fileIsImportant}: if the
-change filter filters out a Change, then it is completely ignored by the
-scheduler.  If a Change is allowed by the change filter, but is deemed
-unimportant, then it will not cause builds to start, but will be remembered and
-shown in status displays.
+Scheduler; @pxref{Change Filters}.  Note that this is different from
+@code{fileIsImportant}: if the change filter filters out a Change, then it is
+completely ignored by the scheduler.  If a Change is allowed by the change
+filter, but is deemed unimportant, then it will not cause builds to start, but
+will be remembered and shown in status displays.
 
 @item categories (deprecated; use change_filter)
 A list of categories of changes that this scheduler will respond to.  If this
@@ -255,11 +254,11 @@ that all Changes are important.
 
 @item change_filter
 The change filter that will determine whch changes are recognized by this
-Scheduler.  Note that this is different from @code{fileIsImportant}: if the
-change filter filters out a Change, then it is completely ignored by the
-scheduler.  If a Change is allowed by the change filter, but is deemed
-unimportant, then it will not cause builds to start, but will be remembered and
-shown in status displays.
+Scheduler; @pxref{Change Filters}.  Note that this is different from
+@code{fileIsImportant}: if the change filter filters out a Change, then it is
+completely ignored by the scheduler.  If a Change is allowed by the change
+filter, but is deemed unimportant, then it will not cause builds to start, but
+will be remembered and shown in status displays.
 
 @item branches (deprecated; use change_filter)
 This Scheduler will pay attention to any number of branches, ignoring
