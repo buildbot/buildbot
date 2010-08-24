@@ -1,24 +1,22 @@
-import threading
-
 from twisted.trial import unittest
 
 from buildbot.db import dbspec, connector
+from buildbot.test.util import threads
 
-class DBConnector_Basic(unittest.TestCase):
+class DBConnector_Basic(threads.ThreadLeakMixin, unittest.TestCase):
     """
     Basic tests of the DBConnector class - all start with an empty DB
     """
 
     def setUp(self):
+        self.setUpThreadLeak()
         # use an in-memory sqlite database to test
         self.dbc = connector.DBConnector(dbspec.DBSpec.from_url("sqlite://"))
         self.dbc.start()
-        self.start_thdcount = len(threading.enumerate())
 
     def tearDown(self):
         self.dbc.stop()
-        # double-check we haven't left a ThreadPool open
-        assert len(threading.enumerate()) - self.start_thdcount < 1
+        self.tearDownThreadLeak()
 
     def test_quoteq_format(self):
         self.dbc.paramstyle = "format" # override default

@@ -1,9 +1,9 @@
 import os
-import threading
 
 from twisted.trial import unittest
 
 from buildbot.db import dbspec
+from buildbot.test.util import threads
 
 class DBSpec(unittest.TestCase):
     # a dburl of "sqlite:///.." can use either the third-party sqlite3
@@ -126,19 +126,18 @@ class DBSpec(unittest.TestCase):
                 connkw=dict(host='somehost.com', db='dbname', user="user",
                             port=8000, foo="moo", use_unicode=True, charset='utf8'))
 
-class DBSpec_methods(unittest.TestCase):
+class DBSpec_methods(threads.ThreadLeakMixin, unittest.TestCase):
 
     def setUp(self):
+        self.setUpThreadLeak()
         self.spec = dbspec.DBSpec.from_url("sqlite://")
         self.pools = []
-        self.start_thdcount = len(threading.enumerate())
 
     def tearDown(self):
         # be careful to stop all pools
         for pool in self.pools:
             pool.close()
-        # double-check we haven't left a ThreadPool open
-        assert len(threading.enumerate()) - self.start_thdcount < 1
+        self.tearDownThreadLeak()
 
     # track a pool that must be closed
     def trackPool(self, pool):
