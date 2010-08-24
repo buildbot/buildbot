@@ -22,7 +22,6 @@ from buildbot.status.web.builder import BuildersResource
 from buildbot.status.web.buildstatus import BuildStatusStatusResource
 from buildbot.status.web.slaves import BuildSlavesResource
 from buildbot.status.web.status_json import JsonStatusResource
-from buildbot.status.web.xmlrpc import XMLRPCServer
 from buildbot.status.web.about import AboutBuildbot
 from buildbot.status.web.authz import Authz
 from buildbot.status.web.auth import AuthFailResource
@@ -81,7 +80,6 @@ class WebStatus(service.MultiService):
      /one_line_per_build : summarize the last few builds, one line each
      /one_line_per_build/BUILDERNAME : same, but only for a single builder
      /about : describe this buildmaster (Buildbot and support library versions)
-     /xmlrpc : (not yet implemented) an XMLRPC server with build status
      /change_hook[/DIALECT] : accepts changes from external sources, optionally
                               choosing the dialect that will be permitted
                               (i.e. github format, etc..)
@@ -335,7 +333,6 @@ class WebStatus(service.MultiService):
         #self.putChild("schedulers", SchedulersResource())
         self.putChild("one_line_per_build",
                       OneLinePerBuild(numbuilds=numbuilds))
-        self.putChild("xmlrpc", XMLRPCServer())
         self.putChild("about", AboutBuildbot())
         self.putChild("authfail", AuthFailResource())
 
