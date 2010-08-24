@@ -26,6 +26,9 @@ create-slave
 .BR \-r | \-\-relocatable
 ]
 [
+.BR \-n | \-\-no-logrotate  
+]
+[
 .BR \-k | \-\-keepalive
 .I TIME
 ]
@@ -129,7 +132,9 @@ All files are kept by default.
 Do not emit the commands being run.
 .TP
 .BR \-r | \-\-relocatable
-Create a relocatable buildbot.tac
+Create a relocatable buildbot.tac.
+.TP \-n | \-\-no-logrotate
+Do not permit buildslave rotate logs by itself.
 .TP
 .BR \-s | \-\-log-size
 Set size at which twisted lof file is rotated to
