@@ -13,7 +13,7 @@ class ThreadLeakMixin(object):
     def tearDownThreadLeak(self):
         # double-check we haven't left a ThreadPool open.  Sometimes, threads
         # take a while to go away, so this will wait up to 5s for that to occur
-        for time in xrange(5):
+        for _ in xrange(5):
             cur_thdcount = len(threading.enumerate())
             if cur_thdcount - self.start_thdcount < 1:
                 return
