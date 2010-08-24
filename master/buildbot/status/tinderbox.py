@@ -171,7 +171,7 @@ class TinderboxMailNotifier(mail.MailNotifier):
         elif results == WARNINGS:
             res = "testfailed"
             text += res
-        elif results == EXCEPTION:
+        elif results in (EXCEPTION, RETRY):
             res = "exception"
             text += res
         else:
