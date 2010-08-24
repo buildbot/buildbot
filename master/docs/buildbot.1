@@ -30,6 +30,9 @@ create-master
 .BR \-r | \-\-relocatable
 ]
 [
+.BR \-n | \-\-no-logrotate
+]
+[
 .BR \-s | \-\-log-size
 .I SIZE
 ]
@@ -347,7 +350,8 @@ Re-use an existing directory (will not overwrite master.cfg file)
 .TP
 .BR \-r | \-\-relocatable
 Create a relocatable buildbot.tac
-.TP \-n | \-\-no-logrotate
+.TP 
+.BR \-n | \-\-no-logrotate
 Do not permit buildmaster rotate logs by itself.
 .TP
 .BR \-c | \-\-config
