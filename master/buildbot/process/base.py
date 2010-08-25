@@ -339,6 +339,8 @@ class Build:
             return None
         if not self.steps:
             return None
+        if not self.remote:
+            return None
         if self.terminate:
             while True:
                 s = self.steps.pop(0)
