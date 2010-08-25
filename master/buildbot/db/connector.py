@@ -826,12 +826,14 @@ class DBConnector(util.ComparableMixin):
                                    now, master_name, master_incarnation, brids)
     def _txn_claim_buildrequests(self, t, now, master_name, master_incarnation,
                                  brids):
-        q = self.quoteq("UPDATE buildrequests"
-                        " SET claimed_at = ?,"
-                        "     claimed_by_name = ?, claimed_by_incarnation = ?"
-                        " WHERE id IN " + self.parmlist(len(brids)))
-        qargs = [now, master_name, master_incarnation] + list(brids)
-        t.execute(q, qargs)
+        while brids:
+            batch, brids = brids[:100], brids[100:]
+            q = self.quoteq("UPDATE buildrequests"
+                            " SET claimed_at = ?,"
+                            "     claimed_by_name = ?, claimed_by_incarnation = ?"
+                            " WHERE id IN " + self.parmlist(len(batch)))
+            qargs = [now, master_name, master_incarnation] + list(batch)
+            t.execute(q, qargs)
 
     def build_started(self, brid, buildnumber):
         return self.runInteractionNow(self._txn_build_started, brid, buildnumber)
@@ -848,10 +850,12 @@ class DBConnector(util.ComparableMixin):
         return self.runInteractionNow(self._txn_build_finished, bids)
     def _txn_build_finished(self, t, bids):
         now = self._getCurrentTime()
-        q = self.quoteq("UPDATE builds SET finish_time = ?"
-                        " WHERE id IN " + self.parmlist(len(bids)))
-        qargs = [now] + list(bids)
-        t.execute(q, qargs)
+        while bids:
+            batch, bids = bids[:100], bids[100:]
+            q = self.quoteq("UPDATE builds SET finish_time = ?"
+                            " WHERE id IN " + self.parmlist(len(batch)))
+            qargs = [now] + list(batch)
+            t.execute(q, qargs)
 
     def get_build_info(self, bid):
         return self.runInteractionNow(self._txn_get_build_info, bid)
@@ -878,11 +882,13 @@ class DBConnector(util.ComparableMixin):
     def _txn_resubmit_buildreqs(self, t, brids):
         # the interrupted build that gets resubmitted will still have the
         # same submitted_at value, so it should be re-started first
-        q = self.quoteq("UPDATE buildrequests"
-                        " SET claimed_at=0,"
-                        "     claimed_by_name=NULL, claimed_by_incarnation=NULL"
-                        " WHERE id IN " + self.parmlist(len(brids)))
-        t.execute(q, brids)
+        while brids:
+            batch, brids = brids[:100], brids[100:]
+            q = self.quoteq("UPDATE buildrequests"
+                            " SET claimed_at=0,"
+                            "     claimed_by_name=NULL, claimed_by_incarnation=NULL"
+                            " WHERE id IN " + self.parmlist(len(batch)))
+            t.execute(q, batch)
         self.notify("add-buildrequest", *brids)
 
     def retire_buildrequests(self, brids, results):
@@ -891,20 +897,23 @@ class DBConnector(util.ComparableMixin):
         now = self._getCurrentTime()
         #q = self.db.quoteq("DELETE FROM buildrequests WHERE id IN "
         #                   + self.db.parmlist(len(brids)))
-        q = self.quoteq("UPDATE buildrequests"
-                        " SET complete=1, results=?, complete_at=?"
-                        " WHERE id IN " + self.parmlist(len(brids)))
-        t.execute(q, [results, now]+brids)
-        # now, does this cause any buildsets to complete?
-        q = self.quoteq("SELECT bs.id"
-                        " FROM buildsets AS bs, buildrequests AS br"
-                        " WHERE br.buildsetid=bs.id AND bs.complete=0"
-                        "  AND br.id in "
-                        + self.parmlist(len(brids)))
-        t.execute(q, brids)
-        bsids = [bsid for (bsid,) in t.fetchall()]
-        for bsid in bsids:
-            self._check_buildset(t, bsid, now)
+        while brids:
+            batch, brids = brids[:100], brids[100:]
+
+            q = self.quoteq("UPDATE buildrequests"
+                            " SET complete=1, results=?, complete_at=?"
+                            " WHERE id IN " + self.parmlist(len(batch)))
+            t.execute(q, [results, now]+batch)
+            # now, does this cause any buildsets to complete?
+            q = self.quoteq("SELECT bs.id"
+                            " FROM buildsets AS bs, buildrequests AS br"
+                            " WHERE br.buildsetid=bs.id AND bs.complete=0"
+                            "  AND br.id in "
+                            + self.parmlist(len(batch)))
+            t.execute(q, batch)
+            bsids = [bsid for (bsid,) in t.fetchall()]
+            for bsid in bsids:
+                self._check_buildset(t, bsid, now)
         self.notify("retire-buildrequest", *brids)
         self.notify("modify-buildset", *bsids)
 
@@ -917,27 +926,30 @@ class DBConnector(util.ComparableMixin):
         # buildset will appear complete and SUCCESS-ful). But we haven't
         # thought it through enough to be sure. So for now, "cancel" means
         # "mark as complete and FAILURE".
-        if True:
-            now = self._getCurrentTime()
-            q = self.quoteq("UPDATE buildrequests"
-                            " SET complete=1, results=?, complete_at=?"
-                            " WHERE id IN " + self.parmlist(len(brids)))
-            t.execute(q, [FAILURE, now]+brids)
-        else:
-            q = self.quoteq("DELETE FROM buildrequests"
-                            " WHERE id IN " + self.parmlist(len(brids)))
-            t.execute(q, brids)
+        while brids:
+            batch, brids = brids[:100], brids[100:]
 
-        # now, does this cause any buildsets to complete?
-        q = self.quoteq("SELECT bs.id"
-                        " FROM buildsets AS bs, buildrequests AS br"
-                        " WHERE br.buildsetid=bs.id AND bs.complete=0"
-                        "  AND br.id in "
-                        + self.parmlist(len(brids)))
-        t.execute(q, brids)
-        bsids = [bsid for (bsid,) in t.fetchall()]
-        for bsid in bsids:
-            self._check_buildset(t, bsid, now)
+            if True:
+                now = self._getCurrentTime()
+                q = self.quoteq("UPDATE buildrequests"
+                                " SET complete=1, results=?, complete_at=?"
+                                " WHERE id IN " + self.parmlist(len(batch)))
+                t.execute(q, [FAILURE, now]+batch)
+            else:
+                q = self.quoteq("DELETE FROM buildrequests"
+                                " WHERE id IN " + self.parmlist(len(batch)))
+                t.execute(q, batch)
+
+            # now, does this cause any buildsets to complete?
+            q = self.quoteq("SELECT bs.id"
+                            " FROM buildsets AS bs, buildrequests AS br"
+                            " WHERE br.buildsetid=bs.id AND bs.complete=0"
+                            "  AND br.id in "
+                            + self.parmlist(len(batch)))
+            t.execute(q, batch)
+            bsids = [bsid for (bsid,) in t.fetchall()]
+            for bsid in bsids:
+                self._check_buildset(t, bsid, now)
 
         self.notify("cancel-buildrequest", *brids)
         self.notify("modify-buildset", *bsids)
