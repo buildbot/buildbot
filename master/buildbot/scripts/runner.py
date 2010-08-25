@@ -841,9 +841,14 @@ def sendchange(config, runReactor=False):
     d = s.send(branch, revision, comments, files, category=category, when=when,
                properties=properties, repository=repository, project=project)
     if runReactor:
-        d.addCallbacks(s.printSuccess, s.printFailure)
+        status = [True]
+        def failed(res):
+            status[0] = False
+            s.printFailure(res)
+        d.addCallbacks(s.printSuccess, failed)
         d.addBoth(s.stop)
         s.run()
+        return status[0]
     return d
 
 
@@ -1120,7 +1125,8 @@ def run():
         from buildbot.scripts.reconfig import Reconfigurator
         Reconfigurator().run(so)
     elif command == "sendchange":
-        sendchange(so, True)
+        if not sendchange(so, True):
+            sys.exit(1)
     elif command == "debugclient":
         debugclient(so)
     elif command == "statuslog":
