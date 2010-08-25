@@ -928,7 +928,8 @@ class Builder(pb.Referenceable, service.MultiService):
             brids = [br.id for br in build.requests]
             self.db.retire_buildrequests(brids, results)
 
-        sb.slave.releaseLocks()
+        if sb.slave:
+            sb.slave.releaseLocks()
 
         self.triggerNewBuildCheck()
 
