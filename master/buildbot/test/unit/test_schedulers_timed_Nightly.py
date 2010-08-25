@@ -1,7 +1,6 @@
 import time
 
 from twisted.trial import unittest
-from twisted.internet import defer
 
 from buildbot.schedulers import timed
 from buildbot.changes.manager import ChangeManager
