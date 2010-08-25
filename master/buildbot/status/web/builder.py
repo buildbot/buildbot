@@ -152,7 +152,7 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
         try:
             c = interfaces.IControl(self.getBuildmaster(req))
             bc = c.getBuilder(self.builder_status.getName())
-            bc.submitBuildRequest(s, r, properties, now=True)
+            bc.submitBuildRequest(s, r, properties)
         except interfaces.NoSlaveError:
             # TODO: tell the web user that their request could not be
             # honored
