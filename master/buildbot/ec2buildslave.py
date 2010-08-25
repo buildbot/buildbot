@@ -231,9 +231,9 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
                      self.output.output))
             if self.elastic_ip is not None:
                 self.instance.use_ip(self.elastic_ip)
-                return [self.instance.id,
-                        image.id,
-                        '%02d:%02d:%02d' % (minutes//60, minutes%60, seconds)]
+            return [self.instance.id,
+                    image.id,
+                    '%02d:%02d:%02d' % (minutes//60, minutes%60, seconds)]
         else:
             log.msg('%s %s failed to start instance %s (%s)' %
                     (self.__class__.__name__, self.slavename,
