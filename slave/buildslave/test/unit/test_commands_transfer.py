@@ -241,7 +241,8 @@ class TestSlaveDirectoryUpload(CommandTestMixin, unittest.TestCase):
             f = StringIO.StringIO(self.fakemaster.data)
             a = tarfile.open(fileobj=f, name='check.tar')
             exp_names = [ '.', 'aa', 'bb' ]
-            got_names = sorted([ n.rstrip('/') for n in a.getnames() ])
+            got_names = [ n.rstrip('/') for n in a.getnames() ]
+            got_names = sorted([ n or '.' for n in a.getnames() ]) # py27 uses '' instead of '.'
             self.assertEqual(got_names, exp_names, "expected archive contents")
             a.close()
             f.close()
