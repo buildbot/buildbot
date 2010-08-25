@@ -2,6 +2,7 @@ import sys
 import re
 import os
 
+import twisted
 from twisted.trial import unittest
 from twisted.internet import task, defer
 from twisted.python import runtime
@@ -147,10 +148,9 @@ class TestRunProcess(unittest.TestCase):
         basedir = "test_slave_commands_base.runprocess.badcommand"
         b = FakeSlaveBuilder(False, basedir)
         s = runprocess.RunProcess(b, ['command_that_doesnt_exist.exe'], basedir)
-        s.workdir = 1
+        s.workdir = 1 # cause an exception
         d = s.start()
         def check(err):
-            self.flushLoggedErrors()
             err.trap(AbandonChain)
             stderr = []
             # Here we're checking that the exception starting up the command
@@ -161,7 +161,10 @@ class TestRunProcess(unittest.TestCase):
             stderr = "".join(stderr)
             self.failUnless("TypeError" in stderr, stderr)
         d.addBoth(check)
+        d.addBoth(lambda _ : self.flushLoggedErrors())
         return d
+    if twisted.version.major <= 9 and sys.version_info[:2] >= (2,7):
+        testBadCommand.skip = "flushLoggedErrors does not work correctly on 9.0.0 and earlier with Python-2.7"
 
     def testLogEnviron(self):
         basedir = "test_slave_commands_base.runprocess.start"
