@@ -34,7 +34,7 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
                  keypair_name='latent_buildbot_slave',
                  security_name='latent_buildbot_slave',
                  max_builds=None, notify_on_missing=[], missing_timeout=60*20,
-                 build_wait_timeout=60*10, properties={}, locks):
+                 build_wait_timeout=60*10, properties={}, locks=None):
         AbstractLatentBuildSlave.__init__(
             self, name, password, max_builds, notify_on_missing,
             missing_timeout, build_wait_timeout, properties, locks)
