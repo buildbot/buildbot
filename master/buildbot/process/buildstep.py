@@ -11,7 +11,7 @@ from twisted.web.util import formatFailure
 from buildbot import interfaces, locks
 from buildbot.status import progress
 from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE, SKIPPED, \
-     EXCEPTION, RETRY
+     EXCEPTION, RETRY, worst_status
 
 """
 BuildStep and RemoteCommand classes for master-side representation of the

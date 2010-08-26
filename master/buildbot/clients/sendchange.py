@@ -11,13 +11,13 @@ class Sender:
         self.num_changes = 0
 
     def send(self, branch, revision, comments, files, user=None, category=None,
-             when=None, properties={}, repository = '', project = ''):
+             when=None, properties={}, repository='', project='', revlink=''):
         if user is None:
             user = self.user
         change = {'project': project, 'repository': repository, 'who': user,
                   'files': files, 'comments': comments, 'branch': branch,
                   'revision': revision, 'category': category, 'when': when,
-                  'properties': properties}
+                  'properties': properties, 'revlink': revlink}
         self.num_changes += 1
 
         f = pb.PBClientFactory()
