@@ -1209,7 +1209,7 @@ def regex_log_evaluator(cmd, step_status, regexes):
         if worst_status(worst, possible_status) == possible_status:
             if isinstance(err, (basestring)):
                 err = re.compile(".*%s.*" % err, re.DOTALL)
-            for l in cmd.logs:
+            for l in cmd.logs.values():
                 if err.search(l.getText()):
                     worst = possible_status
     return worst

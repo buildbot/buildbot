@@ -7,7 +7,7 @@ from twisted.internet import defer
 
 from buildbot import interfaces
 from buildbot.status import mail
-from buildbot.status.builder import SUCCESS, WARNINGS, EXCEPTION
+from buildbot.status.builder import SUCCESS, WARNINGS, EXCEPTION, RETRY
 from buildbot.steps.shell import WithProperties
 
 import gzip, bz2, base64, re, cStringIO
