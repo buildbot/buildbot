@@ -784,6 +784,7 @@ class SendChangeOptions(OptionsWithOptionsFile):
         ("logfile", "F", None,
          "Read the log messages from this file (- for stdin)"),
         ("when", "w", None, "timestamp to use as the change time"),
+        ("revlink", "l", None, "Revision link (revlink)"),
         ]
 
     buildbotOptions = [
@@ -815,6 +816,7 @@ def sendchange(config, runReactor=False):
     properties = config.get('properties', {})
     repository = config.get('repository', '')
     project = config.get('project', '')
+    revlink = config.get('revlink', '')
     if config.get('when'):
         when = float(config.get('when'))
     else:
@@ -839,7 +841,8 @@ def sendchange(config, runReactor=False):
 
     s = Sender(master, user)
     d = s.send(branch, revision, comments, files, category=category, when=when,
-               properties=properties, repository=repository, project=project)
+               properties=properties, repository=repository, project=project,
+               revlink=revlink)
     if runReactor:
         status = [True]
         def failed(res):
