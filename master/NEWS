@@ -4,6 +4,12 @@ Major User visible changes in Buildbot.             -*- outline -*-
 
 * NEXT RELEASE
 
+** Deprecations
+
+*** statusgui is deprecated in this version and will be removed in the next
+release.  Please file a bug at http://buildbot.net if you wish to reverse this
+decision.
+
 ** New configuration key, 'changeCacheSize'
 
 This sets the number of changes that buildbot will keep in memory at once.
