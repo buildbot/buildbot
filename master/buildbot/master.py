@@ -313,8 +313,51 @@ class BotMaster(service.MultiService):
             return self.mergeRequests(builder, req1, req2)
         return req1.canBeMergedWith(req2)
 
-    def getPerspective(self, slavename):
-        return self.slaves[slavename]
+    def getPerspective(self, mind, slavename):
+        sl = self.slaves[slavename]
+        if not sl:
+            return None
+
+        # record when this connection attempt occurred
+        sl.recordConnectTime()
+
+        if sl.isConnected():
+            # uh-oh, we've got a duplicate slave. The most likely
+            # explanation is that the slave is behind a slow link, thinks we
+            # went away, and has attempted to reconnect, so we've got two
+            # "connections" from the same slave.  The old may not be stale at this
+            # point, if there are two slave proceses out there with the same name,
+            # so instead of booting the old (which may be in the middle of a build),
+            # we reject the new connection and ping the old slave.
+            log.msg("duplicate slave %s; rejecting new slave and pinging old" % sl.slavename)
+
+            # just in case we've got two identically-configured slaves,
+            # report the IP addresses of both so someone can resolve the
+            # squabble
+            old_tport = sl.slave.broker.transport
+            new_tport = mind.broker.transport
+            log.msg("old slave was connected from", old_tport.getPeer())
+            log.msg("new slave is from", new_tport.getPeer())
+
+            # ping the old slave.  If this kills it, then the new slave will connect
+            # again and everyone will be happy.
+            d = sl.slave.callRemote("print", "master got a duplicate connection; keeping this one")
+
+            # now return a dummy avatar and kill the new connection in 5
+            # seconds, thereby giving the ping a bit of time to kill the old
+            # connection, if necessary
+            def kill():
+                log.msg("killing new slave on", new_tport.getPeer())
+                new_tport.loseConnection()
+            reactor.callLater(5, kill)
+            class DummyAvatar(pb.Avatar):
+                def attached(self, *args):
+                    pass
+                def detached(self, *args):
+                    pass
+            return DummyAvatar()
+
+        return sl
 
     def shutdownSlaves(self):
         # TODO: make this into a bot method rather than a builder method
@@ -428,7 +471,7 @@ class Dispatcher:
         else:
             # it must be one of the buildslaves: no other names will make it
             # past the checker
-            p = self.botmaster.getPerspective(avatarID)
+            p = self.botmaster.getPerspective(mind, avatarID)
 
         if not p:
             raise ValueError("no perspective for '%s'" % avatarID)

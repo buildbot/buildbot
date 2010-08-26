@@ -163,6 +163,13 @@ class AbstractBuildSlave(pb.Avatar, service.MultiService):
             self.missing_timer = reactor.callLater(self.missing_timeout,
                                                    self._missing_timer_fired)
 
+    def recordConnectTime(self):
+        if self.slave_status:
+            self.slave_status.recordConnectTime()
+
+    def isConnected(self):
+        return self.slave
+
     def _missing_timer_fired(self):
         self.missing_timer = None
         # notify people, but only if we're still in the config
@@ -210,25 +217,9 @@ class AbstractBuildSlave(pb.Avatar, service.MultiService):
         @return: a Deferred that fires when the attachment is complete
         """
 
-        self.slave_status.recordConnectTime()
+        # the botmaster should ensure this.
+        assert not self.isConnected()
 
-        if self.slave:
-            # uh-oh, we've got a duplicate slave. The most likely
-            # explanation is that the slave is behind a slow link, thinks we
-            # went away, and has attempted to reconnect, so we've got two
-            # "connections" from the same slave, but the previous one is
-            # stale. Give the new one precedence.
-            log.msg("duplicate slave %s replacing old one" % self.slavename)
-
-            # just in case we've got two identically-configured slaves,
-            # report the IP addresses of both so someone can resolve the
-            # squabble
-            tport = self.slave.broker.transport
-            log.msg("old slave was connected from", tport.getPeer())
-            log.msg("new slave is from", bot.broker.transport.getPeer())
-            d = self.disconnect()
-        else:
-            d = defer.succeed(None)
         # now we go through a sequence of calls, gathering information, then
         # tell the Botmaster that it can finally give this slave to all the
         # Builders that care about it.
@@ -242,6 +233,7 @@ class AbstractBuildSlave(pb.Avatar, service.MultiService):
         # We want to know when the graceful shutdown flag changes
         self.slave_status.addGracefulWatcher(self._gracefulChanged)
 
+        d = defer.succeed(None)
         def _log_attachment_on_slave(res):
             d1 = bot.callRemote("print", "attached")
             d1.addErrback(lambda why: None)
