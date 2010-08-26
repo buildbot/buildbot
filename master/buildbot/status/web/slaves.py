@@ -59,7 +59,12 @@ class OneBuildSlaveResource(HtmlResource, BuildLineMixin):
                 recent_builds.append(self.get_line_values(request, rb))
                 if n > max_builds:
                     break
-        ctx.update(dict(slave = s.getSlave(self.slavename),
+
+        # connects over the last hour
+        slave = s.getSlave(self.slavename)
+        connect_count = slave.getConnectCount()
+
+        ctx.update(dict(slave=slave,
                         slavename = self.slavename,  
                         current = current_builds, 
                         recent = recent_builds, 
@@ -69,7 +74,8 @@ class OneBuildSlaveResource(HtmlResource, BuildLineMixin):
                         access_uri = slave.getAccessURI()),
                         admin = unicode(slave.getAdmin() or '', 'utf-8'),
                         host = unicode(slave.getHost() or '', 'utf-8'),
-                        show_builder_column = True)
+                        show_builder_column = True,
+                        connect_count = connect_count)
         template = request.site.buildbot_service.templates.get_template("buildslave.html")
         data = template.render(**ctx)
         return data
@@ -112,6 +118,7 @@ class BuildSlavesResource(HtmlResource):
                                         
             info['version'] = slave.getVersion()
             info['connected'] = slave.isConnected()
+            info['connectCount'] = slave.getConnectCount()
             
             if slave.isConnected():
                 info['admin'] = unicode(slave.getAdmin() or '', 'utf-8')

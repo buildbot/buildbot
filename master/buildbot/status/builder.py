@@ -12,6 +12,7 @@ from buildbot.util.eventual import eventually
 import weakref
 import os, shutil, re, urllib, itertools
 import gc
+import time
 from cPickle import load, dump
 from cStringIO import StringIO
 from bz2 import BZ2File
@@ -2148,6 +2149,7 @@ class SlaveStatus:
         self._lastMessageReceived = 0
         self.runningBuilds = []
         self.graceful_callbacks = []
+        self.connect_times = []
 
     def getName(self):
         return self.name
@@ -2165,6 +2167,9 @@ class SlaveStatus:
         return self._lastMessageReceived
     def getRunningBuilds(self):
         return self.runningBuilds
+    def getConnectCount(self):
+        then = time.time() - 3600
+        return len([ t for t in self.connect_times if t > then ])
 
     def setAdmin(self, admin):
         self.admin = admin
@@ -2178,6 +2183,11 @@ class SlaveStatus:
         self.connected = isConnected
     def setLastMessageReceived(self, when):
         self._lastMessageReceived = when
+
+    def recordConnectTime(self):
+        # record this connnect, and keep data for the last hour
+        now = time.time()
+        self.connect_times = [ t for t in self.connect_times if t > now - 3600 ] + [ now ]
 
     def buildStarted(self, build):
         self.runningBuilds.append(build)
@@ -2216,7 +2226,6 @@ class SlaveStatus:
         result['connected'] = self.isConnected()
         result['runningBuilds'] = [b.asDict() for b in self.getRunningBuilds()]
         return result
-
 
 class Status:
     """

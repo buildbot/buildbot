@@ -42,9 +42,14 @@
   <pre>{{ host|e }}</pre>
 {% endif %}
 
+<h2>Connection Status</h2>
+<p>
+{{ connect_count }} connection(s) in the last hour
 {% if not slave.isConnected() %}
-  <p>(not connected)</p>
-{% elif authz.advertiseAction('gracefulShutdown') %}
+(not currently connected)
+{% endif %}
+</p>
+{% if authz.advertiseAction('gracefulShutdown') %}
   <h2>Graceful Shutdown</h2>
   {% if slave.getGraceful() %}
     <p>Slave will shut down gracefully when it is idle.</p>

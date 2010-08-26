@@ -210,6 +210,8 @@ class AbstractBuildSlave(pb.Avatar, service.MultiService):
         @return: a Deferred that fires when the attachment is complete
         """
 
+        self.slave_status.recordConnectTime()
+
         if self.slave:
             # uh-oh, we've got a duplicate slave. The most likely
             # explanation is that the slave is behind a slow link, thinks we
