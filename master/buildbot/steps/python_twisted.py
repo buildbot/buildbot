@@ -165,63 +165,7 @@ class TrialTestCaseCounter(LogLineObserver):
 UNSPECIFIED=() # since None is a valid choice
 
 class Trial(ShellCommand):
-    """I run a unit test suite using 'trial', a unittest-like testing
-    framework that comes with Twisted. Trial is used to implement Twisted's
-    own unit tests, and is the unittest-framework of choice for many projects
-    that use Twisted internally.
-
-    Projects that use trial typically have all their test cases in a 'test'
-    subdirectory of their top-level library directory. I.e. for my package
-    'petmail', the tests are in 'petmail/test/test_*.py'. More complicated
-    packages (like Twisted itself) may have multiple test directories, like
-    'twisted/test/test_*.py' for the core functionality and
-    'twisted/mail/test/test_*.py' for the email-specific tests.
-
-    To run trial tests, you run the 'trial' executable and tell it where the
-    test cases are located. The most common way of doing this is with a
-    module name. For petmail, I would run 'trial petmail.test' and it would
-    locate all the test_*.py files under petmail/test/, running every test
-    case it could find in them. Unlike the unittest.py that comes with
-    Python, you do not run the test_foo.py as a script; you always let trial
-    do the importing and running. The 'tests' parameter controls which tests
-    trial will run: it can be a string or a list of strings.
-
-    To find these test cases, you must set a PYTHONPATH that allows something
-    like 'import petmail.test' to work. For packages that don't use a
-    separate top-level 'lib' directory, PYTHONPATH=. will work, and will use
-    the test cases (and the code they are testing) in-place.
-    PYTHONPATH=build/lib or PYTHONPATH=build/lib.$ARCH are also useful when
-    you do a'setup.py build' step first. The 'testpath' attribute of this
-    class controls what PYTHONPATH= is set to.
-
-    Trial has the ability (through the --testmodule flag) to run only the set
-    of test cases named by special 'test-case-name' tags in source files. We
-    can get the list of changed source files from our parent Build and
-    provide them to trial, thus running the minimal set of test cases needed
-    to cover the Changes. This is useful for quick builds, especially in
-    trees with a lot of test cases. The 'testChanges' parameter controls this
-    feature: if set, it will override 'tests'.
-
-    The trial executable itself is typically just 'trial' (which is usually
-    found on your $PATH as /usr/bin/trial), but it can be overridden with the
-    'trial' parameter. This is useful for Twisted's own unittests, which want
-    to use the copy of bin/trial that comes with the sources. (when bin/trial
-    discovers that it is living in a subdirectory named 'Twisted', it assumes
-    it is being run from the source tree and adds that parent directory to
-    PYTHONPATH. Therefore the canonical way to run Twisted's own unittest
-    suite is './bin/trial twisted.test' rather than 'PYTHONPATH=.
-    /usr/bin/trial twisted.test', especially handy when /usr/bin/trial has
-    not yet been installed).
-
-    To influence the version of python being used for the tests, or to add
-    flags to the command, set the 'python' parameter. This can be a string
-    (like 'python2.2') or a list (like ['python2.3', '-Wall']).
-
-    Trial creates and switches into a directory named _trial_temp/ before
-    running the tests, and sends the twisted log (which includes all
-    exceptions) to a file named test.log . This file will be pulled up to
-    the master where it can be seen as part of the status output.
-
+    """
     There are some class attributes which may be usefully overridden
     by subclasses. 'trialMode' and 'trialArgs' can influence the trial
     command line.

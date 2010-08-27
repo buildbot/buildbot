@@ -1,13 +1,3 @@
-@c TODO: go over this file to organize into classes
-@c and be sure all index entries are in place
-
-@c TODO:
-@c @bsindex buildbot.steps.python_twisted.HLint
-@c @bsindex buildbot.steps.python_twisted.Trial
-@c @bsindex buildbot.steps.python_twisted.ProcessDocs
-@c @bsindex buildbot.steps.python_twisted.BuildDebs
-@c @bsindex buildbot.steps.python_twisted.RemovePYCs
-
 @code{BuildStep}s are usually specified in the buildmaster's
 configuration file, in a list that goes into the @code{BuildFactory}.
 The @code{BuildStep} instances in this list are used as templates to
@@ -41,6 +31,7 @@ control each.
 * Transferring Strings::
 * Steps That Run on the Master::
 * Triggering Schedulers::
+* Miscellaneous BuildSteps::
 * Writing New BuildSteps::
 * Build Step Index::
 @end menu
@@ -1517,6 +1508,8 @@ implemented in Python.
 * BuildEPYDoc::
 * PyFlakes::
 * PyLint::
+* Trial::
+* RemovePYCs::
 @end menu
 
 @node BuildEPYDoc
@@ -1555,7 +1548,6 @@ from buildbot.steps.python import BuildEPYDoc
 ...
 f.addStep(BuildEPYDoc(command=["epydoc", "-o", "apiref", "source/mypkg"]))
 @end example
-
 
 @node PyFlakes
 @subsubsection PyFlakes
@@ -1600,6 +1592,84 @@ from buildbot.steps.python import PyLint
 f.addStep(PyLint(command=["pylint", "src"]))
 @end example
 
+@node Trial
+@subsubsection Trial
+
+@bsindex buildbot.steps.python_twisted.Trial
+
+This step runs a unit test suite using @code{trial}, a unittest-like testing
+framework that is a component of Twisted Python. Trial is used to implement
+Twisted's own unit tests, and is the unittest-framework of choice for many
+projects that use Twisted internally.
+
+Projects that use trial typically have all their test cases in a 'test'
+subdirectory of their top-level library directory. For example, for a package
+@code{petmail}, the tests might be in @code{petmail/test/test_*.py}. More
+complicated packages (like Twisted itself) may have multiple test directories,
+like @code{twisted/test/test_*.py} for the core functionality and
+@code{twisted/mail/test/test_*.py} for the email-specific tests.
+
+To run trial tests manually, you run the @code{trial} executable and tell it
+where the test cases are located. The most common way of doing this is with a
+module name. For petmail, this might look like @code{trial petmail.test}, which
+would locate all the @code{test_*.py} files under @code{petmail/test/}, running
+every test case it could find in them.  Unlike the @code{unittest.py} that
+comes with Python, it is not necessary to run the @code{test_foo.py} as a
+script; you always let trial do the importing and running. The step's
+@code{tests} parameter controls which tests trial will run: it can be a string
+or a list of strings.
+
+To find the test cases, the Python search path must allow something like
+@code{import petmail.test} to work. For packages that don't use a separate
+top-level @code{lib} directory, @code{PYTHONPATH=.} will work, and will use the
+test cases (and the code they are testing) in-place.
+@code{PYTHONPATH=build/lib} or @code{PYTHONPATH=build/lib.somearch} are also
+useful when you do a @code{python setup.py build} step first. The
+@code{testpath} attribute of this class controls what @code{PYTHONPATH} is set
+to before running @code{trial}.
+
+Trial has the ability, through the @code{--testmodule} flag, to run only the
+set of test cases named by special @code{test-case-name} tags in source files.
+We can get the list of changed source files from our parent Build and provide
+them to trial, thus running the minimal set of test cases needed to cover the
+Changes.  This is useful for quick builds, especially in trees with a lot of
+test cases.  The @code{testChanges} parameter controls this feature: if set, it
+will override @code{tests}.
+
+The trial executable itself is typically just @code{trial}, and is typically
+found in the shell search path.  It can be overridden with the @code{trial}
+parameter.  This is useful for Twisted's own unittests, which want to use the
+copy of bin/trial that comes with the sources.
+
+To influence the version of python being used for the tests, or to add flags to
+the command, set the @code{python} parameter. This can be a string (like
+@code{python2.2}) or a list (like @code{['python2.3', '-Wall']}).
+
+Trial creates and switches into a directory named @code{_trial_temp/} before
+running the tests, and sends the twisted log (which includes all exceptions) to
+a file named @code{test.log}. This file will be pulled up to the master where
+it can be seen as part of the status output.
+
+@example
+from buildbot.steps.python_twisted import Trial
+f.addStep(Trial(tests='petmail.test'))
+@end example
+
+@node RemovePYCs
+@subsubsection RemovePYCs
+
+@bsindex buildbot.steps.python_twisted.RemovePYCs
+
+This is a simple built-in step that will remove @code{.pyc} files from the
+workdir.  This is useful in builds that update their source (and thus do not
+automatically delete @code{.pyc} files) but where some part of the build
+process is dynamically searching for Python modules.  Notably, trial has a bad
+habit of finding old test modules.
+
+@example
+from buildbot.steps.python_twisted import RemovePYCs
+f.addStep(RemovePYCs())
+@end example
 
 @node Transferring Files
 @subsection Transferring Files
@@ -1810,6 +1880,37 @@ scheduler.  To simply copy properties verbatim, list them in the
 sophisticated @code{set_properties}, which takes a dictionary mapping property
 names to values.  You may use @code{WithProperties} here to dynamically
 construct new property values.
+
+@node Miscellaneous BuildSteps
+@subsection Miscellaneous BuildSteps
+
+A number of steps do not fall into any particular category.
+
+@menu
+* HLint::
+* Proce
+@end menu
+
+@node HLint
+@subsubsection HLint
+
+@bsindex buildbot.steps.python_twisted.HLint
+
+The HLint step runs Twisted Lore, a lint-like checker over a set of
+@code{.xhtml} files.  Any deviations from recommended style is flagged and put
+in the output log.  
+
+The step looks at the list of changes in the build to determine which files to
+check - it does not check all files.  It specifically excludes any @code{.xhtml}
+files in the top-level @code{sandbox/} directory.
+
+The step takes a single, optional, parameter: @code{python}.  This specifies the
+Python executable to use to run Lore.
+
+@example
+from buildbot.steps.python_twisted import HLint
+f.addStep(HLint())
+@end example
 
 @node Writing New BuildSteps
 @subsection Writing New BuildSteps
@@ -2048,9 +2149,9 @@ change it by calling @code{setMaxLineLength()} on your
 @code{LogLineObserver} instance.  Use @code{sys.maxint} for effective
 infinity.)
 
-For example, let's take a look at the @code{TrialTestCaseCounter},
-which is used by the Trial step to count test cases as they are run.
-As Trial executes, it emits lines like the following:
+For example, let's take a look at the @code{TrialTestCaseCounter}, which is
+used by the Trial step (@pxref{Trial}) to count test cases as they are
+run.  As Trial executes, it emits lines like the following:
 
 @example
 buildbot.test.test_config.ConfigTest.testDebugPassword ... [OK]
