@@ -451,7 +451,7 @@ class MailNotifier(base.StatusReceiverMultiService):
             for k,v in self.extraHeaders.items():
                 k = properties.render(k)
                 if k in m:
-                    twlog("Warning: Got header " + k + " in self.extraHeaders "
+                    twlog.msg("Warning: Got header " + k + " in self.extraHeaders "
                           "but it already exists in the Message - "
                           "not adding it.")
                     continue
