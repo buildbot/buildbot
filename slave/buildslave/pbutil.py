@@ -35,9 +35,6 @@ class ReconnectingPBClientFactory(PBClientFactory,
 
     def clientConnectionFailed(self, connector, reason):
         PBClientFactory.clientConnectionFailed(self, connector, reason)
-        # Twisted-1.3 erroneously abandons the connection on non-UserErrors.
-        # To avoid this bug, don't upcall, and implement the correct version
-        # of the method here.
         if self.continueTrying:
             self.connector = connector
             self.retry()

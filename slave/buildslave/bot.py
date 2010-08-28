@@ -3,7 +3,7 @@ import sys
 
 from twisted.spread import pb
 from twisted.python import log
-from twisted.internet import reactor, defer
+from twisted.internet import reactor, defer, error
 from twisted.application import service, internet
 from twisted.cred import credentials
 
@@ -326,17 +326,23 @@ class BotFactory(ReconnectingPBClientFactory):
     unsafeTracebacks = 1
     perspective = None
 
-    def __init__(self, keepaliveInterval, keepaliveTimeout, maxDelay):
+    def __init__(self, buildmaster_host, port, keepaliveInterval, keepaliveTimeout, maxDelay):
         ReconnectingPBClientFactory.__init__(self)
         self.maxDelay = maxDelay
         self.keepaliveInterval = keepaliveInterval
         self.keepaliveTimeout = keepaliveTimeout
+        # NOTE: this class does not actually make the TCP connections - this information is
+        # only here to print useful error messages
+        self.buildmaster_host = buildmaster_host
+        self.port = port
 
     def startedConnecting(self, connector):
+        log.msg("Connecting to %s:%s" % (self.buildmaster_host, self.port))
         ReconnectingPBClientFactory.startedConnecting(self, connector)
         self.connector = connector
 
     def gotPerspective(self, perspective):
+        log.msg("Connected to %s:%s; slave is ready" % (self.buildmaster_host, self.port))
         ReconnectingPBClientFactory.gotPerspective(self, perspective)
         self.perspective = perspective
         try:
@@ -353,10 +359,15 @@ class BotFactory(ReconnectingPBClientFactory):
 
     def clientConnectionFailed(self, connector, reason):
         self.connector = None
+        why = reason
+        if reason.check(error.ConnectionRefusedError):
+            why = "Connection Refused"
+        log.msg("Connection to %s:%s failed: %s" % (self.buildmaster_host, self.port, why))
         ReconnectingPBClientFactory.clientConnectionFailed(self,
                                                            connector, reason)
 
     def clientConnectionLost(self, connector, reason):
+        log.msg("Lost connection to %s:%s" % (self.buildmaster_host, self.port))
         self.connector = None
         self.stopTimers()
         self.perspective = None
@@ -427,7 +438,7 @@ class BuildSlave(service.MultiService):
         if keepalive == 0:
             keepalive = None
         self.umask = umask
-        bf = self.bf = BotFactory(keepalive, keepaliveTimeout, maxdelay)
+        bf = self.bf = BotFactory(buildmaster_host, port, keepalive, keepaliveTimeout, maxdelay)
         bf.startLogin(credentials.UsernamePassword(name, passwd), client=bot)
         self.connection = c = internet.TCPClient(buildmaster_host, port, bf)
         c.setServiceParent(self)
