@@ -33,6 +33,11 @@ class ReconnectingPBClientFactory(PBClientFactory,
     TCPClient).
     """
 
+    # hung connections wait for a relatively long time, since a busy master may
+    # take a while to get back to us.
+    hungConnectionTimer = None
+    HUNG_CONNECTION_TIMEOUT = 120
+
     def clientConnectionFailed(self, connector, reason):
         PBClientFactory.clientConnectionFailed(self, connector, reason)
         if self.continueTrying:
@@ -44,6 +49,9 @@ class ReconnectingPBClientFactory(PBClientFactory,
                                              reconnecting=True)
         RCF = protocol.ReconnectingClientFactory
         RCF.clientConnectionLost(self, connector, reason)
+
+    def startedConnecting(self, connector):
+        self.startHungConnectionTimer(connector)
 
     def clientConnectionMade(self, broker):
         self.resetDelay()
@@ -66,19 +74,33 @@ class ReconnectingPBClientFactory(PBClientFactory,
                                  self._credentials.password, self._client)
         d.addCallbacks(self.gotPerspective, self.failedToGetPerspective)
 
+    # timer for hung connections
+
+    def startHungConnectionTimer(self, connector):
+        self.stopHungConnectionTimer()
+        def hungConnection():
+            log.msg("connection attempt timed out (is the port number correct?)")
+            self.hungConnectionTimer = None
+            connector.disconnect()
+            # (this will trigger the retry)
+        self.hungConnectionTimer = reactor.callLater(self.HUNG_CONNECTION_TIMEOUT, hungConnection)
+
+    def stopHungConnectionTimer(self):
+        if self.hungConnectionTimer:
+            self.hungConnectionTimer.cancel()
 
     # methods to override
 
     def gotPerspective(self, perspective):
         """The remote avatar or perspective (obtained each time this factory
         connects) is now available."""
-        pass
+        self.stopHungConnectionTimer()
 
     def gotRootObject(self, root):
         """The remote root object (obtained each time this factory connects)
         is now available. This method will be called each time the connection
         is established and the object reference is retrieved."""
-        pass
+        self.stopHungConnectionTimer()
 
     def failedToGetPerspective(self, why):
         """The login process failed, most likely because of an authorization
@@ -86,6 +108,7 @@ class ReconnectingPBClientFactory(PBClientFactory,
         connection before we managed to send our credentials.
         """
         log.msg("ReconnectingPBClientFactory.failedToGetPerspective")
+        self.stopHungConnectionTimer()
         if why.check(pb.PBConnectionLost):
             log.msg("we lost the brand-new connection")
             # retrying might help here, let clientConnectionLost decide
