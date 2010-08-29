@@ -88,6 +88,7 @@ class ReconnectingPBClientFactory(PBClientFactory,
     def stopHungConnectionTimer(self):
         if self.hungConnectionTimer:
             self.hungConnectionTimer.cancel()
+        self.hungConnectionTimer = None
 
     # methods to override
 
