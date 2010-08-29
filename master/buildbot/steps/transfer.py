@@ -107,37 +107,41 @@ def _extractall(self, path=".", members=None):
 class _DirectoryWriter(_FileWriter):
     """
     A DirectoryWriter is implemented as a FileWriter, with an added post-processing
-    step to unpack the archive, once the transfer has completed.  Note that the close()
-    method is not called!
+    step to unpack the archive, once the transfer has completed.
     """
 
     def __init__(self, destroot, maxsize, compress, mode):
         self.destroot = destroot
+        self.compress = compress
 
         self.fd, self.tarname = tempfile.mkstemp()
-        self.compress = compress
+        os.close(self.fd)
+
         _FileWriter.__init__(self, self.tarname, maxsize, mode)
 
     def remote_unpack(self):
         """
         Called by remote slave to state that no more data will be transfered
         """
-        if self.fp:
-            self.fp.close()
-            self.fp = None
-        fileobj = os.fdopen(self.fd, 'rb')
+        # Make sure remote_close is called, otherwise atomic rename wont happen
+        self.remote_close()
+
+        # Map configured compression to a TarFile setting
         if self.compress == 'bz2':
             mode='r|bz2'
         elif self.compress == 'gz':
             mode='r|gz'
         else:
             mode = 'r'
+
+        # Support old python
         if not hasattr(tarfile.TarFile, 'extractall'):
             tarfile.TarFile.extractall = _extractall
-        archive = tarfile.open(name=self.tarname, mode=mode, fileobj=fileobj)
+
+        # Unpack archive and clean up after self
+        archive = tarfile.open(name=self.tarname, mode=mode)
         archive.extractall(path=self.destroot)
         archive.close()
-        fileobj.close()
         os.remove(self.tarname)
 
 
