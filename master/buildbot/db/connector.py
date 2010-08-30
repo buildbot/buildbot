@@ -494,6 +494,27 @@ class DBConnector(util.ComparableMixin):
         changes.sort(key=lambda c: c.number)
         return changes
 
+    def getChangeIdsLessThanIdNow(self, new_changeid):
+        """Return a list of all extant change id's less than the given value,
+        sorted by number."""
+        def txn(t):
+            q = self.quoteq("SELECT changeid FROM changes WHERE changeid < ?")
+            t.execute(q, (new_changeid,))
+            changes = [changeid for (changeid,) in t.fetchall()]
+            changes.sort()
+            return changes
+        return self.runInteractionNow(txn)
+
+    def removeChangeNow(self, changeid):
+        """Thoroughly remove a change from the database, including all dependent
+        tables"""
+        def txn(t):
+            for table in ('changes', 'scheduler_changes', 'sourcestamp_changes',
+                          'change_files', 'change_links', 'change_properties'):
+                q = self.quoteq("DELETE FROM %s WHERE changeid = ?" % table)
+                t.execute(q, (changeid,))
+        return self.runInteractionNow(txn)
+
     def getChangesByNumber(self, changeids):
         return defer.gatherResults([self.getChangeByNumber(changeid)
                                     for changeid in changeids])
