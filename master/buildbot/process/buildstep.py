@@ -1,5 +1,7 @@
 # -*- test-case-name: buildbot.test.test_steps -*-
 
+import re
+
 from zope.interface import implements
 from twisted.internet import reactor, defer, error
 from twisted.protocols import basic
