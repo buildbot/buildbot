@@ -34,6 +34,12 @@ from twisted.web.client import getPage
 
 from buildbot.changes import base, changes
 
+def googleCodePollerForProject(project, vcs, pollinterval=3600):
+    return GoogleCodeAtomPoller(
+        'http://code.google.com/feeds/p/%s/%schanges/basic' % (project, vcs),
+        pollinterval=pollinterval)
+
+
 class GoogleCodeAtomPoller(base.ChangeSource):
     """This source will poll a GoogleCode Atom feed for changes and
     submit them to the change master. Works for both Svn and Hg repos.
