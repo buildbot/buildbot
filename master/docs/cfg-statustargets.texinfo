@@ -262,12 +262,13 @@ restricted to only showing changes made by the given users.
 NOTE: To use this page, your buildbot.css file in public_html
 must be the one found in buildbot/status/web/extended.css.
 
-The console view is still in development. At this moment it supports
-only the source control managers that have an integer based revision id,
-like svn. It also has some issues with displaying multiple braches at the
-same time. If you do have multiple branches, you should use the
-``branch='' query argument.  The @code{order_console_by_time} option may help
-with non-integer VCs:
+The console view is still in development. At this moment by default the view
+sorts revisions lexically, which can lead to odd behavior with non-integer
+revisions (e.g., git), or with integer revisions of different length (e.g., 999
+and 1000).  It also has some issues with displaying multiple braches at the
+same time. If you do have multiple branches, you should use the ``branch=''
+query argument.  The @code{order_console_by_time} option may help sorting
+revisions, although it depends on the date being set correctly in each commit:
 
 @example
 w = html.WebStatus(http_port=8080, order_console_by_time=True)
