@@ -57,7 +57,7 @@ class TestSVN(SourceCommandTestMixin, unittest.TestCase):
 
 
 class TestGetUnversionedFiles(unittest.TestCase):
-    def test_getUnversionedFIles_does_not_list_externals(self):
+    def test_getUnversionedFiles_does_not_list_externals(self):
         svn_st_xml = """<?xml version="1.0"?>
         <status>
             <target path=".">
@@ -74,4 +74,17 @@ class TestGetUnversionedFiles(unittest.TestCase):
         """
         unversioned_files = list(svn.SVN.getUnversionedFiles(svn_st_xml, []))
         self.assertEquals(["svn_external_path/unversioned_file"], unversioned_files)
-        
+
+    def test_getUnversionedFiles_does_not_list_missing(self):
+        svn_st_xml = """<?xml version="1.0"?>
+        <status>
+            <target path=".">
+                <entry path="missing_file">
+                    <wc-status props="none" item="missing"></wc-status>
+                </entry>
+            </target>
+        </status>
+        """
+        unversioned_files = list(svn.SVN.getUnversionedFiles(svn_st_xml, []))
+        self.assertEquals([], unversioned_files)
+

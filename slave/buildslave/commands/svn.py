@@ -99,11 +99,13 @@ class SVN(SourceBaseCommand):
             (wc_status,) = entry.getElementsByTagName('wc-status')
             if wc_status.getAttribute('item') == 'external':
                 continue
+            if wc_status.getAttribute('item') == 'missing':
+                continue
             filename = entry.getAttribute('path')
             if filename in keep_on_purge:
                 continue
             yield filename
-            
+
     def _purgeAndUpdate2(self, res):
         for filename in self.getUnversionedFiles(self.command.stdout, self.keep_on_purge):
             filepath = os.path.join(self.builder.basedir, self.workdir,
