@@ -54,7 +54,7 @@ Build #{{ b.getNumber() }}
 {% endif %}
 
 {% if ss.revision %}
-  <tr class="{{ ss_class.next() }}"><td class="left">Revision</td><td>{{ ss.revision|revlink(ss.repostiory) }}</td></tr>
+  <tr class="{{ ss_class.next() }}"><td class="left">Revision</td><td>{{ ss.revision|revlink(ss.repository) }}</td></tr>
 {% endif %}
 
 {% if got_revision %}
