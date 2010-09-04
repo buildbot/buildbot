@@ -1,6 +1,7 @@
 # developer utilities
 
-.PHONY: docs apidocs some-apidocs paper
+.PHONY: docs apidocs pylint
+
 docs:
 	$(MAKE) -C master/docs
 
