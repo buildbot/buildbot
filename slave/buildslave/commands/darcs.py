@@ -16,7 +16,6 @@ class Darcs(SourceBaseCommand):
 
     def setup(self, args):
         SourceBaseCommand.setup(self, args)
-        self.vcexe = utils.getCommand("darcs")
         self.repourl = args['repourl']
         self.sourcedata = "%s\n" % self.repourl
         self.revision = self.args.get('revision')
@@ -29,10 +28,11 @@ class Darcs(SourceBaseCommand):
                                            self.srcdir, "_darcs")))
 
     def doVCUpdate(self):
+        darcs = self.getCommand('darcs')
         assert not self.revision
         # update: possible for mode in ('copy', 'update')
         d = os.path.join(self.builder.basedir, self.srcdir)
-        command = [self.vcexe, 'pull', '--all', '--verbose']
+        command = [darcs, 'pull', '--all', '--verbose']
         c = runprocess.RunProcess(self.builder, command, d,
                          sendRC=False, timeout=self.timeout,
                          maxTime=self.maxTime, usePTY=False)
@@ -40,9 +40,10 @@ class Darcs(SourceBaseCommand):
         return c.start()
 
     def doVCFull(self):
+        darcs = self.getCommand('darcs')
         # checkout or export
         d = self.builder.basedir
-        command = [self.vcexe, 'get', '--verbose', '--partial',
+        command = [darcs, 'get', '--verbose', '--partial',
                    '--repo-name', self.srcdir]
         if self.revision:
             # write the context to a file
@@ -69,8 +70,10 @@ class Darcs(SourceBaseCommand):
         return res
 
     def parseGotRevision(self):
+        darcs = self.getCommand('darcs')
+
         # we use 'darcs context' to find out what we wound up with
-        command = [self.vcexe, "changes", "--context"]
+        command = [darcs, "changes", "--context"]
         c = runprocess.RunProcess(self.builder, command,
                          os.path.join(self.builder.basedir, self.srcdir),
                          environ=self.env, timeout=self.timeout,

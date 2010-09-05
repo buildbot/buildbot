@@ -26,7 +26,6 @@ class CVS(SourceBaseCommand):
 
     def setup(self, args):
         SourceBaseCommand.setup(self, args)
-        self.vcexe = utils.getCommand("cvs")
         self.cvsroot = args['cvsroot']
         self.cvsmodule = args['cvsmodule']
         self.global_options = args.get('global_options', [])
@@ -44,10 +43,11 @@ class CVS(SourceBaseCommand):
                                            self.srcdir, "CVS")))
 
     def start(self):
+        cvs = self.getCommand("cvs")
         if self.login is not None:
             # need to do a 'cvs login' command first
             d = self.builder.basedir
-            command = ([self.vcexe, '-d', self.cvsroot] + self.global_options
+            command = ([cvs, '-d', self.cvsroot] + self.global_options
                        + ['login'])
             c = runprocess.RunProcess(self.builder, command, d,
                              sendRC=False, timeout=self.timeout,
@@ -66,8 +66,9 @@ class CVS(SourceBaseCommand):
         return SourceBaseCommand.start(self)
 
     def doVCUpdate(self):
+        cvs = self.getCommand("cvs")
         d = os.path.join(self.builder.basedir, self.srcdir)
-        command = [self.vcexe, '-z3'] + self.global_options + ['update', '-dP']
+        command = [cvs, '-z3'] + self.global_options + ['update', '-dP']
         if self.branch:
             command += ['-r', self.branch]
         if self.revision:
@@ -79,12 +80,13 @@ class CVS(SourceBaseCommand):
         return c.start()
 
     def doVCFull(self):
+        cvs = self.getCommand("cvs")
         d = self.builder.basedir
         if self.mode == "export":
             verb = "export"
         else:
             verb = "checkout"
-        command = ([self.vcexe, '-d', self.cvsroot, '-z3'] +
+        command = ([cvs, '-d', self.cvsroot, '-z3'] +
                    self.global_options +
                    [verb, '-d', self.srcdir])
 

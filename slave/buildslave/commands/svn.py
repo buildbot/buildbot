@@ -25,7 +25,6 @@ class SVN(SourceBaseCommand):
 
     def setup(self, args):
         SourceBaseCommand.setup(self, args)
-        self.vcexe = utils.getCommand("svn")
         self.svnurl = args['svnurl']
         self.sourcedata = "%s\n" % self.svnurl
         self.keep_on_purge = args.get('keep_on_purge', [])
@@ -45,9 +44,10 @@ class SVN(SourceBaseCommand):
             self.svn_args.extend(["--depth",args['depth']])
 
     def _dovccmd(self, command, args, rootdir=None, cb=None, **kwargs):
+        svn = self.getCommand("svn")
         if rootdir is None:
             rootdir = os.path.join(self.builder.basedir, self.srcdir)
-        fullCmd = [self.vcexe, command, '--non-interactive', '--no-auth-cache']
+        fullCmd = [svn, command, '--non-interactive', '--no-auth-cache']
         fullCmd.extend(self.svn_args)
         fullCmd.extend(args)
         c = runprocess.RunProcess(self.builder, fullCmd, rootdir,

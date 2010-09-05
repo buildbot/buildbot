@@ -18,7 +18,6 @@ class BK(SourceBaseCommand):
 
     def setup(self, args):
         SourceBaseCommand.setup(self, args)
-        self.vcexe = utils.getCommand("bk")
         self.bkurl = args['bkurl']
         self.sourcedata = '"%s\n"' % self.bkurl
 
@@ -34,12 +33,13 @@ class BK(SourceBaseCommand):
                                           self.srcdir, "BK/parent"))
 
     def doVCUpdate(self):
+        bk = self.getCommand('bk')
         revision = self.args['revision'] or 'HEAD'
         # update: possible for mode in ('copy', 'update')
         d = os.path.join(self.builder.basedir, self.srcdir)
 
         # Revision is ignored since the BK free client doesn't support it.
-        command = [self.vcexe, 'pull']
+        command = [bk, 'pull']
         c = runprocess.RunProcess(self.builder, command, d,
                          sendRC=False, timeout=self.timeout,
                          keepStdout=True, usePTY=False)
@@ -47,6 +47,7 @@ class BK(SourceBaseCommand):
         return c.start()
 
     def doVCFull(self):
+        bk = self.getCommand('bk')
 
         revision_arg = ''
         if self.args['revision']:
@@ -54,7 +55,7 @@ class BK(SourceBaseCommand):
 
         d = self.builder.basedir
 
-        command = [self.vcexe, 'clone', revision_arg] + self.bk_args + \
+        command = [bk, 'clone', revision_arg] + self.bk_args + \
                    [self.bkurl, self.srcdir]
         c = runprocess.RunProcess(self.builder, command, d,
                          sendRC=False, timeout=self.timeout,
@@ -69,7 +70,8 @@ class BK(SourceBaseCommand):
 
         return: list of strings, passable as the command argument to RunProcess
         """
-        return [self.vcexe, "changes", "-r+", "-d:REV:"]
+        bk = self.getCommand('bk')
+        return [bk, "changes", "-r+", "-d:REV:"]
 
     def parseGotRevision(self):
         c = runprocess.RunProcess(self.builder,

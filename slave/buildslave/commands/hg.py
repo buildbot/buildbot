@@ -20,7 +20,6 @@ class Mercurial(SourceBaseCommand):
 
     def setup(self, args):
         SourceBaseCommand.setup(self, args)
-        self.vcexe = utils.getCommand("hg")
         self.repourl = args['repourl']
         self.clobberOnBranchChange = args.get('clobberOnBranchChange', True)
         self.sourcedata = "%s\n" % self.repourl
@@ -34,8 +33,9 @@ class Mercurial(SourceBaseCommand):
                                           self.srcdir, ".hg"))
 
     def doVCUpdate(self):
+        hg = self.getCommand('hg')
         d = os.path.join(self.builder.basedir, self.srcdir)
-        command = [self.vcexe, 'pull', '--verbose', self.repourl]
+        command = [hg, 'pull', '--verbose', self.repourl]
         c = runprocess.RunProcess(self.builder, command, d,
                          sendRC=False, timeout=self.timeout,
                          maxTime=self.maxTime, keepStdout=True, usePTY=False)
@@ -56,7 +56,8 @@ class Mercurial(SourceBaseCommand):
         return res
 
     def doVCFull(self):
-        command = [self.vcexe, 'clone', '--verbose', '--noupdate']
+        hg = self.getCommand('hg')
+        command = [hg, 'clone', '--verbose', '--noupdate']
 
         # if got revision, clobbering and in dirname, only clone to specific revision
         # (otherwise, do full clone to re-use .hg dir for subsequent builds)
@@ -87,8 +88,9 @@ class Mercurial(SourceBaseCommand):
         return c
 
     def _purge(self, dummy, dirname):
+        hg = self.getCommand('hg')
         d = os.path.join(self.builder.basedir, self.srcdir)
-        purge = [self.vcexe, 'purge', '--all']
+        purge = [hg, 'purge', '--all']
         purgeCmd = runprocess.RunProcess(self.builder, purge, d,
                                 keepStdout=True, keepStderr=True, usePTY=False)
 
@@ -109,6 +111,7 @@ class Mercurial(SourceBaseCommand):
         return p
 
     def _update(self, res):
+        hg = self.getCommand('hg')
         if res != 0:
             return res
 
@@ -116,7 +119,7 @@ class Mercurial(SourceBaseCommand):
         self.update_branch = self.args.get('branch',  'default')
 
         d = os.path.join(self.builder.basedir, self.srcdir)
-        parentscmd = [self.vcexe, 'identify', '--num', '--branch']
+        parentscmd = [hg, 'identify', '--num', '--branch']
         cmd = runprocess.RunProcess(self.builder, parentscmd, d,
                            sendRC=False, timeout=self.timeout, keepStdout=True,
                            keepStderr=True, usePTY=False)
@@ -170,7 +173,8 @@ class Mercurial(SourceBaseCommand):
             return 0
 
         def _checkRepoURL(res):
-            parentscmd = [self.vcexe, 'paths', 'default']
+            hg = self.getCommand('hg')
+            parentscmd = [hg, 'paths', 'default']
             cmd2 = runprocess.RunProcess(self.builder, parentscmd, d,
                                keepStdout=True, keepStderr=True, usePTY=False,
                                timeout=self.timeout, sendRC=False)
@@ -235,7 +239,8 @@ class Mercurial(SourceBaseCommand):
         return c
 
     def _update2(self, res):
-        updatecmd=[self.vcexe, 'update', '--clean', '--repository', self.srcdir]
+        hg = self.getCommand('hg')
+        updatecmd=[hg, 'update', '--clean', '--repository', self.srcdir]
         if self.args.get('revision'):
             updatecmd.extend(['--rev', self.args['revision']])
         else:
@@ -246,8 +251,9 @@ class Mercurial(SourceBaseCommand):
         return self.command.start()
 
     def parseGotRevision(self):
+        hg = self.getCommand('hg')
         # we use 'hg identify' to find out what we wound up with
-        command = [self.vcexe, "identify", "--id", "--debug"] # get full rev id
+        command = [hg, "identify", "--id", "--debug"] # get full rev id
         c = runprocess.RunProcess(self.builder, command,
                          os.path.join(self.builder.basedir, self.srcdir),
                          environ=self.env, timeout=self.timeout,

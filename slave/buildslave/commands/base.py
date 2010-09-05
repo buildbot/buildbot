@@ -1,6 +1,7 @@
 
 import os, signal, types, re, traceback
 from stat import ST_CTIME, ST_MTIME, ST_SIZE
+import os
 import sys
 import shutil
 
@@ -230,8 +231,22 @@ class SourceBaseCommand(Command):
         self.timeout = args.get('timeout', 120)
         self.maxTime = args.get('maxTime', None)
         self.retry = args.get('retry')
+        self._commandPaths = {}
         # VC-specific subclasses should override this to extract more args.
         # Make sure to upcall!
+
+    def getCommand(self, name):
+        """Wrapper around utils.getCommand that will output a resonable
+        error message and raise AbandonChain if the command cannot be
+        found"""
+        if name not in self._commandPaths:
+            try:
+                self._commandPaths[name] = utils.getCommand(name)
+            except RuntimeError:
+                self.sendStatus({'stderr' : "could not find '%s'\n" % name})
+                self.sendStatus({'stderr' : "PATH is '%s'\n" % os.environ.get('PATH', '')})
+                raise AbandonChain(-1)
+        return self._commandPaths[name]
 
     def start(self):
         self.sendStatus({'header': "starting " + self.header + "\n"})

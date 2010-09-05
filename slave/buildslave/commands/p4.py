@@ -212,14 +212,13 @@ class P4Sync(P4Base):
 
     def setup(self, args):
         P4Base.setup(self, args)
-        self.vcexe = utils.getCommand("p4")
 
     def sourcedirIsUpdateable(self):
         return True
 
     def _doVC(self, force):
         d = os.path.join(self.builder.basedir, self.srcdir)
-        command = [self.vcexe]
+        command = [self.getCommand('p4')]
         if self.p4port:
             command.extend(['-p', self.p4port])
         if self.p4user:

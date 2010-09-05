@@ -23,7 +23,6 @@ class Git(SourceBaseCommand):
 
     def setup(self, args):
         SourceBaseCommand.setup(self, args)
-        self.vcexe = utils.getCommand("git")
         self.repourl = args['repourl']
         self.branch = args.get('branch')
         if not self.branch:
@@ -44,7 +43,8 @@ class Git(SourceBaseCommand):
         return os.path.isdir(os.path.join(self._fullSrcdir(), ".git"))
 
     def _dovccmd(self, command, cb=None, **kwargs):
-        c = runprocess.RunProcess(self.builder, [self.vcexe] + command, self._fullSrcdir(),
+        git = self.getCommand("git")
+        c = runprocess.RunProcess(self.builder, [git] + command, self._fullSrcdir(),
                          sendRC=False, timeout=self.timeout,
                          maxTime=self.maxTime, usePTY=False, **kwargs)
         self.command = c
@@ -143,10 +143,12 @@ class Git(SourceBaseCommand):
         return self.doVCUpdate()
 
     def doVCFull(self):
+        git = self.getCommand("git")
+
         # If they didn't ask for a specific revision, we can get away with a
         # shallow clone.
         if not self.args.get('revision') and self.args.get('shallow'):
-            cmd = [self.vcexe, 'clone', '--depth', '1', self.repourl,
+            cmd = [git, 'clone', '--depth', '1', self.repourl,
                    self._fullSrcdir()]
             c = runprocess.RunProcess(self.builder, cmd, self.builder.basedir,
                              sendRC=False, timeout=self.timeout,
