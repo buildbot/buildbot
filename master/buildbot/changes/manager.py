@@ -118,13 +118,11 @@ class ChangeManager(service.MultiService):
     def pruneChanges(self, last_added_changeid):
         # this is an expensive operation, so only do it once per second, in case
         # addChanges is called frequently
-        print "HERE, last =", last_added_changeid
         if not self.changeHorizon or self.lastPruneChanges > time.time() - 1:
             return
         self.lastPruneChanges = time.time()
 
         ids = self.parent.db.getChangeIdsLessThanIdNow(last_added_changeid - self.changeHorizon + 1)
-        print "ids", ids
         for changeid in ids:
             log.msg("removing change with id %s" % changeid)
             self.parent.db.removeChangeNow(changeid)
