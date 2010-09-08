@@ -68,6 +68,7 @@ class VisualStudio(ShellCommand):
     logobserver = None
 
     installdir = None
+    default_installdir = None
 
     # One of build, or rebuild
     mode = "rebuild"
@@ -127,6 +128,10 @@ class VisualStudio(ShellCommand):
         ShellCommand.setupLogfiles(self, cmd, logfiles)
 
 
+    def setupInstalldir(self):
+        if not self.installdir:
+            self.installdir = self.default_installdir
+
     def setupEnvironment(self, cmd):
         ShellCommand.setupEnvironment(self, cmd)
         if cmd.args['env'] is None:
@@ -140,6 +145,7 @@ class VisualStudio(ShellCommand):
         for path in self.LIB:
             addEnvPath(cmd.args['env'], "LIB", path)
 
+        self.setupInstalldir()
 
     def describe(self, done=False):
         description = ShellCommand.describe(self, done)
@@ -175,6 +181,8 @@ class VisualStudio(ShellCommand):
 
 class VC6(VisualStudio):
 
+    default_installdir = 'C:\\Program Files\\Microsoft Visual Studio'
+
     def __init__(self, **kwargs):  
 
         # always upcall !
@@ -183,16 +191,10 @@ class VC6(VisualStudio):
     def setupEnvironment(self, cmd):
         VisualStudio.setupEnvironment(self, cmd)
 
-        if self.installdir:
-            installdir = self.installdir
-        else:
-            installdir = 'C:\\Program Files\\Microsoft Visual Studio'
-
         # Root of Visual Developer Studio Common files.
-        VSCommonDir = installdir + '\\Common'
-        MSVCDir = installdir + '\\VC98'
+        VSCommonDir = seif.installdir + '\\Common'
+        MSVCDir = seif.installdir + '\\VC98'
         MSDevDir = VSCommonDir + '\\msdev98'
-
 
         addEnvPath(cmd.args['env'], "PATH", MSDevDir + '\\BIN')
         addEnvPath(cmd.args['env'], "PATH", MSVCDir + '\\BIN')
@@ -230,14 +232,9 @@ class VC7(VisualStudio):
     def setupEnvironment(self, cmd):
         VisualStudio.setupEnvironment(self, cmd)
 
-        if self.installdir:
-            installdir = self.installdir
-        else:
-            installdir = 'C:\\Program Files\\Microsoft Visual Studio .NET 2003'
-        
-        VSInstallDir = installdir + '\\Common7\\IDE'
-        VCInstallDir = installdir
-        MSVCDir = installdir + '\\VC7'
+        VSInstallDir = self.installdir + '\\Common7\\IDE'
+        VCInstallDir = self.installdir
+        MSVCDir = self.installdir + '\\VC7'
 
         addEnvPath(cmd.args['env'], "PATH", VSInstallDir)
         addEnvPath(cmd.args['env'], "PATH", MSVCDir + '\\BIN')
@@ -274,6 +271,7 @@ class VC8(VisualStudio):
     
     # Our ones
     arch = "x86"
+    default_installdir = 'C:\\Program Files\\Microsoft Visual Studio 8'
 
     def __init__(self, arch = "x86", **kwargs):
         self.arch = arch
@@ -285,13 +283,8 @@ class VC8(VisualStudio):
     def setupEnvironment(self, cmd):
         VisualStudio.setupEnvironment(self, cmd)
 
-        if self.installdir:
-            installdir = self.installdir
-        else:
-            installdir = 'C:\\Program Files\\Microsoft Visual Studio 8'
-
-        VSInstallDir = installdir
-        VCInstallDir = installdir + '\\VC'
+        VSInstallDir = self.installdir
+        VCInstallDir = self.installdir + '\\VC'
 
         addEnvPath(cmd.args['env'], "PATH", VSInstallDir + '\\Common7\\IDE')
         if self.arch == "x64":
@@ -347,6 +340,8 @@ class VCExpress9(VC8):
         self.setCommand(command)
         return VisualStudio.start(self)
 
-# Add first support for VC9 (Same as VC8)
-VC9 = VC8
+# Add first support for VC9 (Same as VC8, with a different installdir)
+class VC9(VC8):
+    default_installdir = 'C:\\Program Files\\Microsoft Visual Studio 9'
+
 VS2008 = VC9
