@@ -342,6 +342,6 @@ class VCExpress9(VC8):
 
 # Add first support for VC9 (Same as VC8, with a different installdir)
 class VC9(VC8):
-    default_installdir = 'C:\\Program Files\\Microsoft Visual Studio 9'
+    default_installdir = 'C:\\Program Files\\Microsoft Visual Studio 9.0'
 
 VS2008 = VC9
