@@ -1204,6 +1204,8 @@ class LoggingBuildStep(BuildStep):
 # )
 def regex_log_evaluator(cmd, step_status, regexes):
     worst = SUCCESS
+    if cmd.rc != 0:
+        worst = FAILURE
     for err, possible_status in regexes:
         # worst_status returns the worse of the two status' passed to it.
         # we won't be changing "worst" unless possible_status is worse than it,
