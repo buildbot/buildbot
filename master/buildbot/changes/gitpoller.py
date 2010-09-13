@@ -219,7 +219,7 @@ class GitPoller(base.ChangeSource):
                                when = commit_timestamp,
                                branch = self.branch,
                                category = self.category,
-                               projecy = self.project)
+                               project = self.project)
             self.parent.addChange(c)
             self.lastChange = self.lastPoll
             
