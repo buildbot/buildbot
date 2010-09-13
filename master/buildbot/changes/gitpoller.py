@@ -16,7 +16,11 @@ from buildbot.changes import base, changes
 class GitPoller(base.ChangeSource):
     """This source will poll a remote git repo for changes and submit
     them to the change master."""
-
+    
+    compare_attrs = ["repourl", "branch", "workdir",
+                     "pollinterval", "gitbin", "usetimestamps",
+                     "category", "project"]
+                     
     parent = None # filled in when we're added
     loop = None
     volatile = ['loop']
@@ -25,7 +29,8 @@ class GitPoller(base.ChangeSource):
     
     def __init__(self, repourl, branch='master', 
                  workdir=None, pollinterval=10*60, 
-                 gitbin='git', usetimestamps=True):
+                 gitbin='git', usetimestamps=True,
+                 category=None, project=None):
         """
         @type  repourl: string
         @param repourl: the url that describes the remote repository,
@@ -48,6 +53,16 @@ class GitPoller(base.ChangeSource):
         @param usetimestamps: parse each revision's commit timestamp (default True), or
                               ignore it in favor of the current time (to appear together
                               in the waterfall page)
+                              
+        @type  category:     string
+        @param category:     catergory associated with the change. Attached to
+                             the Change object produced by this changesource such that
+                             it can be targeted by change filters.
+                             
+        @type  project       string
+        @param project       project that the changes are associated to. Attached to
+                             the Change object produced by this changesource such that
+                             it can be targeted by change filters.
         """
         
         self.repourl = repourl
@@ -56,8 +71,10 @@ class GitPoller(base.ChangeSource):
         self.lastChange = time.time()
         self.lastPoll = time.time()
         self.gitbin = gitbin
-        self.workdir = workdir;
+        self.workdir = workdir
         self.usetimestamps = usetimestamps
+        self.category = category
+        self.project = project
         
         if self.workdir == None:
             self.workdir = tempfile.gettempdir() + '/gitpoller_work'
@@ -200,7 +217,9 @@ class GitPoller(base.ChangeSource):
                                files = self._get_commit_files(rev),
                                comments = self._get_commit_comments(rev),
                                when = commit_timestamp,
-                               branch = self.branch)
+                               branch = self.branch,
+                               category = self.category,
+                               projecy = self.project)
             self.parent.addChange(c)
             self.lastChange = self.lastPoll
             
