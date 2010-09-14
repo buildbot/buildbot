@@ -925,7 +925,7 @@ class BuildStep:
         # This might change in the future (I might move away from CVS), but
         # if so I'll keep updating that string with suitably-comparable
         # values.
-        if sv.split(".") < minversion.split("."):
+        if map(int, sv.split(".")) < map(int, minversion.split(".")):
             return True
         return False
 
