@@ -141,5 +141,5 @@ class ChangeManager(service.MultiService):
         return self.parent.db.getChangesGreaterThan(last_changeid, t)
     def getChangesByNumber(self, changeids):
         return self.parent.db.getChangesByNumber(changeids)
-    def getLatestChangeNumberNow(self, t=None):
-        return self.parent.db.getLatestChangeNumberNow(t)
+    def getLatestChangeNumberNow(self, branch=None, t=None):
+        return self.parent.db.getLatestChangeNumberNow(branch=branch, t=t)

@@ -365,14 +365,18 @@ class DBConnector(util.ComparableMixin):
         for (changeid,) in rows:
             yield self.getChangeNumberedNow(changeid)
 
-    def getLatestChangeNumberNow(self, t=None):
+    def getLatestChangeNumberNow(self, branch=None, t=None):
         if t:
-            return self._txn_getLatestChangeNumber(t)
+            return self._txn_getLatestChangeNumber(branch=branch, t=t)
         else:
             return self.runInteractionNow(self._txn_getLatestChangeNumber)
-    def _txn_getLatestChangeNumber(self, t):
-        q = self.quoteq("SELECT max(changeid) from changes")
-        t.execute(q)
+    def _txn_getLatestChangeNumber(self, branch, t):
+        args = None
+        if branch:
+            br_clause = "WHERE branch =? "
+            args = ( branch, )
+        q = self.quoteq("SELECT max(changeid) from changes"+ br_clause)
+        t.execute(q, args)
         row = t.fetchone()
         if not row:
             return 0
