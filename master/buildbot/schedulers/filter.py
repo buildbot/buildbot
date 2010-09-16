@@ -56,3 +56,17 @@ class ChangeFilter(ComparableMixin):
             if filt_fn is not None and not filt_fn(chg_val):
                 return False
         return True
+
+    def __repr__(self):
+        checks = []
+        for (filt_list, filt_re, filt_fn, chg_attr) in self.checks:
+            if filt_list is not None and len(filt_list) == 1:
+                checks.append('%s == %s' % (chg_attr, filt_list[0]))
+            elif filt_list is not None:
+                checks.append('%s in %r' % (chg_attr, filt_list))
+            if filt_re is not None :
+                checks.append('%s ~/%s/' % (chg_attr, filt_re))
+            if filt_fn is not None :
+                checks.append('%s(%s)' % (filt_fn.__name__, chg_attr))
+        
+        return "<%s on %s>" % (self.__class__.__name__, ' and '.join(checks))
