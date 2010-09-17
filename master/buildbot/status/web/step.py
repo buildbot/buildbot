@@ -66,6 +66,9 @@ class StepsResource(HtmlResource):
         HtmlResource.__init__(self)
         self.build_status = build_status
 
+    def content(self, req, ctx):
+        return "subpages show data for each step"
+
     def getChild(self, path, req):
         for s in self.build_status.getSteps():
             if s.getName() == path:
