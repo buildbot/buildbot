@@ -10,6 +10,7 @@ from buildbot.status.web.base import HtmlResource, \
      getAndCheckProperties, path_to_authfail
 
 from buildbot.status.web.step import StepsResource
+from buildbot.status.web.tests import TestsResource
 from buildbot import util, interfaces
 
 
@@ -210,6 +211,8 @@ class StatusResourceBuild(HtmlResource):
             return self.rebuild(req)
         if path == "steps":
             return StepsResource(self.build_status)
+        if path == "tests":
+            return TestsResource(self.build_status)
 
         return HtmlResource.getChild(self, path, req)
 
