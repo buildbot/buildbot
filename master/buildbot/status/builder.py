@@ -1267,6 +1267,12 @@ class BuildStatus(styles.Versioned):
     def getTestResults(self):
         return self.testResults
 
+    def getTestResultsOrd(self):
+        trs = self.testResults.keys()
+        trs.sort()
+        ret = [ self.testResults[t] for t in trs]
+        return ret
+
     def getLogs(self):
         # TODO: steps should contribute significant logs instead of this
         # hack, which returns every log from every step. The logs should get
