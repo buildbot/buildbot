@@ -55,7 +55,7 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
         b = self.builder_status
 
         cxt['name'] = b.getName()
-
+        req.setHeader('Cache-Control', 'no-cache')
         slaves = b.getSlaves()
         connected_slaves = [s for s in slaves if s.isConnected()]
 

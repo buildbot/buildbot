@@ -592,6 +592,8 @@ class ConsoleStatusResource(HtmlResource):
             except ValueError:
                 pass
 
+        req.setHeader('Cache-Control', 'no-cache')
+
         # Sets the default reload time to 60 seconds.
         if not reload_time:
             reload_time = 60
