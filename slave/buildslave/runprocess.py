@@ -160,9 +160,6 @@ class RunProcess:
     """
 
     notreally = False
-    TERM = "TERM"
-    TERM_TIMEOUT = 20
-
     BACKUP_TIMEOUT = 5
     KILL = "KILL"
     CHUNK_LIMIT = 128*1024
@@ -655,17 +652,12 @@ class RunProcess:
         msg = "command timed out: %d seconds elapsed" % self.maxTime
         self.kill(msg)
 
-    def kill(self, msg, signame=None):
-        if signame is None:
-            signame = self.TERM
+    def kill(self, msg):
         # This may be called by the timeout, or when the user has decided to
         # abort this build.
         self._sendBuffers()
         if self.timer:
-            try: # this can be already called when TERM was unsuccesfull
-                self.timer.cancel()
-            except:
-                pass
+            self.timer.cancel()
             self.timer = None
         if self.maxTimer:
             self.maxTimer.cancel()
@@ -692,12 +684,12 @@ class RunProcess:
 
                 sig = None
                 if self.KILL is not None:
-                    sig = getattr(signal, "SIG"+ signame, None)
+                    sig = getattr(signal, "SIG"+ self.KILL, None)
 
                 if self.KILL == None:
                     log.msg("self.KILL==None, only pretending to kill child")
                 elif sig is None:
-                    log.msg("signal module is missing SIG%s" % signame)
+                    log.msg("signal module is missing SIG%s" % self.KILL)
                 elif not hasattr(os, "kill"):
                     log.msg("os module is missing the 'kill' function")
                 elif not hasattr(self.process, "pid") or self.process.pid is None:
@@ -717,9 +709,9 @@ class RunProcess:
                 if self.KILL is None:
                     log.msg("self.KILL==None, only pretending to kill child")
                 else:
-                    log.msg("trying process.signalProcess('%s')" % (signame, ))
-                    self.process.signalProcess(signame)
-                    log.msg(" signal %s sent successfully" % (signame,))
+                    log.msg("trying process.signalProcess('KILL')")
+                    self.process.signalProcess(self.KILL)
+                    log.msg(" signal %s sent successfully" % (self.KILL,))
                     hit = 1
             except OSError:
                 # could be no-such-process, because they finished very recently
@@ -733,16 +725,10 @@ class RunProcess:
             # stderr. This is weird.
             self.pp.transport.loseConnection()
 
-        # we tried TERM first, next it's time for KILL
-        if self.KILL is not None and signame != self.KILL:
-            self.timer = self._reactor.callLater(self.TERM_TIMEOUT,
-                                           self.kill, msg=msg, signame=self.KILL)
-
-        else:
-            # finished ought to be called momentarily. Just in case it doesn't,
-            # set a timer which will abandon the command.
-            self.timer = self._reactor.callLater(self.BACKUP_TIMEOUT,
-                                           self.doBackupTimeout)
+        # finished ought to be called momentarily. Just in case it doesn't,
+        # set a timer which will abandon the command.
+        self.timer = self._reactor.callLater(self.BACKUP_TIMEOUT,
+                                       self.doBackupTimeout)
 
     def doBackupTimeout(self):
         log.msg("we tried to kill the process, and it wouldn't die.."
