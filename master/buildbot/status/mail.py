@@ -258,7 +258,8 @@ class MailNotifier(base.StatusReceiverMultiService):
         assert isinstance(extraRecipients, (list, tuple))
         for r in extraRecipients:
             assert isinstance(r, str)
-            assert VALID_EMAIL.search(r) # require full email addresses, not User names
+            # require full email addresses, not User names
+            assert VALID_EMAIL.search(r), "%s is not a valid email" % r 
         self.extraRecipients = extraRecipients
         self.sendToInterestedUsers = sendToInterestedUsers
         self.fromaddr = fromaddr
