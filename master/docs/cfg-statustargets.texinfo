@@ -743,7 +743,7 @@ mn = MailNotifier(fromaddr="buildbot@@example.org",
 @end example
 
 Another example of a function delivering a customized html email
-containing the last 80 lines of logs of a failing build step is given
+containing the last 80 log lines of the last build step is given
 below:
 
 @example
