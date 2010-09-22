@@ -10,7 +10,7 @@ class BuildStatusStatusResource(HtmlResource):
         number."""
 
         status = self.getStatus(request)
-        req.setHeader('Cache-Control', 'no-cache')
+        request.setHeader('Cache-Control', 'no-cache')
 
         # Get the parameters.
         name = request.args.get("builder", [None])[0]
