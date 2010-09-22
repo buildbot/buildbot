@@ -431,7 +431,12 @@ class SVNPoller(base.ChangeSource, util.ComparableMixin):
             #when     = time.mktime(time.strptime("%.19s" % when,
             #                                     "%Y-%m-%dT%H:%M:%S"))
             branches = {}
-            pathlist = el.getElementsByTagName("paths")[0]
+            try:
+                pathlist = el.getElementsByTagName("paths")[0]
+            except IndexError: # weird, we got an empty revision
+                log.msg("ignoring commit with no paths")
+                continue
+
             for p in pathlist.getElementsByTagName("path"):
                 action = p.getAttribute("action")
                 path = "".join([t.data for t in p.childNodes])
