@@ -181,6 +181,7 @@ class TransposedGridStatusResource(HtmlResource, GridStatusMixin):
     # TODO: docs
     status = None
     changemaster = None
+    default_rev_order = "asc"
 
     def content(self, request, cxt):
         """This method builds the transposed grid display.
@@ -193,9 +194,9 @@ class TransposedGridStatusResource(HtmlResource, GridStatusMixin):
         branch = request.args.get("branch", [ANYBRANCH])[0]
         if branch == 'trunk': branch = None
 
-        rev_order = request.args.get("rev_order", ["asc"])[0]
+        rev_order = request.args.get("rev_order", [self.default_rev_order])[0]
         if rev_order not in ["asc", "desc"]:
-            rev_order = "asc"
+            rev_order = self.default_rev_order
 
         cxt['refresh'] = self.get_reload_time(request)
 
