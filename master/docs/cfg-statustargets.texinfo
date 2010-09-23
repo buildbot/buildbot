@@ -234,6 +234,11 @@ of the page, and the build hosts are listed across the top.  It accepts
 the same query arguments. The exception being that instead of ``width''
 the argument is named ``length.''
 
+This page also has a ``rev_order='' query argument that
+lets you change in what order revisions are shown.
+Valid values are ``asc'' (ascending, oldest revision first)
+and ``desc'' (descending, newest revision first).
+
 @item /console
 
 EXPERIMENTAL: This provides a developer-oriented display of the the last
