@@ -193,6 +193,10 @@ class TransposedGridStatusResource(HtmlResource, GridStatusMixin):
         branch = request.args.get("branch", [ANYBRANCH])[0]
         if branch == 'trunk': branch = None
 
+        rev_order = request.args.get("rev_order", ["asc"])[0]
+        if rev_order not in ["asc", "desc"]:
+            rev_order = "asc"
+
         cxt['refresh'] = self.get_reload_time(request)
 
         # and the data we want to render
@@ -212,6 +216,8 @@ class TransposedGridStatusResource(HtmlResource, GridStatusMixin):
         cxt['builder_builds'] = builder_builds = []
         cxt['builders'] = builders = []
         cxt['range'] = range(len(stamps))
+        if rev_order == "desc":
+            cxt['range'].reverse()
         
         for bn in sortedBuilderNames:
             builds = [None] * len(stamps)
