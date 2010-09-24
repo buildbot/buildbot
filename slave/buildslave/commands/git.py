@@ -121,6 +121,12 @@ class Git(SourceBaseCommand):
         # The plus will make sure the repo is moved to the branch's
         # head even if it is not a simple "fast-forward"
         command = ['fetch', '-t', self.repourl, '+%s' % self.branch]
+        # If the 'progress' option is set, tell git fetch to output
+        # progress information to the log. This can solve issues with
+        # long fetches killed due to lack of output, but only works
+        # with Git 1.7.2 or later.
+        if self.args.get('progress'):
+            command.append('--progress')
         self.sendStatus({"header": "fetching branch %s from %s\n"
                                         % (self.branch, self.repourl)})
         return self._dovccmd(command, self._didFetch)

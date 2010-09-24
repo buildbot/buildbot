@@ -871,6 +871,11 @@ or not buildbot should consider git submodules.  Default: False.
 (optional): instructs git to attempt shallow clones (@code{--depth 1}).  If the
 user/scheduler asks for a specific revision, this parameter is ignored.
 
+@item progress
+(optional): passes the (@code{--progress}) flag to (@code{git fetch}). This
+solves issues of long fetches being killed due to lack of output, but requires
+Git 1.7.2 or later.
+
 @end table
 
 

@@ -767,6 +767,7 @@ class Git(Source):
                  submodules=False,
                  ignore_ignores=None,
                  shallow=False,
+                 progress=False,
                  **kwargs):
         """
         @type  repourl: string
@@ -783,6 +784,11 @@ class Git(Source):
 
         @type  shallow: boolean
         @param shallow: Use a shallow or clone, if possible
+
+        @type  progress: boolean
+        @param progress: Pass the --progress option when fetching. This
+                         can solve long fetches getting killed due to
+                         lack of output, but requires Git 1.7.2+.
         """
         Source.__init__(self, **kwargs)
         self.repourl = repourl
@@ -791,11 +797,13 @@ class Git(Source):
                                  submodules=submodules,
                                  ignore_ignores=ignore_ignores,
                                  shallow=shallow,
+                                 progress=progress,
                                  )
         self.args.update({'branch': branch,
                           'submodules': submodules,
                           'ignore_ignores': ignore_ignores,
                           'shallow': shallow,
+                          'progress': progress,
                           })
 
     def computeSourceRevision(self, changes):
