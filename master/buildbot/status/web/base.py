@@ -351,6 +351,7 @@ class BuildLineMixin:
             rev = "??"
         rev = str(rev)
         css_class = css_classes.get(results, "")
+        repo = build.getSourceStamp().repository
 
         if type(text) == list:
             text = " ".join(text)            
@@ -363,6 +364,7 @@ class BuildLineMixin:
                   'buildurl': path_to_build(req, build),
                   'builderurl': path_to_builder(req, build.getBuilder()),
                   'rev': rev,
+                  'rev_repo' : repo,
                   'time': time.strftime(self.LINE_TIME_FORMAT,
                                         time.localtime(build.getTimes()[0])),
                   'text': text,
