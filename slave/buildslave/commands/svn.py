@@ -2,6 +2,7 @@ import os
 from xml.dom.minidom import parseString
 
 from twisted.python import log
+from twisted.internet import defer
 
 from buildslave.commands.base import SourceBaseCommand
 from buildslave import runprocess
@@ -31,6 +32,8 @@ class SVN(SourceBaseCommand):
         self.keep_on_purge.append(".buildbot-sourcedata")
         self.ignore_ignores = args.get('ignore_ignores', True)
         self.always_purge = args.get('always_purge', False)
+
+        self.exported_rev = 'HEAD'
 
         self.svn_args = []
         if args.has_key('username'):
@@ -74,12 +77,35 @@ class SVN(SourceBaseCommand):
     def doVCFull(self):
         revision = self.args['revision'] or 'HEAD'
         args = ['--revision', str(revision), self.svnurl, self.srcdir]
-        if self.mode == "export":
-            command = 'export'
+
+        if self.mode == 'export':
+            if revision == 'HEAD': return self.doSVNExport()
+            else: command = 'export'
         else:
             # mode=='clobber', or copy/update on a broken workspace
             command = 'checkout'
         return self._dovccmd(command, args, rootdir=self.builder.basedir)
+
+    def doSVNExport(self):
+        ''' Since svnversion cannot be used on a svn export, we find the HEAD
+            revision from the repository and pass it to the --revision arg'''
+
+        def parseInfo(res):
+            answer = [i.split(': ') for i in self.command.stdout.splitlines() if i]
+            answer = dict(answer)
+            self.exported_rev = answer['Revision']
+            return self.exported_rev
+
+        def exportCmd(res):
+            args = ['--revision', str(res), self.svnurl, self.srcdir]
+            return self._dovccmd('export', args, rootdir=self.builder.basedir)
+
+        svn_info_d = self._dovccmd('info', (self.svnurl,), rootdir=self.builder.basedir, keepStdout=True)
+
+        svn_info_d.addCallbacks(parseInfo, self._abandonOnFailure)
+        svn_info_d.addCallbacks(exportCmd) 
+
+        return svn_info_d
 
     def _purgeAndUpdate(self):
         """svn revert has several corner cases that make it unpractical.
@@ -137,6 +163,11 @@ class SVN(SourceBaseCommand):
         return [svnversion_command, "."]
 
     def parseGotRevision(self):
+        if self.mode == 'export':
+            ss_rev = self.args['revision']
+            got_revision = ss_rev and ss_rev or self.exported_rev
+            return defer.succeed(got_revision)
+
         c = runprocess.RunProcess(self.builder,
                          self.getSvnVersionCommand(),
                          os.path.join(self.builder.basedir, self.srcdir),
