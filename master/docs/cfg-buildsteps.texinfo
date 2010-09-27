@@ -867,6 +867,11 @@ branch will be used.
 (optional): when initializing/updating a Git repository, this decides whether
 or not buildbot should consider git submodules.  Default: False.
 
+@item reference
+(optional): use the specified string as a path to a reference repository on the
+local machine. Git will try to grab objects from this path first instead of the
+main repository, if they exist.
+
 @item shallow
 (optional): instructs git to attempt shallow clones (@code{--depth 1}).  If the
 user/scheduler asks for a specific revision, this parameter is ignored.

@@ -17,6 +17,7 @@ class Git(SourceBaseCommand):
     ['submodules'] (optional): whether to initialize and update
                                submodules. Default: False.
     ['ignore_ignores']:        ignore ignores when purging changes.
+    ['reference'] (optional):  use this reference repository to fetch objects
     """
 
     header = "git operation"
@@ -30,6 +31,7 @@ class Git(SourceBaseCommand):
         self.sourcedata = "%s %s\n" % (self.repourl, self.branch)
         self.submodules = args.get('submodules')
         self.ignore_ignores = args.get('ignore_ignores', True)
+        self.reference = args.get('reference', None)
 
     def _fullSrcdir(self):
         return os.path.join(self.builder.basedir, self.srcdir)
@@ -146,6 +148,13 @@ class Git(SourceBaseCommand):
             return self._doFetch(None)
 
     def _didInit(self, res):
+        # If we have a reference repository specified, we need to also set that
+        # up after the 'git init'.
+        if self.reference:
+            git_alts_path = os.path.join(self._fullSrcdir(), '.git', 'objects', 'info', 'alternates')
+            git_alts_file = open(git_alts_path, 'w')
+            git_alts_file.write(self.reference)
+            git_alts_file.close()
         return self.doVCUpdate()
 
     def doVCFull(self):
@@ -154,8 +163,11 @@ class Git(SourceBaseCommand):
         # If they didn't ask for a specific revision, we can get away with a
         # shallow clone.
         if not self.args.get('revision') and self.args.get('shallow'):
-            cmd = [git, 'clone', '--depth', '1', self.repourl,
-                   self._fullSrcdir()]
+            cmd = [git, 'clone', '--depth', '1']
+            # If we have a reference repository, pass it to the clone command
+            if self.reference:
+                cmd.extend(['--reference', self.reference])
+            cmd.extend([self.repourl, self._fullSrcdir()])
             c = runprocess.RunProcess(self.builder, cmd, self.builder.basedir,
                              sendRC=False, timeout=self.timeout,
                              maxTime=self.maxTime, usePTY=False)

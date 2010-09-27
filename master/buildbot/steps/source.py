@@ -766,6 +766,7 @@ class Git(Source):
                  branch="master",
                  submodules=False,
                  ignore_ignores=None,
+                 reference=None,
                  shallow=False,
                  progress=False,
                  **kwargs):
@@ -782,6 +783,10 @@ class Git(Source):
         @param submodules: Whether or not to update (and initialize)
                        git submodules.
 
+        @type  reference: string
+        @param reference: The path to a reference repository to obtain
+                          objects from, if any.
+
         @type  shallow: boolean
         @param shallow: Use a shallow or clone, if possible
 
@@ -796,12 +801,14 @@ class Git(Source):
                                  branch=branch,
                                  submodules=submodules,
                                  ignore_ignores=ignore_ignores,
+                                 reference=reference,
                                  shallow=shallow,
                                  progress=progress,
                                  )
         self.args.update({'branch': branch,
                           'submodules': submodules,
                           'ignore_ignores': ignore_ignores,
+                          'reference': reference,
                           'shallow': shallow,
                           'progress': progress,
                           })
