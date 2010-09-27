@@ -30,7 +30,7 @@ class _FileWriter(pb.Referenceable):
         fd, self.tmpname = tempfile.mkstemp(dir=dirname)
         self.fp = os.fdopen(fd, 'wb')
         if mode is not None:
-            os.chmod(destfile, mode)
+            os.chmod(self.tmpname, mode)
         self.remaining = maxsize
 
     def remote_write(self, data):
