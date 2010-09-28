@@ -397,6 +397,7 @@ class CVSMaildirSource(MaildirSource):
         comments = ""
         branch = None
         cvsroot = None
+        fileList = None
         files = []
         isdir = 0
         path = None
@@ -467,7 +468,7 @@ class CVSMaildirSource(MaildirSource):
 
         if fileList is None:
            log.msg('CVSMaildirSource Mail with no files. Ignoring')
-           return            # We don't have any files. Email not from CVS
+           return None       # We don't have any files. Email not from CVS
 
         if cvsmode == '1.11':
             # Please, no repo paths with spaces!

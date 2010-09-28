@@ -168,6 +168,17 @@ class TestCVSMaildirSource(unittest.TestCase):
             self.fail('Failed to get change from email message.')
         self.assert_(change.comments == None )
 
+    def test_CVSMaildirSource_create_change_with_no_files(self):
+        # A message with no files is likely not for us
+        msg = cvs1_11_msg.replace('Files: base/module/src/make GNUmakefile,1.362,1.363','')
+        m = message_from_string(msg)
+        src = CVSMaildirSource('/dev/null')
+        try:
+            change = src.parse( m )
+        except:
+            self.fail('Failed to get change from email message.')
+        self.assert_(change == None )
+
     def test_CVSMaildirSource_create_change_with_no_project(self):
         msg = cvs1_11_msg.replace('Project: MyModuleName', '')
         m = message_from_string(msg)
