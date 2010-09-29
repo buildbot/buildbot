@@ -26,7 +26,7 @@ def add_debugging_monkeypatches():
     # on Python-2.7
     if twisted.version.major <= 9 and sys.version_info[:2] == (2,7):
         def nopatch(self, *args):
-            raise unittest.SkipTest('unittest.patch is not available')
+            raise unittest.SkipTest('unittest.TestCase.patch is not available')
         unittest.TestCase.patch = nopatch
 
 add_debugging_monkeypatches()
