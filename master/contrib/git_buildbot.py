@@ -50,6 +50,11 @@ category = None
 
 repository = None
 
+# When sending the notification, send this project iff
+# it's set (via --project)
+
+project = None
+
 # When converting strings to unicode, assume this encoding. 
 # (set with --encoding)
 
@@ -152,6 +157,9 @@ def gen_changes(input, branch):
         if repository:
             c['repository'] = unicode(repository, encoding=encoding)
 
+        if project:
+            c['project'] = unicode(project, encoding=encoding)
+
         grab_commit_info(c, m.group(1))
         changes.append(c)
 
@@ -219,6 +227,9 @@ def gen_update_branch_changes(oldrev, newrev, refname, branch):
 
         if repository:
             c['repository'] = unicode(repository, encoding=encoding)
+
+        if project:
+            c['project'] = unicode(project, encoding=encoding)
 
         if files:
             c['files'] = files
@@ -299,6 +310,8 @@ def parse_options():
                       type="string", help="Scheduler category to notify.")
     parser.add_option("-r", "--repository", action="store",
                       type="string", help="Git repository URL to send.")
+    parser.add_option("-p", "--project", action="store",
+                      type="string", help="Project to send.")
     encoding_help = ("Encoding to use when converting strings to "
                      "unicode. Default is %(encoding)s." % 
                      { "encoding" : encoding })
@@ -340,6 +353,9 @@ try:
 
     if options.repository:
         repository = options.repository
+
+    if options.project:
+        project = options.project
 
     if options.encoding:
         encoding = options.encoding
