@@ -66,6 +66,7 @@
 import sys
 import os
 import threading
+import re
 
 import pywintypes
 import winerror
@@ -481,7 +482,7 @@ def CustomInstall(opts):
 # special cmdline args (which includes the service stop handle!)
 
 
-def _RunChild():
+def _RunChild(runfn):
     del sys.argv[1] # The --spawn arg.
     # Create a new thread that just waits for the event to be signalled.
     t = threading.Thread(target=_WaitForShutdown,
@@ -504,9 +505,8 @@ def _RunChild():
         # py2exe sets this env vars that may screw our child process - reset
         del os.environ["PYTHONPATH"]
 
-    # Start the buildbot app
-    from buildbot.scripts import runner
-    runner.run()
+    # Start the buildbot/buildslave app
+    runfn()
     print "Service child process terminating normally."
 
 
@@ -517,6 +517,26 @@ def _WaitForShutdown(h):
     from twisted.internet import reactor
     reactor.callLater(0, reactor.stop)
 
+def DetermineRunner(bbdir):
+   '''Checks if the given directory is a buildslave or a master and returns the
+   appropriate run function.'''
+   try:
+      import buildslave.scripts.runner
+      tacfile = os.path.join(bbdir, 'buildbot.tac')
+
+      if os.path.exists(tacfile):
+         rexp = re.compile("BuildSlave")
+         with open(tacfile, 'r') as f:
+            contents = f.read()
+            if rexp.search(contents):
+               return buildslave.scripts.runner.run
+
+   except ImportError:
+      # Use the default
+      pass
+
+   import buildbot.scripts.runner
+   return buildbot.scripts.runner.run
 
 # This function is also called by the py2exe startup code.
 
@@ -526,7 +546,8 @@ def HandleCommandLine():
         # Special command-line created by the service to execute the
         # child-process.
         # First arg is the handle to wait on
-        _RunChild()
+        # Fourth arg is the config directory to use for the buildbot/slave
+        _RunChild(DetermineRunner(sys.argv[4]))
     else:
         win32serviceutil.HandleCommandLine(BBService,
                                            customOptionHandler=CustomInstall)
