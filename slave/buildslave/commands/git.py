@@ -5,6 +5,7 @@ from twisted.internet import defer
 from buildslave.commands.base import SourceBaseCommand
 from buildslave import runprocess
 from buildslave.commands import utils
+from buildslave.commands.base import AbandonChain
 
 
 class Git(SourceBaseCommand):
@@ -102,6 +103,12 @@ class Git(SourceBaseCommand):
         command = ['reset', '--hard', head]
         return self._dovccmd(command, self._didHeadCheckout)
 
+    def maybeNotDoVCFallback(self, res):
+        # If we were unable to find the branch/SHA on the remote,
+        # clobbering the repo won't help any, so just abort the chain
+        if "Couldn't find remote ref" in self.stderr:
+            raise AbandonChain(-1)
+
     # Update first runs "git clean", removing local changes,
     # if the branch to be checked out has changed.  This, combined
     # with the later "git reset" equates clobbering the repo,
@@ -131,7 +138,7 @@ class Git(SourceBaseCommand):
             command.append('--progress')
         self.sendStatus({"header": "fetching branch %s from %s\n"
                                         % (self.branch, self.repourl)})
-        return self._dovccmd(command, self._didFetch)
+        return self._dovccmd(command, self._didFetch, keepStderr=True)
 
     def _didClean(self, dummy):
         # After a clean, try to use the given revision if we have one.

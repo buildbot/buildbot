@@ -366,6 +366,9 @@ class SourceBaseCommand(Command):
             return rc
         if self.interrupted:
             raise AbandonChain(1)
+        # Let VCS subclasses have an opportunity to handle
+        # unrecoverable errors without having to clobber the repo
+        self.maybeNotDoVCFallback(self, rc)
         msg = "update failed, clobbering and trying again"
         self.sendStatus({'header': msg + "\n"})
         log.msg(msg)
@@ -381,6 +384,14 @@ class SourceBaseCommand(Command):
         d.addBoth(self.maybeDoVCRetry)
         d.addCallback(self._abandonOnFailure)
         return d
+
+    def maybeNotDoVCFallback(self, rc):
+        """Override this in a subclass if you want to detect unrecoverable
+        checkout errors where clobbering the repo wouldn't help, and stop
+        the current VC chain before it clobbers the repo for future builds.
+
+        Use 'raise AbandonChain' to pass up a halt if you do detect such."""
+        pass
 
     def maybeDoVCRetry(self, res):
         """We get here somewhere after a VC chain has finished. res could
