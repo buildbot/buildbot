@@ -17,10 +17,12 @@ class MasterShellCommand(BuildStep):
 
     def __init__(self, command,
                  description=None, descriptionDone=None,
+                 env=None, path=None, usePTY=0,
                  **kwargs):
         BuildStep.__init__(self, **kwargs)
         self.addFactoryArguments(description=description,
                                  descriptionDone=descriptionDone,
+                                 env=env, path=path, usePTY=usePTY,
                                  command=command)
 
         self.command=command
@@ -32,6 +34,9 @@ class MasterShellCommand(BuildStep):
             self.descriptionDone = descriptionDone
         if isinstance(self.descriptionDone, str):
             self.descriptionDone = [self.descriptionDone]
+        self.env=env
+        self.path=path
+        self.usePTY=usePTY
 
     class LocalPP(ProcessProtocol):
         def __init__(self, step):
@@ -80,8 +85,14 @@ class MasterShellCommand(BuildStep):
         stdio_log.addHeader(" argv: %s\n" % (argv,))
         self.step_status.setText(list(self.description))
 
+        if self.env is None:
+            env = os.environ
+        else:
+            assert isinstance(self.env, dict)
+            env = self.env
         # TODO add a timeout?
-        reactor.spawnProcess(self.LocalPP(self), argv[0], argv)
+        reactor.spawnProcess(self.LocalPP(self), argv[0], argv, 
+                path=self.path, usePTY=self.usePTY, env=env )
         # (the LocalPP object will call processEnded for us)
 
     def processEnded(self, status_object):
