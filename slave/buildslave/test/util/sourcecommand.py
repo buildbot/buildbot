@@ -6,7 +6,7 @@ class SourceCommandTestMixin(command.CommandTestMixin):
     Support for testing Source Commands; an extension of CommandTestMixin
     """
 
-    def make_command(self, cmdclass, args, makedirs=False):
+    def make_command(self, cmdclass, args, makedirs=False, initial_sourcedata=''):
         """
         Same as the parent class method, but this also adds some source-specific
         patches:
@@ -22,7 +22,7 @@ class SourceCommandTestMixin(command.CommandTestMixin):
         # note that these patches are to an *instance*, not a class, so there
         # is no need to use self.patch() to reverse them
 
-        self.sourcedata = ''
+        self.sourcedata = initial_sourcedata
         def readSourcedata():
             return self.sourcedata
         cmd.readSourcedata = readSourcedata
