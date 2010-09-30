@@ -847,6 +847,7 @@ class DBConnector(util.ComparableMixin):
                                    now, master_name, master_incarnation, brids)
     def _txn_claim_buildrequests(self, t, now, master_name, master_incarnation,
                                  brids):
+        brids = list(brids) # in case it's a set
         while brids:
             batch, brids = brids[:100], brids[100:]
             q = self.quoteq("UPDATE buildrequests"
