@@ -66,7 +66,6 @@
 import sys
 import os
 import threading
-import re
 
 import pywintypes
 import winerror
@@ -525,10 +524,9 @@ def DetermineRunner(bbdir):
       tacfile = os.path.join(bbdir, 'buildbot.tac')
 
       if os.path.exists(tacfile):
-         rexp = re.compile("BuildSlave")
          with open(tacfile, 'r') as f:
             contents = f.read()
-            if rexp.search(contents):
+            if 'import BuildSlave' in contents:
                return buildslave.scripts.runner.run
 
    except ImportError:
