@@ -134,6 +134,7 @@ class MakeTarball(ShellCommand):
 
 @menu
 * WithProperties::
+* Common Build Properties::
 @end menu
 
 @node WithProperties
@@ -205,7 +206,8 @@ Note: like python, you can either do positional-argument interpolation
 @emph{or} keyword-argument interpolation, not both. Thus you cannot use
 a string like @code{WithProperties("foo-%(revision)s-%s", "branch")}.
 
-@heading Common Build Properties
+@node Common Build Properties
+@subsubsection Common Build Properties
 
 The following build properties are set when the build is started, and
 are available to all steps.
