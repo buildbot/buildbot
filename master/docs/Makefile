@@ -1,6 +1,6 @@
 all: docs.tgz
 
-VERSION=$(shell python -c 'g = {}; execfile("../buildbot/__init__.py",g); print g["version"]')
+VERSION=$(shell PYTHONPATH=..:$${PYTHONPATH} python -c 'from buildbot import version; print version')
 
 buildbot.info: buildbot.texinfo
 	echo "@set VERSION $(VERSION)" > version.texinfo
