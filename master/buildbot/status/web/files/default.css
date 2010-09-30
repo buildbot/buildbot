@@ -192,6 +192,10 @@ td.DevDetails {
 	text-align: left;
 }
 
+td.DevDetails li a {
+	padding-right: 5px;
+}
+
 td.DevComment {
 	font-weight: normal;
 	padding: 8px 8px 8px 8px;
