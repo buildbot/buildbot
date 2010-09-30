@@ -9,6 +9,8 @@ from buildbot import util
 from buildbot.status import builder
 from buildbot.status.web.base import HtmlResource
 
+class DoesNotPassFilter(Exception): pass # Used for filtering revs
+
 def getResultsClass(results, prevResults, inProgress):
     """Given the current and past results, return the class that will be used
     by the css to display the right color for a box."""
@@ -173,35 +175,6 @@ class ConsoleStatusResource(HtmlResource):
         allChanges = newChanges
 
         return allChanges
-
-    def stripRevisions(self, allChanges, numRevs, branch, devName):
-        """Returns a subset of changes from allChanges that matches the query.
-
-        allChanges is the list of all changes we know about.
-        numRevs is the number of changes we will inspect from allChanges. We
-            do not want to inspect all of them or it would be too slow.
-        branch is the branch we are interested in. Changes not in this branch
-            will be ignored.
-        devName is the developper name. Changes have not been submitted by this
-            person will be ignored.
-        """
-        
-        revisions = []
-
-        if not allChanges:
-            return revisions
-
-        totalRevs = len(allChanges)
-        for i in range(totalRevs - 1, totalRevs - numRevs, -1):
-            if i < 0:
-                break
-            change = allChanges[i]
-            if branch == ANYBRANCH or branch == change.branch:
-                if not devName or change.who in devName:                    
-                    rev = DevRevision(change)
-                    revisions.append(rev)
-
-        return revisions
 
     def getBuildDetails(self, request, builderName, build):
         """Returns an HTML list of failures for a given build."""
@@ -519,12 +492,44 @@ class ConsoleStatusResource(HtmlResource):
 
         return (builds, details)
 
+    def filterRevisions(self, revisions, filter=None, max_revs=None):
+        """Filter a set of revisions based on any number of filter criteria.
+        If specified, filter should be a dict with keys corresponding to
+        revision attributes, and values of 1+ strings"""
+        if not filter:
+            if max_revs is None:
+                for rev in reversed(revisions):
+                    yield DevRevision(rev)
+            else:
+                for index,rev in enumerate(reversed(revisions)):
+                    if index >= max_revs:
+                        break
+                    yield DevRevision(rev)
+        else:
+            for index, rev in enumerate(reversed(revisions)):
+                if max_revs and index >= max_revs:
+                    break
+                try:
+                    for field,acceptable in filter.iteritems():
+                        if not hasattr(rev, field):
+                            raise DoesNotPassFilter
+                        if type(acceptable) in (str, unicode):
+                            if getattr(rev, field) != acceptable:
+                                raise DoesNotPassFilter
+                        elif type(acceptable) in (list, tuple, set):
+                            if getattr(rev, field) not in acceptable:
+                                raise DoesNotPassFilter
+                    yield DevRevision(rev)
+                except DoesNotPassFilter:
+                    pass
+
     def displayPage(self, request, status, builderList, allBuilds, revisions,
-                    categories, branch, debugInfo):
+                    categories, repository, branch, debugInfo):
         """Display the console page."""
         # Build the main template directory with all the informations we have.
         subs = dict()
         subs["branch"] = branch or 'trunk'
+        subs["repository"] = repository
         if categories:
             subs["categories"] = ' '.join(categories)
         subs["time"] = time.strftime("%a %d %b %Y %H:%M:%S",
@@ -604,6 +609,8 @@ class ConsoleStatusResource(HtmlResource):
         categories = request.args.get("category", [])
         # List of all builders to show on the page.
         builders = request.args.get("builder", [])
+        # Repo used to filter the changes shown.
+        repository = request.args.get("repository", [None])[0]
         # Branch used to filter the changes shown.
         branch = request.args.get("branch", [ANYBRANCH])[0]
         # List of all the committers name to display on the page.
@@ -627,8 +634,14 @@ class ConsoleStatusResource(HtmlResource):
             numRevs *= 2
         numBuilds = numRevs
 
-
-        revisions = self.stripRevisions(allChanges, numRevs, branch, devName)
+        revFilter = {}
+        if branch != ANYBRANCH:
+            revFilter['branch'] = branch
+        if devName:
+            revFilter['who'] = devName
+        if repository:
+            revFilter['repository'] = repository
+        revisions = list(self.filterRevisions(allChanges, max_revs=numRevs, filter=revFilter))
         debugInfo["revision_final"] = len(revisions)
 
         # Fetch all the builds for all builders until we get the next build
@@ -650,7 +663,7 @@ class ConsoleStatusResource(HtmlResource):
         debugInfo["added_blocks"] = 0
 
         cxt.update(self.displayPage(request, status, builderList, allBuilds,
-                                    revisions, categories, branch, debugInfo))
+                                    revisions, categories, repository, branch, debugInfo))
 
         template = request.site.buildbot_service.templates.get_template("console.html")
         data = template.render(cxt)

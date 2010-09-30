@@ -254,9 +254,10 @@ regressions from this change. Finally a yellow box means that the test
 is in progress.
 
 By adding one or more ``builder='' query arguments, the Console view is
-restricted to only showing information about the given Builders. By
-adding one or more ``branch='' query arguments, the display is
-restricted to showing information about the given branches. In
+restricted to only showing information about the given Builders. Adding a
+``repository='' argument will limit display to a given repository. By
+adding a ``branch='' query argument, the display is
+restricted to showing information about the given branch. In
 addition, adding one or more ``category='' query arguments to the URL
 will limit the display to Builders that were defined with one of the
 given categories.
