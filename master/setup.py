@@ -19,6 +19,7 @@ from distutils.core import setup, Command
 from buildbot import version
 
 from distutils.command.install_data import install_data
+from distutils.command.sdist import sdist
 
 def include(d, e):
     """Generate a pair of (directory, file-list) for installation.
@@ -142,6 +143,19 @@ class install_data_twisted(install_data):
         )
         install_data.finalize_options(self)
 
+    def run(self):
+        install_data.run(self)
+        # ensure there's a buildbot/VERSION file
+        open(os.path.join(self.install_dir, 'buildbot', 'VERSION'), 'w').write(version)
+
+class our_sdist(sdist):
+
+    def make_release_tree(self, base_dir, files):
+        sdist.make_release_tree(self, base_dir, files)
+        # ensure there's a buildbot/VERSION file
+        open(os.path.join(base_dir, 'buildbot', 'VERSION'), 'w').write(version)
+
+
 long_description="""
 The BuildBot is a system to automate the compile/test cycle required by
 most software projects to validate code changes. By automatically
@@ -221,7 +235,8 @@ setup_args = {
     'scripts': scripts,
     'cmdclass': {'install_data': install_data_twisted,
                  'test': TestCommand,
-                 'sdist_test': SdistTestCommand},
+                 'sdist_test': SdistTestCommand,
+                 'sdist': our_sdist},
     }
 
 # set zip_safe to false to force Windows installs to always unpack eggs
