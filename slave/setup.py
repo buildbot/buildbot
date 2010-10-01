@@ -13,6 +13,8 @@ Standard setup script.
 import sys
 import os
 from distutils.core import setup
+from distutils.command.install_data import install_data
+from distutils.command.sdist import sdist
 
 from buildslave import version
 
@@ -21,6 +23,23 @@ scripts = ["bin/buildslave"]
 # still needs to get packaged.
 if 'sdist' in sys.argv or sys.platform == 'win32':
     scripts.append("contrib/windows/buildslave.bat")
+
+class our_install_data(install_data):
+
+    def run(self):
+        install_data.run(self)
+        # ensure there's a buildslave/VERSION file
+        fn = os.path.join(self.install_dir, 'buildslave', 'VERSION')
+        open(fn, 'w').write(version)
+        self.outfiles.append(fn)
+
+class our_sdist(sdist):
+
+    def make_release_tree(self, base_dir, files):
+        sdist.make_release_tree(self, base_dir, files)
+        # ensure there's a buildslave/VERSION file
+        fn = os.path.join(base_dir, 'buildslave', 'VERSION')
+        open(fn, 'w').write(version)
 
 setup_args = {
     'name': "buildbot-slave",
@@ -51,7 +70,14 @@ setup_args = {
         "buildslave.test.util",
         "buildslave.test.unit",
     ],
-    'scripts': scripts
+    'scripts': scripts,
+    # mention data_files, even if empty, so install_data is called and
+    # VERSION gets copied
+    'data_files': [("buildslave", [])],
+    'cmdclass': {
+        'install_data': our_install_data,
+        'sdist': our_sdist
+        }
     }
 
 # set zip_safe to false to force Windows installs to always unpack eggs
