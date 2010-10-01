@@ -598,17 +598,37 @@ def changelinkfilter(changelink):
     def replace_from_tuple(t):
         search, url_replace = t[:2]
         if len(t) == 3:
-            title_replace = ' title="%s"' % t[2]
+            title_replace = t[2]
         else:
             title_replace = ''
         
         search_re = re.compile(search)
-        link_replace_re = jinja2.Markup(r'<a href="%s"%s>\g<0></a>' % (url_replace, title_replace))        
+
+        def replacement_unmatched(text):
+            return jinja2.escape(text)
+        def replacement_matched(mo):
+            # expand things *after* application of the regular expressions
+            url = jinja2.escape(mo.expand(url_replace))
+            title = jinja2.escape(mo.expand(title_replace))
+            body = jinja2.escape(mo.group())
+            if title:
+                return '<a href="%s" title="%s">%s</a>' % (url, title, body)
+            else:
+                return '<a href="%s">%s</a>' % (url, body)
 
         def filter(text, project):
-            text = cgi.escape(text)
-            html = search_re.sub(link_replace_re, text)
-            return html
+            # now, we need to split the string into matched and unmatched portions,
+            # quoting the unmatched portions directly and quoting the components of
+            # the 'a' element for the matched portions.  We can't use re.split here,
+            # because the user-supplied patterns may have multiple groups.
+            html = []
+            last_idx = 0
+            for mo in search_re.finditer(text):
+                html.append(replacement_unmatched(text[last_idx:mo.start()]))
+                html.append(replacement_matched(mo))
+                last_idx = mo.end()
+            html.append(replacement_unmatched(text[last_idx:]))
+            return jinja2.Markup(''.join(html))
 
         return filter
     
@@ -633,7 +653,7 @@ def changelinkfilter(changelink):
             
     elif callable(changelink):
         def callable_filter(text, project):
-            text = cgi.escape(text)
+            text = jinja2.escape(text)
             return changelink(text, project)
         
         return callable_filter
