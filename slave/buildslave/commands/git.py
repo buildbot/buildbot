@@ -160,7 +160,7 @@ class Git(SourceBaseCommand):
         if self.reference:
             git_alts_path = os.path.join(self._fullSrcdir(), '.git', 'objects', 'info', 'alternates')
             git_alts_file = open(git_alts_path, 'w')
-            git_alts_file.write(self.reference)
+            git_alts_file.write(os.path.join(self.reference, 'objects'))
             git_alts_file.close()
         return self.doVCUpdate()
 
