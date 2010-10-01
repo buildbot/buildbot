@@ -634,7 +634,6 @@ An example WebStatus configuration line which enables change_hook and two DIALEC
 
 @example
 c['status'].append(html.WebStatus(http_port=8010,allowForce=True,
-                        change_hook=True,
                         change_hook_dialects=@{
                                 'base': True,
                                 'github': @{'option1':True,
