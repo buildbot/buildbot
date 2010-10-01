@@ -12,13 +12,13 @@ try:
     version = open(fn).read().strip()
 
 except IOError:
-    from subprocess import Popen, PIPE
+    from subprocess import Popen, PIPE, STDOUT
     import re
 
     VERSION_MATCH = re.compile(r'\d+\.\d+\.\d+(\w|-)*')
 
     try:
-        p = Popen(['git', 'describe', '--tags', '--always', '--dirty'], stdout=PIPE)
+        p = Popen(['git', 'describe', '--tags', '--always'], stdout=PIPE, stderr=STDOUT)
         out = p.communicate()[0]
 
         if (not p.returncode) and out:
