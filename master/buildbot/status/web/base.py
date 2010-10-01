@@ -606,7 +606,7 @@ def changelinkfilter(changelink):
         link_replace_re = jinja2.Markup(r'<a href="%s"%s>\g<0></a>' % (url_replace, title_replace))        
 
         def filter(text, project):
-            text = jinja2.escape(text)
+            text = cgi.escape(text)
             html = search_re.sub(link_replace_re, text)
             return html
 
@@ -624,7 +624,7 @@ def changelinkfilter(changelink):
             if t:
                 return replace_from_tuple(t)(text, project)
             else:
-                return jinja2.escape(text)
+                return cgi.escape(text)
             
         return dict_filter
         
@@ -633,7 +633,7 @@ def changelinkfilter(changelink):
             
     elif callable(changelink):
         def callable_filter(text, project):
-            text = jinja2.escape(text)
+            text = cgi.escape(text)
             return changelink(text, project)
         
         return callable_filter
