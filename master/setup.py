@@ -155,7 +155,8 @@ class our_sdist(sdist):
     def make_release_tree(self, base_dir, files):
         sdist.make_release_tree(self, base_dir, files)
         # ensure there's a buildbot/VERSION file
-        open(os.path.join(base_dir, 'buildbot', 'VERSION'), 'w').write(version)
+        fn = os.path.join(base_dir, 'buildbot', 'VERSION')
+        open(fn, 'w').write(version)
 
 
 long_description="""
