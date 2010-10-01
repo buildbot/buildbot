@@ -1,6 +1,10 @@
 Major User visible changes in Buildbot.             -*- outline -*-
   (see ChangeLog for a detailed list of changes)
 
+* Release 0.8.0p1 (October 1, 2010)
+
+** Fix for XSS vulnerabilities discovered by Amber Yust
+
 * Release 0.8.0 (May 25, 2010)
 
 ** (NOTE!) Scheduler requires keyword arguments
