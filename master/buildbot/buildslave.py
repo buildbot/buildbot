@@ -87,6 +87,11 @@ class AbstractBuildSlave(pb.Avatar, service.MultiService):
         assert self.__class__ == new.__class__
         self.max_builds = new.max_builds
         self.access = new.access
+        self.notify_on_missing = new.notify_on_missing
+        self.missing_timeout = new.missing_timeout
+
+        self.properties.updateFromProperties(new)
+
         if self.botmaster:
             self.updateLocks()
 
