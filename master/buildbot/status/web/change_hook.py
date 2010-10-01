@@ -29,7 +29,7 @@ class ChangeHookResource(resource.Resource):
         Reponds to events and starts the build process
           different implementations can decide on what methods they will accept
         """
-        self.render_POST(request)
+        return self.render_POST(request)
 
     def render_POST(self, request):
         """
@@ -46,9 +46,9 @@ class ChangeHookResource(resource.Resource):
         
         if not changes:
             msg("No changes found")
-            return
+            return "no changes found"
         self.submitChanges( changes, request )
-        return "changes %s" % changes
+        return "changes processed"
 
   
     def getChanges(self, request):
@@ -97,5 +97,4 @@ class ChangeHookResource(resource.Resource):
             msg("injecting change %s" % onechange)
             changeMaster.addChange( onechange )
         
-    
     

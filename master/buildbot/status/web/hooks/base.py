@@ -15,7 +15,7 @@ from buildbot.changes.changes import Change
 from twisted.python.reflect import namedModule
 from buildbot.util import json
     
-def getChanges(self, request):
+def getChanges(request, options=None):
         """
         Consumes a naive build notification (the default for now)
         basically, set POST variables to match commit object parameters:
