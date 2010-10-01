@@ -2,7 +2,9 @@ Major User visible changes in Buildbot.             -*- outline -*-
    see the git log for a detailed list of changes:
    http://github.com/djmitche/buildbot/commits/master
 
-* NEXT RELEASE
+* Release 0.8.1p1 (October 1, 2010)
+
+** Fix for XSS vulnerabilities discovered by Amber Yust
 
 * Release 0.8.1 (July 6, 2010)
 
