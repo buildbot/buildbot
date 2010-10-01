@@ -166,7 +166,7 @@ function checkMouseLeave(element, event) {
         <tr>          
     {% for s in slaves[c.name] %}          
           <td class='DevSlaveBox'>
-            <a href='{{ s.url|e }}' title='{{ s.title|e }}' class='DevSlaveBox {{ s.color|e }}' target="_blank">
+            <a href='{{ s.url }}' title='{{ s.title }}' class='DevSlaveBox {{ s.color }}' target="_blank">
             </a>
           </td>
     {% endfor %}            
@@ -183,20 +183,20 @@ function checkMouseLeave(element, event) {
 
   <tr>
     <td class='DevRev {{ alt }}' width="1%">
-      {{ r.id|shortrev(r.repository)|e }}
+      {{ r.id|shortrev(r.repository) }}
     </td>
     <td class='DevName {{ alt }}' width="1%">
-      {{ r.who|user|e }}
+      {{ r.who|user }}
     </td>
 
   {% for c in categories %}
-    <td class='DevStatus {{ alt|e }} {{ last|e }}'>
+    <td class='DevStatus {{ alt }} {{ last }}'>
       <table width="100%">
         <tr>    
     {% for b in r.builds[c.name] %}
           <td class='DevStatusBox'>
-            <a href='#' onclick='showBuildBox("{{ b.url|e }}", event); return false;' 
-               title='{{ b.title|e }}' class='DevStatusBox {{ b.color|e }} {{ b.tag|e }}' 
+            <a href='#' onclick='showBuildBox("{{ b.url }}", event); return false;'
+               title='{{ b.title|e }}' class='DevStatusBox {{ b.color }} {{ b.tag }}'
                target="_blank"></a>
           </td>
     {% endfor %}    
@@ -217,9 +217,9 @@ function checkMouseLeave(element, event) {
     <td colspan="{{ r.span }}" class='DevDetails {{ alt }}'>
       <ul style='margin: 0px; padding: 0 0 0 1.5em;'>
     {% for d in r.details %}
-        <li>{{ d.buildername }}: {{ d.status|e }} - &nbsp;
+        <li>{{ d.buildername }}: {{ d.status }} - &nbsp;
       {%- for l in d.logs -%}
-            <a href="{{ l.url|e }}">{{ l.name|e }}</a>
+            <a href="{{ l.url }}">{{ l.name }}</a>
       {%- endfor -%}
         </li>
     {% endfor %}
