@@ -70,11 +70,6 @@ class WebStatus(service.MultiService):
      /buildstatus?builder=...&number=...: an embedded iframe for the console
      /changes : summarize all ChangeSources
      /changes/CHANGENUM: a page describing a single Change
-     /schedulers/SCHEDULERNAME: a page describing a Scheduler, including
-                                a description of its behavior, a list of the
-                                Builders it triggers, and list of the Changes
-                                that are queued awaiting the tree-stable
-                                timer, and controls to accelerate the timer.
      /buildslaves : list all BuildSlaves
      /buildslaves/SLAVENAME : describe a single BuildSlave
      /one_line_per_build : summarize the last few builds, one line each
@@ -330,7 +325,6 @@ class WebStatus(service.MultiService):
         self.putChild("changes", ChangesResource())
         self.putChild("buildslaves", BuildSlavesResource())
         self.putChild("buildstatus", BuildStatusStatusResource())
-        #self.putChild("schedulers", SchedulersResource())
         self.putChild("one_line_per_build",
                       OneLinePerBuild(numbuilds=numbuilds))
         self.putChild("about", AboutBuildbot())
