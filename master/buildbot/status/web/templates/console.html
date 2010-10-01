@@ -208,7 +208,7 @@ function checkMouseLeave(element, event) {
    
   <tr>
     <td colspan="{{ r.span }}" class='DevComment {{ alt }}'> 
-      {{ r.comments|changecomment(r.project or None)|e|replace('\n', '<br/>').replace('  ','&nbsp; ') }}
+      {{ r.comments|changecomment(r.project or None)|replace('\n', '<br/>').replace('  ','&nbsp; ') }}
     </td>
   </tr>
  
