@@ -146,14 +146,17 @@ class install_data_twisted(install_data):
     def run(self):
         install_data.run(self)
         # ensure there's a buildbot/VERSION file
-        open(os.path.join(self.install_dir, 'buildbot', 'VERSION'), 'w').write(version)
+        fn = os.path.join(self.install_dir, 'buildbot', 'VERSION')
+        open(fn, 'w').write(version)
+        self.outfiles.append(fn)
 
 class our_sdist(sdist):
 
     def make_release_tree(self, base_dir, files):
         sdist.make_release_tree(self, base_dir, files)
         # ensure there's a buildbot/VERSION file
-        open(os.path.join(base_dir, 'buildbot', 'VERSION'), 'w').write(version)
+        fn = os.path.join(base_dir, 'buildbot', 'VERSION')
+        open(fn, 'w').write(version)
 
 
 long_description="""
