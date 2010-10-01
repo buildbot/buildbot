@@ -1,6 +1,6 @@
 all: docs.tgz
 
-VERSION=$(shell PYTHONPATH=..:$${PYTHONPATH} python -c 'from buildbot import version; print version')
+VERSION=$(shell if [ -n "$$VERSION" ]; then echo $$VERSION; else PYTHONPATH=..:$${PYTHONPATH} python -c 'from buildbot import version; print version'; fi)
 
 buildbot.info: buildbot.texinfo
 	echo "@set VERSION $(VERSION)" > version.texinfo
