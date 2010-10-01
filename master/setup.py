@@ -146,7 +146,9 @@ class install_data_twisted(install_data):
     def run(self):
         install_data.run(self)
         # ensure there's a buildbot/VERSION file
-        open(os.path.join(self.install_dir, 'buildbot', 'VERSION'), 'w').write(version)
+        fn = os.path.join(self.install_dir, 'buildbot', 'VERSION')
+        open(fn, 'w').write(version)
+        self.outfiles.append(fn)
 
 class our_sdist(sdist):
 
