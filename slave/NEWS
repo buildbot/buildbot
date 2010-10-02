@@ -1,6 +1,6 @@
 Major User visible changes in Buildslave.             -*- outline -*-
    see the git log for a detailed list of changes:
-   http://github.com/djmitche/buildbot/commits/master
+   http://github.com/buildbot/buildbot/commits/master
 
 * Buildbot 0.8.1
 

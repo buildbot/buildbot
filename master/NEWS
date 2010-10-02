@@ -1,6 +1,6 @@
 Major User visible changes in Buildbot.             -*- outline -*-
    see the git log for a detailed list of changes:
-   http://github.com/djmitche/buildbot/commits/master
+   http://github.com/buildbot/buildbot/commits/master
 
 * NEXT RELEASE
 
@@ -272,7 +272,7 @@ information about test runs and test failures into an external database.
 ** Python API Docs
 
 The docstrings for buildbot are now available in a web-friendly format:
-  http://djmitche.github.com/buildbot/docs/latest/reference
+  http://buildbot.net/buildbot/docs/latest/reference
 
 ** Many, many bugfixes
 
