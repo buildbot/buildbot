@@ -13,6 +13,7 @@ from buildbot.process.properties import Properties
 from buildbot.changes.changes import Change
 from twisted.python.reflect import namedModule
 from twisted.python.log import msg,err
+from buildbot.util import json
 
 class ChangeHookResource(resource.Resource):
      # this is a cheap sort of template thingy
@@ -47,10 +48,10 @@ class ChangeHookResource(resource.Resource):
         if not changes:
             msg("No changes found")
             return "no changes found"
-        self.submitChanges( changes, request )
-        return "changes processed"
+        submitted = self.submitChanges( changes, request )
+        return json.dumps(submitted)
 
-  
+    
     def getChanges(self, request):
         """
         Take the logic from the change hook, and then delegate it
@@ -79,7 +80,7 @@ class ChangeHookResource(resource.Resource):
             dialect = 'base'
             
         if dialect in self.dialects.keys():
-            msg("Attempting to load module buildbot.status.web.hooks" + dialect)
+            msg("Attempting to load module buildbot.status.web.hooks." + dialect)
             tempModule = namedModule('buildbot.status.web.hooks.' + dialect)
             changes = tempModule.getChanges(request,self.dialects[dialect])
             msg("Got the following changes %s" % changes)
@@ -87,14 +88,16 @@ class ChangeHookResource(resource.Resource):
         else:
             msg("The dialect specified %s wasn't whitelisted in change_hook" % dialect)
             msg("Note: if dialect is 'base' then it's possible your URL is malformed and we didn't regex it properly")
-                
+
         return changes        
                 
     def submitChanges(self, changes, request):
         # get a control object
         changeMaster = request.site.buildbot_service.master.change_svc
+        submitted = []
         for onechange in changes:
-            msg("injecting change %s" % onechange)
             changeMaster.addChange( onechange )
-        
-    
+            d = onechange.asDict()
+            msg("injected change %s" % d)
+            submitted.append(d)
+        return submitted
