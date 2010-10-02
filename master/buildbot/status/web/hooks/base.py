@@ -14,6 +14,7 @@ from buildbot.process.properties import Properties
 from buildbot.changes.changes import Change
 from twisted.python.reflect import namedModule
 from buildbot.util import json
+from twisted.python.log import msg,err
     
 def getChanges(request, options=None):
         """
@@ -21,7 +22,7 @@ def getChanges(request, options=None):
         basically, set POST variables to match commit object parameters:
         revision, revlink, comments, branch, who, files, links
         
-        files and links will be de-json'd, the rest are interpreted as strings
+        files, links and properties will be de-json'd, the rest are interpreted as strings
         """
         
         def firstOrNothing( value ):
@@ -33,10 +34,10 @@ def getChanges(request, options=None):
                 return value[0]
             else:
                 return value
-            
+
         args = request.args
 
-        # first, convert files and links
+        # first, convert files, links and properties
         files = None
         if args.get('files'):
             files = json.loads( args.get('files')[0] )
@@ -48,6 +49,12 @@ def getChanges(request, options=None):
             links = json.loads( args.get('links')[0] )
         else:
             links = []
+
+        properties = None
+        if args.get('properties'):
+            properties = json.loads( args.get('properties')[0] )
+        else:
+            properties = {}
             
         revision = firstOrNothing(args.get('revision'))
         when     = firstOrNothing(args.get('when'))
@@ -57,14 +64,13 @@ def getChanges(request, options=None):
         branch = firstOrNothing(args.get('branch'))
         category = firstOrNothing(args.get('category'))
         revlink = firstOrNothing(args.get('revlink'))
-        properties = Properties()
-        # properties.update(properties, "Change")
         repository = firstOrNothing(args.get('repository'))
         project = firstOrNothing(args.get('project'))
               
         ourchange = Change(who = who, files = files, comments = comments, isdir = isdir, links = links,
                         revision=revision, when = when, branch = branch, category = category,
-                        revlink = revlink, repository = repository, project = project)  
+                        revlink = revlink, properties = properties, repository = repository,
+                        project = project)
         return [ourchange]
 
 

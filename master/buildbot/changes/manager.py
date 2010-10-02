@@ -103,9 +103,9 @@ class ChangeManager(service.MultiService):
         """Deliver a file change event. The event should be a Change object.
         This method will timestamp the object as it is received."""
         msg = ("adding change, who %s, %d files, rev=%s, branch=%s, repository=%s, "
-                "comments %s, category %s" % (change.who, len(change.files),
+                "comments %s, category %s, project %s" % (change.who, len(change.files),
                                               change.revision, change.branch, change.repository,
-                                              change.comments, change.category))
+                                              change.comments, change.category, change.project))
         log.msg(msg.encode('utf-8', 'replace'))
 
         # this sets change.number, if it wasn't already set (by the
