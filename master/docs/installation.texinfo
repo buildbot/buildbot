@@ -205,6 +205,12 @@ In addition to @file{buildbot.tac}, a small @file{Makefile.sample} is
 installed. This can be used as the basis for customized daemon startup,
 @xref{Launching the daemons}.
 
+@heading Using MySQL
+
+If you want to use MySQL as the database backend for your Buildbot, add the
+@code{--db} option to the @code{create-master} invocation to specify the
+connection string for the MySQL database (@pxref{Database Specification}).
+
 @node Upgrading an Existing Buildmaster
 @section Upgrading an Existing Buildmaster
 

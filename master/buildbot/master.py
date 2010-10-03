@@ -980,7 +980,10 @@ class BuildMaster(service.MultiService):
                 can run.  Use the following command-line
                     buildbot upgrade-master path/to/master
                 to upgrade the database, and try starting the buildmaster again.  You may want
-                to make a backup of your buildmaster before doing so.""")
+                to make a backup of your buildmaster before doing so.  If you are using MySQL,
+                you must specify the connector string on the upgrade-master command line:
+                    buildbot upgrade-master --db=<db-connector-string> path/to/master
+                """)
 
         self.db = connector.DBConnector(db_spec)
         if self.changeCacheSize:
