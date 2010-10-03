@@ -398,8 +398,9 @@ the image just to change the buildbot credentials. One option is to use libvirt'
 server to allocate an identity to the slave: DHCP sets a hostname, and the slave takes its
 identity from that.
 
-Doing all this is really beyond the scope of the manual, but there is a vmbuilder script
-and a network.xml file to create such a DHCP server in contrib/ that should get you started:
+Doing all this is really beyond the scope of the manual, but there is a
+vmbuilder script and a network.xml file to create such a DHCP server in
+@code{contrib/} (@pxref{Contrib Scripts}) that should get you started:
 
 @example
 sudo apt-get install ubuntu-vm-builder

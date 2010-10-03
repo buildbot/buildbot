@@ -37,9 +37,10 @@ There are a variety of ChangeSources available, some of which are
 meant to be used in conjunction with other tools to deliver Change
 events from the VC repository to the buildmaster.
 
-As a quick guide, here is a list of VC systems and the ChangeSources
-that might be useful with them. All of these ChangeSources are in the
-@code{buildbot.changes} module.
+As a quick guide, here is a list of VC systems and the ChangeSources that might
+be useful with them. All of these ChangeSources are in the
+@code{buildbot.changes} module.  The @code{contrib/} scripts mentioned below
+are available on github - @pxref{Contrib Scripts}.
 
 @anchor{depr-src}
 @emph{NOTE:} The CVS change sources FreshCVSSource, FCMaildirSource,
@@ -778,7 +779,7 @@ Since Mercurial is written in python, the hook script can invoke
 Buildbot's @code{sendchange} function directly, rather than having to
 spawn an external process. This function delivers the same sort of
 changes as @code{buildbot sendchange} and the various hook scripts in
-contrib/, so you'll need to add a @code{pb.PBChangeSource} to your
+@code{contrib/}, so you'll need to add a @code{pb.PBChangeSource} to your
 buildmaster to receive these changes.
 
 To set this up, first choose a Mercurial repository that represents
@@ -880,11 +881,11 @@ stripping @code{strip} slashes.
 Bzr is also written in Python, and the Bzr hook depends on Twisted to send the
 changes.
 
-To install, put @code{contrib/bzr_buildbot.py} in one of your plugins
-locations a bzr plugins directory (e.g.,
+To install, put @code{contrib/bzr_buildbot.py} (@pxref{Contrib Scripts}) in one
+of your plugins locations a bzr plugins directory (e.g.,
 @code{~/.bazaar/plugins}). Then, in one of your bazaar conf files (e.g.,
-@code{~/.bazaar/locations.conf}), set the location you want to connect with buildbot
-with these keys:
+@code{~/.bazaar/locations.conf}), set the location you want to connect with
+buildbot with these keys:
 
 @table @code
 @item buildbot_on
@@ -1297,12 +1298,13 @@ def my_file_splitter(path):
 @subsection Bzr Poller
 
 If you cannot insert a Bzr hook in the server, you can use the Bzr Poller. To
-use, put @code{contrib/bzr_buildbot.py} somewhere that your buildbot
-configuration can import it. Even putting it in the same directory as the master.cfg
-should work. Install the poller in the buildbot configuration as with any
-other change source. Minimally, provide a URL that you want to poll (bzr://,
-bzr+ssh://, or lp:), though make sure the buildbot user has necessary
-privileges. You may also want to specify these optional values.
+use, put @code{contrib/bzr_buildbot.py} (@pxref{Contrib Scripts}) somewhere
+that your buildbot configuration can import it. Even putting it in the same
+directory as the master.cfg should work. Install the poller in the buildbot
+configuration as with any other change source. Minimally, provide a URL that
+you want to poll (bzr://, bzr+ssh://, or lp:), though make sure the buildbot
+user has necessary privileges. You may also want to specify these optional
+values.
 
 @table @code
 @item poll_interval

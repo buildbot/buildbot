@@ -11,6 +11,7 @@
 * Shutdown::
 * Maintenance::
 * Troubleshooting::
+* Contrib Scripts::
 @end menu
 
 @node Buildbot Components
@@ -282,8 +283,9 @@ to your purpose, you can simply delete @code{changes.pck}.
 
 If you would like to keep the change history, then you will need to figure out
 which encoding is in use, and use @code{contrib/fix_changes_pickle_encoding.py}
-to rewrite the changes pickle into Unicode before upgrading the master.  A
-typical invocation (with Mac-Roman encoding) might look like:
+(@pxref{Contrib Scripts}) to rewrite the changes pickle into Unicode before
+upgrading the master.  A typical invocation (with Mac-Roman encoding) might
+look like:
 
 @example
 $ python $buildbot/contrib/fix_changes_pickle_encoding.py changes.pck macroman
@@ -800,3 +802,11 @@ attempt to reconnect as usual. The reconnect time will depend upon how long the
 buildmaster is offline (i.e. how far up the exponential backoff curve the
 slaves have travelled). Again, @code{buildslave restart @var{BASEDIR}} will
 speed up the process.
+
+@node Contrib Scripts
+@section Contrib Scripts
+
+While some features of Buildbot are included in the distribution, others are
+only available in @code{contrib/} in the source directory.  The latest versions
+of such scripts are available at
+@url{http://github.com/buildbot/buildbot/tree/master/master/contrib}.
