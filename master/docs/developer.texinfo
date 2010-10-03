@@ -261,6 +261,10 @@ this test is a good reminder that testing isn't done yet.
 
 @item
 
+Updated the version number in @file{buildbot/db/schema/tables.sql}, too.
+
+@item
+
 Finally, make the corresponding changes to @file{buildbot/db/schema/tables.sql}.
 
 @end enumerate
