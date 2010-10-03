@@ -662,9 +662,9 @@ to ``src/foo.c'', then the SVN step will concatenate
 ``svn://svn.example.org/MyProject/'' with ``features/newthing'' to get the
 svnurl for checkout.
 
-For added flexibility, @code{baseURL} may contain a %%BRANCH%% placeholder,
-which will be replaced either by the branch in the SourceStamp or the default
-specified in one @code{defaultBranch}.
+For added flexibility, @code{baseURL} may contain a @code{%%BRANCH%%}
+placeholder, which will be replaced either by the branch in the SourceStamp or
+the default specified in @code{defaultBranch}.
 
 @example
 source.SVN( mode='update',
