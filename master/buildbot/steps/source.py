@@ -564,11 +564,11 @@ class SVN(Source):
         lastChange = max([int(c.revision) for c in changes])
         return lastChange
 
-    def startVC(self, branch, revision, patch):
+    def checkCompatibility(self):
+        ''' Handle compatibility between old slaves/svn clients '''
 
-        # handle old slaves
-        warnings = []
         slavever = self.slaveVersion("svn", "old")
+
         if not slavever:
             m = "slave does not have the 'svn' command"
             raise BuildSlaveTooOldError(m)
@@ -615,6 +615,26 @@ class SVN(Source):
             if patch:
                 raise BuildSlaveTooOldError("old slave can't do patch")
 
+        if (self.depth is not None) and self.slaveVersionIsOlderThan("svn","2.9"):
+            m = ("This buildslave (%s) does not support svn depth "
+                    "arguments.  Refusing to build. "
+                    "Please upgrade the buildslave." % (self.build.slavename))
+            raise BuildSlaveTooOldError(m)
+
+        if (self.username is not None or self.password is not None) \
+        and self.slaveVersionIsOlderThan("svn", "2.8"):
+            m = ("This buildslave (%s) does not support svn usernames "
+                 "and passwords.  "
+                 "Refusing to build. Please upgrade the buildslave to "
+                 "buildbot-0.7.10 or newer." % (self.build.slavename,))
+            raise BuildSlaveTooOldError(m)
+
+
+    def startVC(self, branch, revision, patch):
+        warnings = []
+
+        self.checkCompatibility()
+
         if self.svnurl:
             self.args['svnurl'] = self.computeRepositoryURL(self.svnurl)
         else:
@@ -627,25 +647,12 @@ class SVN(Source):
 
         #Set up depth if specified
         if self.depth is not None:
-            if self.slaveVersionIsOlderThan("svn","2.9"):
-                m = ("This buildslave (%s) does not support svn depth "
-                     "arguments.  Refusing to build. "
-                     "Please upgrade the buildslave." % (self.build.slavename))
-                raise BuildSlaveTooOldError(m)
-            else: 
-                self.args['depth'] = self.depth
+            self.args['depth'] = self.depth
 
-        if self.username is not None or self.password is not None:
-            if self.slaveVersionIsOlderThan("svn", "2.8"):
-                m = ("This buildslave (%s) does not support svn usernames "
-                     "and passwords.  "
-                     "Refusing to build. Please upgrade the buildslave to "
-                     "buildbot-0.7.10 or newer." % (self.build.slavename,))
-                raise BuildSlaveTooOldError(m)
-            if self.username is not None:
-                self.args['username'] = self.username
-            if self.password is not None:
-                self.args['password'] = self.password
+        if self.username is not None:
+            self.args['username'] = self.username
+        if self.password is not None:
+            self.args['password'] = self.password
 
         if self.extra_args is not None:
             self.args['extra_args'] = self.extra_args
