@@ -494,6 +494,7 @@ class SVN(Source):
     """I perform Subversion checkout/update operations."""
 
     name = 'svn'
+    branch_placeholder = '%%BRANCH%%'
 
     def __init__(self, svnurl=None, baseURL=None, defaultBranch=None,
                  directory=None, username=None, password=None,
@@ -629,20 +630,28 @@ class SVN(Source):
                  "buildbot-0.7.10 or newer." % (self.build.slavename,))
             raise BuildSlaveTooOldError(m)
 
+    def getSvnUrl(self, branch, revision, patch):
+        ''' Compute the svn url that will be passed to the svn remote command '''
+        if self.svnurl:
+            return self.computeRepositoryURL(self.svnurl)
+        else:
+            computed = self.computeRepositoryURL(self.baseURL)
+
+            if self.branch_placeholder in self.baseURL:
+                return computed.replace(self.branch_placeholder, branch)
+            else:
+                # Throwing a TypeError here is probably better than checking
+                # out everything under baseURL
+                return computed + branch
 
     def startVC(self, branch, revision, patch):
         warnings = []
 
         self.checkCompatibility()
 
-        if self.svnurl:
-            self.args['svnurl'] = self.computeRepositoryURL(self.svnurl)
-        else:
-            self.args['svnurl'] = (self.computeRepositoryURL(self.baseURL) +
-                                   branch)
+        self.args['svnurl'] = self.getSvnUrl(branch, revision, patch)
         self.args['revision'] = revision
         self.args['patch'] = patch
-
         self.args['always_purge'] = self.always_purge
 
         #Set up depth if specified
