@@ -494,6 +494,7 @@ class SVN(Source):
     """I perform Subversion checkout/update operations."""
 
     name = 'svn'
+    branch_placeholder = '%%BRANCH%%'
 
     def __init__(self, svnurl=None, baseURL=None, defaultBranch=None,
                  directory=None, username=None, password=None,
@@ -564,11 +565,11 @@ class SVN(Source):
         lastChange = max([int(c.revision) for c in changes])
         return lastChange
 
-    def startVC(self, branch, revision, patch):
+    def checkCompatibility(self):
+        ''' Handle compatibility between old slaves/svn clients '''
 
-        # handle old slaves
-        warnings = []
         slavever = self.slaveVersion("svn", "old")
+
         if not slavever:
             m = "slave does not have the 'svn' command"
             raise BuildSlaveTooOldError(m)
@@ -615,37 +616,57 @@ class SVN(Source):
             if patch:
                 raise BuildSlaveTooOldError("old slave can't do patch")
 
+        if (self.depth is not None) and self.slaveVersionIsOlderThan("svn","2.9"):
+            m = ("This buildslave (%s) does not support svn depth "
+                    "arguments.  Refusing to build. "
+                    "Please upgrade the buildslave." % (self.build.slavename))
+            raise BuildSlaveTooOldError(m)
+
+        if (self.username is not None or self.password is not None) \
+        and self.slaveVersionIsOlderThan("svn", "2.8"):
+            m = ("This buildslave (%s) does not support svn usernames "
+                 "and passwords.  "
+                 "Refusing to build. Please upgrade the buildslave to "
+                 "buildbot-0.7.10 or newer." % (self.build.slavename,))
+            raise BuildSlaveTooOldError(m)
+
+    def getSvnUrl(self, branch, revision, patch):
+        ''' Compute the svn url that will be passed to the svn remote command '''
         if self.svnurl:
-            self.args['svnurl'] = self.computeRepositoryURL(self.svnurl)
+            return self.computeRepositoryURL(self.svnurl)
         else:
-            self.args['svnurl'] = (self.computeRepositoryURL(self.baseURL) +
-                                   branch)
+            if branch is None:
+                m = ("The SVN source step belonging to builder '%s' does not know "
+                     "which branch to work with. This means that the change source "
+                     "did not specify a branch and that defaultBranch is None." \
+                     % self.build.builder.name)
+                raise RuntimeError(m)
+
+            computed = self.computeRepositoryURL(self.baseURL)
+
+            if self.branch_placeholder in self.baseURL:
+                return computed.replace(self.branch_placeholder, branch)
+            else:
+                return computed + branch
+
+    def startVC(self, branch, revision, patch):
+        warnings = []
+
+        self.checkCompatibility()
+
+        self.args['svnurl'] = self.getSvnUrl(branch, revision, patch)
         self.args['revision'] = revision
         self.args['patch'] = patch
-
         self.args['always_purge'] = self.always_purge
 
         #Set up depth if specified
         if self.depth is not None:
-            if self.slaveVersionIsOlderThan("svn","2.9"):
-                m = ("This buildslave (%s) does not support svn depth "
-                     "arguments.  Refusing to build. "
-                     "Please upgrade the buildslave." % (self.build.slavename))
-                raise BuildSlaveTooOldError(m)
-            else: 
-                self.args['depth'] = self.depth
+            self.args['depth'] = self.depth
 
-        if self.username is not None or self.password is not None:
-            if self.slaveVersionIsOlderThan("svn", "2.8"):
-                m = ("This buildslave (%s) does not support svn usernames "
-                     "and passwords.  "
-                     "Refusing to build. Please upgrade the buildslave to "
-                     "buildbot-0.7.10 or newer." % (self.build.slavename,))
-                raise BuildSlaveTooOldError(m)
-            if self.username is not None:
-                self.args['username'] = self.username
-            if self.password is not None:
-                self.args['password'] = self.password
+        if self.username is not None:
+            self.args['username'] = self.username
+        if self.password is not None:
+            self.args['password'] = self.password
 
         if self.extra_args is not None:
             self.args['extra_args'] = self.extra_args

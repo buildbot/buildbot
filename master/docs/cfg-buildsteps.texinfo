@@ -522,14 +522,17 @@ should preferentially create the @code{SVN} step with the
 
 @table @code
 @item baseURL
-(required): this specifies the base repository URL, to which a branch
-name will be appended. It should probably end in a slash.
+(required): this specifies the base repository URL, to which a branch name will
+be appended. Alternatively, @code{baseURL} can contain a @code{%%BRANCH%%}
+placeholder, which will be replaced with the branch name. @code{baseURL} should
+probably end in a slash.
 
 @item defaultBranch
-(optional): this specifies the name of the branch to use when a Build
-does not provide one of its own. This is a string that will be
-appended to @code{baseURL} to create the URL that will be passed to
-the @code{svn checkout} command.
+(optional): this specifies the name of the branch to use when a Build does not
+provide one of its own. This is a string that will be appended to
+@code{baseURL} to create the URL that will be passed to the @code{svn checkout}
+command. If you use @code{baseURL} without specifying @code{defaultBranch}
+every @code{ChangeStamp} must come with a valid (not None) @code{branch}.
 
 It is possible to mix to have a mix of @code{SVN} steps that use
 either the @code{svnurl} or @code{baseURL} arguments but not both at
@@ -595,7 +598,7 @@ build any of the user branches, but it should be willing to build a
 user branch when explicitly requested (most likely by the user who
 owns that branch).
 
-There are three things that need to be set up to accomodate this
+There are three things that need to be set up to accommodate this
 system. The first is a ChangeSource that is capable of identifying the
 branch which owns any given file. This depends upon a user-supplied
 function, in an external program that runs in the SVN commit hook and
@@ -651,13 +654,23 @@ c['builders'] = [
  ]
 @end example
 
-In this example, when a change arrives with a @code{branch} attribute
-of ``trunk'', the resulting build will have an SVN step that
-concatenates ``svn://svn.example.org/MyProject/'' (the baseURL) with
-``trunk'' (the branch name) to get the correct svn command. If the
-``newthing'' branch has a change to ``src/foo.c'', then the SVN step
-will concatenate ``svn://svn.example.org/MyProject/'' with
-``features/newthing'' to get the svnurl for checkout.
+In this example, when a change arrives with a @code{branch} attribute of
+``trunk'', the resulting build will have a SVN step that concatenates
+``svn://svn.example.org/MyProject/'' (the baseURL) with ``trunk'' (the branch
+name) to get the correct svn command. If the ``newthing'' branch has a change
+to ``src/foo.c'', then the SVN step will concatenate
+``svn://svn.example.org/MyProject/'' with ``features/newthing'' to get the
+svnurl for checkout.
+
+For added flexibility, @code{baseURL} may contain a @code{%%BRANCH%%}
+placeholder, which will be replaced either by the branch in the SourceStamp or
+the default specified in @code{defaultBranch}.
+
+@example
+source.SVN( mode='update',
+            baseURL='svn://svn.example.org/svn/%%BRANCH%%/myproject',
+            defaultBranch='trunk' )
+@end example
 
 @node Darcs
 @subsubsection Darcs
