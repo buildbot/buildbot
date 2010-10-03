@@ -121,6 +121,10 @@ the code in somewhere like @code{/usr/lib/python2.3/site-packages/buildbot}. It
 will also install the @code{buildbot} command-line tool in
 @code{/usr/bin/buildbot}.
 
+If the environment variable @code{$NO_INSTALL_REQS} is set to '1', then
+@code{setup.py} will not try to install Buildbot's requirements.  This is
+usually only useful when building a Buildbot package.
+
 To test this, shift to a different directory (like @code{/tmp}), and run:
 
 @example
