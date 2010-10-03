@@ -115,7 +115,7 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
     def getAbsoluteSourceStamp(self, got_revision):
         return SourceStamp(branch=self.branch, revision=got_revision,
                            patch=self.patch, repository=self.repository,
-                           project=self.project)
+                           project=self.project, changes=self.changes)
 
     def getText(self):
         # note: this won't work for VC systems with huge 'revision' strings
