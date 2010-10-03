@@ -1851,6 +1851,10 @@ f.addStep(MasterShellCommand(command="""
     mv widgetsoft-new.tar.gz widgetsoft-`date +%a`.tar.gz"""))
 @end example
 
+Note that, by default, this step passes a copy of the buildmaster's environment
+variables to the subprocess.  To pass an explicit environment instead, add an
+@code{env=@{..@}} argument.
+
 @node Triggering Schedulers
 @subsection Triggering Schedulers
 @bsindex buildbot.steps.trigger.Trigger
