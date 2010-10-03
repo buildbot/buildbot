@@ -343,7 +343,7 @@ class Contact(base.StatusReceiver):
             r += "  Build details are at %s" % buildurl
 
         if self.channel.showBlameList and build.getResults() != SUCCESS and len(build.changes) != 0:
-            r += '  blamelist: ' + ', '.join([c.who for c in build.changes])
+            r += '  blamelist: ' + ', '.join(list(set([c.who for c in build.changes])))
 
         self.send(r)
 
