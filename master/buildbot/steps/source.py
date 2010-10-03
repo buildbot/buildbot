@@ -635,13 +635,18 @@ class SVN(Source):
         if self.svnurl:
             return self.computeRepositoryURL(self.svnurl)
         else:
+            if branch is None:
+                m = ("The SVN source step belonging to builder '%s' does not know "
+                     "which branch to work with. This means that the change source "
+                     "did not specify a branch and that defaultBranch is None." \
+                     % self.build.builder.name)
+                raise RuntimeError(m)
+
             computed = self.computeRepositoryURL(self.baseURL)
 
             if self.branch_placeholder in self.baseURL:
                 return computed.replace(self.branch_placeholder, branch)
             else:
-                # Throwing a TypeError here is probably better than checking
-                # out everything under baseURL
                 return computed + branch
 
     def startVC(self, branch, revision, patch):
