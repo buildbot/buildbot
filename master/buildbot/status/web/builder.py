@@ -127,7 +127,7 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
 
         # keep weird stuff out of the branch revision, and property strings.
         # TODO: centralize this somewhere.
-        if not re.match(r'^[\w\.\-\/]*$', branch):
+        if not re.match(r'^[\w.+/~-]*$', branch):
             log.msg("bad branch '%s'" % branch)
             return Redirect(path_to_builder(req, self.builder_status))
         if not re.match(r'^[ \w\.\-\/]*$', revision):
