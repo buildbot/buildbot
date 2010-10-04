@@ -7,23 +7,28 @@ class Upgrader(base.Upgrader):
         self.set_version()
 
     def add_columns(self):
+        if self.dbapiName == 'MySQLdb':
+            default_text = ""
+        else:
+            default_text = "default ''"
+
         cursor = self.conn.cursor()
         cursor.execute("""
         ALTER TABLE changes
-            add column `repository` text not null default ''
-        """)
+            add column `repository` text not null %s
+        """ % default_text)
         cursor.execute("""
         ALTER TABLE changes
-            add column `project` text not null default ''
-        """)
+            add column `project` text not null %s
+        """ % default_text)
         cursor.execute("""
         ALTER TABLE sourcestamps
-            add column `repository` text not null default ''
-        """)
+            add column `repository` text not null %s
+        """ % default_text)
         cursor.execute("""
         ALTER TABLE sourcestamps
-            add column `project` text not null default ''
-        """)
+            add column `project` text not null %s
+        """ % default_text)
 
     def set_version(self):
         c = self.conn.cursor()
