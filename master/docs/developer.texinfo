@@ -18,6 +18,7 @@ described here.
 * String Types::
 * Subscription Interfaces::
 * Web Status::
+* Obfuscating Passwords::
 * Master-Slave API::
 * Twisted Idioms::
 * Buildbot Tests::
@@ -390,6 +391,20 @@ user's authorization function could ensure that devs can only operate on their
 own builds.
 
 The available actions are listed in @pxref{WebStatus Configuration Parameters}.
+
+@node Obfuscating Passwords
+@section Obfuscating Passwords
+@dvindex buildslave.util.Obfuscated
+
+It's often necessary to pass passwords to commands on the slave, but it's no
+fun to see those passwords appear for everyone else in the build log.  The
+@code{Obfuscated} class can help here.  Instantiate it with a real string and a
+fake string that should appear in logfiles.  You can then use the
+@code{Obfuscated.get_real} and @code{Obfuscated.get_fake} static methods to
+convert a list of command words to the real or fake equivalent.
+
+The @code{RunProcess} implementation in the buildslave will apply these methods
+automatically, so just feed it a list of strings and @code{Obfuscated} objects.
 
 @node Master-Slave API
 @section Master-Slave API
