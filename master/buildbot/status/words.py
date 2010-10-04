@@ -76,6 +76,7 @@ class Contact(base.StatusReceiver):
         self.channel = channel
         self.notify_events = {}
         self.subscribed = 0
+        self.reported_builds = [] # tuples (when, buildername, buildnum)
         self.add_notification_events(channel.notify_events)
 
     silly = {
@@ -126,6 +127,20 @@ class Contact(base.StatusReceiver):
         hours = int(minutes / 60)
         minutes = minutes - 60*hours
         return "%dh%02dm%02ds" % (hours, minutes, seconds)
+
+    def reportBuild(self, builder, buildnum):
+        """Returns True if this build should be reported for this contact
+        (eliminating duplicates), and also records the report for later"""
+        for w, b, n in self.reported_builds:
+            if b == builder and n == buildnum:
+                return False
+        self.reported_builds.append([util.now(), builder, buildnum])
+        self.cleanReportedBuilds()
+
+    def cleanReportedBuilds(self):
+        horizon = util.now() - 60
+        while self.reported_builds ans self.reported_builds[0][0] < horizon:
+            self.reported_builds.pop(0)
 
     def doSilly(self, message):
         response = self.silly[message]
@@ -333,19 +348,23 @@ class Contact(base.StatusReceiver):
         if not self.notify_for_finished(build):
             return
 
-        r = "build #%d of %s is complete: %s" % \
-            (build.getNumber(),
-             builder.getName(),
-             self.results_descriptions.get(build.getResults(), "??"))
-        r += " [%s]" % " ".join(build.getText())
-        buildurl = self.channel.status.getURLForThing(build)
-        if buildurl:
-            r += "  Build details are at %s" % buildurl
+        builder_name = builder.getName()
+        buildnum = build.getNumber()
 
-        if self.channel.showBlameList and build.getResults() != SUCCESS and len(build.changes) != 0:
-            r += '  blamelist: ' + ', '.join(list(set([c.who for c in build.changes])))
+        if self.reportBuild(builder_name, buildnum):
+            r = "build #%d of %s is complete: %s" % \
+                (buildnum,
+                 builder_name,
+                 self.results_descriptions.get(build.getResults(), "??"))
+            r += " [%s]" % " ".join(build.getText())
+            buildurl = self.channel.status.getURLForThing(build)
+            if buildurl:
+                r += "  Build details are at %s" % buildurl
 
-        self.send(r)
+            if self.channel.showBlameList and build.getResults() != SUCCESS and len(build.changes) != 0:
+                r += '  blamelist: ' + ', '.join(list(set([c.who for c in build.changes])))
+
+            self.send(r)
 
     def notify_for_finished(self, build):
         results = build.getResults()
@@ -380,15 +399,19 @@ class Contact(base.StatusReceiver):
             builder.category not in self.channel.categories):
             return
 
-        r = "Hey! build %s #%d is complete: %s" % \
-            (b.getBuilder().getName(),
-             b.getNumber(),
-             self.results_descriptions.get(b.getResults(), "??"))
-        r += " [%s]" % " ".join(b.getText())
-        self.send(r)
-        buildurl = self.channel.status.getURLForThing(b)
-        if buildurl:
-            self.send("Build details are at %s" % buildurl)
+        builder_name = b.getBuilder().getName()
+        buildnum = b.getNumber()
+
+        if self.reportBuild(builder_name, buildnum):
+            r = "Hey! build %s #%d is complete: %s" % \
+                (builder_name, 
+                 buildnum,
+                 self.results_descriptions.get(b.getResults(), "??"))
+            r += " [%s]" % " ".join(b.getText())
+            self.send(r)
+            buildurl = self.channel.status.getURLForThing(b)
+            if buildurl:
+                self.send("Build details are at %s" % buildurl)
 
     def command_FORCE(self, args, who):
         args = shlex.split(args)
