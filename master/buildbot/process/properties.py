@@ -25,6 +25,9 @@ class Properties(util.ComparableMixin):
         @param kwargs: initial property values (for testing)
         """
         self.properties = {}
+        # Track keys which are 'runtime', and should not be
+        # persisted if a build is rebuilt
+        self.runtime = set()
         self.pmap = PropertyMap(self)
         if kwargs: self.update(kwargs, "TEST")
 
@@ -64,17 +67,29 @@ class Properties(util.ComparableMixin):
     def __repr__(self):
         return repr(dict([ (k,v[0]) for k,v in self.properties.iteritems() ]))
 
-    def setProperty(self, name, value, source):
+    def setProperty(self, name, value, source, runtime=False):
         self.properties[name] = (value, source)
+        if runtime:
+            self.runtime.add(name)
 
-    def update(self, dict, source):
+    def update(self, dict, source, runtime=False):
         """Update this object from a dictionary, with an explicit source specified."""
         for k, v in dict.items():
             self.properties[k] = (v, source)
+            if runtime:
+                self.runtime.add(k)
 
     def updateFromProperties(self, other):
         """Update this object based on another object; the other object's """
         self.properties.update(other.properties)
+        self.runtime.update(other.runtime)
+
+    def updateFromPropertiesNoRuntime(self, other):
+        """Update this object based on another object, but don't
+        include properties that were marked as runtime."""
+        for k,v in other.properties.iteritems():
+            if k not in other.runtime:
+                self.properties[k] = v
 
     def render(self, value):
         """

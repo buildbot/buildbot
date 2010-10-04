@@ -976,12 +976,11 @@ class BuilderControl:
             return
 
         ss = bs.getSourceStamp(absolute=True)
+        # Make a copy so as not to modify the original build.
+        properties = Properties()
+        # Don't include runtime-set properties in a rebuild request
+        properties.updateFromPropertiesNoRuntime(bs.getProperties())
         if extraProperties is None:
-            properties = bs.getProperties()
-        else:
-            # Make a copy so as not to modify the original build.
-            properties = Properties()
-            properties.updateFromProperties(bs.getProperties())
             properties.updateFromProperties(extraProperties)
         self.submitBuildRequest(ss, reason, props=properties)
 
