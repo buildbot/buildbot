@@ -135,12 +135,14 @@ class Contact(base.StatusReceiver):
             if b == builder and n == buildnum:
                 return False
         self.reported_builds.append([util.now(), builder, buildnum])
-        self.cleanReportedBuilds()
 
-    def cleanReportedBuilds(self):
+        # clean the reported builds
         horizon = util.now() - 60
-        while self.reported_builds ans self.reported_builds[0][0] < horizon:
+        while self.reported_builds and self.reported_builds[0][0] < horizon:
             self.reported_builds.pop(0)
+
+        # and return True, since this is a new one
+        return True
 
     def doSilly(self, message):
         response = self.silly[message]
