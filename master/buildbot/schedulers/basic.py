@@ -37,7 +37,7 @@
 
 import time
 
-from buildbot import interfaces
+from buildbot import interfaces, util
 from buildbot.util import collections, NotABranch
 from buildbot.sourcestamp import SourceStamp
 from buildbot.status.builder import SUCCESS, WARNINGS
@@ -89,6 +89,7 @@ class Scheduler(base.BaseScheduler, base.ClassifierMixin):
         base.BaseScheduler.__init__(self, name, builderNames, properties)
         self.make_filter(change_filter=change_filter, branch=branch, categories=categories)
         self.treeStableTimer = treeStableTimer
+        self.stableAt = None
         self.branch = branch
         if fileIsImportant:
             assert callable(fileIsImportant)
@@ -132,13 +133,14 @@ class Scheduler(base.BaseScheduler, base.ClassifierMixin):
         most_recent = max([c.when for c in all_changes])
         if self.treeStableTimer is not None:
             now = time.time()
-            stable_at = most_recent + self.treeStableTimer
-            if stable_at > now:
+            self.stableAt = most_recent + self.treeStableTimer
+            if self.stableAt > now:
                 # Wake up one second late, to avoid waking up too early and
                 # looping a lot.
-                return stable_at + 1.0
+                return self.stableAt + 1.0
 
         # ok, do a build
+        self.stableAt = None
         self._add_build_and_remove_changes(t, all_changes)
         return None
 
@@ -159,6 +161,11 @@ class Scheduler(base.BaseScheduler, base.ClassifierMixin):
         changeids = [c.number for c in all_changes]
         db.scheduler_retire_changes(self.schedulerid, changeids, t)
 
+    # the waterfall needs to know the next time we plan to trigger a build
+    def getPendingBuildTimes(self):
+        if self.stableAt and self.stableAt > util.now():
+            return [ self.stableAt ]
+        return []
 
 class AnyBranchScheduler(Scheduler):
     compare_attrs = ('name', 'treeStableTimer', 'builderNames',
