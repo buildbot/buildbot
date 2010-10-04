@@ -702,7 +702,10 @@ class TimeRevisionComparator(RevisionComparator):
 
 class IntegerRevisionComparator(RevisionComparator):
     def isRevisionEarlier(self, first, second):
-        return int(first.revision) < int(second.revision)
+        try:
+            return int(first.revision) < int(second.revision)
+        except TypeError:
+            return False
 
     def isValidRevision(self, revision):
         try:
