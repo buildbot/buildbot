@@ -1,4 +1,10 @@
+import os
 from twisted.trial import unittest
+
+def disable_os_chdir():
+    def DoNotUseOsChDir(_):
+      raise ValueError('Do not use os.chdir() in your code.  You probably want to use path=foo or cwd=foo argument when calling out subprocesses instead')
+    os.chdir = DoNotUseOsChDir
 
 def add_debugging_monkeypatches():
     """

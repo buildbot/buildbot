@@ -15,8 +15,8 @@ from twisted.application import service, strports
 from twisted.application.internet import TimerService
 
 import buildbot
-# sibling imports
 from buildbot.util import now, safeTranslate, eventual
+from buildbot.util import monkeypatches
 from buildbot.pbutil import NewCredPerspective
 from buildbot.process.builder import Builder, IDLE
 from buildbot.status.builder import Status, BuildSetStatus
@@ -570,6 +570,10 @@ class BuildMaster(service.MultiService):
         for b in self.botmaster.builders.values():
             b.builder_status.addPointEvent(["master", "started"])
             b.builder_status.saveYourself()
+
+        # now that we're running a master, don't use os.chdir.  Note that this
+        # will trip up twistd if we do it any earlier
+        monkeypatches.disable_os_chdir()
 
     def _handleSIGHUP(self, *args):
         reactor.callLater(0, self.loadTheConfigFile)
