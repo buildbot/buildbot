@@ -50,16 +50,20 @@ class SlaveFileUploadCommand(Command):
 
         d = defer.Deferred()
         self._reactor.callLater(0, self._loop, d)
-        def _close(res):
-            # close the file
+        def _close_ok(res):
             self.fp = None
-
-            # call close, but pass through any errors from _loop
+            return self.writer.callRemote("close")
+        def _close_err(f):
+            self.fp = None
+            # call remote's close(), but keep the existing failure
             d1 = self.writer.callRemote("close")
-            d1.addErrback(log.err)
-            d1.addCallback(lambda ignored: res)
+            def eb(f2):
+                log.msg("ignoring error from remote close():")
+                log.err(f2)
+            d1.addErrback(eb)
+            d1.addBoth(lambda _ : f) # always return _loop failure
             return d1
-        d.addBoth(_close)
+        d.addCallbacks(_close_ok, _close_err)
         d.addBoth(self.finished)
         return d
 
@@ -271,7 +275,7 @@ class SlaveFileDownloadCommand(Command):
         def _close(res):
             # close the file, but pass through any errors from _loop
             d1 = self.reader.callRemote('close')
-            d1.addErrback(log.err)
+            d1.addErrback(log.err) # ignore errors closing a reader file
             d1.addCallback(lambda ignored: res)
             return d1
         d.addBoth(_close)
