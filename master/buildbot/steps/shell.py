@@ -543,7 +543,8 @@ class WarningCountingShellCommand(ShellCommand):
         # If there were any warnings, make the log if lines with warnings
         # available
         if self.warnCount:
-            self.addCompleteLog("warnings", "\n".join(warnings) + "\n")
+            self.addCompleteLog("warnings (%d)" % self.warnCount,
+                    "\n".join(warnings) + "\n")
 
         warnings_stat = self.step_status.getStatistic('warnings', 0)
         self.step_status.setStatistic('warnings', warnings_stat + self.warnCount)
