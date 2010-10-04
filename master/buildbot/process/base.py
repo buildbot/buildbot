@@ -79,11 +79,11 @@ class Build:
     def getSourceStamp(self):
         return self.source
 
-    def setProperty(self, propname, value, source):
+    def setProperty(self, propname, value, source, runtime=True):
         """Set a property on this build. This may only be called after the
         build has started, so that it has a BuildStatus object where the
         properties can live."""
-        self.build_status.setProperty(propname, value, source)
+        self.build_status.setProperty(propname, value, source, runtime=True)
 
     def getProperties(self):
         return self.build_status.getProperties()

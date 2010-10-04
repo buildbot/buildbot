@@ -1324,8 +1324,8 @@ class BuildStatus(styles.Versioned):
         self.steps.append(s)
         return s
 
-    def setProperty(self, propname, value, source):
-        self.properties.setProperty(propname, value, source)
+    def setProperty(self, propname, value, source, runtime=True):
+        self.properties.setProperty(propname, value, source, runtime)
 
     def addTestResult(self, result):
         self.testResults[result.getName()] = result
