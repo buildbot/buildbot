@@ -184,11 +184,10 @@ class GitPoller(base.ChangeSource):
         log.msg('gitpoller: polling git repo at %s' % self.repourl)
 
         self.lastPoll = time.time()
-        os.chdir(self.workdir)
         
         # get a deferred object that performs the fetch
         args = ['fetch', self.repourl, self.branch]
-        d = utils.getProcessOutput(self.gitbin, args, env={}, errortoo=1 )
+        d = utils.getProcessOutput(self.gitbin, args, path=self.workdir, env={}, errortoo=1 )
 
         return d
 
@@ -228,7 +227,7 @@ class GitPoller(base.ChangeSource):
         log.msg('gitpoller: catching up to FETCH_HEAD')
         
         args = ['reset', '--hard', 'FETCH_HEAD']
-        d = utils.getProcessOutputAndValue(self.gitbin, args, env={})
+        d = utils.getProcessOutputAndValue(self.gitbin, args, path=self.workdir, env={})
         return d;
 
     def _changes_finished_ok(self, res):
