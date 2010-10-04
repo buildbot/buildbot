@@ -122,11 +122,13 @@ class Source(LoggingBuildStep):
             assert isinstance(repeats, int)
             assert repeats > 0
         self.args = {'mode': mode,
-                     'workdir': workdir,
                      'timeout': timeout,
                      'retry': retry,
                      'patch': None, # set during .start
                      }
+        # This will get added to args later, after properties are rendered
+        self.workdir = workdir
+
         self.alwaysUseLatest = alwaysUseLatest
 
         # Compute defaults for descriptions:
@@ -146,7 +148,7 @@ class Source(LoggingBuildStep):
         LoggingBuildStep.setStepStatus(self, step_status)
 
     def setDefaultWorkdir(self, workdir):
-        self.args['workdir'] = self.args['workdir'] or workdir
+        self.workdir = self.workdir or workdir
 
     def describe(self, done=False):
         if done:
@@ -197,6 +199,10 @@ class Source(LoggingBuildStep):
                                 "Faked %s checkout/update 'successful'\n" \
                                 % self.name)
             return SKIPPED
+
+        # Allow workdir to be WithProperties
+        properties = self.build.getProperties()
+        self.args['workdir'] = properties.render(self.workdir)
 
         # what source stamp would this build like to use?
         s = self.build.getSourceStamp()
@@ -602,7 +608,7 @@ class SVN(Source):
             if self.args['mode'] == "export":
                 raise BuildSlaveTooOldError("old slave does not have "
                                             "mode=export")
-            self.args['directory'] = self.args['workdir']
+            self.args['directory'] = self.workdir
             if revision is not None:
                 # 0.5.0 can only do HEAD. We have no way of knowing whether
                 # the requested revision is HEAD or not, and for
