@@ -20,6 +20,12 @@ class ChangeHookResource(resource.Resource):
     contentType = "text/html; charset=utf-8"
     children    = {}
     def __init__(self, dialects={}):
+        """
+        The keys of 'dialects' select a modules to load under
+        master/buildbot/status/web/hooks/
+        The value is passed to the module's getChanges function, providing
+        configuration options to the dialect.
+        """
         self.dialects = dialects
     
     def getChild(self, name, request):
@@ -42,7 +48,12 @@ class ChangeHookResource(resource.Resource):
                 the http request object
         """
 
-        changes = self.getChanges( request )
+        try:
+            changes = self.getChanges( request )
+        except ValueError as err:
+            request.setResponseCode(400, err.args[0])
+            return err.args[0]
+
         msg("Payload: " + str(request.args))
         
         if not changes:
@@ -69,7 +80,7 @@ class ChangeHookResource(resource.Resource):
         
         if not uriRE:
             msg("URI doesn't match change_hook regex: %s" % request.uri)
-            return
+            raise ValueError("URI doesn't match change_hook regex: %s" % request.uri)
         
         changes = []
         
@@ -86,10 +97,12 @@ class ChangeHookResource(resource.Resource):
             msg("Got the following changes %s" % changes)
 
         else:
-            msg("The dialect specified %s wasn't whitelisted in change_hook" % dialect)
+            m = "The dialect specified, '%s', wasn't whitelisted in change_hook" % dialect
+            msg(m)
             msg("Note: if dialect is 'base' then it's possible your URL is malformed and we didn't regex it properly")
+            raise ValueError(m)
 
-        return changes        
+        return changes
                 
     def submitChanges(self, changes, request):
         # get a control object

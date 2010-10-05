@@ -169,10 +169,10 @@ parser.add_option("-P", "--project", dest='project', metavar="PROJ",
             The project for the source. Often set to the CVS module being modified. This becomes
             the Change.project attribute.
             """))
-parser.add_option("-q", "--quiet", dest='verbose', action="store_false",
-            default=True, 
+parser.add_option("-v", "--verbose", dest='verbosity', action="count",
             help=textwrap.dedent("""\
-            Don't print as much status to stdout.
+            Print more detail. If specified once, show status. If secified twice,
+            print all data returned. Normally this will be the json version of the Change.
             """))
 parser.add_option("-H", "--host", dest='host', metavar="HOST",
             default='localhost:8010',
@@ -214,13 +214,19 @@ if options.amTesting:
     print "urlpath: %s" % options.urlpath
 else:
     conn = httplib.HTTPConnection(options.host)
-    conn.request("POST", "/change_hook/base", params, headers)
+    conn.request("POST", options.urlpath, params, headers)
     response = conn.getresponse()
     data = response.read()
-    if options.verbose:
+    exitCode=0
+    if response.status is not 200:
+        exitCode=1
+    if options.verbosity >= 1:
         print response.status, response.reason
-        print data
-        res =json.loads(data)
-        print "Request %d at %s" % (res[0]['number'], res[0]['at'])
+        if response.status is 200:
+            res =json.loads(data)
+            print "Request %d at %s" % (res[0]['number'], res[0]['at'])
+        if options.verbosity >= 2:
+            print "Raw response %s" % (data)
     conn.close()
+    os._exit(exitCode)
 

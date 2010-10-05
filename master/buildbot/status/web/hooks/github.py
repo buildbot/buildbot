@@ -120,9 +120,12 @@ def process_change(payload, user, repo, repo_url):
         else: 
             for commit in payload['commits']:
                 files = []
-                files.extend(commit['added'])
-                files.extend(commit['modified'])
-                files.extend(commit['removed'])
+                if 'added' in commit.keys():
+                    files.extend(commit['added'])
+                if 'modified' in commit.keys():
+                    files.extend(commit['modified'])
+                if 'removed' in commit.keys():
+                    files.extend(commit['removed'])
                 when =  convertTime( commit['timestamp'])
                 change = {'revision': commit['id'],
                      'revlink': commit['url'],
