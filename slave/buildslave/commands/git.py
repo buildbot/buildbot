@@ -106,8 +106,9 @@ class Git(SourceBaseCommand):
     def maybeNotDoVCFallback(self, res):
         # If we were unable to find the branch/SHA on the remote,
         # clobbering the repo won't help any, so just abort the chain
-        if "Couldn't find remote ref" in self.command.stderr:
-            raise AbandonChain(-1)
+        if hasattr(self.command, 'stderr'):
+            if "Couldn't find remote ref" in self.command.stderr:
+                raise AbandonChain(-1)
 
     # Update first runs "git clean", removing local changes,
     # if the branch to be checked out has changed.  This, combined
