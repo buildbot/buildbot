@@ -1,4 +1,4 @@
-import buildbot.status.web.change_hook as ch
+from buildbot.status.web import change_hook
 from buildbot.util import json
 from buildbot.test.util.web import MockRequest
 from mock import Mock
@@ -8,7 +8,7 @@ from twisted.trial import unittest
 class TestChangeHookUnconfigured(unittest.TestCase):
     def setUp(self):
         self.request = Mock()
-        self.changeHook = ch.ChangeHookResource()
+        self.changeHook = change_hook.ChangeHookResource()
 
     # A bad URI should cause an exception inside check_hook.
     # After writing the test, it became apparent this can't happen.
@@ -37,7 +37,7 @@ class TestChangeHookUnconfigured(unittest.TestCase):
 class TestChangeHookConfigured(unittest.TestCase):
     def setUp(self):
         self.request = MockRequest()
-        self.changeHook = ch.ChangeHookResource(dialects={'base' : True})
+        self.changeHook = change_hook.ChangeHookResource(dialects={'base' : True})
 
     # Test base hook with no attributes. We should get a json string representing
     # a Change object as a dictionary. All values except 'when' and 'at' will be null.
@@ -81,7 +81,7 @@ class TestChangeHookConfiguredWithChange(unittest.TestCase):
                        "revision" : [99] }
         #print changeDict
         self.request = MockRequest(changeDict)
-        self.changeHook = ch.ChangeHookResource(dialects={'base' : True})
+        self.changeHook = change_hook.ChangeHookResource(dialects={'base' : True})
 
     # Test 'base' hook with attributes. We should get a json string representing
     # a Change object as a dictionary. All values show be set.

@@ -1,4 +1,4 @@
-import buildbot.status.web.change_hook as ch
+import buildbot.status.web.change_hook as change_hook
 from buildbot.test.util.web import MockRequest
 from buildbot.util import json
 
@@ -56,7 +56,7 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
     def setUp(self):
         changeDict={"payload" : [gitJsonPayload]}
         self.request = MockRequest(changeDict)
-        self.changeHook = ch.ChangeHookResource(dialects={'github' : True})
+        self.changeHook = change_hook.ChangeHookResource(dialects={'github' : True})
 
     # Test 'base' hook with attributes. We should get a json string representing
     # a Change object as a dictionary. All values show be set.
