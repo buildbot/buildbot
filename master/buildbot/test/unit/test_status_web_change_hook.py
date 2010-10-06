@@ -79,7 +79,6 @@ class TestChangeHookConfiguredWithChange(unittest.TestCase):
                        "revlink" : ["a revlink"],
                        "properties" : [json.dumps( { "prop1" : "val1", "prop2" : "val2" })],
                        "revision" : [99] }
-        #print changeDict
         self.request = MockRequest(changeDict)
         self.changeHook = change_hook.ChangeHookResource(dialects={'base' : True})
 
@@ -90,7 +89,6 @@ class TestChangeHookConfiguredWithChange(unittest.TestCase):
         ret = self.changeHook.render_GET(self.request)
         # Change is an array of dicts holding changes. There will normally only be one
         # changes, thus only one dictionary
-        #print ret
         changeArray = json.loads(ret)
         change = changeArray[0]
         self.assertEquals(change["category"], "mycat")
