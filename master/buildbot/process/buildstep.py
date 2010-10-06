@@ -1071,6 +1071,13 @@ class LoggingBuildStep(BuildStep):
 
     def setupLogfiles(self, cmd, logfiles):
         """Set up any additional logfiles= logs.
+
+        @param cmd: the LoggedRemoteCommand to add additional logs to.
+
+        @param logfiles: a list of tuples (logname,remotefilename)
+                         specifying additional logs to watch. (note:
+                         the remotefilename component is currently
+                         ignored)
         """
         for logname,remotefilename in logfiles.items():
             if self.lazylogfiles:
