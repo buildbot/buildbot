@@ -1074,7 +1074,7 @@ class LoggingBuildStep(BuildStep):
 
         @param cmd: the LoggedRemoteCommand to add additional logs to.
 
-        @param logfiles: a list of tuples (logname,remotefilename)
+        @param logfiles: a dict of tuples (logname,remotefilename)
                          specifying additional logs to watch. (note:
                          the remotefilename component is currently
                          ignored)
