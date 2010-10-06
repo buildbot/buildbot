@@ -8,7 +8,8 @@ from twisted.python.failure import Failure
 from twisted.internet import reactor, defer, error
 
 from buildbot import interfaces, locks
-from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE, EXCEPTION, RETRY
+from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE, EXCEPTION, \
+  RETRY, worst_status
 from buildbot.status.builder import Results
 from buildbot.status.progress import BuildProgress
 
@@ -388,26 +389,24 @@ class Build:
             self.text.extend(text)
         if not self.remote:
             terminate = True
+
+        possible_overall_result = result
         if result == FAILURE:
             if step.warnOnFailure:
-                if self.result != FAILURE:
-                    self.result = WARNINGS
+                possible_overall_result = WARNINGS
             if step.flunkOnFailure:
-                self.result = FAILURE
+                possible_overall_result = FAILURE
             if step.haltOnFailure:
                 terminate = True
         elif result == WARNINGS:
             if step.warnOnWarnings:
-                if self.result != FAILURE:
-                    self.result = WARNINGS
+                possible_overall_result = WARNINGS
             if step.flunkOnWarnings:
-                self.result = FAILURE
-        elif result == EXCEPTION:
-            self.result = EXCEPTION
+                possible_overall_result = FAILURE
+        elif result in (EXCEPTION, RETRY):
             terminate = True
-        elif result == RETRY:
-            self.result = RETRY
-            terminate = True
+
+        self.result = worst_status(self.result, possible_overall_result)
         return terminate
 
     def lostRemote(self, remote=None):

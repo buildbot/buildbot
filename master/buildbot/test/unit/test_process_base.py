@@ -322,3 +322,18 @@ class TestBuild(unittest.TestCase):
         terminate = b.stepDone(WARNINGS, step)
         self.assertEqual(terminate, False)
         self.assertEqual(b.result, FAILURE)
+
+    def testStepDoneRetryOverridesAnythingElse(self):
+        r = FakeRequest()
+        b = Build([r])
+        b.results = [RETRY]
+        b.result = RETRY
+        b.remote = Mock()
+        step = FakeBuildStep()
+        step.alwaysRun = True
+        b.stepDone(WARNINGS, step)
+        b.stepDone(FAILURE, step)
+        b.stepDone(SUCCESS, step)
+        terminate = b.stepDone(EXCEPTION, step)
+        self.assertEqual(terminate, True)
+        self.assertEqual(b.result, RETRY)
