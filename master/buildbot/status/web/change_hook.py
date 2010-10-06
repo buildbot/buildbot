@@ -50,7 +50,7 @@ class ChangeHookResource(resource.Resource):
 
         try:
             changes = self.getChanges( request )
-        except ValueError as err:
+        except ValueError, err:
             request.setResponseCode(400, err.args[0])
             return err.args[0]
 
