@@ -392,6 +392,8 @@ class Build:
 
         possible_overall_result = result
         if result == FAILURE:
+            if not step.flunkOnFailure:
+                possible_overall_result = SUCCESS
             if step.warnOnFailure:
                 possible_overall_result = WARNINGS
             if step.flunkOnFailure:
@@ -399,7 +401,9 @@ class Build:
             if step.haltOnFailure:
                 terminate = True
         elif result == WARNINGS:
-            if step.warnOnWarnings:
+            if not step.warnOnWarnings:
+                possible_overall_result = SUCCESS
+            else:
                 possible_overall_result = WARNINGS
             if step.flunkOnWarnings:
                 possible_overall_result = FAILURE

@@ -254,6 +254,57 @@ class TestBuild(unittest.TestCase):
         self.assertEqual(terminate, False)
         self.assertEqual(b.result, SUCCESS)
 
+    def testStepDoneHaltOnFailure(self):
+        r = FakeRequest()
+        b = Build([r])
+        b.results = []
+        b.result = SUCCESS
+        b.remote = Mock()
+        step = FakeBuildStep()
+        step.haltOnFailure = True
+        terminate = b.stepDone(FAILURE, step)
+        self.assertEqual(terminate, True)
+        self.assertEqual(b.result, FAILURE)
+
+    def testStepDoneHaltOnFailureNoFlunkOnFailure(self):
+        r = FakeRequest()
+        b = Build([r])
+        b.results = []
+        b.result = SUCCESS
+        b.remote = Mock()
+        step = FakeBuildStep()
+        step.flunkOnFailure = False
+        step.haltOnFailure = True
+        terminate = b.stepDone(FAILURE, step)
+        self.assertEqual(terminate, True)
+        self.assertEqual(b.result, SUCCESS)
+
+    def testStepDoneFlunkOnWarningsFlunkOnFailure(self):
+        r = FakeRequest()
+        b = Build([r])
+        b.results = []
+        b.result = SUCCESS
+        b.remote = Mock()
+        step = FakeBuildStep()
+        step.flunkOnFailure = True
+        step.flunkOnWarnings = True
+        b.stepDone(WARNINGS, step)
+        terminate = b.stepDone(FAILURE, step)
+        self.assertEqual(terminate, False)
+        self.assertEqual(b.result, FAILURE)
+
+    def testStepDoneNoWarnOnWarnings(self):
+        r = FakeRequest()
+        b = Build([r])
+        b.results = [SUCCESS]
+        b.result = SUCCESS
+        b.remote = Mock()
+        step = FakeBuildStep()
+        step.warnOnWarnings = False
+        terminate = b.stepDone(WARNINGS, step)
+        self.assertEqual(terminate, False)
+        self.assertEqual(b.result, SUCCESS)
+
     def testStepDoneWarnings(self):
         r = FakeRequest()
         b = Build([r])
@@ -308,6 +359,19 @@ class TestBuild(unittest.TestCase):
         b.remote = Mock()
         step = FakeBuildStep()
         step.flunkOnWarnings = True
+        terminate = b.stepDone(WARNINGS, step)
+        self.assertEqual(terminate, False)
+        self.assertEqual(b.result, FAILURE)
+
+    def testStepDoneHaltOnFailureFlunkOnWarnings(self):
+        r = FakeRequest()
+        b = Build([r])
+        b.results = [SUCCESS]
+        b.result = SUCCESS
+        b.remote = Mock()
+        step = FakeBuildStep()
+        step.flunkOnWarnings = True
+        self.haltOnFailure = True
         terminate = b.stepDone(WARNINGS, step)
         self.assertEqual(terminate, False)
         self.assertEqual(b.result, FAILURE)
