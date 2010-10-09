@@ -57,8 +57,7 @@ Return a new Properties object containing each property found in req.
         pvalue = req.args.get("property%dvalue" % i, [""])[0]
         if not pname or not pvalue:
             break
-        if not re.match(r'^[\w\.\-\/\~:]*$', pname) \
-                or not re.match(r'^[\w\.\-\/\~:]*$', pvalue):
+        if not re.match(r'^[\w\.\-\/\~:]*$', pname):
             log.msg("bad property name='%s', value='%s'" % (pname, pvalue))
             return None
         properties.setProperty(pname, pvalue, "Force Build Form")
