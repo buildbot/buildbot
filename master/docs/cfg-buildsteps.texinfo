@@ -402,6 +402,8 @@ the Change and its return value will be used as repository URL.
 @end table
 @end table
 
+Use of WithProperites with string, dict and callable is supported.
+
 Note that this is quite similar to the mechanism used by the WebStatus
 for the @code{changecommentlink}, @code{projects} or @code{repositories} parameter.
 

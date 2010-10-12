@@ -175,21 +175,23 @@ class Source(LoggingBuildStep):
             isinstance(repository, str) or isinstance(repository, unicode)
 
         s = self.build.getSourceStamp()
+        props = self.build.getProperties()
+
         if not repository:
             assert s.repository
             return str(s.repository)
         else:
             if callable(repository):
-                return str(repository(s.repository))
+                return str(props.render(repository(s.repository)))
             elif isinstance(repository, dict):
-                return str(repository.get(s.repository))
+                return str(props.render(repository.get(s.repository)))
             else: # string or unicode
                 try:
                     repourl = str(repository % s.repository)
                 except TypeError:
                     # that's the backward compatibility case
-                    repourl = repository
-                return str(repourl)
+                    repourl = props.render(repository)
+                return repourl
 
     def start(self):
         if self.notReally:
@@ -849,7 +851,7 @@ class Git(Source):
         if branch is not None:
             self.args['branch'] = branch
 
-        self.args['repourl'] = self.computeRepositoryURL(self.repourl)                  
+        self.args['repourl'] = self.computeRepositoryURL(self.repourl)
         self.args['revision'] = revision
         self.args['patch'] = patch
         slavever = self.slaveVersion("git")
