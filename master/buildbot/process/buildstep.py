@@ -571,7 +571,7 @@ class BuildStep:
     # immediately, the others will be taken into consideration when
     # determining the overall build status.
     #
-    # steps that are makred as alwaysRun will be run regardless of the outcome
+    # steps that are marked as alwaysRun will be run regardless of the outcome
     # of previous steps (especially steps with haltOnFailure=True)
     haltOnFailure = False
     flunkOnWarnings = False
