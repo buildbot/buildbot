@@ -68,7 +68,7 @@ when True, a FAILURE of this build step will mark the overall build as
 a FAILURE. The remaining steps will still be executed.
 
 @item warnOnWarnings
-when True, a WARNINGS or FAILURE of this build step will mark the
+when True, a WARNINGS of this build step will mark the
 overall build as having WARNINGS. The remaining steps will still be
 executed.
 
