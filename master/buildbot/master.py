@@ -790,7 +790,7 @@ class BuildMaster(service.MultiService):
                 log.err(errmsg)
                 raise ValueError(errmsg)
 
-            # Fix the dictionnary with default values, in case this wasn't
+            # Fix the dictionary with default values, in case this wasn't
             # specified with a BuilderConfig object (which sets the same defaults)
             b.setdefault('builddir', safeTranslate(b['name']))
             b.setdefault('slavebuilddir', b['builddir'])

@@ -278,9 +278,9 @@ class ConsoleStatusResource(HtmlResource):
     
     def getAllBuildsForRevision(self, status, request, lastRevision, numBuilds,
                                 categories, builders, debugInfo):
-        """Returns a dictionnary of builds we need to inspect to be able to
+        """Returns a dictionary of builds we need to inspect to be able to
         display the console page. The key is the builder name, and the value is
-        an array of build we care about. We also returns a dictionnary of
+        an array of build we care about. We also returns a dictionary of
         builders we care about. The key is it's category.
  
         lastRevision is the last revision we want to display in the page.
@@ -292,7 +292,7 @@ class ConsoleStatusResource(HtmlResource):
 
         allBuilds = dict()
 
-        # List of all builders in the dictionnary.
+        # List of all builders in the dictionary.
         builderList = dict()
 
         debugInfo["builds_scanned"] = 0
@@ -318,7 +318,7 @@ class ConsoleStatusResource(HtmlResource):
             if not builderList.get(category):
                 builderList[category] = []
 
-            # Append this builder to the dictionnary of builders.
+            # Append this builder to the dictionary of builders.
             builderList[category].append(builderName)
             # Set the list of builds for this builder.
             allBuilds[builderName] = self.getBuildsForRevision(request,
@@ -549,7 +549,7 @@ class ConsoleStatusResource(HtmlResource):
         for revision in revisions:
             r = {}
             
-            # Fill the dictionnary with these new information
+            # Fill the dictionary with this new information
             r['id'] = revision.revision
             r['link'] = revision.revlink 
             r['who'] = revision.who
