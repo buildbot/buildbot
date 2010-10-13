@@ -326,7 +326,7 @@ where the previous build was performed. That simply means that the
 source-checkout step should be given a @code{mode='update'} flag, to
 do the source update in-place.
 
-In addition to that, this class sets teh @code{useProgress} flag to False.
+In addition to that, this class sets the @code{useProgress} flag to False.
 Incremental builds will (or at least the ought to) compile as few files as
 necessary, so they will take an unpredictable amount of time to run. Therefore
 it would be misleading to claim to predict how long the build will take.

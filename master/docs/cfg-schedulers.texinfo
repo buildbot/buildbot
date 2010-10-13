@@ -83,7 +83,7 @@ my_filter = ChangeFilter(
     branch="devel")
 @end example
 
-and then add it to a scheduler with teh @code{change_filter} parameter:
+and then add it to a scheduler with the @code{change_filter} parameter:
 
 @example
 sch = SomeSchedulerClass(...,
