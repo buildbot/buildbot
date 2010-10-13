@@ -170,6 +170,7 @@ class JsonResource(resource.Resource):
         data = self.content(request)
         if isinstance(data, unicode):
             data = data.encode("utf-8")
+        request.setHeader("Access-Control-Allow-Origin", "*")
         if RequestArgToBool(request, 'as_text', False):
             request.setHeader("content-type", 'text/plain')
         else:
