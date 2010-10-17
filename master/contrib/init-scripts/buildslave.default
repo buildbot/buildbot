@@ -1,0 +1,8 @@
+BUILDSLAVE_RUNNER=/usr/bin/buildslave
+
+SLAVE_ENABLED[1]=0                    # 0-enabled, other-disabled
+SLAVE_NAME[1]="buildmaster #1"        # short name printed on start/stop
+SLAVE_USER[1]="buildbot"              # user to run master as
+SLAVE_BASEDIR[1]=""                   # basedir to slave (absolute path)
+SLAVE_OPTIONS[1]=""                   # buildbot options  
+SLAVE_PREFIXCMD[1]=""                 # prefix command, i.e. nice, linux32, dchroot
