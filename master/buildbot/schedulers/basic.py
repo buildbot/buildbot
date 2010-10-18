@@ -174,40 +174,16 @@ class AnyBranchScheduler(Scheduler):
                  fileIsImportant=None, properties={}, categories=None,
                  branches=NotABranch, change_filter=None):
         """
-        @param name: the name of this Scheduler
-        @param treeStableTimer: the duration, in seconds, for which the tree
-                                must remain unchanged before a build is
-                                triggered. This is intended to avoid builds
-                                of partially-committed fixes.
-        @param builderNames: a list of Builder names. When this Scheduler
-                             decides to start a set of builds, they will be
-                             run on the Builders named by this list.
-
-        @param fileIsImportant: A callable which takes one argument (a Change
-                                instance) and returns True if the change is
-                                worth building, and False if it is not.
-                                Unimportant Changes are accumulated until the
-                                build is triggered by an important change.
-                                The default value of None means that all
-                                Changes are important.
-
-        @param properties: properties to apply to all builds started from
-                           this scheduler
-
-        @param change_filter: a buildbot.schedulers.filter.ChangeFilter instance
-                              used to filter changes for this scheduler
+        Same parameters as the scheduler, but without 'branch', and adding:
 
         @param branches: (deprecated)
-        @param categories: (deprecated)
         """
 
-        base.BaseScheduler.__init__(self, name, builderNames, properties)
-        self.make_filter(change_filter=change_filter, branch=branches, categories=categories)
-        self.treeStableTimer = treeStableTimer
-        self.stableAt = None
-        if fileIsImportant:
-            assert callable(fileIsImportant)
-            self.fileIsImportant = fileIsImportant
+        Scheduler.__init__(self, name, builderNames=builderNames, properties=properties,
+                categories=categories, treeStableTimer=treeStableTimer,
+                fileIsImportant=fileIsImportant, change_filter=change_filter,
+                # this is the interesting part:
+                branch=branches)
 
     def _process_changes(self, t):
         db = self.parent.db
