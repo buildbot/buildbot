@@ -204,6 +204,7 @@ class AnyBranchScheduler(Scheduler):
         base.BaseScheduler.__init__(self, name, builderNames, properties)
         self.make_filter(change_filter=change_filter, branch=branches, categories=categories)
         self.treeStableTimer = treeStableTimer
+        self.stableAt = None
         if fileIsImportant:
             assert callable(fileIsImportant)
             self.fileIsImportant = fileIsImportant
