@@ -468,6 +468,10 @@ stop all running builds
 
 cancel a build that has not yet started
 
+@item stopChange
+
+cancel builds that include a given change number
+
 @item cleanShutdown
 
 shut down the master gracefully, without interrupting builds

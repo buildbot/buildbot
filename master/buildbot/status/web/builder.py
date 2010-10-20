@@ -11,6 +11,7 @@ from buildbot.status.web.base import HtmlResource, BuildLineMixin, \
     map_branches, path_to_authfail
 from buildbot.sourcestamp import SourceStamp
 
+from buildbot.status.builder import BuildRequestStatus
 from buildbot.status.web.build import BuildsResource, StatusResourceBuild
 from buildbot import util
 
@@ -200,6 +201,35 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
                         break
         return Redirect(path_to_builder(req, self.builder_status))
 
+    def stopchange(self, req, auth_ok=False):
+        """Cancel all pending builds that include a given numbered change."""
+        try:
+            request_change = req.args.get("change", [None])[0]
+            request_change = int(request_change)
+        except:
+            request_change = None
+
+        authz = self.getAuthz(req)
+        if request_change:
+            # FIXME: Please, for the love of god one day make there only be
+            # one getPendingBuilds() with combined status info/controls
+            c = interfaces.IControl(self.getBuildmaster(req))
+            builder_control = c.getBuilder(self.builder_status.getName())
+            build_controls = dict((x.brid, x) for x in builder_control.getPendingBuilds())
+            for build_req in self.builder_status.getPendingBuilds():
+                ss = build_req.getSourceStamp()
+                if not ss.changes:
+                    continue
+                for change in ss.changes:
+                    if change.number == request_change:
+                        control = build_controls[build_req.brid]
+                        log.msg("Cancelling %s" % control)
+                        if auth_ok or authz.actionAllowed('stopChange', req, control):
+                            control.cancel()
+                        else:
+                            return Redirect(path_to_authfail(req))
+        return Redirect(path_to_builder(req, self.builder_status))
+
     def getChild(self, path, req):
         if path == "force":
             return self.force(req)
@@ -207,6 +237,8 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
             return self.ping(req)
         if path == "cancelbuild":
             return self.cancelbuild(req)
+        if path == "stopchange":
+            return self.stopchange(req)
         if path == "builds":
             return BuildsResource(self.builder_status)
 
@@ -225,6 +257,8 @@ class StatusResourceAllBuilders(HtmlResource, BuildLineMixin):
             return self.forceall(req)
         if path == "stopall":
             return self.stopall(req)
+        if path == "stopchangeall":
+            return self.stopchangeall(req)
 
         return HtmlResource.getChild(self, path, req)
 
@@ -257,6 +291,18 @@ class StatusResourceAllBuilders(HtmlResource, BuildLineMixin):
                 build = StatusResourceBuild(build_status)
                 build.stop(req, auth_ok=True)
         # go back to the welcome page
+        return Redirect(path_to_root(req))
+
+    def stopchangeall(self, req):
+        authz = self.getAuthz(req)
+        if not authz.actionAllowed('stopChange', req):
+            return Redirect(path_to_authfail(req))
+
+        for bname in self.status.getBuilderNames():
+            builder_status = self.status.getBuilder(bname)
+            build = StatusResourceBuilder(builder_status)
+            build.stopchange(req, auth_ok=True)
+
         return Redirect(path_to_root(req))
 
 

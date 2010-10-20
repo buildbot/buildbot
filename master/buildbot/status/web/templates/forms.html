@@ -36,6 +36,33 @@
   {% endif %}
 {% endmacro %}
 
+{% macro stop_change_builds(stopchange_url, changenum, authz) %}
+  {% if not changenum or not authz.needAuthForm('stopChange') %}
+    <form method="post" action="{{ stopchange_url }}" class='command stopchange'>
+      {% if changenum %}
+        <p>To cancel all builds for this change, push the 'Cancel' button</p>
+      {% else %}
+        <p>To cancel builds for this builder for a given change, fill out all
+          fields and push the 'Cancel' button</p>
+      {% endif %}
+
+      {% if authz.needAuthForm('cancelPendingBuild') %}
+        {{ auth() }}
+      {% endif %}
+
+      {% if changenum %}
+        <input type="hidden" name="change" value="{{ changenum }}" />
+      {% else %}
+        <div class="row">
+          <span class="label">Change #:</span>
+          <input type="text" name="change"/>
+        </div>
+      {% endif %}
+      <input type="submit" value="Cancel" />
+    </form>
+  {% endif %}
+{% endmacro %}
+
 {% macro stop_build(stop_url, authz, on_all=False, short=False, label="Build") %}
   {% if not short or not authz.needAuthForm('stopBuild') %}
     <form method="post" name="stop_build" action="{{ stop_url }}" class='command stopbuild'
