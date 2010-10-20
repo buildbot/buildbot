@@ -31,7 +31,11 @@ FLAGS = """\
   - filter
     - Filters out null, false, and empty string, list and dict. This reduce the
       amount of useless data sent.
-
+  - callback
+    - Enable uses of JSONP as described in
+      http://en.wikipedia.org/wiki/JSON#JSONP. Note that
+      Access-Control-Allow-Origin:* is set in the HTTP response header so you
+      can use this in compatible browsers.
 """
 
 EXAMPLES = """\
@@ -188,8 +192,14 @@ class JsonResource(resource.Resource):
 
     def content(self, request):
         """Renders the json dictionaries."""
-        # Implement filtering at global level and every child.
+        # Supported flags.
         select = request.args.get('select')
+        as_text = RequestArgToBool(request, 'as_text', False)
+        filter_out = RequestArgToBool(request, 'filter', as_text)
+        compact = RequestArgToBool(request, 'compact', not as_text)
+        callback = request.args.get('callback')
+
+        # Implement filtering at global level and every child.
         if select is not None:
             del request.args['select']
             # Do not render self.asDict()!
@@ -218,14 +228,18 @@ class JsonResource(resource.Resource):
                 request.postpath = postpath
         else:
             data = self.asDict(request)
-        as_text = RequestArgToBool(request, 'as_text', False)
-        filter_out = RequestArgToBool(request, 'filter', as_text)
         if filter_out:
             data = FilterOut(data)
-        if RequestArgToBool(request, 'compact', not as_text):
-            return json.dumps(data, sort_keys=True, separators=(',',':'))
+        if compact:
+            data = json.dumps(data, sort_keys=True, separators=(',',':'))
         else:
-            return json.dumps(data, sort_keys=True, indent=2)
+            data = json.dumps(data, sort_keys=True, indent=2)
+        if callback:
+            # Only accept [a-zA-Z_] for now.
+            callback = callback[0]
+            if re.match(r'^[a-zA-Z$][a-zA-Z$0-9.]*$', callback):
+                data = '%s(%s);' % (callback, data)
+        return data
 
     def asDict(self, request):
         """Generates the json dictionary.
