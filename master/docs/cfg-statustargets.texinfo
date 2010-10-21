@@ -1079,10 +1079,6 @@ If the given Builder is currently running, wait until the Build is
 finished and then announce the results.
 @item last BUILDER
 Return the results of the last build to run on the given Builder.
-@item join CHANNEL
-Join the given IRC channel
-@item leave CHANNEL
-Leave the given IRC channel
 @item notify on|off|list EVENT
 Report events relating to builds.  If the command is issued as a
 private message, then the report will be sent back as a private

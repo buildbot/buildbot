@@ -633,21 +633,6 @@ class IRCContact(Contact):
     def act(self, action):
         self.channel.me(self.dest, action.encode("ascii", "replace"))
 
-    def command_JOIN(self, args, who):
-        args = shlex.split(args)
-        to_join = args[0]
-        self.channel.join(to_join)
-        self.send("Joined %s" % to_join)
-    command_JOIN.usage = "join channel - Join another channel"
-
-    def command_LEAVE(self, args, who):
-        args = shlex.split(args)
-        to_leave = args[0]
-        self.send("Buildbot has been told to leave %s" % to_leave)
-        self.channel.part(to_leave)
-    command_LEAVE.usage = "leave channel - Leave a channel"
-
-
     def handleMessage(self, message, who):
         # a message has arrived from 'who'. For broadcast contacts (i.e. when
         # people do an irc 'buildbot: command'), this will be a string
