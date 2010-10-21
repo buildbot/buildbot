@@ -14,9 +14,7 @@ described here.
 * Buildmaster Service Hierarchy::
 * Utilities::
 * The Database::
-* The Event Loop::
-* String Types::
-* Subscription Interfaces::
+* Log File Format::
 * Web Status::
 * Obfuscating Passwords::
 * Master-Slave API::
@@ -270,20 +268,21 @@ Finally, make the corresponding changes to @file{buildbot/db/schema/tables.sql}.
 
 @end enumerate
 
-@node The Event Loop
-@section The Event Loop
+@node Log File Format
+@section Log File Format
+@dvindex buildbot.status.builder.LogFile
 
-TODO
+The master currently stores each logfile in a single file, which may have a
+standard compression applied.
 
-@node String Types
-@section String Types
+The format is a special case of the netstrings protocol - see
+@url{http://cr.yp.to/proto/netstrings.txt}.  The text in each netstring
+consists of a one-digit channel identifier followed by the data from that
+channel.
 
-TODO
-
-@node Subscription Interfaces
-@section Subscription Interfaces
-
-TODO use @code{buildbot.eventually}
+The formatting is implemented in the LogFile class in
+@file{buildbot/status/builder.py}, and in particular by the @code{merge}
+method.
 
 @node Web Status
 @section Web Status
