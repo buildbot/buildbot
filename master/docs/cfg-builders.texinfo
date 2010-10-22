@@ -157,6 +157,7 @@ def nextBuild(bldr, requests):
     
 c['builders'] = [
   BuilderConfig(name='test', factory=f,
+        nextBuild=nextBuild,
         slavenames=['slave1', 'slave2', 'slave3', 'slave4']),
 ]
 @end example
