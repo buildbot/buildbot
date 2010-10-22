@@ -112,12 +112,15 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
         reason = req.args.get("comments", ["<no reason specified>"])[0]
         branch = req.args.get("branch", [""])[0]
         revision = req.args.get("revision", [""])[0]
+        repository = req.args.get("repository", [""])[0]
+        project = req.args.get("project", [""])[0]
 
         r = "The web-page 'force build' button was pressed by '%s': %s\n" \
             % (html.escape(name), html.escape(reason))
-        log.msg("web forcebuild of builder '%s', branch='%s', revision='%s'"
-                " by user '%s'" % (self.builder_status.getName(), branch,
-                                   revision, name))
+        log.msg("web forcebuild of builder '%s', branch='%s', revision='%s',"
+                " repository='%s', project='%s' by user '%s'" % (
+                self.builder_status.getName(), branch, revision, repository,
+                project, name))
 
         # check if this is allowed
         if not auth_ok:
@@ -148,7 +151,7 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
         # now, so someone can write this support. but it requires a
         # buildbot.changes.changes.Change instance which is tedious at this
         # stage to compute
-        s = SourceStamp(branch=branch, revision=revision)
+        s = SourceStamp(branch=branch, revision=revision, project=project, repository=repository)
         try:
             c = interfaces.IControl(self.getBuildmaster(req))
             bc = c.getBuilder(self.builder_status.getName())
