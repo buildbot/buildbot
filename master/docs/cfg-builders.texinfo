@@ -1,3 +1,11 @@
+@menu
+* Builder Configuration::
+* Prioritizing Builds::
+@end menu
+
+@node Builder Configuration
+@subsection Builder Configuration
+
 @bcindex c['builders']
 
 The @code{c['builders']} key is a list of objects giving configuration for the
@@ -132,5 +140,23 @@ later on like other properties. @pxref{WithProperties}.
 
 @end table
 
+@node Prioritizing Builds
+@subsection Prioritizing Builds
 
+The @code{BuilderConfig} parameter @code{nextBuild} can be use to prioritize
+build requests within a builder. Note that this is orthogonal to
+@pxref{Prioritizing Builders}, which controls the order in which builders are
+called on to start their builds.
 
+@example
+def nextBuild(bldr, requests):
+    for r in requests:
+        if r.source.branch == 'release':
+            return r
+    return requests[0]
+    
+c['builders'] = [
+  BuilderConfig(name='test', factory=f,
+        slavenames=['slave1', 'slave2', 'slave3', 'slave4']),
+]
+@end example

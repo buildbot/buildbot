@@ -289,6 +289,10 @@ should return a list of @code{Builder} objects in the desired order.
 It may also remove items from the list if builds should not be started
 on those builders.
 
+This parameter controls the order in which builders are activated.  It does not
+affect the order in which a builder processes the build requests in its queue.
+For that purpose, see @pxref{Prioritizing Builds}.
+
 @example
 def prioritizeBuilders(buildmaster, builders):
     """Prioritize builders.  'finalRelease' builds have the highest
