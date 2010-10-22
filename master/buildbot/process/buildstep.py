@@ -770,6 +770,7 @@ class BuildStep:
 
             if skip == SKIPPED:
                 self.step_status.setText(self.describe(True) + ['skipped'])
+                self.step_status.setSkipped(True)
                 # this return value from self.start is a shortcut
                 # to finishing the step immediately
                 reactor.callLater(0, self.finished, SKIPPED)

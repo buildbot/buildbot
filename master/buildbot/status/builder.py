@@ -836,6 +836,7 @@ class BuildStepStatus(styles.Versioned):
         self.updates = {}
         self.finishedWatchers = []
         self.statistics = {}
+        self.skipped = False
 
         self.waitingForLocks = False
 
@@ -870,6 +871,9 @@ class BuildStepStatus(styles.Versioned):
 
     def isStarted(self):
         return (self.started is not None)
+
+    def isSkipped(self):
+        return self.skipped
 
     def isFinished(self):
         return (self.finished is not None)
@@ -1024,6 +1028,9 @@ class BuildStepStatus(styles.Versioned):
         """Set the given statistic.  Usually called by subclasses.
         """
         self.statistics[name] = value
+
+    def setSkipped(self, skipped):
+        self.skipped = skipped
 
     def stepFinished(self, results):
         self.finished = util.now()
