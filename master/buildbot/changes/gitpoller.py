@@ -30,7 +30,7 @@ class GitPoller(base.ChangeSource):
     def __init__(self, repourl, branch='master', 
                  workdir=None, pollinterval=10*60, 
                  gitbin='git', usetimestamps=True,
-                 category=None, project=None):
+                 category=None, project=''):
         """
         @type  repourl: string
         @param repourl: the url that describes the remote repository,
