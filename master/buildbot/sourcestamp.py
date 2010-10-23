@@ -55,12 +55,8 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
             revision = changes[-1].revision
             if not self.project and hasattr(changes[-1], 'project'):
                 self.project = changes[-1].project
-            else:
-                self.project = ''
             if not self.repository and hasattr(changes[-1], 'repository'):
                 self.repository = changes[-1].repository
-            else:
-                self.repository = ''
 
         if revision is not None:
             if isinstance(revision, int):
