@@ -9,14 +9,26 @@
 ### END INIT INFO
 
 PATH=/sbin:/bin:/usr/sbin:/usr/bin
-BUILDSLAVE_RUNNER=/usr/bin/buildslave
-
-# Source buildslave configuration
-[[ -r /etc/default/buildslave ]] && . /etc/default/buildslave
-
-test -x ${SLAVE_RUNNER} || exit 0
+SLAVE_RUNNER=/usr/bin/buildslave
 
 . /lib/lsb/init-functions
+
+# Source buildslave configuration 
+[[ -r /etc/default/buildslave ]] && . /etc/default/buildslave
+#[[ -r /etc/sysconfig/buildslave ]] && . /etc/sysconfig/buildslave
+
+# Or define/override the configuration here
+#SLAVE_ENABLED[1]=0                    # 0-enabled, other-disabled
+#SLAVE_NAME[1]="buildslave #1"         # short name printed on start/stop
+#SLAVE_USER[1]="buildbot"              # user to run slave as
+#SLAVE_BASEDIR[1]=""                   # basedir to slave (absolute path)
+#SLAVE_OPTIONS[1]=""                   # buildbot options  
+#SLAVE_PREFIXCMD[1]=""                 # prefix command, i.e. nice, linux32, dchroot
+
+if [[ ! -x ${SLAVE_RUNNER} ]]; then
+    log_failure_msg "does not exist or not an executable file: ${SLAVE_RUNNER}"
+    exit 1
+fi
 
 function check_config() {
     itemcount="${#SLAVE_ENABLED[@]}
@@ -27,32 +39,32 @@ function check_config() {
                ${#SLAVE_PREFIXCMD[@]}" 
 
     if [[ $(echo "$itemcount" | tr -d ' ' | sort -u | wc -l) -ne 1 ]]; then
-        echo "@todo: think of error msg" >&2
+        log_failure_msg "SLAVE_* arrays must have an equal number of elements!"
         return 1
     fi
 
     errors=0
     for i in $( seq ${#SLAVE_ENABLED[@]} ); do
         if [[ ${SLAVE_ENABLED[$i]} -ne 0 ]]; then 
-            echo "buildslave #${i}: unknown run status" >&2
+            log_failure_msg "buildslave #${i}: unknown run status"
             errors=$(($errors+1))
         fi
 
         if [[ -z ${SLAVE_NAME[$i]} ]]; then
-            echo "buildslave #${i}: no name" >&2
+            log_failure_msg "buildslave #${i}: no name"
             errors=$(($errors+1))
         fi
 
         if [[ -z ${SLAVE_USER[$i]} ]]; then
-            echo "buildslave #${i}: no run user specified" >&2
+            log_failure_msg "buildslave #${i}: no run user specified"
             errors=$( ($errors+1) )
         elif ! getent passwd ${SLAVE_USER[$i]} >/dev/null; then
-            echo "buildslave #${i}: unknown user ${SLAVE_USER[$i]}" >&2
+            log_failure_msg "buildslave #${i}: unknown user ${SLAVE_USER[$i]}"
             errors=$(($errors+1))
         fi
 
         if [[ ! -d "${SLAVE_BASEDIR[$i]}" ]]; then
-            echo "buildslave ${i}: basedir does not exist ${SLAVE_BASEDIR[$i]}" >&2
+            log_failure_msg "buildslave ${i}: basedir does not exist ${SLAVE_BASEDIR[$i]}"
             errors=$(($errors+1))
         fi
     done
@@ -62,13 +74,15 @@ function check_config() {
 
 check_config || exit $?
 
+function iscallable () { type $1 2>/dev/null | grep -q 'shell function'; }
+
 function slave_op () {
-    op=$1
+    op=$1 ; mi=$2
 
     ${SLAVE_PREFIXCMD[$1]} \
     su -s /bin/sh \
-    -c "$BUILDSLAVE_RUNNER $op --quiet ${MASTER_OPTIONS[$1]} ${MASTER_BASEDIR[$1]}" \
-    - ${SLAVE_USER[$1]}
+    -c "$SLAVE_RUNNER $op --quiet ${SLAVE_OPTIONS[$mi]} ${SLAVE_BASEDIR[$mi]}" \
+    - ${SLAVE_USER[$mi]}
     return $?
 }
 
@@ -77,12 +91,22 @@ function do_op () {
     for i in $( seq ${#SLAVE_ENABLED[@]} ); do
         [[ ${SLAVE_ENABLED[$i]} -ne 0 ]] && continue
 
-	    log_daemon_msg "$3 \"${SLAVE_NAME[$i]}\""
-        if $(eval $1 $2 $i); then
-            log_end_msg 0
+        # Some rhels don't come with all the lsb goodies
+        if iscallable log_daemon_msg; then
+	        log_daemon_msg "$3 \"${SLAVE_NAME[$i]}\""
+            if eval $1 $2 $i; then
+                log_end_msg 0
+            else
+                log_end_msg 1
+                errors=$(($errors+1))
+            fi
         else
-            log_end_msg 1
-            errors=$(($errors+1))
+            if eval $1 $2 $i; then
+                log_success_msg "$3 \"${SLAVE_NAME[$i]}\""
+            else
+                log_failure_msg "$3 \"${SLAVE_NAME[$i]}\""
+                errors=$(($errors+1))
+            fi
         fi
     done
     return $errors
@@ -106,7 +130,7 @@ case "$1" in
         exit $?
         ;;
     *)
-        log_warning_msg "Usage: $0 {start|stop|restart|reload|force-reload}"
+        echo "Usage: $0 {start|stop|restart|reload|force-reload}"
         exit 1
         ;;
 esac

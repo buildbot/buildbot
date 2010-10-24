@@ -1,4 +1,4 @@
-BUILDBOT_RUNNER=/usr/bin/buildbot
+MASTER_RUNNER=/usr/bin/buildbot
 
 MASTER_ENABLED[1]=0                    # 0-enabled, other-disabled
 MASTER_NAME[1]="buildmaster #1"        # short name printed on start/stop
