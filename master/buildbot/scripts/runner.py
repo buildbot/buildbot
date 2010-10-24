@@ -1136,7 +1136,7 @@ def run():
         except BuildbotNotRunningError:
             if not so['quiet']:
                 print "buildmaster not running"
-                sys.exit(0)
+            sys.exit(0)
 
     elif command == "restart":
         restart(so)
