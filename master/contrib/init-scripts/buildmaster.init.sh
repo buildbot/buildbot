@@ -1,5 +1,9 @@
 #!/bin/bash
 
+### Maintain compatibility with chkconfig
+# chkconfig: 2345 83 17
+# description: buildmaster
+
 ### BEGIN INIT INFO
 # Provides:          buildmaster
 # Required-Start:    $remote_fs

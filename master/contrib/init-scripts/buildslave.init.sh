@@ -1,5 +1,9 @@
 #!/bin/bash
 
+### Maintain compatibility with chkconfig
+# chkconfig: 2345 83 17
+# description: buildslave
+
 ### BEGIN INIT INFO
 # Provides:          buildslave
 # Required-Start:    $remote_fs
