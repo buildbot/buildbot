@@ -17,3 +17,4 @@ include buildbot/buildbot.png
 
 include contrib/* contrib/windows/* contrib/os-x/* contrib/css/*
 include contrib/trac/* contrib/trac/bbwatcher/* contrib/trac/bbwatcher/templates/*
+include contrib/init-scripts/*
