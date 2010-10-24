@@ -669,13 +669,13 @@ master/contrib/init-scripts/buildslave.default
 master/contrib/init-scripts/buildmaster.default 
 
 # install as /etc/init.d/buildslave
-master/contrib/init-scripts/buildslave.init.sh
+slave/contrib/init-scripts/buildslave.init.sh
 
 # install as /etc/init.d/buildmaster
-master/contrib/init-scripts/buildmaster.init.sh
+slave/contrib/init-scripts/buildmaster.init.sh
 
 # ... and tell sysvinit about them 
-chkconfig   buildmaster reset
+chkconfig buildmaster reset
 # ... or
 update-rc.d buildmaster defaults
 @end example
