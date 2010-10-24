@@ -1131,7 +1131,13 @@ def run():
 
         start(so)
     elif command == "stop":
-        stop(so, wait=True)
+        try:
+            stop(so, wait=True)
+        except BuildbotNotRunningError:
+            if not so['quiet']:
+                print "buildmaster not running"
+                sys.exit(0)
+
     elif command == "restart":
         restart(so)
     elif command == "reconfig" or command == "sighup":

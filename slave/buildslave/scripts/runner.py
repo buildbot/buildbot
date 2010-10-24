@@ -182,8 +182,8 @@ def stop(config, signame="TERM", wait=False, returnFalseOnNotRunning=False):
     except:
         if returnFalseOnNotRunning:
             return False
-        print "buildslave not running."
-        sys.exit(1)
+        if not quiet: print "buildslave not running."
+        sys.exit(0)
     pid = int(f.read().strip())
     signum = getattr(signal, "SIG"+signame)
     timer = 0
