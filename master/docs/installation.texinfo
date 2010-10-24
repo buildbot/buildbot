@@ -654,6 +654,32 @@ Debian-based distributions, you may only need to modify
 @code{/etc/default/buildbot} (see also @code{/etc/init.d/buildbot}, which
 reads the configuration in @code{/etc/default/buildbot}).
 
+Buildbot also comes with its own init scripts that provide support for
+controlling multi-slave and multi-master setups (mostly because they are based
+on the init script from the debian package).  With a little modification these
+scripts can be used both on debian and rhel based distributions and may thus
+prove helpful to package maintainers who are working on buildbot (or those that
+haven't yet split buildbot into master and slave packages). 
+
+@example
+# install as /etc/default|sysconfig/buildslave
+master/contrib/init-scripts/buildslave.default 
+
+# install /etc/default|sysconfig/buildslave
+master/contrib/init-scripts/buildmaster.default 
+
+# install as /etc/init.d/buildslave
+slave/contrib/init-scripts/buildslave.init.sh
+
+# install as /etc/init.d/buildmaster
+slave/contrib/init-scripts/buildmaster.init.sh
+
+# ... and tell sysvinit about them 
+chkconfig buildmaster reset
+# ... or
+update-rc.d buildmaster defaults
+@end example
+
 @node Logfiles
 @section Logfiles
 
