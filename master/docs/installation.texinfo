@@ -216,6 +216,46 @@ If you want to use MySQL as the database backend for your Buildbot, add the
 @code{--db} option to the @code{create-master} invocation to specify the
 connection string for the MySQL database (@pxref{Database Specification}).
 
+@heading Buildmaster Options
+
+This section lists options to the @command{create-master} command.
+You can also type @command{buildslave create-slave --help} for an up-to-the-moment summary.
+
+@table @code
+
+@item --force
+With this option, @command{create-master} will re-use an existing master
+directory.
+
+@item --no-logrotate
+This disables internal buildslave log management mechanism. With this option
+buildslave does not override the default logfile name and its behaviour giving
+a possibility to control those with command-line options of twistd daemon.
+
+@item --relocatable
+This creates a "relocatable" buildbot.tac, which uses relative paths instead
+of absolute paths, so that the buildmaster directory can be moved about.
+
+@item --config
+The name of the configuration file to use.  This configuration file need not
+reside in the buildmaster directory.
+
+@item --log-size
+This is the size in bytes when to rotate the Twisted log files.  The default is
+10MiB.
+
+@item --log-count
+This is the number of log rotations to keep around. You can either
+specify a number or @code{None} to keep all @file{twistd.log} files
+around.  The default is 10.
+
+@item --db
+The database that the Buildmaster should use.  This information is needed
+earlier than the configuration file can be loaded.
+
+@end table
+
+
 @node Upgrading an Existing Buildmaster
 @section Upgrading an Existing Buildmaster
 
@@ -499,12 +539,13 @@ seconds. The default (300) causes the buildslave to wait at most 5
 minutes before trying to connect to the buildmaster again.
 
 @item --log-size
-This is the size in bytes when to rotate the Twisted log files.
+This is the size in bytes when to rotate the Twisted log files.  The default is
+10MiB.
 
 @item --log-count
 This is the number of log rotations to keep around. You can either
-specify a number or @code{None} (the default) to keep all
-@file{twistd.log} files around.
+specify a number or @code{None} to keep all @file{twistd.log} files
+around.  The default is 10.
 
 @end table
 

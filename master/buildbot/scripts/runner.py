@@ -486,9 +486,9 @@ class MasterOptions(MakerBase):
         ]
     optParameters = [
         ["config", "c", "master.cfg", "name of the buildmaster config file"],
-        ["log-size", "s", "1000000",
+        ["log-size", "s", "10000000",
          "size at which to rotate twisted log files"],
-        ["log-count", "l", "None",
+        ["log-count", "l", "10",
          "limit the number of kept old twisted log files"],
         ["db", None, "sqlite:///state.sqlite",
          "which DB to use for scheduler/status state. See below for syntax."],

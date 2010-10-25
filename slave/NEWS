@@ -2,6 +2,14 @@ Major User visible changes in Buildslave.             -*- outline -*-
    see the git log for a detailed list of changes:
    http://github.com/buildbot/buildbot/commits/master
 
+* Next Release
+
+** Log Rotation
+
+The default 'create-slave' output now rotates ten twistd.log files, each of
+about 10MiB.  This is a change from older versions, which would rotate an
+unbounded number of 1MiB files.
+
 * Buildbot 0.8.1
 
 ** First release of buildslave as a separate package

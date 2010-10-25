@@ -4,6 +4,12 @@ Major User visible changes in Buildbot.             -*- outline -*-
 
 * NEXT RELEASE
 
+** Upgrading
+
+Upgrading to from the previous version will require an 'upgrade-master' run.
+However, the schema changes are backward-compatible, so if a downgrade is
+required, it will not be difficult.
+
 ** New Requirements
 
 The Buildmaster now requires Jinja-2.1 or higher.
@@ -27,6 +33,12 @@ internal logging and log rotation mechanism in buildbot.tac (ticket #973)
 
 The MasterShellCommand now provides the buildmaster's environment to the step
 by default; pass env={} to pass a clean environment, instead.
+
+** Log Rotation
+
+The default 'create-master' output now rotates ten twistd.log files, each of
+about 10MiB.  This is a change from older versions, which would rotate an
+unbounded number of 1MiB files.
 
 ** New configuration key, 'changeCacheSize'
 
