@@ -16,8 +16,6 @@ from buildbot.process.properties import Properties
 from buildbot.locks import LockAccess
 
 import sys
-if sys.version_info[:3] < (2,4,0):
-    from sets import Set as set
 
 class AbstractBuildSlave(pb.Avatar, service.MultiService):
     """This is the master-side representative for a remote buildbot slave.
