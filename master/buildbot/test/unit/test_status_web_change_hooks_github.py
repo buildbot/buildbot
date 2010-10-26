@@ -3,7 +3,6 @@ from buildbot.test.util.web import MockRequest
 from buildbot.util import json
 
 from twisted.trial import unittest
-from mock import Mock
 
 # Sample GITHUB commit payload from http://help.github.com/post-receive-hooks/
 # Added "modfied" and "removed", and change email

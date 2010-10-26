@@ -47,7 +47,7 @@ class Upgrader(base.Upgrader):
             lengthstr = " (%i)" % length
         q = "CREATE INDEX `%(table)s_%(column)s` ON `%(table)s` (`%(column)s`%(lengthstr)s)"
         cursor = self.conn.cursor()
-        cursor.execute(q % locals())
+        cursor.execute(q % {'table': table, 'column': column, 'lengthstr': lengthstr})
 
     def set_version(self):
         c = self.conn.cursor()

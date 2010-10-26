@@ -4,7 +4,7 @@ import cPickle
 
 from twisted.trial import unittest
 
-from buildbot.changes.changes import Change, OldChangeMaster
+from buildbot.changes.changes import Change
 
 from buildbot.db.schema import manager
 from buildbot.db.dbspec import DBSpec

@@ -1,5 +1,4 @@
 import sys
-import datetime
 import re
 import subprocess
 import os

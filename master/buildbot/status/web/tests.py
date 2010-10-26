@@ -2,10 +2,7 @@
 import urllib
 from buildbot.status.web.base import HtmlResource, path_to_builder, \
      path_to_build, css_classes
-from buildbot.status.web.logs import LogsResource
 from buildbot.status.builder import Results
-from buildbot import util
-from time import ctime
 
 # /builders/$builder/builds/$buildnum/steps/$stepname
 class StatusResourceBuildTest(HtmlResource):

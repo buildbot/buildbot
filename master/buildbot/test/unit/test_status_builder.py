@@ -2,7 +2,6 @@ import os
 
 from buildbot.status import builder
 #from buildbot.util import json
-from mock import Mock
 
 from twisted.trial import unittest
 

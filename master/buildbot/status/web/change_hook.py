@@ -4,15 +4,9 @@
 
 # but "the rest" is pretty minimal
 from twisted.web import resource
-from buildbot.status.builder import FAILURE
 import re
-from buildbot import util, interfaces
-import traceback
-import sys
-from buildbot.process.properties import Properties
-from buildbot.changes.changes import Change
 from twisted.python.reflect import namedModule
-from twisted.python.log import msg,err
+from twisted.python.log import msg
 from buildbot.util import json
 
 class ChangeHookResource(resource.Resource):

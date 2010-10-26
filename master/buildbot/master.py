@@ -341,7 +341,7 @@ class BotMaster(service.MultiService):
 
             # ping the old slave.  If this kills it, then the new slave will connect
             # again and everyone will be happy.
-            d = sl.slave.callRemote("print", "master got a duplicate connection; keeping this one")
+            sl.slave.callRemote("print", "master got a duplicate connection; keeping this one")
 
             # now return a dummy avatar and kill the new connection in 5
             # seconds, thereby giving the ping a bit of time to kill the old

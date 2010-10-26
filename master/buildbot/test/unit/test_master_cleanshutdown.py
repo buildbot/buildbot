@@ -1,5 +1,5 @@
 # Test clean shutdown functionality of the master
-from mock import Mock, patch, patch_object
+from mock import Mock
 from twisted.trial import unittest
 from twisted.internet import defer
 from buildbot.master import BotMaster
@@ -125,6 +125,7 @@ class TestCleanShutdown(unittest.TestCase):
         self.assertEquals(self.master._get_processors(), [builder.run])
 
         d_shutdown = self.master.cleanShutdown()
+        assert d_shutdown
 
         # Trigger the loop to get things going
         self.master.loop.trigger()

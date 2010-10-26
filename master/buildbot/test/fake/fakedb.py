@@ -4,6 +4,7 @@ from twisted.internet import defer
 
 try:
     from pysqlite2 import dbapi2 as sqlite3
+    assert sqlite3
 except ImportError:
     # don't use built-in sqlite3 on 2.5 -- it has *bad* bugs
     if sys.version_info >= (2,6):

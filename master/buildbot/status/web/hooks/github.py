@@ -9,28 +9,18 @@ repository for the user who initiated the build on the buildslave.
 
 """
 
-import tempfile
 import logging
 import re
 import sys
 import traceback
-from twisted.web import server, resource
-from twisted.internet import reactor
-from twisted.spread import pb
-from twisted.cred import credentials
-from optparse import OptionParser
 from buildbot.changes.changes import Change
 import datetime
-import time
 from twisted.python import log
 import calendar
-import time
-import calendar
-import datetime
-import re
 
 try:
     import json
+    assert json
 except ImportError:
     import simplejson as json
 
@@ -86,7 +76,8 @@ def getChanges(request, options = None):
             user = payload['repository']['owner']['name']
             repo = payload['repository']['name']
             repo_url = payload['repository']['url']
-            private = payload['repository']['private']
+            # This field is unused:
+            #private = payload['repository']['private']
             changes = process_change(payload, user, repo, repo_url)
             log.msg("Received %s changes from github" % len(changes))
             return changes

@@ -1,6 +1,6 @@
 
 from buildbot.steps.shell import ShellCommand
-from buildbot.status.builder import SUCCESS, FAILURE, WARNINGS, SKIPPED
+from buildbot.status.builder import SUCCESS, FAILURE
 
 class SubunitShellCommand(ShellCommand):
     """A ShellCommand that sniffs subunit output.

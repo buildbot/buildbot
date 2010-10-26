@@ -3,6 +3,7 @@
 import os.path, tarfile, tempfile
 try:
     from cStringIO import StringIO
+    assert StringIO
 except ImportError:
     from StringIO import StringIO
 from twisted.internet import reactor

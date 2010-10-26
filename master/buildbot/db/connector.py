@@ -271,11 +271,9 @@ class DBConnector(util.ComparableMixin):
     def runQuery(self, *args, **kwargs):
         assert self._started
         self._pending_operation_count += 1
-        start = self._getCurrentTime()
-        #t = self._start_operation()   # why is this commented out? -warner
         d = self._pool.runQuery(*args, **kwargs)
-        #d.addBoth(self._runQuery_done, start, t)
         return d
+
     def _runQuery_done(self, res, start, t):
         self._end_operation(t)
         self._add_query_time(start)

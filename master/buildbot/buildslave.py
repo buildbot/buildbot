@@ -15,8 +15,6 @@ from buildbot.interfaces import IBuildSlave, ILatentBuildSlave
 from buildbot.process.properties import Properties
 from buildbot.locks import LockAccess
 
-import sys
-
 class AbstractBuildSlave(pb.Avatar, service.MultiService):
     """This is the master-side representative for a remote buildbot slave.
     There is exactly one for each slave described in the config file (the
@@ -696,7 +694,8 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
         return d
 
     def disconnect(self):
-        d = self._soft_disconnect()
+        # This returns a Deferred but we don't use it
+        self._soft_disconnect() 
         # this removes the slave from all builders.  It won't come back
         # without a restart (or maybe a sighup)
         self.botmaster.slaveLost(self)

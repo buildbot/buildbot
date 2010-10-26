@@ -1,4 +1,4 @@
-import sys, os, time
+import os, time
 from cPickle import dump
 
 from zope.interface import implements

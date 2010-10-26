@@ -319,7 +319,8 @@ class BonsaiMaildirSource(MaildirSource):
             if module and file:
                 path = "%s/%s" % (module, file)
                 files.append(path)
-            sticky = items[7]
+            # For reference, we don't use this field
+            #sticky = items[7]
             branch = items[8]
 
         # if no files changed, return nothing
@@ -424,7 +425,8 @@ class CVSMaildirSource(MaildirSource):
                 continue
             m = modRE.match(line)
             if m:
-                module = m.group(1)
+                # We don't actually use this
+                #module = m.group(1)
                 continue
             m = pathRE.match(line)
             if m:
@@ -440,7 +442,8 @@ class CVSMaildirSource(MaildirSource):
                 continue
             m = updateRE.match(line)
             if m:
-                updateof = m.group(1)
+                # We don't actually use this
+                #updateof = m.group(1)
                 continue
             if line == "Log Message:\n":
                 break
@@ -576,7 +579,6 @@ class SVNCommitEmailMaildirSource(MaildirSource):
 
         files = []
         comments = ""
-        isdir = 0
         lines = list(body_line_iterator(m))
         rev = None
         while lines:

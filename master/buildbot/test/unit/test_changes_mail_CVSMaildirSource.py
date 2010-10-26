@@ -1,12 +1,8 @@
-from mock import Mock, patch_object
-from buildbot.interfaces import ParameterError
 from twisted.trial import unittest
 
 from email import message_from_string
-from email.Utils import parseaddr, parsedate_tz, mktime_tz
-import datetime
-from buildbot.status.builder import SUCCESS, FAILURE
-from buildbot.changes.mail import MaildirSource, CVSMaildirSource
+from email.Utils import parsedate_tz, mktime_tz
+from buildbot.changes.mail import CVSMaildirSource
 
 #
 # Sample message from CVS version 1.11
@@ -118,6 +114,7 @@ class TestCVSMaildirSource(unittest.TestCase):
         src = CVSMaildirSource('/dev/null')
         try:
             change = src.parse( m )
+            assert change
         except ValueError:
             pass
         else:
@@ -130,6 +127,7 @@ class TestCVSMaildirSource(unittest.TestCase):
         src = CVSMaildirSource('/dev/null')
         try:
             change = src.parse( m )
+            assert change
         except ValueError:
             pass
         else:

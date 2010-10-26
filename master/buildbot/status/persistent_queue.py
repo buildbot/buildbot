@@ -3,6 +3,7 @@
 try:
     # Python 2.4+
     from collections import deque
+    assert deque
 except ImportError:
     deque = None
 import os

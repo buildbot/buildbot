@@ -458,7 +458,7 @@ def upgradeMaster(config):
     m.move_if_present(os.path.join(basedir, "public_html/index.html"),
                       os.path.join(basedir, "templates/root.html"))
 
-    from buildbot.db import connector, dbspec
+    from buildbot.db import dbspec
     spec = dbspec.DBSpec.from_url(config["db"], basedir)
     # TODO: check that TAC file specifies the right spec
 
@@ -634,7 +634,7 @@ def restart(config):
     basedir = config['basedir']
     quiet = config['quiet']
 
-    if not isBuildmasterDir(config['basedir']):
+    if not isBuildmasterDir(basedir):
         print "not a buildmaster directory"
         sys.exit(1)
 
@@ -987,6 +987,7 @@ class TryServerOptions(OptionsWithOptionsFile):
 def doTryServer(config):
     try:
         from hashlib import md5
+        assert md5
     except ImportError:
         # For Python 2.4 compatibility
         import md5

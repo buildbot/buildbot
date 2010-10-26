@@ -3,10 +3,9 @@ from twisted.internet import defer
 
 from buildbot.process.base import Build
 from buildbot.process.properties import Properties
-from buildbot.buildrequest import BuildRequest
 from buildbot.status.builder import FAILURE, SUCCESS, WARNINGS, RETRY, EXCEPTION
-from buildbot.locks import SlaveLock, RealSlaveLock
-from buildbot.process.buildstep import BuildStep, LoggingBuildStep
+from buildbot.locks import SlaveLock
+from buildbot.process.buildstep import LoggingBuildStep
 
 from mock import Mock
 
@@ -173,7 +172,6 @@ class TestBuild(unittest.TestCase):
         status = Mock()
 
         l = SlaveLock('lock')
-        claimCount = [0]
         lock_access = l.access('counting')
         l.access = lambda mode: lock_access
         real_lock = b.builder.botmaster.getLockByID(l).getLock(slavebuilder)
@@ -210,7 +208,6 @@ class TestBuild(unittest.TestCase):
         status = Mock()
 
         l = SlaveLock('lock')
-        claimCount = [0]
         lock_access = l.access('counting')
         l.access = lambda mode: lock_access
         real_lock = b.builder.botmaster.getLockByID(l).getLock(slavebuilder)

@@ -12,6 +12,7 @@ import urlparse
 
 try:
     import simplejson as json
+    assert json
 except ImportError:
     import json
 

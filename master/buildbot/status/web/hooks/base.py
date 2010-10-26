@@ -3,18 +3,8 @@
 # otherwise, Andrew Melo <andrew.melo@gmail.com> wrote the rest
 
 # but "the rest" is pretty minimal
-from twisted.web import resource
-from buildbot.status.builder import FAILURE
-import re
-from buildbot import util, interfaces
-import logging
-import traceback
-import sys
-from buildbot.process.properties import Properties
 from buildbot.changes.changes import Change
-from twisted.python.reflect import namedModule
 from buildbot.util import json
-from twisted.python.log import msg,err
     
 def getChanges(request, options=None):
         """

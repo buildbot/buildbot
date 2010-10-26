@@ -1001,11 +1001,7 @@ class BuildStepStatus(styles.Versioned):
         log = HTMLLogFile(self, name, logfilename, html)
         self.logs.append(log)
         for w in self.watchers:
-            receiver = w.logStarted(self.build, self, log)
-            # TODO: think about this: there isn't much point in letting
-            # them subscribe
-            #if receiver:
-            #    log.subscribe(receiver, True)
+            w.logStarted(self.build, self, log)
             w.logFinished(self.build, self, log)
 
     def logFinished(self, log):

@@ -1,5 +1,4 @@
 from twisted.trial import unittest
-from twisted.internet import defer
 
 from buildbot.process.properties import PropertyMap, Properties, WithProperties
 

@@ -9,7 +9,6 @@ import errno
 from twisted.python import log, failure
 from twisted.internet import reactor, utils
 from twisted.internet.task import LoopingCall
-from twisted.web.client import getPage
 
 from buildbot.changes import base, changes
 

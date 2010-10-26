@@ -104,6 +104,7 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
         # usage requirement.
         try:
             key_pair = self.conn.get_all_key_pairs(keypair_name)[0]
+            assert key_pair
             # key_pair.delete() # would be used to recreate
         except boto.exception.EC2ResponseError, e:
             if 'InvalidKeyPair.NotFound' not in e.body:
@@ -122,6 +123,7 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
         # create security group
         try:
             group = self.conn.get_all_security_groups(security_name)[0]
+            assert group
         except boto.exception.EC2ResponseError, e:
             if 'InvalidGroup.NotFound' in e.body:
                 self.security_group = self.conn.create_security_group(
@@ -143,6 +145,7 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
         else:
             # verify we have access to at least one acceptable image
             discard = self.get_image()
+            assert discard
 
         # get the specified elastic IP, if any
         if elastic_ip is not None:

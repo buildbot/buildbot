@@ -1,5 +1,6 @@
 try:
     from collections import defaultdict
+    assert defaultdict
 except ImportError:
     # collections.defaultdict only appeared in py2.5, but buildbot supports 2.4
     class defaultdict(dict):

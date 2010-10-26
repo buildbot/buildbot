@@ -1,8 +1,6 @@
 from twisted.web.util import redirectTo
-from twisted.python import log
-from twisted.internet import reactor
 
-from buildbot.status.web.base import HtmlResource, path_to_root, path_to_authfail
+from buildbot.status.web.base import HtmlResource, path_to_authfail
 from buildbot.util.eventual import eventually
 
 class RootPage(HtmlResource):

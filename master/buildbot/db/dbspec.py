@@ -220,11 +220,13 @@ class DBSpec(object):
         sqlite_dbapi_name = None
         try:
             from pysqlite2 import dbapi2 as sqlite3
+            assert sqlite3
             sqlite_dbapi_name = "pysqlite2.dbapi2"
         except ImportError:
             # don't use built-in sqlite3 on 2.5 -- it has *bad* bugs
             if sys.version_info >= (2,6):
                 import sqlite3
+                assert sqlite3
                 sqlite_dbapi_name = "sqlite3"
             else:
                 raise

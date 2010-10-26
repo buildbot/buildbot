@@ -11,7 +11,6 @@ from buildbot.status.web.base import HtmlResource, BuildLineMixin, \
     map_branches, path_to_authfail
 from buildbot.sourcestamp import SourceStamp
 
-from buildbot.status.builder import BuildRequestStatus
 from buildbot.status.web.build import BuildsResource, StatusResourceBuild
 from buildbot import util
 
