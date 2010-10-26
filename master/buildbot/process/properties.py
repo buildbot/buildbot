@@ -39,6 +39,8 @@ class Properties(util.ComparableMixin):
     def __setstate__(self, d):
         self.__dict__ = d
         self.pmap = PropertyMap(self)
+        if not hasattr(self, 'runtime'):
+            self.runtime = set()
 
     def __contains__(self, name):
         return name in self.properties
