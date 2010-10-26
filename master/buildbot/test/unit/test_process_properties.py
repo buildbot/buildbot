@@ -80,6 +80,32 @@ class TestPropertyMap(unittest.TestCase):
         self.assertEqual(self.pm['prop_nosuch:-missing'], 'missing')
 
 
+    def testColonTildeSet(self):
+        self.assertEqual(self.pm['prop_str:~missing'], 'a-string')
+
+    def testColonTildeNone(self):
+        # None is special-cased *differently* for ~:
+        self.assertEqual(self.pm['prop_none:~missing'], 'missing')
+
+    def testColonTildeZero(self):
+        self.assertEqual(self.pm['prop_zero:~missing'], 'missing')
+
+    def testColonTildeOne(self):
+        self.assertEqual(self.pm['prop_one:~missing'], 1)
+
+    def testColonTildeFalse(self):
+        self.assertEqual(self.pm['prop_false:~missing'], 'missing')
+
+    def testColonTildeTrue(self):
+        self.assertEqual(self.pm['prop_true:~missing'], True)
+
+    def testColonTildeEmpty(self):
+        self.assertEqual(self.pm['prop_empty:~missing'], 'missing')
+
+    def testColonTildeUnset(self):
+        self.assertEqual(self.pm['prop_nosuch:~missing'], 'missing')
+
+
     def testColonPlusSet(self):
         self.assertEqual(self.pm['prop_str:+present'], 'present')
 
@@ -103,6 +129,7 @@ class TestPropertyMap(unittest.TestCase):
 
     def testColonPlusUnset(self):
         self.assertEqual(self.pm['prop_nosuch:+present'], '')
+
 
 class TestWithProperties(unittest.TestCase):
     def setUp(self):

@@ -117,6 +117,7 @@ class PropertyMap:
     including the rendering of None as ''.
     """
     colon_minus_re = re.compile(r"(.*):-(.*)")
+    colon_tilde_re = re.compile(r"(.*):~(.*)")
     colon_plus_re = re.compile(r"(.*):\+(.*)")
     def __init__(self, properties):
         # use weakref here to avoid a reference loop
@@ -126,27 +127,44 @@ class PropertyMap:
         properties = self.properties()
         assert properties is not None
 
-        # %(prop:-repl)s
-        # if prop exists, use it; otherwise, use repl
-        mo = self.colon_minus_re.match(key)
-        if mo:
+        def colon_minus(mo):
+            # %(prop:-repl)s
+            # if prop exists, use it; otherwise, use repl
             prop, repl = mo.group(1,2)
             if properties.has_key(prop):
-                rv = properties[prop]
+                return properties[prop]
             else:
-                rv = repl
-        else:
+                return repl
+
+        def colon_tilde(mo):
+            # %(prop:~repl)s
+            # if prop exists and is true (nonempty), use it; otherwise, use repl
+            prop, repl = mo.group(1,2)
+            if properties.has_key(prop) and properties[prop]:
+                return properties[prop]
+            else:
+                return repl
+
+        def colon_plus(mo):
             # %(prop:+repl)s
             # if prop exists, use repl; otherwise, an empty string
-            mo = self.colon_plus_re.match(key)
-            if mo:
-                prop, repl = mo.group(1,2)
-                if properties.has_key(prop):
-                    rv = repl
-                else:
-                    rv = ''
+            prop, repl = mo.group(1,2)
+            if properties.has_key(prop):
+                return repl
             else:
-                rv = properties[key]
+                return ''
+
+        for regexp, fn in [
+            ( self.colon_minus_re, colon_minus ),
+            ( self.colon_tilde_re, colon_tilde ),
+            ( self.colon_plus_re, colon_plus ),
+            ]:
+            mo = regexp.match(key)
+            if mo:
+                rv = fn(mo)
+                break
+        else:
+            rv = properties[key]
 
         # translate 'None' to an empty string
         if rv is None: rv = ''

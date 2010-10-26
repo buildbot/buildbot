@@ -192,6 +192,12 @@ If @code{propname} exists, substitute its value; otherwise,
 substitute @code{replacement}.  @code{replacement} may be empty
 (@code{%(propname:-)s})
 
+@item propname:~replacement
+Like @code{propname:-replacement}, but only substitutes the value
+of property @code{propname} if it is something Python regards as "true".
+Python considers @code{None}, 0, empty lists, and the empty string to be 
+false, so such values will be replaced by @code{replacement}.
+
 @item propname:+replacement
 If @code{propname} exists, substitute @code{replacement}; otherwise,
 substitute an empty string.
