@@ -92,6 +92,7 @@ class RunProcessPP(protocol.ProcessProtocol):
         self.command = command
         self.pending_stdin = ""
         self.stdin_finished = False
+        self.killed = False
 
     def writeStdin(self, data):
         assert not self.stdin_finished
@@ -151,6 +152,17 @@ class RunProcessPP(protocol.ProcessProtocol):
         # requires twisted >= 1.0.4 to overcome a bug in process.py
         sig = status_object.value.signal
         rc = status_object.value.exitCode
+
+        # sometimes, even when we kill a process, GetExitCodeProcess will still return
+        # a zero exit status.  So we force it.  See
+        # http://stackoverflow.com/questions/2061735/42-passed-to-terminateprocess-sometimes-getexitcodeprocess-returns-0
+        if self.killed and rc == 0:
+            log.msg("process was killed, but exited with status 0; faking a failure")
+            # windows returns '1' even for signalled failsres, while POSIX returns -1
+            if runtime.platformType == 'win32':
+                rc = 1
+            else:
+                rc = -1
         self.command.finished(sig, rc)
 
 class RunProcess:
@@ -669,6 +681,10 @@ class RunProcess:
             msg += ", killing pid %s" % self.process.pid
         log.msg(msg)
         self.sendStatus({'header': "\n" + msg + "\n"})
+
+        # let the PP know that we are killing it, so that it can ensure that
+        # the exit status comes out right
+        self.pp.killed = True
 
         hit = 0
         if runtime.platformType == "posix":
