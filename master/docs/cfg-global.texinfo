@@ -275,6 +275,9 @@ def mergeRequests(builder, req1, req2):
 c['mergeRequests'] = mergeRequests
 @end example
 
+If desired, request merging can be disabled globally by setting
+@code{c['mergeRequests'] = False} instead of a callable function.
+
 @node Prioritizing Builders
 @subsection Prioritizing Builders
 

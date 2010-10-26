@@ -310,7 +310,11 @@ class BotMaster(service.MultiService):
 
         """
         if self.mergeRequests is not None:
-            return self.mergeRequests(builder, req1, req2)
+            if callable(self.mergeRequests):
+                return self.mergeRequests(builder, req1, req2)
+            elif self.mergeRequests == False:
+                # To save typing, this allows c['mergeRequests'] = False
+                return False
         return req1.canBeMergedWith(req2)
 
     def getPerspective(self, mind, slavename):
@@ -686,8 +690,8 @@ class BuildMaster(service.MultiService):
                     isinstance(logMaxTailSize, int):
                 raise ValueError("logMaxTailSize needs to be None or int")
             mergeRequests = config.get('mergeRequests')
-            if mergeRequests is not None and not callable(mergeRequests):
-                raise ValueError("mergeRequests must be a callable")
+            if mergeRequests not in (None, False) and not callable(mergeRequests):
+                raise ValueError("mergeRequests must be a callable or False")
             prioritizeBuilders = config.get('prioritizeBuilders')
             if prioritizeBuilders is not None and not callable(prioritizeBuilders):
                 raise ValueError("prioritizeBuilders must be callable")
