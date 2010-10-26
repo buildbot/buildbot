@@ -101,9 +101,9 @@ builder. The environment variables will override anything in the buildslave's
 environment. Variables passed directly to a @code{ShellCommand} will override
 variables of the same name passed to the Builder.
 
-For example, if you a pool of identical slaves it is often easier to manage
-variables like PATH from Buildbot rather than manually editing it inside of
-the slaves' environment.
+For example, if you have a pool of identical slaves, it is often easier to
+manage variables like PATH from Buildbot, rather than manually editing it inside
+of the slaves' environment.
 
 @example
 f = factory.BuildFactory
@@ -134,7 +134,7 @@ only if the Builder's @code{mergeRequests} key is True, so merging
 only takes place if both allow it. @pxref{Merging BuildRequests}.
 
 @item properties
-A builder may be given a dictionnary of @pxref{Build Properties}
+A builder may be given a dictionary of @pxref{Build Properties}
 specific for this builder in this parameter. Those values can be used
 later on like other properties. @pxref{WithProperties}.
 
