@@ -2,7 +2,7 @@ Major User visible changes in Buildbot.             -*- outline -*-
    see the git log for a detailed list of changes:
    http://github.com/buildbot/buildbot/commits/master
 
-* NEXT RELEASE
+* Buildbot 0.8.2
 
 ** Upgrading
 

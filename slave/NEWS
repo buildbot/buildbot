@@ -2,7 +2,7 @@ Major User visible changes in Buildslave.             -*- outline -*-
    see the git log for a detailed list of changes:
    http://github.com/buildbot/buildbot/commits/master
 
-* Next Release
+* Buildbot-Slave 0.8.2
 
 ** Log Rotation
 
@@ -16,7 +16,7 @@ On startup, the buildslave writes its hostname to twistd.hostname.  This is
 intended to contextualize twistd.pid, which does not specify the host on which
 the buildslave is running.
 
-* Buildbot 0.8.1
+* Buildbot-Slave 0.8.1
 
 ** First release of buildslave as a separate package
 
