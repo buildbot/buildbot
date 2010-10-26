@@ -485,20 +485,20 @@ class BuildStepsJsonResource(JsonResource):
 
     def getChild(self, path, request):
         # Dynamic childs.
-        build_set_status = None
+        build_step_status = None
         if isinstance(path, int) or _IS_INT.match(path):
-            build_set_status = self.build_status.getSteps[int(path)]
+            build_step_status = self.build_status.getSteps[int(path)]
         else:
             steps_dict = dict([(step.getName(), step)
                                for step in self.build_status.getStep()])
-            build_set_status = steps_dict.get(path)
-        if build_set_status:
+            build_step_status = steps_dict.get(path)
+        if build_step_status:
             # Create it on-demand.
-            child = BuildStepJsonResource(status, build_step_status)
+            child = BuildStepJsonResource(self.status, build_step_status)
             # Cache it.
             index = self.build_status.getSteps().index(build_step_status)
             self.putChild(str(index), child)
-            self.putChild(build_set_status.getName(), child)
+            self.putChild(build_step_status.getName(), child)
             return child
         return JsonResource.getChild(self, path, request)
 

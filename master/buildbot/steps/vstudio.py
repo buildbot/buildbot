@@ -192,8 +192,8 @@ class VC6(VisualStudio):
         VisualStudio.setupEnvironment(self, cmd)
 
         # Root of Visual Developer Studio Common files.
-        VSCommonDir = seif.installdir + '\\Common'
-        MSVCDir = seif.installdir + '\\VC98'
+        VSCommonDir = self.installdir + '\\Common'
+        MSVCDir = self.installdir + '\\VC98'
         MSDevDir = VSCommonDir + '\\msdev98'
 
         addEnvPath(cmd.args['env'], "PATH", MSDevDir + '\\BIN')
