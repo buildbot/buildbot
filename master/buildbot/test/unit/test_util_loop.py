@@ -145,18 +145,18 @@ class Loop(unittest.TestCase, TestLoopMixin):
         return self.whenQuiet(check)
 
     def test_sleep(self):
-        reactor = self.loop._reactor = task.Clock()
-        eventual._setReactor(reactor)
+        clock_reactor = self.loop._reactor = task.Clock()
+        eventual._setReactor(clock_reactor)
         state = State(count=5)
         def proc():
-            self.results.append(reactor.seconds())
+            self.results.append(clock_reactor.seconds())
             state.count -= 1
             if state.count:
-                return defer.succeed(reactor.seconds() + 10.0)
+                return defer.succeed(clock_reactor.seconds() + 10.0)
         self.loop.add(proc)
         self.loop.trigger()
         def check(ign):
-            reactor.pump((0,) + (1,)*50) # run for 50 fake seconds
+            clock_reactor.pump((0,) + (1,)*50) # run for 50 fake seconds
             self.assertEqual(self.results, [ 0.0, 10.0, 20.0, 30.0, 40.0 ])
         d = eventual.flushEventualQueue()
         d.addCallback(check)
