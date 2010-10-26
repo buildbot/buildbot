@@ -1098,6 +1098,11 @@ with the portion that will substitute for a revision number replaced by
 could be used to cause revision links to be created to a websvn repository
 viewer.
 
+@item cachepath
+If specified, buildbot will cache processed revisions between restarts. This
+means you don't miss changes that were committed if the master is down for any
+reason.
+
 @end table
 
 @heading Branches

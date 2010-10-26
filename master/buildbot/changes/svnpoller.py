@@ -44,7 +44,7 @@ class SVNPoller(base.ChangeSource, util.ComparableMixin):
     compare_attrs = ["svnurl", "split_file_function",
                      "svnuser", "svnpasswd",
                      "pollinterval", "histmax",
-                     "svnbin", "category"]
+                     "svnbin", "category", "cachepath"]
 
     parent = None # filled in when we're added
     last_change = None
@@ -54,7 +54,8 @@ class SVNPoller(base.ChangeSource, util.ComparableMixin):
     def __init__(self, svnurl, split_file=None,
                  svnuser=None, svnpasswd=None,
                  pollinterval=10*60, histmax=100,
-                 svnbin='svn', revlinktmpl='', category=None, project=None):
+                 svnbin='svn', revlinktmpl='', category=None, 
+                 project=None, cachepath=None):
         """
         @type  svnurl: string
         @param svnurl: the SVN URL that describes the repository and
@@ -177,6 +178,11 @@ class SVNPoller(base.ChangeSource, util.ComparableMixin):
         @param project       A single project that the changes are associated with
                              the repository, added to the changes, for the use in 
                              change filters
+
+        @type  cachepath     string
+        @param cachepath     A path to a file that can be used to store the last
+                             rev that was processed, so we can grab changes that
+                             happened while we were offline
         """
 
         if svnurl.endswith("/"):
@@ -199,6 +205,18 @@ class SVNPoller(base.ChangeSource, util.ComparableMixin):
         self.loop = LoopingCall(self.checksvn)
         self.category = category
         self.project = project
+
+        self.cachepath = cachepath
+        if self.cachepath and os.path.exists(self.cachepath):
+            try:
+                f = open(self.cachepath, "r")
+                self.last_change = int(f.read().strip())
+                log.msg("SVNPoller(%s) setting last_change to %s" % (self.svnurl, self.last_change))
+                f.close()
+            except:
+                self.cachepath = None
+                log.msg("SVNPoller(%s) cache file corrupt, skipping and not using" % self.svnurl)
+                log.err()
 
     def split_file(self, path):
         # use getattr() to avoid turning this function into a bound method,
@@ -486,6 +504,11 @@ class SVNPoller(base.ChangeSource, util.ComparableMixin):
             self.parent.addChange(c)
 
     def finished_ok(self, res):
+        if self.cachepath:
+            f = open(self.cachepath, "w")
+            f.write(str(self.last_change))
+            f.close()
+
         log.msg("SVNPoller finished polling %s" % res)
         assert self.working
         self.working = False
