@@ -74,6 +74,7 @@ class GitPoller(base.ChangeSource):
         self.usetimestamps = usetimestamps
         self.category = category
         self.project = project
+        self.changeCount = 0
         
         if self.workdir == None:
             self.workdir = tempfile.gettempdir() + '/gitpoller_work'
@@ -171,7 +172,7 @@ class GitPoller(base.ChangeSource):
         return fileList
             
     def _get_commit_name(self, rev):
-        args = ['log', rev, '--no-walk', r'--format=%cn']
+        args = ['log', rev, '--no-walk', r'--format=%aE']
         output = self._get_git_output(args)
         
         if len(output.strip()) == 0:
@@ -194,15 +195,15 @@ class GitPoller(base.ChangeSource):
         # get the change list
         revListArgs = ['log', 'HEAD..FETCH_HEAD', r'--format=%H']
         revs = self._get_git_output(revListArgs);
-        revCount = 0
+        self.changeCount = 0
         
         # process oldest change first
         revList = revs.split()
         if revList:
             revList.reverse()
-            revCount = len(revList)
+            self.changeCount = len(revList)
             
-        log.msg('gitpoller: processing %d changes' % revCount )
+        log.msg('gitpoller: processing %d changes' % self.changeCount )
 
         for rev in revList:
             if self.usetimestamps:
@@ -223,8 +224,10 @@ class GitPoller(base.ChangeSource):
             self.lastChange = self.lastPoll
             
     def _catch_up(self, res):
+        if self.changeCount == 0:
+            log.msg('gitpoller: no changes, no catch_up')
+            return self.changeCount
         log.msg('gitpoller: catching up to FETCH_HEAD')
-        
         args = ['reset', '--hard', 'FETCH_HEAD']
         d = utils.getProcessOutputAndValue(self.gitbin, args, path=self.workdir, env={})
         return d;
