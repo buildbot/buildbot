@@ -23,7 +23,7 @@ except ImportError:
 
 from buildbot import interfaces, util
 from buildbot.status import base
-from buildbot.status.builder import FAILURE, SUCCESS, Results
+from buildbot.status.builder import FAILURE, SUCCESS, WARNINGS, Results
 
 VALID_EMAIL = re.compile("[a-zA-Z0-9\.\_\%\-\+]+@[a-zA-Z0-9\.\_\%\-]+.[a-zA-Z]{2,6}")
 
@@ -55,6 +55,8 @@ def defaultMessage(mode, name, build, results, master_status):
         text += "The Buildbot has finished a build"
     elif mode == "failing":
         text += "The Buildbot has detected a failed build"
+    elif attrs['mode'] == "warnings":
+        text += "The Buildbot has detected a problem in the build"
     elif mode == "passing":
         text += "The Buildbot has detected a passing build"
     elif mode == "change" and result == 'success':
@@ -173,6 +175,7 @@ class MailNotifier(base.StatusReceiverMultiService):
         @param mode: one of:
                      - 'all': send mail about all builds, passing and failing
                      - 'failing': only send mail about builds which fail
+                     - 'warnings': send mail if builds contain warnings or fail 
                      - 'passing': only send mail about builds which succeed
                      - 'problem': only send mail about a build which failed
                      when the previous build passed
@@ -263,7 +266,7 @@ class MailNotifier(base.StatusReceiverMultiService):
         self.extraRecipients = extraRecipients
         self.sendToInterestedUsers = sendToInterestedUsers
         self.fromaddr = fromaddr
-        assert mode in ('all', 'failing', 'problem', 'change', 'passing')
+        assert mode in ('all', 'failing', 'problem', 'change', 'passing', 'warnings')
         self.mode = mode
         self.categories = categories
         self.builders = builders
@@ -337,6 +340,8 @@ class MailNotifier(base.StatusReceiverMultiService):
                builder.category not in self.categories:
             return # ignore this build
 
+        if self.mode == "warnings" and results == SUCCESS:
+            return
         if self.mode == "failing" and results != FAILURE:
             return
         if self.mode == "passing" and results != SUCCESS:

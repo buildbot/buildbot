@@ -885,6 +885,8 @@ Send mail about all builds, both passing and failing
 Only send mail about builds which change status
 @item failing
 Only send mail about builds which fail
+@item warning
+Only send mail about builds which fail or generate warnings
 @item passing
 Only send mail about builds which succeed
 @item problem
