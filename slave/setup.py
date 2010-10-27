@@ -23,6 +23,7 @@ scripts = ["bin/buildslave"]
 # still needs to get packaged.
 if 'sdist' in sys.argv or sys.platform == 'win32':
     scripts.append("contrib/windows/buildslave.bat")
+    scripts.append("contrib/windows/buildbot_service.py")
 
 class our_install_data(install_data):
 
