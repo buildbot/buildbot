@@ -11,3 +11,6 @@ apidocs:
 pylint:
 	cd master; $(MAKE) pylint
 	cd slave; $(MAKE) pylint
+
+pyflakes:
+	cd master; $(MAKE) pyflakes

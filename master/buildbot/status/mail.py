@@ -23,7 +23,7 @@ except ImportError:
 
 from buildbot import interfaces, util
 from buildbot.status import base
-from buildbot.status.builder import FAILURE, SUCCESS, WARNINGS, Results
+from buildbot.status.builder import FAILURE, SUCCESS, Results
 
 VALID_EMAIL = re.compile("[a-zA-Z0-9\.\_\%\-\+]+@[a-zA-Z0-9\.\_\%\-]+.[a-zA-Z]{2,6}")
 
@@ -55,7 +55,7 @@ def defaultMessage(mode, name, build, results, master_status):
         text += "The Buildbot has finished a build"
     elif mode == "failing":
         text += "The Buildbot has detected a failed build"
-    elif attrs['mode'] == "warnings":
+    elif mode == "warnings":
         text += "The Buildbot has detected a problem in the build"
     elif mode == "passing":
         text += "The Buildbot has detected a passing build"
