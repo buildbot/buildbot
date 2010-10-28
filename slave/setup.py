@@ -27,6 +27,12 @@ if 'sdist' in sys.argv or sys.platform == 'win32':
 
 class our_install_data(install_data):
 
+    def finalize_options(self):
+        self.set_undefined_options('install',
+            ('install_lib', 'install_dir'),
+        )
+        install_data.finalize_options(self)
+
     def run(self):
         install_data.run(self)
         # ensure there's a buildslave/VERSION file
