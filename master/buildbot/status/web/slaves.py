@@ -74,7 +74,7 @@ class OneBuildSlaveResource(HtmlResource, BuildLineMixin):
                         access_uri = slave.getAccessURI()),
                         admin = unicode(slave.getAdmin() or '', 'utf-8'),
                         host = unicode(slave.getHost() or '', 'utf-8'),
-                        version = slave.getVersion(),
+                        slave_version = slave.getVersion(),
                         show_builder_column = True,
                         connect_count = connect_count)
         template = request.site.buildbot_service.templates.get_template("buildslave.html")
