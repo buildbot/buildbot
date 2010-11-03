@@ -662,14 +662,18 @@ class Builder(pb.Referenceable, service.MultiService):
         return # all done
 
     def reclaimAllBuilds(self):
-        now = util.now()
-        brids = set()
-        for b in self.building:
-            brids.update([br.id for br in b.requests])
-        for b in self.old_building:
-            brids.update([br.id for br in b.requests])
-        self.db.claim_buildrequests(now, self.master_name,
-                                    self.master_incarnation, brids)
+        try:
+            now = util.now()
+            brids = set()
+            for b in self.building:
+                brids.update([br.id for br in b.requests])
+            for b in self.old_building:
+                brids.update([br.id for br in b.requests])
+            self.db.claim_buildrequests(now, self.master_name,
+                                        self.master_incarnation, brids)
+        except:
+            log.msg("Error in reclaimAllBuilds")
+            log.err()
 
     def getBuild(self, number):
         for b in self.building:
