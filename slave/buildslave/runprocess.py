@@ -732,6 +732,9 @@ class RunProcess:
             except OSError:
                 # could be no-such-process, because they finished very recently
                 pass
+            except twisted.internet.error.ProcessExitedAlready:
+                # Twisted thinks the process has already exited
+                pass
         if not hit:
             log.msg("signalProcess/os.kill failed both times")
 
