@@ -4,6 +4,15 @@ Major User visible changes in Buildbot.             -*- outline -*-
 
 * Next Release
 
+** SQLAlchemy & SQLAlchemy-Migrate
+
+Buildbot now uses SQLAlchemy as a database abstraction layer.  This will give
+us greater inter-database compatibility and a more stable and reliable basis
+for this core component of the framework.  SQLAlchemy-Migrate is used to manage
+changes to the database schema from version to version.
+
+* Next Release
+
 ** PBChangeSource now supports authentication
 
 PBChangeSource now supports the `user` and `passwd` arguments.  Users with a

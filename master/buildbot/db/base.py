@@ -13,15 +13,20 @@
 #
 # Copyright Buildbot Team Members
 
-class Upgrader(object):
+"""
+Base classes for database handling
+"""
 
-    def __init__(self, dbapi, conn, basedir, quiet=False):
-        self.dbapi = dbapi
-        self.conn = conn
-        self.basedir = basedir
-        self.quiet = quiet
+class DBConnectorComponent(object):
+    """
+    A fixed component of the DBConnector, handling one particular aspect of the
+    database.  Instances of subclasses are assigned to attributes of the
+    DBConnector object, so that they are available at e.g., C{master.db.model}
+    or C{master.db.changes}.  This parent class takes care of the necessary
+    backlinks and other housekeeping.
+    """
 
-        self.dbapiName = dbapi.__name__
+    connector = None
 
-    def upgrade(self):
-        raise NotImplementedError
+    def __init__(self, connector):
+        self.connector = connector

@@ -296,13 +296,13 @@ class Maker:
             f.close()
 
     def create_db(self):
-        from buildbot.db import dbspec, exceptions
-        spec = dbspec.DBSpec.from_url(self.config["db"], self.basedir)
+        from buildbot.db import enginestrategy, exceptions
+        engine = enginestrategy.create_engine(self.config['db'], basedir=self.basedir)
         if not self.config['quiet']: print "creating database"
 
         # upgrade from "nothing"
         from buildbot.db.schema import manager
-        sm = manager.DBSchemaManager(spec, self.basedir)
+        sm = manager.DBSchemaManager(engine, self.basedir)
         if sm.get_db_version() != 0:
             raise exceptions.DBAlreadyExistsError
         sm.upgrade()
@@ -410,7 +410,6 @@ DB_HELP = """
     status information. The default (which creates an SQLite database in
     BASEDIR/state.sqlite) is equivalent to:
 
-      --db='DBSpec("sqlite3", basedir+"/state.sqlite"))'
       --db='sqlite:///state.sqlite'
 
     To use a remote MySQL database instead, use something like:
@@ -472,13 +471,12 @@ def upgradeMaster(config):
     m.move_if_present(os.path.join(basedir, "public_html/index.html"),
                       os.path.join(basedir, "templates/root.html"))
 
-    from buildbot.db import dbspec
-    spec = dbspec.DBSpec.from_url(config["db"], basedir)
-    # TODO: check that TAC file specifies the right spec
+    from buildbot.db import enginestrategy
+    engine = enginestrategy.create_engine(config['db'], basedir=basedir)
 
     # upgrade the db
     from buildbot.db.schema import manager
-    sm = manager.DBSchemaManager(spec, basedir)
+    sm = manager.DBSchemaManager(engine, basedir)
     sm.upgrade()
 
     # check the configuration

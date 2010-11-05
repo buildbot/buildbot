@@ -37,7 +37,21 @@ def naturalSort(l):
     l = [ i[1] for i in keyed_l ]
     return l
 
+def flatten(l):
+    """Flatten nested lists into a single-level list"""
+    if l and type(l[0]) == list:
+        rv = []
+        for e in l:
+            if type(e) == list:
+                rv.extend(e)
+            else:
+                rv.append(e)
+        return rv
+    else:
+        return l
+
 def now(_reactor=None):
+    """Get the time, using reactor.seconds or time.time"""
     if _reactor and hasattr(_reactor, "seconds"):
         return _reactor.seconds()
     else:

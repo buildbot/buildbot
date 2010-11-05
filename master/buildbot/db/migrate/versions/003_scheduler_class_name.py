@@ -13,11 +13,17 @@
 #
 # Copyright Buildbot Team Members
 
-from buildbot.db.schema import base
+import sqlalchemy as sa
 
-class Upgrader(base.Upgrader):
-    def upgrade(self):
-        cursor = self.conn.cursor()
-        cursor.execute("DROP table last_access")
-        cursor.execute("""UPDATE version set version = 6 where version = 5""")
+def upgrade(migrate_engine):
+    metadata = sa.MetaData()
+    metadata.bind = migrate_engine
 
+    # add an empty class_name to the schedulers table
+    schedulers = sa.Table('schedulers', metadata, autoload=True)
+    class_name = sa.Column('class_name', sa.Text, nullable=False, server_default=sa.DefaultClause(''))
+    class_name.create(schedulers, populate_default=True)
+
+    # and an index since we'll be selecting with (name= AND class=)
+    idx = sa.Index('name_and_class', schedulers.c.name, schedulers.c.class_name)
+    idx.create(migrate_engine)

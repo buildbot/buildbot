@@ -223,7 +223,6 @@ setup_args = {
               "buildbot.schedulers",
               "buildbot.scripts",
               "buildbot.db",
-              "buildbot.db.schema",
               "buildbot.util",
               "buildbot.test",
               "buildbot.test.fake",
@@ -231,18 +230,28 @@ setup_args = {
               "buildbot.test.util",
               "buildbot.test.regressions",
               ],
-    'data_files': [("buildbot", ["buildbot/buildbot.png"]),
-                include("buildbot/db/schema", "*.sql"),
-                ("buildbot/clients", ["buildbot/clients/debug.glade"]),
-                ("buildbot/status/web/files",
-                 ["buildbot/status/web/files/default.css",
-                  "buildbot/status/web/files/bg_gradient.jpg",
-                  "buildbot/status/web/files/robots.txt",
-                  "buildbot/status/web/files/favicon.ico",
-                  ]),
+    'data_files': [
+                ("buildbot", [
+                    "buildbot/buildbot.png",
+                ]),
+                ("buildbot/db/migrate", [
+                    "buildbot/db/migrate/migrate.cfg",
+                ]),
+                include("buildbot/db/migrate/versions", "*.py"),
+                ("buildbot/clients", [
+                    "buildbot/clients/debug.glade",
+                ]),
+                ("buildbot/status/web/files", [
+                    "buildbot/status/web/files/default.css",
+                    "buildbot/status/web/files/bg_gradient.jpg",
+                    "buildbot/status/web/files/robots.txt",
+                    "buildbot/status/web/files/favicon.ico",
+                ]),
                 include("buildbot/status/web/templates", '*.html'),
                 include("buildbot/status/web/templates", '*.xml'),
-                ("buildbot/scripts", ["buildbot/scripts/sample.cfg"]),
+                ("buildbot/scripts", [
+                    "buildbot/scripts/sample.cfg",
+                ]),
                 ],
     'scripts': scripts,
     'cmdclass': {'install_data': install_data_twisted,
@@ -271,7 +280,9 @@ else:
     setup_args['install_requires'] = [
         'twisted >= 2.0.0',
         'Jinja2 >= 2.1',
-        'sqlalchemy >= 0.6'
+        'sqlalchemy >= 0.6',
+        # buildbot depends on sqlalchemy internals. See buildbot.db.model.
+        'sqlalchemy-migrate == 0.6',
     ]
     # Python-2.6 and up includes json
     if not py_26:

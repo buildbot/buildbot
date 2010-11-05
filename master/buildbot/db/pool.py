@@ -48,3 +48,15 @@ class DBThreadPool(threadpool.ThreadPool):
                     "do not return ResultProxy objects!"
             return rv
         return threads.deferToThreadPool(reactor, self, thd)
+
+    def do_with_engine(self, callable, *args, **kwargs):
+        """
+        Like l{do}, but with an SQLAlchemy Engine as the first argument
+        """
+        def thd():
+            conn = self.engine
+            rv = callable(conn, *args, **kwargs)
+            assert not isinstance(rv, engine.ResultProxy), \
+                    "do not return ResultProxy objects!"
+            return rv
+        return threads.deferToThreadPool(reactor, self, thd)

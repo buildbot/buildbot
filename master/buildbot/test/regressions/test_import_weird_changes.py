@@ -13,54 +13,37 @@
 #
 # Copyright Buildbot Team Members
 
-import os
-import shutil
-import cPickle
-
 from twisted.trial import unittest
-
-from buildbot.changes.changes import Change
-
-from buildbot.db.schema import manager
-from buildbot.db.dbspec import DBSpec
 from buildbot.db.connector import DBConnector
+from buildbot.test.util import change_import
 
-class TestWeirdChanges(unittest.TestCase):
+class TestWeirdChanges(change_import.ChangeImportMixin, unittest.TestCase):
     def setUp(self):
-        self.basedir = "WeirdChanges"
-        if os.path.exists(self.basedir):
-            shutil.rmtree(self.basedir)
-        os.makedirs(self.basedir)
-
-        # Now try the upgrade process, which will import the old changes.
-        self.spec = DBSpec.from_url("sqlite:///state.sqlite", self.basedir)
-
-        self.db = DBConnector(self.spec)
-        self.db.start()
+        self.setUpChangeImport()
+        self.dbc = DBConnector(self.db_url, self.basedir)
+        # note the connector isn't started, as we're testing upgrades
 
     def tearDown(self):
-        if self.db:
-            self.db.stop()
-        if os.path.exists(self.basedir):
-            shutil.rmtree(self.basedir)
-
-    def mkchanges(self, changes):
-        import buildbot.changes.changes
-        cm = buildbot.changes.changes.OldChangeMaster()
-        cm.changes = changes
-        return cm
+        if self.dbc:
+            self.dbc.stop()
+        self.tearDownChangeImport()
 
     def testListsAsFilenames(self):
-        # Create changes.pck
-        changes = [Change(who=u"Frosty the \N{SNOWMAN}".encode("utf8"),
-            files=[["foo","bar"],['bing']], comments=u"Frosty the \N{SNOWMAN}".encode("utf8"),
-            branch="b1", revision=12345)]
-        cPickle.dump(self.mkchanges(changes), open(os.path.join(self.basedir,
-            "changes.pck"), "wb"))
+        # sometimes the 'filenames' in a Change object are actually lists of files.  I don't
+        # know how this happens, but we should be resilient to it.
+        self.make_pickle(
+                self.make_change(
+                    who=u"Frosty the \N{SNOWMAN}".encode("utf8"),
+                    files=[["foo","bar"],['bing']],
+                    comments=u"Frosty the \N{SNOWMAN}".encode("utf8"),
+                    branch="b1",
+                    revision=12345))
 
-        sm = manager.DBSchemaManager(self.spec, self.basedir)
-        sm.upgrade(quiet=True)
-
-        c = self.db.getChangeNumberedNow(1)
-
-        self.assertEquals(sorted(c.files), sorted([u"foo", u"bar", u"bing"]))
+        d = self.dbc.model.upgrade()
+        d.addCallback(lambda _ : self.dbc.start())
+        d.addCallback(lambda _ : self.dbc.getChangeByNumber(1))
+        def check(c):
+            self.failIf(c is None)
+            self.assertEquals(sorted(c.files), sorted([u"foo", u"bar", u"bing"]))
+        d.addCallback(check)
+        return d
