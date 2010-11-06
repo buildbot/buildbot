@@ -1,6 +1,6 @@
 from buildbot.status.web import change_hook
 from buildbot.util import json
-from buildbot.test.util.web import MockRequest
+from buildbot.test.fake.web import MockRequest
 from mock import Mock
 
 from twisted.trial import unittest
