@@ -90,8 +90,7 @@ class TestBuild(unittest.TestCase):
 
         b.startBuild(status, None, slavebuilder)
 
-        self.assert_("Interrupted" in b.text)
-        self.assertEqual(b.result, FAILURE)
+        self.assertEqual(b.result, EXCEPTION)
 
         self.assert_( ('interrupt', ('stop it',), {}) in step.method_calls)
 
@@ -194,8 +193,7 @@ class TestBuild(unittest.TestCase):
 
         self.assert_( ('startStep', (b.remote,), {}) not in step.method_calls)
         self.assert_(b.currentStep is None)
-        self.assert_("Interrupted" in b.text, b.text)
-        self.assertEqual(b.result, FAILURE)
+        self.assertEqual(b.result, EXCEPTION)
         self.assert_( ('interrupt', ('stop it',), {}) not in step.method_calls)
 
     def testStopBuildWaitingForStepLocks(self):
@@ -237,8 +235,7 @@ class TestBuild(unittest.TestCase):
 
         self.assertEqual(gotLocks, [True])
         self.assert_(('stepStarted', (), {}) in step.step_status.method_calls)
-        self.assert_("Interrupted" in b.text, b.text)
-        self.assertEqual(b.result, FAILURE)
+        self.assertEqual(b.result, EXCEPTION)
 
     def testStepDone(self):
         r = FakeRequest()

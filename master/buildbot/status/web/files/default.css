@@ -358,7 +358,7 @@ div.BuildWaterfall {
 	border-color: #C29D46;
 }
 
-.exception {
+.exception,.retry {
 	color: #FFFFFF;
 	background-color: #f6f;
 	border-color: #ACA0B3;

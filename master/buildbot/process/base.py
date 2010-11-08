@@ -444,8 +444,7 @@ class Build:
         if self.currentStep:
             self.currentStep.interrupt(reason)
 
-        self.result = FAILURE
-        self.text.append("Interrupted")
+        self.result = EXCEPTION
 
         if self._acquiringLock:
             lock, access, d = self._acquiringLock
@@ -467,7 +466,7 @@ class Build:
     def buildException(self, why):
         log.msg("%s.buildException" % self)
         log.err(why)
-        self.buildFinished(["build", "exception"], FAILURE)
+        self.buildFinished(["build", "exception"], EXCEPTION)
 
     def buildFinished(self, text, results):
         """This method must be called when the last Step has completed. It

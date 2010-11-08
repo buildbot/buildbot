@@ -751,7 +751,7 @@ class BuildStep:
 
     def _startStep_2(self, res):
         if self.stopped:
-            self.finished(FAILURE)
+            self.finished(EXCEPTION)
             return
 
         if self.progress:
@@ -862,6 +862,14 @@ class BuildStep:
                 assert self.stopped
 
     def finished(self, results):
+        if self.stopped:
+            # We handle this specially because we don't care about
+            # the return code of an interrupted command; we know
+            # that this should just be exception due to interrupt
+            results = EXCEPTION
+            self.step_status.setText(self.describe(True) +
+                                 ["interrupted"])
+            self.step_status.setText2(["interrupted"])
         if self.progress:
             self.progress.finish()
         self.step_status.stepFinished(results)
@@ -1113,8 +1121,8 @@ class LoggingBuildStep(BuildStep):
     def checkDisconnect(self, f):
         f.trap(error.ConnectionLost)
         self.step_status.setText(self.describe(True) +
-                                 ["failed", "slave", "lost"])
-        self.step_status.setText2(["failed", "slave", "lost"])
+                                 ["exception", "slave", "lost"])
+        self.step_status.setText2(["exception", "slave", "lost"])
         return self.finished(RETRY)
 
     # to refine the status output, override one or more of the following
@@ -1170,6 +1178,8 @@ class LoggingBuildStep(BuildStep):
             return self.describe(True)
         elif results == WARNINGS:
             return self.describe(True) + ["warnings"]
+        elif results == EXCEPTION:
+            return self.describe(True) + ["exception"]
         else:
             return self.describe(True) + ["failed"]
 
