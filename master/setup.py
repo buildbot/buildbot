@@ -274,11 +274,6 @@ else:
     if os.getenv('NO_INSTALL_REQS'):
         setup_args['install_requires'] = None
 
-    entry_points={
-        'console_scripts': [
-            'buildbot = buildbot.scripts.runner:run'],
-        },
-
 setup(**setup_args)
 
 # Local Variables:

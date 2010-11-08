@@ -98,17 +98,13 @@ try:
     # to the setup args.
     import setuptools #@UnusedImport
 except ImportError:
-    setup_args['scripts'] = [
-        'bin/buildslave'
-    ]
+    pass
 else:
     setup_args['install_requires'] = [
         'twisted >= 2.0.0',
     ]
-    setup_args['entry_points'] = {
-        'console_scripts': [
-            'buildslave = buildslave.scripts.runner:run',
-        ],
-    }
+
+    if os.getenv('NO_INSTALL_REQS'):
+        setup_args['install_requires'] = None
 
 setup(**setup_args)
