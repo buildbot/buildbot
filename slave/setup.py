@@ -105,7 +105,7 @@ else:
     setup_args['install_requires'] = [
         'twisted >= 2.0.0',
     ]
-    setup_args['entry_points'] = {
+    entry_points = {
         'console_scripts': [
             'buildslave = buildslave.scripts.runner:run',
         ],
