@@ -9,7 +9,7 @@ from twisted.internet import reactor, defer, error
 
 from buildbot import interfaces, locks
 from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE, EXCEPTION, \
-  RETRY, worst_status
+  RETRY, SKIPPED, worst_status
 from buildbot.status.builder import Results
 from buildbot.status.progress import BuildProgress
 
@@ -410,7 +410,10 @@ class Build:
         elif result in (EXCEPTION, RETRY):
             terminate = True
 
-        self.result = worst_status(self.result, possible_overall_result)
+        # if we skipped this step, then don't adjust the build status
+        if result != SKIPPED:
+            self.result = worst_status(self.result, possible_overall_result)
+
         return terminate
 
     def lostRemote(self, remote=None):
