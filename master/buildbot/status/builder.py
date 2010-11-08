@@ -25,7 +25,6 @@ SUCCESS, WARNINGS, FAILURE, SKIPPED, EXCEPTION, RETRY = range(6)
 Results = ["success", "warnings", "failure", "skipped", "exception", "retry"]
 
 def worst_status(a, b):
-    # if either status is SKIPPED, use the other one.
     # SUCCESS > WARNINGS > FAILURE > EXCEPTION > RETRY
     # Retry needs to be considered the worst so that conusmers don't have to
     # worry about other failures undermining the RETRY.
