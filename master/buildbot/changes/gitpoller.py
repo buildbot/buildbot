@@ -163,6 +163,7 @@ class GitPoller(base.ChangeSource):
         if len(stripped_output) == 0:
             raise EnvironmentError('could not get commit comment for rev %s' % rev)
         self.commitInfo['comments'] = stripped_output
+        return self.commitInfo['comments'] # for tests
 
     def _get_commit_timestamp(self, rev):
         # unix timestamp
@@ -182,6 +183,7 @@ class GitPoller(base.ChangeSource):
             self.commitInfo['timestamp'] = stamp
         else:
             self.commitInfo['timestamp'] = None
+        return self.commitInfo['timestamp'] # for tests
 
     def _get_commit_files(self, rev):
         args = ['log', rev, '--name-only', '--no-walk', r'--format=%n']
@@ -192,6 +194,7 @@ class GitPoller(base.ChangeSource):
     def _get_commit_files_from_output(self, git_output):
         fileList = git_output.split()
         self.commitInfo['files'] = fileList
+        return self.commitInfo['files'] # for tests
             
     def _get_commit_name(self, rev):
         args = ['log', rev, '--no-walk', r'--format=%aE']
@@ -205,6 +208,7 @@ class GitPoller(base.ChangeSource):
         if len(stripped_output) == 0:
             raise EnvironmentError('could not get commit name for rev %s' % rev)
         self.commitInfo['name'] = stripped_output
+        return self.commitInfo['name'] # for tests
 
     def _get_changes(self):
         log.msg('gitpoller: polling git repo at %s' % self.repourl)
