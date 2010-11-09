@@ -9,7 +9,6 @@ import errno
 from twisted.python import log, failure
 from twisted.internet import defer, reactor, utils
 from twisted.internet.task import LoopingCall
-from twisted.web.client import getPage
 
 from buildbot.changes import base, changes
 
@@ -161,7 +160,7 @@ class GitPoller(base.ChangeSource):
         stripped_output = git_output.strip()
         log.msg('gitpoller: _get_commit_comments_from_output "%s" for "%s"' % (stripped_output, self.repourl))
         if len(stripped_output) == 0:
-            raise EnvironmentError('could not get commit comment for rev %s' % rev)
+            raise EnvironmentError('could not get commit comment for rev')
         self.commitInfo['comments'] = stripped_output
         return self.commitInfo['comments'] # for tests
 
@@ -206,7 +205,7 @@ class GitPoller(base.ChangeSource):
         stripped_output = git_output.strip()
         log.msg('gitpoller: _get_commit_name_from_output "%s" for "%s"' % (stripped_output, self.repourl))
         if len(stripped_output) == 0:
-            raise EnvironmentError('could not get commit name for rev %s' % rev)
+            raise EnvironmentError('could not get commit name for rev')
         self.commitInfo['name'] = stripped_output
         return self.commitInfo['name'] # for tests
 
