@@ -1,6 +1,7 @@
 
 import os, signal, types, re, traceback
 from stat import ST_CTIME, ST_MTIME, ST_SIZE
+from base64 import b64encode
 import os
 import sys
 import shutil
@@ -259,9 +260,16 @@ class SourceBaseCommand(Command):
             self.srcdir = self.workdir
 
         self.sourcedatafile = os.path.join(self.builder.basedir,
-                                           ".buildbot-sourcedata")
+            ".buildbot-sourcedata-" + b64encode(self.srcdir))
+
         # upgrade older versions to the new sourcedata location
         old_sd_path = os.path.join(self.builder.basedir, self.srcdir, ".buildbot-sourcedata")
+        if os.path.exists(old_sd_path) and not os.path.exists(self.sourcedatafile):
+            os.rename(old_sd_path, self.sourcedatafile)
+
+        # also upgrade versions that didn't include the encoded version of the
+        # source directory
+        old_sd_path = os.path.join(self.builder.basedir, ".buildbot-sourcedata")
         if os.path.exists(old_sd_path) and not os.path.exists(self.sourcedatafile):
             os.rename(old_sd_path, self.sourcedatafile)
 
