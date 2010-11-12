@@ -30,8 +30,8 @@ class ConfigLoader(master.BuildMaster):
             configFile = open(configFileName, "r")
             self.loadConfig(configFile, check_synchronously_only=True)
         except:
+            # clean up before passing on the exception
             os.chdir(dir)
-            configFile.close()
             rmtree(tempdir)
             raise
         os.chdir(dir)
