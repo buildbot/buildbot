@@ -36,3 +36,4 @@ twisted/plugins/dropin.cache
 coverage-html
 apidocs/reference
 apidocs/reference.tgz
+common/googlecode_upload.py
