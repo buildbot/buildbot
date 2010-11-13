@@ -102,7 +102,6 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
         changes = []
         changes.extend(self.changes)
         for req in others:
-            assert self.canBeMergedWith(req) # should have been checked already
             changes.extend(req.changes)
         newsource = SourceStamp(branch=self.branch,
                                 revision=self.revision,
