@@ -48,14 +48,15 @@
 {{ connect_count }} connection(s) in the last hour
 {% if not slave.isConnected() %}
 (not currently connected)
-{% endif %}
+{% else %}
 </p>
-{% if authz.advertiseAction('gracefulShutdown') %}
-  <h2>Graceful Shutdown</h2>
-  {% if slave.getGraceful() %}
-    <p>Slave will shut down gracefully when it is idle.</p>
-  {% else %}
-    {{ forms.graceful_shutdown(shutdown_url, authz) }}
+  {% if authz.advertiseAction('gracefulShutdown') %}
+    <h2>Graceful Shutdown</h2>
+    {% if slave.getGraceful() %}
+      <p>Slave will shut down gracefully when it is idle.</p>
+    {% else %}
+      {{ forms.graceful_shutdown(shutdown_url, authz) }}
+    {% endif %}
   {% endif %}
 {% endif %}
 </div>
