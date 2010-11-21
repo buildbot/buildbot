@@ -21,10 +21,28 @@
 # pages and texinfo documentation.
 
 import os, sys, stat, re, time
-import traceback
 from twisted.python import usage, util, runtime
+from twisted.internet import reactor, defer
 
 from buildbot.interfaces import BuildbotNotRunningError
+
+def in_reactor(f):
+    """decorate a function by running it with maybeDeferred in a reactor"""
+    def wrap(*args, **kwargs):
+        result = [ ]
+        def async():
+            d = defer.maybeDeferred(f, *args, **kwargs)
+            def eb(f):
+                f.printTraceback()
+            d.addErrback(eb)
+            def do_stop(r):
+                result.append(r)
+                reactor.stop()
+            d.addBoth(do_stop)
+        reactor.callWhenRunning(async)
+        reactor.run()
+        return result[0]
+    return wrap
 
 def isBuildmasterDir(dir):
     buildbot_tac = os.path.join(dir, "buildbot.tac")
@@ -296,16 +314,11 @@ class Maker:
             f.close()
 
     def create_db(self):
-        from buildbot.db import enginestrategy, exceptions
-        engine = enginestrategy.create_engine(self.config['db'], basedir=self.basedir)
+        from buildbot.db import connector
+        db = connector.DBConnector(self.config['db'], basedir=self.basedir)
         if not self.config['quiet']: print "creating database"
-
-        # upgrade from "nothing"
-        from buildbot.db.schema import manager
-        sm = manager.DBSchemaManager(engine, self.basedir)
-        if sm.get_db_version() != 0:
-            raise exceptions.DBAlreadyExistsError
-        sm.upgrade()
+        d = db.model.upgrade()
+        return d
 
     def populate_if_missing(self, target, source, overwrite=False):
         new_contents = open(source, "rt").read()
@@ -353,6 +366,8 @@ class Maker:
                                  source)
 
     def check_master_cfg(self):
+        """Check the buildmaster configuration, returning a deferred that
+        fires with an approprate exit status (so 0=success)."""
         from buildbot.master import BuildMaster
         from twisted.python import log, failure
 
@@ -360,7 +375,7 @@ class Maker:
         if not os.path.exists(master_cfg):
             if not self.quiet:
                 print "No master.cfg found"
-            return 1
+            return defer.succeed(1)
 
         # side-effects of loading the config file:
 
@@ -389,7 +404,7 @@ class Maker:
             # the config file. Note that this BuildMaster instance is never
             # started, so it won't actually do anything with the
             # configuration.
-            m.loadConfig(open(master_cfg, "r"), check_synchronously_only=True)
+            return m.loadConfig(open(master_cfg, "r"), checkOnly=True)
         except:
             f = failure.Failure()
             if not self.quiet:
@@ -452,39 +467,47 @@ class UpgradeMasterOptions(MakerBase):
     pickle files.
     """
 
+@in_reactor
 def upgradeMaster(config):
-    basedir = os.path.expanduser(config['basedir'])
     m = Maker(config)
-    # TODO: check Makefile
-    # TODO: check TAC file
-    # check web files: index.html, default.css, robots.txt
-    m.upgrade_public_html({
-          'bg_gradient.jpg' : util.sibpath(__file__, "../status/web/files/bg_gradient.jpg"),
-          'default.css' : util.sibpath(__file__, "../status/web/files/default.css"),
-          'robots.txt' : util.sibpath(__file__, "../status/web/files/robots.txt"),
-          'favicon.ico' : util.sibpath(__file__, "../status/web/files/favicon.ico"),
-      })
-    m.populate_if_missing(os.path.join(basedir, "master.cfg.sample"),
-                          util.sibpath(__file__, "sample.cfg"),
-                          overwrite=True)
-    # if index.html exists, use it to override the root page tempalte
-    m.move_if_present(os.path.join(basedir, "public_html/index.html"),
-                      os.path.join(basedir, "templates/root.html"))
 
-    from buildbot.db import enginestrategy
-    engine = enginestrategy.create_engine(config['db'], basedir=basedir)
+    d = defer.succeed(None)
+    def upgradeBasedir(_):
+        if not config['quiet']: print "upgrading basedir"
+        basedir = os.path.expanduser(config['basedir'])
+        # TODO: check Makefile
+        # TODO: check TAC file
+        # check web files: index.html, default.css, robots.txt
+        m.upgrade_public_html({
+              'bg_gradient.jpg' : util.sibpath(__file__, "../status/web/files/bg_gradient.jpg"),
+              'default.css' : util.sibpath(__file__, "../status/web/files/default.css"),
+              'robots.txt' : util.sibpath(__file__, "../status/web/files/robots.txt"),
+              'favicon.ico' : util.sibpath(__file__, "../status/web/files/favicon.ico"),
+          })
+        m.populate_if_missing(os.path.join(basedir, "master.cfg.sample"),
+                              util.sibpath(__file__, "sample.cfg"),
+                              overwrite=True)
+        # if index.html exists, use it to override the root page tempalte
+        m.move_if_present(os.path.join(basedir, "public_html/index.html"),
+                          os.path.join(basedir, "templates/root.html"))
+    d.addCallback(upgradeBasedir)
 
-    # upgrade the db
-    from buildbot.db.schema import manager
-    sm = manager.DBSchemaManager(engine, basedir)
-    sm.upgrade()
+    def upgradeDB(_):
+        from buildbot.db import connector
+        db = connector.DBConnector(config['db'], basedir=config['basedir'])
+        if not config['quiet']: print "upgrading database"
+        return db.model.upgrade()
+    d.addCallback(upgradeDB)
 
-    # check the configuration
-    rc = m.check_master_cfg()
-    if rc:
-        return rc
-    if not config['quiet']: print "upgrade complete"
-    return 0
+    def checkMaster(_):
+        # check the configuration
+        rc = m.check_master_cfg()
+        if rc:
+            return rc
+        if not config['quiet']: print "upgrade complete"
+        return 0
+    d.addCallback(checkMaster)
+    return d
 
 
 class MasterOptions(MakerBase):
@@ -577,6 +600,7 @@ m.log_rotation.maxRotatedFiles = maxRotatedFiles
 
 """]
 
+@in_reactor
 def createMaster(config):
     m = Maker(config)
     m.mkdir()
@@ -597,9 +621,13 @@ def createMaster(config):
           'favicon.ico' : util.sibpath(__file__, "../status/web/files/favicon.ico"),
       })
     m.makefile()
-    m.create_db()
+    d = m.create_db()
 
-    if not m.quiet: print "buildmaster configured in %s" % m.basedir
+    def print_status(r):
+        if not m.quiet:
+            print "buildmaster configured in %s" % m.basedir
+    d.addCallback(print_status)
+    return d
 
 def stop(config, signame="TERM", wait=False):
     import signal
@@ -1058,25 +1086,30 @@ class CheckConfigOptions(OptionsWithOptionsFile):
             self['configFile'] = 'master.cfg'
 
 
+@in_reactor
 def doCheckConfig(config):
+    from buildbot.scripts.checkconfig import ConfigLoader
     quiet = config.get('quiet')
     configFileName = config.get('configFile')
-    try:
-        from buildbot.scripts.checkconfig import ConfigLoader
-        if os.path.isdir(configFileName):
-            ConfigLoader(basedir=configFileName)
-        else:
-            ConfigLoader(configFileName=configFileName)
-    except:
+
+    if os.path.isdir(configFileName):
+        cl = ConfigLoader(basedir=configFileName)
+    else:
+        cl = ConfigLoader(configFileName=configFileName)
+
+    d = cl.load()
+
+    def cb(r):
         if not quiet:
-            # Print out the traceback in a nice format
-            t, v, tb = sys.exc_info()
-            traceback.print_exception(t, v, tb)
-        sys.exit(1)
+            print "Config file is good!"
+        return True
+    def eb(f):
+        if not quiet:
+            f.printTraceback()
+        return False
+    d.addCallbacks(cb, eb)
 
-    if not quiet:
-        print "Config file is good!"
-
+    return d
 
 class Options(usage.Options):
     synopsis = "Usage:    buildbot <command> [command options]"
@@ -1187,6 +1220,7 @@ def run():
     elif command == "tryserver":
         doTryServer(so)
     elif command == "checkconfig":
-        doCheckConfig(so)
+        if not doCheckConfig(so):
+            sys.exit(1)
     sys.exit(0)
 

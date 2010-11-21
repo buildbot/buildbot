@@ -696,346 +696,351 @@ class BuildMaster(service.MultiService):
         f.close()
         return d # for unit tests
 
-    def loadConfig(self, f, check_synchronously_only=False):
+    def loadConfig(self, f, checkOnly=False):
         """Internal function to load a specific configuration file. Any
-        errors in the file will be signalled by raising an exception.
+        errors in the file will be signalled by raising a failure.  Returns
+        a deferred.
+        """
 
-        If check_synchronously_only=True, I will return (with None)
-        synchronously, after checking the config file for sanity, or raise an
-        exception. I may also emit some DeprecationWarnings.
+        # this entire operation executes in a deferred, so that any exceptions
+        # are automatically converted to a failure object.
+        d = defer.succeed(None)
 
-        If check_synchronously_only=False, I will return a Deferred that
-        fires (with None) when the configuration changes have been completed.
-        This may involve a round-trip to each buildslave that was involved."""
+        def do_load(_):
+            log.msg("configuration update started")
 
-        localDict = {'basedir': os.path.expanduser(self.basedir)}
-        try:
-            exec f in localDict
-        except:
-            log.msg("error while parsing config file")
-            raise
+            # execute the config file
 
-        try:
-            config = localDict['BuildmasterConfig']
-        except KeyError:
-            log.err("missing config dictionary")
-            log.err("config file must define BuildmasterConfig")
-            raise
+            localDict = {'basedir': os.path.expanduser(self.basedir)}
+            try:
+                exec f in localDict
+            except:
+                log.msg("error while parsing config file")
+                raise
 
-        known_keys = ("slaves", "change_source",
-                      "schedulers", "builders", "mergeRequests",
-                      "slavePortnum", "debugPassword", "logCompressionLimit",
-                      "manhole", "status", "projectName", "projectURL",
-                      "buildbotURL", "properties", "prioritizeBuilders",
-                      "eventHorizon", "buildCacheSize", "changeCacheSize",
-                      "logHorizon", "buildHorizon", "changeHorizon",
-                      "logMaxSize", "logMaxTailSize", "logCompressionMethod",
-                      "db_url", "multiMaster", "db_poll_interval",
-                      )
-        for k in config.keys():
-            if k not in known_keys:
-                log.msg("unknown key '%s' defined in config dictionary" % k)
+            try:
+                config = localDict['BuildmasterConfig']
+            except KeyError:
+                log.err("missing config dictionary")
+                log.err("config file must define BuildmasterConfig")
+                raise
 
-        try:
-            # required
-            schedulers = config['schedulers']
-            builders = config['builders']
-            slavePortnum = config['slavePortnum']
-            #slaves = config['slaves']
-            #change_source = config['change_source']
+            # check for unknown keys
 
-            # optional
-            db_url = config.get("db_url", "sqlite:///state.sqlite")
-            db_poll_interval = config.get("db_poll_interval", None)
-            debugPassword = config.get('debugPassword')
-            manhole = config.get('manhole')
-            status = config.get('status', [])
-            projectName = config.get('projectName')
-            projectURL = config.get('projectURL')
-            buildbotURL = config.get('buildbotURL')
-            properties = config.get('properties', {})
-            buildCacheSize = config.get('buildCacheSize', None)
-            changeCacheSize = config.get('changeCacheSize', None)
-            eventHorizon = config.get('eventHorizon', 50)
-            logHorizon = config.get('logHorizon', None)
-            buildHorizon = config.get('buildHorizon', None)
-            logCompressionLimit = config.get('logCompressionLimit', 4*1024)
-            if logCompressionLimit is not None and not \
-                    isinstance(logCompressionLimit, int):
-                raise ValueError("logCompressionLimit needs to be bool or int")
-            logCompressionMethod = config.get('logCompressionMethod', "bz2")
-            if logCompressionMethod not in ('bz2', 'gz'):
-                raise ValueError("logCompressionMethod needs to be 'bz2', or 'gz'")
-            logMaxSize = config.get('logMaxSize')
-            if logMaxSize is not None and not \
-                    isinstance(logMaxSize, int):
-                raise ValueError("logMaxSize needs to be None or int")
-            logMaxTailSize = config.get('logMaxTailSize')
-            if logMaxTailSize is not None and not \
-                    isinstance(logMaxTailSize, int):
-                raise ValueError("logMaxTailSize needs to be None or int")
-            mergeRequests = config.get('mergeRequests')
-            if mergeRequests not in (None, False) and not callable(mergeRequests):
-                raise ValueError("mergeRequests must be a callable or False")
-            prioritizeBuilders = config.get('prioritizeBuilders')
-            if prioritizeBuilders is not None and not callable(prioritizeBuilders):
-                raise ValueError("prioritizeBuilders must be callable")
-            changeHorizon = config.get("changeHorizon")
-            if changeHorizon is not None and not isinstance(changeHorizon, int):
-                raise ValueError("changeHorizon needs to be an int")
+            known_keys = ("slaves", "change_source",
+                          "schedulers", "builders", "mergeRequests",
+                          "slavePortnum", "debugPassword", "logCompressionLimit",
+                          "manhole", "status", "projectName", "projectURL",
+                          "buildbotURL", "properties", "prioritizeBuilders",
+                          "eventHorizon", "buildCacheSize", "changeCacheSize",
+                          "logHorizon", "buildHorizon", "changeHorizon",
+                          "logMaxSize", "logMaxTailSize", "logCompressionMethod",
+                          "db_url", "multiMaster", "db_poll_interval",
+                          )
+            for k in config.keys():
+                if k not in known_keys:
+                    log.msg("unknown key '%s' defined in config dictionary" % k)
 
-            multiMaster = config.get("multiMaster", False)
+            # load known keys into local vars, applying defaults
 
-        except KeyError:
-            log.msg("config dictionary is missing a required parameter")
-            log.msg("leaving old configuration in place")
-            raise
+            try:
+                # required
+                schedulers = config['schedulers']
+                builders = config['builders']
+                slavePortnum = config['slavePortnum']
+                #slaves = config['slaves']
+                #change_source = config['change_source']
 
-        if "sources" in config:
-            m = ("c['sources'] is deprecated as of 0.7.6 and is no longer "
-                 "accepted in >= 0.8.0 . Please use c['change_source'] instead.")
-            raise KeyError(m)
+                # optional
+                db_url = config.get("db_url", "sqlite:///state.sqlite")
+                db_poll_interval = config.get("db_poll_interval", None)
+                debugPassword = config.get('debugPassword')
+                manhole = config.get('manhole')
+                status = config.get('status', [])
+                projectName = config.get('projectName')
+                projectURL = config.get('projectURL')
+                buildbotURL = config.get('buildbotURL')
+                properties = config.get('properties', {})
+                buildCacheSize = config.get('buildCacheSize', None)
+                changeCacheSize = config.get('changeCacheSize', None)
+                eventHorizon = config.get('eventHorizon', 50)
+                logHorizon = config.get('logHorizon', None)
+                buildHorizon = config.get('buildHorizon', None)
+                logCompressionLimit = config.get('logCompressionLimit', 4*1024)
+                if logCompressionLimit is not None and not \
+                        isinstance(logCompressionLimit, int):
+                    raise ValueError("logCompressionLimit needs to be bool or int")
+                logCompressionMethod = config.get('logCompressionMethod', "bz2")
+                if logCompressionMethod not in ('bz2', 'gz'):
+                    raise ValueError("logCompressionMethod needs to be 'bz2', or 'gz'")
+                logMaxSize = config.get('logMaxSize')
+                if logMaxSize is not None and not \
+                        isinstance(logMaxSize, int):
+                    raise ValueError("logMaxSize needs to be None or int")
+                logMaxTailSize = config.get('logMaxTailSize')
+                if logMaxTailSize is not None and not \
+                        isinstance(logMaxTailSize, int):
+                    raise ValueError("logMaxTailSize needs to be None or int")
+                mergeRequests = config.get('mergeRequests')
+                if mergeRequests not in (None, False) and not callable(mergeRequests):
+                    raise ValueError("mergeRequests must be a callable or False")
+                prioritizeBuilders = config.get('prioritizeBuilders')
+                if prioritizeBuilders is not None and not callable(prioritizeBuilders):
+                    raise ValueError("prioritizeBuilders must be callable")
+                changeHorizon = config.get("changeHorizon")
+                if changeHorizon is not None and not isinstance(changeHorizon, int):
+                    raise ValueError("changeHorizon needs to be an int")
 
-        if "bots" in config:
-            m = ("c['bots'] is deprecated as of 0.7.6 and is no longer "
-                 "accepted in >= 0.8.0 . Please use c['slaves'] instead.")
-            raise KeyError(m)
+                multiMaster = config.get("multiMaster", False)
 
-        slaves = config.get('slaves', [])
-        if "slaves" not in config:
-            log.msg("config dictionary must have a 'slaves' key")
-            log.msg("leaving old configuration in place")
-            raise KeyError("must have a 'slaves' key")
+            except KeyError:
+                log.msg("config dictionary is missing a required parameter")
+                log.msg("leaving old configuration in place")
+                raise
 
-        if changeHorizon is not None:
-            self.change_svc.changeHorizon = changeHorizon
+            if "sources" in config:
+                m = ("c['sources'] is deprecated as of 0.7.6 and is no longer "
+                     "accepted in >= 0.8.0 . Please use c['change_source'] instead.")
+                raise KeyError(m)
 
-        change_source = config.get('change_source', [])
-        if isinstance(change_source, (list, tuple)):
-            change_sources = change_source
-        else:
-            change_sources = [change_source]
+            if "bots" in config:
+                m = ("c['bots'] is deprecated as of 0.7.6 and is no longer "
+                     "accepted in >= 0.8.0 . Please use c['slaves'] instead.")
+                raise KeyError(m)
 
-        # do some validation first
-        for s in slaves:
-            assert interfaces.IBuildSlave.providedBy(s)
-            if s.slavename in ("debug", "change", "status"):
-                raise KeyError(
-                    "reserved name '%s' used for a bot" % s.slavename)
-        if config.has_key('interlocks'):
-            raise KeyError("c['interlocks'] is no longer accepted")
-        assert self.db_url is None or db_url == self.db_url, \
-                "Cannot change db_url after master has started"
-        assert db_poll_interval is None or isinstance(db_poll_interval, int), \
-               "db_poll_interval must be an integer: seconds between polls"
-        assert self.db_poll_interval is _Unset or db_poll_interval == self.db_poll_interval, \
-               "Cannot change db_poll_interval after master has started"
+            slaves = config.get('slaves', [])
+            if "slaves" not in config:
+                log.msg("config dictionary must have a 'slaves' key")
+                log.msg("leaving old configuration in place")
+                raise KeyError("must have a 'slaves' key")
 
-        assert isinstance(change_sources, (list, tuple))
-        for s in change_sources:
-            assert interfaces.IChangeSource(s, None)
-        # this assertion catches c['schedulers'] = Scheduler(), since
-        # Schedulers are service.MultiServices and thus iterable.
-        errmsg = "c['schedulers'] must be a list of Scheduler instances"
-        assert isinstance(schedulers, (list, tuple)), errmsg
-        for s in schedulers:
-            assert interfaces.IScheduler(s, None), errmsg
-        assert isinstance(status, (list, tuple))
-        for s in status:
-            assert interfaces.IStatusReceiver(s, None)
+            if changeHorizon is not None:
+                self.change_svc.changeHorizon = changeHorizon
 
-        slavenames = [s.slavename for s in slaves]
-        buildernames = []
-        dirnames = []
-
-        # convert builders from objects to config dictionaries
-        builders_dicts = []
-        for b in builders:
-            if isinstance(b, BuilderConfig):
-                builders_dicts.append(b.getConfigDict())
-            elif type(b) is dict:
-                builders_dicts.append(b)
+            change_source = config.get('change_source', [])
+            if isinstance(change_source, (list, tuple)):
+                change_sources = change_source
             else:
-                raise ValueError("builder %s is not a BuilderConfig object (or a dict)" % b)
-        builders = builders_dicts
+                change_sources = [change_source]
 
-        for b in builders:
-            if b.has_key('slavename') and b['slavename'] not in slavenames:
-                raise ValueError("builder %s uses undefined slave %s" \
-                                 % (b['name'], b['slavename']))
-            for n in b.get('slavenames', []):
-                if n not in slavenames:
-                    raise ValueError("builder %s uses undefined slave %s" \
-                                     % (b['name'], n))
-            if b['name'] in buildernames:
-                raise ValueError("duplicate builder name %s"
-                                 % b['name'])
-            buildernames.append(b['name'])
+            # do some validation first
+            for s in slaves:
+                assert interfaces.IBuildSlave.providedBy(s)
+                if s.slavename in ("debug", "change", "status"):
+                    raise KeyError(
+                        "reserved name '%s' used for a bot" % s.slavename)
+            if config.has_key('interlocks'):
+                raise KeyError("c['interlocks'] is no longer accepted")
+            assert self.db_url is None or db_url == self.db_url, \
+                    "Cannot change db_url after master has started"
+            assert db_poll_interval is None or isinstance(db_poll_interval, int), \
+                   "db_poll_interval must be an integer: seconds between polls"
+            assert self.db_poll_interval is _Unset or db_poll_interval == self.db_poll_interval, \
+                   "Cannot change db_poll_interval after master has started"
 
-            # sanity check name (BuilderConfig does this too)
-            if b['name'].startswith("_"):
-                errmsg = ("builder names must not start with an "
-                          "underscore: " + b['name'])
-                log.err(errmsg)
-                raise ValueError(errmsg)
+            assert isinstance(change_sources, (list, tuple))
+            for s in change_sources:
+                assert interfaces.IChangeSource(s, None)
+            # this assertion catches c['schedulers'] = Scheduler(), since
+            # Schedulers are service.MultiServices and thus iterable.
+            errmsg = "c['schedulers'] must be a list of Scheduler instances"
+            assert isinstance(schedulers, (list, tuple)), errmsg
+            for s in schedulers:
+                assert interfaces.IScheduler(s, None), errmsg
+            assert isinstance(status, (list, tuple))
+            for s in status:
+                assert interfaces.IStatusReceiver(s, None)
 
-            # Fix the dictionary with default values, in case this wasn't
-            # specified with a BuilderConfig object (which sets the same defaults)
-            b.setdefault('builddir', safeTranslate(b['name']))
-            b.setdefault('slavebuilddir', b['builddir'])
-            b.setdefault('buildHorizon', buildHorizon)
-            b.setdefault('logHorizon', logHorizon)
-            b.setdefault('eventHorizon', eventHorizon)
-            if b['builddir'] in dirnames:
-                raise ValueError("builder %s reuses builddir %s"
-                                 % (b['name'], b['builddir']))
-            dirnames.append(b['builddir'])
+            slavenames = [s.slavename for s in slaves]
+            buildernames = []
+            dirnames = []
 
-        unscheduled_buildernames = buildernames[:]
-        schedulernames = []
-        for s in schedulers:
-            for b in s.listBuilderNames():
-                # Skip checks for builders in multimaster mode
-                if not multiMaster:
-                    assert b in buildernames, \
-                           "%s uses unknown builder %s" % (s, b)
-                if b in unscheduled_buildernames:
-                    unscheduled_buildernames.remove(b)
-
-            if s.name in schedulernames:
-                msg = ("Schedulers must have unique names, but "
-                       "'%s' was a duplicate" % (s.name,))
-                raise ValueError(msg)
-            schedulernames.append(s.name)
-
-        # Skip the checks for builders in multimaster mode
-        if not multiMaster and unscheduled_buildernames:
-            log.msg("Warning: some Builders have no Schedulers to drive them:"
-                    " %s" % (unscheduled_buildernames,))
-
-        # assert that all locks used by the Builds and their Steps are
-        # uniquely named.
-        lock_dict = {}
-        for b in builders:
-            for l in b.get('locks', []):
-                if isinstance(l, locks.LockAccess): # User specified access to the lock
-                    l = l.lockid
-                if lock_dict.has_key(l.name):
-                    if lock_dict[l.name] is not l:
-                        raise ValueError("Two different locks (%s and %s) "
-                                         "share the name %s"
-                                         % (l, lock_dict[l.name], l.name))
+            # convert builders from objects to config dictionaries
+            builders_dicts = []
+            for b in builders:
+                if isinstance(b, BuilderConfig):
+                    builders_dicts.append(b.getConfigDict())
+                elif type(b) is dict:
+                    builders_dicts.append(b)
                 else:
-                    lock_dict[l.name] = l
-            # TODO: this will break with any BuildFactory that doesn't use a
-            # .steps list, but I think the verification step is more
-            # important.
-            for s in b['factory'].steps:
-                for l in s[1].get('locks', []):
+                    raise ValueError("builder %s is not a BuilderConfig object (or a dict)" % b)
+            builders = builders_dicts
+
+            for b in builders:
+                if b.has_key('slavename') and b['slavename'] not in slavenames:
+                    raise ValueError("builder %s uses undefined slave %s" \
+                                     % (b['name'], b['slavename']))
+                for n in b.get('slavenames', []):
+                    if n not in slavenames:
+                        raise ValueError("builder %s uses undefined slave %s" \
+                                         % (b['name'], n))
+                if b['name'] in buildernames:
+                    raise ValueError("duplicate builder name %s"
+                                     % b['name'])
+                buildernames.append(b['name'])
+
+                # sanity check name (BuilderConfig does this too)
+                if b['name'].startswith("_"):
+                    errmsg = ("builder names must not start with an "
+                              "underscore: " + b['name'])
+                    log.err(errmsg)
+                    raise ValueError(errmsg)
+
+                # Fix the dictionary with default values, in case this wasn't
+                # specified with a BuilderConfig object (which sets the same defaults)
+                b.setdefault('builddir', safeTranslate(b['name']))
+                b.setdefault('slavebuilddir', b['builddir'])
+                b.setdefault('buildHorizon', buildHorizon)
+                b.setdefault('logHorizon', logHorizon)
+                b.setdefault('eventHorizon', eventHorizon)
+                if b['builddir'] in dirnames:
+                    raise ValueError("builder %s reuses builddir %s"
+                                     % (b['name'], b['builddir']))
+                dirnames.append(b['builddir'])
+
+            unscheduled_buildernames = buildernames[:]
+            schedulernames = []
+            for s in schedulers:
+                for b in s.listBuilderNames():
+                    # Skip checks for builders in multimaster mode
+                    if not multiMaster:
+                        assert b in buildernames, \
+                               "%s uses unknown builder %s" % (s, b)
+                    if b in unscheduled_buildernames:
+                        unscheduled_buildernames.remove(b)
+
+                if s.name in schedulernames:
+                    msg = ("Schedulers must have unique names, but "
+                           "'%s' was a duplicate" % (s.name,))
+                    raise ValueError(msg)
+                schedulernames.append(s.name)
+
+            # Skip the checks for builders in multimaster mode
+            if not multiMaster and unscheduled_buildernames:
+                log.msg("Warning: some Builders have no Schedulers to drive them:"
+                        " %s" % (unscheduled_buildernames,))
+
+            # assert that all locks used by the Builds and their Steps are
+            # uniquely named.
+            lock_dict = {}
+            for b in builders:
+                for l in b.get('locks', []):
                     if isinstance(l, locks.LockAccess): # User specified access to the lock
                         l = l.lockid
                     if lock_dict.has_key(l.name):
                         if lock_dict[l.name] is not l:
-                            raise ValueError("Two different locks (%s and %s)"
-                                             " share the name %s"
+                            raise ValueError("Two different locks (%s and %s) "
+                                             "share the name %s"
                                              % (l, lock_dict[l.name], l.name))
                     else:
                         lock_dict[l.name] = l
+                # TODO: this will break with any BuildFactory that doesn't use a
+                # .steps list, but I think the verification step is more
+                # important.
+                for s in b['factory'].steps:
+                    for l in s[1].get('locks', []):
+                        if isinstance(l, locks.LockAccess): # User specified access to the lock
+                            l = l.lockid
+                        if lock_dict.has_key(l.name):
+                            if lock_dict[l.name] is not l:
+                                raise ValueError("Two different locks (%s and %s)"
+                                                 " share the name %s"
+                                                 % (l, lock_dict[l.name], l.name))
+                        else:
+                            lock_dict[l.name] = l
 
-        if not isinstance(properties, dict):
-            raise ValueError("c['properties'] must be a dictionary")
+            if not isinstance(properties, dict):
+                raise ValueError("c['properties'] must be a dictionary")
 
-        # slavePortnum supposed to be a strports specification
-        if type(slavePortnum) is int:
-            slavePortnum = "tcp:%d" % slavePortnum
+            # slavePortnum supposed to be a strports specification
+            if type(slavePortnum) is int:
+                slavePortnum = "tcp:%d" % slavePortnum
 
-        if check_synchronously_only:
-            return
-        # now we're committed to implementing the new configuration, so do
-        # it atomically
-        # TODO: actually, this is spread across a couple of Deferreds, so it
-        # really isn't atomic.
+            ### ---- everything from here on down is done only on an actual (re)start
+            if checkOnly:
+                return
 
-        d = defer.succeed(None)
+            self.projectName = projectName
+            self.projectURL = projectURL
+            self.buildbotURL = buildbotURL
 
-        self.projectName = projectName
-        self.projectURL = projectURL
-        self.buildbotURL = buildbotURL
+            self.properties = Properties()
+            self.properties.update(properties, self.configFileName)
 
-        self.properties = Properties()
-        self.properties.update(properties, self.configFileName)
+            self.status.logCompressionLimit = logCompressionLimit
+            self.status.logCompressionMethod = logCompressionMethod
+            self.status.logMaxSize = logMaxSize
+            self.status.logMaxTailSize = logMaxTailSize
+            # Update any of our existing builders with the current log parameters.
+            # This is required so that the new value is picked up after a
+            # reconfig.
+            for builder in self.botmaster.builders.values():
+                builder.builder_status.setLogCompressionLimit(logCompressionLimit)
+                builder.builder_status.setLogCompressionMethod(logCompressionMethod)
+                builder.builder_status.setLogMaxSize(logMaxSize)
+                builder.builder_status.setLogMaxTailSize(logMaxTailSize)
 
-        self.status.logCompressionLimit = logCompressionLimit
-        self.status.logCompressionMethod = logCompressionMethod
-        self.status.logMaxSize = logMaxSize
-        self.status.logMaxTailSize = logMaxTailSize
-        # Update any of our existing builders with the current log parameters.
-        # This is required so that the new value is picked up after a
-        # reconfig.
-        for builder in self.botmaster.builders.values():
-            builder.builder_status.setLogCompressionLimit(logCompressionLimit)
-            builder.builder_status.setLogCompressionMethod(logCompressionMethod)
-            builder.builder_status.setLogMaxSize(logMaxSize)
-            builder.builder_status.setLogMaxTailSize(logMaxTailSize)
+            if mergeRequests is not None:
+                self.botmaster.mergeRequests = mergeRequests
+            if prioritizeBuilders is not None:
+                self.botmaster.prioritizeBuilders = prioritizeBuilders
 
-        if mergeRequests is not None:
-            self.botmaster.mergeRequests = mergeRequests
-        if prioritizeBuilders is not None:
-            self.botmaster.prioritizeBuilders = prioritizeBuilders
+            self.buildCacheSize = buildCacheSize
+            self.changeCacheSize = changeCacheSize
+            self.eventHorizon = eventHorizon
+            self.logHorizon = logHorizon
+            self.buildHorizon = buildHorizon
+            self.slavePortnum = slavePortnum # TODO: move this to master.config.slavePortnum
 
-        self.buildCacheSize = buildCacheSize
-        self.changeCacheSize = changeCacheSize
-        self.eventHorizon = eventHorizon
-        self.logHorizon = logHorizon
-        self.buildHorizon = buildHorizon
-        self.slavePortnum = slavePortnum # TODO: move this to master.config.slavePortnum
+            # Set up the database
+            d.addCallback(lambda res:
+                          self.loadConfig_Database(db_url, db_poll_interval))
 
-        # Set up the database
-        d.addCallback(lambda res:
-                      self.loadConfig_Database(db_url, db_poll_interval))
+            # set up slaves
+            d.addCallback(lambda res: self.loadConfig_Slaves(slaves))
 
-        # set up slaves
-        d.addCallback(lambda res: self.loadConfig_Slaves(slaves))
+            # self.manhole
+            if manhole != self.manhole:
+                # changing
+                if self.manhole:
+                    # disownServiceParent may return a Deferred
+                    d.addCallback(lambda res: self.manhole.disownServiceParent())
+                    def _remove(res):
+                        self.manhole = None
+                        return res
+                    d.addCallback(_remove)
+                if manhole:
+                    def _add(res):
+                        self.manhole = manhole
+                        manhole.setServiceParent(self)
+                    d.addCallback(_add)
 
-        # self.manhole
-        if manhole != self.manhole:
-            # changing
-            if self.manhole:
-                # disownServiceParent may return a Deferred
-                d.addCallback(lambda res: self.manhole.disownServiceParent())
-                def _remove(res):
-                    self.manhole = None
-                    return res
-                d.addCallback(_remove)
-            if manhole:
-                def _add(res):
-                    self.manhole = manhole
-                    manhole.setServiceParent(self)
-                d.addCallback(_add)
+            # add/remove self.botmaster.builders to match builders. The
+            # botmaster will handle startup/shutdown issues.
+            d.addCallback(lambda res: self.loadConfig_Builders(builders))
 
-        # add/remove self.botmaster.builders to match builders. The
-        # botmaster will handle startup/shutdown issues.
-        d.addCallback(lambda res: self.loadConfig_Builders(builders))
+            d.addCallback(lambda res: self.loadConfig_status(status))
 
-        d.addCallback(lambda res: self.loadConfig_status(status))
+            # Schedulers are added after Builders in case they start right away
+            d.addCallback(lambda res:
+                          self.scheduler_manager.updateSchedulers(schedulers))
 
-        # Schedulers are added after Builders in case they start right away
-        d.addCallback(lambda res:
-                      self.scheduler_manager.updateSchedulers(schedulers))
+            # and Sources go after Schedulers for the same reason
+            d.addCallback(lambda res: self.loadConfig_Sources(change_sources))
 
-        # and Sources go after Schedulers for the same reason
-        d.addCallback(lambda res: self.loadConfig_Sources(change_sources))
+            # debug client
+            d.addCallback(lambda res: self.loadConfig_DebugClient(debugPassword))
 
-        # debug client
-        d.addCallback(lambda res: self.loadConfig_DebugClient(debugPassword))
+        d.addCallback(do_load)
 
-        log.msg("configuration update started")
         def _done(res):
             self.readConfig = True
             log.msg("configuration update complete")
-        d.addCallback(_done)
-        d.addCallback(lambda res: self.botmaster.triggerNewBuildCheck())
-        d.addErrback(log.err)
+        # the remainder is only done if we are really loading the config
+        if not checkOnly:
+            d.addCallback(_done)
+            d.addCallback(lambda res: self.botmaster.triggerNewBuildCheck())
+            d.addErrback(log.err)
         return d
 
     def loadDatabase(self, db_url, db_poll_interval=None):
@@ -1048,6 +1053,7 @@ class BuildMaster(service.MultiService):
         self.db.start()
 
         # make sure it's up to date
+        d = self.db.model.is_current()
         def check_current(res):
             if res:
                 return # good to go!
@@ -1060,11 +1066,10 @@ class BuildMaster(service.MultiService):
                 you must specify the connector string on the upgrade-master command line:
                     buildbot upgrade-master --db=<db-url> path/to/master
                 """)
-        d = self.db.model.is_current()
         d.addCallback(check_current)
 
         # set up the stuff that depends on the db
-        def set_up_db_dependents():
+        def set_up_db_dependents(r):
             # TODO: this needs to go
             self.botmaster.db = self.db
             self.status.setDB(self.db)
