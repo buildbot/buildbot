@@ -55,6 +55,9 @@ class _FileWriter(pb.Referenceable):
         """
         self.fp.close()
         self.fp = None
+        # on windows, os.rename does not automatically unlink, so do it manually
+        if os.path.exists(self.destfile):
+            os.unlink(self.destfile)
         os.rename(self.tmpname, self.destfile)
         self.tmpname = None
         if self.mode is not None:
