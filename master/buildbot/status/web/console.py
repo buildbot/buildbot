@@ -349,11 +349,6 @@ class ConsoleStatusResource(HtmlResource):
         
         for category in categories:            
             c = {}
-            # TODO(nsylvain): Another hack to display the category in a pretty
-            # way.  If the master owner wants to display the categories in a
-            # given order, he/she can prepend a number to it. This number won't
-            # be shown.
-            c["name"] = category.lstrip('0123456789')
 
             # To be able to align the table correctly, we need to know
             # what percentage of space this category will be taking. This is

@@ -4,6 +4,12 @@ Major User visible changes in Buildbot.             -*- outline -*-
 
 * Next Release
 
+** Deprecations and Removals
+
+*** The console view previously had an undocumented feature that would strip
+leading digits off the category name.  This was undocumented and apparently
+non-functional, and has been removed. (#1059)
+
 * Buildbot 0.8.2
 
 ** Upgrading
