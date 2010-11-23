@@ -150,7 +150,6 @@ class Scheduler(base.BaseScheduler, base.ClassifierMixin):
         # on change number, since the SourceStamp will be created
         # based on the final change.
         all_changes.sort(key=lambda c : c.number)
-        print [ c.number for c in all_changes ]
 
         db = self.parent.db
         if self.treeStableTimer is None:
