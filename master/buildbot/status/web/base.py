@@ -202,6 +202,24 @@ class HtmlResource(resource.Resource, ContextMixin):
             return self
         return resource.Resource.getChild(self, path, request)
 
+
+    def content(self, req, context):
+        """
+        Generate content using the standard layout and the result of the C{body}
+        method.
+
+        This is suitable for the case where a resource just wants to generate
+        the body of a page.  It depends on another method, C{body}, being
+        defined to accept the request object and return a C{str}.  C{render}
+        will call this method and to generate the response body.
+        """
+        body = self.body(req)
+        context['content'] = body
+        template = req.site.buildbot_service.templates.get_template(
+            "empty.html")
+        return template.render(**context)
+
+
     def render(self, request):
         # tell the WebStatus about the HTTPChannel that got opened, so they
         # can close it if we get reconfigured and the WebStatus goes away.
