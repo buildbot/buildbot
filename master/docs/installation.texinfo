@@ -93,7 +93,7 @@ The simplejson package is required for python-2.5 and earlier (it is already
 included as json in python-2.6 and later)
 
 @item
-Jinja2: http://jinja.pocoo.org/2
+Jinja2: http://jinja.pocoo.org/
 
 Buildbot requires Jinja version 2.1 or higher
 
