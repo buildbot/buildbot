@@ -812,7 +812,9 @@ class BuildStepStatus(styles.Versioned):
     # note that these are created when the Build is set up, before each
     # corresponding BuildStep has started.
     implements(interfaces.IBuildStepStatus, interfaces.IStatusEvent)
+
     persistenceVersion = 3
+    persistenceForgets = ( 'wasUpgraded', )
 
     started = None
     finished = None
@@ -1086,18 +1088,24 @@ class BuildStepStatus(styles.Versioned):
         # point the logs to this object
         for loog in self.logs:
             loog.step = self
+        self.watchers = []
+        self.finishedWatchers = []
+        self.updates = {}
 
     def upgradeToVersion1(self):
         if not hasattr(self, "urls"):
             self.urls = {}
+        self.wasUpgraded = True
 
     def upgradeToVersion2(self):
         if not hasattr(self, "statistics"):
             self.statistics = {}
+        self.wasUpgraded = True
 
     def upgradeToVersion3(self):
         if not hasattr(self, "step_number"):
             self.step_number = 0
+        self.wasUpgraded = True
 
     def asDict(self):
         result = {}
@@ -1123,7 +1131,9 @@ class BuildStepStatus(styles.Versioned):
 
 class BuildStatus(styles.Versioned):
     implements(interfaces.IBuildStatus, interfaces.IStatusEvent)
+
     persistenceVersion = 3
+    persistenceForgets = ( 'wasUpgraded', )
 
     source = None
     reason = None
@@ -1474,15 +1484,18 @@ class BuildStatus(styles.Versioned):
             self.source = source
             self.changes = source.changes
             del self.sourceStamp
+        self.wasUpgraded = True
 
     def upgradeToVersion2(self):
         self.properties = {}
+        self.wasUpgraded = True
 
     def upgradeToVersion3(self):
         # in version 3, self.properties became a Properties object
         propdict = self.properties
         self.properties = Properties()
         self.properties.update(propdict, "Upgrade from previous version")
+        self.wasUpgraded = True
 
     def upgradeLogfiles(self):
         # upgrade any LogFiles that need it. This must occur after we've been
@@ -1575,7 +1588,9 @@ class BuilderStatus(styles.Versioned):
     """
 
     implements(interfaces.IBuilderStatus, interfaces.IEventSource)
+
     persistenceVersion = 1
+    persistenceForgets = ( 'wasUpgraded', )
 
     # these limit the amount of memory we consume, as well as the size of the
     # main Builder pickle. The Build and LogFile pickles on disk must be
@@ -1658,6 +1673,7 @@ class BuilderStatus(styles.Versioned):
             del self.slavename
         if hasattr(self, 'nextBuildNumber'):
             del self.nextBuildNumber # determineNextBuildNumber chooses this
+        self.wasUpgraded = True
 
     def determineNextBuildNumber(self):
         """Scan our directory of saved BuildStatus instances to determine
@@ -1734,8 +1750,19 @@ class BuilderStatus(styles.Versioned):
             log.msg("Loading builder %s's build %d from on-disk pickle"
                 % (self.name, number))
             build = load(open(filename, "rb"))
-            styles.doUpgrade()
             build.builder = self
+
+            # (bug #1068) if we need to upgrade, we probably need to rewrite
+            # this pickle, too.  We determine this by looking at the list of
+            # Versioned objects that have been unpickled, and (after doUpgrade)
+            # checking to see if any of them set wasUpgraded.  The Versioneds'
+            # upgradeToVersionNN methods all set this.
+            versioneds = styles.versionedsToUpgrade
+            styles.doUpgrade()
+            if True in [ hasattr(o, 'wasUpgraded') for o in versioneds.values() ]:
+                log.msg("re-writing upgraded build pickle")
+                build.saveYourself()
+
             # handle LogFiles from after 0.5.0 and before 0.6.5
             build.upgradeLogfiles()
             # check that logfiles exist
@@ -2485,7 +2512,18 @@ class Status:
         builder_status = None
         try:
             builder_status = load(open(filename, "rb"))
+            
+            # (bug #1068) if we need to upgrade, we probably need to rewrite
+            # this pickle, too.  We determine this by looking at the list of
+            # Versioned objects that have been unpickled, and (after doUpgrade)
+            # checking to see if any of them set wasUpgraded.  The Versioneds'
+            # upgradeToVersionNN methods all set this.
+            versioneds = styles.versionedsToUpgrade
             styles.doUpgrade()
+            if True in [ hasattr(o, 'wasUpgraded') for o in versioneds.values() ]:
+                log.msg("re-writing upgraded builder pickle")
+                builder_status.saveYourself()
+
         except IOError:
             log.msg("no saved status pickle, creating a new one")
         except:

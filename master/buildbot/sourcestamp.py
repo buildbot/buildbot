@@ -25,6 +25,7 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
     """
 
     persistenceVersion = 2
+    persistenceForgets = ( 'wasUpgraded', )
 
     # all six of these are publically visible attributes
     branch = None
@@ -145,6 +146,7 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
         return result
 
     def upgradeToVersion1(self):
+        print "upg 1"
         # version 0 was untyped; in version 1 and later, types matter.
         if self.branch is not None and not isinstance(self.branch, str):
             self.branch = str(self.branch)
@@ -152,10 +154,13 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
             self.revision = str(self.revision)
         if self.patch is not None:
             self.patch = ( int(self.patch[0]), str(self.patch[1]) )
+        self.wasUpgraded = True
 
     def upgradeToVersion2(self):
         # version 1 did not have project or repository; just set them to a default ''
+        print "upg 2"
         self.project = ''
         self.repository = ''
+        self.wasUpgraded = True
 
 # vim: set ts=4 sts=4 sw=4 et:
