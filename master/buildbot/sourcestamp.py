@@ -146,7 +146,6 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
         return result
 
     def upgradeToVersion1(self):
-        print "upg 1"
         # version 0 was untyped; in version 1 and later, types matter.
         if self.branch is not None and not isinstance(self.branch, str):
             self.branch = str(self.branch)
@@ -158,7 +157,6 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
 
     def upgradeToVersion2(self):
         # version 1 did not have project or repository; just set them to a default ''
-        print "upg 2"
         self.project = ''
         self.repository = ''
         self.wasUpgraded = True
