@@ -7,7 +7,6 @@ from twisted.web import client
 from buildbot.test.util import changesource
 from buildbot.changes.bonsaipoller import FileNode, CiNode, BonsaiResult, \
      BonsaiParser, BonsaiPoller, InvalidResultError, EmptyResult
-from buildbot.changes.changes import ChangeMaster
 
 log1 = "Add Bug 338541a"
 who1 = "sar@gmail.com"

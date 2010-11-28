@@ -1007,8 +1007,33 @@ humans and machines. In this case, the buildbot's change source forms
 a query which asks about any files in the specified branch which have
 changed since the last query.
 
-Please take a look at the BonsaiPoller docstring for details about the
-arguments it accepts.
+@code{BonsaiPoller} accepts the following arguments:
+
+@table @code
+@item bonsaiURL
+The base URL of the Bonsai server, e.g., @code{http://bonsai.mozilla.org}
+
+@item module
+The module to look for changes in. Commonly this is @code{all}.
+
+@item branch
+The branch to look for changes in.  This will appear in the @code{branch} field
+of the resulting change objects.
+
+@item tree
+The tree to look for changes in.  Commonly this is @code{all}.
+
+@item cvsroot
+The CVS root of the repository.  Usually this is @code{/cvsroot}.
+
+@item pollInterval
+The time (in seconds) between queries for changes.
+
+@item project
+The project name to attach to all change objects produced by this change
+source.
+
+@end table
 
 @node SVNPoller
 @subsection SVNPoller

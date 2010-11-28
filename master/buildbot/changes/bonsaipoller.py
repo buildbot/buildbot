@@ -3,7 +3,6 @@ from xml.dom import minidom
 
 from twisted.python import log, failure
 from twisted.internet import reactor
-from twisted.internet.task import LoopingCall
 from twisted.web import client
 
 from buildbot.changes import base, changes
@@ -187,45 +186,14 @@ class BonsaiParser:
         return self.currentFileNode.getAttribute("rev")
 
 
-class BonsaiPoller(base.ChangeSource):
-    """This source will poll a bonsai server for changes and submit
-    them to the change master."""
-
+class BonsaiPoller(base.PollingChangeSource):
     compare_attrs = ["bonsaiURL", "pollInterval", "tree",
                      "module", "branch", "cvsroot"]
 
     parent = None # filled in when we're added
-    loop = None
-    volatile = ['loop']
-    working = False
 
     def __init__(self, bonsaiURL, module, branch, tree="default",
                  cvsroot="/cvsroot", pollInterval=30, project=''):
-        """
-        @type   bonsaiURL:      string
-        @param  bonsaiURL:      The base URL of the Bonsai server
-                                (ie. http://bonsai.mozilla.org)
-        @type   module:         string
-        @param  module:         The module to look for changes in. Commonly
-                                this is 'all'
-        @type   branch:         string
-        @param  branch:         The branch to look for changes in. This must
-                                match the
-                                'branch' option for the Scheduler.
-        @type   tree:           string
-        @param  tree:           The tree to look for changes in. Commonly this
-                                is 'all'
-        @type   cvsroot:        string
-        @param  cvsroot:        The cvsroot of the repository. Usually this is
-                                '/cvsroot'
-        @type   pollInterval:   int
-        @param  pollInterval:   The time (in seconds) between queries for
-                                changes
-
-        @type project: string
-        @param project: project to attach to all Changes from this changesource
-        """
-
         self.bonsaiURL = bonsaiURL
         self.module = module
         self.branch = branch
@@ -236,15 +204,6 @@ class BonsaiPoller(base.ChangeSource):
         self.lastChange = time.time()
         self.lastPoll = time.time()
 
-    def startService(self):
-        base.ChangeSource.startService(self)
-        self.loop = LoopingCall(self.poll)
-        self.loop.start(self.pollInterval)
-
-    def stopService(self):
-        self.loop.stop()
-        return base.ChangeSource.stopService(self)
-
     def describe(self):
         str = ""
         str += "Getting changes from the Bonsai service running at %s " \
@@ -254,31 +213,9 @@ class BonsaiPoller(base.ChangeSource):
         return str
 
     def poll(self):
-        if self.working:
-            log.msg("Not polling Bonsai because last poll is still working")
-            d = defer.succeed(None)
-        else:
-            self.working = True
-            d = self._get_changes()
-            d.addCallback(self._process_changes)
-            d.addCallbacks(self._finished_ok, self._finished_failure)
+        d = self._get_changes()
+        d.addCallback(self._process_changes)
         return d
-
-    def _finished_ok(self, res):
-        assert self.working
-        self.working = False
-
-        # check for failure -- this is probably never hit but the twisted docs
-        # are not clear enough to be sure. it is being kept "just in case"
-        if isinstance(res, failure.Failure):
-            log.msg("Bonsai poll failed: %s" % res)
-        return res
-
-    def _finished_failure(self, res):
-        log.msg("Bonsai poll failed: %s" % res)
-        assert self.working
-        self.working = False
-        return None # eat the failure
 
     def _make_url(self):
         args = ["treeid=%s" % self.tree, "module=%s" % self.module,
