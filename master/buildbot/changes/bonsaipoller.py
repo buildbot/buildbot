@@ -4,7 +4,7 @@ from xml.dom import minidom
 from twisted.python import log, failure
 from twisted.internet import reactor
 from twisted.internet.task import LoopingCall
-from twisted.web.client import getPage
+from twisted.web import client
 
 from buildbot.changes import base, changes
 
@@ -237,10 +237,9 @@ class BonsaiPoller(base.ChangeSource):
         self.lastPoll = time.time()
 
     def startService(self):
-        self.loop = LoopingCall(self.poll)
         base.ChangeSource.startService(self)
-
-        reactor.callLater(0, self.loop.start, self.pollInterval)
+        self.loop = LoopingCall(self.poll)
+        self.loop.start(self.pollInterval)
 
     def stopService(self):
         self.loop.stop()
@@ -257,12 +256,13 @@ class BonsaiPoller(base.ChangeSource):
     def poll(self):
         if self.working:
             log.msg("Not polling Bonsai because last poll is still working")
+            d = defer.succeed(None)
         else:
             self.working = True
             d = self._get_changes()
             d.addCallback(self._process_changes)
             d.addCallbacks(self._finished_ok, self._finished_failure)
-        return
+        return d
 
     def _finished_ok(self, res):
         assert self.working
@@ -300,7 +300,7 @@ class BonsaiPoller(base.ChangeSource):
 
         self.lastPoll = time.time()
         # get the page, in XML format
-        return getPage(url, timeout=self.pollInterval)
+        return client.getPage(url, timeout=self.pollInterval)
 
     def _process_changes(self, query):
         try:

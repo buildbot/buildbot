@@ -1,10 +1,13 @@
+from copy import deepcopy
+import re
+
 from twisted.trial import unittest
+from twisted.internet import defer
+from twisted.web import client
+from buildbot.test.util import changesource
 from buildbot.changes.bonsaipoller import FileNode, CiNode, BonsaiResult, \
      BonsaiParser, BonsaiPoller, InvalidResultError, EmptyResult
 from buildbot.changes.changes import ChangeMaster
-
-from copy import deepcopy
-import re
 
 log1 = "Add Bug 338541a"
 who1 = "sar@gmail.com"
@@ -14,7 +17,7 @@ who2 = "aarrg@ooacm.org"
 date2 = 1161910620
 log3 = "Testing log #3 lbah blah"
 who3 = "huoents@hueont.net"
-date3 = 1889822728
+date3 = 1089822728
 rev1 = "1.8"
 file1 = "mozilla/testing/mochitest/tests/index.html"
 rev2 = "1.1"
@@ -136,18 +139,6 @@ noCheckinMsgRef = [dict(filename="first/file.ext",
                 dict(filename="third/file.ext",
                      revision="1.3")]
 
-class FakeChangeMaster(ChangeMaster):
-    def __init__(self):
-        ChangeMaster.__init__(self)
-
-    def addChange(self, change):
-        pass
-
-class FakeBonsaiPoller(BonsaiPoller):
-    def __init__(self):
-        BonsaiPoller.__init__(self, "fake url", "fake module", "fake branch")
-        self.parent = FakeChangeMaster()
-
 class TestBonsaiParser(unittest.TestCase):
     def testFullyFormedResult(self):
         br = BonsaiParser(goodUnparsedResult)
@@ -200,35 +191,6 @@ class TestBonsaiParser(unittest.TestCase):
         except EmptyResult:
             pass
 
-class TestBonsaiPoller(unittest.TestCase):
-    def testChangeNotSubmitted(self):
-        "Make sure a change is not submitted if the BonsaiParser fails"
-        poller = FakeBonsaiPoller()
-        lastChangeBefore = poller.lastChange
-        poller._process_changes(badUnparsedResult)
-        # self.lastChange will not be updated if the change was not submitted
-        self.failUnlessEqual(lastChangeBefore, poller.lastChange)
-
-    def testParserWorksAfterInvalidResult(self):
-        """Make sure the BonsaiPoller still works after catching an
-        InvalidResultError"""
-
-        poller = FakeBonsaiPoller()
-
-        lastChangeBefore = poller.lastChange
-        # generate an exception first. pretend that we're doing a poll and
-        # increment the timestamp, otherwise the failIfEqual test at the
-        # bottom will depend upon there being a noticeable difference between
-        # two successive calls to time.time().
-        poller.lastPoll += 1.0
-        poller._process_changes(badUnparsedResult)
-        # now give it a valid one...
-        poller.lastPoll += 1.0
-        poller._process_changes(goodUnparsedResult)
-        # if poller.lastChange has not been updated then the good result
-        # was not parsed
-        self.failIfEqual(lastChangeBefore, poller.lastChange)
-
     def testMergeEmptyLogMsg(self):
         """Ensure that BonsaiPoller works around the bonsai xml output
         issue when the check-in comment is empty"""
@@ -241,3 +203,63 @@ class TestBonsaiPoller(unittest.TestCase):
         for file, ref in zip(result.nodes[0].files, noCheckinMsgRef):
             self.failUnlessEqual(file.filename, ref['filename'])
             self.failUnlessEqual(file.revision, ref['revision'])
+
+class TestBonsaiPoller(changesource.ChangeSourceMixin, unittest.TestCase):
+    def setUp(self):
+        d = self.setupChangeSource()
+        def create_poller(_):
+            self.poller = BonsaiPoller('http://bonsai.mozilla.org', 'all', 'seamonkey')
+            self.poller.parent = self.changemaster
+        d.addCallback(create_poller)
+        return d
+
+    def tearDown(self):
+        return self.tearDownChangeSource()
+
+    def fakeGetPage(self, result):
+        """Install a fake getPage that puts the requested URL in C{self.getPage_got_url}
+        and return C{result}"""
+        self.getPage_got_url = None
+        def fake(url, timeout=None):
+            self.getPage_got_url = url
+            return defer.succeed(result)
+        self.patch(client, "getPage", fake)
+
+    # tests
+
+    def test_describe(self):
+        assert re.search(r'bonsai\.mozilla\.org', self.poller.describe())
+
+    def test_poll_bad(self):
+        # Make sure a change is not submitted if the BonsaiParser fails, and
+        # that the poll operation catches the exception correctly
+        self.fakeGetPage(badUnparsedResult)
+        d = self.poller.poll()
+        def check(_):
+            self.assertEqual(len(self.changes_added), 0)
+        d.addCallback(check)
+        return d
+
+    def test_poll_good(self):
+        self.fakeGetPage(goodUnparsedResult)
+        d = self.poller.poll()
+        def check(_):
+            self.assertEqual(len(self.changes_added), 3)
+            self.assertEqual(self.changes_added[0].who, who1)
+            self.assertEqual(self.changes_added[0].when, date1)
+            self.assertEqual(self.changes_added[0].comments, log1)
+            self.assertEqual(self.changes_added[0].branch, 'seamonkey')
+            self.assertEqual(self.changes_added[0].files,
+                    [ '%s (revision %s)' % (file1, rev1) ])
+            self.assertEqual(self.changes_added[1].who, who2)
+            self.assertEqual(self.changes_added[1].when, date2)
+            self.assertEqual(self.changes_added[1].comments, log2)
+            self.assertEqual(self.changes_added[1].files,
+                    [ '%s (revision %s)' % (file2, rev2),
+                      '%s (revision %s)' % (file3, rev3) ])
+            self.assertEqual(self.changes_added[2].who, who3)
+            self.assertEqual(self.changes_added[2].comments, log3)
+            self.assertEqual(self.changes_added[2].when, date3)
+            self.assertEqual(self.changes_added[2].files, [])
+        d.addCallback(check)
+        return d
