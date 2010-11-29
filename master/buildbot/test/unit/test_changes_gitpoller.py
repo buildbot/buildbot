@@ -2,6 +2,7 @@ from twisted.trial import unittest
 from twisted.internet import defer, utils
 from exceptions import Exception
 from buildbot.changes import gitpoller
+from buildbot.test.util import changesource
 
 class GitOutputHelper:
     """just used to keep shared vars out of the global namespace"""
@@ -10,8 +11,7 @@ class GitOutputHelper:
 # single instance
 helper = GitOutputHelper()
 
-# the following methods are used in place of 
-# GitPoller._get_git_output(self, args)
+# the following methods are used in the monkey-patching, below
 def produce_desired_git_output(*args, **kwargs):
     return defer.succeed(helper.desiredOutput)
     
@@ -22,18 +22,16 @@ def produce_exception_git_output(*args, **kwargs):
     return defer.fail(Exception('fake'))
 
 class GitOutputParsing(unittest.TestCase):
-    """Test GitPoller methods that rely on GitPoller._get_git_output()"""
-    gp = None
-    
+    """Test GitPoller methods for parsing git output"""
     def setUp(self):
-        self.gp = gitpoller.GitPoller('git@example.com:foo/baz.git')
+        self.poller = gitpoller.GitPoller('git@example.com:foo/baz.git')
         
     def _perform_git_output_test(self, methodToTest,
                                  desiredGoodOutput, desiredGoodResult,
                                  emptyRaisesException=True):
         """
-        This method will monkey-patch the GitPoller instance's _get_git_output() 
-        method to produce different scenarios for testing methods which
+        This method will monkey-patch getProcessOutput to produce different
+        scenarios for testing methods which
         """
         dummyRevStr = '12345abcde'
 
@@ -79,20 +77,84 @@ class GitOutputParsing(unittest.TestCase):
         
     def test_get_commit_name(self):
         nameStr = 'Sammy Jankis'
-        return self._perform_git_output_test(self.gp._get_commit_name,
+        return self._perform_git_output_test(self.poller._get_commit_name,
                 nameStr, nameStr)
         
     def test_get_commit_comments(self):
         commentStr = 'this is a commit message\n\nthat is multiline'
-        return self._perform_git_output_test(self.gp._get_commit_comments,
+        return self._perform_git_output_test(self.poller._get_commit_comments,
                 commentStr, commentStr)
         
     def test_get_commit_files(self):
         filesStr = 'file1\nfile2'
-        return self._perform_git_output_test(self.gp._get_commit_files, filesStr, 
+        return self._perform_git_output_test(self.poller._get_commit_files, filesStr, 
                                       filesStr.split(), emptyRaisesException=False)    
         
     def test_get_commit_timestamp(self):
         stampStr = '1273258009'
-        return self._perform_git_output_test(self.gp._get_commit_timestamp,
+        return self._perform_git_output_test(self.poller._get_commit_timestamp,
                 stampStr, float(stampStr))
+
+    # _get_changes is tested in TestPolling, below
+
+class TestPolling(changesource.ChangeSourceMixin, unittest.TestCase):
+    def setUp(self):
+        d = self.setUpChangeSource()
+        def create_poller(_):
+            self.poller = gitpoller.GitPoller('git@example.com:foo/baz.git')
+            self.poller.parent = self.changemaster
+        d.addCallback(create_poller)
+        return d
+        
+    def tearDown(self):
+        return self.tearDownChangeSource()
+
+    def test_poll(self):
+        # patch out getProcessOutput for the benefit of the _get_changes
+        # method
+        def gpo_fetch_and_log(bin, cmd, *args, **kwargs):
+            if cmd[0] == 'fetch':
+                return defer.succeed('no interesting output')
+            if cmd[0] == 'log':
+                return defer.succeed('\n'.join([
+                    '64a5dc2a4bd4f558b5dd193d47c83c7d7abc9a1a',
+                    '4423cdbcbb89c14e50dd5f4152415afd686c5241']))
+        self.patch(utils, "getProcessOutput", gpo_fetch_and_log)
+
+        # and patch out the _get_commit_foo methods which were already tested
+        # above
+        def timestamp(rev):
+            self.poller.commitInfo['timestamp'] = 1273258009.0
+            return defer.succeed(None)
+        self.patch(self.poller, '_get_commit_timestamp', timestamp)
+        def name(rev):
+            self.poller.commitInfo['name'] = 'by:' + rev[:8]
+            return defer.succeed(None)
+        self.patch(self.poller, '_get_commit_name', name)
+        def files(rev):
+            self.poller.commitInfo['files'] = ['/etc/' + rev[:3]]
+            return defer.succeed(None)
+        self.patch(self.poller, '_get_commit_files', files)
+        def comments(rev):
+            self.poller.commitInfo['comments'] = 'hello!'
+            return defer.succeed(None)
+        self.patch(self.poller, '_get_commit_comments', comments)
+
+        # do the poll
+        d = self.poller.poll()
+
+        # check the results
+        def check(_):
+            self.assertEqual(len(self.changes_added), 2)
+            self.assertEqual(self.changes_added[0].who, 'by:4423cdbc')
+            self.assertEqual(self.changes_added[0].when, 1273258009.0)
+            self.assertEqual(self.changes_added[0].comments, 'hello!')
+            self.assertEqual(self.changes_added[0].branch, 'master')
+            self.assertEqual(self.changes_added[0].files, [ '/etc/442' ])
+            self.assertEqual(self.changes_added[1].who, 'by:64a5dc2a')
+            self.assertEqual(self.changes_added[1].when, 1273258009.0)
+            self.assertEqual(self.changes_added[1].comments, 'hello!')
+            self.assertEqual(self.changes_added[1].files, [ '/etc/64a' ])
+        d.addCallback(check)
+
+        return d

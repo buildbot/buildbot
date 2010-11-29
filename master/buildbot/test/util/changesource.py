@@ -10,7 +10,7 @@ class ChangeSourceMixin(object):
 
     changesource = None
 
-    def setupChangeSource(self):
+    def setUpChangeSource(self):
         self.changemaster = mock.Mock()
 
         self.changes_added = []

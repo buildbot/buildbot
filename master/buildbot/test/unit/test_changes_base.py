@@ -12,7 +12,7 @@ class TestPollingChangeSource(changesource.ChangeSourceMixin, unittest.TestCase)
             return defer.succeed(None)
 
     def setUp(self):
-        d = self.setupChangeSource()
+        d = self.setUpChangeSource()
         def create_poller(_):
             self.poller = self.Subclass()
         d.addCallback(create_poller)

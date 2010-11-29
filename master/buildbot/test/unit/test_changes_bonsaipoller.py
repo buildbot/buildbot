@@ -205,7 +205,7 @@ class TestBonsaiParser(unittest.TestCase):
 
 class TestBonsaiPoller(changesource.ChangeSourceMixin, unittest.TestCase):
     def setUp(self):
-        d = self.setupChangeSource()
+        d = self.setUpChangeSource()
         def create_poller(_):
             self.poller = BonsaiPoller('http://bonsai.mozilla.org', 'all', 'seamonkey')
             self.poller.parent = self.changemaster

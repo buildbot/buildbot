@@ -1,72 +1,27 @@
 import time
 import tempfile
 import os
-import subprocess
 
-import select
-import errno
-
-from twisted.python import log, failure
-from twisted.internet import defer, reactor, utils
-from twisted.internet.task import LoopingCall
+from twisted.python import log
+from twisted.internet import defer, utils
 
 from buildbot.changes import base, changes
 
-class GitPoller(base.ChangeSource):
+class GitPoller(base.PollingChangeSource):
     """This source will poll a remote git repo for changes and submit
     them to the change master."""
     
     compare_attrs = ["repourl", "branch", "workdir",
-                     "pollinterval", "gitbin", "usetimestamps",
+                     "pollInterval", "gitbin", "usetimestamps",
                      "category", "project"]
                      
-    parent = None # filled in when we're added
-    loop = None
-    volatile = ['loop']
-    working = False
-    running = False
-    
     def __init__(self, repourl, branch='master', 
-                 workdir=None, pollinterval=10*60, 
+                 workdir=None, pollInterval=10*60, 
                  gitbin='git', usetimestamps=True,
                  category=None, project=None):
-        """
-        @type  repourl: string
-        @param repourl: the url that describes the remote repository,
-                        e.g. git@example.com:foobaz/myrepo.git
-
-        @type  branch: string
-        @param branch: the desired branch to fetch, will default to 'master'
-        
-        @type  workdir: string
-        @param workdir: the directory where the poller should keep its local repository.
-                        will default to <tempdir>/gitpoller_work
-                        
-        @type  pollinterval: int
-        @param pollinterval: interval in seconds between polls, default is 10 minutes
-        
-        @type  gitbin: string
-        @param gitbin: path to the git binary, defaults to just 'git'
-        
-        @type  usetimestamps: boolean
-        @param usetimestamps: parse each revision's commit timestamp (default True), or
-                              ignore it in favor of the current time (to appear together
-                              in the waterfall page)
-                              
-        @type  category:     string
-        @param category:     catergory associated with the change. Attached to
-                             the Change object produced by this changesource such that
-                             it can be targeted by change filters.
-                             
-        @type  project       string
-        @param project       project that the changes are associated to. Attached to
-                             the Change object produced by this changesource such that
-                             it can be targeted by change filters.
-        """
-        
         self.repourl = repourl
         self.branch = branch
-        self.pollinterval = pollinterval
+        self.pollInterval = pollInterval
         self.lastChange = time.time()
         self.lastPoll = time.time()
         self.gitbin = gitbin
@@ -81,8 +36,7 @@ class GitPoller(base.ChangeSource):
             self.workdir = tempfile.gettempdir() + '/gitpoller_work'
 
     def startService(self):
-        self.loop = LoopingCall(self.poll)
-        base.ChangeSource.startService(self)
+        base.PollingChangeSource.startService(self)
         
         if not os.path.exists(self.workdir):
             log.msg('gitpoller: creating working dir %s' % self.workdir)
@@ -92,63 +46,22 @@ class GitPoller(base.ChangeSource):
             log.msg('gitpoller: initializing working dir')
             os.system(self.gitbin + ' clone ' + self.repourl + ' ' + self.workdir)
         
-        reactor.callLater(0, self.loop.start, self.pollinterval)
-        
-        self.running = True
-
-    def stopService(self):
-        if self.running:
-            self.loop.stop()
-        self.running = False
-        return base.ChangeSource.stopService(self)
-
     def describe(self):
         status = ""
-        if not self.running:
+        if not self.parent:
             status = "[STOPPED - check log]"
         str = 'GitPoller watching the remote git repository %s, branch: %s %s' \
                 % (self.repourl, self.branch, status)
         return str
 
     def poll(self):
-        if self.working:
-            log.msg('gitpoller: not polling git repo because last poll is still working')
-        else:
-            self.working = True
-            d = self._get_changes()
-            d.addCallback(self._process_changes)
-            d.addCallbacks(self._changes_finished_ok, self._changes_finished_failure)
-            d.addCallback(self._catch_up)
-            d.addCallbacks(self._catch_up_finished_ok, self._catch_up__finished_failure)
-        return
-
-    def _get_git_output(self, args):
-        git_args = [self.gitbin] + args
-        
-        p = subprocess.Popen(git_args,
-                             cwd=self.workdir,
-                             stdout=subprocess.PIPE)
-        
-        # dirty hack - work around EINTR oddness on Mac builder
-
-        while True:
-            try:
-                log.msg('gitpoller: about to run "%s" in "%s"' % (git_args, self.workdir))
-                output = p.communicate()[0]
-                log.msg('gitpoller: finished`run "%s" in "%s"' % (git_args, self.workdir))
-                break
-            except (OSError, select.error), e:
-                error_name = errno.errorcode[e[0]]
-                log.msg('gitpoller: caught exception with errno "%s"' % error_name)
-                if e[0] == errno.EINTR:
-                    continue
-                else:
-                    raise
-        
-        if p.returncode != 0:
-            raise EnvironmentError('call \'%s\' exited with error \'%s\', output: \'%s\'' % 
-                                    (args, p.returncode, output))
-        return output
+        d = self._get_changes()
+        d.addCallback(self._process_changes)
+        d.addErrback(self._changes_finished_failure)
+        d.addCallback(self._catch_up)
+        d.addCallback(self._catch_up_finished)
+        d.addErrback(self._catch_up_finished_failure)
+        return d
 
     def _get_commit_comments(self, rev):
         args = ['log', rev, '--no-walk', r'--format=%s%n%b']
@@ -276,6 +189,13 @@ class GitPoller(base.ChangeSource):
         self.lastChange = self.lastPoll
             
 
+    def _changes_finished_failure(self, f):
+        log.msg('gitpoller: repo poll failed')
+        log.err(f)
+        # eat the failure to continue along the defered chain 
+        # - we still want to catch up
+        return None
+        
     def _catch_up(self, res):
         if self.changeCount == 0:
             log.msg('gitpoller: no changes, no catch_up')
@@ -285,48 +205,13 @@ class GitPoller(base.ChangeSource):
         d = utils.getProcessOutputAndValue(self.gitbin, args, path=self.workdir, env={})
         return d;
 
-    def _changes_finished_ok(self, res):
-        assert self.working
-        # check for failure -- this is probably never hit but the twisted docs
-        # are not clear enough to be sure. it is being kept "just in case"
-        if isinstance(res, failure.Failure):
-            return self._changes_finished_failure(res)
+    def _catch_up_finished(self, res):
+        (stdout, stderr, code) = res
+        if code != 0:
+            raise EnvironmentError('catch up failed with exit code: %d' % code)
 
-        return res
-
-    def _changes_finished_failure(self, res):
-        log.msg('gitpoller: repo poll failed: %s' % res)
-        assert self.working
-        # eat the failure to continue along the defered chain 
-        # - we still want to catch up
-        return None
-        
-    def _catch_up_finished_ok(self, res):
-        assert self.working
-
-        # check for failure -- this is probably never hit but the twisted docs
-        # are not clear enough to be sure. it is being kept "just in case"
-        if isinstance(res, failure.Failure):
-            return self._catch_up__finished_failure(res)
-            
-        elif isinstance(res, tuple):
-            (stdout, stderr, code) = res
-            if code != 0:
-                e = EnvironmentError('catch up failed with exit code: %d' % code)
-                return self._catch_up__finished_failure(failure.Failure(e))
-        
-        self.working = False
-        return res
-
-    def _catch_up__finished_failure(self, res):
-        assert self.working
-        assert isinstance(res, failure.Failure)
-        self.working = False
-
-        log.msg('gitpoller: catch up failed: %s' % res)
+    def _catch_up_finished_failure(self, f):
+        log.err(f)
         log.msg('gitpoller: stopping service - please resolve issues in local repo: %s' %
                 self.workdir)
         self.stopService()
-        return res
-        
-
