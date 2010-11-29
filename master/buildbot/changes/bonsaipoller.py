@@ -1,8 +1,7 @@
 import time
 from xml.dom import minidom
 
-from twisted.python import log, failure
-from twisted.internet import reactor
+from twisted.python import log
 from twisted.web import client
 
 from buildbot.changes import base, changes
