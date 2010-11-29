@@ -126,6 +126,7 @@ class TestPolling(changesource.ChangeSourceMixin, unittest.TestCase):
             if cmd[0] == 'reset':
                 return defer.succeed(('done', '', 0))
             assert 0, "bad command"
+        self.patch(utils, "getProcessOutputAndValue", gpoav)
 
         # and patch out the _get_commit_foo methods which were already tested
         # above
