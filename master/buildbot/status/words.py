@@ -582,9 +582,11 @@ class Contact(base.StatusReceiver):
         self.act("readies phasers")
 
     def command_DANCE(self, args, who):
-        reactor.callLater(1.0, self.send, "0-<")
-        reactor.callLater(3.0, self.send, "0-/")
-        reactor.callLater(3.5, self.send, "0-\\")
+        reactor.callLater(1.0, self.send, "<(^.^<)")
+        reactor.callLater(2.0, self.send, "<(^.^)>")
+        reactor.callLater(3.0, self.send, "(>^.^)>")
+        reactor.callLater(3.5, self.send, "(7^.^)7")
+        reactor.callLater(5.0, self.send, "(>^.^<)")
 
     def command_EXCITED(self, args, who):
         # like 'buildbot: destroy the sun!'
