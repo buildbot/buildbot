@@ -212,6 +212,7 @@ class GitPoller(base.PollingChangeSource):
 
     def _catch_up_finished_failure(self, f):
         log.err(f)
-        log.msg('gitpoller: stopping service - please resolve issues in local repo: %s' %
+        if self.parent:
+            log.msg('gitpoller: stopping service - please resolve issues in local repo: %s' %
                 self.workdir)
-        self.stopService()
+            self.stopService()

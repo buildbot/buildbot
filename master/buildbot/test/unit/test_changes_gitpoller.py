@@ -110,8 +110,8 @@ class TestPolling(changesource.ChangeSourceMixin, unittest.TestCase):
         return self.tearDownChangeSource()
 
     def test_poll(self):
-        # patch out getProcessOutput for the benefit of the _get_changes
-        # method
+        # patch out getProcessOutput and getProcessOutputAndValue for the
+        # benefit of the _get_changes method
         def gpo_fetch_and_log(bin, cmd, *args, **kwargs):
             if cmd[0] == 'fetch':
                 return defer.succeed('no interesting output')
@@ -119,7 +119,13 @@ class TestPolling(changesource.ChangeSourceMixin, unittest.TestCase):
                 return defer.succeed('\n'.join([
                     '64a5dc2a4bd4f558b5dd193d47c83c7d7abc9a1a',
                     '4423cdbcbb89c14e50dd5f4152415afd686c5241']))
+            assert 0, "bad command"
         self.patch(utils, "getProcessOutput", gpo_fetch_and_log)
+
+        def gpoav(bin, cmd, *args, **kwargs):
+            if cmd[0] == 'reset':
+                return defer.succeed(('done', '', 0))
+            assert 0, "bad command"
 
         # and patch out the _get_commit_foo methods which were already tested
         # above
