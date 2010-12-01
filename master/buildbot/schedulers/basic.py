@@ -141,29 +141,34 @@ class Scheduler(base.BaseScheduler, base.ClassifierMixin):
 
         # ok, do a build
         self.stableAt = None
-        self._add_build_and_remove_changes(t, all_changes)
+        self._add_build_and_remove_changes(t, important, unimportant)
         return None
 
-    def _add_build_and_remove_changes(self, t, all_changes):
-        # all_changes is segregated into important and unimportant
+    def _add_build_and_remove_changes(self, t, important, unimportant):
+        # the changes are segregated into important and unimportant
         # changes, but we need it ordered earliest to latest, based
         # on change number, since the SourceStamp will be created
         # based on the final change.
-        all_changes.sort(key=lambda c : c.number)
+        all_changes = sorted(important + unimportant, key=lambda c : c.number)
 
         db = self.parent.db
         if self.treeStableTimer is None:
-            # each Change gets a separate build
-            for c in all_changes:
+            # each *important* Change gets a separate build.  Unimportant
+            # builds get ignored.
+            for c in sorted(important, key=lambda c : c.number):
                 ss = SourceStamp(changes=[c])
                 ssid = db.get_sourcestampid(ss, t)
                 self.create_buildset(ssid, "scheduler", t)
         else:
+            # if we had a treeStableTimer, then trigger a build for the
+            # whole pile - important or not.  There's at least one important
+            # change in the list, or we wouldn't have gotten here.
             ss = SourceStamp(changes=all_changes)
             ssid = db.get_sourcestampid(ss, t)
             self.create_buildset(ssid, "scheduler", t)
 
-        # and finally retire the changes from scheduler_changes
+        # and finally retire all of the changes from scheduler_changes, regardless
+        # of importance level
         changeids = [c.number for c in all_changes]
         db.scheduler_retire_changes(self.schedulerid, changeids, t)
 
