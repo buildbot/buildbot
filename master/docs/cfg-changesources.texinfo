@@ -1382,8 +1382,9 @@ the desired branch to fetch, will default to @code{'master'}
 @item workdir
 the directory where the poller should keep its local repository. will default to @code{<tempdir>/gitpoller_work}
                 
-@item pollinterval
-interval in seconds between polls, default is 10 minutes
+@item pollInterval
+interval in seconds between polls, default is 10 minutes.  For compatibility,
+this can also be spelled @code{pollinterval}
 
 @item gitbin
 path to the git binary, defaults to just @code{'git'}

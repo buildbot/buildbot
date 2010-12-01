@@ -18,7 +18,12 @@ class GitPoller(base.PollingChangeSource):
     def __init__(self, repourl, branch='master', 
                  workdir=None, pollInterval=10*60, 
                  gitbin='git', usetimestamps=True,
-                 category=None, project=None):
+                 category=None, project=None,
+                 pollinterval=-2):
+        # for backward compatibility; the parameter used to be spelled with 'i'
+        if pollinterval != -2:
+            pollInterval = pollinterval
+
         self.repourl = repourl
         self.branch = branch
         self.pollInterval = pollInterval
@@ -57,10 +62,9 @@ class GitPoller(base.PollingChangeSource):
     def poll(self):
         d = self._get_changes()
         d.addCallback(self._process_changes)
-        d.addErrback(self._changes_finished_failure)
+        d.addErrback(self._process_changes_failure)
         d.addCallback(self._catch_up)
-        d.addCallback(self._catch_up_finished)
-        d.addErrback(self._catch_up_finished_failure)
+        d.addErrback(self._catch_up_failure)
         return d
 
     def _get_commit_comments(self, rev):
@@ -71,7 +75,6 @@ class GitPoller(base.PollingChangeSource):
 
     def _get_commit_comments_from_output(self,git_output):
         stripped_output = git_output.strip()
-        log.msg('gitpoller: _get_commit_comments_from_output "%s" for "%s"' % (stripped_output, self.repourl))
         if len(stripped_output) == 0:
             raise EnvironmentError('could not get commit comment for rev')
         self.commitInfo['comments'] = stripped_output
@@ -116,7 +119,6 @@ class GitPoller(base.PollingChangeSource):
 
     def _get_commit_name_from_output(self, git_output):
         stripped_output = git_output.strip()
-        log.msg('gitpoller: _get_commit_name_from_output "%s" for "%s"' % (stripped_output, self.repourl))
         if len(stripped_output) == 0:
             raise EnvironmentError('could not get commit name for rev')
         self.commitInfo['name'] = stripped_output
@@ -138,7 +140,6 @@ class GitPoller(base.PollingChangeSource):
         return d
 
     def _process_changes(self, unused_output):
-        #log.msg('gitpoller: _process_changes called with ARG "%s"' % res)
         # get the change list
         revListArgs = ['log', 'HEAD..FETCH_HEAD', r'--format=%H']
         d = utils.getProcessOutput(self.gitbin, revListArgs, path=self.workdir, env={}, errortoo=False )
@@ -146,7 +147,6 @@ class GitPoller(base.PollingChangeSource):
         return d
     
     def _process_changes_in_output(self, git_output):
-        log.msg('gitpoller: _process_changes_in_output with "%s"' % git_output)
         self.changeCount = 0
         
         # process oldest change first
@@ -155,10 +155,9 @@ class GitPoller(base.PollingChangeSource):
             revList.reverse()
             self.changeCount = len(revList)
             
-        log.msg('gitpoller: processing %d changes: "%s" in "%s"' % (self.changeCount, revList, self.workdir) )
+        log.msg('gitpoller: processing %d changes: %s in "%s"' % (self.changeCount, revList, self.workdir) )
 
         for rev in revList:
-            log.msg('gitpoller: _process_changes_in_output "%s" in "%s"' % (rev, self.workdir))
             self.commitInfo = {}
 
             deferreds = [
@@ -167,7 +166,6 @@ class GitPoller(base.PollingChangeSource):
                                 self._get_commit_files(rev),
                                 self._get_commit_comments(rev),
                         ]
-            log.msg('gitpoller: _process_changes_in_output deferreds "%s" in "%s"' % (deferreds, self.workdir))
             dl = defer.DeferredList(deferreds)
             dl.addCallback(self._add_change,rev)        
 
@@ -189,30 +187,28 @@ class GitPoller(base.PollingChangeSource):
         self.lastChange = self.lastPoll
             
 
-    def _changes_finished_failure(self, f):
+    def _process_changes_failure(self, f):
         log.msg('gitpoller: repo poll failed')
         log.err(f)
-        # eat the failure to continue along the defered chain 
-        # - we still want to catch up
+        # eat the failure to continue along the defered chain - we still want to catch up
         return None
         
     def _catch_up(self, res):
         if self.changeCount == 0:
             log.msg('gitpoller: no changes, no catch_up')
-            return self.changeCount
+            return
         log.msg('gitpoller: catching up to FETCH_HEAD')
         args = ['reset', '--hard', 'FETCH_HEAD']
         d = utils.getProcessOutputAndValue(self.gitbin, args, path=self.workdir, env={})
-        return d;
+        def convert_nonzero_to_failure(res):
+            (stdout, stderr, code) = res
+            if code != 0:
+                raise EnvironmentError('catch up failed with exit code: %d' % code)
+        d.addCallback(convert_nonzero_to_failure)
+        return d
 
-    def _catch_up_finished(self, res):
-        (stdout, stderr, code) = res
-        if code != 0:
-            raise EnvironmentError('catch up failed with exit code: %d' % code)
-
-    def _catch_up_finished_failure(self, f):
+    def _catch_up_failure(self, f):
         log.err(f)
-        if self.parent:
-            log.msg('gitpoller: stopping service - please resolve issues in local repo: %s' %
-                self.workdir)
-            self.stopService()
+        log.msg('gitpoller: please resolve issues in local repo: %s' % self.workdir)
+        # this used to stop the service, but this is (a) unfriendly to tests and (b)
+        # likely to leave the error message lost in a sea of other log messages
