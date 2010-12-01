@@ -37,7 +37,7 @@
   {%- endif %}
 
 
-  <td>{{ s.version or '-' }}</td>
+  <td>{{ (s.version or '-')|e }}</td>
  
   {% if s.connected %}
     <td>
