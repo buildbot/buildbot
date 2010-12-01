@@ -391,6 +391,7 @@ class Builder(pb.Referenceable, service.MultiService):
         self.eventHorizon = setup.get('eventHorizon')
         self.mergeRequests = setup.get('mergeRequests', True)
         self.properties = setup.get('properties', {})
+        self.category = setup.get('category', None)
 
         # build/wannabuild slots: Build objects move along this sequence
         self.building = []
@@ -456,6 +457,9 @@ class Builder(pb.Referenceable, service.MultiService):
             diffs.append('logHorizon changed from %s to %s' % (self.logHorizon, setup['logHorizon']))
         if setup['eventHorizon'] != self.eventHorizon:
             diffs.append('eventHorizon changed from %s to %s' % (self.eventHorizon, setup['eventHorizon']))
+        if setup['category'] != self.category:
+            diffs.append('category changed from %r to %r' % (self.category, setup['category']))
+
         return diffs
 
     def __repr__(self):
@@ -614,6 +618,10 @@ class Builder(pb.Referenceable, service.MultiService):
         # all pending builds are stored in the DB, so we don't have to do
         # anything to claim them. The old builder will be stopService'd,
         # which should make sure they don't start any new work
+
+        # this is kind of silly, but the builder status doesn't get updated
+        # when the config changes, yet it stores the category.  So:
+        self.builder_status.category = self.category
 
         # old.building (i.e. builds which are still running) is not migrated
         # directly: it keeps track of builds which were in progress in the
