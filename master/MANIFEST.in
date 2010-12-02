@@ -6,7 +6,7 @@ include docs/*.png docs/images/*.png docs/images/*.svg docs/images/*.txt docs/im
 include docs/images/icon.blend docs/images/Makefile
 include docs/epyrun docs/gen-reference docs/Makefile
 include docs/version.py
-include docs/buildbot.1 docs/buildslave.1
+include docs/buildbot.1
 
 include buildbot/db/schema/tables.sql
 include buildbot/scripts/sample.cfg

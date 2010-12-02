@@ -1,5 +1,6 @@
 include MANIFEST.in README NEWS COPYING UPGRADING
 include bin/buildslave
+include docs/buildslave.1
 
 include contrib/* contrib/windows/* contrib/os-x/*
 include contrib/init-scripts/*
