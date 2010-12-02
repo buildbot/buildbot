@@ -1,4 +1,4 @@
-.\" Based on template /usr/share/man-db/examples/manpage.example provided by 
+.\" Based on template /usr/share/man-db/examples/manpage.example provided by
 .\" Tom Christiansen <tchrist@jhereg.perl.com>.
 .TH BUILDSLAVE "1" "August 2010" "Buildbot" "User Commands"
 .SH NAME
@@ -26,7 +26,7 @@ create-slave
 .BR \-r | \-\-relocatable
 ]
 [
-.BR \-n | \-\-no-logrotate  
+.BR \-n | \-\-no-logrotate
 ]
 [
 .BR \-k | \-\-keepalive
@@ -45,7 +45,7 @@ create-slave
 .I SIZE
 ]
 [
-.BR \-l | \-\-log-count 
+.BR \-l | \-\-log-count
 .I COUNT
 ]
 [
@@ -99,7 +99,7 @@ Restart a buildslave
 .SS Global options
 .TP
 .BR \-h | \-\-help
-Print the list of available commands and global options. 
+Print the list of available commands and global options.
 All subsequent commands are ignored.
 .TP
 .BR --version
@@ -124,7 +124,7 @@ seconds.
 Default value is 600 seconds.
 .TP
 .BR \-l | \-\-log-count
-Limit the number of kept old twisted log files to 
+Limit the number of kept old twisted log files to
 .IR COUNT .
 All files are kept by default.
 .TP
@@ -133,7 +133,7 @@ Do not emit the commands being run.
 .TP
 .BR \-r | \-\-relocatable
 Create a relocatable buildbot.tac.
-.TP 
+.TP
 .BR \-n | \-\-no-logrotate
 Do not permit buildslave rotate logs by itself.
 .TP
@@ -145,8 +145,8 @@ Default value is 1000000 bytes.
 .TP
 .BR \-\-umask
 Set umask for files created by buildslave.
-Default value is 077 which means only owner can access the files. 
-See 
+Default value is 077 which means only owner can access the files.
+See
 .BR umask (2)
 for more details.
 .TP
@@ -173,7 +173,7 @@ This should be provided by buildmaster administrator.
 .SH AUTHOR
 \fBAndriy Senkovych\fR <\&andriysenkovych@gmail.com\&>
 .SH "SEE ALSO"
-.BR buildbot (1), 
+.BR buildbot (1),
 .BR umask (2),
 .PP
 The complete documentation is available in texinfo format. To use it, run
