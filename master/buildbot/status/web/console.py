@@ -350,6 +350,8 @@ class ConsoleStatusResource(HtmlResource):
         for category in categories:            
             c = {}
 
+            c["name"] = category
+
             # To be able to align the table correctly, we need to know
             # what percentage of space this category will be taking. This is
             # (#Builders in Category) / (#Builders Total) * 100.
