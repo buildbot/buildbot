@@ -129,6 +129,98 @@ class TestPropertyMap(unittest.TestCase):
     def testColonPlusUnset(self):
         self.assertEqual(self.pm['prop_nosuch:+present'], '')
 
+    def testNoTempValues(self):
+        self.assertEqual(self.pm.temp_vals, {})
+
+    def testClearTempValues(self):
+        self.pm.add_temporary_value('prop_temp', 'present')
+        self.pm.clear_temporary_values()
+        self.assertEqual(self.pm.temp_vals, {})
+
+    def testTempValue(self):
+        self.pm.add_temporary_value('prop_temp', 'present')
+        self.assertEqual(self.pm['prop_temp'], 'present')
+        self.pm.clear_temporary_values()
+
+    def testTempValueOverrides(self):
+        self.pm.add_temporary_value('prop_one', 2)
+        self.assertEqual(self.pm['prop_one'], 2)
+        self.pm.clear_temporary_values()
+
+    def testTempValueColonMinusSet(self):
+        self.pm.add_temporary_value('prop_one', 2)
+        self.assertEqual(self.pm['prop_one:-missing'], 2)
+        self.pm.clear_temporary_values()
+
+    def testTempValueColonMinusUnset(self):
+        self.pm.add_temporary_value('prop_nosuch', 'temp')
+        self.assertEqual(self.pm['prop_nosuch:-missing'], 'temp')
+        self.pm.clear_temporary_values()
+
+    def testTempValueColonTildeTrueSet(self):
+        self.pm.add_temporary_value('prop_false', 'temp')
+        self.assertEqual(self.pm['prop_false:~nontrue'], 'temp')
+        self.pm.clear_temporary_values()
+
+    def testTempValueColonTildeTrueUnset(self):
+        self.pm.add_temporary_value('prop_nosuch', 'temp')
+        self.assertEqual(self.pm['prop_nosuch:~nontrue'], 'temp')
+        self.pm.clear_temporary_values()
+
+    def testTempValueColonTildeFalseFalse(self):
+        self.pm.add_temporary_value('prop_false', False)
+        self.assertEqual(self.pm['prop_false:~nontrue'], 'nontrue')
+        self.pm.clear_temporary_values()
+
+    def testTempValueColonTildeTrueFalse(self):
+        self.pm.add_temporary_value('prop_true', False)
+        self.assertEqual(self.pm['prop_true:~nontrue'], True)
+        self.pm.clear_temporary_values()
+
+    def testTempValueColonTildeNoneFalse(self):
+        self.pm.add_temporary_value('prop_nosuch', False)
+        self.assertEqual(self.pm['prop_nosuch:~nontrue'], 'nontrue')
+        self.pm.clear_temporary_values()
+
+
+    def testTempValueColonTildeFalseZero(self):
+        self.pm.add_temporary_value('prop_false', 0)
+        self.assertEqual(self.pm['prop_false:~nontrue'], 'nontrue')
+        self.pm.clear_temporary_values()
+
+    def testTempValueColonTildeTrueZero(self):
+        self.pm.add_temporary_value('prop_true', 0)
+        self.assertEqual(self.pm['prop_true:~nontrue'], True)
+        self.pm.clear_temporary_values()
+
+    def testTempValueColonTildeNoneZero(self):
+        self.pm.add_temporary_value('prop_nosuch', 0)
+        self.assertEqual(self.pm['prop_nosuch:~nontrue'], 'nontrue')
+        self.pm.clear_temporary_values()
+
+    def testTempValueColonTildeFalseBlank(self):
+        self.pm.add_temporary_value('prop_false', '')
+        self.assertEqual(self.pm['prop_false:~nontrue'], 'nontrue')
+        self.pm.clear_temporary_values()
+
+    def testTempValueColonTildeTrueBlank(self):
+        self.pm.add_temporary_value('prop_true', '')
+        self.assertEqual(self.pm['prop_true:~nontrue'], True)
+        self.pm.clear_temporary_values()
+
+    def testTempValueColonTildeNoneBlank(self):
+        self.pm.add_temporary_value('prop_nosuch', '')
+        self.assertEqual(self.pm['prop_nosuch:~nontrue'], 'nontrue')
+        self.pm.clear_temporary_values()
+
+    def testTempValuePlusSetSet(self):
+        self.pm.add_temporary_value('prop_one', 2)
+        self.assertEqual(self.pm['prop_one:+set'], 'set')
+        self.pm.clear_temporary_values()
+
+    def testTempValuePlusUnsetSet(self):
+        self.pm.add_temporary_value('prop_nosuch', 1)
+        self.assertEqual(self.pm['prop_nosuch:+set'], 'set')
 
 class TestWithProperties(unittest.TestCase):
     def setUp(self):
@@ -192,6 +284,18 @@ class TestWithProperties(unittest.TestCase):
                     WithProperties("%(y)s %(x)s") }
         self.failUnlessEqual(self.props.render(command),
                              {"10 20" : "20 10"})
+
+    def testLambdaSubst(self):
+        command = WithProperties('%(foo)s', foo=lambda: 'bar')
+        self.failUnlessEqual(self.props.render(command), 'bar')
+
+    def testLambdaOverride(self):
+        self.props.setProperty('x', 10, 'test')
+        command = WithProperties('%(x)s', x=lambda: 20)
+        self.failUnlessEqual(self.props.render(command), '20')
+
+    def testLambdaCallable(self):
+        self.assertRaises(ValueError, lambda: WithProperties('%(foo)s', foo='bar'))
 
 class TestProperties(unittest.TestCase):
     def setUp(self):

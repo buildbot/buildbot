@@ -208,6 +208,23 @@ Although these are similar to shell substitutions, no other
 substitutions are currently supported, and @code{replacement} in the
 above cannot contain more substitutions.
 
+If you need to do more complex substitution, you can pass keyword
+arguments to @code{WithProperties}. The value of each keyword argument
+should be a function that takes no arguments and returns a string value
+that will be added to the set of replacements for that key:
+
+@example
+WithProperties('%(now)s', now=lambda: time.clock())
+@end example
+
+@example
+def determine_foo():
+    # ... do something to decide what foo should be ...
+    return foo
+
+WithProperties('%(foo)s', foo=determine_foo)
+@end example
+
 Note: like python, you can either do positional-argument interpolation
 @emph{or} keyword-argument interpolation, not both. Thus you cannot use
 a string like @code{WithProperties("foo-%(revision)s-%s", "branch")}.
