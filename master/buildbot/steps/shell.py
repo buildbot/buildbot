@@ -137,6 +137,11 @@ class ShellCommand(LoggingBuildStep):
             if self.description is not None:
                 return properties.render(self.description)
 
+            # we may have no command if this is a step that sets its command
+            # name late in the game (e.g., in start())
+            if not self.command:
+                return ["???"]
+
             words = self.command
             if isinstance(words, (str, unicode)):
                 words = words.split()
