@@ -326,46 +326,12 @@ class BotMaster(service.MultiService):
         sl.recordConnectTime()
 
         if sl.isConnected():
-            # uh-oh, we've got a duplicate slave. The most likely
-            # explanation is that the slave is behind a slow link, thinks we
-            # went away, and has attempted to reconnect, so we've got two
-            # "connections" from the same slave.  The old may not be stale at this
-            # point, if there are two slave proceses out there with the same name,
-            # so instead of booting the old (which may be in the middle of a build),
-            # we reject the new connection and ping the old slave.
-            old_tport = sl.slave.broker.transport
-            new_tport = mind.broker.transport
-            log.msg("duplicate slave %s; rejecting new slave (%s) and pinging old (%s)" % 
-                    (sl.slavename, new_tport.getPeer(), old_tport.getPeer()))
-
-            # ping the old slave.  If this kills it, then the new slave will connect
-            # again and everyone will be happy.
-            d = sl.slave.callRemote("print",
-                    "master got a duplicate connection from %s; keeping this one" %
-                            new_tport.getPeer())
-            def old_gone(f):
-                f.trap(pb.PBConnectionLost)
-                log.msg("connection lost while pinging old slave '%s' - new slave will reconnect" % slavename)
-            d.addErrback(old_gone)
-
-            # kill the new connection before it has attached.  TODO: find a way
-            # to hold onto the new slave connection until the ping of the old
-            # is complete -- for better (old slave still there) or for worse
-            # (gone).  Bug #1702
-            d = mind.callRemote("print",
-                "master already has a connection named '%s'; killing connection" % slavename)
-            d.addErrback(lambda f : None) # ignore errors
-            d.addCallback(lambda _ : new_tport.loseConnection())
-
-            # now return a dummy avatar to hold the slave over for the moment
-            class DummyAvatar(pb.Avatar):
-                def attached(self, bot):
-                    return defer.Deferred() # block the slave in attached()
-                def detached(self, *args):
-                    pass
-            return DummyAvatar()
-
-        return sl
+            # duplicate slave - send it to arbitration
+            arb = DuplicateSlaveArbitrator(sl)
+            return arb.getPerspective(mind, slavename)
+        else:
+            log.msg("slave '%s' attaching from %s" % (slavename, mind.broker.transport.getPeer()))
+            return sl
 
     def shutdownSlaves(self):
         # TODO: make this into a bot method rather than a builder method
@@ -391,6 +357,151 @@ class BotMaster(service.MultiService):
         # that this requires that MasterLock and SlaveLock (marker) instances
         # be hashable and that they should compare properly.
         return self.locks[lockid]
+
+class DuplicateSlaveArbitrator(object):
+    """Utility class to arbitrate the situation when a new slave connects with
+    the name of an existing, connected slave"""
+    # There are several likely duplicate slave scenarios in practice:
+    #
+    # 1. two slaves are configured with the same username/password
+    #
+    # 2. the same slave process believes it is disconnected (due to a network
+    # hiccup), and is trying to reconnect
+    #
+    # For the first case, we want to prevent the two slaves from repeatedly
+    # superseding one another (which results in lots of failed builds), so we
+    # will prefer the old slave.  However, for the second case we need to
+    # detect situations where the old slave is "gone".  Sometimes "gone" means
+    # that the TCP/IP connection to it is in a long timeout period (10-20m,
+    # depending on the OS configuration), so this can take a while.
+
+    PING_TIMEOUT = 10
+    """Timeout for pinging the old slave.  Set this to something quite long, as
+    a very busy slave (e.g., one sending a big log chunk) may take a while to
+    return a ping."""
+
+    def __init__(self, slave):
+        self.old_slave = slave
+        "L{buildbot.buildslave.AbstractSlaveBuilder} instance"
+
+    def getPerspective(self, mind, slavename):
+        self.new_slave_mind = mind
+
+        old_tport = self.old_slave.slave.broker.transport
+        new_tport = mind.broker.transport
+        log.msg("duplicate slave %s; delaying new slave (%s) and pinging old (%s)" % 
+                (self.old_slave.slavename, new_tport.getPeer(), old_tport.getPeer()))
+
+        # delay the new slave until we decide what to do with it
+        self.new_slave_d = defer.Deferred()
+
+        # Ping the old slave.  If this kills it, then we can allow the new
+        # slave to connect.  If this does not kill it, then we disconnect
+        # the new slave.
+        self.ping_old_slave_done = False
+        self.old_slave_connected = True
+        self.ping_old_slave(new_tport.getPeer())
+
+        # Print a message on the new slave, if possible.
+        self.ping_new_slave_done = False
+        self.ping_new_slave()
+
+        return self.new_slave_d
+
+    def ping_new_slave(self):
+        d = self.new_slave_mind.callRemote("print",
+            "master already has a connection named '%s' - checking its liveness"
+                        % self.old_slave.slavename)
+        def done(_):
+            # failure or success, doesn't matter
+            self.ping_new_slave_done = True
+            self.maybe_done()
+        d.addBoth(done)
+
+    def ping_old_slave(self, new_peer):
+        # set a timer on this ping, in case the network is bad.  TODO: a timeout
+        # on the ping itself is not quite what we want.  If there is other data
+        # flowing over the PB connection, then we should keep waiting.  Bug #1703
+        def timeout():
+            self.ping_old_slave_timeout = None
+            self.ping_old_slave_timed_out = True
+            self.old_slave_connected = False
+            self.ping_old_slave_done = True
+            self.maybe_done()
+        self.ping_old_slave_timeout = reactor.callLater(self.PING_TIMEOUT, timeout)
+        self.ping_old_slave_timed_out = False
+
+        d = self.old_slave.slave.callRemote("print",
+            "master got a duplicate connection from %s; keeping this one" % new_peer)
+
+        def clear_timeout(r):
+            if self.ping_old_slave_timeout:
+                self.ping_old_slave_timeout.cancel()
+                self.ping_old_slave_timeout = None
+            return r
+        d.addBoth(clear_timeout)
+
+        def old_gone(f):
+            if self.ping_old_slave_timed_out:
+                return # ignore after timeout
+            f.trap(pb.PBConnectionLost)
+            log.msg(("connection lost while pinging old slave '%s' - " +
+                     "keeping new slave") % self.old_slave.slavename)
+            self.old_slave_connected = False
+        d.addErrback(old_gone)
+
+        def other_err(f):
+            if self.ping_old_slave_timed_out:
+                return # ignore after timeout
+            log.msg("unexpected error while pinging old slave; disconnecting it")
+            log.err(f)
+            self.old_slave_connected = False
+        d.addErrback(other_err)
+
+        def done(_):
+            if self.ping_old_slave_timed_out:
+                return # ignore after timeout
+            self.ping_old_slave_done = True
+            self.maybe_done()
+        d.addCallback(done)
+
+    def maybe_done(self):
+        if not self.ping_new_slave_done or not self.ping_old_slave_done:
+            return
+
+        # both pings are done, so sort out the results
+        if self.old_slave_connected:
+            self.disconnect_new_slave()
+        else:
+            self.start_new_slave()
+
+    def start_new_slave(self, count=20):
+        if not self.new_slave_d:
+            return
+
+        # we need to wait until the old slave has actually disconnected, which
+        # can take a little while -- but don't wait forever!
+        if self.old_slave.isConnected():
+            if self.old_slave.slave:
+                self.old_slave.slave.broker.transport.loseConnection()
+            if count < 0:
+                log.msg("WEIRD: want to start new slave, but the old slave will not disconnect")
+                self.disconnect_new_slave()
+            else:
+                reactor.callLater(0.1, self.start_new_slave, count-1)
+            return
+
+        d = self.new_slave_d
+        self.new_slave_d = None
+        d.callback(self.old_slave)
+
+    def disconnect_new_slave(self):
+        if not self.new_slave_d:
+            return
+        d = self.new_slave_d
+        self.new_slave_d = None
+        log.msg("rejecting duplicate slave with exception")
+        d.errback(Failure(RuntimeError("rejecting duplicate slave")))
 
 ########################################
 
@@ -467,28 +578,43 @@ class Dispatcher:
         assert interface == pb.IPerspective
         afactory = self.names.get(avatarID)
         if afactory:
-            p = afactory.getPerspective()
+            persp_d = defer.maybeDeferred(afactory.getPerspective)
         elif avatarID == "change":
             raise ValueError("no PBChangeSource installed")
         elif avatarID == "debug":
-            p = DebugPerspective()
-            p.master = self.master
-            p.botmaster = self.botmaster
+            persp_d = defer.maybeDeferred(DebugPerspective)
+            def add_masters(persp):
+                persp.master = self.master
+                persp.botmaster = self.botmaster
+                return persp
+            persp_d.addCallback(add_masters)
         elif avatarID == "statusClient":
-            p = self.statusClientService.getPerspective()
+            persp_d = defer.maybeDeferred(self.statusClientService.getPerspective)
         else:
             # it must be one of the buildslaves: no other names will make it
             # past the checker
-            p = self.botmaster.getPerspective(mind, avatarID)
+            persp_d = defer.maybeDeferred(self.botmaster.getPerspective,mind, avatarID)
 
-        if not p:
-            raise ValueError("no perspective for '%s'" % avatarID)
+        # check that we got a perspective
+        def check(persp):
+            if not persp:
+                raise ValueError("no perspective for '%s'" % avatarID)
+            return persp
+        persp_d.addCallback(check)
 
-        d = defer.maybeDeferred(p.attached, mind)
-        def _avatarAttached(_, mind):
-            return (pb.IPerspective, p, lambda: p.detached(mind))
-        d.addCallback(_avatarAttached, mind)
-        return d
+        # call the perspective's attached(mind)
+        def call_attached(persp):
+            d = defer.maybeDeferred(persp.attached, mind)
+            d.addCallback(lambda _ : persp) # keep returning the perspective
+            return d
+        persp_d.addCallback(call_attached)
+
+        # return the tuple requestAvatar is expected to return
+        def done(persp):
+            return (pb.IPerspective, persp, lambda: persp.detached(mind))
+        persp_d.addCallback(done)
+
+        return persp_d
 
 
 ########################################
