@@ -4,6 +4,12 @@ Major User visible changes in Buildbot.             -*- outline -*-
 
 * Next Release
 
+** WithProperties now supports lambda substitutions
+
+WithProperties now has the option to pass callable functions as keyword
+arguments to substitute in the results of more complex Python code at
+evaluation-time.
+
 ** Deprecations and Removals
 
 *** The console view previously had an undocumented feature that would strip
