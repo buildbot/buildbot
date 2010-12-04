@@ -2322,6 +2322,7 @@ class Status:
                         pickles) can be stored
         """
         self.botmaster = botmaster
+        self.master = botmaster.parent # TODO: temporary; this should get set more formally
         self.db = None
         self.basedir = basedir
         self.watchers = []
@@ -2359,11 +2360,11 @@ class Status:
     # methods called by our clients
 
     def getProjectName(self):
-        return self.botmaster.parent.projectName
+        return self.master.projectName
     def getProjectURL(self):
-        return self.botmaster.parent.projectURL
+        return self.master.projectURL
     def getBuildbotURL(self):
-        return self.botmaster.parent.buildbotURL
+        return self.master.buildbotURL
 
     def getURLForThing(self, thing):
         prefix = self.getBuildbotURL()
@@ -2423,13 +2424,14 @@ class Status:
                 urllib.quote(log.getName()))
 
     def getChangeSources(self):
-        return list(self.botmaster.parent.change_svc)
+        return list(self.master.change_svc)
 
     def getChange(self, number):
-        return self.botmaster.parent.change_svc.getChangeNumberedNow(number)
+        """Get a Change object; returns a deferred"""
+        return self.master.db.changes.getChangeInstance(number)
 
     def getSchedulers(self):
-        return self.botmaster.parent.allSchedulers()
+        return self.master.allSchedulers()
 
     def getBuilderNames(self, categories=None):
         if categories == None:

@@ -339,7 +339,7 @@ class Model(base.DBConnectorComponent):
                 return False
 
             return db_version == repo_version
-        return self.connector.pool.do_with_engine(thd)
+        return self.db.pool.do_with_engine(thd)
 
     def upgrade(self):
         """Upgrade the database to the most recent schema version, returning a
@@ -402,4 +402,4 @@ class Model(base.DBConnectorComponent):
             else:
                 version_control(engine)
                 upgrade(engine)
-        return self.connector.pool.do_with_engine(thd)
+        return self.db.pool.do_with_engine(thd)

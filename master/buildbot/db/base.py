@@ -29,4 +29,5 @@ class DBConnectorComponent(object):
     connector = None
 
     def __init__(self, connector):
-        self.connector = connector
+        self.db = connector
+        "backlink to the DBConnector object"

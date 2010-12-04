@@ -15,10 +15,11 @@
 
 from twisted.internet import reactor
 
-from buildbot.changes import base, changes
+from buildbot.changes import base
 from buildbot.util import json
 from buildbot import util
 from twisted.python import log
+from twisted.internet import defer
 from twisted.internet.protocol import ProcessProtocol
 
 class GerritChangeSource(base.ChangeSource):
@@ -26,8 +27,6 @@ class GerritChangeSource(base.ChangeSource):
     that will provide us gerrit events in json format."""
 
     compare_attrs = ["gerritserver", "gerritport"]
-
-    parent = None # filled in when we're added
 
     STREAM_GOOD_CONNECTION_TIME = 120
     "(seconds) connections longer than this are considered good, and reset the backoff timer"
@@ -66,6 +65,7 @@ class GerritChangeSource(base.ChangeSource):
             self.change_source = change_source
             self.data = ""
 
+        @defer.deferredGenerator
         def outReceived(self, data):
             """Do line buffering."""
             self.data += data
@@ -73,7 +73,10 @@ class GerritChangeSource(base.ChangeSource):
             self.data = lines.pop(-1) # last line is either empty or incomplete
             for line in lines:
                 log.msg("gerrit: %s" % (line,))
-                self.change_source.lineReceived(line)
+                d = self.change_source.lineReceived(line)
+                wfd = defer.waitForDeferred(d)
+                yield wfd
+                wfd.getResult()
 
         def errReceived(self, data):
             log.msg("gerrit stderr: %s" % (data,))
@@ -86,7 +89,7 @@ class GerritChangeSource(base.ChangeSource):
             event = json.loads(line)
         except ValueError:
             log.msg("bad json line: %s" % (line,))
-            return
+            return defer.succeed(None)
 
         if type(event) == type({}) and "type" in event and event["type"] in ["patchset-created", "ref-updated"]:
             # flatten the event dictionary, for easy access with WithProperties
@@ -102,29 +105,35 @@ class GerritChangeSource(base.ChangeSource):
 
             if event["type"] == "patchset-created":
                 change = event["change"]
-                c = changes.Change(who="%s <%s>" % (change["owner"]["name"], change["owner"]["email"]),
-                                   project=change["project"],
-                                   branch=change["branch"],
-                                   revision=event["patchSet"]["revision"],
-                                   revlink=change["url"],
-                                   comments=change["subject"],
-                                   files=["unknown"],
-                                   category=event["type"],
-                                   properties=properties)
+
+                chdict = dict(
+                        who="%s <%s>" % (change["owner"]["name"], change["owner"]["email"]),
+                        project=change["project"],
+                        branch=change["branch"],
+                        revision=event["patchSet"]["revision"],
+                        revlink=change["url"],
+                        comments=change["subject"],
+                        files=["unknown"],
+                        category=event["type"],
+                        properties=properties)
             elif event["type"] == "ref-updated":
                 ref = event["refUpdate"]
-                c = changes.Change(who="%s <%s>" % (event["submitter"]["name"], event["submitter"]["email"]),
-                                   project=ref["project"],
-                                   branch=ref["refName"],
-                                   revision=ref["newRev"],
-                                   comments="Gerrit: patchset(s) merged.",
-                                   files=["unknown"],
-                                   category=event["type"],
-                                   properties=properties)
+                chdict = dict(
+                        who="%s <%s>" % (event["submitter"]["name"], event["submitter"]["email"]),
+                        project=ref["project"],
+                        branch=ref["refName"],
+                        revision=ref["newRev"],
+                        comments="Gerrit: patchset(s) merged.",
+                        files=["unknown"],
+                        category=event["type"],
+                        properties=properties)
             else:
-                return # this shouldn't happen anyway
+                return defer.succeed(None) # this shouldn't happen anyway
 
-            self.parent.addChange(c)
+            d = self.master.addChange(**chdict)
+            # eat failures..
+            d.addErrback(log.err, 'error adding change from GerritChangeSource')
+            return d
 
     def streamProcessStopped(self):
         self.process = None

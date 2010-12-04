@@ -18,33 +18,49 @@ from twisted.internet import defer
 
 class ChangeSourceMixin(object):
     """
-    Set up a fake ChangeMaster (C{self.changemaster}) and handle starting and
-    stopping a ChangeSource service.  All Change objects added with
-    C{addChange} appear at C{self.changes_added}.
+    This class is used for testing change sources, and handles a few things:
+
+     - starting and stopping a ChangeSource service
+     - a fake C{self.master.addChange}, which adds its args
+       to the list C{self.chagnes_added}
     """
 
     changesource = None
+    started = False
 
     def setUpChangeSource(self):
-        self.changemaster = mock.Mock()
-
+        "Set up the mixin - returns a deferred."
         self.changes_added = []
-        def addChange(change):
-            self.changes_added.append(change)
-        self.changemaster.addChange = addChange
-
+        def addChange(**kwargs):
+            self.changes_added.append(kwargs)
+            change = mock.Mock()
+            return defer.succeed(change)
+        self.master = mock.Mock()
+        self.master.addChange = addChange
         return defer.succeed(None)
 
     def tearDownChangeSource(self):
-        if not self.changesource:
+        "Tear down the mixin - returns a deferred."
+        if not self.started:
             return defer.succeed(None)
         if self.changesource.running:
             return defer.maybeDeferred(self.changesource.stopService)
         return defer.succeed(None)
 
-    def startChangeSource(self, cs):
-        """Call this after constructing your changeSource; returns a deferred."""
+    def attachChangeSource(self, cs):
+        "Set up a change source for testing; sets its .master attribute"
         self.changesource = cs
-        cs.parent = self.changemaster
-        cs.startService()
-        return defer.succeed(None)
+        self.changesource.master = self.master
+
+    def startChangeSource(self):
+        "start the change source as a service"
+        self.started = True
+        self.changesource.startService()
+
+    def stopChangeSource(self):
+        "stop the change source again; returns a deferred"
+        d = self.changesource.stopService()
+        def mark_stopped(_):
+            self.started = False
+        d.addCallback(mark_stopped)
+        return d

@@ -65,6 +65,9 @@ class Properties(util.ComparableMixin):
         rv = self.properties[name][0]
         return rv
 
+    def __nonzero__(self):
+        return not not self.properties
+
     def has_key(self, name):
         return self.properties.has_key(name)
 

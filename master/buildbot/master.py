@@ -33,7 +33,6 @@ from buildbot.util import now, safeTranslate, eventual
 from buildbot.pbutil import NewCredPerspective
 from buildbot.process.builder import Builder, IDLE
 from buildbot.status.builder import Status, BuildSetStatus
-from buildbot.changes.changes import Change
 from buildbot.changes.manager import ChangeManager
 from buildbot import interfaces, locks
 from buildbot.process.properties import Properties
@@ -553,15 +552,6 @@ class DebugPerspective(NewCredPerspective):
         c = interfaces.IControl(self.master)
         bc = c.getBuilder(buildername)
         bc.ping()
-
-    def perspective_fakeChange(self, file, revision=None, who="fakeUser",
-                               branch=None, repository="", 
-                               project=""):
-        change = Change(who, [file], "some fake comments\n",
-                        branch=branch, revision=revision,
-                        repository=repository, project=project)
-        c = interfaces.IControl(self.master)
-        c.addChange(change)
 
     def perspective_setCurrentState(self, buildername, state):
         builder = self.botmaster.builders.get(buildername)
@@ -1244,10 +1234,16 @@ class BuildMaster(service.MultiService):
         d.addCallback(addNewOnes)
         return d
 
-
-    def addChange(self, change):
-        self.db.addChangeToDatabase(change)
-        self.status.changeAdded(change)
+    def addChange(self, **kwargs):
+        "Add a change to the buildmaster and act on it."
+        d = self.db.changes.addChange(**kwargs)
+        def notify(change):
+            msg = u"added change %s to database" % change
+            log.msg(msg.encode('utf-8', 'replace'))
+            self.status.changeAdded(change)
+            return change
+        d.addCallback(notify)
+        return d
 
     def triggerSlaveManager(self):
         self.botmaster.triggerNewBuildCheck()

@@ -543,19 +543,13 @@ c['change_source'] = BzrLaunchpadEmailMaildirSource("~/maildir-buildbot", branch
 
 @csindex buildbot.changes.pb.PBChangeSource
 
-The last kind of ChangeSource actually listens on a TCP port for
-clients to connect and push change notices @emph{into} the
-Buildmaster. This is used by the built-in @code{buildbot sendchange}
-notification tool, as well as the VC-specific
-@file{contrib/svn_buildbot.py}, @file{contrib/arch_buildbot.py},
-@file{contrib/hg_buildbot.py} tools, and the
-@code{buildbot.changes.hgbuildbot} hook. These tools are run by the
-repository (in a commit hook script), and connect to the buildmaster
-directly each time a file is comitted. This is also useful for
-creating new kinds of change sources that work on a @code{push} model
-instead of some kind of subscription scheme, for example a script
-which is run out of an email .forward file.
-
+@code{PBChangeSource} actually listens on a TCP port for clients to connect and
+push change notices @emph{into} the Buildmaster. This is used by the built-in
+@code{buildbot sendchange} notification tool, as well as several
+version-control hook scripts.  This change source is also useful for creating
+new kinds of change sources that work on a @code{push} model instead of some
+kind of subscription scheme, for example a script which is run out of an email
+@file{.forward} file.
 This ChangeSource always runs on the same TCP port as the slaves.  It
 shares the same protocol, and in fact shares the same space of "usernames", so you cannot configure a @code{PBChangeSource} with the same name as a slave.
 
@@ -806,7 +800,7 @@ A function that maps a pathname, without the leading @code{p4base}, to a
 which effectively disables branch support. You should supply a function
 which understands your repository structure.
 
-@item @code{pollinterval}
+@item @code{pollInterval}
 How often to poll, in seconds. Defaults to 600 (10 minutes).
 
 @item @code{histmax}
@@ -927,7 +921,7 @@ authenticate to the svn server before you can do @code{svn info} or
 Like @code{svnuser}, this will cause a @code{--password} argument to
 be passed to all svn commands.
 
-@item pollinterval
+@item pollInterval
 How often to poll, in seconds. Defaults to 600 (checking once every 10
 minutes). Lower this if you want the buildbot to notice changes
 faster, raise it if you want to reduce the network and CPU load on
@@ -1219,8 +1213,7 @@ the desired branch to fetch, will default to @code{'master'}
 the directory where the poller should keep its local repository. will default to @code{<tempdir>/gitpoller_work}
                 
 @item pollInterval
-interval in seconds between polls, default is 10 minutes.  For compatibility,
-this can also be spelled @code{pollinterval}
+interval in seconds between polls, default is 10 minutes.
 
 @item gitbin
 path to the git binary, defaults to just @code{'git'}

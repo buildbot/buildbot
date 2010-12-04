@@ -15,7 +15,7 @@
 
 from zope.interface import implements
 from twisted.application import service
-from twisted.internet import defer, task
+from twisted.internet import defer, task, reactor
 from twisted.python import log
 
 from buildbot.interfaces import IChangeSource
@@ -24,8 +24,11 @@ from buildbot import util
 class ChangeSource(service.Service, util.ComparableMixin):
     implements(IChangeSource)
 
+    master = None
+    "if C{self.running} is true, then C{cs.master} points to the buildmaster."
+
     def describe(self):
-        return "no description"
+        pass
 
 class PollingChangeSource(ChangeSource):
     """
@@ -38,7 +41,6 @@ class PollingChangeSource(ChangeSource):
     "time (in seconds) between calls to C{poll}"
 
     _loop = None
-    volatile = ['_loop'] # prevents Twisted from pickling this value
 
     def poll(self):
         """
@@ -51,12 +53,16 @@ class PollingChangeSource(ChangeSource):
         ChangeSource.startService(self)
         def do_poll():
             d = defer.maybeDeferred(self.poll)
-            d.addErrback(log.err)
+            d.addErrback(log.err, 'while polling for changes')
             return d
-        self._loop = task.LoopingCall(do_poll)
-        self._loop.start(self.pollInterval)
+
+        # delay starting the loop until the reactor is running
+        def start_loop():
+            self._loop = task.LoopingCall(do_poll)
+            self._loop.start(self.pollInterval)
+        reactor.callWhenRunning(start_loop)
 
     def stopService(self):
-        self._loop.stop()
+        if self._loop:
+            self._loop.stop()
         return ChangeSource.stopService(self)
-

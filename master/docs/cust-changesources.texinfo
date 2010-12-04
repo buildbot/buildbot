@@ -29,7 +29,6 @@ the polling is not frequent enough.
 @subsection Writing a Change Source
 
 @dvindex buildbot.changes.base.ChangeSource
-@dvindex buildbot.changes.changes.Change
 
 A custom change source must implement @code{buildbot.interfaces.IChangeSource}.
 
@@ -40,9 +39,10 @@ you will need to implement the @code{startService} and @code{stopService}
 methods to control the means by which your change source receives
 notifications.
 
-When the class does receive a change, it should create a
-@code{buildbot.changes.changes.Change} object and call
-@code{self.parent.addChange(ch)} to submit it to the buildmaster.
+When the class does receive a change, it should call
+@code{self.master.addChange(..)} to submit it to the buildmaster.  This method
+shares the same parameters as @code{master.db.changes.addChange}, so consult
+the API documentation for that function for details on the available arguments.
 
 You will probably also want to set @code{compare_attrs} to the list of object
 attributes which Buildbot will use to compare one change source to another when

@@ -24,11 +24,7 @@ import sqlalchemy as sa
 import migrate.versioning.api
 from buildbot.db import connector
 from buildbot.test.util import db
-
-class Thing(object):
-    # simple object-with-attributes for use in faking pickled objects
-    def __init__(self, **kwargs):
-        self.__dict__.update(kwargs)
+from buildbot.test.util import change_import
 
 class UpgradeTestMixin(object):
     """Supporting code to test upgrading from older versions by untarring a
@@ -212,4 +208,99 @@ class UpgradeTestCitools(UpgradeTestMixin, DBUtilsMixin, unittest.TestCase):
         d.addCallback(lambda _ : self.db.model.upgrade())
         d.addCallback(lambda _ : self.assertModelMatches())
         d.addCallback(lambda _ : self.db.pool.do(self.verify_thd))
+        return d
+
+class TestWeirdChanges(change_import.ChangeImportMixin, unittest.TestCase):
+    def setUp(self):
+        self.setUpChangeImport()
+        self.db = connector.DBConnector(self.db_url, self.basedir)
+        # note the connector isn't started, as we're testing upgrades
+
+    def tearDown(self):
+        if self.db:
+            self.db.stop()
+        self.tearDownChangeImport()
+
+    def testUpgradeListsAsFilenames(self):
+        # sometimes the 'filenames' in a Change object are actually lists of files.  I don't
+        # know how this happens, but we should be resilient to it.
+        self.make_pickle(
+                self.make_change(
+                    who=u"me!",
+                    files=[["foo","bar"], ['bing'], 'baz'],
+                    comments=u"hello",
+                    branch="b1",
+                    revision=12345))
+
+        d = self.db.model.upgrade()
+        d.addCallback(lambda _ : self.db.start())
+        d.addCallback(lambda _ : self.db.changes.getChangeInstance(1))
+        def check(c):
+            self.failIf(c is None)
+            self.assertEquals(sorted(c.files), sorted([u"foo", u"bar", u"bing", u"baz"]))
+        d.addCallback(check)
+        return d
+
+    def testUpgradeChangeProperties(self):
+        # test importing complex properties
+        self.make_pickle(
+                self.make_change(
+                    who=u'author',
+                    comments='simple',
+                    files=['foo.c'],
+                    properties=dict(
+                        list=['a', 'b'],
+                        num=13,
+                        str=u'SNOW\N{SNOWMAN}MAN',
+                        d=dict(a=1, b=2)),
+                    branch="b1",
+                    revision='12345'))
+
+        d = self.db.model.upgrade()
+        d.addCallback(lambda _ : self.db.start())
+        d.addCallback(lambda _ : self.db.changes.getChangeInstance(1))
+        def check(c):
+            self.failIf(c is None)
+            self.assertEquals(c.properties.getProperty('list')[1], 'Change')
+            self.assertEquals(c.properties.getProperty('list')[0], ['a', 'b'])
+            self.assertEquals(c.properties.getProperty('num')[0], 13)
+            self.assertEquals(c.properties.getProperty('str')[0], u'SNOW\N{SNOWMAN}MAN')
+            self.assertEquals(c.properties.getProperty('d')[0], dict(a=1, b=2))
+        d.addCallback(check)
+        return d
+
+    def testUpgradeChangeLinks(self):
+        # test importing complex properties
+        self.make_pickle(
+                self.make_change(
+                    who=u'author',
+                    comments='simple',
+                    files=['foo.c'],
+                    links=['http://buildbot.net', 'http://twistedmatrix.com'],
+                    revision='12345'))
+
+        d = self.db.model.upgrade()
+        d.addCallback(lambda _ : self.db.start())
+        d.addCallback(lambda _ : self.db.changes.getChangeInstance(1))
+        def check(c):
+            self.failIf(c is None)
+            self.assertEquals(sorted(c.links),
+                    sorted(['http://buildbot.net', 'http://twistedmatrix.com']))
+        d.addCallback(check)
+        return d
+
+    def testUpgradeChangeNoRevision(self):
+        # test a change with no revision (which shouldn't be imported)
+        self.make_pickle(
+                self.make_change(
+                    who=u'author',
+                    comments='simple',
+                    files=['foo.c']))
+
+        d = self.db.model.upgrade()
+        d.addCallback(lambda _ : self.db.start())
+        d.addCallback(lambda _ : self.db.changes.getChangeInstance(1))
+        def check(c):
+            self.failUnless(c is None)
+        d.addCallback(check)
         return d

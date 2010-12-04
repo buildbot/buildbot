@@ -107,16 +107,15 @@ class ClassifierMixin:
 
     def classify_changes(self, t):
         db = self.parent.db
-        cm = self.parent.change_svc
         state = self.get_state(t)
         state_changed = False
         last_processed = state.get("last_processed", None)
 
         if last_processed is None:
-            last_processed = state['last_processed'] = cm.getLatestChangeNumberNow(t)
+            last_processed = state['last_processed'] = db.getLatestChangeid() # TODO: may not work in a transaction..
             state_changed = True
 
-        changes = cm.getChangesGreaterThan(last_processed, t)
+        changes = db.getChangesGreaterThan(last_processed, t)
         for c in changes:
             if self.change_filter.filter_change(c):
                 important = True

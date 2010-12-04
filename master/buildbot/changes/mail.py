@@ -13,7 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-
 """
 Parse various kinds of 'CVS notify' email.
 """
@@ -26,19 +25,16 @@ from email.Iterators import body_line_iterator
 
 from zope.interface import implements
 from twisted.python import log
+from twisted.internet import defer
 from buildbot import util
 from buildbot.interfaces import IChangeSource
-from buildbot.changes import changes
 from buildbot.changes.maildir import MaildirService
 
 class MaildirSource(MaildirService, util.ComparableMixin):
-    """This source will watch a maildir that is subscribed to a FreshCVS
-    change-announcement mailing list.
-    """
+    """Generic base class for Maildir-based change sources"""
     implements(IChangeSource)
 
     compare_attrs = ["basedir", "pollinterval", "prefix"]
-    name = None
 
     def __init__(self, maildir, prefix=None, category='', repository=''):
         MaildirService.__init__(self, maildir)
@@ -50,15 +46,27 @@ class MaildirSource(MaildirService, util.ComparableMixin):
                     "a slash")
 
     def describe(self):
-        return "%s mailing list in maildir %s" % (self.name, self.basedir)
+        return "%s watching maildir '%s'" % (self.__class__.__name__, self.basedir)
 
     def messageReceived(self, filename):
         path = os.path.join(self.basedir, "new", filename)
-        change = self.parse_file(open(path, "r"), self.prefix)
-        if change:
-            self.parent.addChange(change)
-        os.rename(os.path.join(self.basedir, "new", filename),
-                  os.path.join(self.basedir, "cur", filename))
+        d = defer.succeed(None)
+        def parse_file(_):
+            return self.parse_file(open(path, "r"), self.prefix)
+        d.addCallback(parse_file)
+
+        def add_change(chdict):
+            if chdict:
+                return self.master.addChange(**chdict)
+            else:
+                log.msg("no change found in maildir file '%s'" % filename)
+        d.addCallback(add_change)
+
+        def move_file(_):
+            os.rename(path, os.path.join(self.basedir, "cur", filename))
+        d.addCallback(move_file)
+
+        return d
 
     def parse_file(self, fd, prefix=None):
         m = message_from_file(fd)
@@ -237,14 +245,19 @@ class CVSMaildirSource(MaildirSource):
         comments = comments.rstrip() + "\n"
         if comments == '\n':
             comments = None
-        change = changes.Change(who, files, comments, isdir, when=when,
-                                branch=branch, revision=rev,
-                                category=category,
-                                repository=cvsroot,
-                                project=project,
-                                links=links,
-                                properties=self.properties)
-        return change
+        return dict(
+                who=who,
+                files=files,
+                comments=comments,
+                isdir=isdir,
+                when=when,
+                branch=branch,
+                revision=rev,
+                category=category,
+                repository=cvsroot,
+                project=project,
+                links=links,
+                properties=self.properties)
 
 # svn "commit-email.pl" handler.  The format is very similar to freshcvs mail;
 # here's a sample:
@@ -284,7 +297,7 @@ class SVNCommitEmailMaildirSource(MaildirSource):
         # model)
         name, addr = parseaddr(m["from"])
         if not addr:
-            return None # no From means this message isn't from FreshCVS
+            return None # no From means this message isn't from svn
         at = addr.find("@")
         if at == -1:
             who = addr # might still be useful
@@ -370,7 +383,12 @@ class SVNCommitEmailMaildirSource(MaildirSource):
             log.msg("no matching files found, ignoring commit")
             return None
 
-        return changes.Change(who, files, comments, when=when, revision=rev)
+        return dict(
+                who=who,
+                files=files,
+                comments=comments,
+                when=when,
+                revision=rev)
 
 # bzr Launchpad branch subscription mails. Sample mail:
 #
@@ -497,11 +515,15 @@ class BzrLaunchpadEmailMaildirSource(MaildirSource):
                 else:
                     branch = None
 
-        #log.msg("parse(): rev=%s who=%s files=%s comments='%s' when=%s branch=%s" % (rev, who, d['files'], d['comments'], time.asctime(time.localtime(when)), branch))
         if rev and who:
-            return changes.Change(who, d['files'], d['comments'],
-                                  when=when, revision=rev, branch=branch, 
-                                  repository=repository or '')
+            return dict(
+                    who=who,
+                    files=d['files'],
+                    comments=d['comments'],
+                    when=when,
+                    revision=rev,
+                    branch=branch,
+                    repository=repository or '')
         else:
             return None
 
