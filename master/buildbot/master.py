@@ -333,30 +333,34 @@ class BotMaster(service.MultiService):
             # point, if there are two slave proceses out there with the same name,
             # so instead of booting the old (which may be in the middle of a build),
             # we reject the new connection and ping the old slave.
-            log.msg("duplicate slave %s; rejecting new slave and pinging old" % sl.slavename)
-
-            # just in case we've got two identically-configured slaves,
-            # report the IP addresses of both so someone can resolve the
-            # squabble
             old_tport = sl.slave.broker.transport
             new_tport = mind.broker.transport
-            log.msg("old slave was connected from", old_tport.getPeer())
-            log.msg("new slave is from", new_tport.getPeer())
+            log.msg("duplicate slave %s; rejecting new slave (%s) and pinging old (%s)" % 
+                    (sl.slavename, new_tport.getPeer(), old_tport.getPeer()))
 
             # ping the old slave.  If this kills it, then the new slave will connect
             # again and everyone will be happy.
-            sl.slave.callRemote("print", "master got a duplicate connection; keeping this one")
+            d = sl.slave.callRemote("print",
+                    "master got a duplicate connection from %s; keeping this one" %
+                            new_tport.getPeer())
+            def old_gone(f):
+                f.trap(pb.PBConnectionLost)
+                log.msg("connection lost while pinging old slave '%s' - new slave will reconnect" % slavename)
+            d.addErrback(old_gone)
 
-            # now return a dummy avatar and kill the new connection in 5
-            # seconds, thereby giving the ping a bit of time to kill the old
-            # connection, if necessary
-            def kill():
-                log.msg("killing new slave on", new_tport.getPeer())
-                new_tport.loseConnection()
-            reactor.callLater(5, kill)
+            # kill the new connection before it has attached.  TODO: find a way
+            # to hold onto the new slave connection until the ping of the old
+            # is complete -- for better (old slave still there) or for worse
+            # (gone).  Bug #1702
+            d = mind.callRemote("print",
+                "master already has a connection named '%s'; killing connection" % slavename)
+            d.addErrback(lambda f : None) # ignore errors
+            d.addCallback(lambda _ : new_tport.loseConnection())
+
+            # now return a dummy avatar to hold the slave over for the moment
             class DummyAvatar(pb.Avatar):
-                def attached(self, *args):
-                    pass
+                def attached(self, bot):
+                    return defer.Deferred() # block the slave in attached()
                 def detached(self, *args):
                     pass
             return DummyAvatar()
