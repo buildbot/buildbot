@@ -70,7 +70,8 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
                 for c in source.changes:
                     changes.append({ 'url' : path_to_change(req, c),
                                      'who' : c.who,
-                                     'revision' : c.revision })
+                                     'revision' : c.revision,
+                                     'repo' : c.repository })
 
             cxt['pending'].append({
                 'when': time.strftime("%b %d %H:%M:%S", time.localtime(pb.getSubmitTime())),

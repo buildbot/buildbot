@@ -42,8 +42,9 @@
     {% endif %}    
     
     {% if b.num_changes < 4 %}
-        {% for c in b.changes %}<a href="{{ c.url }}">{{ c.revision|shortrev }}
-                    by {{ c.who }}</a> {% endfor %}
+        {% for c in b.changes %}{{ c.revision|shortrev(c.repo) }}
+        (<a href="{{ c.url }}">{{ c.who }}</a>){% if not loop.last %},{% endif %}
+        {% endfor %}
     {% else %}
         ({{ b.num_changes }} changes)
     {% endif %}    
