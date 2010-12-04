@@ -69,18 +69,15 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
             if source.changes:
                 for c in source.changes:
                     changes.append({ 'url' : path_to_change(req, c),
-                                            'who' : c.who})
-            if source.revision:
-                reason = source.revision
-            else:
-                reason = "no changes specified"
+                                     'who' : c.who,
+                                     'revision' : c.revision })
 
             cxt['pending'].append({
                 'when': time.strftime("%b %d %H:%M:%S", time.localtime(pb.getSubmitTime())),
                 'delay': util.formatInterval(util.now() - pb.getSubmitTime()),
-                'reason': reason,
                 'id': pb.brid,
-                'changes' : changes
+                'changes' : changes,
+                'num_changes' : len(changes),
                 })
 
         numbuilds = int(req.args.get('numbuilds', ['5'])[0])

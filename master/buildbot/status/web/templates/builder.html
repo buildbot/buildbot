@@ -41,10 +41,11 @@
       {{ forms.cancel_pending_build(builder_url+"/cancelbuild", authz, short=True, id=b.id) }}
     {% endif %}    
     
-    {% if b.changes %}
-      {% for c in b.changes %}<a href="{{ c.url }}">{{ c.who|email }}</a>{% endfor %}
+    {% if b.num_changes < 4 %}
+        {% for c in b.changes %}<a href="{{ c.url }}">{{ c.revision|shortrev }}
+                    by {{ c.who }}</a> {% endfor %}
     {% else %}
-      {{ b.reason }}
+        ({{ b.num_changes }} changes)
     {% endif %}    
 
     </li>

@@ -534,13 +534,16 @@ def shortrevfilter(replace, templates):
     
     url_f = _revlinkcfg(replace, templates)  
         
-    def filter(rev, repo):
+    def filter(rev, repo=None):
         if not rev:
             return u''
             
         id_html, short_html = _revlinkmacros(replace, templates)
         rev = unicode(rev)
-        url = url_f(rev, repo)
+        if repo:
+            url = url_f(rev, repo)
+        else:
+            url = None
         rev = jinja2.escape(rev)
         shortrev = rev[:12] # TODO: customize this depending on vc type
         
