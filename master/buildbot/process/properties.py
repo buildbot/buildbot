@@ -215,8 +215,9 @@ class WithProperties(util.ComparableMixin):
                 strings.append(pmap[name])
             s = self.fmtstring % tuple(strings)
         else:
+            properties = pmap.properties()
             for k,v in self.lambda_subs.iteritems():
-                pmap.add_temporary_value(k, v())
+                pmap.add_temporary_value(k, v(properties))
             s = self.fmtstring % pmap
             pmap.clear_temporary_values()
         return s

@@ -286,16 +286,22 @@ class TestWithProperties(unittest.TestCase):
                              {"10 20" : "20 10"})
 
     def testLambdaSubst(self):
-        command = WithProperties('%(foo)s', foo=lambda: 'bar')
+        command = WithProperties('%(foo)s', foo=lambda _: 'bar')
         self.failUnlessEqual(self.props.render(command), 'bar')
 
     def testLambdaOverride(self):
         self.props.setProperty('x', 10, 'test')
-        command = WithProperties('%(x)s', x=lambda: 20)
+        command = WithProperties('%(x)s', x=lambda _: 20)
         self.failUnlessEqual(self.props.render(command), '20')
 
     def testLambdaCallable(self):
         self.assertRaises(ValueError, lambda: WithProperties('%(foo)s', foo='bar'))
+
+    def testLambdaUseExisting(self):
+        self.props.setProperty('x', 10, 'test')
+        self.props.setProperty('y', 20, 'test')
+        command = WithProperties('%(z)s', z=lambda pmap: pmap['x'] + pmap['y'])
+        self.failUnlessEqual(self.props.render(command), '30')
 
 class TestProperties(unittest.TestCase):
     def setUp(self):

@@ -210,17 +210,20 @@ above cannot contain more substitutions.
 
 If you need to do more complex substitution, you can pass keyword
 arguments to @code{WithProperties}. The value of each keyword argument
-should be a function that takes no arguments and returns a string value
-that will be added to the set of replacements for that key:
+should be a function that takes one argument (the existing properties)
+and returns a string value that will be used to replace that key:
 
 @example
-WithProperties('%(now)s', now=lambda: time.clock())
+WithProperties('%(now)s', now=lambda _: time.clock())
 @end example
 
 @example
-def determine_foo():
-    # ... do something to decide what foo should be ...
-    return foo
+def determine_foo(props):
+    if props.has_key('bar'):
+        return props['bar']
+    elif props.has_key('baz'):
+        return props['baz']
+    return 'qux'
 
 WithProperties('%(foo)s', foo=determine_foo)
 @end example
