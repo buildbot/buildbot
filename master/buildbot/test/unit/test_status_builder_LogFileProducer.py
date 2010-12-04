@@ -1,12 +1,8 @@
 import mock
 import cStringIO
 from twisted.trial import unittest
+from twisted.internet import defer
 from buildbot.status import builder
-
-from twisted.internet import defer, reactor
-from twisted.python import log
-from buildbot.test.util import changesource
-from buildbot.changes import base
 
 class TestLogFileProducer(unittest.TestCase):
     def make_static_logfile(self, contents):
