@@ -16,6 +16,8 @@ evaluation-time.
 leading digits off the category name.  This was undocumented and apparently
 non-functional, and has been removed. (#1059)
 
+*** contrib/hg_buildbot.py was removed in favor of buildbot.changes.hgbuildbot.
+
 * Buildbot 0.8.2
 
 ** Upgrading
