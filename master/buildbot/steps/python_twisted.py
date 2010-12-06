@@ -611,6 +611,6 @@ class Trial(ShellCommand):
 
 class RemovePYCs(ShellCommand):
     name = "remove-.pyc"
-    command = ['find', '-name', '*.pyc', '-exec', 'rm', '{}', ';']
+    command = ['find', '.', '-name', '*.pyc', '-exec', 'rm', '{}', ';']
     description = ["removing", ".pyc", "files"]
     descriptionDone = ["remove", ".pycs"]
