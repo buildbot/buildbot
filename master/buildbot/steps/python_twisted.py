@@ -608,9 +608,9 @@ class Trial(ShellCommand):
     def getText2(self, cmd, results):
         return self.text2
 
-    
+
 class RemovePYCs(ShellCommand):
     name = "remove-.pyc"
-    command = 'find . -name "*.pyc" | xargs rm'
+    command = ['find', '-name', '*.pyc', '-exec', 'rm', '{}', ';']
     description = ["removing", ".pyc", "files"]
     descriptionDone = ["remove", ".pycs"]
