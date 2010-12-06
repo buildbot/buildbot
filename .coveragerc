@@ -17,6 +17,9 @@ exclude_lines =
     if __name__ == .__main__.:
     if runtime.platformType  == 'win32'
 
+    # 'pass' generally means 'this won't be called'
+    pass
+
 include =
     master/*
     slave/*
