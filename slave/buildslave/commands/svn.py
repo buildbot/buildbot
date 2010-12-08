@@ -76,7 +76,7 @@ class SVN(SourceBaseCommand):
 
     def doVCFull(self):
         revision = self.args['revision'] or 'HEAD'
-        args = ['--revision', str(revision), self.svnurl, self.srcdir]
+        args = ['--revision', str(revision), "%s@%s" % (self.svnurl, str(revision)), self.srcdir]
 
         if self.mode == 'export':
             if revision == 'HEAD': return self.doSVNExport()

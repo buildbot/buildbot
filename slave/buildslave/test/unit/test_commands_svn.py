@@ -35,7 +35,7 @@ class TestSVN(SourceCommandTestMixin, unittest.TestCase):
                 self.basedir)
                 + 0,
             Expect([ 'path/to/svn', 'checkout', '--non-interactive', '--no-auth-cache',
-                     '--revision', 'HEAD', 'http://svn.local/app/trunk', 'source' ],
+                     '--revision', 'HEAD', 'http://svn.local/app/trunk@HEAD', 'source' ],
                 self.basedir,
                 sendRC=False, timeout=120, usePTY=False, environ=exp_environ)
                 + 0,
