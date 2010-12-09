@@ -95,7 +95,7 @@ def hook(ui, repo, hooktype, node=None, source=None, **kwargs):
             if branchtype == 'inrepo':
                 branch = workingctx(repo).branch()
 
-    s = sendchange.Sender(master, None)
+    s = sendchange.Sender(master)
     d = defer.Deferred()
     reactor.callLater(0, d.callback, None)
     # process changesets

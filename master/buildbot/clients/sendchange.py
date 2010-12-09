@@ -4,24 +4,22 @@ from twisted.cred import credentials
 from twisted.internet import reactor
 
 class Sender:
-    def __init__(self, master, user=None):
-        self.user = user
+    def __init__(self, master, auth=('change','changepw')):
+        self.username, self.password = auth
         self.host, self.port = master.split(":")
         self.port = int(self.port)
         self.num_changes = 0
 
-    def send(self, branch, revision, comments, files, user=None, category=None,
+    def send(self, branch, revision, comments, files, who=None, category=None,
              when=None, properties={}, repository='', project='', revlink=''):
-        if user is None:
-            user = self.user
-        change = {'project': project, 'repository': repository, 'who': user,
+        change = {'project': project, 'repository': repository, 'who': who,
                   'files': files, 'comments': comments, 'branch': branch,
                   'revision': revision, 'category': category, 'when': when,
                   'properties': properties, 'revlink': revlink}
         self.num_changes += 1
 
         f = pb.PBClientFactory()
-        d = f.login(credentials.UsernamePassword("change", "changepw"))
+        d = f.login(credentials.UsernamePassword(self.username, self.password))
         reactor.connectTCP(self.host, self.port, f)
         d.addCallback(self.addChange, change)
         return d

@@ -137,7 +137,7 @@ def findNewChanges():
 
 def sendChanges(master):
     changes = findNewChanges()
-    s = sendchange.Sender(master, None)
+    s = sendchange.Sender(master)
 
     d = defer.Deferred()
     reactor.callLater(0, d.callback, None)

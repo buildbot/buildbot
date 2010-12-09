@@ -771,7 +771,10 @@ class SendChangeOptions(OptionsWithOptionsFile):
     optParameters = [
         ("master", "m", None,
          "Location of the buildmaster's PBListener (host:port)"),
-        ("username", "u", None, "Username performing the commit"),
+        # deprecated in 0.8.3; remove in 0.8.5 (bug #1711)
+        ("username", "u", None, "deprecated name for --who"),
+        ("auth", "a", None, "Authentication token - username:password, or prompt for password"),
+        ("who", "W", None, "Author of the commit"),
         ("repository", "R", '', "Repository specifier"),
         ("project", "P", '', "Project specifier"),
         ("branch", "b", None, "Branch specifier"),
@@ -789,6 +792,7 @@ class SendChangeOptions(OptionsWithOptionsFile):
 
     buildbotOptions = [
         [ 'master', 'master' ],
+        [ 'who', 'who' ],
         [ 'username', 'username' ],
         [ 'branch', 'branch' ],
         [ 'category', 'category' ],
@@ -808,7 +812,11 @@ def sendchange(config, runReactor=False):
     connection will be drpoped as soon as the Change has been sent."""
     from buildbot.clients.sendchange import Sender
 
-    user = config.get('username')
+    who = config.get('who')
+    if not who and config.get('username'):
+        print "NOTE: --username/-u is deprecated: use --who/-W'"
+        who = config.get('username')
+    auth = config.get('auth')
     master = config.get('master')
     branch = config.get('branch')
     category = config.get('category')
@@ -836,11 +844,20 @@ def sendchange(config, runReactor=False):
 
     files = config.get('files', [])
 
-    assert user, "you must provide a username"
+    # fix up the auth with a password if none was given
+    if not auth:
+        auth = 'change:changepw'
+    if ':' not in auth:
+        import getpass
+        pw = getpass.getpass("Enter password for '%s': " % auth)
+        auth = "%s:%s" % (auth, pw)
+    auth = auth.split(':', 1)
+
+    assert who, "you must provide a committer (--who)"
     assert master, "you must provide the master location"
 
-    s = Sender(master, user)
-    d = s.send(branch, revision, comments, files, category=category, when=when,
+    s = Sender(master, auth)
+    d = s.send(branch, revision, comments, files, who=who, category=category, when=when,
                properties=properties, repository=repository, project=project,
                revlink=revlink)
     if runReactor:

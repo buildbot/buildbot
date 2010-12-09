@@ -30,6 +30,9 @@ non-functional, and has been removed. (#1059)
 
 *** contrib/hg_buildbot.py was removed in favor of buildbot.changes.hgbuildbot.
 
+*** The misnamed sendchange option 'username' has been renamed to 'who'; the old
+option continues to work, but is deprecated and will be removed. (#1711)
+
 * Buildbot 0.8.2
 
 ** Upgrading

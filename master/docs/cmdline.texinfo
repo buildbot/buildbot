@@ -458,12 +458,18 @@ VC server. It requires that you have a PBChangeSource
 (@pxref{PBChangeSource}) running in the buildmaster (by being set in
 @code{c['change_source']}).
 
-
 @example
-buildbot sendchange --master @var{MASTERHOST}:@var{PORT} --username @var{USER} @var{FILENAMES..}
+buildbot sendchange --master @var{MASTERHOST}:@var{PORT} --auth @var{USER}:@var{PASS} \
+        --who @var{COMMITTER} @var{FILENAMES..}
 @end example
 
-The @code{master} and @code{username} arguments can also be given in the
+The @code{auth} option specifies the credentials to use to connect to the
+master, in the form @code{user:pass}.  If the password is omitted, then
+sendchange will prompt for it.  If both are omitted, the old default (username
+"change" and password "changepw") will be used.  Note that this password is
+well-known, and should not be used on an internet-accessible port.
+
+The @code{master} and @code{who} arguments can also be given in the
 options file (@pxref{.buildbot config directory}).  There are other (optional)
 arguments which can influence the @code{Change} that gets submitted:
 
