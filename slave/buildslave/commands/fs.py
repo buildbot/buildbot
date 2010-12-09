@@ -131,7 +131,7 @@ class CopyDirectory(base.Command):
         - ['maxTime']:  seconds before we kill off the command
 
 
-    RemoveDirectory creates the following status messages:
+    CopyDirectory creates the following status messages:
         - {'rc': rc} : when the process has terminated
     """
 
