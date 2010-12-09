@@ -77,10 +77,10 @@ class PBChangeSource(base.ChangeSource):
         # sep= was removed in 0.7.4 . This more-helpful-than-nothing error
         # message will be removed in 0.7.5 .
         assert sep is None, "prefix= is now a complete string, do not use sep="
-        # TODO: current limitations
-        assert user == "change"
-        assert passwd == "changepw"
+
+        # TODO: current limitation
         assert port == None
+
         self.user = user
         self.passwd = passwd
         self.port = port
@@ -98,9 +98,9 @@ class PBChangeSource(base.ChangeSource):
         base.ChangeSource.startService(self)
         # our parent is the ChangeMaster object
         # find the master's Dispatch object and register our username
-        # TODO: the passwd should be registered here too
         master = self.parent.parent
         master.dispatcher.register(self.user, self)
+        master.checker.addUser(self.user, self.passwd)
 
     def stopService(self):
         base.ChangeSource.stopService(self)

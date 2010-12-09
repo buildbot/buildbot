@@ -1032,7 +1032,6 @@ class BuildMaster(service.MultiService):
         self.checker.users = {} # violates abstraction, oh well
         for s in new_slaves:
             self.checker.addUser(s.slavename, s.password)
-        self.checker.addUser("change", "changepw")
         # let the BotMaster take care of the rest
         return self.botmaster.loadConfig_Slaves(new_slaves)
 
