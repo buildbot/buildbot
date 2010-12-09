@@ -543,7 +543,7 @@ class StringDownload(_TransferBuildStep):
                                   os.path.basename(slavedest)])
 
         # setup structures for reading the file
-        fp = StringIO(self.s)
+        fp = StringIO(properties.render(self.s))
         fileReader = _FileReader(fp)
 
         # default arguments
