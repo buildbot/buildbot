@@ -5,7 +5,11 @@ from twisted.internet import defer
 from buildslave.commands.base import SourceBaseCommand
 from buildslave import runprocess
 
-import hashlib
+try:
+    from hashlib import sha1
+except ImportError:
+    import sha
+    sha1 = sha.new
 
 class Repo(SourceBaseCommand):
     """Repo specific VC operation. In addition to the arguments
@@ -141,6 +145,6 @@ class Repo(SourceBaseCommand):
     def parseGotRevision(self):
         command = ['manifest', '-o', '-']
         def _parse(res):
-            return hashlib.sha1(self.command.stdout).hexdigest()
+            return sha1(self.command.stdout).hexdigest()
         return self._repoCmd(command, _parse, keepStdout=True)
 
