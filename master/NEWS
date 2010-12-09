@@ -22,6 +22,10 @@ WithProperties now has the option to pass callable functions as keyword
 arguments to substitute in the results of more complex Python code at
 evaluation-time.
 
+** New 'SetPropertiesFromEnv' step
+
+This step uses the slave environment to set build properties.
+
 ** Deprecations and Removals
 
 *** The console view previously had an undocumented feature that would strip
