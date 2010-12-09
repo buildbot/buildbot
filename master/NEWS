@@ -16,6 +16,14 @@ connect and inject a change into the Buildmaster without any authentication at
 all, aside from the hard-coded 'change'/'changepw' credentials.  In many cases,
 this can lead to arbitrary code injection on slaves.
 
+** Experiemental Gerrit and Repo support
+
+A new ChangeSource (GerritChangeSource), status listener (GerritStatusPush),
+and source step (Repo) are available in this version.  These are not fully
+documented and still have a number of known bugs outstanding (see
+http://buildbot.net/trac/wiki/RepoProject), and as such are considered
+experimental in this release.
+
 ** WithProperties now supports lambda substitutions
 
 WithProperties now has the option to pass callable functions as keyword
