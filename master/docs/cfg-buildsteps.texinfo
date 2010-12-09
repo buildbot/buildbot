@@ -1855,9 +1855,10 @@ Sometimes it is useful to transfer a calculated value from the master
 to the slave.  Instead of having to create a temporary file and then
 use @code{FileDownload}, you can use one of the string download steps.
 
-@code{StringDownload} works just like @code{FileDownload} except it
-takes a single argument, @code{s}, representing the string to download
-instead of a @code{mastersrc} argument.
+@code{StringDownload} works just like @code{FileDownload} except it takes a
+single argument, @code{s}, representing the string to download instead of a
+@code{mastersrc} argument.  @code{WithProperties} will be properly rendered, if
+used in this argument.
 
 @code{JSONStringDownload} is similar, except it takes an @code{o}
 argument, which must be json serializable, and transfers that as a
