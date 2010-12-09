@@ -1,8 +1,9 @@
 import os
+import sys
 import shutil
 
 from twisted.internet import defer
-from twisted.python import runtime
+from twisted.python import runtime, log
 
 from buildslave import runprocess
 from buildslave.commands import base, utils

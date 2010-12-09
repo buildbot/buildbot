@@ -1,13 +1,11 @@
 
-import os, signal, types, re, traceback
-from stat import ST_CTIME, ST_MTIME, ST_SIZE
-from base64 import b64encode
 import os
+from base64 import b64encode
 import sys
 import shutil
 
 from zope.interface import implements
-from twisted.internet import reactor, defer, task
+from twisted.internet import reactor, defer
 from twisted.python import log, failure, runtime
 
 from buildslave.interfaces import ISlaveCommand

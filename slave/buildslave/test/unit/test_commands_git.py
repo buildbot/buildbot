@@ -1,7 +1,4 @@
-import os
-
 from twisted.trial import unittest
-from twisted.python import runtime
 
 from buildslave.test.fake.runprocess import Expect
 from buildslave.test.util.sourcecommand import SourceCommandTestMixin
@@ -25,7 +22,6 @@ class TestGit(SourceCommandTestMixin, unittest.TestCase):
             repourl='git://github.com/djmitche/buildbot.git',
         ))
 
-        exp_environ = dict(PWD='.', LC_MESSAGES='C')
         expects = [
             Expect([ 'clobber', 'workdir' ],
                 self.basedir)
@@ -91,7 +87,6 @@ class TestGit(SourceCommandTestMixin, unittest.TestCase):
             return True
         self.patch(self.cmd, "sourcedirIsUpdateable", sourcedirIsUpdateable)
 
-        exp_environ = dict(PWD='.', LC_MESSAGES='C')
         expects = [
             Expect([ 'clobber', 'workdir' ],
                 self.basedir)
@@ -135,7 +130,6 @@ class TestGit(SourceCommandTestMixin, unittest.TestCase):
             repourl='git://github.com/djmitche/buildbot.git',
         ))
 
-        exp_environ = dict(PWD='.', LC_MESSAGES='C')
         expects = [
             Expect([ 'clobber', 'workdir' ],
                 self.basedir)

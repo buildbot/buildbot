@@ -1,6 +1,4 @@
 from twisted.trial import unittest
-from twisted.internet import task, defer
-from twisted.python import runtime
 
 from buildslave.test.fake.runprocess import Expect
 from buildslave.test.util.command import CommandTestMixin

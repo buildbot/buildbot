@@ -1,7 +1,6 @@
 import os
 
 from twisted.trial import unittest
-from twisted.python import runtime
 
 from buildslave.test.util.command import CommandTestMixin
 from buildslave.commands import fs

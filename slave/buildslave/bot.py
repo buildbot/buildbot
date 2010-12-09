@@ -4,7 +4,7 @@ import sys
 
 from twisted.spread import pb
 from twisted.python import log
-from twisted.internet import reactor, defer, error
+from twisted.internet import reactor, error
 from twisted.application import service, internet
 from twisted.cred import credentials
 
@@ -71,9 +71,9 @@ class SlaveBuilder(pb.Referenceable, service.Service):
     def activity(self):
         bot = self.parent
         if bot:
-            buildslave = bot.parent
-            if buildslave:
-                bf = buildslave.bf
+            bslave = bot.parent
+            if bslave:
+                bf = bslave.bf
                 bf.activity()
 
     def remote_setMaster(self, remote):

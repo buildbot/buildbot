@@ -1,5 +1,5 @@
 from twisted.python import failure
-from twisted.internet import defer, reactor
+from twisted.internet import defer
 
 class Expect:
     """

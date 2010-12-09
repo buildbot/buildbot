@@ -4,7 +4,6 @@ from twisted.python import log
 
 from buildslave.commands.base import SourceBaseCommand
 from buildslave import runprocess
-from buildslave.commands import utils
 from buildslave.util import Obfuscated
 
 

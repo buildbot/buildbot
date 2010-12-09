@@ -2,7 +2,6 @@ import os
 
 from buildslave.commands.base import SourceBaseCommand
 from buildslave import runprocess
-from buildslave.commands import utils
 
 
 class Darcs(SourceBaseCommand):

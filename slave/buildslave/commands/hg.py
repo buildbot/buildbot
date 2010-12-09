@@ -4,7 +4,6 @@ from twisted.python import log, runtime
 
 from buildslave.commands.base import SourceBaseCommand, AbandonChain
 from buildslave import runprocess
-from buildslave.commands import utils
 from buildslave.util import remove_userpassword
 
 

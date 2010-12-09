@@ -1,8 +1,7 @@
 # N.B.: don't import anything that might pull in a reactor yet. Some of our
 # subcommands want to load modules that need the gtk reactor.
-import os, sys, stat, re, time
-import traceback
-from twisted.python import usage, util, runtime
+import os, sys, re, time
+from twisted.python import usage
 
 def isBuildslaveDir(dir):
     buildbot_tac = os.path.join(dir, "buildbot.tac")
@@ -212,7 +211,6 @@ def stop(config, signame="TERM", wait=False, returnFalseOnNotRunning=False):
         print "never saw process go away"
 
 def restart(config):
-    basedir = config['basedir']
     quiet = config['quiet']
 
     if not isBuildslaveDir(config['basedir']):

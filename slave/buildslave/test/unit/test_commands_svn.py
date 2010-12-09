@@ -1,7 +1,4 @@
-import os
-
 from twisted.trial import unittest
-from twisted.python import runtime
 
 from buildslave.test.fake.runprocess import Expect
 from buildslave.test.util.sourcecommand import SourceCommandTestMixin

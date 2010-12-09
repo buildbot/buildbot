@@ -3,7 +3,6 @@ import time
 
 from buildslave.commands.base import SourceBaseCommand
 from buildslave import runprocess
-from buildslave.commands import utils
 
 class CVS(SourceBaseCommand):
     """CVS-specific VC operation. In addition to the arguments handled by

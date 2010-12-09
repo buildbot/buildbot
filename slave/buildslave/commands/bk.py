@@ -4,7 +4,6 @@ from twisted.python import log
 
 from buildslave.commands.base import SourceBaseCommand
 from buildslave import runprocess
-from buildslave.commands import utils
 
 
 class BK(SourceBaseCommand):
@@ -34,7 +33,8 @@ class BK(SourceBaseCommand):
 
     def doVCUpdate(self):
         bk = self.getCommand('bk')
-        revision = self.args['revision'] or 'HEAD'
+        # XXX revision is never used!! - bug #1715
+        # revision = self.args['revision'] or 'HEAD'
         # update: possible for mode in ('copy', 'update')
         d = os.path.join(self.builder.basedir, self.srcdir)
 
@@ -83,7 +83,6 @@ class BK(SourceBaseCommand):
         d = c.start()
         def _parse(res):
             r_raw = c.stdout.strip()
-            got_version = None
             try:
                 r = r_raw
             except:

@@ -5,7 +5,6 @@ from twisted.internet import defer
 
 from buildslave.commands.base import SourceBaseCommand
 from buildslave import runprocess
-from buildslave.commands import utils
 
 
 class Bzr(SourceBaseCommand):

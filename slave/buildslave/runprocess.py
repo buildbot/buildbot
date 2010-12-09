@@ -3,7 +3,6 @@ Support for running 'shell commands'
 """
 
 import os
-import sys
 import signal
 import types
 import re
@@ -12,7 +11,7 @@ import stat
 from collections import deque
 
 from twisted.python import runtime, log
-from twisted.internet import reactor, defer, protocol, task
+from twisted.internet import reactor, defer, protocol, task, error
 
 from buildslave import util
 from buildslave.exceptions import AbandonChain
@@ -732,7 +731,7 @@ class RunProcess:
             except OSError:
                 # could be no-such-process, because they finished very recently
                 pass
-            except twisted.internet.error.ProcessExitedAlready:
+            except error.ProcessExitedAlready:
                 # Twisted thinks the process has already exited
                 pass
         if not hit:

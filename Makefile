@@ -14,3 +14,4 @@ pylint:
 
 pyflakes:
 	cd master; $(MAKE) pyflakes
+	cd slave; $(MAKE) pyflakes

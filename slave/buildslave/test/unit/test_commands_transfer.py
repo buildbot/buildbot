@@ -5,10 +5,9 @@ import tarfile
 import StringIO
 
 from twisted.trial import unittest
-from twisted.internet import task, defer, reactor
+from twisted.internet import defer, reactor
 from twisted.python import runtime
 
-from buildslave.test.fake.runprocess import Expect
 from buildslave.test.fake.remote import FakeRemote
 from buildslave.test.util.command import CommandTestMixin
 from buildslave.commands import transfer
@@ -389,7 +388,7 @@ class TestDownloadFile(CommandTestMixin, unittest.TestCase):
         return d
 
     def test_interrupted(self):
-        self.fakemaster.data = test_data = 'tenchars--' * 100 # 1k
+        self.fakemaster.data = 'tenchars--' * 100 # 1k
         self.fakemaster.delay_read = True # read veery slowly
 
         self.make_command(transfer.SlaveFileDownloadCommand, dict(

@@ -39,13 +39,6 @@ class SourceCommandTestMixin(command.CommandTestMixin):
             return r.start()
         cmd.doClobber = doClobber
 
-        def doClobber(_, dirname):
-            r = runprocess.RunProcess(self.builder,
-                [ 'clobber', dirname ],
-                self.builder.basedir)
-            return r.start()
-        cmd.doClobber = doClobber
-
         def doCopy(_):
             r = runprocess.RunProcess(self.builder,
                 [ 'copy', cmd.srcdir, cmd.workdir ],

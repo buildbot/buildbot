@@ -4,7 +4,6 @@ import shutil
 from twisted.trial import unittest
 from twisted.internet import defer, reactor
 from twisted.python import failure, log
-from zope.interface import implements
 import mock
 
 from buildslave.test.util import command

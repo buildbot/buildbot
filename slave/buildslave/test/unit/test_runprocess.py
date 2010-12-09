@@ -4,7 +4,7 @@ import os
 
 import twisted
 from twisted.trial import unittest
-from twisted.internet import task, defer
+from twisted.internet import task
 from twisted.python import runtime
 
 from buildslave.test.util.misc import nl, BasedirMixin

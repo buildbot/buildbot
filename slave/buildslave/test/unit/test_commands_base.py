@@ -1,10 +1,5 @@
-import sys, re
-import pprint
-import time
-
 from twisted.trial import unittest
-from twisted.internet import task, defer
-from twisted.python import runtime
+from twisted.internet import defer
 
 from buildslave.test.util.command import CommandTestMixin
 from buildslave.commands.base import Command

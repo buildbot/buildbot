@@ -1,7 +1,4 @@
-import os
-
 from twisted.trial import unittest
-from twisted.python import runtime
 
 from buildslave.test.fake.runprocess import Expect
 from buildslave.test.util.sourcecommand import SourceCommandTestMixin
@@ -26,7 +23,6 @@ class TestCVS(SourceCommandTestMixin, unittest.TestCase):
             cvsmodule='htdocs',
         ))
 
-        exp_environ = dict(PWD='.', LC_MESSAGES='C')
         expects = [
             Expect([ 'clobber', 'workdir' ],
                 self.basedir)
