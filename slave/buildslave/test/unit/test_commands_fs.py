@@ -1,6 +1,7 @@
 import os
 
 from twisted.trial import unittest
+from twisted.python import runtime
 
 from buildslave.test.util.command import CommandTestMixin
 from buildslave.commands import fs
@@ -44,7 +45,7 @@ class TestCopyDirectory(CommandTestMixin, unittest.TestCase):
 
         def check(_):
             self.assertTrue(os.path.exists(os.path.abspath(os.path.join(self.basedir,'copy'))))
-            self.assertIn({'rc': 0},
+            self.assertIn({'rc': 0}, # this may ignore a 'header' : '..', which is OK
                     self.get_updates(),
                     self.builder.show())
         d.addCallback(check)

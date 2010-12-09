@@ -68,11 +68,13 @@ class RemoveDirectory(base.Command):
             # if we're running on w32, use rmtree instead. It will block,
             # but hopefully it won't take too long.
             utils.rmdirRecursive(self.dir)
-            return defer.succeed(0)
+            d = defer.succeed(0)
+        else:
+            d = self._clobber(None)
 
-	d = self._clobber(None)
-	d.addCallback(self._sendRC)
-	return d
+        # always add the RC, regardless of platform
+        d.addCallback(self._sendRC)
+        return d
 
     def _clobber(self, dummy, chmodDone = False):
         command = ["rm", "-rf", self.dir]
@@ -157,20 +159,22 @@ class CopyDirectory(base.Command):
             "use shutil.copytree(), which will block until it is complete.  "
             "fromdir: %s, todir: %s\n" % (fromdir, todir)})
             shutil.copytree(fromdir, todir)
-            return defer.succeed(0)
+            d = defer.succeed(0)
+        else:
+            if not os.path.exists(os.path.dirname(todir)):
+                os.makedirs(os.path.dirname(todir))
+            if os.path.exists(todir):
+                # I don't think this happens, but just in case..
+                log.msg("cp target '%s' already exists -- cp will not do what you think!" % todir)
 
-        if not os.path.exists(os.path.dirname(todir)):
-            os.makedirs(os.path.dirname(todir))
-        if os.path.exists(todir):
-            # I don't think this happens, but just in case..
-            log.msg("cp target '%s' already exists -- cp will not do what you think!" % todir)
+            command = ['cp', '-R', '-P', '-p', fromdir, todir]
+            c = runprocess.RunProcess(self.builder, command, self.builder.basedir,
+                             sendRC=False, timeout=self.timeout, maxTime=self.maxTime,
+                             usePTY=False)
+            self.command = c
+            d = c.start()
+            d.addCallback(self._abandonOnFailure)
 
-        command = ['cp', '-R', '-P', '-p', fromdir, todir]
-        c = runprocess.RunProcess(self.builder, command, self.builder.basedir,
-                         sendRC=False, timeout=self.timeout, maxTime=self.maxTime,
-                         usePTY=False)
-        self.command = c
-        d = c.start()
-        d.addCallback(self._abandonOnFailure)
-	d.addCallback(self._sendRC)
+        # always set the RC, regardless of platform
+        d.addCallback(self._sendRC)
         return d
