@@ -17,7 +17,6 @@ work around this, but true support for multi-tree builds remains elusive.
 @menu
 * Choosing a Change Source::
 * Configuring Change Sources::
-* CVSToys - PBService::
 * Mail-parsing ChangeSources::
 * PBChangeSource::
 * P4Source::
@@ -42,21 +41,11 @@ be useful with them. All of these ChangeSources are in the
 @code{buildbot.changes} module.  The @code{contrib/} scripts mentioned below
 are available on github - @pxref{Contrib Scripts}.
 
-@anchor{depr-src}
-@emph{NOTE:} The CVS change sources FreshCVSSource, FCMaildirSource,
-BonsaiMaildirSource and SyncmailMaildirSource are flagged as
-depreciated. If you are still using them, please send mail to
-the buildbot list.
-
 @table @code
 @item CVS
 
 @itemize @bullet
 @item mail.CVSMaildirSource (watching mail sent by @code{contrib/buildbot_cvs_mail.py} script)
-@item freshcvs.FreshCVSSource (connected via TCP to the freshcvs daemon)
-@item mail.FCMaildirSource (watching for email sent by a freshcvs daemon)
-@item mail.BonsaiMaildirSource (watching for email sent by Bonsai)
-@item mail.SyncmailMaildirSource (watching for email sent by syncmail)
 @item pb.PBChangeSource (listening for connections from @code{buildbot
 sendchange} run in a loginfo script)
 @item pb.PBChangeSource (listening for connections from a long-running
@@ -145,9 +134,7 @@ multiple sources, just set @code{c['change_source']} to a list of
 ChangeSources.
 
 @example
-s = FreshCVSSourceNewcred(host="host", port=4519,
-                          user="alice", passwd="secret",
-                          prefix="Twisted")
+s = PBChangeSource()
 c['change_source'] = [s]
 @end example
 
@@ -172,80 +159,6 @@ useful when building from several distinct codebases in the same buildmaster:
 the project string can serve to differentiate the different codebases.
 Schedulers can filter on project, so you can configure different builders to
 run for each project.
-
-@node CVSToys - PBService
-@subsection CVSToys - PBService
-
-@csindex buildbot.changes.freshcvs.FreshCVSSource
-@csindex buildbot.changes.freshcvs.FreshCVSSourceOldcred
-
-The @uref{http://purl.net/net/CVSToys, CVSToys} package provides a
-server which runs on the machine that hosts the CVS repository it
-watches. It has a variety of ways to distribute commit notifications,
-and offers a flexible regexp-based way to filter out uninteresting
-changes. One of the notification options is named @code{PBService} and
-works by listening on a TCP port for clients. These clients subscribe
-to hear about commit notifications.
-
-The buildmaster has a CVSToys-compatible @code{PBService} client built in.
-There are two versions of it, one for old versions of CVSToys (1.0.9 and
-earlier, @code{FreshCVSSourceOldcred}) which used the @code{oldcred}
-authentication framework, and one for newer versions (1.0.10 and later) which
-use @code{newcred}. Both are classes in the @code{buildbot.changes.freshcvs}
-package.
-
-@code{FreshCVSSource} objects are created with the following
-parameters:
-
-@table @samp
-
-@item @code{host} and @code{port}
-these specify where the CVSToys server can be reached
-
-@item @code{user} and @code{passwd}
-these specify the login information for the CVSToys server
-(@code{freshcvs}). These must match the server's values, which are
-defined in the @code{freshCfg} configuration file (which lives in the
-CVSROOT directory of the repository).
-
-@item @code{prefix}
-this is the prefix to be found and stripped from filenames delivered
-by the CVSToys server. Most projects live in sub-directories of the
-main repository, as siblings of the CVSROOT sub-directory, so
-typically this prefix is set to that top sub-directory name.
-
-@end table
-
-@heading Example
-
-To set up the freshCVS server, add a statement like the following to
-your @file{freshCfg} file:
-
-@example
-pb = ConfigurationSet([
-    (None, None, None, PBService(userpass=('foo', 'bar'), port=4519)),
-    ])
-@end example
-
-This will announce all changes to a client which connects to port 4519
-using a username of 'foo' and a password of 'bar'.
-
-Then add a clause like this to your buildmaster's @file{master.cfg}:
-
-@example
-c['change_source'] = FreshCVSSource("cvs.example.com", 4519,
-                                    "foo", "bar",
-                                    prefix="glib/")
-@end example
-
-where "cvs.example.com" is the host that is running the FreshCVS daemon, and
-"glib" is the top-level directory (relative to the repository's root) where
-all your source code lives. Most projects keep one or more projects in the
-same repository (along with CVSROOT/ to hold admin files like loginfo and
-freshCfg); the prefix= argument tells the buildmaster to ignore everything
-outside that directory, and to strip that common prefix from all pathnames
-it handles.
-
 
 @node Mail-parsing ChangeSources
 @subsection Mail-parsing ChangeSources
@@ -278,9 +191,8 @@ Once you've chosen a maildir location and a parsing function, create
 the change source and put it in @code{c['change_source']}:
 
 @example
-from buildbot.changes.mail import SyncmailMaildirSource
-c['change_source'] = SyncmailMaildirSource("~/maildir-buildbot",
-                                           prefix="/trunk/")
+from buildbot.changes.mail import CVSMaildirSource
+c['change_source'] = CVSMaildirSource("/home/buildbot/Mail", urlmaker=fileToUrl)
 @end example
 
 @menu
@@ -288,9 +200,6 @@ c['change_source'] = SyncmailMaildirSource("~/maildir-buildbot",
 * Using Maildirs::
 * Parsing Email Change Messages::
 * CVSMaildirSource::
-* FCMaildirSource::
-* SyncmailMaildirSource::
-* BonsaiMaildirSource::
 * SVNCommitEmailMaildirSource::
 * BzrLaunchpadEmailMaildirSource::
 @end menu
@@ -386,23 +295,12 @@ and commit script in use.
 A couple of common tools used to create these change emails, along with the
 buildbot tools to parse them, are:
 
-@emph{NOTE:} The CVS change sources FCMaildirSource,
-BonsaiMaildirSource and SyncmailMaildirSource are flagged as
-depreciated. If you are still using them, please send mail to
-the buildbot list.
-
 @table @b
 
 @item CVS
 @table @samp
 @item Buildbot CVS MailNotifier
 @ref{CVSMaildirSource}
-@item CVSToys MailNotifier
-@ref{FCMaildirSource}
-@item Bonsai notification
-@ref{BonsaiMaildirSource}
-@item syncmail
-@ref{SyncmailMaildirSource}
 @end table
 
 @item SVN
@@ -580,67 +478,6 @@ The rest of the command line arguments are:
         string containing the files that are changing.
 @end example
 
-
-@node FCMaildirSource
-@subsubsection FCMaildirSource
-
-
-@xref{depr-src,,Depreciated}.
-
-@csindex buildbot.changes.mail.FCMaildirSource
-
-http://twistedmatrix.com/users/acapnotic/wares/code/CVSToys/
-
-This parser works with the CVSToys @code{MailNotification} action,
-which will send email to a list of recipients for each commit. This
-tends to work better than using @code{/bin/mail} from within the
-CVSROOT/loginfo file directly, as CVSToys will batch together all
-files changed during the same CVS invocation, and can provide more
-information (like creating a ViewCVS URL for each file changed).
-
-The Buildbot's @code{FCMaildirSource} knows for to parse these CVSToys
-messages and turn them into Change objects. It can be given two
-parameters: the directory name of the maildir root, and the prefix to
-strip.
-
-@example
-from buildbot.changes.mail import FCMaildirSource
-c['change_source'] = FCMaildirSource("~/maildir-buildbot")
-@end example
-
-@node SyncmailMaildirSource
-@subsubsection SyncmailMaildirSource
-
-@xref{depr-src,,Depreciated}.
-
-@csindex buildbot.changes.mail.SyncmailMaildirSource
-
-http://sourceforge.net/projects/cvs-syncmail
-
-@code{SyncmailMaildirSource} knows how to parse the message format used by
-the CVS ``syncmail'' script.
-
-@example
-from buildbot.changes.mail import SyncmailMaildirSource
-c['change_source'] = SyncmailMaildirSource("~/maildir-buildbot")
-@end example
-
-@node BonsaiMaildirSource
-@subsubsection BonsaiMaildirSource
-
-@xref{depr-src,,Depreciated}.
-
-@csindex buildbot.changes.mail.BonsaiMaildirSource
-
-http://www.mozilla.org/bonsai.html
-
-@code{BonsaiMaildirSource} parses messages sent out by Bonsai, the CVS
-tree-management system built by Mozilla.
-
-@example
-from buildbot.changes.mail import BonsaiMaildirSource
-c['change_source'] = BonsaiMaildirSource("~/maildir-buildbot")
-@end example
 
 @node SVNCommitEmailMaildirSource
 @subsubsection SVNCommitEmailMaildirSource

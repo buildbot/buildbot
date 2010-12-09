@@ -35,10 +35,6 @@ class ChangeManager(service.MultiService):
         seconds if not.  It parses incoming mail to determine what files
         were changed.
 
-      - L{buildbot.changes.freshcvs.FreshCVSSource} makes a PB
-        connection to the CVSToys 'freshcvs' daemon and relays any
-        changes it announces.
-
     """
 
     implements(interfaces.IEventSource)
