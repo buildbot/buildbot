@@ -835,6 +835,98 @@ class Git(Source):
         cmd = LoggedRemoteCommand("git", self.args)
         self.startCommand(cmd)
 
+class Repo(Source):
+    """Check out a source tree from a repo repository 'repourl'."""
+
+    name = "repo"
+
+    def __init__(self, repourl=None,
+                 manifest_branch=None,
+                 manifest=None,
+                 repotarball=None,
+                 **kwargs):
+        """
+        @type  repourl: string
+        @param repourl: the URL which points at the repo manifests repository
+
+        @type  manifest_branch: string
+        @param manifest_branch: The manifest branch to check out by default.
+
+        @type  manifest: string
+        @param manifest: The manifest to use for sync.
+
+        """
+        Source.__init__(self, **kwargs)
+        self.repourl = repourl
+        self.addFactoryArguments(repourl=repourl,
+                                 manifest_branch=manifest_branch,
+                                 manifest=manifest,
+                                 repotarball=repotarball,
+                                 )
+        self.args.update({'manifest_branch': manifest_branch,
+                          'manifest': manifest,
+                          'repotarball': repotarball,
+                          })
+
+    def computeSourceRevision(self, changes):
+        if not changes:
+            return None
+        return changes[-1].revision
+    def parseDownloadProperty(self, s):
+        """
+         lets try to be nice in the format we want
+         can support several instances of "repo download proj number/patch" (direct copy paste from gerrit web site)
+         or several instances of "proj number/patch" (simpler version)
+         This feature allows integrator to build with several pending interdependant changes.
+         returns list of repo downloads sent to the buildslave
+         """
+        import re
+        if s == None:
+            return []
+        re1 = re.compile("repo download ([^ ]+ [0-9]+/[0-9]+)")
+        re2 = re.compile("([^ ]+ [0-9]+/[0-9]+)")
+        ret = []
+        for cur_re in [re1, re2]:
+            res = cur_re.search(s)
+            while res:
+                ret.append(res.group(1))
+                s = s[:res.start(0)] + s[res.end(0):]
+                res = cur_re.search(s)
+        return ret
+    def startVC(self, branch, revision, patch):
+        if branch is not None:
+            self.args['branch'] = branch
+
+        self.args['repourl'] = self.computeRepositoryURL(self.repourl)
+        self.args['revision'] = revision
+        self.args['patch'] = patch
+        # only master has access to properties, so we must implement this here.
+        downloads = []
+        # download patches based on gerritchangesource events
+        for change in self.build.allChanges():
+            if (change.properties.has_key("event.type") and
+                change.properties["event.type"] == "patchset-created"):
+                downloads.append("%s %s/%s"% (change.properties["event.change.project"],
+                                              change.properties["event.change.number"],
+                                              change.properties["event.patchSet.number"]))
+        # download patches based on web site forced build properties:
+        # user can be lazy and just write: "d"
+	# or specify several properties: download, download1 ... download9
+        for propName in [ "d", "download"] + [ "download%d"%(i)for i in xrange(1,10)]:
+            try:
+                s = self.build.getProperty(propName)
+            except KeyError:
+                s = ""
+            downloads.extend(self.parseDownloadProperty(s))
+        self.args["downloads"] = downloads
+        self.setProperty("downloads",downloads)
+        slavever = self.slaveVersion("repo")
+        if not slavever:
+            raise BuildSlaveTooOldError("slave is too old, does not know "
+                                        "about repo")
+        cmd = LoggedRemoteCommand("repo", self.args)
+        self.startCommand(cmd)
+
 
 class Bzr(Source):
     """Check out a source tree from a bzr (Bazaar) repository at 'repourl'.
