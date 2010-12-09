@@ -54,17 +54,18 @@ class TestBot(unittest.TestCase):
         os.makedirs(infodir)
         open(os.path.join(infodir, "admin"), "w").write("testy!")
         open(os.path.join(infodir, "foo"), "w").write("bar")
+        open(os.path.join(infodir, "environ"), "w").write("something else")
 
         d = self.bot.callRemote("getSlaveInfo")
         def check(info):
-            self.assertEqual(info, dict(admin='testy!', foo='bar'))
+            self.assertEqual(info, dict(admin='testy!', foo='bar', environ=os.environ))
         d.addCallback(check)
         return d
 
     def test_getSlaveInfo_nodir(self):
         d = self.bot.callRemote("getSlaveInfo")
         def check(info):
-            self.assertEqual(info, {})
+            self.assertEqual(info.keys(), ['environ'])
         d.addCallback(check)
         return d
 

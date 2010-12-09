@@ -1535,6 +1535,8 @@ f.addStep(SetProperty(
 Then @code{my_extract} will see @code{stdout="output1\noutput2\n"}
 and @code{stderr="error\n"}.
 
+See also @ref{SetProperiesFromEnv}.
+
 @node SubunitShellCommand
 @subsubsection SubunitShellCommand
 
@@ -1895,6 +1897,16 @@ f.addStep(MasterShellCommand(command="""
 Note that, by default, this step passes a copy of the buildmaster's environment
 variables to the subprocess.  To pass an explicit environment instead, add an
 @code{env=@{..@}} argument.
+
+@bsindex buildbot.steps.master.SetPropertiesFromEnv
+
+@example
+from buildbot.steps.master import SetProperiesFromEnv
+from buildbot.steps.shell import Compile
+
+f.addStep(SetPropertiesFromEnv(variables=["SOME_JAVA_LIB_HOME", "JAVAC"]))
+f.addStep(Compile(commands=[WithProperties("%s","JAVAC"), "-cp", WithProperties("%s", "SOME_JAVA_LIB_HOME")))
+@end example
 
 @node Triggering Schedulers
 @subsection Triggering Schedulers
