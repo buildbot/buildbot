@@ -579,8 +579,6 @@ class Dispatcher:
         afactory = self.names.get(avatarID)
         if afactory:
             persp_d = defer.maybeDeferred(afactory.getPerspective)
-        elif avatarID == "change":
-            raise ValueError("no PBChangeSource installed")
         elif avatarID == "debug":
             persp_d = defer.maybeDeferred(DebugPerspective)
             def add_masters(persp):

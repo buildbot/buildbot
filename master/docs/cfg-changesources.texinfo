@@ -550,25 +550,20 @@ creating new kinds of change sources that work on a @code{push} model
 instead of some kind of subscription scheme, for example a script
 which is run out of an email .forward file.
 
-This ChangeSource can be configured to listen on its own TCP port, or
-it can share the port that the buildmaster is already using for the
-buildslaves to connect. (This is possible because the
-@code{PBChangeSource} uses the same protocol as the buildslaves, and
-they can be distinguished by the @code{username} attribute used when
-the initial connection is established). It might be useful to have it
-listen on a different port if, for example, you wanted to establish
-different firewall rules for that port. You could allow only the SVN
-repository machine access to the @code{PBChangeSource} port, while
-allowing only the buildslave machines access to the slave port. Or you
-could just expose one port and run everything over it. @emph{Note:
-this feature is not yet implemented, the PBChangeSource will always
-share the slave port and will always have a @code{user} name of
-@code{change}, and a passwd of @code{changepw}. These limitations will
-be removed in the future.}.
+This ChangeSource always runs on the same TCP port as the slaves.  It
+shares the same protocol, and in fact shares the same space of "usernames", so you cannot configure a @code{PBChangeSource} with the same name as a slave.
 
+If you have a publicly accessible slave port, and are using
+@code{PBChangeSource}, @emph{you must establish a secure username and password
+for the change source}.  If your sendchange credentials are known (e.g., the
+defaults), then your buildmaster is susceptible to injection of arbitrary
+changes, which (depending on the build factories) could lead to arbitrary code
+execution on buildslaves.
 
-The @code{PBChangeSource} is created with the following arguments. All
-are optional.
+Buildbot does not currently allow @code{PBChangeSource} to run on a different
+port than the slave port.  That will be fixed in bug #1708.
+
+The @code{PBChangeSource} is created with the following arguments.
 
 @table @samp
 @item @code{port}
@@ -578,15 +573,14 @@ Implemented, always set to @code{None}}.
 
 @item @code{user} and @code{passwd}
 The user/passwd account information that the client program must use
-to connect. Defaults to @code{change} and @code{changepw}. @emph{Not
-Implemented, @code{user} is currently always set to @code{change},
-@code{passwd} is always set to @code{changepw}}.
+to connect. Defaults to @code{change} and @code{changepw}.  Do not use
+these defaults on a publicly exposed port!
 
 @item @code{prefix}
 The prefix to be found and stripped from filenames delivered over the
-connection. Any filenames which do not start with this prefix will be
-removed. If all the filenames in a given Change are removed, the that
-whole Change will be dropped. This string should probably end with a
+connection, defaulting to None. Any filenames which do not start with this
+prefix will be removed. If all the filenames in a given Change are removed, the
+that whole Change will be dropped. This string should probably end with a
 directory separator.
 
 This is useful for changes coming from version control systems that
