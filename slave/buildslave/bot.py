@@ -285,18 +285,20 @@ class Bot(pb.Referenceable, service.MultiService):
 
         files = {}
         basedir = os.path.join(self.basedir, "info")
-        if not os.path.isdir(basedir):
-            return files
-        for f in os.listdir(basedir):
-            filename = os.path.join(basedir, f)
-            if os.path.isfile(filename):
-                files[f] = open(filename, "r").read()
+        if os.path.isdir(basedir):
+            for f in os.listdir(basedir):
+                filename = os.path.join(basedir, f)
+                if os.path.isfile(filename):
+                    files[f] = open(filename, "r").read()
+	files['environ'] = os.environ.copy()
         return files
 
     def remote_getVersion(self):
         """Send our version back to the Master"""
         return buildslave.version
 
+    def remote_getEnviron(self):
+        return os.environ.copy()
 
 
 class BotFactory(ReconnectingPBClientFactory):

@@ -251,6 +251,7 @@ class AbstractBuildSlave(pb.Avatar, service.MultiService):
                 state["admin"] = info.get("admin")
                 state["host"] = info.get("host")
                 state["access_uri"] = info.get("access_uri", None)
+		state["slave_environ"] = info.get("environ", {})
             def _info_unavailable(why):
                 # maybe an old slave, doesn't implement remote_getSlaveInfo
                 log.msg("BuildSlave.info_unavailable")
@@ -291,6 +292,7 @@ class AbstractBuildSlave(pb.Avatar, service.MultiService):
             self.slave_status.setVersion(state.get("version"))
             self.slave_status.setConnected(True)
             self.slave_commands = state.get("slave_commands")
+	    self.slave_environ = state.get("slave_environ")
             self.slave = bot
             log.msg("bot attached")
             self.messageReceivedFromSlave()
