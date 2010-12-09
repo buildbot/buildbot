@@ -73,7 +73,7 @@ class RemoveDirectory(base.Command):
             d = self._clobber(None)
 
         # always add the RC, regardless of platform
-        d.addCallback(self._sendRC)
+        d.addCallbacks(self._sendRC, self._checkAbandoned)
         return d
 
     def _clobber(self, dummy, chmodDone = False):
@@ -176,5 +176,5 @@ class CopyDirectory(base.Command):
             d.addCallback(self._abandonOnFailure)
 
         # always set the RC, regardless of platform
-        d.addCallback(self._sendRC)
+        d.addCallbacks(self._sendRC, self._checkAbandoned)
         return d
