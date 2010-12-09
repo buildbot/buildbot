@@ -29,7 +29,8 @@ control each.
 * Python BuildSteps::
 * Transferring Files::
 * Transferring Strings::
-* Steps That Run on the Master::
+* Running Commands on the Master::
+* Setting Properties::
 * Triggering Schedulers::
 * Miscellaneous BuildSteps::
 * Writing New BuildSteps::
@@ -1535,7 +1536,7 @@ f.addStep(SetProperty(
 Then @code{my_extract} will see @code{stdout="output1\noutput2\n"}
 and @code{stderr="error\n"}.
 
-See also @ref{SetProperiesFromEnv}.
+See also @ref{Setting Properties}.
 
 @node SubunitShellCommand
 @subsubsection SubunitShellCommand
@@ -1867,8 +1868,9 @@ represents a dictionary where @code{properties} maps to a dictionary
 of build property name to property value; and @code{sourcestamp}
 represents the build's sourcestamp.
 
-@node Steps That Run on the Master
-@subsection Steps That Run on the Master
+@node Running Commands on the Master
+@subsection Running Commands on the Master
+
 @bsindex buildbot.steps.master.MasterShellCommand
 
 Occasionally, it is useful to execute some task on the master, for example to
@@ -1898,7 +1900,16 @@ Note that, by default, this step passes a copy of the buildmaster's environment
 variables to the subprocess.  To pass an explicit environment instead, add an
 @code{env=@{..@}} argument.
 
+@node Setting Properties
+@subsection Setting Properties
+
 @bsindex buildbot.steps.master.SetPropertiesFromEnv
+
+In Buildbot-0.8.3 and higher, slaves provide their environment variables to the
+master on connect.  These can be copied into Buildbot properties with the
+@code{SetPropertiesFromEnv} step.  Pass a variable or list of variables in the
+@code{variables} parameter, then simply use the values as properties in a later
+step.
 
 @example
 from buildbot.steps.master import SetProperiesFromEnv
@@ -1907,6 +1918,13 @@ from buildbot.steps.shell import Compile
 f.addStep(SetPropertiesFromEnv(variables=["SOME_JAVA_LIB_HOME", "JAVAC"]))
 f.addStep(Compile(commands=[WithProperties("%s","JAVAC"), "-cp", WithProperties("%s", "SOME_JAVA_LIB_HOME")))
 @end example
+
+Note that this step requires that the Buildslave be at least version 0.8.3.
+For previous versions, no environment variables are available (the slave
+environment will appear to be empty).
+
+See also @ref{SetProperty}, which runs a command on the slave and sets a
+property based on the result.
 
 @node Triggering Schedulers
 @subsection Triggering Schedulers
