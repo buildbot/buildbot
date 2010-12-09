@@ -1,18 +1,7 @@
-import time
-import tempfile
-import os
-import subprocess
-import json
-
-import select
-import errno
-
-from twisted.python import log, failure
-from twisted.internet import reactor, utils
-from twisted.internet.task import LoopingCall
-from twisted.web.client import getPage
+from twisted.internet import reactor
 
 from buildbot.changes import base, changes
+from buildbot.util import json
 from twisted.internet.protocol import ProcessProtocol
 
 class GerritChangeSource(base.ChangeSource):
@@ -83,7 +72,7 @@ class GerritChangeSource(base.ChangeSource):
                 branch = change["branch"]
                 author = change["owner"]
                 email = author["email"]
-                who = author["name"] + "<%s>"%(author["email"])
+                who = author["name"] + "<%s>"%(email,)
                 print action
                 c = changes.Change(who = who,
                                    files=[change["project"]],

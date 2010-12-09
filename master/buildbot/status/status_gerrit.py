@@ -3,22 +3,11 @@
 
 ."""
 
-import datetime
-import logging
 import os
-import urllib
-import urlparse
-
-try:
-    import simplejson as json
-except ImportError:
-    import json
 
 from buildbot.status.base import StatusReceiverMultiService
-from twisted.internet import defer, reactor
+from twisted.internet import reactor
 from twisted.internet.protocol import ProcessProtocol
-from twisted.python import log
-from twisted.web import client
 
 def defaultMessageCB(buildername, build, results):
     message = "buildbot finished compiling your patchset\n"

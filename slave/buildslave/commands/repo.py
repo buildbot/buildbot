@@ -4,9 +4,7 @@ from twisted.internet import defer
 
 from buildslave.commands.base import SourceBaseCommand
 from buildslave import runprocess
-from buildslave.commands import utils
 
-from buildslave.exceptions import AbandonChain
 import hashlib
 
 class Repo(SourceBaseCommand):
