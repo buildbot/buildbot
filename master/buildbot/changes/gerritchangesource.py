@@ -67,26 +67,26 @@ class GerritChangeSource(base.ChangeSource):
 
     def lineReceived(self, line):
         try:
-            action = json.loads(line)
+            event = json.loads(line)
         except ValueError:
             print "bad json line:", line
             return
 
-        if type(action) == type({}) and "type" in action:
-            if action["type"] in [u"change-merged", u"patchset-created"]:
-                # flatten the action dictionary, for easy access with WithProperties
-                def flatten(action, base, d):
+        if type(event) == type({}) and "type" in event:
+            if event["type"] in [u"change-merged", u"patchset-created"]:
+                # flatten the event dictionary, for easy access with WithProperties
+                def flatten(event, base, d):
                     for k, v in d.items():
                         if type(v) == dict:
-                            flatten(action, base + "." + k, v)
+                            flatten(event, base + "." + k, v)
                         else: # already there
-                            action[base + "." + k] = v
+                            event[base + "." + k] = v
 
                 properties = {}
-                flatten(properties, "event", action)
+                flatten(properties, "event", event)
 
-                change = action["change"]
-                patchset = action["patchSet"]
+                change = event["change"]
+                patchset = event["patchSet"]
 
                 c = changes.Change(who="%s <%s>" % (change["owner"]["name"], change["owner"]["email"]),
                                    project=change["project"],
