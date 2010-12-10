@@ -14,17 +14,12 @@
 # Copyright Buildbot Team Members
 
 import os
+import sha
 
 from twisted.internet import defer
 
 from buildslave.commands.base import SourceBaseCommand
 from buildslave import runprocess
-
-try:
-    from hashlib import sha1
-except ImportError:
-    import sha
-    sha1 = sha.new
 
 class Repo(SourceBaseCommand):
     """Repo specific VC operation. In addition to the arguments
@@ -160,6 +155,6 @@ class Repo(SourceBaseCommand):
     def parseGotRevision(self):
         command = ['manifest', '-o', '-']
         def _parse(res):
-            return sha1(self.command.stdout).hexdigest()
+            return sha.new(self.command.stdout).hexdigest()
         return self._repoCmd(command, _parse, keepStdout=True)
 
