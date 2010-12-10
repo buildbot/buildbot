@@ -44,24 +44,24 @@ class GerritChangeSource(base.ChangeSource):
         self.gerritserver = gerritserver
         self.gerritport = gerritport
         self.username = username
+
     class LocalPP(ProcessProtocol):
         def __init__(self, change_source):
             self.change_source = change_source
             self.data = ""
 
         def outReceived(self, data):
-            """ do line buffering"""
+            """Do line buffering."""
             self.data += data
             lines = self.data.split("\n")
-            if self.data.endswith("\n"):
-                self.data = ""
-            else:
-                self.data = lines.pop(-1) # last line is not complete
+            self.data = lines.pop(-1) # last line is either empty or incomplete
             for line in lines:
-                print line
+                print "gerrit:", line
                 self.change_source.lineReceived(line)
+
         def errReceived(self, data):
-            print "gerriterr:",data
+            print "gerriterr:", data
+
         def processEnded(self, status_object):
             self.change_source.startService()
 
