@@ -1,9 +1,18 @@
-# hgbuildbot.py - mercurial hooks for buildbot
+# This file is part of Buildbot.  Buildbot is free software: you can
+# redistribute it and/or modify it under the terms of the GNU General Public
+# License as published by the Free Software Foundation, version 2.
 #
-# Copyright 2007 Frederic Leroy <fredo@starox.org>
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
 #
-# This software may be used and distributed according to the terms
-# of the GNU General Public License, incorporated herein by reference.
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, write to the Free Software Foundation, Inc., 51
+# Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Portions Copyright Buildbot Team Members
+# Portions Copyright 2007 Frederic Leroy <fredo@starox.org>
 
 # hook extension to send change notifications to buildbot when a changeset is
 # brought into the repository from elsewhere.
