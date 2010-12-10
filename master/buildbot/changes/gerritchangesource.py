@@ -71,30 +71,31 @@ class GerritChangeSource(base.ChangeSource):
         except ValueError:
             print "bad json line:", line
             return
-	if type(action) == type({}) and "type" in action.keys():
-            acttype = action["type"]
-            if acttype in [u"change-merged", u"patchset-created"]:
+
+        if type(action) == type({}) and "type" in action:
+            if action["type"] in [u"change-merged", u"patchset-created"]:
                 # flatten the action dictionary, for easy access with WithProperties
                 def flatten(action, base, d):
-                    for k,v in d.items():
+                    for k, v in d.items():
                         if type(v) == dict:
-                            flatten(action, base+"."+k, v)
+                            flatten(action, base + "." + k, v)
                         else: # already there
-                            action[base+"."+k] = v
+                            action[base + "." + k] = v
+
                 properties = {}
-                flatten(properties,"event",action)
+                flatten(properties, "event", action)
+
                 change = action["change"]
-                branch = change["branch"]
-                author = change["owner"]
-                email = author["email"]
-                who = author["name"] + "<%s>"%(email,)
-                print action
-                c = changes.Change(who = who,
-                                   files=[change["project"]],
+                patchset = action["patchSet"]
+
+                c = changes.Change(who="%s <%s>" % (change["owner"]["name"], change["owner"]["email"]),
+                                   project=change["project"],
+                                   branch=change["branch"],
+                                   revision=patchset["revision"],
+                                   revlink=change["url"],
                                    comments=change["subject"],
-                                   isdir=1,
-                                   branch = branch,
-                                   properties = properties)
+                                   files=["unknown"],
+                                   properties=properties)
                 self.parent.addChange(c)
 
     def startService(self):
