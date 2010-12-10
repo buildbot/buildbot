@@ -44,57 +44,58 @@ class GerritChangeSource(base.ChangeSource):
         self.gerritserver = gerritserver
         self.gerritport = gerritport
         self.username = username
+
     class LocalPP(ProcessProtocol):
         def __init__(self, change_source):
             self.change_source = change_source
             self.data = ""
 
         def outReceived(self, data):
-            """ do line buffering"""
+            """Do line buffering."""
             self.data += data
             lines = self.data.split("\n")
-            if self.data.endswith("\n"):
-                self.data = ""
-            else:
-                self.data = lines.pop(-1) # last line is not complete
+            self.data = lines.pop(-1) # last line is either empty or incomplete
             for line in lines:
-                print line
+                print "gerrit:", line
                 self.change_source.lineReceived(line)
+
         def errReceived(self, data):
-            print "gerriterr:",data
+            print "gerriterr:", data
+
         def processEnded(self, status_object):
             self.change_source.startService()
 
     def lineReceived(self, line):
         try:
-            action = json.loads(line)
+            event = json.loads(line)
         except ValueError:
             print "bad json line:", line
             return
-	if type(action) == type({}) and "type" in action.keys():
-            acttype = action["type"]
-            if acttype in [u"change-merged", u"patchset-created"]:
-                # flatten the action dictionary, for easy access with WithProperties
-                def flatten(action, base, d):
-                    for k,v in d.items():
+
+        if type(event) == type({}) and "type" in event:
+            if event["type"] in [u"change-merged", u"patchset-created"]:
+                # flatten the event dictionary, for easy access with WithProperties
+                def flatten(event, base, d):
+                    for k, v in d.items():
                         if type(v) == dict:
-                            flatten(action, base+"."+k, v)
+                            flatten(event, base + "." + k, v)
                         else: # already there
-                            action[base+"."+k] = v
+                            event[base + "." + k] = v
+
                 properties = {}
-                flatten(properties,"event",action)
-                change = action["change"]
-                branch = change["branch"]
-                author = change["owner"]
-                email = author["email"]
-                who = author["name"] + "<%s>"%(email,)
-                print action
-                c = changes.Change(who = who,
-                                   files=[change["project"]],
+                flatten(properties, "event", event)
+
+                change = event["change"]
+                patchset = event["patchSet"]
+
+                c = changes.Change(who="%s <%s>" % (change["owner"]["name"], change["owner"]["email"]),
+                                   project=change["project"],
+                                   branch=change["branch"],
+                                   revision=patchset["revision"],
+                                   revlink=change["url"],
                                    comments=change["subject"],
-                                   isdir=1,
-                                   branch = branch,
-                                   properties = properties)
+                                   files=["unknown"],
+                                   properties=properties)
                 self.parent.addChange(c)
 
     def startService(self):
