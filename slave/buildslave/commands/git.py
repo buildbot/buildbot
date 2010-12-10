@@ -26,15 +26,15 @@ class Git(SourceBaseCommand):
     """Git specific VC operation. In addition to the arguments
     handled by SourceBaseCommand, this command reads the following keys:
 
-    ['repourl'] (required):         the upstream GIT repository string
-    ['branch'] (optional):          which version (i.e. branch or tag)
-                                    to retrieve. Default: "master".
-    ['submodules'] (optional):      whether to initialize and update
-                                    submodules. Default: False.
-    ['ignore_ignores']: (optional): ignore ignores when purging changes.
-    ['reference'] (optional):       use this reference repository
-                                    to fetch objects.
-    ['gerrit_branch']: (optional):  which virtual branch to retrieve.
+    ['repourl'] (required):        the upstream GIT repository string
+    ['branch'] (optional):         which version (i.e. branch or tag)
+                                   to retrieve. Default: "master".
+    ['submodules'] (optional):     whether to initialize and update
+                                   submodules. Default: False.
+    ['ignore_ignores'] (optional): ignore ignores when purging changes.
+    ['reference'] (optional):      use this reference repository
+                                   to fetch objects.
+    ['gerrit_branch'] (optional):  which virtual branch to retrieve.
     """
 
     header = "git operation"
