@@ -35,6 +35,9 @@ class Git(SourceBaseCommand):
     ['reference'] (optional):      use this reference repository
                                    to fetch objects.
     ['gerrit_branch'] (optional):  which virtual branch to retrieve.
+    ['progress'] (optional):       have git output progress markers,
+                                   avoiding timeouts for long fetches;
+                                   requires Git 1.7.2 or later.
     """
 
     header = "git operation"
