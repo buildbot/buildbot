@@ -347,11 +347,6 @@ class BotMaster(service.MultiService):
             log.msg("slave '%s' attaching from %s" % (slavename, mind.broker.transport.getPeer()))
             return sl
 
-    def shutdownSlaves(self):
-        # TODO: make this into a bot method rather than a builder method
-        for b in self.slaves.values():
-            b.shutdownSlave()
-
     def stopService(self):
         for b in self.builders.values():
             b.builder_status.addPointEvent(["master", "shutdown"])
