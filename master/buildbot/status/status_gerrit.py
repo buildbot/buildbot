@@ -53,12 +53,18 @@ class GerritStatusPush(StatusReceiverMultiService):
     class LocalPP(ProcessProtocol):
         def __init__(self, status):
             self.status = status
+
         def outReceived(self, data):
-            print "gerritout:",data
+            print "gerritout:", data
+
         def errReceived(self, data):
-            print "gerriterr:",data
+            print "gerriterr:", data
+
         def processEnded(self, status_object):
-            print "gerrit status",status_object
+            if status_object.value.exitCode:
+                print "gerrit status: ERROR:", status_object
+            else:
+                print "gerrit status: OK"
 
     def setServiceParent(self, parent):
         print """Starting up."""
