@@ -53,12 +53,18 @@ class GerritStatusPush(StatusReceiverMultiService):
     class LocalPP(ProcessProtocol):
         def __init__(self, status):
             self.status = status
+
         def outReceived(self, data):
-            print "gerritout:",data
+            print "gerritout:", data
+
         def errReceived(self, data):
-            print "gerriterr:",data
+            print "gerriterr:", data
+
         def processEnded(self, status_object):
-            print "gerrit status",status_object
+            if status_object.value.exitCode:
+                print "gerrit status: ERROR:", status_object
+            else:
+                print "gerrit status: OK"
 
     def setServiceParent(self, parent):
         print """Starting up."""
@@ -72,25 +78,40 @@ class GerritStatusPush(StatusReceiverMultiService):
     def buildFinished(self, builderName, build, results):
         """Do the SSH gerrit verify command to the server."""
         try:
+            build.getProperty("event.patchSet.ref")
+        except KeyError:
+            return # change wasn't received from GerritChangeSource
+
+        try:
             downloads = build.getProperty("downloads")
         except KeyError:
+            # Gerrit + Git
+            message, verified, reviewed = self.messageCB(builderName, build, results)
+            project = build.getProperty("project")
+            revision = build.getProperty("revision")
+            self.sendCodeReview(project, revision, message, verified, reviewed)
             return
+
+        # Gerrit + Repo
         if downloads == None:
             return
-        message, verified, reviewed = self.messageCB(builderName,build,results)
+        message, verified, reviewed = self.messageCB(builderName, build, results)
         for download in downloads:
             project, patch = download.split(" ")[:2]
             changeid = patch.split("/")[0]
-            command = ["ssh", self.username+"@"+self.gerritserver,"-p", str(self.gerritport),
-                       "gerrit","approve",
-                       "--project", project,
-                       "--message", message ]
-            if verified:
-                command.extend["--verified",str(verified)]
-            if reviewed:
-                command.extend["--code-review",str(reviewed)]
-            command.append(str(changeid))
-            print command
-            reactor.spawnProcess(self.LocalPP(self), "ssh", command)
+            self.sendCodeReview(project, changeid, message, verified, reviewed)
+
+    def sendCodeReview(self, project, revision, message=None, verified=0, reviewed=0):
+        command = ["ssh", self.username + "@" + self.gerritserver, "-p", str(self.gerritport),
+                   "gerrit", "review", "--project", project]
+        if message:
+            command.append("--message '%s'" % message)
+        if verified:
+            command.extend(["--verified", str(verified)])
+        if reviewed:
+            command.extend(["--code-review", str(reviewed)])
+        command.append(str(revision))
+        print command
+        reactor.spawnProcess(self.LocalPP(self), "ssh", command)
 
 # vim: set ts=4 sts=4 sw=4 et:
