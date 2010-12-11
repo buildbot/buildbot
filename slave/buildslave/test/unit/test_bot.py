@@ -15,11 +15,11 @@
 
 import os
 import shutil
+import mock
 
 from twisted.trial import unittest
 from twisted.internet import defer, reactor
 from twisted.python import failure, log
-import mock
 
 from buildslave.test.util import command
 from buildslave.test.fake.remote import FakeRemote
@@ -158,6 +158,14 @@ class TestBot(unittest.TestCase):
 
         return d
 
+    def test_shutdown(self):
+        d1 = defer.Deferred()
+        self.patch(reactor, "stop", lambda : d1.callback(None))
+        d2 = self.bot.callRemote("shutdown")
+        # don't return until both the shutdown method has returned, and
+        # reactor.stop has been called
+        return defer.gatherResults([d1, d2])
+
 class FakeStep(object):
     "A fake master-side BuildStep that records its activities."
     def __init__(self):
@@ -211,10 +219,11 @@ class TestSlaveBuilder(command.CommandTestMixin, unittest.TestCase):
 
     def test_shutdown(self):
         # don't *actually* shut down the reactor - that would be silly
-        self.patch(bot.SlaveBuilder, "_reactor", mock.Mock())
+        stop = mock.Mock()
+        self.patch(reactor, "stop", stop)
         d = self.sb.callRemote("shutdown")
         def check(_):
-            self.assertTrue(bot.SlaveBuilder._reactor.stop.called)
+            self.assertTrue(stop.called)
         d.addCallback(check)
         return d
 

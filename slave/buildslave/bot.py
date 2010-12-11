@@ -53,9 +53,6 @@ class SlaveBuilder(pb.Referenceable, service.Service):
     # when the step is started
     remoteStep = None
 
-    # useful for replacing the reactor in tests
-    _reactor = reactor
-
     def __init__(self, name):
         #service.Service.__init__(self) # Service has no __init__ method
         self.setName(name)
@@ -228,7 +225,8 @@ class SlaveBuilder(pb.Referenceable, service.Service):
 
     def remote_shutdown(self):
         log.msg("slave shutting down on command from master")
-        self._reactor.stop()
+        log.msg("NOTE: master is using deprecated slavebuilder.shutdown method")
+        reactor.stop()
 
 
 class Bot(pb.Referenceable, service.MultiService):
@@ -315,6 +313,14 @@ class Bot(pb.Referenceable, service.MultiService):
     def remote_getEnviron(self):
         return os.environ.copy()
 
+    def remote_shutdown(self):
+        log.msg("slave shutting down on command from master")
+        log.msg("NOTE: master is using deprecated slavebuilder.shutdown method")
+        # there's no good way to learn that the PB response has been delivered,
+        # so we'll just wait a bit, in hopes the master hears back.  Masters are
+        # resilinet to slaves dropping their connections, so there is no harm
+        # if this timeout is too short.
+        reactor.callLater(0.2, reactor.stop)
 
 class BotFactory(ReconnectingPBClientFactory):
     # 'keepaliveInterval' serves two purposes. The first is to keep the
