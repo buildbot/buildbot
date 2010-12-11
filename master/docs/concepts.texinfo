@@ -394,34 +394,34 @@ feedback to developers, hoping to catch obvious problems in the code
 that can be detected quickly. These typically do not run the full test
 suite, nor do they run on a wide variety of platforms. They also
 usually do a VC update rather than performing a brand-new checkout
-each time. You could have a ``quick'' scheduler which used a 30 second
-timeout, and feeds a single ``quick'' Builder that uses a VC
-@code{mode='update'} setting.
+each time. 
 
-A separate ``full'' scheduler would run more comprehensive tests a
-little while later, to catch more subtle problems. This scheduler
-would have a longer tree-stable-timer, maybe 30 minutes, and would
-feed multiple Builders (with a @code{mode=} of @code{'copy'},
-@code{'clobber'}, or @code{'export'}).
+A separate ``full'' scheduler might run more comprehensive tests to catch more
+subtle problems, configured to run after the quick scheduler, to give
+developers time to commit fixes to bugs caught by the quick scheduler before
+running the comprehensive tests.  This scheduler would also feed multiple
+Builders.
 
-The @code{tree-stable-timer} and @code{fileIsImportant} decisions are
-made by the Scheduler. Dependencies are also implemented here.
+Many schedulers can be configured to wait a while after seeing a source-code
+change - this is the "tree stable timer".  The timer allows multiple commits to
+be "batched" together.  This is particularly useful in distributed version
+control systems, where a developer may push a long sequence of changes all at
+once.  To save resources, it's often desirable only to test the most recent
+change. 
+
+Schedulers can also filter out the changes they are interested in, based on a
+number of criteria.  For example, a scheduler that only builds documentation
+might skip any changes that do not affect the documentation.  Schedulers can
+also filter on the branch to which a commit was made.
+
+There is some support for configuring dependencies between builds - for
+example, you may want to build packages only for revisions which pass all of
+the unit tests.  This support is under active development in Buildbot, and is
+referred to as "build coordination".
+
 Periodic builds (those which are run every N seconds rather than after
 new Changes arrive) are triggered by a special @code{Periodic}
-Scheduler subclass. The default Scheduler class can also be told to
-watch for specific branches, ignoring Changes on other branches. This
-may be useful if you have a trunk and a few release branches which
-should be tracked, but when you don't want to have the Buildbot pay
-attention to several dozen private user branches.
-
-When the setup has multiple sources of Changes the @code{category}
-can be used for @code{Scheduler} objects to filter out a subset
-of the Changes.  Note that not all change sources can attach a category.
-
-Some Schedulers may trigger builds for other reasons, other than
-recent Changes. For example, a Scheduler subclass could connect to a
-remote buildmaster and watch for builds of a library to succeed before
-triggering a local build that uses that library.
+Scheduler subclass. 
 
 Each Scheduler creates and submits @code{BuildSet} objects to the
 @code{BuildMaster}, which is then responsible for making sure the
