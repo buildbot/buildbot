@@ -87,10 +87,10 @@ class GerritStatusPush(StatusReceiverMultiService):
         for download in downloads:
             project, patch = download.split(" ")[:2]
             changeid = patch.split("/")[0]
-            command = ["ssh", self.username+"@"+self.gerritserver,"-p", str(self.gerritport),
-                       "gerrit","approve",
-                       "--project", project,
-                       "--message", message ]
+            command = ["ssh", self.username + "@" + self.gerritserver, "-p", str(self.gerritport),
+                       "gerrit", "review", "--project", project]
+            if message:
+                command.append("--message '%s'" % message)
             if verified:
                 command.extend["--verified",str(verified)]
             if reviewed:
