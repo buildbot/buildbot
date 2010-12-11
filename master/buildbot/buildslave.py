@@ -456,41 +456,78 @@ class AbstractBuildSlave(pb.Avatar, service.MultiService):
 
     def _gracefulChanged(self, graceful):
         """This is called when our graceful shutdown setting changes"""
-        if graceful:
-            active_builders = [sb for sb in self.slavebuilders.values()
-                               if sb.isBusy()]
-            if len(active_builders) == 0:
-                # Shut down!
-                self.shutdown()
+        self.maybeShutdown()
 
+    @defer.deferredGenerator
     def shutdown(self):
         """Shutdown the slave"""
-        # Look for a builder with a remote reference to the client side
-        # slave.  If we can find one, then call "shutdown" on the remote
-        # builder, which will cause the slave buildbot process to exit.
-        d = None
-        for b in self.slavebuilders.values():
-            if b.remote:
-                d = b.remote.callRemote("shutdown")
-                break
+        if not self.slave:
+            log.msg("no remote; slave is already shut down")
+            return
 
-        if d:
-            log.msg("Shutting down slave: %s" % self.slavename)
-            # The remote shutdown call will not complete successfully since the
-            # buildbot process exits almost immediately after getting the
-            # shutdown request.
-            # Here we look at the reason why the remote call failed, and if
-            # it's because the connection was lost, that means the slave
-            # shutdown as expected.
-            def _errback(why):
-                if why.check(pb.PBConnectionLost):
-                    log.msg("Lost connection to %s" % self.slavename)
-                else:
-                    log.err("Unexpected error when trying to shutdown %s" % self.slavename)
-            d.addErrback(_errback)
+        # First, try the "new" way - calling our own remote's shutdown
+        # method.  The method was only added in 0.8.3, so ignore NoSuchMethod
+        # failures.
+        def new_way():
+            d = self.slave.callRemote('shutdown')
+            d.addCallback(lambda _ : True) # successful shutdown request
+            def check_nsm(f):
+                f.trap(pb.NoSuchMethod)
+                return False # fall through to the old way
+            d.addErrback(check_nsm)
+            def check_connlost(f):
+                f.trap(pb.PBConnectionLost)
+                return True # the slave is gone, so call it finished
+            d.addErrback(check_connlost)
             return d
-        log.err("Couldn't find remote builder to shut down slave")
-        return defer.succeed(None)
+
+        wfd = defer.waitForDeferred(new_way())
+        yield wfd
+        if wfd.getResult():
+            return # done!
+
+        # Now, the old way.  Look for a builder with a remote reference to the
+        # client side slave.  If we can find one, then call "shutdown" on the
+        # remote builder, which will cause the slave buildbot process to exit.
+        def old_way():
+            d = None
+            for b in self.slavebuilders.values():
+                if b.remote:
+                    d = b.remote.callRemote("shutdown")
+                    break
+
+            if d:
+                log.msg("Shutting down (old) slave: %s" % self.slavename)
+                # The remote shutdown call will not complete successfully since the
+                # buildbot process exits almost immediately after getting the
+                # shutdown request.
+                # Here we look at the reason why the remote call failed, and if
+                # it's because the connection was lost, that means the slave
+                # shutdown as expected.
+                def _errback(why):
+                    if why.check(pb.PBConnectionLost):
+                        log.msg("Lost connection to %s" % self.slavename)
+                    else:
+                        log.err("Unexpected error when trying to shutdown %s" % self.slavename)
+                d.addErrback(_errback)
+                return d
+            log.err("Couldn't find remote builder to shut down slave")
+            return defer.succeed(None)
+        #wfd = defer.waitForDeferred(old_way())
+        #yield wfd
+        #wfd.getResult()
+
+    def maybeShutdown(self):
+        """Shut down this slave if it has been asked to shut down gracefully,
+        and has no active builders."""
+        if not self.slave_status.getGraceful():
+            return
+        active_builders = [sb for sb in self.slavebuilders.values()
+                           if sb.isBusy()]
+        if active_builders:
+            return
+        d = self.shutdown()
+        d.addErrback(log.err, 'error while shutting down slave')
 
 class BuildSlave(AbstractBuildSlave):
 
@@ -522,12 +559,7 @@ class BuildSlave(AbstractBuildSlave):
         """This is called when a build on this slave is finished."""
         # If we're gracefully shutting down, and we have no more active
         # builders, then it's safe to disconnect
-        if self.slave_status.getGraceful():
-            active_builders = [sb for sb in self.slavebuilders.values()
-                               if sb.isBusy()]
-            if len(active_builders) == 0:
-                # Shut down!
-                return self.shutdown()
+        self.maybeShutdown()
         return defer.succeed(None)
 
 class AbstractLatentBuildSlave(AbstractBuildSlave):

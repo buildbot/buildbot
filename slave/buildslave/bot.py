@@ -315,7 +315,6 @@ class Bot(pb.Referenceable, service.MultiService):
 
     def remote_shutdown(self):
         log.msg("slave shutting down on command from master")
-        log.msg("NOTE: master is using deprecated slavebuilder.shutdown method")
         # there's no good way to learn that the PB response has been delivered,
         # so we'll just wait a bit, in hopes the master hears back.  Masters are
         # resilinet to slaves dropping their connections, so there is no harm
