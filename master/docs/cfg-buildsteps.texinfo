@@ -967,30 +967,30 @@ The Repo step takes the following arguments:
 (required): the URL at which the Repo's manifests source repository is available.
 
 @item manifest_branch
-(optional, defaults to @code{master}): the manifest repository branch on which
-repo will take its manifest. -b argument to the @code{repo init} command.
+(optional, defaults to @code{"master"}): the manifest repository branch on which
+repo will take its manifest. Corresponds to the @code{-b} argument to the @code{repo init} command.
 @item manifest
-(optional, defaults to @code{default.xml}): the manifest file
--m argument to the @code{repo init} command.
+(optional, defaults to @code{default.xml}): the manifest filename.
+Corresponds to the @code{-m} argument to the @code{repo init} command.
 @item repotarball
-(optional, defaults to @code{None}): the repo tarball used for fast bootstrap
+(optional, defaults to @code{None}): the repo tarball used for fast bootstrap.
 If not present the tarball will be created automatically after first sync.
 It is a copy of the @code{.repo} directory which contains all the git objects.
 This feature helps to minimize network usage on very big projects.
 @end table
 
-This Source step integrates with @ref{GerritChangeSource}, and will automatically use
+This Source step integrates with @ref{GerritChangeSource}, and will automatically use the
 @code{repo download} command of repo to download the additionnal changes introduced by a
 pending changeset.
 
-Another way to modify this source step is by using force build, and force build properties.
-any of @code{d}, @code{download}, @code{download[0-9]} properties will be translated into a
-@code{repo download}
-Each property can support several instances of "repo download proj number/patch"
-(direct copy paste from gerrit web site) or several instances of "proj number/patch"
-(simpler version).This feature allows integrator to build with several pending
-interdependant changes. Which at the moment cannot be described properly in gerrit,
-and can only be described by humans.
+This source step's behavior can be modified by using force build, and force
+build properties.  any of @code{d}, @code{download}, @code{download[0-9]}
+properties will be translated into a @code{repo download}.  Each property can
+support several instances of @code{repo download proj number/patch} (direct
+copy paste from gerrit web site) or several instances of @code{proj
+number/patch} (simpler version).  This feature allows integrator to build with
+several pending interdependant changes, which at the moment cannot be described
+properly in gerrit, and can only be described by humans.
 
 @node ShellCommand
 @subsection ShellCommand

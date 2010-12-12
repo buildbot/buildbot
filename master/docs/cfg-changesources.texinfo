@@ -110,7 +110,7 @@ hook)
 
 @item Repo/Git
 @itemize @bullet
-@item @code{gerritchangesource.GerritChangeSource} connects to ssh interface of gerrit to get live stream of changes
+@item @code{gerritchangesource.GerritChangeSource} connects to Gerrit via SSH to get a live stream of changes
 @end itemize
 
 @end table
@@ -1251,14 +1251,14 @@ c['change_source'] = GitPoller('git@@example.com:foobaz/myrepo.git',
 @subsection GerritChangeSource
 @csindex buildbot.changes.gerritchangesource.GerritChangeSource
 
-The @code{GerritChangeSource} class connects to a gerrit serveur by it's ssh
-interface and uses it's event source mechanism
-@uref{http://gerrit.googlecode.com/svn/documentation/2.1.5/cmd-stream-events.html, gerrit stream-events}
+The @code{GerritChangeSource} class connects to a Gerrit server by its SSH
+interface and uses its event source mechanism,
+@uref{http://gerrit.googlecode.com/svn/documentation/2.1.5/cmd-stream-events.html, gerrit stream-events}.
 
 This class adds a change to the buildbot system for each of the following events:
 @table @code
 @item change-merged
-A change has been merged into the repository. Typically, those kind of event can lead
+A change has been merged into the repository. Typically, this kind of event can lead
 to a complete rebuild of the project, and upload binaries to an incremental build
 results server.
 @item patchset-created
@@ -1268,9 +1268,8 @@ At this point, no trusted human has reviewed the code, and a patch could be
 specially crafted by an attacker to compromise your buildslaves.
 @end table
 This class will populate the property list of the triggered build with the info
-given by gerrit server in json format. Here are not exaustive list
-of such properties. See gerrit's documentation for full list of gerrit
-json attributes:
+given by gerrit server in JSON format. The following is not an exaustive list
+of such properties. See Gerrit's documentation for full list of JSON attributes:
 @table @code
 @item @code{event.change.branch}
 repository branch of the change
@@ -1312,7 +1311,8 @@ from buildbot.changes.gerritchangesource import GerritChangeSource
 c['change_source'] = GerritChangeSource(gerrit_server, gerrit_user)
 @end example
 see 
-@code{master/docs/examples/repo_gerrit.cfg} for example setup of gerritchangesource.
+@code{master/docs/examples/repo_gerrit.cfg} in the Buildbot distribution for an example setup of @code{GerritChangeSource}.
+
 @node Change Hooks (HTTP Notifications)
 @subsection Change Hooks (HTTP Notifications)
 
