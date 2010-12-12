@@ -26,6 +26,7 @@ work around this, but true support for multi-tree builds remains elusive.
 * Change Hooks (HTTP Notifications)::
 * GoogleCodeAtomPoller::
 * GitPoller::
+* GerritChangeSource::
 * Change Source Index::
 @end menu
 
@@ -105,6 +106,11 @@ hook)
 @item change_hook in WebStatus (
 @code{status.web.change_hook})
 @item @code{gitpoller.GitPoller} (polling a remote git repository)
+@end itemize
+
+@item Repo/Git
+@itemize @bullet
+@item @code{gerritchangesource.GerritChangeSource} connects to ssh interface of gerrit to get live stream of changes
 @end itemize
 
 @end table
@@ -1240,7 +1246,73 @@ from buildbot.changes.gitpoller import GitPoller
 c['change_source'] = GitPoller('git@@example.com:foobaz/myrepo.git',
                                branch='great_new_feature')
 @end example
-                  
+
+@node GerritChangeSource
+@subsection GerritChangeSource
+@csindex buildbot.changes.gerritchangesource.GerritChangeSource
+
+The @code{GerritChangeSource} class connects to a gerrit serveur by it's ssh
+interface and uses it's event source mechanism
+@uref{http://gerrit.googlecode.com/svn/documentation/2.1.5/cmd-stream-events.html, gerrit stream-events}
+
+This class adds a change to the buildbot system for each of the following events:
+@table @code
+@item change-merged
+A change has been merged into the repository. Typically, those kind of event can lead
+to a complete rebuild of the project, and upload binaries to an incremental build
+results server.
+@item patchset-created
+A change is proposed for review. Automatic checks like @code{checkpatch.pl} can be
+automatically triggered. Beware of what kind of automatic task you trigger.
+At this point, no trusted human has reviewed the code, and a patch could be
+specially crafted by an attacker to compromise your buildslaves.
+@end table
+This class will populate the property list of the triggered build with the info
+given by gerrit server in json format. Here are not exaustive list
+of such properties. See gerrit's documentation for full list of gerrit
+json attributes:
+@table @code
+@item @code{event.change.branch}
+repository branch of the change
+@item @code{event.change.project}
+repository project of the change
+@item @code{event.change.id}
+key id of the change (the ChangeId: in commit comments)
+@item @code{event.change.number}
+Change number in gerrit system.
+@item @code{event.change.owner.email}
+Change's owner email (owner is first uploader)
+@item @code{event.change.owner.name}
+Change's owner name
+@item @code{event.change.subject}
+Change's Subject
+@item @code{event.change.url}
+Url of the change in the gerrit web ui.
+@item @code{event.patchSet.number}
+Patchset version number
+@item @code{event.patchSet.ref}
+Patchset git ref
+@item @code{event.patchSet.revision}
+Patchset git commit id
+@item @code{event.patchSet.uploader.email}
+Patchset uploader email (owner is only first uploader)
+@item @code{event.patchSet.uploader.name}
+Patchset uploader name (owner is only first uploader)
+@item @code{event.submitter.email}
+Submitter email (merger responsible)
+@item @code{event.submitter.name}
+Submitter name (merger responsible)
+@item @code{event.type}
+event type (``change merged'' or ``patchset-created'')
+@end table
+
+@heading Example
+@example
+from buildbot.changes.gerritchangesource import GerritChangeSource
+c['change_source'] = GerritChangeSource(gerrit_server, gerrit_user)
+@end example
+see 
+@code{master/docs/examples/repo_gerrit.cfg} for example setup of gerritchangesource.
 @node Change Hooks (HTTP Notifications)
 @subsection Change Hooks (HTTP Notifications)
 
