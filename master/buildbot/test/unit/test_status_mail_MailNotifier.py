@@ -13,7 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
-from mock import Mock, patch_object
+from mock import Mock
 from buildbot.interfaces import ParameterError
 from twisted.trial import unittest
 
@@ -109,8 +109,9 @@ class TestMailNotifier(unittest.TestCase):
 
         self.assertEqual(None, mn.buildFinished('dummyBuilder', build, SUCCESS))
 
-    @patch_object(MailNotifier, 'buildMessage')
-    def test_buildFinished_mode_all_always_sends_email(self, mock_method):
+    def test_buildFinished_mode_all_always_sends_email(self):
+        mock_method = Mock()
+        self.patch(MailNotifier, "buildMessage", mock_method)
         mn = MailNotifier('from@example.org', mode="all")
 
         build = Mock()
