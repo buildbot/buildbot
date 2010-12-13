@@ -80,6 +80,8 @@ be considered for a build.
 You may provide more than one -F argument to try multiple
 patterns.  Excludes override includes, that is, patterns that match both an
 include and an exclude will be excluded.'''],
+        ['encoding', 'e', "utf8",
+         "The encoding of the strings from subversion (default: utf8)" ],
         ]
     optFlags = [
         ['dryrun', 'n', "Do not actually send changes"],
@@ -196,13 +198,23 @@ class ChangeSender:
 
         # now create the Change dictionaries
         changes = []
+        encoding = opts['encoding']
         for branch in files_per_branch.keys():
-            d = {'who': who,
-                 'repository': repo,
-                 'branch': branch,
-                 'files': files_per_branch[branch],
-                 'comments': message,
-                 'revision': revision}
+            d = {'who': unicode(who, encoding=encoding),
+                 'repository': unicode(repo, encoding=encoding),
+                 'comments': unicode(message, encoding=encoding),
+                 'revision': revision
+                 }
+            if branch:
+                d['branch'] = unicode(branch, encoding=encoding)
+            else:
+                d['branch'] = branch
+
+            files = []
+            for file in files_per_branch[branch]:
+                files.append(unicode(file, encoding=encoding))
+            d['files'] = files
+
             changes.append(d)
 
         return changes
