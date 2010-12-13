@@ -842,17 +842,12 @@ class Git(Source):
         self.args['repourl'] = self.computeRepositoryURL(self.repourl)
         self.args['revision'] = revision
         self.args['patch'] = patch
-        try:
-            self.args['gerrit_branch'] = self.build.getProperty("event.patchSet.ref")
-        except KeyError:
-            pass
         slavever = self.slaveVersion("git")
         if not slavever:
             raise BuildSlaveTooOldError("slave is too old, does not know "
                                         "about git")
         cmd = LoggedRemoteCommand("git", self.args)
         self.startCommand(cmd)
-
 
 class Repo(Source):
     """Check out a source tree from a repo repository 'repourl'."""

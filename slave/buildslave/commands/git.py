@@ -52,7 +52,6 @@ class Git(SourceBaseCommand):
         self.submodules = args.get('submodules')
         self.ignore_ignores = args.get('ignore_ignores', True)
         self.reference = args.get('reference', None)
-        self.gerrit_branch = args.get('gerrit_branch', None)
 
     def _fullSrcdir(self):
         return os.path.join(self.builder.basedir, self.srcdir)
@@ -121,10 +120,7 @@ class Git(SourceBaseCommand):
         # That is not sufficient. git will leave unversioned files and empty
         # directories. Clean them up manually in _didReset.
         command = ['reset', '--hard', head]
-        d = self._dovccmd(command, self._didHeadCheckout)
-        if self.gerrit_branch:
-            d.addErrback(self._doFetchGerritChange)
-        return d
+        return self._dovccmd(command, self._didHeadCheckout)
 
     def maybeNotDoVCFallback(self, res):
         # If we were unable to find the branch/SHA on the remote,
@@ -162,22 +158,6 @@ class Git(SourceBaseCommand):
             command.append('--progress')
         self.sendStatus({"header": "fetching branch %s from %s\n"
                                         % (self.branch, self.repourl)})
-        return self._dovccmd(command, self._didFetch, keepStderr=True)
-
-    def _doFetchGerritChange(self, dummy):
-        # The plus will make sure the repo is moved to the branch's
-        # head even if it is not a simple "fast-forward"
-        command = ['fetch', '-t', self.repourl, '+%s' % self.gerrit_branch]
-        # If the 'progress' option is set, tell git fetch to output
-        # progress information to the log. This can solve issues with
-        # long fetches killed due to lack of output, but only works
-        # with Git 1.7.2 or later.
-        if self.args.get('progress'):
-            command.append('--progress')
-        self.sendStatus({"header": "fetching branch %s from %s\n"
-                                        % (self.gerrit_branch, self.repourl)})
-        # Clear gerrit_branch, so that we could re-use _didFetch().
-        self.gerrit_branch = None
         return self._dovccmd(command, self._didFetch, keepStderr=True)
 
     def _didClean(self, dummy):
