@@ -152,9 +152,3 @@ class Repo(SourceBaseCommand):
             return self._repoCmd(command, self._doDownload) # call again
         return defer.succeed(0)
 
-    def parseGotRevision(self):
-        command = ['manifest', '-o', '-']
-        def _parse(res):
-            return sha.new(self.command.stdout).hexdigest()
-        return self._repoCmd(command, _parse, keepStdout=True)
-
