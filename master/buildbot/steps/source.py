@@ -917,13 +917,14 @@ class Repo(Source):
         import re
         if s == None:
             return []
-        re1 = re.compile("repo download ([^ ]+ [0-9]+/[0-9]+)")
-        re2 = re.compile("([^ ]+ [0-9]+/[0-9]+)")
+        re1 = re.compile("repo download ([^ ]+) ([0-9]+/[0-9]+)")
+        re2 = re.compile("([^ ]+) ([0-9]+/[0-9]+)")
+        re3 = re.compile("([^ ]+)/([0-9]+/[0-9]+)")
         ret = []
-        for cur_re in [re1, re2]:
+        for cur_re in [re1, re2, re3]:
             res = cur_re.search(s)
             while res:
-                ret.append(res.group(1))
+                ret.append("%s %s" % (res.group(1), res.group(2)))
                 s = s[:res.start(0)] + s[res.end(0):]
                 res = cur_re.search(s)
         return ret
