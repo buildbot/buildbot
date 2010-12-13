@@ -28,7 +28,6 @@ class GerritChangeSource(base.ChangeSource):
     compare_attrs = ["gerritserver", "gerritport"]
 
     parent = None # filled in when we're added
-    running = False
 
     STREAM_GOOD_CONNECTION_TIME = 120
     "(seconds) connections longer than this are considered good, and reset the backoff timer"
@@ -54,10 +53,12 @@ class GerritChangeSource(base.ChangeSource):
         @param username: the username to use to connect to gerrit
 
         """
+        # TODO: delete API comment when documented
 
         self.gerritserver = gerritserver
         self.gerritport = gerritport
         self.username = username
+        self.process = None
         self.streamProcessTimeout = self.STREAM_BACKOFF_MIN
 
     class LocalPP(ProcessProtocol):
@@ -71,11 +72,11 @@ class GerritChangeSource(base.ChangeSource):
             lines = self.data.split("\n")
             self.data = lines.pop(-1) # last line is either empty or incomplete
             for line in lines:
-                print "gerrit:", line
+                log.msg("gerrit: %s" % (line,))
                 self.change_source.lineReceived(line)
 
         def errReceived(self, data):
-            print "gerriterr:", data
+            log.msg("gerrit stderr: %s" % (data,))
 
         def processEnded(self, status_object):
             self.change_source.streamProcessStopped()
@@ -84,7 +85,7 @@ class GerritChangeSource(base.ChangeSource):
         try:
             event = json.loads(line)
         except ValueError:
-            print "bad json line:", line
+            log.msg("bad json line: %s" % (line,))
             return
 
         if type(event) == type({}) and "type" in event:
@@ -115,6 +116,12 @@ class GerritChangeSource(base.ChangeSource):
 
     def streamProcessStopped(self):
         self.process = None
+
+        # if the service is stopped, don't try to restart
+        if not self.parent:
+            log.msg("service is not running; not reconnecting")
+            return
+
         now = util.now()
         if now - self.lastStreamProcessStart < self.STREAM_GOOD_CONNECTION_TIME:
             # bad startup; start the stream process again after a timeout, and then
@@ -139,7 +146,10 @@ class GerritChangeSource(base.ChangeSource):
         self.startStreamProcess()
 
     def stopService(self):
-        self.process.signalProcess("KILL")
+        if self.process:
+            self.process.signalProcess("KILL")
+        # TODO: if this occurs while the process is restarting, some exceptions may
+        # be logged, although things will settle down normally
         return base.ChangeSource.stopService(self)
 
     def describe(self):

@@ -38,7 +38,9 @@ class ChangeSourceMixin(object):
     def tearDownChangeSource(self):
         if not self.changesource:
             return defer.succeed(None)
-        return defer.maybeDeferred(self.changesource.stopService)
+        if self.changesource.running:
+            return defer.maybeDeferred(self.changesource.stopService)
+        return defer.succeed(None)
 
     def startChangeSource(self, cs):
         """Call this after constructing your changeSource; returns a deferred."""
