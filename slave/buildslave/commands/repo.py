@@ -20,6 +20,8 @@ from twisted.internet import defer
 
 from buildslave.commands.base import SourceBaseCommand
 from buildslave import runprocess
+from buildslave.commands.base import AbandonChain
+
 
 class Repo(SourceBaseCommand):
     """Repo specific VC operation. In addition to the arguments
@@ -151,4 +153,11 @@ class Repo(SourceBaseCommand):
                                         % (download)})
             return self._repoCmd(command, self._doDownload) # call again
         return defer.succeed(0)
+
+    def maybeNotDoVCFallback(self, res):
+        # If we were unable to find the branch/SHA on the remote,
+        # clobbering the repo won't help any, so just abort the chain
+        if hasattr(self.command, 'stderr'):
+            if "Couldn't find remote ref" in self.command.stderr:
+                raise AbandonChain(-1)
 
