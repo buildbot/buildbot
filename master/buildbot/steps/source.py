@@ -842,6 +842,23 @@ class Git(Source):
         self.args['repourl'] = self.computeRepositoryURL(self.repourl)
         self.args['revision'] = revision
         self.args['patch'] = patch
+
+        # check if there is any patchset we should fetch from Gerrit
+        try:
+            # GerritChangeSource
+            self.args['gerrit_branch'] = self.build.getProperty("event.patchSet.ref")
+            self.setProperty("gerrit_branch", self.args['gerrit_branch'])
+        except KeyError:
+            try:
+                # forced build
+                change = self.build.getProperty("gerrit_change").split('/')
+                if len(change) == 2:
+                    self.args['gerrit_branch'] = "refs/changes/%2.2d/%d/%d" \
+                                                 % (int(change[0]) % 100, int(change[0]), int(change[1]))
+                    self.setProperty("gerrit_branch", self.args['gerrit_branch'])
+            except:
+                pass
+
         slavever = self.slaveVersion("git")
         if not slavever:
             raise BuildSlaveTooOldError("slave is too old, does not know "

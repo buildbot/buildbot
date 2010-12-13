@@ -52,6 +52,7 @@ class Git(SourceBaseCommand):
         self.submodules = args.get('submodules')
         self.ignore_ignores = args.get('ignore_ignores', True)
         self.reference = args.get('reference', None)
+        self.gerrit_branch = args.get('gerrit_branch', None)
 
     def _fullSrcdir(self):
         return os.path.join(self.builder.basedir, self.srcdir)
@@ -146,10 +147,10 @@ class Git(SourceBaseCommand):
             return self._dovccmd(command, self._didClean)
         return self._didClean(None)
 
-    def _doFetch(self, dummy):
+    def _doFetch(self, dummy, branch):
         # The plus will make sure the repo is moved to the branch's
         # head even if it is not a simple "fast-forward"
-        command = ['fetch', '-t', self.repourl, '+%s' % self.branch]
+        command = ['fetch', '-t', self.repourl, '+%s' % branch]
         # If the 'progress' option is set, tell git fetch to output
         # progress information to the log. This can solve issues with
         # long fetches killed due to lack of output, but only works
@@ -157,10 +158,12 @@ class Git(SourceBaseCommand):
         if self.args.get('progress'):
             command.append('--progress')
         self.sendStatus({"header": "fetching branch %s from %s\n"
-                                        % (self.branch, self.repourl)})
+                                        % (branch, self.repourl)})
         return self._dovccmd(command, self._didFetch, keepStderr=True)
 
     def _didClean(self, dummy):
+        branch = self.gerrit_branch or self.branch
+
         # After a clean, try to use the given revision if we have one.
         if self.revision:
             # We know what revision we want.  See if we have it.
@@ -168,11 +171,11 @@ class Git(SourceBaseCommand):
                               self._initSubmodules)
             # If we are unable to reset to the specified version, we
             # must do a fetch first and retry.
-            d.addErrback(self._doFetch)
+            d.addErrback(self._doFetch, branch)
             return d
         else:
             # No known revision, go grab the latest.
-            return self._doFetch(None)
+            return self._doFetch(None, branch)
 
     def _didInit(self, res):
         # If we have a reference repository specified, we need to also set that
