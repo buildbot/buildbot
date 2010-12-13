@@ -130,13 +130,13 @@ class BuildTopBox(components.Adapter):
         if not builds:
             return Box(["none"], class_="LastBuild")
         b = builds[0]
+        url = path_to_build(req, b)
         text = b.getText()
         tests_failed = b.getSummaryStatistic('tests-failed', operator.add, 0)
         if tests_failed: text.extend(["Failed tests: %d" % tests_failed])
         # TODO: maybe add logs?
-        # TODO: add link to the per-build page at 'url'
         class_ = build_get_class(b)
-        return Box(text, class_="LastBuild %s" % class_)
+        return Box(text, urlbase=url, class_="LastBuild %s" % class_)
 components.registerAdapter(BuildTopBox, builder.BuilderStatus, ITopBox)
 
 class BuildBox(components.Adapter):
