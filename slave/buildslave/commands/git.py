@@ -121,10 +121,7 @@ class Git(SourceBaseCommand):
         # That is not sufficient. git will leave unversioned files and empty
         # directories. Clean them up manually in _didReset.
         command = ['reset', '--hard', head]
-        d = self._dovccmd(command, self._didHeadCheckout)
-        if self.gerrit_branch:
-            d.addErrback(self._doFetchGerritChange)
-        return d
+        return self._dovccmd(command, self._didHeadCheckout)
 
     def maybeNotDoVCFallback(self, res):
         # If we were unable to find the branch/SHA on the remote,
@@ -150,10 +147,10 @@ class Git(SourceBaseCommand):
             return self._dovccmd(command, self._didClean)
         return self._didClean(None)
 
-    def _doFetch(self, dummy):
+    def _doFetch(self, dummy, branch):
         # The plus will make sure the repo is moved to the branch's
         # head even if it is not a simple "fast-forward"
-        command = ['fetch', '-t', self.repourl, '+%s' % self.branch]
+        command = ['fetch', '-t', self.repourl, '+%s' % branch]
         # If the 'progress' option is set, tell git fetch to output
         # progress information to the log. This can solve issues with
         # long fetches killed due to lack of output, but only works
@@ -161,26 +158,12 @@ class Git(SourceBaseCommand):
         if self.args.get('progress'):
             command.append('--progress')
         self.sendStatus({"header": "fetching branch %s from %s\n"
-                                        % (self.branch, self.repourl)})
-        return self._dovccmd(command, self._didFetch, keepStderr=True)
-
-    def _doFetchGerritChange(self, dummy):
-        # The plus will make sure the repo is moved to the branch's
-        # head even if it is not a simple "fast-forward"
-        command = ['fetch', '-t', self.repourl, '+%s' % self.gerrit_branch]
-        # If the 'progress' option is set, tell git fetch to output
-        # progress information to the log. This can solve issues with
-        # long fetches killed due to lack of output, but only works
-        # with Git 1.7.2 or later.
-        if self.args.get('progress'):
-            command.append('--progress')
-        self.sendStatus({"header": "fetching branch %s from %s\n"
-                                        % (self.gerrit_branch, self.repourl)})
-        # Clear gerrit_branch, so that we could re-use _didFetch().
-        self.gerrit_branch = None
+                                        % (branch, self.repourl)})
         return self._dovccmd(command, self._didFetch, keepStderr=True)
 
     def _didClean(self, dummy):
+        branch = self.gerrit_branch or self.branch
+
         # After a clean, try to use the given revision if we have one.
         if self.revision:
             # We know what revision we want.  See if we have it.
@@ -188,11 +171,11 @@ class Git(SourceBaseCommand):
                               self._initSubmodules)
             # If we are unable to reset to the specified version, we
             # must do a fetch first and retry.
-            d.addErrback(self._doFetch)
+            d.addErrback(self._doFetch, branch)
             return d
         else:
             # No known revision, go grab the latest.
-            return self._doFetch(None)
+            return self._doFetch(None, branch)
 
     def _didInit(self, res):
         # If we have a reference repository specified, we need to also set that
