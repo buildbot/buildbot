@@ -94,7 +94,7 @@ class GerritStatusPush(StatusReceiverMultiService):
         except KeyError:
             try:
                 # Gerrit + Git
-                gerrit_branch = build.getProperty("gerrit_branch") # used only to verify Gerrit source
+                build.getProperty("gerrit_branch") # used only to verify Gerrit source
                 project = build.getProperty("project")
                 revision = build.getProperty("got_revision")
 
