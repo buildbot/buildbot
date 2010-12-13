@@ -15,7 +15,6 @@
 
 import os
 import re
-import sha
 
 from twisted.internet import defer
 
