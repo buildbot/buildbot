@@ -27,44 +27,35 @@ class Repo(SourceBaseCommand):
     """Repo specific VC operation. In addition to the arguments
     handled by SourceBaseCommand, this command reads the following keys:
 
-    ['repourl'] (required):     the manifest GIT repository string
-    ['repotarball'] (optional): the tarball base to accelerate the fetch
-    ['manifest_branch'] (optional):     which manifest repo version (i.e. branch or tag) to
-                               retrieve. Default: "master".
-    ['manifest'] (optional):   Which manifest to use. Default: "default.xml".
-    ['downloads'] (optional):   optional repo downloads to do. computer by master counterpart
-    		 	       from gerrit changesource and forced build properties.
+    ['manifest_url'] (required):    The manifests repo repository.
+    ['manifest_branch'] (optional): Which manifest repo version (i.e. branch or tag)
+                                    to retrieve. Default: "master".
+    ['manifest_file'] (optional):   Which manifest file to use. Default: "default.xml".
+    ['tarball'] (optional):         The tarball base to accelerate the fetch.
+    ['repo_downloads'] (optional):  Repo downloads to do. Computer from GerritChangeSource
+                                    and forced build properties.
     """
 
     header = "repo operation"
 
     def setup(self, args):
         SourceBaseCommand.setup(self, args)
-        self.repourl = args['repourl']
+        self.manifest_url = args.get('manifest_url')
         self.manifest_branch = args.get('manifest_branch')
-        if not self.manifest_branch:
-            self.manifest_branch = "master"
-        self.manifest =  args.get('manifest')
-        self.repotarball = args.get('repotarball')
-        self.downloads = args.get('downloads')
-        if not self.manifest:
-            self.manifest = "default.xml"
-        self.sourcedata = "%s -b %s -m %s\n" % (self.repourl, self.manifest_branch, self.manifest)
+        self.manifest_file =  args.get('manifest_file')
+        self.tarball = args.get('tarball')
+        self.repo_downloads = args.get('repo_downloads')
+        self.sourcedata = "%s %s %s" % (self.manifest_url, self.manifest_branch, self.manifest_file)
 
     def _fullSrcdir(self):
         return os.path.join(self.builder.basedir, self.srcdir)
-
-    def _commitSpec(self):
-        if self.revision:
-            return self.revision
-        return self.manifest_branch
 
     def sourcedirIsUpdateable(self):
         print os.path.join(self._fullSrcdir(), ".repo")
         print os.path.isdir(os.path.join(self._fullSrcdir(), ".repo"))
         return os.path.isdir(os.path.join(self._fullSrcdir(), ".repo"))
 
-    def _repoCmd(self, command, cb=None,abandonOnFailure=True, **kwargs):
+    def _repoCmd(self, command, cb=None, abandonOnFailure=True, **kwargs):
         repo = self.getCommand("repo")
         c = runprocess.RunProcess(self.builder, [repo] + command, self._fullSrcdir(),
                          sendRC=False, timeout=self.timeout,
@@ -76,82 +67,78 @@ class Repo(SourceBaseCommand):
                 d.addCallback(self._abandonOnFailure)
             d.addCallback(cb)
         return d
-    def _tarCmd(self,cmds,callback):
-            cmd = ["tar"]+cmds
-            c = runprocess.RunProcess(self.builder, cmd, self._fullSrcdir(),
-                             sendRC=False, timeout=self.timeout,
-                             maxTime=self.maxTime, usePTY=False)
-            self.command = c
-            cmdexec = c.start()
-            cmdexec.addCallback(callback)
-            return cmdexec
-    def _gitCmd(self,subdir,cmds,callback):
-            cmd = ["git"]+cmds 
-            c = runprocess.RunProcess(self.builder, cmd, os.path.join(self._fullSrcdir(), subdir),
-                             sendRC=False, timeout=self.timeout,
-                             maxTime=self.maxTime, usePTY=False)
-            self.command = c
-            cmdexec = c.start()
-            cmdexec.addCallback(callback)
-            return cmdexec
 
-    # If the repourl matches the sourcedata file, then
-    # we can say that the sourcedata matches.  We can
-    # ignore branch changes, since Git can work with
-    # many branches fetched, and we deal with it properly
-    # in doVCUpdate.
+    def _tarCmd(self, cmds, callback):
+        cmd = ["tar"] + cmds
+        c = runprocess.RunProcess(self.builder, cmd, self._fullSrcdir(),
+                                  sendRC=False, timeout=self.timeout,
+                                  maxTime=self.maxTime, usePTY=False)
+        self.command = c
+        cmdexec = c.start()
+        cmdexec.addCallback(callback)
+        return cmdexec
+
+    def _gitCmd(self, subdir, cmds, callback):
+        cmd = ["git"] + cmds
+        c = runprocess.RunProcess(self.builder, cmd, os.path.join(self._fullSrcdir(), subdir),
+                                  sendRC=False, timeout=self.timeout,
+                                  maxTime=self.maxTime, usePTY=False)
+        self.command = c
+        cmdexec = c.start()
+        cmdexec.addCallback(callback)
+        return cmdexec
+
     def sourcedataMatches(self):
         try:
             olddata = self.readSourcedata()
-            if not olddata.startswith(self.repourl+' '):
-                return False
+            return olddata == self.sourcedata
         except IOError:
             return False
-        return True
-
 
     def doVCFull(self):
         os.makedirs(self._fullSrcdir())
-        if self.repotarball and os.path.exists(self.repotarball):
-            return self._tarCmd(['-xvzf',self.repotarball], self._doInit)
+        if self.tarball and os.path.exists(self.tarball):
+            return self._tarCmd(['-xvzf', self.tarball], self._doInit)
         else:
             return self._doInit(None)
+
     def _doInit(self,res):
         # on fresh init, this file may confuse repo.
         if os.path.exists(os.path.join(self._fullSrcdir(), ".repo/project.list")):
             os.unlink(os.path.join(self._fullSrcdir(), ".repo/project.list"))
-        return self._repoCmd(['init', '-u',self.repourl,'-b',self.manifest_branch,'-m',self.manifest], self._didInit)
+        return self._repoCmd(['init', '-u', self.manifest_url, '-b', self.manifest_branch, '-m', self.manifest_file], self._didInit)
 
     def _didInit(self, res):
         return self.doVCUpdate()
 
     def doVCUpdate(self):
-        command = ['forall', '-c', 'git', 'clean', '-f', '-d','-x']
+        command = ['forall', '-c', 'git', 'clean', '-f', '-d', '-x']
         return self._repoCmd(command, self._doClean2, abandonOnFailure=False)
 
     def _doClean2(self,dummy):
-        command = ['clean', '-f', '-d','-x']
+        command = ['clean', '-f', '-d', '-x']
         return self._gitCmd(".repo/manifests",command, self._doSync)
 
     def _doSync(self, dummy):
         command = ['sync']
-        self.sendStatus({"header": "synching manifest%s from branch %s from %s\n"
-                                        % (self.manifest,self.manifest_branch, self.repourl)})
+        self.sendStatus({"header": "synching manifest %s from branch %s from %s\n"
+                                   % (self.manifest_file, self.manifest_branch, self.manifest_url)})
         return self._repoCmd(command, self._didSync)
+
     def _didSync(self, dummy):
-        if self.repotarball and not os.path.exists(self.repotarball):
-            return self._tarCmd(['-cvzf',self.repotarball,".repo"], self._doDownload)
+        if self.tarball and not os.path.exists(self.tarball):
+            return self._tarCmd(['-cvzf', self.tarball, ".repo"], self._doDownload)
         else:
             return self._doDownload(None)
 
     def _doDownload(self, dummy):
-        if self.downloads:
+        if self.repo_downloads:
             # download each changeset while the self.download variable is not empty
-            download = self.downloads.pop(0)
-            command = ['download']+download.split(' ')
+            download = self.repo_downloads.pop(0)
+            command = ['download'] + download.split(' ')
             self.sendStatus({"header": "downloading changeset %s\n"
-                                        % (download)})
-            return self._repoCmd(command, self._doDownload) # call again
+                                       % (download)})
+            return self._repoCmd(command, self._doDownload, keepStderr=True) # call again
         return defer.succeed(0)
 
     def maybeNotDoVCFallback(self, res):

@@ -866,43 +866,46 @@ class Git(Source):
         cmd = LoggedRemoteCommand("git", self.args)
         self.startCommand(cmd)
 
+
 class Repo(Source):
-    """Check out a source tree from a repo repository 'repourl'."""
+    """Check out a source tree from a repo repository described by manifest."""
 
     name = "repo"
 
-    def __init__(self, repourl=None,
-                 manifest_branch=None,
-                 manifest=None,
-                 repotarball=None,
+    def __init__(self,
+                 manifest_url=None,
+                 manifest_branch="master",
+                 manifest_file="default.xml",
+                 tarball=None,
                  **kwargs):
         """
-        @type  repourl: string
-        @param repourl: the URL which points at the repo manifests repository
+        @type  manifest_url: string
+        @param manifest_url: The URL which points at the repo manifests repository.
 
         @type  manifest_branch: string
         @param manifest_branch: The manifest branch to check out by default.
 
-        @type  manifest: string
-        @param manifest: The manifest to use for sync.
+        @type  manifest_file: string
+        @param manifest_file: The manifest to use for sync.
 
         """
         Source.__init__(self, **kwargs)
-        self.repourl = repourl
-        self.addFactoryArguments(repourl=repourl,
+        self.manifest_url = manifest_url
+        self.addFactoryArguments(manifest_url=manifest_url,
                                  manifest_branch=manifest_branch,
-                                 manifest=manifest,
-                                 repotarball=repotarball,
+                                 manifest_file=manifest_file,
+                                 tarball=tarball,
                                  )
         self.args.update({'manifest_branch': manifest_branch,
-                          'manifest': manifest,
-                          'repotarball': repotarball,
+                          'manifest_file': manifest_file,
+                          'tarball': tarball,
                           })
 
     def computeSourceRevision(self, changes):
         if not changes:
             return None
         return changes[-1].revision
+
     def parseDownloadProperty(self, s):
         """
          lets try to be nice in the format we want
@@ -924,33 +927,36 @@ class Repo(Source):
                 s = s[:res.start(0)] + s[res.end(0):]
                 res = cur_re.search(s)
         return ret
-    def startVC(self, branch, revision, patch):
-        if branch is not None:
-            self.args['branch'] = branch
 
-        self.args['repourl'] = self.computeRepositoryURL(self.repourl)
-        self.args['revision'] = revision
-        self.args['patch'] = patch
+    def startVC(self, branch, revision, patch):
+        self.args['manifest_url'] = self.computeRepositoryURL(self.manifest_url)
+
         # only master has access to properties, so we must implement this here.
         downloads = []
-        # download patches based on gerritchangesource events
+
+        # download patches based on GerritChangeSource events
         for change in self.build.allChanges():
             if (change.properties.has_key("event.type") and
                 change.properties["event.type"] == "patchset-created"):
                 downloads.append("%s %s/%s"% (change.properties["event.change.project"],
                                               change.properties["event.change.number"],
                                               change.properties["event.patchSet.number"]))
+
         # download patches based on web site forced build properties:
-        # user can be lazy and just write: "d"
-	# or specify several properties: download, download1 ... download9
-        for propName in [ "d", "download"] + [ "download%d"%(i)for i in xrange(1,10)]:
+        # "repo_d", "repo_d0", .., "repo_d9"
+        # "repo_download", "repo_download0", .., "repo_download9"
+        for propName in ["repo_d"] + ["repo_d%d" % i for i in xrange(0,10)] + \
+          ["repo_download"] + ["repo_download%d" % i for i in xrange(0,10)]:
             try:
                 s = self.build.getProperty(propName)
+                downloads.extend(self.parseDownloadProperty(s))
             except KeyError:
-                s = ""
-            downloads.extend(self.parseDownloadProperty(s))
-        self.args["downloads"] = downloads
-        self.setProperty("downloads",downloads)
+                pass
+
+        if downloads:
+            self.args["repo_downloads"] = downloads
+            self.setProperty("repo_downloads", downloads)
+
         slavever = self.slaveVersion("repo")
         if not slavever:
             raise BuildSlaveTooOldError("slave is too old, does not know "
