@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 import os
+import re
 import sha
 
 from twisted.internet import defer
@@ -45,7 +46,13 @@ class Repo(SourceBaseCommand):
         self.manifest_file =  args.get('manifest_file')
         self.tarball = args.get('tarball')
         self.repo_downloads = args.get('repo_downloads')
+        # we're using string instead of an array here, because it will be transferred back
+        # to the master as string anyway and using eval() could have security implications.
+        self.repo_downloaded = ""
+
         self.sourcedata = "%s %s %s" % (self.manifest_url, self.manifest_branch, self.manifest_file)
+        self.re_change = re.compile(".* refs/changes/\d\d/(\d+)/(\d+) -> FETCH_HEAD$")
+        self.re_head = re.compile("^HEAD is now at ([0-9a-f]+)...")
 
     def _fullSrcdir(self):
         return os.path.join(self.builder.basedir, self.srcdir)
@@ -132,6 +139,14 @@ class Repo(SourceBaseCommand):
             return self._doDownload(None)
 
     def _doDownload(self, dummy):
+        if hasattr(self.command, 'stderr') and self.command.stderr:
+            lines = self.command.stderr.split('\n')
+            if len(lines) > 2:
+                match1 = self.re_change.match(lines[1])
+                match2 = self.re_head.match(lines[-2])
+                if match1 and match2:
+                    self.repo_downloaded += "%s/%s %s " % (match1.group(1), match1.group(2), match2.group(1))
+
         if self.repo_downloads:
             # download each changeset while the self.download variable is not empty
             download = self.repo_downloads.pop(0)
@@ -139,6 +154,9 @@ class Repo(SourceBaseCommand):
             self.sendStatus({"header": "downloading changeset %s\n"
                                        % (download)})
             return self._repoCmd(command, self._doDownload, keepStderr=True) # call again
+
+        if self.repo_downloaded:
+            self.sendStatus({"repo_downloaded": self.repo_downloaded[:-1]})
         return defer.succeed(0)
 
     def maybeNotDoVCFallback(self, res):

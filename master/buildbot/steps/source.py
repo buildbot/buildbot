@@ -965,6 +965,12 @@ class Repo(Source):
         cmd = LoggedRemoteCommand("repo", self.args)
         self.startCommand(cmd)
 
+    def commandComplete(self, cmd):
+        if cmd.updates.has_key("repo_downloaded"):
+            repo_downloaded = cmd.updates["repo_downloaded"][-1]
+            if repo_downloaded:
+                self.setProperty("repo_downloaded", str(repo_downloaded), "Source")
+
 
 class Bzr(Source):
     """Check out a source tree from a bzr (Bazaar) repository at 'repourl'.
