@@ -1253,56 +1253,80 @@ c['change_source'] = GitPoller('git@@example.com:foobaz/myrepo.git',
 
 The @code{GerritChangeSource} class connects to a Gerrit server by its SSH
 interface and uses its event source mechanism,
-@uref{http://gerrit.googlecode.com/svn/documentation/2.1.5/cmd-stream-events.html, gerrit stream-events}.
+@uref{http://gerrit.googlecode.com/svn/documentation/2.1.6/cmd-stream-events.html, gerrit stream-events}.
 
 This class adds a change to the buildbot system for each of the following events:
 @table @code
-@item change-merged
-A change has been merged into the repository. Typically, this kind of event can lead
-to a complete rebuild of the project, and upload binaries to an incremental build
-results server.
 @item patchset-created
 A change is proposed for review. Automatic checks like @code{checkpatch.pl} can be
 automatically triggered. Beware of what kind of automatic task you trigger.
 At this point, no trusted human has reviewed the code, and a patch could be
 specially crafted by an attacker to compromise your buildslaves.
+@item ref-updated
+A change has been merged into the repository. Typically, this kind of event can lead
+to a complete rebuild of the project, and upload binaries to an incremental build
+results server.
 @end table
+
 This class will populate the property list of the triggered build with the info
-given by gerrit server in JSON format. The following is not an exaustive list
-of such properties. See Gerrit's documentation for full list of JSON attributes:
+received from Gerrit server in JSON format.
+
+In case of ``patchset-created'' event, these properties will be:
 @table @code
 @item @code{event.change.branch}
-repository branch of the change
-@item @code{event.change.project}
-repository project of the change
+Branch of the Change
 @item @code{event.change.id}
-key id of the change (the ChangeId: in commit comments)
+Change's ID in the Gerrit system (the ChangeId: in commit comments)
 @item @code{event.change.number}
-Change number in gerrit system.
+Change's number in Gerrit system
 @item @code{event.change.owner.email}
 Change's owner email (owner is first uploader)
 @item @code{event.change.owner.name}
 Change's owner name
+@item @code{event.change.project}
+Project of the Change
 @item @code{event.change.subject}
-Change's Subject
+Change's subject
 @item @code{event.change.url}
-Url of the change in the gerrit web ui.
+URL of the Change in the Gerrit's web interface
 @item @code{event.patchSet.number}
-Patchset version number
+Patchset's version number
 @item @code{event.patchSet.ref}
-Patchset git ref
+Patchset's Gerrit "virtual branch"
 @item @code{event.patchSet.revision}
-Patchset git commit id
+Patchset's Git commit ID
 @item @code{event.patchSet.uploader.email}
-Patchset uploader email (owner is only first uploader)
+Patchset uploader's email (owner is first uploader)
 @item @code{event.patchSet.uploader.name}
-Patchset uploader name (owner is only first uploader)
-@item @code{event.submitter.email}
-Submitter email (merger responsible)
-@item @code{event.submitter.name}
-Submitter name (merger responsible)
+Patchset uploader's name (owner is first uploader)
 @item @code{event.type}
-event type (``change merged'' or ``patchset-created'')
+Event type (``patchset-created'')
+@item @code{event.uploader.email}
+Patchset uploader's email
+@item @code{event.uploader.name}
+Patchset uploader's name
+@end table
+
+In case of ``ref-updated'' event, these properties will be:
+@table @code
+@item @code{event.refUpdate.newRev}
+New Git commit ID (after merger)
+@item @code{event.refUpdate.oldRev}
+Previous Git commit ID (before merger)
+@item @code{event.refUpdate.project}
+Project that was updated
+@item @code{event.refUpdate.refName}
+Branch that was updated
+@item @code{event.submitter.email}
+Submitter's email (merger responsible)
+@item @code{event.submitter.name}
+Submitter's name (merger responsible)
+@item @code{event.type}
+Event type (``ref-updated'')
+@item @code{event.submitter.email}
+Submitter's email (merger responsible)
+@item @code{event.submitter.name}
+Submitter's name (merger responsible)
 @end table
 
 @heading Example

@@ -88,31 +88,43 @@ class GerritChangeSource(base.ChangeSource):
             log.msg("bad json line: %s" % (line,))
             return
 
-        if type(event) == type({}) and "type" in event:
-            if event["type"] in [u"change-merged", u"patchset-created"]:
-                # flatten the event dictionary, for easy access with WithProperties
-                def flatten(event, base, d):
-                    for k, v in d.items():
-                        if type(v) == dict:
-                            flatten(event, base + "." + k, v)
-                        else: # already there
-                            event[base + "." + k] = v
+        if type(event) == type({}) and "type" in event and event["type"] in ["patchset-created", "ref-updated"]:
+            # flatten the event dictionary, for easy access with WithProperties
+            def flatten(event, base, d):
+                for k, v in d.items():
+                    if type(v) == dict:
+                        flatten(event, base + "." + k, v)
+                    else: # already there
+                        event[base + "." + k] = v
 
-                properties = {}
-                flatten(properties, "event", event)
+            properties = {}
+            flatten(properties, "event", event)
 
+            if event["type"] == "patchset-created":
                 change = event["change"]
-                patchset = event["patchSet"]
-
                 c = changes.Change(who="%s <%s>" % (change["owner"]["name"], change["owner"]["email"]),
                                    project=change["project"],
                                    branch=change["branch"],
-                                   revision=patchset["revision"],
+                                   revision=event["patchSet"]["revision"],
                                    revlink=change["url"],
                                    comments=change["subject"],
                                    files=["unknown"],
+                                   category=event["type"],
                                    properties=properties)
-                self.parent.addChange(c)
+            elif event["type"] == "ref-updated":
+                ref = event["refUpdate"]
+                c = changes.Change(who="%s <%s>" % (event["submitter"]["name"], event["submitter"]["email"]),
+                                   project=ref["project"],
+                                   branch=ref["refName"],
+                                   revision=ref["newRev"],
+                                   comments="Gerrit: patchset(s) merged.",
+                                   files=["unknown"],
+                                   category=event["type"],
+                                   properties=properties)
+            else:
+                return # this shouldn't happen anyway
+
+            self.parent.addChange(c)
 
     def streamProcessStopped(self):
         self.process = None
@@ -135,7 +147,7 @@ class GerritChangeSource(base.ChangeSource):
             # good startup, but lost connection; restart immediately, and set the timeout
             # to its minimum
             self.startStreamProcess()
-            self.streamProcessTimeout = self.STREAM_BACKOUT_MIN
+            self.streamProcessTimeout = self.STREAM_BACKOFF_MIN
 
     def startStreamProcess(self):
         log.msg("starting 'gerrit stream-events'")

@@ -928,6 +928,13 @@ Git 1.7.2 or later.
 
 @end table
 
+This Source step integrates with @ref{GerritChangeSource}, and will automatically use
+Gerrit's "virtual branch" (@code{refs/changes/*}) to download the additionnal changes
+introduced by a pending changeset.
+
+Gerrit integration can be also triggered using forced build with @code{gerrit_change}
+property with value in format: @code{change_number/patchset_number}.
+
 
 @node BitKeeper
 @subsubsection BitKeeper
@@ -963,16 +970,16 @@ init and sync.
 The Repo step takes the following arguments:
 
 @table @code
-@item repourl
+@item manifest_url
 (required): the URL at which the Repo's manifests source repository is available.
 
 @item manifest_branch
-(optional, defaults to @code{"master"}): the manifest repository branch on which
+(optional, defaults to @code{master}): the manifest repository branch on which
 repo will take its manifest. Corresponds to the @code{-b} argument to the @code{repo init} command.
-@item manifest
+@item manifest_file
 (optional, defaults to @code{default.xml}): the manifest filename.
 Corresponds to the @code{-m} argument to the @code{repo init} command.
-@item repotarball
+@item tarball
 (optional, defaults to @code{None}): the repo tarball used for fast bootstrap.
 If not present the tarball will be created automatically after first sync.
 It is a copy of the @code{.repo} directory which contains all the git objects.
@@ -983,14 +990,14 @@ This Source step integrates with @ref{GerritChangeSource}, and will automaticall
 @code{repo download} command of repo to download the additionnal changes introduced by a
 pending changeset.
 
-This source step's behavior can be modified by using force build, and force
-build properties.  any of @code{d}, @code{download}, @code{download[0-9]}
-properties will be translated into a @code{repo download}.  Each property can
-support several instances of @code{repo download proj number/patch} (direct
-copy paste from gerrit web site) or several instances of @code{proj
-number/patch} (simpler version).  This feature allows integrator to build with
-several pending interdependant changes, which at the moment cannot be described
-properly in gerrit, and can only be described by humans.
+Gerrit integration can be also triggered using forced build with following properties:
+@code{repo_d}, @code{repo_d[0-9]}, @code{repo_download}, @code{repo_download[0-9]}
+with values in format: @code{project/change_number/patchset_number}.
+All of these properties will be translated into a @code{repo download}.
+This feature allows integrators to build with several pending interdependent changes,
+which at the moment cannot be described properly in Gerrit, and can only be described
+by humans.
+
 
 @node ShellCommand
 @subsection ShellCommand
