@@ -18,8 +18,6 @@
 
 ."""
 
-import os
-
 from buildbot.status.base import StatusReceiverMultiService
 from buildbot.status.builder import Results
 from twisted.internet import reactor

@@ -41,10 +41,10 @@ class TestGerritChangeSource(changesource.ChangeSourceMixin,
 
     # TODO: test the backoff algorithm
 
-    def test_lineReceived_good(self):
+    def test_lineReceived_patchset_created(self):
         s = self.newChangeSource('somehost', 'someuser')
         s.lineReceived(json.dumps(dict(
-            type="change-merged",
+            type="patchset-created",
             change=dict(
                 branch="br",
                 project="pr",
