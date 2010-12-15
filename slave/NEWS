@@ -4,6 +4,14 @@ Major User visible changes in Buildslave.             -*- outline -*-
 
 * Next Release
 
+** Slave-initiated Graceful Shutdown
+
+If the allow_shutdown parameter in buildbot.tac is set, then the slave can be
+gracefully shut down locally by the slave admin.  The shutdown operates by the
+slave informing the master that it would like to shut down; the master then
+finishes any active builds on the slave, and instructs the slave to shut down.
+See the documentation for more information.
+
 * Buildbot-Slave 0.8.2
 
 ** Log Rotation
