@@ -15,7 +15,6 @@
 
 import os
 import shutil
-import signal
 
 from twisted.trial import unittest
 from twisted.spread import pb

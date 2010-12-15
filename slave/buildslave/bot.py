@@ -20,7 +20,7 @@ import signal
 
 from twisted.spread import pb
 from twisted.python import log
-from twisted.internet import reactor, defer, task
+from twisted.internet import error, reactor, task
 from twisted.application import service, internet
 from twisted.cred import credentials
 
