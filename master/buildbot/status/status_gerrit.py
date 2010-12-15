@@ -77,32 +77,45 @@ class GerritStatusPush(StatusReceiverMultiService):
 
     def buildFinished(self, builderName, build, results):
         """Do the SSH gerrit verify command to the server."""
+        repo, git = False, False
+
+        # Gerrit + Repo
         try:
-            # Gerrit + Repo
             downloads = build.getProperty("repo_downloads")
             downloaded = build.getProperty("repo_downloaded").split(" ")
+            repo = True
+        except KeyError:
+            pass
 
+        if repo:
             if downloads and 2 * len(downloads) == len(downloaded):
                 message, verified, reviewed = self.messageCB(builderName, build, results)
                 for i in range(0, len(downloads)):
-                    project, change1 = downloads[i].split(" ")
+                    try:
+                        project, change1 = downloads[i].split(" ")
+                    except ValueError:
+                        return # something is wrong, abort
                     change2 = downloaded[2 * i]
                     revision = downloaded[2 * i + 1]
                     if change1 == change2:
                         self.sendCodeReview(str(project), revision, message, verified, reviewed)
+                    else:
+                        return # something is wrong, abort
             return
-        except KeyError:
-            try:
-                # Gerrit + Git
-                build.getProperty("gerrit_branch") # used only to verify Gerrit source
-                project = build.getProperty("project")
-                revision = build.getProperty("got_revision")
 
-                message, verified, reviewed = self.messageCB(builderName, build, results)
-                self.sendCodeReview(project, revision, message, verified, reviewed)
-                return
-            except KeyError:
-                return
+        # Gerrit + Git
+        try:
+            build.getProperty("gerrit_branch") # used only to verify Gerrit source
+            project = build.getProperty("project")
+            revision = build.getProperty("got_revision")
+            git = True
+        except KeyError:
+            pass
+
+        if git:
+            message, verified, reviewed = self.messageCB(builderName, build, results)
+            self.sendCodeReview(project, revision, message, verified, reviewed)
+            return
 
     def sendCodeReview(self, project, revision, message=None, verified=0, reviewed=0):
         command = ["ssh", self.username + "@" + self.gerritserver, "-p", str(self.gerritport),
