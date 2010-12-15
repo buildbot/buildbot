@@ -398,6 +398,10 @@ class AbstractBuildSlave(pb.Avatar, service.MultiService):
     def perspective_keepalive(self):
         pass
 
+    def perspective_shutdown(self):
+        log.msg("slave %s wants to shut down" % self.slavename)
+        self.slave_status.setGraceful(True)
+
     def addSlaveBuilder(self, sb):
         self.slavebuilders[sb.builder_name] = sb
 

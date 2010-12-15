@@ -566,10 +566,24 @@ settings.
 If you need a different encoding, this can be changed in your build slave's
 buildbot.tac file by adding a unicode_encoding argument to BuildSlave:
 
+@item allow_shutdown
+allow_shutdown can be passed to the BuildSlave constructor in buildbot.tac.
+
+Setting allow_shutdown to 'file' will cause the buildslave to watch
+'shutdown.stamp' in basedir for updates to its mtime.  The file does not need
+to exist prior to starting the slave.
+
+Setting allow_shutdown to 'signal' will set up a SIGHUP handler to start a
+graceful shutdown.
+
+The default value is None, in which case this feature will be disabled.
+
+Both master and slave must be at least version 0.8.3 for this feature to work.
+
 @example
 s = BuildSlave(buildmaster_host, port, slavename, passwd, basedir,
                keepalive, usepty, umask=umask, maxdelay=maxdelay,
-               unicode_encoding='utf-8')
+               unicode_encoding='utf-8', allow_shutdown='signal')
 @end example
 
 @end table

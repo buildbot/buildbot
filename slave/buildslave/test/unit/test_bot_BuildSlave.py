@@ -15,6 +15,7 @@
 
 import os
 import shutil
+import signal
 
 from twisted.trial import unittest
 from twisted.spread import pb
@@ -23,6 +24,8 @@ from twisted.cred import checkers, portal
 from zope.interface import implements
 
 from buildslave import bot
+
+from mock import Mock
 
 # I don't see any simple way to test the PB equipment without actually setting
 # up a TCP connection.  This just tests that the PB code will connect and can
@@ -129,3 +132,90 @@ class TestBuildSlave(unittest.TestCase):
 
         # and wait for the result of the print
         return d
+
+    def test_buildslave_graceful_shutdown(self):
+        """Test that running the build slave's gracefulShutdown method results
+        in a call to the master's shutdown method"""
+        d = defer.Deferred()
+
+        fakepersp = Mock()
+        called = []
+        def fakeCallRemote(*args):
+            called.append(args)
+            d1 = defer.succeed(None)
+            return d1
+        fakepersp.callRemote = fakeCallRemote
+
+        # set up to call shutdown when we are attached, and chain the results onto
+        # the deferred for the whole test
+        def call_shutdown(mind):
+            self.buildslave.bf.perspective = fakepersp
+            shutdown_d = self.buildslave.gracefulShutdown()
+            shutdown_d.addCallbacks(d.callback, d.errback)
+
+        persp = MasterPerspective()
+        port = self.start_master(persp, on_attachment=call_shutdown)
+
+        self.buildslave = bot.BuildSlave("127.0.0.1", port,
+                "testy", "westy", self.basedir,
+                keepalive=0, usePTY=False, umask=022)
+
+        self.buildslave.startService()
+
+        def check(ign):
+            self.assertEquals(called, [('shutdown',)])
+        d.addCallback(check)
+
+        return d
+
+    def test_buildslave_shutdown(self):
+        """Test watching an existing shutdown_file results in gracefulShutdown
+        being called."""
+
+        buildslave = bot.BuildSlave("127.0.0.1", 1234,
+                "testy", "westy", self.basedir,
+                keepalive=0, usePTY=False, umask=022,
+                allow_shutdown='file')
+
+        def patch(obj, attr, val):
+            old = getattr(obj, attr)
+            def cleanup():
+                setattr(obj, attr, old)
+            self.addCleanup(cleanup)
+            setattr(obj, attr, val)
+
+        # Mock out gracefulShutdown
+        buildslave.gracefulShutdown = Mock()
+
+        # Mock out os.path methods
+        exists = Mock()
+        mtime = Mock()
+
+        patch(os.path, 'exists', exists)
+        patch(os.path, 'getmtime', mtime)
+
+        # Pretend that the shutdown file doesn't exist
+        mtime.return_value = 0
+        exists.return_value = False
+
+        buildslave._checkShutdownFile()
+
+        # We shouldn't have called gracefulShutdown
+        self.assertEquals(buildslave.gracefulShutdown.call_count, 0)
+
+        # Pretend that the file exists now, with an mtime of 2
+        exists.return_value = True
+        mtime.return_value = 2
+        buildslave._checkShutdownFile()
+
+        # Now we should have changed gracefulShutdown
+        self.assertEquals(buildslave.gracefulShutdown.call_count, 1)
+
+        # Bump the mtime again, and make sure we call shutdown again
+        mtime.return_value = 3
+        buildslave._checkShutdownFile()
+        self.assertEquals(buildslave.gracefulShutdown.call_count, 2)
+
+        # Try again, we shouldn't call shutdown another time
+        buildslave._checkShutdownFile()
+        self.assertEquals(buildslave.gracefulShutdown.call_count, 2)

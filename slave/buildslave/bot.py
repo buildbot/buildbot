@@ -16,10 +16,11 @@
 import os.path
 import socket
 import sys
+import signal
 
 from twisted.spread import pb
 from twisted.python import log
-from twisted.internet import reactor, error
+from twisted.internet import reactor, defer, task
 from twisted.application import service, internet
 from twisted.cred import credentials
 
@@ -452,7 +453,7 @@ class BotFactory(ReconnectingPBClientFactory):
 class BuildSlave(service.MultiService):
     def __init__(self, buildmaster_host, port, name, passwd, basedir,
                  keepalive, usePTY, keepaliveTimeout=30, umask=None,
-                 maxdelay=300, unicode_encoding=None):
+                 maxdelay=300, unicode_encoding=None, allow_shutdown=None):
         log.msg("Creating BuildSlave -- version: %s" % buildslave.version)
         self.recordHostname()
         service.MultiService.__init__(self)
@@ -462,6 +463,15 @@ class BuildSlave(service.MultiService):
         if keepalive == 0:
             keepalive = None
         self.umask = umask
+
+        if allow_shutdown == 'signal':
+            if not hasattr(signal, 'SIGHUP'):
+                raise ValueError("Can't install signal handler")
+        elif allow_shutdown == 'file':
+            self.shutdown_file = os.path.join(basedir, 'shutdown.stamp')
+            self.shutdown_mtime = 0
+
+        self.allow_shutdown = allow_shutdown
         bf = self.bf = BotFactory(buildmaster_host, port, keepalive, keepaliveTimeout, maxdelay)
         bf.startLogin(credentials.UsernamePassword(name, passwd), client=bot)
         self.connection = c = internet.TCPClient(buildmaster_host, port, bf)
@@ -480,7 +490,51 @@ class BuildSlave(service.MultiService):
             os.umask(self.umask)
         service.MultiService.startService(self)
 
+        if self.allow_shutdown == 'signal':
+            log.msg("Setting up SIGHUP handler to initiate shutdown")
+            signal.signal(signal.SIGHUP, self._handleSIGHUP)
+        elif self.allow_shutdown == 'file':
+            log.msg("Watching %s's mtime to initiate shutdown" % self.shutdown_file)
+            if os.path.exists(self.shutdown_file):
+                self.shutdown_mtime = os.path.getmtime(self.shutdown_file)
+            l = task.LoopingCall(self._checkShutdownFile)
+            l.start(interval=10)
+
     def stopService(self):
         self.bf.continueTrying = 0
         self.bf.stopTrying()
         service.MultiService.stopService(self)
+
+    def _handleSIGHUP(self, *args):
+        log.msg("Initiating shutdown because we got SIGHUP")
+        return self.gracefulShutdown()
+
+    def _checkShutdownFile(self):
+        if os.path.exists(self.shutdown_file) and \
+                os.path.getmtime(self.shutdown_file) > self.shutdown_mtime:
+            log.msg("Initiating shutdown because %s was touched" % self.shutdown_file)
+            self.gracefulShutdown()
+
+            # In case the shutdown fails, update our mtime so we don't keep
+            # trying to shutdown over and over again.
+            # We do want to be able to try again later if the master is
+            # restarted, so we'll keep monitoring the mtime.
+            self.shutdown_mtime = os.path.getmtime(self.shutdown_file)
+
+    def gracefulShutdown(self):
+        """Start shutting down"""
+        if not self.bf.perspective:
+            log.msg("No active connection, shutting down NOW")
+            reactor.stop()
+
+        log.msg("Telling the master we want to shutdown after any running builds are finished")
+        d = self.bf.perspective.callRemote("shutdown")
+        def _shutdownfailed(err):
+            if err.check(AttributeError):
+                log.msg("Master does not support slave initiated shutdown.  Upgrade master to 0.8.3 or later to use this feature.")
+            else:
+                log.msg('callRemote("shutdown") failed')
+                log.err(err)
+
+        d.addErrback(_shutdownfailed)
+        return d
