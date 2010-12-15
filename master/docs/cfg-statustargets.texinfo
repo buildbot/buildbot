@@ -43,6 +43,7 @@ methods. See the docstrings in @file{buildbot/interfaces.py} for full details.
 * PBListener::
 * StatusPush::
 * HttpStatusPush::
+* GerritStatusPush::
 * Writing New Status Plugins::
 * Status Target Index::
 @end menu
@@ -1203,6 +1204,37 @@ c['status'].append(sp)
 HttpStatusPush builds on StatusPush and sends HTTP requests to
 serverUrl, with all the items json-encoded. It is useful to create a
 status front end outside of buildbot for better scalability.
+
+@node GerritStatusPush
+@subsection GerritStatusPush
+
+@cindex GerritStatusPush
+@stindex buildbot.status.status_gerrit.GerritStatusPush
+
+
+@example
+from buildbot.status.status_gerrit import GerritStatusPush
+
+def gerritReviewCB(builderName, build, result, arg):
+    message =  "Buildbot finished compiling your patchset\n"
+    message += "on configuration: %s\n" % builderName
+    message += "The result is: %s\n" % Results[result].upper()
+
+    if arg:
+        message += "\nFor more details visit:\n"
+        message += "%sbuilders/%s/builds/%d\n" % (arg, builderName, build.getNumber())
+
+    # message, verified, reviewed
+    return message, (result == 0 or -1), 0
+
+c['buildbotURL'] = 'http://buildbot.example.com/'
+c['status'].append(GerritStatusPush('127.0.0.1', 'buildbot',
+                                    reviewCB=gerritReviewCB,
+                                    reviewArg=c['buildbotURL']))
+@end example
+
+GerritStatusPush sends review of the Change back to the Gerrit server.
+
 
 @node Writing New Status Plugins
 @subsection Writing New Status Plugins
