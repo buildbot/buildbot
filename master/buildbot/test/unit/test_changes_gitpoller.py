@@ -50,10 +50,13 @@ class GitOutputParsing(unittest.TestCase):
         """
         dummyRevStr = '12345abcde'
 
+        # make this call to self.patch here so that we raise a SkipTest if it
+        # is not supported
+        self.patch(utils, "getProcessOutput", produce_empty_git_output)
+
         d = defer.succeed(None)
         def call_empty(_):
             # we should get an Exception with empty output from git
-            self.patch(utils, "getProcessOutput", produce_empty_git_output)
             return methodToTest(dummyRevStr)
         d.addCallback(call_empty)
     

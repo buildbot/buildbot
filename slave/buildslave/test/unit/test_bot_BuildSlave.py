@@ -176,13 +176,6 @@ class TestBuildSlave(unittest.TestCase):
                 keepalive=0, usePTY=False, umask=022,
                 allow_shutdown='file')
 
-        def patch(obj, attr, val):
-            old = getattr(obj, attr)
-            def cleanup():
-                setattr(obj, attr, old)
-            self.addCleanup(cleanup)
-            setattr(obj, attr, val)
-
         # Mock out gracefulShutdown
         buildslave.gracefulShutdown = Mock()
 
@@ -190,8 +183,8 @@ class TestBuildSlave(unittest.TestCase):
         exists = Mock()
         mtime = Mock()
 
-        patch(os.path, 'exists', exists)
-        patch(os.path, 'getmtime', mtime)
+        self.patch(os.path, 'exists', exists)
+        self.patch(os.path, 'getmtime', mtime)
 
         # Pretend that the shutdown file doesn't exist
         mtime.return_value = 0

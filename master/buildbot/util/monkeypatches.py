@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+import sys
+import twisted
 from twisted.trial import unittest
 
 def add_debugging_monkeypatches():
@@ -34,9 +36,9 @@ def add_debugging_monkeypatches():
     Service.startService = startService
     Service.stopService = stopService
 
-    # make unittest.TestCase have a patch method, even if it just skips
-    # the test.
-    def nopatch(self, *args):
-        raise unittest.SkipTest('unittest.patch is not available')
-    if not hasattr(unittest.TestCase, 'patch'):
+    # versions of Twisted before 9.0.0 did not have a UnitTest.patch that worked
+    # on Python-2.7
+    if twisted.version.major <= 9 and sys.version_info[:2] == (2,7):
+        def nopatch(self, *args):
+            raise unittest.SkipTest('unittest.TestCase.patch is not available')
         unittest.TestCase.patch = nopatch
