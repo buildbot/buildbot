@@ -560,7 +560,7 @@ class MailNotifier(base.StatusReceiverMultiService):
         if self.smtpUser and self.smtpPassword:
             useAuth = True
         else:
-	    useAuth = False
+            useAuth = False
         
         sender_factory = ESMTPSenderFactory(
             self.smtpUser, self.smtpPassword,
