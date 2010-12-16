@@ -34,6 +34,7 @@ commandRegistry = {
     "mkdir" : "buildslave.commands.fs.MakeDirectory",
     "rmdir" : "buildslave.commands.fs.RemoveDirectory",
     "cpdir" : "buildslave.commands.fs.CopyDirectory",
+    "stat" : "buildslave.commands.fs.StatFile",
 }
 
 def getFactory(command):

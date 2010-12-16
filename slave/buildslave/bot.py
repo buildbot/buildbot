@@ -305,14 +305,13 @@ class Bot(pb.Referenceable, service.MultiService):
                 if os.path.isfile(filename):
                     files[f] = open(filename, "r").read()
         files['environ'] = os.environ.copy()
+        files['system'] = os.name
+        files['basedir'] = self.basedir
         return files
 
     def remote_getVersion(self):
         """Send our version back to the Master"""
         return buildslave.version
-
-    def remote_getEnviron(self):
-        return os.environ.copy()
 
     def remote_shutdown(self):
         log.msg("slave shutting down on command from master")

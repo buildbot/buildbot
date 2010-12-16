@@ -1952,7 +1952,7 @@ variables to the subprocess.  To pass an explicit environment instead, add an
 @node Setting Properties
 @subsection Setting Properties
 
-@bsindex buildbot.steps.master.SetPropertiesFromEnv
+@bsindex buildbot.steps.slave.SetPropertiesFromEnv
 
 In Buildbot-0.8.3 and higher, slaves provide their environment variables to the
 master on connect.  These can be copied into Buildbot properties with the
@@ -1961,7 +1961,7 @@ master on connect.  These can be copied into Buildbot properties with the
 step.
 
 @example
-from buildbot.steps.master import SetProperiesFromEnv
+from buildbot.steps.slave import SetProperiesFromEnv
 from buildbot.steps.shell import Compile
 
 f.addStep(SetPropertiesFromEnv(variables=["SOME_JAVA_LIB_HOME", "JAVAC"]))
