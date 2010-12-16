@@ -117,31 +117,3 @@ class MasterShellCommand(BuildStep):
         else:
             self.step_status.setText(list(self.descriptionDone))
             self.finished(SUCCESS)
-
-class SetPropertiesFromEnv(BuildStep):
-    """
-    Sets properties from envirionment variables on the slave.
-
-    Note this is transfered when the slave first connects
-    """
-    name='SetPropertiesFromEnv'
-    description='Setting'
-    descriptionDone='Set'
-
-    def __init__(self, variables, source="SlaveEnvironment", **kwargs):
-        BuildStep.__init__(self, **kwargs)
-        self.addFactoryArguments(variables = variables,
-                                 source = source)
-        self.variables = variables
-        self.source = source
-
-    def start(self):
-        properties = self.build.getProperties()
-        environ = self.buildslave.slave_environ
-        if isinstance(self.variables, str):
-            self.variables = [self.variables]
-        for variable in self.variables:
-            value = environ.get(variable, None)
-            if value:
-                properties.setProperty(variable, value, self.source, runtime=True)
-        self.finished(SUCCESS)
