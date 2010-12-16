@@ -16,6 +16,9 @@
 # Test clean shutdown functionality of the master
 import mock
 from twisted.trial import unittest
+from twisted.internet import defer
+from twisted.spread import pb
+from twisted.cred import credentials
 from buildbot import pbmanager   
 
 class TestPBManager(unittest.TestCase):
@@ -23,27 +26,44 @@ class TestPBManager(unittest.TestCase):
     def setUp(self):
         self.pbm = pbmanager.PBManager()
         self.pbm.startService()
+        self.connections = []
 
     def tearDown(self):
         return self.pbm.stopService()
 
     def perspectiveFactory(self, mind, username):
+        persp = mock.Mock()
+        persp.is_my_persp = True
+        persp.attached = lambda mind : defer.succeed(None)
         self.connections.append(username)
-        return mock.Mock()
+        return defer.succeed(persp)
 
     def test_register_unregister(self):
         portstr = "tcp:0:interface=127.0.0.1"
-        reg = self.pbm.register(portstr, "boris", "pass", None)
+        reg = self.pbm.register(portstr, "boris", "pass", self.perspectiveFactory)
 
         # make sure things look right
         self.assertIn(portstr, self.pbm.dispatchers)
         disp = self.pbm.dispatchers[portstr]
         self.assertIn('boris', disp.users)
 
-        # TODO: actually connect to it?  How can we find the dynamically
-        # allocated port?
+        # we can't actually connect to it, as that requires finding the
+        # dynamically allocated port number which is buried out of reach;
+        # however, we can try the requestAvatar and requestAvatarId methods.
 
-        return reg.unregister()
+        d = disp.requestAvatarId(credentials.UsernamePassword('boris', 'pass'))
+        def check_avatarid(username):
+            self.assertEqual(username, 'boris')
+        d.addCallback(check_avatarid)
+        d.addCallback(lambda _ :
+                disp.requestAvatar('boris', mock.Mock(), pb.IPerspective))
+        def check_avatar((iface, persp, detach_fn)):
+            self.failUnless(persp.is_my_persp)
+            self.assertIn('boris', self.connections)
+        d.addCallback(check_avatar)
+
+        d.addCallback(lambda _ : reg.unregister())
+        return d
 
     def test_double_register_unregister(self):
         portstr = "tcp:0:interface=127.0.0.1"
