@@ -13,8 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
-from buildbot.process.buildstep import BuildStep
+import stat
+from buildbot.process.buildstep import BuildStep, LoggedRemoteCommand
 from buildbot.process.buildstep import SUCCESS, FAILURE
+from buildbot.interfaces import BuildSlaveTooOldError
 
 class SetPropertiesFromEnv(BuildStep):
     """
@@ -43,3 +45,42 @@ class SetPropertiesFromEnv(BuildStep):
             if value:
                 properties.setProperty(variable, value, self.source, runtime=True)
         self.finished(SUCCESS)
+
+class FileExists(BuildStep):
+    """
+    Check for the existence of a file on the slave.
+    """
+    name='FileExists'
+    description='Checking'
+    descriptionDone='Checked'
+
+    haltOnFailure = True
+    flunkOnFailure = True
+
+
+    def __init__(self, file, **kwargs):
+        BuildStep.__init__(self, **kwargs)
+        self.addFactoryArguments(file = file)
+        self.file = file
+
+    def start(self):
+        slavever = self.slaveVersion('stat')
+        if not slavever:
+            raise BuildSlaveTooOldError("slave is too old, does not know "
+                                        "about stat")
+        cmd = LoggedRemoteCommand('stat', {'file': self.file })
+        d = self.runCommand(cmd)
+        d.addCallback(lambda res: self.commandComplete(cmd))
+        d.addErrback(self.failed)
+
+    def commandComplete(self, cmd):
+        if cmd.rc != 0:
+            self.step_status.setText(["File not found."])
+            self.finished(FAILURE)
+        s = cmd.updates["stat"][-1]
+        if stat.S_ISREG(s[stat.ST_MODE]):
+            self.step_status.setText(["File found."])
+            self.finished(SUCCESS)
+        else:
+            self.step_status.setText(["Not a file."])
+            self.finished(FAILURE)
