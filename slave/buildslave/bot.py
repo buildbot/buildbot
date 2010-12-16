@@ -311,9 +311,6 @@ class Bot(pb.Referenceable, service.MultiService):
         """Send our version back to the Master"""
         return buildslave.version
 
-    def remote_getEnviron(self):
-        return os.environ.copy()
-
     def remote_shutdown(self):
         log.msg("slave shutting down on command from master")
         # there's no good way to learn that the PB response has been delivered,
