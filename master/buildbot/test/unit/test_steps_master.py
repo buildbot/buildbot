@@ -18,7 +18,7 @@ from twisted.trial import unittest
 from mock import Mock
 
 from buildbot.process.properties import Properties
-from buildbot.steps.master import SetPropertiesFromEnv
+from buildbot.steps.slave import SetPropertiesFromEnv
 
 class TestSetPropertiesFromEnv(unittest.TestCase):
     def testBasic(self):
