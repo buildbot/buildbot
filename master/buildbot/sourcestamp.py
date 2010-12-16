@@ -109,15 +109,15 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
 
     def mergeWith(self, others):
         """Generate a SourceStamp for the merger of me and all the other
-        BuildRequests. This is called by a Build when it starts, to figure
+        SourceStamps. This is called by a Build when it starts, to figure
         out what its sourceStamp should be."""
 
         # either we're all building the same thing (changes==None), or we're
         # all building changes (which can be merged)
         changes = []
         changes.extend(self.changes)
-        for req in others:
-            changes.extend(req.changes)
+        for ss in others:
+            changes.extend(ss.changes)
         newsource = SourceStamp(branch=self.branch,
                                 revision=self.revision,
                                 patch=self.patch,

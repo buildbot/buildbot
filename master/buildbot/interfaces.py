@@ -134,7 +134,7 @@ class ISourceStamp(Interface):
 
     def mergeWith(self, others):
         """Generate a SourceStamp for the merger of me and all the other
-        BuildRequests. This is called by a Build when it starts, to figure
+        SourceStamps. This is called by a Build when it starts, to figure
         out what its sourceStamp should be."""
 
     def getAbsoluteSourceStamp(self, got_revision):
