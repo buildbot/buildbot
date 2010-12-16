@@ -38,6 +38,7 @@ class GitPoller(base.PollingChangeSource):
         # for backward compatibility; the parameter used to be spelled with 'i'
         if pollinterval != -2:
             pollInterval = pollinterval
+        if project is None: project = ''
 
         self.repourl = repourl
         self.branch = branch
