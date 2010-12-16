@@ -193,3 +193,28 @@ class CopyDirectory(base.Command):
         # always set the RC, regardless of platform
         d.addCallbacks(self._sendRC, self._checkAbandoned)
         return d
+
+class StatFile(base.Command):
+    """This is a command which stats a file on the slave. The args dict contains the following keys:
+
+        - ['file'] (required): file to stat
+
+    StatFile creates the following status messages:
+        - {'rc': rc} : 0 if the file is found, 1 otherwise
+        - {'stat': stat} : if the files is found, stat contains the result of os.stat
+    """
+
+    header = "stat"
+
+    def start(self):
+        args = self.args
+        # args['dir'] is relative to Builder directory, and is required.
+        assert args['file'] is not None
+        filename = os.path.join(self.builder.basedir, args['file'])
+
+        try:
+            stat = os.stat(filename)
+            self.sendStatus({'stat': tuple(stat)})
+            self.sendStatus({'rc': 0})
+        except:
+            self.sendStatus({'rc': 1})

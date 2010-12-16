@@ -111,3 +111,56 @@ class TestMakeDirectory(CommandTestMixin, unittest.TestCase):
             self.assertEqual(self.get_updates(), [{'rc': 1}], self.builder.show())
         d.addErrback(check)
         return d
+
+class TestStatFile(CommandTestMixin, unittest.TestCase):
+
+    def setUp(self):
+        self.setUpCommand()
+
+    def tearDown(self):
+        self.tearDownCommand()
+
+    def test_non_existant(self):
+        self.make_command(fs.StatFile, dict(
+            file='no-such-file',
+        ), True)
+        d = self.run_command()
+
+        def check(_):
+            self.assertEqual(self.get_updates(),
+                    [{'rc': 1}],
+                    self.builder.show())
+        d.addCallback(check)
+        return d
+
+    def test_directory(self):
+        self.make_command(fs.StatFile, dict(
+            file='workdir',
+        ), True)
+        d = self.run_command()
+
+        def check(_):
+            import stat
+            self.assertTrue(stat.S_ISDIR(self.get_updates()[0]['stat'][stat.ST_MODE]))
+            self.assertIn({'rc': 0},
+                    self.get_updates(),
+                    self.builder.show())
+        d.addCallback(check)
+        return d
+
+    def test_file(self):
+        self.make_command(fs.StatFile, dict(
+            file='test-file',
+        ), True)
+        open(os.path.join(self.basedir, 'test-file'), "w")
+
+        d = self.run_command()
+
+        def check(_):
+            import stat
+            self.assertTrue(stat.S_ISREG(self.get_updates()[0]['stat'][stat.ST_MODE]))
+            self.assertIn({'rc': 0},
+                    self.get_updates(),
+                    self.builder.show())
+        d.addCallback(check)
+        return d
