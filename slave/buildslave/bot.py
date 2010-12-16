@@ -305,6 +305,8 @@ class Bot(pb.Referenceable, service.MultiService):
                 if os.path.isfile(filename):
                     files[f] = open(filename, "r").read()
         files['environ'] = os.environ.copy()
+        files['system'] = os.name
+        files['basedir'] = self.basedir
         return files
 
     def remote_getVersion(self):
