@@ -15,12 +15,9 @@
 
 import os.path
 
-from zope.interface import implements
-from twisted.application import strports
+from twisted.internet import defer
 from twisted.python import log, runtime
 from twisted.protocols import basic
-from twisted.cred import portal, checkers
-from twisted.spread import pb
 
 from buildbot import pbutil
 from buildbot.sourcestamp import SourceStamp
@@ -165,36 +162,36 @@ class Try_Jobdir(TryBase):
         bsid = self.create_buildset(ssid, reason, t, builderNames=builderNames)
         return bsid
 
+
 class Try_Userpass(TryBase):
     compare_attrs = ( 'name', 'builderNames', 'port', 'userpass', 'properties' )
-    implements(portal.IRealm)
 
     def __init__(self, name, builderNames, port, userpass,
                  properties={}):
         base.BaseScheduler.__init__(self, name, builderNames, properties)
-        if type(port) is int:
-            port = "tcp:%d" % port
         self.port = port
         self.userpass = userpass
-        c = checkers.InMemoryUsernamePasswordDatabaseDontUse()
-        for user,passwd in self.userpass:
-            c.addUser(user, passwd)
+        self.properties = properties
 
-        p = portal.Portal(self)
-        p.registerChecker(c)
-        f = pb.PBServerFactory(p)
-        s = strports.service(port, f)
-        s.setServiceParent(self)
+    def startService(self):
+        TryBase.startService(self)
+        master = self.parent.parent
 
-    def getPort(self):
-        # utility method for tests: figure out which TCP port we just opened.
-        return self.services[0]._port.getHost().port
+        # register each user/passwd with the pbmanager
+        def factory(mind, username):
+            return Try_Userpass_Perspective(self, username)
+        self.registrations = []
+        for user, passwd in self.userpass:
+            self.registrations.append(
+                    master.pbmanager.register(self.port, user, passwd, factory))
 
-    def requestAvatar(self, avatarID, mind, interface):
-        log.msg("%s got connection from user %s" % (self, avatarID))
-        assert interface == pb.IPerspective
-        p = Try_Userpass_Perspective(self, avatarID)
-        return (pb.IPerspective, p, lambda: None)
+    def stopService(self):
+        d = defer.maybeDeferred(TryBase.stopService, self)
+        def unreg(_):
+            return defer.gatherResults(
+                [ reg.unregister() for reg in self.registrations ])
+        d.addCallback(unreg)
+
 
 class Try_Userpass_Perspective(pbutil.NewCredPerspective):
     def __init__(self, parent, username):

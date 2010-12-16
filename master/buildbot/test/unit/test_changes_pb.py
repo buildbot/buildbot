@@ -18,60 +18,50 @@
 Test the PB change source.
 """
 
+import mock
 from twisted.trial.unittest import TestCase
-from twisted.spread.pb import IPerspective
-from twisted.cred.credentials import UsernamePassword
-from twisted.python.filepath import FilePath
 
-from buildbot.master import BuildMaster
+from buildbot.test.util import pbmanager, changesource
 from buildbot.changes.pb import ChangePerspective, PBChangeSource
 
-class TestPBChangeSource(TestCase):
-    """
-    Tests for PBChangeSource.
-    """
+class TestPBChangeSource(
+            changesource.ChangeSourceMixin,
+            pbmanager.PBManagerMixin,
+            TestCase):
+
     def setUp(self):
-        """
-        Create an unstarted BuildMaster instance with a PBChangeSource as a
-        child.
-        """
-        self.username = 'alice'
-        self.password = 'sekret'
-        path = FilePath(self.mktemp())
-        path.makedirs()
-        self.master = BuildMaster(path.path)
-        self.master.readConfig = True # XXX OPPOSITE DAY
-        self.change_source = PBChangeSource(self.username, self.password)
-        self.master.change_svc.addSource(self.change_source)
+        self.setUpPBChangeSource()
+        d = self.setUpChangeSource()
 
+        def setup(_):
+            # set up a fake service hierarchy
+            self.master = mock.Mock()
+            self.master.slavePortnum = '9999'
+            self.master.pbmanager = self.pbmanager
+            self.master.change_svc = self.changemaster
+            self.master.change_svc.parent = self.master
 
-    def test_authentication(self):
-        """
-        After the BuildMaster service starts, the PBChangeSource's credentials
-        are accepted by the master's credentials checker.
-        """
-        self.master.startService()
-        d = self.master.checker.requestAvatarId(
-            UsernamePassword(self.username, self.password))
-        def checkUsername(result):
-            self.assertEquals(result, self.username)
-        d.addCallback(checkUsername)
+            # and a change source
+            self.change_source = PBChangeSource('alice', 'sekrit')
+            self.change_source.parent = self.master.change_svc
+        d.addCallback(setup)
+
         return d
 
+    def test_describe(self):
+        self.assertIn("PBChangeSource", self.change_source.describe())
 
-    def test_authorization(self):
-        """
-        After the BuildMaster service starts, a ChangePerspective can be
-        retrieved from the master's dispatcher (realm) with the PBChangeSource's
-        username (avatar identifier).
-        """
-        self.master.startService()
-        d = self.master.dispatcher.requestAvatar(
-            self.username, None, IPerspective)
-        def checkLogin((interface, avatar, logout)):
-            self.assertIdentical(interface, IPerspective)
-            self.assertIsInstance(avatar, ChangePerspective)
-        d.addCallback(checkLogin)
+    def test_registration(self):
+        self.change_source.startService()
+        self.assertRegistered('9999', 'alice', 'sekrit')
+        d = self.change_source.stopService()
+        def check(_):
+            self.assertUnregistered('9999', 'alice', 'sekrit')
+        d.addCallback(check)
         return d
 
-
+    def test_perspective(self):
+        persp = self.change_source.getPerspective(mock.Mock(), 'alice')
+        self.assertIsInstance(persp, ChangePerspective)
+        persp.perspective_addChange(dict(who='me', files=['a'], comments='comm'))
+        self.assertEqual(len(self.changes_added), 1)

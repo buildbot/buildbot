@@ -574,8 +574,7 @@ The @code{PBChangeSource} is created with the following arguments.
 @table @samp
 @item @code{port}
 which port to listen on. If @code{None} (which is the default), it
-shares the port used for buildslave connections. @emph{Not
-Implemented, always set to @code{None}}.
+shares the port used for buildslave connections.
 
 @item @code{user} and @code{passwd}
 The user/passwd account information that the client program must use

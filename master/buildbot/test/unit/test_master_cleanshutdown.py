@@ -21,7 +21,7 @@ from buildbot.master import BotMaster
 
 class TestCleanShutdown(unittest.TestCase):
     def setUp(self):
-        self.master = BotMaster()
+        self.master = BotMaster(Mock())
         self.master.reactor = Mock()
         self.master.startService()
 

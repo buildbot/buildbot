@@ -24,12 +24,11 @@ from twisted.python import log, components
 from twisted.python.failure import Failure
 from twisted.internet import defer, reactor
 from twisted.spread import pb
-from twisted.cred import portal, checkers
-from twisted.application import service, strports
+from twisted.application import service
 from twisted.application.internet import TimerService
 
 import buildbot
-# sibling imports
+import buildbot.pbmanager
 from buildbot.util import now, safeTranslate, eventual
 from buildbot.pbutil import NewCredPerspective
 from buildbot.process.builder import Builder, IDLE
@@ -58,8 +57,10 @@ class BotMaster(service.MultiService):
     debug = 0
     reactor = reactor
 
-    def __init__(self):
+    def __init__(self, master):
         service.MultiService.__init__(self)
+        self.master = master
+
         self.builders = {}
         self.builderNames = []
         # builders maps Builder names to instances of bb.p.builder.Builder,
@@ -73,7 +74,6 @@ class BotMaster(service.MultiService):
         # contain a RemoteReference to their Bot instance. If it is not
         # connected, that attribute will hold None.
         self.slaves = {} # maps slavename to BuildSlave
-        self.statusClientService = None
         self.watchers = {}
 
         # self.locks holds the real Lock instances
@@ -91,6 +91,8 @@ class BotMaster(service.MultiService):
         self.loop.setServiceParent(self)
 
         self.shuttingDown = False
+
+        self.lastSlavePortnum = None
 
     def setMasterName(self, name, incarnation):
         self.master_name = name
@@ -216,6 +218,13 @@ class BotMaster(service.MultiService):
         return defer.succeed(None)
 
     def loadConfig_Slaves(self, new_slaves):
+        new_portnum = (self.lastSlavePortnum is not None
+                   and self.lastSlavePortnum != self.master.slavePortnum)
+        if new_portnum:
+            # it turns out this is pretty hard..
+            raise ValueError("changing slavePortnum in reconfig is not supported")
+        self.lastSlavePortnum = self.master.slavePortnum
+
         old_slaves = [c for c in list(self)
                       if interfaces.IBuildSlave.providedBy(c)]
 
@@ -244,29 +253,40 @@ class BotMaster(service.MultiService):
         remaining_t = [t
                        for t in new_t
                        if t in old_t]
+
         # removeSlave will hang up on the old bot
         dl = []
         for s in removed:
             dl.append(self.removeSlave(s))
         d = defer.DeferredList(dl, fireOnOneErrback=True)
-        def _add(res):
+
+        def add_new(res):
             for s in added:
                 self.addSlave(s)
+        d.addCallback(add_new)
+
+        def update_remaining(_):
             for t in remaining_t:
                 old_t[t].update(new_t[t])
-        d.addCallback(_add)
+        d.addCallback(update_remaining)
+
         return d
 
     def addSlave(self, s):
         s.setServiceParent(self)
         s.setBotmaster(self)
         self.slaves[s.slavename] = s
+        s.pb_registration = self.master.pbmanager.register(
+                self.master.slavePortnum, s.slavename,
+                s.password, self.getPerspective)
 
     def removeSlave(self, s):
-        # TODO: technically, disownServiceParent could return a Deferred
-        s.disownServiceParent()
-        d = self.slaves[s.slavename].disconnect()
-        del self.slaves[s.slavename]
+        d = s.disownServiceParent()
+        d.addCallback(lambda _ : s.pb_registration.unregister())
+        d.addCallback(lambda _ : self.slaves[s.slavename].disconnect())
+        def delslave(_):
+            del self.slaves[s.slavename]
+        d.addCallback(delslave)
         return d
 
     def slaveLost(self, bot):
@@ -572,58 +592,6 @@ class DebugPerspective(NewCredPerspective):
     def perspective_print(self, msg):
         print "debug", msg
 
-class Dispatcher:
-    implements(portal.IRealm)
-
-    def __init__(self):
-        self.names = {}
-
-    def register(self, name, afactory):
-        self.names[name] = afactory
-    def unregister(self, name):
-        del self.names[name]
-
-    def requestAvatar(self, avatarID, mind, interface):
-        assert interface == pb.IPerspective
-        afactory = self.names.get(avatarID)
-        if afactory:
-            persp_d = defer.maybeDeferred(afactory.getPerspective)
-        elif avatarID == "debug":
-            persp_d = defer.maybeDeferred(DebugPerspective)
-            def add_masters(persp):
-                persp.master = self.master
-                persp.botmaster = self.botmaster
-                return persp
-            persp_d.addCallback(add_masters)
-        elif avatarID == "statusClient":
-            persp_d = defer.maybeDeferred(self.statusClientService.getPerspective)
-        else:
-            # it must be one of the buildslaves: no other names will make it
-            # past the checker
-            persp_d = defer.maybeDeferred(self.botmaster.getPerspective,mind, avatarID)
-
-        # check that we got a perspective
-        def check(persp):
-            if not persp:
-                raise ValueError("no perspective for '%s'" % avatarID)
-            return persp
-        persp_d.addCallback(check)
-
-        # call the perspective's attached(mind)
-        def call_attached(persp):
-            d = defer.maybeDeferred(persp.attached, mind)
-            d.addCallback(lambda _ : persp) # keep returning the perspective
-            return d
-        persp_d.addCallback(call_attached)
-
-        # return the tuple requestAvatar is expected to return
-        def done(persp):
-            return (pb.IPerspective, persp, lambda: persp.detached(mind))
-        persp_d.addCallback(done)
-
-        return persp_d
-
-
 ########################################
 
 class _Unset: pass  # marker
@@ -650,25 +618,15 @@ class BuildMaster(service.MultiService):
         self.basedir = basedir
         self.configFileName = configFileName
 
-        # the dispatcher is the realm in which all inbound connections are
-        # looked up: slave builders, change notifications, status clients, and
-        # the debug port
-        dispatcher = Dispatcher()
-        dispatcher.master = self
-        self.dispatcher = dispatcher
-        self.checker = checkers.InMemoryUsernamePasswordDatabaseDontUse()
-        # the checker starts with no user/passwd pairs: they are added later
-        p = portal.Portal(dispatcher)
-        p.registerChecker(self.checker)
-        self.slaveFactory = pb.PBServerFactory(p)
-        self.slaveFactory.unsafeTracebacks = True # let them see exceptions
+        self.pbmanager = buildbot.pbmanager.PBManager()
+        self.pbmanager.setServiceParent(self)
+        "L{buildbot.pbmanager.PBManager} instance managing connections for this master"
 
         self.slavePortnum = None
         self.slavePort = None
 
         self.change_svc = ChangeManager()
         self.change_svc.setServiceParent(self)
-        self.dispatcher.changemaster = self.change_svc
 
         try:
             hostname = os.uname()[1] # only on unix
@@ -677,11 +635,12 @@ class BuildMaster(service.MultiService):
         self.master_name = "%s:%s" % (hostname, os.path.abspath(self.basedir))
         self.master_incarnation = "pid%d-boot%d" % (os.getpid(), time.time())
 
-        self.botmaster = BotMaster()
+        self.botmaster = BotMaster(self)
         self.botmaster.setName("botmaster")
         self.botmaster.setMasterName(self.master_name, self.master_incarnation)
         self.botmaster.setServiceParent(self)
-        self.dispatcher.botmaster = self.botmaster
+
+        self.debugClientRegistration = None
 
         self.status = Status(self.botmaster, self.basedir)
         self.statusTargets = []
@@ -692,6 +651,9 @@ class BuildMaster(service.MultiService):
         if db_spec:
             self.loadDatabase(db_spec)
 
+        # note that "read" here is taken in the past participal (i.e., "I read
+        # the config already") rather than the imperative ("you should read the
+        # config later")
         self.readConfig = False
         
         # create log_rotation object and set default parameters (used by WebStatus)
@@ -1040,20 +1002,14 @@ class BuildMaster(service.MultiService):
         self.eventHorizon = eventHorizon
         self.logHorizon = logHorizon
         self.buildHorizon = buildHorizon
+        self.slavePortnum = slavePortnum # TODO: move this to master.config.slavePortnum
 
         # Set up the database
         d.addCallback(lambda res:
                       self.loadConfig_Database(db_url, db_poll_interval))
 
-        # self.slaves: Disconnect any that were attached and removed from the
-        # list. Update self.checker with the new list of passwords, including
-        # debug/change/status.
+        # set up slaves
         d.addCallback(lambda res: self.loadConfig_Slaves(slaves))
-
-        # self.debugPassword
-        if debugPassword:
-            self.checker.addUser("debug", debugPassword)
-            self.debugPassword = debugPassword
 
         # self.manhole
         if manhole != self.manhole:
@@ -1080,25 +1036,12 @@ class BuildMaster(service.MultiService):
         # Schedulers are added after Builders in case they start right away
         d.addCallback(lambda res:
                       self.scheduler_manager.updateSchedulers(schedulers))
+
         # and Sources go after Schedulers for the same reason
         d.addCallback(lambda res: self.loadConfig_Sources(change_sources))
 
-        # self.slavePort
-        if self.slavePortnum != slavePortnum:
-            if self.slavePort:
-                def closeSlavePort(res):
-                    d1 = self.slavePort.disownServiceParent()
-                    self.slavePort = None
-                    return d1
-                d.addCallback(closeSlavePort)
-            if slavePortnum is not None:
-                def openSlavePort(res):
-                    self.slavePort = strports.service(slavePortnum,
-                                                      self.slaveFactory)
-                    self.slavePort.setServiceParent(self)
-                d.addCallback(openSlavePort)
-                log.msg("BuildMaster listening on port %s" % slavePortnum)
-            self.slavePortnum = slavePortnum
+        # debug client
+        d.addCallback(lambda res: self.loadConfig_DebugClient(debugPassword))
 
         log.msg("configuration update started")
         def _done(res):
@@ -1165,11 +1108,6 @@ class BuildMaster(service.MultiService):
         self.loadDatabase(db_spec, db_poll_interval)
 
     def loadConfig_Slaves(self, new_slaves):
-        # set up the Checker with the names and passwords of all valid slaves
-        self.checker.users = {} # violates abstraction, oh well
-        for s in new_slaves:
-            self.checker.addUser(s.slavename, s.password)
-        # let the BotMaster take care of the rest
         return self.botmaster.loadConfig_Slaves(new_slaves)
 
     def loadConfig_Sources(self, sources):
@@ -1185,6 +1123,28 @@ class BuildMaster(service.MultiService):
             [self.change_svc.addSource(s) for s in added_sources]
         d = defer.DeferredList(dl, fireOnOneErrback=1, consumeErrors=0)
         d.addCallback(addNewOnes)
+        return d
+
+    def loadConfig_DebugClient(self, debugPassword):
+        def makeDbgPerspective():
+            persp = DebugPerspective()
+            persp.master = self
+            persp.botmaster = self.botmaster
+            return persp
+
+        # unregister the old name..
+        if self.debugClientRegistration:
+            d = self.debugClientRegistration.unregister()
+            self.debugClientRegistration = None
+        else:
+            d = defer.succeed(None)
+
+        # and register the new one
+        def reg(_):
+            if debugPassword:
+                self.debugClientRegistration = self.pbmanager.register(
+                        self.slavePortnum, "debug", debugPassword, makeDbgPerspective)
+        d.addCallback(reg)
         return d
 
     def allSchedulers(self):
