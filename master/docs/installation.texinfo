@@ -152,7 +152,8 @@ PYTHONPATH=. trial buildslave.test
 
 Nothing should fail, a few might be skipped. If any of the tests fail, you
 should stop and investigate the cause before continuing the installation
-process, as it will probably be easier to track down the bug early.
+process, as it will probably be easier to track down the bug early.  This may
+be a good time to contact the Buildbot developers for help.
 
 If you cannot or do not wish to install the buildbot into a site-wide
 location like @file{/usr} or @file{/usr/local}, you can also install
@@ -164,27 +165,18 @@ it into the account's home directory or any other location using a tool like @ur
 As you learned earlier (@pxref{System Architecture}), the buildmaster
 runs on a central host (usually one that is publically visible, so
 everybody can check on the status of the project), and controls all
-aspects of the buildbot system. Let us call this host
-@code{buildbot.example.org}.
+aspects of the buildbot system. 
 
-You may wish to create a separate user account for the buildmaster,
-perhaps named @code{buildmaster}. This can help keep your personal
-configuration distinct from that of the buildmaster and is useful if
-you have to use a mail-based notification system (@pxref{Change
-Sources}). However, the Buildbot will work just fine with your regular
-user account.
+You will probably wish to create a separate user account for the buildmaster,
+perhaps named @code{buildmaster}.  Do not run the buildmaster as root!
 
-You need to choose a directory for the buildmaster, called the
-@code{basedir}. This directory will be owned by the buildmaster, which
-will use configuration files therein, and create status files as it
-runs. @file{~/Buildbot} is a likely value. If you run multiple
-buildmasters in the same account, or if you run both masters and
-slaves, you may want a more distinctive name like
-@file{~/Buildbot/master/gnomovision} or
-@file{~/Buildmasters/fooproject}. If you are using a separate user
-account, this might just be @file{~buildmaster/masters/fooproject}.
+You also need to choose a directory for the buildmaster, called the
+@code{basedir}. This directory will be owned by the buildmaster.  It will
+contain configuration, the adtabase, and status information - including
+logfiles.  On a large buildmaster this directory will see a lot of activity, so
+it should be on a disk with adequate space and speed.
 
-Once you've picked a directory, use the @command{buildbot
+Once you've picked a basedir, use the @command{buildbot
 create-master} command to create the directory and populate it with
 startup files:
 
