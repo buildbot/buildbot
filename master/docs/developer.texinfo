@@ -459,7 +459,16 @@ This method returns a dictionary of @code{SlaveBuilder} objects - see below
 Adds a message to the slave logfile
 
 @item remote_getSlaveInfo
-Returns the contents of the slave's @file{info/} directory
+Returns the contents of the slave's @file{info/} directory. Also contains the keys
+
+@table @code
+@item environ
+copy of the slaves environment
+@item system
+OS the slave is running (extracted from pythons os.name)
+@item basedir
+base directory where slave is running
+@end table
 
 @item remote_getVersion
 Returns the slave's version
