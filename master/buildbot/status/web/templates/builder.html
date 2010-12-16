@@ -32,7 +32,7 @@
 {% endif %}    
  
 {% if pending %}
-  <h2>Pending builds:</h2>
+  <h2>Pending Build Requests:</h2>
   <ul>
   {% for b in pending %}
     <li><small>({{ b.when }}, waiting {{ b.delay }})</small> 
