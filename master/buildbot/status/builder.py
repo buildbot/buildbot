@@ -1695,7 +1695,7 @@ class BuilderStatus(styles.Versioned):
     def reconfigFromBuildmaster(self, buildmaster):
         # Note that we do not hang onto the buildmaster, since this object
         # gets pickled and unpickled.
-        if buildmaster.buildCacheSize:
+        if buildmaster.buildCacheSize is not None:
             self.buildCacheSize = buildmaster.buildCacheSize
 
     def upgradeToVersion1(self):
@@ -1814,12 +1814,12 @@ class BuilderStatus(styles.Versioned):
         gc.collect()
 
         # get the horizons straight
-        if self.buildHorizon:
+        if self.buildHorizon is not None:
             earliest_build = self.nextBuildNumber - self.buildHorizon
         else:
             earliest_build = 0
 
-        if self.logHorizon:
+        if self.logHorizon is not None:
             earliest_log = self.nextBuildNumber - self.logHorizon
         else:
             earliest_log = 0
