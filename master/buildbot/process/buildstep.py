@@ -785,9 +785,11 @@ class BuildStep:
             if skip == SKIPPED:
                 self.step_status.setText(self.describe(True) + ['skipped'])
                 self.step_status.setSkipped(True)
-                # this return value from self.start is a shortcut
-                # to finishing the step immediately
-                reactor.callLater(0, self.finished, SKIPPED)
+                # this return value from self.start is a shortcut to finishing
+                # the step immediately; we skip calling finished() as
+                # subclasses may have overridden that an expect it to be called
+                # after start() (bug #837)
+                reactor.callLater(0, self._finishFinished, SKIPPED)
         except:
             log.msg("BuildStep.startStep exception in .start")
             self.failed(Failure())
@@ -884,6 +886,11 @@ class BuildStep:
             self.step_status.setText(self.describe(True) +
                                  ["interrupted"])
             self.step_status.setText2(["interrupted"])
+        self._finishFinished(results)
+
+    def _finishFinished(self, results):
+        # internal function to indicate that this step is done; this is separated
+        # from finished() so that subclasses can override finished()
         if self.progress:
             self.progress.finish()
         self.step_status.stepFinished(results)
