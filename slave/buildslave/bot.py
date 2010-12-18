@@ -454,7 +454,7 @@ class BuildSlave(service.MultiService):
                  keepalive, usePTY, keepaliveTimeout=30, umask=None,
                  maxdelay=300, unicode_encoding=None, allow_shutdown=None):
         log.msg("Creating BuildSlave -- version: %s" % buildslave.version)
-        self.recordHostname()
+        self.recordHostname(basedir)
         service.MultiService.__init__(self)
         bot = Bot(basedir, usePTY, unicode_encoding=unicode_encoding)
         bot.setServiceParent(self)
@@ -476,11 +476,12 @@ class BuildSlave(service.MultiService):
         self.connection = c = internet.TCPClient(buildmaster_host, port, bf)
         c.setServiceParent(self)
 
-    def recordHostname(self):
+    def recordHostname(self, basedir):
         "Record my hostname in twistd.hostname, for user convenience"
         log.msg("recording hostname in twistd.hostname")
+        filename = os.path.join(basedir, "twistd.hostname")
         try:
-            open("twistd.hostname", "w").write("%s\n" % socket.getfqdn())
+            open(filename, "w").write("%s\n" % socket.getfqdn())
         except:
             log.msg("failed - ignoring")
 
