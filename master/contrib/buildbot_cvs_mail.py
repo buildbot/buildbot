@@ -85,7 +85,13 @@ def send_mail(options):
             user = 'cvs'
             name = 'CVS'
 
-        domain = options.fromhost or socket.getfqdn()
+        domain = options.fromhost
+        if not domain:
+            # getfqdn is not good for use in unit tests
+            if options.amTesting:
+                domain = 'testing.com'
+            else:
+                domain = socket.getfqdn()
         address = '%s@%s' % (user, domain)
         s = StringIO()
         datestamp = time.strftime('%a, %d %b %Y %H:%M:%S +0000',

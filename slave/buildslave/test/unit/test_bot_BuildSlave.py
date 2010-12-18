@@ -15,6 +15,7 @@
 
 import os
 import shutil
+import socket
 
 from twisted.trial import unittest
 from twisted.spread import pb
@@ -72,6 +73,10 @@ class TestBuildSlave(unittest.TestCase):
             shutil.rmtree(self.basedir)
         os.makedirs(self.basedir)
 
+        # the slave tries to call socket.getfqdn to write its hostname; this hangs
+        # without network, so fake it
+        self.patch(socket, "getfqdn", lambda : 'test-hostname.domain.com')
+
     def tearDown(self):
         d = defer.succeed(None)
         if self.realm:
@@ -89,7 +94,7 @@ class TestBuildSlave(unittest.TestCase):
         p = portal.Portal(self.realm)
         p.registerChecker(
             checkers.InMemoryUsernamePasswordDatabaseDontUse(testy="westy"))
-        self.listeningport = reactor.listenTCP(0, pb.PBServerFactory(p))
+        self.listeningport = reactor.listenTCP(0, pb.PBServerFactory(p), interface='127.0.0.1')
         # return the dynamically allocated port number
         return self.listeningport.getHost().port
 
@@ -131,6 +136,13 @@ class TestBuildSlave(unittest.TestCase):
 
         # and wait for the result of the print
         return d
+
+    def test_hostname_file(self):
+        self.buildslave = bot.BuildSlave("127.0.0.1", 9999,
+                "testy", "westy", self.basedir,
+                keepalive=0, usePTY=False, umask=022)
+        self.assertEqual(open(os.path.join(self.basedir, "twistd.hostname")).read().strip(),
+                         'test-hostname.domain.com')
 
     def test_buildslave_graceful_shutdown(self):
         """Test that running the build slave's gracefulShutdown method results
