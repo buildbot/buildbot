@@ -2,7 +2,8 @@ Major User visible changes in Buildbot.             -*- outline -*-
    see the git log for a detailed list of changes:
    http://github.com/buildbot/buildbot/commits/master
 
-* Next Release
+
+* Buildbot 0.8.3 (December 19, 2010)
 
 ** PBChangeSource now supports authentication
 
@@ -45,7 +46,8 @@ non-functional, and has been removed. (#1059)
 *** The misnamed sendchange option 'username' has been renamed to 'who'; the old
 option continues to work, but is deprecated and will be removed. (#1711)
 
-* Buildbot 0.8.2
+
+* Buildbot 0.8.2 (October 29, 2010)
 
 ** Upgrading
 
@@ -127,6 +129,7 @@ decision.
 
 *** The Twisted-only steps BuildDebs and ProcessDocs have been removed.
 
+
 * Release 0.8.1 (June 16, 2010)
 
 ** Slave Split into separate component
@@ -181,6 +184,7 @@ Makefile.buildbot existed in the master directory.  This functionality will be
 removed in Buildbot-0.8.2, and the create-master command will no longer create
 a Makefile.sample.  Of course, Buildbot still supports build processes on the
 slave using make!
+
 
 * Release 0.8.0 (May 25, 2010)
 
@@ -271,6 +275,7 @@ did not include the rest of the WebStatus pages.
 *** BuildmasterConfig no longer accepts 'bots' and 'sources' as keys
 (deprecated in 0.7.6). Use 'slaves' and 'change_source' instead.
 
+
 * Release 0.7.12 (January 21, 2010)
 
 ** New 'console' display
@@ -342,10 +347,12 @@ The docstrings for buildbot are now available in a web-friendly format:
 
 ** Many, many bugfixes
 
+
 * Release 0.7.11p (July 16, 2009)
 
 Fixes a few test failures in 0.7.11, and gives a default value for branchType
 if it is not specified by the master.
+
 
 * Release 0.7.11 (July 5, 2009)
 
@@ -406,6 +413,7 @@ info.  Located at /tgrid.
 
 Trigger now supports copy_properties, to send selected properties to the
 triggered build.
+
 
 * Release 0.7.10 (25 Feb 2009)
 
@@ -581,6 +589,7 @@ twistd.log files.
 *** Prioritize build requests based on the time they wre submitted (#334)
 
 Balancing of load is a bit more fair, although not true load balancing.
+
 
 * Release 0.7.9 (15 Sep 2008)
 
