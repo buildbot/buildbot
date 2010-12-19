@@ -66,6 +66,7 @@ class Trigger(LoggingBuildStep):
         self.set_properties = set_properties
         self.copy_properties = copy_properties
         self.running = False
+        self.ended = False
         LoggingBuildStep.__init__(self, **kwargs)
         self.addFactoryArguments(schedulerNames=schedulerNames,
                                  updateSourceStamp=updateSourceStamp,
@@ -74,9 +75,14 @@ class Trigger(LoggingBuildStep):
                                  copy_properties=copy_properties)
 
     def interrupt(self, reason):
-        # TODO: this doesn't actually do anything.
         if self.running:
             self.step_status.setText(["interrupted"])
+            return self.end(EXCEPTION)
+
+    def end(self, result):
+        if not self.ended:
+            self.ended = True
+            return self.finished(result)
 
     def start(self):
         properties = self.build.getProperties()
@@ -118,7 +124,7 @@ class Trigger(LoggingBuildStep):
 
         if unknown_schedulers:
             self.step_status.setText(['no scheduler:'] + unknown_schedulers)
-            return self.finished(FAILURE)
+            return self.end(FAILURE)
 
         dl = []
         for scheduler in triggered_schedulers:
@@ -141,9 +147,9 @@ class Trigger(LoggingBuildStep):
                     break
                 if results == FAILURE:
                     rc = FAILURE
-            return self.finished(rc)
+            return self.end(rc)
 
         def eb(why):
-            return self.finished(FAILURE)
+            return self.end(FAILURE)
 
         d.addCallbacks(cb, eb)
