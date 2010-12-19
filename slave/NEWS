@@ -2,6 +2,10 @@ Major User visible changes in Buildslave.             -*- outline -*-
    see the git log for a detailed list of changes:
    http://github.com/buildbot/buildbot/commits/master
 
+
+* Next Version
+
+
 * Buildbot-Slave 0.8.3 (December 19, 2010)
 
 ** Slave-initiated Graceful Shutdown
