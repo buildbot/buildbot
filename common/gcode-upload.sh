@@ -53,11 +53,11 @@ for file in {buildbot,buildbot-slave}-$VERSION.{tar.gz,zip}{,.asc}; do
     labels=`findlabels "$file"`
     file=`findfile "$file"`
     echo "Uploading $file with labels $labels"
-    python common/googlecode_upload.py \
-        -w $PASSWORD \
-        -u $USERNAME \
-        -p buildbot \
-        -s "$file" \
-        --labels=Featured \
-        "$file"
+        python common/googlecode_upload.py \
+            -w $PASSWORD \
+            -u $USERNAME \
+            -p buildbot \
+            -s `basename $file` \
+            --labels=$labels \
+            "$file"
 done
