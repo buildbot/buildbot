@@ -34,12 +34,14 @@ c['db_url'] = "mysql://user:pass@@somehost.com/database_name?max_idle=300"
 @end example
 
 The @code{max_idle} argument for MySQL connections should be set to something
-less than the wait_timeout configured for your server.  This ensures that
-connections are closed and re-opened after the configured amount of idle time.
-If you see errors such as @code{_mysql_exceptions.OperationalError: (2006,
-'MySQL server has gone away')}, this means your @code{max_idle} setting is
-probably too high. @code{show global variables like 'wait_timeout';} will show
-what the currently configured wait_timeout is on your MySQL server.
+less than the wait_timeout configured for your server.  This controls the
+SQLAlchemy @code{pool_recycle} parameter, which defaults to no timeout.
+Setting this parameter ensures that connections are closed and re-opened after
+the configured amount of idle time.  If you see errors such as
+@code{_mysql_exceptions.OperationalError: (2006, 'MySQL server has gone
+away')}, this means your @code{max_idle} setting is probably too high.
+@code{show global variables like 'wait_timeout';} will show what the currently
+configured @code{wait_timeout} is on your MySQL server.
 
 @node Multi-master mode
 @subsection Multi-master mode

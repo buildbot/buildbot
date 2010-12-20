@@ -271,6 +271,7 @@ else:
     setup_args['install_requires'] = [
         'twisted >= 2.0.0',
         'Jinja2 >= 2.1',
+        'sqlalchemy >= 0.6'
     ]
     # Python-2.6 and up includes json
     if not py_26:
