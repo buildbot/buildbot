@@ -91,6 +91,7 @@ class Contact(base.StatusReceiver):
         self.channel = channel
         self.notify_events = {}
         self.subscribed = 0
+        self.muted = False
         self.reported_builds = [] # tuples (when, buildername, buildnum)
         self.add_notification_events(channel.notify_events)
 
@@ -559,6 +560,21 @@ class Contact(base.StatusReceiver):
         self.emit_last(which)
     command_LAST.usage = "last <which> - list last build status for builder <which>"
 
+    def command_MUTE(self, args, who):
+        # The order of these is important! ;)
+        self.send("Shutting up for now.")
+        self.muted = True
+    command_MUTE.usage = "mute - suppress all messages until a corresponding 'unmute' is issued"
+
+    def command_UNMUTE(self, args, who):
+        if self.muted:
+            # The order of these is important! ;)
+            self.muted = False
+            self.send("I'm baaaaaaaaaaack!")
+        else:
+            self.send("You hadn't told me to be quiet, but it's the thought that counts, right?")
+    command_MUTE.usage = "unmute - disable a previous 'mute'"
+
     def build_commands(self):
         commands = []
         for k in dir(self):
@@ -645,10 +661,12 @@ class IRCContact(Contact):
     # userJoined(self, user, channel)
 
     def send(self, message):
-        self.channel.msgOrNotice(self.dest, message.encode("ascii", "replace"))
+        if not self.muted:
+            self.channel.msgOrNotice(self.dest, message.encode("ascii", "replace"))
 
     def act(self, action):
-        self.channel.me(self.dest, action.encode("ascii", "replace"))
+        if not self.muted:
+            self.channel.me(self.dest, action.encode("ascii", "replace"))
 
     def handleMessage(self, message, who):
         # a message has arrived from 'who'. For broadcast contacts (i.e. when
