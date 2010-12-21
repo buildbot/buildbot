@@ -8,6 +8,7 @@ special cases that Buildbot needs.  Those include:
 
 """
 
+import os
 import sqlalchemy
 from sqlalchemy.engine import strategies, url
 
@@ -32,9 +33,8 @@ class BuildbotEngineStrategy(strategies.ThreadLocalEngineStrategy):
         # when given a database path, stick the basedir in there
         if u.database:
             u.database = u.database % dict(basedir = kwargs['basedir'])
-            # no os.path.join here - this is a URL and thus always contains '/'
-            if u.database[0] != '/':
-                u.database = "%s/%s" % (kwargs['basedir'], u.database)
+            if not os.path.isabs(u.database[0]):
+                u.database = os.path.join(kwargs['basedir'], u.database)
 
         # in-memory databases need exactly one connection
         if not u.database:

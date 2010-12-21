@@ -1,4 +1,5 @@
 from twisted.trial import unittest
+from twisted.python import runtime
 from sqlalchemy.engine import url
 from buildbot.db import enginestrategy
 
@@ -17,12 +18,21 @@ class BuildbotEngineStrategy_special_cases(unittest.TestCase):
               dict(basedir='/my-base-dir') ])
 
     def test_sqlite_relpath(self):
-        u = url.make_url("sqlite:///x/state.sqlite")
-        kwargs = dict(basedir='/my-base-dir')
+        url_src = "sqlite:///x/state.sqlite"
+        basedir = "/my-base-dir"
+        expected_url = "sqlite:////my-base-dir/x/state.sqlite"
+
+        # this looks a whole lot different on windows
+        if runtime.platformType == 'win32':
+            url_src = r'sqlite:///X\STATE.SQLITE'
+            basedir = r'C:\MYBASE~1'
+            expected_url = r'sqlite:///C:\MYBASE~1\X\STATE.SQLITE'
+
+        u = url.make_url(url_src)
+        kwargs = dict(basedir=basedir)
         u, kwargs, max_conns = self.strat.special_case_sqlite(u, kwargs)
         self.assertEqual([ str(u), max_conns, kwargs ],
-            [ "sqlite:////my-base-dir/x/state.sqlite", None,
-              dict(basedir='/my-base-dir') ])
+            [ expected_url, None, dict(basedir=basedir) ])
 
     def test_sqlite_abspath(self):
         u = url.make_url("sqlite:////x/state.sqlite")
