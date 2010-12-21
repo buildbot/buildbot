@@ -19,20 +19,13 @@
 # Hacked beyond recognition by Brian Warner
 
 from twisted.python import log
-from twisted.internet import defer, reactor, utils
-from twisted.internet.task import LoopingCall
+from twisted.internet import defer, utils
 
 from buildbot import util
 from buildbot.changes import base
-from buildbot.changes.changes import Change
 
 import xml.dom.minidom
 import os, urllib
-
-def _assert(condition, msg):
-    if condition:
-        return True
-    raise AssertionError(msg)
 
 # these split_file_* functions are available for use as values to the
 # split_file= argument.
@@ -51,158 +44,34 @@ def split_file_branches(path):
         return None
 
 
-class SVNPoller(base.ChangeSource, util.ComparableMixin):
-    """This source will poll a Subversion repository for changes and submit
-    them to the change master."""
+class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
+    """
+    Poll a Subversion repository for changes and submit them to the change
+    master.
+    """
 
-    compare_attrs = ["svnurl", "split_file_function",
+    compare_attrs = ["svnurl", "split_file",
                      "svnuser", "svnpasswd",
-                     "pollinterval", "histmax",
+                     "pollInterval", "histmax",
                      "svnbin", "category", "cachepath"]
 
     parent = None # filled in when we're added
     last_change = None
     loop = None
-    working = False
 
     def __init__(self, svnurl, split_file=None,
                  svnuser=None, svnpasswd=None,
-                 pollinterval=10*60, histmax=100,
+                 pollInterval=10*60, histmax=100,
                  svnbin='svn', revlinktmpl='', category=None, 
-                 project='', cachepath=None):
-        """
-        @type  svnurl: string
-        @param svnurl: the SVN URL that describes the repository and
-                       subdirectory to watch. If this ChangeSource should
-                       only pay attention to a single branch, this should
-                       point at the repository for that branch, like
-                       svn://svn.twistedmatrix.com/svn/Twisted/trunk . If it
-                       should follow multiple branches, point it at the
-                       repository directory that contains all the branches
-                       like svn://svn.twistedmatrix.com/svn/Twisted and also
-                       provide a branch-determining function.
-
-                       Each file in the repository has a SVN URL in the form
-                       (SVNURL)/(BRANCH)/(FILEPATH), where (BRANCH) could be
-                       empty or not, depending upon your branch-determining
-                       function. Only files that start with (SVNURL)/(BRANCH)
-                       will be monitored. The Change objects that are sent to
-                       the Schedulers will see (FILEPATH) for each modified
-                       file.
-
-        @type  split_file: callable or None
-        @param split_file: a function that is called with a string of the
-                           form (BRANCH)/(FILEPATH) and should return a tuple
-                           (BRANCH, FILEPATH). This function should match
-                           your repository's branch-naming policy. Each
-                           changed file has a fully-qualified URL that can be
-                           split into a prefix (which equals the value of the
-                           'svnurl' argument) and a suffix; it is this suffix
-                           which is passed to the split_file function.
-
-                           If the function returns None, the file is ignored.
-                           Use this to indicate that the file is not relevant
-                           to this buildmaster.
-                           
-                           For example, if your repository puts the trunk in
-                           trunk/... and branches are in places like
-                           branches/1.5/..., your split_file function could
-                           look like the following (this function is
-                           available as svnpoller.split_file_branches)::
-
-                            pieces = path.split('/')
-                            if pieces[0] == 'trunk':
-                                return (None, '/'.join(pieces[1:]))
-                            elif pieces[0] == 'branches':
-                                return ('/'.join(pieces[0:2]),
-                                        '/'.join(pieces[2:]))
-                            else:
-                                return None
-
-                           If instead your repository layout puts the trunk
-                           for ProjectA in trunk/ProjectA/... and the 1.5
-                           branch in branches/1.5/ProjectA/..., your
-                           split_file function could look like::
-
-                            pieces = path.split('/')
-                            if pieces[0] == 'trunk':
-                                branch = None
-                                pieces.pop(0) # remove 'trunk'
-                            elif pieces[0] == 'branches':
-                                pieces.pop(0) # remove 'branches'
-                                # grab branch name
-                                branch = 'branches/' + pieces.pop(0)
-                            else:
-                                return None # something weird
-                            productname = pieces.pop(0)
-                            if productname != 'ProjectA':
-                                return None # wrong product
-                            return (branch, '/'.join(pieces))
-
-                           The default of split_file= is None, which
-                           indicates that no splitting should be done. This
-                           is equivalent to the following function::
-
-                            return (None, path)
-
-                           If you wish, you can override the split_file
-                           method with the same sort of function instead of
-                           passing in a split_file= argument.
-
-
-        @type  svnuser:      string
-        @param svnuser:      If set, the --username option will be added to
-                             the 'svn log' command. You may need this to get
-                             access to a private repository.
-        @type  svnpasswd:    string
-        @param svnpasswd:    If set, the --password option will be added.
-
-        @type  pollinterval: int
-        @param pollinterval: interval in seconds between polls. The default
-                             is 600 seconds (10 minutes). Smaller values
-                             decrease the latency between the time a change
-                             is recorded and the time the buildbot notices
-                             it, but it also increases the system load.
-
-        @type  histmax:      int
-        @param histmax:      maximum number of changes to look back through.
-                             The default is 100. Smaller values decrease
-                             system load, but if more than histmax changes
-                             are recorded between polls, the extra ones will
-                             be silently lost.
-
-        @type  svnbin:       string
-        @param svnbin:       path to svn binary, defaults to just 'svn'. Use
-                             this if your subversion command lives in an
-                             unusual location.
-        
-        @type  revlinktmpl:  string
-        @param revlinktmpl:  A format string to use for hyperlinks to revision
-                             information. For example, setting this to
-                             "http://reposerver/websvn/revision.php?rev=%s"
-                             would create suitable links on the build pages
-                             to information in websvn on each revision.
-
-        @type  category:     string
-        @param category:     A single category associated with the changes that
-                             could be used by schedulers watch for branches of a
-                             certain name AND category.
-                             
-        @type  project       string
-        @param project       A single project that the changes are associated with
-                             the repository, added to the changes, for the use in 
-                             change filters
-
-        @type  cachepath     string
-        @param cachepath     A path to a file that can be used to store the last
-                             rev that was processed, so we can grab changes that
-                             happened while we were offline
-        """
+                 project='', cachepath=None, pollinterval=-2):
+        # for backward compatibility; the parameter used to be spelled with 'i'
+        if pollinterval != -2:
+            pollInterval = pollinterval
 
         if svnurl.endswith("/"):
             svnurl = svnurl[:-1] # strip the trailing slash
         self.svnurl = svnurl
-        self.split_file_function = split_file or split_file_alwaystrunk
+        self.split_file = split_file or split_file_alwaystrunk
         self.svnuser = svnuser
         self.svnpasswd = svnpasswd
 
@@ -212,11 +81,10 @@ class SVNPoller(base.ChangeSource, util.ComparableMixin):
                                          # required for ssh-agent auth
 
         self.svnbin = svnbin
-        self.pollinterval = pollinterval
+        self.pollInterval = pollInterval
         self.histmax = histmax
         self._prefix = None
         self.overrun_counter = 0
-        self.loop = LoopingCall(self.checksvn)
         self.category = category
         self.project = project
 
@@ -227,34 +95,20 @@ class SVNPoller(base.ChangeSource, util.ComparableMixin):
                 self.last_change = int(f.read().strip())
                 log.msg("SVNPoller(%s) setting last_change to %s" % (self.svnurl, self.last_change))
                 f.close()
+                # try writing it, too
+                f = open(self.cachepath, "w")
+                f.write(str(self.last_change))
+                f.close()
             except:
                 self.cachepath = None
-                log.msg("SVNPoller(%s) cache file corrupt, skipping and not using" % self.svnurl)
+                log.msg(("SVNPoller(%s) cache file corrupt or unwriteable; " +
+                        "skipping and not using") % self.svnurl)
                 log.err()
-
-    def split_file(self, path):
-        # use getattr() to avoid turning this function into a bound method,
-        # which would require it to have an extra 'self' argument
-        f = getattr(self, "split_file_function")
-        return f(path)
-
-    def startService(self):
-        log.msg("SVNPoller(%s) starting" % self.svnurl)
-        base.ChangeSource.startService(self)
-        # Don't start the loop just yet because the reactor isn't running.
-        # Give it a chance to go and install our SIGCHLD handler before
-        # spawning processes.
-        reactor.callLater(0, self.loop.start, self.pollinterval)
-
-    def stopService(self):
-        log.msg("SVNPoller(%s) shutting down" % self.svnurl)
-        self.loop.stop()
-        return base.ChangeSource.stopService(self)
 
     def describe(self):
         return "SVNPoller watching %s" % self.svnurl
 
-    def checksvn(self):
+    def poll(self):
         # Our return value is only used for unit testing.
 
         # we need to figure out the repository root, so we can figure out
@@ -286,32 +140,25 @@ class SVNPoller(base.ChangeSource, util.ComparableMixin):
 
         # whew.
 
-        if self.working:
-            log.msg("SVNPoller(%s) overrun: timer fired but the previous "
-                    "poll had not yet finished." % self.svnurl)
-            self.overrun_counter += 1
-            return defer.succeed(None)
-        self.working = True
-
         if self.project:
             log.msg("SVNPoller polling " + self.project)
         else:
             log.msg("SVNPoller polling")
+
+        d = defer.succeed(None)
         if not self._prefix:
-            # this sets self._prefix when it finishes. It fires with
-            # self._prefix as well, because that makes the unit tests easier
-            # to write.
-            d = self.get_root()
-            d.addCallback(self.determine_prefix)
-        else:
-            d = defer.succeed(self._prefix)
+            d.addCallback(lambda _ : self.get_prefix())
+            def set_prefix(prefix):
+                self._prefix = prefix
+            d.addCallback(set_prefix)
 
         d.addCallback(self.get_logs)
         d.addCallback(self.parse_logs)
         d.addCallback(self.get_new_logentries)
         d.addCallback(self.create_changes)
         d.addCallback(self.submit_changes)
-        d.addCallbacks(self.finished_ok, self.finished_failure)
+        d.addCallback(self.finished_ok)
+        d.addErrback(log.err, 'error in SVNPoller while polling') # eat errors
         return d
 
     def getProcessOutput(self, args):
@@ -319,42 +166,42 @@ class SVNPoller(base.ChangeSource, util.ComparableMixin):
         d = utils.getProcessOutput(self.svnbin, args, self.environ)
         return d
 
-    def get_root(self):
+    def get_prefix(self):
         args = ["info", "--xml", "--non-interactive", self.svnurl]
         if self.svnuser:
             args.extend(["--username=%s" % self.svnuser])
         if self.svnpasswd:
             args.extend(["--password=%s" % self.svnpasswd])
         d = self.getProcessOutput(args)
+        def determine_prefix(output):
+            try:
+                doc = xml.dom.minidom.parseString(output)
+            except xml.parsers.expat.ExpatError:
+                log.msg("SVNPoller._determine_prefix_2: ExpatError in '%s'"
+                        % output)
+                raise
+            rootnodes = doc.getElementsByTagName("root")
+            if not rootnodes:
+                # this happens if the URL we gave was already the root. In this
+                # case, our prefix is empty.
+                self._prefix = ""
+                return self._prefix
+            rootnode = rootnodes[0]
+            root = "".join([c.data for c in rootnode.childNodes])
+            # root will be a unicode string
+            assert self.svnurl.startswith(root), \
+                    ("svnurl='%s' doesn't start with <root>='%s'" %
+                    (self.svnurl, root))
+            prefix = self.svnurl[len(root):]
+            if prefix.startswith("/"):
+                prefix = prefix[1:]
+            log.msg("SVNPoller: svnurl=%s, root=%s, so prefix=%s" %
+                    (self.svnurl, root, prefix))
+            return prefix
+        d.addCallback(determine_prefix)
         return d
 
-    def determine_prefix(self, output):
-        try:
-            doc = xml.dom.minidom.parseString(output)
-        except xml.parsers.expat.ExpatError:
-            log.msg("SVNPoller._determine_prefix_2: ExpatError in '%s'"
-                    % output)
-            raise
-        rootnodes = doc.getElementsByTagName("root")
-        if not rootnodes:
-            # this happens if the URL we gave was already the root. In this
-            # case, our prefix is empty.
-            self._prefix = ""
-            return self._prefix
-        rootnode = rootnodes[0]
-        root = "".join([c.data for c in rootnode.childNodes])
-        # root will be a unicode string
-        _assert(self.svnurl.startswith(root),
-                "svnurl='%s' doesn't start with <root>='%s'" %
-                (self.svnurl, root))
-        self._prefix = self.svnurl[len(root):]
-        if self._prefix.startswith("/"):
-            self._prefix = self._prefix[1:]
-        log.msg("SVNPoller: svnurl=%s, root=%s, so prefix=%s" %
-                (self.svnurl, root, self._prefix))
-        return self._prefix
-
-    def get_logs(self, ignored_prefix=None):
+    def get_logs(self, _):
         args = []
         args.extend(["log", "--xml", "--verbose", "--non-interactive"])
         if self.svnuser:
@@ -376,45 +223,36 @@ class SVNPoller(base.ChangeSource, util.ComparableMixin):
         return logentries
 
 
-    def _filter_new_logentries(self, logentries, last_change):
-        # given a list of logentries, return a tuple of (new_last_change,
-        # new_logentries), where new_logentries contains only the ones after
-        # last_change
-        if not logentries:
-            # no entries, so last_change must stay at None
-            return (None, [])
-
-        mostRecent = int(logentries[0].getAttribute("revision"))
-
-        if last_change is None:
-            # if this is the first time we've been run, ignore any changes
-            # that occurred before now. This prevents a build at every
-            # startup.
-            log.msg('svnPoller: starting at change %s' % mostRecent)
-            return (mostRecent, [])
-
-        if last_change == mostRecent:
-            # an unmodified repository will hit this case
-            log.msg('svnPoller: _process_changes last %s mostRecent %s' % (
-                      last_change, mostRecent))
-            return (mostRecent, [])
-
-        new_logentries = []
-        for el in logentries:
-            if last_change == int(el.getAttribute("revision")):
-                break
-            new_logentries.append(el)
-        new_logentries.reverse() # return oldest first
-        return (mostRecent, new_logentries)
-
     def get_new_logentries(self, logentries):
-        last_change = self.last_change
-        (new_last_change,
-         new_logentries) = self._filter_new_logentries(logentries,
-                                                       self.last_change)
+        last_change = old_last_change = self.last_change
+
+        # given a list of logentries, calculate new_last_change, and
+        # new_logentries, where new_logentries contains only the ones after
+        # last_change
+
+        new_last_change = None
+        new_logentries = []
+        if logentries:
+            new_last_change = int(logentries[0].getAttribute("revision"))
+
+            if last_change is None:
+                # if this is the first time we've been run, ignore any changes
+                # that occurred before now. This prevents a build at every
+                # startup.
+                log.msg('svnPoller: starting at change %s' % new_last_change)
+            elif last_change == new_last_change:
+                # an unmodified repository will hit this case
+                log.msg('svnPoller: no changes')
+            else:
+                for el in logentries:
+                    if last_change == int(el.getAttribute("revision")):
+                        break
+                    new_logentries.append(el)
+                new_logentries.reverse() # return oldest first
+
         self.last_change = new_last_change
         log.msg('svnPoller: _process_changes %s .. %s' %
-                (last_change, new_last_change))
+                (old_last_change, new_last_change))
         return new_logentries
 
 
@@ -427,8 +265,8 @@ class SVNPoller(base.ChangeSource, util.ComparableMixin):
         return text
 
     def _transform_path(self, path):
-        _assert(path.startswith(self._prefix),
-                "filepath '%s' should start with prefix '%s'" %
+        assert path.startswith(self._prefix), \
+                ("filepath '%s' should start with prefix '%s'" %
                 (path, self._prefix))
         relative_path = path[len(self._prefix):]
         if relative_path.startswith("/"):
@@ -450,18 +288,13 @@ class SVNPoller(base.ChangeSource, util.ComparableMixin):
                     revlink = self.revlinktmpl % urllib.quote_plus(revision)
 
             log.msg("Adding change revision %s" % (revision,))
-            # TODO: the rest of buildbot may not be ready for unicode 'who'
-            # values
             author   = self._get_text(el, "author")
             comments = self._get_text(el, "msg")
             # there is a "date" field, but it provides localtime in the
             # repository's timezone, whereas we care about buildmaster's
             # localtime (since this will get used to position the boxes on
-            # the Waterfall display, etc). So ignore the date field and use
-            # our local clock instead.
-            #when     = self._get_text(el, "date")
-            #when     = time.mktime(time.strptime("%.19s" % when,
-            #                                     "%Y-%m-%dT%H:%M:%S"))
+            # the Waterfall display, etc). So ignore the date field, and
+            # addChange will fill in with the current time
             branches = {}
             try:
                 pathlist = el.getElementsByTagName("paths")[0]
@@ -500,22 +333,26 @@ class SVNPoller(base.ChangeSource, util.ComparableMixin):
                 if action == u'D' and number_of_files_changed == 1 and files[0] == '':
                     log.msg("Ignoring deletion of branch '%s'" % branch)
                 else:
-                    c = Change(who=author,
-                               files=files,
-                               comments=comments,
-                               revision=revision,
-                               branch=branch,
-                               revlink=revlink,
-                               category=self.category,
-                               repository=self.svnurl,
-                               project = self.project)
-                    changes.append(c)
+                    chdict = dict(
+                            who=author,
+                            files=files,
+                            comments=comments,
+                            revision=revision,
+                            branch=branch,
+                            revlink=revlink,
+                            category=self.category,
+                            repository=self.svnurl,
+                            project = self.project)
+                    changes.append(chdict)
 
         return changes
 
+    @defer.deferredGenerator
     def submit_changes(self, changes):
-        for c in changes:
-            self.parent.addChange(c)
+        for chdict in changes:
+            wfd = defer.waitForDeferred(self.master.addChange(**chdict))
+            yield wfd
+            wfd.getResult()
 
     def finished_ok(self, res):
         if self.cachepath:
@@ -524,12 +361,4 @@ class SVNPoller(base.ChangeSource, util.ComparableMixin):
             f.close()
 
         log.msg("SVNPoller finished polling %s" % res)
-        assert self.working
-        self.working = False
         return res
-
-    def finished_failure(self, f):
-        log.msg("SVNPoller failed %s" % f)
-        assert self.working
-        self.working = False
-        return None # eat the failure

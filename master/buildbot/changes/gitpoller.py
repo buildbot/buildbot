@@ -21,7 +21,7 @@ import subprocess
 from twisted.python import log
 from twisted.internet import defer, utils
 
-from buildbot.changes import base, changes
+from buildbot.changes import base
 
 class GitPoller(base.PollingChangeSource):
     """This source will poll a remote git repo for changes and submit
@@ -73,7 +73,7 @@ class GitPoller(base.PollingChangeSource):
 
     def describe(self):
         status = ""
-        if not self.parent:
+        if not self.master:
             status = "[STOPPED - check log]"
         str = 'GitPoller watching the remote git repository %s, branch: %s %s' \
                 % (self.repourl, self.branch, status)
@@ -90,59 +90,51 @@ class GitPoller(base.PollingChangeSource):
     def _get_commit_comments(self, rev):
         args = ['log', rev, '--no-walk', r'--format=%s%n%b']
         d = utils.getProcessOutput(self.gitbin, args, path=self.workdir, env={}, errortoo=False )
-        d.addCallback(self._get_commit_comments_from_output)
+        def process(git_output):
+            stripped_output = git_output.strip()
+            if len(stripped_output) == 0:
+                raise EnvironmentError('could not get commit comment for rev')
+            return stripped_output
+        d.addCallback(process)
         return d
-
-    def _get_commit_comments_from_output(self,git_output):
-        stripped_output = git_output.strip()
-        if len(stripped_output) == 0:
-            raise EnvironmentError('could not get commit comment for rev')
-        self.commitInfo['comments'] = stripped_output
-        return self.commitInfo['comments'] # for tests
 
     def _get_commit_timestamp(self, rev):
         # unix timestamp
         args = ['log', rev, '--no-walk', r'--format=%ct']
         d = utils.getProcessOutput(self.gitbin, args, path=self.workdir, env={}, errortoo=False )
-        d.addCallback(self._get_commit_timestamp_from_output)
+        def process(git_output):
+            stripped_output = git_output.strip()
+            if self.usetimestamps:
+                try:
+                    stamp = float(stripped_output)
+                except Exception, e:
+                        log.msg('gitpoller: caught exception converting output \'%s\' to timestamp' % stripped_output)
+                        raise e
+                return stamp
+            else:
+                return None
+        d.addCallback(process)
         return d
-
-    def _get_commit_timestamp_from_output(self, git_output):
-        stripped_output = git_output.strip()
-        if self.usetimestamps:
-            try:
-                stamp = float(stripped_output)
-            except Exception, e:
-                    log.msg('gitpoller: caught exception converting output \'%s\' to timestamp' % stripped_output)
-                    raise e
-            self.commitInfo['timestamp'] = stamp
-        else:
-            self.commitInfo['timestamp'] = None
-        return self.commitInfo['timestamp'] # for tests
 
     def _get_commit_files(self, rev):
         args = ['log', rev, '--name-only', '--no-walk', r'--format=%n']
         d = utils.getProcessOutput(self.gitbin, args, path=self.workdir, env={}, errortoo=False )
-        d.addCallback(self._get_commit_files_from_output)
+        def process(git_output):
+            fileList = git_output.split()
+            return fileList
+        d.addCallback(process)
         return d
-
-    def _get_commit_files_from_output(self, git_output):
-        fileList = git_output.split()
-        self.commitInfo['files'] = fileList
-        return self.commitInfo['files'] # for tests
             
     def _get_commit_name(self, rev):
         args = ['log', rev, '--no-walk', r'--format=%aE']
         d = utils.getProcessOutput(self.gitbin, args, path=self.workdir, env={}, errortoo=False )
-        d.addCallback(self._get_commit_name_from_output)
+        def process(git_output):
+            stripped_output = git_output.strip()
+            if len(stripped_output) == 0:
+                raise EnvironmentError('could not get commit name for rev')
+            return stripped_output
+        d.addCallback(process)
         return d
-
-    def _get_commit_name_from_output(self, git_output):
-        stripped_output = git_output.strip()
-        if len(stripped_output) == 0:
-            raise EnvironmentError('could not get commit name for rev')
-        self.commitInfo['name'] = stripped_output
-        return self.commitInfo['name'] # for tests
 
     def _get_changes(self):
         log.msg('gitpoller: polling git repo at %s' % self.repourl)
@@ -159,53 +151,60 @@ class GitPoller(base.PollingChangeSource):
 
         return d
 
+    @defer.deferredGenerator
     def _process_changes(self, unused_output):
         # get the change list
         revListArgs = ['log', 'HEAD..FETCH_HEAD', r'--format=%H']
-        d = utils.getProcessOutput(self.gitbin, revListArgs, path=self.workdir, env={}, errortoo=False )
-        d.addCallback(self._process_changes_in_output)
-        return d
-    
-    def _process_changes_in_output(self, git_output):
         self.changeCount = 0
+        d = utils.getProcessOutput(self.gitbin, revListArgs, path=self.workdir,
+                                   env={}, errortoo=False )
+        wfd = defer.waitForDeferred(d)
+        yield wfd
+        results = wfd.getResult()
         
         # process oldest change first
-        revList = git_output.split()
-        if revList:
-            revList.reverse()
-            self.changeCount = len(revList)
+        revList = results.split()
+        if not revList:
+            return
+
+        revList.reverse()
+        self.changeCount = len(revList)
             
-        log.msg('gitpoller: processing %d changes: %s in "%s"' % (self.changeCount, revList, self.workdir) )
+        log.msg('gitpoller: processing %d changes: %s in "%s"'
+                % (self.changeCount, revList, self.workdir) )
 
         for rev in revList:
-            self.commitInfo = {}
+            dl = defer.DeferredList([
+                self._get_commit_timestamp(rev),
+                self._get_commit_name(rev),
+                self._get_commit_files(rev),
+                self._get_commit_comments(rev),
+            ], consumeErrors=True)
 
-            deferreds = [
-                                self._get_commit_timestamp(rev),
-                                self._get_commit_name(rev),
-                                self._get_commit_files(rev),
-                                self._get_commit_comments(rev),
-                        ]
-            dl = defer.DeferredList(deferreds)
-            dl.addCallback(self._add_change,rev)        
+            wfd = defer.waitForDeferred(dl)
+            yield wfd
+            results = wfd.getResult()
 
+            # check for failures
+            failures = [ r[1] for r in results if not r[0] ]
+            if failures:
+                # just fail on the first error; they're probably all related!
+                raise failures[0]
 
-    def _add_change(self, results, rev):
-        log.msg('gitpoller: _add_change results: "%s", rev: "%s" in "%s"' % (results, rev, self.workdir))
-
-        c = changes.Change(who=self.commitInfo['name'],
-                               revision=rev,
-                               files=self.commitInfo['files'],
-                               comments=self.commitInfo['comments'],
-                               when=self.commitInfo['timestamp'],
-                               branch=self.branch,
-                               category=self.category,
-                               project=self.project,
-                               repository=self.repourl)
-        log.msg('gitpoller: change "%s" in "%s"' % (c, self.workdir))
-        self.parent.addChange(c)
-        self.lastChange = self.lastPoll
-            
+            timestamp, name, files, comments = [ r[1] for r in results ]
+            d = self.master.addChange(
+                   who=name,
+                   revision=rev,
+                   files=files,
+                   comments=comments,
+                   when=timestamp,
+                   branch=self.branch,
+                   category=self.category,
+                   project=self.project,
+                   repository=self.repourl)
+            wfd = defer.waitForDeferred(d)
+            yield wfd
+            results = wfd.getResult()
 
     def _process_changes_failure(self, f):
         log.msg('gitpoller: repo poll failed')

@@ -24,30 +24,9 @@ from buildbot import interfaces, util
 from buildbot.process.properties import Properties
 
 class Change:
-    """I represent a single change to the source tree. This may involve
-    several files, but they are all changed by the same person, and there is
-    a change comment for the group as a whole.
-
-    If the version control system supports sequential repository- (or
-    branch-) wide change numbers (like SVN, P4, and Bzr), then revision=
-    should be set to that number. The highest such number will be used at
-    checkout time to get the correct set of files.
-
-    If it does not (like CVS), when= should be set to the timestamp (seconds
-    since epoch, as returned by time.time()) when the change was made. when=
-    will be filled in for you (to the current time) if you omit it, which is
-    suitable for ChangeSources which have no way of getting more accurate
-    timestamps.
-
-    The revision= and branch= values must be ASCII bytestrings, since they
-    will eventually be used in a ShellCommand and passed to os.exec(), which
-    requires bytestrings. These values will also be stored in a database,
-    possibly as unicode, so they must be safely convertable back and forth.
-    This restriction may be relaxed in the future.
-
-    Changes should be submitted to ChangeMaster.addChange() in
-    chronologically increasing order. Out-of-order changes will probably
-    cause the web status displays to be corrupted."""
+    """I represent a single change to the source tree. This may involve several
+    files, but they are all changed by the same person, and there is a change
+    comment for the group as a whole."""
 
     implements(interfaces.IStatusEvent)
 
@@ -101,6 +80,12 @@ class Change:
             self.properties = Properties()
         if not hasattr(self, 'revlink'):
             self.revlink = ""
+
+    def __str__(self):
+        return (u"Change(who=%r, files=%r, comments=%r, revision=%r, " +
+                u"when=%r, category=%r, project=%r, repository=%r)") % (
+                self.who, self.files, self.comments, self.revision,
+                self.when, self.category, self.project, self.repository)
 
     def asText(self):
         data = ""
@@ -184,7 +169,7 @@ class Change:
         return data
 
 
-class ChangeMaster:
+class ChangeMaster: # pragma: no cover
     # this is a stub, retained to allow the "buildbot upgrade-master" tool to
     # read old changes.pck pickle files and convert their contents into the
     # new database format. This is only instantiated by that tool, or by
@@ -195,11 +180,6 @@ class ChangeMaster:
         self.changes = []
         # self.basedir must be filled in by the parent
         self.nextNumber = 1
-
-    def addChange(self, change):
-        change.number = self.nextNumber
-        self.nextNumber += 1
-        self.changes.append(change)
 
     def saveYourself(self):
         filename = os.path.join(self.basedir, "changes.pck")
@@ -254,7 +234,7 @@ class ChangeMaster:
         if not quiet:
             print "converted %d strings" % nconvert
 
-class OldChangeMaster(ChangeMaster):
+class OldChangeMaster(ChangeMaster): # pragma: no cover
     # this is a reminder that the ChangeMaster class is old
     pass
 # vim: set ts=4 sts=4 sw=4 et:

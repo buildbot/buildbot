@@ -12,6 +12,22 @@ import os
 import sqlalchemy
 from sqlalchemy.engine import strategies, url
 
+# from http://www.mail-archive.com/sqlalchemy@googlegroups.com/msg15079.html
+class ReconnectingListener(object):
+    def __init__(self):
+        self.retried = False
+    def checkout(self, dbapi_con, con_record, con_proxy):
+        try:
+            try:
+                dbapi_con.ping(False)
+            except TypeError:
+                dbapi_con.ping()
+        except dbapi_con.OperationalError, ex:
+            if ex.args[0] in (2006, 2013, 2014, 2045, 2055):
+                # sqlalchemy will re-create the connection
+                raise sqlalchemy.exc.DisconnectionError()
+            raise
+
 class BuildbotEngineStrategy(strategies.ThreadLocalEngineStrategy):
     """
     A subclass of the ThreadLocalEngineStrategy that can effectively interact
@@ -64,6 +80,13 @@ class BuildbotEngineStrategy(strategies.ThreadLocalEngineStrategy):
                                  "(and adds it automatically)")
         else:
             u.query['charset'] = 'utf8'
+
+        # add the reconnecting PoolListener that will detect a
+        # disconnected connection and automatically start a new
+        # one.  This provides a measure of additional safety over
+        # the pool_recycle parameter, and is useful when e.g., the
+        # mysql server goes away
+        kwargs['listeners'] = [ ReconnectingListener() ]
 
         return u, kwargs, None
 

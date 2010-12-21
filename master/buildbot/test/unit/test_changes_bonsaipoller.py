@@ -222,8 +222,8 @@ class TestBonsaiPoller(changesource.ChangeSourceMixin, unittest.TestCase):
     def setUp(self):
         d = self.setUpChangeSource()
         def create_poller(_):
-            self.poller = BonsaiPoller('http://bonsai.mozilla.org', 'all', 'seamonkey')
-            self.poller.parent = self.changemaster
+            self.attachChangeSource(BonsaiPoller('http://bonsai.mozilla.org',
+                                       'all', 'seamonkey'))
         d.addCallback(create_poller)
         return d
 
@@ -242,13 +242,13 @@ class TestBonsaiPoller(changesource.ChangeSourceMixin, unittest.TestCase):
     # tests
 
     def test_describe(self):
-        assert re.search(r'bonsai\.mozilla\.org', self.poller.describe())
+        assert re.search(r'bonsai\.mozilla\.org', self.changesource.describe())
 
     def test_poll_bad(self):
         # Make sure a change is not submitted if the BonsaiParser fails, and
         # that the poll operation catches the exception correctly
         self.fakeGetPage(badUnparsedResult)
-        d = self.poller.poll()
+        d = self.changesource.poll()
         def check(_):
             self.assertEqual(len(self.changes_added), 0)
         d.addCallback(check)
@@ -256,24 +256,24 @@ class TestBonsaiPoller(changesource.ChangeSourceMixin, unittest.TestCase):
 
     def test_poll_good(self):
         self.fakeGetPage(goodUnparsedResult)
-        d = self.poller.poll()
+        d = self.changesource.poll()
         def check(_):
             self.assertEqual(len(self.changes_added), 3)
-            self.assertEqual(self.changes_added[0].who, who1)
-            self.assertEqual(self.changes_added[0].when, date1)
-            self.assertEqual(self.changes_added[0].comments, log1)
-            self.assertEqual(self.changes_added[0].branch, 'seamonkey')
-            self.assertEqual(self.changes_added[0].files,
+            self.assertEqual(self.changes_added[0]['who'], who1)
+            self.assertEqual(self.changes_added[0]['when'], date1)
+            self.assertEqual(self.changes_added[0]['comments'], log1)
+            self.assertEqual(self.changes_added[0]['branch'], 'seamonkey')
+            self.assertEqual(self.changes_added[0]['files'],
                     [ '%s (revision %s)' % (file1, rev1) ])
-            self.assertEqual(self.changes_added[1].who, who2)
-            self.assertEqual(self.changes_added[1].when, date2)
-            self.assertEqual(self.changes_added[1].comments, log2)
-            self.assertEqual(self.changes_added[1].files,
+            self.assertEqual(self.changes_added[1]['who'], who2)
+            self.assertEqual(self.changes_added[1]['when'], date2)
+            self.assertEqual(self.changes_added[1]['comments'], log2)
+            self.assertEqual(self.changes_added[1]['files'],
                     [ '%s (revision %s)' % (file2, rev2),
                       '%s (revision %s)' % (file3, rev3) ])
-            self.assertEqual(self.changes_added[2].who, who3)
-            self.assertEqual(self.changes_added[2].comments, log3)
-            self.assertEqual(self.changes_added[2].when, date3)
-            self.assertEqual(self.changes_added[2].files, [])
+            self.assertEqual(self.changes_added[2]['who'], who3)
+            self.assertEqual(self.changes_added[2]['comments'], log3)
+            self.assertEqual(self.changes_added[2]['when'], date3)
+            self.assertEqual(self.changes_added[2]['files'], [])
         d.addCallback(check)
         return d

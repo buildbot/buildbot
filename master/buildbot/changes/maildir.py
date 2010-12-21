@@ -22,12 +22,11 @@
 import os
 from twisted.python import log
 from twisted.application import service, internet
-from twisted.internet import reactor
+from twisted.internet import reactor, defer
 dnotify = None
 try:
     import dnotify
 except:
-    # I'm not actually sure this log message gets recorded
     log.msg("unable to import dnotify, so Maildir will use polling instead")
 
 class NoSuchMaildir(Exception):
@@ -53,6 +52,8 @@ class MaildirService(service.MultiService):
         """
         service.MultiService.__init__(self)
         self.basedir = basedir
+        "base of the maildir"
+        self.newdir = None
         self.files = []
         self.dnotify = None
 
@@ -106,6 +107,7 @@ class MaildirService(service.MultiService):
             self.dnotify = None
         return service.MultiService.stopService(self)
 
+    @defer.deferredGenerator
     def poll(self):
         assert self.basedir
         # see what's new
@@ -117,15 +119,16 @@ class MaildirService(service.MultiService):
             if not f in self.files:
                 newfiles.append(f)
         self.files.extend(newfiles)
-        # TODO: sort by ctime, then filename, since safecat uses a rather
-        # fine-grained timestamp in the filename
         for n in newfiles:
-            # TODO: consider catching exceptions in messageReceived
-            self.messageReceived(n)
+            try:
+                wfd = defer.waitForDeferred(self.messageReceived(n))
+                yield wfd
+                wfd.getResult()
+            except:
+                log.msg("while reading '%s' from maildir '%s':" % (n, self.basedir))
+                log.err()
 
     def messageReceived(self, filename):
-        """Called when a new file is noticed. Will call
-        self.parent.messageReceived() with a path relative to maildir/new.
-        Should probably be overridden in subclasses."""
-        self.parent.messageReceived(filename)
-
+        """process a received message.  The filename is relative to self.newdir.
+        Returns a Deferred."""
+        raise NotImplementedError

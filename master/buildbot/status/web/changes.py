@@ -44,13 +44,16 @@ class ChangesResource(HtmlResource):
     def getChild(self, path, req):
         try:
             num = int(path)
-            c = self.getStatus(req).getChange(num)
         except ValueError:
-            c = None
-            num = path
-        if not c:
-            return NoResource("No change number '%s'" % path)    
-        return ChangeResource(c, num)
+            return NoResource("Expected a change number")
+
+        d = self.getStatus(req).getChange(num)
+        def cb(change):
+            return ChangeResource(change, num)
+        def eb(f):
+            return NoResource("No change number %d" % num)
+        d.addCallbacks(cb, eb)
+        return d
     
 class ChangeBox(components.Adapter):
     implements(IBox)

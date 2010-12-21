@@ -8,7 +8,7 @@
 # details.
 #
 # You should have received a copy of the GNU General Public License along with
-# this program; if not, write to the Free Software Foundation, Inc., 51
+# this program; if not, write to the Free Software Foundation, Inc[''], 51
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
@@ -29,8 +29,7 @@ class TestGerritChangeSource(changesource.ChangeSourceMixin,
 
     def newChangeSource(self, host, user):
         s = gerritchangesource.GerritChangeSource(host, user)
-        self.changesource = s
-        self.changesource.parent = self.changemaster
+        self.attachChangeSource(s)
         return s
 
     # tests
@@ -43,7 +42,7 @@ class TestGerritChangeSource(changesource.ChangeSourceMixin,
 
     def test_lineReceived_patchset_created(self):
         s = self.newChangeSource('somehost', 'someuser')
-        s.lineReceived(json.dumps(dict(
+        d = s.lineReceived(json.dumps(dict(
             type="patchset-created",
             change=dict(
                 branch="br",
@@ -55,13 +54,16 @@ class TestGerritChangeSource(changesource.ChangeSourceMixin,
             patchSet=dict(revision="abcdef")
         )))
 
-        self.failUnlessEqual(len(self.changes_added), 1)
-        c = self.changes_added[0]
-        self.assertEqual(c.who, "Dustin <dustin@mozilla.com>")
-        self.assertEqual(c.project, "pr")
-        self.assertEqual(c.branch, "br")
-        self.assertEqual(c.revision, "abcdef")
-        self.assertEqual(c.revlink, "http://buildbot.net")
-        self.assertEqual(c.comments, "fix 1234")
-        self.assertEqual(c.files, [ 'unknown' ])
-        self.assertEqual(c.properties['event.change.subject'], 'fix 1234')
+        def check(_):
+            self.failUnlessEqual(len(self.changes_added), 1)
+            c = self.changes_added[0]
+            self.assertEqual(c['who'], "Dustin <dustin@mozilla.com>")
+            self.assertEqual(c['project'], "pr")
+            self.assertEqual(c['branch'], "br")
+            self.assertEqual(c['revision'], "abcdef")
+            self.assertEqual(c['revlink'], "http://buildbot.net")
+            self.assertEqual(c['comments'], "fix 1234")
+            self.assertEqual(c['files'], [ 'unknown' ])
+            self.assertEqual(c['properties']['event.change.subject'], 'fix 1234')
+        d.addCallback(check)
+        return d

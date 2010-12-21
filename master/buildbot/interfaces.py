@@ -41,17 +41,20 @@ class ParameterError(Exception):
     pass
 
 class IChangeSource(Interface):
-    """Object which feeds Change objects to the changemaster. When files or
-    directories are changed and the version control system provides some
-    kind of notification, this object should turn it into a Change object
-    and pass it through::
-
-      self.changemaster.addChange(change)
     """
+    Service which feeds Change objects to the changemaster. When files or
+    directories are changed in version control, this object should represent
+    the changes as a change dictionary and call::
+
+      self.master.addChange(who=.., rev=.., ..)
+
+    See 'Writing Change Sources' in the manual for more information.
+    """
+    master = Attribute('master',
+            'Pointer to BuildMaster, automatically set when started.')
 
     def describe():
-        """Should return a string which briefly describes this source. This
-        string will be displayed in an HTML status page."""
+        """Return a string which briefly describes this source."""
 
 class IScheduler(Interface):
     """I watch for Changes in the source tree and decide when to trigger
@@ -1039,9 +1042,7 @@ class IStatusReceiver(Interface):
 
 class IControl(Interface):
     def addChange(change):
-        """Add a change to all builders. Each Builder will decide for
-        themselves whether the change is interesting or not, and may initiate
-        a build as a result."""
+        """Add a change to the change queue, for analysis by schedulers."""
 
     def submitBuildSet(builderNames, ss, reason, props=None, now=False):
         """Create a BuildSet, which will eventually cause a build of the

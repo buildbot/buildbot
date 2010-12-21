@@ -68,7 +68,7 @@ class FakeDBConn:
             i += 1
         return defer.succeed(True)
 
-    def addChangeToDatabase(self, change):
+    def addChangeToDatabase(self, change): # TODO: remove
         i = len(self.changes)
         self.changes.append(change)
         change.number = i
@@ -87,9 +87,6 @@ class FakeDBConn:
 
     def scheduler_set_state(self, schedulerid, t, state):
         self.scheduler_states[schedulerid] = state
-
-    def getLatestChangeNumberNow(self, t):
-        return len(self.changes)-1
 
     def getChangesGreaterThan(self, last_changeid, t):
         return self.changes[last_changeid:]

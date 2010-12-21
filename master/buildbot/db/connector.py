@@ -16,19 +16,17 @@
 import collections, base64
 
 from twisted.python import log, threadable
-from twisted.internet import defer
 from buildbot.db import enginestrategy
 
 from buildbot import util
 from buildbot.util import collections as bbcollections
-from buildbot.changes.changes import Change
 from buildbot.sourcestamp import SourceStamp
 from buildbot.buildrequest import BuildRequest
 from buildbot.process.properties import Properties
 from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE
 from buildbot.util.eventual import eventually
 from buildbot.util import json
-from buildbot.db import pool, model
+from buildbot.db import pool, model, changes
 
 def _one_or_else(res, default=None, process_f=lambda x: x):
     if not res:
@@ -81,7 +79,7 @@ class DBConnector(object):
 
         self._query_times = collections.deque()
 
-        self._change_cache = util.LRUCache()
+        self._change_cache = util.LRUCache() # TODO: remove
         self._sourcestamp_cache = util.LRUCache()
         self._active_operations = set() # protected by synchronized=
         self._pending_notifications = []
@@ -95,10 +93,12 @@ class DBConnector(object):
         self.model = model.Model(self)
         "L{buildbot.db.model.Model} instance"
 
+        self.changes = changes.ChangesConnectorComponent(self)
+        "L{buildbot.db.changes.ChangesConnectorComponent} instance"
 
 
 
-    def _getCurrentTime(self):
+    def _getCurrentTime(self): # TODO: remove
         # this is a seam for use in testing
         return util.now()
 
@@ -240,184 +240,8 @@ class DBConnector(object):
 
     # old ChangeManager methods
 
-    def addChangeToDatabase(self, change):
-        self.runInteractionNow(self._txn_addChangeToDatabase, change)
-        self._change_cache.add(change.number, change)
-
-    def _txn_addChangeToDatabase(self, t, change):
-        q = self.quoteq("INSERT INTO changes"
-                        " (author,"
-                        "  comments, is_dir,"
-                        "  branch, revision, revlink,"
-                        "  when_timestamp, category,"
-                        "  repository, project)"
-                        " VALUES (?, ?,?, ?,?,?, ?,?, ?,?)")
-        # TODO: map None to.. empty string?
-
-        values = (change.who,
-                  change.comments, change.isdir,
-                  change.branch, change.revision, change.revlink,
-                  change.when, change.category, change.repository,
-                  change.project)
-        t.execute(q, values)
-        change.number = t.lastrowid
-
-        for link in change.links:
-            t.execute(self.quoteq("INSERT INTO change_links (changeid, link) "
-                                  "VALUES (?,?)"),
-                      (change.number, link))
-        for filename in change.files:
-            t.execute(self.quoteq("INSERT INTO change_files (changeid,filename)"
-                                  " VALUES (?,?)"),
-                      (change.number, filename))
-        for propname,propvalue in change.properties.properties.items():
-            encoded_value = json.dumps(propvalue)
-            t.execute(self.quoteq("INSERT INTO change_properties"
-                                  " (changeid, property_name, property_value)"
-                                  " VALUES (?,?,?)"),
-                      (change.number, propname, encoded_value))
-        self.notify("add-change", change.number)
-
-    def changeEventGenerator(self, branches=[], categories=[], committers=[], minTime=0):
-        q = "SELECT changeid FROM changes"
-        args = []
-        if branches or categories or committers:
-            q += " WHERE "
-            pieces = []
-            if branches:
-                pieces.append("branch IN %s" % self.parmlist(len(branches)))
-                args.extend(list(branches))
-            if categories:
-                pieces.append("category IN %s" % self.parmlist(len(categories)))
-                args.extend(list(categories))
-            if committers:
-                pieces.append("author IN %s" % self.parmlist(len(committers)))
-                args.extend(list(committers))
-            if minTime:
-                pieces.append("when_timestamp > %d" % minTime)
-            q += " AND ".join(pieces)
-        q += " ORDER BY changeid DESC"
-        rows = self.runQueryNow(q, tuple(args))
-        for (changeid,) in rows:
-            yield self.getChangeNumberedNow(changeid)
-
-    def getLatestChangeNumberNow(self, branch=None, t=None):
-        if t:
-            return self._txn_getLatestChangeNumber(branch=branch, t=t)
-        else:
-            return self.runInteractionNow(self._txn_getLatestChangeNumber)
-    def _txn_getLatestChangeNumber(self, branch, t):
-        args = None
-        if branch:
-            br_clause = "WHERE branch =? "
-            args = ( branch, )
-        q = self.quoteq("SELECT max(changeid) from changes"+ br_clause)
-        t.execute(q, args)
-        row = t.fetchone()
-        if not row:
-            return 0
-        return row[0]
-
-    def getChangeNumberedNow(self, changeid, t=None):
-        # this is a synchronous/blocking version of getChangeByNumber
-        assert changeid >= 0
-        c = self._change_cache.get(changeid)
-        if c:
-            return c
-        if t:
-            c = self._txn_getChangeNumberedNow(t, changeid)
-        else:
-            c = self.runInteractionNow(self._txn_getChangeNumberedNow, changeid)
-        self._change_cache.add(changeid, c)
-        return c
-    def _txn_getChangeNumberedNow(self, t, changeid):
-        q = self.quoteq("SELECT author, comments,"
-                        " is_dir, branch, revision, revlink,"
-                        " when_timestamp, category,"
-                        " repository, project"
-                        " FROM changes WHERE changeid = ?")
-        t.execute(q, (changeid,))
-        rows = t.fetchall()
-        if not rows:
-            return None
-        (who, comments,
-         isdir, branch, revision, revlink,
-         when, category, repository, project) = rows[0]
-        branch = str_or_none(branch)
-        revision = str_or_none(revision)
-        q = self.quoteq("SELECT link FROM change_links WHERE changeid=?")
-        t.execute(q, (changeid,))
-        rows = t.fetchall()
-        links = [row[0] for row in rows]
-        links.sort()
-
-        q = self.quoteq("SELECT filename FROM change_files WHERE changeid=?")
-        t.execute(q, (changeid,))
-        rows = t.fetchall()
-        files = [row[0] for row in rows]
-        files.sort()
-
-        p = self.get_properties_from_db("change_properties", "changeid",
-                                        changeid, t)
-        c = Change(who=who, files=files, comments=comments, isdir=isdir,
-                   links=links, revision=revision, when=when,
-                   branch=branch, category=category, revlink=revlink,
-                   repository=repository, project=project)
-        c.properties.updateFromProperties(p)
-        c.number = changeid
-        return c
-
-    # note that this is the async version of getChangeNumberedNow .. consistent
-    # naming is the hobgoblin of hackable software!
-    def getChangeByNumber(self, changeid):
-        # return a Deferred that fires with a Change instance, or None if
-        # there is no Change with that number
-        assert changeid >= 0
-        c = self._change_cache.get(changeid)
-        if c:
-            return defer.succeed(c)
-        d1 = self.runQuery(self.quoteq("SELECT author, comments,"
-                                       " is_dir, branch, revision, revlink,"
-                                       " when_timestamp, category,"
-                                       " repository, project"
-                                       " FROM changes WHERE changeid = ?"),
-                           (changeid,))
-        d2 = self.runQuery(self.quoteq("SELECT link FROM change_links"
-                                       " WHERE changeid=?"),
-                           (changeid,))
-        d3 = self.runQuery(self.quoteq("SELECT filename FROM change_files"
-                                       " WHERE changeid=?"),
-                           (changeid,))
-        d4 = self.runInteraction(self._txn_get_properties_from_db,
-                "change_properties", "changeid", changeid)
-        d = defer.gatherResults([d1,d2,d3,d4])
-        d.addCallback(self._getChangeByNumber_query_done, changeid)
-        return d
-
-    def _getChangeByNumber_query_done(self, res, changeid):
-        (rows, link_rows, file_rows, properties) = res
-        if not rows:
-            return None
-        (who, comments,
-         isdir, branch, revision, revlink,
-         when, category, repository, project) = rows[0]
-        branch = str_or_none(branch)
-        revision = str_or_none(revision)
-        links = [row[0] for row in link_rows]
-        links.sort()
-        files = [row[0] for row in file_rows]
-        files.sort()
-
-        c = Change(who=who, files=files, comments=comments, isdir=isdir,
-                   links=links, revision=revision, when=when,
-                   branch=branch, category=category, revlink=revlink,
-                   repository=repository, project=project)
-        c.properties.updateFromProperties(properties)
-        c.number = changeid
-        self._change_cache.add(changeid, c)
-        return c
-
     def getChangesGreaterThan(self, last_changeid, t=None):
+        # LIES LIES LIES!
         """Return a Deferred that fires with a list of all Change instances
         with numbers greater than the given value, sorted by number. This is
         useful for catching up with everything that's happened since you last
@@ -436,17 +260,6 @@ class DBConnector(object):
         changes.sort(key=lambda c: c.number)
         return changes
 
-    def getChangeIdsLessThanIdNow(self, new_changeid):
-        """Return a list of all extant change id's less than the given value,
-        sorted by number."""
-        def txn(t):
-            q = self.quoteq("SELECT changeid FROM changes WHERE changeid < ?")
-            t.execute(q, (new_changeid,))
-            changes = [changeid for (changeid,) in t.fetchall()]
-            changes.sort()
-            return changes
-        return self.runInteractionNow(txn)
-
     def removeChangeNow(self, changeid):
         """Thoroughly remove a change from the database, including all dependent
         tables"""
@@ -456,10 +269,6 @@ class DBConnector(object):
                 q = self.quoteq("DELETE FROM %s WHERE changeid = ?" % table)
                 t.execute(q, (changeid,))
         return self.runInteractionNow(txn)
-
-    def getChangesByNumber(self, changeids):
-        return defer.gatherResults([self.getChangeByNumber(changeid)
-                                    for changeid in changeids])
 
     # SourceStamp-manipulating methods
 

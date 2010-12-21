@@ -21,12 +21,12 @@ from buildbot.test.util import change_import
 class TestUnicodeChanges(change_import.ChangeImportMixin, unittest.TestCase):
     def setUp(self):
         self.setUpChangeImport()
-        self.dbc = DBConnector(self.db_url, self.basedir)
+        self.db = DBConnector(self.db_url, self.basedir)
         # note the connector isn't started, as we're testing upgrades
 
     def tearDown(self):
-        if self.dbc:
-            self.dbc.stop()
+        if self.db:
+            self.db.stop()
         self.tearDownChangeImport()
 
     def testUnicodeChange(self):
@@ -38,9 +38,9 @@ class TestUnicodeChanges(change_import.ChangeImportMixin, unittest.TestCase):
                     branch="b1",
                     revision=12345))
 
-        d = self.dbc.model.upgrade()
-        d.addCallback(lambda _ : self.dbc.start())
-        d.addCallback(lambda _ : self.dbc.getChangeByNumber(1))
+        d = self.db.model.upgrade()
+        d.addCallback(lambda _ : self.db.start())
+        d.addCallback(lambda _ : self.db.changes.getChangeInstance(1))
         def check(c):
             self.failIf(c is None)
             self.assertEquals(c.who, u"Frosty the \N{SNOWMAN}")
@@ -57,7 +57,7 @@ class TestUnicodeChanges(change_import.ChangeImportMixin, unittest.TestCase):
                     branch="b1",
                     revision=12345))
 
-        d = self.dbc.model.upgrade()
+        d = self.db.model.upgrade()
         def eb(f):
             self.failUnless("UnicodeError" in str(f))
         def cb(r):
@@ -74,9 +74,9 @@ class TestUnicodeChanges(change_import.ChangeImportMixin, unittest.TestCase):
                     branch="b1",
                     revision=12345))
 
-        d = self.dbc.model.upgrade()
-        d.addCallback(lambda _ : self.dbc.start())
-        d.addCallback(lambda _ : self.dbc.getChangeByNumber(1))
+        d = self.db.model.upgrade()
+        d.addCallback(lambda _ : self.db.start())
+        d.addCallback(lambda _ : self.db.changes.getChangeInstance(1))
         def check(c):
             self.failIf(c is None)
             self.assertEquals(c.who, "Frosty the Snowman")
@@ -97,9 +97,9 @@ class TestUnicodeChanges(change_import.ChangeImportMixin, unittest.TestCase):
                 # the function at the heart of the script anyway.
                 recode_fn=lambda cm : cm.recode_changes('utf16', quiet=True))
 
-        d = self.dbc.model.upgrade()
-        d.addCallback(lambda _ : self.dbc.start())
-        d.addCallback(lambda _ : self.dbc.getChangeByNumber(1))
+        d = self.db.model.upgrade()
+        d.addCallback(lambda _ : self.db.start())
+        d.addCallback(lambda _ : self.db.changes.getChangeInstance(1))
         def check(c):
             self.failIf(c is None)
             self.assertEquals(c.who, u"Frosty the \N{SNOWMAN}")

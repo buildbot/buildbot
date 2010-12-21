@@ -15,6 +15,11 @@ us greater inter-database compatibility and a more stable and reliable basis
 for this core component of the framework.  SQLAlchemy-Migrate is used to manage
 changes to the database schema from version to version.
 
+** Deprecations and Removals
+
+*** Change sources can no longer call change-related methods on self.parent.
+Instead, use self.master methods, e.g., self.master.addChange.
+
 * Next Release
 
 ** PBChangeSource now supports authentication
