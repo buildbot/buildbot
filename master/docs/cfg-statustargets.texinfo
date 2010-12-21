@@ -645,7 +645,7 @@ An example WebStatus configuration line which enables change_hook and two DIALEC
 c['status'].append(html.WebStatus(http_port=8010,allowForce=True,
                         change_hook_dialects=@{
                                 'base': True,
-                                'github': @{'option1':True,
+                                'somehook': @{'option1':True,
                                             'option2':False@}@}))
 @end example
 
@@ -656,6 +656,21 @@ and the values are optional arguments which will be passed to the hooks.
 The post_build_request.py script in master/contrib allows for the submission of an
 arbitrary change request. Run 'post_build_request.py --help' for more information.
 The 'base' dialect must be enabled for this to work.
+
+@heading github hook
+
+The github hook is simple and takes no options.  
+
+@example
+c['status'].append(html.WebStatus(..
+                    change_hook_dialects=@{ 'github' : True @}))
+@end example
+
+With this set up, add a Post-Receive URL for the project in the Github
+administrative interface, pointing to @code{/change_hook/github} relative to
+the root of the web status.  For example, if the grid URL is
+@code{http://builds.mycompany.com/bbot/grid}, then point Github to
+@code{http://builds.mycompany.com/bbot/change_hook/github}.
 
 @node MailNotifier
 @subsection MailNotifier
