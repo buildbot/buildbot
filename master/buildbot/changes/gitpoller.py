@@ -16,6 +16,7 @@
 import time
 import tempfile
 import os
+import subprocess
 
 from twisted.python import log
 from twisted.internet import defer, utils
@@ -58,16 +59,18 @@ class GitPoller(base.PollingChangeSource):
 
     def startService(self):
         base.PollingChangeSource.startService(self)
-        
-        if not os.path.exists(self.workdir):
-            log.msg('gitpoller: creating working dir %s' % self.workdir)
-            os.makedirs(self.workdir)
-            
+
+        dirpath = os.path.dirname(self.workdir.rstrip(os.sep))
+        if not os.path.exists(dirpath):
+            log.msg('gitpoller: creating parent directories for workdir')
+            os.makedirs(dirpath)
+
         if not os.path.exists(self.workdir + r'/.git'):
             log.msg('gitpoller: initializing working dir')
-            os.system(self.gitbin + ' clone --no-checkout ' + self.repourl + ' ' + self.workdir)
-            os.system('cd ' + self.workdir + ' && ' + self.gitbin + ' checkout ' + self.branch)
-        
+            subprocess.check_call([self.gitbin, 'clone', '--no-checkout', self.repourl, self.workdir])
+            subprocess.check_call([self.gitbin, 'checkout', '-b', self.branch, 'origin/%s' % self.branch],
+                cwd=self.workdir)
+
     def describe(self):
         status = ""
         if not self.parent:
