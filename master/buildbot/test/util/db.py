@@ -34,7 +34,8 @@ class RealDatabaseMixin(object):
         meta = MetaData()
         
         # there are some tables for which reflection sometimes fails, but since
-        # we're just dropping them, we don't need actual schema data
+        # we're just dropping them, we don't need actual schema - a fake
+        # table will do the trick
         for table in [ 'buildrequests', 'builds',
                 'buildset_properties', 'buildsets', 'change_properties',
                 'change_files', 'change_links',
@@ -44,11 +45,11 @@ class RealDatabaseMixin(object):
             sqlalchemy.Table(table, meta,
                     sqlalchemy.Column('tmp', sqlalchemy.Integer))
 
-        # load the remaining tables
+        # load any remaining tables
         meta.reflect(bind=engine)
 
-        # and drop them!
-        meta.drop_all(bind=engine)
+        # and drop them, if they exist
+        meta.drop_all(bind=engine, checkfirst=True)
 
         engine.dispose()
 
