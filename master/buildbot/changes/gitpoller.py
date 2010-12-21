@@ -65,7 +65,8 @@ class GitPoller(base.PollingChangeSource):
             
         if not os.path.exists(self.workdir + r'/.git'):
             log.msg('gitpoller: initializing working dir')
-            os.system(self.gitbin + ' clone ' + self.repourl + ' ' + self.workdir)
+            os.system(self.gitbin + ' clone --no-checkout ' + self.repourl + ' ' + self.workdir)
+            os.system('cd ' + self.workdir + ' && ' + self.gitbin + ' checkout ' + self.branch)
         
     def describe(self):
         status = ""
