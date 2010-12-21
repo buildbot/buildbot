@@ -13,11 +13,12 @@
 #
 # Copyright Buildbot Team Members
 
-import sys, collections, base64
+import collections, base64
 
 from twisted.python import log, threadable
 from twisted.internet import defer
-from twisted.enterprise import adbapi
+from buildbot.db import enginestrategy
+
 from buildbot import util
 from buildbot.util import collections as bbcollections
 from buildbot.changes.changes import Change
@@ -27,20 +28,7 @@ from buildbot.process.properties import Properties
 from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE
 from buildbot.util.eventual import eventually
 from buildbot.util import json
-
-# Don't auto-resubmit queries that encounter a broken connection: let them
-# fail. Use the "notification doorbell" thing to provide the retry. Set
-# cp_reconnect=True, so that a connection failure will prepare the
-# ConnectionPool to reconnect next time.
-
-class MyTransaction(adbapi.Transaction):
-    def execute(self, *args, **kwargs):
-        #print "Q", args, kwargs
-        return self._cursor.execute(*args, **kwargs)
-    def fetchall(self):
-        rc = self._cursor.fetchall()
-        #print " F", rc
-        return rc
+from buildbot.db import pool, model
 
 def _one_or_else(res, default=None, process_f=lambda x: x):
     if not res:
@@ -55,33 +43,43 @@ def str_or_none(s):
 class Token: # used for _start_operation/_end_operation
     pass
 
-class DBConnector(util.ComparableMixin):
-    # this will refuse to create the database: use 'create-master' for that
-    compare_attrs = ["args", "kwargs"]
+from twisted.enterprise import adbapi
+class TempAdbapiPool(adbapi.ConnectionPool):
+    def __init__(self, engine):
+        # this wants a module name, so give it one..
+        adbapi.ConnectionPool.__init__(self, "buildbot.db.connector")
+        self._engine = engine
+
+    def connect(self):
+        return self._engine.raw_connection()
+
+    def stop(self):
+        pass
+
+class DBConnector(object):
+    """
+    The connection between Buildbot and its backend database.  This is
+    generally accessible as master.db, but is also used during upgrades.
+
+    Most of the interesting operations available via the connector are
+    implemented in connector components, available as attributes of this
+    object, and listed below.
+    """
+
     synchronized = ["notify", "_end_operation"]
     MAX_QUERY_TIMES = 1000
 
-    def __init__(self, spec):
-        # typical args = (dbmodule, dbname, username, password)
+    def __init__(self, db_url, basedir):
+        self.basedir = basedir
+        "basedir for this master - used for upgrades"
+
+        self._engine = enginestrategy.create_engine(db_url, basedir=self.basedir)
+        self.pool = pool.DBThreadPool(self._engine)
+        "thread pool (L{buildbot.db.pool.DBThreadPool}) for this db"
+
+        self._oldpool = TempAdbapiPool(self._engine)
+
         self._query_times = collections.deque()
-        self._spec = spec
-
-        # this is for synchronous calls: runQueryNow, runInteractionNow
-        self._dbapi = spec.get_dbapi()
-        self._nonpool = None
-        self._nonpool_lastused = None
-        self._nonpool_max_idle = spec.get_maxidle()
-
-        # pass queries in with "?" placeholders. If the backend uses a
-        # different style, we'll replace them.
-        self.paramstyle = self._dbapi.paramstyle
-
-        self._pool = spec.get_async_connection_pool()
-        self._pool.transactionFactory = MyTransaction
-        # the pool must be started before it can be used. The real
-        # buildmaster process will do this at reactor start. CLI tools (like
-        # "buildbot upgrade-master") must do it manually. Unit tests are run
-        # in an environment in which it is already started.
 
         self._change_cache = util.LRUCache()
         self._sourcestamp_cache = util.LRUCache()
@@ -93,32 +91,33 @@ class DBConnector(util.ComparableMixin):
 
         self._started = False
 
+        # set up components
+        self.model = model.Model(self)
+        "L{buildbot.db.model.Model} instance"
+
+
+
+
     def _getCurrentTime(self):
         # this is a seam for use in testing
         return util.now()
 
-    def start(self):
+    def start(self): # TODO: remove
         # this only *needs* to be called in reactorless environments (which
         # should be eliminated anyway).  but it doesn't hurt anyway
-        self._pool.start()
+        self._oldpool.start()
         self._started = True
 
-    def stop(self):
+    def stop(self): # TODO: remove
         """Call this when you're done with me"""
-
-        # Close our synchronous connection if we've got one
-        if self._nonpool:
-            self._nonpool.close()
-            self._nonpool = None
-            self._nonpool_lastused = None
 
         if not self._started:
             return
-        self._pool.close()
+        self._oldpool.stop()
         self._started = False
-        del self._pool
+        del self._oldpool
 
-    def quoteq(self, query):
+    def quoteq(self, query): # TODO: remove
         """
         Given a query that contains qmark-style placeholders, like::
          INSERT INTO foo (col1, col2) VALUES (?,?)
@@ -126,12 +125,13 @@ class DBConnector(util.ComparableMixin):
         placeholders, like::
          INSERT INTO foo (col1, col2) VALUES (%s,%s)
         """
-        if self.paramstyle == "format":
-            return query.replace("?","%s")
-        assert self.paramstyle == "qmark"
+        # TODO: assumes sqlite
+#        if self.paramstyle == "format":
+#            return query.replace("?","%s")
+        #assert self.paramstyle == "qmark"
         return query
 
-    def parmlist(self, count):
+    def parmlist(self, count): # TODO: remove
         """
         When passing long lists of values to e.g., an INSERT query, it is
         tedious to pass long strings of ? placeholders.  This function will
@@ -141,18 +141,7 @@ class DBConnector(util.ComparableMixin):
         p = self.quoteq("?")
         return "(" + ",".join([p]*count) + ")"
 
-    def get_version(self):
-        """Returns None for an empty database, or a number (probably 1) for
-        the database's version"""
-        try:
-            res = self.runQueryNow("SELECT version FROM version")
-        except (self._dbapi.OperationalError, self._dbapi.ProgrammingError):
-            # this means the version table is missing: the db is empty
-            return None
-        assert len(res) == 1
-        return res[0][0]
-
-    def runQueryNow(self, *args, **kwargs):
+    def runQueryNow(self, *args, **kwargs): # TODO: remove
         # synchronous+blocking version of runQuery()
         assert self._started
         return self.runInteractionNow(self._runQuery, *args, **kwargs)
@@ -161,6 +150,7 @@ class DBConnector(util.ComparableMixin):
         c.execute(*args, **kwargs)
         return c.fetchall()
 
+    # TODO: remove
     def _start_operation(self):
         t = Token()
         self._active_operations.add(t)
@@ -179,7 +169,7 @@ class DBConnector(util.ComparableMixin):
             eventually(self.send_notification, category, args)
         self._pending_notifications = []
 
-    def runInteractionNow(self, interaction, *args, **kwargs):
+    def runInteractionNow(self, interaction, *args, **kwargs): # TODO: remove
         # synchronous+blocking version of runInteraction()
         assert self._started
         start = self._getCurrentTime()
@@ -190,93 +180,65 @@ class DBConnector(util.ComparableMixin):
             self._end_operation(t)
             self._add_query_time(start)
 
-    def get_sync_connection(self):
-        # This is a wrapper around spec.get_sync_connection that maintains a
-        # single connection to the database for synchronous usage.  It will get
-        # a new connection if the existing one has been idle for more than
-        # max_idle seconds.
-        if self._nonpool_max_idle is not None:
-            now = util.now()
-            if self._nonpool_lastused and self._nonpool_lastused + self._nonpool_max_idle < now:
-                self._nonpool = None
+    def get_sync_connection(self): # TODO: remove
+        # TODO: SYNC CONNECTIONS MUST DIE
+        return self._engine.raw_connection()
 
-        if not self._nonpool:
-            self._nonpool = self._spec.get_sync_connection()
-
-        self._nonpool_lastused = util.now()
-        return self._nonpool
-
-    def _runInteractionNow(self, interaction, *args, **kwargs):
+    def _runInteractionNow(self, interaction, *args, **kwargs): # TODO: remove
         conn = self.get_sync_connection()
         c = conn.cursor()
-        try:
-            result = interaction(c, *args, **kwargs)
-            c.close()
-            conn.commit()
-            return result
-        except:
-            excType, excValue, excTraceback = sys.exc_info()
-            try:
-                conn.rollback()
-                c2 = conn.cursor()
-                c2.execute(self._pool.good_sql)
-                c2.close()
-                conn.commit()
-            except:
-                log.msg("rollback failed, will reconnect next query")
-                log.err()
-                # and the connection is probably dead: clear the reference,
-                # so we'll establish a new connection next time
-                self._nonpool = None
-            raise excType, excValue, excTraceback
+        result = interaction(c, *args, **kwargs)
+        c.close()
+        conn.commit()
+        return result
 
-    def notify(self, category, *args):
+    def notify(self, category, *args): # TODO: remove
         # this is wrapped by synchronized= and threadable.synchronous(),
         # since it will be invoked from runInteraction threads
         self._pending_notifications.append( (category,args) )
 
-    def send_notification(self, category, args):
+    def send_notification(self, category, args): # TODO: remove
         # in the distributed system, this will be invoked by lineReceived()
         #print "SEND", category, args
         for observer in self._subscribers[category]:
             eventually(observer, category, *args)
 
-    def subscribe_to(self, category, observer):
+    def subscribe_to(self, category, observer): # TODO: remove
         self._subscribers[category].add(observer)
 
-    def runQuery(self, *args, **kwargs):
+    def runQuery(self, *args, **kwargs): # TODO: remove
         assert self._started
         self._pending_operation_count += 1
-        d = self._pool.runQuery(*args, **kwargs)
+        d = self._oldpool.runQuery(*args, **kwargs)
         return d
 
-    def _runQuery_done(self, res, start, t):
+    def _runQuery_done(self, res, start, t): # TODO: remove
         self._end_operation(t)
         self._add_query_time(start)
         self._pending_operation_count -= 1
         return res
 
-    def _add_query_time(self, start):
+    def _add_query_time(self, start): # TODO: remove
         elapsed = self._getCurrentTime() - start
         self._query_times.append(elapsed)
         if len(self._query_times) > self.MAX_QUERY_TIMES:
             self._query_times.popleft()
 
-    def runInteraction(self, *args, **kwargs):
+    def runInteraction(self, *args, **kwargs): # TODO: remove
         assert self._started
         self._pending_operation_count += 1
         start = self._getCurrentTime()
         t = self._start_operation()
-        d = self._pool.runInteraction(*args, **kwargs)
+        d = self._oldpool.runInteraction(*args, **kwargs)
         d.addBoth(self._runInteraction_done, start, t)
         return d
-    def _runInteraction_done(self, res, start, t):
+    def _runInteraction_done(self, res, start, t): # TODO: remove
         self._end_operation(t)
         self._add_query_time(start)
         self._pending_operation_count -= 1
         return res
 
-    # ChangeManager methods
+    # old ChangeManager methods
 
     def addChangeToDatabase(self, change):
         self.runInteractionNow(self._txn_addChangeToDatabase, change)
@@ -405,6 +367,8 @@ class DBConnector(util.ComparableMixin):
         c.number = changeid
         return c
 
+    # note that this is the async version of getChangeNumberedNow .. consistent
+    # naming is the hobgoblin of hackable software!
     def getChangeByNumber(self, changeid):
         # return a Deferred that fires with a Change instance, or None if
         # there is no Change with that number

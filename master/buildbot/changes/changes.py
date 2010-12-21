@@ -219,7 +219,7 @@ class ChangeMaster:
     # bytestrings in an old changes.pck into unicode strings
     def recode_changes(self, old_encoding, quiet=False):
         """Processes the list of changes, with the change attributes re-encoded
-        as UTF-8 bytestrings"""
+        unicode objects"""
         nconvert = 0
         for c in self.changes:
             # give revision special handling, in case it is an integer
@@ -235,6 +235,22 @@ class ChangeMaster:
                     except UnicodeDecodeError:
                         raise UnicodeError("Error decoding %s of change #%s as %s:\n%r" %
                                         (attr, c.number, old_encoding, a))
+
+            # filenames are a special case, but in general they'll have the same encoding
+            # as everything else on a system.  If not, well, hack this script to do your
+            # import!
+            newfiles = []
+            for filename in util.flatten(c.files):
+                if isinstance(filename, str):
+                    try:
+                        filename = filename.decode(old_encoding)
+                        nconvert += 1
+                    except UnicodeDecodeError:
+                        raise UnicodeError("Error decoding filename '%s' of change #%s as %s:\n%r" %
+                                        (filename.decode('ascii', 'replace'),
+                                         c.number, old_encoding, a))
+                newfiles.append(filename)
+            c.files = newfiles
         if not quiet:
             print "converted %d strings" % nconvert
 

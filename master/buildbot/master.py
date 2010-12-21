@@ -39,9 +39,7 @@ from buildbot import interfaces, locks
 from buildbot.process.properties import Properties
 from buildbot.config import BuilderConfig
 from buildbot.process.builder import BuilderControl
-from buildbot.db.dbspec import DBSpec
 from buildbot.db import connector, exceptions
-from buildbot.db.schema.manager import DBSchemaManager
 from buildbot.schedulers.manager import SchedulerManager
 from buildbot.util.loop import DelegateLoop
 
@@ -612,7 +610,7 @@ class BuildMaster(service.MultiService):
     change_svc = None
     properties = Properties()
 
-    def __init__(self, basedir, configFileName="master.cfg", db_spec=None):
+    def __init__(self, basedir, configFileName="master.cfg"):
         service.MultiService.__init__(self)
         self.setName("buildmaster")
         self.basedir = basedir
@@ -648,8 +646,6 @@ class BuildMaster(service.MultiService):
         self.db = None
         self.db_url = None
         self.db_poll_interval = _Unset
-        if db_spec:
-            self.loadDatabase(db_spec)
 
         # note that "read" here is taken in the past participal (i.e., "I read
         # the config already") rather than the imperative ("you should read the
@@ -1052,13 +1048,19 @@ class BuildMaster(service.MultiService):
         d.addErrback(log.err)
         return d
 
-    def loadDatabase(self, db_spec, db_poll_interval=None):
+    def loadDatabase(self, db_url, db_poll_interval=None):
         if self.db:
             return
 
+        self.db = connector.DBConnector(db_url, self.basedir)
+        if self.changeCacheSize:
+            self.db.setChangeCacheSize(self.changeCacheSize)
+        self.db.start()
+
         # make sure it's up to date
-        sm = DBSchemaManager(db_spec, self.basedir)
-        if not sm.is_current():
+        def check_current(res):
+            if res:
+                return # good to go!
             raise exceptions.DatabaseNotReadyError, textwrap.dedent("""
                 The Buildmaster database needs to be upgraded before this version of buildbot
                 can run.  Use the following command-line
@@ -1066,46 +1068,47 @@ class BuildMaster(service.MultiService):
                 to upgrade the database, and try starting the buildmaster again.  You may want
                 to make a backup of your buildmaster before doing so.  If you are using MySQL,
                 you must specify the connector string on the upgrade-master command line:
-                    buildbot upgrade-master --db=<db-connector-string> path/to/master
+                    buildbot upgrade-master --db=<db-url> path/to/master
                 """)
+        d = self.db.model.is_current()
+        d.addCallback(check_current)
 
-        self.db = connector.DBConnector(db_spec)
-        if self.changeCacheSize:
-            self.db.setChangeCacheSize(self.changeCacheSize)
-        self.db.start()
+        # set up the stuff that depends on the db
+        def set_up_db_dependents():
+            # TODO: this needs to go
+            self.botmaster.db = self.db
+            self.status.setDB(self.db)
 
-        self.botmaster.db = self.db
-        self.status.setDB(self.db)
+            self.db.subscribe_to("add-buildrequest",
+                                 self.botmaster.trigger_add_buildrequest)
 
-        self.db.subscribe_to("add-buildrequest",
-                             self.botmaster.trigger_add_buildrequest)
+            sm = SchedulerManager(self, self.db, self.change_svc)
+            self.db.subscribe_to("add-change", sm.trigger_add_change)
+            self.db.subscribe_to("modify-buildset", sm.trigger_modify_buildset)
 
-        sm = SchedulerManager(self, self.db, self.change_svc)
-        self.db.subscribe_to("add-change", sm.trigger_add_change)
-        self.db.subscribe_to("modify-buildset", sm.trigger_modify_buildset)
+            self.scheduler_manager = sm
+            sm.setServiceParent(self)
 
-        self.scheduler_manager = sm
-        sm.setServiceParent(self)
-
-        # Set db_poll_interval (perhaps to 30 seconds) if you are using
-        # multiple buildmasters that share a common database, such that the
-        # masters need to discover what each other is doing by polling the
-        # database. TODO: this will be replaced by the DBNotificationServer.
-        if db_poll_interval:
-            # it'd be nice if TimerService let us set now=False
-            t1 = TimerService(db_poll_interval, sm.trigger)
-            t1.setServiceParent(self)
-            t2 = TimerService(db_poll_interval, self.botmaster.loop.trigger)
-            t2.setServiceParent(self)
-        # adding schedulers (like when loadConfig happens) will trigger the
-        # scheduler loop at least once, which we need to jump-start things
-        # like Periodic.
+            # Set db_poll_interval (perhaps to 30 seconds) if you are using
+            # multiple buildmasters that share a common database, such that the
+            # masters need to discover what each other is doing by polling the
+            # database. TODO: this will be replaced by the DBNotificationServer.
+            if db_poll_interval:
+                # it'd be nice if TimerService let us set now=False
+                t1 = TimerService(db_poll_interval, sm.trigger)
+                t1.setServiceParent(self)
+                t2 = TimerService(db_poll_interval, self.botmaster.loop.trigger)
+                t2.setServiceParent(self)
+            # adding schedulers (like when loadConfig happens) will trigger the
+            # scheduler loop at least once, which we need to jump-start things
+            # like Periodic.
+        d.addCallback(set_up_db_dependents)
+        return d
 
     def loadConfig_Database(self, db_url, db_poll_interval):
         self.db_url = db_url
         self.db_poll_interval = db_poll_interval
-        db_spec = DBSpec.from_url(db_url, self.basedir)
-        self.loadDatabase(db_spec, db_poll_interval)
+        return self.loadDatabase(db_url, db_poll_interval)
 
     def loadConfig_Slaves(self, new_slaves):
         return self.botmaster.loadConfig_Slaves(new_slaves)

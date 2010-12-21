@@ -50,7 +50,19 @@ class DBThreadPool(threadpool.ThreadPool):
             return rv
         return threads.deferToThreadPool(reactor, self, thd)
 
-    # older implementation for twisted < 0.8.2
+    def do_with_engine(self, callable, *args, **kwargs):
+        """
+        Like l{do}, but with an SQLAlchemy Engine as the first argument
+        """
+        def thd():
+            conn = self.engine
+            rv = callable(conn, *args, **kwargs)
+            assert not isinstance(rv, engine.ResultProxy), \
+                    "do not return ResultProxy objects!"
+            return rv
+        return threads.deferToThreadPool(reactor, self, thd)
+
+    # older implementations for twisted < 0.8.2
     def do_081(self, callable, *args, **kwargs):
         d = defer.Deferred()
         def thd():
@@ -64,5 +76,19 @@ class DBThreadPool(threadpool.ThreadPool):
                 reactor.callFromThread(d.errback, failure.Failure())
         self.callInThread(thd)
         return d
+    def do_with_engine_081(self, callable, *args, **kwargs):
+        d = defer.Deferred()
+        def thd():
+            try:
+                conn = self.engine
+                rv = callable(conn, *args, **kwargs)
+                assert not isinstance(rv, engine.ResultProxy), \
+                        "do not return ResultProxy objects!"
+                reactor.callFromThread(d.callback, rv)
+            except:
+                reactor.callFromThread(d.errback, failure.Failure())
+        self.callInThread(thd)
+        return d
     if twisted.version < versions.Version('twisted', 8, 2, 0):
         do = do_081
+        do_with_engine = do_with_engine_081

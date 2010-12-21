@@ -13,45 +13,24 @@
 #
 # Copyright Buildbot Team Members
 
+import os
 from twisted.trial import unittest
+from buildbot.db import connector
+from buildbot.test.util import db
 
-from buildbot.db import dbspec, connector
-from buildbot.test.util import threads
-
-class DBConnector_Basic(threads.ThreadLeakMixin, unittest.TestCase):
+class DBConnector_Basic(db.RealDatabaseMixin, unittest.TestCase):
     """
     Basic tests of the DBConnector class - all start with an empty DB
     """
 
     def setUp(self):
-        self.setUpThreadLeak()
-        # use an in-memory sqlite database to test
-        self.dbc = connector.DBConnector(dbspec.DBSpec.from_url("sqlite://"))
+        self.setUpRealDatabase()
+        self.dbc = connector.DBConnector(self.db_url, os.path.abspath('basedir'))
         self.dbc.start()
 
     def tearDown(self):
         self.dbc.stop()
-        self.tearDownThreadLeak()
-
-    def test_quoteq_format(self):
-        self.dbc.paramstyle = "format" # override default
-        self.assertEqual(
-                self.dbc.quoteq("SELECT * from developers where name='?'"),
-                "SELECT * from developers where name='%s'")
-
-    def test_quoteq_qmark(self):
-        assert self.dbc.paramstyle == "qmark" # default for sqlite
-        self.assertEqual(
-                self.dbc.quoteq("SELECT * from developers where name='?'"),
-                "SELECT * from developers where name='?'")
-
-    def test_paramlist_single(self):
-        self.dbc.paramstyle = "format" # override default
-        self.assertEqual(self.dbc.parmlist(1), "(%s)")
-
-    def test_paramlist_multiple(self):
-        self.dbc.paramstyle = "format" # override default
-        self.assertEqual(self.dbc.parmlist(3), "(%s,%s,%s)")
+        self.tearDownRealDatabase()
 
     def test_runQueryNow_simple(self):
         self.assertEqual(self.dbc.runQueryNow("SELECT 1"),

@@ -13,14 +13,18 @@
 #
 # Copyright Buildbot Team Members
 
-def sql_insert(table, columns):
-    """
-    Make an SQL insert statement for the given table and columns, using the
-    appropriate paramstyle for the dbi.  Note that this only supports positional
-    parameters.  This will need to be reworked if Buildbot supports a backend with
-    a name-based paramstyle.
-    """
+import sqlalchemy as sa
 
-    # TODO: this assumes sqlite for now!!
-    params = ",".join(("?",)*len(columns))
-    return "INSERT INTO %s (%s) VALUES (%s)" % (table, ", ".join(columns), params)
+def upgrade(migrate_engine):
+    metadata = sa.MetaData()
+    metadata.bind = migrate_engine
+
+    # add project and repository columns to 'changes' an 'sourcestamps'
+    def add_cols(table):
+        repository = sa.Column('repository', sa.Text, nullable=False, server_default=sa.DefaultClause(''))
+        repository.create(table, populate_default=True)
+        project = sa.Column('project', sa.Text, nullable=False, server_default=sa.DefaultClause(''))
+        project.create(table, populate_default=True)
+
+    add_cols(sa.Table('changes', metadata, autoload=True))
+    add_cols(sa.Table('sourcestamps', metadata, autoload=True))

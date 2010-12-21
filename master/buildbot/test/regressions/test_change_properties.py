@@ -15,67 +15,53 @@
 
 import os
 import shutil
-
 from twisted.trial import unittest
-
+from twisted.internet import defer
 from buildbot.changes.changes import Change
-
 from buildbot import util
-
-from buildbot.db.schema import manager
-from buildbot.db.dbspec import DBSpec
 from buildbot.db.connector import DBConnector
+from buildbot.test.util import db
 
-class TestChangeProperties(unittest.TestCase):
+class TestChangeProperties(db.RealDatabaseMixin, unittest.TestCase):
     def setUp(self):
-        self.basedir = "ChangeProperties"
+        self.setUpRealDatabase()
+        self.basedir = os.path.abspath("basedir")
         if os.path.exists(self.basedir):
             shutil.rmtree(self.basedir)
         os.makedirs(self.basedir)
 
-        self.spec = DBSpec.from_url("sqlite:///state.sqlite", self.basedir)
-
-        self.sm = manager.DBSchemaManager(self.spec, self.basedir)
-        self.sm.upgrade(quiet=True)
-        self.db = DBConnector(self.spec)
-        self.db.start()
+        self.db = DBConnector(self.db_url, self.basedir)
+        d = self.db.model.upgrade()
+        d.addCallback(lambda _ : self.db.start())
+        return d
 
     def tearDown(self):
         self.db.stop()
-
         shutil.rmtree(self.basedir)
-
-    def testDBGetChangeNumberedNow(self):
-        db = self.db
-
-        c = Change(who="catlee", files=["foo"], comments="", branch="b1")
-        c.properties.setProperty("foo", "bar", "property_source")
-        db.addChangeToDatabase(c)
-
-        c1 = db.getChangeNumberedNow(c.number)
-        self.assertEquals(c1.properties, c.properties)
-
-        # Flush the cache
-        db._change_cache = util.LRUCache()
-
-        c1 = db.getChangeNumberedNow(c.number)
-        self.assertEquals(c1.properties, c.properties)
+        self.tearDownRealDatabase()
 
     def testDBGetChangeByNumber(self):
         db = self.db
 
         c = Change(who="catlee", files=["foo"], comments="", branch="b1")
         c.properties.setProperty("foo", "bar", "property_source")
-        db.addChangeToDatabase(c)
 
-        d = db.getChangeByNumber(c.number)
+        d = defer.succeed(None)
+
+        # add the change to the db..
+        d.addCallback(lambda _ : db.addChangeToDatabase(c)) # TODO not async yet
+
+        # get it and check (probably from the cache)
+        d.addCallback(lambda _ : db.getChangeByNumber(c.number))
         def check(c1):
             self.assertEquals(c1.properties, c.properties)
         d.addCallback(check)
 
-        def flush(ign):
-            # Flush the cache
+        # flush the cache
+        def flush(_):
             db._change_cache = util.LRUCache()
-            return db.getChangeByNumber(c.number)
         d.addCallback(flush)
+
+        # and get the change again, this time using the db, and check it
+        d.addCallback(lambda _ : db.getChangeByNumber(c.number))
         d.addCallback(check)

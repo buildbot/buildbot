@@ -8,12 +8,13 @@ include docs/Makefile
 include docs/version.py
 include docs/buildbot.1
 
-include buildbot/db/schema/tables.sql
 include buildbot/scripts/sample.cfg
 include buildbot/status/web/files/*
 include buildbot/status/web/templates/*.html buildbot/status/web/templates/*.xml
 include buildbot/clients/debug.glade
 include buildbot/buildbot.png
+
+include buildbot/db/migrate/README
 
 include contrib/* contrib/windows/* contrib/os-x/* contrib/css/*
 include contrib/trac/* contrib/trac/bbwatcher/* contrib/trac/bbwatcher/templates/*

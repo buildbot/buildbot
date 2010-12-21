@@ -168,22 +168,9 @@ instead of a more complex conditional import of @code{simplejson} or
 @node The Database
 @section The Database
 
-@dvindex buildbot.db.dbspec.DBSpec
 @dvindex buildbot.db.connector.DBConnector
 
-Buildbot stores its state in a database, using the Python DBAPI to access it.
-
-A database is specified with the @code{buildbot.db.dbspec.DBSpec} class, which
-encapsulates all of the parameters necessary to create a DBAPI connection.  The
-DBSpec class can create either a single synchronous connection, or a twisted
-adbapi connection pool.
-
-Most uses of the database in Buildbot are done through the
-@code{buildbot.db.connector.DBConnector} class, which wraps the DBAPI to
-provide purpose-specific functions.
-
-The database schema is managed by a special class, described in the next
-section.
+TODO
 
 @menu
 * Database Schema::
