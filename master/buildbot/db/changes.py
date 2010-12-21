@@ -96,6 +96,8 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
                     yield self._change_from_chdict(chdict)
         # we'll get GeneratorExit when the generator is garbage-collected before it
         # has finished, so signal to the thread that its work is finished.
+        # TODO: GeneratorExit is not supported in Python-2.4, which means this method
+        # won't work there.  Which is OK.  This method needs to die, quickly.
         except GeneratorExit:
             stop_flag[0] = False
             # .. and drain the queue
