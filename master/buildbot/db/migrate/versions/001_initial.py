@@ -186,8 +186,10 @@ def import_changes(migrate_engine):
     #if not quiet: print "migrating changes.pck to database"
 
     # 'source' will be an old b.c.changes.ChangeMaster instance, with a
-    # .changes attribute
-    source = cPickle.load(open(changes_pickle,"rb"))
+    # .changes attribute.  Note that we use 'r', and not 'rb', because these
+    # pickles were written using the old text pickle format, which requires
+    # newline translation
+    source = cPickle.load(open(changes_pickle,"r"))
     styles.doUpgrade()
 
     #if not quiet: print " (%d Change objects)" % len(source.changes)
