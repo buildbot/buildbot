@@ -1,6 +1,7 @@
+import twisted
 from sqlalchemy import engine
-from twisted.internet import reactor, threads
-from twisted.python import threadpool
+from twisted.internet import reactor, threads, defer
+from twisted.python import threadpool, failure, versions
 
 class DBThreadPool(threadpool.ThreadPool):
     """
@@ -48,3 +49,20 @@ class DBThreadPool(threadpool.ThreadPool):
                     "do not return ResultProxy objects!"
             return rv
         return threads.deferToThreadPool(reactor, self, thd)
+
+    # older implementation for twisted < 0.8.2
+    def do_081(self, callable, *args, **kwargs):
+        d = defer.Deferred()
+        def thd():
+            try:
+                conn = self.engine.contextual_connect()
+                rv = callable(conn, *args, **kwargs)
+                assert not isinstance(rv, engine.ResultProxy), \
+                        "do not return ResultProxy objects!"
+                reactor.callFromThread(d.callback, rv)
+            except:
+                reactor.callFromThread(d.errback, failure.Failure())
+        self.callInThread(thd)
+        return d
+    if twisted.version < versions.Version('twisted', 8, 2, 0):
+        do = do_081

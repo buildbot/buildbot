@@ -17,12 +17,24 @@ class DBThreadPool(unittest.TestCase):
         d.addCallback(check)
         return d
 
-    def test_exception(self):
+    def test_error(self):
         def fail(conn):
             rp = conn.execute("EAT COOKIES")
             return rp.scalar()
         d = self.pool.do(fail)
         def eb(f):
+            pass
+        def cb(r):
+            self.fail("no exception propagated")
+        d.addCallbacks(cb, eb)
+        return d
+
+    def test_exception(self):
+        def raise_something(conn):
+            raise RuntimeError("oh noes")
+        d = self.pool.do(raise_something)
+        def eb(f):
+            f.trap(RuntimeError) # make sure it gets the *right* exception
             pass
         def cb(r):
             self.fail("no exception propagated")
