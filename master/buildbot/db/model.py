@@ -403,3 +403,13 @@ class Model(base.DBConnectorComponent):
                 version_control(engine)
                 upgrade(engine)
         return self.connector.pool.do_with_engine(thd)
+
+# migrate has a bug in one of its warnings; this is fixed in version control
+# (3ba66abc4d), but not yet released. It can't hurt to fix it here, too, so we
+# get realistic tracebacks
+try:
+    import migrate.versioning.exceptions
+    import migrate.changeset.exceptions
+    migrate.versioning.exceptions.MigrateDeprecationWarning = migrate.changeset.exceptions.MigrateDeprecationWarning
+except ImportError:
+    pass
