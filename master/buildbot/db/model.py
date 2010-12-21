@@ -408,8 +408,8 @@ class Model(base.DBConnectorComponent):
 # (3ba66abc4d), but not yet released. It can't hurt to fix it here, too, so we
 # get realistic tracebacks
 try:
-    import migrate.versioning.exceptions
-    import migrate.changeset.exceptions
-    migrate.versioning.exceptions.MigrateDeprecationWarning = migrate.changeset.exceptions.MigrateDeprecationWarning
+    import migrate.versioning.exceptions as ex1
+    import migrate.changeset.exceptions as ex2
+    ex1.MigrateDeprecationWarning = ex2.MigrateDeprecationWarning
 except ImportError:
     pass
