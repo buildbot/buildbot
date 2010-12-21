@@ -31,14 +31,24 @@ class RealDatabaseMixin(object):
         log.msg("cleaning database %s" % self.db_url)
         engine = sqlalchemy.create_engine(self.db_url)
 
-        # get a list of all of the tables..
         meta = MetaData()
+        
+        # there are some tables for which reflection sometimes fails, but since
+        # we're just dropping them, we don't need actual schema data
+        for table in [ 'buildrequests', 'builds',
+                'buildset_properties', 'buildsets', 'change_properties',
+                'change_files', 'change_links',
+                'changes', 'patches', 'sourcestamp_changes', 'sourcestamps',
+                'scheduler_changes', 'scheduler_upstream_buildsets',
+                'schedulers' ]:
+            sqlalchemy.Table(table, meta,
+                    sqlalchemy.Column('tmp', sqlalchemy.Integer))
+
+        # load the remaining tables
         meta.reflect(bind=engine)
 
         # and drop them!
-        for table in reversed(meta.sorted_tables):
-            log.msg("  dropping table %s" % table)
-            table.drop(engine)
+        meta.drop_all(bind=engine)
 
         engine.dispose()
 
