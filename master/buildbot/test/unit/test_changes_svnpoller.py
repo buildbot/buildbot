@@ -14,8 +14,11 @@
 # Copyright Buildbot Team Members
 
 import os
+import sys
 import xml.dom.minidom
+import twisted
 from twisted.internet import defer
+from twisted.python import versions
 from twisted.trial import unittest
 from buildbot.test.util import changesource, gpo
 from buildbot.changes import svnpoller
@@ -461,7 +464,12 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
         s = self.attachSVNPoller(sample_base, cachepath=cachepath)
         self.assertEqual(s.last_change, None)
         self.assertEqual(s.cachepath, None)
-        self.assertTrue(self.flushLoggedErrors()) # it should have called log.err
+        # it should have called log.err once with a ValueError
+        self.assertEqual(len(self.flushLoggedErrors(ValueError)), 1)
+    if (sys.version_info[:2] == (2,7)
+            and twisted.version <= versions.Version('twisted', 9, 0, 0)):
+        test_cachepath_bogus.skip = \
+            "flushLoggedErrors is broken on Python==2.7 and Twisted<=9.0.0"
 
     def test_constructor_pollinterval(self):
         self.attachSVNPoller(sample_base, pollinterval=100) # just don't fail!
