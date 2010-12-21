@@ -110,7 +110,7 @@ except ImportError:
     pass
 else:
     setup_args['install_requires'] = [
-        'twisted >= 2.0.0',
+        'twisted >= 8.0.0',
     ]
 
     if os.getenv('NO_INSTALL_REQS'):

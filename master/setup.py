@@ -278,7 +278,7 @@ except ImportError:
 else:
     ## dependencies
     setup_args['install_requires'] = [
-        'twisted >= 2.0.0',
+        'twisted >= 8.0.0',
         'Jinja2 >= 2.1',
         'sqlalchemy >= 0.6',
         # buildbot depends on sqlalchemy internals. See buildbot.db.model.
