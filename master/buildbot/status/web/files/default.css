@@ -33,7 +33,6 @@ table td {
 }
 
 .LastBuild,.Activity,.Builder,.BuildStep {
-	max-width: 15em;
 	min-width: 5em;
 }
 
