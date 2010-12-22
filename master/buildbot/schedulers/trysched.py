@@ -171,7 +171,8 @@ class Try_Userpass(TryBase):
         base.BaseScheduler.__init__(self, name, builderNames, properties)
         self.port = port
         self.userpass = userpass
-        self.properties = properties
+        self.properties = Properties()
+        self.properties.update(properties, 'Scheduler')
 
     def startService(self):
         TryBase.startService(self)
