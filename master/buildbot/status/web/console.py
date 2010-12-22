@@ -716,7 +716,7 @@ class IntegerRevisionComparator(RevisionComparator):
     def isRevisionEarlier(self, first, second):
         try:
             return int(first.revision) < int(second.revision)
-        except TypeError:
+        except (TypeError, ValueError):
             return False
 
     def isValidRevision(self, revision):
