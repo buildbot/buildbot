@@ -7,7 +7,6 @@ body.interface {
 	background: url(bg_gradient.jpg) repeat-x;
 	font-family: Verdana, Cursor;
 	font-size: 10px;
-	font-weight: bold;
 	background-color: #fff;
 	color: #333;
 }
@@ -21,7 +20,7 @@ table {
 }
 
 table td {
-	padding: 3px 2px 3px 2px;
+	padding: 3px 4px 3px 4px;
 	text-align: center;
 }
 
@@ -34,8 +33,8 @@ table td {
 }
 
 .LastBuild,.Activity,.Builder,.BuildStep {
-	width: 15em;
-	min-width: 15em;
+	max-width: 15em;
+	min-width: 5em;
 }
 
 /* Chromium Specific styles */
@@ -341,32 +340,44 @@ div.BuildWaterfall {
 
 /* LastBuild, BuildStep states */
 .success {
-	color: #FFFFFF;
-	background-color: #8f8;
+	color: #000;
+	background-color: #8d4;
 	border-color: #4F8530;
 }
 
 .failure {
-	color: #FFFFFF;
-	background-color: #f99;
+	color: #000;
+	background-color: #e88;
 	border-color: #A77272;
 }
 
 .warnings {
 	color: #FFFFFF;
-	background-color: #ffc343;
+	background-color: #fa3;
 	border-color: #C29D46;
+}
+
+.skipped {
+	color: #000;
+	background: #AADDEE;
+	border-color: #AADDEE;
 }
 
 .exception,.retry {
 	color: #FFFFFF;
-	background-color: #f6f;
+	background-color: #c6c;
 	border-color: #ACA0B3;
 }
 
-.start,.running,.waiting,td.building {
-	color: #666666;
-	background-color: #ff6;
+.start {
+	color: #000;
+	background-color: #ccc;
+	border-color: #ccc;
+}
+
+.running,.waiting,td.building {
+	color: #000;
+	background-color: #fd3;
 	border-color: #C5C56D;
 }
 
@@ -501,7 +512,7 @@ li {
 /* log view */
 .log * {
 	vlink: #800080;
-	font-family: "Courier New", courier, monotype;
+	font-family: "Courier New", courier, monotype, monospace;
 }
 
 span.stdout {
