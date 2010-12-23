@@ -59,8 +59,14 @@ if runtime.platformType  == 'win32':
             dir = unicode(dir, "utf-8")
         except:
             log.msg("rmdirRecursive: decoding from UTF-8 failed")
+        try:
+            list = os.listdir(dir)
+        except WindowsError, e:
+            log.msg("rmdirRecursive: unable to listdir %s (%s). Trying to remove like a dir" % (dir, e.strerror))
+            os.rmdir(dir)
+            return
 
-        for name in os.listdir(dir):
+        for name in list:
             full_name = os.path.join(dir, name)
             # on Windows, if we don't have write permission we can't remove
             # the file/directory either, so turn that on
