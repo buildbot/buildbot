@@ -78,6 +78,14 @@ class DBUtilsMixin(object):
                 self.db.model.repo_path,
                 self.db.model.metadata)
         d = self.db.pool.do_with_engine(comp)
+
+        # older sqlites cause failures in reflection, which manifest as a
+        # TypeError.  Reflection is only used for tests, so we can just skip
+        # this test on such platforms.
+        def catch_TypeError(f):
+            f.trap(TypeError)
+            raise unittest.SkipTest, "bugs in schema reflection on this platform"
+        d.addErrback(catch_TypeError)
         def check(diff):
             if diff:
                 self.fail(str(diff))
