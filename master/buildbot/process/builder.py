@@ -472,8 +472,8 @@ class Builder(pb.Referenceable, service.MultiService):
             diffs.append('logHorizon changed from %s to %s' % (self.logHorizon, setup['logHorizon']))
         if setup['eventHorizon'] != self.eventHorizon:
             diffs.append('eventHorizon changed from %s to %s' % (self.eventHorizon, setup['eventHorizon']))
-        if setup['category'] != self.category:
-            diffs.append('category changed from %r to %r' % (self.category, setup['category']))
+        if setup.get('category', None) != self.category:
+            diffs.append('category changed from %r to %r' % (self.category, setup.get('category', None)))
 
         return diffs
 

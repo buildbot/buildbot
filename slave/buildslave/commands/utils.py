@@ -38,6 +38,10 @@ def getCommand(name):
             return possibles_exe[0]
     return possibles[0]
 
+# this just keeps pyflakes happy on non-Windows systems
+if runtime.platformType != 'win32':
+    WindowsError = RuntimeError
+
 if runtime.platformType  == 'win32':
     def rmdirRecursive(dir):
         """This is a replacement for shutil.rmtree that works better under
@@ -60,7 +64,14 @@ if runtime.platformType  == 'win32':
         except:
             log.msg("rmdirRecursive: decoding from UTF-8 failed")
 
-        for name in os.listdir(dir):
+        try:
+            list = os.listdir(dir)
+        except WindowsError, e:
+            log.msg("rmdirRecursive: unable to listdir %s (%s). Trying to remove like a dir" % (dir, e.strerror))
+            os.rmdir(dir)
+            return
+
+        for name in list:
             full_name = os.path.join(dir, name)
             # on Windows, if we don't have write permission we can't remove
             # the file/directory either, so turn that on
