@@ -1,0 +1,149 @@
+Buildbot is too complex for any one person to understand all of it.  This file
+lists who's responsible for which parts of Buildbot.  Some of these are easily
+separated into a few source files, while others are general projects that
+cover the entire Buildbot codebase.
+
+Each component contains indented lines identified as follows:
+
+D: Component description (optional)
+
+F: Files comprising this component (optional)
+
+M: Component maintainer, in the form
+      FullName <address@domain.com>  - STATUS
+   where STATUS is one of
+      Hacker - knows the code and can write fixes
+      Tester - can test patches and advise committers to merge
+      User - can help to triage and explain bugs
+      Retired - former maintainer, now out of the business
+
+S: Component status.  One of
+    Supported: This will be a part of Buildbot forever
+    Maintained: Someone is actively looking after this component
+    Patched: Someone is watching bugs for this component and can merge
+        fixes
+    Orphaned: This component is not actively maintained and may be removed
+        from Buildbot if it accumulates too many bugs
+    Last-Rites: This component is slated to be removed in the given
+        release, unless a maintainer steps forward
+
+U: URL for information about the Buildbot component (usually a Trac page)
+
+---
+
+== Version Control ==
+
+Perforce VC
+    S: Orphaned
+    U: http://trac.buildbot.net/wiki/P4Project
+
+Subversion VC
+    S: Orphaned
+    U: http://trac.buildbot.net/wiki/SVNProject
+
+CVS VC
+    S: Patched
+    M: Unpaid Bill (XXX need name) <unpaid.bill@gmail.com> - Tester
+    U: http://trac.buildbot.net/wiki/CVSProject
+
+Bazaar VC
+    S: Orphaned
+    U: http://trac.buildbot.net/wiki/BzrProject
+
+Git VC
+    S: Maintained
+    M: Amber Yust <ayust@yelp.com> - Hacker
+    M: James Tomson <jtomson@wimba.com> - Hacker
+    U: http://trac.buildbot.net/wiki/GitProject
+
+BitKeeper VC
+    S: Patched
+    M: Amar Takhar <verm@snickers.org> - Hacker
+    U: http://trac.buildbot.net/wiki/BkProject
+
+Darcs VC
+    S: Orphaned
+    U: http://trac.buildbot.net/wiki/DarcsProject
+
+Mercurial VC
+    S: Orphaned
+    U: http://trac.buildbot.net/wiki/HgProject
+
+Repo VC
+    S: Maintained
+    M: Chris Soyars <ctsoyars@gmail.com> - Tester
+    M: Piotr Sikora <piotr.sikora@frickle.com> - Hacker
+    M: Pierre Tardy <tardyp@gmail.com> - Hacker
+    U: http://trac.buildbot.net/wiki/RepoProject
+
+
+== Buildbot Plugins ==
+
+Buildbot Try
+    M: Orphaned
+    U: http://trac.buildbot.net/wiki/TryProject
+
+Debug Client
+    S: Orphaned
+
+Status Client
+    S: Patched
+    M: Mark Wielaard <mark@klomp.org>
+
+Gerrit
+    S: Maintained
+    M: Piotr Sikora <piotr.sikora@frickle.com> - Hacker
+    M: Pierre Tardy <tardyp@gmail.com> - Hacker
+    U: http://trac.buildbot.net/wiki/gerrit
+
+Web Status
+    S: Supported
+    M: Marcus Lindblom <macke@yar.nu> - Hacker
+    U: http://trac.buildbot.net/query?keywords=~web&status=!closed&order=priority
+
+IRC Status
+    S: Maintained
+    M: Amber Yust <ayust@yelp.com> - Hacker
+    U: http://trac.buildbot.net/query?keywords=~irc&status=!closed&order=priority
+
+MailNotifier
+    S: Orphaned
+    U: http://trac.buildbot.net/query?keywords=~mail&status=!closed&order=priority
+
+
+== Buildbot Features ==
+
+Virtualization
+    D: Use of virtual, start-on-demand slaves
+    M: John Carr <john.carr@isotoma.com> - Hacker
+    M: Tom Wardill <tom@howrandom.net> - Hacker
+    U: http://trac.buildbot.net/wiki/VirtualizationProject
+
+
+== Ongoing Projects ==
+
+Load Balancing
+
+Status Database
+
+Project / Repository Support
+
+Build Coordination
+
+Documentation
+
+
+== Packaging & System Compatibility ==
+
+Windows
+
+Mac OS X
+
+RedHat / Fedora
+
+Debian / Ubuntu
+
+
+== Other Teams ==
+
+Security
