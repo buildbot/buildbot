@@ -878,10 +878,13 @@ class BuildStep:
                 assert self.stopped
 
     def finished(self, results):
-        if self.stopped:
+        if self.stopped and results != RETRY:
             # We handle this specially because we don't care about
             # the return code of an interrupted command; we know
             # that this should just be exception due to interrupt
+            # At the same time we must respect RETRY status because it's used
+            # to retry interrupted build due to some other issues for example
+            # due to slave lost
             results = EXCEPTION
             self.step_status.setText(self.describe(True) +
                                  ["interrupted"])
