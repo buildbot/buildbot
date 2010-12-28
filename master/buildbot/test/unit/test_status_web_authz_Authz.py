@@ -177,3 +177,15 @@ class TestAuthz(unittest.TestCase):
     def test_authzGetUsername_http(self):
         z = Authz()
         assert z.getUsername(StubHttpAuthRequest('foo')) == 'foo'
+
+    def test_needUsernameField_invalidAction(self):
+        z = Authz(forceBuild='auth')
+        self.assertRaises(KeyError, z.needUsernameField, 'someRandomAction')
+
+    def test_needUsernameField_nonHttp(self):
+        z = Authz(forceBuild='auth')
+        assert z.needUsernameField('forceBuild')
+
+    def test_needUsernameField_http(self):
+        z = Authz(forceBuild="http")
+        assert not z.needUsernameField('forceBuild')

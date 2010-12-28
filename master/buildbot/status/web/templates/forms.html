@@ -107,12 +107,14 @@
   {% if authz.needAuthForm('forceBuild') %}
     {{ auth() }}
   {% else %}
-  <div class="row">
-    <span class="label">
-      Your name:
-    </span>
-    <input type="text" name="username"/>
-  </div>
+    {% if authz.needUsernameField('forceBuild') %}
+    <div class="row">
+      <span class="label">
+        Your name:
+      </span>
+      <input type="text" name="username"/>
+    </div>
+    {% endif %}
   {% endif %}
   
   <div class="row">

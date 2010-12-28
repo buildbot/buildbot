@@ -70,6 +70,16 @@ class Authz(object):
             return True
         return False
 
+    def needUsernameField(self, action):
+        """Does this action require an authentication form?"""
+        if action not in self.knownActions:
+            raise KeyError("unknown action")
+        cfg = self.config.get(action, False)
+        if cfg == 'http':
+            # For HTTP auth authentication form will be displayed by browser
+            return False
+        return True
+
     def getUsername(self, request):
         user = request.getUser()
         if user != None:
