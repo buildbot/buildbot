@@ -26,6 +26,14 @@ class StubRequest(object):
             'username' : [ username ],
             'passwd' : [ passwd ],
         }
+    def getUser(self):
+        return None
+
+class StubHttpAuthRequest(object):
+    def __init__(self, username):
+        self.username = username
+    def getUser(self):
+        return self.username
 
 class StubAuth(object):
     implements(IAuth)
@@ -65,6 +73,18 @@ class TestAuthz(unittest.TestCase):
                   stopBuild='auth')
         assert not z.actionAllowed('stopBuild',
                             StubRequest('apeterson', 'bar'))
+
+    def test_actionAllowedHttp_AuthPositive(self):
+        z = Authz(auth=StubAuth('jrobinson'),
+                  stopBuild='http')
+        assert z.actionAllowed('stopBuild',
+                            StubHttpAuthRequest('jrobinson'))
+
+    def test_actionAllowedHttp_AuthNegative(self):
+        z = Authz(auth=StubAuth('jrobinson'),
+                  stopBuild='http')
+        assert not z.actionAllowed('stopBuild',
+                            StubHttpAuthRequest('apeterson'))
 
     def test_actionAllowed_AuthCallable(self):
         myargs = []
@@ -123,6 +143,18 @@ class TestAuthz(unittest.TestCase):
         z = Authz(stopAllBuilds = lambda u : False)
         assert z.needAuthForm('stopAllBuilds')
 
+    def test_httpNoAuthForm_False(self):
+        z = Authz(forceBuild = 'http')
+        assert not z.needAuthForm('forceBuild')
+
+    def test_httpNoAuthForm_True(self):
+        z = Authz(forceAllBuilds = 'http')
+        assert not z.needAuthForm('forceAllBuilds')
+
+    def test_httpNoAuthForm_auth(self):
+        z = Authz(stopBuild = 'http')
+        assert not z.needAuthForm('stopBuild')
+
     def test_constructor_invalidAction(self):
         self.assertRaises(ValueError, Authz, someRandomAction=3)
 
@@ -137,3 +169,11 @@ class TestAuthz(unittest.TestCase):
     def test_actionAllowed_invalidAction(self):
         z = Authz()
         self.assertRaises(KeyError, z.actionAllowed, 'someRandomAction', StubRequest('snow', 'foo'))
+
+    def test_authzGetUsername_normal(self):
+        z = Authz()
+        assert z.getUsername(StubRequest('foo', 'bar')) == 'foo'
+
+    def test_authzGetUsername_http(self):
+        z = Authz()
+        assert z.getUsername(StubHttpAuthRequest('foo')) == 'foo'

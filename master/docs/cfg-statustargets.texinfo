@@ -546,6 +546,38 @@ BuilderStatus object.  The @code{stopBuild} action supplies a BuildStatus
 object.  The @code{cancelPendingBuild} action supplies a BuildRequest.  The
 remainder do not supply any extra arguments.
 
+@heading HTTP-based authentication by frontend server
+
+In case if WebStatus is served through reverse proxy that supports HTTP-based
+authentication (like apache, lighttpd), it's possible to to tell WebStatus to
+trust web server and get username from request headers. This allows displaying
+correct usernames in build reason, interrupt messages, etc.
+
+Just specify @code{"http"} for such action in @code{"Authz"} constructor.
+
+@example
+from buildbot.status.html import WebStatus
+from buildbot.status.web.authz import Authz
+from buildbot.status.web.auth import BasicAuth
+users = [('bob', '<authenticated-by-http>'), ('jill', '<authenticated-by-http>')]
+authz = Authz(auth=BasicAuth(users),
+    forceBuild='http', # WebStatus secured by web frontend with HTTP auth
+)
+c['status'].append(WebStatus(http_port="tcp:8080:interface=127.0.0.1", authz=authz))
+@end example
+
+Please note that WebStatus will not decode password from HTTP request (for
+DIGEST authentication it's just impossible). Instead it'll pass magic string
+@code{"<authenticated-by-http>"} to @code{"auth"}. Custom
+@code{status.web.auth.IAuth} subclasses may just ignore password at all since
+it's already validated by web server.
+
+Administrator must make sure that it's impossible to get access to WebStatus
+using other way than through frontend. Usually this means that WebStatus should
+listen for incoming connections only on localhost (or on some firewall-protected
+port). Frontend must require HTTP authentication to access WebStatus pages
+(using any source for credentials, such as htpasswd, PAM, LDAP).
+
 @heading Logging configuration
 
 The WebStatus uses a separate log file (http.log) to avoid clutter

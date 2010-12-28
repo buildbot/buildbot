@@ -63,9 +63,18 @@ class Authz(object):
         if action not in self.knownActions:
             raise KeyError("unknown action")
         cfg = self.config.get(action, False)
+        if cfg == 'http':
+            # For HTTP auth authentication form will be displayed by browser
+            return False
         if cfg == 'auth' or callable(cfg):
             return True
         return False
+
+    def getUsername(self, request):
+        user = request.getUser()
+        if user != None:
+            return user
+        return request.args.get("username", ["<unknown>"])[0]
 
     def actionAllowed(self, action, request, *args):
         """Is this ACTION allowed, given this http REQUEST?"""
@@ -73,6 +82,17 @@ class Authz(object):
             raise KeyError("unknown action")
         cfg = self.config.get(action, False)
         if cfg:
+            if cfg == 'http':
+                if not self.auth:
+                    return False
+                user = request.getUser()
+                passwd = "<authenticated-by-http>"
+                if self.auth.authenticate(user, passwd):
+                    if callable(cfg) and not cfg(user, *args):
+                        return False
+                    return True
+                return False
+
             if cfg == 'auth' or callable(cfg):
                 if not self.auth:
                     return False
