@@ -70,6 +70,11 @@ with these keys:
   you may set this value to any of (case-insensitive) "Yes", "Y", "True", or
   "T" to have the buildbot master append the branch name to the baseURL.
 
+Note: The bzr smart server (as of version 2.2.2) doesn't know how to resolve
+bzr:// urls into absolute paths so any paths in locations.conf won't match,
+hence no change notifications will be sent to Buildbot. Setting configuration
+parameters globally or in-branch might still work.
+
 When buildbot no longer has a hardcoded password, it will be a configuration
 option here as well.
 

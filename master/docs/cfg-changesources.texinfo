@@ -756,6 +756,11 @@ append the branch name to the baseURL.
 
 @end table
 
+Note: The bzr smart server (as of version 2.2.2) doesn't know how to resolve
+@code{bzr://} urls into absolute paths so any paths in @code{locations.conf}
+won't match, hence no change notifications will be sent to Buildbot. Setting
+configuration parameters globally or in-branch might still work.
+
 When buildbot no longer has a hardcoded password, it will be a configuration
 option here as well.
 
