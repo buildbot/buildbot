@@ -1246,6 +1246,8 @@ class BuildMaster(service.MultiService):
             msg = u"added change %s to database" % change
             log.msg(msg.encode('utf-8', 'replace'))
             self.status.changeAdded(change)
+            # kick off the schedulers
+            self.scheduler_manager.trigger()
             return change
         d.addCallback(notify)
         return d
