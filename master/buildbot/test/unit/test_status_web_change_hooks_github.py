@@ -15,9 +15,9 @@
 
 import buildbot.status.web.change_hook as change_hook
 from buildbot.test.fake.web import MockRequest
-from buildbot.util import json
 
 from twisted.trial import unittest
+from twisted.internet import defer
 
 # Sample GITHUB commit payload from http://help.github.com/post-receive-hooks/
 # Added "modfied" and "removed", and change email
@@ -76,44 +76,29 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
     # a Change object as a dictionary. All values show be set.
     def testGitWithChange(self):
         self.request.uri = "/change_hook/github"
-        ret = self.changeHook.render_GET(self.request)
-        # Change is an array of dicts holding changes. There may be multiple entries for github
-        changeArray = json.loads(ret)
-        change = changeArray[0]
-        self.assertEquals(change["category"], None)
-        files = change["files"]
-        self.assertEquals(len(files), 1)
-        self.assertEquals(files[0]["name"], "filepath.rb")
-        self.assertEquals(change["repository"], "http://github.com/defunkt/github")
-        self.assertEquals(change["when"], 1203116237)
-        self.assertEquals(change["who"], "Fred Flinstone <fred@flinstone.org>")
-        self.assertEquals(change["rev"], '41a212ee83ca127e3c8cf465891ab7216a705f59')
-        self.assertEquals(change["number"], None)
-        self.assertEquals(change["comments"], "okay i give in")
-        self.assertEquals(change["project"], '')
-        self.assertNotEquals(change["at"], "sometime")
-        self.assertEquals(change["branch"], "master")
-        self.assertEquals(change["revlink"], "http://github.com/defunkt/github/commit/41a212ee83ca127e3c8cf465891ab7216a705f59")
-        properties = change["properties"]
-        self.assertEquals(len(properties), 0)
-        self.assertEquals(change["revision"], '41a212ee83ca127e3c8cf465891ab7216a705f59')
-        # Second change
-        change = changeArray[1]
-        self.assertEquals(change["category"], None)
-        files = change["files"]
-        self.assertEquals(len(files), 2)
-        self.assertEquals(files[0]["name"], "modfile")
-        self.assertEquals(files[1]["name"], "removedFile")
-        self.assertEquals(change["repository"], "http://github.com/defunkt/github")
-        self.assertEquals(change["when"], 1203114994)
-        self.assertEquals(change["who"], "Fred Flinstone <fred@flinstone.org>")
-        self.assertEquals(change["rev"], 'de8251ff97ee194a289832576287d6f8ad74e3d0')
-        self.assertEquals(change["number"], None)
-        self.assertEquals(change["comments"], "update pricing a tad")
-        self.assertEquals(change["project"], '')
-        self.assertNotEquals(change["at"], "sometime")
-        self.assertEquals(change["branch"], "master")
-        self.assertEquals(change["revlink"], "http://github.com/defunkt/github/commit/de8251ff97ee194a289832576287d6f8ad74e3d0")
-        properties = change["properties"]
-        self.assertEquals(len(properties), 0)
-        self.assertEquals(change["revision"], 'de8251ff97ee194a289832576287d6f8ad74e3d0')
+        d = defer.maybeDeferred(lambda : self.changeHook.render_GET(self.request))
+        def check_changes(r):
+            self.assertEquals(len(self.request.addedChanges), 2)
+            change = self.request.addedChanges[0]
+
+            self.assertEquals(change['files'], ['filepath.rb'])
+            self.assertEquals(change["repository"], "http://github.com/defunkt/github")
+            self.assertEquals(change["when"], 1203116237)
+            self.assertEquals(change["who"], "Fred Flinstone <fred@flinstone.org>")
+            self.assertEquals(change["revision"], '41a212ee83ca127e3c8cf465891ab7216a705f59')
+            self.assertEquals(change["comments"], "okay i give in")
+            self.assertEquals(change["branch"], "master")
+            self.assertEquals(change["revlink"], "http://github.com/defunkt/github/commit/41a212ee83ca127e3c8cf465891ab7216a705f59")
+
+            change = self.request.addedChanges[1]
+            self.assertEquals(change['files'], [ 'modfile', 'removedFile' ])
+            self.assertEquals(change["repository"], "http://github.com/defunkt/github")
+            self.assertEquals(change["when"], 1203114994)
+            self.assertEquals(change["who"], "Fred Flinstone <fred@flinstone.org>")
+            self.assertEquals(change["revision"], 'de8251ff97ee194a289832576287d6f8ad74e3d0')
+            self.assertEquals(change["comments"], "update pricing a tad")
+            self.assertEquals(change["branch"], "master")
+            self.assertEquals(change["revlink"], "http://github.com/defunkt/github/commit/de8251ff97ee194a289832576287d6f8ad74e3d0")
+
+        d.addCallback(check_changes)
+        return d

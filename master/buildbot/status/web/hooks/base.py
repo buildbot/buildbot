@@ -16,9 +16,8 @@
 # code inspired/copied from contrib/github_buildbot
 #  and inspired from code from the Chromium project
 # otherwise, Andrew Melo <andrew.melo@gmail.com> wrote the rest
-
 # but "the rest" is pretty minimal
-from buildbot.changes.changes import Change
+
 from buildbot.util import json
     
 def getChanges(request, options=None):
@@ -72,11 +71,12 @@ def getChanges(request, options=None):
         repository = firstOrNothing(args.get('repository'))
         project = firstOrNothing(args.get('project'))
               
-        ourchange = Change(who = who, files = files, comments = comments, isdir = isdir, links = links,
-                        revision=revision, when = when, branch = branch, category = category,
-                        revlink = revlink, properties = properties, repository = repository,
-                        project = project)
-        return [ourchange]
+        chdict = dict(who=who, files=files, comments=comments,
+                isdir=isdir, links=links, revision=revision, when=when,
+                branch=branch, category=category, revlink=revlink,
+                properties=properties, repository=repository,
+                project=project)
+        return [ chdict ]
 
 
 

@@ -28,7 +28,6 @@ import logging
 import re
 import sys
 import traceback
-from buildbot.changes.changes import Change
 import datetime
 from twisted.python import log
 import calendar
@@ -133,31 +132,18 @@ def process_change(payload, user, repo, repo_url):
                 if 'removed' in commit:
                     files.extend(commit['removed'])
                 when =  convertTime( commit['timestamp'])
-                change = {'revision': commit['id'],
-                     'revlink': commit['url'],
-                     'comments': commit['message'],
-                     'branch': branch,
-                     'who': commit['author']['name'] 
-                            + " <" + commit['author']['email'] + ">",
-                     'files': files,
-                     'links': [commit['url']],
-                     'properties': {'repository': repo_url},
-                }
-    
-                log.msg("New revision: %s" % change['revision'][:8])
-                for key, value in change.iteritems():
-                    logging.debug("  %s: %s" % (key, value))
-                    changeObject = Change(\
-                        who      = commit['author']['name'] 
-                                    + " <" + commit['author']['email'] + ">",
-                        files    = files,
-                        comments = commit['message'], 
-                        links    = [commit['url']],
-                        revision = commit['id'],
-                        when     = when,
-                        branch   = branch,
-                        revlink  = commit['url'], 
-                        repository = repo_url)  
-                changes.append(changeObject) 
+                log.msg("New revision: %s" % commit['id'][:8])
+                chdict = dict(
+                    who      = commit['author']['name'] 
+                                + " <" + commit['author']['email'] + ">",
+                    files    = files,
+                    comments = commit['message'], 
+                    links    = [commit['url']],
+                    revision = commit['id'],
+                    when     = when,
+                    branch   = branch,
+                    revlink  = commit['url'], 
+                    repository = repo_url)  
+                changes.append(chdict) 
             return changes
         

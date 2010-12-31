@@ -16,13 +16,13 @@
 # code inspired/copied from contrib/github_buildbot
 #  and inspired from code from the Chromium project
 # otherwise, Andrew Melo <andrew.melo@gmail.com> wrote the rest
-
 # but "the rest" is pretty minimal
-from twisted.web import resource
+
 import re
+from twisted.web import resource
 from twisted.python.reflect import namedModule
-from twisted.python.log import msg
-from buildbot.util import json
+from twisted.python import log
+from twisted.internet import defer
 
 class ChangeHookResource(resource.Resource):
      # this is a cheap sort of template thingy
@@ -61,15 +61,16 @@ class ChangeHookResource(resource.Resource):
             changes = self.getChanges( request )
         except ValueError, err:
             request.setResponseCode(400, err.args[0])
-            return err.args[0]
+            return defer.succeed(err.args[0])
 
-        msg("Payload: " + str(request.args))
+        log.msg("Payload: " + str(request.args))
         
         if not changes:
-            msg("No changes found")
-            return "no changes found"
-        submitted = self.submitChanges( changes, request )
-        return json.dumps(submitted)
+            log.msg("No changes found")
+            return defer.succeed("no changes found")
+        d = self.submitChanges( changes, request )
+        d.addCallback(lambda _ : "OK")
+        return d
 
     
     def getChanges(self, request):
@@ -88,7 +89,7 @@ class ChangeHookResource(resource.Resource):
         uriRE = re.search(r'^/change_hook/?([a-zA-Z0-9_]*)', request.uri)
         
         if not uriRE:
-            msg("URI doesn't match change_hook regex: %s" % request.uri)
+            log.msg("URI doesn't match change_hook regex: %s" % request.uri)
             raise ValueError("URI doesn't match change_hook regex: %s" % request.uri)
         
         changes = []
@@ -100,26 +101,24 @@ class ChangeHookResource(resource.Resource):
             dialect = 'base'
             
         if dialect in self.dialects.keys():
-            msg("Attempting to load module buildbot.status.web.hooks." + dialect)
+            log.msg("Attempting to load module buildbot.status.web.hooks." + dialect)
             tempModule = namedModule('buildbot.status.web.hooks.' + dialect)
             changes = tempModule.getChanges(request,self.dialects[dialect])
-            msg("Got the following changes %s" % changes)
+            log.msg("Got the following changes %s" % changes)
 
         else:
             m = "The dialect specified, '%s', wasn't whitelisted in change_hook" % dialect
-            msg(m)
-            msg("Note: if dialect is 'base' then it's possible your URL is malformed and we didn't regex it properly")
+            log.msg(m)
+            log.msg("Note: if dialect is 'base' then it's possible your URL is malformed and we didn't regex it properly")
             raise ValueError(m)
 
         return changes
                 
+    @defer.deferredGenerator
     def submitChanges(self, changes, request):
-        # get a control object
-        changeMaster = request.site.buildbot_service.master.change_svc
-        submitted = []
-        for onechange in changes:
-            changeMaster.addChange( onechange )
-            d = onechange.asDict()
-            msg("injected change %s" % d)
-            submitted.append(d)
-        return submitted
+        master = request.site.buildbot_service.master
+        for chdict in changes:
+            wfd = defer.waitForDeferred(master.addChange(**chdict))
+            yield wfd
+            change = wfd.getResult()
+            log.msg("injected change %s" % change)

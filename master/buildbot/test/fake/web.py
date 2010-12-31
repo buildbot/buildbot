@@ -15,11 +15,24 @@
 
 from mock import Mock
 
+from twisted.internet import defer
+
 class MockRequest(Mock):
+    """
+    A fake Twisted Web Request object, including some pointers to the
+    buildmaster and an addChange method on that master which will append its
+    arguments to self.addedChanges.
+    """
     def __init__(self, args={}):
         self.args = args
         self.site = Mock()
         self.site.buildbot_service = Mock()
-        self.site.buildbot_service.master = Mock()
-        self.site.buildbot_service.master.change_svc = Mock()
+        master = self.site.buildbot_service.master = Mock()
+
+        self.addedChanges = []
+        def addChange(**kwargs):
+            self.addedChanges.append(kwargs)
+            return defer.succeed(Mock())
+        master.addChange = addChange
+
         Mock.__init__(self)
