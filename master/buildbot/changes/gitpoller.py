@@ -16,11 +16,10 @@
 import time
 import tempfile
 import os
-import subprocess
-
 from twisted.python import log
 from twisted.internet import defer, utils
 
+from buildbot.util import deferredLocked
 from buildbot.changes import base
 
 class GitPoller(base.PollingChangeSource):
@@ -53,23 +52,76 @@ class GitPoller(base.PollingChangeSource):
         self.project = project
         self.changeCount = 0
         self.commitInfo  = {}
+        self.initLock = defer.DeferredLock()
         
         if self.workdir == None:
             self.workdir = tempfile.gettempdir() + '/gitpoller_work'
 
     def startService(self):
+        # initialize the repository we'll use to get changes; note that
+        # startService is not an event-driven method, so this method will
+        # instead acquire self.initLock immediately when it is called.
+        if not os.path.exists(self.workdir + r'/.git'):
+            d = self.initRepository()
+            d.addErrback(log.err, 'while initializing GitPoller repository')
+        else:
+            log.msg("GitPoller repository already exists")
+
+        # call this *after* initRepository, so that the initLock is locked first
         base.PollingChangeSource.startService(self)
 
-        dirpath = os.path.dirname(self.workdir.rstrip(os.sep))
-        if not os.path.exists(dirpath):
-            log.msg('gitpoller: creating parent directories for workdir')
-            os.makedirs(dirpath)
+    @deferredLocked('initLock')
+    def initRepository(self):
+        d = defer.succeed(None)
+        def make_dir(_):
+            dirpath = os.path.dirname(self.workdir.rstrip(os.sep))
+            if not os.path.exists(dirpath):
+                log.msg('gitpoller: creating parent directories for workdir')
+                os.makedirs(dirpath)
+        d.addCallback(make_dir)
 
-        if not os.path.exists(self.workdir + r'/.git'):
-            log.msg('gitpoller: initializing working dir')
-            subprocess.check_call([self.gitbin, 'clone', '--no-checkout', self.repourl, self.workdir])
-            subprocess.check_call([self.gitbin, 'checkout', '-b', self.branch, 'origin/%s' % self.branch],
-                cwd=self.workdir)
+        def git_init(_):
+            log.msg('gitpoller: initializing working dir from %s' % self.repourl)
+            d = utils.getProcessOutputAndValue(self.gitbin,
+                    ['init', self.workdir], env={})
+            d.addCallback(self._convert_nonzero_to_failure)
+            d.addErrback(self._stop_on_failure)
+            return d
+        d.addCallback(git_init)
+        
+        def git_remote_add(_):
+            d = utils.getProcessOutputAndValue(self.gitbin,
+                    ['remote', 'add', 'origin', self.repourl],
+                    path=self.workdir, env={})
+            d.addCallback(self._convert_nonzero_to_failure)
+            d.addErrback(self._stop_on_failure)
+            return d
+        d.addCallback(git_remote_add)
+        
+        def git_fetch_origin(_):
+            d = utils.getProcessOutputAndValue(self.gitbin,
+                    ['fetch', 'origin'],
+                    path=self.workdir, env={})
+            d.addCallback(self._convert_nonzero_to_failure)
+            d.addErrback(self._stop_on_failure)
+            return d
+        d.addCallback(git_fetch_origin)
+        
+        def set_master(_):
+            log.msg('gitpoller: checking out %s' % self.branch)
+            if self.branch == 'master': # repo is already on branch 'master', so reset
+                d = utils.getProcessOutputAndValue(self.gitbin,
+                        ['reset', '--hard', 'origin/%s' % self.branch],
+                        path=self.workdir, env={})
+            else:
+                d = utils.getProcessOutputAndValue(self.gitbin,
+                        ['checkout', '-b', self.branch, 'origin/%s' % self.branch],
+                        path=self.workdir, env={})
+            d.addCallback(self._convert_nonzero_to_failure)
+            d.addErrback(self._stop_on_failure)
+            return d
+        d.addCallback(set_master)
+        return d
 
     def describe(self):
         status = ""
@@ -79,6 +131,7 @@ class GitPoller(base.PollingChangeSource):
                 % (self.repourl, self.branch, status)
         return str
 
+    @deferredLocked('initLock')
     def poll(self):
         d = self._get_changes()
         d.addCallback(self._process_changes)
@@ -219,11 +272,7 @@ class GitPoller(base.PollingChangeSource):
         log.msg('gitpoller: catching up to FETCH_HEAD')
         args = ['reset', '--hard', 'FETCH_HEAD']
         d = utils.getProcessOutputAndValue(self.gitbin, args, path=self.workdir, env={})
-        def convert_nonzero_to_failure(res):
-            (stdout, stderr, code) = res
-            if code != 0:
-                raise EnvironmentError('catch up failed with exit code: %d' % code)
-        d.addCallback(convert_nonzero_to_failure)
+        d.addCallback(self._convert_nonzero_to_failure)
         return d
 
     def _catch_up_failure(self, f):
@@ -231,3 +280,16 @@ class GitPoller(base.PollingChangeSource):
         log.msg('gitpoller: please resolve issues in local repo: %s' % self.workdir)
         # this used to stop the service, but this is (a) unfriendly to tests and (b)
         # likely to leave the error message lost in a sea of other log messages
+
+    def _convert_nonzero_to_failure(self, res):
+        "utility method to handle the result of getProcessOutputAndValue"
+        (stdout, stderr, code) = res
+        if code != 0:
+            raise EnvironmentError('command failed with exit code %d: %s' % (code, stderr))
+
+    def _stop_on_failure(self, f):
+        "utility method to stop the service when a failure occurs"
+        if self.running:
+            d = defer.maybeDeferred(lambda : self.stopService())
+            d.addErrback(log.err, 'while stopping broken GitPoller service')
+        return f
