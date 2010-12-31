@@ -14,8 +14,9 @@
 # Copyright Buildbot Team Members
 
 
-from twisted.python import threadable
 import time, re, string
+from twisted.python import threadable
+from buildbot.util.misc import deferredLocked
 
 def naturalSort(l):
     """Returns a sorted copy of l, so that numbers in strings are sorted in the
@@ -181,4 +182,4 @@ NotABranch = NotABranch()
 __all__ = [
     'naturalSort', 'now', 'formatInterval', 'ComparableMixin', 'json',
     'safeTranslate', 'remove_userpassword', 'LRUCache', 'none_or_str',
-    'NotABranch']
+    'NotABranch', 'deferredLocked' ]

@@ -120,6 +120,34 @@ will be automatically removed from the cache.  The class has @code{get} and
 @code{add} methods, and can also be accessed via dictionary syntax
 (@code{lru['id']}).
 
+@item deferredLocked
+
+This is a decorator to wrap an event-driven method (one returning a
+@code{Deferred}) in an acquire/release pair of a designated
+@code{DeferredLock}.  For simple functions with a static lock, this is as easy as
+
+@example
+someLock = defer.DeferredLock()
+@@util.deferredLocked(someLock)
+def someLockedFunction(..):
+    # ..
+    return d
+@end example
+
+for class methods which must access a lock that is an instance attribute, the
+lock can be specified by a string, which will be dynamically resolved to the
+specific instance at runtime:
+
+@example
+    def __init__(self):
+        self.someLock = defer.DeferredLock()
+
+    @@util.deferredLocked('someLock')
+    def someLockedFunction(..):
+        # ..
+        return d
+@end example
+
 @end table
 
 @node buildbot.util.collections
