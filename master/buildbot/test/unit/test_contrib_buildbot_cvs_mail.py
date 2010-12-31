@@ -19,6 +19,7 @@ import subprocess
 import os
 
 from twisted.trial import unittest
+from twisted.internet import utils
 
 test = '''
 Update of /cvsroot/test
@@ -94,6 +95,11 @@ class TestBuildbotCvsMail(unittest.TestCase):
             if not m:
                 misses.append((regex,line))
         self.assertEqual(misses, [], "got non-matching lines")
+
+    # NOTE: subprocess fails with "Interrupted system call" in early versions
+    # of Python on some systems.  It seems to work OK with p.communicate, but
+    # if this becomes a problem then these invocations should be replaced with
+    # a spawnProcess invocation.
             
     def test_buildbot_cvs_mail_from_cvs1_11(self):
         # Simulate CVS 1.11 
@@ -121,35 +127,41 @@ class TestBuildbotCvsMail(unittest.TestCase):
         self.assertOutputOk(p, stdoutdata, golden_1_12_regex )
 
     def test_buildbot_cvs_mail_no_args_exits_with_error(self):
-        p = subprocess.Popen( [ sys.executable, self.buildbot_cvs_mail_path ], 
-                                stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        ret = p.wait()
-        self.assert_(ret == 2)
+        d = utils.getProcessOutputAndValue(sys.executable, [ self.buildbot_cvs_mail_path ])
+        def check((stdout, stderr, code)):
+            self.assertEqual(code, 2)
+        d.addCallback(check)
+        return d
         
     def test_buildbot_cvs_mail_without_email_opt_exits_with_error(self):
-        p = subprocess.Popen( [ sys.executable, self.buildbot_cvs_mail_path, '--cvsroot=\"ext:example.com:/cvsroot\"',
+        d = utils.getProcessOutputAndValue(sys.executable, [ self.buildbot_cvs_mail_path,
+                                '--cvsroot=\"ext:example.com:/cvsroot\"',
                                 '-P', 'test', '--path', 'test',
                                 '-R', 'noreply@example.com', '-t', 
-                                'README', '1.1', '1.2', 'hello.c', '2.2', '2.3'], 
-                              stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        ret = p.wait()
-        self.assert_(ret == 2)
+                                'README', '1.1', '1.2', 'hello.c', '2.2', '2.3'])
+        def check((stdout, stderr, code)):
+            self.assertEqual(code, 2)
+        d.addCallback(check)
+        return d
 
     def test_buildbot_cvs_mail_without_cvsroot_opt_exits_with_error(self):
-        p = subprocess.Popen( [ sys.executable, self.buildbot_cvs_mail_path, '--complete-garbage-opt=gomi',
+        d = utils.getProcessOutputAndValue(sys.executable, [ self.buildbot_cvs_mail_path,
+                                '--complete-garbage-opt=gomi',
                                 '--cvsroot=\"ext:example.com:/cvsroot\"',
-                                '--email=buildbot@example.com','-P', 'test', '--path', 'test',
-                                '-R', 'noreply@example.com', '-t', 
-                                'README', '1.1', '1.2', 'hello.c', '2.2', '2.3'], 
-                              stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        ret = p.wait()
-        self.assert_(ret == 2)
+                                '--email=buildbot@example.com','-P', 'test', '--path',
+                                'test', '-R', 'noreply@example.com', '-t', 
+                                'README', '1.1', '1.2', 'hello.c', '2.2', '2.3'])
+        def check((stdout, stderr, code)):
+            self.assertEqual(code, 2)
+        d.addCallback(check)
+        return d
 
     def test_buildbot_cvs_mail_with_unknown_opt_exits_with_error(self):
-        p = subprocess.Popen( [ sys.executable, self.buildbot_cvs_mail_path,
-                                '--email=buildbot@example.com','-P', 'test', '--path', 'test',
-                                '-R', 'noreply@example.com', '-t', 
-                                'README', '1.1', '1.2', 'hello.c', '2.2', '2.3'], 
-                              stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        ret = p.wait()
-        self.assert_(ret == 2)
+        d = utils.getProcessOutputAndValue(sys.executable, [ self.buildbot_cvs_mail_path,
+                                '--email=buildbot@example.com','-P', 'test', '--path',
+                                'test', '-R', 'noreply@example.com', '-t', 
+                                'README', '1.1', '1.2', 'hello.c', '2.2', '2.3'])
+        def check((stdout, stderr, code)):
+            self.assertEqual(code, 2)
+        d.addCallback(check)
+        return d
