@@ -15,11 +15,10 @@
 
 import sys
 import re
-import subprocess
 import os
 
 from twisted.trial import unittest
-from twisted.internet import utils
+from twisted.internet import protocol, defer, utils, reactor
 
 test = '''
 Update of /cvsroot/test
@@ -80,12 +79,38 @@ golden_1_12_regex=[
     '^$',
     '^$' ]
 
+class _SubprocessProtocol(protocol.ProcessProtocol):
+    def __init__(self, input, deferred):
+        self.input = input
+        self.deferred = deferred
+        self.output = ''
+
+    def outReceived(self, s):
+        self.output += s
+    errReceived = outReceived
+
+    def connectionMade(self):
+        # push the input and send EOF
+        self.transport.write(self.input)
+        self.transport.closeStdin()
+
+    def processEnded(self, reason):
+        self.deferred.callback((self.output, reason.value.exitCode))
+
+def getProcessOutputAndValueWithInput(executable, args, input):
+    "similar to getProcessOutputAndValue, but also allows injection of input on stdin"
+    d = defer.Deferred()
+    p = _SubprocessProtocol(input, d)
+    reactor.spawnProcess(p, executable, (executable,) + tuple(args))
+    return d
+
 class TestBuildbotCvsMail(unittest.TestCase):
     buildbot_cvs_mail_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../contrib/buildbot_cvs_mail.py'))
 
-    def assertOutputOk(self, p, stdout, regexList):
-        self.failUnlessEqual(p.returncode, 0, "subprocess exited uncleanly")
-        lines = stdout.splitlines()
+    def assertOutputOk(self, (output, code), regexList):
+        "assert that the output from getProcessOutputAndValueWithInput matches expectations"
+        self.failUnlessEqual(code, 0, "subprocess exited uncleanly")
+        lines = output.splitlines()
         self.failUnlessEqual(len(lines), len(regexList),
                     "got wrong number of lines of output")
 
@@ -96,35 +121,26 @@ class TestBuildbotCvsMail(unittest.TestCase):
                 misses.append((regex,line))
         self.assertEqual(misses, [], "got non-matching lines")
 
-    # NOTE: subprocess fails with "Interrupted system call" in early versions
-    # of Python on some systems.  It seems to work OK with p.communicate, but
-    # if this becomes a problem then these invocations should be replaced with
-    # a spawnProcess invocation.
-            
     def test_buildbot_cvs_mail_from_cvs1_11(self):
         # Simulate CVS 1.11 
-        p = subprocess.Popen( [ sys.executable, self.buildbot_cvs_mail_path, '--cvsroot=\"ext:example:/cvsroot\"',
-                               '--email=buildbot@example.com', '-P', 'test', '-R', 'noreply@example.com', '-t',
-                               'test', 'README', '1.1,1.2', 'hello.c', '2.2,2.3'],
-                              stdin=subprocess.PIPE, stdout=subprocess.PIPE)
-        
-        stdoutdata, stderrdata = p.communicate(test)
-        #print 'CVS 1.11 stdout: ', stdoutdata
-
-        self.assertOutputOk(p, stdoutdata, golden_1_11_regex )
+        d = getProcessOutputAndValueWithInput(sys.executable,
+                [ self.buildbot_cvs_mail_path, '--cvsroot=\"ext:example:/cvsroot\"',
+                  '--email=buildbot@example.com', '-P', 'test', '-R', 'noreply@example.com', '-t',
+                  'test', 'README', '1.1,1.2', 'hello.c', '2.2,2.3' ],
+                input=test)
+        d.addCallback(self.assertOutputOk, golden_1_11_regex)
+        return d
 
     def test_buildbot_cvs_mail_from_cvs1_12(self):
         # Simulate CVS 1.12, with --path option
-        p = subprocess.Popen( [ sys.executable, self.buildbot_cvs_mail_path, '--cvsroot=\"ext:example.com:/cvsroot\"',
-                               '--email=buildbot@example.com', '-P', 'test', '--path', 'test',
-                               '-R', 'noreply@example.com', '-t', 
-                               'README', '1.1', '1.2', 'hello.c', '2.2', '2.3'], 
-                              stdin=subprocess.PIPE, stdout=subprocess.PIPE)
-
-        stdoutdata, stderrdata = p.communicate(test)
-        #print 'CVS 1.12 stdout: ', stdoutdata
-
-        self.assertOutputOk(p, stdoutdata, golden_1_12_regex )
+        d = getProcessOutputAndValueWithInput(sys.executable,
+                [ self.buildbot_cvs_mail_path, '--cvsroot=\"ext:example.com:/cvsroot\"',
+                  '--email=buildbot@example.com', '-P', 'test', '--path', 'test',
+                  '-R', 'noreply@example.com', '-t', 
+                  'README', '1.1', '1.2', 'hello.c', '2.2', '2.3' ],
+                input=test)
+        d.addCallback(self.assertOutputOk, golden_1_12_regex)
+        return d
 
     def test_buildbot_cvs_mail_no_args_exits_with_error(self):
         d = utils.getProcessOutputAndValue(sys.executable, [ self.buildbot_cvs_mail_path ])
