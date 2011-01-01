@@ -2,6 +2,15 @@ Major User visible changes in Buildbot.             -*- outline -*-
    see the git log for a detailed list of changes:
    http://github.com/buildbot/buildbot/commits/master
 
+* Buildbot 0.8.3p1
+
+** Critical Fixes for GitPoller
+
+*** correctly initialize a new repository with 'git init' and 'git fetch',
+albiet using blocking calls (fixes #1742)
+
+*** correctly synchronize processing of each change in a large batch of changes
+(fixes #1745)
 
 * Buildbot 0.8.3 (December 19, 2010)
 

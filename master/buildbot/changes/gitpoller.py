@@ -16,6 +16,7 @@
 import time
 import tempfile
 import os
+import subprocess
 
 from twisted.python import log
 from twisted.internet import defer, utils
@@ -59,13 +60,26 @@ class GitPoller(base.PollingChangeSource):
     def startService(self):
         base.PollingChangeSource.startService(self)
         
-        if not os.path.exists(self.workdir):
-            log.msg('gitpoller: creating working dir %s' % self.workdir)
-            os.makedirs(self.workdir)
+        dirpath = os.path.dirname(self.workdir.rstrip(os.sep))
+        if not os.path.exists(dirpath):
+            log.msg('gitpoller: creating parent directories for workdir')
+            os.makedirs(dirpath)
             
         if not os.path.exists(self.workdir + r'/.git'):
             log.msg('gitpoller: initializing working dir')
-            os.system(self.gitbin + ' clone ' + self.repourl + ' ' + self.workdir)
+            subprocess.check_call([self.gitbin, 'init', self.workdir])
+            subprocess.check_call([self.gitbin, 'remote', 'add', 'origin', self.repourl],
+                    cwd=self.workdir)
+            subprocess.check_call([self.gitbin, 'fetch', 'origin'],
+                    cwd=self.workdir)
+            if self.branch == 'master':
+                subprocess.check_call([self.gitbin, 'reset', '--hard',
+                                       'origin/%s' % self.branch],
+                        cwd=self.workdir)
+            else:
+                subprocess.check_call([self.gitbin, 'checkout', '-b', self.branch,
+                                       'origin/%s' % self.branch],
+                        cwd=self.workdir)
         
     def describe(self):
         status = ""
@@ -162,6 +176,7 @@ class GitPoller(base.PollingChangeSource):
         d.addCallback(self._process_changes_in_output)
         return d
     
+    @defer.deferredGenerator
     def _process_changes_in_output(self, git_output):
         self.changeCount = 0
         
@@ -184,6 +199,11 @@ class GitPoller(base.PollingChangeSource):
                         ]
             dl = defer.DeferredList(deferreds)
             dl.addCallback(self._add_change,rev)        
+
+            # wait for that deferred to finish before starting the next
+            wfd = defer.waitForDeferred(dl)
+            yield wfd
+            wfd.getResult()
 
 
     def _add_change(self, results, rev):
