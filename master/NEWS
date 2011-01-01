@@ -15,8 +15,8 @@ with the copy in this version.
 
 ** Deprecations, Removals, and Non-Compatible Changes
 
-*** MasterShellCommand now defaults to haltOnFailure=True and
-flunkOnFailure=True
+*** MasterShellCommand and all of the transfer steps now default to
+haltOnFailure=True and flunkOnFailure=True
 
 * Buildbot 0.8.3 (December 19, 2010)
 

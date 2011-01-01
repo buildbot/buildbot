@@ -185,6 +185,9 @@ class _TransferBuildStep(BuildStep):
     """
     DEFAULT_WORKDIR = "build"           # is this redundant?
 
+    haltOnFailure = True
+    flunkOnFailure = True
+
     def setDefaultWorkdir(self, workdir):
         if self.workdir is None:
             self.workdir = workdir
