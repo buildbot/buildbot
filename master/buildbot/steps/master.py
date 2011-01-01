@@ -24,11 +24,13 @@ class MasterShellCommand(BuildStep):
     """
     Run a shell command locally - on the buildmaster.  The shell command
     COMMAND is specified just as for a RemoteShellCommand.  Note that extra
-    logfiles are not sopported.
+    logfiles are not supported.
     """
     name='MasterShellCommand'
     description='Running'
     descriptionDone='Ran'
+    haltOnFailure = True
+    flunkOnFailure = True
 
     def __init__(self, command,
                  description=None, descriptionDone=None,
