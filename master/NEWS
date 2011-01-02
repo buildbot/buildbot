@@ -5,6 +5,13 @@ Major User visible changes in Buildbot.             -*- outline -*-
 
 * Next Version
 
+** SQLAlchemy & SQLAlchemy-Migrate
+
+Buildbot now uses SQLAlchemy as a database abstraction layer.  This will give
+us greater inter-database compatibility and a more stable and reliable basis
+for this core component of the framework.  SQLAlchemy-Migrate is used to manage
+changes to the database schema from version to version.
+
 ** Less garish color scheme
 
 The default color scheme for Buildbot has been modified to make it slightly
@@ -19,13 +26,6 @@ with the copy in this version.
 haltOnFailure=True and flunkOnFailure=True
 
 * Buildbot 0.8.3 (December 19, 2010)
-
-** SQLAlchemy & SQLAlchemy-Migrate
-
-Buildbot now uses SQLAlchemy as a database abstraction layer.  This will give
-us greater inter-database compatibility and a more stable and reliable basis
-for this core component of the framework.  SQLAlchemy-Migrate is used to manage
-changes to the database schema from version to version.
 
 ** Deprecations and Removals
 
