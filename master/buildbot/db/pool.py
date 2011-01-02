@@ -6,6 +6,11 @@ from twisted.python import threadpool, failure, versions
 class DBThreadPool(threadpool.ThreadPool):
     """
     A pool of threads ready and waiting to execute queries.
+
+    If the engine has an @C{optimal_thread_pool_size} attribute, then the
+    maxthreads of the thread pool will be set to that value.  This is most
+    useful for SQLite in-memory connections, where exactly one connection
+    (and thus thread) should be used.
     """
 
     running = False
@@ -62,7 +67,11 @@ class DBThreadPool(threadpool.ThreadPool):
             return rv
         return threads.deferToThreadPool(reactor, self, thd)
 
-    # older implementations for twisted < 0.8.2
+    # older implementations for twisted < 0.8.2, which does not have
+    # deferToThreadPool; this basically re-implements it, although it gets some
+    # of the synchronization wrong - the thread may still be "in use" when the
+    # deferred fires in the parent, which can lead to database accesses hopping
+    # between threads.  In practice, this should not cause any difficulty.
     def do_081(self, callable, *args, **kwargs):
         d = defer.Deferred()
         def thd():

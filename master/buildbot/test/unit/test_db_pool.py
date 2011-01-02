@@ -6,6 +6,7 @@ from buildbot.db import pool
 class DBThreadPool(unittest.TestCase):
     def setUp(self):
         self.engine = sqlalchemy.create_engine('sqlite://')
+        self.engine.optimal_thread_pool_size = 1
         self.pool = pool.DBThreadPool(self.engine)
 
     def test_do(self):
@@ -65,6 +66,12 @@ class DBThreadPool(unittest.TestCase):
         return d
 
     def test_persistence_across_invocations(self):
+        # NOTE: this assumes that both methods are called with the same
+        # connection; if they run in parallel threads then it is not valid to
+        # assume that the database engine will have finalized the first
+        # transaction (and thus created the table) by the time the second
+        # transaction runs.  This is why we set optimal_thread_pool_size in
+        # setUp.
         d = defer.succeed(None)
         def create_table(engine):
             engine.execute("CREATE TABLE tmp ( a integer )")
