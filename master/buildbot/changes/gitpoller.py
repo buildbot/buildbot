@@ -159,12 +159,13 @@ class GitPoller(base.PollingChangeSource):
 
         self.lastPoll = time.time()
         
-        # get a deferred object that performs the fetch
-        args = ['fetch', self.repourl, self.branch]
+        # get a deferred object that performs the git fetch
+
         # This command always produces data on stderr, but we actually do not care
         # about the stderr or stdout from this command. We set errortoo=True to
         # avoid an errback from the deferred. The callback which will be added to this
         # deferred will not use the response.
+        args = ['fetch', self.repourl, self.branch]
         d = utils.getProcessOutput(self.gitbin, args, path=self.workdir, env={}, errortoo=True )
 
         return d
