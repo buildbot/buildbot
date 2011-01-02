@@ -204,7 +204,11 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
     def getChangeInstance(self, changeid):
         """
         Get a L{buildbot.changes.changes.Change} instance for the given changeid,
-        or None if no such change exists.  Returns a deferred.
+        or None if no such change exists.
+
+        @param changeid: the id of the change instance to fetch
+
+        @returns: Change instance via Deferred
         """
         assert changeid >= 0
         def thd(conn):
@@ -229,7 +233,9 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
     def getLatestChangeid(self):
         """
         Get the most-recently-assigned changeid, or None if there are no
-        changes at all.  Returns a deferred.
+        changes at all.
+
+        @returns: changeid via Deferred
         """
         def thd(conn):
             changes_tbl = self.db.model.changes
