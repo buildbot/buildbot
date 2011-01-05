@@ -153,6 +153,8 @@ class MailNotifier(base.StatusReceiverMultiService):
                      "subject", "sendToInterestedUsers", "customMesg",
                      "messageFormatter", "extraHeaders"]
 
+    possible_modes = ('all', 'failing', 'problem', 'change', 'passing', 'warnings')
+
     def __init__(self, fromaddr, mode="all", categories=None, builders=None,
                  addLogs=False, relayhost="localhost",
                  subject="buildbot %(result)s in %(projectName)s on %(builder)s",
@@ -186,7 +188,7 @@ class MailNotifier(base.StatusReceiverMultiService):
                         builder which provoked the message.
 
         @type  mode: string (defaults to all)
-        @param mode: one of:
+        @param mode: one of MailNotifer.possible_modes:
                      - 'all': send mail about all builds, passing and failing
                      - 'failing': only send mail about builds which fail
                      - 'warnings': send mail if builds contain warnings or fail 
@@ -280,7 +282,7 @@ class MailNotifier(base.StatusReceiverMultiService):
         self.extraRecipients = extraRecipients
         self.sendToInterestedUsers = sendToInterestedUsers
         self.fromaddr = fromaddr
-        assert mode in ('all', 'failing', 'problem', 'change', 'passing', 'warnings')
+        assert mode in MailNotifier.possible_modes
         self.mode = mode
         self.categories = categories
         self.builders = builders
