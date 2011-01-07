@@ -99,7 +99,7 @@ class GitPoller(base.PollingChangeSource):
 
     def _get_commit_comments(self, rev):
         args = ['log', rev, '--no-walk', r'--format=%s%n%b']
-        d = utils.getProcessOutput(self.gitbin, args, path=self.workdir, env={}, errortoo=False )
+        d = utils.getProcessOutput(self.gitbin, args, path=self.workdir, env=dict(PATH=os.environ['PATH']), errortoo=False )
         d.addCallback(self._get_commit_comments_from_output)
         return d
 
@@ -113,7 +113,7 @@ class GitPoller(base.PollingChangeSource):
     def _get_commit_timestamp(self, rev):
         # unix timestamp
         args = ['log', rev, '--no-walk', r'--format=%ct']
-        d = utils.getProcessOutput(self.gitbin, args, path=self.workdir, env={}, errortoo=False )
+        d = utils.getProcessOutput(self.gitbin, args, path=self.workdir, env=dict(PATH=os.environ['PATH']), errortoo=False )
         d.addCallback(self._get_commit_timestamp_from_output)
         return d
 
@@ -132,7 +132,7 @@ class GitPoller(base.PollingChangeSource):
 
     def _get_commit_files(self, rev):
         args = ['log', rev, '--name-only', '--no-walk', r'--format=%n']
-        d = utils.getProcessOutput(self.gitbin, args, path=self.workdir, env={}, errortoo=False )
+        d = utils.getProcessOutput(self.gitbin, args, path=self.workdir, env=dict(PATH=os.environ['PATH']), errortoo=False )
         d.addCallback(self._get_commit_files_from_output)
         return d
 
@@ -143,7 +143,7 @@ class GitPoller(base.PollingChangeSource):
             
     def _get_commit_name(self, rev):
         args = ['log', rev, '--no-walk', r'--format=%aE']
-        d = utils.getProcessOutput(self.gitbin, args, path=self.workdir, env={}, errortoo=False )
+        d = utils.getProcessOutput(self.gitbin, args, path=self.workdir, env=dict(PATH=os.environ['PATH']), errortoo=False )
         d.addCallback(self._get_commit_name_from_output)
         return d
 
@@ -166,14 +166,14 @@ class GitPoller(base.PollingChangeSource):
         # avoid an errback from the deferred. The callback which will be added to this
         # deferred will not use the response.
         args = ['fetch', self.repourl, self.branch]
-        d = utils.getProcessOutput(self.gitbin, args, path=self.workdir, env={}, errortoo=True )
+        d = utils.getProcessOutput(self.gitbin, args, path=self.workdir, env=dict(PATH=os.environ['PATH']), errortoo=True )
 
         return d
 
     def _process_changes(self, unused_output):
         # get the change list
         revListArgs = ['log', 'HEAD..FETCH_HEAD', r'--format=%H']
-        d = utils.getProcessOutput(self.gitbin, revListArgs, path=self.workdir, env={}, errortoo=False )
+        d = utils.getProcessOutput(self.gitbin, revListArgs, path=self.workdir, env=dict(PATH=os.environ['PATH']), errortoo=False )
         d.addCallback(self._process_changes_in_output)
         return d
     
@@ -236,7 +236,7 @@ class GitPoller(base.PollingChangeSource):
             return
         log.msg('gitpoller: catching up to FETCH_HEAD')
         args = ['reset', '--hard', 'FETCH_HEAD']
-        d = utils.getProcessOutputAndValue(self.gitbin, args, path=self.workdir, env={})
+        d = utils.getProcessOutputAndValue(self.gitbin, args, path=self.workdir, env=dict(PATH=os.environ['PATH']))
         def convert_nonzero_to_failure(res):
             (stdout, stderr, code) = res
             if code != 0:
