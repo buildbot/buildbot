@@ -266,8 +266,10 @@ given categories.
 By adding one or more ``name='' query arguments to the URL, the console view is
 restricted to only showing changes made by the given users.
 
-NOTE: To use this page, your buildbot.css file in public_html
-must be the one found in buildbot/status/web/extended.css.
+NOTE: To use this page, your buildbot.css file in public_html must be the one
+found in @file{master/buildbot/status/web/files/default.css}.  This is the
+default for new installs, but upgrades of very old installs of Buildbot may
+need to manually fix the CSS file.
 
 The console view is still in development. At this moment by default the view
 sorts revisions lexically, which can lead to odd behavior with non-integer
