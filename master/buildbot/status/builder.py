@@ -1154,9 +1154,9 @@ class BuildStepStatus(styles.Versioned):
         result['eta'] = self.getETA()
         result['urls'] = self.getURLs()
         result['step_number'] = self.step_number
-        # TODO(maruel): Move that to a sub-url or just publish the log_url
-        # instead.
-        #result['logs'] = self.getLogs()
+        result['logs'] = [[l.getName(),
+            self.build.builder.status.getURLForThing(l)]
+                for l in self.getLogs()]
         return result
 
 
@@ -1587,8 +1587,8 @@ class BuildStatus(styles.Versioned):
         result['slave'] = self.getSlavename()
         # TODO(maruel): Add.
         #result['test_results'] = self.getTestResults()
-        # TODO(maruel): Include the url? It's too heavy otherwise.
-        #result['logs'] = self.getLogs()
+        result['logs'] = [[l.getName(),
+            self.builder.status.getURLForThing(l)] for l in self.getLogs()]
         result['eta'] = self.getETA()
         result['steps'] = [bss.asDict() for bss in self.steps]
         if self.getCurrentStep():
