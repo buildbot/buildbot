@@ -83,7 +83,7 @@ class GitPoller(base.PollingChangeSource):
         def git_init(_):
             log.msg('gitpoller: initializing working dir from %s' % self.repourl)
             d = utils.getProcessOutputAndValue(self.gitbin,
-                    ['init', self.workdir], env={})
+                    ['init', self.workdir], env=dict(PATH=os.environ['PATH']))
             d.addCallback(self._convert_nonzero_to_failure)
             d.addErrback(self._stop_on_failure)
             return d
@@ -92,7 +92,7 @@ class GitPoller(base.PollingChangeSource):
         def git_remote_add(_):
             d = utils.getProcessOutputAndValue(self.gitbin,
                     ['remote', 'add', 'origin', self.repourl],
-                    path=self.workdir, env={})
+                    path=self.workdir, env=dict(PATH=os.environ['PATH']))
             d.addCallback(self._convert_nonzero_to_failure)
             d.addErrback(self._stop_on_failure)
             return d
@@ -101,7 +101,7 @@ class GitPoller(base.PollingChangeSource):
         def git_fetch_origin(_):
             d = utils.getProcessOutputAndValue(self.gitbin,
                     ['fetch', 'origin'],
-                    path=self.workdir, env={})
+                    path=self.workdir, env=dict(PATH=os.environ['PATH']))
             d.addCallback(self._convert_nonzero_to_failure)
             d.addErrback(self._stop_on_failure)
             return d
@@ -112,15 +112,18 @@ class GitPoller(base.PollingChangeSource):
             if self.branch == 'master': # repo is already on branch 'master', so reset
                 d = utils.getProcessOutputAndValue(self.gitbin,
                         ['reset', '--hard', 'origin/%s' % self.branch],
-                        path=self.workdir, env={})
+                        path=self.workdir, env=dict(PATH=os.environ['PATH']))
             else:
                 d = utils.getProcessOutputAndValue(self.gitbin,
                         ['checkout', '-b', self.branch, 'origin/%s' % self.branch],
-                        path=self.workdir, env={})
+                        path=self.workdir, env=dict(PATH=os.environ['PATH']))
             d.addCallback(self._convert_nonzero_to_failure)
             d.addErrback(self._stop_on_failure)
             return d
         d.addCallback(set_master)
+        def log_finished(_):
+            log.msg("gitpoller: finished initializing working dir from %s" % self.repourl)
+        d.addCallback(log_finished)
         return d
 
     def describe(self):
@@ -142,7 +145,7 @@ class GitPoller(base.PollingChangeSource):
 
     def _get_commit_comments(self, rev):
         args = ['log', rev, '--no-walk', r'--format=%s%n%b']
-        d = utils.getProcessOutput(self.gitbin, args, path=self.workdir, env={}, errortoo=False )
+        d = utils.getProcessOutput(self.gitbin, args, path=self.workdir, env=dict(PATH=os.environ['PATH']), errortoo=False )
         def process(git_output):
             stripped_output = git_output.strip()
             if len(stripped_output) == 0:
@@ -154,7 +157,7 @@ class GitPoller(base.PollingChangeSource):
     def _get_commit_timestamp(self, rev):
         # unix timestamp
         args = ['log', rev, '--no-walk', r'--format=%ct']
-        d = utils.getProcessOutput(self.gitbin, args, path=self.workdir, env={}, errortoo=False )
+        d = utils.getProcessOutput(self.gitbin, args, path=self.workdir, env=dict(PATH=os.environ['PATH']), errortoo=False )
         def process(git_output):
             stripped_output = git_output.strip()
             if self.usetimestamps:
@@ -171,7 +174,7 @@ class GitPoller(base.PollingChangeSource):
 
     def _get_commit_files(self, rev):
         args = ['log', rev, '--name-only', '--no-walk', r'--format=%n']
-        d = utils.getProcessOutput(self.gitbin, args, path=self.workdir, env={}, errortoo=False )
+        d = utils.getProcessOutput(self.gitbin, args, path=self.workdir, env=dict(PATH=os.environ['PATH']), errortoo=False )
         def process(git_output):
             fileList = git_output.split()
             return fileList
@@ -180,7 +183,7 @@ class GitPoller(base.PollingChangeSource):
             
     def _get_commit_name(self, rev):
         args = ['log', rev, '--no-walk', r'--format=%aE']
-        d = utils.getProcessOutput(self.gitbin, args, path=self.workdir, env={}, errortoo=False )
+        d = utils.getProcessOutput(self.gitbin, args, path=self.workdir, env=dict(PATH=os.environ['PATH']), errortoo=False )
         def process(git_output):
             stripped_output = git_output.strip()
             if len(stripped_output) == 0:
@@ -200,7 +203,7 @@ class GitPoller(base.PollingChangeSource):
         # about the stderr or stdout from this command. We set errortoo=True to
         # avoid an errback from the deferred. The callback which will be added to this
         # deferred will not use the response.
-        d = utils.getProcessOutput(self.gitbin, args, path=self.workdir, env={}, errortoo=True )
+        d = utils.getProcessOutput(self.gitbin, args, path=self.workdir, env=dict(PATH=os.environ['PATH']), errortoo=True )
 
         return d
 
@@ -210,7 +213,7 @@ class GitPoller(base.PollingChangeSource):
         revListArgs = ['log', 'HEAD..FETCH_HEAD', r'--format=%H']
         self.changeCount = 0
         d = utils.getProcessOutput(self.gitbin, revListArgs, path=self.workdir,
-                                   env={}, errortoo=False )
+                                   env=dict(PATH=os.environ['PATH']), errortoo=False )
         wfd = defer.waitForDeferred(d)
         yield wfd
         results = wfd.getResult()
@@ -271,7 +274,7 @@ class GitPoller(base.PollingChangeSource):
             return
         log.msg('gitpoller: catching up to FETCH_HEAD')
         args = ['reset', '--hard', 'FETCH_HEAD']
-        d = utils.getProcessOutputAndValue(self.gitbin, args, path=self.workdir, env={})
+        d = utils.getProcessOutputAndValue(self.gitbin, args, path=self.workdir, env=dict(PATH=os.environ['PATH']))
         d.addCallback(self._convert_nonzero_to_failure)
         return d
 
