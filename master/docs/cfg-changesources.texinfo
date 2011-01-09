@@ -645,6 +645,25 @@ whereas the @code{incoming} hook is run with just one revision at a
 time. The @code{hgbuildbot.hook} function will only work with the
 @code{changegroup} hook.
 
+If the buildmaster @code{PBChangeSource} is configured to require
+sendchange credentials then you can set these with the @code{auth}
+parameter. When this parameter is not set it defaults to
+@code{change:changepw}, which are the defaults for the @code{user} and
+@code{password} values of a @code{PBChangeSource} which doesn't require
+authentication.
+
+@example
+[hgbuildbot]
+master = buildmaster.example.org:9987
+auth = clientname:supersecret
+@end example
+
+You can set this parameter in either the global @file{/etc/mercurial/hgrc},
+your personal @file{~/.hgrc} file or the repository local @file{.hg/hgrc}
+file. But since this value is stored in plain text, you must make sure that
+it can only be read by those users that need to know the authentication
+credentials.
+
 The @code{[hgbuildbot]} section has two other parameters that you
 might specify, both of which control the name of the branch that is
 attached to the changes coming from this hook.
