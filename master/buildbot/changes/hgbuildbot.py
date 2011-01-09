@@ -48,6 +48,10 @@
 #
 #   category = None                      # category property
 #   project = ''                         # project this repository belong to
+#
+#   auth = user:passwd                   # How to authenticate, defaults to
+#                                        # change:changepw, which is also
+#                                        # the default of PBChangeSource.
 
 import os
 
@@ -74,6 +78,7 @@ def hook(ui, repo, hooktype, node=None, source=None, **kwargs):
         stripcount = int(ui.config('notify','strip') or ui.config('hgbuildbot','strip',3))
         category = ui.config('hgbuildbot', 'category', None)
         project = ui.config('hgbuildbot', 'project', '')
+        auth = ui.config('hgbuildbot', 'auth', None)
     else:
         ui.write("* You must add a [hgbuildbot] section to .hg/hgrc in "
                  "order to use buildbot hook\n")
@@ -104,7 +109,11 @@ def hook(ui, repo, hooktype, node=None, source=None, **kwargs):
             if branchtype == 'inrepo':
                 branch = workingctx(repo).branch()
 
-    s = sendchange.Sender(master)
+    if not auth:
+        auth = 'change:changepw'
+    auth = auth.split(':', 1)
+
+    s = sendchange.Sender(master, auth=auth)
     d = defer.Deferred()
     reactor.callLater(0, d.callback, None)
     # process changesets
