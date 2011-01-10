@@ -29,7 +29,7 @@ from twisted.application.internet import TimerService
 
 import buildbot
 import buildbot.pbmanager
-from buildbot.util import now, safeTranslate, eventual
+from buildbot.util import now, safeTranslate, eventual, subscription
 from buildbot.pbutil import NewCredPerspective
 from buildbot.process.builder import Builder, IDLE
 from buildbot.status.builder import Status, BuildSetStatus
@@ -645,6 +645,10 @@ class BuildMaster(service.MultiService):
         # create log_rotation object and set default parameters (used by WebStatus)
         self.log_rotation = LogRotation()
 
+        # subscription point to recieve changes; users should call subscribeToChanges
+        # to get into this subscription point
+        self._change_subscriptions = subscription.SubscriptionPoint("changes")
+
     def startService(self):
         service.MultiService.startService(self)
         if not self.readConfig:
@@ -1073,6 +1077,7 @@ class BuildMaster(service.MultiService):
             # TODO: this needs to go
             self.botmaster.db = self.db
             self.status.setDB(self.db)
+            self._change_subscriptions.subscribe(self.status.changeAdded)
 
             self.db.subscribe_to("add-buildrequest",
                                  self.botmaster.trigger_add_buildrequest)
@@ -1245,9 +1250,7 @@ class BuildMaster(service.MultiService):
         def notify(change):
             msg = u"added change %s to database" % change
             log.msg(msg.encode('utf-8', 'replace'))
-            self.status.changeAdded(change)
-            # kick off the schedulers
-            self.scheduler_manager.trigger()
+            self._change_subscriptions.deliver(change)
             return change
         d.addCallback(notify)
         return d
@@ -1274,6 +1277,14 @@ class BuildMaster(service.MultiService):
         bsid = self.db.create_buildset(ssid, reason, props, builderNames, t)
         return bsid
 
+    def subscribeToChanges(self, callback):
+        """
+        Request that L{callback} be called with each Change object added to the
+        cluster.
+
+        Note: this method will go away in 0.9.x
+        """
+        return self._change_subscriptions.subscribe(callback)
 
 class Control:
     implements(interfaces.IControl)
