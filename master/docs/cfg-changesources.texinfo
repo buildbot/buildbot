@@ -81,8 +81,6 @@ process
 @item Mercurial
 @itemize @bullet
 @item pb.PBChangeSource (listening for connections from
-@code{contrib/hg_buildbot.py} run in an 'incoming' hook)
-@item pb.PBChangeSource (listening for connections from
 @code{buildbot/changes/hgbuildbot.py} run as an in-process 'changegroup'
 hook)
 @item change_hook in WebStatus (
