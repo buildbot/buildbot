@@ -45,16 +45,21 @@ class Sender:
         return d
 
     def printSuccess(self, res):
+        print getSuccessString(res)
+
+    def getSuccessString(self, res):
         if self.num_changes > 1:
-            print "%d changes sent successfully" % self.num_changes
+            return "%d changes sent successfully" % self.num_changes
         elif self.num_changes == 1:
-            print "change sent successfully"
+            return "change sent successfully"
         else:
-            print "no changes to send"
+            return "no changes to send"
 
     def printFailure(self, why):
-        print "change(s) NOT sent, something went wrong:"
-        print why
+        print getFailureString(why)
+
+    def getFailureString(self, why):
+        return "change(s) NOT sent, something went wrong: " + str(why)
 
     def stop(self, res):
         reactor.stop()

@@ -153,7 +153,13 @@ def hook(ui, repo, hooktype, node=None, source=None, **kwargs):
         }
         d.addCallback(_send, change)
 
-    d.addCallbacks(s.printSuccess, s.printFailure)
+    def _printSuccess(res):
+        ui.status(s.getSuccessString(res) + '\n')
+
+    def _printFailure(why):
+        ui.warn(s.getFailureString(why) + '\n')
+
+    d.addCallbacks(_printSuccess, _printFailure)
     d.addBoth(s.stop)
     s.run()
 
