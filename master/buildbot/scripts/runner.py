@@ -22,13 +22,14 @@
 
 import os, sys, stat, re, time
 from twisted.python import usage, util, runtime
-from twisted.internet import reactor, defer
+from twisted.internet import defer
 
 from buildbot.interfaces import BuildbotNotRunningError
 
 def in_reactor(f):
     """decorate a function by running it with maybeDeferred in a reactor"""
     def wrap(*args, **kwargs):
+        from twisted.internet import reactor
         result = [ ]
         def async():
             d = defer.maybeDeferred(f, *args, **kwargs)
@@ -800,7 +801,9 @@ def statusgui(config):
     if master is None:
         raise usage.UsageError("master must be specified: on the command "
                                "line or in ~/.buildbot/options")
-    c = gtkPanes.GtkClient(master)
+    passwd = config.get('passwd')
+    username = config.get('username')
+    c = gtkPanes.GtkClient(master, username=username, passwd=passwd)
     c.run()
 
 class SendChangeOptions(OptionsWithOptionsFile):

@@ -27,7 +27,7 @@ assert(gtk.Window) # in gtk1 it's gtk.GtkWindow
 from twisted.spread import pb
 
 #from buildbot.clients.base import Builder, Client
-from buildbot.clients.base import TextClient
+from buildbot.clients.base import TextClient, StatusClient
 from buildbot.util import now
 
 from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE, EXCEPTION
@@ -497,8 +497,11 @@ class ThreeRowClient(pb.Referenceable):
 class GtkClient(TextClient):
     ClientClass = ThreeRowClient
 
-    def __init__(self, master):
+    def __init__(self, master, events="steps", username="statusClient", passwd="clientpw"):
         self.master = master
+        self.username = username
+        self.passwd = passwd
+        self.listener = StatusClient(events)
 
         w = gtk.Window()
         self.w = w
