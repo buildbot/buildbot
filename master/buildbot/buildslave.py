@@ -279,9 +279,9 @@ class AbstractBuildSlave(pb.Avatar, service.MultiService):
             def _got_version(version):
                 state["version"] = version
             def _version_unavailable(why):
+                why.trap(pb.NoSuchMethod)
                 # probably an old slave
-                log.msg("BuildSlave.version_unavailable")
-                log.err(why)
+                state["version"] = '(unknown)'
             d1.addCallbacks(_got_version, _version_unavailable)
         d.addCallback(_get_version)
 
