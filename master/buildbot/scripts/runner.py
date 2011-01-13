@@ -146,7 +146,7 @@ class MakerBase(OptionsWithOptionsFile):
         ["quiet", "q", "Do not emit the commands being run"],
         ]
 
-    longdesc = """
+    usage.Options.longdesc = """
     Operates upon the specified <basedir> (or the current directory, if not
     specified).
     """
