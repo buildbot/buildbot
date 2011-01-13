@@ -45,7 +45,7 @@ class Sender:
         return d
 
     def printSuccess(self, res):
-        print getSuccessString(res)
+        print self.getSuccessString(res)
 
     def getSuccessString(self, res):
         if self.num_changes > 1:
@@ -56,7 +56,7 @@ class Sender:
             return "no changes to send"
 
     def printFailure(self, why):
-        print getFailureString(why)
+        print self.getFailureString(why)
 
     def getFailureString(self, why):
         return "change(s) NOT sent, something went wrong: " + str(why)
