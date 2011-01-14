@@ -466,11 +466,11 @@ class Builder(pb.Referenceable, service.MultiService):
             diffs.append('nextSlave changed from %s to %s' % (self.nextSlave, setup.get('nextSlave')))
         if setup.get('nextBuild') != self.nextBuild:
             diffs.append('nextBuild changed from %s to %s' % (self.nextBuild, setup.get('nextBuild')))
-        if setup['buildHorizon'] != self.buildHorizon:
+        if setup.get('buildHorizon', None) != self.buildHorizon:
             diffs.append('buildHorizon changed from %s to %s' % (self.buildHorizon, setup['buildHorizon']))
-        if setup['logHorizon'] != self.logHorizon:
+        if setup.get('logHorizon', None) != self.logHorizon:
             diffs.append('logHorizon changed from %s to %s' % (self.logHorizon, setup['logHorizon']))
-        if setup['eventHorizon'] != self.eventHorizon:
+        if setup.get('eventHorizon', None) != self.eventHorizon:
             diffs.append('eventHorizon changed from %s to %s' % (self.eventHorizon, setup['eventHorizon']))
         if setup.get('category', None) != self.category:
             diffs.append('category changed from %r to %r' % (self.category, setup.get('category', None)))
