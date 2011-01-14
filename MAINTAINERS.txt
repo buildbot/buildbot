@@ -109,26 +109,13 @@ MailNotifier
     U: http://trac.buildbot.net/query?keywords=~mail&status=!closed&order=priority
 
 
-== Buildbot Features ==
+== Buildbot Core Features ==
 
 Virtualization
     D: Use of virtual, start-on-demand slaves
     M: John Carr <john.carr@isotoma.com> - Hacker
     M: Tom Wardill <tom@howrandom.net> - Hacker
     U: http://trac.buildbot.net/wiki/VirtualizationProject
-
-
-== Ongoing Projects ==
-
-Load Balancing
-
-Status Database
-
-Project / Repository Support
-
-Build Coordination
-
-Documentation
 
 
 == Packaging & System Compatibility ==
