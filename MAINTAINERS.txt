@@ -144,7 +144,17 @@ RedHat / Fedora
 
 Debian / Ubuntu
 
+Gentoo
+    M: Dustin J. Mitchell <dustin@v.igoros.us> - Tester
+
 
 == Other Teams ==
 
 Security
+
+== Everything Else ==
+
+Committers
+    D: General Buildbot development and maintenance
+    M: Dustin J. Mitchell <dustin@v.igoros.us> - Hacker
+    M: Amber Yust <ayust@yelp.com> - Hacker
