@@ -121,9 +121,19 @@ class GitPoller(base.PollingChangeSource):
             d.addErrback(self._stop_on_failure)
             return d
         d.addCallback(set_master)
-        def log_finished(_):
-            log.msg("gitpoller: finished initializing working dir from %s" % self.repourl)
-        d.addCallback(log_finished)
+        def get_rev(_):
+            d = utils.getProcessOutputAndValue(self.gitbin,
+                    ['rev-parse', self.branch],
+                    path=self.workdir, env={})
+            d.addCallback(self._convert_nonzero_to_failure)
+            d.addErrback(self._stop_on_failure)
+            d.addCallback(lambda (out, err, code) : out.strip())
+            return d
+        d.addCallback(get_rev)
+        def print_rev(rev):
+            log.msg("gitpoller: finished initializing working dir from %s at rev %s"
+                    % (self.repourl, rev))
+        d.addCallback(print_rev)
         return d
 
     def describe(self):
@@ -198,7 +208,7 @@ class GitPoller(base.PollingChangeSource):
         self.lastPoll = time.time()
         
         # get a deferred object that performs the fetch
-        args = ['fetch', self.repourl, self.branch]
+        args = ['fetch', 'origin']
         # This command always produces data on stderr, but we actually do not care
         # about the stderr or stdout from this command. We set errortoo=True to
         # avoid an errback from the deferred. The callback which will be added to this
@@ -210,7 +220,7 @@ class GitPoller(base.PollingChangeSource):
     @defer.deferredGenerator
     def _process_changes(self, unused_output):
         # get the change list
-        revListArgs = ['log', 'HEAD..FETCH_HEAD', r'--format=%H']
+        revListArgs = ['log', '%s..origin/%s' % (self.branch, self.branch), r'--format=%H']
         self.changeCount = 0
         d = utils.getProcessOutput(self.gitbin, revListArgs, path=self.workdir,
                                    env=dict(PATH=os.environ['PATH']), errortoo=False )
@@ -272,8 +282,8 @@ class GitPoller(base.PollingChangeSource):
         if self.changeCount == 0:
             log.msg('gitpoller: no changes, no catch_up')
             return
-        log.msg('gitpoller: catching up to FETCH_HEAD')
-        args = ['reset', '--hard', 'FETCH_HEAD']
+        log.msg('gitpoller: catching up tracking branch')
+        args = ['reset', '--hard', 'origin/%s' % (self.branch,)]
         d = utils.getProcessOutputAndValue(self.gitbin, args, path=self.workdir, env=dict(PATH=os.environ['PATH']))
         d.addCallback(self._convert_nonzero_to_failure)
         return d
@@ -289,6 +299,7 @@ class GitPoller(base.PollingChangeSource):
         (stdout, stderr, code) = res
         if code != 0:
             raise EnvironmentError('command failed with exit code %d: %s' % (code, stderr))
+        return (stdout, stderr, code)
 
     def _stop_on_failure(self, f):
         "utility method to stop the service when a failure occurs"
