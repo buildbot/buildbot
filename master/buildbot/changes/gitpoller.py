@@ -34,7 +34,7 @@ class GitPoller(base.PollingChangeSource):
                  workdir=None, pollInterval=10*60, 
                  gitbin='git', usetimestamps=True,
                  category=None, project=None,
-                 pollinterval=-2):
+                 pollinterval=-2, fetch_refspec=None):
         # for backward compatibility; the parameter used to be spelled with 'i'
         if pollinterval != -2:
             pollInterval = pollinterval
@@ -43,6 +43,7 @@ class GitPoller(base.PollingChangeSource):
         self.repourl = repourl
         self.branch = branch
         self.pollInterval = pollInterval
+        self.fetch_refspec = fetch_refspec
         self.lastChange = time.time()
         self.lastPoll = time.time()
         self.gitbin = gitbin
@@ -106,8 +107,13 @@ class GitPoller(base.PollingChangeSource):
         d.addCallback(git_remote_add)
         
         def git_fetch_origin(_):
-            d = utils.getProcessOutputAndValue(self.gitbin,
-                    ['fetch', 'origin'],
+            args = ['fetch', 'origin']
+            if self.fetch_refspec:
+                if type(self.fetch_refspec) in (list,set):
+                    args.extend(self.fetch_refspec)
+                else:
+                    args.append(self.fetch_respec)
+            d = utils.getProcessOutputAndValue(self.gitbin, args,
                     path=self.workdir, env=dict(PATH=os.environ['PATH']))
             d.addCallback(self._convert_nonzero_to_failure)
             d.addErrback(self._stop_on_failure)
@@ -216,6 +222,11 @@ class GitPoller(base.PollingChangeSource):
         
         # get a deferred object that performs the fetch
         args = ['fetch', 'origin']
+        if self.fetch_refspec:
+	    if type(self.fetch_refspec) in (list,set):
+                args.extend(self.fetch_refspec)
+        else:
+            args.append(self.fetch_respec)
         # This command always produces data on stderr, but we actually do not care
         # about the stderr or stdout from this command. We set errortoo=True to
         # avoid an errback from the deferred. The callback which will be added to this
