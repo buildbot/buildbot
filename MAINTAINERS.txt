@@ -7,8 +7,6 @@ Each component contains indented lines identified as follows:
 
 D: Component description (optional)
 
-F: Files comprising this component (optional)
-
 M: Component maintainer, in the form
       FullName <address@domain.com>  - STATUS
    where STATUS is one of
