@@ -56,8 +56,15 @@ class GitPoller(base.PollingChangeSource):
         
         if self.workdir == None:
             self.workdir = tempfile.gettempdir() + '/gitpoller_work'
+            log.msg("WARNING: gitpoller using temporary workdir " +
+                    "'%s'; consider setting workdir=" % self.workdir)
 
     def startService(self):
+        # make our workdir absolute, relative to the master's basedir
+        if not os.path.isabs(self.workdir):
+            self.workdir = os.path.join(self.master.basedir, self.workdir)
+            log.msg("gitpoller: using workdir '%s'" % self.workdir)
+
         # initialize the repository we'll use to get changes; note that
         # startService is not an event-driven method, so this method will
         # instead acquire self.initLock immediately when it is called.

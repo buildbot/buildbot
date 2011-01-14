@@ -1218,8 +1218,10 @@ processes any changes. It requires its own working directory for operation, whic
 can be specified via the @code{workdir} property. By default a temporary directory will
 be used.
 
-The @code{GitPoller} has only been tested with @code{git} version 
-@code{1.7.0.3} - your mileage may vary.
+The @code{GitPoller} has mostly been tested with Git version @code{1.7.0.3},
+although it does not use any obscure Git features and should work with any
+version.  If you discover any incopmatibilities, please report them to the
+Buildbot developers.
 
 @code{GitPoller} accepts the following arguments:
 
@@ -1232,7 +1234,10 @@ the git-url that describes the remote repository, e.g. @code{git@@example.com:fo
 the desired branch to fetch, will default to @code{'master'}
 
 @item workdir
-the directory where the poller should keep its local repository. will default to @code{<tempdir>/gitpoller_work}
+the directory where the poller should keep its local repository. will default
+to @code{<tempdir>/gitpoller_work}, which is probably not what you want.  If
+this is a relative path, it will be interpreted relative to the master's
+basedir.
                 
 @item pollInterval
 interval in seconds between polls, default is 10 minutes.
