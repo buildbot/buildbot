@@ -112,7 +112,7 @@ class GitPoller(base.PollingChangeSource):
                 if type(self.fetch_refspec) in (list,set):
                     args.extend(self.fetch_refspec)
                 else:
-                    args.append(self.fetch_respec)
+                    args.append(self.fetch_refspec)
             d = utils.getProcessOutputAndValue(self.gitbin, args,
                     path=self.workdir, env=dict(PATH=os.environ['PATH']))
             d.addCallback(self._convert_nonzero_to_failure)
@@ -226,7 +226,7 @@ class GitPoller(base.PollingChangeSource):
 	    if type(self.fetch_refspec) in (list,set):
                 args.extend(self.fetch_refspec)
         else:
-            args.append(self.fetch_respec)
+            args.append(self.fetch_refspec)
         # This command always produces data on stderr, but we actually do not care
         # about the stderr or stdout from this command. We set errortoo=True to
         # avoid an errback from the deferred. The callback which will be added to this
