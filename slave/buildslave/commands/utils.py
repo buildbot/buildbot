@@ -59,10 +59,11 @@ if runtime.platformType  == 'win32':
         # os.listdir below only returns a list of unicode filenames if the parameter is unicode
         # Thus, if a non-unicode-named dir contains a unicode filename, that filename will get garbled.
         # So force dir to be unicode.
-        try:
-            dir = unicode(dir, "utf-8")
-        except:
-            log.msg("rmdirRecursive: decoding from UTF-8 failed")
+        if not isinstance(dir, unicode):
+            try:
+                dir = unicode(dir, "utf-8")
+            except:
+                log.err("rmdirRecursive: decoding from UTF-8 failed (ignoring)")
 
         try:
             list = os.listdir(dir)
