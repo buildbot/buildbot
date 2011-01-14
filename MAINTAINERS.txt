@@ -140,6 +140,11 @@ Security
 == Everything Else ==
 
 Committers
-    D: General Buildbot development and maintenance
+    D: People who can commit changes to the main Buildbot repository
     M: Dustin J. Mitchell <dustin@v.igoros.us> - Hacker
     M: Amber Yust <ayust@yelp.com> - Hacker
+    M: Ben Hearsum <bhearsum@mozilla.com> - Hacker
+    M: Brian Warner <warner@lothar.com> - Hacker
+    M: Chris AtLee <catlee@mozilla.com> - Hacker
+    M: Marc-Antoine Ruel <maruel@chromium.org> - Hacker
+    M: Marcus Lindblom <macke@yar.nu> - Hacker
