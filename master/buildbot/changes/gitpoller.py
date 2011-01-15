@@ -108,11 +108,7 @@ class GitPoller(base.PollingChangeSource):
         
         def git_fetch_origin(_):
             args = ['fetch', 'origin']
-            if self.fetch_refspec:
-                if type(self.fetch_refspec) in (list,set):
-                    args.extend(self.fetch_refspec)
-                else:
-                    args.append(self.fetch_refspec)
+            self._extend_with_fetch_refspec(args)
             d = utils.getProcessOutputAndValue(self.gitbin, args,
                     path=self.workdir, env=dict(PATH=os.environ['PATH']))
             d.addCallback(self._convert_nonzero_to_failure)
@@ -222,16 +218,15 @@ class GitPoller(base.PollingChangeSource):
         
         # get a deferred object that performs the fetch
         args = ['fetch', 'origin']
-        if self.fetch_refspec:
-	    if type(self.fetch_refspec) in (list,set):
-                args.extend(self.fetch_refspec)
-        else:
-            args.append(self.fetch_refspec)
+        self._extend_with_fetch_refspec(args)
+
         # This command always produces data on stderr, but we actually do not care
         # about the stderr or stdout from this command. We set errortoo=True to
         # avoid an errback from the deferred. The callback which will be added to this
         # deferred will not use the response.
-        d = utils.getProcessOutput(self.gitbin, args, path=self.workdir, env=dict(PATH=os.environ['PATH']), errortoo=True )
+        d = utils.getProcessOutput(self.gitbin, args,
+                    path=self.workdir,
+                    env=dict(PATH=os.environ['PATH']), errortoo=True )
 
         return d
 
@@ -325,3 +320,10 @@ class GitPoller(base.PollingChangeSource):
             d = defer.maybeDeferred(lambda : self.stopService())
             d.addErrback(log.err, 'while stopping broken GitPoller service')
         return f
+
+    def _extend_with_fetch_refspec(self, args):
+        if self.fetch_refspec:
+            if type(self.fetch_refspec) in (list,set):
+                args.extend(self.fetch_refspec)
+            else:
+                args.append(self.fetch_refspec)
