@@ -427,6 +427,12 @@ The callable given as parameter will take the repository property from
 the Change and its return value will be used as repository URL.
 
 @end table
+
+@item timeout
+Specifies the timeout for slave-side operations, in seconds.  If your
+repositories are particularly large, then you may need to increase this 
+value from its default of 1200 (20 minutes).
+
 @end table
 
 Use of WithProperites with string, dict and callable is supported.
