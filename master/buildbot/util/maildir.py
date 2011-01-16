@@ -130,5 +130,5 @@ class MaildirService(service.MultiService):
 
     def messageReceived(self, filename):
         """process a received message.  The filename is relative to self.newdir.
-        Returns a Deferred."""
-        raise NotImplementedError
+        Returns a Deferred.  The default calls the same method on its parent class."""
+        return self.parent.messageReceived(filename)

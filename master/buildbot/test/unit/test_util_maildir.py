@@ -17,7 +17,7 @@ import os
 import shutil
 from twisted.trial import unittest
 from twisted.internet import defer
-from buildbot.changes import maildir
+from buildbot.util import maildir
 
 class TestMaildirService(unittest.TestCase):
     def setUp(self):

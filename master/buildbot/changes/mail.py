@@ -28,7 +28,7 @@ from twisted.python import log
 from twisted.internet import defer
 from buildbot import util
 from buildbot.interfaces import IChangeSource
-from buildbot.changes.maildir import MaildirService
+from buildbot.util.maildir import MaildirService
 
 class MaildirSource(MaildirService, util.ComparableMixin):
     """Generic base class for Maildir-based change sources"""

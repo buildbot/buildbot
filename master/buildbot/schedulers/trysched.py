@@ -21,7 +21,7 @@ from twisted.protocols import basic
 
 from buildbot import pbutil
 from buildbot.sourcestamp import SourceStamp
-from buildbot.changes.maildir import MaildirService
+from buildbot.util.maildir import MaildirService
 from buildbot.process.properties import Properties
 from buildbot.schedulers import base
 from buildbot.status.builder import BuildSetStatus
