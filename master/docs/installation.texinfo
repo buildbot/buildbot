@@ -95,10 +95,23 @@ included as json in python-2.6 and later)
 @item
 Jinja2: http://jinja.pocoo.org/
 
-Buildbot requires Jinja version 2.1 or higher
+Buildbot requires Jinja version 2.1 or higher.
 
 Jinja2 is a general purpose templating language and is used by Buildbot
 to generate the HTML output.
+
+@item
+SQLAlchemy: http://www.sqlalchemy.org/
+
+Buildbot requires SQLAlchemy 0.6 or higher.  SQLAlchemy allows Buildbot to
+build database schemas and queries for a wide variety of database systems.
+
+@item
+SQLAlchemy-Migrate: http://code.google.com/p/sqlalchemy-migrate/
+
+Buildbot requires SQLAlchemy-Migrate version 0.6 (exactly; as-yet unreleased
+later versions may not work).  Buildbot uses SQLAlchemy-Migrate to manage
+schema upgrades from version to version.
 
 @end itemize
 
