@@ -7,9 +7,11 @@ Each component contains indented lines identified as follows:
 
 D: Component description (optional)
 
+U: URL for more information
+
 M: Component maintainer, in the form
       FullName <address@domain.com>  - STATUS
-   where STATUS is one of
+   where STATUS is optional, and can be one of
       Hacker - knows the code and can write fixes
       Tester - can test patches and advise committers to merge
       User - can help to triage and explain bugs
@@ -24,8 +26,6 @@ S: Component status.  One of
         from Buildbot if it accumulates too many bugs
     Last-Rites: This component is slated to be removed in the given
         release, unless a maintainer steps forward
-
-U: URL for information about the Buildbot component (usually a Trac page)
 
 ---
 
@@ -124,30 +124,67 @@ Buildbot Try
 == Packaging & System Compatibility ==
 
 MacPorts
-    M: William Siegrist <wsiegrist@apple.com> - Hacker
+    S: Maintained
+    M: William Siegrist <wsiegrist@apple.com>
+    U: http://trac.macports.org/browser/trunk/dports/devel/buildbot/Portfile
+
+FreeBSD
+    S: Maitnained
+    U: http://www.freebsd.org/cgi/cvsweb.cgi/ports/devel/buildbot/
+
+OpenBSD
+    S: Maintained
+    U: http://www.openbsd.org/cgi-bin/cvsweb/ports/devel/py-buildbot/
 
 Windows
+    S: Patched
+    M: Robert Stackhouse <robertstackhouse@gmail.com>
+    U: http://trac.buildbot.net/wiki/windows
 
 RedHat / Fedora
+    S: Maintained
+    M: Gareth Armstrong <gareth.armstrong@hp.com>
+    M: Gianluca Sforna <giallu@gmail.com>
+    M: Steve Milner <smilner@redhat.com>
+    U: https://admin.fedoraproject.org/pkgdb/acls/name/buildbot
 
 Debian / Ubuntu
+    S: Orphaned
+    U: http://packages.ubuntu.com/maverick/buildbot
+
+OpenCSW
+    S: Orphaned
+    U: http://www.opencsw.org/packages/CSWbuildbot/
 
 Gentoo
-    M: Dustin J. Mitchell <dustin@v.igoros.us> - Tester
+    M: Dustin J. Mitchell <dustin@v.igoros.us>
+    U: http://packages.gentoo.org/package/dev-util/buildbot
 
 
-== Other Teams ==
+== Other Contact Information ==
 
 Security
+    D: Contacts members of this team directly with any security concerns
+    M: Dustin J. Mitchell <dustin@v.igoros.us>
+    M: Amber Yust <ayust@yelp.com>
+    M: Steve Milner <smilner@redhat.com>
+    U: http://trac.buildbot.net/wiki/SecurityPolicy
 
-== Everything Else ==
+Metabuildbot Slave Donors
+    D: Maintainers of buildslaves for the Metabuildbot
+    M: Steve Milner <smilner@redhat.com>
+    M: Dustin J. Mitchell <dustin@v.igoros.us>
+    M: Mozilla Release Engineering <release@mozilla.com>
+    M: Marc-Antoine Ruel <maruel@chromium.org>
+    M: Dustin Sallings <dustin@spy.net>
+    U: http://buildbot.buildbot.net
 
 Committers
     D: People who can commit changes to the main Buildbot repository
-    M: Dustin J. Mitchell <dustin@v.igoros.us> - Hacker
-    M: Amber Yust <ayust@yelp.com> - Hacker
-    M: Ben Hearsum <bhearsum@mozilla.com> - Hacker
-    M: Brian Warner <warner@lothar.com> - Hacker
-    M: Chris AtLee <catlee@mozilla.com> - Hacker
-    M: Marc-Antoine Ruel <maruel@chromium.org> - Hacker
-    M: Marcus Lindblom <macke@yar.nu> - Hacker
+    M: Dustin J. Mitchell <dustin@v.igoros.us>
+    M: Amber Yust <ayust@yelp.com>
+    M: Ben Hearsum <bhearsum@mozilla.com>
+    M: Brian Warner <warner@lothar.com>
+    M: Chris AtLee <catlee@mozilla.com>
+    M: Marc-Antoine Ruel <maruel@chromium.org>
+    M: Marcus Lindblom <macke@yar.nu>
