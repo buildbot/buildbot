@@ -22,6 +22,7 @@ from twisted.protocols import basic
 from buildbot import pbutil
 from buildbot.sourcestamp import SourceStamp
 from buildbot.util.maildir import MaildirService
+from buildbot.util import netstrings
 from buildbot.process.properties import Properties
 from buildbot.schedulers import base
 from buildbot.status.builder import BuildSetStatus
@@ -52,18 +53,6 @@ class TryBase(base.BaseScheduler):
 class BadJobfile(Exception):
     pass
 
-class JobFileScanner(basic.NetstringReceiver):
-    def __init__(self):
-        self.strings = []
-        self.transport = self # so transport.loseConnection works
-        self.error = False
-
-    def stringReceived(self, s):
-        self.strings.append(s)
-
-    def loseConnection(self):
-        self.error = True
-
 class Try_Jobdir(TryBase):
     compare_attrs = ( 'name', 'builderNames', 'jobdir', 'properties' )
 
@@ -90,15 +79,15 @@ class Try_Jobdir(TryBase):
         #  patchlevel, usually "1"
         #  patch
         #  builderNames...
-        p = JobFileScanner()
-        p.dataReceived(f.read())
-        if p.error:
+        p = netstrings.NetstringParser()
+        try:
+            p.dataReceived(f.read())
+        except basic.NetstringParseError:
             raise BadJobfile("unable to parse netstrings")
-        s = p.strings
-        ver = s.pop(0)
+        ver = p.strings.pop(0)
         if ver == "1":
-            buildsetID, branch, baserev, patchlevel, diff = s[:5]
-            builderNames = s[5:]
+            buildsetID, branch, baserev, patchlevel, diff = p.strings[:5]
+            builderNames = p.strings[5:]
             if branch == "":
                 branch = None
             if baserev == "":
@@ -107,8 +96,8 @@ class Try_Jobdir(TryBase):
             patch = (patchlevel, diff)
             ss = SourceStamp("Old client", branch, baserev, patch)
         elif ver == "2": # introduced the repository and project property
-            buildsetID, branch, baserev, patchlevel, diff, repository, project = s[:7]
-            builderNames = s[7:]
+            buildsetID, branch, baserev, patchlevel, diff, repository, project = p.strings[:7]
+            builderNames = p.strings[7:]
             if branch == "":
                 branch = None
             if baserev == "":
@@ -144,11 +133,11 @@ class Try_Jobdir(TryBase):
         except BadJobfile:
             log.msg("%s reports a bad jobfile in %s" % (self, filename))
             log.err()
-            return
+            return defer.succeed(None)
         # Validate/fixup the builder names.
         builderNames = self.filterBuilderList(builderNames)
         if not builderNames:
-            return
+            return defer.succeed(None)
         reason = "'try' job"
         d = self.parent.db.runInteraction(self._try, ss, builderNames, reason)
         def _done(ign):
