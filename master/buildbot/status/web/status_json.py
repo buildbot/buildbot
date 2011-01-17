@@ -500,10 +500,10 @@ class BuildStepsJsonResource(JsonResource):
         # Dynamic childs.
         build_step_status = None
         if isinstance(path, int) or _IS_INT.match(path):
-            build_step_status = self.build_status.getSteps[int(path)]
+            build_step_status = self.build_status.getSteps()[int(path)]
         else:
             steps_dict = dict([(step.getName(), step)
-                               for step in self.build_status.getStep()])
+                               for step in self.build_status.getSteps()])
             build_step_status = steps_dict.get(path)
         if build_step_status:
             # Create it on-demand.
@@ -519,7 +519,7 @@ class BuildStepsJsonResource(JsonResource):
         # Only use the number and not the names!
         results = {}
         index = 0
-        for step in self.build_status.getStep():
+        for step in self.build_status.getSteps():
             results[index] = step
             index += 1
         return results
