@@ -75,11 +75,16 @@ Repo VC
     U: http://trac.buildbot.net/wiki/RepoProject
 
 
-== Buildbot Plugins ==
+== Change Sources ==
 
-Buildbot Try
-    M: Orphaned
-    U: http://trac.buildbot.net/wiki/TryProject
+Gerrit
+    S: Maintained
+    M: Piotr Sikora <piotr.sikora@frickle.com> - Hacker
+    M: Pierre Tardy <tardyp@gmail.com> - Hacker
+    U: http://trac.buildbot.net/wiki/gerrit
+
+
+== Buildbot Plugins ==
 
 Debug Client
     S: Orphaned
@@ -87,12 +92,6 @@ Debug Client
 Status Client
     S: Patched
     M: Mark Wielaard <mark@klomp.org>
-
-Gerrit
-    S: Maintained
-    M: Piotr Sikora <piotr.sikora@frickle.com> - Hacker
-    M: Pierre Tardy <tardyp@gmail.com> - Hacker
-    U: http://trac.buildbot.net/wiki/gerrit
 
 Web Status
     S: Supported
@@ -116,6 +115,10 @@ Virtualization
     M: John Carr <john.carr@isotoma.com> - Hacker
     M: Tom Wardill <tom@howrandom.net> - Hacker
     U: http://trac.buildbot.net/wiki/VirtualizationProject
+
+Buildbot Try
+    M: Orphaned
+    U: http://trac.buildbot.net/wiki/TryProject
 
 
 == Packaging & System Compatibility ==
