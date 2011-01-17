@@ -14,31 +14,25 @@
 # Copyright Buildbot Team Members
 
 import os
-import shutil
 from twisted.trial import unittest
 from twisted.internet import defer
 from buildbot.util import maildir
+from buildbot.test.util import dirs
 
-class TestMaildirService(unittest.TestCase):
+class TestMaildirService(dirs.DirsMixin, unittest.TestCase):
     def setUp(self):
         self.maildir = os.path.abspath("maildir")
-        if os.path.exists(self.maildir):
-            shutil.rmtree(self.maildir)
-
         self.newdir = os.path.join(self.maildir, "new")
-        os.makedirs(self.newdir)
         self.curdir = os.path.join(self.maildir, "cur")
-        os.makedirs(self.curdir)
         self.tmpdir = os.path.join(self.maildir, "tmp")
-        os.makedirs(self.tmpdir)
+        self.setUpDirs(self.maildir, self.newdir, self.curdir, self.tmpdir)
 
         self.svc = None
 
     def tearDown(self):
         if self.svc:
             self.svc.stopService()
-        if os.path.exists(self.maildir):
-            shutil.rmtree(self.maildir)
+        self.tearDownDirs()
 
     # tests
 

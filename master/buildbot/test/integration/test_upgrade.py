@@ -14,7 +14,6 @@
 # Copyright Buildbot Team Members
 
 import os
-import shutil
 import cPickle
 import tarfile
 from twisted.python import util
@@ -23,8 +22,7 @@ from twisted.trial import unittest
 import sqlalchemy as sa
 import migrate.versioning.api
 from buildbot.db import connector
-from buildbot.test.util import db
-from buildbot.test.util import change_import
+from buildbot.test.util import change_import, db, dirs
 
 class UpgradeTestMixin(object):
     """Supporting code to test upgrading from older versions by untarring a
@@ -101,23 +99,19 @@ class DBUtilsMixin(object):
         changemgr.recode_changes(old_encoding, quiet=True)
         cPickle.dump(changemgr, open(changes_file, "w"))
 
-class UpgradeTestEmpty(db.RealDatabaseMixin, DBUtilsMixin, unittest.TestCase):
+class UpgradeTestEmpty(dirs.DirsMixin, db.RealDatabaseMixin, DBUtilsMixin, unittest.TestCase):
 
     def setUp(self):
         self.setUpRealDatabase()
 
         self.basedir = os.path.abspath("basedir")
-        if os.path.exists(self.basedir):
-            shutil.rmtree(self.basedir)
-        os.makedirs(self.basedir)
+        self.setUpDirs('basedir')
 
         self.db = connector.DBConnector(self.db_url, self.basedir)
 
     def tearDown(self):
-        if os.path.exists(self.basedir):
-            shutil.rmtree(self.basedir)
-
         self.tearDownRealDatabase()
+        self.tearDownDirs()
 
     def test_emptydb_modelmatches(self):
         d = self.db.model.upgrade()

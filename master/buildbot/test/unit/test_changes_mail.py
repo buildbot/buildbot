@@ -14,19 +14,18 @@
 # Copyright Buildbot Team Members
 
 import os
-import shutil
 from twisted.trial import unittest
-from buildbot.test.util import changesource
+from buildbot.test.util import changesource, dirs
 from buildbot.changes import mail
 
-class TestMaildirSource(changesource.ChangeSourceMixin, unittest.TestCase):
+class TestMaildirSource(changesource.ChangeSourceMixin, dirs.DirsMixin,
+                        unittest.TestCase):
+
     def setUp(self):
+        self.maildir = os.path.abspath("maildir")
+
         d = self.setUpChangeSource()
-        def setup_dirs(_):
-            self.maildir = os.path.abspath("maildir")
-            if os.path.exists(self.maildir):
-                shutil.rmtree(self.maildir)
-        d.addCallback(setup_dirs)
+        d.addCallback(lambda _ : self.setUpDirs(self.maildir))
         return d
 
     def populateMaildir(self):
@@ -46,9 +45,9 @@ class TestMaildirSource(changesource.ChangeSourceMixin, unittest.TestCase):
         self.assertTrue(os.path.exists(os.path.join(self.maildir, "cur", "newmsg")))
 
     def tearDown(self):
-        if os.path.exists(self.maildir):
-            shutil.rmtree(self.maildir)
-        return self.tearDownChangeSource()
+        d = self.tearDownDirs()
+        d.addCallback(lambda _ : self.tearDownChangeSource())
+        return d
 
     # tests
 
