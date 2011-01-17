@@ -3,6 +3,8 @@ lists who's responsible for which parts of Buildbot.  Some of these are easily
 separated into a few source files, while others are general projects that
 cover the entire Buildbot codebase.
 
+  See http://trac.buildbot.net/wiki/ComponentMaintenancePolicy for more.
+
 Each component contains indented lines identified as follows:
 
 D: Component description (optional)
@@ -40,8 +42,7 @@ Subversion VC
     U: http://trac.buildbot.net/wiki/SVNProject
 
 CVS VC
-    S: Patched
-    M: Unpaid Bill (XXX need name) <unpaid.bill@gmail.com> - Tester
+    S: Orphaned
     U: http://trac.buildbot.net/wiki/CVSProject
 
 Bazaar VC
@@ -112,14 +113,18 @@ MailNotifier
 
 Virtualization
     D: Use of virtual, start-on-demand slaves
+    S: Maintained
     M: John Carr <john.carr@isotoma.com> - Hacker
     M: Tom Wardill <tom@howrandom.net> - Hacker
     U: http://trac.buildbot.net/wiki/VirtualizationProject
 
 Buildbot Try
-    M: Orphaned
+    S: Orphaned
     U: http://trac.buildbot.net/wiki/TryProject
 
+Documentation
+    S: Supported
+    U: http://buildbot.net/buildbot/docs
 
 == Packaging & System Compatibility ==
 
@@ -129,7 +134,7 @@ MacPorts
     U: http://trac.macports.org/browser/trunk/dports/devel/buildbot/Portfile
 
 FreeBSD
-    S: Maitnained
+    S: Maintained
     U: http://www.freebsd.org/cgi/cvsweb.cgi/ports/devel/buildbot/
 
 OpenBSD
@@ -157,6 +162,7 @@ OpenCSW
     U: http://www.opencsw.org/packages/CSWbuildbot/
 
 Gentoo
+    S: Maintained
     M: Dustin J. Mitchell <dustin@v.igoros.us>
     U: http://packages.gentoo.org/package/dev-util/buildbot
 
