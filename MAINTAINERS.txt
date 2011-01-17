@@ -35,45 +35,45 @@ S: Component status.  One of
 
 Perforce VC
     S: Orphaned
-    U: http://trac.buildbot.net/wiki/P4Project
+    U: http://trac.buildbot.net/wiki/p4
 
 Subversion VC
     S: Orphaned
-    U: http://trac.buildbot.net/wiki/SVNProject
+    U: http://trac.buildbot.net/wiki/svn
 
 CVS VC
     S: Orphaned
-    U: http://trac.buildbot.net/wiki/CVSProject
+    U: http://trac.buildbot.net/wiki/cvs
 
 Bazaar VC
     S: Orphaned
-    U: http://trac.buildbot.net/wiki/BzrProject
+    U: http://trac.buildbot.net/wiki/bzr
 
 Git VC
     S: Maintained
     M: Amber Yust <ayust@yelp.com> - Hacker
     M: James Tomson <jtomson@wimba.com> - Hacker
-    U: http://trac.buildbot.net/wiki/GitProject
+    U: http://trac.buildbot.net/wiki/git
 
 BitKeeper VC
     S: Patched
     M: Amar Takhar <verm@snickers.org> - Hacker
-    U: http://trac.buildbot.net/wiki/BkProject
+    U: http://trac.buildbot.net/wiki/bk
 
 Darcs VC
     S: Orphaned
-    U: http://trac.buildbot.net/wiki/DarcsProject
+    U: http://trac.buildbot.net/wiki/darcs
 
 Mercurial VC
     S: Orphaned
-    U: http://trac.buildbot.net/wiki/HgProject
+    U: http://trac.buildbot.net/wiki/hg
 
 Repo VC
     S: Maintained
     M: Chris Soyars <ctsoyars@gmail.com> - Tester
     M: Piotr Sikora <piotr.sikora@frickle.com> - Hacker
     M: Pierre Tardy <tardyp@gmail.com> - Hacker
-    U: http://trac.buildbot.net/wiki/RepoProject
+    U: http://trac.buildbot.net/wiki/repovc
 
 
 == Change Sources ==
@@ -97,16 +97,16 @@ Status Client
 Web Status
     S: Supported
     M: Marcus Lindblom <macke@yar.nu> - Hacker
-    U: http://trac.buildbot.net/query?keywords=~web&status=!closed&order=priority
+    U: http://trac.buildbot.net/wiki/web
 
 IRC Status
     S: Maintained
     M: Amber Yust <ayust@yelp.com> - Hacker
-    U: http://trac.buildbot.net/query?keywords=~irc&status=!closed&order=priority
+    U: http://trac.buildbot.net/wiki/irc
 
 MailNotifier
     S: Orphaned
-    U: http://trac.buildbot.net/query?keywords=~mail&status=!closed&order=priority
+    U: http://trac.buildbot.net/wiki/mail
 
 
 == Buildbot Core Features ==
@@ -116,15 +116,16 @@ Virtualization
     S: Maintained
     M: John Carr <john.carr@isotoma.com> - Hacker
     M: Tom Wardill <tom@howrandom.net> - Hacker
-    U: http://trac.buildbot.net/wiki/VirtualizationProject
+    U: http://trac.buildbot.net/wiki/virtualization
 
 Buildbot Try
     S: Orphaned
-    U: http://trac.buildbot.net/wiki/TryProject
+    U: http://trac.buildbot.net/wiki/try
 
 Documentation
     S: Supported
     U: http://buildbot.net/buildbot/docs
+    U: http://trac.buildbot.net/wiki/docs
 
 == Packaging & System Compatibility ==
 
@@ -132,6 +133,11 @@ MacPorts
     S: Maintained
     M: William Siegrist <wsiegrist@apple.com>
     U: http://trac.macports.org/browser/trunk/dports/devel/buildbot/Portfile
+
+Fink
+    S: Maintained
+    M: Charles Lepple <clepple+fink@ghz.cc>
+    U: http://pdb.finkproject.org/pdb/package.php/buildbot-master-py26
 
 FreeBSD
     S: Maintained
