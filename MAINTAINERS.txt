@@ -137,7 +137,7 @@ MacPorts
 Fink
     S: Maintained
     M: Charles Lepple <clepple+fink@ghz.cc>
-    U: http://pdb.finkproject.org/pdb/package.php/buildbot-master-py26
+    U: http://pdb.finkproject.org/pdb/browse.php?name=buildbot
 
 FreeBSD
     S: Maintained
