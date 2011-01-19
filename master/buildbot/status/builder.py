@@ -2182,10 +2182,7 @@ class BuilderStatus(styles.Versioned):
         result['cachedBuilds'] = cached_builds
         result['currentBuilds'] = current_builds
         result['state'] = self.getState()[0]
-        # BuildRequestStatus doesn't have a number so display the SourceStamp.
-        result['pendingBuilds'] = [
-            b.getSourceStamp().asDict() for b in self.getPendingBuilds()
-        ]
+        result['pendingBuilds'] = len(self.getPendingBuilds())
         return result
 
 
