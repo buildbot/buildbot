@@ -547,15 +547,13 @@ class ChangesJsonResource(JsonResource):
     def __init__(self, status, changes):
         JsonResource.__init__(self, status)
         for c in changes:
-            # TODO(maruel): Problem with multiple changes with the same number.
-            # Probably try server hack specific so we could fix it on this side
-            # instead. But there is still the problem with multiple pollers from
-            # different repo where the numbers could clash.
-            number = str(c.number)
-            while number in self.children:
-                # TODO(maruel): Do something better?
-                number = str(int(c.number)+1)
-            self.putChild(number, ChangeJsonResource(status, c))
+            # c.number can be None or clash another change if the change was
+            # generated inside buildbot or if using multiple pollers.
+            if c.number is not None and str(c.number) not in self.children:
+                self.putChild(str(c.number), ChangeJsonResource(status, c))
+            else:
+                # Temporary hack since it creates information exposure.
+                self.putChild(str(id(c)), ChangeJsonResource(status, c))
 
     def asDict(self, request):
         """Don't throw an exception when there is no child."""
