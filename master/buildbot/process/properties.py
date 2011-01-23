@@ -80,9 +80,13 @@ class Properties(util.ComparableMixin):
 
     def asList(self):
         """Return the properties as a sorted list of (name, value, source)"""
-        l = [ (k, v[0], v[1]) for k,v in self.properties.items() ]
+        l = [ (k, v[0], v[1]) for k,v in self.properties.iteritems() ]
         l.sort()
         return l
+
+    def asDict(self):
+        """Return the properties as a simple key:value dictionary"""
+        return dict((k,v[0]) for k,v in self.properties.iteritems())
 
     def __repr__(self):
         return repr(dict([ (k,v[0]) for k,v in self.properties.iteritems() ]))

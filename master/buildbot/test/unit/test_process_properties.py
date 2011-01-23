@@ -332,6 +332,20 @@ class TestProperties(unittest.TestCase):
         self.assertRaises(KeyError, lambda : self.props['do-nothing'])
         self.failUnlessEqual(self.props.getProperty('do-install'), 2)
 
+    def testAsList(self):
+        self.props.setProperty("happiness", 7, "builder")
+        self.props.setProperty("flames", True, "tester")
+
+        self.assertEqual(sorted(self.props.asList()),
+                [ ('flames', True, 'tester'), ('happiness', 7, 'builder') ])
+
+    def testAsDict(self):
+        self.props.setProperty("msi_filename", "product.msi", 'packager')
+        self.props.setProperty("dmg_filename", "product.dmg", 'packager')
+
+        self.assertEqual(self.props.asDict(),
+                dict(msi_filename='product.msi', dmg_filename='product.dmg'))
+
     def testUpdate(self):
         self.props.setProperty("x", 24, "old")
         newprops = { 'a' : 1, 'b' : 2 }
