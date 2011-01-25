@@ -1218,10 +1218,7 @@ processes any changes. It requires its own working directory for operation, whic
 can be specified via the @code{workdir} property. By default a temporary directory will
 be used.
 
-The @code{GitPoller} has mostly been tested with Git version @code{1.7.0.3},
-although it does not use any obscure Git features and should work with any
-version.  If you discover any incopmatibilities, please report them to the
-Buildbot developers.
+The @code{GitPoller} only works with git versions @code{1.7} and up.
 
 @code{GitPoller} accepts the following arguments:
 
