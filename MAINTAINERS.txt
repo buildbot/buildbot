@@ -94,6 +94,9 @@ Status Client
     S: Patched
     M: Mark Wielaard <mark@klomp.org>
 
+Debug Client
+    S: Orphaned
+
 Web Status
     S: Supported
     M: Marcus Lindblom <macke@yar.nu> - Hacker
