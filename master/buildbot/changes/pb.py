@@ -43,10 +43,9 @@ class ChangePerspective(NewCredPerspective):
             files.append(path)
         changedict['files'] = files
 
-        if files:
-            return self.master.addChange(**changedict)
-        else:
-            return defer.succeed(None)
+        if not files:
+            log.msg("No files listed in change... bit strange, but not fatal.")
+        return self.master.addChange(**changedict)
 
 class PBChangeSource(base.ChangeSource):
     compare_attrs = ["user", "passwd", "port", "prefix", "port"]
