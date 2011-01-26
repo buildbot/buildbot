@@ -44,8 +44,8 @@ systems as having repositories that each provide sources for a variety
 of projects. Each project is defined as a directory tree with source
 files. The individual files may each have revisions, but we ignore
 that and treat the project as a whole as having a set of revisions
-(CVS is really the only VC system still in widespread use that has
-per-file revisions.. everything modern has moved to atomic tree-wide
+(CVS is the only VC system still in widespread use that has
+per-file revisions, as everything modern has moved to atomic tree-wide
 changesets). Each time someone commits a change to the project, a new
 revision becomes available. These revisions can be described by a
 tuple with two items: the first is a branch tag, and the second is
@@ -510,7 +510,7 @@ oldest to newest, so when a buildslave becomes free, the
 
 The @code{BuildRequest} contains the @code{SourceStamp} specification.
 The actual process of running the build (the series of Steps that will
-be executed) is implemented by the @code{Build} object. In this future
+be executed) is implemented by the @code{Build} object. In the future
 this might be changed, to have the @code{Build} define @emph{what}
 gets built, and a separate @code{BuildProcess} (provided by the
 Builder) to define @emph{how} it gets built.
@@ -629,7 +629,7 @@ the union of the users responsible for all the build's changes.
 
 The build provides a list of users who are interested in the build -- the
 ``interested users''. Usually this is equal to the blamelist, but may also be
-expanded, e.g., to include the current build sherrif or a module's maintainer.
+expanded, e.g., to include the current build sheriff or a module's maintainer.
 
 If desired, the buildbot can notify the interested users until the problem is
 resolved.  
