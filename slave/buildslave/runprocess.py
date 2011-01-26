@@ -428,7 +428,17 @@ class RunProcess:
         # then comes the secondary information
         msg = " in dir %s" % (self.workdir,)
         if self.timeout:
-            msg += " (timeout %d secs)" % (self.timeout,)
+            if self.timeout == 1:
+                unit = "sec"
+            else:
+                unit = "secs"
+            msg += " (timeout %d %s)" % (self.timeout, unit)
+        if self.maxTime:
+            if self.maxTime == 1:
+                unit = "sec"
+            else:
+                unit = "secs"
+            msg += " (maxTime %d %s)" % (self.maxTime, unit)
         log.msg(" " + msg)
         self._addToBuffers('header', msg+"\n")
 
