@@ -1008,7 +1008,7 @@ by humans.
 @node ShellCommand
 @subsection ShellCommand
 
-Most interesting steps involve exectuing a process of some sort on the
+Most interesting steps involve executing a process of some sort on the
 buildslave.  The @code{ShellCommand} class handles this activity.
 
 Several subclasses of ShellCommand are provided as starting points for
@@ -1504,7 +1504,7 @@ myFactory.addStep(MTR(workdir="mysql-test", dbpool=myPool,
 
 @item textLimit
 Maximum number of test failures to show on the waterfall page (to not flood
-the page in case of a large number of test failures. Defaults to 5.
+the page in case of a large number of test failures). Defaults to 5.
 
 @item testNameLimit
 Maximum length of test names to show unabbreviated in the waterfall page, to
