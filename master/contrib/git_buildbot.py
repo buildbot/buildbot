@@ -214,7 +214,7 @@ def gen_update_branch_changes(oldrev, newrev, refname, branch):
             if not line:
                 break
 
-            file = re.match(r"^:.*[MAD]\s*(.+)$", line).group(1)
+            file = re.match(r"^:.*[MAD]\s+(.+)$", line).group(1)
             logging.debug("  Rewound file: %s" % file)
             files.append(unicode(file, encoding=encoding))
 
