@@ -356,7 +356,7 @@ these AWS EC2 values.  They both default to "latent_buildbot_slave".
 with the virtualization capabilities of recent versions of Linux and other OSes.
 It is LGPL and comes with a stable C API, and python bindings.
 
-This means we know have an API which when tied to buildbot allows us to have slaves
+This means we now have an API which when tied to buildbot allows us to have slaves
 that run under Xen, QEMU, KVM, LXC, OpenVZ, User Mode Linux, VirtualBox and VMWare.
 
 The libvirt code in Buildbot was developed against libvirt 0.7.5 on Ubuntu Lucid. It
@@ -371,7 +371,7 @@ but there are a few things you should keep in mind.
 @itemize @bullet
 @item
 If you are running on Ubuntu, your master should run Lucid. Libvirt and apparmor are
-buggy on karmic.
+buggy on Karmic.
 
 @item
 If you are using the system libvirt, your buildbot master user will need to be in the
@@ -460,7 +460,7 @@ automatically when needed, and destroyed when not needed any longer.
 
 Any latent build slave that interacts with a for-fee service, such as the
 EC2LatentBuildSlave, brings significant risks. As already identified, the
-configuraton will need access to account information that, if obtained by a
+configuration will need access to account information that, if obtained by a
 criminal, can be used to charge services to your account. Also, bugs in the
 buildbot software may lead to unnecessary charges. In particular, if the
 master neglects to shut down an instance for some reason, a virtual machine
@@ -468,11 +468,11 @@ may be running unnecessarily, charging against your account. Manual and/or
 automatic (e.g. nagios with a plugin using a library like boto)
 double-checking may be appropriate.
 
-A comparitively trivial note is that currently if two instances try to attach
+A comparatively trivial note is that currently if two instances try to attach
 to the same latent buildslave, it is likely that the system will become
 confused.  This should not occur, unless, for instance, you configure a normal
-build slave to connect with the authentication of a latent buildbot.  If the
-situation occurs, stop all attached instances and restart the master.
+build slave to connect with the authentication of a latent buildbot.  If this
+situation does occur, stop all attached instances and restart the master.
 
 @node Writing New Latent Buildslaves
 @subsubsection Writing New Latent Buildslaves
