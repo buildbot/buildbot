@@ -93,14 +93,14 @@ sch = SomeSchedulerClass(...,
 There are four attributes of changes on which you can filter:
 
 @itemize
-@item project
+@item @code{project}
 the project string, as defined by the ChangeSource.
-@item repository
+@item @code{repository}
 the repository in which this change occurred.
-@item branch
+@item @code{branch}
 the branch on which this change occurred.  Note that 'trunk' or 'master' is often
 denoted by @code{None}.
-@item category
+@item @code{category}
 the category, again as defined by the ChangeSource.
 @end itemize
 
