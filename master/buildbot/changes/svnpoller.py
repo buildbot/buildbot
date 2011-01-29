@@ -84,7 +84,6 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
         self.pollInterval = pollInterval
         self.histmax = histmax
         self._prefix = None
-        self.overrun_counter = 0
         self.category = category
         self.project = project
 
