@@ -38,8 +38,8 @@ class MSLogLineObserver(LogLineObserver):
 
     _re_delimitor = re.compile(r'^(\d+>)?-{5}.+-{5}$')
     _re_file = re.compile(r'^(\d+>)?[^ ]+\.(cpp|c)$')
-    _re_warning = re.compile(r' : warning [A-Z]+[0-9]+:')
-    _re_error = re.compile(r' ?error [A-Z]+[0-9]+\s?: ')
+    _re_warning = re.compile(r' ?: warning [A-Z]+[0-9]+:')
+    _re_error = re.compile(r' ?error ([A-Z]+[0-9]+)?\s?: ')
 
     nbFiles = 0
     nbProjects = 0
