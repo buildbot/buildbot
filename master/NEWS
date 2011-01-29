@@ -22,6 +22,10 @@ with the copy in this version.
 
 ** Deprecations, Removals, and Non-Compatible Changes
 
+*** GitPoller's 'workdir' parameter should always be supplied; using the
+default (/tmp/gitpoller_work) is deprecated and will not be supported in future
+versions.
+
 *** MasterShellCommand and all of the transfer steps now default to
 haltOnFailure=True and flunkOnFailure=True
 
