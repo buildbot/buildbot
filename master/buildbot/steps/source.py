@@ -18,6 +18,7 @@ from warnings import warn
 from email.Utils import formatdate
 from twisted.python import log
 from buildbot.process.buildstep import LoggingBuildStep, LoggedRemoteCommand
+from buildbot.process.properties import WithProperties
 from buildbot.interfaces import BuildSlaveTooOldError
 from buildbot.status.builder import SKIPPED
 
@@ -186,7 +187,8 @@ class Source(LoggingBuildStep):
         '''
 
         assert not repository or callable(repository) or isinstance(repository, dict) or \
-            isinstance(repository, str) or isinstance(repository, unicode)
+            isinstance(repository, str) or isinstance(repository, unicode) or \
+            isinstance(repository, WithProperties)
 
         s = self.build.getSourceStamp()
         props = self.build.getProperties()
@@ -199,6 +201,8 @@ class Source(LoggingBuildStep):
                 return str(props.render(repository(s.repository)))
             elif isinstance(repository, dict):
                 return str(props.render(repository.get(s.repository)))
+            elif isinstance(repository, WithProperties):
+                return str(props.render(repository))
             else: # string or unicode
                 try:
                     repourl = str(repository % s.repository)
