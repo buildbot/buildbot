@@ -234,7 +234,8 @@ class Source(LoggingBuildStep):
             revision = self.computeSourceRevision(s.changes)
             # the revision property is currently None, so set it to something
             # more interesting
-            self.setProperty('revision', str(revision), "Source")
+            if revision is not None:
+                self.setProperty('revision', str(revision), "Source")
 
         # if patch is None, then do not patch the tree after checkout
 
