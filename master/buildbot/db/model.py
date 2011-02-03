@@ -48,6 +48,7 @@ class Model(base.DBConnectorComponent):
     #
     # * always use default=sa.DefaultClause(..) instead of default=.., so that we can add
     #   non-null columns with a server-side default value.
+    # * dates are stored as unix timestamps (UTC-ish epoch time)
 
     # build requests
 
@@ -55,7 +56,7 @@ class Model(base.DBConnectorComponent):
         sa.Column('id', sa.Integer,  primary_key=True),
         sa.Column('buildsetid', sa.Integer, sa.ForeignKey("buildsets.id"), nullable=False),
         sa.Column('buildername', sa.String(length=None), nullable=False),
-        sa.Column('priority', sa.Integer, nullable=False, server_default=sa.DefaultClause("NULL")),
+        sa.Column('priority', sa.Integer, nullable=False, server_default=sa.DefaultClause("0")), # TODO: used?
 
         # claimed_at is the time at which a master most recently asserted that
         # it is responsible for running the build: this will be updated
@@ -69,8 +70,8 @@ class Model(base.DBConnectorComponent):
         # and will be different for subsequent runs. This allows each buildmaster
         # to distinguish their current claims, their old claims, and the claims
         # of other buildmasters, to treat them each appropriately.
-        sa.Column('claimed_by_name', sa.String(length=None), server_default=sa.DefaultClause("NULL")),
-        sa.Column('claimed_by_incarnation', sa.String(length=None), server_default=sa.DefaultClause("NULL")),
+        sa.Column('claimed_by_name', sa.String(length=None)),
+        sa.Column('claimed_by_incarnation', sa.String(length=None)),
 
         # if this is zero, then the build is still pending
         sa.Column('complete', sa.Integer, server_default=sa.DefaultClause("0")), # TODO: boolean
@@ -110,14 +111,19 @@ class Model(base.DBConnectorComponent):
     buildset_properties = sa.Table('buildset_properties', metadata,
         sa.Column('buildsetid', sa.Integer, sa.ForeignKey('buildsets.id'), nullable=False),
         sa.Column('property_name', sa.String(256), nullable=False),
-        # JSON-encoded property value
+        # JSON-encoded tuple of (value, source)
         sa.Column('property_value', sa.String(1024), nullable=False), # TODO: too short?
     )
     """This table contains input properties for buildsets"""
 
     buildsets = sa.Table('buildsets', metadata,
         sa.Column('id', sa.Integer,  primary_key=True),
-        sa.Column('external_idstring', sa.String(256)), # TODO: what is this??
+
+        # a simple external identifier to track down this buildset later, e.g.,
+        # for try requests
+        sa.Column('external_idstring', sa.String(256)),
+
+        # a short string giving the reason the buildset was created
         sa.Column('reason', sa.String(256)), # TODO: sa.Text
         sa.Column('sourcestampid', sa.Integer, sa.ForeignKey('sourcestamps.id'), nullable=False),
         sa.Column('submitted_at', sa.Integer, nullable=False), # TODO: timestamp (or redundant?)
@@ -131,7 +137,7 @@ class Model(base.DBConnectorComponent):
         sa.Column('results', sa.SmallInteger), # TODO: synthesize from buildrequests
     )
     """This table represents BuildSets - sets of BuildRequests that share the same
-    original cause an source information."""
+    original cause and source information."""
 
     # changes
 
