@@ -85,8 +85,6 @@ class Git(SourceBaseCommand):
     def sourcedataMatches(self):
         try:
             olddata = self.readSourcedata()
-            if not olddata.startswith(self.repourl+' '):
-                return False
         except IOError:
             return False
         return True
