@@ -108,8 +108,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
                  revision=None, when=None, branch=None, category=None,
                  revlink='', properties={}, repository='', project=''):
         """Add the a Change with the given attributes to the database; returns
-        a Deferred that will fire with a L{buildbot.changes.changes.Change}
-        instance on completion.
+        a Change instance via a deferred.
 
         @param who: the author of this change
         @type branch: unicode string
@@ -151,7 +150,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
         @param project: the project this change is a part of
         @type project: unicode string
 
-        @returns: a Change instance
+        @returns: a L{buildbot.changes.changes.Change} instance via Deferred
         """
         # first create the change, although with no 'number'
         change = Change(who=who, files=files, comments=comments, isdir=isdir,
