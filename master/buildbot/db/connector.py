@@ -26,7 +26,7 @@ from buildbot.process.properties import Properties
 from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE
 from buildbot.util.eventual import eventually
 from buildbot.util import json
-from buildbot.db import pool, model, changes, buildsets
+from buildbot.db import pool, model, changes, schedulers, buildsets
 
 def _one_or_else(res, default=None, process_f=lambda x: x):
     if not res:
@@ -95,6 +95,9 @@ class DBConnector(object):
 
         self.changes = changes.ChangesConnectorComponent(self)
         "L{buildbot.db.changes.ChangesConnectorComponent} instance"
+
+        self.schedulers = schedulers.SchedulersConnectorComponent(self)
+        "L{buildbot.db.schedulers.ChangesConnectorComponent} instance"
 
         self.buildsets = buildsets.BuildsetsConnectorComponent(self)
         "L{buildbot.db.sourcestamps.BuildsetsConnectorComponent} instance"
