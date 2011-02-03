@@ -17,7 +17,7 @@ import re
 
 from twisted.trial import unittest
 
-from buildbot.schedulers import filter
+from buildbot.changes import filter
 from buildbot.test.fake.state import State
 
 class Change(State):
@@ -123,4 +123,3 @@ class ChangeFilter(unittest.TestCase):
         self.yes(Change(project='p', repository='r', branch='b', category='c', ff=True),
                 "all match and fn returns True -> False")
         self.check()
-

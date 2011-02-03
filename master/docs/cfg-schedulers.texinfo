@@ -77,7 +77,7 @@ can most generically be specified as a ChangeFilter.  Set up a ChangeFilter
 like this:
 
 @example
-from buildbot.schedulers.filter import ChangeFilter
+from buildbot.changes.filter import ChangeFilter
 my_filter = ChangeFilter(
     project_re="^baseproduct/.*",
     branch="devel")
