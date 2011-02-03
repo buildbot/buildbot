@@ -35,7 +35,7 @@ class SubscriptionPoint(object):
         return "<SubscriptionPoint '%s'>" % self.name
 
     def subscribe(self, callback):
-        """Add a CALLBACK to the subscriptions; returns a L{Subscription}
+        """Add C{callback} to the subscriptions; returns a L{Subscription}
         instance."""
         sub = Subscription(self, callback)
         self.subscriptions.add(sub)
