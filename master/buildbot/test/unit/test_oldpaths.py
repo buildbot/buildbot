@@ -62,3 +62,7 @@ class OldImportPaths(unittest.TestCase):
         # this must exist to open old changes pickles
         from buildbot.changes.changes import Change
         assert Change
+
+    def test_status_html_Webstatus(self):
+        from buildbot.status.html import WebStatus
+        assert WebStatus
