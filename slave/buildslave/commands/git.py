@@ -84,7 +84,7 @@ class Git(SourceBaseCommand):
     # in doVCUpdate.
     def sourcedataMatches(self):
         try:
-            olddata = self.readSourcedata()
+            self.readSourcedata()
         except IOError:
             return False
         return True
