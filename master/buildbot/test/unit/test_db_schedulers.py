@@ -144,6 +144,28 @@ class TestSchedulersConnectorComponent(
         d.addCallback(check)
         return d
 
+    def test_classifyChanges_again(self):
+        # test reclassifying changes, which may happen during some timing
+        # conditions
+        d = self.insertTestData([
+            self.change3,
+            self.scheduler24,
+            fakedb.SchedulerChange(schedulerid=24, changeid=3, important=False),
+        ])
+        d.addCallback(lambda _ :
+                self.db.schedulers.classifyChanges(24, { 3 : True }))
+        def check(_):
+            def thd(conn):
+                sch_chgs_tbl = self.db.model.scheduler_changes
+                q = sch_chgs_tbl.select(order_by=sch_chgs_tbl.c.changeid)
+                r = conn.execute(q)
+                rows = [ (row.schedulerid, row.changeid, row.important)
+                         for row in r.fetchall() ]
+                self.assertEqual(rows, [ (24, 3, 1) ])
+            return self.db.pool.do(thd)
+        d.addCallback(check)
+        return d
+
     def test_flushChangeClassifications(self):
         d = self.insertTestData([ self.change3, self.change4,
                                   self.change5, self.scheduler24 ])

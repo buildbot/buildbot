@@ -16,8 +16,10 @@
 
 from zope.interface import implements
 from twisted.persisted import styles
+from twisted.internet import defer
 from buildbot import util, interfaces
 
+# TODO: kill this class, or at least make it less significant
 class SourceStamp(util.ComparableMixin, styles.Versioned):
     """This is a tuple of (branch, revision, patchspec, changes, project, repository).
 
@@ -48,7 +50,7 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
     changes = ()
     project = ''
     repository = ''
-    ssid = None # filled in by db.get_sourcestampid()
+    ssid = None
 
     compare_attrs = ('branch', 'revision', 'patch', 'changes', 'project', 'repository')
 
@@ -78,6 +80,7 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
                 revision = str(revision)
 
         self.revision = revision
+        self._getSourceStampId_lock = defer.DeferredLock();
 
     def canBeMergedWith(self, other):
         if other.repository != self.repository:
@@ -175,4 +178,23 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
         self.repository = ''
         self.wasUpgraded = True
 
-# vim: set ts=4 sts=4 sw=4 et:
+    @util.deferredLocked('_getSourceStampId_lock')
+    def getSourceStampId(self, master):
+        "temporary; do not use widely!"
+        if self.ssid:
+            return defer.succeed(self.ssid)
+        # add it to the DB
+        patch_body = None
+        patch_level = None
+        if self.patch:
+            patch_body, patch_level = self.patch
+        d = master.db.sourcestamps.createSourceStamp(
+                branch=self.branch, revision=self.revision,
+                repository=self.repository, project=self.project,
+                patch_body=patch_body, patch_level=patch_level,
+                patch_subdir=None, changeids=[c.number for c in self.changes])
+        def set_ssid(ssid):
+            self.ssid = ssid
+            return ssid
+        d.addCallback(set_ssid)
+        return d

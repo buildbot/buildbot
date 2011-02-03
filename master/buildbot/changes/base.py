@@ -56,10 +56,12 @@ class PollingChangeSource(ChangeSource):
             d.addErrback(log.err, 'while polling for changes')
             return d
 
-        # delay starting the loop until the reactor is running
+        # delay starting the loop until the reactor is running, and do not
+        # run it immediately - if services are still starting up, they may
+        # miss an initial flood of changes
         def start_loop():
             self._loop = task.LoopingCall(do_poll)
-            self._loop.start(self.pollInterval)
+            self._loop.start(self.pollInterval, now=False)
         reactor.callWhenRunning(start_loop)
 
     def stopService(self):

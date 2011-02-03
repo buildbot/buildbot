@@ -7,7 +7,7 @@ based on other events in the buildmaster.
 @menu
 * Configuring Schedulers::
 * Change Filters::
-* Scheduler Scheduler::
+* SingleBranchScheduler::
 * AnyBranchScheduler::
 * Dependent Scheduler::
 * Periodic Scheduler::
@@ -34,7 +34,8 @@ to allow for future expansion:
 sched = Scheduler(name="quick", builderNames=['lin', 'win'])
 @end example
 
-All schedulers have several arguments in common:
+There are several common arguments for schedulers, although not all are
+available with all schedulers.
 
 @table @code
 @item name
@@ -60,6 +61,21 @@ For example:
 sched = Scheduler(...,
     properties = @{ 'owner' : [ 'zorro@@company.com', 'silver@@company.com' ] @})
 @end example
+
+@item fileIsImportant
+A callable which takes one argument, a Change instance, and returns
+@code{True} if the change is worth building, and @code{False} if
+it is not.  Unimportant Changes are accumulated until the build is
+triggered by an important change.  The default value of None means
+that all Changes are important.
+
+@item change_filter
+The change filter that will determine whch changes are recognized by this
+scheduler; @pxref{Change Filters}.  Note that this is different from
+@code{fileIsImportant}: if the change filter filters out a Change, then it is
+completely ignored by the scheduler.  If a Change is allowed by the change
+filter, but is deemed unimportant, then it will not cause builds to start, but
+will be remembered and shown in status displays.
 
 @end table
 
@@ -141,14 +157,14 @@ A Change passes the filter only if @i{all} arguments are satisfied.  If no
 filter object is given to a scheduler, then all changes will be built (subject
 to any other restrictions the scheduler enforces).
 
-@node Scheduler Scheduler
-@subsection Scheduler Scheduler
-@slindex buildbot.schedulers.basic.Scheduler
+@node SingleBranchScheduler
+@subsection SingleBranchScheduler
+@slindex buildbot.schedulers.basic.SingleBranchScheduler
 
-This is the original and still most popular Scheduler class. It follows
+This is the original and still most popular scheduler class. It follows
 exactly one branch, and starts a configurable tree-stable-timer after
 each change on that branch. When the timer expires, it starts a build
-on some set of Builders. The Scheduler accepts a @code{fileIsImportant}
+on some set of Builders. The scheduler accepts a @code{fileIsImportant}
 function which can be used to ignore some Changes if they do not
 affect any ``important'' files.
 
@@ -161,8 +177,13 @@ The arguments to this scheduler are:
 
 @item properties
 
+@item fileIsImportant
+
+@item change_filter
+@pxref{Configuring Schedulers}
+
 @item treeStableTimer
-The Scheduler will wait for this many seconds before starting the
+The scheduler will wait for this many seconds before starting the
 build. If new changes are made during this interval, the timer will be
 restarted, so really the build will be started after a change and then
 after this many seconds of inactivity.
@@ -170,44 +191,28 @@ after this many seconds of inactivity.
 If treeStableTimer is @code{None}, then a separate build is started
 immediately for each Change.
 
-@item fileIsImportant
-A callable which takes one argument, a Change instance, and returns
-@code{True} if the change is worth building, and @code{False} if
-it is not.  Unimportant Changes are accumulated until the build is
-triggered by an important change.  The default value of None means
-that all Changes are important.
-
-@item change_filter
-The change filter that will determine whch changes are recognized by this
-Scheduler; @pxref{Change Filters}.  Note that this is different from
-@code{fileIsImportant}: if the change filter filters out a Change, then it is
-completely ignored by the scheduler.  If a Change is allowed by the change
-filter, but is deemed unimportant, then it will not cause builds to start, but
-will be remembered and shown in status displays.
-
 @item categories (deprecated; use change_filter)
 A list of categories of changes that this scheduler will respond to.  If this
 is specified, then any non-matching changes are ignored.
 
 @item branch (deprecated; use change_filter)
-
-If specified, then this Scheduler will pay attention to a single branch,
-ignoring Changes that occur on other branches. Setting @code{branch} equal to
-the special value of @code{None} means it should only pay attention to the
-default branch. Note that @code{None} is a keyword, not a string, so you want
-to use @code{None} and not @code{"None"}.
+The scheduler will pay attention to a this branch, ignoring Changes that occur
+on other branches. Setting @code{branch} equal to the special value of
+@code{None} means it should only pay attention to the default branch. Note that
+@code{None} is a keyword, not a string, so write @code{None} and not
+@code{"None"}.
 
 @end table
 
 Example:
 
 @example
-from buildbot.schedulers.basic  import Scheduler
-quick = Scheduler(name="quick",
+from buildbot.schedulers.basic  import SingleBranchScheduler
+quick = SingleBranchScheduler(name="quick",
                     branch=None,
                     treeStableTimer=60,
                     builderNames=["quick-linux", "quick-netbsd"])
-full = Scheduler(name="full",
+full = SingleBranchScheduler(name="full",
                     branch=None,
                     treeStableTimer=5*60,
                     builderNames=["full-linux", "full-netbsd", "full-OSX"])
@@ -220,8 +225,14 @@ so quickly (they wait 5 minutes), so hopefully if the quick builds
 fail due to a missing file or really simple typo, the developer can
 discover and fix the problem before the full builds are started. Both
 Schedulers only pay attention to the default branch: any changes
-on other branches are ignored by these Schedulers. Each Scheduler
+on other branches are ignored by these schedulers. Each scheduler
 triggers a different set of Builders, referenced by name.
+
+@slindex buildbot.schedulers.basic.Scheduler
+@slindex buildbot.scheduler.Scheduler
+The old names for this scheduler, @code{buildbot.scheduler.Scheduler} and
+@code{buildbot.schedulers.basic.Scheduler}, are deprecated in favor of the more
+accurate name @code{SingleBranchScheduler}.
 
 @node AnyBranchScheduler
 @subsection AnyBranchScheduler
@@ -239,29 +250,19 @@ The arguments to this scheduler are:
 
 @item properties
 
+@item fileIsImportant
+
+@item change_filter
+@pxref{Configuring Schedulers}
+
 @item treeStableTimer
-The Scheduler will wait for this many seconds before starting the
+The scheduler will wait for this many seconds before starting the
 build. If new changes are made during this interval, the timer will be
 restarted, so really the build will be started after a change and then
 after this many seconds of inactivity.
 
-@item fileIsImportant
-A callable which takes one argument, a Change instance, and returns
-@code{True} if the change is worth building, and @code{False} if
-it is not.  Unimportant Changes are accumulated until the build is
-triggered by an important change.  The default value of None means
-that all Changes are important.
-
-@item change_filter
-The change filter that will determine whch changes are recognized by this
-Scheduler; @pxref{Change Filters}.  Note that this is different from
-@code{fileIsImportant}: if the change filter filters out a Change, then it is
-completely ignored by the scheduler.  If a Change is allowed by the change
-filter, but is deemed unimportant, then it will not cause builds to start, but
-will be remembered and shown in status displays.
-
 @item branches (deprecated; use change_filter)
-This Scheduler will pay attention to any number of branches, ignoring
+This scheduler will pay attention to any number of branches, ignoring
 Changes that occur on other branches. 
 
 @item categories (deprecated; use change_filter)
@@ -274,6 +275,7 @@ is specified, then any non-matching changes are ignored.
 @subsection Dependent Scheduler
 @cindex Dependent
 @cindex Dependencies
+@slindex buildbot.schedulers.dependent.Dependent
 @slindex buildbot.schedulers.basic.Dependent
 
 It is common to wind up with one kind of build which should only be
@@ -291,8 +293,8 @@ that is used by some other Builder, you'd want to make sure the
 consuming Build is run @emph{after} the producing one.
 
 You can use ``Dependencies'' to express this relationship
-to the Buildbot. There is a special kind of Scheduler named
-@code{scheduler.Dependent} that will watch an ``upstream'' Scheduler
+to the Buildbot. There is a special kind of scheduler named
+@code{scheduler.Dependent} that will watch an ``upstream'' scheduler
 for builds to complete successfully (on all of its Builders). Each time
 that happens, the same source code (i.e. the same @code{SourceStamp})
 will be used to start a new set of builds, on a different set of
@@ -325,10 +327,10 @@ not the name of the scheduler.
 Example:
 
 @example
-from buildbot.schedulers import basic
-tests = basic.Scheduler("just-tests", None, 5*60,
+from buildbot.schedulers import dependent
+tests = basic.SingleBranchScheduler("just-tests", None, 5*60,
                             ["full-linux", "full-netbsd", "full-OSX"])
-package = basic.Dependent(name="build-package",
+package = dependent.Dependent(name="build-package",
                               upstream=tests, # <- no quotes!
                               builderNames=["make-tarball", "make-deb", "make-rpm"])
 c['schedulers'] = [tests, package]
@@ -357,17 +359,16 @@ Example:
 
 @example
 from buildbot.schedulers import timed
-nightly = timed.Periodic(name="nightly",
+nightly = timed.Periodic(name="daily",
                 builderNames=["full-solaris"],
                 periodicBuildTimer=24*60*60)
 c['schedulers'] = [nightly]
 @end example
 
-The Scheduler in this example just runs the full solaris build once
-per day. Note that this Scheduler only lets you control the time
-between builds, not the absolute time-of-day of each Build, so this
-could easily wind up a ``daily'' or ``every afternoon'' scheduler
-depending upon when it was first activated.
+The scheduler in this example just runs the full solaris build once per day.
+Note that this scheduler only lets you control the time between builds, not the
+absolute time-of-day of each Build, so this could easily wind up an ``evening''
+or ``every afternoon'' scheduler depending upon when it was first activated.
 
 @node Nightly Scheduler
 @subsection Nightly Scheduler
@@ -397,8 +398,11 @@ The full list of parameters is:
 
 @item properties
 
-@item branch
-The branch to build when the time comes.
+@item fileIsImportant
+
+@item change_filter
+@pxref{Configuring Schedulers}.  Note that @code{fileIsImportant} and
+@code{change_filter} are only relevant if @code{onlyIfChanged} is true.
 
 @item minute
 The minute of the hour on which to start the build.  This defaults
@@ -408,17 +412,27 @@ to 0, meaning an hourly build.
 The hour of the day on which to start the build, in 24-hour notation.
 This defaults to *, meaning every hour.
 
+@item dayOfMonth
+The day of the month to start a build.  This defauls to *, meaning every day.
+
 @item month
 The month in which to start the build, with January = 1.  This defaults
 to *, meaning every month.
 
 @item dayOfWeek
-The day of the week to start a build, with Monday = 0.  This defauls
-to *, meaning every day of the week.
+The day of the week to start a build, with Monday = 0.  This defauls to *,
+meaning every day of the week.  If @code{dayOfMonth} and @code{dayOfWeek} are
+both specified, builds will be started when @emph{either} parameter matches.
 
 @item onlyIfChanged
 If this is true, then builds will not be scheduled at the designated time
-unless the source has changed since the previous build.
+@emph{unless} the specified branch has seen an important change since the
+previous build.
+
+@item branch
+The branch to build when the time comes.  Remember that a value of @code{None}
+here means the default branch, and will not match other branches!
+
 @end table
 
 For example, the following master.cfg clause will cause a build to be
@@ -478,9 +492,6 @@ Two implementations are available: @code{Try_Jobdir} and
 by the @code{jobdir} parameter, while the latter listens for PB
 connections on a specific @code{port}, and authenticates against
 @code{userport}.
-
-@slindex buildbot.schedulers.trysched.Try_Jobdir
-@slindex buildbot.schedulers.trysched.Try_Userpass
 
 The buildmaster must have a scheduler instance in the config file's
 @code{c['schedulers']} list to receive try requests. This lets the
@@ -633,7 +644,7 @@ from buildbot.schedulers import basic, timed, triggerable
 from buildbot.process import factory
 from buildbot.steps import trigger
 
-checkin = basic.Scheduler(name="checkin",
+checkin = basic.SingleBranchScheduler(name="checkin",
             branch=None,
             treeStableTimer=5*60,
             builderNames=["checkin"])

@@ -126,16 +126,24 @@ class Trigger(LoggingBuildStep):
             self.step_status.setText(['no scheduler:'] + unknown_schedulers)
             return self.end(FAILURE)
 
-        dl = []
-        for scheduler in triggered_schedulers:
-            sch = all_schedulers[scheduler]
-            dl.append(sch.trigger(ss, set_props=props_to_set))
-        self.step_status.setText(['triggered'] + triggered_schedulers)
+        master = self.build.builder.botmaster.parent # seriously?!
+        d = ss.getSourceStampId(master)
+        def start_builds(ssid):
+            dl = []
+            for scheduler in triggered_schedulers:
+                sch = all_schedulers[scheduler]
+                dl.append(sch.trigger(ssid, set_props=props_to_set))
+            self.step_status.setText(['triggered'] + triggered_schedulers)
 
-        if self.waitForFinish:
             d = defer.DeferredList(dl, consumeErrors=1)
-        else:
-            d = defer.succeed([])
+            if self.waitForFinish:
+                return d
+            else:
+                # do something to handle errors
+                d.addErrback(log.err,
+                        '(ignored) while invoking Triggerable schedulers:')
+                return None
+        d.addCallback(start_builds)
 
         def cb(rclist):
             rc = SUCCESS # (this rc is not the same variable as that above)
@@ -148,8 +156,10 @@ class Trigger(LoggingBuildStep):
                 if results == FAILURE:
                     rc = FAILURE
             return self.end(rc)
-
         def eb(why):
             return self.end(FAILURE)
 
-        d.addCallbacks(cb, eb)
+        if self.waitForFinish:
+            d.addCallbacks(cb, eb)
+
+        d.addErrback(log.err, '(ignored) while triggering builds:')

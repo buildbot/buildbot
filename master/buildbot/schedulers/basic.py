@@ -13,230 +13,231 @@
 #
 # Copyright Buildbot Team Members
 
-import time
-
-from buildbot import interfaces, util
+from twisted.internet import defer, reactor
+from twisted.python import log
+from buildbot import util
 from buildbot.util import collections, NotABranch
-from buildbot.sourcestamp import SourceStamp
-from buildbot.status.builder import SUCCESS, WARNINGS
-from buildbot.schedulers import base
+from buildbot.changes import filter
+from buildbot.schedulers import base, dependent
 
-class Scheduler(base.BaseScheduler, base.ClassifierMixin):
-    fileIsImportant = None
-    compare_attrs = ('name', 'treeStableTimer', 'builderNames',
-                     'fileIsImportant', 'properties', 'change_filter')
+class BaseBasicScheduler(base.BaseScheduler):
 
-    def __init__(self, name, shouldntBeSet=NotABranch, treeStableTimer=None,
-                builderNames=None, branch=NotABranch, fileIsImportant=None,
-                properties={}, categories=None, change_filter=None):
-        """
-        @param name: the name of this Scheduler
-        @param treeStableTimer: the duration, in seconds, for which the tree
-                                must remain unchanged before a build is
-                                triggered. This is intended to avoid builds
-                                of partially-committed fixes. If None, then
-                                a separate build will be made for each
-                                Change, regardless of when they arrive.
-        @param builderNames: a list of Builder names. When this Scheduler
-                             decides to start a set of builds, they will be
-                             run on the Builders named by this list.
+    compare_attrs = (base.BaseScheduler.compare_attrs +
+                     ('treeStableTimer', 'change_filter', 'fileIsImportant') )
 
-        @param fileIsImportant: A callable which takes one argument (a Change
-                                instance) and returns True if the change is
-                                worth building, and False if it is not.
-                                Unimportant Changes are accumulated until the
-                                build is triggered by an important change.
-                                The default value of None means that all
-                                Changes are important.
+    _reactor = reactor # for tests
 
-        @param properties: properties to apply to all builds started from
-                           this scheduler
-        
-        @param change_filter: a buildbot.schedulers.filter.ChangeFilter instance
-                              used to filter changes for this scheduler
-
-        @param branch: The branch name that the Scheduler should pay
-                       attention to. Any Change that is not in this branch
-                       will be ignored. It can be set to None to only pay
-                       attention to the default branch.
-        @param categories: A list of categories of changes to accept
-        """
-        assert shouldntBeSet is NotABranch, \
-                "pass arguments to Scheduler using keyword arguments"
-
-        base.BaseScheduler.__init__(self, name, builderNames, properties)
-        self.make_filter(change_filter=change_filter, branch=branch, categories=categories)
-        self.treeStableTimer = treeStableTimer
-        self.stableAt = None
-        self.branch = branch
+    class NotSet: pass
+    def __init__(self, name, shouldntBeSet=NotSet, treeStableTimer=None,
+                builderNames=None, branch=NotABranch, branches=NotABranch,
+                fileIsImportant=None, properties={}, categories=None,
+                change_filter=None):
+        assert shouldntBeSet is self.NotSet, \
+                "pass arguments to schedulers using keyword arguments"
         if fileIsImportant:
             assert callable(fileIsImportant)
-            self.fileIsImportant = fileIsImportant
 
-    def get_initial_state(self, max_changeid):
-        return {"last_processed": max_changeid}
+        # initialize parent classes
+        base.BaseScheduler.__init__(self, name, builderNames, properties)
 
-    def run(self):
-        db = self.parent.db
-        d = db.runInteraction(self.classify_changes)
-        d.addCallback(lambda ign: db.runInteraction(self._process_changes))
+        self.treeStableTimer = treeStableTimer
+        self.fileIsImportant = fileIsImportant
+        self.change_filter = self.getChangeFilter(branch=branch,
+                branches=branches, change_filter=change_filter,
+                categories=categories)
+
+        # the IDelayedCall used to wake up when this scheduler's
+        # treeStableTimer expires.
+        self._stable_timers = collections.defaultdict(lambda : None)
+        self._stable_timers_lock = defer.DeferredLock()
+
+    def getChangeFilter(self, branch, branches, change_filter, categories):
+        raise NotImplementedError
+
+    def startService(self, _returnDeferred=False):
+        base.BaseScheduler.startService(self)
+
+        d = self.startConsumingChanges(fileIsImportant=self.fileIsImportant,
+                                       change_filter=self.change_filter)
+
+        # if treeStableTimer is False, then we don't care about classified
+        # changes, so get rid of any hanging around from previous
+        # configurations
+        if not self.treeStableTimer:
+            d.addCallback(lambda _ :
+                self.master.db.schedulers.flushChangeClassifications(
+                                                        self.schedulerid))
+
+        # otherwise, if there are classified changes out there, start their
+        # treeStableTimers again
+        else:
+            d.addCallback(lambda _ :
+                self.scanExistingClassifiedChanges())
+
+        # handle Deferred errors, since startService does not return a Deferred
+        d.addErrback(log.err, "while starting SingleBranchScheduler '%s'"
+                              % self.name)
+
+        if _returnDeferred:
+            return d # only used in tests
+
+    def stopService(self):
+        # the base stopService will unsubscribe from new changes
+        d = base.BaseScheduler.stopService(self)
+        d.addCallback(lambda _ :
+                self._stable_timers_lock.acquire())
+        def cancel_timers(_):
+            for timer in self._stable_timers.values():
+                if timer:
+                    timer.cancel()
+            self._stable_timers = {}
+            self._stable_timers_lock.release()
+        d.addCallback(cancel_timers)
         return d
 
-    def _process_changes(self, t):
-        db = self.parent.db
-        res = db.scheduler_get_classified_changes(self.schedulerid, t)
-        (important, unimportant) = res
-        return self.decide_and_remove_changes(t, important, unimportant)
+    @util.deferredLocked('_stable_timers_lock')
+    def gotChange(self, change, important):
+        if not self.treeStableTimer:
+            # if there's no treeStableTimer, we can completely ignore
+            # unimportant changes
+            if not important:
+                return defer.succeed(None)
 
-    def decide_and_remove_changes(self, t, important, unimportant):
-        """Look at the changes that need to be processed and decide whether
-        to queue a BuildRequest or sleep until something changes.
+            # otherwise, we'll build it right away
+            return self.addBuildsetForChanges(reason='scheduler',
+                            changeids=[ change.number ])
 
-        If I decide that a build should be performed, I will add the
-        appropriate BuildRequest to the database queue, and remove the
-        (retired) changes that went into it from the scheduler_changes table.
+        timer_name = self.getTimerNameForChange(change)
 
-        Returns wakeup_delay: either None, or a float indicating when this
-        scheduler wants to be woken up next. The Scheduler is responsible for
-        padding its desired wakeup time by about a second to avoid frenetic
-        must-wake-up-at-exactly-8AM behavior. The Loop may silently impose a
-        minimum delay request of a couple seconds to prevent this sort of
-        thing, but Schedulers must still add their own padding to avoid at
-        least a double wakeup.
-        """
+        # if we have a treeStableTimer, then record the change's importance
+        # and:
+        # - for an important change, start the timer
+        # - for an unimportant change, reset the timer if it is running
+        d = self.master.db.schedulers.classifyChanges(
+                self.schedulerid, { change.number : important })
+        def fix_timer(_):
+            if not important and not self._stable_timers[timer_name]:
+                return
+            if self._stable_timers[timer_name]:
+                self._stable_timers[timer_name].cancel()
+            self._stable_timers[timer_name] = self._reactor.callLater(
+                    self.treeStableTimer, self.stableTimerFired, timer_name)
+        d.addCallback(fix_timer)
+        return d
 
-        if not important:
-            return None
-        all_changes = important + unimportant
-        most_recent = max([c.when for c in all_changes])
-        if self.treeStableTimer is not None:
-            now = time.time()
-            self.stableAt = most_recent + self.treeStableTimer
-            if self.stableAt > now:
-                # Wake up one second late, to avoid waking up too early and
-                # looping a lot.
-                return self.stableAt + 1.0
+    @defer.deferredGenerator
+    def scanExistingClassifiedChanges(self):
+        # call gotChange for each classified change.  This is called at startup
+        # and is intended to re-start the treeStableTimer for any changes that
+        # had not yet been built when the scheduler was stopped.
 
-        # ok, do a build
-        self.stableAt = None
-        self._add_build_and_remove_changes(t, important, unimportant)
-        return None
+        # NOTE: this may double-call gotChange for changes that arrive just as
+        # the scheduler starts up.  In practice, this doesn't hurt anything.
+        wfd = defer.waitForDeferred(
+            self.master.db.schedulers.getChangeClassifications(
+                                                        self.schedulerid))
+        yield wfd
+        classifications = wfd.getResult()
 
-    def _add_build_and_remove_changes(self, t, important, unimportant):
-        # the changes are segregated into important and unimportant
-        # changes, but we need it ordered earliest to latest, based
-        # on change number, since the SourceStamp will be created
-        # based on the final change.
-        all_changes = sorted(important + unimportant, key=lambda c : c.number)
+        # call gotChange for each change, after first fetching it from the db
+        for changeid, important in classifications.iteritems():
+            wfd = defer.waitForDeferred(
+                self.master.db.changes.getChangeInstance(changeid))
+            yield wfd
+            change = wfd.getResult()
 
-        db = self.parent.db
-        if self.treeStableTimer is None:
-            # each *important* Change gets a separate build.  Unimportant
-            # builds get ignored.
-            for c in sorted(important, key=lambda c : c.number):
-                ss = SourceStamp(changes=[c])
-                ssid = db.get_sourcestampid(ss, t)
-                self.create_buildset(ssid, "scheduler", t)
-        else:
-            # if we had a treeStableTimer, then trigger a build for the
-            # whole pile - important or not.  There's at least one important
-            # change in the list, or we wouldn't have gotten here.
-            ss = SourceStamp(changes=all_changes)
-            ssid = db.get_sourcestampid(ss, t)
-            self.create_buildset(ssid, "scheduler", t)
+            if not change:
+                continue
 
-        # and finally retire all of the changes from scheduler_changes, regardless
-        # of importance level
-        changeids = [c.number for c in all_changes]
-        db.scheduler_retire_changes(self.schedulerid, changeids, t)
+            wfd = defer.waitForDeferred(
+                self.gotChange(change, important))
+            yield wfd
+            wfd.getResult()
 
-    # the waterfall needs to know the next time we plan to trigger a build
-    def getPendingBuildTimes(self):
-        if self.stableAt and self.stableAt > util.now():
-            return [ self.stableAt ]
-        return []
+    def getTimerNameForChange(self, change):
+        raise NotImplementedError # see subclasses
+
+    def getChangeClassificationsForTimer(self, schedulerid, timer_name):
+        """similar to db.schedulers.getChangeClassifications, but given timer
+        name"""
+        raise NotImplementedError # see subclasses
+
+    @util.deferredLocked('_stable_timers_lock')
+    @defer.deferredGenerator
+    def stableTimerFired(self, timer_name):
+        # if the service has already been stoppd then just bail out
+        if not self._stable_timers[timer_name]:
+            return
+
+        # delete this now-fired timer
+        del self._stable_timers[timer_name]
+
+        wfd = defer.waitForDeferred(
+                self.getChangeClassificationsForTimer(self.schedulerid,
+                                                      timer_name))
+        yield wfd
+        classifications = wfd.getResult()
+
+        # just in case: databases do weird things sometimes!
+        if not classifications: # pragma: no cover
+            return
+
+        changeids = sorted(classifications.keys())
+        wfd = defer.waitForDeferred(
+                self.addBuildsetForChanges(reason='scheduler',
+                                           changeids=changeids))
+        yield wfd
+        wfd.getResult()
+
+        max_changeid = changeids[-1] # (changeids are sorted)
+        wfd = defer.waitForDeferred(
+                self.master.db.schedulers.flushChangeClassifications(
+                            self.schedulerid, less_than=max_changeid+1))
+        yield wfd
+        wfd.getResult()
+
+class SingleBranchScheduler(BaseBasicScheduler):
+    def getChangeFilter(self, branch, branches, change_filter, categories):
+        assert branch is not NotABranch or change_filter, (
+                "the 'branch' argument to SingleBranchScheduler is " +
+                "mandatory unless change_filter is provided")
+        assert branches is NotABranch, (
+                "the 'branches' argument is not allowed for " +
+                "SingleBranchScheduler")
+        return filter.ChangeFilter.fromSchedulerConstructorArgs(
+                change_filter=change_filter, branch=branch,
+                categories=categories)
+
+    def getTimerNameForChange(self, change):
+        return "only" # this class only uses one timer
+
+    def getChangeClassificationsForTimer(self, schedulerid, timer_name):
+        return self.master.db.schedulers.getChangeClassifications(
+                                                        self.schedulerid)
+
+
+class Scheduler(SingleBranchScheduler):
+    "alias for SingleBranchScheduler"
+    def __init__(self, *args, **kwargs):
+        log.msg("WARNING: the name 'Scheduler' is deprecated; use " +
+                "SingleBranchScheduler instead")
+        SingleBranchScheduler.__init__(self, *args, **kwargs)
+
 
 class AnyBranchScheduler(Scheduler):
-    compare_attrs = ('name', 'treeStableTimer', 'builderNames',
-                     'fileIsImportant', 'properties', 'change_filter')
-    def __init__(self, name, treeStableTimer, builderNames,
-                 fileIsImportant=None, properties={}, categories=None,
-                 branches=NotABranch, change_filter=None):
-        """
-        Same parameters as the scheduler, but without 'branch', and adding:
+    def getChangeFilter(self, branch, branches, change_filter, categories):
+        assert branch is NotABranch
+        return filter.ChangeFilter.fromSchedulerConstructorArgs(
+                change_filter=change_filter, branch=branches,
+                categories=categories)
 
-        @param branches: (deprecated)
-        """
+    def getTimerNameForChange(self, change):
+        return change.branch
 
-        Scheduler.__init__(self, name, builderNames=builderNames, properties=properties,
-                categories=categories, treeStableTimer=treeStableTimer,
-                fileIsImportant=fileIsImportant, change_filter=change_filter,
-                # this is the interesting part:
-                branch=branches)
+    def getChangeClassificationsForTimer(self, schedulerid, timer_name):
+        branch = timer_name # set in getTimerNameForChange
+        return self.master.db.schedulers.getChangeClassifications(
+                self.schedulerid, branch=branch)
 
-    def _process_changes(self, t):
-        db = self.parent.db
-        res = db.scheduler_get_classified_changes(self.schedulerid, t)
-        (important, unimportant) = res
-        def _twolists(): return [], [] # important, unimportant
-        branch_changes = collections.defaultdict(_twolists)
-        for c in important:
-            branch_changes[c.branch][0].append(c)
-        for c in unimportant:
-            branch_changes[c.branch][1].append(c)
-        delays = []
-        for branch in branch_changes:
-            (b_important, b_unimportant) = branch_changes[branch]
-            delay = self.decide_and_remove_changes(t, b_important,
-                                                   b_unimportant)
-            if delay is not None:
-                delays.append(delay)
-        if delays:
-            return min(delays)
-        return None
-
-class Dependent(base.BaseScheduler):
-    # register with our upstream, so they'll tell us when they submit a
-    # buildset
-    compare_attrs = ('name', 'upstream_name', 'builderNames', 'properties')
-
-    def __init__(self, name, upstream, builderNames, properties={}):
-        assert interfaces.IScheduler.providedBy(upstream)
-        base.BaseScheduler.__init__(self, name, builderNames, properties)
-        # by setting self.upstream_name, our buildSetSubmitted() method will
-        # be called whenever that upstream Scheduler adds a buildset to the
-        # DB.
-        self.upstream_name = upstream.name
-
-    def buildSetSubmitted(self, bsid, t):
-        db = self.parent.db
-        db.scheduler_subscribe_to_buildset(self.schedulerid, bsid, t)
-
-    def run(self):
-        d = self.parent.db.runInteraction(self._run)
-        return d
-    def _run(self, t):
-        db = self.parent.db
-        res = db.scheduler_get_subscribed_buildsets(self.schedulerid, t)
-        # this returns bsid,ssid,results for all of our active subscriptions.
-        # We ignore the ones that aren't complete yet. This leaves the
-        # subscription in place until the buildset is complete.
-        for (bsid,ssid,complete,results) in res:
-            if complete:
-                if results in (SUCCESS, WARNINGS):
-                    self.create_buildset(ssid, "downstream", t)
-                db.scheduler_unsubscribe_buildset(self.schedulerid, bsid, t)
-        return None
-
-# Dependent/Triggerable schedulers will make a BuildSet with linked
-# BuildRequests. The rest (which don't generally care when the set
-# finishes) will just make the BuildRequests.
-
-# runInteraction() should give us the all-or-nothing transaction
-# semantics we want, with synchronous operation during the
-# interaction function, transactions fail instead of retrying. So if
-# a concurrent actor touches the database in a way that blocks the
-# transaction, we'll get an errback. That will cause the overall
-# Scheduler to errback, and not commit its "all Changes before X have
-# been handled" update. The next time that Scheduler is processed, it
-# should try everything again.
+# now at buildbot.schedulers.dependent, but keep the old name alive
+Dependent = dependent.Dependent

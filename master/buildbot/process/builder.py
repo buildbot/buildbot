@@ -25,6 +25,7 @@ from twisted.internet import defer
 from buildbot import interfaces, util
 from buildbot.status.progress import Expectations
 from buildbot.status.builder import RETRY
+from buildbot.status.builder import BuildSetStatus
 from buildbot.process.properties import Properties
 from buildbot.util.eventual import eventually
 
@@ -988,28 +989,44 @@ class Builder(pb.Referenceable, service.MultiService):
 class BuilderControl:
     implements(interfaces.IBuilderControl)
 
-    def __init__(self, builder, parent):
+    def __init__(self, builder, master):
         self.original = builder
-        self.parent = parent # the IControl object
+        self.master = master
 
-    def submitBuildRequest(self, ss, reason, props=None, now=False):
-        bss = self.parent.submitBuildSet([self.original.name], ss, reason,
-                                         props, now)
-        brs = bss.getBuildRequests()[0]
-        return brs
+    def submitBuildRequest(self, ss, reason, props=None):
+        d = ss.getSourceStampId(self.master.master)
+        def add_buildset(ssid):
+            return self.master.master.addBuildset(
+                    builderNames=[self.original.name],
+                    ssid=ssid, reason=reason, properties=props)
+        d.addCallback(add_buildset)
+        def get_brs(bsid):
+            bss = BuildSetStatus(bsid, self.scheduler.master.status,
+                                 self.master.master.db)
+            brs = bss.getBuildRequests()[0]
+            return brs
+        d.addCallback(get_brs)
+        return d
 
     def rebuildBuild(self, bs, reason="<rebuild, no reason given>", extraProperties=None):
         if not bs.isFinished():
             return
 
-        ss = bs.getSourceStamp(absolute=True)
-        # Make a copy so as not to modify the original build.
+        # Make a copy of the properties so as not to modify the original build.
         properties = Properties()
         # Don't include runtime-set properties in a rebuild request
         properties.updateFromPropertiesNoRuntime(bs.getProperties())
         if extraProperties is None:
             properties.updateFromProperties(extraProperties)
-        self.submitBuildRequest(ss, reason, props=properties)
+
+        ss = bs.getSourceStamp(absolute=True)
+        d = ss.getSourceStampId(self.master.master)
+        def add_buildset(ssid):
+            return self.master.master.addBuildset(
+                    builderNames=[self.original.name],
+                    ssid=ssid, reason=reason, properties=properties)
+        d.addCallback(add_buildset)
+        return d
 
     def getPendingBuilds(self):
         # return IBuildRequestControl objects

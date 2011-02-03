@@ -89,7 +89,9 @@ class Properties(util.ComparableMixin):
         return dict((k,v[0]) for k,v in self.properties.iteritems())
 
     def __repr__(self):
-        return repr(dict([ (k,v[0]) for k,v in self.properties.iteritems() ]))
+        return ('Properties(**' +
+                repr(dict((k,v[0]) for k,v in self.properties.iteritems())) +
+                ')')
 
     def setProperty(self, name, value, source, runtime=False):
         self.properties[name] = (value, source)

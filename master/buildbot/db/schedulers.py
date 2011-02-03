@@ -19,6 +19,7 @@ Support for schedulers in the database
 
 from buildbot.util import json
 import sqlalchemy as sa
+import sqlalchemy.exc
 from twisted.python import log
 from buildbot.db import base
 
@@ -60,16 +61,27 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
         table. CLASSIFICATIONS is a dictionary mapping CHANGEID to IMPORTANT
         (boolean).  Returns a Deferred."""
         def thd(conn):
-            scheduler_changes_tbl = self.db.model.scheduler_changes
-            q = scheduler_changes_tbl.insert()
+            tbl = self.db.model.scheduler_changes
+            ins_q = tbl.insert()
+            upd_q = tbl.update(
+                    ((tbl.c.schedulerid == schedulerid)
+                    & (tbl.c.changeid == sa.bindparam('wc_changeid'))))
             for changeid, important in classifications.items():
                 # convert the 'important' value into an integer, since that
                 # is the column type
                 imp_int = important and 1 or 0
-                conn.execute(q,
-                        schedulerid=schedulerid,
-                        changeid=changeid,
-                        important=imp_int)
+                try:
+                    conn.execute(ins_q,
+                            schedulerid=schedulerid,
+                            changeid=changeid,
+                            important=imp_int)
+                except (sqlalchemy.exc.ProgrammingError,
+                        sqlalchemy.exc.IntegrityError):
+                    # insert failed, so try an update
+                    conn.execute(upd_q,
+                            wc_changeid=changeid,
+                            important=imp_int)
+
         return self.db.pool.do(thd)
 
     def flushChangeClassifications(self, schedulerid, less_than=None):

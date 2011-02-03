@@ -20,7 +20,6 @@ from buildbot.db import buildsets
 from buildbot.util import json
 from buildbot.test.util import connector_component
 from buildbot.test.fake import fakedb
-from buildbot.process import properties
 
 class TestBuildsetsConnectorComponent(
             connector_component.ConnectorComponentMixin,
@@ -83,8 +82,7 @@ class TestBuildsetsConnectorComponent(
         return d
 
     def test_addBuildset_bigger(self):
-        props = properties.Properties()
-        props.setProperty('prop', [ 'list' ], 'test')
+        props = dict(prop=(['list'], 'test'))
         d = defer.succeed(None)
         d.addCallback(lambda _ :
             self.db.buildsets.addBuildset(ssid=234, reason='because',

@@ -114,7 +114,7 @@ class DBThreadPool(threadpool.ThreadPool):
     # of the synchronization wrong - the thread may still be "in use" when the
     # deferred fires in the parent, which can lead to database accesses hopping
     # between threads.  In practice, this should not cause any difficulty.
-    def do_081(self, callable, *args, **kwargs):
+    def do_081(self, callable, *args, **kwargs): # pragma: no cover
         d = defer.Deferred()
         def thd():
             try:
@@ -132,7 +132,7 @@ class DBThreadPool(threadpool.ThreadPool):
                 reactor.callFromThread(d.errback, failure.Failure())
         self.callInThread(thd)
         return d
-    def do_with_engine_081(self, callable, *args, **kwargs):
+    def do_with_engine_081(self, callable, *args, **kwargs): # pragma: no cover
         d = defer.Deferred()
         def thd():
             try:
