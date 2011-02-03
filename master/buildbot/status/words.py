@@ -30,6 +30,7 @@ from buildbot import interfaces, util
 from buildbot import version
 from buildbot.interfaces import IStatusReceiver
 from buildbot.sourcestamp import SourceStamp
+from buildbot.status.builder import BuildSetStatus
 from buildbot.status import base
 from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE, EXCEPTION
 from buildbot.scripts.runner import ForceOptions
@@ -463,17 +464,17 @@ class Contact(base.StatusReceiver):
 
         bc = self.getControl(which)
 
-        # TODO: maybe give certain users the ability to request builds of
-        # certain branches
         reason = "forced: by %s: %s" % (self.describeUser(who), reason)
         ss = SourceStamp(branch=branch, revision=revision)
-        try:
-            brs = bc.submitBuildRequest(ss, reason, now=True)
-        except interfaces.NoSlaveError:
-            self.send("sorry, I can't force a build: all slaves are offline")
-            return
-        ireq = IrcBuildRequest(self)
-        brs.subscribe(ireq.started)
+        d = bc.submitBuildRequest(ss, reason)
+        def subscribe(bsid):
+            ireq = IrcBuildRequest(self)
+            bss = BuildSetStatus(bsid, self.scheduler.master.status,
+                                 self.master.db)
+            brs = bss.getBuildRequests()[0]
+            brs.subscribe(ireq.started)
+        d.addCallback(subscribe)
+        d.addErrback(log.err, "while forcing a build")
 
 
     command_FORCE.usage = "force build <which> <reason> - Force a build"

@@ -350,6 +350,8 @@ class Model(base.DBConnectorComponent):
     sa.Index('change_properties_changeid', change_properties.c.changeid)
     sa.Index('scheduler_changes_schedulerid', scheduler_changes.c.schedulerid)
     sa.Index('scheduler_changes_changeid', scheduler_changes.c.changeid)
+    sa.Index('scheduler_changes_unique', scheduler_changes.c.schedulerid,
+                    scheduler_changes.c.changeid, unique=True)
     sa.Index('scheduler_upstream_buildsets_buildsetid', scheduler_upstream_buildsets.c.buildsetid)
     sa.Index('scheduler_upstream_buildsets_schedulerid', scheduler_upstream_buildsets.c.schedulerid)
     sa.Index('scheduler_upstream_buildsets_active', scheduler_upstream_buildsets.c.active)

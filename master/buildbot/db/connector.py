@@ -13,9 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
-import collections, base64
+import base64
 
-from twisted.python import log, threadable
+from twisted.python import threadable
 from buildbot.db import enginestrategy
 
 from buildbot import util
@@ -65,10 +65,11 @@ class DBConnector(object):
     object, and listed below.
     """
 
-    synchronized = ["notify", "_end_operation"]
+    synchronized = ["notify", "_end_operation"] # TODO: remove
     MAX_QUERY_TIMES = 1000
 
-    def __init__(self, db_url, basedir):
+    def __init__(self, master, db_url, basedir):
+        self.master = master
         self.basedir = basedir
         "basedir for this master - used for upgrades"
 
@@ -78,15 +79,10 @@ class DBConnector(object):
 
         self._oldpool = TempAdbapiPool(self._engine)
 
-        self._query_times = collections.deque()
-
-        self._change_cache = util.LRUCache() # TODO: remove
-        self._sourcestamp_cache = util.LRUCache()
-        self._active_operations = set() # protected by synchronized=
-        self._pending_notifications = []
+        self._sourcestamp_cache = util.LRUCache() # TODO: remove
+        self._active_operations = set() # protected by synchronized= TODO: remove
+        self._pending_notifications = [] # TODO: remove
         self._subscribers = bbcollections.defaultdict(set)
-
-        self._pending_operation_count = 0
 
         self._started = False
 
@@ -205,20 +201,14 @@ class DBConnector(object):
     def runInteractionNow(self, interaction, *args, **kwargs): # TODO: remove
         # synchronous+blocking version of runInteraction()
         assert self._started
-        start = self._getCurrentTime()
         t = self._start_operation()
         try:
             return self._runInteractionNow(interaction, *args, **kwargs)
         finally:
             self._end_operation(t)
-            self._add_query_time(start)
-
-    def get_sync_connection(self): # TODO: remove
-        # TODO: SYNC CONNECTIONS MUST DIE
-        return self._engine.raw_connection()
 
     def _runInteractionNow(self, interaction, *args, **kwargs): # TODO: remove
-        conn = self.get_sync_connection()
+        conn = self._engine.raw_connection()
         c = conn.cursor()
         result = interaction(c, *args, **kwargs)
         c.close()
@@ -241,25 +231,15 @@ class DBConnector(object):
 
     def runQuery(self, *args, **kwargs): # TODO: remove
         assert self._started
-        self._pending_operation_count += 1
         d = self._oldpool.runQuery(*args, **kwargs)
         return d
 
     def _runQuery_done(self, res, start, t): # TODO: remove
         self._end_operation(t)
-        self._add_query_time(start)
-        self._pending_operation_count -= 1
         return res
-
-    def _add_query_time(self, start): # TODO: remove
-        elapsed = self._getCurrentTime() - start
-        self._query_times.append(elapsed)
-        if len(self._query_times) > self.MAX_QUERY_TIMES:
-            self._query_times.popleft()
 
     def runInteraction(self, *args, **kwargs): # TODO: remove
         assert self._started
-        self._pending_operation_count += 1
         start = self._getCurrentTime()
         t = self._start_operation()
         d = self._oldpool.runInteraction(*args, **kwargs)
@@ -267,41 +247,7 @@ class DBConnector(object):
         return d
     def _runInteraction_done(self, res, start, t): # TODO: remove
         self._end_operation(t)
-        self._add_query_time(start)
-        self._pending_operation_count -= 1
         return res
-
-    # old ChangeManager methods
-
-    def getChangesGreaterThan(self, last_changeid, t=None):
-        # LIES LIES LIES!
-        """Return a Deferred that fires with a list of all Change instances
-        with numbers greater than the given value, sorted by number. This is
-        useful for catching up with everything that's happened since you last
-        called this function."""
-        assert last_changeid >= 0
-        if t:
-            return self._txn_getChangesGreaterThan(t, last_changeid)
-        else:
-            return self.runInteractionNow(self._txn_getChangesGreaterThan,
-                                          last_changeid)
-    def _txn_getChangesGreaterThan(self, t, last_changeid):
-        q = self.quoteq("SELECT changeid FROM changes WHERE changeid > ?")
-        t.execute(q, (last_changeid,))
-        changes = [self.getChangeNumberedNow(changeid, t)
-                   for (changeid,) in t.fetchall()]
-        changes.sort(key=lambda c: c.number)
-        return changes
-
-    def removeChangeNow(self, changeid):
-        """Thoroughly remove a change from the database, including all dependent
-        tables"""
-        def txn(t):
-            for table in ('changes', 'scheduler_changes', 'sourcestamp_changes',
-                          'change_files', 'change_links', 'change_properties'):
-                q = self.quoteq("DELETE FROM %s WHERE changeid = ?" % table)
-                t.execute(q, (changeid,))
-        return self.runInteractionNow(txn)
 
     # SourceStamp-manipulating methods
 
@@ -377,184 +323,6 @@ class DBConnector(object):
             value, source = json.loads(valuepair)
             retval.setProperty(str(key), value, source)
         return retval
-
-    # Scheduler manipulation methods
-
-    def addSchedulers(self, added):
-        return self.runInteraction(self._addSchedulers, added)
-    def _addSchedulers(self, t, added):
-        for scheduler in added:
-            name = scheduler.name
-            assert name
-            class_name = "%s.%s" % (scheduler.__class__.__module__,
-                    scheduler.__class__.__name__)
-            q = self.quoteq("""
-                SELECT schedulerid, class_name FROM schedulers WHERE
-                    name=? AND
-                    (class_name=? OR class_name='')
-                    """)
-            t.execute(q, (name, class_name))
-            row = t.fetchone()
-            if row:
-                sid, db_class_name = row
-                if db_class_name == '':
-                    # We're updating from an old schema where the class name
-                    # wasn't stored.
-                    # Update this row's class name and move on
-                    q = self.quoteq("""UPDATE schedulers SET class_name=?
-                        WHERE schedulerid=?""")
-                    t.execute(q, (class_name, sid))
-                elif db_class_name != class_name:
-                    # A different scheduler is being used with this name.
-                    # Ignore the old scheduler and create a new one
-                    sid = None
-            else:
-                sid = None
-
-            if sid is None:
-                # create a new row, with the latest changeid (so it won't try
-                # to process all of the old changes) new Schedulers are
-                # supposed to ignore pre-existing Changes
-                q = ("SELECT changeid FROM changes"
-                     " ORDER BY changeid DESC LIMIT 1")
-                t.execute(q)
-                max_changeid = _one_or_else(t.fetchall(), 0)
-                state = scheduler.get_initial_state(max_changeid)
-                state_json = json.dumps(state)
-                q = self.quoteq("INSERT INTO schedulers"
-                                " (name, class_name, state)"
-                                "  VALUES (?,?,?)", "schedulerid")
-                t.execute(q, (name, class_name, state_json))
-                sid = self.lastrowid(t)
-            log.msg("scheduler '%s' got id %d" % (scheduler.name, sid))
-            scheduler.schedulerid = sid
-
-    def scheduler_get_state(self, schedulerid, t):
-        q = self.quoteq("SELECT state FROM schedulers WHERE schedulerid=?")
-        t.execute(q, (schedulerid,))
-        state_json = _one_or_else(t.fetchall())
-        assert state_json is not None
-        return json.loads(state_json)
-
-    def scheduler_set_state(self, schedulerid, t, state):
-        state_json = json.dumps(state)
-        q = self.quoteq("UPDATE schedulers SET state=? WHERE schedulerid=?")
-        t.execute(q, (state_json, schedulerid))
-
-    def get_sourcestampid(self, ss, t):
-        """Given a SourceStamp (which may or may not have an ssid), make sure
-        the contents are in the database, and return the ssid. If the
-        SourceStamp originally came from the DB (and thus already has an
-        ssid), just return the ssid. If not, create a new row for it."""
-        if ss.ssid is not None:
-            return ss.ssid
-        patchid = None
-        if ss.patch:
-            patchlevel = ss.patch[0]
-            diff = ss.patch[1]
-            subdir = None
-            if len(ss.patch) > 2:
-                subdir = ss.patch[2]
-            q = self.quoteq("INSERT INTO patches"
-                            " (patchlevel, patch_base64, subdir)"
-                            " VALUES (?,?,?)", "id")
-            t.execute(q, (patchlevel, base64.b64encode(diff), subdir))
-            patchid = self.lastrowid(t)
-        t.execute(self.quoteq("INSERT INTO sourcestamps"
-                              " (branch, revision, patchid, project, repository)"
-                              " VALUES (?,?,?,?,?)", "id"),
-                  (ss.branch, ss.revision, patchid, ss.project, ss.repository))
-        ss.ssid = self.lastrowid(t)
-        q2 = self.quoteq("INSERT INTO sourcestamp_changes"
-                         " (sourcestampid, changeid) VALUES (?,?)")
-        for c in ss.changes:
-            t.execute(q2, (ss.ssid, c.number))
-        return ss.ssid
-
-    def create_buildset(self, ssid, reason, properties, builderNames, t,
-                        external_idstring=None):
-        # this creates both the BuildSet and the associated BuildRequests
-        now = self._getCurrentTime()
-        t.execute(self.quoteq("INSERT INTO buildsets"
-                              " (external_idstring, reason,"
-                              "  sourcestampid, submitted_at)"
-                              " VALUES (?,?,?,?)", "id"),
-                  (external_idstring, reason, ssid, now))
-        bsid = self.lastrowid(t)
-        for propname, propvalue in properties.properties.items():
-            encoded_value = json.dumps(propvalue)
-            t.execute(self.quoteq("INSERT INTO buildset_properties"
-                                  " (buildsetid, property_name, property_value)"
-                                  " VALUES (?,?,?)"),
-                      (bsid, propname, encoded_value))
-        brids = []
-        for bn in builderNames:
-            t.execute(self.quoteq("INSERT INTO buildrequests"
-                                  " (buildsetid, buildername, submitted_at)"
-                                  " VALUES (?,?,?)", "id"),
-                      (bsid, bn, now))
-            brid = self.lastrowid(t)
-            brids.append(brid)
-        self.notify("add-buildset", bsid)
-        self.notify("add-buildrequest", *brids)
-        return bsid
-
-    def scheduler_classify_change(self, schedulerid, number, important, t):
-        q = self.quoteq("INSERT INTO scheduler_changes"
-                        " (schedulerid, changeid, important)"
-                        " VALUES (?,?,?)")
-        t.execute(q, (schedulerid, number, bool(important)))
-
-    def scheduler_get_classified_changes(self, schedulerid, t):
-        q = self.quoteq("SELECT changeid, important"
-                        " FROM scheduler_changes"
-                        " WHERE schedulerid=?")
-        t.execute(q, (schedulerid,))
-        important = []
-        unimportant = []
-        for (changeid, is_important) in t.fetchall():
-            c = self.getChangeNumberedNow(changeid, t)
-            if is_important:
-                important.append(c)
-            else:
-                unimportant.append(c)
-        return (important, unimportant)
-
-    def scheduler_retire_changes(self, schedulerid, changeids, t):
-        while changeids:
-            # sqlite has a maximum of 999 parameters, but we'll try to come in far
-            # short of that
-            batch, changeids = changeids[:100], changeids[100:]
-            t.execute(self.quoteq("DELETE FROM scheduler_changes"
-                                  " WHERE schedulerid=? AND changeid IN ")
-                      + self.parmlist(len(batch)),
-                      (schedulerid,) + tuple(batch))
-
-    def scheduler_subscribe_to_buildset(self, schedulerid, bsid, t):
-        # scheduler_get_subscribed_buildsets(schedulerid) will return
-        # information about all buildsets that were subscribed this way
-        t.execute(self.quoteq("INSERT INTO scheduler_upstream_buildsets"
-                              " (buildsetid, schedulerid, active)"
-                              " VALUES (?,?,?)"),
-                  (bsid, schedulerid, 1))
-
-    def scheduler_get_subscribed_buildsets(self, schedulerid, t):
-        # returns list of (bsid, ssid, complete, results) pairs
-        t.execute(self.quoteq("SELECT bs.id, "
-                              "  bs.sourcestampid, bs.complete, bs.results"
-                              " FROM scheduler_upstream_buildsets AS s,"
-                              "  buildsets AS bs"
-                              " WHERE s.buildsetid=bs.id"
-                              "  AND s.schedulerid=?"
-                              "  AND s.active=1"),
-                  (schedulerid,))
-        return t.fetchall()
-
-    def scheduler_unsubscribe_buildset(self, schedulerid, buildsetid, t):
-        t.execute(self.quoteq("UPDATE scheduler_upstream_buildsets"
-                              " SET active=0"
-                              " WHERE buildsetid=? AND schedulerid=?"),
-                  (buildsetid, schedulerid))
 
     # BuildRequest-manipulation methods
 
@@ -783,6 +551,8 @@ class DBConnector(object):
                             " SET complete=1, complete_at=?, results=?"
                             " WHERE id=?")
             t.execute(q, (now, bs_results, bsid))
+            # notify the master
+            self.master.buildsetComplete(bsid, bs_results)
 
     def get_buildrequestids_for_buildset(self, bsid):
         return self.runInteractionNow(self._txn_get_buildrequestids_for_buildset,
@@ -852,13 +622,52 @@ class DBConnector(object):
                   (buildername,))
         return [brid for (brid,) in t.fetchall()]
 
-    # test/debug methods
+    # used by getSourceStamp
+    def getChangeNumberedNow(self, changeid, t=None):
+        # this is a synchronous/blocking version of getChangeByNumber
+        assert changeid >= 0
+        if t:
+            c = self._txn_getChangeNumberedNow(t, changeid)
+        else:
+            c = self.runInteractionNow(self._txn_getChangeNumberedNow, changeid)
+        return c
+    def _txn_getChangeNumberedNow(self, t, changeid):
+        q = self.quoteq("SELECT author, comments,"
+                        " is_dir, branch, revision, revlink,"
+                        " when_timestamp, category,"
+                        " repository, project"
+                        " FROM changes WHERE changeid = ?")
+        t.execute(q, (changeid,))
+        rows = t.fetchall()
+        if not rows:
+            return None
+        (who, comments,
+         isdir, branch, revision, revlink,
+         when, category, repository, project) = rows[0]
+        branch = str_or_none(branch)
+        revision = str_or_none(revision)
+        q = self.quoteq("SELECT link FROM change_links WHERE changeid=?")
+        t.execute(q, (changeid,))
+        rows = t.fetchall()
+        links = [row[0] for row in rows]
+        links.sort()
 
-    def has_pending_operations(self):
-        return bool(self._pending_operation_count)
+        q = self.quoteq("SELECT filename FROM change_files WHERE changeid=?")
+        t.execute(q, (changeid,))
+        rows = t.fetchall()
+        files = [row[0] for row in rows]
+        files.sort()
 
-    def setChangeCacheSize(self, max_size):
-        self._change_cache.setMaxSize(max_size)
+        p = self.get_properties_from_db("change_properties", "changeid",
+                                        changeid, t)
+        from buildbot.changes.changes import Change
+        c = Change(who=who, files=files, comments=comments, isdir=isdir,
+                   links=links, revision=revision, when=when,
+                   branch=branch, category=category, revlink=revlink,
+                   repository=repository, project=project)
+        c.properties.updateFromProperties(p)
+        c.number = changeid
+        return c
 
 
 threadable.synchronize(DBConnector)

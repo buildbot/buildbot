@@ -13,12 +13,19 @@
 #
 # Copyright Buildbot Team Members
 
-from buildbot.schedulers.basic import Scheduler, AnyBranchScheduler
-from buildbot.schedulers.dependent import Dependent
-from buildbot.schedulers.timed import Periodic, Nightly
-from buildbot.schedulers.triggerable import Triggerable
-from buildbot.schedulers.trysched import Try_Jobdir, Try_Userpass
+import sqlalchemy as sa
 
-_hush_pyflakes = [Scheduler, AnyBranchScheduler, Dependent,
-                  Periodic, Nightly, Triggerable, Try_Jobdir, Try_Userpass]
-del _hush_pyflakes
+def upgrade(migrate_engine):
+    metadata = sa.MetaData()
+    metadata.bind = migrate_engine
+
+    scheduler_changes = sa.Table('scheduler_changes', metadata,
+        sa.Column('schedulerid', sa.Integer),
+        sa.Column('changeid', sa.Integer),
+        sa.Column('important', sa.SmallInteger),
+    )
+
+    idx = sa.Index('scheduler_changes_unique',
+                   scheduler_changes.c.schedulerid,
+                   scheduler_changes.c.changeid, unique=True)
+    idx.create(migrate_engine)

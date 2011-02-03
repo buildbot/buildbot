@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 import os
+import mock
 from twisted.trial import unittest
 from buildbot.db import connector
 from buildbot.test.util import db
@@ -26,7 +27,7 @@ class DBConnector_Basic(db.RealDatabaseMixin, unittest.TestCase):
     def setUp(self):
         d = self.setUpRealDatabase()
         def make_dbc(_):
-            self.dbc = connector.DBConnector(self.db_url,
+            self.dbc = connector.DBConnector(mock.Mock(), self.db_url,
                                         os.path.abspath('basedir'))
             self.dbc.start()
         d.addCallback(make_dbc)

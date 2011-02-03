@@ -13,27 +13,24 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.internet import reactor, defer
+from twisted.python import failure
+from twisted.internet import defer
 from buildbot.schedulers import base
 from buildbot.process.properties import Properties
 
 class Triggerable(base.BaseScheduler):
-    """This scheduler doesn't do anything until it is triggered by a Trigger
-    step in a factory. In general, that step will not complete until all of
-    the builds that I fire have finished.
-    """
 
-    compare_attrs = ('name', 'builderNames', 'properties')
+    compare_attrs = base.BaseScheduler.compare_attrs
+
     def __init__(self, name, builderNames, properties={}):
         base.BaseScheduler.__init__(self, name, builderNames, properties)
         self._waiters = {}
+        self._bsc_subscription = None
         self.reason = "Triggerable(%s)" % name
 
-    def trigger(self, ss, set_props=None):
-        """Trigger this scheduler. Returns a deferred that will fire when the
-        buildset is finished.
-        """
-
+    def trigger(self, ssid, set_props=None):
+        """Trigger this scheduler with the given sourcestamp ID. Returns a
+        deferred that will fire when the buildset is finished."""
         # properties for this buildset are composed of our own properties,
         # potentially overridden by anything from the triggering build
         props = Properties()
@@ -41,39 +38,50 @@ class Triggerable(base.BaseScheduler):
         if set_props:
             props.updateFromProperties(set_props)
 
-        d = self.parent.db.runInteraction(self._trigger, ss, props)
-        # this returns a Deferred that fires when the buildset is complete,
-        # with the buildset results (SUCCESS or FAILURE). This Deferred is
-        # not persistent: if the master is bounced, the "upstream" build (the
-        # one which used steps.trigger.Trigger) will disappear anyways.
-        def _done(res):
-            return res[0] # chain the Deferred
-        d.addCallback(_done)
+        # note that this does not use the buildset subscriptions mechanism, as
+        # the duration of interest to the caller is bounded by the lifetime of
+        # this process.
+        d = self.addBuildsetForSourceStamp(reason=self.reason, ssid=ssid,
+                            properties=props)
+        def setup_waiter(bsid):
+            self._waiters[bsid] = d = defer.Deferred()
+            self._updateWaiters()
+            return d
+        d.addCallback(setup_waiter)
         return d
 
-    def _trigger(self, t, ss, props):
-        db = self.parent.db
-        ssid = db.get_sourcestampid(ss, t)
-        bsid = self.create_buildset(ssid, self.reason, t, props)
-        self._waiters[bsid] = d = defer.Deferred()
-        db.scheduler_subscribe_to_buildset(self.schedulerid, bsid, t)
-        reactor.callFromThread(self.parent.master.triggerSlaveManager)
-        return (d,) # apparently you can't return Deferreds from runInteraction
+    def stopService(self):
+        # cancel any outstanding subscription
+        if self._bsc_subscription:
+            self._bsc_subscription.unsubscribe()
+            self._bsc_subscription = None
 
-    def run(self):
-        # this exists just to notify triggerers that the builds they
-        # triggered are now done, i.e. if buildbot.steps.trigger.Trigger is
-        # called with waitForFinish=True.
-        d = self.parent.db.runInteraction(self._run)
-        return d
-    def _run(self, t):
-        db = self.parent.db
-        res = db.scheduler_get_subscribed_buildsets(self.schedulerid, t)
-        # this returns bsid,ssid,results for all of our active subscriptions
-        for (bsid,ssid,complete,results) in res:
-            if complete:
-                d = self._waiters.pop(bsid, None)
-                if d:
-                    reactor.callFromThread(d.callback, results)
-                db.scheduler_unsubscribe_buildset(self.schedulerid, bsid, t)
-        return None
+        # and errback any outstanding deferreds
+        if self._waiters:
+            msg = 'Triggerable scheduler stopped before build was complete'
+            for d in self.waiters:
+                d.errback(failure.Failure(RuntimeError(msg)))
+            self._waiters = {}
+
+        return base.BaseScheduler.stopService(self)
+
+    def _updateWaiters(self):
+        if self._waiters and not self._bsc_subscription:
+            self._bsc_subscription = \
+                    self.master.subscribeToBuildsetCompletions(
+                                                self._buildsetComplete)
+        elif not self._waiters and self._bsc_subscription:
+            self._bsc_subscription.unsubscribe()
+            self._bsc_subscription = None
+
+    def _buildsetComplete(self, bsid, result):
+        if bsid not in self._waiters:
+            return
+
+        # pop this bsid from the waiters list, and potentially unsubscribe
+        # from completion notifications
+        d = self._waiters.pop(bsid)
+        self._updateWaiters()
+
+        # fire the callback to indicate that the triggered build is complete
+        d.callback(result)

@@ -32,7 +32,7 @@ import buildbot.pbmanager
 from buildbot.util import now, safeTranslate, eventual, subscription
 from buildbot.pbutil import NewCredPerspective
 from buildbot.process.builder import Builder, IDLE
-from buildbot.status.builder import Status, BuildSetStatus
+from buildbot.status.builder import Status
 from buildbot.changes.manager import ChangeManager
 from buildbot import interfaces, locks
 from buildbot.process.properties import Properties
@@ -40,6 +40,7 @@ from buildbot.config import BuilderConfig
 from buildbot.process.builder import BuilderControl
 from buildbot.db import connector, exceptions
 from buildbot.schedulers.manager import SchedulerManager
+from buildbot.schedulers.base import isScheduler
 from buildbot.util.loop import DelegateLoop
 
 ########################################
@@ -169,13 +170,6 @@ class BotMaster(service.MultiService):
             log.err(Failure())
             # leave them in the original order
         return [b.run for b in builders]
-
-    def trigger_add_buildrequest(self, category, *brids):
-        # a buildrequest has been added or resubmitted
-        self.loop.trigger()
-    def triggerNewBuildCheck(self):
-        # called when a build finishes, or a slave attaches
-        self.loop.trigger()
 
     # these four are convenience functions for testing
 
@@ -384,6 +378,11 @@ class BotMaster(service.MultiService):
         # be hashable and that they should compare properly.
         return self.locks[lockid]
 
+    def triggerNewBuildCheck(self):
+        # TODO: old name -- should go
+        self.loop.trigger()
+
+
 class DuplicateSlaveArbitrator(object):
     """Utility class to arbitrate the situation when a new slave connects with
     the name of an existing, connected slave"""
@@ -546,7 +545,7 @@ class DebugPerspective(NewCredPerspective):
         ss = SourceStamp(branch, revision)
         bpr = Properties()
         bpr.update(properties, "remote requestBuild")
-        bc.submitBuildRequest(ss, reason, bpr)
+        return bc.submitBuildRequest(ss, reason, bpr)
 
     def perspective_pingBuilder(self, buildername):
         c = interfaces.IControl(self.master)
@@ -628,6 +627,10 @@ class BuildMaster(service.MultiService):
         self.botmaster.setMasterName(self.master_name, self.master_incarnation)
         self.botmaster.setServiceParent(self)
 
+        self.scheduler_manager = SchedulerManager(self)
+        self.scheduler_manager.setName('scheduler_manager')
+        self.scheduler_manager.setServiceParent(self)
+
         self.debugClientRegistration = None
 
         self.status = Status(self.botmaster, self.basedir)
@@ -645,9 +648,13 @@ class BuildMaster(service.MultiService):
         # create log_rotation object and set default parameters (used by WebStatus)
         self.log_rotation = LogRotation()
 
-        # subscription point to recieve changes; users should call subscribeToChanges
-        # to get into this subscription point
-        self._change_subscriptions = subscription.SubscriptionPoint("changes")
+        # subscription points
+        self._change_subscriptions = \
+                subscription.SubscriptionPoint("changes")
+        self._buildset_addition_subscriptions = \
+                subscription.SubscriptionPoint("buildset_additions")
+        self._buildset_completion_subscriptions = \
+                subscription.SubscriptionPoint("buildset_completion")
 
     def startService(self):
         service.MultiService.startService(self)
@@ -845,12 +852,7 @@ class BuildMaster(service.MultiService):
             assert isinstance(change_sources, (list, tuple))
             for s in change_sources:
                 assert interfaces.IChangeSource(s, None)
-            # this assertion catches c['schedulers'] = Scheduler(), since
-            # Schedulers are service.MultiServices and thus iterable.
-            errmsg = "c['schedulers'] must be a list of Scheduler instances"
-            assert isinstance(schedulers, (list, tuple)), errmsg
-            for s in schedulers:
-                assert interfaces.IScheduler(s, None), errmsg
+            self.checkConfig_Schedulers(schedulers)
             assert isinstance(status, (list, tuple))
             for s in status:
                 assert interfaces.IStatusReceiver(s, None)
@@ -1026,8 +1028,7 @@ class BuildMaster(service.MultiService):
             d.addCallback(lambda res: self.loadConfig_status(status))
 
             # Schedulers are added after Builders in case they start right away
-            d.addCallback(lambda res:
-                          self.scheduler_manager.updateSchedulers(schedulers))
+            d.addCallback(lambda _: self.loadConfig_Schedulers(schedulers))
 
             # and Sources go after Schedulers for the same reason
             d.addCallback(lambda res: self.loadConfig_Sources(change_sources))
@@ -1043,7 +1044,8 @@ class BuildMaster(service.MultiService):
         # the remainder is only done if we are really loading the config
         if not checkOnly:
             d.addCallback(_done)
-            d.addCallback(lambda res: self.botmaster.triggerNewBuildCheck())
+            # trigger the bostmaster to try to start builds
+            d.addCallback(lambda _: self.botmaster.loop.trigger())
             d.addErrback(log.err)
         return d
 
@@ -1051,9 +1053,9 @@ class BuildMaster(service.MultiService):
         if self.db:
             return
 
-        self.db = connector.DBConnector(db_url, self.basedir)
+        self.db = connector.DBConnector(self, db_url, self.basedir)
         if self.changeCacheSize:
-            self.db.setChangeCacheSize(self.changeCacheSize)
+            pass # TODO: set this in self.db.changes, or in self.config?
         self.db.start()
 
         # make sure it's up to date
@@ -1074,28 +1076,21 @@ class BuildMaster(service.MultiService):
 
         # set up the stuff that depends on the db
         def set_up_db_dependents(r):
-            # TODO: this needs to go
+            # TODO: these need to go
             self.botmaster.db = self.db
             self.status.setDB(self.db)
+
+            # subscribe the various parts of the system to changes
             self._change_subscriptions.subscribe(self.status.changeAdded)
-
-            self.db.subscribe_to("add-buildrequest",
-                                 self.botmaster.trigger_add_buildrequest)
-
-            sm = SchedulerManager(self, self.db, self.change_svc)
-            self.db.subscribe_to("add-change", sm.trigger_add_change)
-            self.db.subscribe_to("modify-buildset", sm.trigger_modify_buildset)
-
-            self.scheduler_manager = sm
-            sm.setServiceParent(self)
+            self._buildset_addition_subscriptions.subscribe(
+                    lambda **kwargs : self.botmaster.loop.trigger())
 
             # Set db_poll_interval (perhaps to 30 seconds) if you are using
             # multiple buildmasters that share a common database, such that the
             # masters need to discover what each other is doing by polling the
-            # database. TODO: this will be replaced by the DBNotificationServer.
+            # database.
             if db_poll_interval:
-                # it'd be nice if TimerService let us set now=False
-                t1 = TimerService(db_poll_interval, sm.trigger)
+                t1 = TimerService(db_poll_interval, self.pollDatabase)
                 t1.setServiceParent(self)
                 t2 = TimerService(db_poll_interval, self.botmaster.loop.trigger)
                 t2.setServiceParent(self)
@@ -1244,47 +1239,189 @@ class BuildMaster(service.MultiService):
         d.addCallback(addNewOnes)
         return d
 
+    def checkConfig_Schedulers(self, schedulers):
+        # this assertion catches c['schedulers'] = Scheduler(), since
+        # Schedulers are service.MultiServices and thus iterable.
+        errmsg = "c['schedulers'] must be a list of Scheduler instances"
+        assert isinstance(schedulers, (list, tuple)), errmsg
+        for s in schedulers:
+            assert isScheduler(s), errmsg
+
+    def loadConfig_Schedulers(self, schedulers):
+        return self.scheduler_manager.updateSchedulers(schedulers)
+
+    ## triggering methods and subscriptions
+
     def addChange(self, **kwargs):
-        "Add a change to the buildmaster and act on it."
+        """Add a change to the buildmaster and act on it.  Interface is
+        identical to
+        L{buildbot.db.changes.ChangesConnectorComponent.addChange}, including
+        returning a deferred, but also triggers schedulers to examine the
+        change."""
         d = self.db.changes.addChange(**kwargs)
         def notify(change):
             msg = u"added change %s to database" % change
             log.msg(msg.encode('utf-8', 'replace'))
-            self._change_subscriptions.deliver(change)
+            # only deliver messages immediately if we're not polling
+            if not self.db_poll_interval:
+                self._change_subscriptions.deliver(change)
             return change
         d.addCallback(notify)
         return d
 
-    def triggerSlaveManager(self):
-        self.botmaster.triggerNewBuildCheck()
-
-    def submitBuildSet(self, builderNames, ss, reason, props=None, now=False):
-        # determine the set of Builders to use
-        for name in builderNames:
-            b = self.botmaster.builders.get(name)
-            if not b:
-                raise KeyError("no such builder named '%s'" % name)
-            if now and not b.slaves:
-                raise interfaces.NoSlaveError
-        if props is None:
-            props = Properties()
-        bsid = self.db.runInteractionNow(self._txn_submitBuildSet,
-                                         builderNames, ss, reason, props)
-        return BuildSetStatus(bsid, self.status, self.db)
-
-    def _txn_submitBuildSet(self, t, builderNames, ss, reason, props):
-        ssid = self.db.get_sourcestampid(ss, t)
-        bsid = self.db.create_buildset(ssid, reason, props, builderNames, t)
-        return bsid
-
     def subscribeToChanges(self, callback):
         """
-        Request that L{callback} be called with each Change object added to the
+        Request that C{callback} be called with each Change object added to the
         cluster.
 
         Note: this method will go away in 0.9.x
         """
         return self._change_subscriptions.subscribe(callback)
+
+    def addBuildset(self, **kwargs):
+        """
+        Add a buildset to the buildmaster and act on it.  Interface is
+        identical to
+        L{buildbot.db.buildsets.BuildsetConnectorComponent.addBuildset},
+        including returning a Deferred, but also potentially triggers the
+        resulting builds.
+        """
+        d = self.db.buildsets.addBuildset(**kwargs)
+        def notify(bsid):
+            log.msg("added buildset %d to database" % bsid)
+            # note that buildset additions are only reported on this master
+            self._buildset_addition_subscriptions.deliver(bsid=bsid, **kwargs)
+            return bsid
+        d.addCallback(notify)
+        return d
+
+    def subscribeToBuildsets(self, callback):
+        """
+        Request that C{callback(bsid=bsid, ssid=ssid, reason=reason,
+        properties=properties, builderNames=builderNames,
+        external_idstring=external_idstring)} be called whenever a buildset is
+        added.
+
+        Note: this method will go away in 0.9.x
+        """
+        return self._buildset_addition_subscriptions.subscribe(callback)
+
+    def buildsetComplete(self, bsid, result):
+        """
+        Notifies the master that the given buildset with ID C{bsid} is
+        complete, with result C{result}.
+        """
+        # note that buildset completions are only reported on this master
+        self._buildset_completion_subscriptions.deliver(bsid, result)
+
+    def subscribeToBuildsetCompletions(self, callback):
+        """
+        Request that C{callback(bsid, result)} be called whenever a
+        buildset is complete.
+
+        Note: this method will go away in 0.9.x
+        """
+        return self._buildset_completion_subscriptions.subscribe(callback)
+
+    ## database polling
+
+    def pollDatabase(self):
+        # poll each of the tables that can indicate new, actionable stuff for
+        # this buildmaster to do.  This is used in a TimerService, so returning
+        # a Deferred means that we won't run two polling operations
+        # simultaneously.  Each particular poll method handles errors itself.
+        return defer.gatherResults([
+            # only changes at the moment
+            self.pollDatabaseChanges(),
+        ])
+
+    _last_processed_change = None
+    @defer.deferredGenerator
+    def pollDatabaseChanges(self):
+        # Older versions of Buildbot had each scheduler polling the database
+        # independently, and storing a "last_processed" state indicating the
+        # last change it had processed.  This had the advantage of allowing
+        # schedulers to pick up changes that arrived in the database while
+        # the scheduler was not running, but was horribly inefficient.
+
+        # This version polls the database on behalf of the schedulers, using a
+        # similar state at the master level.
+
+        need_setState = False
+
+        # get the last processed change id
+        if self._last_processed_change is None:
+            wfd = defer.waitForDeferred(
+                self._getState('last_processed_change'))
+            yield wfd
+            self._last_processed_change = wfd.getResult()
+
+        # if it's still None, assume we've processed up to the latest changeid
+        if self._last_processed_change is None:
+            wfd = defer.waitForDeferred(
+                self.db.changes.getLatestChangeid())
+            yield wfd
+            self._last_processed_change = wfd.getResult()
+            need_setState = True
+
+        if self._last_processed_change is None:
+            return
+
+        while True:
+            changeid = self._last_processed_change + 1
+            wfd = defer.waitForDeferred(
+                self.db.changes.getChangeInstance(changeid))
+            yield wfd
+            change = wfd.getResult()
+
+            # if there's no such change, we've reached the end and can
+            # stop polling
+            if not change:
+                break
+
+            self._change_subscriptions.deliver(change)
+
+            self._last_processed_change = changeid
+            need_setState = True
+
+        # write back the updated state, if it's changed
+        if need_setState:
+            wfd = defer.waitForDeferred(
+                self._setState('last_processed_change',
+                               self._last_processed_change))
+            yield wfd
+            wfd.getResult()
+
+    ## state maintenance (private)
+
+    _master_objectid = None
+
+    def _getObjectId(self):
+        if self._master_objectid is None:
+            d = self.db.state.getObjectId('master',
+                                    'buildbot.master.BuildMaster')
+            def keep(objectid):
+                self._master_objectid = objectid
+                return objectid
+            d.addCallback(keep)
+            return d
+        return defer.succeed(self._master_objectid)
+
+    def _getState(self, name, default=None):
+        "private wrapper around C{self.db.state.getState}"
+        d = self._getObjectId()
+        def get(objectid):
+            return self.db.state.getState(self._master_objectid, name, default)
+        d.addCallback(get)
+        return d
+
+    def _setState(self, name, value):
+        "private wrapper around C{self.db.state.setState}"
+        d = self._getObjectId()
+        def set(objectid):
+            return self.db.state.setState(self._master_objectid, name, value)
+        d.addCallback(set)
+        return d
 
 class Control:
     implements(interfaces.IControl)
@@ -1295,8 +1432,8 @@ class Control:
     def addChange(self, change):
         self.master.addChange(change)
 
-    def submitBuildSet(self, builderNames, ss, reason, props=None, now=False):
-        return self.master.submitBuildSet(builderNames, ss, reason, props, now)
+    def addBuildset(self, **kwargs):
+        return self.master.addBuildset(**kwargs)
 
     def getBuilder(self, name):
         b = self.master.botmaster.builders[name]

@@ -203,7 +203,8 @@ class StatusResourceBuild(HtmlResource):
                     % (bc, b.isFinished()))
             # TODO: indicate an error
         else:
-            bc.rebuildBuild(b, reason, extraProperties)
+            d = bc.rebuildBuild(b, reason, extraProperties)
+            d.addErrback(log.err, "while rebuilding a build")
         # we're at
         # http://localhost:8080/builders/NAME/builds/5/rebuild?[args]
         # Where should we send them?

@@ -56,57 +56,6 @@ class IChangeSource(Interface):
     def describe():
         """Return a string which briefly describes this source."""
 
-class IScheduler(Interface):
-    """I watch for Changes in the source tree and decide when to trigger
-    Builds. I create BuildSet objects and submit them to the BuildMaster. I
-    am a service, and the BuildMaster is always my parent.
-
-    @ivar properties: properties to be applied to all builds started by this
-    scheduler
-    @type properties: L<buildbot.process.properties.Properties>
-    """
-
-    def addChange(change):
-        """A Change has just been dispatched by one of the ChangeSources.
-        Each Scheduler will receive this Change. I may decide to start a
-        build as a result, or I might choose to ignore it."""
-
-    def listBuilderNames():
-        """Return a list of strings indicating the Builders that this
-        Scheduler might feed."""
-
-    def getPendingBuildTimes():
-        """Return a list of timestamps for any builds that are waiting in the
-        tree-stable-timer queue. This is only relevant for Change-based
-        schedulers, all others can just return an empty list."""
-        # TODO: it might be nice to make this into getPendingBuildSets, which
-        # would let someone subscribe to the buildset being finished.
-        # However, the Scheduler doesn't actually create the buildset until
-        # it gets submitted, so doing this would require some major rework.
-
-class IUpstreamScheduler(Interface):
-    """This marks an IScheduler as being eligible for use as the 'upstream='
-    argument to a buildbot.scheduler.Dependent instance."""
-
-    def subscribeToSuccessfulBuilds(target):
-        """Request that the target callbable be invoked after every
-        successful buildset. The target will be called with a single
-        argument: the SourceStamp used by the successful builds."""
-
-    def listBuilderNames():
-        """Return a list of strings indicating the Builders that this
-        Scheduler might feed."""
-
-class IDownstreamScheduler(Interface):
-    """This marks an IScheduler to be listening to other schedulers.
-    On reconfigs, these might get notified to check if their upstream
-    scheduler are stil the same."""
-
-    def checkUpstreamScheduler():
-        """Check if the upstream scheduler is still alive, and if not,
-        get a new upstream object from the master."""
-
-
 class ISourceStamp(Interface):
     """
     @cvar branch: branch from which source was drawn
@@ -1044,15 +993,6 @@ class IControl(Interface):
     def addChange(change):
         """Add a change to the change queue, for analysis by schedulers."""
 
-    def submitBuildSet(builderNames, ss, reason, props=None, now=False):
-        """Create a BuildSet, which will eventually cause a build of the
-        given SourceStamp to be run on all of the named builders. This
-        returns a BuildSetStatus object, which can be used to keep track of
-        the builds that are performed.
-
-        If now=True, and the builder has no slave attached, NoSlaveError will
-        be raised instead of queueing the request for later action."""
-
     def getBuilder(name):
         """Retrieve the IBuilderControl object for the given Builder."""
 
@@ -1060,13 +1000,13 @@ class IBuilderControl(Interface):
     def submitBuildRequest(ss, reason, props=None, now=False):
         """Create a BuildRequest, which will eventually cause a build of the
         given SourceStamp to be run on this builder. This returns a
-        BuildRequestStatus object, which can be used to keep track of the
-        builds that are performed.
+        BuildRequestStatus object via a Deferred, which can be used to keep
+        track of the builds that are performed.
 
         If now=True, and I have no slave attached, NoSlaveError will be
         raised instead of queueing the request for later action."""
 
-    def resubmitBuild(buildStatus, reason="<rebuild, no reason given>"):
+    def rebuildBuild(buildStatus, reason="<rebuild, no reason given>"):
         """Rebuild something we've already built before. This submits a
         BuildRequest to our Builder using the same SourceStamp as the earlier
         build. This has no effect (but may eventually raise an exception) if

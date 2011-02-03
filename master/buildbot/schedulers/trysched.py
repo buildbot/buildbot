@@ -13,14 +13,13 @@
 #
 # Copyright Buildbot Team Members
 
-import os.path
+import os
 
 from twisted.internet import defer
 from twisted.python import log, runtime
 from twisted.protocols import basic
 
 from buildbot import pbutil
-from buildbot.sourcestamp import SourceStamp
 from buildbot.util.maildir import MaildirService
 from buildbot.util import netstrings
 from buildbot.process.properties import Properties
@@ -30,11 +29,15 @@ from buildbot.status.builder import BuildSetStatus
 
 class TryBase(base.BaseScheduler):
 
-    def run(self):
-        # triggered by external events, not DB changes or timers
-        return None
-
     def filterBuilderList(self, builderNames):
+        """
+        Make sure that C{builderNames} is a subset of the configured
+        C{self.builderNames}, returning an empty list if not.  If
+        C{builderNames} is empty, use C{self.builderNames}.
+
+        @returns: list of builder names to build on
+        """
+
         # self.builderNames is the configured list of builders
         # available for try.  If the user supplies a list of builders,
         # it must be restricted to the configured list.  If not, build
@@ -50,29 +53,55 @@ class TryBase(base.BaseScheduler):
             builderNames = self.builderNames
         return builderNames
 
+
 class BadJobfile(Exception):
     pass
 
+
+class JobdirService(MaildirService):
+    # NOTE: tightly coupled with Try_Jobdir, below
+
+    def messageReceived(self, filename):
+        md = self.parent.jobdir
+        if runtime.platformType == "posix":
+            # open the file before moving it, because I'm afraid that once
+            # it's in cur/, someone might delete it at any moment
+            path = os.path.join(md, "new", filename)
+            f = open(path, "r")
+            os.rename(os.path.join(md, "new", filename),
+                      os.path.join(md, "cur", filename))
+        if runtime.platformType == "win32":
+            # do this backwards under windows, because you can't move a file
+            # that somebody is holding open. This was causing a Permission
+            # Denied error on bear's win32-twisted1.3 buildslave.
+            os.rename(os.path.join(md, "new", filename),
+                      os.path.join(md, "cur", filename))
+            path = os.path.join(md, "cur", filename)
+            f = open(path, "r")
+
+        self.parent.handleJobFile(filename, f)
+
+
 class Try_Jobdir(TryBase):
-    compare_attrs = ( 'name', 'builderNames', 'jobdir', 'properties' )
+
+    compare_attrs = TryBase.compare_attrs + ( 'jobdir', )
 
     def __init__(self, name, builderNames, jobdir,
                  properties={}):
-        base.BaseScheduler.__init__(self, name, builderNames, properties)
+        TryBase.__init__(self, name=name, builderNames=builderNames, properties=properties)
         self.jobdir = jobdir
-        self.watcher = MaildirService()
+        self.watcher = JobdirService()
         self.watcher.setServiceParent(self)
 
-    def setServiceParent(self, parent):
-        sm = parent
-        m = sm.parent
-        self.watcher.setBasedir(os.path.join(m.basedir, self.jobdir))
-        TryBase.setServiceParent(self, parent)
+    def startService(self):
+        # set the watcher's basedir now that we have a master
+        self.watcher.setBasedir(os.path.join(self.master.basedir, self.jobdir))
+        TryBase.startService(self)
 
     def parseJob(self, f):
         # jobfiles are serialized build requests. Each is a list of
         # serialized netstrings, in the following order:
-        #  "1", the version number of this format
+        #  "2", the format version number ("1" does not have project/repo)
         #  buildsetID, arbitrary string, used to find the buildSet later
         #  branch name, "" for default-branch
         #  base revision, "" for HEAD
@@ -81,9 +110,11 @@ class Try_Jobdir(TryBase):
         #  builderNames...
         p = netstrings.NetstringParser()
         try:
-            p.dataReceived(f.read())
+            p.feed(f.read())
         except basic.NetstringParseError:
             raise BadJobfile("unable to parse netstrings")
+        if not p.strings:
+            raise BadJobfile("could not find any complete netstrings")
         ver = p.strings.pop(0)
         if ver == "1":
             buildsetID, branch, baserev, patchlevel, diff = p.strings[:5]
@@ -93,8 +124,8 @@ class Try_Jobdir(TryBase):
             if baserev == "":
                 baserev = None
             patchlevel = int(patchlevel)
-            patch = (patchlevel, diff)
-            ss = SourceStamp("Old client", branch, baserev, patch)
+            repository=''
+            project=''
         elif ver == "2": # introduced the repository and project property
             buildsetID, branch, baserev, patchlevel, diff, repository, project = p.strings[:7]
             builderNames = p.strings[7:]
@@ -103,53 +134,97 @@ class Try_Jobdir(TryBase):
             if baserev == "":
                 baserev = None
             patchlevel = int(patchlevel)
-            patch = (patchlevel, diff)
-            ss = SourceStamp(branch, baserev, patch, repository=repository,
-                             project=project)
         else:
             raise BadJobfile("unknown version '%s'" % ver)
-        return builderNames, ss, buildsetID
+        return dict(
+                builderNames=builderNames,
+                branch=branch,
+                baserev=baserev,
+                patch_body=diff,
+                patch_level=patchlevel,
+                repository=repository,
+                project=project,
+                jobid=buildsetID)
 
-    def messageReceived(self, filename):
-        md = os.path.join(self.parent.parent.basedir, self.jobdir)
-        if runtime.platformType == "posix":
-            # open the file before moving it, because I'm afraid that once
-            # it's in cur/, someone might delete it at any moment
-            path = os.path.join(md, "new", filename)
-            f = open(path, "r")
-            os.rename(os.path.join(md, "new", filename),
-                      os.path.join(md, "cur", filename))
-        else:
-            # do this backwards under windows, because you can't move a file
-            # that somebody is holding open. This was causing a Permission
-            # Denied error on bear's win32-twisted1.3 buildslave.
-            os.rename(os.path.join(md, "new", filename),
-                      os.path.join(md, "cur", filename))
-            path = os.path.join(md, "cur", filename)
-            f = open(path, "r")
-
+    def handleJobFile(self, filename, f):
         try:
-            builderNames, ss, jobid = self.parseJob(f)
+            parsed_job = self.parseJob(f)
+            builderNames = parsed_job['builderNames']
         except BadJobfile:
             log.msg("%s reports a bad jobfile in %s" % (self, filename))
             log.err()
             return defer.succeed(None)
+
         # Validate/fixup the builder names.
         builderNames = self.filterBuilderList(builderNames)
         if not builderNames:
+            log.msg("incoming Try job did not specify any allowed builder names")
             return defer.succeed(None)
-        reason = "'try' job"
-        d = self.parent.db.runInteraction(self._try, ss, builderNames, reason)
-        def _done(ign):
-            self.parent.loop_done() # so it will notify builder loop
-        d.addCallback(_done)
+
+        d = self.master.db.sourcestamps.createSourceStamp(
+                branch=parsed_job['branch'],
+                revision=parsed_job['baserev'],
+                patch_body=parsed_job['patch_body'],
+                patch_level=parsed_job['patch_level'],
+                patch_subdir='', # TODO: can't set this remotely - #1769
+                project=parsed_job['project'],
+                repository=parsed_job['repository'])
+        def create_buildset(ssid):
+            return self.addBuildsetForSourceStamp(ssid=ssid,
+                    reason="'try' job", external_idstring=parsed_job['jobid'],
+                    builderNames=builderNames)
+        d.addCallback(create_buildset)
         return d
 
-    def _try(self, t, ss, builderNames, reason):
-        db = self.parent.db
-        ssid = db.get_sourcestampid(ss, t)
-        bsid = self.create_buildset(ssid, reason, t, builderNames=builderNames)
-        return bsid
+
+class Try_Userpass_Perspective(pbutil.NewCredPerspective):
+    def __init__(self, scheduler, username):
+        self.scheduler = scheduler
+        self.username = username
+
+    @defer.deferredGenerator
+    def perspective_try(self, branch, revision, patch, repository, project,
+                        builderNames, properties={}, ):
+        db = self.scheduler.master.db
+        log.msg("user %s requesting build on builders %s" % (self.username,
+                                                             builderNames))
+
+        # build the intersection of the request and our configured list
+        builderNames = self.scheduler.filterBuilderList(builderNames)
+        if not builderNames:
+            return
+
+        wfd = defer.waitForDeferred(
+                db.sourcestamps.createSourceStamp(branch=branch, revision=revision,
+                    repository=repository, project=project, patch_level=patch[0],
+                    patch_body=patch[1], patch_subdir=''))
+                    # note: no way to specify patch subdir - #1769
+        yield wfd
+        ssid = wfd.getResult()
+
+        reason = "'try' job from user %s" % self.username
+
+        requested_props = Properties()
+        requested_props.update(properties, "try build")
+        wfd = defer.waitForDeferred(
+                self.scheduler.addBuildsetForSourceStamp(ssid=ssid,
+                        reason=reason, properties=requested_props,
+                        builderNames=builderNames))
+        yield wfd
+        bsid = wfd.getResult()
+
+        # return a remotely-usable BuildSetStatus object
+        bss = BuildSetStatus(bsid, self.scheduler.master.status, db)
+        from buildbot.status.client import makeRemote
+        r = makeRemote(bss)
+        yield r # return value
+
+    def perspective_getAvailableBuilderNames(self):
+        # Return a list of builder names that are configured
+        # for the try service
+        # This is mostly intended for integrating try services
+        # into other applications
+        return self.scheduler.listBuilderNames()
 
 
 class Try_Userpass(TryBase):
@@ -157,15 +232,12 @@ class Try_Userpass(TryBase):
 
     def __init__(self, name, builderNames, port, userpass,
                  properties={}):
-        base.BaseScheduler.__init__(self, name, builderNames, properties)
+        TryBase.__init__(self, name=name, builderNames=builderNames, properties=properties)
         self.port = port
         self.userpass = userpass
-        self.properties = Properties()
-        self.properties.update(properties, 'Scheduler')
 
     def startService(self):
         TryBase.startService(self)
-        master = self.parent.parent
 
         # register each user/passwd with the pbmanager
         def factory(mind, username):
@@ -173,7 +245,7 @@ class Try_Userpass(TryBase):
         self.registrations = []
         for user, passwd in self.userpass:
             self.registrations.append(
-                    master.pbmanager.register(self.port, user, passwd, factory))
+                    self.master.pbmanager.register(self.port, user, passwd, factory))
 
     def stopService(self):
         d = defer.maybeDeferred(TryBase.stopService, self)
@@ -181,54 +253,3 @@ class Try_Userpass(TryBase):
             return defer.gatherResults(
                 [ reg.unregister() for reg in self.registrations ])
         d.addCallback(unreg)
-
-
-class Try_Userpass_Perspective(pbutil.NewCredPerspective):
-    def __init__(self, parent, username):
-        self.parent = parent
-        self.username = username
-
-    def perspective_try(self, branch, revision, patch, repository, project,
-                        builderNames, properties={}, ):
-        log.msg("user %s requesting build on builders %s" % (self.username,
-                                                             builderNames))
-        # build the intersection of the request and our configured list
-        builderNames = self.parent.filterBuilderList(builderNames)
-        if not builderNames:
-            return
-        ss = SourceStamp(branch, revision, patch, repository=repository,
-                         project=project)
-        reason = "'try' job from user %s" % self.username
-
-        # roll the specified props in with our inherited props
-        combined_props = Properties()
-        combined_props.updateFromProperties(self.parent.properties)
-        combined_props.update(properties, "try build")
-
-        status = self.parent.parent.parent.status
-        db = self.parent.parent.db
-        d = db.runInteraction(self._try, ss, builderNames, reason,
-                              combined_props, db)
-        def _done(bsid):
-            # return a remotely-usable BuildSetStatus object
-            bss = BuildSetStatus(bsid, status, db)
-            from buildbot.status.client import makeRemote
-            r = makeRemote(bss)
-            #self.parent.parent.loop_done() # so it will notify builder loop
-            return r
-        d.addCallback(_done)
-        return d
-
-    def _try(self, t, ss, builderNames, reason, combined_props, db):
-        ssid = db.get_sourcestampid(ss, t)
-        bsid = self.parent.create_buildset(ssid, reason, t,
-                                           props=combined_props,
-                                           builderNames=builderNames)
-        return bsid
-
-    def perspective_getAvailableBuilderNames(self):
-        # Return a list of builder names that are configured
-        # for the try service
-        # This is mostly intended for integrating try services
-        # into other applications
-        return self.parent.listBuilderNames()

@@ -14,160 +14,235 @@
 # Copyright Buildbot Team Members
 
 import time
-from twisted.internet import defer
-from twisted.python import log
-from buildbot.sourcestamp import SourceStamp
+from buildbot import util
 from buildbot.schedulers import base
+from twisted.internet import defer, reactor
+from twisted.python import log
+from buildbot.changes import filter
 
-class TimedBuildMixin:
+class Timed(base.BaseScheduler):
+    """
+    Parent class for timed schedulers.  This takes care of the (surprisingly
+    subtle) mechanics of ensuring that each timed actuation runs to completion
+    before the service stops.
+    """
 
-    def start_HEAD_build(self, t):
-        # start a build (of the tip of self.branch)
-        db = self.parent.db
-        ss = SourceStamp(branch=self.branch)
-        ssid = db.get_sourcestampid(ss, t)
-        self.create_buildset(ssid, self.reason, t)
+    compare_attrs = base.BaseScheduler.compare_attrs
 
-    def start_requested_build(self, t, relevant_changes):
-        # start a build with the requested list of changes on self.branch
-        db = self.parent.db
-        ss = SourceStamp(branch=self.branch, changes=relevant_changes)
-        ssid = db.get_sourcestampid(ss, t)
-        self.create_buildset(ssid, self.reason, t)
+    def __init__(self, name, builderNames, properties={}):
+        base.BaseScheduler.__init__(self, name, builderNames, properties)
 
-    def update_last_build(self, t, when):
-        # and record when we did it
-        state = self.get_state(t)
-        state["last_build"] = when
-        self.set_state(t, state)
+        # tracking for when to start the next build
+        self.lastActuated = None
 
-class Periodic(base.BaseScheduler, TimedBuildMixin):
-    """Instead of watching for Changes, this Scheduler can just start a build
-    at fixed intervals. The C{periodicBuildTimer} parameter sets the number
-    of seconds to wait between such periodic builds. The first build will be
-    run immediately."""
+        # A lock to make sure that each actuation occurs without interruption.
+        # This lock governs actuateAt, actuateAtTimer, and actuateOk
+        self.actuationLock = defer.DeferredLock()
+        self.actuateOk = False
+        self.actuateAt = None
+        self.actuateAtTimer = None
 
-    # TODO: consider having this watch another (changed-based) scheduler and
-    # merely enforce a minimum time between builds.
-    compare_attrs = ('name', 'builderNames', 'periodicBuildTimer', 'branch',
-                     'properties')
+        self._reactor = reactor # patched by tests
+
+    def startService(self):
+        base.BaseScheduler.startService(self)
+
+        # no need to lock this; nothing else can run before the service is started
+        self.actuateOk = True
+
+        # get the scheduler's last_build time (note: only done at startup)
+        d = self.getState('last_build', None)
+        def set_last(lastActuated):
+            self.lastActuated = lastActuated
+        d.addCallback(set_last)
+
+        # schedule the next build
+        d.addCallback(lambda _ : self.scheduleNextBuild())
+
+        # give subclasses a chance to start up
+        d.addCallback(lambda _ : self.startTimedSchedulerService())
+
+        # startService does not return a Deferred, so handle errors with a traceback
+        d.addErrback(log.err, "while initializing %s '%s'" %
+                (self.__class__.__name__, self.name))
+
+    def startTimedSchedulerService(self):
+        """Hook for subclasses to participate in the L{startService} process;
+        can return a Deferred"""
+
+    def stopService(self):
+        # shut down any pending actuation, and ensure that we wait for any
+        # current actuation to complete by acquiring the lock.  This ensures
+        # that no build will be scheduled after stopService is complete.
+        d = self.actuationLock.acquire()
+        def stop_actuating(_):
+            self.actuateOk = False
+            self.actuateAt = None
+            if self.actuateAtTimer:
+                self.actuateAtTimer.cancel()
+            self.actuateAtTimer = None
+        d.addCallback(stop_actuating)
+        d.addCallback(lambda _ : self.actuationLock.release())
+
+        # and chain to the parent class
+        d.addCallback(lambda _ : base.BaseScheduler.stopService(self))
+        return d
+
+    ## Scheduler methods
+
+    def getPendingBuildTimes(self):
+        # take the latest-calculated value of actuateAt as a reasonable
+        # estimate
+        return [ self.actuateAt ]
+
+    ## Timed methods
+
+    def startBuild(self):
+        """The time has come to start a new build.  Returns a Deferred.
+        Override in subclasses."""
+        raise NotImplementedError
+
+    def getNextBuildTime(self, lastActuation):
+        """
+        Called by to calculate the next time to actuate a BuildSet.  Override
+        in subclasses.  To trigger a fresh call to this method, use
+        L{rescheduleNextBuild}.
+
+        @param lastActuation: the time of the last actuation, or None for never
+
+        @returns: a Deferred firing with the next time a build should occur (in
+        the future), or None for never.
+        """
+        raise NotImplementedError
+
+    def scheduleNextBuild(self):
+        """
+        Schedule the next build, re-invoking L{getNextBuildTime}.  This can be
+        called at any time, and it will avoid contention with builds being
+        started concurrently.
+
+        @returns: Deferred
+        """
+        d = self.actuationLock.acquire()
+        d.addCallback(lambda _ : self._scheduleNextBuild_locked())
+        # always release the lock
+        def release(x):
+            self.actuationLock.release()
+            return x
+        d.addBoth(release)
+        return d
+
+    ## utilities
+
+    def now(self):
+        "Similar to util.now, but patchable by tests"
+        return util.now(self._reactor)
+
+    def _scheduleNextBuild_locked(self):
+        # clear out the existing timer
+        if self.actuateAtTimer:
+            self.actuateAtTimer.cancel()
+        self.actuateAtTimer = None
+
+        # calculate the new time
+        d = self.getNextBuildTime(self.lastActuated)
+
+        # set up the new timer
+        def set_timer(actuateAt):
+            now = self.now()
+            self.actuateAt = max(actuateAt, now)
+            if actuateAt is not None:
+                untilNext = self.actuateAt - now
+                if untilNext == 0:
+                    log.msg(("%s: missed scheduled build time, so building "
+                             "immediately") % self.name)
+                self.actuateAtTimer = self._reactor.callLater(untilNext,
+                                                              self._actuate)
+        d.addCallback(set_timer)
+
+        return d
+
+    def _actuate(self):
+        # called from the timer when it's time to start a build
+        self.actuateAtTimer = None
+
+        @defer.deferredGenerator
+        def do():
+            self.lastActuated = self.actuateAt
+
+            # acquire the actuationLock
+            wfd = defer.waitForDeferred(self.actuationLock.acquire())
+            yield wfd
+            wfd.getResult()
+
+            try:
+                # bail out if we shouldn't be actuating anymore
+                if not self.actuateOk:
+                    return
+
+                # mark the last build time
+                self.actuateAt = None
+                wfd = defer.waitForDeferred(self.setState('last_build', self.lastActuated))
+                yield wfd
+                wfd.getResult()
+
+                # start the build
+                wfd = defer.waitForDeferred(self.startBuild())
+                yield wfd
+                wfd.getResult()
+
+                # schedule the next build (noting the lock is already held)
+                wfd = defer.waitForDeferred(self._scheduleNextBuild_locked())
+                yield wfd
+                wfd.getResult()
+            finally:
+                self.actuationLock.release()
+
+        # this function can't return a deferred, so handle any failures via log.err
+        d = do()
+        d.addErrback(log.err, 'while actuating')
+
+
+class Periodic(Timed):
+    compare_attrs = Timed.compare_attrs + ('periodicBuildTimer', 'branch',)
 
     def __init__(self, name, builderNames, periodicBuildTimer,
             branch=None, properties={}):
-        base.BaseScheduler.__init__(self, name, builderNames, properties)
+        Timed.__init__(self, name=name, builderNames=builderNames,
+                    properties=properties)
+        assert periodicBuildTimer > 0, "periodicBuildTimer must be positive"
         self.periodicBuildTimer = periodicBuildTimer
         self.branch = branch
-        self.reason = ("The Periodic scheduler named '%s' triggered this build"
-                       % name)
+        self.reason = "The Periodic scheduler named '%s' triggered this build" % self.name
 
-    def get_initial_state(self, max_changeid):
-        return {"last_build": None}
+    def getNextBuildTime(self, lastActuated):
+        if lastActuated is None:
+            return defer.succeed(self.now()) # meaning "ASAP"
+        else:
+            return defer.succeed(lastActuated + self.periodicBuildTimer)
 
-    def getPendingBuildTimes(self):
-        db = self.parent.db
-        s = db.runInteractionNow(self.get_state)
-        last_build = s["last_build"]
-        now = time.time()
-        if last_build is None:
-            return [now]
-        return [last_build + self.periodicBuildTimer]
+    def startBuild(self):
+        return self.addBuildsetForLatest(reason=self.reason, branch=self.branch)
 
-    def run(self):
-        db = self.parent.db
-        d = db.runInteraction(self._run)
-        return d
+class Nightly(Timed):
+    compare_attrs = (Timed.compare_attrs
+            + ('minute', 'hour', 'dayOfMonth', 'month',
+               'dayOfWeek', 'onlyIfChanged', 'fileIsImportant',
+               'change_filter',))
 
-    def _run(self, t):
-        now = time.time()
-        s = self.get_state(t)
-        last_build = s["last_build"]
-        if last_build is None:
-            self.start_HEAD_build(t)
-            self.update_last_build(t, now)
-            last_build = now
-        when = last_build + self.periodicBuildTimer
-        if when < now:
-            self.start_HEAD_build(t)
-            self.update_last_build(t, now)
-            last_build = now
-            when = now + self.periodicBuildTimer
-        return when + 1.0
-
-
-class Nightly(base.BaseScheduler, base.ClassifierMixin, TimedBuildMixin):
-    """Imitate 'cron' scheduling. This can be used to schedule a nightly
-    build, or one which runs are certain times of the day, week, or month.
-
-    Pass some subset of minute, hour, dayOfMonth, month, and dayOfWeek; each
-    may be a single number or a list of valid values. The builds will be
-    triggered whenever the current time matches these values. Wildcards are
-    represented by a '*' string. All fields default to a wildcard except
-    'minute', so with no fields this defaults to a build every hour, on the
-    hour.
-
-    For example, the following master.cfg clause will cause a build to be
-    started every night at 3:00am::
-
-     s = Nightly(name='nightly', builderNames=['builder1', 'builder2'],
-                 hour=3, minute=0)
-     c['schedules'].append(s)
-
-    This scheduler will perform a build each monday morning at 6:23am and
-    again at 8:23am::
-
-     s = Nightly(name='BeforeWork', builderNames=['builder1'],
-                 dayOfWeek=0, hour=[6,8], minute=23)
-
-    The following runs a build every two hours::
-
-     s = Nightly(name='every2hours', builderNames=['builder1'],
-                 hour=range(0, 24, 2))
-
-    And this one will run only on December 24th::
-
-     s = Nightly(name='SleighPreflightCheck',
-                 builderNames=['flying_circuits', 'radar'],
-                 month=12, dayOfMonth=24, hour=12, minute=0)
-
-    For dayOfWeek and dayOfMonth, builds are triggered if the date matches
-    either of them. All time values are compared against the tuple returned
-    by time.localtime(), so month and dayOfMonth numbers start at 1, not
-    zero. dayOfWeek=0 is Monday, dayOfWeek=6 is Sunday.
-
-    When onlyIfChanged is True, the build is triggered only if changes have
-    arrived on the given branch since the last build was performed. As a
-    further restriction, if fileIsImportant= is provided (a one-argument
-    callable which takes a Change object and returns a bool), then the build
-    will be triggered only if at least one of those changes qualifies as
-    'important'. The following example will run a build at 3am, but only when
-    a source code file (.c/.h) has been changed:
-
-     def isSourceFile(change):
-         for fn in change.files:
-             if fn.endswith('.c') or fn.endswith('.h'):
-                 return True
-         return False
-     s = Nightly(name='nightly-when-changed', builderNames=['builder1'],
-                 hour=3, minute=0,
-                 onlyIfChanged=True, fileIsImportant=isSourceFile)
-
-    onlyIfChanged defaults to False, which means a build will be performed
-    even if nothing has changed.
-    """
-
-    compare_attrs = ('name', 'builderNames',
-                     'minute', 'hour', 'dayOfMonth', 'month',
-                     'dayOfWeek', 'branch', 'onlyIfChanged',
-                     'fileIsImportant', 'properties')
-
+    class NoBranch: pass
     def __init__(self, name, builderNames, minute=0, hour='*',
                  dayOfMonth='*', month='*', dayOfWeek='*',
-                 branch=None, fileIsImportant=None, onlyIfChanged=False,
-                 properties={}):
-        # Setting minute=0 really makes this an 'Hourly' scheduler. This
-        # seemed like a better default than minute='*', which would result in
-        # a build every 60 seconds.
-        base.BaseScheduler.__init__(self, name, builderNames, properties)
+                 branch=NoBranch, fileIsImportant=None, onlyIfChanged=False,
+                 properties={}, change_filter=None):
+        Timed.__init__(self, name=name, builderNames=builderNames, properties=properties)
+
+        if fileIsImportant:
+            assert callable(fileIsImportant), \
+                "fileIsImportant must be a callable"
+        assert branch is not Nightly.NoBranch, \
+                "Nightly parameter 'branch' is required"
+
         self.minute = minute
         self.hour = hour
         self.dayOfMonth = dayOfMonth
@@ -175,143 +250,112 @@ class Nightly(base.BaseScheduler, base.ClassifierMixin, TimedBuildMixin):
         self.dayOfWeek = dayOfWeek
         self.branch = branch
         self.onlyIfChanged = onlyIfChanged
-        self.delayedRun = None
-        self.nextRunTime = None
-        self.reason = ("The Nightly scheduler named '%s' triggered this build"
-                       % name)
-        self.fileIsImportant = None
-        if fileIsImportant:
-            assert callable(fileIsImportant)
-            self.fileIsImportant = fileIsImportant
-        self._start_time = time.time()
+        self.fileIsImportant = fileIsImportant
+        self.change_filter = filter.ChangeFilter.fromSchedulerConstructorArgs(
+                change_filter=change_filter)
+        self.reason = "The Nightly scheduler named '%s' triggered this build" % self.name
 
-        # this scheduler does not support filtering, but ClassifierMixin needs a
-        # filter anyway
-        self.make_filter()
-
-    def get_initial_state(self, max_changeid):
-        return {
-            "last_build": None,
-            "last_processed": max_changeid,
-        }
-
-    def getPendingBuildTimes(self):
-        now = time.time()
-        next = self._calculateNextRunTimeFrom(now)
-        # note: this ignores onlyIfChanged
-        return [next]
-
-    def run(self):
-        d = defer.succeed(None)
-        db = self.parent.db
+    def startTimedSchedulerService(self):
         if self.onlyIfChanged:
-            # call classify_changes, so that we can keep last_processed
-            # up to date, in case we are configured with onlyIfChanged.
-            d.addCallback(lambda ign: db.runInteraction(self.classify_changes))
-        d.addCallback(lambda ign: db.runInteraction(self._check_timer))
-        return d
-
-    def _check_timer(self, t):
-        now = time.time()
-        s = self.get_state(t)
-        last_build = s["last_build"]
-        if last_build is None:
-            next = self._calculateNextRunTimeFrom(self._start_time)
+            return self.startConsumingChanges(
+                    fileIsImportant=self.fileIsImportant, change_filter=self.change_filter)
         else:
-            next = self._calculateNextRunTimeFrom(last_build)
+            return self.master.db.schedulers.flushChangeClassifications(self.schedulerid)
 
-        # not ready to fire yet
-        if next >= now:
-            return next + 1.0
+    def gotChange(self, change, important):
+        # both important and unimportant changes on our branch are recorded, as
+        # we will include all such changes in any buildsets we start.  Note
+        # that we must check the branch here because it is not included in the
+        # change filter
+        if change.branch != self.branch:
+            return defer.succeed(None) # don't care about this change
+        return self.master.db.schedulers.classifyChanges(
+                self.schedulerid, { change.number : important })
 
-        self._maybe_start_build(t)
-        self.update_last_build(t, now)
+    def getNextBuildTime(self, lastActuated):
+        def addTime(timetuple, secs):
+            return time.localtime(time.mktime(timetuple)+secs)
 
-        # reschedule for the next timer
-        return self._check_timer(t)
-
-    def _maybe_start_build(self, t):
-        db = self.parent.db
-        if self.onlyIfChanged:
-            res = db.scheduler_get_classified_changes(self.schedulerid, t)
-            (important, unimportant) = res
-            if not important:
-                log.msg("Nightly Scheduler <%s>: "
-                        "skipping build - No important change" % self.name)
-                return
-            relevant_changes = [c for c in (important + unimportant) if
-                                c.branch == self.branch]
-            if not relevant_changes:
-                log.msg("Nightly Scheduler <%s>: "
-                        "skipping build - No relevant change on branch" %
-                        self.name)
-                return
-            self.start_requested_build(t, relevant_changes)
-            # retire the changes
-            changeids = [c.number for c in relevant_changes]
-            db.scheduler_retire_changes(self.schedulerid, changeids, t)
-        else:
-            # start it unconditionally
-            self.start_HEAD_build(t)
-
-            # Retire any changes on this scheduler
-            res = db.scheduler_get_classified_changes(self.schedulerid, t)
-            (important, unimportant) = res
-            changeids = [c.number for c in important + unimportant]
-            db.scheduler_retire_changes(self.schedulerid, changeids, t)
-
-    def _addTime(self, timetuple, secs):
-        return time.localtime(time.mktime(timetuple)+secs)
-
-    def _isRunTime(self, timetuple):
         def check(ourvalue, value):
             if ourvalue == '*': return True
             if isinstance(ourvalue, int): return value == ourvalue
             return (value in ourvalue)
 
-        if not check(self.minute, timetuple[4]):
-            #print 'bad minute', timetuple[4], self.minute
-            return False
-
-        if not check(self.hour, timetuple[3]):
-            #print 'bad hour', timetuple[3], self.hour
-            return False
-
-        if not check(self.month, timetuple[1]):
-            #print 'bad month', timetuple[1], self.month
-            return False
-
-        if self.dayOfMonth != '*' and self.dayOfWeek != '*':
-            # They specified both day(s) of month AND day(s) of week.
-            # This means that we only have to match one of the two. If
-            # neither one matches, this time is not the right time.
-            if not (check(self.dayOfMonth, timetuple[2]) or
-                    check(self.dayOfWeek, timetuple[6])):
-                #print 'bad day'
-                return False
-        else:
-            if not check(self.dayOfMonth, timetuple[2]):
-                #print 'bad day of month'
-                return False
-
-            if not check(self.dayOfWeek, timetuple[6]):
-                #print 'bad day of week'
-                return False
-
-        return True
-
-    def _calculateNextRunTimeFrom(self, now):
-        dateTime = time.localtime(now)
+        dateTime = time.localtime(lastActuated or self.now())
 
         # Remove seconds by advancing to at least the next minute
-        dateTime = self._addTime(dateTime, 60-dateTime[5])
+        dateTime = addTime(dateTime, 60-dateTime[5])
 
         # Now we just keep adding minutes until we find something that matches
+        # TODO: use a smarter algorithm, now that we have thorough tests
 
-        # It not an efficient algorithm, but it'll *work* for now
-        yearLimit = dateTime[0]+2
-        while not self._isRunTime(dateTime):
-            dateTime = self._addTime(dateTime, 60)
-            #print 'Trying', time.asctime(dateTime)
+        yearLimit = dateTime[0]+2 # only check 2 years (a lot of minutes!)
+        def isRunTime(timetuple):
+
+            if not check(self.minute, timetuple[4]):
+                return False
+
+            if not check(self.hour, timetuple[3]):
+                return False
+
+            if not check(self.month, timetuple[1]):
+                return False
+
+            if self.dayOfMonth != '*' and self.dayOfWeek != '*':
+                # They specified both day(s) of month AND day(s) of week.
+                # This means that we only have to match one of the two. If
+                # neither one matches, this time is not the right time.
+                if not (check(self.dayOfMonth, timetuple[2]) or
+                        check(self.dayOfWeek, timetuple[6])):
+                    return False
+            else:
+                if not check(self.dayOfMonth, timetuple[2]):
+                    return False
+
+                if not check(self.dayOfWeek, timetuple[6]):
+                    return False
+
+            return True
+
+        while not isRunTime(dateTime):
+            dateTime = addTime(dateTime, 60)
             assert dateTime[0] < yearLimit, 'Something is wrong with this code'
-        return time.mktime(dateTime)
+        return defer.succeed(time.mktime(dateTime))
+
+    @defer.deferredGenerator
+    def startBuild(self):
+        scheds = self.master.db.schedulers
+        # if onlyIfChanged is True, then we will skip this build if no
+        # important changes have occurred since the last invocation
+        if self.onlyIfChanged:
+            wfd = defer.waitForDeferred(scheds.getChangeClassifications(self.schedulerid))
+            yield wfd
+            classifications = wfd.getResult()
+
+            # see if we have any important changes
+            for imp in classifications.itervalues():
+                if imp:
+                    break
+            else:
+                log.msg(("Nightly Scheduler <%s>: skipping build " +
+                         "- No important changes on configured branch") % self.name)
+                return
+
+            changeids = sorted(classifications.keys())
+            wfd = defer.waitForDeferred(
+                    self.addBuildsetForChanges(reason=self.reason, changeids=changeids))
+            yield wfd
+            wfd.getResult()
+
+            max_changeid = changeids[-1] # (changeids are sorted)
+            wfd = defer.waitForDeferred(
+                    scheds.flushChangeClassifications(self.schedulerid,
+                                                      less_than=max_changeid+1))
+            yield wfd
+            wfd.getResult()
+        else:
+            # start a build of the latest revision, whatever that is
+            wfd = defer.waitForDeferred(
+                    self.addBuildsetForLatest(reason=self.reason, branch=self.branch))
+            yield wfd
+            wfd.getResult()

@@ -16,6 +16,7 @@
 import os
 import cPickle
 import tarfile
+import mock
 from twisted.python import util
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -52,7 +53,7 @@ class UpgradeTestMixin(object):
         assert len(prefixes) == 1, "tarball has multiple top-level dirs!"
         self.basedir = prefixes.pop()
 
-        self.db = connector.DBConnector(self.db_url, self.basedir)
+        self.db = connector.DBConnector(mock.Mock(), self.db_url, self.basedir)
 
     def tearDownUpgradeTest(self):
         if self.basedir:
@@ -109,7 +110,7 @@ class UpgradeTestEmpty(dirs.DirsMixin,
         self.setUpDirs('basedir')
         d = self.setUpRealDatabase()
         def make_dbc(_):
-            self.db = connector.DBConnector(self.db_url, self.basedir)
+            self.db = connector.DBConnector(mock.Mock(), self.db_url, self.basedir)
         d.addCallback(make_dbc)
         return d
 
@@ -222,7 +223,7 @@ class TestWeirdChanges(change_import.ChangeImportMixin, unittest.TestCase):
     def setUp(self):
         d = self.setUpChangeImport()
         def make_dbc(_):
-            self.db = connector.DBConnector(self.db_url, self.basedir)
+            self.db = connector.DBConnector(mock.Mock(), self.db_url, self.basedir)
         d.addCallback(make_dbc)
         # note the connector isn't started, as we're testing upgrades
         return d

@@ -121,28 +121,29 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
 
         @param isdir: deprecated
 
-        @param links: a list of links related to this change, e.g., to web viewers
-        or review pages
+        @param links: a list of links related to this change, e.g., to web
+        viewers or review pages
         @type links: list of unicode strings
 
         @param revision: the revision identifier for this change
         @type revision: unicode string
 
-        @param when: when this change occurs; defaults to now, and cannot be later
-        than now
+        @param when: when this change occurs
         @type when: integer (UNIX epoch time)
 
         @param branch: the branch on which this change took place
         @type branch: unicode string
 
-        @param category: category for this change (arbitrary use by Buildbot users)
+        @param category: category for this change (arbitrary use by Buildbot
+        users)
         @type category: unicode string
 
         @param revlink: link to a web view of this revision
         @type revlink: unicode string
 
         @param properties: properties to set on this change
-        @type properties: dictionary with string keys and simple values (JSON-able)
+        @type properties: dictionary with string keys and simple values
+        (JSON-able)
 
         @param repository: the repository in which this change took place
         @type repository: unicode string
@@ -161,6 +162,15 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
         # then add it to the database and update its '.number'
         def thd(conn):
             assert change.number is None
+
+            # note that in a read-uncommitted database like SQLite this
+            # transaction does not buy atomicitiy - other database users may
+            # still come across a change without its links, files, properties,
+            # etc.  That's OK, since we don't announce the change until it's
+            # all in the database, but beware.
+
+            transaction = conn.begin()
+
             ins = self.db.model.changes.insert()
             r = conn.execute(ins, dict(
                 author=change.who,
@@ -189,9 +199,14 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
             if change.properties:
                 ins = self.db.model.change_properties.insert()
                 conn.execute(ins, [
-                    dict(changeid=change.number, property_name=k, property_value=json.dumps(v))
-                        for k,v,s in change.properties.asList()
-                    ])
+                    dict(changeid=change.number,
+                        property_name=k,
+                        property_value=json.dumps(v))
+                    for k,v,s in change.properties.asList()
+                ])
+
+            transaction.commit()
+
             return change
         d = self.db.pool.do(thd)
         # prune changes, if necessary

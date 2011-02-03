@@ -25,9 +25,18 @@ class OldImportPaths(unittest.TestCase):
         from buildbot.scheduler import Scheduler
         assert Scheduler
 
+    def test_schedulers_basic_Scheduler(self):
+        # renamed to basic.SingleBranchScheduler
+        from buildbot.schedulers.basic import Scheduler
+        assert Scheduler
+
     def test_scheduler_AnyBranchScheduler(self):
         from buildbot.scheduler import AnyBranchScheduler
         assert AnyBranchScheduler
+
+    def test_scheduler_basic_Dependent(self):
+        from buildbot.schedulers.basic import Dependent
+        assert Dependent
 
     def test_scheduler_Dependent(self):
         from buildbot.scheduler import Dependent

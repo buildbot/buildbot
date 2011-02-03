@@ -43,8 +43,8 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
         @type reason: short unicode string
 
         @param properties: properties for this buildset
-        @type properties: L{buildbot.process.properties.Properties} instance,
-        or None
+        @type properties: dictionary, where values are tuples of (value,
+        source)
 
         @param builderNames: builders specified by this buildset
         @type builderNames: list of strings
@@ -74,7 +74,7 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
                 conn.execute(self.db.model.buildset_properties.insert(), [
                     dict(buildsetid=bsid, property_name=k,
                          property_value=json.dumps([v,s]))
-                    for (k,v,s) in properties.asList() ])
+                    for k,(v,s) in properties.iteritems() ])
 
             # and finish with a build request for each builder
             conn.execute(self.db.model.buildrequests.insert(), [

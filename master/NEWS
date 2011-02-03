@@ -17,6 +17,16 @@ versions.
 *** ChangeFilter should now be imported from `buildbot.changes.filter'; the old
 import path will still work.
 
+*** What used to be called simply 'Scheduler' should now be instantiated as
+'SingleBranchScheduler', and its branch argument is mandatory.
+
+*** The Dependent scheduler is now in its own module,
+'buildbot.schedulers.dependent', although the old name will continue to work.
+
+** Scheduler Improvements
+
+*** Nightly scheduler now accepts a change_filter argument
+
 ** SQLAlchemy & SQLAlchemy-Migrate
 
 Buildbot now uses SQLAlchemy as a database abstraction layer.  This will give

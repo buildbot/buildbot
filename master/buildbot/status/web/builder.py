@@ -24,7 +24,6 @@ from buildbot.status.web.base import HtmlResource, BuildLineMixin, \
     path_to_build, path_to_slave, path_to_builder, path_to_change, \
     path_to_root, getAndCheckProperties, ICurrentBox, build_get_class, \
     map_branches, path_to_authfail
-from buildbot.sourcestamp import SourceStamp
 
 from buildbot.status.web.build import BuildsResource, StatusResourceBuild
 from buildbot import util
@@ -128,8 +127,6 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
         repository = req.args.get("repository", [""])[0]
         project = req.args.get("project", [""])[0]
 
-        r = "The web-page 'force build' button was pressed by '%s': %s\n" \
-            % (html.escape(name), html.escape(reason))
         log.msg("web forcebuild of builder '%s', branch='%s', revision='%s',"
                 " repository='%s', project='%s' by user '%s'" % (
                 self.builder_status.getName(), branch, revision, repository,
@@ -157,22 +154,17 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
         if not revision:
             revision = None
 
-        # TODO: if we can authenticate that a particular User pushed the
-        # button, use their name instead of None, so they'll be informed of
-        # the results.
-        # TODO2: we can authenticate that a particular User pushed the button
-        # now, so someone can write this support. but it requires a
-        # buildbot.changes.changes.Change instance which is tedious at this
-        # stage to compute
-        s = SourceStamp(branch=branch, revision=revision, project=project, repository=repository)
-        try:
-            c = interfaces.IControl(self.getBuildmaster(req))
-            bc = c.getBuilder(self.builder_status.getName())
-            bc.submitBuildRequest(s, r, properties)
-        except interfaces.NoSlaveError:
-            # TODO: tell the web user that their request could not be
-            # honored
-            pass
+        master = self.getBuildmaster(req)
+        d = master.db.sourcestamps.createSourceStamp(branch=branch,
+                revision=revision, project=project, repository=repository)
+        def make_buildset(ssid):
+            r = ("The web-page 'force build' button was pressed by '%s': %s\n"
+                 % (html.escape(name), html.escape(reason)))
+            return master.addBuildset(
+                    builderNames=[self.builder_status.getName()],
+                    ssid=ssid, reason=r, properties=None)
+        d.addCallback(make_buildset)
+        d.addErrback(log.err, "(ignored) while trying to force build")
         # send the user back to the builder page
         return Redirect(path_to_builder(req, self.builder_status))
 

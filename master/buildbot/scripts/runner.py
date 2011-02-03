@@ -316,7 +316,7 @@ class Maker:
 
     def create_db(self):
         from buildbot.db import connector
-        db = connector.DBConnector(self.config['db'], basedir=self.basedir)
+        db = connector.DBConnector(None, self.config['db'], basedir=self.basedir)
         if not self.config['quiet']: print "creating database"
         d = db.model.upgrade()
         return d
@@ -495,7 +495,7 @@ def upgradeMaster(config):
 
     def upgradeDB(_):
         from buildbot.db import connector
-        db = connector.DBConnector(config['db'], basedir=config['basedir'])
+        db = connector.DBConnector(None, config['db'], basedir=config['basedir'])
         if not config['quiet']: print "upgrading database"
         return db.model.upgrade()
     d.addCallback(upgradeDB)

@@ -14,79 +14,80 @@
 # Copyright Buildbot Team Members
 
 from twisted.internet import defer
+from twisted.application import service
 from twisted.python import log
-from buildbot.util import loop
-from buildbot.util import collections
-from buildbot.util.eventual import eventually
+from buildbot.util import collections, deferredLocked
 
-class SchedulerManager(loop.MultiServiceLoop):
-    def __init__(self, master, db, change_svc):
-        loop.MultiServiceLoop.__init__(self)
+class SchedulerManager(service.MultiService):
+    def __init__(self, master):
+        service.MultiService.__init__(self)
         self.master = master
-        self.db = db
-        self.change_svc = change_svc
         self.upstream_subscribers = collections.defaultdict(list)
+        self._updateLock = defer.DeferredLock()
 
+    @deferredLocked('_updateLock')
     def updateSchedulers(self, newschedulers):
         """Add and start any Scheduler that isn't already a child of ours.
         Stop and remove any that are no longer in the list. Make sure each
         one has a schedulerid in the database."""
-        # TODO: this won't tolerate reentrance very well
-        new_names = set()
-        added = set()
-        removed = set()
-        for s in newschedulers:
-            new_names.add(s.name)
-            try:
-                old = self.getServiceNamed(s.name)
-            except KeyError:
-                old = None
-            if old:
-                if old.compareToOther(s):
-                    removed.add(old)
-                    added.add(s)
-                else:
-                    pass # unchanged
-            else:
-                added.add(s)
-        for old in list(self):
-            if old.name not in new_names:
-                removed.add(old)
-        #if removed or added:
-        #    # notify Downstream schedulers to potentially pick up
-        #    # new schedulers now that we have removed and added some
-        #    def updateDownstreams(res):
-        #        log.msg("notifying downstream schedulers of changes")
-        #        for s in newschedulers:
-        #            if interfaces.IDownstreamScheduler.providedBy(s):
-        #                s.checkUpstreamScheduler()
-        #    d.addCallback(updateDownstreams)
-        log.msg("removing %d old schedulers, adding %d new ones"
-                % (len(removed), len(added)))
-        dl = [defer.maybeDeferred(s.disownServiceParent) for s in removed]
-        d = defer.gatherResults(dl)
-        d.addCallback(lambda ign: self.db.addSchedulers(added))
-        def _attach(ign):
-            for s in added:
-                s.setServiceParent(self)
-            self.upstream_subscribers = collections.defaultdict(list)
-            for s in list(self):
-                if s.upstream_name:
-                    self.upstream_subscribers[s.upstream_name].append(s)
-            eventually(self.trigger)
-        d.addCallback(_attach)
+        # compute differences
+        old = dict((s.name,s) for s in self)
+        old_names = set(old)
+        new = dict((s.name,s) for s in newschedulers)
+        new_names = set(new)
+
+        added_names = new_names - old_names
+        removed_names = old_names - new_names
+
+        # find any existing schedulers that need to be updated
+        updated_names = set(name for name in (new_names & old_names)
+                            if old[name] != new[name])
+
+        log.msg("removing %d old schedulers, updating %d, and adding %d"
+                % (len(removed_names), len(updated_names), len(added_names)))
+
+        # treat updates as an add and a remove, for simplicity
+        added_names |= updated_names
+        removed_names |= updated_names
+
+        # build a deferred chain that stops all of the removed schedulers,
+        # *then* starts all of the added schedulers.  note that _setUpScheduler
+        # is called before the service starts, and _shutDownSchedler is called
+        # after the service is stopped.  Also note that this shuts down all
+        # relevant schedulers before starting any schedulers - there's unlikely
+        # to be any payoff to more parallelism
+        d = defer.succeed(None)
+
+        def stopScheduler(sch):
+            d = defer.maybeDeferred(lambda : sch.disownServiceParent())
+            d.addCallback(lambda _ : sch._shutDownScheduler())
+            return d
+        d.addCallback(lambda _ :
+            defer.gatherResults([stopScheduler(old[n]) for n in removed_names]))
+
+        # account for some renamed classes in buildbot - classes that have
+        # changed their module import path, but should still access the same
+        # state
+
+        new_class_names = {
+            # new : old
+            'buildbot.schedulers.dependent.Dependent' :
+                            'buildbot.schedulers.basic.Dependent',
+            'buildbot.schedulers.basic.SingleBranchScheduler' :
+                            'buildbot.schedulers.basic.Scheduler',
+        }
+        def startScheduler(sch):
+            class_name = '%s.%s' % (sch.__class__.__module__,
+                                    sch.__class__.__name__)
+            class_name = new_class_names.get(class_name, class_name)
+            d = self.master.db.schedulers.getSchedulerId(sch.name, class_name)
+            d.addCallback(lambda schedulerid :
+                    sch._setUpScheduler(schedulerid, self.master, self))
+            d.addCallback(lambda _ :
+                    sch.setServiceParent(self))
+            return d
+        d.addCallback(lambda _ :
+            defer.gatherResults([startScheduler(new[n]) for n in added_names]))
+
         d.addErrback(log.err)
         return d
-
-    def publish_buildset(self, upstream_name, bsid, t):
-        if upstream_name in self.upstream_subscribers:
-            for s in self.upstream_subscribers[upstream_name]:
-                s.buildSetSubmitted(bsid, t)
-
-    def trigger_add_change(self, category, changenumber):
-        self.trigger()
-    def trigger_modify_buildset(self, category, *bsids):
-        # TODO: this could just run the schedulers that have subscribed to
-        # scheduler_upstream_buildsets, or even just the ones that subscribed
-        # to hear about the specific buildsetid
-        self.trigger()
