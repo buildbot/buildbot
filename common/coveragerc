@@ -20,6 +20,9 @@ exclude_lines =
     # 'pass' generally means 'this won't be called'
     ^ *pass *$
 
+    # conditionals on twisted versions aren't coverable
+    if twisted.version
+
 include =
     master/*
     slave/*
