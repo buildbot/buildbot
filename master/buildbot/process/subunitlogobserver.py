@@ -15,8 +15,10 @@
 
 
 from unittest import TestResult
-from buildbot.process import buildstep
 from StringIO import StringIO
+
+from buildbot.process import buildstep
+from buildbot.status.builder import TestResult as aTestResult, SUCCESS, FAILURE, SKIPPED #nosetests does not support unexpected success yet, so no need for WARNINGS
 
 class SubunitLogObserver(buildstep.LogLineObserver, TestResult):
     """Observe a log that may contain subunit output.
@@ -29,10 +31,14 @@ class SubunitLogObserver(buildstep.LogLineObserver, TestResult):
         buildstep.LogLineObserver.__init__(self)
         TestResult.__init__(self)
         try:
-            from subunit import TestProtocolServer
+            from subunit import TestProtocolServer, PROGRESS_CUR, PROGRESS_SET, PROGRESS_PUSH, PROGRESS_POP
         except ImportError:
             raise ImportError("subunit is not importable, but is required for "
                 "SubunitLogObserver support.")
+        self.PROGRESS_CUR = PROGRESS_CUR
+        self.PROGRESS_SET = PROGRESS_SET
+        self.PROGRESS_PUSH = PROGRESS_PUSH
+        self.PROGRESS_POP = PROGRESS_POP
         self.warningio = StringIO()
         self.protocol = TestProtocolServer(self, self.warningio)
         self.skips = []
@@ -47,15 +53,20 @@ class SubunitLogObserver(buildstep.LogLineObserver, TestResult):
         """same for stderr line."""
         self.protocol.lineReceived(line + '\n')
 
-    def startTest(self, test):
-        TestResult.startTest(self, test)
+    def stopTest(self, test):
+        TestResult.stopTest(self, test)
         self.step.setProgress('tests', self.testsRun)
+
+    def addSuccess(self, test):
+        TestResult.addSuccess(self, test)
+        self.addAResult(test, SUCCESS, 'SUCCESS')
 
     def addSkip(self, test, detail):
         if hasattr(TestResult,'addSkip'):
             TestResult.addSkip(self, test, detail)
         else:
             self.skips.append((test, detail))
+        self.addAResult(test, SKIPPED, 'SKIPPED', detail)
 
     def addError(self, test, err):
         TestResult.addError(self, test, err)
@@ -65,10 +76,30 @@ class SubunitLogObserver(buildstep.LogLineObserver, TestResult):
         TestResult.addFailure(self, test, err)
         self.issue()
 
+    def addAResult(self, test, result, text, log=""):
+        tr = aTestResult(tuple(test.id().split('.')), result, text, log)
+	self.step.build.build_status.addTestResult(tr)
+
     def issue(self):
         """An issue - failing, erroring etc test."""
+	self.addAResult(test, FAILURE, 'FAILURE', err)
         self.step.setProgress('tests failed', len(self.failures) + 
             len(self.errors))
+
+    expectedTests = 0
+    contextLevel = 0
+    def progress(self, offset, whence):
+        if not self.contextLevel:
+            if whence == self.PROGRESS_CUR:
+                self.expectedTests += offset
+            elif whence == self.PROGRESS_SET:
+                self.expectedTests = offset
+            self.step.progress.setExpectations({'tests': self.expectedTests})
+        #TODO: properly support PUSH/POP
+        if whence == self.PROGRESS_PUSH:
+            self.contextLevel += 1
+        elif whence == self.PROGRESS_POP:
+            self.contextLevel -= 1
 
     def tags(self, new_tags, gone_tags):
         """Accumulate the seen tags."""
