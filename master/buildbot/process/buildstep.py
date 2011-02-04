@@ -1,4 +1,20 @@
-# -*- test-case-name: buildbot.test.test_steps -*-
+# This file is part of Buildbot.  Buildbot is free software: you can
+# redistribute it and/or modify it under the terms of the GNU General Public
+# License as published by the Free Software Foundation, version 2.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, write to the Free Software Foundation, Inc., 51
+# Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Copyright Buildbot Team Members
+
+
+import re
 
 from zope.interface import implements
 from twisted.internet import reactor, defer, error
@@ -11,7 +27,7 @@ from twisted.web.util import formatFailure
 from buildbot import interfaces, locks
 from buildbot.status import progress
 from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE, SKIPPED, \
-     EXCEPTION, RETRY
+     EXCEPTION, RETRY, worst_status
 
 """
 BuildStep and RemoteCommand classes for master-side representation of the
@@ -569,7 +585,7 @@ class BuildStep:
     # immediately, the others will be taken into consideration when
     # determining the overall build status.
     #
-    # steps that are makred as alwaysRun will be run regardless of the outcome
+    # steps that are marked as alwaysRun will be run regardless of the outcome
     # of previous steps (especially steps with haltOnFailure=True)
     haltOnFailure = False
     flunkOnWarnings = False
@@ -617,6 +633,9 @@ class BuildStep:
                   % (self, kwargs.keys())
             raise TypeError(why)
         self._pendingLogObservers = []
+
+        self._acquiringLock = None
+        self.stopped = False
 
     def describe(self, done=False):
         return [self.name]
@@ -666,8 +685,8 @@ class BuildStep:
     def getProperty(self, propname):
         return self.build.getProperty(propname)
 
-    def setProperty(self, propname, value, source="Step"):
-        self.build.setProperty(propname, value, source)
+    def setProperty(self, propname, value, source="Step", runtime=True):
+        self.build.setProperty(propname, value, source, runtime=runtime)
 
     def startStep(self, remote):
         """Begin the step. This returns a Deferred that will fire when the
@@ -713,33 +732,45 @@ class BuildStep:
                 log.msg("Hey, lock %s is claimed by both a Step (%s) and the"
                         " parent Build (%s)" % (l, self, self.build))
                 raise RuntimeError("lock claimed by both Step and Build")
-        d = self.acquireLocks()
-        d.addCallback(self._startStep_2)
-        return self.deferred
-
-    def acquireLocks(self, res=None):
-        log.msg("acquireLocks(step %s, locks %s)" % (self, self.locks))
-        if not self.locks:
-            return defer.succeed(None)
-        for lock, access in self.locks:
-            if not lock.isAvailable(access):
-                log.msg("step %s waiting for lock %s" % (self, lock))
-                d = lock.waitUntilMaybeAvailable(self, access)
-                d.addCallback(self.acquireLocks)
-                return d
-        # all locks are available, claim them all
-        for lock, access in self.locks:
-            lock.claim(self, access)
-        return defer.succeed(None)
-
-    def _startStep_2(self, res):
-        if self.progress:
-            self.progress.start()
 
         # Set the step's text here so that the stepStarted notification sees
         # the correct description
         self.step_status.setText(self.describe(False))
         self.step_status.stepStarted()
+
+        d = self.acquireLocks()
+        d.addCallback(self._startStep_2)
+        return self.deferred
+
+    def acquireLocks(self, res=None):
+        self._acquiringLock = None
+        if not self.locks:
+            return defer.succeed(None)
+        if self.stopped:
+            return defer.succeed(None)
+        log.msg("acquireLocks(step %s, locks %s)" % (self, self.locks))
+        for lock, access in self.locks:
+            if not lock.isAvailable(access):
+                self.step_status.setWaitingForLocks(True)
+                log.msg("step %s waiting for lock %s" % (self, lock))
+                d = lock.waitUntilMaybeAvailable(self, access)
+                d.addCallback(self.acquireLocks)
+                self._acquiringLock = (lock, access, d)
+                return d
+        # all locks are available, claim them all
+        for lock, access in self.locks:
+            lock.claim(self, access)
+        self.step_status.setWaitingForLocks(False)
+        return defer.succeed(None)
+
+    def _startStep_2(self, res):
+        if self.stopped:
+            self.finished(EXCEPTION)
+            return
+
+        if self.progress:
+            self.progress.start()
+
         try:
             skip = None
             if isinstance(self.doStepIf, bool):
@@ -752,9 +783,13 @@ class BuildStep:
                 skip = self.start()
 
             if skip == SKIPPED:
-                # this return value from self.start is a shortcut
-                # to finishing the step immediately
-                reactor.callLater(0, self.finished, SKIPPED)
+                self.step_status.setText(self.describe(True) + ['skipped'])
+                self.step_status.setSkipped(True)
+                # this return value from self.start is a shortcut to finishing
+                # the step immediately; we skip calling finished() as
+                # subclasses may have overridden that an expect it to be called
+                # after start() (bug #837)
+                reactor.callLater(0, self._finishFinished, SKIPPED)
         except:
             log.msg("BuildStep.startStep exception in .start")
             self.failed(Failure())
@@ -827,14 +862,38 @@ class BuildStep:
         local processing should be skipped, and the Step completed with an
         error status. The results text should say something useful like
         ['step', 'interrupted'] or ['remote', 'lost']"""
-        pass
+        self.stopped = True
+        if self._acquiringLock:
+            lock, access, d = self._acquiringLock
+            lock.stopWaitingUntilAvailable(self, access, d)
+            d.callback(None)
 
     def releaseLocks(self):
         log.msg("releaseLocks(%s): %s" % (self, self.locks))
         for lock, access in self.locks:
-            lock.release(self, access)
+            if lock.isOwner(self, access):
+                lock.release(self, access)
+            else:
+                # This should only happen if we've been interrupted
+                assert self.stopped
 
     def finished(self, results):
+        if self.stopped and results != RETRY:
+            # We handle this specially because we don't care about
+            # the return code of an interrupted command; we know
+            # that this should just be exception due to interrupt
+            # At the same time we must respect RETRY status because it's used
+            # to retry interrupted build due to some other issues for example
+            # due to slave lost
+            results = EXCEPTION
+            self.step_status.setText(self.describe(True) +
+                                 ["interrupted"])
+            self.step_status.setText2(["interrupted"])
+        self._finishFinished(results)
+
+    def _finishFinished(self, results):
+        # internal function to indicate that this step is done; this is separated
+        # from finished() so that subclasses can override finished()
         if self.progress:
             self.progress.finish()
         self.step_status.stepFinished(results)
@@ -900,7 +959,7 @@ class BuildStep:
         # This might change in the future (I might move away from CVS), but
         # if so I'll keep updating that string with suitably-comparable
         # values.
-        if sv.split(".") < minversion.split("."):
+        if map(int, sv.split(".")) < map(int, minversion.split(".")):
             return True
         return False
 
@@ -985,17 +1044,22 @@ class LoggingBuildStep(BuildStep):
     progressMetrics = ('output',)
     logfiles = {}
 
-    parms = BuildStep.parms + ['logfiles', 'lazylogfiles']
+    parms = BuildStep.parms + ['logfiles', 'lazylogfiles', 'log_eval_func']
+    cmd = None
 
-    def __init__(self, logfiles={}, lazylogfiles=False, *args, **kwargs):
+    def __init__(self, logfiles={}, lazylogfiles=False, log_eval_func=None,
+                 *args, **kwargs):
         BuildStep.__init__(self, *args, **kwargs)
         self.addFactoryArguments(logfiles=logfiles,
-                                 lazylogfiles=lazylogfiles)
+                                 lazylogfiles=lazylogfiles,
+                                 log_eval_func=log_eval_func)
         # merge a class-level 'logfiles' attribute with one passed in as an
         # argument
         self.logfiles = self.logfiles.copy()
         self.logfiles.update(logfiles)
         self.lazylogfiles = lazylogfiles
+        assert not log_eval_func or callable(log_eval_func)
+        self.log_eval_func = log_eval_func
         self.addLogObserver('stdio', OutputProgressObserver("output"))
 
     def addLogFile(self, logname, filename):
@@ -1040,6 +1104,13 @@ class LoggingBuildStep(BuildStep):
 
     def setupLogfiles(self, cmd, logfiles):
         """Set up any additional logfiles= logs.
+
+        @param cmd: the LoggedRemoteCommand to add additional logs to.
+
+        @param logfiles: a dict of tuples (logname,remotefilename)
+                         specifying additional logs to watch. (note:
+                         the remotefilename component is currently
+                         ignored)
         """
         for logname,remotefilename in logfiles.items():
             if self.lazylogfiles:
@@ -1061,15 +1132,21 @@ class LoggingBuildStep(BuildStep):
         # TODO: consider adding an INTERRUPTED or STOPPED status to use
         # instead of FAILURE, might make the text a bit more clear.
         # 'reason' can be a Failure, or text
-        self.addCompleteLog('interrupt', str(reason))
-        d = self.cmd.interrupt(reason)
-        return d
+        BuildStep.interrupt(self, reason)
+        if self.step_status.isWaitingForLocks():
+            self.addCompleteLog('interrupt while waiting for locks', str(reason))
+        else:
+            self.addCompleteLog('interrupt', str(reason))
+
+        if self.cmd:
+            d = self.cmd.interrupt(reason)
+            return d
 
     def checkDisconnect(self, f):
         f.trap(error.ConnectionLost)
         self.step_status.setText(self.describe(True) +
-                                 ["failed", "slave", "lost"])
-        self.step_status.setText2(["failed", "slave", "lost"])
+                                 ["exception", "slave", "lost"])
+        self.step_status.setText2(["exception", "slave", "lost"])
         return self.finished(RETRY)
 
     # to refine the status output, override one or more of the following
@@ -1114,9 +1191,10 @@ class LoggingBuildStep(BuildStep):
         Override this to, say, declare WARNINGS if there is any stderr
         activity, or to say that rc!=0 is not actually an error."""
 
+        if self.log_eval_func:
+            return self.log_eval_func(cmd, self.step_status)
         if cmd.rc != 0:
             return FAILURE
-        # if cmd.log.getStderr(): return WARNINGS
         return SUCCESS
 
     def getText(self, cmd, results):
@@ -1124,6 +1202,8 @@ class LoggingBuildStep(BuildStep):
             return self.describe(True)
         elif results == WARNINGS:
             return self.describe(True) + ["warnings"]
+        elif results == EXCEPTION:
+            return self.describe(True) + ["exception"]
         else:
             return self.describe(True) + ["failed"]
 
@@ -1156,6 +1236,31 @@ class LoggingBuildStep(BuildStep):
         # get more control over the displayed text
         self.step_status.setText(self.getText(cmd, results))
         self.step_status.setText2(self.maybeGetText2(cmd, results))
+
+
+# Parses the logs for a list of regexs. Meant to be invoked like:
+# regexes = ((re.compile(...), FAILURE), (re.compile(...), WARNINGS))
+# self.addStep(ShellCommand,
+#   command=...,
+#   ...,
+#   log_eval_func=lambda c,s: regex_log_evaluator(c, s, regexs)
+# )
+def regex_log_evaluator(cmd, step_status, regexes):
+    worst = SUCCESS
+    if cmd.rc != 0:
+        worst = FAILURE
+    for err, possible_status in regexes:
+        # worst_status returns the worse of the two status' passed to it.
+        # we won't be changing "worst" unless possible_status is worse than it,
+        # so we don't even need to check the log if that's the case
+        if worst_status(worst, possible_status) == possible_status:
+            if isinstance(err, (basestring)):
+                err = re.compile(".*%s.*" % err, re.DOTALL)
+            for l in cmd.logs.values():
+                if err.search(l.getText()):
+                    worst = possible_status
+    return worst
+
 
 # (WithProperties used to be available in this module)
 from buildbot.process.properties import WithProperties

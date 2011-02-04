@@ -1,3 +1,18 @@
+# This file is part of Buildbot.  Buildbot is free software: you can
+# redistribute it and/or modify it under the terms of the GNU General Public
+# License as published by the Free Software Foundation, version 2.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, write to the Free Software Foundation, Inc., 51
+# Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Copyright Buildbot Team Members
+
 from __future__ import generators
 
 import time
@@ -8,6 +23,8 @@ import urllib
 from buildbot import util
 from buildbot.status import builder
 from buildbot.status.web.base import HtmlResource
+
+class DoesNotPassFilter(Exception): pass # Used for filtering revs
 
 def getResultsClass(results, prevResults, inProgress):
     """Given the current and past results, return the class that will be used
@@ -174,35 +191,6 @@ class ConsoleStatusResource(HtmlResource):
 
         return allChanges
 
-    def stripRevisions(self, allChanges, numRevs, branch, devName):
-        """Returns a subset of changes from allChanges that matches the query.
-
-        allChanges is the list of all changes we know about.
-        numRevs is the number of changes we will inspect from allChanges. We
-            do not want to inspect all of them or it would be too slow.
-        branch is the branch we are interested in. Changes not in this branch
-            will be ignored.
-        devName is the developper name. Changes have not been submitted by this
-            person will be ignored.
-        """
-        
-        revisions = []
-
-        if not allChanges:
-            return revisions
-
-        totalRevs = len(allChanges)
-        for i in range(totalRevs - 1, totalRevs - numRevs, -1):
-            if i < 0:
-                break
-            change = allChanges[i]
-            if branch == ANYBRANCH or branch == change.branch:
-                if not devName or change.who in devName:                    
-                    rev = DevRevision(change)
-                    revisions.append(rev)
-
-        return revisions
-
     def getBuildDetails(self, request, builderName, build):
         """Returns an HTML list of failures for a given build."""
         details = {}
@@ -305,9 +293,9 @@ class ConsoleStatusResource(HtmlResource):
     
     def getAllBuildsForRevision(self, status, request, lastRevision, numBuilds,
                                 categories, builders, debugInfo):
-        """Returns a dictionnary of builds we need to inspect to be able to
+        """Returns a dictionary of builds we need to inspect to be able to
         display the console page. The key is the builder name, and the value is
-        an array of build we care about. We also returns a dictionnary of
+        an array of build we care about. We also returns a dictionary of
         builders we care about. The key is it's category.
  
         lastRevision is the last revision we want to display in the page.
@@ -319,7 +307,7 @@ class ConsoleStatusResource(HtmlResource):
 
         allBuilds = dict()
 
-        # List of all builders in the dictionnary.
+        # List of all builders in the dictionary.
         builderList = dict()
 
         debugInfo["builds_scanned"] = 0
@@ -345,7 +333,7 @@ class ConsoleStatusResource(HtmlResource):
             if not builderList.get(category):
                 builderList[category] = []
 
-            # Append this builder to the dictionnary of builders.
+            # Append this builder to the dictionary of builders.
             builderList[category].append(builderName)
             # Set the list of builds for this builder.
             allBuilds[builderName] = self.getBuildsForRevision(request,
@@ -376,11 +364,8 @@ class ConsoleStatusResource(HtmlResource):
         
         for category in categories:            
             c = {}
-            # TODO(nsylvain): Another hack to display the category in a pretty
-            # way.  If the master owner wants to display the categories in a
-            # given order, he/she can prepend a number to it. This number won't
-            # be shown.
-            c["name"] = category.lstrip('0123456789')
+
+            c["name"] = category
 
             # To be able to align the table correctly, we need to know
             # what percentage of space this category will be taking. This is
@@ -519,12 +504,44 @@ class ConsoleStatusResource(HtmlResource):
 
         return (builds, details)
 
+    def filterRevisions(self, revisions, filter=None, max_revs=None):
+        """Filter a set of revisions based on any number of filter criteria.
+        If specified, filter should be a dict with keys corresponding to
+        revision attributes, and values of 1+ strings"""
+        if not filter:
+            if max_revs is None:
+                for rev in reversed(revisions):
+                    yield DevRevision(rev)
+            else:
+                for index,rev in enumerate(reversed(revisions)):
+                    if index >= max_revs:
+                        break
+                    yield DevRevision(rev)
+        else:
+            for index, rev in enumerate(reversed(revisions)):
+                if max_revs and index >= max_revs:
+                    break
+                try:
+                    for field,acceptable in filter.iteritems():
+                        if not hasattr(rev, field):
+                            raise DoesNotPassFilter
+                        if type(acceptable) in (str, unicode):
+                            if getattr(rev, field) != acceptable:
+                                raise DoesNotPassFilter
+                        elif type(acceptable) in (list, tuple, set):
+                            if getattr(rev, field) not in acceptable:
+                                raise DoesNotPassFilter
+                    yield DevRevision(rev)
+                except DoesNotPassFilter:
+                    pass
+
     def displayPage(self, request, status, builderList, allBuilds, revisions,
-                    categories, branch, debugInfo):
+                    categories, repository, branch, debugInfo):
         """Display the console page."""
         # Build the main template directory with all the informations we have.
         subs = dict()
         subs["branch"] = branch or 'trunk'
+        subs["repository"] = repository
         if categories:
             subs["categories"] = ' '.join(categories)
         subs["time"] = time.strftime("%a %d %b %Y %H:%M:%S",
@@ -544,7 +561,7 @@ class ConsoleStatusResource(HtmlResource):
         for revision in revisions:
             r = {}
             
-            # Fill the dictionnary with these new information
+            # Fill the dictionary with this new information
             r['id'] = revision.revision
             r['link'] = revision.revlink 
             r['who'] = revision.who
@@ -587,6 +604,8 @@ class ConsoleStatusResource(HtmlResource):
             except ValueError:
                 pass
 
+        request.setHeader('Cache-Control', 'no-cache')
+
         # Sets the default reload time to 60 seconds.
         if not reload_time:
             reload_time = 60
@@ -604,6 +623,8 @@ class ConsoleStatusResource(HtmlResource):
         categories = request.args.get("category", [])
         # List of all builders to show on the page.
         builders = request.args.get("builder", [])
+        # Repo used to filter the changes shown.
+        repository = request.args.get("repository", [None])[0]
         # Branch used to filter the changes shown.
         branch = request.args.get("branch", [ANYBRANCH])[0]
         # List of all the committers name to display on the page.
@@ -622,13 +643,19 @@ class ConsoleStatusResource(HtmlResource):
         # By default we process the last 40 revisions.
         # If a dev name is passed, we look for the changes by this person in the
         # last 80 revisions.
-        numRevs = 40
+        numRevs = int(request.args.get("revs", [40])[0])
         if devName:
             numRevs *= 2
         numBuilds = numRevs
 
-
-        revisions = self.stripRevisions(allChanges, numRevs, branch, devName)
+        revFilter = {}
+        if branch != ANYBRANCH:
+            revFilter['branch'] = branch
+        if devName:
+            revFilter['who'] = devName
+        if repository:
+            revFilter['repository'] = repository
+        revisions = list(self.filterRevisions(allChanges, max_revs=numRevs, filter=revFilter))
         debugInfo["revision_final"] = len(revisions)
 
         # Fetch all the builds for all builders until we get the next build
@@ -650,7 +677,7 @@ class ConsoleStatusResource(HtmlResource):
         debugInfo["added_blocks"] = 0
 
         cxt.update(self.displayPage(request, status, builderList, allBuilds,
-                                    revisions, categories, branch, debugInfo))
+                                    revisions, categories, repository, branch, debugInfo))
 
         template = request.site.buildbot_service.templates.get_template("console.html")
         data = template.render(cxt)
@@ -687,7 +714,10 @@ class TimeRevisionComparator(RevisionComparator):
 
 class IntegerRevisionComparator(RevisionComparator):
     def isRevisionEarlier(self, first, second):
-        return int(first.revision) < int(second.revision)
+        try:
+            return int(first.revision) < int(second.revision)
+        except (TypeError, ValueError):
+            return False
 
     def isValidRevision(self, revision):
         try:

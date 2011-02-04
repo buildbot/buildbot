@@ -1,3 +1,18 @@
+# This file is part of Buildbot.  Buildbot is free software: you can
+# redistribute it and/or modify it under the terms of the GNU General Public
+# License as published by the Free Software Foundation, version 2.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, write to the Free Software Foundation, Inc., 51
+# Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Copyright Buildbot Team Members
+
 
 from twisted.web import html
 from twisted.web.util import Redirect
@@ -36,23 +51,26 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
             b['when'] = util.formatInterval(when)
             b['when_time'] = time.strftime("%H:%M:%S",
                                       time.localtime(time.time() + when))
-                    
+
         step = build.getCurrentStep()
-        if step:
-            b['current_step'] = step.getName()
-        else:
+        # TODO: is this necessarily the case?
+        if not step:
             b['current_step'] = "[waiting for Lock]"
-            # TODO: is this necessarily the case?
+        else:
+            if step.isWaitingForLocks():
+                b['current_step'] = "%s [waiting for Lock]" % step.getName()
+            else:
+                b['current_step'] = step.getName()
 
         b['stop_url'] = path_to_build(req, build) + '/stop'
 
         return b
-          
+
     def content(self, req, cxt):
         b = self.builder_status
 
         cxt['name'] = b.getName()
-        
+        req.setHeader('Cache-Control', 'no-cache')
         slaves = b.getSlaves()
         connected_slaves = [s for s in slaves if s.isConnected()]
 
@@ -66,18 +84,16 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
             if source.changes:
                 for c in source.changes:
                     changes.append({ 'url' : path_to_change(req, c),
-                                            'who' : c.who})
-            if source.revision:
-                reason = source.revision
-            else:
-                reason = "no changes specified"
+                                     'who' : c.who,
+                                     'revision' : c.revision,
+                                     'repo' : c.repository })
 
             cxt['pending'].append({
                 'when': time.strftime("%b %d %H:%M:%S", time.localtime(pb.getSubmitTime())),
                 'delay': util.formatInterval(util.now() - pb.getSubmitTime()),
-                'reason': reason,
                 'id': pb.brid,
-                'changes' : changes
+                'changes' : changes,
+                'num_changes' : len(changes),
                 })
 
         numbuilds = int(req.args.get('numbuilds', ['5'])[0])
@@ -94,7 +110,7 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
             s['name'] = slave.getName()
             c = s['connected'] = slave.isConnected()
             if c:
-                s['admin'] = slave.getAdmin()
+                s['admin'] = unicode(slave.getAdmin() or '', 'utf-8')
                 connected_slaves += 1
         cxt['connected_slaves'] = connected_slaves
 
@@ -109,12 +125,15 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
         reason = req.args.get("comments", ["<no reason specified>"])[0]
         branch = req.args.get("branch", [""])[0]
         revision = req.args.get("revision", [""])[0]
+        repository = req.args.get("repository", [""])[0]
+        project = req.args.get("project", [""])[0]
 
         r = "The web-page 'force build' button was pressed by '%s': %s\n" \
             % (html.escape(name), html.escape(reason))
-        log.msg("web forcebuild of builder '%s', branch='%s', revision='%s'"
-                " by user '%s'" % (self.builder_status.getName(), branch,
-                                   revision, name))
+        log.msg("web forcebuild of builder '%s', branch='%s', revision='%s',"
+                " repository='%s', project='%s' by user '%s'" % (
+                self.builder_status.getName(), branch, revision, repository,
+                project, name))
 
         # check if this is allowed
         if not auth_ok:
@@ -124,7 +143,7 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
 
         # keep weird stuff out of the branch revision, and property strings.
         # TODO: centralize this somewhere.
-        if not re.match(r'^[\w\.\-\/]*$', branch):
+        if not re.match(r'^[\w.+/~-]*$', branch):
             log.msg("bad branch '%s'" % branch)
             return Redirect(path_to_builder(req, self.builder_status))
         if not re.match(r'^[ \w\.\-\/]*$', revision):
@@ -145,11 +164,11 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
         # now, so someone can write this support. but it requires a
         # buildbot.changes.changes.Change instance which is tedious at this
         # stage to compute
-        s = SourceStamp(branch=branch, revision=revision)
+        s = SourceStamp(branch=branch, revision=revision, project=project, repository=repository)
         try:
             c = interfaces.IControl(self.getBuildmaster(req))
             bc = c.getBuilder(self.builder_status.getName())
-            bc.submitBuildRequest(s, r, properties, now=True)
+            bc.submitBuildRequest(s, r, properties)
         except interfaces.NoSlaveError:
             # TODO: tell the web user that their request could not be
             # honored
@@ -194,6 +213,35 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
                         break
         return Redirect(path_to_builder(req, self.builder_status))
 
+    def stopchange(self, req, auth_ok=False):
+        """Cancel all pending builds that include a given numbered change."""
+        try:
+            request_change = req.args.get("change", [None])[0]
+            request_change = int(request_change)
+        except:
+            request_change = None
+
+        authz = self.getAuthz(req)
+        if request_change:
+            # FIXME: Please, for the love of god one day make there only be
+            # one getPendingBuilds() with combined status info/controls
+            c = interfaces.IControl(self.getBuildmaster(req))
+            builder_control = c.getBuilder(self.builder_status.getName())
+            build_controls = dict((x.brid, x) for x in builder_control.getPendingBuilds())
+            for build_req in self.builder_status.getPendingBuilds():
+                ss = build_req.getSourceStamp()
+                if not ss.changes:
+                    continue
+                for change in ss.changes:
+                    if change.number == request_change:
+                        control = build_controls[build_req.brid]
+                        log.msg("Cancelling %s" % control)
+                        if auth_ok or authz.actionAllowed('stopChange', req, control):
+                            control.cancel()
+                        else:
+                            return Redirect(path_to_authfail(req))
+        return Redirect(path_to_builder(req, self.builder_status))
+
     def getChild(self, path, req):
         if path == "force":
             return self.force(req)
@@ -201,6 +249,8 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
             return self.ping(req)
         if path == "cancelbuild":
             return self.cancelbuild(req)
+        if path == "stopchange":
+            return self.stopchange(req)
         if path == "builds":
             return BuildsResource(self.builder_status)
 
@@ -219,6 +269,8 @@ class StatusResourceAllBuilders(HtmlResource, BuildLineMixin):
             return self.forceall(req)
         if path == "stopall":
             return self.stopall(req)
+        if path == "stopchangeall":
+            return self.stopchangeall(req)
 
         return HtmlResource.getChild(self, path, req)
 
@@ -253,6 +305,18 @@ class StatusResourceAllBuilders(HtmlResource, BuildLineMixin):
         # go back to the welcome page
         return Redirect(path_to_root(req))
 
+    def stopchangeall(self, req):
+        authz = self.getAuthz(req)
+        if not authz.actionAllowed('stopChange', req):
+            return Redirect(path_to_authfail(req))
+
+        for bname in self.status.getBuilderNames():
+            builder_status = self.status.getBuilder(bname)
+            build = StatusResourceBuilder(builder_status)
+            build.stopchange(req, auth_ok=True)
+
+        return Redirect(path_to_root(req))
+
 
 # /builders
 class BuildersResource(HtmlResource):
@@ -267,7 +331,7 @@ class BuildersResource(HtmlResource):
 
         cxt['branches'] = branches
         bs = cxt['builders'] = []
-        
+
         building = 0
         online = 0
         base_builders_url = path_to_root(req) + "builders/"
@@ -288,7 +352,7 @@ class BuildersResource(HtmlResource):
                     label = None
                 if not label or len(str(label)) > 20:
                     label = "#%d" % b.getNumber()
-                
+
                 bld['build_label'] = label
                 bld['build_text'] = " ".join(b.getText())
                 bld['build_css_class'] = build_get_class(b)
@@ -302,14 +366,14 @@ class BuildersResource(HtmlResource):
                 online += 1
             elif builder_status != "offline":
                 online += 1
-                
+
         cxt['authz'] = self.getAuthz(req)
         cxt['num_building'] = building
         cxt['num_online'] = online
 
         template = req.site.buildbot_service.templates.get_template("builders.html")
         return template.render(**cxt)
-    
+
     def getChild(self, path, req):
         s = self.getStatus(req)
         if path in s.getBuilderNames():

@@ -1,3 +1,18 @@
+# This file is part of Buildbot.  Buildbot is free software: you can
+# redistribute it and/or modify it under the terms of the GNU General Public
+# License as published by the Free Software Foundation, version 2.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, write to the Free Software Foundation, Inc., 51
+# Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Copyright Buildbot Team Members
+
 
 from twisted.internet import gtk2reactor
 gtk2reactor.install() #@UndefinedVariable
@@ -12,7 +27,7 @@ assert(gtk.Window) # in gtk1 it's gtk.GtkWindow
 from twisted.spread import pb
 
 #from buildbot.clients.base import Builder, Client
-from buildbot.clients.base import TextClient
+from buildbot.clients.base import TextClient, StatusClient
 from buildbot.util import now
 
 from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE, EXCEPTION
@@ -482,8 +497,11 @@ class ThreeRowClient(pb.Referenceable):
 class GtkClient(TextClient):
     ClientClass = ThreeRowClient
 
-    def __init__(self, master):
+    def __init__(self, master, events="steps", username="statusClient", passwd="clientpw"):
         self.master = master
+        self.username = username
+        self.passwd = passwd
+        self.listener = StatusClient(events)
 
         w = gtk.Window()
         self.w = w

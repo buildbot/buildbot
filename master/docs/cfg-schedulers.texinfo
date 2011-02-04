@@ -1,0 +1,677 @@
+Schedulers are responsible for initiating builds on builders.
+
+Some schedulers listen for changes from ChangeSources and generate build sets
+in response to these changes.  Others generate build sets without changes,
+based on other events in the buildmaster.
+
+@menu
+* Configuring Schedulers::
+* Change Filters::
+* Scheduler Scheduler::
+* AnyBranchScheduler::
+* Dependent Scheduler::
+* Periodic Scheduler::
+* Nightly Scheduler::
+* Try Schedulers::
+* Triggerable Scheduler::
+* Scheduler Index::
+@end menu
+
+@node Configuring Schedulers
+@subsection Configuring Schedulers
+
+@bcindex c['schedulers']
+@code{c['schedulers']} is a list of Scheduler instances, each
+of which causes builds to be started on a particular set of
+Builders. The two basic Scheduler classes you are likely to start
+with are @code{Scheduler} and @code{Periodic}, but you can write a
+customized subclass to implement more complicated build scheduling.
+
+Scheduler arguments should always be specified by name (as keyword arguments),
+to allow for future expansion:
+
+@example
+sched = Scheduler(name="quick", builderNames=['lin', 'win'])
+@end example
+
+All schedulers have several arguments in common:
+
+@table @code
+@item name
+
+Each Scheduler must have a unique name. This is used in status
+displays, and is also available in the build property @code{scheduler}.
+
+@item builderNames
+
+This is the set of builders which this scheduler should trigger, specified
+as a list of names (strings).
+
+@item properties
+@cindex Properties
+
+This is a dictionary specifying properties that will be transmitted to all
+builds started by this scheduler.  The @code{owner} property may be of
+particular interest, as its contents (as a list) will be added to the list of
+"interested users" (@pxref{Doing Things With Users}) for each triggered build.
+For example:
+
+@example
+sched = Scheduler(...,
+    properties = @{ 'owner' : [ 'zorro@@company.com', 'silver@@company.com' ] @})
+@end example
+
+@end table
+
+The remaining subsections represent a catalog of the available Scheduler types.
+All these Schedulers are defined in modules under @code{buildbot.schedulers},
+and the docstrings there are the best source of documentation on the arguments
+taken by each one.
+
+@node Change Filters
+@subsection Change Filters
+@slindex buildbot.schedulers.filter.ChangeFilter
+
+Several schedulers perform filtering on an incoming set of changes.  The filter
+can most generically be specified as a ChangeFilter.  Set up a ChangeFilter
+like this:
+
+@example
+from buildbot.changes.filter import ChangeFilter
+my_filter = ChangeFilter(
+    project_re="^baseproduct/.*",
+    branch="devel")
+@end example
+
+and then add it to a scheduler with the @code{change_filter} parameter:
+
+@example
+sch = SomeSchedulerClass(...,
+    change_filter=my_filter)
+@end example
+
+There are four attributes of changes on which you can filter:
+
+@itemize
+@item @code{project}
+the project string, as defined by the ChangeSource.
+@item @code{repository}
+the repository in which this change occurred.
+@item @code{branch}
+the branch on which this change occurred.  Note that 'trunk' or 'master' is often
+denoted by @code{None}.
+@item @code{category}
+the category, again as defined by the ChangeSource.
+@end itemize
+
+For each attribute, the filter can look for a single, specific value:
+@example
+my_filter = ChangeFilter(project = 'myproject')
+@end example
+
+or accept any of a set of values:
+
+@example
+my_filter = ChangeFilter(project = ['myproject', 'jimsproject'])
+@end example
+
+It can apply a regular expression, use the attribute name with a suffix of
+@code{_re}:
+
+@example
+my_filter = ChangeFilter(category_re = '.*deve.*')
+# or, to use regular expression flags:
+import re
+my_filter = ChangeFilter(category_re = re.compile('.*deve.*', re.I))
+@end example
+
+For anything more complicated, define a Python function to recognize the strings
+you want:
+
+@example
+def my_branch_fn(branch):
+    return branch in branches_to_build and branch not in branches_to_ignore
+my_filter = ChangeFilter(branch_fn = my_branch_fn)
+@end example
+
+The special argument @code{filter_fn} can be used to specify a function that is
+given the entire Change object, and returns a boolean.
+
+A Change passes the filter only if @i{all} arguments are satisfied.  If no
+filter object is given to a scheduler, then all changes will be built (subject
+to any other restrictions the scheduler enforces).
+
+@node Scheduler Scheduler
+@subsection Scheduler Scheduler
+@slindex buildbot.schedulers.basic.Scheduler
+
+This is the original and still most popular Scheduler class. It follows
+exactly one branch, and starts a configurable tree-stable-timer after
+each change on that branch. When the timer expires, it starts a build
+on some set of Builders. The Scheduler accepts a @code{fileIsImportant}
+function which can be used to ignore some Changes if they do not
+affect any ``important'' files.
+
+The arguments to this scheduler are:
+
+@table @code
+@item name
+
+@item builderNames
+
+@item properties
+
+@item treeStableTimer
+The Scheduler will wait for this many seconds before starting the
+build. If new changes are made during this interval, the timer will be
+restarted, so really the build will be started after a change and then
+after this many seconds of inactivity.
+
+If treeStableTimer is @code{None}, then a separate build is started
+immediately for each Change.
+
+@item fileIsImportant
+A callable which takes one argument, a Change instance, and returns
+@code{True} if the change is worth building, and @code{False} if
+it is not.  Unimportant Changes are accumulated until the build is
+triggered by an important change.  The default value of None means
+that all Changes are important.
+
+@item change_filter
+The change filter that will determine whch changes are recognized by this
+Scheduler; @pxref{Change Filters}.  Note that this is different from
+@code{fileIsImportant}: if the change filter filters out a Change, then it is
+completely ignored by the scheduler.  If a Change is allowed by the change
+filter, but is deemed unimportant, then it will not cause builds to start, but
+will be remembered and shown in status displays.
+
+@item categories (deprecated; use change_filter)
+A list of categories of changes that this scheduler will respond to.  If this
+is specified, then any non-matching changes are ignored.
+
+@item branch (deprecated; use change_filter)
+
+If specified, then this Scheduler will pay attention to a single branch,
+ignoring Changes that occur on other branches. Setting @code{branch} equal to
+the special value of @code{None} means it should only pay attention to the
+default branch. Note that @code{None} is a keyword, not a string, so you want
+to use @code{None} and not @code{"None"}.
+
+@end table
+
+Example:
+
+@example
+from buildbot.schedulers.basic  import Scheduler
+quick = Scheduler(name="quick",
+                    branch=None,
+                    treeStableTimer=60,
+                    builderNames=["quick-linux", "quick-netbsd"])
+full = Scheduler(name="full",
+                    branch=None,
+                    treeStableTimer=5*60,
+                    builderNames=["full-linux", "full-netbsd", "full-OSX"])
+c['schedulers'] = [quick, full]
+@end example
+
+In this example, the two ``quick'' builders are triggered 60 seconds
+after the tree has been changed. The ``full'' builds do not run quite
+so quickly (they wait 5 minutes), so hopefully if the quick builds
+fail due to a missing file or really simple typo, the developer can
+discover and fix the problem before the full builds are started. Both
+Schedulers only pay attention to the default branch: any changes
+on other branches are ignored by these Schedulers. Each Scheduler
+triggers a different set of Builders, referenced by name.
+
+@node AnyBranchScheduler
+@subsection AnyBranchScheduler
+@slindex buildbot.schedulers.basic.AnyBranchScheduler
+
+This scheduler uses a tree-stable-timer like the default one, but
+uses a separate timer for each branch.
+
+The arguments to this scheduler are:
+
+@table @code
+@item name
+
+@item builderNames
+
+@item properties
+
+@item treeStableTimer
+The Scheduler will wait for this many seconds before starting the
+build. If new changes are made during this interval, the timer will be
+restarted, so really the build will be started after a change and then
+after this many seconds of inactivity.
+
+@item fileIsImportant
+A callable which takes one argument, a Change instance, and returns
+@code{True} if the change is worth building, and @code{False} if
+it is not.  Unimportant Changes are accumulated until the build is
+triggered by an important change.  The default value of None means
+that all Changes are important.
+
+@item change_filter
+The change filter that will determine whch changes are recognized by this
+Scheduler; @pxref{Change Filters}.  Note that this is different from
+@code{fileIsImportant}: if the change filter filters out a Change, then it is
+completely ignored by the scheduler.  If a Change is allowed by the change
+filter, but is deemed unimportant, then it will not cause builds to start, but
+will be remembered and shown in status displays.
+
+@item branches (deprecated; use change_filter)
+This Scheduler will pay attention to any number of branches, ignoring
+Changes that occur on other branches. 
+
+@item categories (deprecated; use change_filter)
+A list of categories of changes that this scheduler will respond to.  If this
+is specified, then any non-matching changes are ignored.
+
+@end table
+
+@node Dependent Scheduler
+@subsection Dependent Scheduler
+@cindex Dependent
+@cindex Dependencies
+@slindex buildbot.schedulers.basic.Dependent
+
+It is common to wind up with one kind of build which should only be
+performed if the same source code was successfully handled by some
+other kind of build first. An example might be a packaging step: you
+might only want to produce .deb or RPM packages from a tree that was
+known to compile successfully and pass all unit tests. You could put
+the packaging step in the same Build as the compile and testing steps,
+but there might be other reasons to not do this (in particular you
+might have several Builders worth of compiles/tests, but only wish to
+do the packaging once). Another example is if you want to skip the
+``full'' builds after a failing ``quick'' build of the same source
+code. Or, if one Build creates a product (like a compiled library)
+that is used by some other Builder, you'd want to make sure the
+consuming Build is run @emph{after} the producing one.
+
+You can use ``Dependencies'' to express this relationship
+to the Buildbot. There is a special kind of Scheduler named
+@code{scheduler.Dependent} that will watch an ``upstream'' Scheduler
+for builds to complete successfully (on all of its Builders). Each time
+that happens, the same source code (i.e. the same @code{SourceStamp})
+will be used to start a new set of builds, on a different set of
+Builders. This ``downstream'' scheduler doesn't pay attention to
+Changes at all. It only pays attention to the upstream scheduler.
+
+If the build fails on any of the Builders in the upstream set,
+the downstream builds will not fire.  Note that, for SourceStamps
+generated by a ChangeSource, the @code{revision} is None, meaning HEAD.
+If any changes are committed between the time the upstream scheduler
+begins its build and the time the dependent scheduler begins its
+build, then those changes will be included in the downstream build.
+See the @pxref{Triggerable Scheduler} for a more flexible dependency
+mechanism that can avoid this problem.
+
+The keyword arguments to this scheduler are:
+
+@table @code
+@item name
+
+@item builderNames
+
+@item properties
+
+@item upstream
+The upstream scheduler to watch.  Note that this is an ``instance'',
+not the name of the scheduler.
+@end table
+
+Example:
+
+@example
+from buildbot.schedulers import basic
+tests = basic.Scheduler("just-tests", None, 5*60,
+                            ["full-linux", "full-netbsd", "full-OSX"])
+package = basic.Dependent(name="build-package",
+                              upstream=tests, # <- no quotes!
+                              builderNames=["make-tarball", "make-deb", "make-rpm"])
+c['schedulers'] = [tests, package]
+@end example
+
+@node Periodic Scheduler
+@subsection Periodic Scheduler
+@slindex buildbot.schedulers.timed.Periodic
+
+This simple scheduler just triggers a build every N seconds.
+
+The arguments to this scheduler are:
+
+@table @code
+@item name
+
+@item builderNames
+
+@item properties
+
+@item periodicBuildTimer
+The time, in seconds, after which to start a build.
+@end table
+
+Example:
+
+@example
+from buildbot.schedulers import timed
+nightly = timed.Periodic(name="nightly",
+                builderNames=["full-solaris"],
+                periodicBuildTimer=24*60*60)
+c['schedulers'] = [nightly]
+@end example
+
+The Scheduler in this example just runs the full solaris build once
+per day. Note that this Scheduler only lets you control the time
+between builds, not the absolute time-of-day of each Build, so this
+could easily wind up a ``daily'' or ``every afternoon'' scheduler
+depending upon when it was first activated.
+
+@node Nightly Scheduler
+@subsection Nightly Scheduler
+@slindex buildbot.schedulers.timed.Nightly
+
+This is highly configurable periodic build scheduler, which triggers
+a build at particular times of day, week, month, or year. The
+configuration syntax is very similar to the well-known @code{crontab}
+format, in which you provide values for minute, hour, day, and month
+(some of which can be wildcards), and a build is triggered whenever
+the current time matches the given constraints. This can run a build
+every night, every morning, every weekend, alternate Thursdays,
+on your boss's birthday, etc.
+
+Pass some subset of @code{minute}, @code{hour}, @code{dayOfMonth},
+@code{month}, and @code{dayOfWeek}; each may be a single number or
+a list of valid values. The builds will be triggered whenever the
+current time matches these values. Wildcards are represented by a
+'*' string. All fields default to a wildcard except 'minute', so
+with no fields this defaults to a build every hour, on the hour.
+The full list of parameters is:
+
+@table @code
+@item name
+
+@item builderNames
+
+@item properties
+
+@item branch
+The branch to build when the time comes.
+
+@item minute
+The minute of the hour on which to start the build.  This defaults
+to 0, meaning an hourly build.
+
+@item hour
+The hour of the day on which to start the build, in 24-hour notation.
+This defaults to *, meaning every hour.
+
+@item month
+The month in which to start the build, with January = 1.  This defaults
+to *, meaning every month.
+
+@item dayOfWeek
+The day of the week to start a build, with Monday = 0.  This defauls
+to *, meaning every day of the week.
+
+@item onlyIfChanged
+If this is true, then builds will not be scheduled at the designated time
+unless the source has changed since the previous build.
+@end table
+
+For example, the following master.cfg clause will cause a build to be
+started every night at 3:00am:
+
+@example
+from buildbot.schedulers import timed
+s = timed.Nightly(name='nightly',
+        builderNames=['builder1', 'builder2'],
+        hour=3,
+        minute=0)
+@end example
+
+This scheduler will perform a build each monday morning at 6:23am and
+again at 8:23am, but only if someone has committed code in the interim:
+
+@example
+s = timed.Nightly(name='BeforeWork',
+         builderNames=['builder1'],
+         dayOfWeek=0,
+         hour=[6,8],
+         minute=23,
+         onlyIfChanged=True)
+@end example
+
+The following runs a build every two hours, using Python's @code{range}
+function:
+
+@example
+s = timed.Nightly(name='every2hours',
+        builderNames=['builder1'],
+        hour=range(0, 24, 2))
+@end example
+
+Finally, this example will run only on December 24th:
+
+@example
+s = timed.Nightly(name='SleighPreflightCheck',
+        builderNames=['flying_circuits', 'radar'],
+        month=12,
+        dayOfMonth=24,
+        hour=12,
+        minute=0)
+@end example
+
+@node Try Schedulers
+@subsection Try Schedulers
+@slindex buildbot.schedulers.trysched.Try_Jobdir
+@slindex buildbot.schedulers.trysched.Try_Userpass
+
+This scheduler allows developers to use the @code{buildbot try}
+command to trigger builds of code they have not yet committed. See
+@ref{try} for complete details.
+
+Two implementations are available: @code{Try_Jobdir} and
+@code{Try_Userpass}.  The former monitors a job directory, specified
+by the @code{jobdir} parameter, while the latter listens for PB
+connections on a specific @code{port}, and authenticates against
+@code{userport}.
+
+@slindex buildbot.schedulers.trysched.Try_Jobdir
+@slindex buildbot.schedulers.trysched.Try_Userpass
+
+The buildmaster must have a scheduler instance in the config file's
+@code{c['schedulers']} list to receive try requests. This lets the
+administrator control who may initiate these ``trial'' builds, which branches
+are eligible for trial builds, and which Builders should be used for them.
+
+The scheduler has various means to accept build requests.
+All of them enforce more security than the usual buildmaster ports do.
+Any source code being built can be used to compromise the buildslave
+accounts, but in general that code must be checked out from the VC
+repository first, so only people with commit privileges can get
+control of the buildslaves. The usual force-build control channels can
+waste buildslave time but do not allow arbitrary commands to be
+executed by people who don't have those commit privileges. However,
+the source code patch that is provided with the trial build does not
+have to go through the VC system first, so it is important to make
+sure these builds cannot be abused by a non-committer to acquire as
+much control over the buildslaves as a committer has. Ideally, only
+developers who have commit access to the VC repository would be able
+to start trial builds, but unfortunately the buildmaster does not, in
+general, have access to VC system's user list.
+
+As a result, the try scheduler requires a bit more configuration. There are
+currently two ways to set this up:
+
+@table @strong
+@item jobdir (ssh)
+
+This approach creates a command queue directory, called the
+``jobdir'', in the buildmaster's working directory. The buildmaster
+admin sets the ownership and permissions of this directory to only
+grant write access to the desired set of developers, all of whom must
+have accounts on the machine. The @code{buildbot try} command creates
+a special file containing the source stamp information and drops it in
+the jobdir, just like a standard maildir. When the buildmaster notices
+the new file, it unpacks the information inside and starts the builds.
+
+The config file entries used by 'buildbot try' either specify a local
+queuedir (for which write and mv are used) or a remote one (using scp
+and ssh).
+
+The advantage of this scheme is that it is quite secure, the
+disadvantage is that it requires fiddling outside the buildmaster
+config (to set the permissions on the jobdir correctly). If the
+buildmaster machine happens to also house the VC repository, then it
+can be fairly easy to keep the VC userlist in sync with the
+trial-build userlist. If they are on different machines, this will be
+much more of a hassle. It may also involve granting developer accounts
+on a machine that would not otherwise require them.
+
+To implement this, the buildslave invokes 'ssh -l username host
+buildbot tryserver ARGS', passing the patch contents over stdin. The
+arguments must include the inlet directory and the revision
+information.
+
+@item user+password (PB)
+
+In this approach, each developer gets a username/password pair, which
+are all listed in the buildmaster's configuration file. When the
+developer runs @code{buildbot try}, their machine connects to the
+buildmaster via PB and authenticates themselves using that username
+and password, then sends a PB command to start the trial build.
+
+The advantage of this scheme is that the entire configuration is
+performed inside the buildmaster's config file. The disadvantages are
+that it is less secure (while the ``cred'' authentication system does
+not expose the password in plaintext over the wire, it does not offer
+most of the other security properties that SSH does). In addition, the
+buildmaster admin is responsible for maintaining the username/password
+list, adding and deleting entries as developers come and go.
+
+@end table
+
+For example, to set up the ``jobdir'' style of trial build, using a
+command queue directory of @file{MASTERDIR/jobdir} (and assuming that
+all your project developers were members of the @code{developers} unix
+group), you would first set up that directory:
+
+@example
+mkdir -p MASTERDIR/jobdir MASTERDIR/jobdir/new MASTERDIR/jobdir/cur MASTERDIR/jobdir/tmp
+chgrp developers MASTERDIR/jobdir MASTERDIR/jobdir/*
+chmod g+rwx,o-rwx MASTERDIR/jobdir MASTERDIR/jobdir/*
+@end example
+
+and then use the following scheduler in the buildmaster's config file:
+
+@example
+from buildbot.schedulers.trysched import Try_Jobdir
+s = Try_Jobdir(name="try1",
+               builderNames=["full-linux", "full-netbsd", "full-OSX"],
+               jobdir="jobdir")
+c['schedulers'] = [s]
+@end example
+
+Note that you must create the jobdir before telling the buildmaster to
+use this configuration, otherwise you will get an error. Also remember
+that the buildmaster must be able to read and write to the jobdir as
+well. Be sure to watch the @file{twistd.log} file (@pxref{Logfiles})
+as you start using the jobdir, to make sure the buildmaster is happy
+with it.
+
+To use the username/password form of authentication, create a
+@code{Try_Userpass} instance instead. It takes the same
+@code{builderNames} argument as the @code{Try_Jobdir} form, but
+accepts an addtional @code{port} argument (to specify the TCP port to
+listen on) and a @code{userpass} list of username/password pairs to
+accept. Remember to use good passwords for this: the security of the
+buildslave accounts depends upon it:
+
+@example
+from buildbot.schedulers.trysched import Try_Userpass
+s = Try_Userpass(name="try2",
+                 builderNames=["full-linux", "full-netbsd", "full-OSX"],
+                 port=8031,
+                 userpass=[("alice","pw1"), ("bob", "pw2")] )
+c['schedulers'] = [s]
+@end example
+
+Like most places in the buildbot, the @code{port} argument takes a
+strports specification. See @code{twisted.application.strports} for
+details.
+
+@node Triggerable Scheduler
+@subsection Triggerable Scheduler
+@cindex Triggers
+@slindex buildbot.schedulers.triggerable.Triggerable
+
+The @code{Triggerable} scheduler waits to be triggered by a Trigger
+step (see @ref{Triggering Schedulers}) in another build. That step
+can optionally wait for the scheduler's builds to complete. This
+provides two advantages over Dependent schedulers. First, the same
+scheduler can be triggered from multiple builds. Second, the ability
+to wait for a Triggerable's builds to complete provides a form of
+"subroutine call", where one or more builds can "call" a scheduler
+to perform some work for them, perhaps on other buildslaves.
+
+The parameters are just the basics:
+
+@table @code
+@item name
+@item builderNames
+@item properties
+@end table
+
+This class is only useful in conjunction with the @code{Trigger} step.
+Here is a fully-worked example:
+
+@example
+from buildbot.schedulers import basic, timed, triggerable
+from buildbot.process import factory
+from buildbot.steps import trigger
+
+checkin = basic.Scheduler(name="checkin",
+            branch=None,
+            treeStableTimer=5*60,
+            builderNames=["checkin"])
+nightly = timed.Nightly(name='nightly',
+            builderNames=['nightly'],
+            hour=3,
+            minute=0)
+
+mktarball = triggerable.Triggerable(name="mktarball",
+                builderNames=["mktarball"])
+build = triggerable.Triggerable(name="build-all-platforms",
+                builderNames=["build-all-platforms"])
+test = triggerable.Triggerable(name="distributed-test",
+                builderNames=["distributed-test"])
+package = triggerable.Triggerable(name="package-all-platforms",
+                builderNames=["package-all-platforms"])
+
+c['schedulers'] = [mktarball, checkin, nightly, build, test, package]
+
+# on checkin, make a tarball, build it, and test it
+checkin_factory = factory.BuildFactory()
+checkin_factory.addStep(trigger.Trigger(schedulerNames=['mktarball'],
+                                       waitForFinish=True))
+checkin_factory.addStep(trigger.Trigger(schedulerNames=['build-all-platforms'],
+                                   waitForFinish=True))
+checkin_factory.addStep(trigger.Trigger(schedulerNames=['distributed-test'],
+                                  waitForFinish=True))
+
+# and every night, make a tarball, build it, and package it
+nightly_factory = factory.BuildFactory()
+nightly_factory.addStep(trigger.Trigger(schedulerNames=['mktarball'],
+                                       waitForFinish=True))
+nightly_factory.addStep(trigger.Trigger(schedulerNames=['build-all-platforms'],
+                                   waitForFinish=True))
+nightly_factory.addStep(trigger.Trigger(schedulerNames=['package-all-platforms'],
+                                     waitForFinish=True))
+@end example
+
+@node Scheduler Index
+@subsection Scheduler Index
+@printindex sl

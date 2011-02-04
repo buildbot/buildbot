@@ -16,6 +16,7 @@
   <th>BuildBot</th>
   <th>Admin</th>
   <th>Last heard from</th>
+  <th>Connects/Hour</th>
   <th>Status</th>
 </tr>
 
@@ -36,7 +37,7 @@
   {%- endif %}
 
 
-  <td>{{ s.version or '-' }}</td>
+  <td>{{ (s.version or '-')|e }}</td>
  
   {% if s.connected %}
     <td>
@@ -51,6 +52,16 @@
     {%- endif -%}
     </td>
         
+  {% else %}
+    <td>-</td>
+    <td>-</td>
+  {% endif %}
+
+    <td>
+    {{ s.connectCount }}
+    </td>
+        
+  {% if s.connected %}
     {% if s.running_builds %}
       <td class="building">Running {{ s.running_builds }} build(s)</td>
     {% else %}
@@ -58,8 +69,6 @@
     {% endif %}
         
   {% else %}
-    <td>-</td>
-    <td>-</td>
     <td class="offline">Not connected</td>
   {% endif %}
   

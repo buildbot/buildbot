@@ -1,3 +1,18 @@
+# This file is part of Buildbot.  Buildbot is free software: you can
+# redistribute it and/or modify it under the terms of the GNU General Public
+# License as published by the Free Software Foundation, version 2.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, write to the Free Software Foundation, Inc., 51
+# Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Copyright Buildbot Team Members
+
 
 import time, urllib
 from twisted.web import html
@@ -59,7 +74,12 @@ class OneBuildSlaveResource(HtmlResource, BuildLineMixin):
                 recent_builds.append(self.get_line_values(request, rb))
                 if n > max_builds:
                     break
-        ctx.update(dict(slave = s.getSlave(self.slavename),
+
+        # connects over the last hour
+        slave = s.getSlave(self.slavename)
+        connect_count = slave.getConnectCount()
+
+        ctx.update(dict(slave=slave,
                         slavename = self.slavename,  
                         current = current_builds, 
                         recent = recent_builds, 
@@ -69,7 +89,9 @@ class OneBuildSlaveResource(HtmlResource, BuildLineMixin):
                         access_uri = slave.getAccessURI()),
                         admin = unicode(slave.getAdmin() or '', 'utf-8'),
                         host = unicode(slave.getHost() or '', 'utf-8'),
-                        show_builder_column = True)
+                        slave_version = slave.getVersion(),
+                        show_builder_column = True,
+                        connect_count = connect_count)
         template = request.site.buildbot_service.templates.get_template("buildslave.html")
         data = template.render(**ctx)
         return data
@@ -112,6 +134,7 @@ class BuildSlavesResource(HtmlResource):
                                         
             info['version'] = slave.getVersion()
             info['connected'] = slave.isConnected()
+            info['connectCount'] = slave.getConnectCount()
             
             if slave.isConnected():
                 info['admin'] = unicode(slave.getAdmin() or '', 'utf-8')

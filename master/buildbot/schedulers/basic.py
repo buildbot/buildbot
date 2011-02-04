@@ -1,43 +1,21 @@
-# ***** BEGIN LICENSE BLOCK *****
-# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+# This file is part of Buildbot.  Buildbot is free software: you can
+# redistribute it and/or modify it under the terms of the GNU General Public
+# License as published by the Free Software Foundation, version 2.
 #
-# The contents of this file are subject to the Mozilla Public License Version
-# 1.1 (the "License"); you may not use this file except in compliance with
-# the License. You may obtain a copy of the License at
-# http://www.mozilla.org/MPL/
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
 #
-# Software distributed under the License is distributed on an "AS IS" basis,
-# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
-# for the specific language governing rights and limitations under the
-# License.
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, write to the Free Software Foundation, Inc., 51
+# Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-# The Original Code is Mozilla-specific Buildbot steps.
-#
-# The Initial Developer of the Original Code is
-# Mozilla Foundation.
-# Portions created by the Initial Developer are Copyright (C) 2009
-# the Initial Developer. All Rights Reserved.
-#
-# Contributor(s):
-#   Brian Warner <warner@lothar.com>
-#
-# Alternatively, the contents of this file may be used under the terms of
-# either the GNU General Public License Version 2 or later (the "GPL"), or
-# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
-# in which case the provisions of the GPL or the LGPL are applicable instead
-# of those above. If you wish to allow use of your version of this file only
-# under the terms of either the GPL or the LGPL, and not to allow others to
-# use your version of this file under the terms of the MPL, indicate your
-# decision by deleting the provisions above and replace them with the notice
-# and other provisions required by the GPL or the LGPL. If you do not delete
-# the provisions above, a recipient may use your version of this file under
-# the terms of any one of the MPL, the GPL or the LGPL.
-#
-# ***** END LICENSE BLOCK *****
+# Copyright Buildbot Team Members
 
 import time
 
-from buildbot import interfaces
+from buildbot import interfaces, util
 from buildbot.util import collections, NotABranch
 from buildbot.sourcestamp import SourceStamp
 from buildbot.status.builder import SUCCESS, WARNINGS
@@ -89,6 +67,7 @@ class Scheduler(base.BaseScheduler, base.ClassifierMixin):
         base.BaseScheduler.__init__(self, name, builderNames, properties)
         self.make_filter(change_filter=change_filter, branch=branch, categories=categories)
         self.treeStableTimer = treeStableTimer
+        self.stableAt = None
         self.branch = branch
         if fileIsImportant:
             assert callable(fileIsImportant)
@@ -115,7 +94,7 @@ class Scheduler(base.BaseScheduler, base.ClassifierMixin):
 
         If I decide that a build should be performed, I will add the
         appropriate BuildRequest to the database queue, and remove the
-        (retired) changes that went into it from the scheduler_changes tabke.
+        (retired) changes that went into it from the scheduler_changes table.
 
         Returns wakeup_delay: either None, or a float indicating when this
         scheduler wants to be woken up next. The Scheduler is responsible for
@@ -132,33 +111,50 @@ class Scheduler(base.BaseScheduler, base.ClassifierMixin):
         most_recent = max([c.when for c in all_changes])
         if self.treeStableTimer is not None:
             now = time.time()
-            stable_at = most_recent + self.treeStableTimer
-            if stable_at > now:
+            self.stableAt = most_recent + self.treeStableTimer
+            if self.stableAt > now:
                 # Wake up one second late, to avoid waking up too early and
                 # looping a lot.
-                return stable_at + 1.0
+                return self.stableAt + 1.0
 
         # ok, do a build
-        self._add_build_and_remove_changes(t, all_changes)
+        self.stableAt = None
+        self._add_build_and_remove_changes(t, important, unimportant)
         return None
 
-    def _add_build_and_remove_changes(self, t, all_changes):
+    def _add_build_and_remove_changes(self, t, important, unimportant):
+        # the changes are segregated into important and unimportant
+        # changes, but we need it ordered earliest to latest, based
+        # on change number, since the SourceStamp will be created
+        # based on the final change.
+        all_changes = sorted(important + unimportant, key=lambda c : c.number)
+
         db = self.parent.db
         if self.treeStableTimer is None:
-            # each Change gets a separate build
-            for c in all_changes:
+            # each *important* Change gets a separate build.  Unimportant
+            # builds get ignored.
+            for c in sorted(important, key=lambda c : c.number):
                 ss = SourceStamp(changes=[c])
                 ssid = db.get_sourcestampid(ss, t)
                 self.create_buildset(ssid, "scheduler", t)
         else:
+            # if we had a treeStableTimer, then trigger a build for the
+            # whole pile - important or not.  There's at least one important
+            # change in the list, or we wouldn't have gotten here.
             ss = SourceStamp(changes=all_changes)
             ssid = db.get_sourcestampid(ss, t)
             self.create_buildset(ssid, "scheduler", t)
 
-        # and finally retire the changes from scheduler_changes
+        # and finally retire all of the changes from scheduler_changes, regardless
+        # of importance level
         changeids = [c.number for c in all_changes]
         db.scheduler_retire_changes(self.schedulerid, changeids, t)
 
+    # the waterfall needs to know the next time we plan to trigger a build
+    def getPendingBuildTimes(self):
+        if self.stableAt and self.stableAt > util.now():
+            return [ self.stableAt ]
+        return []
 
 class AnyBranchScheduler(Scheduler):
     compare_attrs = ('name', 'treeStableTimer', 'builderNames',
@@ -167,39 +163,16 @@ class AnyBranchScheduler(Scheduler):
                  fileIsImportant=None, properties={}, categories=None,
                  branches=NotABranch, change_filter=None):
         """
-        @param name: the name of this Scheduler
-        @param treeStableTimer: the duration, in seconds, for which the tree
-                                must remain unchanged before a build is
-                                triggered. This is intended to avoid builds
-                                of partially-committed fixes.
-        @param builderNames: a list of Builder names. When this Scheduler
-                             decides to start a set of builds, they will be
-                             run on the Builders named by this list.
-
-        @param fileIsImportant: A callable which takes one argument (a Change
-                                instance) and returns True if the change is
-                                worth building, and False if it is not.
-                                Unimportant Changes are accumulated until the
-                                build is triggered by an important change.
-                                The default value of None means that all
-                                Changes are important.
-
-        @param properties: properties to apply to all builds started from
-                           this scheduler
-
-        @param change_filter: a buildbot.schedulers.filter.ChangeFilter instance
-                              used to filter changes for this scheduler
+        Same parameters as the scheduler, but without 'branch', and adding:
 
         @param branches: (deprecated)
-        @param categories: (deprecated)
         """
 
-        base.BaseScheduler.__init__(self, name, builderNames, properties)
-        self.make_filter(change_filter=change_filter, branch=branches, categories=categories)
-        self.treeStableTimer = treeStableTimer
-        if fileIsImportant:
-            assert callable(fileIsImportant)
-            self.fileIsImportant = fileIsImportant
+        Scheduler.__init__(self, name, builderNames=builderNames, properties=properties,
+                categories=categories, treeStableTimer=treeStableTimer,
+                fileIsImportant=fileIsImportant, change_filter=change_filter,
+                # this is the interesting part:
+                branch=branches)
 
     def _process_changes(self, t):
         db = self.parent.db

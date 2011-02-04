@@ -1,3 +1,18 @@
+# This file is part of Buildbot.  Buildbot is free software: you can
+# redistribute it and/or modify it under the terms of the GNU General Public
+# License as published by the Free Software Foundation, version 2.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, write to the Free Software Foundation, Inc., 51
+# Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Copyright Buildbot Team Members
+
 """Interface documentation.
 
 Define the interfaces that are implemented by various buildbot classes.
@@ -26,25 +41,20 @@ class ParameterError(Exception):
     pass
 
 class IChangeSource(Interface):
-    """Object which feeds Change objects to the changemaster. When files or
-    directories are changed and the version control system provides some
-    kind of notification, this object should turn it into a Change object
-    and pass it through::
-
-      self.changemaster.addChange(change)
     """
+    Service which feeds Change objects to the changemaster. When files or
+    directories are changed in version control, this object should represent
+    the changes as a change dictionary and call::
 
-    def start():
-        """Called when the buildmaster starts. Can be used to establish
-        connections to VC daemons or begin polling."""
+      self.master.addChange(who=.., rev=.., ..)
 
-    def stop():
-        """Called when the buildmaster shuts down. Connections should be
-        terminated, polling timers should be canceled."""
+    See 'Writing Change Sources' in the manual for more information.
+    """
+    master = Attribute('master',
+            'Pointer to BuildMaster, automatically set when started.')
 
     def describe():
-        """Should return a string which briefly describes this source. This
-        string will be displayed in an HTML status page."""
+        """Return a string which briefly describes this source."""
 
 class IScheduler(Interface):
     """I watch for Changes in the source tree and decide when to trigger
@@ -108,7 +118,7 @@ class ISourceStamp(Interface):
     @cvar patch: patch applied to the source, or None if no patch
     @type patch: None or tuple (level diff)
 
-    @cvar changes: the source step should check out hte latest revision
+    @cvar changes: the source step should check out the latest revision
                    in the given changes
     @type changes: tuple of L{buildbot.changes.changes.Change} instances,
                    all of which are on the same branch
@@ -127,7 +137,7 @@ class ISourceStamp(Interface):
 
     def mergeWith(self, others):
         """Generate a SourceStamp for the merger of me and all the other
-        BuildRequests. This is called by a Build when it starts, to figure
+        SourceStamps. This is called by a Build when it starts, to figure
         out what its sourceStamp should be."""
 
     def getAbsoluteSourceStamp(self, got_revision):
@@ -1032,9 +1042,7 @@ class IStatusReceiver(Interface):
 
 class IControl(Interface):
     def addChange(change):
-        """Add a change to all builders. Each Builder will decide for
-        themselves whether the change is interesting or not, and may initiate
-        a build as a result."""
+        """Add a change to the change queue, for analysis by schedulers."""
 
     def submitBuildSet(builderNames, ss, reason, props=None, now=False):
         """Create a BuildSet, which will eventually cause a build of the

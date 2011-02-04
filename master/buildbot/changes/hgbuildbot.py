@@ -1,9 +1,18 @@
-# hgbuildbot.py - mercurial hooks for buildbot
+# This file is part of Buildbot.  Buildbot is free software: you can
+# redistribute it and/or modify it under the terms of the GNU General Public
+# License as published by the Free Software Foundation, version 2.
 #
-# Copyright 2007 Frederic Leroy <fredo@starox.org>
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
 #
-# This software may be used and distributed according to the terms
-# of the GNU General Public License, incorporated herein by reference.
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, write to the Free Software Foundation, Inc., 51
+# Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Portions Copyright Buildbot Team Members
+# Portions Copyright 2007 Frederic Leroy <fredo@starox.org>
 
 # hook extension to send change notifications to buildbot when a changeset is
 # brought into the repository from elsewhere.
@@ -39,6 +48,10 @@
 #
 #   category = None                      # category property
 #   project = ''                         # project this repository belong to
+#
+#   auth = user:passwd                   # How to authenticate, defaults to
+#                                        # change:changepw, which is also
+#                                        # the default of PBChangeSource.
 
 import os
 
@@ -65,6 +78,7 @@ def hook(ui, repo, hooktype, node=None, source=None, **kwargs):
         stripcount = int(ui.config('notify','strip') or ui.config('hgbuildbot','strip',3))
         category = ui.config('hgbuildbot', 'category', None)
         project = ui.config('hgbuildbot', 'project', '')
+        auth = ui.config('hgbuildbot', 'auth', None)
     else:
         ui.write("* You must add a [hgbuildbot] section to .hg/hgrc in "
                  "order to use buildbot hook\n")
@@ -95,7 +109,11 @@ def hook(ui, repo, hooktype, node=None, source=None, **kwargs):
             if branchtype == 'inrepo':
                 branch = workingctx(repo).branch()
 
-    s = sendchange.Sender(master, None)
+    if not auth:
+        auth = 'change:changepw'
+    auth = auth.split(':', 1)
+
+    s = sendchange.Sender(master, auth=auth)
     d = defer.Deferred()
     reactor.callLater(0, d.callback, None)
     # process changesets
@@ -135,7 +153,13 @@ def hook(ui, repo, hooktype, node=None, source=None, **kwargs):
         }
         d.addCallback(_send, change)
 
-    d.addCallbacks(s.printSuccess, s.printFailure)
+    def _printSuccess(res):
+        ui.status(s.getSuccessString(res) + '\n')
+
+    def _printFailure(why):
+        ui.warn(s.getFailureString(why) + '\n')
+
+    d.addCallbacks(_printSuccess, _printFailure)
     d.addBoth(s.stop)
     s.run()
 

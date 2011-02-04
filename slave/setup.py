@@ -1,11 +1,20 @@
 #!/usr/bin/env python
 #
-# This software may be freely redistributed under the terms of the GNU
-# general public license.
+# This file is part of Buildbot.  Buildbot is free software: you can
+# redistribute it and/or modify it under the terms of the GNU General Public
+# License as published by the Free Software Foundation, version 2.
 #
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, write to the Free Software Foundation, Inc., 51
+# Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Copyright Buildbot Team Members
+
 """
 Standard setup script.
 """
@@ -13,14 +22,40 @@ Standard setup script.
 import sys
 import os
 from distutils.core import setup
+from distutils.command.install_data import install_data
+from distutils.command.sdist import sdist
 
 from buildslave import version
 
 scripts = ["bin/buildslave"]
-# TODO: windows stuff??
-if sys.platform == "win32":
-    scripts.append("../contrib/windows/buildslave.bat")
-#    scripts.append("contrib/windows/buildslave_service.py")
+# sdist is usually run on a non-Windows platform, but the buildslave.bat file
+# still needs to get packaged.
+if 'sdist' in sys.argv or sys.platform == 'win32':
+    scripts.append("contrib/windows/buildslave.bat")
+    scripts.append("contrib/windows/buildbot_service.py")
+
+class our_install_data(install_data):
+
+    def finalize_options(self):
+        self.set_undefined_options('install',
+            ('install_lib', 'install_dir'),
+        )
+        install_data.finalize_options(self)
+
+    def run(self):
+        install_data.run(self)
+        # ensure there's a buildslave/VERSION file
+        fn = os.path.join(self.install_dir, 'buildslave', 'VERSION')
+        open(fn, 'w').write(version)
+        self.outfiles.append(fn)
+
+class our_sdist(sdist):
+
+    def make_release_tree(self, base_dir, files):
+        sdist.make_release_tree(self, base_dir, files)
+        # ensure there's a buildslave/VERSION file
+        fn = os.path.join(base_dir, 'buildslave', 'VERSION')
+        open(fn, 'w').write(version)
 
 setup_args = {
     'name': "buildbot-slave",
@@ -51,7 +86,14 @@ setup_args = {
         "buildslave.test.util",
         "buildslave.test.unit",
     ],
-    'scripts': scripts
+    'scripts': scripts,
+    # mention data_files, even if empty, so install_data is called and
+    # VERSION gets copied
+    'data_files': [("buildslave", [])],
+    'cmdclass': {
+        'install_data': our_install_data,
+        'sdist': our_sdist
+        }
     }
 
 # set zip_safe to false to force Windows installs to always unpack eggs
@@ -65,17 +107,13 @@ try:
     # to the setup args.
     import setuptools #@UnusedImport
 except ImportError:
-    setup_args['scripts'] = [
-        'bin/buildslave'
-    ]
+    pass
 else:
     setup_args['install_requires'] = [
-        'twisted >= 2.0.0',
+        'twisted >= 8.0.0',
     ]
-    setup_args['entry_points'] = {
-        'console_scripts': [
-            'buildslave = buildslave.scripts.runner:run',
-        ],
-    }
+
+    if os.getenv('NO_INSTALL_REQS'):
+        setup_args['install_requires'] = None
 
 setup(**setup_args)

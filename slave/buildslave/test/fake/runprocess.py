@@ -1,3 +1,18 @@
+# This file is part of Buildbot.  Buildbot is free software: you can
+# redistribute it and/or modify it under the terms of the GNU General Public
+# License as published by the Free Software Foundation, version 2.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, write to the Free Software Foundation, Inc., 51
+# Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Copyright Buildbot Team Members
+
 from twisted.python import failure
 from twisted.internet import defer
 
@@ -119,6 +134,7 @@ class FakeRunProcess:
             self.stdout = ''
         if keepStderr:
             self.stderr = ''
+        finish_immediately = True
 
         # send the updates, accounting for the stdio parameters
         for upd in self._exp.status_updates:
@@ -132,14 +148,27 @@ class FakeRunProcess:
                     self.stderr += upd['stderr']
                 if not sendStderr:
                     del upd['stderr']
+            if 'wait' in upd:
+                finish_immediately = False
+                continue # don't send this update
             if not upd:
                 continue
             self._builder.sendUpdate(upd)
 
-        # and return an already-fired deferred
-        if self._exp.result[0] == 'e':
-            return defer.fail(self._exp.result[1])
-        else:
-            return defer.succeed(self._exp.result[1])
+        d = self.run_deferred = defer.Deferred()
 
-# TODO: test P4Sync
+        if finish_immediately:
+            self._finished()
+
+        return d
+
+    def _finished(self):
+        if self._exp.result[0] == 'e':
+            self.run_deferred.errback(self._exp.result[1])
+        else:
+            self.run_deferred.callback(self._exp.result[1])
+
+    def kill(self, reason):
+        self._builder.sendUpdate({'hdr' : 'killing'})
+        self._builder.sendUpdate({'rc' : -1})
+        self.run_deferred.callback(-1)

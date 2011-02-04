@@ -1,8 +1,21 @@
-import os
+# This file is part of Buildbot.  Buildbot is free software: you can
+# redistribute it and/or modify it under the terms of the GNU General Public
+# License as published by the Free Software Foundation, version 2.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, write to the Free Software Foundation, Inc., 51
+# Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Copyright Buildbot Team Members
+
 import textwrap
 
 from twisted.trial import unittest
-from twisted.python import runtime
 
 from buildslave.test.fake.runprocess import Expect
 from buildslave.test.util.sourcecommand import SourceCommandTestMixin
@@ -47,7 +60,7 @@ class TestBzr(SourceCommandTestMixin, unittest.TestCase):
                 sendRC=False, timeout=120, usePTY=False)
                 + 0,
             Expect(['path/to/bzr', 'version-info'],
-                os.path.join(self.basedir, 'source'),
+                self.basedir_source,
                 sendRC=False, usePTY=False, keepStdout=True,
                 environ=exp_environ, sendStderr=False, sendStdout=False)
                 + { 'stdout' : verinfo }

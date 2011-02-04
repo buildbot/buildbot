@@ -1,9 +1,26 @@
+# This file is part of Buildbot.  Buildbot is free software: you can
+# redistribute it and/or modify it under the terms of the GNU General Public
+# License as published by the Free Software Foundation, version 2.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, write to the Free Software Foundation, Inc., 51
+# Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Copyright Buildbot Team Members
+
 import os.path
+import socket
 import sys
+import signal
 
 from twisted.spread import pb
 from twisted.python import log
-from twisted.internet import reactor, defer
+from twisted.internet import error, reactor, task
 from twisted.application import service, internet
 from twisted.cred import credentials
 
@@ -12,27 +29,8 @@ from buildslave.util import now
 from buildslave.pbutil import ReconnectingPBClientFactory
 from buildslave.commands import registry, base
 
-class NoCommandRunning(pb.Error):
-    pass
-class WrongCommandRunning(pb.Error):
-    pass
 class UnknownCommand(pb.Error):
     pass
-
-class Master:
-    def __init__(self, host, port, username, password):
-        self.host = host
-        self.port = port
-        self.username = username
-        self.password = password
-
-class SlaveBuild:
-
-    """This is an object that can hold state from one step to another in the
-    same build. All SlaveCommands have access to it.
-    """
-    def __init__(self, builder):
-        self.builder = builder
 
 class SlaveBuilder(pb.Referenceable, service.Service):
 
@@ -48,9 +46,6 @@ class SlaveBuilder(pb.Referenceable, service.Service):
     # is severed.
     remote = None
 
-    # .build points to a SlaveBuild object, a new one for each build
-    build = None
-
     # .command points to a SlaveCommand instance, and is set while the step
     # is running. We use it to implement the stopBuild method.
     command = None
@@ -59,10 +54,9 @@ class SlaveBuilder(pb.Referenceable, service.Service):
     # when the step is started
     remoteStep = None
 
-    def __init__(self, name, not_really):
+    def __init__(self, name):
         #service.Service.__init__(self) # Service has no __init__ method
         self.setName(name)
-        self.not_really = not_really
 
     def __repr__(self):
         return "<SlaveBuilder '%s' at %d>" % (self.name, id(self))
@@ -90,36 +84,18 @@ class SlaveBuilder(pb.Referenceable, service.Service):
     def activity(self):
         bot = self.parent
         if bot:
-            buildslave = bot.parent
-            if buildslave:
-                bf = buildslave.bf
+            bslave = bot.parent
+            if bslave:
+                bf = bslave.bf
                 bf.activity()
 
     def remote_setMaster(self, remote):
         self.remote = remote
         self.remote.notifyOnDisconnect(self.lostRemote)
+
     def remote_print(self, message):
         log.msg("SlaveBuilder.remote_print(%s): message from master: %s" %
                 (self.name, message))
-        if message == "ping":
-            return self.remote_ping()
-
-    def remote_ping(self):
-        log.msg("SlaveBuilder.remote_ping(%s)" % self)
-        if self.bot and self.bot.parent:
-            debugOpts = self.bot.parent.debugOpts
-            if debugOpts.get("stallPings"):
-                log.msg(" debug_stallPings")
-                timeout, timers = debugOpts["stallPings"]
-                d = defer.Deferred()
-                t = reactor.callLater(timeout, d.callback, None)
-                timers.append(t)
-                return d
-            if debugOpts.get("failPingOnce"):
-                log.msg(" debug_failPingOnce")
-                class FailPingError(pb.Error): pass
-                del debugOpts['failPingOnce']
-                raise FailPingError("debug_failPingOnce means we should fail")
 
     def lostRemote(self, remote):
         log.msg("lost remote")
@@ -134,11 +110,9 @@ class SlaveBuilder(pb.Referenceable, service.Service):
     # the following are Commands that can be invoked by the master-side
     # Builder
     def remote_startBuild(self):
-        """This is invoked before the first step of any new build is run. It
-        creates a new SlaveBuild object, which holds slave-side state from
-        one step to the next."""
-        self.build = SlaveBuild(self)
-        log.msg("%s.startBuild" % self)
+        """This is invoked before the first step of any new build is run.  It
+        doesn't do much, but masters call it so it's still here."""
+        pass
 
     def remote_startCommand(self, stepref, stepId, command, args):
         """
@@ -223,7 +197,7 @@ class SlaveBuilder(pb.Referenceable, service.Service):
 
     def _ackFailed(self, why, where):
         log.msg("SlaveBuilder._ackFailed:", where)
-        #log.err(why) # we don't really care
+        log.err(why) # we don't really care
 
 
     # this is fired by the Deferred attached to each Command
@@ -251,7 +225,8 @@ class SlaveBuilder(pb.Referenceable, service.Service):
 
 
     def remote_shutdown(self):
-        print "slave shutting down on command from master"
+        log.msg("slave shutting down on command from master")
+        log.msg("NOTE: master is using deprecated slavebuilder.shutdown method")
         reactor.stop()
 
 
@@ -260,20 +235,16 @@ class Bot(pb.Referenceable, service.MultiService):
     usePTY = None
     name = "bot"
 
-    def __init__(self, basedir, usePTY, not_really=0, unicode_encoding=None):
+    def __init__(self, basedir, usePTY, unicode_encoding=None):
         service.MultiService.__init__(self)
         self.basedir = basedir
         self.usePTY = usePTY
-        self.not_really = not_really
         self.unicode_encoding = unicode_encoding or sys.getfilesystemencoding() or 'ascii'
         self.builders = {}
 
     def startService(self):
         assert os.path.isdir(self.basedir)
         service.MultiService.startService(self)
-
-    def remote_getDirs(self):
-        return filter(lambda d: os.path.isdir(d), os.listdir(self.basedir))
 
     def remote_getCommands(self):
         commands = dict([
@@ -294,7 +265,7 @@ class Bot(pb.Referenceable, service.MultiService):
                             % (name, b.builddir, builddir))
                     b.setBuilddir(builddir)
             else:
-                b = SlaveBuilder(name, self.not_really)
+                b = SlaveBuilder(name)
                 b.usePTY = self.usePTY
                 b.unicode_encoding = self.unicode_encoding
                 b.setServiceParent(self)
@@ -308,7 +279,7 @@ class Bot(pb.Referenceable, service.MultiService):
                 del(self.builders[name])
 
         for d in os.listdir(self.basedir):
-            if os.path.isdir(d):
+            if os.path.isdir(os.path.join(self.basedir, d)):
                 if d not in wanted_dirs:
                     log.msg("I have a leftover directory '%s' that is not "
                             "being used by the buildmaster: you can delete "
@@ -328,19 +299,27 @@ class Bot(pb.Referenceable, service.MultiService):
 
         files = {}
         basedir = os.path.join(self.basedir, "info")
-        if not os.path.isdir(basedir):
-            return files
-        for f in os.listdir(basedir):
-            filename = os.path.join(basedir, f)
-            if os.path.isfile(filename):
-                files[f] = open(filename, "r").read()
+        if os.path.isdir(basedir):
+            for f in os.listdir(basedir):
+                filename = os.path.join(basedir, f)
+                if os.path.isfile(filename):
+                    files[f] = open(filename, "r").read()
+        files['environ'] = os.environ.copy()
+        files['system'] = os.name
+        files['basedir'] = self.basedir
         return files
 
     def remote_getVersion(self):
         """Send our version back to the Master"""
         return buildslave.version
 
-
+    def remote_shutdown(self):
+        log.msg("slave shutting down on command from master")
+        # there's no good way to learn that the PB response has been delivered,
+        # so we'll just wait a bit, in hopes the master hears back.  Masters are
+        # resilinet to slaves dropping their connections, so there is no harm
+        # if this timeout is too short.
+        reactor.callLater(0.2, reactor.stop)
 
 class BotFactory(ReconnectingPBClientFactory):
     # 'keepaliveInterval' serves two purposes. The first is to keep the
@@ -370,17 +349,23 @@ class BotFactory(ReconnectingPBClientFactory):
     unsafeTracebacks = 1
     perspective = None
 
-    def __init__(self, keepaliveInterval, keepaliveTimeout, maxDelay):
+    def __init__(self, buildmaster_host, port, keepaliveInterval, keepaliveTimeout, maxDelay):
         ReconnectingPBClientFactory.__init__(self)
         self.maxDelay = maxDelay
         self.keepaliveInterval = keepaliveInterval
         self.keepaliveTimeout = keepaliveTimeout
+        # NOTE: this class does not actually make the TCP connections - this information is
+        # only here to print useful error messages
+        self.buildmaster_host = buildmaster_host
+        self.port = port
 
     def startedConnecting(self, connector):
+        log.msg("Connecting to %s:%s" % (self.buildmaster_host, self.port))
         ReconnectingPBClientFactory.startedConnecting(self, connector)
         self.connector = connector
 
     def gotPerspective(self, perspective):
+        log.msg("Connected to %s:%s; slave is ready" % (self.buildmaster_host, self.port))
         ReconnectingPBClientFactory.gotPerspective(self, perspective)
         self.perspective = perspective
         try:
@@ -397,10 +382,15 @@ class BotFactory(ReconnectingPBClientFactory):
 
     def clientConnectionFailed(self, connector, reason):
         self.connector = None
+        why = reason
+        if reason.check(error.ConnectionRefusedError):
+            why = "Connection Refused"
+        log.msg("Connection to %s:%s failed: %s" % (self.buildmaster_host, self.port, why))
         ReconnectingPBClientFactory.clientConnectionFailed(self,
                                                            connector, reason)
 
     def clientConnectionLost(self, connector, reason):
+        log.msg("Lost connection to %s:%s" % (self.buildmaster_host, self.port))
         self.connector = None
         self.stopTimers()
         self.perspective = None
@@ -460,50 +450,91 @@ class BotFactory(ReconnectingPBClientFactory):
 
 
 class BuildSlave(service.MultiService):
-    botClass = Bot
-
-    # debugOpts is a dictionary used during unit tests.
-
-    # debugOpts['stallPings'] can be set to a tuple of (timeout, []). Any
-    # calls to remote_print will stall for 'timeout' seconds before
-    # returning. The DelayedCalls used to implement this are stashed in the
-    # list so they can be cancelled later.
-
-    # debugOpts['failPingOnce'] can be set to True to make the slaveping fail
-    # exactly once.
-
     def __init__(self, buildmaster_host, port, name, passwd, basedir,
                  keepalive, usePTY, keepaliveTimeout=30, umask=None,
-                 maxdelay=300, debugOpts={}, unicode_encoding=None):
+                 maxdelay=300, unicode_encoding=None, allow_shutdown=None):
         log.msg("Creating BuildSlave -- version: %s" % buildslave.version)
+        self.recordHostname(basedir)
         service.MultiService.__init__(self)
-        self.debugOpts = debugOpts.copy()
-        bot = self.botClass(basedir, usePTY, unicode_encoding=unicode_encoding)
+        bot = Bot(basedir, usePTY, unicode_encoding=unicode_encoding)
         bot.setServiceParent(self)
         self.bot = bot
         if keepalive == 0:
             keepalive = None
         self.umask = umask
-        bf = self.bf = BotFactory(keepalive, keepaliveTimeout, maxdelay)
+
+        if allow_shutdown == 'signal':
+            if not hasattr(signal, 'SIGHUP'):
+                raise ValueError("Can't install signal handler")
+        elif allow_shutdown == 'file':
+            self.shutdown_file = os.path.join(basedir, 'shutdown.stamp')
+            self.shutdown_mtime = 0
+
+        self.allow_shutdown = allow_shutdown
+        bf = self.bf = BotFactory(buildmaster_host, port, keepalive, keepaliveTimeout, maxdelay)
         bf.startLogin(credentials.UsernamePassword(name, passwd), client=bot)
         self.connection = c = internet.TCPClient(buildmaster_host, port, bf)
         c.setServiceParent(self)
 
-    def waitUntilDisconnected(self):
-        # utility method for testing. Returns a Deferred that will fire when
-        # we lose the connection to the master.
-        if not self.bf.perspective:
-            return defer.succeed(None)
-        d = defer.Deferred()
-        self.bf.perspective.notifyOnDisconnect(lambda res: d.callback(None))
-        return d
+    def recordHostname(self, basedir):
+        "Record my hostname in twistd.hostname, for user convenience"
+        log.msg("recording hostname in twistd.hostname")
+        filename = os.path.join(basedir, "twistd.hostname")
+        try:
+            open(filename, "w").write("%s\n" % socket.getfqdn())
+        except:
+            log.msg("failed - ignoring")
 
     def startService(self):
         if self.umask is not None:
             os.umask(self.umask)
         service.MultiService.startService(self)
 
+        if self.allow_shutdown == 'signal':
+            log.msg("Setting up SIGHUP handler to initiate shutdown")
+            signal.signal(signal.SIGHUP, self._handleSIGHUP)
+        elif self.allow_shutdown == 'file':
+            log.msg("Watching %s's mtime to initiate shutdown" % self.shutdown_file)
+            if os.path.exists(self.shutdown_file):
+                self.shutdown_mtime = os.path.getmtime(self.shutdown_file)
+            l = task.LoopingCall(self._checkShutdownFile)
+            l.start(interval=10)
+
     def stopService(self):
         self.bf.continueTrying = 0
         self.bf.stopTrying()
         service.MultiService.stopService(self)
+
+    def _handleSIGHUP(self, *args):
+        log.msg("Initiating shutdown because we got SIGHUP")
+        return self.gracefulShutdown()
+
+    def _checkShutdownFile(self):
+        if os.path.exists(self.shutdown_file) and \
+                os.path.getmtime(self.shutdown_file) > self.shutdown_mtime:
+            log.msg("Initiating shutdown because %s was touched" % self.shutdown_file)
+            self.gracefulShutdown()
+
+            # In case the shutdown fails, update our mtime so we don't keep
+            # trying to shutdown over and over again.
+            # We do want to be able to try again later if the master is
+            # restarted, so we'll keep monitoring the mtime.
+            self.shutdown_mtime = os.path.getmtime(self.shutdown_file)
+
+    def gracefulShutdown(self):
+        """Start shutting down"""
+        if not self.bf.perspective:
+            log.msg("No active connection, shutting down NOW")
+            reactor.stop()
+
+        log.msg("Telling the master we want to shutdown after any running builds are finished")
+        d = self.bf.perspective.callRemote("shutdown")
+        def _shutdownfailed(err):
+            if err.check(AttributeError):
+                log.msg("Master does not support slave initiated shutdown.  Upgrade master to 0.8.3 or later to use this feature.")
+            else:
+                log.msg('callRemote("shutdown") failed')
+                log.err(err)
+
+        d.addErrback(_shutdownfailed)
+        return d

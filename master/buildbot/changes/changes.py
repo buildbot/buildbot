@@ -1,4 +1,19 @@
-import sys, os, time
+# This file is part of Buildbot.  Buildbot is free software: you can
+# redistribute it and/or modify it under the terms of the GNU General Public
+# License as published by the Free Software Foundation, version 2.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, write to the Free Software Foundation, Inc., 51
+# Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Copyright Buildbot Team Members
+
+import os, time
 from cPickle import dump
 
 from zope.interface import implements
@@ -9,30 +24,9 @@ from buildbot import interfaces, util
 from buildbot.process.properties import Properties
 
 class Change:
-    """I represent a single change to the source tree. This may involve
-    several files, but they are all changed by the same person, and there is
-    a change comment for the group as a whole.
-
-    If the version control system supports sequential repository- (or
-    branch-) wide change numbers (like SVN, P4, and Bzr), then revision=
-    should be set to that number. The highest such number will be used at
-    checkout time to get the correct set of files.
-
-    If it does not (like CVS), when= should be set to the timestamp (seconds
-    since epoch, as returned by time.time()) when the change was made. when=
-    will be filled in for you (to the current time) if you omit it, which is
-    suitable for ChangeSources which have no way of getting more accurate
-    timestamps.
-
-    The revision= and branch= values must be ASCII bytestrings, since they
-    will eventually be used in a ShellCommand and passed to os.exec(), which
-    requires bytestrings. These values will also be stored in a database,
-    possibly as unicode, so they must be safely convertable back and forth.
-    This restriction may be relaxed in the future.
-
-    Changes should be submitted to ChangeMaster.addChange() in
-    chronologically increasing order. Out-of-order changes will probably
-    cause the web status displays to be corrupted."""
+    """I represent a single change to the source tree. This may involve several
+    files, but they are all changed by the same person, and there is a change
+    comment for the group as a whole."""
 
     implements(interfaces.IStatusEvent)
 
@@ -57,9 +51,16 @@ class Change:
             return unicode(x)
 
         self.revision = none_or_unicode(revision)
+        now = util.now()
         if when is None:
-            when = util.now()
-        self.when = when
+            self.when = now
+        elif when > now:
+            # this happens when the committing system has an incorrect clock, for example.
+            # handle it gracefully
+            log.msg("received a Change with when > now; assuming the change happened now")
+            self.when = now
+        else:
+            self.when = when
         self.branch = none_or_unicode(branch)
         self.category = none_or_unicode(category)
         self.revlink = revlink
@@ -79,6 +80,12 @@ class Change:
             self.properties = Properties()
         if not hasattr(self, 'revlink'):
             self.revlink = ""
+
+    def __str__(self):
+        return (u"Change(who=%r, files=%r, comments=%r, revision=%r, " +
+                u"when=%r, category=%r, project=%r, repository=%r)") % (
+                self.who, self.files, self.comments, self.revision,
+                self.when, self.category, self.project, self.repository)
 
     def asText(self):
         data = ""
@@ -162,7 +169,7 @@ class Change:
         return data
 
 
-class ChangeMaster:
+class ChangeMaster: # pragma: no cover
     # this is a stub, retained to allow the "buildbot upgrade-master" tool to
     # read old changes.pck pickle files and convert their contents into the
     # new database format. This is only instantiated by that tool, or by
@@ -173,11 +180,6 @@ class ChangeMaster:
         self.changes = []
         # self.basedir must be filled in by the parent
         self.nextNumber = 1
-
-    def addChange(self, change):
-        change.number = self.nextNumber
-        self.nextNumber += 1
-        self.changes.append(change)
 
     def saveYourself(self):
         filename = os.path.join(self.basedir, "changes.pck")
@@ -197,7 +199,7 @@ class ChangeMaster:
     # bytestrings in an old changes.pck into unicode strings
     def recode_changes(self, old_encoding, quiet=False):
         """Processes the list of changes, with the change attributes re-encoded
-        as UTF-8 bytestrings"""
+        unicode objects"""
         nconvert = 0
         for c in self.changes:
             # give revision special handling, in case it is an integer
@@ -213,10 +215,26 @@ class ChangeMaster:
                     except UnicodeDecodeError:
                         raise UnicodeError("Error decoding %s of change #%s as %s:\n%r" %
                                         (attr, c.number, old_encoding, a))
+
+            # filenames are a special case, but in general they'll have the same encoding
+            # as everything else on a system.  If not, well, hack this script to do your
+            # import!
+            newfiles = []
+            for filename in util.flatten(c.files):
+                if isinstance(filename, str):
+                    try:
+                        filename = filename.decode(old_encoding)
+                        nconvert += 1
+                    except UnicodeDecodeError:
+                        raise UnicodeError("Error decoding filename '%s' of change #%s as %s:\n%r" %
+                                        (filename.decode('ascii', 'replace'),
+                                         c.number, old_encoding, a))
+                newfiles.append(filename)
+            c.files = newfiles
         if not quiet:
             print "converted %d strings" % nconvert
 
-class OldChangeMaster(ChangeMaster):
+class OldChangeMaster(ChangeMaster): # pragma: no cover
     # this is a reminder that the ChangeMaster class is old
     pass
 # vim: set ts=4 sts=4 sw=4 et:

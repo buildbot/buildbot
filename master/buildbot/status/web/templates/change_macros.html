@@ -59,8 +59,8 @@
 <table class="info">
   {% for p in c.properties %}
   <tr class="{{ loop.cycle('alt') }}">
-    <td class="left">{{ p[0]|capitalize }}</td>
-    <td>{{ p[1] }}</td>
+    <td class="left">{{ p[0]|capitalize|e }}</td>
+    <td>{{ p[1]|e }}</td>
   </tr>
   {% endfor %}
 </table>

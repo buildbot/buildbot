@@ -1,11 +1,26 @@
+# This file is part of Buildbot.  Buildbot is free software: you can
+# redistribute it and/or modify it under the terms of the GNU General Public
+# License as published by the Free Software Foundation, version 2.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, write to the Free Software Foundation, Inc., 51
+# Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Copyright Buildbot Team Members
 
-import os, signal, types, re, traceback
-from stat import ST_CTIME, ST_MTIME, ST_SIZE
+
+import os
+from base64 import b64encode
 import sys
 import shutil
 
 from zope.interface import implements
-from twisted.internet import reactor, defer, task
+from twisted.internet import reactor, defer
 from twisted.python import log, failure, runtime
 
 from buildslave.interfaces import ISlaveCommand
@@ -16,7 +31,7 @@ from buildslave.commands import utils
 # this used to be a CVS $-style "Revision" auto-updated keyword, but since I
 # moved to Darcs as the primary repository, this is updated manually each
 # time this file is changed. The last cvs_ver that was here was 1.51 .
-command_version = "2.9"
+command_version = "2.11"
 
 # version history:
 #  >=1.17: commands are interruptable
@@ -43,6 +58,7 @@ command_version = "2.9"
 #  >= 2.8: added username and password args to SVN class
 #  >= 2.9: add depth arg to SVN class
 #  >= 2.10: CVS can handle 'extra_options' and 'export_options'
+#  >= 2.11: Arch, Bazaar, and Monotone removed
 
 class Command:
     implements(ISlaveCommand)
@@ -229,8 +245,22 @@ class SourceBaseCommand(Command):
         self.timeout = args.get('timeout', 120)
         self.maxTime = args.get('maxTime', None)
         self.retry = args.get('retry')
+        self._commandPaths = {}
         # VC-specific subclasses should override this to extract more args.
         # Make sure to upcall!
+
+    def getCommand(self, name):
+        """Wrapper around utils.getCommand that will output a resonable
+        error message and raise AbandonChain if the command cannot be
+        found"""
+        if name not in self._commandPaths:
+            try:
+                self._commandPaths[name] = utils.getCommand(name)
+            except RuntimeError:
+                self.sendStatus({'stderr' : "could not find '%s'\n" % name})
+                self.sendStatus({'stderr' : "PATH is '%s'\n" % os.environ.get('PATH', '')})
+                raise AbandonChain(-1)
+        return self._commandPaths[name]
 
     def start(self):
         self.sendStatus({'header': "starting " + self.header + "\n"})
@@ -241,9 +271,20 @@ class SourceBaseCommand(Command):
             self.srcdir = "source" # hardwired directory name, sorry
         else:
             self.srcdir = self.workdir
+
         self.sourcedatafile = os.path.join(self.builder.basedir,
-                                           self.srcdir,
-                                           ".buildbot-sourcedata")
+            ".buildbot-sourcedata-" + b64encode(self.srcdir))
+
+        # upgrade older versions to the new sourcedata location
+        old_sd_path = os.path.join(self.builder.basedir, self.srcdir, ".buildbot-sourcedata")
+        if os.path.exists(old_sd_path) and not os.path.exists(self.sourcedatafile):
+            os.rename(old_sd_path, self.sourcedatafile)
+
+        # also upgrade versions that didn't include the encoded version of the
+        # source directory
+        old_sd_path = os.path.join(self.builder.basedir, ".buildbot-sourcedata")
+        if os.path.exists(old_sd_path) and not os.path.exists(self.sourcedatafile):
+            os.rename(old_sd_path, self.sourcedatafile)
 
         d = defer.succeed(None)
         self.maybeClobber(d)
@@ -346,6 +387,9 @@ class SourceBaseCommand(Command):
             return rc
         if self.interrupted:
             raise AbandonChain(1)
+        # Let VCS subclasses have an opportunity to handle
+        # unrecoverable errors without having to clobber the repo
+        self.maybeNotDoVCFallback(rc)
         msg = "update failed, clobbering and trying again"
         self.sendStatus({'header': msg + "\n"})
         log.msg(msg)
@@ -361,6 +405,14 @@ class SourceBaseCommand(Command):
         d.addBoth(self.maybeDoVCRetry)
         d.addCallback(self._abandonOnFailure)
         return d
+
+    def maybeNotDoVCFallback(self, rc):
+        """Override this in a subclass if you want to detect unrecoverable
+        checkout errors where clobbering the repo wouldn't help, and stop
+        the current VC chain before it clobbers the repo for future builds.
+
+        Use 'raise AbandonChain' to pass up a halt if you do detect such."""
+        pass
 
     def maybeDoVCRetry(self, res):
         """We get here somewhere after a VC chain has finished. res could
@@ -508,13 +560,15 @@ class SourceBaseCommand(Command):
             '--remove-empty-files',
             '--force',
             '--forward',
+            '-i', '.buildbot-diff',
         ]
         dir = os.path.join(self.builder.basedir, self.workdir)
         # Mark the directory so we don't try to update it later, or at least try
         # to revert first.
-        marker = open(os.path.join(dir, ".buildbot-patched"), "w")
-        marker.write("patched\n")
-        marker.close()
+        open(os.path.join(dir, ".buildbot-patched"), "w").write("patched\n")
+
+        # write the diff to a file, for reading later
+        open(os.path.join(dir, ".buildbot-diff"), "w").write(diff)
 
         # Update 'dir' with the 'root' option. Make sure it is a subdirectory
         # of dir.
@@ -526,9 +580,19 @@ class SourceBaseCommand(Command):
         # now apply the patch
         c = runprocess.RunProcess(self.builder, command, dir,
                          sendRC=False, timeout=self.timeout,
-                         maxTime=self.maxTime, initialStdin=diff, usePTY=False)
+                         maxTime=self.maxTime, usePTY=False)
         self.command = c
         d = c.start()
+        
+        # clean up the temp file
+        def cleanup(x):
+            try:
+                os.unlink(os.path.join(dir, ".buildbot-diff"))
+            except:
+                pass
+            return x
+        d.addBoth(cleanup)
+
         d.addCallback(self._abandonOnFailure)
         return d
 

@@ -1,3 +1,18 @@
+# This file is part of Buildbot.  Buildbot is free software: you can
+# redistribute it and/or modify it under the terms of the GNU General Public
+# License as published by the Free Software Foundation, version 2.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, write to the Free Software Foundation, Inc., 51
+# Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Copyright Buildbot Team Members
+
 
 import urlparse, urllib, time, re
 import os, cgi, sys, locale
@@ -51,15 +66,19 @@ Check the names for valid strings, and return None if a problem is found.
 Return a new Properties object containing each property found in req.
 """
     properties = Properties()
-    for i in (1,2,3):
+    i = 1
+    while True:
         pname = req.args.get("property%dname" % i, [""])[0]
         pvalue = req.args.get("property%dvalue" % i, [""])[0]
-        if pname and pvalue:
-            if not re.match(r'^[\w\.\-\/\~:]*$', pname) \
-                    or not re.match(r'^[\w\.\-\/\~:]*$', pvalue):
-                log.msg("bad property name='%s', value='%s'" % (pname, pvalue))
-                return None
-            properties.setProperty(pname, pvalue, "Force Build Form")
+        if not pname:
+            break
+        if not re.match(r'^[\w\.\-\/\~:]*$', pname) \
+                or not re.match(r'^[\w\.\-\/\~:]*$', pvalue):
+            log.msg("bad property name='%s', value='%s'" % (pname, pvalue))
+            return None
+        properties.setProperty(pname, pvalue, "Force Build Form")
+        i = i + 1
+
     return properties
 
 def build_get_class(b):
@@ -98,7 +117,7 @@ def path_to_root(request):
     return root
 
 def path_to_authfail(request):
-    return path_to_root(request) + "/authfail"
+    return path_to_root(request) + "authfail"
 
 def path_to_builder(request, builderstatus):
     return (path_to_root(request) +
@@ -180,6 +199,13 @@ class ContextMixin(object):
     def getTitle(self, request):
         return self.title
 
+    def getAuthz(self, request):
+        return request.site.buildbot_service.authz
+
+    def getBuildmaster(self, request):
+        return request.site.buildbot_service.master
+
+
 class HtmlResource(resource.Resource, ContextMixin):
     # this is a cheap sort of template thingy
     contentType = "text/html; charset=utf-8"
@@ -190,6 +216,24 @@ class HtmlResource(resource.Resource, ContextMixin):
         if self.addSlash and path == "" and len(request.postpath) == 0:
             return self
         return resource.Resource.getChild(self, path, request)
+
+
+    def content(self, req, context):
+        """
+        Generate content using the standard layout and the result of the C{body}
+        method.
+
+        This is suitable for the case where a resource just wants to generate
+        the body of a page.  It depends on another method, C{body}, being
+        defined to accept the request object and return a C{str}.  C{render}
+        will call this method and to generate the response body.
+        """
+        body = self.body(req)
+        context['content'] = body
+        template = req.site.buildbot_service.templates.get_template(
+            "empty.html")
+        return template.render(**context)
+
 
     def render(self, request):
         # tell the WebStatus about the HTTPChannel that got opened, so they
@@ -235,12 +279,6 @@ class HtmlResource(resource.Resource, ContextMixin):
             request.setHeader("content-length", len(data))
             return ''
         return data
-
-    def getAuthz(self, request):
-        return request.site.buildbot_service.authz
-
-    def getBuildmaster(self, request):
-        return request.site.buildbot_service.master
 
 
 class StaticHTML(HtmlResource):
@@ -346,6 +384,7 @@ class BuildLineMixin:
             rev = "??"
         rev = str(rev)
         css_class = css_classes.get(results, "")
+        repo = build.getSourceStamp().repository
 
         if type(text) == list:
             text = " ".join(text)            
@@ -358,6 +397,7 @@ class BuildLineMixin:
                   'buildurl': path_to_build(req, build),
                   'builderurl': path_to_builder(req, build.getBuilder()),
                   'rev': rev,
+                  'rev_repo' : repo,
                   'time': time.strftime(self.LINE_TIME_FORMAT,
                                         time.localtime(build.getTimes()[0])),
                   'text': text,
@@ -591,17 +631,37 @@ def changelinkfilter(changelink):
     def replace_from_tuple(t):
         search, url_replace = t[:2]
         if len(t) == 3:
-            title_replace = ' title="%s"' % t[2]
+            title_replace = t[2]
         else:
             title_replace = ''
         
         search_re = re.compile(search)
-        link_replace_re = jinja2.Markup(r'<a href="%s"%s>\g<0></a>' % (url_replace, title_replace))        
+
+        def replacement_unmatched(text):
+            return jinja2.escape(text)
+        def replacement_matched(mo):
+            # expand things *after* application of the regular expressions
+            url = jinja2.escape(mo.expand(url_replace))
+            title = jinja2.escape(mo.expand(title_replace))
+            body = jinja2.escape(mo.group())
+            if title:
+                return '<a href="%s" title="%s">%s</a>' % (url, title, body)
+            else:
+                return '<a href="%s">%s</a>' % (url, body)
 
         def filter(text, project):
-            text = jinja2.escape(text)
-            html = search_re.sub(link_replace_re, text)
-            return html
+            # now, we need to split the string into matched and unmatched portions,
+            # quoting the unmatched portions directly and quoting the components of
+            # the 'a' element for the matched portions.  We can't use re.split here,
+            # because the user-supplied patterns may have multiple groups.
+            html = []
+            last_idx = 0
+            for mo in search_re.finditer(text):
+                html.append(replacement_unmatched(text[last_idx:mo.start()]))
+                html.append(replacement_matched(mo))
+                last_idx = mo.end()
+            html.append(replacement_unmatched(text[last_idx:]))
+            return jinja2.Markup(''.join(html))
 
         return filter
     
@@ -617,7 +677,7 @@ def changelinkfilter(changelink):
             if t:
                 return replace_from_tuple(t)(text, project)
             else:
-                return jinja2.escape(text)
+                return cgi.escape(text)
             
         return dict_filter
         

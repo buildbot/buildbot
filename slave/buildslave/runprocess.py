@@ -1,9 +1,23 @@
+# This file is part of Buildbot.  Buildbot is free software: you can
+# redistribute it and/or modify it under the terms of the GNU General Public
+# License as published by the Free Software Foundation, version 2.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, write to the Free Software Foundation, Inc., 51
+# Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Copyright Buildbot Team Members
+
 """
 Support for running 'shell commands'
 """
 
 import os
-import sys
 import signal
 import types
 import re
@@ -12,10 +26,32 @@ import stat
 from collections import deque
 
 from twisted.python import runtime, log
-from twisted.internet import reactor, defer, protocol, task
+from twisted.internet import reactor, defer, protocol, task, error
 
 from buildslave import util
 from buildslave.exceptions import AbandonChain
+
+def shell_quote(cmd_list):
+    # attempt to quote cmd_list such that a shell will properly re-interpret
+    # it.  The pipes module is only available on UNIX, and Windows "shell"
+    # quoting is indescribably convoluted - so much so that it's not clear it's
+    # reversible.  Also, the quote function is undocumented (although it looks
+    # like it will be documentd soon: http://bugs.python.org/issue9723).
+    # Finally, it has a nasty bug in some versions where an empty string is not
+    # quoted.
+    #
+    # So:
+    #  - use pipes.quote on UNIX, handling '' as a special case
+    #  - use Python's repr() on Windows, as a best effort
+    if runtime.platformType == 'win32':
+        return " ".join([ `e` for e in cmd_list ])
+    else:
+        import pipes
+        def quote(e):
+            if not e:
+                return '""'
+            return pipes.quote(e)
+        return " ".join([ quote(e) for e in cmd_list ])
 
 class LogFileWatcher:
     POLL_INTERVAL = 2
@@ -92,6 +128,7 @@ class RunProcessPP(protocol.ProcessProtocol):
         self.command = command
         self.pending_stdin = ""
         self.stdin_finished = False
+        self.killed = False
 
     def writeStdin(self, data):
         assert not self.stdin_finished
@@ -151,6 +188,17 @@ class RunProcessPP(protocol.ProcessProtocol):
         # requires twisted >= 1.0.4 to overcome a bug in process.py
         sig = status_object.value.signal
         rc = status_object.value.exitCode
+
+        # sometimes, even when we kill a process, GetExitCodeProcess will still return
+        # a zero exit status.  So we force it.  See
+        # http://stackoverflow.com/questions/2061735/42-passed-to-terminateprocess-sometimes-getexitcodeprocess-returns-0
+        if self.killed and rc == 0:
+            log.msg("process was killed, but exited with status 0; faking a failure")
+            # windows returns '1' even for signalled failsres, while POSIX returns -1
+            if runtime.platformType == 'win32':
+                rc = 1
+            else:
+                rc = -1
         self.command.finished(sig, rc)
 
 class RunProcess:
@@ -363,7 +411,8 @@ class RunProcess:
                 argv += list(self.command)
             else:
                 argv = self.command
-            display = " ".join(self.fake_command)
+            # Attempt to format this for use by a shell, although the process isn't perfect
+            display = shell_quote(self.fake_command)
 
         # $PWD usually indicates the current directory; spawnProcess may not
         # update this value, though, so we set it explicitly here.  This causes
@@ -373,17 +422,23 @@ class RunProcess:
 
         # self.stdin is handled in RunProcessPP.connectionMade
 
-        # first header line is the command in plain text, argv joined with
-        # spaces. You should be able to cut-and-paste this into a shell to
-        # obtain the same results. If there are spaces in the arguments, too
-        # bad.
         log.msg(" " + display)
         self._addToBuffers('header', display+"\n")
 
         # then comes the secondary information
         msg = " in dir %s" % (self.workdir,)
         if self.timeout:
-            msg += " (timeout %d secs)" % (self.timeout,)
+            if self.timeout == 1:
+                unit = "sec"
+            else:
+                unit = "secs"
+            msg += " (timeout %d %s)" % (self.timeout, unit)
+        if self.maxTime:
+            if self.maxTime == 1:
+                unit = "sec"
+            else:
+                unit = "secs"
+            msg += " (maxTime %d %s)" % (self.maxTime, unit)
         log.msg(" " + msg)
         self._addToBuffers('header', msg+"\n")
 
@@ -670,6 +725,10 @@ class RunProcess:
         log.msg(msg)
         self.sendStatus({'header': "\n" + msg + "\n"})
 
+        # let the PP know that we are killing it, so that it can ensure that
+        # the exit status comes out right
+        self.pp.killed = True
+
         hit = 0
         if runtime.platformType == "posix":
             try:
@@ -715,6 +774,9 @@ class RunProcess:
                     hit = 1
             except OSError:
                 # could be no-such-process, because they finished very recently
+                pass
+            except error.ProcessExitedAlready:
+                # Twisted thinks the process has already exited
                 pass
         if not hit:
             log.msg("signalProcess/os.kill failed both times")

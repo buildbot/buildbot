@@ -1,8 +1,22 @@
+# This file is part of Buildbot.  Buildbot is free software: you can
+# redistribute it and/or modify it under the terms of the GNU General Public
+# License as published by the Free Software Foundation, version 2.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, write to the Free Software Foundation, Inc., 51
+# Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Copyright Buildbot Team Members
+
 import os
 
 from buildslave.commands.base import SourceBaseCommand
 from buildslave import runprocess
-from buildslave.commands import utils
 
 
 class Darcs(SourceBaseCommand):
@@ -16,7 +30,6 @@ class Darcs(SourceBaseCommand):
 
     def setup(self, args):
         SourceBaseCommand.setup(self, args)
-        self.vcexe = utils.getCommand("darcs")
         self.repourl = args['repourl']
         self.sourcedata = "%s\n" % self.repourl
         self.revision = self.args.get('revision')
@@ -29,10 +42,11 @@ class Darcs(SourceBaseCommand):
                                            self.srcdir, "_darcs")))
 
     def doVCUpdate(self):
+        darcs = self.getCommand('darcs')
         assert not self.revision
         # update: possible for mode in ('copy', 'update')
         d = os.path.join(self.builder.basedir, self.srcdir)
-        command = [self.vcexe, 'pull', '--all', '--verbose']
+        command = [darcs, 'pull', '--all', '--verbose']
         c = runprocess.RunProcess(self.builder, command, d,
                          sendRC=False, timeout=self.timeout,
                          maxTime=self.maxTime, usePTY=False)
@@ -40,9 +54,10 @@ class Darcs(SourceBaseCommand):
         return c.start()
 
     def doVCFull(self):
+        darcs = self.getCommand('darcs')
         # checkout or export
         d = self.builder.basedir
-        command = [self.vcexe, 'get', '--verbose', '--partial',
+        command = [darcs, 'get', '--verbose', '--partial',
                    '--repo-name', self.srcdir]
         if self.revision:
             # write the context to a file
@@ -69,8 +84,10 @@ class Darcs(SourceBaseCommand):
         return res
 
     def parseGotRevision(self):
+        darcs = self.getCommand('darcs')
+
         # we use 'darcs context' to find out what we wound up with
-        command = [self.vcexe, "changes", "--context"]
+        command = [darcs, "changes", "--context"]
         c = runprocess.RunProcess(self.builder, command,
                          os.path.join(self.builder.basedir, self.srcdir),
                          environ=self.env, timeout=self.timeout,

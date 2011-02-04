@@ -1,4 +1,18 @@
-# -*- test-case-name: buildbot.test.test_sourcestamp -*-
+# This file is part of Buildbot.  Buildbot is free software: you can
+# redistribute it and/or modify it under the terms of the GNU General Public
+# License as published by the Free Software Foundation, version 2.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, write to the Free Software Foundation, Inc., 51
+# Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Copyright Buildbot Team Members
+
 
 from zope.interface import implements
 from twisted.persisted import styles
@@ -25,6 +39,7 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
     """
 
     persistenceVersion = 2
+    persistenceForgets = ( 'wasUpgraded', )
 
     # all six of these are publically visible attributes
     branch = None
@@ -53,9 +68,9 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
             # set branch and revision to most recent change
             self.branch = changes[-1].branch
             revision = changes[-1].revision
-            if not self.project:
+            if not self.project and hasattr(changes[-1], 'project'):
                 self.project = changes[-1].project
-            if not self.repository:
+            if not self.repository and hasattr(changes[-1], 'repository'):
                 self.repository = changes[-1].repository
 
         if revision is not None:
@@ -94,16 +109,15 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
 
     def mergeWith(self, others):
         """Generate a SourceStamp for the merger of me and all the other
-        BuildRequests. This is called by a Build when it starts, to figure
+        SourceStamps. This is called by a Build when it starts, to figure
         out what its sourceStamp should be."""
 
         # either we're all building the same thing (changes==None), or we're
         # all building changes (which can be merged)
         changes = []
         changes.extend(self.changes)
-        for req in others:
-            assert self.canBeMergedWith(req) # should have been checked already
-            changes.extend(req.changes)
+        for ss in others:
+            changes.extend(ss.changes)
         newsource = SourceStamp(branch=self.branch,
                                 revision=self.revision,
                                 patch=self.patch,
@@ -115,7 +129,7 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
     def getAbsoluteSourceStamp(self, got_revision):
         return SourceStamp(branch=self.branch, revision=got_revision,
                            patch=self.patch, repository=self.repository,
-                           project=self.project)
+                           project=self.project, changes=self.changes)
 
     def getText(self):
         # note: this won't work for VC systems with huge 'revision' strings
@@ -153,10 +167,12 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
             self.revision = str(self.revision)
         if self.patch is not None:
             self.patch = ( int(self.patch[0]), str(self.patch[1]) )
+        self.wasUpgraded = True
 
     def upgradeToVersion2(self):
         # version 1 did not have project or repository; just set them to a default ''
         self.project = ''
         self.repository = ''
+        self.wasUpgraded = True
 
 # vim: set ts=4 sts=4 sw=4 et:

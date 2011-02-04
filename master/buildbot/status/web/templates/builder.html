@@ -32,7 +32,7 @@
 {% endif %}    
  
 {% if pending %}
-  <h2>Pending builds:</h2>
+  <h2>Pending Build Requests:</h2>
   <ul>
   {% for b in pending %}
     <li><small>({{ b.when }}, waiting {{ b.delay }})</small> 
@@ -41,10 +41,12 @@
       {{ forms.cancel_pending_build(builder_url+"/cancelbuild", authz, short=True, id=b.id) }}
     {% endif %}    
     
-    {% if b.changes %}
-      {% for c in b.changes %}<a href="{{ c.url }}">{{ c.who|email }}</a>{% endfor %}
+    {% if b.num_changes < 4 %}
+        {% for c in b.changes %}{{ c.revision|shortrev(c.repo) }}
+        (<a href="{{ c.url }}">{{ c.who }}</a>){% if not loop.last %},{% endif %}
+        {% endfor %}
     {% else %}
-      {{ b.reason }}
+        ({{ b.num_changes }} changes)
     {% endif %}    
 
     </li>
@@ -56,7 +58,7 @@
   {% endif %}    
      
 {% else %}
-  <h2>No pending builds</h2>
+  <h2>No Pending Build Requests</h2>
 {% endif %}
 
 <h2>Recent Builds:</h2>
@@ -98,12 +100,7 @@
 
 {% if authz.advertiseAction('forceBuild') %}
   <h2>Force build</h2>
-  {% if connected_slaves %}
-    {{ forms.force_build(builder_url+"/force", authz, False) }}
-  {% else %}
-    <p>All buildslaves appear to be offline, so it's not possible
-    to force this build to execute at this time.</p>
-  {% endif %}
+  {{ forms.force_build(builder_url+"/force", authz, False) }}
 {% endif %}
 
 </div>

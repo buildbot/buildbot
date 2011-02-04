@@ -1,0 +1,68 @@
+# This file is part of Buildbot.  Buildbot is free software: you can
+# redistribute it and/or modify it under the terms of the GNU General Public
+# License as published by the Free Software Foundation, version 2.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, write to the Free Software Foundation, Inc., 51
+# Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Copyright Buildbot Team Members
+
+from twisted.protocols import basic
+from zope.interface import implements
+from twisted.internet.interfaces import IAddress, ITransport
+
+class NullAddress(object):
+    "an address for NullTransport"
+    implements(IAddress)
+
+class NullTransport(object):
+    "a do-nothing transport to make NetstringReceiver happy"
+    implements(ITransport)
+    def write(self, data): raise NotImplementedError
+    def writeSequence(self, data): raise NotImplementedError
+    def loseConnection(self): pass
+    def getPeer(self):
+        return NullAddress
+    def getHost(self):
+        return NullAddress
+
+class NetstringParser(basic.NetstringReceiver):
+    """
+    Adapts the Twisted netstring support (which assumes it is on a socket) to
+    work on simple strings, too.  Call the C{feed} method with arbitrary blocks
+    of data, and override the C{stringReceived} method to get called for each
+    embedded netstring.  The default implementation collects the netstrings in
+    the list C{self.strings}.
+    """
+
+    def __init__(self):
+        # most of the complexity here is stubbing out the transport code so
+        # that Twisted-10.2.0 and higher believes that this is a valid protocol
+        self.makeConnection(NullTransport())
+        self.strings = []
+
+    def feed(self, data):
+        """
+        Add arbitrariliy-sized C{data} to the incoming-data buffer.  Any
+        complete netstrings will trigger a call to the stringReceived method.
+
+        Note that this method (and the Twisted class it is based on) cannot
+        detect a trailing partial netstring at EOF - the data will be silently
+        ignored.
+
+        @raise C{twisted.protocols.basic.NetstringParseError}: if invalid
+        """
+        self.dataReceived(data)
+        # dataReceived handles errors unusually quietly!
+        if self.brokenPeer:
+            raise basic.NetstringParseError
+
+    def stringReceived(self, string):
+        self.strings.append(string)
+

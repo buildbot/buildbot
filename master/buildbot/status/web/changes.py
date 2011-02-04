@@ -1,3 +1,18 @@
+# This file is part of Buildbot.  Buildbot is free software: you can
+# redistribute it and/or modify it under the terms of the GNU General Public
+# License as published by the Free Software Foundation, version 2.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, write to the Free Software Foundation, Inc., 51
+# Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Copyright Buildbot Team Members
+
 
 from zope.interface import implements
 from twisted.python import components
@@ -29,13 +44,16 @@ class ChangesResource(HtmlResource):
     def getChild(self, path, req):
         try:
             num = int(path)
-            c = self.getStatus(req).getChange(num)
         except ValueError:
-            c = None
-            num = path
-        if not c:
-            return NoResource("No change number '%s'" % path)    
-        return ChangeResource(c, num)
+            return NoResource("Expected a change number")
+
+        d = self.getStatus(req).getChange(num)
+        def cb(change):
+            return ChangeResource(change, num)
+        def eb(f):
+            return NoResource("No change number %d" % num)
+        d.addCallbacks(cb, eb)
+        return d
     
 class ChangeBox(components.Adapter):
     implements(IBox)

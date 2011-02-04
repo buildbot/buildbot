@@ -1,3 +1,18 @@
+# This file is part of Buildbot.  Buildbot is free software: you can
+# redistribute it and/or modify it under the terms of the GNU General Public
+# License as published by the Free Software Foundation, version 2.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, write to the Free Software Foundation, Inc., 51
+# Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Copyright Buildbot Team Members
+
 from __future__ import generators
 
 from buildbot.status.web.base import HtmlResource
@@ -181,6 +196,7 @@ class TransposedGridStatusResource(HtmlResource, GridStatusMixin):
     # TODO: docs
     status = None
     changemaster = None
+    default_rev_order = "asc"
 
     def content(self, request, cxt):
         """This method builds the transposed grid display.
@@ -192,6 +208,10 @@ class TransposedGridStatusResource(HtmlResource, GridStatusMixin):
         categories = request.args.get("category", [])
         branch = request.args.get("branch", [ANYBRANCH])[0]
         if branch == 'trunk': branch = None
+
+        rev_order = request.args.get("rev_order", [self.default_rev_order])[0]
+        if rev_order not in ["asc", "desc"]:
+            rev_order = self.default_rev_order
 
         cxt['refresh'] = self.get_reload_time(request)
 
@@ -212,6 +232,8 @@ class TransposedGridStatusResource(HtmlResource, GridStatusMixin):
         cxt['builder_builds'] = builder_builds = []
         cxt['builders'] = builders = []
         cxt['range'] = range(len(stamps))
+        if rev_order == "desc":
+            cxt['range'].reverse()
         
         for bn in sortedBuilderNames:
             builds = [None] * len(stamps)

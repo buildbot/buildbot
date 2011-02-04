@@ -1,0 +1,65 @@
+# This file is part of Buildbot.  Buildbot is free software: you can
+# redistribute it and/or modify it under the terms of the GNU General Public
+# License as published by the Free Software Foundation, version 2.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, write to the Free Software Foundation, Inc., 51
+# Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Copyright Buildbot Team Members
+
+import os
+from twisted.trial import unittest
+from twisted.internet import defer
+from buildbot.util import maildir
+from buildbot.test.util import dirs
+
+class TestMaildirService(dirs.DirsMixin, unittest.TestCase):
+    def setUp(self):
+        self.maildir = os.path.abspath("maildir")
+        self.newdir = os.path.join(self.maildir, "new")
+        self.curdir = os.path.join(self.maildir, "cur")
+        self.tmpdir = os.path.join(self.maildir, "tmp")
+        self.setUpDirs(self.maildir, self.newdir, self.curdir, self.tmpdir)
+
+        self.svc = None
+
+    def tearDown(self):
+        if self.svc:
+            self.svc.stopService()
+        self.tearDownDirs()
+
+    # tests
+
+    def test_messageReceived(self):
+        self.svc = maildir.MaildirService(self.maildir)
+
+        # add a fake messageReceived method
+        messagesReceived = []
+        def messageReceived(filename):
+            messagesReceived.append(filename)
+            return defer.succeed(None)
+        self.svc.messageReceived = messageReceived
+        d = defer.maybeDeferred(self.svc.startService)
+        def check_empty(_):
+            self.assertEqual(messagesReceived, [])
+        d.addCallback(check_empty)
+        def add_msg(_):
+            tmpfile = os.path.join(self.tmpdir, "newmsg")
+            newfile = os.path.join(self.newdir, "newmsg")
+            open(tmpfile, "w")
+            os.rename(tmpfile, newfile)
+        d.addCallback(add_msg)
+        def trigger(_):
+            # TODO: can we wait for a dnotify somehow, if enabled?
+            return self.svc.poll()
+        d.addCallback(trigger)
+        def check_nonempty(_):
+            self.assertEqual(messagesReceived, [ 'newmsg' ])
+        d.addCallback(check_nonempty)
+        return d

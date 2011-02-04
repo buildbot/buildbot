@@ -1,12 +1,27 @@
+# This file is part of Buildbot.  Buildbot is free software: you can
+# redistribute it and/or modify it under the terms of the GNU General Public
+# License as published by the Free Software Foundation, version 2.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, write to the Free Software Foundation, Inc., 51
+# Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Copyright Buildbot Team Members
+
 # Test clean shutdown functionality of the master
-from mock import Mock, patch, patch_object
+from mock import Mock
 from twisted.trial import unittest
 from twisted.internet import defer
 from buildbot.master import BotMaster
 
 class TestCleanShutdown(unittest.TestCase):
     def setUp(self):
-        self.master = BotMaster()
+        self.master = BotMaster(Mock())
         self.master.reactor = Mock()
         self.master.startService()
 
@@ -125,6 +140,7 @@ class TestCleanShutdown(unittest.TestCase):
         self.assertEquals(self.master._get_processors(), [builder.run])
 
         d_shutdown = self.master.cleanShutdown()
+        assert d_shutdown
 
         # Trigger the loop to get things going
         self.master.loop.trigger()

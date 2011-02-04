@@ -1,12 +1,26 @@
+# This file is part of Buildbot.  Buildbot is free software: you can
+# redistribute it and/or modify it under the terms of the GNU General Public
+# License as published by the Free Software Foundation, version 2.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, write to the Free Software Foundation, Inc., 51
+# Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Copyright Buildbot Team Members
+
 import time
 from xml.dom import minidom
 
-from twisted.python import log, failure
-from twisted.internet import reactor
-from twisted.internet.task import LoopingCall
-from twisted.web.client import getPage
+from twisted.python import log
+from twisted.internet import defer
+from twisted.web import client
 
-from buildbot.changes import base, changes
+from buildbot.changes import base
 
 class InvalidResultError(Exception):
     def __init__(self, value="InvalidResultError"):
@@ -187,45 +201,12 @@ class BonsaiParser:
         return self.currentFileNode.getAttribute("rev")
 
 
-class BonsaiPoller(base.ChangeSource):
-    """This source will poll a bonsai server for changes and submit
-    them to the change master."""
-
+class BonsaiPoller(base.PollingChangeSource):
     compare_attrs = ["bonsaiURL", "pollInterval", "tree",
                      "module", "branch", "cvsroot"]
 
-    parent = None # filled in when we're added
-    loop = None
-    volatile = ['loop']
-    working = False
-
     def __init__(self, bonsaiURL, module, branch, tree="default",
                  cvsroot="/cvsroot", pollInterval=30, project=''):
-        """
-        @type   bonsaiURL:      string
-        @param  bonsaiURL:      The base URL of the Bonsai server
-                                (ie. http://bonsai.mozilla.org)
-        @type   module:         string
-        @param  module:         The module to look for changes in. Commonly
-                                this is 'all'
-        @type   branch:         string
-        @param  branch:         The branch to look for changes in. This must
-                                match the
-                                'branch' option for the Scheduler.
-        @type   tree:           string
-        @param  tree:           The tree to look for changes in. Commonly this
-                                is 'all'
-        @type   cvsroot:        string
-        @param  cvsroot:        The cvsroot of the repository. Usually this is
-                                '/cvsroot'
-        @type   pollInterval:   int
-        @param  pollInterval:   The time (in seconds) between queries for
-                                changes
-
-        @type project: string
-        @param project: project to attach to all Changes from this changesource
-        """
-
         self.bonsaiURL = bonsaiURL
         self.module = module
         self.branch = branch
@@ -236,16 +217,6 @@ class BonsaiPoller(base.ChangeSource):
         self.lastChange = time.time()
         self.lastPoll = time.time()
 
-    def startService(self):
-        self.loop = LoopingCall(self.poll)
-        base.ChangeSource.startService(self)
-
-        reactor.callLater(0, self.loop.start, self.pollInterval)
-
-    def stopService(self):
-        self.loop.stop()
-        return base.ChangeSource.stopService(self)
-
     def describe(self):
         str = ""
         str += "Getting changes from the Bonsai service running at %s " \
@@ -255,30 +226,9 @@ class BonsaiPoller(base.ChangeSource):
         return str
 
     def poll(self):
-        if self.working:
-            log.msg("Not polling Bonsai because last poll is still working")
-        else:
-            self.working = True
-            d = self._get_changes()
-            d.addCallback(self._process_changes)
-            d.addCallbacks(self._finished_ok, self._finished_failure)
-        return
-
-    def _finished_ok(self, res):
-        assert self.working
-        self.working = False
-
-        # check for failure -- this is probably never hit but the twisted docs
-        # are not clear enough to be sure. it is being kept "just in case"
-        if isinstance(res, failure.Failure):
-            log.msg("Bonsai poll failed: %s" % res)
-        return res
-
-    def _finished_failure(self, res):
-        log.msg("Bonsai poll failed: %s" % res)
-        assert self.working
-        self.working = False
-        return None # eat the failure
+        d = self._get_changes()
+        d.addCallback(self._process_changes)
+        return d
 
     def _make_url(self):
         args = ["treeid=%s" % self.tree, "module=%s" % self.module,
@@ -300,8 +250,9 @@ class BonsaiPoller(base.ChangeSource):
 
         self.lastPoll = time.time()
         # get the page, in XML format
-        return getPage(url, timeout=self.pollInterval)
+        return client.getPage(url, timeout=self.pollInterval)
 
+    @defer.deferredGenerator
     def _process_changes(self, query):
         try:
             bp = BonsaiParser(query)
@@ -315,10 +266,12 @@ class BonsaiPoller(base.ChangeSource):
         for cinode in result.nodes:
             files = [file.filename + ' (revision '+file.revision+')'
                      for file in cinode.files]
-            c = changes.Change(who = cinode.who,
+            self.lastChange = self.lastPoll
+            w = defer.waitForDeferred(
+                    self.master.addChange(who = cinode.who,
                                files = files,
                                comments = cinode.log,
                                when = cinode.date,
-                               branch = self.branch)
-            self.parent.addChange(c)
-            self.lastChange = self.lastPoll
+                               branch = self.branch))
+            yield w
+            w.getResult()

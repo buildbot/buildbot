@@ -1,8 +1,170 @@
 Major User visible changes in Buildbot.             -*- outline -*-
    see the git log for a detailed list of changes:
-   http://github.com/djmitche/buildbot/commits/master
+   http://github.com/buildbot/buildbot/commits/master
 
-* NEXT RELEASE
+
+* Next Version
+
+** Deprecations, Removals, and Non-Compatible Changes
+
+*** MasterShellCommand and all of the transfer steps now default to
+haltOnFailure=True and flunkOnFailure=True
+
+*** GitPoller's 'workdir' parameter should always be supplied; using the
+default (/tmp/gitpoller_work) is deprecated and will not be supported in future
+versions.
+
+*** ChangeFilter should now be imported from `buildbot.changes.filter'; the old
+import path will still work.
+
+** SQLAlchemy & SQLAlchemy-Migrate
+
+Buildbot now uses SQLAlchemy as a database abstraction layer.  This will give
+us greater inter-database compatibility and a more stable and reliable basis
+for this core component of the framework.  SQLAlchemy-Migrate is used to manage
+changes to the database schema from version to version.
+
+** Less garish color scheme
+
+The default color scheme for Buildbot has been modified to make it slightly
+less, well, neon. Note: This will not affect already-created masters, as
+their default.css file has already been created. If you currently use the
+default and want to get the new version, just overwrite public_html/default.css
+with the copy in this version.
+
+* Buildbot 0.8.3 (December 19, 2010)
+
+** Deprecations and Removals
+
+*** Change sources can no longer call change-related methods on self.parent.
+Instead, use self.master methods, e.g., self.master.addChange.
+
+* Next Release
+
+** PBChangeSource now supports authentication
+
+PBChangeSource now supports the `user` and `passwd` arguments.  Users with a
+publicly exposed PB port should use these parameters to limit sendchange
+access.
+
+Previous versions of Buildbot should never be configured with a PBChangeSource
+and a publicly accessible slave port, as that arrangement  allows anyone to
+connect and inject a change into the Buildmaster without any authentication at
+all, aside from the hard-coded 'change'/'changepw' credentials.  In many cases,
+this can lead to arbitrary code injection on slaves.
+
+** Experiemental Gerrit and Repo support
+
+A new ChangeSource (GerritChangeSource), status listener (GerritStatusPush),
+and source step (Repo) are available in this version.  These are not fully
+documented and still have a number of known bugs outstanding (see
+http://buildbot.net/trac/wiki/RepoProject), and as such are considered
+experimental in this release.
+
+** WithProperties now supports lambda substitutions
+
+WithProperties now has the option to pass callable functions as keyword
+arguments to substitute in the results of more complex Python code at
+evaluation-time.
+
+** New 'SetPropertiesFromEnv' step
+
+This step uses the slave environment to set build properties.
+
+** Deprecations and Removals
+
+*** The console view previously had an undocumented feature that would strip
+leading digits off the category name.  This was undocumented and apparently
+non-functional, and has been removed. (#1059)
+
+*** contrib/hg_buildbot.py was removed in favor of buildbot.changes.hgbuildbot.
+
+*** The misnamed sendchange option 'username' has been renamed to 'who'; the old
+option continues to work, but is deprecated and will be removed. (#1711)
+
+
+* Buildbot 0.8.2 (October 29, 2010)
+
+** Upgrading
+
+Upgrading to from the previous version will require an 'upgrade-master' run.
+However, the schema changes are backward-compatible, so if a downgrade is
+required, it will not be difficult.
+
+** New Requirements
+
+The Buildmaster now requires Jinja-2.1 or higher.
+
+Both master and slave now require Twisted-8.0.0.  Although Twisted-2.5.0 may
+still work, it is not tested and not supported.
+
+** Command-line options changed
+
+To resolve conflicting command-line options (ticket #972) for sendchange
+command the following changes were done:
+
+ * `-m` option now means `--master`
+ * `-c` option now means `--comments`
+ * `-C` option now means `--category`
+
+Added new `-n|--no-logrotate` flag to create-master command which disables
+internal logging and log rotation mechanism in buildbot.tac (ticket #973)
+
+** MasterShellCommand semantics change
+
+The MasterShellCommand now provides the buildmaster's environment to the step
+by default; pass env={} to pass a clean environment, instead.
+
+** Log Rotation
+
+The default 'create-master' output now rotates ten twistd.log files, each of
+about 10MiB.  This is a change from older versions, which would rotate an
+unbounded number of 1MiB files.
+
+** New configuration key, 'changeCacheSize'
+
+This sets the number of changes that buildbot will keep in memory at once.
+Users of distributed version control systems should consider setting this to a
+high value (e.g. 10,000)
+
+** New libvirt-based Latent Buildslave Support
+
+This extends the support already included for EC2 buildslaves to include any
+virtualization platform supported by libvirt.
+
+** Canceling Pending Builds for a Change
+
+Change pages on the webstatus now have buttons to cancel any pending
+builds that include that change (across all builders). The corresponding
+authz privledge to control access to this feature is 'stopChange'.
+
+** New Change source
+
+*** CVSMaildirSource
+
+This parses mail sent by buildbot_cvs_mail.py in contrib directory.
+See docs for more info.
+
+** New Steps
+
+*** VC++ 9, VS2008, VCExpress9 - part of the vstudio suite of steps
+
+** Deprecations and Removals
+
+*** Removed sendchange's --revision_number argument (use --revision)
+
+*** Deprecating old CVS MairdirSources:
+    Please post to the list if you are using
+      FreshCVS   FCMaildirSource
+      Syncmail   SyncmailMaildirSource
+      Bonsai     BonsaiMaildirSource
+
+*** statusgui is deprecated in this version and will be removed in the next
+release.  Please file a bug at http://buildbot.net if you wish to reverse this
+decision.
+
+*** The Twisted-only steps BuildDebs and ProcessDocs have been removed.
+
 
 * Release 0.8.1 (June 16, 2010)
 
@@ -58,6 +220,7 @@ Makefile.buildbot existed in the master directory.  This functionality will be
 removed in Buildbot-0.8.2, and the create-master command will no longer create
 a Makefile.sample.  Of course, Buildbot still supports build processes on the
 slave using make!
+
 
 * Release 0.8.0 (May 25, 2010)
 
@@ -148,6 +311,7 @@ did not include the rest of the WebStatus pages.
 *** BuildmasterConfig no longer accepts 'bots' and 'sources' as keys
 (deprecated in 0.7.6). Use 'slaves' and 'change_source' instead.
 
+
 * Release 0.7.12 (January 21, 2010)
 
 ** New 'console' display
@@ -215,14 +379,16 @@ information about test runs and test failures into an external database.
 ** Python API Docs
 
 The docstrings for buildbot are now available in a web-friendly format:
-  http://djmitche.github.com/buildbot/docs/latest/reference
+  http://buildbot.net/buildbot/docs/latest/reference
 
 ** Many, many bugfixes
+
 
 * Release 0.7.11p (July 16, 2009)
 
 Fixes a few test failures in 0.7.11, and gives a default value for branchType
 if it is not specified by the master.
+
 
 * Release 0.7.11 (July 5, 2009)
 
@@ -283,6 +449,7 @@ info.  Located at /tgrid.
 
 Trigger now supports copy_properties, to send selected properties to the
 triggered build.
+
 
 * Release 0.7.10 (25 Feb 2009)
 
@@ -458,6 +625,7 @@ twistd.log files.
 *** Prioritize build requests based on the time they wre submitted (#334)
 
 Balancing of load is a bit more fair, although not true load balancing.
+
 
 * Release 0.7.9 (15 Sep 2008)
 

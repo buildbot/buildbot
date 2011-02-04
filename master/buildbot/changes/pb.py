@@ -1,14 +1,29 @@
-# -*- test-case-name: buildbot.test.test_changes -*-
+# This file is part of Buildbot.  Buildbot is free software: you can
+# redistribute it and/or modify it under the terms of the GNU General Public
+# License as published by the Free Software Foundation, version 2.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, write to the Free Software Foundation, Inc., 51
+# Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Copyright Buildbot Team Members
+
 
 from twisted.python import log
+from twisted.internet import defer
 
 from buildbot.pbutil import NewCredPerspective
-from buildbot.changes import base, changes
+from buildbot.changes import base
 
 class ChangePerspective(NewCredPerspective):
 
-    def __init__(self, changemaster, prefix):
-        self.changemaster = changemaster
+    def __init__(self, master, prefix):
+        self.master = master
         self.prefix = prefix
 
     def attached(self, mind):
@@ -18,95 +33,60 @@ class ChangePerspective(NewCredPerspective):
 
     def perspective_addChange(self, changedict):
         log.msg("perspective_addChange called")
-        pathnames = []
+        files = []
         for path in changedict['files']:
             if self.prefix:
                 if not path.startswith(self.prefix):
                     # this file does not start with the prefix, so ignore it
                     continue
                 path = path[len(self.prefix):]
-            pathnames.append(path)
+            files.append(path)
+        changedict['files'] = files
 
-        if pathnames:
-            change = changes.Change(who=changedict['who'],
-                                    files=pathnames,
-                                    comments=changedict['comments'],
-                                    branch=changedict.get('branch'),
-                                    revision=changedict.get('revision'),
-                                    revlink=changedict.get('revlink', ''),
-                                    category=changedict.get('category'),
-                                    when=changedict.get('when'),
-                                    properties=changedict.get('properties', {}),
-                                    repository=changedict.get('repository', '') or '',
-                                    project=changedict.get('project', '') or '',
-                                    )
-            self.changemaster.addChange(change)
+        if not files:
+            log.msg("No files listed in change... bit strange, but not fatal.")
+        return self.master.addChange(**changedict)
 
 class PBChangeSource(base.ChangeSource):
-    compare_attrs = ["user", "passwd", "port", "prefix"]
+    compare_attrs = ["user", "passwd", "port", "prefix", "port"]
 
     def __init__(self, user="change", passwd="changepw", port=None,
-                 prefix=None, sep=None):
-        """I listen on a TCP port for Changes from 'buildbot sendchange'.
+            prefix=None):
 
-        I am a ChangeSource which will accept Changes from a remote source. I
-        share a TCP listening port with the buildslaves.
-
-        The 'buildbot sendchange' command, the contrib/svn_buildbot.py tool,
-        and the contrib/bzr_buildbot.py tool know how to send changes to me.
-
-        @type prefix: string (or None)
-        @param prefix: if set, I will ignore any filenames that do not start
-                       with this string. Moreover I will remove this string
-                       from all filenames before creating the Change object
-                       and delivering it to the Schedulers. This is useful
-                       for changes coming from version control systems that
-                       represent branches as parent directories within the
-                       repository (like SVN and Perforce). Use a prefix of
-                       'trunk/' or 'project/branches/foobranch/' to only
-                       follow one branch and to get correct tree-relative
-                       filenames.
-
-        @param sep: DEPRECATED (with an axe). sep= was removed in
-                    buildbot-0.7.4 . Instead of using it, you should use
-                    prefix= with a trailing directory separator. This
-                    docstring (and the better-than-nothing error message
-                    which occurs when you use it) will be removed in 0.7.5 .
-        """
-
-        # sep= was removed in 0.7.4 . This more-helpful-than-nothing error
-        # message will be removed in 0.7.5 .
-        assert sep is None, "prefix= is now a complete string, do not use sep="
-        # TODO: current limitations
-        assert user == "change"
-        assert passwd == "changepw"
-        assert port == None
         self.user = user
         self.passwd = passwd
         self.port = port
         self.prefix = prefix
+        self.registration = None
 
     def describe(self):
         # TODO: when the dispatcher is fixed, report the specific port
-        #d = "PB listener on port %d" % self.port
-        d = "PBChangeSource listener on all-purpose slaveport"
+        if self.port is not None:
+            portname = self.port
+        else:
+            portname = "all-purpose slaveport"
+        d = "PBChangeSource listener on " + portname
         if self.prefix is not None:
             d += " (prefix '%s')" % self.prefix
         return d
 
     def startService(self):
         base.ChangeSource.startService(self)
-        # our parent is the ChangeMaster object
-        # find the master's Dispatch object and register our username
-        # TODO: the passwd should be registered here too
-        master = self.parent.parent
-        master.dispatcher.register(self.user, self)
+        port = self.port
+        if port is None:
+            port = self.master.slavePortnum
+        self.registration = self.master.pbmanager.register(
+                port, self.user, self.passwd,
+                self.getPerspective)
 
     def stopService(self):
-        base.ChangeSource.stopService(self)
-        # unregister our username
-        master = self.parent.parent
-        master.dispatcher.unregister(self.user)
+        d = defer.maybeDeferred(base.ChangeSource.stopService, self)
+        def unreg(_):
+            if self.registration:
+                return self.registration.unregister()
+        d.addCallback(unreg)
+        return d
 
-    def getPerspective(self):
+    def getPerspective(self, mind, username):
+        assert username == self.user
         return ChangePerspective(self.parent, self.prefix)

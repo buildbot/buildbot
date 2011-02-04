@@ -1,24 +1,37 @@
-# -*- test-case-name: buildbot.test.test_persistent_queue -*-
+# This file is part of Buildbot.  Buildbot is free software: you can
+# redistribute it and/or modify it under the terms of the GNU General Public
+# License as published by the Free Software Foundation, version 2.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, write to the Free Software Foundation, Inc., 51
+# Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Copyright Buildbot Team Members
+
 
 import os
-import shutil
 from twisted.trial import unittest
+from buildbot.test.util import dirs
 
 from buildbot.status.persistent_queue import DequeMemoryQueue, DiskQueue, \
     IQueue, ListMemoryQueue, MemoryQueue, PersistentQueue, WriteFile
 
-class test_Queues(unittest.TestCase):
+class test_Queues(dirs.DirsMixin, unittest.TestCase):
+
     def setUp(self):
-        if os.path.isdir('fake_dir'):
-            shutil.rmtree('fake_dir')
+        self.setUpDirs('fake_dir')
 
     def tearDown(self):
-        if os.path.isdir('fake_dir'):
-            self.assertEqual([], os.listdir('fake_dir'))
+        self.assertEqual([], os.listdir('fake_dir'))
+        self.tearDownDirs()
 
     def testQueued(self):
         # Verify behavior when starting up with queued items on disk.
-        os.mkdir('fake_dir')
         WriteFile(os.path.join('fake_dir', '3'), 'foo3')
         WriteFile(os.path.join('fake_dir', '5'), 'foo5')
         WriteFile(os.path.join('fake_dir', '8'), 'foo8')

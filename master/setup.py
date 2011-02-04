@@ -1,11 +1,20 @@
 #!/usr/bin/env python
 #
-# This software may be freely redistributed under the terms of the GNU
-# general public license.
+# This file is part of Buildbot.  Buildbot is free software: you can
+# redistribute it and/or modify it under the terms of the GNU General Public
+# License as published by the Free Software Foundation, version 2.
 #
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, write to the Free Software Foundation, Inc., 51
+# Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Copyright Buildbot Team Members
+
 """
 Standard setup script.
 """
@@ -19,6 +28,7 @@ from distutils.core import setup, Command
 from buildbot import version
 
 from distutils.command.install_data import install_data
+from distutils.command.sdist import sdist
 
 def include(d, e):
     """Generate a pair of (directory, file-list) for installation.
@@ -142,6 +152,22 @@ class install_data_twisted(install_data):
         )
         install_data.finalize_options(self)
 
+    def run(self):
+        install_data.run(self)
+        # ensure there's a buildbot/VERSION file
+        fn = os.path.join(self.install_dir, 'buildbot', 'VERSION')
+        open(fn, 'w').write(version)
+        self.outfiles.append(fn)
+
+class our_sdist(sdist):
+
+    def make_release_tree(self, base_dir, files):
+        sdist.make_release_tree(self, base_dir, files)
+        # ensure there's a buildbot/VERSION file
+        fn = os.path.join(base_dir, 'buildbot', 'VERSION')
+        open(fn, 'w').write(version)
+
+
 long_description="""
 The BuildBot is a system to automate the compile/test cycle required by
 most software projects to validate code changes. By automatically
@@ -158,7 +184,9 @@ improve.
 """
 
 scripts = ["bin/buildbot"]
-if sys.platform == "win32":
+# sdist is usually run on a non-Windows platform, but the buildslave.bat file
+# still needs to get packaged.
+if 'sdist' in sys.argv or sys.platform == 'win32':
     scripts.append("contrib/windows/buildbot.bat")
     scripts.append("contrib/windows/buildbot_service.py")
 
@@ -185,7 +213,7 @@ setup_args = {
         ],
 
     'packages': ["buildbot",
-              "buildbot.status", "buildbot.status.web",
+              "buildbot.status", "buildbot.status.web","buildbot.status.web.hooks",
               "buildbot.changes",
               "buildbot.steps",
               "buildbot.steps.package",
@@ -195,7 +223,6 @@ setup_args = {
               "buildbot.schedulers",
               "buildbot.scripts",
               "buildbot.db",
-              "buildbot.db.schema",
               "buildbot.util",
               "buildbot.test",
               "buildbot.test.fake",
@@ -203,23 +230,34 @@ setup_args = {
               "buildbot.test.util",
               "buildbot.test.regressions",
               ],
-    'data_files': [("buildbot", ["buildbot/buildbot.png"]),
-                include("buildbot/db/schema", "*.sql"),
-                ("buildbot/clients", ["buildbot/clients/debug.glade"]),
-                ("buildbot/status/web/files",
-                 ["buildbot/status/web/files/default.css",
-                  "buildbot/status/web/files/bg_gradient.jpg",
-                  "buildbot/status/web/files/robots.txt",
-                  "buildbot/status/web/files/favicon.ico",
-                  ]),
+    'data_files': [
+                ("buildbot", [
+                    "buildbot/buildbot.png",
+                ]),
+                ("buildbot/db/migrate", [
+                    "buildbot/db/migrate/migrate.cfg",
+                ]),
+                include("buildbot/db/migrate/versions", "*.py"),
+                ("buildbot/clients", [
+                    "buildbot/clients/debug.glade",
+                ]),
+                ("buildbot/status/web/files", [
+                    "buildbot/status/web/files/default.css",
+                    "buildbot/status/web/files/bg_gradient.jpg",
+                    "buildbot/status/web/files/robots.txt",
+                    "buildbot/status/web/files/favicon.ico",
+                ]),
                 include("buildbot/status/web/templates", '*.html'),
                 include("buildbot/status/web/templates", '*.xml'),
-                ("buildbot/scripts", ["buildbot/scripts/sample.cfg"]),
+                ("buildbot/scripts", [
+                    "buildbot/scripts/sample.cfg",
+                ]),
                 ],
     'scripts': scripts,
     'cmdclass': {'install_data': install_data_twisted,
                  'test': TestCommand,
-                 'sdist_test': SdistTestCommand},
+                 'sdist_test': SdistTestCommand,
+                 'sdist': our_sdist},
     }
 
 # set zip_safe to false to force Windows installs to always unpack eggs
@@ -240,8 +278,11 @@ except ImportError:
 else:
     ## dependencies
     setup_args['install_requires'] = [
-        'twisted >= 2.0.0',
-        'Jinja2',
+        'twisted >= 8.0.0',
+        'Jinja2 >= 2.1',
+        'sqlalchemy >= 0.6',
+        # buildbot depends on sqlalchemy internals. See buildbot.db.model.
+        'sqlalchemy-migrate == 0.6',
     ]
     # Python-2.6 and up includes json
     if not py_26:
@@ -251,10 +292,8 @@ else:
     if not py_26:
         setup_args['install_requires'].append('pysqlite')
 
-    entry_points={
-        'console_scripts': [
-            'buildbot = buildbot.scripts.runner:run'],
-        },
+    if os.getenv('NO_INSTALL_REQS'):
+        setup_args['install_requires'] = None
 
 setup(**setup_args)
 

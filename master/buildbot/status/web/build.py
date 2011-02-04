@@ -1,3 +1,18 @@
+# This file is part of Buildbot.  Buildbot is free software: you can
+# redistribute it and/or modify it under the terms of the GNU General Public
+# License as published by the Free Software Foundation, version 2.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, write to the Free Software Foundation, Inc., 51
+# Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Copyright Buildbot Team Members
+
 
 from twisted.web import html
 from twisted.web.util import Redirect, DeferredResource
@@ -10,6 +25,7 @@ from buildbot.status.web.base import HtmlResource, \
      getAndCheckProperties, path_to_authfail
 
 from buildbot.status.web.step import StepsResource
+from buildbot.status.web.tests import TestsResource
 from buildbot import util, interfaces
 
 
@@ -30,28 +46,37 @@ class StatusResourceBuild(HtmlResource):
     def content(self, req, cxt):
         b = self.build_status
         status = self.getStatus(req)
+        req.setHeader('Cache-Control', 'no-cache')
 
         cxt['b'] = b
         cxt['path_to_builder'] = path_to_builder(req, b.getBuilder())
-        
+
         if not b.isFinished():
+            step = b.getCurrentStep()
+            if not step:
+                cxt['current_step'] = "[waiting for Lock]"
+            else:
+                if step.isWaitingForLocks():
+                    cxt['current_step'] = "%s [waiting for Lock]" % step.getName()
+                else:
+                    cxt['current_step'] = step.getName()
             when = b.getETA()
             if when is not None:
                 cxt['when'] = util.formatInterval(when)
                 cxt['when_time'] = time.strftime("%H:%M:%S",
                                                 time.localtime(time.time() + when))
-                
-        else: 
+
+        else:
             cxt['result_css'] = css_classes[b.getResults()]
             if b.getTestResults():
                 cxt['tests_link'] = req.childLink("tests")
-                
+
         ss = cxt['ss'] = b.getSourceStamp()
-        
+
         if ss.branch is None and ss.revision is None and ss.patch is None and not ss.changes:
             cxt['most_recent_rev_build'] = True
-            
-        
+
+
         got_revision = None
         try:
             got_revision = b.getProperty("got_revision")
@@ -76,8 +101,12 @@ class StatusResourceBuild(HtmlResource):
                 (start, end) = s.getTimes()
                 step['time_to_run'] = util.formatInterval(end - start)
             elif s.isStarted():
-                step['css_class'] = "running"
-                step['time_to_run'] = "running"
+                if s.isWaitingForLocks():
+                    step['css_class'] = "waiting"
+                    step['time_to_run'] = "waiting for locks"
+                else:
+                    step['css_class'] = "running"
+                    step['time_to_run'] = "running"
             else:
                 step['css_class'] = "not_started"
                 step['time_to_run'] = ""
@@ -198,6 +227,8 @@ class StatusResourceBuild(HtmlResource):
             return self.rebuild(req)
         if path == "steps":
             return StepsResource(self.build_status)
+        if path == "tests":
+            return TestsResource(self.build_status)
 
         return HtmlResource.getChild(self, path, req)
 

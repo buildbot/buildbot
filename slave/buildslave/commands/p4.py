@@ -1,10 +1,24 @@
+# This file is part of Buildbot.  Buildbot is free software: you can
+# redistribute it and/or modify it under the terms of the GNU General Public
+# License as published by the Free Software Foundation, version 2.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, write to the Free Software Foundation, Inc., 51
+# Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Copyright Buildbot Team Members
+
 import os, re
 
 from twisted.python import log
 
 from buildslave.commands.base import SourceBaseCommand
 from buildslave import runprocess
-from buildslave.commands import utils
 from buildslave.util import Obfuscated
 
 
@@ -212,14 +226,13 @@ class P4Sync(P4Base):
 
     def setup(self, args):
         P4Base.setup(self, args)
-        self.vcexe = utils.getCommand("p4")
 
     def sourcedirIsUpdateable(self):
         return True
 
     def _doVC(self, force):
         d = os.path.join(self.builder.basedir, self.srcdir)
-        command = [self.vcexe]
+        command = [self.getCommand('p4')]
         if self.p4port:
             command.extend(['-p', self.p4port])
         if self.p4user:

@@ -1,3 +1,18 @@
+# This file is part of Buildbot.  Buildbot is free software: you can
+# redistribute it and/or modify it under the terms of the GNU General Public
+# License as published by the Free Software Foundation, version 2.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, write to the Free Software Foundation, Inc., 51
+# Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Copyright Buildbot Team Members
+
 
 import random, weakref
 from zope.interface import implements
@@ -34,6 +49,7 @@ class AbstractSlaveBuilder(pb.Referenceable):
         self.remote = None
         self.slave = None
         self.builder_name = None
+        self.locks = None
 
     def __repr__(self):
         r = ["<", self.__class__.__name__]
@@ -96,30 +112,32 @@ class AbstractSlaveBuilder(pb.Referenceable):
             assert self.slave == slave
         log.msg("Buildslave %s attached to %s" % (slave.slavename,
                                                   self.builder_name))
-        d = self.remote.callRemote("setMaster", self)
-        d.addErrback(self._attachFailure, "Builder.setMaster")
-        d.addCallback(self._attached2)
+        def _attachFailure(why, where):
+            log.msg(where)
+            log.err(why)
+            return why
+
+        d = defer.succeed(None)
+        def doSetMaster(res):
+            d = self.remote.callRemote("setMaster", self)
+            #d.addErrback(_attachFailure, "Builder.setMaster")
+            return d
+        d.addCallback(doSetMaster)
+        def doPrint(res):
+            d = self.remote.callRemote("print", "attached")
+            #d.addErrback(_attachFailure, "Builder.print 'attached'")
+            return d
+        d.addCallback(doPrint)
+        def setIdle(res):
+            self.state = IDLE
+            return self
+        d.addCallback(setIdle)
         return d
-
-    def _attached2(self, res):
-        d = self.remote.callRemote("print", "attached")
-        d.addErrback(self._attachFailure, "Builder.print 'attached'")
-        d.addCallback(self._attached3)
-        return d
-
-    def _attached3(self, res):
-        # now we say they're really attached
-        self.state = IDLE
-        return self
-
-    def _attachFailure(self, why, where):
-        assert isinstance(where, str)
-        log.msg(where)
-        log.err(why)
-        return why
 
     def prepare(self, builder_status):
-        return defer.succeed(None)
+        if not self.slave.acquireLocks():
+            return defer.succeed(False)
+        return defer.succeed(True)
 
     def ping(self, status=None):
         """Ping the slave to make sure it is still there. Returns a Deferred
@@ -242,6 +260,10 @@ class LatentSlaveBuilder(AbstractSlaveBuilder):
                                                          self.builder_name))
 
     def prepare(self, builder_status):
+        # If we can't lock, then don't bother trying to substantiate
+        if not self.slave.acquireLocks():
+            return defer.succeed(False)
+
         log.msg("substantiating slave %s" % (self,))
         d = self.substantiate()
         def substantiation_failed(f):
@@ -250,6 +272,12 @@ class LatentSlaveBuilder(AbstractSlaveBuilder):
             self.slave.disconnect()
             # TODO: should failover to a new Build
             return f
+        def substantiation_cancelled(res):
+            # if res is False, latent slave cancelled subtantiation
+            if not res:
+                self.state = LATENT
+            return res
+        d.addCallback(substantiation_cancelled)
         d.addErrback(substantiation_failed)
         return d
 
@@ -378,6 +406,7 @@ class Builder(pb.Referenceable, service.MultiService):
         self.eventHorizon = setup.get('eventHorizon')
         self.mergeRequests = setup.get('mergeRequests', True)
         self.properties = setup.get('properties', {})
+        self.category = setup.get('category', None)
 
         # build/wannabuild slots: Build objects move along this sequence
         self.building = []
@@ -431,16 +460,21 @@ class Builder(pb.Referenceable, service.MultiService):
             diffs.append('factory changed')
         if setup.get('locks', []) != self.locks:
             diffs.append('locks changed from %s to %s' % (self.locks, setup.get('locks')))
+        if setup.get('env', {}) != self.env:
+            diffs.append('env changed from %s to %s' % (self.env, setup.get('env', {})))
         if setup.get('nextSlave') != self.nextSlave:
             diffs.append('nextSlave changed from %s to %s' % (self.nextSlave, setup.get('nextSlave')))
         if setup.get('nextBuild') != self.nextBuild:
             diffs.append('nextBuild changed from %s to %s' % (self.nextBuild, setup.get('nextBuild')))
-        if setup['buildHorizon'] != self.buildHorizon:
+        if setup.get('buildHorizon', None) != self.buildHorizon:
             diffs.append('buildHorizon changed from %s to %s' % (self.buildHorizon, setup['buildHorizon']))
-        if setup['logHorizon'] != self.logHorizon:
+        if setup.get('logHorizon', None) != self.logHorizon:
             diffs.append('logHorizon changed from %s to %s' % (self.logHorizon, setup['logHorizon']))
-        if setup['eventHorizon'] != self.eventHorizon:
+        if setup.get('eventHorizon', None) != self.eventHorizon:
             diffs.append('eventHorizon changed from %s to %s' % (self.eventHorizon, setup['eventHorizon']))
+        if setup.get('category', None) != self.category:
+            diffs.append('category changed from %r to %r' % (self.category, setup.get('category', None)))
+
         return diffs
 
     def __repr__(self):
@@ -600,6 +634,10 @@ class Builder(pb.Referenceable, service.MultiService):
         # anything to claim them. The old builder will be stopService'd,
         # which should make sure they don't start any new work
 
+        # this is kind of silly, but the builder status doesn't get updated
+        # when the config changes, yet it stores the category.  So:
+        self.builder_status.category = self.category
+
         # old.building (i.e. builds which are still running) is not migrated
         # directly: it keeps track of builds which were in progress in the
         # old Builder. When those builds finish, the old Builder will be
@@ -647,14 +685,18 @@ class Builder(pb.Referenceable, service.MultiService):
         return # all done
 
     def reclaimAllBuilds(self):
-        now = util.now()
-        brids = set()
-        for b in self.building:
-            brids.update([br.id for br in b.requests])
-        for b in self.old_building:
-            brids.update([br.id for br in b.requests])
-        self.db.claim_buildrequests(now, self.master_name,
-                                    self.master_incarnation, brids)
+        try:
+            now = util.now()
+            brids = set()
+            for b in self.building:
+                brids.update([br.id for br in b.requests])
+            for b in self.old_building:
+                brids.update([br.id for br in b.requests])
+            self.db.claim_buildrequests(now, self.master_name,
+                                        self.master_incarnation, brids)
+        except:
+            log.msg("Error in reclaimAllBuilds")
+            log.err()
 
     def getBuild(self, number):
         for b in self.building:
@@ -742,8 +784,9 @@ class Builder(pb.Referenceable, service.MultiService):
         # TODO: make this .addSlaveEvent?
         # TODO: remove from self.slaves (except that detached() should get
         #       run first, right?)
+        print why
         self.builder_status.addPointEvent(['failed', 'connect',
-                                           slave.slave.slavename])
+                                           slave.slavename])
         # TODO: add an HTMLLogFile of the exception
         self.fireTestEvent('attach', why)
 
@@ -804,19 +847,48 @@ class Builder(pb.Referenceable, service.MultiService):
         self.updateBigStatus()
         log.msg("starting build %s using slave %s" % (build, sb))
         d = sb.prepare(self.builder_status)
-        def _ping(ign):
-            # ping the slave to make sure they're still there. If they've
-            # fallen off the map (due to a NAT timeout or something), this
-            # will fail in a couple of minutes, depending upon the TCP
-            # timeout.
-            #
-            # TODO: This can unnecessarily suspend the starting of a build, in
-            # situations where the slave is live but is pushing lots of data to
-            # us in a build.
-            log.msg("starting build %s.. pinging the slave %s" % (build, sb))
-            return sb.ping()
-        d.addCallback(_ping)
-        d.addCallback(self._startBuild_1, build, sb)
+
+        def _prepared(ready):
+            # If prepare returns True then it is ready and we start a build
+            # If it returns false then we don't start a new build.
+            d = defer.succeed(ready)
+
+            if not ready:
+                #FIXME: We should perhaps trigger a check to see if there is
+                # any other way to schedule the work
+                log.msg("slave %s can't build %s after all" % (build, sb))
+
+                # release the slave. This will queue a call to maybeStartBuild, which
+                # will fire after other notifyOnDisconnect handlers have marked the
+                # slave as disconnected (so we don't try to use it again).
+                # sb.buildFinished()
+
+                log.msg("re-queueing the BuildRequest %s" % build)
+                self.building.remove(build)
+                self._resubmit_buildreqs(build).addErrback(log.err)
+
+                sb.slave.releaseLocks()
+                self.triggerNewBuildCheck()
+
+                return d
+
+            def _ping(ign):
+                # ping the slave to make sure they're still there. If they've
+                # fallen off the map (due to a NAT timeout or something), this
+                # will fail in a couple of minutes, depending upon the TCP
+                # timeout.
+                #
+                # TODO: This can unnecessarily suspend the starting of a build, in
+                # situations where the slave is live but is pushing lots of data to
+                # us in a build.
+                log.msg("starting build %s.. pinging the slave %s" % (build, sb))
+                return sb.ping()
+            d.addCallback(_ping)
+            d.addCallback(self._startBuild_1, build, sb)
+
+            return d
+
+        d.addCallback(_prepared)
         return d
 
     def _startBuild_1(self, res, build, sb):
@@ -882,6 +954,10 @@ class Builder(pb.Referenceable, service.MultiService):
         else:
             brids = [br.id for br in build.requests]
             self.db.retire_buildrequests(brids, results)
+
+        if sb.slave:
+            sb.slave.releaseLocks()
+
         self.triggerNewBuildCheck()
 
     def _resubmit_buildreqs(self, build):
@@ -927,12 +1003,11 @@ class BuilderControl:
             return
 
         ss = bs.getSourceStamp(absolute=True)
+        # Make a copy so as not to modify the original build.
+        properties = Properties()
+        # Don't include runtime-set properties in a rebuild request
+        properties.updateFromPropertiesNoRuntime(bs.getProperties())
         if extraProperties is None:
-            properties = bs.getProperties()
-        else:
-            # Make a copy so as not to modify the original build.
-            properties = Properties()
-            properties.updateFromProperties(bs.getProperties())
             properties.updateFromProperties(extraProperties)
         self.submitBuildRequest(ss, reason, props=properties)
 

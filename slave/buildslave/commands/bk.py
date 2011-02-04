@@ -1,10 +1,24 @@
+# This file is part of Buildbot.  Buildbot is free software: you can
+# redistribute it and/or modify it under the terms of the GNU General Public
+# License as published by the Free Software Foundation, version 2.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, write to the Free Software Foundation, Inc., 51
+# Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Copyright Buildbot Team Members
+
 import os
 
 from twisted.python import log
 
 from buildslave.commands.base import SourceBaseCommand
 from buildslave import runprocess
-from buildslave.commands import utils
 
 
 class BK(SourceBaseCommand):
@@ -18,7 +32,6 @@ class BK(SourceBaseCommand):
 
     def setup(self, args):
         SourceBaseCommand.setup(self, args)
-        self.vcexe = utils.getCommand("bk")
         self.bkurl = args['bkurl']
         self.sourcedata = '"%s\n"' % self.bkurl
 
@@ -34,12 +47,14 @@ class BK(SourceBaseCommand):
                                           self.srcdir, "BK/parent"))
 
     def doVCUpdate(self):
-        revision = self.args['revision'] or 'HEAD'
+        bk = self.getCommand('bk')
+        # XXX revision is never used!! - bug #1715
+        # revision = self.args['revision'] or 'HEAD'
         # update: possible for mode in ('copy', 'update')
         d = os.path.join(self.builder.basedir, self.srcdir)
 
         # Revision is ignored since the BK free client doesn't support it.
-        command = [self.vcexe, 'pull']
+        command = [bk, 'pull']
         c = runprocess.RunProcess(self.builder, command, d,
                          sendRC=False, timeout=self.timeout,
                          keepStdout=True, usePTY=False)
@@ -47,6 +62,7 @@ class BK(SourceBaseCommand):
         return c.start()
 
     def doVCFull(self):
+        bk = self.getCommand('bk')
 
         revision_arg = ''
         if self.args['revision']:
@@ -54,7 +70,7 @@ class BK(SourceBaseCommand):
 
         d = self.builder.basedir
 
-        command = [self.vcexe, 'clone', revision_arg] + self.bk_args + \
+        command = [bk, 'clone', revision_arg] + self.bk_args + \
                    [self.bkurl, self.srcdir]
         c = runprocess.RunProcess(self.builder, command, d,
                          sendRC=False, timeout=self.timeout,
@@ -69,7 +85,8 @@ class BK(SourceBaseCommand):
 
         return: list of strings, passable as the command argument to RunProcess
         """
-        return [self.vcexe, "changes", "-r+", "-d:REV:"]
+        bk = self.getCommand('bk')
+        return [bk, "changes", "-r+", "-d:REV:"]
 
     def parseGotRevision(self):
         c = runprocess.RunProcess(self.builder,
@@ -81,7 +98,6 @@ class BK(SourceBaseCommand):
         d = c.start()
         def _parse(res):
             r_raw = c.stdout.strip()
-            got_version = None
             try:
                 r = r_raw
             except:

@@ -1,3 +1,18 @@
+# This file is part of Buildbot.  Buildbot is free software: you can
+# redistribute it and/or modify it under the terms of the GNU General Public
+# License as published by the Free Software Foundation, version 2.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, write to the Free Software Foundation, Inc., 51
+# Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Copyright Buildbot Team Members
+
 import os
 
 from twisted.python import log
@@ -5,7 +20,6 @@ from twisted.internet import defer
 
 from buildslave.commands.base import SourceBaseCommand
 from buildslave import runprocess
-from buildslave.commands import utils
 
 
 class Bzr(SourceBaseCommand):
@@ -20,7 +34,6 @@ class Bzr(SourceBaseCommand):
 
     def setup(self, args):
         SourceBaseCommand.setup(self, args)
-        self.vcexe = utils.getCommand("bzr")
         self.repourl = args['repourl']
         self.sourcedata = "%s\n" % self.repourl
         self.revision = self.args.get('revision')
@@ -46,10 +59,11 @@ class Bzr(SourceBaseCommand):
             return cont(None)
 
     def doVCUpdate(self):
+        bzr = self.getCommand('bzr')
         assert not self.revision
         # update: possible for mode in ('copy', 'update')
         srcdir = os.path.join(self.builder.basedir, self.srcdir)
-        command = [self.vcexe, 'update']
+        command = [bzr, 'update']
         c = runprocess.RunProcess(self.builder, command, srcdir,
                          sendRC=False, timeout=self.timeout,
                          maxTime=self.maxTime, usePTY=False)
@@ -57,6 +71,8 @@ class Bzr(SourceBaseCommand):
         return c.start()
 
     def doVCFull(self):
+        bzr = self.getCommand('bzr')
+
         # checkout or export
         d = self.builder.basedir
         if self.mode == "export":
@@ -72,7 +88,7 @@ class Bzr(SourceBaseCommand):
         #
         # So I won't bother using --lightweight for now.
 
-        command = [self.vcexe, 'checkout']
+        command = [bzr, 'checkout']
         if self.revision:
             command.append('--revision')
             command.append(str(self.revision))
@@ -87,9 +103,10 @@ class Bzr(SourceBaseCommand):
         return d
 
     def doVCExport(self):
+        bzr = self.getCommand('bzr')
         tmpdir = os.path.join(self.builder.basedir, "export-temp")
         srcdir = os.path.join(self.builder.basedir, self.srcdir)
-        command = [self.vcexe, 'checkout', '--lightweight']
+        command = [bzr, 'checkout', '--lightweight']
         if self.revision:
             command.append('--revision')
             command.append(str(self.revision))
@@ -101,7 +118,7 @@ class Bzr(SourceBaseCommand):
         self.command = c
         d = c.start()
         def _export(res):
-            command = [self.vcexe, 'export', srcdir]
+            command = [bzr, 'export', srcdir]
             c = runprocess.RunProcess(self.builder, command, tmpdir,
                              sendRC=False, timeout=self.timeout,
                              maxTime=self.maxTime, usePTY=False)
@@ -111,10 +128,12 @@ class Bzr(SourceBaseCommand):
         return d
 
     def doForceSharedRepo(self):
+        bzr = self.getCommand('bzr')
+
         # Don't send stderr. When there is no shared repo, this might confuse
         # users, as they will see a bzr error message. But having no shared
         # repo is not an error, just an indication that we need to make one.
-        c = runprocess.RunProcess(self.builder, [self.vcexe, 'info', '.'],
+        c = runprocess.RunProcess(self.builder, [bzr, 'info', '.'],
                          self.builder.basedir,
                          sendStderr=False, sendRC=False, usePTY=False)
         d = c.start()
@@ -122,7 +141,7 @@ class Bzr(SourceBaseCommand):
             if type(res) is int and res != 0:
                 log.msg("No shared repo found, creating it")
                 # bzr info fails, try to create shared repo.
-                c = runprocess.RunProcess(self.builder, [self.vcexe, 'init-repo', '.'],
+                c = runprocess.RunProcess(self.builder, [bzr, 'init-repo', '.'],
                                  self.builder.basedir,
                                  sendRC=False, usePTY=False)
                 self.command = c
@@ -145,7 +164,8 @@ class Bzr(SourceBaseCommand):
         raise ValueError("unable to find revno: in bzr output: '%s'" % out)
 
     def parseGotRevision(self):
-        command = [self.vcexe, "version-info"]
+        bzr = self.getCommand('bzr')
+        command = [bzr, "version-info"]
         c = runprocess.RunProcess(self.builder, command,
                          os.path.join(self.builder.basedir, self.srcdir),
                          environ=self.env,

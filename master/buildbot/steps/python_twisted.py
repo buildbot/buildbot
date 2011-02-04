@@ -1,4 +1,18 @@
-# -*- test-case-name: buildbot.test.test_twisted -*-
+# This file is part of Buildbot.  Buildbot is free software: you can
+# redistribute it and/or modify it under the terms of the GNU General Public
+# License as published by the Free Software Foundation, version 2.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, write to the Free Software Foundation, Inc., 51
+# Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Copyright Buildbot Team Members
+
 
 from twisted.python import log
 
@@ -165,63 +179,7 @@ class TrialTestCaseCounter(LogLineObserver):
 UNSPECIFIED=() # since None is a valid choice
 
 class Trial(ShellCommand):
-    """I run a unit test suite using 'trial', a unittest-like testing
-    framework that comes with Twisted. Trial is used to implement Twisted's
-    own unit tests, and is the unittest-framework of choice for many projects
-    that use Twisted internally.
-
-    Projects that use trial typically have all their test cases in a 'test'
-    subdirectory of their top-level library directory. I.e. for my package
-    'petmail', the tests are in 'petmail/test/test_*.py'. More complicated
-    packages (like Twisted itself) may have multiple test directories, like
-    'twisted/test/test_*.py' for the core functionality and
-    'twisted/mail/test/test_*.py' for the email-specific tests.
-
-    To run trial tests, you run the 'trial' executable and tell it where the
-    test cases are located. The most common way of doing this is with a
-    module name. For petmail, I would run 'trial petmail.test' and it would
-    locate all the test_*.py files under petmail/test/, running every test
-    case it could find in them. Unlike the unittest.py that comes with
-    Python, you do not run the test_foo.py as a script; you always let trial
-    do the importing and running. The 'tests' parameter controls which tests
-    trial will run: it can be a string or a list of strings.
-
-    To find these test cases, you must set a PYTHONPATH that allows something
-    like 'import petmail.test' to work. For packages that don't use a
-    separate top-level 'lib' directory, PYTHONPATH=. will work, and will use
-    the test cases (and the code they are testing) in-place.
-    PYTHONPATH=build/lib or PYTHONPATH=build/lib.$ARCH are also useful when
-    you do a'setup.py build' step first. The 'testpath' attribute of this
-    class controls what PYTHONPATH= is set to.
-
-    Trial has the ability (through the --testmodule flag) to run only the set
-    of test cases named by special 'test-case-name' tags in source files. We
-    can get the list of changed source files from our parent Build and
-    provide them to trial, thus running the minimal set of test cases needed
-    to cover the Changes. This is useful for quick builds, especially in
-    trees with a lot of test cases. The 'testChanges' parameter controls this
-    feature: if set, it will override 'tests'.
-
-    The trial executable itself is typically just 'trial' (which is usually
-    found on your $PATH as /usr/bin/trial), but it can be overridden with the
-    'trial' parameter. This is useful for Twisted's own unittests, which want
-    to use the copy of bin/trial that comes with the sources. (when bin/trial
-    discovers that it is living in a subdirectory named 'Twisted', it assumes
-    it is being run from the source tree and adds that parent directory to
-    PYTHONPATH. Therefore the canonical way to run Twisted's own unittest
-    suite is './bin/trial twisted.test' rather than 'PYTHONPATH=.
-    /usr/bin/trial twisted.test', especially handy when /usr/bin/trial has
-    not yet been installed).
-
-    To influence the version of python being used for the tests, or to add
-    flags to the command, set the 'python' parameter. This can be a string
-    (like 'python2.2') or a list (like ['python2.3', '-Wall']).
-
-    Trial creates and switches into a directory named _trial_temp/ before
-    running the tests, and sends the twisted log (which includes all
-    exceptions) to a file named test.log . This file will be pulled up to
-    the master where it can be seen as part of the status output.
-
+    """
     There are some class attributes which may be usefully overridden
     by subclasses. 'trialMode' and 'trialArgs' can influence the trial
     command line.
@@ -664,141 +622,9 @@ class Trial(ShellCommand):
     def getText2(self, cmd, results):
         return self.text2
 
-    
-class ProcessDocs(ShellCommand):
-    """I build all docs. This requires some LaTeX packages to be installed.
-    It will result in the full documentation book (dvi, pdf, etc).
-    
-    """
-
-    name = "process-docs"
-    warnOnWarnings = 1
-    command = ["admin/process-docs"]
-    description = ["processing", "docs"]
-    descriptionDone = ["docs"]
-    # TODO: track output and time
-
-    def __init__(self, **kwargs):
-        """
-        @type    workdir: string
-        @keyword workdir: the workdir to start from: must be the base of the
-                          Twisted tree
-        """
-        ShellCommand.__init__(self, **kwargs)
-
-    def createSummary(self, log):
-        output = log.getText()
-        # hlint warnings are of the format: 'WARNING: file:line:col: stuff
-        # latex warnings start with "WARNING: LaTeX Warning: stuff", but
-        # sometimes wrap around to a second line.
-        lines = output.split("\n")
-        warningLines = []
-        wantNext = False
-        for line in lines:
-            wantThis = wantNext
-            wantNext = False
-            if line.startswith("WARNING: "):
-                wantThis = True
-                wantNext = True
-            if wantThis:
-                warningLines.append(line)
-
-        if warningLines:
-            self.addCompleteLog("warnings", "\n".join(warningLines) + "\n")
-        self.warnings = len(warningLines)
-
-    def evaluateCommand(self, cmd):
-        if cmd.rc != 0:
-            return FAILURE
-        if self.warnings:
-            return WARNINGS
-        return SUCCESS
-
-    def getText(self, cmd, results):
-        if results == SUCCESS:
-            return ["docs", "successful"]
-        if results == WARNINGS:
-            return ["docs",
-                    "%d warnin%s" % (self.warnings,
-                                     self.warnings == 1 and 'g' or 'gs')]
-        if results == FAILURE:
-            return ["docs", "failed"]
-
-    def getText2(self, cmd, results):
-        if results == WARNINGS:
-            return ["%d do%s" % (self.warnings,
-                                 self.warnings == 1 and 'c' or 'cs')]
-        return ["docs"]
-
-
-    
-class BuildDebs(ShellCommand):
-    """I build the .deb packages."""
- 
-    name = "debuild"
-    flunkOnFailure = 1
-    command = ["debuild", "-uc", "-us"]
-    description = ["building", "debs"]
-    descriptionDone = ["debs"]
-
-    def __init__(self, **kwargs):
-        """
-        @type    workdir: string
-        @keyword workdir: the workdir to start from (must be the base of the
-                          Twisted tree)
-        """
-        ShellCommand.__init__(self, **kwargs)
-
-    def commandComplete(self, cmd):
-        errors, warnings = 0, 0
-        output = cmd.logs['stdio'].getText()
-        summary = ""
-        sio = StringIO.StringIO(output)
-        for line in sio.readlines():
-            if line.find("E: ") == 0:
-                summary += line
-                errors += 1
-            if line.find("W: ") == 0:
-                summary += line
-                warnings += 1
-        if summary:
-            self.addCompleteLog("problems", summary)
-        self.errors = errors
-        self.warnings = warnings
-
-    def evaluateCommand(self, cmd):
-        if cmd.rc != 0:
-            return FAILURE
-        if self.errors:
-            return FAILURE
-        if self.warnings:
-            return WARNINGS
-        return SUCCESS
-
-    def getText(self, cmd, results):
-        text = ["debuild"]
-        if cmd.rc != 0:
-            text.append("failed")
-        errors, warnings = self.errors, self.warnings
-        if warnings or errors:
-            text.append("lintian:")
-            if warnings:
-                text.append("%d warnin%s" % (warnings,
-                                             warnings == 1 and 'g' or 'gs'))
-            if errors:
-                text.append("%d erro%s" % (errors,
-                                           errors == 1 and 'r' or 'rs'))
-        return text
-
-    def getText2(self, cmd, results):
-        if cmd.rc != 0:
-            return ["debuild"]
-        if self.errors or self.warnings:
-            return ["%d lintian" % (self.errors + self.warnings)]
-        return []
 
 class RemovePYCs(ShellCommand):
     name = "remove-.pyc"
-    command = 'find . -name "*.pyc" | xargs rm'
+    command = ['find', '.', '-name', '*.pyc', '-exec', 'rm', '{}', ';']
     description = ["removing", ".pyc", "files"]
     descriptionDone = ["remove", ".pycs"]

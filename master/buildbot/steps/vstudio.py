@@ -1,3 +1,18 @@
+# This file is part of Buildbot.  Buildbot is free software: you can
+# redistribute it and/or modify it under the terms of the GNU General Public
+# License as published by the Free Software Foundation, version 2.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, write to the Free Software Foundation, Inc., 51
+# Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Copyright Buildbot Team Members
+
 # Visual studio steps
 
 from buildbot.steps.shell import ShellCommand
@@ -23,8 +38,8 @@ class MSLogLineObserver(LogLineObserver):
 
     _re_delimitor = re.compile(r'^(\d+>)?-{5}.+-{5}$')
     _re_file = re.compile(r'^(\d+>)?[^ ]+\.(cpp|c)$')
-    _re_warning = re.compile(r' : warning [A-Z]+[0-9]+:')
-    _re_error = re.compile(r' error [A-Z]+[0-9]+\s?: ')
+    _re_warning = re.compile(r' ?: warning [A-Z]+[0-9]+:')
+    _re_error = re.compile(r' ?error ([A-Z]+[0-9]+)?\s?: ')
 
     nbFiles = 0
     nbProjects = 0
@@ -68,6 +83,7 @@ class VisualStudio(ShellCommand):
     logobserver = None
 
     installdir = None
+    default_installdir = None
 
     # One of build, or rebuild
     mode = "rebuild"
@@ -79,38 +95,41 @@ class VisualStudio(ShellCommand):
     INCLUDE = []
     LIB = []
     
-    def __init__(self, **kwargs):
-        # cleanup kwargs
-        if 'installdir' in kwargs:
-            self.installdir = kwargs['installdir']
-            del kwargs['installdir']
-        if 'mode' in kwargs:
-            self.config = kwargs['mode']
-            del kwargs['mode']
-        if 'projectfile' in kwargs:
-            self.projectfile = kwargs['projectfile']
-            del kwargs['projectfile']
-        if 'config' in kwargs:
-            self.config = kwargs['config']
-            del kwargs['config']
-        if 'useenv' in kwargs:
-            self.useenv = kwargs['useenv']
-            del kwargs['useenv']
-        # one of those next two forces the usage of env variables
-        if 'INCLUDE' in kwargs:
+    def __init__(self, 
+                installdir = None,
+                mode = "rebuild", 
+                projectfile = None,
+                config = None,
+                useenv = False,
+                INCLUDE = [],
+                LIB = [],
+                PATH = [],
+                **kwargs):
+        self.installdir = installdir
+        self.mode = mode
+        self.projectfile = projectfile
+        self.config = config
+        self.useenv = useenv
+        if len(INCLUDE) > 0:
+            self.INCLUDE = INCLUDE
             self.useenv = True
-            self.INCLUDE = kwargs['INCLUDE']
-            del kwargs['INCLUDE']
-        if 'LIB' in kwargs:
+        if len(LIB) > 0:
+            self.LIB = LIB
             self.useenv = True
-            self.LIB = kwargs['LIB']
-            del kwargs['LIB']
-        if 'PATH' in kwargs:
-            self.PATH = kwargs['PATH']
-            del kwargs['PATH']            
-
+        if len(PATH) > 0:
+            self.PATH = PATH
         # always upcall !
         ShellCommand.__init__(self, **kwargs)
+        self.addFactoryArguments(
+            installdir = installdir,
+            mode = mode,
+            projectfile = projectfile,
+            config = config,
+            useenv = useenv,
+            INCLUDE = INCLUDE,
+            LIB = LIB,
+            PATH = PATH
+        )
 
     def setupProgress(self):
         self.progressMetrics += ('projects', 'files', 'warnings',)
@@ -123,6 +142,10 @@ class VisualStudio(ShellCommand):
         self.addLogObserver('stdio', self.logobserver)
         ShellCommand.setupLogfiles(self, cmd, logfiles)
 
+
+    def setupInstalldir(self):
+        if not self.installdir:
+            self.installdir = self.default_installdir
 
     def setupEnvironment(self, cmd):
         ShellCommand.setupEnvironment(self, cmd)
@@ -137,6 +160,7 @@ class VisualStudio(ShellCommand):
         for path in self.LIB:
             addEnvPath(cmd.args['env'], "LIB", path)
 
+        self.setupInstalldir()
 
     def describe(self, done=False):
         description = ShellCommand.describe(self, done)
@@ -158,6 +182,8 @@ class VisualStudio(ShellCommand):
         self.step_status.setStatistic('errors', self.logobserver.nbErrors)
 
     def evaluateCommand(self, cmd):
+        if cmd.rc != 0:
+            return FAILURE
         if self.logobserver.nbErrors > 0:
             return FAILURE
         if self.logobserver.nbWarnings > 0:
@@ -172,6 +198,8 @@ class VisualStudio(ShellCommand):
 
 class VC6(VisualStudio):
 
+    default_installdir = 'C:\\Program Files\\Microsoft Visual Studio'
+
     def __init__(self, **kwargs):  
 
         # always upcall !
@@ -180,16 +208,10 @@ class VC6(VisualStudio):
     def setupEnvironment(self, cmd):
         VisualStudio.setupEnvironment(self, cmd)
 
-        if self.installdir:
-            installdir = self.installdir
-        else:
-            installdir = 'C:\\Program Files\\Microsoft Visual Studio'
-
         # Root of Visual Developer Studio Common files.
-        VSCommonDir = installdir + '\\Common'
-        MSVCDir = installdir + '\\VC98'
+        VSCommonDir = self.installdir + '\\Common'
+        MSVCDir = self.installdir + '\\VC98'
         MSDevDir = VSCommonDir + '\\msdev98'
-
 
         addEnvPath(cmd.args['env'], "PATH", MSDevDir + '\\BIN')
         addEnvPath(cmd.args['env'], "PATH", MSVCDir + '\\BIN')
@@ -218,6 +240,7 @@ class VC6(VisualStudio):
         return VisualStudio.start(self)    
 
 class VC7(VisualStudio):
+    default_installdir = 'C:\\Program Files\\Microsoft Visual Studio .NET 2003'
 
     def __init__(self, **kwargs):  
 
@@ -227,14 +250,9 @@ class VC7(VisualStudio):
     def setupEnvironment(self, cmd):
         VisualStudio.setupEnvironment(self, cmd)
 
-        if self.installdir:
-            installdir = self.installdir
-        else:
-            installdir = 'C:\\Program Files\\Microsoft Visual Studio .NET 2003'
-        
-        VSInstallDir = installdir + '\\Common7\\IDE'
-        VCInstallDir = installdir
-        MSVCDir = installdir + '\\VC7'
+        VSInstallDir = self.installdir + '\\Common7\\IDE'
+        VCInstallDir = self.installdir
+        MSVCDir = self.installdir + '\\VC7'
 
         addEnvPath(cmd.args['env'], "PATH", VSInstallDir)
         addEnvPath(cmd.args['env'], "PATH", MSVCDir + '\\BIN')
@@ -252,7 +270,7 @@ class VC7(VisualStudio):
         addEnvPath(cmd.args['env'], "LIB", VCInstallDir + '\\SDK\\v1.1\\lib')
         
     def start(self):
-        command = ["devenv"]
+        command = ["devenv.com"]
         command.append(self.projectfile)
         if self.mode == "rebuild":
             command.append("/Rebuild")
@@ -267,31 +285,24 @@ class VC7(VisualStudio):
 #alias VC7 as VS2003
 VS2003 = VC7
 
-class VC8(VisualStudio):
+class VC8(VC7):
     
     # Our ones
     arch = "x86"
+    default_installdir = 'C:\\Program Files\\Microsoft Visual Studio 8'
 
-    def __init__(self, **kwargs):
-
-        # cleanup kwargs
-        if 'arch' in kwargs:
-            self.arch = kwargs['arch']
-            del kwargs['arch']
+    def __init__(self, arch = "x86", **kwargs):
+        self.arch = arch
 
         # always upcall !
         VisualStudio.__init__(self, **kwargs)
+        self.addFactoryArguments(arch = arch)
 
     def setupEnvironment(self, cmd):
         VisualStudio.setupEnvironment(self, cmd)
 
-        if self.installdir:
-            installdir = self.installdir
-        else:
-            installdir = 'C:\\Program Files\\Microsoft Visual Studio 8'
-
-        VSInstallDir = installdir
-        VCInstallDir = installdir + '\\VC'
+        VSInstallDir = self.installdir
+        VCInstallDir = self.installdir + '\\VC'
 
         addEnvPath(cmd.args['env'], "PATH", VSInstallDir + '\\Common7\\IDE')
         if self.arch == "x64":
@@ -316,9 +327,12 @@ class VC8(VisualStudio):
         addEnvPath(cmd.args['env'], "LIB", VCInstallDir + '\\PlatformSDK\\lib' + archsuffix)
         addEnvPath(cmd.args['env'], "LIB", VSInstallDir + '\\SDK\\v2.0\\lib' + archsuffix)
 
-    # the start method is the same as for VC7
+#alias VC8 as VS2005
+VS2005 = VC8
+
+class VCExpress9(VC8):
     def start(self):
-        command = ["devenv"]
+        command = ["vcexpress"]
         command.append(self.projectfile)
         if self.mode == "rebuild":
             command.append("/Rebuild")
@@ -330,5 +344,14 @@ class VC8(VisualStudio):
         self.setCommand(command)
         return VisualStudio.start(self)
 
-#alias VC8 as VS2005
-VS2005 = VC8
+# Add first support for VC9 (Same as VC8, with a different installdir)
+class VC9(VC8):
+    default_installdir = 'C:\\Program Files\\Microsoft Visual Studio 9.0'
+
+VS2008 = VC9
+
+# VC10 doesn't looks like it needs extra stuff.
+class VC10(VC9):
+    default_installdir = 'C:\\Program Files\\Microsoft Visual Studio 10.0'
+
+VS2010 = VC10

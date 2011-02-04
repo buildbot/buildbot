@@ -1,9 +1,23 @@
+# This file is part of Buildbot.  Buildbot is free software: you can
+# redistribute it and/or modify it under the terms of the GNU General Public
+# License as published by the Free Software Foundation, version 2.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, write to the Free Software Foundation, Inc., 51
+# Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Portions Copyright Buildbot Team Members
+# Portions Copyright Canonical Ltd. 2009
+
 """A LatentSlave that uses EC2 to instantiate the slaves on demand.
 
 Tested with Python boto 1.5c
 """
-
-# Portions copyright Canonical Ltd. 2009
 
 import os
 import re
@@ -34,10 +48,10 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
                  keypair_name='latent_buildbot_slave',
                  security_name='latent_buildbot_slave',
                  max_builds=None, notify_on_missing=[], missing_timeout=60*20,
-                 build_wait_timeout=60*10, properties={}):
+                 build_wait_timeout=60*10, properties={}, locks=None):
         AbstractLatentBuildSlave.__init__(
             self, name, password, max_builds, notify_on_missing,
-            missing_timeout, build_wait_timeout, properties)
+            missing_timeout, build_wait_timeout, properties, locks)
         if not ((ami is not None) ^
                 (valid_ami_owners is not None or
                  valid_ami_location_regex is not None)):
@@ -104,6 +118,7 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
         # usage requirement.
         try:
             key_pair = self.conn.get_all_key_pairs(keypair_name)[0]
+            assert key_pair
             # key_pair.delete() # would be used to recreate
         except boto.exception.EC2ResponseError, e:
             if 'InvalidKeyPair.NotFound' not in e.body:
@@ -122,6 +137,7 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
         # create security group
         try:
             group = self.conn.get_all_security_groups(security_name)[0]
+            assert group
         except boto.exception.EC2ResponseError, e:
             if 'InvalidGroup.NotFound' in e.body:
                 self.security_group = self.conn.create_security_group(
@@ -143,6 +159,7 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
         else:
             # verify we have access to at least one acceptable image
             discard = self.get_image()
+            assert discard
 
         # get the specified elastic IP, if any
         if elastic_ip is not None:
@@ -231,9 +248,9 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
                      self.output.output))
             if self.elastic_ip is not None:
                 self.instance.use_ip(self.elastic_ip)
-                return [self.instance.id,
-                        image.id,
-                        '%02d:%02d:%02d' % (minutes//60, minutes%60, seconds)]
+            return [self.instance.id,
+                    image.id,
+                    '%02d:%02d:%02d' % (minutes//60, minutes%60, seconds)]
         else:
             log.msg('%s %s failed to start instance %s (%s)' %
                     (self.__class__.__name__, self.slavename,

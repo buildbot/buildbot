@@ -1,4 +1,18 @@
-# -*- test-case-name: buildbot.test.test_run -*-
+# This file is part of Buildbot.  Buildbot is free software: you can
+# redistribute it and/or modify it under the terms of the GNU General Public
+# License as published by the Free Software Foundation, version 2.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, write to the Free Software Foundation, Inc., 51
+# Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Copyright Buildbot Team Members
+
 
 import os
 import signal
@@ -10,25 +24,21 @@ from twisted.python import log, components
 from twisted.python.failure import Failure
 from twisted.internet import defer, reactor
 from twisted.spread import pb
-from twisted.cred import portal, checkers
-from twisted.application import service, strports
+from twisted.application import service
 from twisted.application.internet import TimerService
 
 import buildbot
-# sibling imports
-from buildbot.util import now, safeTranslate, eventual
+import buildbot.pbmanager
+from buildbot.util import now, safeTranslate, eventual, subscription
 from buildbot.pbutil import NewCredPerspective
 from buildbot.process.builder import Builder, IDLE
 from buildbot.status.builder import Status, BuildSetStatus
-from buildbot.changes.changes import Change
 from buildbot.changes.manager import ChangeManager
 from buildbot import interfaces, locks
 from buildbot.process.properties import Properties
 from buildbot.config import BuilderConfig
 from buildbot.process.builder import BuilderControl
-from buildbot.db.dbspec import DBSpec
 from buildbot.db import connector, exceptions
-from buildbot.db.schema.manager import DBSchemaManager
 from buildbot.schedulers.manager import SchedulerManager
 from buildbot.util.loop import DelegateLoop
 
@@ -44,8 +54,10 @@ class BotMaster(service.MultiService):
     debug = 0
     reactor = reactor
 
-    def __init__(self):
+    def __init__(self, master):
         service.MultiService.__init__(self)
+        self.master = master
+
         self.builders = {}
         self.builderNames = []
         # builders maps Builder names to instances of bb.p.builder.Builder,
@@ -59,7 +71,6 @@ class BotMaster(service.MultiService):
         # contain a RemoteReference to their Bot instance. If it is not
         # connected, that attribute will hold None.
         self.slaves = {} # maps slavename to BuildSlave
-        self.statusClientService = None
         self.watchers = {}
 
         # self.locks holds the real Lock instances
@@ -77,6 +88,8 @@ class BotMaster(service.MultiService):
         self.loop.setServiceParent(self)
 
         self.shuttingDown = False
+
+        self.lastSlavePortnum = None
 
     def setMasterName(self, name, incarnation):
         self.master_name = name
@@ -202,6 +215,13 @@ class BotMaster(service.MultiService):
         return defer.succeed(None)
 
     def loadConfig_Slaves(self, new_slaves):
+        new_portnum = (self.lastSlavePortnum is not None
+                   and self.lastSlavePortnum != self.master.slavePortnum)
+        if new_portnum:
+            # it turns out this is pretty hard..
+            raise ValueError("changing slavePortnum in reconfig is not supported")
+        self.lastSlavePortnum = self.master.slavePortnum
+
         old_slaves = [c for c in list(self)
                       if interfaces.IBuildSlave.providedBy(c)]
 
@@ -230,29 +250,40 @@ class BotMaster(service.MultiService):
         remaining_t = [t
                        for t in new_t
                        if t in old_t]
+
         # removeSlave will hang up on the old bot
         dl = []
         for s in removed:
             dl.append(self.removeSlave(s))
         d = defer.DeferredList(dl, fireOnOneErrback=True)
-        def _add(res):
+
+        def add_new(res):
             for s in added:
                 self.addSlave(s)
+        d.addCallback(add_new)
+
+        def update_remaining(_):
             for t in remaining_t:
                 old_t[t].update(new_t[t])
-        d.addCallback(_add)
+        d.addCallback(update_remaining)
+
         return d
 
     def addSlave(self, s):
         s.setServiceParent(self)
         s.setBotmaster(self)
         self.slaves[s.slavename] = s
+        s.pb_registration = self.master.pbmanager.register(
+                self.master.slavePortnum, s.slavename,
+                s.password, self.getPerspective)
 
     def removeSlave(self, s):
-        # TODO: technically, disownServiceParent could return a Deferred
-        s.disownServiceParent()
-        d = self.slaves[s.slavename].disconnect()
-        del self.slaves[s.slavename]
+        d = s.disownServiceParent()
+        d.addCallback(lambda _ : s.pb_registration.unregister())
+        d.addCallback(lambda _ : self.slaves[s.slavename].disconnect())
+        def delslave(_):
+            del self.slaves[s.slavename]
+        d.addCallback(delslave)
         return d
 
     def slaveLost(self, bot):
@@ -310,16 +341,28 @@ class BotMaster(service.MultiService):
 
         """
         if self.mergeRequests is not None:
-            return self.mergeRequests(builder, req1, req2)
+            if callable(self.mergeRequests):
+                return self.mergeRequests(builder, req1, req2)
+            elif self.mergeRequests == False:
+                # To save typing, this allows c['mergeRequests'] = False
+                return False
         return req1.canBeMergedWith(req2)
 
-    def getPerspective(self, slavename):
-        return self.slaves[slavename]
+    def getPerspective(self, mind, slavename):
+        sl = self.slaves[slavename]
+        if not sl:
+            return None
 
-    def shutdownSlaves(self):
-        # TODO: make this into a bot method rather than a builder method
-        for b in self.slaves.values():
-            b.shutdownSlave()
+        # record when this connection attempt occurred
+        sl.recordConnectTime()
+
+        if sl.isConnected():
+            # duplicate slave - send it to arbitration
+            arb = DuplicateSlaveArbitrator(sl)
+            return arb.getPerspective(mind, slavename)
+        else:
+            log.msg("slave '%s' attaching from %s" % (slavename, mind.broker.transport.getPeer()))
+            return sl
 
     def stopService(self):
         for b in self.builders.values():
@@ -341,6 +384,151 @@ class BotMaster(service.MultiService):
         # be hashable and that they should compare properly.
         return self.locks[lockid]
 
+class DuplicateSlaveArbitrator(object):
+    """Utility class to arbitrate the situation when a new slave connects with
+    the name of an existing, connected slave"""
+    # There are several likely duplicate slave scenarios in practice:
+    #
+    # 1. two slaves are configured with the same username/password
+    #
+    # 2. the same slave process believes it is disconnected (due to a network
+    # hiccup), and is trying to reconnect
+    #
+    # For the first case, we want to prevent the two slaves from repeatedly
+    # superseding one another (which results in lots of failed builds), so we
+    # will prefer the old slave.  However, for the second case we need to
+    # detect situations where the old slave is "gone".  Sometimes "gone" means
+    # that the TCP/IP connection to it is in a long timeout period (10-20m,
+    # depending on the OS configuration), so this can take a while.
+
+    PING_TIMEOUT = 10
+    """Timeout for pinging the old slave.  Set this to something quite long, as
+    a very busy slave (e.g., one sending a big log chunk) may take a while to
+    return a ping."""
+
+    def __init__(self, slave):
+        self.old_slave = slave
+        "L{buildbot.buildslave.AbstractSlaveBuilder} instance"
+
+    def getPerspective(self, mind, slavename):
+        self.new_slave_mind = mind
+
+        old_tport = self.old_slave.slave.broker.transport
+        new_tport = mind.broker.transport
+        log.msg("duplicate slave %s; delaying new slave (%s) and pinging old (%s)" % 
+                (self.old_slave.slavename, new_tport.getPeer(), old_tport.getPeer()))
+
+        # delay the new slave until we decide what to do with it
+        self.new_slave_d = defer.Deferred()
+
+        # Ping the old slave.  If this kills it, then we can allow the new
+        # slave to connect.  If this does not kill it, then we disconnect
+        # the new slave.
+        self.ping_old_slave_done = False
+        self.old_slave_connected = True
+        self.ping_old_slave(new_tport.getPeer())
+
+        # Print a message on the new slave, if possible.
+        self.ping_new_slave_done = False
+        self.ping_new_slave()
+
+        return self.new_slave_d
+
+    def ping_new_slave(self):
+        d = self.new_slave_mind.callRemote("print",
+            "master already has a connection named '%s' - checking its liveness"
+                        % self.old_slave.slavename)
+        def done(_):
+            # failure or success, doesn't matter
+            self.ping_new_slave_done = True
+            self.maybe_done()
+        d.addBoth(done)
+
+    def ping_old_slave(self, new_peer):
+        # set a timer on this ping, in case the network is bad.  TODO: a timeout
+        # on the ping itself is not quite what we want.  If there is other data
+        # flowing over the PB connection, then we should keep waiting.  Bug #1703
+        def timeout():
+            self.ping_old_slave_timeout = None
+            self.ping_old_slave_timed_out = True
+            self.old_slave_connected = False
+            self.ping_old_slave_done = True
+            self.maybe_done()
+        self.ping_old_slave_timeout = reactor.callLater(self.PING_TIMEOUT, timeout)
+        self.ping_old_slave_timed_out = False
+
+        d = self.old_slave.slave.callRemote("print",
+            "master got a duplicate connection from %s; keeping this one" % new_peer)
+
+        def clear_timeout(r):
+            if self.ping_old_slave_timeout:
+                self.ping_old_slave_timeout.cancel()
+                self.ping_old_slave_timeout = None
+            return r
+        d.addBoth(clear_timeout)
+
+        def old_gone(f):
+            if self.ping_old_slave_timed_out:
+                return # ignore after timeout
+            f.trap(pb.PBConnectionLost)
+            log.msg(("connection lost while pinging old slave '%s' - " +
+                     "keeping new slave") % self.old_slave.slavename)
+            self.old_slave_connected = False
+        d.addErrback(old_gone)
+
+        def other_err(f):
+            if self.ping_old_slave_timed_out:
+                return # ignore after timeout
+            log.msg("unexpected error while pinging old slave; disconnecting it")
+            log.err(f)
+            self.old_slave_connected = False
+        d.addErrback(other_err)
+
+        def done(_):
+            if self.ping_old_slave_timed_out:
+                return # ignore after timeout
+            self.ping_old_slave_done = True
+            self.maybe_done()
+        d.addCallback(done)
+
+    def maybe_done(self):
+        if not self.ping_new_slave_done or not self.ping_old_slave_done:
+            return
+
+        # both pings are done, so sort out the results
+        if self.old_slave_connected:
+            self.disconnect_new_slave()
+        else:
+            self.start_new_slave()
+
+    def start_new_slave(self, count=20):
+        if not self.new_slave_d:
+            return
+
+        # we need to wait until the old slave has actually disconnected, which
+        # can take a little while -- but don't wait forever!
+        if self.old_slave.isConnected():
+            if self.old_slave.slave:
+                self.old_slave.slave.broker.transport.loseConnection()
+            if count < 0:
+                log.msg("WEIRD: want to start new slave, but the old slave will not disconnect")
+                self.disconnect_new_slave()
+            else:
+                reactor.callLater(0.1, self.start_new_slave, count-1)
+            return
+
+        d = self.new_slave_d
+        self.new_slave_d = None
+        d.callback(self.old_slave)
+
+    def disconnect_new_slave(self):
+        if not self.new_slave_d:
+            return
+        d = self.new_slave_d
+        self.new_slave_d = None
+        log.msg("rejecting duplicate slave with exception")
+        d.errback(Failure(RuntimeError("rejecting duplicate slave")))
+
 ########################################
 
 
@@ -351,19 +539,19 @@ class DebugPerspective(NewCredPerspective):
     def detached(self, mind):
         pass
 
+    def perspective_requestBuild(self, buildername, reason, branch, revision, properties={}):
+        from buildbot.sourcestamp import SourceStamp
+        c = interfaces.IControl(self.master)
+        bc = c.getBuilder(buildername)
+        ss = SourceStamp(branch, revision)
+        bpr = Properties()
+        bpr.update(properties, "remote requestBuild")
+        bc.submitBuildRequest(ss, reason, bpr)
+
     def perspective_pingBuilder(self, buildername):
         c = interfaces.IControl(self.master)
         bc = c.getBuilder(buildername)
         bc.ping()
-
-    def perspective_fakeChange(self, file, revision=None, who="fakeUser",
-                               branch=None, repository="", 
-                               project=""):
-        change = Change(who, [file], "some fake comments\n",
-                        branch=branch, revision=revision,
-                        repository=repository, project=project)
-        c = interfaces.IControl(self.master)
-        c.addChange(change)
 
     def perspective_setCurrentState(self, buildername, state):
         builder = self.botmaster.builders.get(buildername)
@@ -392,45 +580,6 @@ class DebugPerspective(NewCredPerspective):
     def perspective_print(self, msg):
         print "debug", msg
 
-class Dispatcher:
-    implements(portal.IRealm)
-
-    def __init__(self):
-        self.names = {}
-
-    def register(self, name, afactory):
-        self.names[name] = afactory
-    def unregister(self, name):
-        del self.names[name]
-
-    def requestAvatar(self, avatarID, mind, interface):
-        assert interface == pb.IPerspective
-        afactory = self.names.get(avatarID)
-        if afactory:
-            p = afactory.getPerspective()
-        elif avatarID == "change":
-            raise ValueError("no PBChangeSource installed")
-        elif avatarID == "debug":
-            p = DebugPerspective()
-            p.master = self.master
-            p.botmaster = self.botmaster
-        elif avatarID == "statusClient":
-            p = self.statusClientService.getPerspective()
-        else:
-            # it must be one of the buildslaves: no other names will make it
-            # past the checker
-            p = self.botmaster.getPerspective(avatarID)
-
-        if not p:
-            raise ValueError("no perspective for '%s'" % avatarID)
-
-        d = defer.maybeDeferred(p.attached, mind)
-        d.addCallback(self._avatarAttached, mind)
-        return d
-
-    def _avatarAttached(self, p, mind):
-        return (pb.IPerspective, p, lambda p=p,mind=mind: p.detached(mind))
-
 ########################################
 
 class _Unset: pass  # marker
@@ -451,31 +600,21 @@ class BuildMaster(service.MultiService):
     change_svc = None
     properties = Properties()
 
-    def __init__(self, basedir, configFileName="master.cfg", db_spec=None):
+    def __init__(self, basedir, configFileName="master.cfg"):
         service.MultiService.__init__(self)
         self.setName("buildmaster")
         self.basedir = basedir
         self.configFileName = configFileName
 
-        # the dispatcher is the realm in which all inbound connections are
-        # looked up: slave builders, change notifications, status clients, and
-        # the debug port
-        dispatcher = Dispatcher()
-        dispatcher.master = self
-        self.dispatcher = dispatcher
-        self.checker = checkers.InMemoryUsernamePasswordDatabaseDontUse()
-        # the checker starts with no user/passwd pairs: they are added later
-        p = portal.Portal(dispatcher)
-        p.registerChecker(self.checker)
-        self.slaveFactory = pb.PBServerFactory(p)
-        self.slaveFactory.unsafeTracebacks = True # let them see exceptions
+        self.pbmanager = buildbot.pbmanager.PBManager()
+        self.pbmanager.setServiceParent(self)
+        "L{buildbot.pbmanager.PBManager} instance managing connections for this master"
 
         self.slavePortnum = None
         self.slavePort = None
 
         self.change_svc = ChangeManager()
         self.change_svc.setServiceParent(self)
-        self.dispatcher.changemaster = self.change_svc
 
         try:
             hostname = os.uname()[1] # only on unix
@@ -484,11 +623,12 @@ class BuildMaster(service.MultiService):
         self.master_name = "%s:%s" % (hostname, os.path.abspath(self.basedir))
         self.master_incarnation = "pid%d-boot%d" % (os.getpid(), time.time())
 
-        self.botmaster = BotMaster()
+        self.botmaster = BotMaster(self)
         self.botmaster.setName("botmaster")
         self.botmaster.setMasterName(self.master_name, self.master_incarnation)
         self.botmaster.setServiceParent(self)
-        self.dispatcher.botmaster = self.botmaster
+
+        self.debugClientRegistration = None
 
         self.status = Status(self.botmaster, self.basedir)
         self.statusTargets = []
@@ -496,13 +636,18 @@ class BuildMaster(service.MultiService):
         self.db = None
         self.db_url = None
         self.db_poll_interval = _Unset
-        if db_spec:
-            self.loadDatabase(db_spec)
 
+        # note that "read" here is taken in the past participal (i.e., "I read
+        # the config already") rather than the imperative ("you should read the
+        # config later")
         self.readConfig = False
         
         # create log_rotation object and set default parameters (used by WebStatus)
         self.log_rotation = LogRotation()
+
+        # subscription point to recieve changes; users should call subscribeToChanges
+        # to get into this subscription point
+        self._change_subscriptions = subscription.SubscriptionPoint("changes")
 
     def startService(self):
         service.MultiService.startService(self)
@@ -555,422 +700,417 @@ class BuildMaster(service.MultiService):
         f.close()
         return d # for unit tests
 
-    def loadConfig(self, f, check_synchronously_only=False):
+    def loadConfig(self, f, checkOnly=False):
         """Internal function to load a specific configuration file. Any
-        errors in the file will be signalled by raising an exception.
+        errors in the file will be signalled by raising a failure.  Returns
+        a deferred.
+        """
 
-        If check_synchronously_only=True, I will return (with None)
-        synchronously, after checking the config file for sanity, or raise an
-        exception. I may also emit some DeprecationWarnings.
+        # this entire operation executes in a deferred, so that any exceptions
+        # are automatically converted to a failure object.
+        d = defer.succeed(None)
 
-        If check_synchronously_only=False, I will return a Deferred that
-        fires (with None) when the configuration changes have been completed.
-        This may involve a round-trip to each buildslave that was involved."""
+        def do_load(_):
+            log.msg("configuration update started")
 
-        localDict = {'basedir': os.path.expanduser(self.basedir)}
-        try:
-            exec f in localDict
-        except:
-            log.msg("error while parsing config file")
-            raise
+            # execute the config file
 
-        try:
-            config = localDict['BuildmasterConfig']
-        except KeyError:
-            log.err("missing config dictionary")
-            log.err("config file must define BuildmasterConfig")
-            raise
+            localDict = {'basedir': os.path.expanduser(self.basedir)}
+            try:
+                exec f in localDict
+            except:
+                log.msg("error while parsing config file")
+                raise
 
-        known_keys = ("slaves", "change_source",
-                      "schedulers", "builders", "mergeRequests",
-                      "slavePortnum", "debugPassword", "logCompressionLimit",
-                      "manhole", "status", "projectName", "projectURL",
-                      "buildbotURL", "properties", "prioritizeBuilders",
-                      "eventHorizon", "buildCacheSize", "logHorizon", "buildHorizon",
-                      "changeHorizon", "logMaxSize", "logMaxTailSize",
-                      "logCompressionMethod", "db_url", "multiMaster",
-                      "db_poll_interval",
-                      )
-        for k in config.keys():
-            if k not in known_keys:
-                log.msg("unknown key '%s' defined in config dictionary" % k)
+            try:
+                config = localDict['BuildmasterConfig']
+            except KeyError:
+                log.err("missing config dictionary")
+                log.err("config file must define BuildmasterConfig")
+                raise
 
-        try:
-            # required
-            schedulers = config['schedulers']
-            builders = config['builders']
-            slavePortnum = config['slavePortnum']
-            #slaves = config['slaves']
-            #change_source = config['change_source']
+            # check for unknown keys
 
-            # optional
-            db_url = config.get("db_url", "sqlite:///state.sqlite")
-            db_poll_interval = config.get("db_poll_interval", None)
-            debugPassword = config.get('debugPassword')
-            manhole = config.get('manhole')
-            status = config.get('status', [])
-            projectName = config.get('projectName')
-            projectURL = config.get('projectURL')
-            buildbotURL = config.get('buildbotURL')
-            properties = config.get('properties', {})
-            buildCacheSize = config.get('buildCacheSize', None)
-            eventHorizon = config.get('eventHorizon', 50)
-            logHorizon = config.get('logHorizon', None)
-            buildHorizon = config.get('buildHorizon', None)
-            logCompressionLimit = config.get('logCompressionLimit', 4*1024)
-            if logCompressionLimit is not None and not \
-                    isinstance(logCompressionLimit, int):
-                raise ValueError("logCompressionLimit needs to be bool or int")
-            logCompressionMethod = config.get('logCompressionMethod', "bz2")
-            if logCompressionMethod not in ('bz2', 'gz'):
-                raise ValueError("logCompressionMethod needs to be 'bz2', or 'gz'")
-            logMaxSize = config.get('logMaxSize')
-            if logMaxSize is not None and not \
-                    isinstance(logMaxSize, int):
-                raise ValueError("logMaxSize needs to be None or int")
-            logMaxTailSize = config.get('logMaxTailSize')
-            if logMaxTailSize is not None and not \
-                    isinstance(logMaxTailSize, int):
-                raise ValueError("logMaxTailSize needs to be None or int")
-            mergeRequests = config.get('mergeRequests')
-            if mergeRequests is not None and not callable(mergeRequests):
-                raise ValueError("mergeRequests must be a callable")
-            prioritizeBuilders = config.get('prioritizeBuilders')
-            if prioritizeBuilders is not None and not callable(prioritizeBuilders):
-                raise ValueError("prioritizeBuilders must be callable")
-            changeHorizon = config.get("changeHorizon")
-            if changeHorizon is not None and not isinstance(changeHorizon, int):
-                raise ValueError("changeHorizon needs to be an int")
+            known_keys = ("slaves", "change_source",
+                          "schedulers", "builders", "mergeRequests",
+                          "slavePortnum", "debugPassword", "logCompressionLimit",
+                          "manhole", "status", "projectName", "projectURL",
+                          "buildbotURL", "properties", "prioritizeBuilders",
+                          "eventHorizon", "buildCacheSize", "changeCacheSize",
+                          "logHorizon", "buildHorizon", "changeHorizon",
+                          "logMaxSize", "logMaxTailSize", "logCompressionMethod",
+                          "db_url", "multiMaster", "db_poll_interval",
+                          )
+            for k in config.keys():
+                if k not in known_keys:
+                    log.msg("unknown key '%s' defined in config dictionary" % k)
 
-            multiMaster = config.get("multiMaster", False)
+            # load known keys into local vars, applying defaults
 
-        except KeyError:
-            log.msg("config dictionary is missing a required parameter")
-            log.msg("leaving old configuration in place")
-            raise
+            try:
+                # required
+                schedulers = config['schedulers']
+                builders = config['builders']
+                slavePortnum = config['slavePortnum']
+                #slaves = config['slaves']
+                #change_source = config['change_source']
 
-        if "sources" in config:
-            m = ("c['sources'] is deprecated as of 0.7.6 and is no longer "
-                 "accepted in >= 0.8.0 . Please use c['change_source'] instead.")
-            raise KeyError(m)
+                # optional
+                db_url = config.get("db_url", "sqlite:///state.sqlite")
+                db_poll_interval = config.get("db_poll_interval", None)
+                debugPassword = config.get('debugPassword')
+                manhole = config.get('manhole')
+                status = config.get('status', [])
+                projectName = config.get('projectName')
+                projectURL = config.get('projectURL')
+                buildbotURL = config.get('buildbotURL')
+                properties = config.get('properties', {})
+                buildCacheSize = config.get('buildCacheSize', None)
+                changeCacheSize = config.get('changeCacheSize', None)
+                eventHorizon = config.get('eventHorizon', 50)
+                logHorizon = config.get('logHorizon', None)
+                buildHorizon = config.get('buildHorizon', None)
+                logCompressionLimit = config.get('logCompressionLimit', 4*1024)
+                if logCompressionLimit is not None and not \
+                        isinstance(logCompressionLimit, int):
+                    raise ValueError("logCompressionLimit needs to be bool or int")
+                logCompressionMethod = config.get('logCompressionMethod', "bz2")
+                if logCompressionMethod not in ('bz2', 'gz'):
+                    raise ValueError("logCompressionMethod needs to be 'bz2', or 'gz'")
+                logMaxSize = config.get('logMaxSize')
+                if logMaxSize is not None and not \
+                        isinstance(logMaxSize, int):
+                    raise ValueError("logMaxSize needs to be None or int")
+                logMaxTailSize = config.get('logMaxTailSize')
+                if logMaxTailSize is not None and not \
+                        isinstance(logMaxTailSize, int):
+                    raise ValueError("logMaxTailSize needs to be None or int")
+                mergeRequests = config.get('mergeRequests')
+                if mergeRequests not in (None, False) and not callable(mergeRequests):
+                    raise ValueError("mergeRequests must be a callable or False")
+                prioritizeBuilders = config.get('prioritizeBuilders')
+                if prioritizeBuilders is not None and not callable(prioritizeBuilders):
+                    raise ValueError("prioritizeBuilders must be callable")
+                changeHorizon = config.get("changeHorizon")
+                if changeHorizon is not None and not isinstance(changeHorizon, int):
+                    raise ValueError("changeHorizon needs to be an int")
 
-        if "bots" in config:
-            m = ("c['bots'] is deprecated as of 0.7.6 and is no longer "
-                 "accepted in >= 0.8.0 . Please use c['slaves'] instead.")
-            raise KeyError(m)
+                multiMaster = config.get("multiMaster", False)
 
-        slaves = config.get('slaves', [])
-        if "slaves" not in config:
-            log.msg("config dictionary must have a 'slaves' key")
-            log.msg("leaving old configuration in place")
-            raise KeyError("must have a 'slaves' key")
+            except KeyError:
+                log.msg("config dictionary is missing a required parameter")
+                log.msg("leaving old configuration in place")
+                raise
 
-        if changeHorizon is not None:
-            self.change_svc.changeHorizon = changeHorizon
+            if "sources" in config:
+                m = ("c['sources'] is deprecated as of 0.7.6 and is no longer "
+                     "accepted in >= 0.8.0 . Please use c['change_source'] instead.")
+                raise KeyError(m)
 
-        change_source = config.get('change_source', [])
-        if isinstance(change_source, (list, tuple)):
-            change_sources = change_source
-        else:
-            change_sources = [change_source]
+            if "bots" in config:
+                m = ("c['bots'] is deprecated as of 0.7.6 and is no longer "
+                     "accepted in >= 0.8.0 . Please use c['slaves'] instead.")
+                raise KeyError(m)
 
-        # do some validation first
-        for s in slaves:
-            assert interfaces.IBuildSlave.providedBy(s)
-            if s.slavename in ("debug", "change", "status"):
-                raise KeyError(
-                    "reserved name '%s' used for a bot" % s.slavename)
-        if config.has_key('interlocks'):
-            raise KeyError("c['interlocks'] is no longer accepted")
-        assert self.db_url is None or db_url == self.db_url, \
-                "Cannot change db_url after master has started"
-        assert db_poll_interval is None or isinstance(db_poll_interval, int), \
-               "db_poll_interval must be an integer: seconds between polls"
-        assert self.db_poll_interval is _Unset or db_poll_interval == self.db_poll_interval, \
-               "Cannot change db_poll_interval after master has started"
+            slaves = config.get('slaves', [])
+            if "slaves" not in config:
+                log.msg("config dictionary must have a 'slaves' key")
+                log.msg("leaving old configuration in place")
+                raise KeyError("must have a 'slaves' key")
 
-        assert isinstance(change_sources, (list, tuple))
-        for s in change_sources:
-            assert interfaces.IChangeSource(s, None)
-        # this assertion catches c['schedulers'] = Scheduler(), since
-        # Schedulers are service.MultiServices and thus iterable.
-        errmsg = "c['schedulers'] must be a list of Scheduler instances"
-        assert isinstance(schedulers, (list, tuple)), errmsg
-        for s in schedulers:
-            assert interfaces.IScheduler(s, None), errmsg
-        assert isinstance(status, (list, tuple))
-        for s in status:
-            assert interfaces.IStatusReceiver(s, None)
+            if changeHorizon is not None:
+                self.change_svc.changeHorizon = changeHorizon
 
-        slavenames = [s.slavename for s in slaves]
-        buildernames = []
-        dirnames = []
-
-        # convert builders from objects to config dictionaries
-        builders_dicts = []
-        for b in builders:
-            if isinstance(b, BuilderConfig):
-                builders_dicts.append(b.getConfigDict())
-            elif type(b) is dict:
-                builders_dicts.append(b)
+            change_source = config.get('change_source', [])
+            if isinstance(change_source, (list, tuple)):
+                change_sources = change_source
             else:
-                raise ValueError("builder %s is not a BuilderConfig object (or a dict)" % b)
-        builders = builders_dicts
+                change_sources = [change_source]
 
-        for b in builders:
-            if b.has_key('slavename') and b['slavename'] not in slavenames:
-                raise ValueError("builder %s uses undefined slave %s" \
-                                 % (b['name'], b['slavename']))
-            for n in b.get('slavenames', []):
-                if n not in slavenames:
-                    raise ValueError("builder %s uses undefined slave %s" \
-                                     % (b['name'], n))
-            if b['name'] in buildernames:
-                raise ValueError("duplicate builder name %s"
-                                 % b['name'])
-            buildernames.append(b['name'])
+            # do some validation first
+            for s in slaves:
+                assert interfaces.IBuildSlave.providedBy(s)
+                if s.slavename in ("debug", "change", "status"):
+                    raise KeyError(
+                        "reserved name '%s' used for a bot" % s.slavename)
+            if config.has_key('interlocks'):
+                raise KeyError("c['interlocks'] is no longer accepted")
+            assert self.db_url is None or db_url == self.db_url, \
+                    "Cannot change db_url after master has started"
+            assert db_poll_interval is None or isinstance(db_poll_interval, int), \
+                   "db_poll_interval must be an integer: seconds between polls"
+            assert self.db_poll_interval is _Unset or db_poll_interval == self.db_poll_interval, \
+                   "Cannot change db_poll_interval after master has started"
 
-            # sanity check name (BuilderConfig does this too)
-            if b['name'].startswith("_"):
-                errmsg = ("builder names must not start with an "
-                          "underscore: " + b['name'])
-                log.err(errmsg)
-                raise ValueError(errmsg)
+            assert isinstance(change_sources, (list, tuple))
+            for s in change_sources:
+                assert interfaces.IChangeSource(s, None)
+            # this assertion catches c['schedulers'] = Scheduler(), since
+            # Schedulers are service.MultiServices and thus iterable.
+            errmsg = "c['schedulers'] must be a list of Scheduler instances"
+            assert isinstance(schedulers, (list, tuple)), errmsg
+            for s in schedulers:
+                assert interfaces.IScheduler(s, None), errmsg
+            assert isinstance(status, (list, tuple))
+            for s in status:
+                assert interfaces.IStatusReceiver(s, None)
 
-            # Fix the dictionnary with default values, in case this wasn't
-            # specified with a BuilderConfig object (which sets the same defaults)
-            b.setdefault('builddir', safeTranslate(b['name']))
-            b.setdefault('slavebuilddir', b['builddir'])
-            b.setdefault('buildHorizon', buildHorizon)
-            b.setdefault('logHorizon', logHorizon)
-            b.setdefault('eventHorizon', eventHorizon)
-            if b['builddir'] in dirnames:
-                raise ValueError("builder %s reuses builddir %s"
-                                 % (b['name'], b['builddir']))
-            dirnames.append(b['builddir'])
+            slavenames = [s.slavename for s in slaves]
+            buildernames = []
+            dirnames = []
 
-        unscheduled_buildernames = buildernames[:]
-        schedulernames = []
-        for s in schedulers:
-            for b in s.listBuilderNames():
-                # Skip checks for builders in multimaster mode
-                if not multiMaster:
-                    assert b in buildernames, \
-                           "%s uses unknown builder %s" % (s, b)
-                if b in unscheduled_buildernames:
-                    unscheduled_buildernames.remove(b)
-
-            if s.name in schedulernames:
-                msg = ("Schedulers must have unique names, but "
-                       "'%s' was a duplicate" % (s.name,))
-                raise ValueError(msg)
-            schedulernames.append(s.name)
-
-        # Skip the checks for builders in multimaster mode
-        if not multiMaster and unscheduled_buildernames:
-            log.msg("Warning: some Builders have no Schedulers to drive them:"
-                    " %s" % (unscheduled_buildernames,))
-
-        # assert that all locks used by the Builds and their Steps are
-        # uniquely named.
-        lock_dict = {}
-        for b in builders:
-            for l in b.get('locks', []):
-                if isinstance(l, locks.LockAccess): # User specified access to the lock
-                    l = l.lockid
-                if lock_dict.has_key(l.name):
-                    if lock_dict[l.name] is not l:
-                        raise ValueError("Two different locks (%s and %s) "
-                                         "share the name %s"
-                                         % (l, lock_dict[l.name], l.name))
+            # convert builders from objects to config dictionaries
+            builders_dicts = []
+            for b in builders:
+                if isinstance(b, BuilderConfig):
+                    builders_dicts.append(b.getConfigDict())
+                elif type(b) is dict:
+                    builders_dicts.append(b)
                 else:
-                    lock_dict[l.name] = l
-            # TODO: this will break with any BuildFactory that doesn't use a
-            # .steps list, but I think the verification step is more
-            # important.
-            for s in b['factory'].steps:
-                for l in s[1].get('locks', []):
+                    raise ValueError("builder %s is not a BuilderConfig object (or a dict)" % b)
+            builders = builders_dicts
+
+            for b in builders:
+                if b.has_key('slavename') and b['slavename'] not in slavenames:
+                    raise ValueError("builder %s uses undefined slave %s" \
+                                     % (b['name'], b['slavename']))
+                for n in b.get('slavenames', []):
+                    if n not in slavenames:
+                        raise ValueError("builder %s uses undefined slave %s" \
+                                         % (b['name'], n))
+                if b['name'] in buildernames:
+                    raise ValueError("duplicate builder name %s"
+                                     % b['name'])
+                buildernames.append(b['name'])
+
+                # sanity check name (BuilderConfig does this too)
+                if b['name'].startswith("_"):
+                    errmsg = ("builder names must not start with an "
+                              "underscore: " + b['name'])
+                    log.err(errmsg)
+                    raise ValueError(errmsg)
+
+                # Fix the dictionary with default values, in case this wasn't
+                # specified with a BuilderConfig object (which sets the same defaults)
+                b.setdefault('builddir', safeTranslate(b['name']))
+                b.setdefault('slavebuilddir', b['builddir'])
+                b.setdefault('buildHorizon', buildHorizon)
+                b.setdefault('logHorizon', logHorizon)
+                b.setdefault('eventHorizon', eventHorizon)
+                if b['builddir'] in dirnames:
+                    raise ValueError("builder %s reuses builddir %s"
+                                     % (b['name'], b['builddir']))
+                dirnames.append(b['builddir'])
+
+            unscheduled_buildernames = buildernames[:]
+            schedulernames = []
+            for s in schedulers:
+                for b in s.listBuilderNames():
+                    # Skip checks for builders in multimaster mode
+                    if not multiMaster:
+                        assert b in buildernames, \
+                               "%s uses unknown builder %s" % (s, b)
+                    if b in unscheduled_buildernames:
+                        unscheduled_buildernames.remove(b)
+
+                if s.name in schedulernames:
+                    msg = ("Schedulers must have unique names, but "
+                           "'%s' was a duplicate" % (s.name,))
+                    raise ValueError(msg)
+                schedulernames.append(s.name)
+
+            # Skip the checks for builders in multimaster mode
+            if not multiMaster and unscheduled_buildernames:
+                log.msg("Warning: some Builders have no Schedulers to drive them:"
+                        " %s" % (unscheduled_buildernames,))
+
+            # assert that all locks used by the Builds and their Steps are
+            # uniquely named.
+            lock_dict = {}
+            for b in builders:
+                for l in b.get('locks', []):
                     if isinstance(l, locks.LockAccess): # User specified access to the lock
                         l = l.lockid
                     if lock_dict.has_key(l.name):
                         if lock_dict[l.name] is not l:
-                            raise ValueError("Two different locks (%s and %s)"
-                                             " share the name %s"
+                            raise ValueError("Two different locks (%s and %s) "
+                                             "share the name %s"
                                              % (l, lock_dict[l.name], l.name))
                     else:
                         lock_dict[l.name] = l
+                # TODO: this will break with any BuildFactory that doesn't use a
+                # .steps list, but I think the verification step is more
+                # important.
+                for s in b['factory'].steps:
+                    for l in s[1].get('locks', []):
+                        if isinstance(l, locks.LockAccess): # User specified access to the lock
+                            l = l.lockid
+                        if lock_dict.has_key(l.name):
+                            if lock_dict[l.name] is not l:
+                                raise ValueError("Two different locks (%s and %s)"
+                                                 " share the name %s"
+                                                 % (l, lock_dict[l.name], l.name))
+                        else:
+                            lock_dict[l.name] = l
 
-        if not isinstance(properties, dict):
-            raise ValueError("c['properties'] must be a dictionary")
+            if not isinstance(properties, dict):
+                raise ValueError("c['properties'] must be a dictionary")
 
-        # slavePortnum supposed to be a strports specification
-        if type(slavePortnum) is int:
-            slavePortnum = "tcp:%d" % slavePortnum
+            # slavePortnum supposed to be a strports specification
+            if type(slavePortnum) is int:
+                slavePortnum = "tcp:%d" % slavePortnum
 
-        if check_synchronously_only:
-            return
-        # now we're committed to implementing the new configuration, so do
-        # it atomically
-        # TODO: actually, this is spread across a couple of Deferreds, so it
-        # really isn't atomic.
+            ### ---- everything from here on down is done only on an actual (re)start
+            if checkOnly:
+                return
 
-        d = defer.succeed(None)
+            self.projectName = projectName
+            self.projectURL = projectURL
+            self.buildbotURL = buildbotURL
 
-        self.projectName = projectName
-        self.projectURL = projectURL
-        self.buildbotURL = buildbotURL
+            self.properties = Properties()
+            self.properties.update(properties, self.configFileName)
 
-        self.properties = Properties()
-        self.properties.update(properties, self.configFileName)
+            self.status.logCompressionLimit = logCompressionLimit
+            self.status.logCompressionMethod = logCompressionMethod
+            self.status.logMaxSize = logMaxSize
+            self.status.logMaxTailSize = logMaxTailSize
+            # Update any of our existing builders with the current log parameters.
+            # This is required so that the new value is picked up after a
+            # reconfig.
+            for builder in self.botmaster.builders.values():
+                builder.builder_status.setLogCompressionLimit(logCompressionLimit)
+                builder.builder_status.setLogCompressionMethod(logCompressionMethod)
+                builder.builder_status.setLogMaxSize(logMaxSize)
+                builder.builder_status.setLogMaxTailSize(logMaxTailSize)
 
-        self.status.logCompressionLimit = logCompressionLimit
-        self.status.logCompressionMethod = logCompressionMethod
-        self.status.logMaxSize = logMaxSize
-        self.status.logMaxTailSize = logMaxTailSize
-        # Update any of our existing builders with the current log parameters.
-        # This is required so that the new value is picked up after a
-        # reconfig.
-        for builder in self.botmaster.builders.values():
-            builder.builder_status.setLogCompressionLimit(logCompressionLimit)
-            builder.builder_status.setLogCompressionMethod(logCompressionMethod)
-            builder.builder_status.setLogMaxSize(logMaxSize)
-            builder.builder_status.setLogMaxTailSize(logMaxTailSize)
+            if mergeRequests is not None:
+                self.botmaster.mergeRequests = mergeRequests
+            if prioritizeBuilders is not None:
+                self.botmaster.prioritizeBuilders = prioritizeBuilders
 
-        if mergeRequests is not None:
-            self.botmaster.mergeRequests = mergeRequests
-        if prioritizeBuilders is not None:
-            self.botmaster.prioritizeBuilders = prioritizeBuilders
+            self.buildCacheSize = buildCacheSize
+            self.changeCacheSize = changeCacheSize
+            self.eventHorizon = eventHorizon
+            self.logHorizon = logHorizon
+            self.buildHorizon = buildHorizon
+            self.slavePortnum = slavePortnum # TODO: move this to master.config.slavePortnum
 
-        self.buildCacheSize = buildCacheSize
-        self.eventHorizon = eventHorizon
-        self.logHorizon = logHorizon
-        self.buildHorizon = buildHorizon
+            # Set up the database
+            d.addCallback(lambda res:
+                          self.loadConfig_Database(db_url, db_poll_interval))
 
-        # Set up the database
-        d.addCallback(lambda res:
-                      self.loadConfig_Database(db_url, db_poll_interval))
+            # set up slaves
+            d.addCallback(lambda res: self.loadConfig_Slaves(slaves))
 
-        # self.slaves: Disconnect any that were attached and removed from the
-        # list. Update self.checker with the new list of passwords, including
-        # debug/change/status.
-        d.addCallback(lambda res: self.loadConfig_Slaves(slaves))
+            # self.manhole
+            if manhole != self.manhole:
+                # changing
+                if self.manhole:
+                    # disownServiceParent may return a Deferred
+                    d.addCallback(lambda res: self.manhole.disownServiceParent())
+                    def _remove(res):
+                        self.manhole = None
+                        return res
+                    d.addCallback(_remove)
+                if manhole:
+                    def _add(res):
+                        self.manhole = manhole
+                        manhole.setServiceParent(self)
+                    d.addCallback(_add)
 
-        # self.debugPassword
-        if debugPassword:
-            self.checker.addUser("debug", debugPassword)
-            self.debugPassword = debugPassword
+            # add/remove self.botmaster.builders to match builders. The
+            # botmaster will handle startup/shutdown issues.
+            d.addCallback(lambda res: self.loadConfig_Builders(builders))
 
-        # self.manhole
-        if manhole != self.manhole:
-            # changing
-            if self.manhole:
-                # disownServiceParent may return a Deferred
-                d.addCallback(lambda res: self.manhole.disownServiceParent())
-                def _remove(res):
-                    self.manhole = None
-                    return res
-                d.addCallback(_remove)
-            if manhole:
-                def _add(res):
-                    self.manhole = manhole
-                    manhole.setServiceParent(self)
-                d.addCallback(_add)
+            d.addCallback(lambda res: self.loadConfig_status(status))
 
-        # add/remove self.botmaster.builders to match builders. The
-        # botmaster will handle startup/shutdown issues.
-        d.addCallback(lambda res: self.loadConfig_Builders(builders))
+            # Schedulers are added after Builders in case they start right away
+            d.addCallback(lambda res:
+                          self.scheduler_manager.updateSchedulers(schedulers))
 
-        d.addCallback(lambda res: self.loadConfig_status(status))
+            # and Sources go after Schedulers for the same reason
+            d.addCallback(lambda res: self.loadConfig_Sources(change_sources))
 
-        # Schedulers are added after Builders in case they start right away
-        d.addCallback(lambda res:
-                      self.scheduler_manager.updateSchedulers(schedulers))
-        # and Sources go after Schedulers for the same reason
-        d.addCallback(lambda res: self.loadConfig_Sources(change_sources))
+            # debug client
+            d.addCallback(lambda res: self.loadConfig_DebugClient(debugPassword))
 
-        # self.slavePort
-        if self.slavePortnum != slavePortnum:
-            if self.slavePort:
-                def closeSlavePort(res):
-                    d1 = self.slavePort.disownServiceParent()
-                    self.slavePort = None
-                    return d1
-                d.addCallback(closeSlavePort)
-            if slavePortnum is not None:
-                def openSlavePort(res):
-                    self.slavePort = strports.service(slavePortnum,
-                                                      self.slaveFactory)
-                    self.slavePort.setServiceParent(self)
-                d.addCallback(openSlavePort)
-                log.msg("BuildMaster listening on port %s" % slavePortnum)
-            self.slavePortnum = slavePortnum
+        d.addCallback(do_load)
 
-        log.msg("configuration update started")
         def _done(res):
             self.readConfig = True
             log.msg("configuration update complete")
-        d.addCallback(_done)
-        d.addCallback(lambda res: self.botmaster.triggerNewBuildCheck())
-        d.addErrback(log.err)
+        # the remainder is only done if we are really loading the config
+        if not checkOnly:
+            d.addCallback(_done)
+            d.addCallback(lambda res: self.botmaster.triggerNewBuildCheck())
+            d.addErrback(log.err)
         return d
 
-    def loadDatabase(self, db_spec, db_poll_interval=None):
+    def loadDatabase(self, db_url, db_poll_interval=None):
         if self.db:
             return
 
+        self.db = connector.DBConnector(db_url, self.basedir)
+        if self.changeCacheSize:
+            self.db.setChangeCacheSize(self.changeCacheSize)
+        self.db.start()
+
         # make sure it's up to date
-        sm = DBSchemaManager(db_spec, self.basedir)
-        if not sm.is_current():
+        d = self.db.model.is_current()
+        def check_current(res):
+            if res:
+                return # good to go!
             raise exceptions.DatabaseNotReadyError, textwrap.dedent("""
                 The Buildmaster database needs to be upgraded before this version of buildbot
                 can run.  Use the following command-line
                     buildbot upgrade-master path/to/master
                 to upgrade the database, and try starting the buildmaster again.  You may want
-                to make a backup of your buildmaster before doing so.""")
+                to make a backup of your buildmaster before doing so.  If you are using MySQL,
+                you must specify the connector string on the upgrade-master command line:
+                    buildbot upgrade-master --db=<db-url> path/to/master
+                """)
+        d.addCallback(check_current)
 
-        self.db = connector.DBConnector(db_spec)
-        self.db.start()
+        # set up the stuff that depends on the db
+        def set_up_db_dependents(r):
+            # TODO: this needs to go
+            self.botmaster.db = self.db
+            self.status.setDB(self.db)
+            self._change_subscriptions.subscribe(self.status.changeAdded)
 
-        self.botmaster.db = self.db
-        self.status.setDB(self.db)
+            self.db.subscribe_to("add-buildrequest",
+                                 self.botmaster.trigger_add_buildrequest)
 
-        self.db.subscribe_to("add-buildrequest",
-                             self.botmaster.trigger_add_buildrequest)
+            sm = SchedulerManager(self, self.db, self.change_svc)
+            self.db.subscribe_to("add-change", sm.trigger_add_change)
+            self.db.subscribe_to("modify-buildset", sm.trigger_modify_buildset)
 
-        sm = SchedulerManager(self, self.db, self.change_svc)
-        self.db.subscribe_to("add-change", sm.trigger_add_change)
-        self.db.subscribe_to("modify-buildset", sm.trigger_modify_buildset)
+            self.scheduler_manager = sm
+            sm.setServiceParent(self)
 
-        self.scheduler_manager = sm
-        sm.setServiceParent(self)
-
-        # Set db_poll_interval (perhaps to 30 seconds) if you are using
-        # multiple buildmasters that share a common database, such that the
-        # masters need to discover what each other is doing by polling the
-        # database. TODO: this will be replaced by the DBNotificationServer.
-        if db_poll_interval:
-            # it'd be nice if TimerService let us set now=False
-            t1 = TimerService(db_poll_interval, sm.trigger)
-            t1.setServiceParent(self)
-            t2 = TimerService(db_poll_interval, self.botmaster.loop.trigger)
-            t2.setServiceParent(self)
-        # adding schedulers (like when loadConfig happens) will trigger the
-        # scheduler loop at least once, which we need to jump-start things
-        # like Periodic.
+            # Set db_poll_interval (perhaps to 30 seconds) if you are using
+            # multiple buildmasters that share a common database, such that the
+            # masters need to discover what each other is doing by polling the
+            # database. TODO: this will be replaced by the DBNotificationServer.
+            if db_poll_interval:
+                # it'd be nice if TimerService let us set now=False
+                t1 = TimerService(db_poll_interval, sm.trigger)
+                t1.setServiceParent(self)
+                t2 = TimerService(db_poll_interval, self.botmaster.loop.trigger)
+                t2.setServiceParent(self)
+            # adding schedulers (like when loadConfig happens) will trigger the
+            # scheduler loop at least once, which we need to jump-start things
+            # like Periodic.
+        d.addCallback(set_up_db_dependents)
+        return d
 
     def loadConfig_Database(self, db_url, db_poll_interval):
         self.db_url = db_url
         self.db_poll_interval = db_poll_interval
-        db_spec = DBSpec.from_url(db_url, self.basedir)
-        self.loadDatabase(db_spec, db_poll_interval)
+        return self.loadDatabase(db_url, db_poll_interval)
 
     def loadConfig_Slaves(self, new_slaves):
-        # set up the Checker with the names and passwords of all valid slaves
-        self.checker.users = {} # violates abstraction, oh well
-        for s in new_slaves:
-            self.checker.addUser(s.slavename, s.password)
-        self.checker.addUser("change", "changepw")
-        # let the BotMaster take care of the rest
         return self.botmaster.loadConfig_Slaves(new_slaves)
 
     def loadConfig_Sources(self, sources):
@@ -986,6 +1126,28 @@ class BuildMaster(service.MultiService):
             [self.change_svc.addSource(s) for s in added_sources]
         d = defer.DeferredList(dl, fireOnOneErrback=1, consumeErrors=0)
         d.addCallback(addNewOnes)
+        return d
+
+    def loadConfig_DebugClient(self, debugPassword):
+        def makeDbgPerspective():
+            persp = DebugPerspective()
+            persp.master = self
+            persp.botmaster = self.botmaster
+            return persp
+
+        # unregister the old name..
+        if self.debugClientRegistration:
+            d = self.debugClientRegistration.unregister()
+            self.debugClientRegistration = None
+        else:
+            d = defer.succeed(None)
+
+        # and register the new one
+        def reg(_):
+            if debugPassword:
+                self.debugClientRegistration = self.pbmanager.register(
+                        self.slavePortnum, "debug", debugPassword, makeDbgPerspective)
+        d.addCallback(reg)
         return d
 
     def allSchedulers(self):
@@ -1082,10 +1244,16 @@ class BuildMaster(service.MultiService):
         d.addCallback(addNewOnes)
         return d
 
-
-    def addChange(self, change):
-        self.db.addChangeToDatabase(change)
-        self.status.changeAdded(change)
+    def addChange(self, **kwargs):
+        "Add a change to the buildmaster and act on it."
+        d = self.db.changes.addChange(**kwargs)
+        def notify(change):
+            msg = u"added change %s to database" % change
+            log.msg(msg.encode('utf-8', 'replace'))
+            self._change_subscriptions.deliver(change)
+            return change
+        d.addCallback(notify)
+        return d
 
     def triggerSlaveManager(self):
         self.botmaster.triggerNewBuildCheck()
@@ -1109,6 +1277,14 @@ class BuildMaster(service.MultiService):
         bsid = self.db.create_buildset(ssid, reason, props, builderNames, t)
         return bsid
 
+    def subscribeToChanges(self, callback):
+        """
+        Request that L{callback} be called with each Change object added to the
+        cluster.
+
+        Note: this method will go away in 0.9.x
+        """
+        return self._change_subscriptions.subscribe(callback)
 
 class Control:
     implements(interfaces.IControl)

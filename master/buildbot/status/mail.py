@@ -1,4 +1,18 @@
-# -*- test-case-name: buildbot.test.test_status -*-
+# This file is part of Buildbot.  Buildbot is free software: you can
+# redistribute it and/or modify it under the terms of the GNU General Public
+# License as published by the Free Software Foundation, version 2.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, write to the Free Software Foundation, Inc., 51
+# Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Copyright Buildbot Team Members
+
 
 import re
 
@@ -55,6 +69,8 @@ def defaultMessage(mode, name, build, results, master_status):
         text += "The Buildbot has finished a build"
     elif mode == "failing":
         text += "The Buildbot has detected a failed build"
+    elif mode == "warnings":
+        text += "The Buildbot has detected a problem in the build"
     elif mode == "passing":
         text += "The Buildbot has detected a passing build"
     elif mode == "change" and result == 'success':
@@ -137,6 +153,8 @@ class MailNotifier(base.StatusReceiverMultiService):
                      "subject", "sendToInterestedUsers", "customMesg",
                      "messageFormatter", "extraHeaders"]
 
+    possible_modes = ('all', 'failing', 'problem', 'change', 'passing', 'warnings')
+
     def __init__(self, fromaddr, mode="all", categories=None, builders=None,
                  addLogs=False, relayhost="localhost",
                  subject="buildbot %(result)s in %(projectName)s on %(builder)s",
@@ -149,7 +167,7 @@ class MailNotifier(base.StatusReceiverMultiService):
         @type  fromaddr: string
         @param fromaddr: the email address to be used in the 'From' header.
         @type  sendToInterestedUsers: boolean
-        @param sendToInterestedUsers: if True (the default), send mail to all 
+        @param sendToInterestedUsers: if True (the default), send mail to all
                                       of the Interested Users. If False, only
                                       send mail to the extraRecipients list.
 
@@ -160,7 +178,9 @@ class MailNotifier(base.StatusReceiverMultiService):
                                 developers who made Changes that went into this
                                 build). It is a good idea to create a small
                                 mailing list and deliver to that, then let
-                                subscribers come and go as they please.
+                                subscribers come and go as they please.  The
+                                addresses in this list are used literally (they
+                                are not processed by lookup).
 
         @type  subject: string
         @param subject: a string to be used as the subject line of the message.
@@ -168,9 +188,10 @@ class MailNotifier(base.StatusReceiverMultiService):
                         builder which provoked the message.
 
         @type  mode: string (defaults to all)
-        @param mode: one of:
+        @param mode: one of MailNotifer.possible_modes:
                      - 'all': send mail about all builds, passing and failing
                      - 'failing': only send mail about builds which fail
+                     - 'warnings': send mail if builds contain warnings or fail 
                      - 'passing': only send mail about builds which succeed
                      - 'problem': only send mail about a build which failed
                      when the previous build passed
@@ -203,23 +224,23 @@ class MailNotifier(base.StatusReceiverMultiService):
 
         @type  lookup:    implementor of {IEmailLookup}
         @param lookup:    object which provides IEmailLookup, which is
-                          responsible for mapping User names (which come from
-                          the VC system) into valid email addresses. If not
-                          provided, the notifier will only be able to send mail
-                          to the addresses in the extraRecipients list. Most of
-                          the time you can use a simple Domain instance. As a
-                          shortcut, you can pass as string: this will be
-                          treated as if you had provided Domain(str). For
-                          example, lookup='twistedmatrix.com' will allow mail
-                          to be sent to all developers whose SVN usernames
-                          match their twistedmatrix.com account names.
-                          
+                          responsible for mapping User names for Interested
+                          Users (which come from the VC system) into valid
+                          email addresses. If not provided, the notifier will
+                          only be able to send mail to the addresses in the
+                          extraRecipients list. Most of the time you can use a
+                          simple Domain instance. As a shortcut, you can pass
+                          as string: this will be treated as if you had provided
+                          Domain(str). For example, lookup='twistedmatrix.com'
+                          will allow mail to be sent to all developers whose SVN
+                          usernames match their twistedmatrix.com account names.
+
         @type  customMesg: func
         @param customMesg: (this function is deprecated)
 
         @type  messageFormatter: func
         @param messageFormatter: function taking (mode, name, build, result,
-                                 master_status ) and returning a dictionary
+                                 master_status) and returning a dictionary
                                  containing two required keys "body" and "type",
                                  with a third optional key, "subject". The
                                  "body" key gives a string that contains the
@@ -256,11 +277,12 @@ class MailNotifier(base.StatusReceiverMultiService):
         assert isinstance(extraRecipients, (list, tuple))
         for r in extraRecipients:
             assert isinstance(r, str)
-            assert VALID_EMAIL.search(r) # require full email addresses, not User names
+            # require full email addresses, not User names
+            assert VALID_EMAIL.search(r), "%s is not a valid email" % r 
         self.extraRecipients = extraRecipients
         self.sendToInterestedUsers = sendToInterestedUsers
         self.fromaddr = fromaddr
-        assert mode in ('all', 'failing', 'problem', 'change', 'passing')
+        assert mode in MailNotifier.possible_modes
         self.mode = mode
         self.categories = categories
         self.builders = builders
@@ -334,6 +356,8 @@ class MailNotifier(base.StatusReceiverMultiService):
                builder.category not in self.categories:
             return # ignore this build
 
+        if self.mode == "warnings" and results == SUCCESS:
+            return
         if self.mode == "failing" and results != FAILURE:
             return
         if self.mode == "passing" and results != SUCCESS:
@@ -449,7 +473,7 @@ class MailNotifier(base.StatusReceiverMultiService):
             for k,v in self.extraHeaders.items():
                 k = properties.render(k)
                 if k in m:
-                    twlog("Warning: Got header " + k + " in self.extraHeaders "
+                    twlog.msg("Warning: Got header " + k + " in self.extraHeaders "
                           "but it already exists in the Message - "
                           "not adding it.")
                     continue
@@ -495,7 +519,8 @@ class MailNotifier(base.StatusReceiverMultiService):
         return logname in self.addLogs
 
     def _gotRecipients(self, res, rlist, m):
-        recipients = set()
+        to_recipients = set()
+        cc_recipients = set()
 
         for r in rlist:
             if r is None: # getAddress didn't like this address
@@ -507,30 +532,23 @@ class MailNotifier(base.StatusReceiverMultiService):
                 r = r[:r.rindex('@')]
 
             if VALID_EMAIL.search(r):
-                recipients.add(r)
+                to_recipients.add(r)
             else:
                 twlog.msg("INVALID EMAIL: %r" + r)
 
-        # if we're sending to interested users move the extra's to the CC
-        # list so they can tell if they are also interested in the change
-        # unless there are no interested users
-        if self.sendToInterestedUsers and len(recipients):
-            extra_recips = self.extraRecipients[:]
-            extra_recips.sort()
-            m['CC'] = ", ".join(extra_recips)
+        # If we're sending to interested users put the extras in the
+        # CC list so they can tell if they are also interested in the
+        # change:
+        if self.sendToInterestedUsers and to_recipients:
+            cc_recipients.update(self.extraRecipients)
         else:
-            [recipients.add(r) for r in self.extraRecipients[:]]
+            to_recipients.update(self.extraRecipients)
 
-        rlist = list(recipients)
-        rlist.sort()
-        m['To'] = ", ".join(rlist)
+        m['To'] = ", ".join(sorted(to_recipients))
+        if cc_recipients:
+            m['CC'] = ", ".join(sorted(cc_recipients))
 
-        # The extras weren't part of the TO list so add them now
-        if self.sendToInterestedUsers:
-            for r in self.extraRecipients:
-                recipients.add(r)
-
-        return self.sendMessage(m, list(recipients))
+        return self.sendMessage(m, list(to_recipients | cc_recipients))
 
     def sendmail(self, s, recipients):
         result = defer.Deferred()
@@ -544,7 +562,7 @@ class MailNotifier(base.StatusReceiverMultiService):
         if self.smtpUser and self.smtpPassword:
             useAuth = True
         else:
-	    useAuth = False
+            useAuth = False
         
         sender_factory = ESMTPSenderFactory(
             self.smtpUser, self.smtpPassword,

@@ -1,4 +1,17 @@
-# -*- test-case-name: buildbot.test.test_web_status_json -*-
+# This file is part of Buildbot.  Buildbot is free software: you can
+# redistribute it and/or modify it under the terms of the GNU General Public
+# License as published by the Free Software Foundation, version 2.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, write to the Free Software Foundation, Inc., 51
+# Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Portions Copyright Buildbot Team Members
 # Original Copyright (c) 2010 The Chromium Authors.
 
 """Simple JSON exporter."""
@@ -31,7 +44,11 @@ FLAGS = """\
   - filter
     - Filters out null, false, and empty string, list and dict. This reduce the
       amount of useless data sent.
-
+  - callback
+    - Enable uses of JSONP as described in
+      http://en.wikipedia.org/wiki/JSON#JSONP. Note that
+      Access-Control-Allow-Origin:* is set in the HTTP response header so you
+      can use this in compatible browsers.
 """
 
 EXAMPLES = """\
@@ -170,6 +187,7 @@ class JsonResource(resource.Resource):
         data = self.content(request)
         if isinstance(data, unicode):
             data = data.encode("utf-8")
+        request.setHeader("Access-Control-Allow-Origin", "*")
         if RequestArgToBool(request, 'as_text', False):
             request.setHeader("content-type", 'text/plain')
         else:
@@ -187,8 +205,14 @@ class JsonResource(resource.Resource):
 
     def content(self, request):
         """Renders the json dictionaries."""
-        # Implement filtering at global level and every child.
+        # Supported flags.
         select = request.args.get('select')
+        as_text = RequestArgToBool(request, 'as_text', False)
+        filter_out = RequestArgToBool(request, 'filter', as_text)
+        compact = RequestArgToBool(request, 'compact', not as_text)
+        callback = request.args.get('callback')
+
+        # Implement filtering at global level and every child.
         if select is not None:
             del request.args['select']
             # Do not render self.asDict()!
@@ -217,14 +241,18 @@ class JsonResource(resource.Resource):
                 request.postpath = postpath
         else:
             data = self.asDict(request)
-        as_text = RequestArgToBool(request, 'as_text', False)
-        filter_out = RequestArgToBool(request, 'filter', as_text)
         if filter_out:
             data = FilterOut(data)
-        if RequestArgToBool(request, 'compact', not as_text):
-            return json.dumps(data, sort_keys=True, separators=(',',':'))
+        if compact:
+            data = json.dumps(data, sort_keys=True, separators=(',',':'))
         else:
-            return json.dumps(data, sort_keys=True, indent=2)
+            data = json.dumps(data, sort_keys=True, indent=2)
+        if callback:
+            # Only accept things that look like identifiers for now
+            callback = callback[0]
+            if re.match(r'^[a-zA-Z$][a-zA-Z$0-9.]*$', callback):
+                data = '%s(%s);' % (callback, data)
+        return data
 
     def asDict(self, request):
         """Generates the json dictionary.
@@ -315,6 +343,20 @@ class HelpResource(HtmlResource):
         template = request.site.buildbot_service.templates.get_template("jsonhelp.html")
         return template.render(**cxt)
 
+class BuilderPendingBuildsJsonResource(JsonResource):
+    help = """Describe pending builds for a builder.
+"""
+    title = 'Builder'
+
+    def __init__(self, status, builder_status):
+        JsonResource.__init__(self, status)
+        self.builder_status = builder_status
+
+    def asDict(self, request):
+        # buildbot.status.builder.BuilderStatus
+        return [b.asDict() for b in self.builder_status.getPendingBuilds()]
+
+
 class BuilderJsonResource(JsonResource):
     help = """Describe a single builder.
 """
@@ -326,6 +368,9 @@ class BuilderJsonResource(JsonResource):
         self.putChild('builds', BuildsJsonResource(status, builder_status))
         self.putChild('slaves', BuilderSlavesJsonResources(status,
                                                            builder_status))
+        self.putChild(
+                'pendingBuilds',
+                BuilderPendingBuildsJsonResource(status, builder_status))
 
     def asDict(self, request):
         # buildbot.status.builder.BuilderStatus
@@ -470,20 +515,20 @@ class BuildStepsJsonResource(JsonResource):
 
     def getChild(self, path, request):
         # Dynamic childs.
-        build_set_status = None
+        build_step_status = None
         if isinstance(path, int) or _IS_INT.match(path):
-            build_set_status = self.build_status.getSteps[int(path)]
+            build_step_status = self.build_status.getSteps()[int(path)]
         else:
             steps_dict = dict([(step.getName(), step)
-                               for step in self.build_status.getStep()])
-            build_set_status = steps_dict.get(path)
-        if build_set_status:
+                               for step in self.build_status.getSteps()])
+            build_step_status = steps_dict.get(path)
+        if build_step_status:
             # Create it on-demand.
-            child = BuildStepJsonResource(status, build_step_status)
+            child = BuildStepJsonResource(self.status, build_step_status)
             # Cache it.
             index = self.build_status.getSteps().index(build_step_status)
             self.putChild(str(index), child)
-            self.putChild(build_set_status.getName(), child)
+            self.putChild(build_step_status.getName(), child)
             return child
         return JsonResource.getChild(self, path, request)
 
@@ -491,7 +536,7 @@ class BuildStepsJsonResource(JsonResource):
         # Only use the number and not the names!
         results = {}
         index = 0
-        for step in self.build_status.getStep():
+        for step in self.build_status.getSteps():
             results[index] = step
             index += 1
         return results
@@ -519,15 +564,13 @@ class ChangesJsonResource(JsonResource):
     def __init__(self, status, changes):
         JsonResource.__init__(self, status)
         for c in changes:
-            # TODO(maruel): Problem with multiple changes with the same number.
-            # Probably try server hack specific so we could fix it on this side
-            # instead. But there is still the problem with multiple pollers from
-            # different repo where the numbers could clash.
-            number = str(c.number)
-            while number in self.children:
-                # TODO(maruel): Do something better?
-                number = str(int(c.number)+1)
-            self.putChild(number, ChangeJsonResource(status, c))
+            # c.number can be None or clash another change if the change was
+            # generated inside buildbot or if using multiple pollers.
+            if c.number is not None and str(c.number) not in self.children:
+                self.putChild(str(c.number), ChangeJsonResource(status, c))
+            else:
+                # Temporary hack since it creates information exposure.
+                self.putChild(str(id(c)), ChangeJsonResource(status, c))
 
     def asDict(self, request):
         """Don't throw an exception when there is no child."""

@@ -1,3 +1,18 @@
+# This file is part of Buildbot.  Buildbot is free software: you can
+# redistribute it and/or modify it under the terms of the GNU General Public
+# License as published by the Free Software Foundation, version 2.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, write to the Free Software Foundation, Inc., 51
+# Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Copyright Buildbot Team Members
+
 
 # code to deliver build status through twisted.words (instant messaging
 # protocols: irc, etc)
@@ -76,6 +91,8 @@ class Contact(base.StatusReceiver):
         self.channel = channel
         self.notify_events = {}
         self.subscribed = 0
+        self.muted = False
+        self.reported_builds = [] # tuples (when, buildername, buildnum)
         self.add_notification_events(channel.notify_events)
 
     silly = {
@@ -126,6 +143,22 @@ class Contact(base.StatusReceiver):
         hours = int(minutes / 60)
         minutes = minutes - 60*hours
         return "%dh%02dm%02ds" % (hours, minutes, seconds)
+
+    def reportBuild(self, builder, buildnum):
+        """Returns True if this build should be reported for this contact
+        (eliminating duplicates), and also records the report for later"""
+        for w, b, n in self.reported_builds:
+            if b == builder and n == buildnum:
+                return False
+        self.reported_builds.append([util.now(), builder, buildnum])
+
+        # clean the reported builds
+        horizon = util.now() - 60
+        while self.reported_builds and self.reported_builds[0][0] < horizon:
+            self.reported_builds.pop(0)
+
+        # and return True, since this is a new one
+        return True
 
     def doSilly(self, message):
         response = self.silly[message]
@@ -333,19 +366,23 @@ class Contact(base.StatusReceiver):
         if not self.notify_for_finished(build):
             return
 
-        r = "build #%d of %s is complete: %s" % \
-            (build.getNumber(),
-             builder.getName(),
-             self.results_descriptions.get(build.getResults(), "??"))
-        r += " [%s]" % " ".join(build.getText())
-        buildurl = self.channel.status.getURLForThing(build)
-        if buildurl:
-            r += "  Build details are at %s" % buildurl
+        builder_name = builder.getName()
+        buildnum = build.getNumber()
 
-        if self.channel.showBlameList and build.getResults() != SUCCESS and len(build.changes) != 0:
-            r += '  blamelist: ' + ', '.join([c.who for c in build.changes])
+        if self.reportBuild(builder_name, buildnum):
+            r = "build #%d of %s is complete: %s" % \
+                (buildnum,
+                 builder_name,
+                 self.results_descriptions.get(build.getResults(), "??"))
+            r += " [%s]" % " ".join(build.getText())
+            buildurl = self.channel.status.getURLForThing(build)
+            if buildurl:
+                r += "  Build details are at %s" % buildurl
 
-        self.send(r)
+            if self.channel.showBlameList and build.getResults() != SUCCESS and len(build.changes) != 0:
+                r += '  blamelist: ' + ', '.join(list(set([c.who for c in build.changes])))
+
+            self.send(r)
 
     def notify_for_finished(self, build):
         results = build.getResults()
@@ -380,15 +417,19 @@ class Contact(base.StatusReceiver):
             builder.category not in self.channel.categories):
             return
 
-        r = "Hey! build %s #%d is complete: %s" % \
-            (b.getBuilder().getName(),
-             b.getNumber(),
-             self.results_descriptions.get(b.getResults(), "??"))
-        r += " [%s]" % " ".join(b.getText())
-        self.send(r)
-        buildurl = self.channel.status.getURLForThing(b)
-        if buildurl:
-            self.send("Build details are at %s" % buildurl)
+        builder_name = b.getBuilder().getName()
+        buildnum = b.getNumber()
+
+        if self.reportBuild(builder_name, buildnum):
+            r = "Hey! build %s #%d is complete: %s" % \
+                (builder_name, 
+                 buildnum,
+                 self.results_descriptions.get(b.getResults(), "??"))
+            r += " [%s]" % " ".join(b.getText())
+            self.send(r)
+            buildurl = self.channel.status.getURLForThing(b)
+            if buildurl:
+                self.send("Build details are at %s" % buildurl)
 
     def command_FORCE(self, args, who):
         args = shlex.split(args)
@@ -519,6 +560,21 @@ class Contact(base.StatusReceiver):
         self.emit_last(which)
     command_LAST.usage = "last <which> - list last build status for builder <which>"
 
+    def command_MUTE(self, args, who):
+        # The order of these is important! ;)
+        self.send("Shutting up for now.")
+        self.muted = True
+    command_MUTE.usage = "mute - suppress all messages until a corresponding 'unmute' is issued"
+
+    def command_UNMUTE(self, args, who):
+        if self.muted:
+            # The order of these is important! ;)
+            self.muted = False
+            self.send("I'm baaaaaaaaaaack!")
+        else:
+            self.send("You hadn't told me to be quiet, but it's the thought that counts, right?")
+    command_MUTE.usage = "unmute - disable a previous 'mute'"
+
     def build_commands(self):
         commands = []
         for k in dir(self):
@@ -557,9 +613,11 @@ class Contact(base.StatusReceiver):
         self.act("readies phasers")
 
     def command_DANCE(self, args, who):
-        reactor.callLater(1.0, self.send, "0-<")
-        reactor.callLater(3.0, self.send, "0-/")
-        reactor.callLater(3.5, self.send, "0-\\")
+        reactor.callLater(1.0, self.send, "<(^.^<)")
+        reactor.callLater(2.0, self.send, "<(^.^)>")
+        reactor.callLater(3.0, self.send, "(>^.^)>")
+        reactor.callLater(3.5, self.send, "(7^.^)7")
+        reactor.callLater(5.0, self.send, "(>^.^<)")
 
     def command_EXCITED(self, args, who):
         # like 'buildbot: destroy the sun!'
@@ -603,25 +661,12 @@ class IRCContact(Contact):
     # userJoined(self, user, channel)
 
     def send(self, message):
-        self.channel.msgOrNotice(self.dest, message.encode("ascii", "replace"))
+        if not self.muted:
+            self.channel.msgOrNotice(self.dest, message.encode("ascii", "replace"))
 
     def act(self, action):
-        self.channel.me(self.dest, action.encode("ascii", "replace"))
-
-    def command_JOIN(self, args, who):
-        args = shlex.split(args)
-        to_join = args[0]
-        self.channel.join(to_join)
-        self.send("Joined %s" % to_join)
-    command_JOIN.usage = "join channel - Join another channel"
-
-    def command_LEAVE(self, args, who):
-        args = shlex.split(args)
-        to_leave = args[0]
-        self.send("Buildbot has been told to leave %s" % to_leave)
-        self.channel.part(to_leave)
-    command_LEAVE.usage = "leave channel - Leave a channel"
-
+        if not self.muted:
+            self.channel.me(self.dest, action.encode("ascii", "replace"))
 
     def handleMessage(self, message, who):
         # a message has arrived from 'who'. For broadcast contacts (i.e. when

@@ -1,12 +1,16 @@
 # developer utilities
 
-.PHONY: docs apidocs some-apidocs paper
-docs:
-	$(MAKE) -C docs
+.PHONY: docs apidocs pylint
 
-reference:
-	cd docs; ./gen-reference
+docs:
+	$(MAKE) -C master/docs
+
+apidocs:
+	$(MAKE) -C apidocs
 
 pylint:
 	cd master; $(MAKE) pylint
 	cd slave; $(MAKE) pylint
+
+pyflakes:
+	pyflakes master/buildbot slave/buildslave

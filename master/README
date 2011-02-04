@@ -2,7 +2,7 @@
 BuildBot: build/test automation
   http://buildbot.net
   Brian Warner <warner-buildbot @ lothar . com>
-  Dustin J. Mitchell <dustin@v.igoro.us >
+  Dustin J. Mitchell <dustin@v.igoro.us>
 
 
 Abstract:
@@ -90,7 +90,7 @@ to:
 You also need to pick a working directory for the buildslave. All commands
 will be run inside this directory.
 
-Now run the 'buildbot' command as follows:
+Now run the 'buildslave' command as follows:
 
  buildslave create-slave WORKDIR MASTERHOST:PORT SLAVENAME PASSWORD
 

@@ -1,3 +1,18 @@
+# This file is part of Buildbot.  Buildbot is free software: you can
+# redistribute it and/or modify it under the terms of the GNU General Public
+# License as published by the Free Software Foundation, version 2.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, write to the Free Software Foundation, Inc., 51
+# Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Copyright Buildbot Team Members
+
 import os
 import shutil
 
@@ -17,20 +32,24 @@ class CommandTestMixin:
         Sets:
             self.basedir -- the basedir (an abs path)
             self.basedir_workdir -- os.path.join(self.basedir, 'workdir')
+            self.basedir_source -- os.path.join(self.basedir, 'source')
         """
         self.basedir = os.path.abspath('basedir')
         self.basedir_workdir = os.path.join(self.basedir, 'workdir')
+        self.basedir_source = os.path.join(self.basedir, 'source')
+
+        # clean up the basedir unconditionally
+        if os.path.exists(self.basedir):
+            shutil.rmtree(self.basedir)
 
     def tearDownCommand(self):
         """
         Call this from the tearDown method to clean up any leftover workdirs and do
         any additional cleanup required.
         """
-        # note: Twisted-2.5.0 does not have addCleanup, or we could use that here..
-        if hasattr(self, 'makedirs') and self.makedirs:
-            basedir_abs = os.path.abspath(os.path.join('basedir'))
-            if os.path.exists(basedir_abs):
-                shutil.rmtree(basedir_abs)
+        # clean up the basedir unconditionally
+        if os.path.exists(self.basedir):
+            shutil.rmtree(self.basedir)
 
         # finish up the runprocess
         if hasattr(self, 'runprocess_patched') and self.runprocess_patched:
@@ -54,7 +73,6 @@ class CommandTestMixin:
         """
 
         # set up the workdir and basedir
-        self.makedirs = makedirs
         if makedirs:
             basedir_abs = os.path.abspath(os.path.join(self.basedir))
             workdir_abs = os.path.abspath(os.path.join(self.basedir, 'workdir'))
@@ -79,6 +97,9 @@ class CommandTestMixin:
         Return the updates made so far
         """
         return self.builder.updates
+
+    def add_update(self, upd):
+        self.builder.updates.append(upd)
 
     def patch_runprocess(self, *expectations):
         """

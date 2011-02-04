@@ -1,4 +1,18 @@
-# -*- test-case-name: buildbot.test.test_steps,buildbot.test.test_properties -*-
+# This file is part of Buildbot.  Buildbot is free software: you can
+# redistribute it and/or modify it under the terms of the GNU General Public
+# License as published by the Free Software Foundation, version 2.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, write to the Free Software Foundation, Inc., 51
+# Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Copyright Buildbot Team Members
+
 
 import re
 from twisted.python import log
@@ -130,12 +144,18 @@ class ShellCommand(LoggingBuildStep):
         """
 
         try:
-            if done and self.descriptionDone is not None:
-                return list(self.descriptionDone)
-            if self.description is not None:
-                return list(self.description)
-
             properties = self.build.getProperties()
+
+            if done and self.descriptionDone is not None:
+                return properties.render(self.descriptionDone)
+            if self.description is not None:
+                return properties.render(self.description)
+
+            # we may have no command if this is a step that sets its command
+            # name late in the game (e.g., in start())
+            if not self.command:
+                return ["???"]
+
             words = self.command
             if isinstance(words, (str, unicode)):
                 words = words.split()
@@ -439,9 +459,8 @@ class WarningCountingShellCommand(ShellCommand):
             for fileRe, warnRe, start, end in self.suppressions:
                 if ( (file == None or fileRe == None or fileRe.search(file)) and
                      (warnRe == None or  warnRe.search(text)) and
-                     lineNo != None and
-                     (start == None or start <= lineNo) and
-                     (end == None or end >= lineNo) ):
+                     ((start == None and end == None) or
+                      (lineNo != None and start <= lineNo and end >= lineNo)) ):
                     return
 
         warnings.append(line)
@@ -543,7 +562,8 @@ class WarningCountingShellCommand(ShellCommand):
         # If there were any warnings, make the log if lines with warnings
         # available
         if self.warnCount:
-            self.addCompleteLog("warnings", "\n".join(warnings) + "\n")
+            self.addCompleteLog("warnings (%d)" % self.warnCount,
+                    "\n".join(warnings) + "\n")
 
         warnings_stat = self.step_status.getStatistic('warnings', 0)
         self.step_status.setStatistic('warnings', warnings_stat + self.warnCount)
@@ -638,12 +658,13 @@ class PerlModuleTest(Test):
         total = 0
         passed = 0
         failed = 0
-        rc = cmd.rc
+        rc = SUCCESS
+        if cmd.rc > 0:
+            rc = FAILURE
 
         # New version of Test::Harness?
-        try:
+        if "Test Summary Report" in lines:
             test_summary_report_index = lines.index("Test Summary Report")
-
             del lines[0:test_summary_report_index + 2]
 
             re_test_result = re.compile("^Result: (PASS|FAIL)$|Tests: \d+ Failed: (\d+)\)|Files=\d+, Tests=(\d+)")
@@ -652,16 +673,15 @@ class PerlModuleTest(Test):
             test_result_lines = [mo.groups() for mo in mos if mo]
 
             for line in test_result_lines:
-                if line[0] == 'PASS':
-                    rc = SUCCESS
-                elif line[0] == 'FAIL':
+                if line[0] == 'FAIL':
                     rc = FAILURE
-                elif line[1]:
+
+                if line[1]:
                     failed += int(line[1])
-                elif line[2]:
+                if line[2]:
                     total = int(line[2])
 
-        except ValueError: # Nope, it's the old version
+        else: # Nope, it's the old version
             re_test_result = re.compile("^(All tests successful)|(\d+)/(\d+) subtests failed|Files=\d+, Tests=(\d+),")
 
             mos = map(lambda line: re_test_result.search(line), lines)
@@ -677,7 +697,6 @@ class PerlModuleTest(Test):
 
                     test_totals_line = test_result_lines[1]
                     total_str = test_totals_line[3]
-                    rc = SUCCESS
                 else:
                     failed_str = test_result_line[1]
                     failed = int(failed_str)

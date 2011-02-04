@@ -1,17 +1,23 @@
+# This file is part of Buildbot.  Buildbot is free software: you can
+# redistribute it and/or modify it under the terms of the GNU General Public
+# License as published by the Free Software Foundation, version 2.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, write to the Free Software Foundation, Inc., 51
+# Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Copyright Buildbot Team Members
+
 from twisted.trial import unittest
-from twisted.internet import task, defer
-from twisted.python import runtime
 
 from buildslave.test.fake.runprocess import Expect
 from buildslave.test.util.command import CommandTestMixin
 from buildslave.commands import shell
-
-def filter_hdr(updates):
-    def f(u):
-        if 'header' in u:
-            return 'hdr'
-        return u
-    return [ f(u) for u in updates ]
 
 class TestSlaveShellCommand(CommandTestMixin, unittest.TestCase):
 
@@ -37,7 +43,7 @@ class TestSlaveShellCommand(CommandTestMixin, unittest.TestCase):
 
         # note that SlaveShellCommand does not add any extra updates of it own
         def check(_):
-            self.assertEqual(filter_hdr(self.get_updates()),
+            self.assertEqual(self.get_updates(),
                     [{'hdr': 'headers'}, {'stdout': 'hello\n'}, {'rc': 0}],
                     self.builder.show())
         d.addCallback(check)

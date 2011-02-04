@@ -1,3 +1,18 @@
+# This file is part of Buildbot.  Buildbot is free software: you can
+# redistribute it and/or modify it under the terms of the GNU General Public
+# License as published by the Free Software Foundation, version 2.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, write to the Free Software Foundation, Inc., 51
+# Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Copyright Buildbot Team Members
+
 
 from email.Message import Message
 from email.Utils import formatdate
@@ -7,10 +22,10 @@ from twisted.internet import defer
 
 from buildbot import interfaces
 from buildbot.status import mail
-from buildbot.status.builder import SUCCESS, WARNINGS
+from buildbot.status.builder import SUCCESS, WARNINGS, EXCEPTION, RETRY
 from buildbot.steps.shell import WithProperties
 
-import zlib, bz2, base64
+import gzip, bz2, base64, re, cStringIO
 
 # TODO: docs, maybe a test of some sort just to make sure it actually imports
 # and can format email without raising an exception.
@@ -48,6 +63,8 @@ class TinderboxMailNotifier(mail.MailNotifier):
 
         @type  tree: string
         @param tree: The Tinderbox tree to post to.
+                     When tree is a WithProperties instance it will be
+                     interpolated as such. See WithProperties for more detail
 
         @type  extraRecipients: tuple of string
         @param extraRecipients: E-mail addresses of recipients. This should at
@@ -110,6 +127,9 @@ class TinderboxMailNotifier(mail.MailNotifier):
                                    subject=subject,
                                    extraRecipients=extraRecipients,
                                    sendToInterestedUsers=False)
+        assert isinstance(tree, basestring) \
+            or isinstance(tree, WithProperties), \
+            "tree must be a string or a WithProperties instance"
         self.tree = tree
         self.binaryURL = binaryURL
         self.logCompression = logCompression
@@ -135,7 +155,15 @@ class TinderboxMailNotifier(mail.MailNotifier):
         # shortform
         t = "tinderbox:"
 
-        text += "%s tree: %s\n" % (t, self.tree)
+        if type(self.tree) is str:
+            # use the exact string given
+            text += "%s tree: %s\n" % (t, self.tree)
+        elif isinstance(self.tree, WithProperties):
+            # interpolate the WithProperties instance, use that
+            text += "%s tree: %s\n" % (t, build.getProperties().render(self.tree))
+        else:
+            raise Exception("tree is an unhandled value")
+
         # the start time
         # getTimes() returns a fractioned time that tinderbox doesn't understand
         builddate = int(build.getTimes()[0])
@@ -157,6 +185,9 @@ class TinderboxMailNotifier(mail.MailNotifier):
             text += res
         elif results == WARNINGS:
             res = "testfailed"
+            text += res
+        elif results in (EXCEPTION, RETRY):
+            res = "exception"
             text += res
         else:
             res += "busted"
@@ -188,19 +219,52 @@ class TinderboxMailNotifier(mail.MailNotifier):
             # logs will always be appended
             logEncoding = ""
             tinderboxLogs = ""
-            for log in build.getLogs():
-                l = ""
-                if self.logCompression == "bzip2":
-                    compressedLog = bz2.compress(log.getText())
-                    l = base64.encodestring(compressedLog)
-                    logEncoding = "base64";
-                elif self.logCompression == "gzip":
-                    compressedLog = zlib.compress(log.getText())
-                    l = base64.encodestring(compressedLog)
-                    logEncoding = "base64";
-                else:
-                    l = log.getText()
-                tinderboxLogs += l
+            for bs in build.getSteps():
+                # Make sure that shortText is a regular string, so that bad
+                # data in the logs don't generate UnicodeDecodeErrors
+                shortText = "%s\n" % ' '.join(bs.getText()).encode('ascii', 'replace')
+
+                # ignore steps that haven't happened
+                if not re.match(".*[^\s].*", shortText):
+                    continue
+                # we ignore TinderboxPrint's here so we can do things like:
+                # ShellCommand(command=['echo', 'TinderboxPrint:', ...])
+                if re.match(".+TinderboxPrint.*", shortText):
+                    shortText = shortText.replace("TinderboxPrint",
+                                                  "Tinderbox Print")
+                logs = bs.getLogs()
+
+                tinderboxLogs += "======== BuildStep started ========\n"
+                tinderboxLogs += shortText
+                tinderboxLogs += "=== Output ===\n"
+                for log in logs:
+                    logText = log.getTextWithHeaders()
+                    # Because we pull in the log headers here we have to ignore
+                    # some of them. Basically, if we're TinderboxPrint'ing in
+                    # a ShellCommand, the only valid one(s) are at the start
+                    # of a line. The others are prendeded by whitespace, quotes,
+                    # or brackets/parentheses
+                    for line in logText.splitlines():
+                        if re.match(".+TinderboxPrint.*", line):
+                            line = line.replace("TinderboxPrint",
+                                                "Tinderbox Print")
+                        tinderboxLogs += line + "\n"
+
+                tinderboxLogs += "=== Output ended ===\n"
+                tinderboxLogs += "======== BuildStep ended ========\n"
+
+            if self.logCompression == "bzip2":
+                cLog = bz2.compress(tinderboxLogs)
+                tinderboxLogs = base64.encodestring(cLog)
+                logEncoding = "base64"
+            elif self.logCompression == "gzip":
+                cLog = cStringIO.StringIO()
+                gz = gzip.GzipFile(mode="w", fileobj=cLog)
+                gz.write(tinderboxLogs)
+                gz.close()
+                cLog = cLog.getvalue()
+                tinderboxLogs = base64.encodestring(cLog)
+                logEncoding = "base64"
 
             text += "%s logencoding: %s\n" % (t, logEncoding)
             text += "%s END\n\n" % t

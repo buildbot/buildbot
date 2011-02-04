@@ -1,3 +1,18 @@
+# This file is part of Buildbot.  Buildbot is free software: you can
+# redistribute it and/or modify it under the terms of the GNU General Public
+# License as published by the Free Software Foundation, version 2.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, write to the Free Software Foundation, Inc., 51
+# Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Copyright Buildbot Team Members
+
 
 from buildbot.status.builder import SUCCESS, FAILURE, WARNINGS
 from buildbot.steps.shell import ShellCommand
@@ -140,8 +155,8 @@ class PyLint(ShellCommand):
 
     _re_groupname = 'errtype'
     _msgtypes_re_str = '(?P<%s>[%s])' % (_re_groupname, ''.join(MESSAGES.keys()))
-    _default_line_re = re.compile(r'%s\d{4}: *\d+:.+' % _msgtypes_re_str)
-    _parseable_line_re = re.compile(r'[^:]+:\d+: \[%s\d{4}[,\]] .+' % _msgtypes_re_str)
+    _default_line_re = re.compile(r'^%s: *\d+:.+' % _msgtypes_re_str)
+    _parseable_line_re = re.compile(r'[^:]+:\d+: \[%s[,\]] .+' % _msgtypes_re_str)
 
     def createSummary(self, log):
         counts = {}

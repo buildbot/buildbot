@@ -1,4 +1,17 @@
-# -*- test-case-name: buildbot.test.test_mailparse -*-
+# This file is part of Buildbot.  Buildbot is free software: you can
+# redistribute it and/or modify it under the terms of the GNU General Public
+# License as published by the Free Software Foundation, version 2.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, write to the Free Software Foundation, Inc., 51
+# Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Copyright Buildbot Team Members
 
 """
 Parse various kinds of 'CVS notify' email.
@@ -7,24 +20,21 @@ import os, re
 import time, calendar
 import datetime
 from email import message_from_file
-from email.Utils import parseaddr
+from email.Utils import parseaddr, parsedate_tz, mktime_tz
 from email.Iterators import body_line_iterator
 
 from zope.interface import implements
 from twisted.python import log
+from twisted.internet import defer
 from buildbot import util
 from buildbot.interfaces import IChangeSource
-from buildbot.changes import changes
-from buildbot.changes.maildir import MaildirService
+from buildbot.util.maildir import MaildirService
 
 class MaildirSource(MaildirService, util.ComparableMixin):
-    """This source will watch a maildir that is subscribed to a FreshCVS
-    change-announcement mailing list.
-    """
+    """Generic base class for Maildir-based change sources"""
     implements(IChangeSource)
 
     compare_attrs = ["basedir", "pollinterval", "prefix"]
-    name = None
 
     def __init__(self, maildir, prefix=None, category='', repository=''):
         MaildirService.__init__(self, maildir)
@@ -36,308 +46,218 @@ class MaildirSource(MaildirService, util.ComparableMixin):
                     "a slash")
 
     def describe(self):
-        return "%s mailing list in maildir %s" % (self.name, self.basedir)
+        return "%s watching maildir '%s'" % (self.__class__.__name__, self.basedir)
 
     def messageReceived(self, filename):
         path = os.path.join(self.basedir, "new", filename)
-        change = self.parse_file(open(path, "r"), self.prefix)
-        if change:
-            self.parent.addChange(change)
-        os.rename(os.path.join(self.basedir, "new", filename),
-                  os.path.join(self.basedir, "cur", filename))
+        d = defer.succeed(None)
+        def parse_file(_):
+            return self.parse_file(open(path, "r"), self.prefix)
+        d.addCallback(parse_file)
+
+        def add_change(chdict):
+            if chdict:
+                return self.master.addChange(**chdict)
+            else:
+                log.msg("no change found in maildir file '%s'" % filename)
+        d.addCallback(add_change)
+
+        def move_file(_):
+            os.rename(path, os.path.join(self.basedir, "cur", filename))
+        d.addCallback(move_file)
+
+        return d
 
     def parse_file(self, fd, prefix=None):
         m = message_from_file(fd)
         return self.parse(m, prefix)
 
-class FCMaildirSource(MaildirSource):
-    name = "FreshCVS"
+class CVSMaildirSource(MaildirSource):
+    name = "CVSMaildirSource"
 
+    def __init__(self, maildir, prefix=None, category='',
+                 repository='', urlmaker=None, properties={}):
+        """If urlmaker is defined, it will be called with three arguments:
+        filename, previous version, new version. It returns a url for that
+        file."""
+        MaildirSource.__init__(self, maildir, prefix, category, repository)
+        self.urlmaker = urlmaker
+        self.properties = properties
+        
     def parse(self, m, prefix=None):
-        """Parse mail sent by FreshCVS"""
-
-        # FreshCVS sets From: to "user CVS <user>", but the <> part may be
-        # modified by the MTA (to include a local domain)
-        name, addr = parseaddr(m["from"])
-        if not name:
-            return None # no From means this message isn't from FreshCVS
-        cvs = name.find(" CVS")
-        if cvs == -1:
-            return None # this message isn't from FreshCVS
-        who = name[:cvs]
-
-        # we take the time of receipt as the time of checkin. Not correct,
-        # but it avoids the out-of-order-changes issue. See the comment in
-        # parseSyncmail about using the 'Date:' header
-        when = util.now()
-
-        files = []
-        comments = ""
-        isdir = 0
-        lines = list(body_line_iterator(m))
-        while lines:
-            line = lines.pop(0)
-            if line == "Modified files:\n":
-                break
-        while lines:
-            line = lines.pop(0)
-            if line == "\n":
-                break
-            line = line.rstrip("\n")
-            linebits = line.split(None, 1)
-            file = linebits[0]
-            if prefix:
-                # insist that the file start with the prefix: FreshCVS sends
-                # changes we don't care about too
-                if file.startswith(prefix):
-                    file = file[len(prefix):]
-                else:
-                    continue
-            if len(linebits) == 1:
-                isdir = 1
-            elif linebits[1] == "0 0":
-                isdir = 1
-            files.append(file)
-        while lines:
-            line = lines.pop(0)
-            if line == "Log message:\n":
-                break
-        # message is terminated by "ViewCVS links:" or "Index:..." (patch)
-        while lines:
-            line = lines.pop(0)
-            if line == "ViewCVS links:\n":
-                break
-            if line.find("Index: ") == 0:
-                break
-            comments += line
-        comments = comments.rstrip() + "\n"
-
-        if not files:
-            return None
-
-        change = changes.Change(who, files, comments, isdir, when=when)
-
-        return change
-
-class SyncmailMaildirSource(MaildirSource):
-    name = "Syncmail"
-
-    def parse(self, m, prefix=None):
-        """Parse messages sent by the 'syncmail' program, as suggested by the
-        sourceforge.net CVS Admin documentation. Syncmail is maintained at
-        syncmail.sf.net .
+        """Parse messages sent by the 'buildbot-cvs-mail' program.
         """
-        # pretty much the same as freshcvs mail, not surprising since CVS is
-        # the one creating most of the text
-
         # The mail is sent from the person doing the checkin. Assume that the
         # local username is enough to identify them (this assumes a one-server
         # cvs-over-rsh environment rather than the server-dirs-shared-over-NFS
         # model)
         name, addr = parseaddr(m["from"])
         if not addr:
-            return None # no From means this message isn't from FreshCVS
+            return None # no From means this message isn't from buildbot-cvs-mail
         at = addr.find("@")
         if at == -1:
             who = addr # might still be useful
         else:
             who = addr[:at]
 
-        # we take the time of receipt as the time of checkin. Not correct (it
-        # depends upon the email latency), but it avoids the
-        # out-of-order-changes issue. Also syncmail doesn't give us anything
-        # better to work with, unless you count pulling the v1-vs-v2
-        # timestamp out of the diffs, which would be ugly. TODO: Pulling the
-        # 'Date:' header from the mail is a possibility, and
-        # email.Utils.parsedate_tz may be useful. It should be configurable,
-        # however, because there are a lot of broken clocks out there.
-        when = util.now()
-
-        # calculate a "revision" based on that timestamp
-        theCurrentTime =  datetime.datetime.utcfromtimestamp(float(when))
-        rev = theCurrentTime.strftime('%Y-%m-%d %H:%M:%S')
-
-        subject = m["subject"]
-        # syncmail puts the repository-relative directory in the subject:
-        # mprefix + "%(dir)s %(file)s,%(oldversion)s,%(newversion)s", where
-        # 'mprefix' is something that could be added by a mailing list
-        # manager.
-        # this is the only reasonable way to determine the directory name
-        space = subject.find(" ")
-        if space != -1:
-            directory = subject[:space]
+        # CVS accecpts RFC822 dates. buildbot-cvs-mail adds the date as
+        # part of the mail header, so use that.
+        # This assumes cvs is being access via ssh or pserver, so the time
+        # will be the CVS server's time.
+        
+        # calculate a "revision" based on that timestamp, or the current time
+        # if we're unable to parse the date.
+        log.msg('Processing CVS mail')
+        dateTuple = parsedate_tz(m["date"])
+        if dateTuple == None:
+            when = util.now()
         else:
-            directory = subject
+            when = mktime_tz(dateTuple)
+            
+        theTime =  datetime.datetime.utcfromtimestamp(float(when))
+        rev = theTime.strftime('%Y-%m-%d %H:%M:%S')
 
-        files = []
+        catRE           = re.compile( '^Category:\s*(\S.*)')
+        cvsRE           = re.compile( '^CVSROOT:\s*(\S.*)')
+        cvsmodeRE       = re.compile( '^Cvsmode:\s*(\S.*)')
+        filesRE         = re.compile( '^Files:\s*(\S.*)')
+        modRE           = re.compile( '^Module:\s*(\S.*)')
+        pathRE          = re.compile( '^Path:\s*(\S.*)')
+        projRE          = re.compile( '^Project:\s*(\S.*)')
+        singleFileRE    = re.compile( '(.*) (NONE|\d(\.|\d)+) (NONE|\d(\.|\d)+)')
+        tagRE           = re.compile( '^\s+Tag:\s*(\S.*)')
+        updateRE        = re.compile( '^Update of:\s*(\S.*)')
         comments = ""
-        isdir = 0
         branch = None
-
-        lines = list(body_line_iterator(m))
-        while lines:
-            line = lines.pop(0)
-
-            if (line == "Modified Files:\n" or
-                line == "Added Files:\n" or
-                line == "Removed Files:\n"):
-                break
-
-        while lines:
-            line = lines.pop(0)
-            if line == "\n":
-                break
-            if line == "Log Message:\n":
-                lines.insert(0, line)
-                break
-            line = line.lstrip()
-            line = line.rstrip()
-            # note: syncmail will send one email per directory involved in a
-            # commit, with multiple files if they were in the same directory.
-            # Unlike freshCVS, it makes no attempt to collect all related
-            # commits into a single message.
-
-            # note: syncmail will report a Tag underneath the ... Files: line
-            # e.g.:       Tag: BRANCH-DEVEL
-
-            if line.startswith('Tag:'):
-                branch = line.split(' ')[-1].rstrip()
-                continue
-
-            thesefiles = line.split(" ")
-            for f in thesefiles:
-                f = directory + "/" + f
-                if prefix:
-                    # insist that the file start with the prefix: we may get
-                    # changes we don't care about too
-                    if f.startswith(prefix):
-                        f = f[len(prefix):]
-                    else:
-                        continue
-                        break
-                # TODO: figure out how new directories are described, set
-                # .isdir
-                files.append(f)
-
-        if not files:
-            return None
-
-        while lines:
-            line = lines.pop(0)
-            if line == "Log Message:\n":
-                break
-        # message is terminated by "Index:..." (patch) or "--- NEW FILE.."
-        # or "--- filename DELETED ---". Sigh.
-        while lines:
-            line = lines.pop(0)
-            if line.find("Index: ") == 0:
-                break
-            if re.search(r"^--- NEW FILE", line):
-                break
-            if re.search(r" DELETED ---$", line):
-                break
-            comments += line
-        comments = comments.rstrip() + "\n"
-
-        change = changes.Change(who, files, comments, isdir, when=when,
-                                branch=branch, revision=rev,
-                                category=self.category,
-                                repository=self.repository)
-
-        return change
-
-# Bonsai mail parser by Stephen Davis.
-#
-# This handles changes for CVS repositories that are watched by Bonsai
-# (http://www.mozilla.org/bonsai.html)
-
-# A Bonsai-formatted email message looks like:
-# 
-# C|1071099907|stephend|/cvs|Sources/Scripts/buildbot|bonsai.py|1.2|||18|7
-# A|1071099907|stephend|/cvs|Sources/Scripts/buildbot|master.cfg|1.1|||18|7
-# R|1071099907|stephend|/cvs|Sources/Scripts/buildbot|BuildMaster.py|||
-# LOGCOMMENT
-# Updated bonsai parser and switched master config to buildbot-0.4.1 style.
-# 
-# :ENDLOGCOMMENT
-#
-# In the first example line, stephend is the user, /cvs the repository,
-# buildbot the directory, bonsai.py the file, 1.2 the revision, no sticky
-# and branch, 18 lines added and 7 removed. All of these fields might not be
-# present (during "removes" for example).
-#
-# There may be multiple "control" lines or even none (imports, directory
-# additions) but there is one email per directory. We only care about actual
-# changes since it is presumed directory additions don't actually affect the
-# build. At least one file should need to change (the makefile, say) to
-# actually make a new directory part of the build process. That's my story
-# and I'm sticking to it.
-
-class BonsaiMaildirSource(MaildirSource):
-    name = "Bonsai"
-
-    def parse(self, m, prefix=None):
-        """Parse mail sent by the Bonsai cvs loginfo script."""
-
-        # we don't care who the email came from b/c the cvs user is in the
-        # msg text
-
-        who = "unknown"
-        timestamp = None
+        cvsroot = None
+        fileList = None
         files = []
+        isdir = 0
+        path = None
+        project = None
+
         lines = list(body_line_iterator(m))
-
-        # read the control lines (what/who/where/file/etc.)
         while lines:
             line = lines.pop(0)
-            if line == "LOGCOMMENT\n":
-                break;
-            line = line.rstrip("\n")
-
-            # we'd like to do the following but it won't work if the number of
-            # items doesn't match so...
-            #   what, timestamp, user, repo, module, file = line.split( '|' )
-            items = line.split('|')
-            if len(items) < 6:
-                # not a valid line, assume this isn't a bonsai message
-                return None
-
-            try:
-                # just grab the bottom-most timestamp, they're probably all the
-                # same. TODO: I'm assuming this is relative to the epoch, but
-                # this needs testing.
-                timestamp = int(items[1])
-            except ValueError:
-                pass
-
-            user = items[2]
-            if user:
-                who = user
-
-            module = items[4]
-            file = items[5]
-            if module and file:
-                path = "%s/%s" % (module, file)
-                files.append(path)
-            sticky = items[7]
-            branch = items[8]
-
-        # if no files changed, return nothing
-        if not files:
-            return None
-
-        # read the comments
-        comments = ""
-        while lines:
-            line = lines.pop(0)
-            if line == ":ENDLOGCOMMENT\n":
+            m = catRE.match(line)
+            if m:
+                category = m.group(1)
+                continue
+            m = cvsRE.match(line)
+            if m:
+                cvsroot = m.group(1)
+                continue
+            m = cvsmodeRE.match(line)
+            if m:
+                cvsmode = m.group(1)
+                continue
+            m = filesRE.match(line)
+            if m:
+                fileList = m.group(1)
+                continue
+            m = modRE.match(line)
+            if m:
+                # We don't actually use this
+                #module = m.group(1)
+                continue
+            m = pathRE.match(line)
+            if m:
+                path = m.group(1)
+                continue
+            m = projRE.match(line)
+            if m:
+                project = m.group(1)
+                continue
+            m = tagRE.match(line)
+            if m:
+                branch = m.group(1)
+                continue
+            m = updateRE.match(line)
+            if m:
+                # We don't actually use this
+                #updateof = m.group(1)
+                continue
+            if line == "Log Message:\n":
                 break
-            comments += line
-        comments = comments.rstrip() + "\n"
 
-        # return buildbot Change object
-        return changes.Change(who, files, comments, when=timestamp,
-                              branch=branch)
+        # CVS 1.11 lists files as:
+        #   repo/path file,old-version,new-version file2,old-version,new-version
+        # Version 1.12 lists files as:
+        #   file1 old-version new-version file2 old-version new-version
+        # 
+        # files consists of tuples of 'file-name old-version new-version'
+        # The versions are either dotted-decimal version numbers, ie 1.1
+        # or NONE. New files are of the form 'NONE NUMBER', while removed
+        # files are 'NUMBER NONE'. 'NONE' is a literal string
+        # Parsing this instead of files list in 'Added File:' etc
+        # makes it possible to handle files with embedded spaces, though
+        # it could fail if the filename was 'bad 1.1 1.2'
+        # For cvs version 1.11, we expect
+        #  my_module new_file.c,NONE,1.1
+        #  my_module removed.txt,1.2,NONE
+        #  my_module modified_file.c,1.1,1.2
+        # While cvs version 1.12 gives us       
+        #  new_file.c NONE 1.1
+        #  removed.txt 1.2 NONE
+        #  modified_file.c 1.1,1.2
+
+        if fileList is None:
+           log.msg('CVSMaildirSource Mail with no files. Ignoring')
+           return None       # We don't have any files. Email not from CVS
+
+        if cvsmode == '1.11':
+            # Please, no repo paths with spaces!
+            m = re.search('([^ ]*) ', fileList)
+            if m:
+                path = m.group(1)
+            else:
+                log.msg('CVSMaildirSource can\'t get path from file list. Ignoring mail')
+                return
+            fileList = fileList[len(path):].strip()
+            singleFileRE = re.compile( '(.+?),(NONE|(?:\d+\.(?:\d+\.\d+\.)*\d+)),(NONE|(?:\d+\.(?:\d+\.\d+\.)*\d+))(?: |$)')
+        elif cvsmode == '1.12':
+            singleFileRE = re.compile( '(.+?) (NONE|(?:\d+\.(?:\d+\.\d+\.)*\d+)) (NONE|(?:\d+\.(?:\d+\.\d+\.)*\d+))(?: |$)')
+            if path is None:
+                raise ValueError('CVSMaildirSource cvs 1.12 require path. Check cvs loginfo config')
+        else:
+            raise ValueError('Expected cvsmode 1.11 or 1.12. got: %s' % cvsmode)
+        
+        log.msg("CVSMaildirSource processing filelist: %s" % fileList)
+        links = []
+        while(fileList):
+            m = singleFileRE.match(fileList)
+            if m:
+                curFile = path + '/' + m.group(1)
+                oldRev = m.group(2)
+                newRev = m.group(3)
+                files.append( curFile )
+                if self.urlmaker:
+                    links.append(self.urlmaker(curFile, oldRev, newRev ))
+                fileList = fileList[m.end():]
+            else:
+                log.msg('CVSMaildirSource no files matched regex. Ignoring')
+                return None   # bail - we couldn't parse the files that changed
+        # Now get comments    
+        while lines:
+            line = lines.pop(0)
+            comments += line
+            
+        comments = comments.rstrip() + "\n"
+        if comments == '\n':
+            comments = None
+        return dict(
+                who=who,
+                files=files,
+                comments=comments,
+                isdir=isdir,
+                when=when,
+                branch=branch,
+                revision=rev,
+                category=category,
+                repository=cvsroot,
+                project=project,
+                links=links,
+                properties=self.properties)
 
 # svn "commit-email.pl" handler.  The format is very similar to freshcvs mail;
 # here's a sample:
@@ -377,7 +297,7 @@ class SVNCommitEmailMaildirSource(MaildirSource):
         # model)
         name, addr = parseaddr(m["from"])
         if not addr:
-            return None # no From means this message isn't from FreshCVS
+            return None # no From means this message isn't from svn
         at = addr.find("@")
         if at == -1:
             who = addr # might still be useful
@@ -396,7 +316,6 @@ class SVNCommitEmailMaildirSource(MaildirSource):
 
         files = []
         comments = ""
-        isdir = 0
         lines = list(body_line_iterator(m))
         rev = None
         while lines:
@@ -464,7 +383,12 @@ class SVNCommitEmailMaildirSource(MaildirSource):
             log.msg("no matching files found, ignoring commit")
             return None
 
-        return changes.Change(who, files, comments, when=when, revision=rev)
+        return dict(
+                who=who,
+                files=files,
+                comments=comments,
+                when=when,
+                revision=rev)
 
 # bzr Launchpad branch subscription mails. Sample mail:
 #
@@ -591,11 +515,15 @@ class BzrLaunchpadEmailMaildirSource(MaildirSource):
                 else:
                     branch = None
 
-        #log.msg("parse(): rev=%s who=%s files=%s comments='%s' when=%s branch=%s" % (rev, who, d['files'], d['comments'], time.asctime(time.localtime(when)), branch))
         if rev and who:
-            return changes.Change(who, d['files'], d['comments'],
-                                  when=when, revision=rev, branch=branch, 
-                                  repository=repository or '')
+            return dict(
+                    who=who,
+                    files=d['files'],
+                    comments=d['comments'],
+                    when=when,
+                    revision=rev,
+                    branch=branch,
+                    repository=repository or '')
         else:
             return None
 

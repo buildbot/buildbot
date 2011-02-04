@@ -1,12 +1,32 @@
-# -*- test-case-name: buildbot.test.test_transfer -*-
+# This file is part of Buildbot.  Buildbot is free software: you can
+# redistribute it and/or modify it under the terms of the GNU General Public
+# License as published by the Free Software Foundation, version 2.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, write to the Free Software Foundation, Inc., 51
+# Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Copyright Buildbot Team Members
+
 
 import os.path, tarfile, tempfile
+try:
+    from cStringIO import StringIO
+    assert StringIO
+except ImportError:
+    from StringIO import StringIO
 from twisted.internet import reactor
 from twisted.spread import pb
 from twisted.python import log
 from buildbot.process.buildstep import RemoteCommand, BuildStep
 from buildbot.process.buildstep import SUCCESS, FAILURE, SKIPPED
 from buildbot.interfaces import BuildSlaveTooOldError
+from buildbot.util import json
 
 
 class _FileWriter(pb.Referenceable):
@@ -22,9 +42,9 @@ class _FileWriter(pb.Referenceable):
             os.makedirs(dirname)
 
         self.destfile = destfile
-        self.fp = open(destfile, "wb")
-        if mode is not None:
-            os.chmod(destfile, mode)
+        self.mode = mode
+        fd, self.tmpname = tempfile.mkstemp(dir=dirname)
+        self.fp = os.fdopen(fd, 'wb')
         self.remaining = maxsize
 
     def remote_write(self, data):
@@ -49,6 +69,13 @@ class _FileWriter(pb.Referenceable):
         """
         self.fp.close()
         self.fp = None
+        # on windows, os.rename does not automatically unlink, so do it manually
+        if os.path.exists(self.destfile):
+            os.unlink(self.destfile)
+        os.rename(self.tmpname, self.destfile)
+        self.tmpname = None
+        if self.mode is not None:
+            os.chmod(self.destfile, self.mode)
 
     def __del__(self):
         # unclean shutdown, the file is probably truncated, so delete it
@@ -57,6 +84,8 @@ class _FileWriter(pb.Referenceable):
         if fp:
             fp.close()
             os.unlink(self.destfile)
+            if self.tmpname and os.path.exists(self.tmpname):
+                os.unlink(self.tmpname)
 
 
 def _extractall(self, path=".", members=None):
@@ -102,31 +131,36 @@ class _DirectoryWriter(_FileWriter):
 
     def __init__(self, destroot, maxsize, compress, mode):
         self.destroot = destroot
+        self.compress = compress
 
         self.fd, self.tarname = tempfile.mkstemp()
-        self.compress = compress
+        os.close(self.fd)
+
         _FileWriter.__init__(self, self.tarname, maxsize, mode)
 
     def remote_unpack(self):
         """
         Called by remote slave to state that no more data will be transfered
         """
-        if self.fp:
-            self.fp.close()
-            self.fp = None
-        fileobj = os.fdopen(self.fd, 'rb')
+        # Make sure remote_close is called, otherwise atomic rename wont happen
+        self.remote_close()
+
+        # Map configured compression to a TarFile setting
         if self.compress == 'bz2':
             mode='r|bz2'
         elif self.compress == 'gz':
             mode='r|gz'
         else:
             mode = 'r'
+
+        # Support old python
         if not hasattr(tarfile.TarFile, 'extractall'):
             tarfile.TarFile.extractall = _extractall
-        archive = tarfile.open(name=self.tarname, mode=mode, fileobj=fileobj)
+
+        # Unpack archive and clean up after self
+        archive = tarfile.open(name=self.tarname, mode=mode)
         archive.extractall(path=self.destroot)
         archive.close()
-        fileobj.close()
         os.remove(self.tarname)
 
 
@@ -150,6 +184,9 @@ class _TransferBuildStep(BuildStep):
     functionality.
     """
     DEFAULT_WORKDIR = "build"           # is this redundant?
+
+    haltOnFailure = True
+    flunkOnFailure = True
 
     def setDefaultWorkdir(self, workdir):
         if self.workdir is None:
@@ -468,3 +505,120 @@ class FileDownload(_TransferBuildStep):
         d = self.runCommand(self.cmd)
         d.addCallback(self.finished).addErrback(self.failed)
 
+class StringDownload(_TransferBuildStep):
+    """
+    Download the first 'maxsize' bytes of a string, from the buildmaster to the
+    buildslave. Set the mode of the file
+
+    Arguments::
+
+     ['s']         string to transfer
+     ['slavedest'] filename of destination file at slave
+     ['workdir']   string with slave working directory relative to builder
+                   base dir, default 'build'
+     ['maxsize']   maximum size of the file, default None (=unlimited)
+     ['blocksize'] maximum size of each block being transfered
+     ['mode']      use this to set the access permissions of the resulting
+                   buildslave-side file. This is traditionally an octal
+                   integer, like 0644 to be world-readable (but not
+                   world-writable), or 0600 to only be readable by
+                   the buildslave account, or 0755 to be world-executable.
+                   The default (=None) is to leave it up to the umask of
+                   the buildslave process.
+    """
+    name = 'string_download'
+
+    def __init__(self, s, slavedest,
+                 workdir=None, maxsize=None, blocksize=16*1024, mode=None,
+                 **buildstep_kwargs):
+        BuildStep.__init__(self, **buildstep_kwargs)
+        self.addFactoryArguments(s=s,
+                                 slavedest=slavedest,
+                                 workdir=workdir,
+                                 maxsize=maxsize,
+                                 blocksize=blocksize,
+                                 mode=mode,
+                                 )
+
+        self.s = s
+        self.slavedest = slavedest
+        self.workdir = workdir
+        self.maxsize = maxsize
+        self.blocksize = blocksize
+        assert isinstance(mode, (int, type(None)))
+        self.mode = mode
+
+    def start(self):
+        properties = self.build.getProperties()
+
+        version = self.slaveVersion("downloadFile")
+        if not version:
+            m = "slave is too old, does not know about downloadFile"
+            raise BuildSlaveTooOldError(m)
+
+        # we are currently in the buildmaster's basedir, so any non-absolute
+        # paths will be interpreted relative to that
+        slavedest = properties.render(self.slavedest)
+        log.msg("StringDownload started, from master to slave %r" % slavedest)
+
+        self.step_status.setText(['downloading', "to",
+                                  os.path.basename(slavedest)])
+
+        # setup structures for reading the file
+        fp = StringIO(properties.render(self.s))
+        fileReader = _FileReader(fp)
+
+        # default arguments
+        args = {
+            'slavedest': slavedest,
+            'maxsize': self.maxsize,
+            'reader': fileReader,
+            'blocksize': self.blocksize,
+            'workdir': self._getWorkdir(),
+            'mode': self.mode,
+            }
+
+        self.cmd = StatusRemoteCommand('downloadFile', args)
+        d = self.runCommand(self.cmd)
+        d.addCallback(self.finished).addErrback(self.failed)
+
+class JSONStringDownload(StringDownload):
+    """
+    Encode object o as a json string and save it on the buildslave
+
+    Arguments::
+
+     ['o']         object to encode and transfer
+    """
+    name = "json_download"
+    def __init__(self, o, slavedest, **buildstep_kwargs):
+        if 's' in buildstep_kwargs:
+            del buildstep_kwargs['s']
+        s = json.dumps(o)
+        StringDownload.__init__(self, s=s, slavedest=slavedest, **buildstep_kwargs)
+        self.addFactoryArguments(o=o)
+
+class JSONPropertiesDownload(StringDownload):
+    """
+    Download the current build properties as a json string and save it on the
+    buildslave
+    """
+    name = "json_properties_download"
+    def __init__(self, slavedest, **buildstep_kwargs):
+        self.super_class = StringDownload
+        if 's' in buildstep_kwargs:
+            del buildstep_kwargs['s']
+        StringDownload.__init__(self, s=None, slavedest=slavedest, **buildstep_kwargs)
+
+    def start(self):
+        properties = self.build.getProperties()
+        props = {}
+        for key, value, source in properties.asList():
+            props[key] = value
+
+        self.s = json.dumps(dict(
+                        properties=props,
+                        sourcestamp=self.build.getSourceStamp().asDict(),
+                    ),
+                )
+        return self.super_class.start(self)

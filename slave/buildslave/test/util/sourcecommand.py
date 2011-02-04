@@ -1,3 +1,18 @@
+# This file is part of Buildbot.  Buildbot is free software: you can
+# redistribute it and/or modify it under the terms of the GNU General Public
+# License as published by the Free Software Foundation, version 2.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, write to the Free Software Foundation, Inc., 51
+# Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Copyright Buildbot Team Members
+
 from buildslave import runprocess
 from buildslave.test.util import command
 
@@ -6,7 +21,7 @@ class SourceCommandTestMixin(command.CommandTestMixin):
     Support for testing Source Commands; an extension of CommandTestMixin
     """
 
-    def make_command(self, cmdclass, args, makedirs=False):
+    def make_command(self, cmdclass, args, makedirs=False, initial_sourcedata=''):
         """
         Same as the parent class method, but this also adds some source-specific
         patches:
@@ -22,7 +37,7 @@ class SourceCommandTestMixin(command.CommandTestMixin):
         # note that these patches are to an *instance*, not a class, so there
         # is no need to use self.patch() to reverse them
 
-        self.sourcedata = ''
+        self.sourcedata = initial_sourcedata
         def readSourcedata():
             return self.sourcedata
         cmd.readSourcedata = readSourcedata
@@ -31,13 +46,6 @@ class SourceCommandTestMixin(command.CommandTestMixin):
             self.sourcedata = cmd.sourcedata
             return res
         cmd.writeSourcedata = writeSourcedata
-
-        def doClobber(_, dirname):
-            r = runprocess.RunProcess(self.builder,
-                [ 'clobber', dirname ],
-                self.builder.basedir)
-            return r.start()
-        cmd.doClobber = doClobber
 
         def doClobber(_, dirname):
             r = runprocess.RunProcess(self.builder,

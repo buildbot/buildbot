@@ -1,3 +1,18 @@
+# This file is part of Buildbot.  Buildbot is free software: you can
+# redistribute it and/or modify it under the terms of the GNU General Public
+# License as published by the Free Software Foundation, version 2.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, write to the Free Software Foundation, Inc., 51
+# Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Copyright Buildbot Team Members
+
 import os, types
 from twisted.python import runtime
 from twisted.internet import reactor 
@@ -9,18 +24,22 @@ class MasterShellCommand(BuildStep):
     """
     Run a shell command locally - on the buildmaster.  The shell command
     COMMAND is specified just as for a RemoteShellCommand.  Note that extra
-    logfiles are not sopported.
+    logfiles are not supported.
     """
     name='MasterShellCommand'
     description='Running'
     descriptionDone='Ran'
+    haltOnFailure = True
+    flunkOnFailure = True
 
     def __init__(self, command,
                  description=None, descriptionDone=None,
+                 env=None, path=None, usePTY=0,
                  **kwargs):
         BuildStep.__init__(self, **kwargs)
         self.addFactoryArguments(description=description,
                                  descriptionDone=descriptionDone,
+                                 env=env, path=path, usePTY=usePTY,
                                  command=command)
 
         self.command=command
@@ -32,6 +51,9 @@ class MasterShellCommand(BuildStep):
             self.descriptionDone = descriptionDone
         if isinstance(self.descriptionDone, str):
             self.descriptionDone = [self.descriptionDone]
+        self.env=env
+        self.path=path
+        self.usePTY=usePTY
 
     class LocalPP(ProcessProtocol):
         def __init__(self, step):
@@ -80,8 +102,14 @@ class MasterShellCommand(BuildStep):
         stdio_log.addHeader(" argv: %s\n" % (argv,))
         self.step_status.setText(list(self.description))
 
+        if self.env is None:
+            env = os.environ
+        else:
+            assert isinstance(self.env, dict)
+            env = self.env
         # TODO add a timeout?
-        reactor.spawnProcess(self.LocalPP(self), argv[0], argv)
+        reactor.spawnProcess(self.LocalPP(self), argv[0], argv, 
+                path=self.path, usePTY=self.usePTY, env=env )
         # (the LocalPP object will call processEnded for us)
 
     def processEnded(self, status_object):

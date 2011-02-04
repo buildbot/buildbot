@@ -1,0 +1,204 @@
+Buildbot is too complex for any one person to understand all of it.  This file
+lists who's responsible for which parts of Buildbot.  Some of these are easily
+separated into a few source files, while others are general projects that
+cover the entire Buildbot codebase.
+
+  See http://trac.buildbot.net/wiki/ComponentMaintenancePolicy for more.
+
+Each component contains indented lines identified as follows:
+
+D: Component description (optional)
+
+U: URL for more information
+
+M: Component maintainer, in the form
+      FullName <address@domain.com>  - STATUS
+   where STATUS is optional, and can be one of
+      Hacker - knows the code and can write fixes
+      Tester - can test patches and advise committers to merge
+      User - can help to triage and explain bugs
+      Retired - former maintainer, now out of the business
+
+S: Component status.  One of
+    Supported: This will be a part of Buildbot forever
+    Maintained: Someone is actively looking after this component
+    Patched: Someone is watching bugs for this component and can merge
+        fixes
+    Orphaned: This component is not actively maintained and may be removed
+        from Buildbot if it accumulates too many bugs
+    Last-Rites: This component is slated to be removed in the given
+        release, unless a maintainer steps forward
+
+---
+
+== Version Control ==
+
+Perforce VC
+    S: Orphaned
+    U: http://trac.buildbot.net/wiki/p4
+
+Subversion VC
+    S: Orphaned
+    U: http://trac.buildbot.net/wiki/svn
+
+CVS VC
+    S: Orphaned
+    U: http://trac.buildbot.net/wiki/cvs
+
+Bazaar VC
+    S: Orphaned
+    U: http://trac.buildbot.net/wiki/bzr
+
+Git VC
+    S: Maintained
+    M: Amber Yust <ayust@yelp.com> - Hacker
+    U: http://trac.buildbot.net/wiki/git
+
+BitKeeper VC
+    S: Patched
+    M: Amar Takhar <verm@snickers.org> - Hacker
+    U: http://trac.buildbot.net/wiki/bk
+
+Darcs VC
+    S: Orphaned
+    U: http://trac.buildbot.net/wiki/darcs
+
+Mercurial VC
+    S: Orphaned
+    U: http://trac.buildbot.net/wiki/hg
+
+Repo VC
+    S: Maintained
+    M: Chris Soyars <ctsoyars@gmail.com> - Tester
+    M: Piotr Sikora <piotr.sikora@frickle.com> - Hacker
+    M: Pierre Tardy <tardyp@gmail.com> - Hacker
+    U: http://trac.buildbot.net/wiki/repovc
+
+
+== Change Sources ==
+
+Gerrit
+    S: Maintained
+    M: Piotr Sikora <piotr.sikora@frickle.com> - Hacker
+    M: Pierre Tardy <tardyp@gmail.com> - Hacker
+    U: http://trac.buildbot.net/wiki/gerrit
+
+
+== Buildbot Plugins ==
+
+Debug Client
+    S: Orphaned
+
+Status Client
+    S: Patched
+    M: Mark Wielaard <mark@klomp.org>
+
+Debug Client
+    S: Orphaned
+
+Web Status
+    S: Supported
+    M: Marcus Lindblom <macke@yar.nu> - Hacker
+    U: http://trac.buildbot.net/wiki/web
+
+IRC Status
+    S: Maintained
+    M: Amber Yust <ayust@yelp.com> - Hacker
+    U: http://trac.buildbot.net/wiki/irc
+
+MailNotifier
+    S: Orphaned
+    U: http://trac.buildbot.net/wiki/mail
+
+
+== Buildbot Core Features ==
+
+Virtualization
+    D: Use of virtual, start-on-demand slaves
+    S: Maintained
+    M: John Carr <john.carr@isotoma.com> - Hacker
+    M: Tom Wardill <tom@howrandom.net> - Hacker
+    U: http://trac.buildbot.net/wiki/virtualization
+
+Buildbot Try
+    S: Orphaned
+    U: http://trac.buildbot.net/wiki/try
+
+Documentation
+    S: Supported
+    U: http://buildbot.net/buildbot/docs
+    U: http://trac.buildbot.net/wiki/docs
+
+== Packaging & System Compatibility ==
+
+MacPorts
+    S: Maintained
+    M: William Siegrist <wsiegrist@apple.com>
+    U: http://trac.macports.org/browser/trunk/dports/devel/buildbot/Portfile
+
+Fink
+    S: Maintained
+    M: Charles Lepple <clepple+fink@ghz.cc>
+    U: http://pdb.finkproject.org/pdb/browse.php?name=buildbot
+
+FreeBSD
+    S: Maintained
+    U: http://www.freebsd.org/cgi/cvsweb.cgi/ports/devel/buildbot/
+
+OpenBSD
+    S: Maintained
+    U: http://www.openbsd.org/cgi-bin/cvsweb/ports/devel/py-buildbot/
+
+Windows
+    S: Patched
+    M: Robert Stackhouse <robertstackhouse@gmail.com>
+    U: http://trac.buildbot.net/wiki/windows
+
+RedHat / Fedora
+    S: Maintained
+    M: Gareth Armstrong <gareth.armstrong@hp.com>
+    M: Gianluca Sforna <giallu@gmail.com>
+    M: Steve Milner <smilner@redhat.com>
+    U: https://admin.fedoraproject.org/pkgdb/acls/name/buildbot
+
+Debian / Ubuntu
+    S: Orphaned
+    U: http://packages.ubuntu.com/maverick/buildbot
+
+OpenCSW
+    S: Orphaned
+    U: http://www.opencsw.org/packages/CSWbuildbot/
+
+Gentoo
+    S: Maintained
+    M: Dustin J. Mitchell <dustin@v.igoros.us>
+    U: http://packages.gentoo.org/package/dev-util/buildbot
+
+
+== Other Contact Information ==
+
+Security
+    D: Contacts members of this team directly with any security concerns
+    M: Dustin J. Mitchell <dustin@v.igoros.us>
+    M: Amber Yust <ayust@yelp.com>
+    M: Steve Milner <smilner@redhat.com>
+    U: http://trac.buildbot.net/wiki/SecurityPolicy
+
+Metabuildbot Slave Donors
+    D: Maintainers of buildslaves for the Metabuildbot
+    M: Steve Milner <smilner@redhat.com>
+    M: Dustin J. Mitchell <dustin@v.igoros.us>
+    M: Mozilla Release Engineering <release@mozilla.com>
+    M: Marc-Antoine Ruel <maruel@chromium.org>
+    M: Dustin Sallings <dustin@spy.net>
+    U: http://buildbot.buildbot.net
+
+Committers
+    D: People who can commit changes to the main Buildbot repository
+    M: Dustin J. Mitchell <dustin@v.igoros.us>
+    M: Amber Yust <ayust@yelp.com>
+    M: Ben Hearsum <bhearsum@mozilla.com>
+    M: Brian Warner <warner@lothar.com>
+    M: Chris AtLee <catlee@mozilla.com>
+    M: Marc-Antoine Ruel <maruel@chromium.org>
+    M: Marcus Lindblom <macke@yar.nu>

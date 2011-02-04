@@ -1,7 +1,22 @@
-# -*- test-case-name: buildbot.test.test_util -*-
+# This file is part of Buildbot.  Buildbot is free software: you can
+# redistribute it and/or modify it under the terms of the GNU General Public
+# License as published by the Free Software Foundation, version 2.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, write to the Free Software Foundation, Inc., 51
+# Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Copyright Buildbot Team Members
 
-from twisted.python import threadable
+
 import time, re, string
+from twisted.python import threadable
+from buildbot.util.misc import deferredLocked
 
 def naturalSort(l):
     """Returns a sorted copy of l, so that numbers in strings are sorted in the
@@ -23,7 +38,21 @@ def naturalSort(l):
     l = [ i[1] for i in keyed_l ]
     return l
 
+def flatten(l):
+    """Flatten nested lists into a single-level list"""
+    if l and type(l[0]) == list:
+        rv = []
+        for e in l:
+            if type(e) == list:
+                rv.extend(e)
+            else:
+                rv.append(e)
+        return rv
+    else:
+        return l
+
 def now(_reactor=None):
+    """Get the time, using reactor.seconds or time.time"""
     if _reactor and hasattr(_reactor, "seconds"):
         return _reactor.seconds()
     else:
@@ -113,6 +142,9 @@ class LRUCache:
         self._cached_ids.append(id)
     __setitem__ = add
 
+    def setMaxSize(self, max_size):
+        self._max_size = max_size
+
 threadable.synchronize(LRUCache)
 
 
@@ -127,6 +159,7 @@ def none_or_str(x):
 #   http://lists.debian.org/debian-python/2010/02/msg00016.html
 try:
     import json # python 2.6
+    assert json
 except ImportError:
     import simplejson as json # python 2.4 to 2.5
 try:
@@ -149,4 +182,4 @@ NotABranch = NotABranch()
 __all__ = [
     'naturalSort', 'now', 'formatInterval', 'ComparableMixin', 'json',
     'safeTranslate', 'remove_userpassword', 'LRUCache', 'none_or_str',
-    'NotABranch']
+    'NotABranch', 'deferredLocked' ]

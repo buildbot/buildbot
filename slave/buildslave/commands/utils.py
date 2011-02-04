@@ -1,5 +1,21 @@
+# This file is part of Buildbot.  Buildbot is free software: you can
+# redistribute it and/or modify it under the terms of the GNU General Public
+# License as published by the Free Software Foundation, version 2.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, write to the Free Software Foundation, Inc., 51
+# Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Copyright Buildbot Team Members
+
 import os
 
+from twisted.python import log
 from twisted.python.procutils import which
 from twisted.python import runtime
 
@@ -22,6 +38,10 @@ def getCommand(name):
             return possibles_exe[0]
     return possibles[0]
 
+# this just keeps pyflakes happy on non-Windows systems
+if runtime.platformType != 'win32':
+    WindowsError = RuntimeError
+
 if runtime.platformType  == 'win32':
     def rmdirRecursive(dir):
         """This is a replacement for shutil.rmtree that works better under
@@ -36,7 +56,23 @@ if runtime.platformType  == 'win32':
         # Verify the directory is read/write/execute for the current user
         os.chmod(dir, 0700)
 
-        for name in os.listdir(dir):
+        # os.listdir below only returns a list of unicode filenames if the parameter is unicode
+        # Thus, if a non-unicode-named dir contains a unicode filename, that filename will get garbled.
+        # So force dir to be unicode.
+        if not isinstance(dir, unicode):
+            try:
+                dir = unicode(dir, "utf-8")
+            except:
+                log.err("rmdirRecursive: decoding from UTF-8 failed (ignoring)")
+
+        try:
+            list = os.listdir(dir)
+        except WindowsError, e:
+            log.msg("rmdirRecursive: unable to listdir %s (%s). Trying to remove like a dir" % (dir, e.strerror))
+            os.rmdir(dir)
+            return
+
+        for name in list:
             full_name = os.path.join(dir, name)
             # on Windows, if we don't have write permission we can't remove
             # the file/directory either, so turn that on

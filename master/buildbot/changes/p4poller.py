@@ -1,4 +1,18 @@
-# -*- test-case-name: buildbot.test.test_p4poller -*-
+# This file is part of Buildbot.  Buildbot is free software: you can
+# redistribute it and/or modify it under the terms of the GNU General Public
+# License as published by the Free Software Foundation, version 2.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, write to the Free Software Foundation, Inc., 51
+# Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Copyright Buildbot Team Members
+
 
 # Many thanks to Dave Peticolas for contributing this module
 
@@ -7,12 +21,10 @@ import time
 import os
 
 from twisted.python import log
-from twisted.internet import defer, reactor
-from twisted.internet.utils import getProcessOutput
-from twisted.internet.task import LoopingCall
+from twisted.internet import defer, utils
 
 from buildbot import util
-from buildbot.changes import base, changes
+from buildbot.changes import base
 
 class P4PollerError(Exception):
     """Something went wrong with the poll. This is used as a distinctive
@@ -28,12 +40,12 @@ def get_simple_split(branchfile):
     branch, file = branchfile.split('/', 1)
     return branch, file
 
-class P4Source(base.ChangeSource, util.ComparableMixin):
+class P4Source(base.PollingChangeSource, util.ComparableMixin):
     """This source will poll a perforce repository for changes and submit
     them to the change master."""
 
     compare_attrs = ["p4port", "p4user", "p4passwd", "p4base",
-                     "p4bin", "pollinterval"]
+                     "p4bin", "pollInterval"]
 
     env_vars = ["P4CLIENT", "P4PORT", "P4PASSWD", "P4USER",
                 "P4CHARSET"]
@@ -48,32 +60,14 @@ class P4Source(base.ChangeSource, util.ComparableMixin):
     parent = None # filled in when we're added
     last_change = None
     loop = None
-    working = False
 
     def __init__(self, p4port=None, p4user=None, p4passwd=None,
                  p4base='//', p4bin='p4',
                  split_file=lambda branchfile: (None, branchfile),
-                 pollinterval=60 * 10, histmax=None):
-        """
-        @type  p4port:       string
-        @param p4port:       p4 port definition (host:portno)
-        @type  p4user:       string
-        @param p4user:       p4 user
-        @type  p4passwd:     string
-        @param p4passwd:     p4 passwd
-        @type  p4base:       string
-        @param p4base:       p4 file specification to limit a poll to
-                             without the trailing '...' (i.e., //)
-        @type  p4bin:        string
-        @param p4bin:        path to p4 binary, defaults to just 'p4'
-        @type  split_file:   func
-        $param split_file:   splits a filename into branch and filename.
-        @type  pollinterval: int
-        @param pollinterval: interval in seconds between polls
-        @type  histmax:      int
-        @param histmax:      (obsolete) maximum number of changes to look back through.
-                             ignored; accepted for backwards compatibility.
-        """
+                 pollInterval=60 * 10, histmax=None, pollinterval=-2):
+        # for backward compatibility; the parameter used to be spelled with 'i'
+        if pollinterval != -2:
+            pollInterval = pollinterval
 
         self.p4port = p4port
         self.p4user = p4user
@@ -81,57 +75,23 @@ class P4Source(base.ChangeSource, util.ComparableMixin):
         self.p4base = p4base
         self.p4bin = p4bin
         self.split_file = split_file
-        self.pollinterval = pollinterval
-        self.loop = LoopingCall(self.checkp4)
-
-    def startService(self):
-        base.ChangeSource.startService(self)
-
-        # Don't start the loop just yet because the reactor isn't running.
-        # Give it a chance to go and install our SIGCHLD handler before
-        # spawning processes.
-        reactor.callLater(0, self.loop.start, self.pollinterval)
-
-    def stopService(self):
-        self.loop.stop()
-        return base.ChangeSource.stopService(self)
+        self.pollInterval = pollInterval
 
     def describe(self):
         return "p4source %s %s" % (self.p4port, self.p4base)
 
-    def checkp4(self):
-        # Our return value is only used for unit testing.
-        if self.working:
-            log.msg("Skipping checkp4 because last one has not finished")
-            return defer.succeed(None)
-        else:
-            self.working = True
-            d = self._get_changes()
-            d.addCallback(self._process_changes)
-            d.addCallbacks(self._finished_ok, self._finished_failure)
-            return d
-
-    def _finished_ok(self, res):
-        assert self.working
-        self.working = False
-        return res
-
-    def _finished_failure(self, res):
-        assert self.working
-        self.working = False
-
-        # Again, the return value is only for unit testing. If there's a
-        # failure, log it so it isn't lost. Use log.err to make sure unit
-        # tests flunk if there was a problem.
-        log.err(res, 'P4 poll failed')
-        return None
+    def poll(self):
+        d = self._poll()
+        d.addErrback(log.err, 'P4 poll failed')
+        return d
 
     def _get_process_output(self, args):
         env = dict([(e, os.environ.get(e)) for e in self.env_vars if os.environ.get(e)])
-        d = getProcessOutput(self.p4bin, args, env)
+        d = utils.getProcessOutput(self.p4bin, args, env)
         return d
 
-    def _get_changes(self):
+    @defer.deferredGenerator
+    def _poll(self):
         args = []
         if self.p4port:
             args.extend(['-p', self.p4port])
@@ -144,9 +104,11 @@ class P4Source(base.ChangeSource, util.ComparableMixin):
             args.extend(['%s...@%d,now' % (self.p4base, self.last_change+1)])
         else:
             args.extend(['-m', '1', '%s...' % (self.p4base,)])
-        return self._get_process_output(args)
 
-    def _process_changes(self, result):
+        wfd = defer.waitForDeferred(self._get_process_output(args))
+        yield wfd
+        result = wfd.getResult()
+
         last_change = self.last_change
         changelists = []
         for line in result.split('\n'):
@@ -157,68 +119,68 @@ class P4Source(base.ChangeSource, util.ComparableMixin):
                 raise P4PollerError("Unexpected 'p4 changes' output: %r" % result)
             num = int(m.group('num'))
             if last_change is None:
+                # first time through, the poller just gets a "baseline" for where to
+                # start on the next poll
                 log.msg('P4Poller: starting at change %d' % num)
                 self.last_change = num
-                return []
+                return
             changelists.append(num)
         changelists.reverse() # oldest first
 
         # Retrieve each sequentially.
-        d = defer.succeed(None)
-        for c in changelists:
-            d.addCallback(self._get_describe, c)
-            d.addCallback(self._process_describe, c)
-        return d
+        for num in changelists:
+            args = []
+            if self.p4port:
+                args.extend(['-p', self.p4port])
+            if self.p4user:
+                args.extend(['-u', self.p4user])
+            if self.p4passwd:
+                args.extend(['-P', self.p4passwd])
+            args.extend(['describe', '-s', str(num)])
+            wfd = defer.waitForDeferred(self._get_process_output(args))
+            yield wfd
+            result = wfd.getResult()
 
-    def _get_describe(self, dummy, num):
-        args = []
-        if self.p4port:
-            args.extend(['-p', self.p4port])
-        if self.p4user:
-            args.extend(['-u', self.p4user])
-        if self.p4passwd:
-            args.extend(['-P', self.p4passwd])
-        args.extend(['describe', '-s', str(num)])
-        return self._get_process_output(args)
-
-    def _process_describe(self, result, num):
-        lines = result.split('\n')
-        # SF#1555985: Wade Brainerd reports a stray ^M at the end of the date
-        # field. The rstrip() is intended to remove that.
-        lines[0] = lines[0].rstrip()
-        m = self.describe_header_re.match(lines[0])
-        if not m:
-            raise P4PollerError("Unexpected 'p4 describe -s' result: %r" % result)
-        who = m.group('who')
-        when = time.mktime(time.strptime(m.group('when'), self.datefmt))
-        comments = ''
-        while not lines[0].startswith('Affected files'):
-            comments += lines.pop(0) + '\n'
-        lines.pop(0) # affected files
-
-        branch_files = {} # dict for branch mapped to file(s)
-        while lines:
-            line = lines.pop(0).strip()
-            if not line: continue
-            m = self.file_re.match(line)
+            lines = result.split('\n')
+            # SF#1555985: Wade Brainerd reports a stray ^M at the end of the date
+            # field. The rstrip() is intended to remove that.
+            lines[0] = lines[0].rstrip()
+            m = self.describe_header_re.match(lines[0])
             if not m:
-                raise P4PollerError("Invalid file line: %r" % line)
-            path = m.group('path')
-            if path.startswith(self.p4base):
-                branch, file = self.split_file(path[len(self.p4base):])
-                if (branch == None and file == None): continue
-                if branch_files.has_key(branch):
-                    branch_files[branch].append(file)
-                else:
-                    branch_files[branch] = [file]
+                raise P4PollerError("Unexpected 'p4 describe -s' result: %r" % result)
+            who = m.group('who')
+            when = time.mktime(time.strptime(m.group('when'), self.datefmt))
+            comments = ''
+            while not lines[0].startswith('Affected files'):
+                comments += lines.pop(0) + '\n'
+            lines.pop(0) # affected files
 
-        for branch in branch_files:
-            c = changes.Change(who=who,
-                               files=branch_files[branch],
-                               comments=comments,
-                               revision=str(num),
-                               when=when,
-                               branch=branch)
-            self.parent.addChange(c)
+            branch_files = {} # dict for branch mapped to file(s)
+            while lines:
+                line = lines.pop(0).strip()
+                if not line: continue
+                m = self.file_re.match(line)
+                if not m:
+                    raise P4PollerError("Invalid file line: %r" % line)
+                path = m.group('path')
+                if path.startswith(self.p4base):
+                    branch, file = self.split_file(path[len(self.p4base):])
+                    if (branch == None and file == None): continue
+                    if branch_files.has_key(branch):
+                        branch_files[branch].append(file)
+                    else:
+                        branch_files[branch] = [file]
 
-        self.last_change = num
+            for branch in branch_files:
+                d = self.master.addChange(
+                       who=who,
+                       files=branch_files[branch],
+                       comments=comments,
+                       revision=str(num),
+                       when=when,
+                       branch=branch)
+                wfd = defer.waitForDeferred(d)
+                yield wfd
+                wfd.getResult()
+
+            self.last_change = num

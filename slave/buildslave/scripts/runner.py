@@ -1,8 +1,22 @@
+# This file is part of Buildbot.  Buildbot is free software: you can
+# redistribute it and/or modify it under the terms of the GNU General Public
+# License as published by the Free Software Foundation, version 2.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, write to the Free Software Foundation, Inc., 51
+# Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Copyright Buildbot Team Members
+
 # N.B.: don't import anything that might pull in a reactor yet. Some of our
 # subcommands want to load modules that need the gtk reactor.
-import os, sys, stat, re, time
-import traceback
-from twisted.python import usage, util, runtime
+import os, sys, re, time
+from twisted.python import usage
 
 def isBuildslaveDir(dir):
     buildbot_tac = os.path.join(dir, "buildbot.tac")
@@ -88,7 +102,7 @@ class Maker:
         if secret:
             os.chmod(tacfile, 0600)
 
-slaveTAC = """
+slaveTACTemplate = ["""
 import os
 
 from twisted.application import service
@@ -106,6 +120,8 @@ if basedir == '.':
 # note: this line is matched against to check that this is a buildslave
 # directory; do not edit it.
 application = service.Application('buildslave')
+""",
+"""
 try:
   from twisted.python.logfile import LogFile
   from twisted.python.log import ILogObserver, FileLogObserver
@@ -115,7 +131,8 @@ try:
 except ImportError:
   # probably not yet twisted 8.2.0 and beyond, can't set log yet
   pass
-
+""",
+"""
 buildmaster_host = '%(host)s'
 port = %(port)d
 slavename = '%(name)s'
@@ -129,7 +146,7 @@ s = BuildSlave(buildmaster_host, port, slavename, passwd, basedir,
                keepalive, usepty, umask=umask, maxdelay=maxdelay)
 s.setServiceParent(application)
 
-"""
+"""]
 
 def createSlave(config):
     m = Maker(config)
@@ -139,13 +156,21 @@ def createSlave(config):
         config['basedir'] = '.'
     try:
         master = config['master']
-        host, port = re.search(r'(.+):(\d+)', master).groups()
+        port = None
+        host, port = re.search(r'^([^:]+)(?:[:](\d+))?', master).groups()
+        if port == None:
+            port = '9989'
         config['host'] = host
         config['port'] = int(port)
     except:
         print "unparseable master location '%s'" % master
-        print " expecting something more like localhost:8007"
+        print " expecting something more like localhost:8007 or localhost"
         raise
+
+    if config['no-logrotate']:
+        slaveTAC = "".join([slaveTACTemplate[0]] + slaveTACTemplate[2:])
+    else:
+        slaveTAC = "".join(slaveTACTemplate)
     contents = slaveTAC % config
 
     m.makeTAC(contents, secret=True)
@@ -171,8 +196,8 @@ def stop(config, signame="TERM", wait=False, returnFalseOnNotRunning=False):
     except:
         if returnFalseOnNotRunning:
             return False
-        print "buildslave not running."
-        sys.exit(1)
+        if not quiet: print "buildslave not running."
+        sys.exit(0)
     pid = int(f.read().strip())
     signum = getattr(signal, "SIG"+signame)
     timer = 0
@@ -201,7 +226,6 @@ def stop(config, signame="TERM", wait=False, returnFalseOnNotRunning=False):
         print "never saw process go away"
 
 def restart(config):
-    basedir = config['basedir']
     quiet = config['quiet']
 
     if not isBuildslaveDir(config['basedir']):
@@ -260,11 +284,42 @@ class RestartOptions(MakerBase):
     def getSynopsis(self):
         return "Usage:    buildslave restart [<basedir>]"
 
+class UpgradeSlaveOptions(MakerBase):
+    optFlags = [
+        ]
+    optParameters = [
+        ]
+
+    def getSynopsis(self):
+        return "Usage:    buildslave upgrade-slave [<basedir>]"
+
+    longdesc = """
+    This command takes an existing buildslave working directory and
+    upgrades it to the current version.
+    """
+
+def upgradeSlave(config):
+    basedir = os.path.expanduser(config['basedir'])
+    buildbot_tac = open(os.path.join(basedir, "buildbot.tac")).read()
+    new_buildbot_tac = buildbot_tac.replace(
+        "from buildbot.slave.bot import BuildSlave",
+        "from buildslave.bot import BuildSlave")
+    if new_buildbot_tac != buildbot_tac:
+        open(os.path.join(basedir, "buildbot.tac"), "w").write(new_buildbot_tac)
+        print "buildbot.tac updated"
+    else:
+        print "No changes made"
+
+    return 0
+
+
 class SlaveOptions(MakerBase):
     optFlags = [
         ["force", "f", "Re-use an existing directory"],
         ["relocatable", "r",
          "Create a relocatable buildbot.tac"],
+        ["no-logrotate", "n",
+         "Do not permit buildmaster rotate logs by itself"]
         ]
     optParameters = [
         ["keepalive", "k", 600,
@@ -275,10 +330,10 @@ class SlaveOptions(MakerBase):
          "controls permissions of generated files. Use --umask=022 to be world-readable"],
         ["maxdelay", None, 300,
          "Maximum time between connection attempts"],
-        ["log-size", "s", "1000000",
+        ["log-size", "s", "10000000",
          "size at which to rotate twisted log files"],
-        ["log-count", "l", "None",
-         "limit the number of kept old twisted log files"],
+        ["log-count", "l", "10",
+         "limit the number of kept old twisted log files (None for unlimited)"],
         ]
     
     longdesc = """
@@ -286,10 +341,12 @@ class SlaveOptions(MakerBase):
     file. The bot will use the <name> and <passwd> arguments to authenticate
     itself when connecting to the master. All commands are run in a
     build-specific subdirectory of <basedir>. <master> is a string of the
-    form 'hostname:port', and specifies where the buildmaster can be reached.
+    form 'hostname[:port]', and specifies where the buildmaster can be reached.
+    port defaults to 9989
 
-    <name>, <passwd>, and <master> will be provided by the buildmaster
-    administrator for your bot. You must choose <basedir> yourself.
+    The appropriate values for <name>, <passwd>, and <master> should be
+    provided to you by the buildmaster administrator. You must choose <basedir>
+    yourself.
     """
 
     def getSynopsis(self):
@@ -311,8 +368,6 @@ class SlaveOptions(MakerBase):
         self['usepty'] = int(self['usepty'])
         self['keepalive'] = int(self['keepalive'])
         self['maxdelay'] = int(self['maxdelay'])
-        if self['master'].find(":") == -1:
-            raise usage.UsageError("master must be in the form host:portnum")
         if not re.match('^\d+$', self['log-size']):
             raise usage.UsageError("log-size parameter needs to be an int")
         if not re.match('^\d+$', self['log-count']) and \
@@ -327,6 +382,8 @@ class Options(usage.Options):
         # the following are all admin commands
         ['create-slave', None, SlaveOptions,
          "Create and populate a directory for a new buildslave"],
+        ['upgrade-slave', None, UpgradeSlaveOptions,
+         "Upgrade an existing buildslave directory for the current version"],
         ['start', None, StartOptions, "Start a buildslave"],
         ['stop', None, StopOptions, "Stop a buildslave"],
         ['restart', None, RestartOptions,
@@ -363,6 +420,8 @@ def run():
 
     if command == "create-slave":
         createSlave(so)
+    elif command == "upgrade-slave":
+        upgradeSlave(so)
     elif command == "start":
         if not isBuildslaveDir(so['basedir']):
             print "not a buildslave directory"

@@ -1,9 +1,23 @@
+# This file is part of Buildbot.  Buildbot is free software: you can
+# redistribute it and/or modify it under the terms of the GNU General Public
+# License as published by the Free Software Foundation, version 2.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, write to the Free Software Foundation, Inc., 51
+# Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Copyright Buildbot Team Members
+
 import os
 import time
 
 from buildslave.commands.base import SourceBaseCommand
 from buildslave import runprocess
-from buildslave.commands import utils
 
 class CVS(SourceBaseCommand):
     """CVS-specific VC operation. In addition to the arguments handled by
@@ -26,7 +40,6 @@ class CVS(SourceBaseCommand):
 
     def setup(self, args):
         SourceBaseCommand.setup(self, args)
-        self.vcexe = utils.getCommand("cvs")
         self.cvsroot = args['cvsroot']
         self.cvsmodule = args['cvsmodule']
         self.global_options = args.get('global_options', [])
@@ -44,10 +57,11 @@ class CVS(SourceBaseCommand):
                                            self.srcdir, "CVS")))
 
     def start(self):
+        cvs = self.getCommand("cvs")
         if self.login is not None:
             # need to do a 'cvs login' command first
             d = self.builder.basedir
-            command = ([self.vcexe, '-d', self.cvsroot] + self.global_options
+            command = ([cvs, '-d', self.cvsroot] + self.global_options
                        + ['login'])
             c = runprocess.RunProcess(self.builder, command, d,
                              sendRC=False, timeout=self.timeout,
@@ -66,8 +80,9 @@ class CVS(SourceBaseCommand):
         return SourceBaseCommand.start(self)
 
     def doVCUpdate(self):
+        cvs = self.getCommand("cvs")
         d = os.path.join(self.builder.basedir, self.srcdir)
-        command = [self.vcexe, '-z3'] + self.global_options + ['update', '-dP']
+        command = [cvs, '-z3'] + self.global_options + ['update', '-dP']
         if self.branch:
             command += ['-r', self.branch]
         if self.revision:
@@ -79,12 +94,13 @@ class CVS(SourceBaseCommand):
         return c.start()
 
     def doVCFull(self):
+        cvs = self.getCommand("cvs")
         d = self.builder.basedir
         if self.mode == "export":
             verb = "export"
         else:
             verb = "checkout"
-        command = ([self.vcexe, '-d', self.cvsroot, '-z3'] +
+        command = ([cvs, '-d', self.cvsroot, '-z3'] +
                    self.global_options +
                    [verb, '-d', self.srcdir])
 

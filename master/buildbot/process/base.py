@@ -1,4 +1,18 @@
-# -*- test-case-name: buildbot.test.test_step -*-
+# This file is part of Buildbot.  Buildbot is free software: you can
+# redistribute it and/or modify it under the terms of the GNU General Public
+# License as published by the Free Software Foundation, version 2.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, write to the Free Software Foundation, Inc., 51
+# Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Copyright Buildbot Team Members
+
 
 import types
 
@@ -8,7 +22,8 @@ from twisted.python.failure import Failure
 from twisted.internet import reactor, defer, error
 
 from buildbot import interfaces, locks
-from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE, EXCEPTION, RETRY
+from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE, EXCEPTION, \
+  RETRY, SKIPPED, worst_status
 from buildbot.status.builder import Results
 from buildbot.status.progress import BuildProgress
 
@@ -60,6 +75,8 @@ class Build:
 
         self.terminate = False
 
+        self._acquiringLock = None
+
     def setBuilder(self, builder):
         """
         Set the given builder as our builder.
@@ -77,11 +94,11 @@ class Build:
     def getSourceStamp(self):
         return self.source
 
-    def setProperty(self, propname, value, source):
+    def setProperty(self, propname, value, source, runtime=True):
         """Set a property on this build. This may only be called after the
         build has started, so that it has a BuildStatus object where the
         properties can live."""
-        self.build_status.setProperty(propname, value, source)
+        self.build_status.setProperty(propname, value, source, runtime=True)
 
     def getProperties(self):
         return self.build_status.getProperties()
@@ -229,18 +246,23 @@ class Build:
             d.callback(self)
             return d
 
+        self.build_status.buildStarted(self)
         self.acquireLocks().addCallback(self._startBuild_2)
         return d
 
     def acquireLocks(self, res=None):
-        log.msg("acquireLocks(step %s, locks %s)" % (self, self.locks))
+        self._acquiringLock = None
         if not self.locks:
             return defer.succeed(None)
+        if self.stopped:
+            return defer.succeed(None)
+        log.msg("acquireLocks(build %s, locks %s)" % (self, self.locks))
         for lock, access in self.locks:
             if not lock.isAvailable(access):
                 log.msg("Build %s waiting for lock %s" % (self, lock))
                 d = lock.waitUntilMaybeAvailable(self, access)
                 d.addCallback(self.acquireLocks)
+                self._acquiringLock = (lock, access, d)
                 return d
         # all locks are available, claim them all
         for lock, access in self.locks:
@@ -248,7 +270,6 @@ class Build:
         return defer.succeed(None)
 
     def _startBuild_2(self, res):
-        self.build_status.buildStarted(self)
         self.startNextStep()
 
     def setupBuild(self, expectations):
@@ -333,6 +354,8 @@ class Build:
             return None
         if not self.steps:
             return None
+        if not self.remote:
+            return None
         if self.terminate:
             while True:
                 s = self.steps.pop(0)
@@ -380,26 +403,31 @@ class Build:
             self.text.extend(text)
         if not self.remote:
             terminate = True
+
+        possible_overall_result = result
         if result == FAILURE:
+            if not step.flunkOnFailure:
+                possible_overall_result = SUCCESS
             if step.warnOnFailure:
-                if self.result != FAILURE:
-                    self.result = WARNINGS
+                possible_overall_result = WARNINGS
             if step.flunkOnFailure:
-                self.result = FAILURE
+                possible_overall_result = FAILURE
             if step.haltOnFailure:
                 terminate = True
         elif result == WARNINGS:
-            if step.warnOnWarnings:
-                if self.result != FAILURE:
-                    self.result = WARNINGS
+            if not step.warnOnWarnings:
+                possible_overall_result = SUCCESS
+            else:
+                possible_overall_result = WARNINGS
             if step.flunkOnWarnings:
-                self.result = FAILURE
-        elif result == EXCEPTION:
-            self.result = EXCEPTION
+                possible_overall_result = FAILURE
+        elif result in (EXCEPTION, RETRY):
             terminate = True
-        elif result == RETRY:
-            self.result = RETRY
-            terminate = True
+
+        # if we skipped this step, then don't adjust the build status
+        if result != SKIPPED:
+            self.result = worst_status(self.result, possible_overall_result)
+
         return terminate
 
     def lostRemote(self, remote=None):
@@ -427,7 +455,15 @@ class Build:
         # TODO: include 'reason' in this point event
         self.builder.builder_status.addPointEvent(['interrupt'])
         self.stopped = True
-        self.currentStep.interrupt(reason)
+        if self.currentStep:
+            self.currentStep.interrupt(reason)
+
+        self.result = EXCEPTION
+
+        if self._acquiringLock:
+            lock, access, d = self._acquiringLock
+            lock.stopWaitingUntilAvailable(self, access, d)
+            d.callback(None)
 
     def allStepsDone(self):
         if self.result == FAILURE:
@@ -444,7 +480,7 @@ class Build:
     def buildException(self, why):
         log.msg("%s.buildException" % self)
         log.err(why)
-        self.buildFinished(["build", "exception"], FAILURE)
+        self.buildFinished(["build", "exception"], EXCEPTION)
 
     def buildFinished(self, text, results):
         """This method must be called when the last Step has completed. It
@@ -476,9 +512,14 @@ class Build:
         self.deferred = None
 
     def releaseLocks(self):
-        log.msg("releaseLocks(%s): %s" % (self, self.locks))
+        if self.locks:
+            log.msg("releaseLocks(%s): %s" % (self, self.locks))
         for lock, access in self.locks:
-            lock.release(self, access)
+            if lock.isOwner(self, access):
+                lock.release(self, access)
+            else:
+                # This should only happen if we've been interrupted
+                assert self.stopped
 
     # IBuildControl
 
