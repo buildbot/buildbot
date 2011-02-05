@@ -16,11 +16,13 @@
 import sys
 import re
 import os
+import time
+import signal
 
 import twisted
 from twisted.trial import unittest
-from twisted.internet import task
-from twisted.python import runtime
+from twisted.internet import task, defer, reactor
+from twisted.python import runtime, util
 
 from buildslave.test.util.misc import nl, BasedirMixin
 from buildslave.test.fake.slavebuilder import FakeSlaveBuilder
@@ -35,6 +37,10 @@ def stderrCommand(output):
 
 def sleepCommand(dur):
     return [sys.executable, '-c', 'import time; time.sleep(%d)' % dur]
+
+def scriptCommand(function, *args):
+    runprocess_scripts = util.sibpath(__file__, 'runprocess-scripts.py')
+    return [sys.executable, runprocess_scripts, function] + list(args)
 
 # windows returns rc 1, because exit status cannot indicate "signalled";
 # posix returns rc -1 for "signalled"
@@ -229,6 +235,198 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
             headers = "".join([update.values()[0] for update in b.updates if update.keys() == ["header"] ])
             self.failUnless(not re.match('\bPATH=',headers), "got:\n" + headers)
         d.addCallback(check)
+        return d
+
+class TestPOSIXKilling(BasedirMixin, unittest.TestCase):
+
+    if runtime.platformType != "posix":
+        skip = "not a POSIX platform"
+
+    def setUp(self):
+        self.pidfiles = []
+        self.setUpBasedir()
+
+    def tearDown(self):
+        # make sure all of the subprocesses are dead
+        for pidfile in self.pidfiles:
+            if not os.path.exists(pidfile): continue
+            pid = open(pidfile).read()
+            if not pid: return
+            pid = int(pid)
+            try: os.kill(pid, signal.SIGKILL)
+            except OSError: pass
+
+        # and clean up leftover pidfiles
+        for pidfile in self.pidfiles:
+            if os.path.exists(pidfile):
+                os.unlink(pidfile)
+
+        self.tearDownBasedir()
+
+    def newPidfile(self):
+        pidfile = os.path.abspath("test-%d.pid" % len(self.pidfiles))
+        if os.path.exists(pidfile):
+            os.unlink(pidfile)
+        self.pidfiles.append(pidfile)
+        return pidfile
+
+    def waitForPidfile(self, pidfile):
+        # wait for a pidfile, and return the pid via a Deferred
+        until = time.time() + 10
+        d = defer.Deferred()
+        def poll():
+            if reactor.seconds() > until:
+                d.errback(RuntimeError("pidfile %s never appeared" % pidfile))
+                return
+            if os.path.exists(pidfile):
+                try:
+                    pid = int(open(pidfile).read())
+                except:
+                    pid = None
+
+                if pid is not None:
+                    d.callback(pid)
+                    return
+            reactor.callLater(0.01, poll)
+        poll() # poll right away
+        return d
+
+    def assertAlive(self, pid):
+        try:
+            os.kill(pid, 0)
+        except OSError:
+            self.fail("pid %d still alive", pid)
+
+    def assertDead(self, pid, timeout=0):
+        def check():
+            try:
+                os.kill(pid, 0)
+            except OSError:
+                return True # dead
+            return False # alive
+
+        # check immediately
+        if check(): return
+
+        # poll every 100'th of a second; this allows us to test for
+        # processes that have been killed, but where the signal hasn't
+        # been delivered yet
+        until = time.time() + timeout
+        while time.time() < until:
+            time.sleep(0.01)
+            if check():
+                return
+        self.fail("pid %d still alive after %ds" % (pid, timeout))
+
+    # tests
+
+    def test_simple(self):
+        # test a simple process that just sleeps waiting to die
+        pidfile = self.newPidfile()
+        self.pid = None
+
+        b = FakeSlaveBuilder(False, self.basedir)
+        s = runprocess.RunProcess(b,
+                scriptCommand('write_pidfile_and_sleep', pidfile),
+                self.basedir)
+        runproc_d = s.start()
+
+        pidfile_d = self.waitForPidfile(pidfile)
+
+        def check_alive(pid):
+            self.pid = pid # for use in check_dead
+            # test that the process is still alive
+            os.kill(pid, 0)
+            # and tell the RunProcess object to kill it
+            s.kill("diaf")
+        pidfile_d.addCallback(check_alive)
+
+        def check_dead(_):
+            self.assertRaises(OSError, lambda : os.kill(self.pid, 0))
+        runproc_d.addCallback(check_dead)
+        return defer.gatherResults([pidfile_d, runproc_d])
+
+    def test_pgroup_usePTY(self):
+        return self.do_test_pgroup(usePTY=True)
+
+    def test_pgroup_no_usePTY(self):
+        return self.do_test_pgroup(usePTY=False)
+    test_pgroup_no_usePTY.todo = "doesn't work yet" # TODO
+
+    def do_test_pgroup(self, usePTY):
+        # test that a process group gets killed
+        parent_pidfile = self.newPidfile()
+        self.parent_pid = None
+        child_pidfile = self.newPidfile()
+        self.child_pid = None
+
+        b = FakeSlaveBuilder(False, self.basedir)
+        s = runprocess.RunProcess(b,
+                scriptCommand('spawn_child', parent_pidfile, child_pidfile),
+                self.basedir,
+                usePTY=usePTY)
+        runproc_d = s.start()
+
+        # wait for both processes to start up, then call s.kill
+        parent_pidfile_d = self.waitForPidfile(parent_pidfile)
+        child_pidfile_d = self.waitForPidfile(child_pidfile)
+        pidfiles_d = defer.gatherResults([parent_pidfile_d, child_pidfile_d])
+        def got_pids(pids):
+            self.parent_pid, self.child_pid = pids
+        pidfiles_d.addCallback(got_pids)
+        def kill(_):
+            s.kill("diaf")
+        pidfiles_d.addCallback(kill)
+
+        # check that both processes are dead after RunProcess is done
+        d = defer.gatherResults([pidfiles_d, runproc_d])
+        def check_dead(_):
+            self.assertDead(self.parent_pid)
+            self.assertDead(self.child_pid, timeout=5)
+        d.addCallback(check_dead)
+        return d
+
+    def test_double_fork_usePTY(self):
+        return self.do_test_double_fork(usePTY=True)
+    test_double_fork_usePTY.todo = "doesn't work yet - orphaned process group" # TODO
+
+    def test_double_fork_no_usePTY(self):
+        return self.do_test_double_fork(usePTY=False)
+    test_double_fork_no_usePTY.todo = "doesn't work yet - orphaned process group" # TODO
+
+    def do_test_double_fork(self, usePTY):
+        # when a spawned process spawns another process, and then dies itself
+        # (either intentionally or accidentally), we should be able to clean up
+        # the child.
+        parent_pidfile = self.newPidfile()
+        self.parent_pid = None
+        child_pidfile = self.newPidfile()
+        self.child_pid = None
+
+        b = FakeSlaveBuilder(False, self.basedir)
+        s = runprocess.RunProcess(b,
+                scriptCommand('double_fork', parent_pidfile, child_pidfile),
+                self.basedir,
+                usePTY=usePTY)
+        runproc_d = s.start()
+
+        # wait for both processes to start up, then call s.kill
+        parent_pidfile_d = self.waitForPidfile(parent_pidfile)
+        child_pidfile_d = self.waitForPidfile(child_pidfile)
+        pidfiles_d = defer.gatherResults([parent_pidfile_d, child_pidfile_d])
+        def got_pids(pids):
+            self.parent_pid, self.child_pid = pids
+        pidfiles_d.addCallback(got_pids)
+        def kill(_):
+            s.kill("diaf")
+        pidfiles_d.addCallback(kill)
+
+        # check that both processes are dead after RunProcess is done
+        d = defer.gatherResults([pidfiles_d, runproc_d])
+        def check_dead(_):
+            self.assertDead(self.parent_pid, timeout=5)
+            self.assertDead(self.child_pid, timeout=5)
+        d.addCallback(check_dead)
         return d
 
 class TestLogging(BasedirMixin, unittest.TestCase):
