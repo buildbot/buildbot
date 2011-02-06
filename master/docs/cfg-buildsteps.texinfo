@@ -1128,18 +1128,25 @@ a PTY do not have separate stdout/stderr streams: both are merged into
 stdout.
 
 @item usePTY
-Should this command be run in a @code{pty}?  The default is to observe the
+Should this command be run in a pseudo-terminal?  The default is to observe the
 configuration of the client (@pxref{Buildslave Options}), but specifying
-@code{True} or @code{False} here will override the default.
+@code{True} or @code{False} here will override the default.  This option is not
+available on Windows.
 
-The advantage of using a PTY is that ``grandchild'' processes are more likely
-to be cleaned up if the build is interrupted or times out (since it enables the
-use of a ``process group'' in which all child processes will be placed). The
-disadvantages: some forms of Unix have problems with PTYs, some of your unit
-tests may behave differently when run under a PTY (generally those which check
-to see if they are being run interactively), and PTYs will merge the stdout and
-stderr streams into a single output stream (which means the red-vs-black
-coloring in the logfiles will be lost).
+In general, you do not want to use a pseudo-terminal.  This is @i{only} useful
+for running commands that require a terminal - for example, testing a
+command-line application that will only accept passwords read from a terminal.
+Using a pseudo-terminal brings lots of compatibility problems, and prevents
+Buildbot from distinguishing the standard error (red) and standard output
+(black) streams.
+
+In previous versions, the advantage of using a pseudo-terminal was that
+``grandchild'' processes were more likely to be cleaned up if the build was
+interrupted or times out.  This occurred because using a pseudo-terminal
+incidentally puts the command into its own process group. 
+
+As of Buildbot-0.8.4, all commands are placed in process groups, and thus
+grandchild processes will be cleaned up properly.
 
 @item logfiles
 Sometimes commands will log interesting data to a local file, rather
