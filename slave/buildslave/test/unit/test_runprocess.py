@@ -22,7 +22,7 @@ import signal
 import twisted
 from twisted.trial import unittest
 from twisted.internet import task, defer, reactor
-from twisted.python import runtime, util
+from twisted.python import runtime, util, log
 
 from buildslave.test.util.misc import nl, BasedirMixin
 from buildslave.test.fake.slavebuilder import FakeSlaveBuilder
@@ -308,9 +308,10 @@ class TestPOSIXKilling(BasedirMixin, unittest.TestCase):
         try:
             os.kill(pid, 0)
         except OSError:
-            self.fail("pid %d still alive", pid)
+            self.fail("pid %d still alive" % (pid,))
 
     def assertDead(self, pid, timeout=0):
+        log.msg("checking pid %r" % (pid,))
         def check():
             try:
                 os.kill(pid, 0)
@@ -349,7 +350,7 @@ class TestPOSIXKilling(BasedirMixin, unittest.TestCase):
         def check_alive(pid):
             self.pid = pid # for use in check_dead
             # test that the process is still alive
-            os.kill(pid, 0)
+            self.assertAlive(pid)
             # and tell the RunProcess object to kill it
             s.kill("diaf")
         pidfile_d.addCallback(check_alive)
@@ -364,9 +365,15 @@ class TestPOSIXKilling(BasedirMixin, unittest.TestCase):
 
     def test_pgroup_no_usePTY(self):
         return self.do_test_pgroup(usePTY=False)
-    test_pgroup_no_usePTY.todo = "doesn't work yet" # TODO
 
-    def do_test_pgroup(self, usePTY):
+    def test_pgroup_no_usePTY_no_pgroup(self):
+        # note that this configuration is not *used*, but that it is
+        # still supported, and correctly fails to kill the child process
+        return self.do_test_double_fork(usePTY=False, useProcGroup=False,
+                expectChildSurvival=True)
+
+    def do_test_pgroup(self, usePTY, useProcGroup=True,
+                expectChildSurvival=False):
         # test that a process group gets killed
         parent_pidfile = self.newPidfile()
         self.parent_pid = None
@@ -377,7 +384,8 @@ class TestPOSIXKilling(BasedirMixin, unittest.TestCase):
         s = runprocess.RunProcess(b,
                 scriptCommand('spawn_child', parent_pidfile, child_pidfile),
                 self.basedir,
-                usePTY=usePTY)
+                usePTY=usePTY,
+                useProcGroup=useProcGroup)
         runproc_d = s.start()
 
         # wait for both processes to start up, then call s.kill
@@ -395,19 +403,27 @@ class TestPOSIXKilling(BasedirMixin, unittest.TestCase):
         d = defer.gatherResults([pidfiles_d, runproc_d])
         def check_dead(_):
             self.assertDead(self.parent_pid)
-            self.assertDead(self.child_pid, timeout=5)
+            if expectChildSurvival:
+                self.assertAlive(self.child_pid)
+            else:
+                self.assertDead(self.child_pid, timeout=5)
         d.addCallback(check_dead)
         return d
 
     def test_double_fork_usePTY(self):
         return self.do_test_double_fork(usePTY=True)
-    test_double_fork_usePTY.todo = "doesn't work yet - orphaned process group" # TODO
 
     def test_double_fork_no_usePTY(self):
         return self.do_test_double_fork(usePTY=False)
-    test_double_fork_no_usePTY.todo = "doesn't work yet - orphaned process group" # TODO
 
-    def do_test_double_fork(self, usePTY):
+    def test_double_fork_no_usePTY_no_pgroup(self):
+        # note that this configuration is not *used*, but that it is
+        # still supported, and correctly fails to kill the child process
+        return self.do_test_double_fork(usePTY=False, useProcGroup=False,
+                expectChildSurvival=True)
+
+    def do_test_double_fork(self, usePTY, useProcGroup=True,
+                            expectChildSurvival=False):
         # when a spawned process spawns another process, and then dies itself
         # (either intentionally or accidentally), we should be able to clean up
         # the child.
@@ -420,7 +436,8 @@ class TestPOSIXKilling(BasedirMixin, unittest.TestCase):
         s = runprocess.RunProcess(b,
                 scriptCommand('double_fork', parent_pidfile, child_pidfile),
                 self.basedir,
-                usePTY=usePTY)
+                usePTY=usePTY,
+                useProcGroup=useProcGroup)
         runproc_d = s.start()
 
         # wait for both processes to start up, then call s.kill
@@ -438,7 +455,10 @@ class TestPOSIXKilling(BasedirMixin, unittest.TestCase):
         d = defer.gatherResults([pidfiles_d, runproc_d])
         def check_dead(_):
             self.assertDead(self.parent_pid, timeout=5)
-            self.assertDead(self.child_pid, timeout=5)
+            if expectChildSurvival:
+                self.assertAlive(self.child_pid)
+            else:
+                self.assertDead(self.child_pid, timeout=5)
         d.addCallback(check_dead)
         return d
 
