@@ -194,7 +194,7 @@ class RunProcessPP(protocol.ProcessProtocol):
         # http://stackoverflow.com/questions/2061735/42-passed-to-terminateprocess-sometimes-getexitcodeprocess-returns-0
         if self.killed and rc == 0:
             log.msg("process was killed, but exited with status 0; faking a failure")
-            # windows returns '1' even for signalled failsres, while POSIX returns -1
+            # windows returns '1' even for signalled failures, while POSIX returns -1
             if runtime.platformType == 'win32':
                 rc = 1
             else:
@@ -776,7 +776,8 @@ class RunProcess:
                 # could be no-such-process, because they finished very recently
                 pass
             except error.ProcessExitedAlready:
-                # Twisted thinks the process has already exited
+                # the process has already exited, and likely finished() has
+                # been called already or will be called shortly
                 pass
         if not hit:
             log.msg("signalProcess/os.kill failed both times")
@@ -787,9 +788,10 @@ class RunProcess:
             # stderr. This is weird.
             self.pp.transport.loseConnection()
 
-        # finished ought to be called momentarily. Just in case it doesn't,
-        # set a timer which will abandon the command.
-        self.timer = self._reactor.callLater(self.BACKUP_TIMEOUT,
+        if self.deferred:
+            # finished ought to be called momentarily. Just in case it doesn't,
+            # set a timer which will abandon the command.
+            self.timer = self._reactor.callLater(self.BACKUP_TIMEOUT,
                                        self.doBackupTimeout)
 
     def doBackupTimeout(self):
@@ -801,7 +803,6 @@ class RunProcess:
             self.sendStatus({'header': "using fake rc=-1\n"})
             self.sendStatus({'rc': -1})
         self.failed(RuntimeError("SIGKILL failed to kill process"))
-
 
     def writeStdin(self, data):
         self.pp.writeStdin(data)
