@@ -130,18 +130,9 @@ class RunProcessPP(protocol.ProcessProtocol):
         self.stdin_finished = False
         self.killed = False
 
-    def writeStdin(self, data):
-        assert not self.stdin_finished
-        if self.connected:
-            self.transport.write(data)
-        else:
-            self.pending_stdin += data
-
-    def closeStdin(self):
-        if self.connected:
-            if self.debug: log.msg(" closing stdin")
-            self.transport.closeStdin()
-        self.stdin_finished = True
+    def setStdin(self, data):
+        assert not self.connected
+        self.pending_stdin = data
 
     def connectionMade(self):
         if self.debug:
@@ -152,23 +143,11 @@ class RunProcessPP(protocol.ProcessProtocol):
                         (self.transport,))
             self.command.process = self.transport
 
-        # TODO: maybe we shouldn't close stdin when using a PTY. I can't test
-        # this yet, recent debian glibc has a bug which causes thread-using
-        # test cases to SIGHUP trial, and the workaround is to either run
-        # the whole test with /bin/sh -c " ".join(argv)  (way gross) or to
-        # not use a PTY. Once the bug is fixed, I'll be able to test what
-        # happens when you close stdin on a pty. My concern is that it will
-        # SIGHUP the child (since we are, in a sense, hanging up on them).
-        # But it may well be that keeping stdout open prevents the SIGHUP
-        # from being sent.
-        #if not self.command.usePTY:
-
         if self.pending_stdin:
             if self.debug: log.msg(" writing to stdin")
             self.transport.write(self.pending_stdin)
-        if self.stdin_finished:
-            if self.debug: log.msg(" closing stdin")
-            self.transport.closeStdin()
+        if self.debug: log.msg(" closing stdin")
+        self.transport.closeStdin()
 
     def outReceived(self, data):
         if self.debug:
@@ -233,7 +212,7 @@ class RunProcess:
                  workdir, environ=None,
                  sendStdout=True, sendStderr=True, sendRC=True,
                  timeout=None, maxTime=None, initialStdin=None,
-                 keepStdinOpen=False, keepStdout=False, keepStderr=False,
+                 keepStdout=False, keepStderr=False,
                  logEnviron=True, logfiles={}, usePTY="slave-config"):
         """
 
@@ -305,7 +284,6 @@ class RunProcess:
         else: # not environ
             self.environ = os.environ.copy()
         self.initialStdin = initialStdin
-        self.keepStdinOpen = keepStdinOpen
         self.logEnviron = logEnviron
         self.timeout = timeout
         self.timer = None
@@ -466,22 +444,13 @@ class RunProcess:
             log.msg(" " + msg)
             self._addToBuffers('header', msg+"\n")
 
-        if self.keepStdinOpen:
-            msg = " leaving stdin open"
-        else:
-            msg = " closing stdin"
-        log.msg(" " + msg)
-        self._addToBuffers('header', msg+"\n")
-
         msg = " using PTY: %s" % bool(self.usePTY)
         log.msg(" " + msg)
         self._addToBuffers('header', msg+"\n")
 
         # this will be buffered until connectionMade is called
         if self.initialStdin:
-            self.pp.writeStdin(self.initialStdin)
-        if not self.keepStdinOpen:
-            self.pp.closeStdin()
+            self.pp.setStdin(self.initialStdin)
 
         # win32eventreactor's spawnProcess (under twisted <= 2.0.1) returns
         # None, as opposed to all the posixbase-derived reactors (which
@@ -803,11 +772,3 @@ class RunProcess:
             self.sendStatus({'header': "using fake rc=-1\n"})
             self.sendStatus({'rc': -1})
         self.failed(RuntimeError("SIGKILL failed to kill process"))
-
-    def writeStdin(self, data):
-        self.pp.writeStdin(data)
-
-    def closeStdin(self):
-        self.pp.closeStdin()
-
-

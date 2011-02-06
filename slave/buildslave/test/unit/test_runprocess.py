@@ -164,6 +164,19 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         clock.advance(6) # should knock out maxTime
         return d
 
+    def test_stdin_closed(self):
+        b = FakeSlaveBuilder(False, self.basedir)
+        s = runprocess.RunProcess(b,
+                scriptCommand('assert_stdin_closed'),
+                self.basedir,
+                usePTY=False, # if usePTY=True, stdin is never closed
+                logEnviron=False)
+        d = s.start()
+        def check(ign):
+            self.failUnless({'rc': 0} in b.updates, b.show())
+        d.addCallback(check)
+        return d
+
     def testBadCommand(self):
         b = FakeSlaveBuilder(False, self.basedir)
         s = runprocess.RunProcess(b, ['command_that_doesnt_exist.exe'], self.basedir)

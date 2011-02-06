@@ -86,12 +86,6 @@ def double_fork():
         sys.exit(0)
 
 @script
-def assert_stdin_open():
-    r, w, x = select.select([0], [], [], 0.01)
-    # if stdin is still open, but there's no data, then it's not readable
-    assert r == []
-
-@script
 def assert_stdin_closed():
     # EOF counts as readable data, so we should see stdin in the readable list,
     # although it may not appear immediately, and select may return early

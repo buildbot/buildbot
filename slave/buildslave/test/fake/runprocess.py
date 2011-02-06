@@ -93,7 +93,7 @@ class FakeRunProcess:
         default_values = dict(environ=None,
                  sendStdout=True, sendStderr=True, sendRC=True,
                  timeout=None, maxTime=None, initialStdin=None,
-                 keepStdinOpen=False, keepStdout=False, keepStderr=False,
+                 keepStdout=False, keepStderr=False,
                  logEnviron=True, logfiles={}, usePTY="slave-config")
 
         if not self._expectations:

@@ -34,10 +34,6 @@ class SlaveShellCommand(base.Command):
                    any existing PYTHONPATH environment variable.
         - ['initial_stdin']: a string which will be written to the command's
                              stdin as soon as it starts
-        - ['keep_stdin_open']: unless True, the command's stdin will be
-                               closed as soon as initial_stdin has been
-                               written. Set this to True if you plan to write
-                               to stdin after the command has been started.
         - ['want_stdout']: 0 if stdout should be thrown away
         - ['want_stderr']: 0 if stderr should be thrown away
         - ['usePTY']: True or False if the command should use a PTY (defaults to
@@ -76,7 +72,6 @@ class SlaveShellCommand(base.Command):
                          sendStderr=args.get('want_stderr', True),
                          sendRC=True,
                          initialStdin=args.get('initial_stdin'),
-                         keepStdinOpen=args.get('keep_stdin_open', False),
                          logfiles=args.get('logfiles', {}),
                          usePTY=args.get('usePTY', "slave-config"),
                          logEnviron=args.get('logEnviron', True),

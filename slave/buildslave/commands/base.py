@@ -31,7 +31,7 @@ from buildslave.commands import utils
 # this used to be a CVS $-style "Revision" auto-updated keyword, but since I
 # moved to Darcs as the primary repository, this is updated manually each
 # time this file is changed. The last cvs_ver that was here was 1.51 .
-command_version = "2.11"
+command_version = "2.12"
 
 # version history:
 #  >=1.17: commands are interruptable
@@ -59,6 +59,7 @@ command_version = "2.11"
 #  >= 2.9: add depth arg to SVN class
 #  >= 2.10: CVS can handle 'extra_options' and 'export_options'
 #  >= 2.11: Arch, Bazaar, and Monotone removed
+#  >= 2.12: SlaveShellCommand no longer accepts 'keep_stdin_open'
 
 class Command:
     implements(ISlaveCommand)
