@@ -2,6 +2,7 @@
 * Buildbot Components::
 * Requirements::
 * Installing the code::
+* Running Buildbot's Tests (optional)::
 * Creating a buildmaster::
 * Upgrading an Existing Buildmaster::
 * Creating a buildslave::
@@ -155,7 +156,20 @@ Windows users will find these files in other places. You will need to
 make sure that python can find the libraries, and will probably find
 it convenient to have @code{buildbot} on your PATH.
 
-If you wish, you can run the buildbot unit test suite like this:
+@node Running Buildbot's Tests (optional)
+@section Running Buildbot's Tests (optional)
+
+If you wish, you can run the buildbot unit test suite.  First, ensure you have
+the @url{http://pypi.python.org/pypi/mock,mock} Python module installed from
+PyPi.  This module is not required for ordinary Buildbot operation - only to
+run the tests.  Note that this is not the same as the Fedora @code{mock}
+package!  You can check with
+
+@example
+python -mmock
+@end example
+
+Then, run the tests:
 
 @example
 PYTHONPATH=. trial buildbot.test
@@ -163,14 +177,19 @@ PYTHONPATH=. trial buildbot.test
 PYTHONPATH=. trial buildslave.test
 @end example
 
-Nothing should fail, a few might be skipped. If any of the tests fail, you
-should stop and investigate the cause before continuing the installation
-process, as it will probably be easier to track down the bug early.  This may
-be a good time to contact the Buildbot developers for help.
+Nothing should fail, although a few might be skipped.
 
-If you cannot or do not wish to install the buildbot into a site-wide
-location like @file{/usr} or @file{/usr/local}, you can also install
-it into the account's home directory or any other location using a tool like @url{http://pypi.python.org/pypi/virtualenv,virtualenv}.
+If any of the tests fail for reasons other than a missing @code{mock}, you
+should stop and investigate the cause before continuing the installation
+process, as it will probably be easier to track down the bug early.  In most
+cases, the problem is incorrectly installed Python modules or a badly
+configured PYTHONPATH.  This may be a good time to contact the Buildbot
+developers for help.
+
+If you cannot or do not wish to install the buildbot into a site-wide location
+like @file{/usr} or @file{/usr/local}, you can also install it into the
+account's home directory or any other location using a tool like
+@url{http://pypi.python.org/pypi/virtualenv,virtualenv}.
 
 @node Creating a buildmaster
 @section Creating a buildmaster

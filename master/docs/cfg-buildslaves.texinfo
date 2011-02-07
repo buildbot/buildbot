@@ -497,6 +497,5 @@ def stop_instance(self, fast=False):
     raise NotImplementedError
 @end example
 
-See @code{buildbot.ec2buildslave.EC2LatentBuildSlave} for an example, or see the
-test example @code{buildbot.test_slaves.FakeLatentBuildSlave}.
+See @code{buildbot.ec2buildslave.EC2LatentBuildSlave} for an example.
 
