@@ -45,9 +45,9 @@ def upgrade(migrate_engine):
 
     sa.Table('sourcestamps', metadata,
         sa.Column('id', sa.Integer, autoincrement=False, primary_key=True),
-        sa.Column('branch', sa.String(256), server_default=sa.DefaultClause("NULL")),
-        sa.Column('revision', sa.String(256), server_default=sa.DefaultClause("NULL")),
-        sa.Column('patchid', sa.Integer, sa.ForeignKey('patches.id'), server_default=sa.DefaultClause("NULL")),
+        sa.Column('branch', sa.String(256)),
+        sa.Column('revision', sa.String(256)),
+        sa.Column('patchid', sa.Integer, sa.ForeignKey('patches.id')),
         sa.Column('repository', sa.Text, nullable=False, server_default=''),
         sa.Column('project', sa.Text, nullable=False, server_default=''),
     )

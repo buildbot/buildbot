@@ -230,13 +230,13 @@ class Model(base.DBConnectorComponent):
 
         # the branch to check out.  When branch is NULL, that means
         # the main branch (trunk, master, etc.)
-        sa.Column('branch', sa.String(256), server_default=sa.DefaultClause("NULL")),
+        sa.Column('branch', sa.String(256)),
 
         # the revision to check out, or the latest if NULL
-        sa.Column('revision', sa.String(256), server_default=sa.DefaultClause("NULL")),
+        sa.Column('revision', sa.String(256)),
 
         # the patch to apply to generate this source code
-        sa.Column('patchid', sa.Integer, sa.ForeignKey('patches.id'), server_default=sa.DefaultClause("NULL")),
+        sa.Column('patchid', sa.Integer, sa.ForeignKey('patches.id')),
 
         # the repository from which this source should be checked out
         sa.Column('repository', sa.Text(length=None), nullable=False, server_default=''),

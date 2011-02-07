@@ -79,9 +79,9 @@ scheduler_upstream_buildsets = sa.Table('scheduler_upstream_buildsets', metadata
 
 sourcestamps = sa.Table('sourcestamps', metadata,
     sa.Column('id', sa.Integer, autoincrement=False, primary_key=True),
-    sa.Column('branch', sa.String(256), server_default=sa.DefaultClause("NULL")),
-    sa.Column('revision', sa.String(256), server_default=sa.DefaultClause("NULL")),
-    sa.Column('patchid', sa.Integer, sa.ForeignKey('patches.id'), server_default=sa.DefaultClause("NULL")),
+    sa.Column('branch', sa.String(256)),
+    sa.Column('revision', sa.String(256)),
+    sa.Column('patchid', sa.Integer, sa.ForeignKey('patches.id')),
 )
 
 patches = sa.Table('patches', metadata,
@@ -119,8 +119,8 @@ buildrequests = sa.Table('buildrequests', metadata,
     sa.Column('buildername', sa.String(length=None), nullable=False),
     sa.Column('priority', sa.Integer, nullable=False, server_default=sa.DefaultClause("0")),
     sa.Column('claimed_at', sa.Integer, server_default=sa.DefaultClause("0")),
-    sa.Column('claimed_by_name', sa.String(length=None), server_default=sa.DefaultClause("NULL")),
-    sa.Column('claimed_by_incarnation', sa.String(length=None), server_default=sa.DefaultClause("NULL")),
+    sa.Column('claimed_by_name', sa.String(length=None)),
+    sa.Column('claimed_by_incarnation', sa.String(length=None)),
     sa.Column('complete', sa.Integer, server_default=sa.DefaultClause("0")),
     sa.Column('results', sa.SmallInteger),
     sa.Column('submitted_at', sa.Integer, nullable=False),
