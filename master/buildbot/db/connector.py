@@ -138,7 +138,7 @@ class DBConnector(object):
         """
         # PostgreSQL:
         # * doesn't return last row id, so we must append "RETURNING x"
-        #   to queries where we have it and we must fetch it later,
+        #   to queries where we want it and we must fetch it later,
         # * doesn't accept "?" in queries.
         if self._engine.dialect.name in ('postgres', 'postgresql'):
             if returning:
