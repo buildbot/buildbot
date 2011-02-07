@@ -143,7 +143,7 @@ def test_unicode(migrate_engine):
 
     test_unicode = sa.Table('test_unicode', submeta,
         sa.Column('u', sa.Unicode),
-        sa.Column('b', sa.BLOB),
+        sa.Column('b', sa.LargeBinary),
     )
     test_unicode.create()
 
