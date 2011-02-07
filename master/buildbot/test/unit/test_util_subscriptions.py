@@ -13,11 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
-import sys
-import twisted
 from twisted.trial import unittest
 
 from buildbot.util import subscription
+from buildbot.test.util import compat
 
 class subscriptions(unittest.TestCase):
 
@@ -49,6 +48,7 @@ class subscriptions(unittest.TestCase):
         self.subpt.deliver(3, 4)
         self.assertEqual(state, [])
 
+    @compat.usesFlushLoggedErrors
     def test_exception(self):
         def cb(*args, **kwargs):
             raise RuntimeError('mah bucket!')
@@ -62,6 +62,3 @@ class subscriptions(unittest.TestCase):
         # log.err will cause Trial to complain about this error anyway, unless
         # we clean it up
         self.assertEqual(1, len(self.flushLoggedErrors(RuntimeError)))
-
-    if twisted.version.major <= 9 and sys.version_info[:2] >= (2,7):
-        test_exception.skip = "flushLoggedErrors does not work correctly on 9.0.0 and earlier with Python-2.7"

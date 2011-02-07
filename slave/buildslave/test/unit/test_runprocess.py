@@ -19,12 +19,12 @@ import os
 import time
 import signal
 
-import twisted
 from twisted.trial import unittest
 from twisted.internet import task, defer, reactor
 from twisted.python import runtime, util, log
 
 from buildslave.test.util.misc import nl, BasedirMixin
+from buildslave.test.util import compat
 from buildslave.test.fake.slavebuilder import FakeSlaveBuilder
 from buildslave.exceptions import AbandonChain
 from buildslave import runprocess
@@ -179,6 +179,7 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
     if runtime.platformType != "posix":
         test_stdin_closed.skip = "not a POSIX platform"
 
+    @compat.usesFlushLoggedErrors
     def testBadCommand(self):
         b = FakeSlaveBuilder(False, self.basedir)
         s = runprocess.RunProcess(b, ['command_that_doesnt_exist.exe'], self.basedir)
@@ -197,8 +198,6 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         d.addBoth(check)
         d.addBoth(lambda _ : self.flushLoggedErrors())
         return d
-    if twisted.version.major <= 9 and sys.version_info[:2] >= (2,7):
-        testBadCommand.skip = "flushLoggedErrors does not work correctly on 9.0.0 and earlier with Python-2.7"
 
     def testLogEnviron(self):
         b = FakeSlaveBuilder(False, self.basedir)
