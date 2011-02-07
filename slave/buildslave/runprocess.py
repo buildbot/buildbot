@@ -147,7 +147,6 @@ class RunProcessPP(protocol.ProcessProtocol):
         self.pending_stdin = ""
         self.stdin_finished = False
         self.killed = False
-        self.pgid = None
 
     def setStdin(self, data):
         assert not self.connected
@@ -497,10 +496,6 @@ class RunProcess:
                                  self.workdir,
                                  usePTY=self.usePTY)
 
-        # keep the pgid for later, if using process groups
-        if self.useProcGroup:
-            self.process.pgid = self.process.pid
-
         # set up timeouts
 
         if self.timeout:
@@ -752,17 +747,17 @@ class RunProcess:
             else:
                 log.msg("trying to kill process group %d" %
                                                 (self.process.pgid,))
-            try:
-                os.kill(-self.process.pgid, sig)
-                log.msg(" signal %s sent successfully" % sig)
-                self.process.pgid = None
-                hit = 1
-            except OSError:
-                log.msg('failed to kill process group (ignored): %s' %
-                        (sys.exc_info()[1],))
-                # probably no-such-process, maybe because there is no process
-                # group
-                pass
+                try:
+                    os.kill(-self.process.pgid, sig)
+                    log.msg(" signal %s sent successfully" % sig)
+                    self.process.pgid = None
+                    hit = 1
+                except OSError:
+                    log.msg('failed to kill process group (ignored): %s' %
+                            (sys.exc_info()[1],))
+                    # probably no-such-process, maybe because there is no process
+                    # group
+                    pass
 
         # try signalling the process itself (works on Windows too, sorta)
         if not hit:

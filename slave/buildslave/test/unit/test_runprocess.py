@@ -312,7 +312,7 @@ class TestPOSIXKilling(BasedirMixin, unittest.TestCase):
         except OSError:
             self.fail("pid %d still alive" % (pid,))
 
-    def assertDead(self, pid, timeout=0):
+    def assertDead(self, pid, timeout=5):
         log.msg("checking pid %r" % (pid,))
         def check():
             try:
@@ -358,7 +358,7 @@ class TestPOSIXKilling(BasedirMixin, unittest.TestCase):
         pidfile_d.addCallback(check_alive)
 
         def check_dead(_):
-            self.assertRaises(OSError, lambda : os.kill(self.pid, 0))
+            self.assertDead(self.pid)
         runproc_d.addCallback(check_dead)
         return defer.gatherResults([pidfile_d, runproc_d])
 
@@ -371,7 +371,7 @@ class TestPOSIXKilling(BasedirMixin, unittest.TestCase):
     def test_pgroup_no_usePTY_no_pgroup(self):
         # note that this configuration is not *used*, but that it is
         # still supported, and correctly fails to kill the child process
-        return self.do_test_double_fork(usePTY=False, useProcGroup=False,
+        return self.do_test_pgroup(usePTY=False, useProcGroup=False,
                 expectChildSurvival=True)
 
     def do_test_pgroup(self, usePTY, useProcGroup=True,
@@ -408,7 +408,7 @@ class TestPOSIXKilling(BasedirMixin, unittest.TestCase):
             if expectChildSurvival:
                 self.assertAlive(self.child_pid)
             else:
-                self.assertDead(self.child_pid, timeout=5)
+                self.assertDead(self.child_pid)
         d.addCallback(check_dead)
         return d
 
@@ -456,11 +456,11 @@ class TestPOSIXKilling(BasedirMixin, unittest.TestCase):
         # check that both processes are dead after RunProcess is done
         d = defer.gatherResults([pidfiles_d, runproc_d])
         def check_dead(_):
-            self.assertDead(self.parent_pid, timeout=5)
+            self.assertDead(self.parent_pid)
             if expectChildSurvival:
                 self.assertAlive(self.child_pid)
             else:
-                self.assertDead(self.child_pid, timeout=5)
+                self.assertDead(self.child_pid)
         d.addCallback(check_dead)
         return d
 
