@@ -176,6 +176,8 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
             self.failUnless({'rc': 0} in b.updates, b.show())
         d.addCallback(check)
         return d
+    if runtime.platformType != "posix":
+        test_stdin_closed.skip = "not a POSIX platform"
 
     def testBadCommand(self):
         b = FakeSlaveBuilder(False, self.basedir)
