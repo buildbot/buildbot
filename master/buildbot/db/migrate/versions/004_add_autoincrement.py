@@ -65,7 +65,7 @@ def upgrade(migrate_engine):
     # It seems that SQLAlchemy's ALTER TABLE doesn't work when migrating from
     # INTEGER to PostgreSQL's SERIAL data type (which is just pseudo data type
     # for INTEGER with SEQUENCE), so we have to work-around this with raw SQL.
-    if str(migrate_engine.dialect).startswith("<sqlalchemy.dialects.postgresql"):
+    if migrate_engine.dialect.name in ('postgres', 'postgresql'):
         for table_name, col_name in to_autoinc:
             migrate_engine.execute("CREATE SEQUENCE %s_%s_seq"
                                    % (table_name, col_name))
