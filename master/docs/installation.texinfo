@@ -77,6 +77,10 @@ Buildbot's windows testing is limited to the most recent Twisted and Python
 versions.  For best results, use the most recent available versions of these
 libraries on Windows.
 
+Note that versions of MSys Git earlier than 1.7.3.1 are known to have problems
+with incorrect exit statuses from git commands.  Always use the newest version
+of MSys Git.
+
 @node Buildmaster Requirements
 @subsection Buildmaster Requirements
 
