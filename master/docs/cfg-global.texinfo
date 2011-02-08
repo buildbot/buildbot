@@ -128,16 +128,17 @@ project that this buildbot is working on. For example, it is used as
 the title of the waterfall HTML page.
 
 @bcindex c['projectURL']
-@code{projectURL} is a string that gives a URL for the project as a
-whole. HTML status displays will show @code{projectName} as a link to
-@code{projectURL}, to provide a link from buildbot HTML pages to your
-project's home page.
+@code{projectURL} is a string that gives a URL for the project as a whole. This
+URL must end with a slash (@code{/}).  HTML status displays will show
+@code{projectName} as a link to @code{projectURL}, to provide a link from
+buildbot HTML pages to your project's home page.
 
 @bcindex c['buildbotURL']
 The @code{buildbotURL} string should point to the location where the buildbot's
-internal web server is visible. This typically uses the port number set when
-you create the @code{Waterfall} object: the buildbot needs your help to figure
-out a suitable externally-visible host name.
+internal web server is visible. This URL must end with a slash (@code{/}).
+This typically uses the port number set when you create the @code{Waterfall}
+object: the buildbot needs your help to figure out a suitable
+externally-visible host name.
 
 When status notices are sent to users (either by email or over IRC),
 @code{buildbotURL} will be used to create a URL to the specific build
