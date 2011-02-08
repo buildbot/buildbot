@@ -752,6 +752,10 @@ mn = MailNotifier(fromaddr="myuser@@gmail.com",
                   smtpUser="myuser@@gmail.com", smtpPassword="mypassword")
 @end example
 
+Note that if you see @code{twisted.mail.smtp.TLSRequiredError} exceptions in
+the log while using TLS, this can be due @i{either} to the server not
+supporting TLS or to a missing pyopenssl package on the buildmaster system.
+
 In some cases it is desirable to have different information then what is
 provided in a standard MailNotifier message. For this purpose MailNotifier
 provides the argument @code{messageFormatter} (a function) which allows for the
