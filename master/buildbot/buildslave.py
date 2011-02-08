@@ -521,9 +521,9 @@ class AbstractBuildSlave(pb.Avatar, service.MultiService):
                 return d
             log.err("Couldn't find remote builder to shut down slave")
             return defer.succeed(None)
-        #wfd = defer.waitForDeferred(old_way())
-        #yield wfd
-        #wfd.getResult()
+        wfd = defer.waitForDeferred(old_way())
+        yield wfd
+        wfd.getResult()
 
     def maybeShutdown(self):
         """Shut down this slave if it has been asked to shut down gracefully,
