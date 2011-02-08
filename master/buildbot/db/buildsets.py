@@ -151,7 +151,7 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
                 whereclause=(
                     (upstreams_tbl.c.schedulerid == schedulerid) &
                     (upstreams_tbl.c.buildsetid == bs_tbl.c.id) &
-                    (upstreams_tbl.c.active)),
+                    (upstreams_tbl.c.active != 0)),
                 distinct=True)
             return [ (row.id, row.sourcestampid, row.complete, row.results)
                      for row in conn.execute(q).fetchall() ]

@@ -15,7 +15,7 @@
 
 import os
 import sqlalchemy
-from sqlalchemy.schema import MetaData
+from buildbot.db import model
 from twisted.python import log
 
 class RealDatabaseMixin(object):
@@ -31,22 +31,10 @@ class RealDatabaseMixin(object):
         log.msg("cleaning database %s" % self.db_url)
         engine = sqlalchemy.create_engine(self.db_url)
 
-        meta = MetaData()
-        
-        # there are some tables for which reflection sometimes fails, but since
-        # we're just dropping them, we don't need actual schema - a fake
-        # table will do the trick
-        for table in [ 'buildrequests', 'builds',
-                'buildset_properties', 'buildsets', 'change_properties',
-                'change_files', 'change_links',
-                'changes', 'patches', 'sourcestamp_changes', 'sourcestamps',
-                'scheduler_changes', 'scheduler_upstream_buildsets',
-                'schedulers' ]:
-            sqlalchemy.Table(table, meta,
-                    sqlalchemy.Column('tmp', sqlalchemy.Integer))
-
-        # load any remaining tables
-        meta.reflect(bind=engine)
+        # While it's awful to make tests depend on the code under test, this
+        # is the best way to ensure that we are deleting all of the tables in
+        # the model, without using reflection (which does not work very well)
+        meta = model.Model.metadata
 
         # and drop them, if they exist
         meta.drop_all(bind=engine, checkfirst=True)

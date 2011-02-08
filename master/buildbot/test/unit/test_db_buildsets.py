@@ -36,11 +36,13 @@ class TestBuildsetsConnectorComponent(
         # set up the tables we'll need, following links where ForeignKey
         # constraints are in place.
         def thd(engine):
+            self.db.model.patches.create(bind=engine)
+            self.db.model.sourcestamps.create(bind=engine)
             self.db.model.buildsets.create(bind=engine)
             self.db.model.buildset_properties.create(bind=engine)
+            self.db.model.schedulers.create(bind=engine)
             self.db.model.scheduler_upstream_buildsets.create(bind=engine)
             self.db.model.buildrequests.create(bind=engine)
-            self.db.model.sourcestamps.create(bind=engine)
 
             # set up a sourcestamp with id 234 for referential integrity
             engine.execute(self.db.model.sourcestamps.insert(), dict(id=234))
@@ -158,6 +160,18 @@ class TestBuildsetsConnectorComponent(
     def test_getSubscribedBuildsets(self):
         tbl = self.db.model.scheduler_upstream_buildsets
         def add_data_thd(conn):
+            conn.execute(self.db.model.schedulers.insert(), [
+                    dict(schedulerid=92, name='sc', state='', class_name='sch'),
+                    dict(schedulerid=93, name='other', state='', class_name='sch'),
+                ])
+            conn.execute(self.db.model.sourcestamps.insert(), [
+                    dict(id=120, branch='b', revision='120',
+                         repository='', project=''),
+                    dict(id=130, branch='b', revision='130',
+                         repository='', project=''),
+                    dict(id=140, branch='b', revision='140',
+                         repository='', project=''),
+                ])
             conn.execute(self.db.model.buildsets.insert(), [
                     dict(id=12, sourcestampid=120, complete=0,
                          results=-1, submitted_at=0),
@@ -165,6 +179,8 @@ class TestBuildsetsConnectorComponent(
                          results=-1, submitted_at=0),
                     dict(id=14, sourcestampid=140, complete=1,
                          results=5, submitted_at=0),
+                    dict(id=15, sourcestampid=120, complete=0,
+                         results=-1, submitted_at=0),
                 ])
             conn.execute(tbl.insert(), [
                     dict(schedulerid=92, buildsetid=12, active=1),
