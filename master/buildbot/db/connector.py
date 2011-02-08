@@ -125,19 +125,40 @@ class DBConnector(object):
         self._started = False
         del self._oldpool
 
-    def quoteq(self, query): # TODO: remove
+    def quoteq(self, query, returning=None):
         """
         Given a query that contains qmark-style placeholders, like::
          INSERT INTO foo (col1, col2) VALUES (?,?)
         replace the '?' with '%s' if the backend uses format-style
         placeholders, like::
          INSERT INTO foo (col1, col2) VALUES (%s,%s)
+
+        While there, append "RETURNING x" for backends that don't provide
+        last row id (PostgreSQL and probably Oracle).
         """
-        # TODO: assumes sqlite
-#        if self.paramstyle == "format":
-#            return query.replace("?","%s")
-        #assert self.paramstyle == "qmark"
+        # PostgreSQL:
+        # * doesn't return last row id, so we must append "RETURNING x"
+        #   to queries where we want it and we must fetch it later,
+        # * doesn't accept "?" in queries.
+        if self._engine.dialect.name in ('postgres', 'postgresql'):
+            if returning:
+                query += " RETURNING %s" % returning
+            return query.replace("?", "%s")
+
+        # default
         return query
+
+    def lastrowid(self, t):
+        # PostgreSQL:
+        # * fetch last row id from previously issued "RETURNING x" query.
+        if self._engine.dialect.name in ('postgres', 'postgresql'):
+            row = t.fetchone()
+            if row:
+                 return row[0]
+            return -1
+
+        # default
+        return t.lastrowid
 
     def parmlist(self, count): # TODO: remove
         """
@@ -398,9 +419,9 @@ class DBConnector(object):
                 state_json = json.dumps(state)
                 q = self.quoteq("INSERT INTO schedulers"
                                 " (name, class_name, state)"
-                                "  VALUES (?,?,?)")
+                                "  VALUES (?,?,?)", "schedulerid")
                 t.execute(q, (name, class_name, state_json))
-                sid = t.lastrowid
+                sid = self.lastrowid(t)
             log.msg("scheduler '%s' got id %d" % (scheduler.name, sid))
             scheduler.schedulerid = sid
 
@@ -432,14 +453,14 @@ class DBConnector(object):
                 subdir = ss.patch[2]
             q = self.quoteq("INSERT INTO patches"
                             " (patchlevel, patch_base64, subdir)"
-                            " VALUES (?,?,?)")
+                            " VALUES (?,?,?)", "id")
             t.execute(q, (patchlevel, base64.b64encode(diff), subdir))
-            patchid = t.lastrowid
+            patchid = self.lastrowid(t)
         t.execute(self.quoteq("INSERT INTO sourcestamps"
                               " (branch, revision, patchid, project, repository)"
-                              " VALUES (?,?,?,?,?)"),
+                              " VALUES (?,?,?,?,?)", "id"),
                   (ss.branch, ss.revision, patchid, ss.project, ss.repository))
-        ss.ssid = t.lastrowid
+        ss.ssid = self.lastrowid(t)
         q2 = self.quoteq("INSERT INTO sourcestamp_changes"
                          " (sourcestampid, changeid) VALUES (?,?)")
         for c in ss.changes:
@@ -453,9 +474,9 @@ class DBConnector(object):
         t.execute(self.quoteq("INSERT INTO buildsets"
                               " (external_idstring, reason,"
                               "  sourcestampid, submitted_at)"
-                              " VALUES (?,?,?,?)"),
+                              " VALUES (?,?,?,?)", "id"),
                   (external_idstring, reason, ssid, now))
-        bsid = t.lastrowid
+        bsid = self.lastrowid(t)
         for propname, propvalue in properties.properties.items():
             encoded_value = json.dumps(propvalue)
             t.execute(self.quoteq("INSERT INTO buildset_properties"
@@ -466,9 +487,9 @@ class DBConnector(object):
         for bn in builderNames:
             t.execute(self.quoteq("INSERT INTO buildrequests"
                                   " (buildsetid, buildername, submitted_at)"
-                                  " VALUES (?,?,?)"),
+                                  " VALUES (?,?,?)", "id"),
                       (bsid, bn, now))
-            brid = t.lastrowid
+            brid = self.lastrowid(t)
             brids.append(brid)
         self.notify("add-buildset", bsid)
         self.notify("add-buildrequest", *brids)
@@ -621,9 +642,9 @@ class DBConnector(object):
     def _txn_build_started(self, t, brid, buildnumber):
         now = self._getCurrentTime()
         t.execute(self.quoteq("INSERT INTO builds (number, brid, start_time)"
-                              " VALUES (?,?,?)"),
+                              " VALUES (?,?,?)", "id"),
                   (buildnumber, brid, now))
-        bid = t.lastrowid
+        bid = self.lastrowid(t)
         self.notify("add-build", bid)
         return bid
 

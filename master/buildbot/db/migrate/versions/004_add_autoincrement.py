@@ -45,9 +45,9 @@ def upgrade(migrate_engine):
 
     sa.Table('sourcestamps', metadata,
         sa.Column('id', sa.Integer, autoincrement=False, primary_key=True),
-        sa.Column('branch', sa.String(256), server_default=sa.DefaultClause("NULL")),
-        sa.Column('revision', sa.String(256), server_default=sa.DefaultClause("NULL")),
-        sa.Column('patchid', sa.Integer, sa.ForeignKey('patches.id'), server_default=sa.DefaultClause("NULL")),
+        sa.Column('branch', sa.String(256)),
+        sa.Column('revision', sa.String(256)),
+        sa.Column('patchid', sa.Integer, sa.ForeignKey('patches.id')),
         sa.Column('repository', sa.Text, nullable=False, server_default=''),
         sa.Column('project', sa.Text, nullable=False, server_default=''),
     )
@@ -62,10 +62,23 @@ def upgrade(migrate_engine):
         "sourcestamps.id",
     ]
 
-    for table_name, col_name in to_autoinc:
-        table = sa.Table(table_name, metadata, autoload=True)
-        col = table.c[col_name]
-        col.alter(autoincrement=True)
+    # It seems that SQLAlchemy's ALTER TABLE doesn't work when migrating from
+    # INTEGER to PostgreSQL's SERIAL data type (which is just pseudo data type
+    # for INTEGER with SEQUENCE), so we have to work-around this with raw SQL.
+    if migrate_engine.dialect.name in ('postgres', 'postgresql'):
+        for table_name, col_name in to_autoinc:
+            migrate_engine.execute("CREATE SEQUENCE %s_%s_seq"
+                                   % (table_name, col_name))
+            migrate_engine.execute("ALTER TABLE %s ALTER COLUMN %s SET DEFAULT nextval('%s_%s_seq'::regclass)"
+                                   % (table_name, col_name, table_name, col_name))
+            migrate_engine.execute("ALTER SEQUENCE %s_%s_seq OWNED BY %s.%s"
+                                   % (table_name, col_name, table_name, col_name))
+    else:
+        for table_name, col_name in to_autoinc:
+            table = sa.Table(table_name, metadata, autoload=True)
+            col = table.c[col_name]
+            col.alter(autoincrement=True)
+
 
     # also drop the changes_nextid table here (which really should have been a
     # sequence..)
