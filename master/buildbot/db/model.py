@@ -45,9 +45,13 @@ class Model(base.DBConnectorComponent):
     metadata = sa.MetaData()
 
     # NOTES
+
+    # * server_defaults here are included to match those added by the migration
+    #   scripts, but they should not be depended on - all code accessing these
+    #   tables should supply default values as necessary.  The defaults are
+    #   required during migration when adding non-nullable columns to existing
+    #   tables.
     #
-    # * always use default=sa.DefaultClause(..) instead of default=.., so that we can add
-    #   non-null columns with a server-side default value.
     # * dates are stored as unix timestamps (UTC-ish epoch time)
 
     # build requests

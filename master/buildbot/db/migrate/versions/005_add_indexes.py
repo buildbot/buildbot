@@ -20,7 +20,8 @@ def upgrade(migrate_engine):
     metadata.bind = migrate_engine
 
     # note that all of the tables defined here omit the ForeignKey constraints;
-    # this just lets this code define the tables in any order; the key
+    # this just lets this code specify the tables in any order; the tables are
+    # not re-created here, so this omission causes no problems - the key
     # constraints are still defined in the table
 
     def add_index(table_name, col_name):
