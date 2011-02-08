@@ -125,7 +125,7 @@ class DBConnector(object):
         self._started = False
         del self._oldpool
 
-    def quoteq(self, query, returning=None):
+    def quoteq(self, query, returning=None): # TODO: remove
         """
         Given a query that contains qmark-style placeholders, like::
          INSERT INTO foo (col1, col2) VALUES (?,?)
@@ -148,7 +148,7 @@ class DBConnector(object):
         # default
         return query
 
-    def lastrowid(self, t):
+    def lastrowid(self, t): # TODO: remove
         # PostgreSQL:
         # * fetch last row id from previously issued "RETURNING x" query.
         if self._engine.dialect.name in ('postgres', 'postgresql'):
