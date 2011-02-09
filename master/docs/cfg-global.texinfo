@@ -136,9 +136,9 @@ buildbot HTML pages to your project's home page.
 @bcindex c['buildbotURL']
 The @code{buildbotURL} string should point to the location where the buildbot's
 internal web server is visible. This URL must end with a slash (@code{/}).
-This typically uses the port number set when you create the @code{Waterfall}
-object: the buildbot needs your help to figure out a suitable
-externally-visible host name.
+This typically uses the port number set for the web status @pxref{WebStatus}:
+the buildbot needs your help to figure out a suitable externally-visible host
+URL.
 
 When status notices are sent to users (either by email or over IRC),
 @code{buildbotURL} will be used to create a URL to the specific build
