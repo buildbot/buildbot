@@ -22,6 +22,7 @@ import os
 import signal
 import types
 import re
+import subprocess
 import traceback
 import stat
 from collections import deque
@@ -758,6 +759,15 @@ class RunProcess:
                     # probably no-such-process, maybe because there is no process
                     # group
                     pass
+
+        elif runtime.platformType == "win32":
+            if self.KILL == None:
+                log.msg("self.KILL==None, only pretending to kill child")
+            else:
+                log.msg("using TASKKILL /F PID /T to kill pid %s" % self.process.pid)
+                subprocess.check_call("TASKKILL /F /PID %s /T" % self.process.pid)
+                log.msg("taskkill'd pid %s" % self.process.pid)
+                hit = 1
 
         # try signalling the process itself (works on Windows too, sorta)
         if not hit:
