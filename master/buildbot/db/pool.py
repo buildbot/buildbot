@@ -55,6 +55,15 @@ class DBThreadPool(threadpool.ThreadPool):
         self.engine.dispose()
         self.running = False
 
+    def shutdown(self):
+        """Manually stop the pool.  This is only necessary from tests, as the
+        pool will stop itself when the reactor stops under normal
+        circumstances."""
+        if not self._stop_evt:
+            return # pool is already stopped
+        reactor.removeSystemEventTrigger(self._stop_evt)
+        self._stop()
+
     def do(self, callable, *args, **kwargs):
         """
         Call CALLABLE in a thread, with a Connection as first argument.
@@ -64,9 +73,12 @@ class DBThreadPool(threadpool.ThreadPool):
         """
         def thd():
             conn = self.engine.contextual_connect()
-            rv = callable(conn, *args, **kwargs)
-            assert not isinstance(rv, engine.ResultProxy), \
-                    "do not return ResultProxy objects!"
+            try:
+                rv = callable(conn, *args, **kwargs)
+                assert not isinstance(rv, engine.ResultProxy), \
+                        "do not return ResultProxy objects!"
+            finally:
+                conn.close()
             return rv
         return threads.deferToThreadPool(reactor, self, thd)
 
@@ -75,8 +87,7 @@ class DBThreadPool(threadpool.ThreadPool):
         Like l{do}, but with an SQLAlchemy Engine as the first argument
         """
         def thd():
-            conn = self.engine
-            rv = callable(conn, *args, **kwargs)
+            rv = callable(self.engine, *args, **kwargs)
             assert not isinstance(rv, engine.ResultProxy), \
                     "do not return ResultProxy objects!"
             return rv
@@ -92,9 +103,12 @@ class DBThreadPool(threadpool.ThreadPool):
         def thd():
             try:
                 conn = self.engine.contextual_connect()
-                rv = callable(conn, *args, **kwargs)
-                assert not isinstance(rv, engine.ResultProxy), \
-                        "do not return ResultProxy objects!"
+                try:
+                    rv = callable(conn, *args, **kwargs)
+                    assert not isinstance(rv, engine.ResultProxy), \
+                            "do not return ResultProxy objects!"
+                finally:
+                    conn.close()
                 reactor.callFromThread(d.callback, rv)
             except:
                 reactor.callFromThread(d.errback, failure.Failure())

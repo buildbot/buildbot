@@ -36,6 +36,7 @@ class ConnectorComponentMixin(object):
         self.db.model = model.Model(self.db)
 
     def tearDownConnectorComponent(self):
+        self.db.pool.shutdown()
         # break some reference loops, just for fun
         del self.db.pool
         del self.db.model
