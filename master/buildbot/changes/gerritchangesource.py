@@ -40,7 +40,7 @@ class GerritChangeSource(base.ChangeSource):
     STREAM_BACKOFF_MAX = 60
     "(seconds) maximum time to wait before retrying a failed connection"
 
-    def __init__(self, gerritserver, username, gerritport=29418):
+    def __init__(self, gerritserver, username, gerritport=29418, identity_file=None):
         """
         @type  gerritserver: string
         @param gerritserver: the dns or ip that host the gerrit ssh server,
@@ -49,7 +49,10 @@ class GerritChangeSource(base.ChangeSource):
         @param gerritport: the port of the gerrit ssh server,
 
         @type  username: string
-        @param username: the username to use to connect to gerrit
+        @param username: the username to use to connect to gerrit,
+
+        @type  identity_file: string
+        @param identity_file: identity file to for authentication (optional).
 
         """
         # TODO: delete API comment when documented
@@ -57,6 +60,7 @@ class GerritChangeSource(base.ChangeSource):
         self.gerritserver = gerritserver
         self.gerritport = gerritport
         self.username = username
+        self.identity_file = identity_file
         self.process = None
         self.streamProcessTimeout = self.STREAM_BACKOFF_MIN
 
@@ -161,7 +165,11 @@ class GerritChangeSource(base.ChangeSource):
     def startStreamProcess(self):
         log.msg("starting 'gerrit stream-events'")
         self.lastStreamProcessStart = util.now()
-        self.process = reactor.spawnProcess(self.LocalPP(self), "ssh", ["ssh", self.username+"@"+self.gerritserver,"-p", str(self.gerritport), "gerrit","stream-events"])
+        args = [ self.username+"@"+self.gerritserver,"-p", str(self.gerritport)]
+        if self.identity_file is not None:
+          args = args + [ '-i', self.identity_file ]
+        self.process = reactor.spawnProcess(self.LocalPP(self), "ssh",
+          [ "ssh" ] + args + [ "gerrit", "stream-events" ])
 
     def startService(self):
         self.startStreamProcess()
