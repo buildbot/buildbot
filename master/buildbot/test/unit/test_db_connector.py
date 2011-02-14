@@ -24,13 +24,17 @@ class DBConnector_Basic(db.RealDatabaseMixin, unittest.TestCase):
     """
 
     def setUp(self):
-        self.setUpRealDatabase()
-        self.dbc = connector.DBConnector(self.db_url, os.path.abspath('basedir'))
-        self.dbc.start()
+        d = self.setUpRealDatabase()
+        def make_dbc(_):
+            self.dbc = connector.DBConnector(self.db_url,
+                                        os.path.abspath('basedir'))
+            self.dbc.start()
+        d.addCallback(make_dbc)
+        return d
 
     def tearDown(self):
         self.dbc.stop()
-        self.tearDownRealDatabase()
+        return self.tearDownRealDatabase()
 
     def test_runQueryNow_simple(self):
         self.assertEqual(self.dbc.runQueryNow("SELECT 1"),

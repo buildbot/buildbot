@@ -99,26 +99,32 @@ class DBUtilsMixin(object):
         changemgr.recode_changes(old_encoding, quiet=True)
         cPickle.dump(changemgr, open(changes_file, "w"))
 
-class UpgradeTestEmpty(dirs.DirsMixin, db.RealDatabaseMixin, DBUtilsMixin, unittest.TestCase):
+class UpgradeTestEmpty(dirs.DirsMixin,
+                       db.RealDatabaseMixin,
+                       DBUtilsMixin,
+                       unittest.TestCase):
 
     def setUp(self):
-        self.setUpRealDatabase()
-
         self.basedir = os.path.abspath("basedir")
         self.setUpDirs('basedir')
-
-        self.db = connector.DBConnector(self.db_url, self.basedir)
+        d = self.setUpRealDatabase()
+        def make_dbc(_):
+            self.db = connector.DBConnector(self.db_url, self.basedir)
+        d.addCallback(make_dbc)
+        return d
 
     def tearDown(self):
-        self.tearDownRealDatabase()
         self.tearDownDirs()
+        return self.tearDownRealDatabase()
 
     def test_emptydb_modelmatches(self):
         d = self.db.model.upgrade()
         d.addCallback(lambda r : self.assertModelMatches())
         return d
 
-class UpgradeTest075(UpgradeTestMixin, DBUtilsMixin, unittest.TestCase):
+class UpgradeTest075(UpgradeTestMixin,
+                     DBUtilsMixin,
+                     unittest.TestCase):
 
     # this tarball contains some unicode changes, encoded as utf8, so it
     # needs fix_pickle_encoding invoked before we can get started
@@ -214,14 +220,17 @@ class UpgradeTestCitools(UpgradeTestMixin, DBUtilsMixin, unittest.TestCase):
 
 class TestWeirdChanges(change_import.ChangeImportMixin, unittest.TestCase):
     def setUp(self):
-        self.setUpChangeImport()
-        self.db = connector.DBConnector(self.db_url, self.basedir)
+        d = self.setUpChangeImport()
+        def make_dbc(_):
+            self.db = connector.DBConnector(self.db_url, self.basedir)
+        d.addCallback(make_dbc)
         # note the connector isn't started, as we're testing upgrades
+        return d
 
     def tearDown(self):
         if self.db:
             self.db.stop()
-        self.tearDownChangeImport()
+        return self.tearDownChangeImport()
 
     def testUpgradeListsAsFilenames(self):
         # sometimes the 'filenames' in a Change object are actually lists of files.  I don't

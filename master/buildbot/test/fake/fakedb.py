@@ -13,106 +13,126 @@
 #
 # Copyright Buildbot Team Members
 
-import sys, time
+"""
+A complete re-implementation of the database connector components, but without
+using a database.  These classes should pass the same tests as are applied to
+the real connector components.
+"""
 
-from twisted.internet import defer
+# Fake DB Rows
 
-try:
-    from pysqlite2 import dbapi2 as sqlite3
-    assert sqlite3
-except ImportError:
-    # don't use built-in sqlite3 on 2.5 -- it has *bad* bugs
-    if sys.version_info >= (2,6):
-        import sqlite3
-    else:
-        raise
+class Row(object):
+    """
+    Parent class for row classes, which are used to specify test data for
+    database-related tests.
 
-def get_sqlite_memory_connection():
-    return sqlite3.connect(":memory:")
+    @cvar defaults: default values for columns
+    @type defaults: dictionary
 
-class FakeDBSpec(object):
-    def __init__(self, conn=None, pool=None):
-        self.conn = conn
-        self.pool = pool
+    @cvar table: the table name
 
-    def get_dbapi(self):
-        return sqlite3
+    @cvar id_column: specify a column that should be assigned an
+    auto-incremented id.  Auto-assigned id's begin at 1000, so any explicitly
+    specified ID's should be less than 1000.
 
-    def get_sync_connection(self):
-        return self.conn
+    @cvar id_column: a tuple of columns that must be given in the constructor
 
-    def get_async_connection_pool(self):
-        assert self.pool, "fake DBSpec will only return a pool once"
-        pool = self.pool
-        self.pool = None
-        return pool
+    @ivar values: the values to be inserted into this row
+    """
 
-###
-# Note, this isn't fully equivalent to a real db connection object
-# transactions aren't emulated, scheduler state is hacked, and some methods
-# are missing or are just stubbed out.
-###
-class FakeDBConn:
-    def __init__(self):
-        self.schedulers = []
-        self.changes = []
-        self.sourcestamps = []
-        self.scheduler_states = {}
-        self.classified_changes = {}
+    id_column = ()
+    required_columns = ()
 
-    def addSchedulers(self, schedulers):
-        i = len(self.schedulers)
-        for s in schedulers:
-            self.schedulers.append(s)
-            s.schedulerid = i
-            i += 1
-        return defer.succeed(True)
+    def __init__(self, **kwargs):
+        self.values = self.defaults.copy()
+        self.values.update(kwargs)
+        if self.id_column:
+            if self.values[self.id_column] is None:
+                self.values[self.id_column] = self.nextId()
+        for col in self.required_columns:
+            assert col in kwargs, "%s not specified" % col
 
-    def addChangeToDatabase(self, change): # TODO: remove
-        i = len(self.changes)
-        self.changes.append(change)
-        change.number = i
-
-    def get_sourcestampid(self, ss, t):
-        i = len(self.sourcestamps)
-        self.sourcestamps.append(ss)
-        ss.ssid = ss
-        return i
-
-    def runInteraction(self, f, *args):
-        return f(None, *args)
-
-    def scheduler_get_state(self, schedulerid, t):
-        return self.scheduler_states.get(schedulerid, {"last_processed": 0, "last_build": time.time()+100})
-
-    def scheduler_set_state(self, schedulerid, t, state):
-        self.scheduler_states[schedulerid] = state
-
-    def getChangesGreaterThan(self, last_changeid, t):
-        return self.changes[last_changeid:]
-
-    def scheduler_get_classified_changes(self, schedulerid, t):
-        return self.classified_changes.get(schedulerid, ([], []))
-
-    def scheduler_classify_change(self, schedulerid, changeid, important, t):
-        if schedulerid not in self.classified_changes:
-            self.classified_changes[schedulerid] = ([], [])
-
-        if important:
-            self.classified_changes[schedulerid][0].append(self.changes[changeid])
+    def nextId(self):
+        if not hasattr(self.__class__, '_next_id'):
+            self.__class__._next_id = 1000
         else:
-            self.classified_changes[schedulerid][1].append(self.changes[changeid])
+            self.__class__._next_id += 1
+        return self.__class__._next_id
 
-    def scheduler_retire_changes(self, schedulerid, changeids, t):
-        if schedulerid not in self.classified_changes:
-            return
-        for c in self.classified_changes[schedulerid][0][:]:
-            if c.number in changeids:
-                self.classified_changes[schedulerid][0].remove(c)
-        for c in self.classified_changes[schedulerid][1][:]:
-            if c.number in changeids:
-                self.classified_changes[schedulerid][1].remove(c)
+class Change(Row):
+    table = "changes"
 
-    def create_buildset(self, *args):
-        pass
+    defaults = dict(
+        changeid = None,
+        author = 'frank',
+        comments = 'test change',
+        is_dir = 0,
+        branch = 'master',
+        revision = 'abcd',
+        revlink = 'http://vc/abcd',
+        when_timestamp = 1200000,
+        category = 'cat',
+        repository = 'repo',
+        project = 'proj',
+    )
 
+    id_column = 'changeid'
+
+class ChangeFile(Row):
+    table = "change_files"
+
+    defaults = dict(
+        changeid = None,
+        filename = None,
+    )
+
+    required_columns = ('changeid',)
+
+class ChangeLink(Row):
+    table = "change_links"
+
+    defaults = dict(
+        changeid = None,
+        link = None,
+    )
+
+    required_columns = ('changeid',)
+
+class ChangeProperty(Row):
+    table = "change_properties"
+
+    defaults = dict(
+        changeid = None,
+        property_name = None,
+        property_value = None,
+    )
+
+    required_columns = ('changeid',)
+
+class SourceStamp(Row):
+    table = "sourcestamps"
+
+    defaults = dict(
+        id = None,
+        branch = 'master',
+        revision = 'abcd',
+        patchid = None,
+        repository = 'repo',
+        project = 'proj',
+    )
+
+    id_column = 'id'
+
+class Scheduler(Row):
+    table = "schedulers"
+
+    defaults = dict(
+        schedulerid = None,
+        name = 'testsched',
+        state = '{}',
+        class_name = 'TestScheduler',
+    )
+
+    id_column = 'schedulerid'
+
+# Fake DB Components

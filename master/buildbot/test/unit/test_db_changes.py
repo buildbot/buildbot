@@ -19,88 +19,47 @@ from twisted.trial import unittest
 from twisted.internet import defer
 from buildbot.changes.changes import Change
 from buildbot.db import changes
-from buildbot.test.util import db, connector_component
+from buildbot.test.util import connector_component
+from buildbot.test.fake import fakedb
 
 class TestChangesConnectorComponent(
             connector_component.ConnectorComponentMixin,
-            db.RealDatabaseMixin,
             unittest.TestCase):
-    """
-    Tests of C{master.db.changes}
-    """
 
     def setUp(self):
-        self.setUpRealDatabase()
-        self.setUpConnectorComponent(self.db_url)
+        d = self.setUpConnectorComponent()
 
-        # add the .changes attribute
-        self.db.changes = changes.ChangesConnectorComponent(self.db)
+        def finish_setup(_):
+            self.db.changes = changes.ChangesConnectorComponent(self.db)
+        d.addCallback(finish_setup)
 
-        # set up the tables we'll need, following links where ForeignKey
-        # constraints are in place.
-        def thd(engine):
-            self.db.model.changes.create(bind=engine)
-            self.db.model.change_files.create(bind=engine)
-            self.db.model.change_links.create(bind=engine)
-            self.db.model.change_properties.create(bind=engine)
-            self.db.model.schedulers.create(bind=engine)
-            self.db.model.scheduler_changes.create(bind=engine)
-            self.db.model.patches.create(bind=engine)
-            self.db.model.sourcestamps.create(bind=engine)
-            self.db.model.sourcestamp_changes.create(bind=engine)
-        return self.db.pool.do_with_engine(thd)
+        # add the change-related tables now, to save time below
+        d.addCallback(lambda _ :
+            self.createTestTables([ 'changes', 'change_links', 'change_files',
+                                    'change_properties' ]))
+
+        return d
 
     def tearDown(self):
-        self.tearDownConnectorComponent()
-        self.tearDownRealDatabase()
-
-    # add stuff to the database; these are all meant to be used
-    # as callbacks on a deferred
-
-    def addChanges(self, _, *rows):
-        def thd(conn):
-            stmt = self.db.model.changes.insert()
-            conn.execute(stmt, rows)
-        return self.db.pool.do(thd)
-
-    def addLink(self, _, *rows):
-        def thd(conn):
-            stmt = self.db.model.change_links.insert()
-            conn.execute(stmt, rows)
-        return self.db.pool.do(thd)
-
-    def addFile(self, _, *rows):
-        def thd(conn):
-            stmt = self.db.model.change_files.insert()
-            conn.execute(stmt, rows)
-        return self.db.pool.do(thd)
-
-    def addProperty(self, _, *rows):
-        def thd(conn):
-            stmt = self.db.model.change_properties.insert()
-            conn.execute(stmt, rows)
-        return self.db.pool.do(thd)
+        return self.tearDownConnectorComponent()
 
     # common sample data
 
-    def addChange13(self, _):
-        d = defer.succeed(None)
-        d.addCallback(self.addChanges,
-          dict(changeid=13, author="dustin", comments="fix spelling", is_dir=0,
-               branch="master", revision="deadbeef", when_timestamp=266738400,
-               category=None, repository='', project=''),
-          )
-        d.addCallback(self.addLink,
-          dict(changeid=13, link='http://buildbot.net'))
-        d.addCallback(self.addLink,
-          dict(changeid=13, link='http://sf.net/projects/buildbot'))
-        d.addCallback(self.addFile,
-          dict(changeid=13, filename='master/README.txt'))
-        d.addCallback(self.addFile,
-          dict(changeid=13, filename='slave/README.txt'))
-        d.addCallback(self.addProperty,
-          dict(changeid=13, property_name='notest', property_value='"no"'))
-        return d
+    change13_rows = [
+        fakedb.Change(changeid=13, author="dustin", comments="fix spelling",
+            is_dir=0, branch="master", revision="deadbeef",
+            when_timestamp=266738400, revlink=None, category=None,
+            repository='', project=''),
+
+        fakedb.ChangeLink(changeid=13, link='http://buildbot.net'),
+        fakedb.ChangeLink(changeid=13, link='http://sf.net/projects/buildbot'),
+
+        fakedb.ChangeFile(changeid=13, filename='master/README.txt'),
+        fakedb.ChangeFile(changeid=13, filename='slave/README.txt'),
+
+        fakedb.ChangeProperty(changeid=13, property_name='notest',
+            property_value='"no"'),
+    ]
 
     def change13(self):
         c = Change(**dict(
@@ -120,17 +79,14 @@ class TestChangesConnectorComponent(
         c.number = 13
         return c
 
-    def addChange14(self, _):
-        d = defer.succeed(None)
-        d.addCallback(self.addChanges,
-          dict(changeid=14, author="warner", comments="fix whitespace", is_dir=0,
-               branch="warnerdb", revision="0e92a098b", when_timestamp=266738404,
-               revlink='http://warner/0e92a098b',
-               category='devel', repository='git://warner', project='Buildbot'),
-          )
-        d.addCallback(self.addFile,
-          dict(changeid=14, filename='master/buildbot/__init__.py'))
-        return d
+    change14_rows = [
+        fakedb.Change(changeid=14, author="warner", comments="fix whitespace",
+            is_dir=0, branch="warnerdb", revision="0e92a098b",
+            when_timestamp=266738404, revlink='http://warner/0e92a098b',
+            category='devel', repository='git://warner', project='Buildbot'),
+
+        fakedb.ChangeFile(changeid=14, filename='master/buildbot/__init__.py'),
+    ]
 
     def change14(self):
         c = Change(**dict(
@@ -184,9 +140,7 @@ class TestChangesConnectorComponent(
     # tests
 
     def test_changeEventGenerator(self):
-        d = defer.succeed(None)
-        d.addCallback(self.addChange13)
-        d.addCallback(self.addChange14)
+        d = self.insertTestData(self.change13_rows + self.change14_rows)
         # this demonstrates that we can leave the generator running between
         # deferred operations.  Note that we expect change 14 first, because it
         # is higher-numbered
@@ -203,9 +157,7 @@ class TestChangesConnectorComponent(
         return d
 
     def test_changeEventGenerator_params(self):
-        d = defer.succeed(None)
-        d.addCallback(self.addChange13)
-        d.addCallback(self.addChange14)
+        d = self.insertTestData(self.change13_rows + self.change14_rows)
         def check(_):
             gen = self.db.changes.changeEventGenerator(
                     branches=['master', 'warnerdb'],
@@ -219,9 +171,7 @@ class TestChangesConnectorComponent(
         return d
 
     def test_changeEventGenerator_cancel(self):
-        d = defer.succeed(None)
-        d.addCallback(self.addChange13)
-        d.addCallback(self.addChange14)
+        d = self.insertTestData(self.change13_rows + self.change14_rows)
         # leave the generator hanging -- this should cancel the thread, although we
         # have no way to verify that.  If it doesn't, then the next test will hang
         # when testing against SQLite in-memory.
@@ -232,8 +182,7 @@ class TestChangesConnectorComponent(
         return d
 
     def test_getChangeInstance(self):
-        d = defer.succeed(None)
-        d.addCallback(self.addChange14)
+        d = self.insertTestData(self.change14_rows)
         def get14(_):
             return self.db.changes.getChangeInstance(14)
         d.addCallback(get14)
@@ -253,8 +202,7 @@ class TestChangesConnectorComponent(
         return d
 
     def test_getLatestChangeid(self):
-        d = defer.succeed(None)
-        d.addCallback(self.addChange13)
+        d = self.insertTestData(self.change13_rows)
         def get(_):
             return self.db.changes.getLatestChangeid()
         d.addCallback(get)
@@ -362,9 +310,13 @@ class TestChangesConnectorComponent(
 
     def test_prune_changes(self):
         self.db.changes.changeHorizon = 1
-        d = defer.succeed(None)
-        d.addCallback(self.addChange13)
-        d.addCallback(self.addChange14)
+
+        # prune_changes prunes from a lot of tables
+        # TODO: add data to them to check!
+        d = self.insertTestData(self.change13_rows + self.change14_rows,
+                tables=[ 'changes', 'scheduler_changes', 'schedulers',
+                    'sourcestamps', 'sourcestamp_changes', 'patches' ])
+
         d.addCallback(lambda _ : self.db.changes._prune_changes(14))
         def check(_):
             def thd(conn):

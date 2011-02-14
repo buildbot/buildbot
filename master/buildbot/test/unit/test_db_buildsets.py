@@ -18,40 +18,34 @@ from twisted.trial import unittest
 from twisted.internet import defer
 from buildbot.db import buildsets
 from buildbot.util import json
-from buildbot.test.util import db, connector_component
+from buildbot.test.util import connector_component
+from buildbot.test.fake import fakedb
 from buildbot.process import properties
 
 class TestBuildsetsConnectorComponent(
             connector_component.ConnectorComponentMixin,
-            db.RealDatabaseMixin,
             unittest.TestCase):
 
     def setUp(self):
-        self.setUpRealDatabase()
-        self.setUpConnectorComponent(self.db_url)
+        d = self.setUpConnectorComponent()
 
-        # add the .sourcestamps attribute
-        self.db.buildsets = buildsets.BuildsetsConnectorComponent(self.db)
+        def finish_setup(_):
+            self.db.buildsets = buildsets.BuildsetsConnectorComponent(self.db)
+        d.addCallback(finish_setup)
 
-        # set up the tables we'll need, following links where ForeignKey
-        # constraints are in place.
-        def thd(engine):
-            self.db.model.patches.create(bind=engine)
-            self.db.model.sourcestamps.create(bind=engine)
-            self.db.model.buildsets.create(bind=engine)
-            self.db.model.buildset_properties.create(bind=engine)
-            self.db.model.schedulers.create(bind=engine)
-            self.db.model.scheduler_upstream_buildsets.create(bind=engine)
-            self.db.model.buildrequests.create(bind=engine)
+        # set up a sourcestamp with id 234 for referential integrity, along
+        # with the tables we'll need
+        d.addCallback(lambda _ :
+            self.insertTestData([
+                fakedb.SourceStamp(id=234),
+            ], tables=[ 'patches', 'changes', 'sourcestamp_changes',
+                'buildsets', 'buildset_properties', 'schedulers',
+                'buildrequests', 'scheduler_upstream_buildsets' ]))
 
-            # set up a sourcestamp with id 234 for referential integrity
-            engine.execute(self.db.model.sourcestamps.insert(), dict(id=234))
-
-        return self.db.pool.do_with_engine(thd)
+        return d
 
     def tearDown(self):
-        self.tearDownConnectorComponent()
-        self.tearDownRealDatabase()
+        return self.tearDownConnectorComponent()
 
     # tests
 

@@ -48,9 +48,12 @@ class ChangeImportMixin(db.RealDatabaseMixin):
             shutil.rmtree(self.basedir)
         os.makedirs(self.basedir)
         self.changes_pickle = os.path.join(self.basedir, "changes.pck")
-        self.setUpRealDatabase()
+        return self.setUpRealDatabase()
 
     def tearDownChangeImport(self):
-        self.tearDownRealDatabase()
-        if os.path.exists(self.basedir):
-            shutil.rmtree(self.basedir)
+        d = self.tearDownRealDatabase()
+        def rmtree(_):
+            if os.path.exists(self.basedir):
+                shutil.rmtree(self.basedir)
+        d.addCallback(rmtree)
+        return d
