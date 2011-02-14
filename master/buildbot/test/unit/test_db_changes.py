@@ -86,7 +86,7 @@ class TestChangesConnectorComponent(
     def addChange13(self, _):
         d = defer.succeed(None)
         d.addCallback(self.addChanges,
-          dict(changeid=13, author="dustin", comments="fix spelling", is_dir=False,
+          dict(changeid=13, author="dustin", comments="fix spelling", is_dir=0,
                branch="master", revision="deadbeef", when_timestamp=266738400,
                category=None, repository='', project=''),
           )
@@ -123,7 +123,7 @@ class TestChangesConnectorComponent(
     def addChange14(self, _):
         d = defer.succeed(None)
         d.addCallback(self.addChanges,
-          dict(changeid=14, author="warner", comments="fix whitespace", is_dir=False,
+          dict(changeid=14, author="warner", comments="fix whitespace", is_dir=0,
                branch="warnerdb", revision="0e92a098b", when_timestamp=266738404,
                revlink='http://warner/0e92a098b',
                category='devel', repository='git://warner', project='Buildbot'),
