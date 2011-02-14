@@ -58,14 +58,20 @@ class RealDatabaseMixin(object):
 
         engine.dispose()
 
+    # if true, then the db was just cleaned (by tearDownRealDatabase), and thus
+    # need not be cleaned dring setUpRealDatabase
+    _just_cleaned = False
+
     def setUpRealDatabase(self):
         memory = 'sqlite://'
         self.db_url = os.environ.get('BUILDBOT_TEST_DB_URL', 'sqlite:///%s' % (os.path.abspath('test.db'))) ### XXX TEMPORARY until sqlalchemification is complete
         self._using_memory_db = (self.db_url == memory)
 
-        if not self._using_memory_db:
+        if not self._using_memory_db and not RealDatabaseMixin._just_cleaned:
             self._clean_database()
+        RealDatabaseMixin._just_cleaned = False
 
     def tearDownRealDatabase(self):
         if not self._using_memory_db:
             self._clean_database()
+        RealDatabaseMixin._just_cleaned = True
