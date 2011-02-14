@@ -37,7 +37,7 @@ class DBConnector_Basic(db.RealDatabaseMixin, unittest.TestCase):
         return self.tearDownRealDatabase()
 
     def test_runQueryNow_simple(self):
-        self.assertEqual(self.dbc.runQueryNow("SELECT 1"),
+        self.assertEqual(list(self.dbc.runQueryNow("SELECT 1")),
                          [(1,)])
 
     def test_runQueryNow_exception(self):
@@ -46,8 +46,8 @@ class DBConnector_Basic(db.RealDatabaseMixin, unittest.TestCase):
 
     def test_runInterationNow_simple(self):
         def inter(cursor, *args, **kwargs):
-            self.assertEqual(cursor.execute("SELECT 1").fetchall(),
-                             [(1,)])
+            cursor.execute("SELECT 1")
+            self.assertEqual(list(cursor.fetchall()), [(1,)])
         self.dbc.runInteractionNow(inter)
 
     def test_runInterationNow_args(self):
@@ -65,6 +65,6 @@ class DBConnector_Basic(db.RealDatabaseMixin, unittest.TestCase):
     def test_runQuery_simple(self):
         d = self.dbc.runQuery("SELECT 1")
         def cb(res):
-            self.assertEqual(res, [(1,)])
+            self.assertEqual(list(res), [(1,)])
         d.addCallback(cb)
         return d

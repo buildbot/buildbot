@@ -21,7 +21,7 @@ from buildbot.util import json
 from buildbot.test.util import connector_component
 from buildbot.test.fake import fakedb
 
-class TestChangesConnectorComponent(
+class TestSchedulersConnectorComponent(
             connector_component.ConnectorComponentMixin,
             unittest.TestCase):
 
@@ -127,9 +127,10 @@ class TestChangesConnectorComponent(
         return d
 
     def test_classifyChanges(self):
-        d = self.insertTestData([ self.change3, self.change4 ])
+        d = self.insertTestData([ self.change3, self.change4,
+                                  self.scheduler24 ])
         d.addCallback(lambda _ :
-                self.db.schedulers.classifyChanges(27,
+                self.db.schedulers.classifyChanges(24,
                     { 3 : False, 4: True }))
         def check(_):
             def thd(conn):
@@ -138,7 +139,7 @@ class TestChangesConnectorComponent(
                 r = conn.execute(q)
                 rows = [ (row.schedulerid, row.changeid, row.important)
                          for row in r.fetchall() ]
-                self.assertEqual(rows, [ (27, 3, 0), (27, 4, 1) ])
+                self.assertEqual(rows, [ (24, 3, 0), (24, 4, 1) ])
             return self.db.pool.do(thd)
         d.addCallback(check)
         return d
