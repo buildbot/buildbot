@@ -31,6 +31,8 @@ class RealDatabaseMixin(object):
     @ivar db_pool: a (real) DBThreadPool instance that can be used as desired
 
     @ivar db_url: the DB URL used to run these tests
+
+    @ivar db_engine: the engine created for the test database
     """
 
     # Note that this class uses the production database model.  A
@@ -52,37 +54,43 @@ class RealDatabaseMixin(object):
         meta.reflect()
         meta.drop_all()
 
-    # if true, then the db was just cleaned (by tearDownRealDatabase), and thus
-    # need not be cleaned dring setUpRealDatabase
-    _just_cleaned = False
+    def setUpRealDatabase(self, basedir='basedir', want_pool=True):
+        """
 
-    def setUpRealDatabase(self, basedir='basedir'):
+        Set up a database.  Ordinarily sets up an engine and a pool and takes
+        care of cleaning out any existing tables in the database.  If
+        @C{want_pool} is false, then no pool will be created, and the database
+        will not be cleaned.
+
+        @param basedir: (optional) basedir for the engine
+        @param want_pool: false to not create @C{self.db_pool}
+        @returns: Deferred
+        """
+        self.__want_pool = want_pool
+
         memory = 'sqlite://'
         self.db_url = os.environ.get('BUILDBOT_TEST_DB_URL',
                 ### XXX TEMPORARY until sqlalchemification is complete
                 'sqlite:///%s' % (os.path.abspath('test.db')))
         self.__using_memory_db = (self.db_url == memory)
 
-        self.__engine = enginestrategy.create_engine(self.db_url,
+        self.db_engine = enginestrategy.create_engine(self.db_url,
                                                     basedir=basedir)
-        self.db_pool = pool.DBThreadPool(self.__engine)
 
-        if not self.__class__._just_cleaned:
-            log.msg("cleaning database %s" % self.db_url)
-            d = self.db_pool.do_with_engine(self.__thd_clean_database)
-        else:
-            d = defer.succeed(None)
-        def not_cleaned(_):
-            self.__class__._just_cleaned = False
-        d.addCallback(not_cleaned)
-        return d
+        # if the caller does not want a pool, we're done.
+        if not want_pool:
+            return defer.succeed(None)
+
+        self.db_pool = pool.DBThreadPool(self.db_engine)
+
+        log.msg("cleaning database %s" % self.db_url)
+        return self.db_pool.do_with_engine(self.__thd_clean_database)
 
     def tearDownRealDatabase(self):
-        d = self.db_pool.do_with_engine(self.__thd_clean_database)
-        def cleaned(_):
-            self.__class__._just_cleaned = True
-        d.addCallback(cleaned)
-        return d
+        if self.__want_pool:
+            return self.db_pool.do_with_engine(self.__thd_clean_database)
+        else:
+            return defer.succeed(None)
 
     def insertTestData(self, rows, tables=[]):
         """Insert test data into the database for use during the test.

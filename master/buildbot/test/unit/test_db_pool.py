@@ -13,16 +13,23 @@
 #
 # Copyright Buildbot Team Members
 
-import sqlalchemy
+import sqlalchemy as sa
 from twisted.trial import unittest
 from twisted.internet import defer
 from buildbot.db import pool
+from buildbot.test.util import db
 
-class DBThreadPool(unittest.TestCase):
+class Basic(unittest.TestCase):
+
+    # basic tests, just using an in-memory SQL db and one thread
+
     def setUp(self):
-        self.engine = sqlalchemy.create_engine('sqlite://')
+        self.engine = sa.create_engine('sqlite://')
         self.engine.optimal_thread_pool_size = 1
         self.pool = pool.DBThreadPool(self.engine)
+
+    def tearDown(self):
+        self.pool.shutdown()
 
     def test_do(self):
         def add(conn, addend1, addend2):
@@ -95,3 +102,42 @@ class DBThreadPool(unittest.TestCase):
             engine.execute("INSERT INTO tmp values ( 1 )")
         d.addCallback( lambda r : self.pool.do_with_engine(insert_into_table))
         return d
+
+class Native(unittest.TestCase, db.RealDatabaseMixin):
+
+    # similar tests, but using the BUILDBOT_TEST_DB_URL
+
+    def setUp(self):
+        d = self.setUpRealDatabase(want_pool=False)
+        def make_pool(_):
+            self.pool = pool.DBThreadPool(self.db_engine)
+        d.addCallback(make_pool)
+        return d
+
+    def tearDown(self):
+        # try to delete the 'native_tests' table
+        meta = sa.MetaData()
+        native_tests = sa.Table("native_tests", meta)
+        native_tests.drop(bind=self.db_engine, checkfirst=True)
+        self.pool.shutdown()
+        return self.tearDownRealDatabase()
+
+    def test_ddl_and_queries(self):
+        meta = sa.MetaData()
+        native_tests = sa.Table("native_tests", meta,
+                sa.Column('name', sa.String()))
+
+        # perform a DDL operation and immediately try to access that table;
+        # this has caused problems in the past, so this is basically a
+        # regression test.
+        def ddl(conn):
+            t = conn.begin()
+            native_tests.create(bind=conn)
+            t.commit()
+        d = self.pool.do(ddl)
+        def access(conn):
+            native_tests.insert(bind=conn).execute([ {'name':'foo'} ])
+        d.addCallback(lambda _ :
+            self.pool.do(access))
+        return d
+
