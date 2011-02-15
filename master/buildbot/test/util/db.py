@@ -59,11 +59,11 @@ class RealDatabaseMixin(object):
 
         Set up a database.  Ordinarily sets up an engine and a pool and takes
         care of cleaning out any existing tables in the database.  If
-        @C{want_pool} is false, then no pool will be created, and the database
+        C{want_pool} is false, then no pool will be created, and the database
         will not be cleaned.
 
         @param basedir: (optional) basedir for the engine
-        @param want_pool: false to not create @C{self.db_pool}
+        @param want_pool: false to not create C{self.db_pool}
         @returns: Deferred
         """
         self.__want_pool = want_pool

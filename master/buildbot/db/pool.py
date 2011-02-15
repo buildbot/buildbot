@@ -23,7 +23,7 @@ class DBThreadPool(threadpool.ThreadPool):
     """
     A pool of threads ready and waiting to execute queries.
 
-    If the engine has an @C{optimal_thread_pool_size} attribute, then the
+    If the engine has an C{optimal_thread_pool_size} attribute, then the
     maxthreads of the thread pool will be set to that value.  This is most
     useful for SQLite in-memory connections, where exactly one connection
     (and thus thread) should be used.
@@ -78,7 +78,7 @@ class DBThreadPool(threadpool.ThreadPool):
 
     def do(self, callable, *args, **kwargs):
         """
-        Call CALLABLE in a thread, with a Connection as first argument.
+        Call C{callable} in a thread, with a Connection as first argument.
         Returns a deferred that will indicate the results of the callable.
 
         Note: do not return any SQLAlchemy objects via this deferred!
@@ -98,7 +98,7 @@ class DBThreadPool(threadpool.ThreadPool):
 
     def do_with_engine(self, callable, *args, **kwargs):
         """
-        Like l{do}, but with an SQLAlchemy Engine as the first argument
+        Like L{do}, but with an SQLAlchemy Engine as the first argument
         """
         def thd():
             if self.__broken_sqlite: # see bug #1810

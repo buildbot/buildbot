@@ -90,7 +90,7 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
     def subscribeToBuildset(self, schedulerid, buildsetid):
         """
         Add a row to C{scheduler_upstream_buildsets} indicating that
-        C{SCHEDULERID} is interested in buildset @C{BSID}.
+        C{schedulerid} is interested in buildset C{bsid}.
 
         @param schedulerid: downstream scheduler
         @type schedulerid: integer
