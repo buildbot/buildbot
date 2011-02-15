@@ -95,7 +95,7 @@ class GerritChangeSource(base.ChangeSource):
             log.msg("bad json line: %s" % (line,))
             return defer.succeed(None)
 
-        if type(event) == type({}) and "type" in event and event["type"] in ["patchset-created", "ref-updated"]:
+        if type(event) == type({}) and "type" in event and event["type"] in ["change-merged", "patchset-created", "ref-updated"]:
             # flatten the event dictionary, for easy access with WithProperties
             def flatten(event, base, d):
                 for k, v in d.items():
@@ -107,7 +107,7 @@ class GerritChangeSource(base.ChangeSource):
             properties = {}
             flatten(properties, "event", event)
 
-            if event["type"] == "patchset-created":
+            if event["type"] in ["patchset-created", "change-merged"]:
                 change = event["change"]
 
                 chdict = dict(
@@ -120,7 +120,7 @@ class GerritChangeSource(base.ChangeSource):
                         files=["unknown"],
                         category=event["type"],
                         properties=properties)
-            elif event["type"] == "ref-updated":
+            elif event["type"] == "ref-updated" and 'submitter' in event:
                 ref = event["refUpdate"]
                 chdict = dict(
                         who="%s <%s>" % (event["submitter"]["name"], event["submitter"]["email"]),
