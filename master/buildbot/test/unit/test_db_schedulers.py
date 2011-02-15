@@ -18,78 +18,29 @@ from twisted.trial import unittest
 from twisted.internet import defer
 from buildbot.db import schedulers
 from buildbot.util import json
-from buildbot.test.util import db, connector_component
+from buildbot.test.util import connector_component
+from buildbot.test.fake import fakedb
 
-class TestChangesConnectorComponent(
+class TestSchedulersConnectorComponent(
             connector_component.ConnectorComponentMixin,
-            db.RealDatabaseMixin,
             unittest.TestCase):
 
     def setUp(self):
-        self.setUpRealDatabase()
-        self.setUpConnectorComponent(self.db_url)
+        d = self.setUpConnectorComponent()
 
-        # add the .schedulers attribute
-        self.db.schedulers = schedulers.SchedulersConnectorComponent(self.db)
+        def finish_setup(_):
+            self.db.schedulers = \
+                    schedulers.SchedulersConnectorComponent(self.db)
+        d.addCallback(finish_setup)
 
-        # set up the tables we'll need, following links where ForeignKey
-        # constraints are in place.
-        def thd(engine):
-            self.db.model.changes.create(bind=engine)
-            self.db.model.schedulers.create(bind=engine)
-            self.db.model.scheduler_changes.create(bind=engine)
-        return self.db.pool.do_with_engine(thd)
+        d.addCallback(lambda _ :
+            self.createTestTables([ 'changes', 'schedulers',
+                                    'scheduler_changes' ]))
 
-    def tearDown(self):
-        self.tearDownConnectorComponent()
-        self.tearDownRealDatabase()
-
-    # add stuff to the database; these are all meant to be used
-    # as callbacks on a deferred
-
-    def addChanges(self, _, *rows):
-        def thd(conn):
-            stmt = self.db.model.changes.insert()
-            conn.execute(stmt, rows)
-        return self.db.pool.do(thd)
-
-    def addScheduler(self, _, **cols):
-        def thd(conn):
-            stmt = self.db.model.schedulers.insert()
-            conn.execute(stmt, **cols)
-        return self.db.pool.do(thd)
-
-    def addSchedulerChanges(self, _, *rows):
-        def thd(conn):
-            stmt = self.db.model.scheduler_changes.insert()
-            conn.execute(stmt, rows)
-        return self.db.pool.do(thd)
-
-    def addSampleChanges(self, _):
-        d = defer.succeed(None)
-        d.addCallback(self.addChanges,
-          dict(changeid=3, author="three", comments="3", is_dir=False,
-               branch="trunk", revision="0e92a098b", when_timestamp=266738404,
-               revlink='lnk', category='devel', repository='git://warner',
-               project='Buildbot'),
-          dict(changeid=4, author="four", comments="4", is_dir=False,
-               branch="trunk", revision="0e92a098b", when_timestamp=266738404,
-               revlink='lnk', category='devel', repository='git://warner',
-               project='Buildbot'),
-          dict(changeid=5, author="five", comments="5", is_dir=False,
-               branch="trunk", revision="0e92a098b", when_timestamp=266738404,
-               revlink='lnk', category='devel', repository='git://warner',
-               project='Buildbot'),
-          )
         return d
 
-    def addClassifications(self, _, schedulerid, *classifications):
-        def thd(conn):
-            q = self.db.model.scheduler_changes.insert()
-            conn.execute(q, [
-                dict(changeid=c[0], schedulerid=schedulerid, important=c[1])
-                for c in classifications ])
-        return self.db.pool.do(thd)
+    def tearDown(self):
+        return self.tearDownConnectorComponent()
 
     def checkScheduler(self, schedulerid, name, class_name, state):
         def thd(conn):
@@ -100,14 +51,29 @@ class TestChangesConnectorComponent(
                                  [ schedulerid, name, class_name, state ])
         return self.db.pool.do(thd)
 
+    # test data
+
+    change3 = fakedb.Change(changeid=3)
+    change4 = fakedb.Change(changeid=4)
+    change5 = fakedb.Change(changeid=5)
+    change6 = fakedb.Change(changeid=6, branch='sql')
+
+    scheduler24 = fakedb.Scheduler(schedulerid=24)
+
+    def addClassifications(self, _, schedulerid, *classifications):
+        def thd(conn):
+            q = self.db.model.scheduler_changes.insert()
+            conn.execute(q, [
+                dict(changeid=c[0], schedulerid=schedulerid, important=c[1])
+                for c in classifications ])
+        return self.db.pool.do(thd)
 
     # tests
 
     def test_getState_good(self):
-        d = defer.succeed(None)
-        d.addCallback(self.addScheduler,
-            schedulerid=10, name='testsched',
-            class_name='TestScheduler', state='{ "foo":"bar" }')
+        d = self.insertTestData([
+            fakedb.Scheduler(schedulerid=10, state='{ "foo":"bar" }')
+        ])
         d.addCallback(lambda _ : self.db.schedulers.getState(10))
         def check(state):
             self.assertEqual(state, dict(foo="bar"))
@@ -115,10 +81,9 @@ class TestChangesConnectorComponent(
         return d
 
     def test_getState_bad(self):
-        d = defer.succeed(None)
-        d.addCallback(self.addScheduler,
-            schedulerid=10, name='testsched',
-            class_name='TestScheduler', state='{ 99notjs0n }')
+        d = self.insertTestData([
+            fakedb.Scheduler(schedulerid=10, state='{ 99notjs0n }')
+        ])
         d.addCallback(lambda _ : self.db.schedulers.getState(10))
         def check(state):
             self.assertEqual(state, {})
@@ -134,10 +99,9 @@ class TestChangesConnectorComponent(
         return d
 
     def test_setState(self):
-        d = defer.succeed(None)
-        d.addCallback(self.addScheduler,
-            schedulerid=99, name='trythis',
-            class_name='Scheduler', state='{}')
+        d = self.insertTestData([
+            fakedb.Scheduler(schedulerid=99, state='{}')
+        ])
         d.addCallback(lambda _ : self.db.schedulers.setState(99, dict(abc="def")))
         def check(state):
             def thd(conn):
@@ -151,10 +115,9 @@ class TestChangesConnectorComponent(
         return d
 
     def test_setState_unJSON(self):
-        d = defer.succeed(None)
-        d.addCallback(self.addScheduler,
-            schedulerid=99, name='trythis',
-            class_name='Scheduler', state='{}')
+        d = self.insertTestData([
+            fakedb.Scheduler(schedulerid=99, state='{}')
+        ])
         d.addCallback(lambda _ : self.db.schedulers.setState(99, mock.Mock()))
         def cb(_):
             self.fail("should have raised a failure")
@@ -164,10 +127,10 @@ class TestChangesConnectorComponent(
         return d
 
     def test_classifyChanges(self):
-        d = defer.succeed(None)
-        d.addCallback(self.addSampleChanges)
+        d = self.insertTestData([ self.change3, self.change4,
+                                  self.scheduler24 ])
         d.addCallback(lambda _ :
-                self.db.schedulers.classifyChanges(27,
+                self.db.schedulers.classifyChanges(24,
                     { 3 : False, 4: True }))
         def check(_):
             def thd(conn):
@@ -176,14 +139,14 @@ class TestChangesConnectorComponent(
                 r = conn.execute(q)
                 rows = [ (row.schedulerid, row.changeid, row.important)
                          for row in r.fetchall() ]
-                self.assertEqual(rows, [ (27, 3, 0), (27, 4, 1) ])
+                self.assertEqual(rows, [ (24, 3, 0), (24, 4, 1) ])
             return self.db.pool.do(thd)
         d.addCallback(check)
         return d
 
     def test_flushChangeClassifications(self):
-        d = defer.succeed(None)
-        d.addCallback(self.addSampleChanges)
+        d = self.insertTestData([ self.change3, self.change4,
+                                  self.change5, self.scheduler24 ])
         d.addCallback(self.addClassifications, 24,
                 (3, 1), (4, 0), (5, 1))
         d.addCallback(lambda _ :
@@ -198,8 +161,8 @@ class TestChangesConnectorComponent(
         return d
 
     def test_flushChangeClassifications_less_than(self):
-        d = defer.succeed(None)
-        d.addCallback(self.addSampleChanges)
+        d = self.insertTestData([ self.change3, self.change4,
+                                  self.change5, self.scheduler24 ])
         d.addCallback(self.addClassifications, 24,
                 (3, 1), (4, 0), (5, 1))
         d.addCallback(lambda _ :
@@ -215,14 +178,8 @@ class TestChangesConnectorComponent(
         return d
 
     def test_getChangeClassifications(self):
-        d = defer.succeed(None)
-        d.addCallback(self.addSampleChanges)
-        d.addCallback(self.addChanges,
-          dict(changeid=6, author="six", comments="six", is_dir=False,
-               branch="sql", revision="0e92a99b", when_timestamp=266738419,
-               revlink='lnk', category='sql', repository='git://ayust',
-               project='Buildbot'),
-        )
+        d = self.insertTestData([ self.change3, self.change4, self.change5,
+                                  self.change6, self.scheduler24 ])
         d.addCallback(self.addClassifications, 24,
                 (3, 1), (4, 0), (5, 1), (6, 1))
         d.addCallback(lambda _ :
@@ -233,14 +190,8 @@ class TestChangesConnectorComponent(
         return d
 
     def test_getChangeClassifications_branch(self):
-        d = defer.succeed(None)
-        d.addCallback(self.addSampleChanges)
-        d.addCallback(self.addChanges,
-          dict(changeid=6, author="six", comments="six", is_dir=False,
-               branch="sql", revision="0e92a99b", when_timestamp=266738419,
-               revlink='lnk', category='sql', repository='git://ayust',
-               project='Buildbot'),
-        )
+        d = self.insertTestData([ self.change3, self.change4, self.change5,
+                                  self.change6, self.scheduler24 ])
         d.addCallback(self.addClassifications, 24,
                 (3, 1), (4, 0), (5, 1), (6, 1))
         d.addCallback(lambda _ :
@@ -251,10 +202,10 @@ class TestChangesConnectorComponent(
         return d
 
     def test_getSchedulerId_first_time(self):
-        d = defer.succeed(None)
-        d.addCallback(self.addScheduler,
-                name='distractor', class_name='Weekly',
-                schedulerid=9929, state='{"foo": "bar"}')
+        d = self.insertTestData([
+            fakedb.Scheduler(name='distractor', class_name='Weekly',
+                schedulerid=992, state='{"foo": "bar"}')
+        ])
         d.addCallback(lambda _ :
                 self.db.schedulers.getSchedulerId('mysched', 'Nightly'))
         d.addCallback(lambda schid :
@@ -262,27 +213,28 @@ class TestChangesConnectorComponent(
         return d
 
     def test_getSchedulerId_existing(self):
-        d = defer.succeed(None)
-        d.addCallback(self.addScheduler,
-                name='mysched', class_name='Nightly',
-                schedulerid=9929, state='{"foo": "bar"}')
+        d = self.insertTestData([
+            fakedb.Scheduler(name='mysched', class_name='Nightly',
+                schedulerid=992, state='{"foo": "bar"}')
+        ])
         d.addCallback(lambda _ :
                 self.db.schedulers.getSchedulerId('mysched', 'Nightly'))
         def check(schid):
-            self.assertEqual(schid, 9929)
-            return self.checkScheduler(9929, 'mysched', 'Nightly', '{"foo": "bar"}')
+            self.assertEqual(schid, 992)
+            return self.checkScheduler(992, 'mysched', 'Nightly', '{"foo": "bar"}')
         d.addCallback(check)
         return d
 
     def test_getSchedulerId_upgrade(self):
-        d = defer.succeed(None)
-        d.addCallback(self.addScheduler,
-                name='mysched', class_name='', schedulerid=9929, state='{}')
+        d = self.insertTestData([
+            fakedb.Scheduler(name='mysched', class_name='', schedulerid=992,
+                state='{}')
+        ])
         d.addCallback(lambda _ :
                 self.db.schedulers.getSchedulerId('mysched', 'Hourly'))
         def check(schid):
-            self.assertEqual(schid, 9929)
+            self.assertEqual(schid, 992)
             # class has been filled in
-            return self.checkScheduler(9929, 'mysched', 'Hourly', '{}')
+            return self.checkScheduler(992, 'mysched', 'Hourly', '{}')
         d.addCallback(check)
         return d

@@ -1466,7 +1466,7 @@ class BuildStatus(styles.Versioned):
         # for now, a serialized Build is always "finished". We will never
         # save unfinished builds.
         if not self.finished:
-            d['finished'] = True
+            d['finished'] = util.now()
             # TODO: push an "interrupted" step so it is clear that the build
             # was interrupted. The builder will have a 'shutdown' event, but
             # someone looking at just this build will be confused as to why

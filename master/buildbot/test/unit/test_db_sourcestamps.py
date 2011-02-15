@@ -16,32 +16,29 @@
 from twisted.trial import unittest
 from twisted.internet import defer
 from buildbot.db import sourcestamps
-from buildbot.test.util import db, connector_component
+from buildbot.test.util import connector_component
+from buildbot.test.fake import fakedb
 
 class TestSourceStampsConnectorComponent(
             connector_component.ConnectorComponentMixin,
-            db.RealDatabaseMixin,
             unittest.TestCase):
 
     def setUp(self):
-        self.setUpRealDatabase()
-        self.setUpConnectorComponent(self.db_url)
+        d = self.setUpConnectorComponent()
 
-        # add the .sourcestamps attribute
-        self.db.sourcestamps = sourcestamps.SourceStampsConnectorComponent(self.db)
+        def finish_setup(_):
+            self.db.sourcestamps = \
+                    sourcestamps.SourceStampsConnectorComponent(self.db)
+        d.addCallback(finish_setup)
 
-        # set up the tables we'll need, following links where ForeignKey
-        # constraints are in place.
-        def thd(engine):
-            self.db.model.changes.create(bind=engine)
-            self.db.model.patches.create(bind=engine)
-            self.db.model.sourcestamp_changes.create(bind=engine)
-            self.db.model.sourcestamps.create(bind=engine)
-        return self.db.pool.do_with_engine(thd)
+        d.addCallback(lambda _ :
+            self.createTestTables([ 'changes', 'change_links', 'change_files',
+                'patches', 'sourcestamp_changes', 'sourcestamps' ]))
+
+        return d
 
     def tearDown(self):
-        self.tearDownConnectorComponent()
-        self.tearDownRealDatabase()
+        return self.tearDownConnectorComponent()
 
     # tests
 
@@ -72,19 +69,10 @@ class TestSourceStampsConnectorComponent(
 
     def test_createSourceStamp_changes(self):
         # add some sample changes for referential integrity
-        def thd(conn):
-            stmt = self.db.model.changes.insert()
-            conn.execute(stmt, [
-              dict(changeid=3, author="three", comments="3", is_dir=False,
-                  branch="trunk", revision="0e92a098b",
-                  when_timestamp=266738404, revlink='lnk', category='devel',
-                  repository='git://warner', project='Buildbot'),
-              dict(changeid=4, author="four", comments="4", is_dir=False,
-                  branch="trunk", revision="0e92a098b",
-                  when_timestamp=266738404, revlink='lnk', category='devel',
-                  repository='git://warner', project='Buildbot'),
+        d = self.insertTestData([
+              fakedb.Change(changeid=3),
+              fakedb.Change(changeid=4),
             ])
-        d = self.db.pool.do(thd)
 
         d.addCallback(lambda _ :
             self.db.sourcestamps.createSourceStamp('production', 'abdef',

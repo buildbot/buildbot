@@ -136,7 +136,7 @@ buildbot HTML pages to your project's home page.
 @bcindex c['buildbotURL']
 The @code{buildbotURL} string should point to the location where the buildbot's
 internal web server is visible. This URL must end with a slash (@code{/}).
-This typically uses the port number set for the web status @pxref{WebStatus}:
+This typically uses the port number set for the web status (@pxref{WebStatus}):
 the buildbot needs your help to figure out a suitable externally-visible host
 URL.
 
@@ -243,7 +243,7 @@ By default, buildbot merges BuildRequests that have compatible
 SourceStamps.
 
 This can be disabled for any particular Builder by passing
-@code{mergeRequests=False} to the BuilderConfig definition, @pxref{Builders}.
+@code{mergeRequests=False} to the BuilderConfig definition (@pxref{Builders}).
 For example:
 
 @example

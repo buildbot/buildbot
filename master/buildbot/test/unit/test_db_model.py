@@ -26,19 +26,22 @@ class DBConnector_Basic(db.RealDatabaseMixin, unittest.TestCase):
     """
 
     def setUp(self):
-        self.setUpRealDatabase()
-        engine = enginestrategy.create_engine(self.db_url,
-                    basedir=os.path.abspath('basedir'))
+        d = self.setUpRealDatabase()
+        def make_fake_pool(_):
+            engine = enginestrategy.create_engine(self.db_url,
+                        basedir=os.path.abspath('basedir'))
 
-        # mock out the pool, and set up the model
-        self.db = mock.Mock()
-        self.db.pool.do_with_engine = lambda thd : defer.maybeDeferred(thd,engine)
-        self.db.model = model.Model(self.db)
-        self.db.start()
+            # mock out the pool, and set up the model
+            self.db = mock.Mock()
+            self.db.pool.do_with_engine = lambda thd : defer.maybeDeferred(thd,engine)
+            self.db.model = model.Model(self.db)
+            self.db.start()
+        d.addCallback(make_fake_pool)
+        return d
 
     def tearDown(self):
         self.db.stop()
-        self.tearDownRealDatabase()
+        return self.tearDownRealDatabase()
 
     def test_is_current_empty(self):
         d = self.db.model.is_current()

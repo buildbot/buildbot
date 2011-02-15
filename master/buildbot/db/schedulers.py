@@ -63,10 +63,13 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
             scheduler_changes_tbl = self.db.model.scheduler_changes
             q = scheduler_changes_tbl.insert()
             for changeid, important in classifications.items():
+                # convert the 'important' value into an integer, since that
+                # is the column type
+                imp_int = important and 1 or 0
                 conn.execute(q,
                         schedulerid=schedulerid,
                         changeid=changeid,
-                        important=important)
+                        important=imp_int)
         return self.db.pool.do(thd)
 
     def flushChangeClassifications(self, schedulerid, less_than=None):
