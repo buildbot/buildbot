@@ -21,7 +21,6 @@ Standard setup script.
 
 import sys
 import os
-import re
 import glob
 
 from distutils.core import setup, Command
@@ -201,7 +200,6 @@ setup_args = {
     'maintainer_email': "dustin@v.igoro.us",
     'url': "http://buildbot.net/",
     'license': "GNU GPL",
-    # does this classifiers= mean that this can't be installed on 2.2/2.3?
     'classifiers': [
         'Development Status :: 5 - Production/Stable',
         'Environment :: No Input/Output (Daemon)',
