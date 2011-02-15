@@ -104,7 +104,7 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
             conn.execute(self.db.model.scheduler_upstream_buildsets.insert(),
                     schedulerid=schedulerid,
                     buildsetid=buildsetid,
-                    complete=0)
+                    active=1)
         return self.db.pool.do(thd)
 
     def unsubscribeFromBuildset(self, schedulerid, buildsetid):

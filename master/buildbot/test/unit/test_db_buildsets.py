@@ -137,9 +137,9 @@ class TestBuildsetsConnectorComponent(
         def check(_):
             def thd(conn):
                 r = conn.execute(tbl.select())
-                rows = [ (row.schedulerid, row.buildsetid)
+                rows = [ (row.schedulerid, row.buildsetid, row.active)
                           for row in r.fetchall() ]
-                self.assertEqual(rows, [ (13, 14) ])
+                self.assertEqual(rows, [ (13, 14, 1) ])
             return self.db.pool.do(thd)
         d.addCallback(check)
         return d
