@@ -175,6 +175,8 @@ class DBThreadPool(threadpool.ThreadPool):
                     curs1.execute("SELECT * from sqlite_master")
                 curs1.execute("SELECT * from foo")
             finally:
+                conn1.close()
+                conn2.close()
                 os.unlink(dbfile)
 
         try:
