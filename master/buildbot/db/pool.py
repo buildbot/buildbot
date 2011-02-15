@@ -13,10 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
+import os
+import sqlalchemy as sa
 import twisted
-from sqlalchemy import engine
 from twisted.internet import reactor, threads, defer
-from twisted.python import threadpool, failure, versions
+from twisted.python import threadpool, failure, versions, log
 
 class DBThreadPool(threadpool.ThreadPool):
     """
@@ -48,7 +49,8 @@ class DBThreadPool(threadpool.ThreadPool):
                         name='DBThreadPool')
         self.engine = engine
         if engine.dialect.name == 'sqlite':
-            self.__broken_sqlite = True
+            log.msg("applying SQLite workaround from Buildbot bug #1810")
+            self.__broken_sqlite = self.detect_bug1810()
         self._start_evt = reactor.callWhenRunning(self._start)
 
     def _start(self):
@@ -87,7 +89,7 @@ class DBThreadPool(threadpool.ThreadPool):
                 conn.execute("select * from sqlite_master")
             try:
                 rv = callable(conn, *args, **kwargs)
-                assert not isinstance(rv, engine.ResultProxy), \
+                assert not isinstance(rv, sa.engine.ResultProxy), \
                         "do not return ResultProxy objects!"
             finally:
                 conn.close()
@@ -102,7 +104,7 @@ class DBThreadPool(threadpool.ThreadPool):
             if self.__broken_sqlite: # see bug #1810
                 self.engine.execute("select * from sqlite_master")
             rv = callable(self.engine, *args, **kwargs)
-            assert not isinstance(rv, engine.ResultProxy), \
+            assert not isinstance(rv, sa.engine.ResultProxy), \
                     "do not return ResultProxy objects!"
             return rv
         return threads.deferToThreadPool(reactor, self, thd)
@@ -121,7 +123,7 @@ class DBThreadPool(threadpool.ThreadPool):
                     conn.execute("select * from sqlite_master")
                 try:
                     rv = callable(conn, *args, **kwargs)
-                    assert not isinstance(rv, engine.ResultProxy), \
+                    assert not isinstance(rv, sa.engine.ResultProxy), \
                             "do not return ResultProxy objects!"
                 finally:
                     conn.close()
@@ -138,7 +140,7 @@ class DBThreadPool(threadpool.ThreadPool):
                 if self.__broken_sqlite: # see bug #1810
                     conn.execute("select * from sqlite_master")
                 rv = callable(conn, *args, **kwargs)
-                assert not isinstance(rv, engine.ResultProxy), \
+                assert not isinstance(rv, sa.engine.ResultProxy), \
                         "do not return ResultProxy objects!"
                 reactor.callFromThread(d.callback, rv)
             except:
@@ -148,3 +150,39 @@ class DBThreadPool(threadpool.ThreadPool):
     if twisted.version < versions.Version('twisted', 8, 2, 0):
         do = do_081
         do_with_engine = do_with_engine_081
+
+    def detect_bug1810(self):
+        # detect buggy SQLite implementations; call only for a known-sqlite
+        # dialect
+        try:
+            import pysqlite2.dbapi2 as sqlite
+            sqlite = sqlite
+        except ImportError:
+            import sqlite3 as sqlite
+
+        dbfile = "detect_bug1810.db"
+        def test(select_from_sqlite_master=False):
+            try:
+                conn1 = sqlite.connect(dbfile)
+                curs1 = conn1.cursor()
+                curs1.execute("PRAGMA table_info('foo')")
+
+                conn2 = sqlite.connect(dbfile)
+                curs2 = conn2.cursor()
+                curs2.execute("CREATE TABLE foo ( a integer )")
+
+                if select_from_sqlite_master:
+                    curs1.execute("SELECT * from sqlite_master")
+                curs1.execute("SELECT * from foo")
+            finally:
+                os.unlink(dbfile)
+
+        try:
+            test()
+        except sqlite.OperationalError:
+            # this is the expected error indicating it's broken
+            return True
+
+        # but this version should not fail..
+        test(select_from_sqlite_master=True)
+        return False # not broken - no workaround required
