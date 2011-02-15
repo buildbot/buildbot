@@ -526,6 +526,7 @@ class BuildSlave(service.MultiService):
         if not self.bf.perspective:
             log.msg("No active connection, shutting down NOW")
             reactor.stop()
+            return
 
         log.msg("Telling the master we want to shutdown after any running builds are finished")
         d = self.bf.perspective.callRemote("shutdown")
