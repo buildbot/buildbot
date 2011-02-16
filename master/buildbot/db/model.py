@@ -21,9 +21,13 @@ import sqlalchemy as sa
 import migrate
 import migrate.versioning.schema
 import migrate.versioning.repository
-import migrate.versioning.exceptions
 from twisted.python import util, log
 from buildbot.db import base
+
+try:
+    from migrate import exceptions
+except ImportError:
+    from migrate.versioning import exceptions
 
 class Model(base.DBConnectorComponent):
     """
@@ -345,7 +349,7 @@ class Model(base.DBConnectorComponent):
                 # migrate.api doesn't let us hand in an engine
                 schema = migrate.versioning.schema.ControlledSchema(engine, self.repo_path)
                 db_version = schema.version
-            except migrate.versioning.exceptions.DatabaseNotControlledError:
+            except exceptions.DatabaseNotControlledError:
                 return False
 
             return db_version == repo_version
