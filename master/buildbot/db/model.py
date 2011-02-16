@@ -25,9 +25,9 @@ from twisted.python import util, log
 from buildbot.db import base
 
 try:
-    from migrate import exceptions
-except ImportError:
     from migrate.versioning import exceptions
+except ImportError:
+    from migrate import exceptions
 
 class Model(base.DBConnectorComponent):
     """
