@@ -89,4 +89,4 @@ class PBChangeSource(base.ChangeSource):
 
     def getPerspective(self, mind, username):
         assert username == self.user
-        return ChangePerspective(self.parent, self.prefix)
+        return ChangePerspective(self.master, self.prefix)
