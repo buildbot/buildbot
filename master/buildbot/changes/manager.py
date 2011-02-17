@@ -37,7 +37,6 @@ class ChangeManager(service.MultiService):
     def __init__(self):
         service.MultiService.__init__(self)
         self.master = None
-        "the BuildMaster"
         self._cache = util.LRUCache()
         self.lastPruneChanges = 0
 
