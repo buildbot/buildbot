@@ -298,6 +298,35 @@ class Model(base.DBConnectorComponent):
     Note that schedulers are never deleted."""
     # TODO: delete records eventually
 
+    objects = sa.Table("objects", metadata,
+        # unique ID for this object
+        sa.Column("id", sa.Integer, primary_key=True),
+        # object's user-given name
+        sa.Column('name', sa.String(128), nullable=False),
+        # object's class name, basically representing a "type" for the state
+        sa.Column('class_name', sa.String(128), nullable=False),
+
+        # prohibit multiple id's for the same object
+        sa.UniqueConstraint('name', 'class_name', name='object_identity'),
+    )
+    """This table uniquely identifies objects that need to maintain state
+    across invocations."""
+
+    object_state = sa.Table("object_state", metadata,
+        # object for which this value is set
+        sa.Column("objectid", sa.Integer, sa.ForeignKey('objects.id'),
+                              nullable=False),
+        # name for this value (local to the object)
+        sa.Column("name", sa.String(length=None), nullable=False),
+        # value, as a JSON string
+        sa.Column("value_json", sa.Text, nullable=False),
+
+        # prohibit multiple values for the same object and name
+        sa.UniqueConstraint('objectid', 'name', name='name_per_object'),
+    )
+    """This table stores key/value pairs for objects, where the key is a string
+    and the value is a JSON string."""
+
     # indexes
 
     sa.Index('name_and_class', schedulers.c.name, schedulers.c.class_name)

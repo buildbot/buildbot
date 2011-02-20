@@ -135,4 +135,26 @@ class Scheduler(Row):
 
     id_column = 'schedulerid'
 
+class Object(Row):
+    table = "objects"
+
+    defaults = dict(
+        id = None,
+        name = 'nam',
+        class_name = 'cls',
+    )
+
+    id_column = 'id'
+
+class ObjectState(Row):
+    table = "object_state"
+
+    defaults = dict(
+        objectid = None,
+        name = 'nam',
+        value_json = '{}',
+    )
+
+    required_columns = ( 'objectid', )
+
 # Fake DB Components
