@@ -26,7 +26,8 @@ from buildbot.process.properties import Properties
 from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE
 from buildbot.util.eventual import eventually
 from buildbot.util import json
-from buildbot.db import pool, model, changes, schedulers, sourcestamps, buildsets
+from buildbot.db import pool, model, changes, schedulers, sourcestamps
+from buildbot.db import state, buildsets
 
 def _one_or_else(res, default=None, process_f=lambda x: x):
     if not res:
@@ -104,6 +105,9 @@ class DBConnector(object):
 
         self.buildsets = buildsets.BuildsetsConnectorComponent(self)
         "L{buildbot.db.sourcestamps.BuildsetsConnectorComponent} instance"
+
+        self.state = state.StateConnectorComponent(self)
+        "L{buildbot.db.state.StateConnectorComponent} instance"
 
 
     def _getCurrentTime(self): # TODO: remove
