@@ -1019,12 +1019,13 @@ class BuilderControl:
         if extraProperties is None:
             properties.updateFromProperties(extraProperties)
 
+        properties_dict = dict((k,(v,s)) for (k,v,s) in properties.asList())
         ss = bs.getSourceStamp(absolute=True)
         d = ss.getSourceStampId(self.master.master)
         def add_buildset(ssid):
             return self.master.master.addBuildset(
                     builderNames=[self.original.name],
-                    ssid=ssid, reason=reason, properties=properties)
+                    ssid=ssid, reason=reason, properties=properties_dict)
         d.addCallback(add_buildset)
         return d
 
