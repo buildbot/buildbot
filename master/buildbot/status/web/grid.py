@@ -98,6 +98,27 @@ class GridStatusMixin(object):
         """
         return (ss.branch, ss.revision, ss.patch)
 
+    def getRecentBuilds(self, builder, numBuilds, branch):
+        """
+        get a list of most recent builds on given builder
+        """
+        build = builder.getBuild(-1)
+        num = 0
+        while build and num < numBuilds:
+            start = build.getTimes()[0]
+            ss = build.getSourceStamp(absolute=True)
+            build = build.getPreviousBuild()
+
+            # skip un-started builds
+            if not start: continue
+
+            # skip non-matching branches
+            if branch != ANYBRANCH and ss.branch != branch: continue
+
+            num += 1
+            yield build
+        return
+
     def getRecentSourcestamps(self, status, numBuilds, categories, branch):
         """
         get a list of the most recent NUMBUILDS SourceStamp tuples, sorted
@@ -109,19 +130,10 @@ class GridStatusMixin(object):
             builder = status.getBuilder(bn)
             if categories and builder.category not in categories:
                 continue
-            build = builder.getBuild(-1)
-            while build:
+            for build in self.getRecentBuilds(builder, numBuilds, branch):
                 ss = build.getSourceStamp(absolute=True)
-                start = build.getTimes()[0]
-                build = build.getPreviousBuild()
-
-                # skip un-started builds
-                if not start: continue
-
-                # skip non-matching branches
-                if branch != ANYBRANCH and ss.branch != branch: continue
-
                 key= self.getSourceStampKey(ss)
+                start = build.getTimes()[0]
                 if key not in sourcestamps or sourcestamps[key][1] > start:
                     sourcestamps[key] = (ss, start)
 
@@ -173,14 +185,12 @@ class GridStatusResource(HtmlResource, GridStatusMixin):
             if categories and builder.category not in categories:
                 continue
 
-            build = builder.getBuild(-1)
-            while build and None in builds:
+            for build in self.getRecentBuilds(builder, numBuilds, branch):
                 ss = build.getSourceStamp(absolute=True)
                 key= self.getSourceStampKey(ss)
                 for i in range(len(stamps)):
                     if key == self.getSourceStampKey(stamps[i]) and builds[i] is None:
                         builds[i] = build
-                build = build.getPreviousBuild()
 
             b = self.builder_cxt(request, builder)
             b['builds'] = []
@@ -242,14 +252,12 @@ class TransposedGridStatusResource(HtmlResource, GridStatusMixin):
             if categories and builder.category not in categories:
                 continue
 
-            build = builder.getBuild(-1)
-            while build and None in builds:
+            for build in self.getRecentBuilds(builder, numBuilds, branch):
                 ss = build.getSourceStamp(absolute=True)
                 key = self.getSourceStampKey(ss)
                 for i in range(len(stamps)):
                     if key == self.getSourceStampKey(stamps[i]) and builds[i] is None:
                         builds[i] = build
-                build = build.getPreviousBuild()
 
             builders.append(self.builder_cxt(request, builder))
             builder_builds.append(map(lambda b: self.build_cxt(request, b), builds))
