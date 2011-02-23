@@ -321,7 +321,7 @@ class DBConnector(object):
         retval = Properties()
         for key, valuepair in t.fetchall():
             if tablename == "change_properties":
-                value, source = valuepair, "Change"
+                value, source = valuepair[1:-1], "Change"
             else:
                 value, source = json.loads(valuepair)
             retval.setProperty(str(key), value, source)
