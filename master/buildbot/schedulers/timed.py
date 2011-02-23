@@ -165,41 +165,41 @@ class Timed(base.BaseScheduler):
     def _actuate(self):
         # called from the timer when it's time to start a build
         self.actuateAtTimer = None
+        self.lastActuated = self.actuateAt
+
+        d = self.actuationLock.acquire()
 
         @defer.deferredGenerator
-        def do():
-            self.lastActuated = self.actuateAt
+        def set_state_and_start(_):
+            # bail out if we shouldn't be actuating anymore
+            if not self.actuateOk:
+                return
 
-            # acquire the actuationLock
-            wfd = defer.waitForDeferred(self.actuationLock.acquire())
+            # mark the last build time
+            self.actuateAt = None
+            wfd = defer.waitForDeferred(self.setState('last_build',
+                                                    self.lastActuated))
             yield wfd
             wfd.getResult()
 
-            try:
-                # bail out if we shouldn't be actuating anymore
-                if not self.actuateOk:
-                    return
+            # start the build
+            wfd = defer.waitForDeferred(self.startBuild())
+            yield wfd
+            wfd.getResult()
 
-                # mark the last build time
-                self.actuateAt = None
-                wfd = defer.waitForDeferred(self.setState('last_build', self.lastActuated))
-                yield wfd
-                wfd.getResult()
+            # schedule the next build (noting the lock is already held)
+            wfd = defer.waitForDeferred(self._scheduleNextBuild_locked())
+            yield wfd
+            wfd.getResult()
+        d.addCallback(set_state_and_start)
 
-                # start the build
-                wfd = defer.waitForDeferred(self.startBuild())
-                yield wfd
-                wfd.getResult()
+        def unlock(x):
+            self.actuationLock.release()
+            return x
+        d.addBoth(unlock)
 
-                # schedule the next build (noting the lock is already held)
-                wfd = defer.waitForDeferred(self._scheduleNextBuild_locked())
-                yield wfd
-                wfd.getResult()
-            finally:
-                self.actuationLock.release()
-
-        # this function can't return a deferred, so handle any failures via log.err
-        d = do()
+        # this function can't return a deferred, so handle any failures via
+        # log.err
         d.addErrback(log.err, 'while actuating')
 
 
