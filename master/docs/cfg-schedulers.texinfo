@@ -196,7 +196,7 @@ A list of categories of changes that this scheduler will respond to.  If this
 is specified, then any non-matching changes are ignored.
 
 @item branch (deprecated; use change_filter)
-The scheduler will pay attention to a this branch, ignoring Changes that occur
+The scheduler will pay attention to this branch, ignoring Changes that occur
 on other branches. Setting @code{branch} equal to the special value of
 @code{None} means it should only pay attention to the default branch. Note that
 @code{None} is a keyword, not a string, so write @code{None} and not
