@@ -105,11 +105,11 @@ class Polling(dirs.DirsMixin, unittest.TestCase):
             self.master.db_poll_interval = 10
 
             # overridesubscription callbacks
-            self.master._change_subscriptions = sub = mock.Mock()
+            self.master._change_subs = sub = mock.Mock()
             sub.deliver = self.deliverChange
-            self.master._buildset_addition_subscriptions = sub = mock.Mock()
+            self.master._new_buildset_subs = sub = mock.Mock()
             sub.deliver = self.deliverBuildsetAddition
-            self.master._buildset_completion_subscriptions = sub = mock.Mock()
+            self.master._complete_buildset_subs = sub = mock.Mock()
             sub.deliver = self.deliverBuildsetCompletion
 
         d.addCallback(set_master)

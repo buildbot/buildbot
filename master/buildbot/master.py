@@ -649,11 +649,11 @@ class BuildMaster(service.MultiService):
         self.log_rotation = LogRotation()
 
         # subscription points
-        self._change_subscriptions = \
+        self._change_subs = \
                 subscription.SubscriptionPoint("changes")
-        self._buildset_addition_subscriptions = \
+        self._new_buildset_subs = \
                 subscription.SubscriptionPoint("buildset_additions")
-        self._buildset_completion_subscriptions = \
+        self._complete_buildset_subs = \
                 subscription.SubscriptionPoint("buildset_completion")
 
     def startService(self):
@@ -1081,8 +1081,8 @@ class BuildMaster(service.MultiService):
             self.status.setDB(self.db)
 
             # subscribe the various parts of the system to changes
-            self._change_subscriptions.subscribe(self.status.changeAdded)
-            self._buildset_addition_subscriptions.subscribe(
+            self._change_subs.subscribe(self.status.changeAdded)
+            self._new_buildset_subs.subscribe(
                     lambda **kwargs : self.botmaster.loop.trigger())
 
             # Set db_poll_interval (perhaps to 30 seconds) if you are using
@@ -1264,7 +1264,7 @@ class BuildMaster(service.MultiService):
             log.msg(msg.encode('utf-8', 'replace'))
             # only deliver messages immediately if we're not polling
             if not self.db_poll_interval:
-                self._change_subscriptions.deliver(change)
+                self._change_subs.deliver(change)
             return change
         d.addCallback(notify)
         return d
@@ -1276,7 +1276,7 @@ class BuildMaster(service.MultiService):
 
         Note: this method will go away in 0.9.x
         """
-        return self._change_subscriptions.subscribe(callback)
+        return self._change_subs.subscribe(callback)
 
     def addBuildset(self, **kwargs):
         """
@@ -1290,7 +1290,7 @@ class BuildMaster(service.MultiService):
         def notify(bsid):
             log.msg("added buildset %d to database" % bsid)
             # note that buildset additions are only reported on this master
-            self._buildset_addition_subscriptions.deliver(bsid=bsid, **kwargs)
+            self._new_buildset_subs.deliver(bsid=bsid, **kwargs)
             return bsid
         d.addCallback(notify)
         return d
@@ -1304,7 +1304,7 @@ class BuildMaster(service.MultiService):
 
         Note: this method will go away in 0.9.x
         """
-        return self._buildset_addition_subscriptions.subscribe(callback)
+        return self._new_buildset_subs.subscribe(callback)
 
     def buildsetComplete(self, bsid, result):
         """
@@ -1312,7 +1312,7 @@ class BuildMaster(service.MultiService):
         complete, with result C{result}.
         """
         # note that buildset completions are only reported on this master
-        self._buildset_completion_subscriptions.deliver(bsid, result)
+        self._complete_buildset_subs.deliver(bsid, result)
 
     def subscribeToBuildsetCompletions(self, callback):
         """
@@ -1321,7 +1321,7 @@ class BuildMaster(service.MultiService):
 
         Note: this method will go away in 0.9.x
         """
-        return self._buildset_completion_subscriptions.subscribe(callback)
+        return self._complete_buildset_subs.subscribe(callback)
 
     ## database polling
 
@@ -1379,7 +1379,7 @@ class BuildMaster(service.MultiService):
             if not change:
                 break
 
-            self._change_subscriptions.deliver(change)
+            self._change_subs.deliver(change)
 
             self._last_processed_change = changeid
             need_setState = True
