@@ -319,11 +319,14 @@ class DBConnector(object):
                         % (tablename, idname))
         t.execute(q, (id,))
         retval = Properties()
-        for key, valuepair in t.fetchall():
+        for key, value_json in t.fetchall():
+            value = json.loads(value_json)
             if tablename == "change_properties":
-                value, source = valuepair[1:-1], "Change"
+                # change_properties does not store a source
+                value, source = value, "Change"
             else:
-                value, source = json.loads(valuepair)
+                # buildset_properties stores a tuple (value, source)
+                value, source = value
             retval.setProperty(str(key), value, source)
         return retval
 
