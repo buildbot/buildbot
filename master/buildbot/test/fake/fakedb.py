@@ -332,10 +332,9 @@ class FakeSchedulersComponent(FakeDBComponent):
             self.classifications[schedulerid] = {}
         return defer.succeed(None)
 
-    class Thunk: pass
-    def getChangeClassifications(self, schedulerid, branch=Thunk):
+    def getChangeClassifications(self, schedulerid, branch=-1):
         classifications = self.classifications.setdefault(schedulerid, {})
-        if branch is not self.Thunk:
+        if branch is not -1:
             # filter out the classifications for the requested branch
             change_branches = dict(
                     (id, getattr(c, 'branch', None))
