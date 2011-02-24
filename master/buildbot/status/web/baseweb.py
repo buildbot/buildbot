@@ -147,7 +147,7 @@ class WebStatus(service.MultiService):
                  order_console_by_time=False, changecommentlink=None,
                  revlink=None, projects=None, repositories=None,
                  authz=None, logRotateLength=None, maxRotatedFiles=None,
-                 change_hook_dialects = {}):
+                 change_hook_dialects = {}, provide_feeds=None):
         """Run a web server that provides Buildbot status.
 
         @type  http_port: int or L{twisted.application.strports} string
@@ -260,6 +260,11 @@ class WebStatus(service.MultiService):
                                      
         
     
+        @type  provide_feeds: None or list
+        @param provide_feeds: If empty, provides atom, json, and rss feeds.
+                              Otherwise, a dictionary of strings of
+                              the type of feeds provided.  Current
+                              possibilities are "atom", "json", and "rss"
         """
 
         service.MultiService.__init__(self)
@@ -326,6 +331,12 @@ class WebStatus(service.MultiService):
         if change_hook_dialects:
             self.change_hook_dialects = change_hook_dialects
             self.putChild("change_hook", ChangeHookResource(dialects = self.change_hook_dialects))
+
+        # Set default feeds
+        if provide_feeds is None:
+            self.provide_feeds = ["atom", "json", "rss"]
+        else:
+            self.provide_feeds = provide_feeds
 
     def setupUsualPages(self, numbuilds, num_events, num_events_max):
         #self.putChild("", IndexOrWaterfallRedirection())
@@ -436,9 +447,12 @@ class WebStatus(service.MultiService):
             root.putChild(name, child_resource)
 
         status = self.getStatus()
-        root.putChild("rss", Rss20StatusResource(status))
-        root.putChild("atom", Atom10StatusResource(status))
-        root.putChild("json", JsonStatusResource(status))
+        if "rss" in self.provide_feeds:
+            root.putChild("rss", Rss20StatusResource(status))
+        if "atom" in self.provide_feeds:
+            root.putChild("atom", Atom10StatusResource(status))
+        if "json" in self.provide_feeds:
+            root.putChild("json", JsonStatusResource(status))
 
         self.site.resource = root
 
@@ -480,4 +494,3 @@ class WebStatus(service.MultiService):
 
 # resources can get access to the IStatus by calling
 # request.site.buildbot_service.getStatus()
-
