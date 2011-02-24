@@ -107,16 +107,22 @@ class GridStatusMixin(object):
         while build and num < numBuilds:
             start = build.getTimes()[0]
             ss = build.getSourceStamp(absolute=True)
-            build = build.getPreviousBuild()
+
+            okay_build = True
 
             # skip un-started builds
-            if not start: continue
+            if not start:
+                okay_build = False
 
             # skip non-matching branches
-            if branch != ANYBRANCH and ss.branch != branch: continue
+            if branch != ANYBRANCH and ss.branch != branch:
+                okay_build = False
 
-            num += 1
-            yield build
+            if okay_build:
+                num += 1
+                yield build
+
+            build = build.getPreviousBuild()
         return
 
     def getRecentSourcestamps(self, status, numBuilds, categories, branch):
