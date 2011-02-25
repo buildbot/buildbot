@@ -53,13 +53,19 @@ It is possible to configure buildbot to have multiple master processes that
 share state in the same database.  This has been well tested using a MySQL
 database.  There are several benefits of Multi-master mode:
 @itemize @bullet
-@item You can have large numbers of build slaves handling the same queue of
-      build requests.  There is a finite limit to the number of slaves you
-      can attach to a single master process.  By adding another master
-      which shares the queue of build requests, you can attach more slaves
-      to this additional master, and increase your build throughput.
-@item You can shut one master down to do maintenance, and other masters
-      will continue to do builds.
+
+@item
+You can have large numbers of build slaves handling the same queue of build
+requests.  A single master can only handle so many slaves (the number is based
+on a number of factors including type of builds, number of builds, and master
+and slave IO and CPU capacity - there is no fixed formula).  By adding another
+master which shares the queue of build requests, you can attach more slaves to
+this additional master, and increase your build throughput.
+
+@item
+You can shut one master down to do maintenance, and other masters will continue
+to do builds.
+
 @end itemize
 
 State that is shared in the database includes:
@@ -71,18 +77,20 @@ State that is shared in the database includes:
 
 Because of this shared state, you are strongly encouraged to:
 @itemize @bullet
-@item Ensure that change branches correspond to exactly the schedulers you
-      have configured on those branches.  All schedulers on all masters
-      will see all new changes, regardless of which master initially
-      submitted the change.
 
-@item Ensure scheduler names are unique, and only run one instance of a
-      scheduler for each set of masters connecting to one database.
+@item
 
-@item Ensure builder names are unique for a given build factory implementation.
-      You can have the same builder name configured on many masters, but if the
-      build factories differ, you will get different results depending on which
-      master claims the build.
+Ensure that each named scheduler runs on only one master.  If the same
+scheduler runs on multiple masters, it will trigger duplicate builds and may
+produce other undesirable behaviors.
+
+@item
+
+Ensure builder names are unique for a given build factory implementation.  You
+can have the same builder name configured on many masters, but if the build
+factories differ, you will get different results depending on which master
+claims the build.
+
 @end itemize
 
 One suggested configuration is to have one buildbot master configured with

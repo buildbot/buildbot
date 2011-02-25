@@ -501,19 +501,12 @@ appropriate Builders.
 
 @cindex BuildRequest
 
-A @code{BuildRequest} is a request to build a specific set of sources
-on a single specific @code{Builder}. Each @code{Builder} runs the
-@code{BuildRequest} as soon as it can (i.e. when an associated
-buildslave becomes free). @code{BuildRequest}s are prioritized from
-oldest to newest, so when a buildslave becomes free, the
-@code{Builder} with the oldest @code{BuildRequest} is run.
-
-The @code{BuildRequest} contains the @code{SourceStamp} specification.
-The actual process of running the build (the series of Steps that will
-be executed) is implemented by the @code{Build} object. In the future
-this might be changed, to have the @code{Build} define @emph{what}
-gets built, and a separate @code{BuildProcess} (provided by the
-Builder) to define @emph{how} it gets built.
+A @code{BuildRequest} is a request to build a specific revision of the source
+code (specified by a source stamp) on a single @code{Builder}. Each
+@code{Builder} runs the @code{BuildRequest} as soon as it can (i.e. when an
+associated buildslave becomes free). @code{BuildRequest}s are prioritized from
+oldest to newest, and when a buildslave becomes free, the @code{Builder} with
+the oldest @code{BuildRequest} is run.
 
 The @code{BuildRequest} may be mergeable with other compatible
 @code{BuildRequest}s. Builds that are triggered by incoming Changes
@@ -587,8 +580,9 @@ configure, make, and make check sequence.  For interpreted projects like Python
 modules, a build is generally a checkout followed by an invocation of the
 bundled test suite.
 
-The builder which creates a build specifies its steps via a BuildFactory; the
-build then executes the steps and records their results.
+A build factory describes the steps a build will perform.  The builder which
+starts a build uses its configured build factory to determine the build's
+steps.
 
 @node Users
 @section Users
