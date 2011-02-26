@@ -30,7 +30,6 @@ from buildbot import interfaces, util
 from buildbot import version
 from buildbot.interfaces import IStatusReceiver
 from buildbot.sourcestamp import SourceStamp
-from buildbot.status.builder import BuildSetStatus
 from buildbot.status import base
 from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE, EXCEPTION
 from buildbot.scripts.runner import ForceOptions
@@ -467,12 +466,9 @@ class Contact(base.StatusReceiver):
         reason = "forced: by %s: %s" % (self.describeUser(who), reason)
         ss = SourceStamp(branch=branch, revision=revision)
         d = bc.submitBuildRequest(ss, reason)
-        def subscribe(bsid):
+        def subscribe(buildreq):
             ireq = IrcBuildRequest(self)
-            bss = BuildSetStatus(bsid, self.scheduler.master.status,
-                                 self.master.db)
-            brs = bss.getBuildRequests()[0]
-            brs.subscribe(ireq.started)
+            buildreq.subscribe(ireq.started)
         d.addCallback(subscribe)
         d.addErrback(log.err, "while forcing a build")
 
@@ -741,6 +737,7 @@ class IrcStatusBot(irc.IRCClient):
         self.channels = channels
         self.password = password
         self.status = status
+        self.master = status.master
         self.categories = categories
         self.notify_events = notify_events
         self.counter = 0
