@@ -86,9 +86,16 @@ of MSys Git.
 
 @itemize @bullet
 @item
-sqlite3: http://pypi.python.org/pypi/pysqlite
+sqlite3: http://www.sqlite.org
 
-The sqlite3 package is required for python-2.5 and earlier (it is already
+Buildbot requires SQLite to store its state.  Version 3.3.8 or higher is
+recommended, as earlier versions had trouble with contention for database
+tables.
+
+@item
+pysqlite: http://pypi.python.org/pypi/pysqlite
+
+The SQLite Python package is required for python-2.5 and earlier (it is already
 included in python-2.5 and later, but the version in python-2.5 has nasty bugs)
 
 @item
