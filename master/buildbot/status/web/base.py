@@ -18,7 +18,8 @@ import urlparse, urllib, time, re
 import os, cgi, sys, locale
 import jinja2
 from zope.interface import Interface
-from twisted.web import resource, static
+from twisted.internet import defer
+from twisted.web import resource, static, server
 from twisted.python import log
 from buildbot.status import builder
 from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE, SKIPPED, EXCEPTION, RETRY
@@ -271,15 +272,24 @@ class HtmlResource(resource.Resource, ContextMixin):
 
         ctx = self.getContext(request)
 
-        data = self.content(request, ctx)
-        if isinstance(data, unicode):
-            data = data.encode("utf-8")
-        request.setHeader("content-type", self.contentType)
-        if request.method == "HEAD":
-            request.setHeader("content-length", len(data))
-            return ''
-        return data
-
+        d = defer.maybeDeferred(lambda : self.content(request, ctx))
+        def handle(data):
+            if isinstance(data, unicode):
+                data = data.encode("utf-8")
+            request.setHeader("content-type", self.contentType)
+            if request.method == "HEAD":
+                request.setHeader("content-length", len(data))
+                return ''
+            return data
+        d.addCallback(handle)
+        def ok(data):
+            request.write(data)
+            request.finish()
+        def fail(f):
+            request.processingFailed(f)
+            return None # processingFailed will log this for us
+        d.addCallbacks(ok, fail)
+        return server.NOT_DONE_YET
 
 class StaticHTML(HtmlResource):
     def __init__(self, body, title):

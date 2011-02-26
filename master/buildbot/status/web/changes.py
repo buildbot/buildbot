@@ -22,15 +22,22 @@ from buildbot.changes.changes import Change
 from buildbot.status.web.base import HtmlResource, IBox, Box
 
 class ChangeResource(HtmlResource):
-    def __init__(self, change, num):
-        self.change = change
-        self.title = "Change #%d" % num
-        
+    def __init__(self, changeid):
+        self.changeid = changeid
+        self.title = "Change #%d" % changeid
+
     def content(self, req, cxt):
-        cxt['c'] = self.change.asDict()
-        template = req.site.buildbot_service.templates.get_template("change.html")
-        data = template.render(cxt)
-        return data      
+        d = self.getStatus(req).getChange(self.changeid)
+        def cb(change):
+            if not change:
+                return "No change number %d" % self.changeid
+            templates = req.site.buildbot_service.templates
+            cxt['c'] = change.asDict()
+            template = templates.get_template("change.html")
+            data = template.render(cxt)
+            return data
+        d.addCallback(cb)
+        return d
 
 # /changes/NN
 class ChangesResource(HtmlResource):
@@ -39,22 +46,15 @@ class ChangesResource(HtmlResource):
         cxt['sources'] = self.getStatus(req).getChangeSources()
         template = req.site.buildbot_service.templates.get_template("change_sources.html")
         return template.render(**cxt)
-    
 
     def getChild(self, path, req):
         try:
-            num = int(path)
+            changeid = int(path)
         except ValueError:
             return NoResource("Expected a change number")
 
-        d = self.getStatus(req).getChange(num)
-        def cb(change):
-            return ChangeResource(change, num)
-        def eb(f):
-            return NoResource("No change number %d" % num)
-        d.addCallbacks(cb, eb)
-        return d
-    
+        return ChangeResource(changeid)
+
 class ChangeBox(components.Adapter):
     implements(IBox)
 
