@@ -166,6 +166,7 @@ class Dispatcher(service.MultiService):
             d = defer.maybeDeferred(creds.checkPassword, password)
             def check(matched):
                 if not matched:
+                    log.msg("invalid login from user '%s'" % creds.username)
                     return failure.Failure(error.UnauthorizedLogin())
                 return creds.username
             d.addCallback(check)
