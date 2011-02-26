@@ -89,8 +89,12 @@ def double_fork():
 def assert_stdin_closed():
     # EOF counts as readable data, so we should see stdin in the readable list,
     # although it may not appear immediately, and select may return early
-    r, w, x = select.select([0], [], [], 0.01)
-    assert r == [0]
+    bail_at = time.time() + 10
+    while True:
+        r, w, x = select.select([0], [], [], 0.01)
+        if r == [0]: return # succcess!
+        if time.time() > bail_at:
+            assert False # failure :(
 
 # dispatcher
 
