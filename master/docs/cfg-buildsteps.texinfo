@@ -2200,9 +2200,11 @@ that contained the same text. To do this, you would add code to your
 and creates a new LogFile with the results:
 
 @example
+    import StringIO
     def createSummary(self, log):
         warnings = []
-        for line in log.readlines():
+        sio = StringIO.StringIO(log.getText())
+        for line in sio.readlines():
             if "warning:" in line:
                 warnings.append()
         self.addCompleteLog('warnings', "".join(warnings))
