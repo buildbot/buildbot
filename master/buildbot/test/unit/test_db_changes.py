@@ -139,48 +139,6 @@ class TestChangesConnectorComponent(
 
     # tests
 
-    def test_changeEventGenerator(self):
-        d = self.insertTestData(self.change13_rows + self.change14_rows)
-        # this demonstrates that we can leave the generator running between
-        # deferred operations.  Note that we expect change 14 first, because it
-        # is higher-numbered
-        def check14(_):
-            gen = self.db.changes.changeEventGenerator()
-            ch14 = gen.next()
-            self.assertChangesEqual([ ch14 ], [ self.change14() ])
-            return gen
-        d.addCallback(check14)
-        def check13(gen):
-            ch13 = gen.next()
-            self.assertChangesEqual([ ch13 ], [ self.change13() ])
-        d.addCallback(check13)
-        return d
-
-    def test_changeEventGenerator_params(self):
-        d = self.insertTestData(self.change13_rows + self.change14_rows)
-        def check(_):
-            gen = self.db.changes.changeEventGenerator(
-                    branches=['master', 'warnerdb'],
-                    committers=['dustin', 'warner'],
-                    categories=['devel'], # only matches change14
-                    minTime=1)
-            changes = list(gen)
-            self.assertChangesEqual(changes, [ self.change14() ])
-            return gen
-        d.addCallback(check)
-        return d
-
-    def test_changeEventGenerator_cancel(self):
-        d = self.insertTestData(self.change13_rows + self.change14_rows)
-        # leave the generator hanging -- this should cancel the thread, although we
-        # have no way to verify that.  If it doesn't, then the next test will hang
-        # when testing against SQLite in-memory.
-        def check(_):
-            gen = self.db.changes.changeEventGenerator()
-            gen.next()
-        d.addCallback(check)
-        return d
-
     def test_getChangeInstance(self):
         d = self.insertTestData(self.change14_rows)
         def get14(_):
@@ -324,5 +282,50 @@ class TestChangesConnectorComponent(
                 r = conn.execute(sa.select([changes_tbl.c.changeid]))
                 self.assertEqual([ r.changeid for r in r.fetchall() ], [ 14 ])
             return self.db.pool.do(thd)
+        d.addCallback(check)
+        return d
+
+    def test_getRecentChangeInstances_subset(self):
+        d = self.insertTestData([
+            fakedb.Change(changeid=8),
+            fakedb.Change(changeid=9),
+            fakedb.Change(changeid=10),
+            fakedb.Change(changeid=11),
+            fakedb.Change(changeid=12),
+        ] + self.change13_rows + self.change14_rows)
+        d.addCallback(lambda _ :
+                self.db.changes.getRecentChangeInstances(5))
+        def check(changes):
+            changeids = [ c.number for c in changes ]
+            self.assertEqual(changeids, [10, 11, 12, 13, 14])
+        d.addCallback(check)
+        return d
+
+    def test_getRecentChangeInstances_empty(self):
+        d = defer.succeed(None)
+        d.addCallback(lambda _ :
+                self.db.changes.getRecentChangeInstances(5))
+        def check(changes):
+            changeids = [ c.number for c in changes ]
+            self.assertEqual(changeids, [])
+        d.addCallback(check)
+        return d
+
+    def test_getRecentChangeInstances_missing(self):
+        d = self.insertTestData(self.change13_rows + self.change14_rows)
+        d.addCallback(lambda _ :
+                self.db.changes.getRecentChangeInstances(5))
+        def check(changes):
+            # requested 5, but only got 2
+            changeids = [ c.number for c in changes ]
+            self.assertEqual(changeids, [13, 14])
+            # double-check that they have .files, etc.
+            self.assertEqual(changes[0].files,
+                        ['master/README.txt', 'slave/README.txt'])
+            self.assertEqual(changes[0].links,
+                        ['http://buildbot.net',
+                         'http://sf.net/projects/buildbot'])
+            self.assertEqual(changes[0].properties.asList(),
+                        [('notest', 'no', 'Change')])
         d.addCallback(check)
         return d

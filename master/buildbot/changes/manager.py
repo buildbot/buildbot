@@ -58,11 +58,3 @@ class ChangeManager(service.MultiService):
             return x
         d.addBoth(unset_master)
         return d
-
-    # IEventSource methods
-
-    def eventGenerator(self, branches=[], categories=[],
-                            committers=[], minTime=0): # pragma: no cover
-        # TODO: this function must be eliminated.
-        return self.parent.db.changes.changeEventGenerator(branches,
-                                                categories, committers, minTime)

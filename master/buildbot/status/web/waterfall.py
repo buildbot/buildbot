@@ -304,6 +304,25 @@ class WaterfallHelp(HtmlResource):
         return template.render(**cxt)
 
 
+class ChangeEventSource(object):
+    "A wrapper around a list of changes to supply the IEventSource interface"
+    def __init__(self, changes):
+        self.changes = changes
+        # we want them in newest-to-oldest order
+        self.changes.reverse()
+
+    def eventGenerator(self, branches, categories, committers, minTime):
+        for change in self.changes:
+            if branches and change.branch not in branches:
+                continue
+            if categories and change.category not in categories:
+                continue
+            if committers and change.author not in committers:
+                continue
+            if minTime and change.when < minTime:
+                continue
+            yield change
+
 class WaterfallStatusResource(HtmlResource):
     """This builds the main status page, with the waterfall display, and
     all child pages."""
@@ -365,6 +384,14 @@ class WaterfallStatusResource(HtmlResource):
         return True
 
     def content(self, request, ctx):
+        # before calling content_with_changes, calculate the set of changes
+        # so we can look at them synchronously later
+        master = request.site.buildbot_service.master
+        d = master.db.changes.getRecentChangeInstances(40)
+        d.addCallback(self.content_with_changes, request, ctx)
+        return d
+
+    def content_with_changes(self, changes, request, ctx):
         status = self.getStatus(request)
         ctx['refresh'] = self.get_reload_time(request)
 
@@ -398,7 +425,7 @@ class WaterfallStatusResource(HtmlResource):
             builders = [b for b in builders if not self.isSuccess(b)]
         
         (changeNames, builderNames, timestamps, eventGrid, sourceEvents) = \
-                      self.buildGrid(request, builders)            
+                      self.buildGrid(request, builders, changes)
             
         # start the table: top-header material
         locale_enc = locale.getdefaultlocale()[1]
@@ -468,7 +495,7 @@ class WaterfallStatusResource(HtmlResource):
         data = template.render(**ctx)
         return data
     
-    def buildGrid(self, request, builders):
+    def buildGrid(self, request, builders, changes):
         debug = False
         # TODO: see if we can use a cached copy
 
@@ -499,7 +526,7 @@ class WaterfallStatusResource(HtmlResource):
         # (commit, all builders) if they have any events there. Build up the
         # array of events, and stop when we have a reasonable number.
 
-        commit_source = self.getChangeManager(request)
+        commit_source = ChangeEventSource(changes)
 
         lastEventTime = util.now()
         sources = [commit_source] + builders

@@ -13,13 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import generators
-
 import time
 import operator
 import re
 import urllib
-
+from twisted.internet import defer
 from buildbot import util
 from buildbot.status import builder
 from buildbot.status.web.base import HtmlResource
@@ -163,19 +161,14 @@ class ConsoleStatusResource(HtmlResource):
         debugInfo["source_fetch_len"] = len(allChanges)
         return allChanges                
 
-    def getAllChanges(self, source, status, debugInfo):
-        """Return all the changes we can find at this time. If |source| does not
-        not have enough (less than 25), we try to fetch more from the builders
-        history."""
+    @defer.deferredGenerator
+    def getAllChanges(self, request, status, debugInfo):
+        master = request.site.buildbot_service.master
 
-        g = source.eventGenerator()
-        allChanges = []
-        while len(allChanges) < 25:
-            try:
-                c = g.next()
-            except StopIteration:
-                break
-            allChanges.append(c)
+        wfd = defer.waitForDeferred(
+                master.db.changes.getRecentChangeInstances(25))
+        yield wfd
+        allChanges = wfd.getResult()
 
         allChanges.sort(key=self.comparator.getSortingKey())
 
@@ -189,7 +182,7 @@ class ConsoleStatusResource(HtmlResource):
             prevChange = change
         allChanges = newChanges
 
-        return allChanges
+        yield allChanges
 
     def getBuildDetails(self, request, builderName, build):
         """Returns an HTML list of failures for a given build."""
@@ -633,12 +626,6 @@ class ConsoleStatusResource(HtmlResource):
         # and the data we want to render
         status = self.getStatus(request)
 
-        # Get all revisions we can find.
-        source = self.getChangeManager(request)
-        allChanges = self.getAllChanges(source, status, debugInfo)
-
-        debugInfo["source_all"] = len(allChanges)
-
         # Keep only the revisions we care about.
         # By default we process the last 40 revisions.
         # If a dev name is passed, we look for the changes by this person in the
@@ -648,40 +635,51 @@ class ConsoleStatusResource(HtmlResource):
             numRevs *= 2
         numBuilds = numRevs
 
-        revFilter = {}
-        if branch != ANYBRANCH:
-            revFilter['branch'] = branch
-        if devName:
-            revFilter['who'] = devName
-        if repository:
-            revFilter['repository'] = repository
-        revisions = list(self.filterRevisions(allChanges, max_revs=numRevs, filter=revFilter))
-        debugInfo["revision_final"] = len(revisions)
+        # Get all changes we can find.  This is a DB operation, so it must use
+        # a deferred.
+        d = self.getAllChanges(request, status, debugInfo)
+        def got_changes(allChanges):
+            debugInfo["source_all"] = len(allChanges)
 
-        # Fetch all the builds for all builders until we get the next build
-        # after lastRevision.
-        builderList = None
-        allBuilds = None
-        if revisions:
-            lastRevision = revisions[len(revisions) - 1].revision
-            debugInfo["last_revision"] = lastRevision
+            revFilter = {}
+            if branch != ANYBRANCH:
+                revFilter['branch'] = branch
+            if devName:
+                revFilter['who'] = devName
+            if repository:
+                revFilter['repository'] = repository
+            revisions = list(self.filterRevisions(allChanges, max_revs=numRevs,
+                                                            filter=revFilter))
+            debugInfo["revision_final"] = len(revisions)
 
-            (builderList, allBuilds) = self.getAllBuildsForRevision(status,
-                                                request,
-                                                lastRevision,
-                                                numBuilds,
-                                                categories,
-                                                builders,
-                                                debugInfo)
+            # Fetch all the builds for all builders until we get the next build
+            # after lastRevision.
+            builderList = None
+            allBuilds = None
+            if revisions:
+                lastRevision = revisions[len(revisions) - 1].revision
+                debugInfo["last_revision"] = lastRevision
 
-        debugInfo["added_blocks"] = 0
+                (builderList, allBuilds) = self.getAllBuildsForRevision(status,
+                                                    request,
+                                                    lastRevision,
+                                                    numBuilds,
+                                                    categories,
+                                                    builders,
+                                                    debugInfo)
 
-        cxt.update(self.displayPage(request, status, builderList, allBuilds,
-                                    revisions, categories, repository, branch, debugInfo))
+            debugInfo["added_blocks"] = 0
 
-        template = request.site.buildbot_service.templates.get_template("console.html")
-        data = template.render(cxt)
-        return data
+            cxt.update(self.displayPage(request, status, builderList,
+                                        allBuilds, revisions, categories,
+                                        repository, branch, debugInfo))
+
+            templates = request.site.buildbot_service.templates
+            template = templates.get_template("console.html")
+            data = template.render(cxt)
+            return data
+        d.addCallback(got_changes)
+        return d
 
 class RevisionComparator(object):
     """Used for comparing between revisions, as some
