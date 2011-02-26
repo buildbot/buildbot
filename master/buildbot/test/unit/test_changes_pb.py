@@ -71,6 +71,10 @@ class TestPBChangeSource(
         cs = pb.PBChangeSource()
         self.assertSubstring("PBChangeSource", cs.describe())
 
+    def test_describe_int(self):
+        cs = pb.PBChangeSource(port=9989)
+        self.assertSubstring("PBChangeSource", cs.describe())
+
 class TestChangePerspective(unittest.TestCase):
     def setUp(self):
         self.added_changes = []

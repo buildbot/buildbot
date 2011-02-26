@@ -65,7 +65,7 @@ class PBChangeSource(base.ChangeSource):
             portname = self.port
         else:
             portname = "all-purpose slaveport"
-        d = "PBChangeSource listener on " + portname
+        d = "PBChangeSource listener on " + str(portname)
         if self.prefix is not None:
             d += " (prefix '%s')" % self.prefix
         return d
