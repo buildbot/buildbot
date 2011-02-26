@@ -1001,7 +1001,7 @@ class BuilderControl:
                     ssid=ssid, reason=reason, properties=props)
         d.addCallback(add_buildset)
         def get_brs(bsid):
-            bss = BuildSetStatus(bsid, self.scheduler.master.status,
+            bss = BuildSetStatus(bsid, self.master.status,
                                  self.master.master.db)
             brs = bss.getBuildRequests()[0]
             return brs
