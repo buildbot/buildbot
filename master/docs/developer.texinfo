@@ -504,6 +504,7 @@ Does nothing - used to keep traffic flowing over the TCP connection
 
 @dvindex buildslave.bot.SlaveBuilder
 @dvindex buildbot.process.builder.Builder
+@dvindex buildbot.process.slavebuilder.SlaveBuilder
 
 Each build slave has a set of builders which can run on it.  These are represented
 by distinct classes on the master and slave, just like the BuildSlave and Bot objects
@@ -511,7 +512,7 @@ described above.
 
 On the slave side, builders are represented as instances of the
 @code{buildslave.bot.SlaveBuilder} class.  On the master side, they are
-represented by the @code{buildbot.process.builder.SlaveBuilder} class.  The
+represented by the @code{buildbot.process.slavebuilder.SlaveBuilder} class.  The
 following will refer to these as the slave-side and master-side SlaveBuilder
 classes.  Each object keeps a reference to its opposite in @code{self.remote}.
 

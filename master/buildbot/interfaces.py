@@ -1108,13 +1108,13 @@ class ILatentBuildSlave(IBuildSlave):
     def buildStarted(sb):
         """Inform the latent build slave that a build has started.
 
-        ``sb`` is a LatentSlaveBuilder as defined in buildslave.py.  The sb
-        is the one for whom the build started.
+        @param sb: a L{LatentSlaveBuilder}.  The sb is the one for whom the
+        build finished.
         """
 
     def buildFinished(sb):
         """Inform the latent build slave that a build has finished.
 
-        ``sb`` is a LatentSlaveBuilder as defined in buildslave.py.  The sb
-        is the one for whom the build finished.
+        @param sb: a L{LatentSlaveBuilder}.  The sb is the one for whom the
+        build finished.
         """

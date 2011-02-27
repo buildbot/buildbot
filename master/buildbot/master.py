@@ -366,11 +366,14 @@ class DuplicateSlaveArbitrator(object):
     PING_TIMEOUT = 10
     """Timeout for pinging the old slave.  Set this to something quite long, as
     a very busy slave (e.g., one sending a big log chunk) may take a while to
-    return a ping."""
+    return a ping.
+
+    @ivar old_slave: L{buildbot.process.slavebuilder.AbstractSlaveBuilder}
+    instance
+    """
 
     def __init__(self, slave):
         self.old_slave = slave
-        "L{buildbot.buildslave.AbstractSlaveBuilder} instance"
 
     def getPerspective(self, mind, slavename):
         self.new_slave_mind = mind
