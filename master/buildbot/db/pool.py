@@ -98,7 +98,9 @@ class DBThreadPool(threadpool.ThreadPool):
 
     def do_with_engine(self, callable, *args, **kwargs):
         """
-        Like L{do}, but with an SQLAlchemy Engine as the first argument
+        Like L{do}, but with an SQLAlchemy Engine as the first argument.  This
+        is only used for schema manipulation, and is not used at master
+        runtime.
         """
         def thd():
             if self.__broken_sqlite: # see bug #1810

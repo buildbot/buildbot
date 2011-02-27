@@ -45,12 +45,12 @@ class RealDatabaseMixin(object):
     #  - avoids repetitive implementation
     #  - cooperates better at runtime with thread-sensitive DBAPI's
 
-    def __thd_clean_database(self, engine):
+    def __thd_clean_database(self, conn):
         # drop the known tables
-        model.Model.metadata.drop_all(bind=engine, checkfirst=True)
+        model.Model.metadata.drop_all(bind=conn, checkfirst=True)
 
         # see if we can find any other tables to drop
-        meta = MetaData(bind=engine)
+        meta = MetaData(bind=conn)
         meta.reflect()
         meta.drop_all()
 
@@ -94,14 +94,14 @@ class RealDatabaseMixin(object):
         self.db_pool = pool.DBThreadPool(self.db_engine)
 
         log.msg("cleaning database %s" % self.db_url)
-        d = self.db_pool.do_with_engine(self.__thd_clean_database)
+        d = self.db_pool.do(self.__thd_clean_database)
         d.addCallback(lambda _ :
                 self.db_pool.do(self.__thd_create_tables, table_names))
         return d
 
     def tearDownRealDatabase(self):
         if self.__want_pool:
-            return self.db_pool.do_with_engine(self.__thd_clean_database)
+            return self.db_pool.do(self.__thd_clean_database)
         else:
             return defer.succeed(None)
 
