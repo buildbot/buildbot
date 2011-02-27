@@ -315,11 +315,11 @@ class TestChangesConnectorComponent(
             changeids = [ c.number for c in changes ]
             self.assertEqual(changeids, [13, 14])
             # double-check that they have .files, etc.
-            self.assertEqual(changes[0].files,
-                        ['master/README.txt', 'slave/README.txt'])
-            self.assertEqual(changes[0].links,
-                        ['http://buildbot.net',
-                         'http://sf.net/projects/buildbot'])
+            self.assertEqual(sorted(changes[0].files),
+                        sorted(['master/README.txt', 'slave/README.txt']))
+            self.assertEqual(sorted(changes[0].links),
+                        sorted(['http://buildbot.net',
+                                'http://sf.net/projects/buildbot']))
             self.assertEqual(changes[0].properties.asList(),
                         [('notest', 'no', 'Change')])
         d.addCallback(check)
