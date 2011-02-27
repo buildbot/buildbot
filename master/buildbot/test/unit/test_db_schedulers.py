@@ -147,7 +147,7 @@ class TestSchedulersConnectorComponent(
         d = self.insertTestData([
             self.change3,
             self.scheduler24,
-            fakedb.SchedulerChange(schedulerid=24, changeid=3, important=False),
+            fakedb.SchedulerChange(schedulerid=24, changeid=3, important=0),
         ])
         d.addCallback(lambda _ :
                 self.db.schedulers.classifyChanges(24, { 3 : True }))
