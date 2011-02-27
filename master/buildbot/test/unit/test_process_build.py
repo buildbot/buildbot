@@ -36,7 +36,6 @@ class FakeSource:
     project = None
 
 class FakeRequest:
-    startCount = 0
     source = FakeSource()
     reason = "Because"
     properties = Properties()

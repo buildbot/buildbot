@@ -57,7 +57,6 @@ class BuildRequest:
 
     source = None
     builder = None # XXXREMOVE
-    startCount = 0 # how many times we have tried to start this build # XXXREMOVE
     submittedAt = None
 
     def __init__(self, reason, source, builderName, properties=None):

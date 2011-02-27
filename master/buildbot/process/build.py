@@ -62,8 +62,6 @@ class Build:
 
     def __init__(self, requests):
         self.requests = requests
-        for req in self.requests:
-            req.startCount += 1
         self.locks = []
         # build a source stamp
         self.source = requests[0].mergeWith(requests[1:])
