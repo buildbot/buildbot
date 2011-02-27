@@ -27,16 +27,14 @@ class TestChangesConnectorComponent(
             unittest.TestCase):
 
     def setUp(self):
-        d = self.setUpConnectorComponent()
+        d = self.setUpConnectorComponent(
+            table_names=['changes', 'change_links', 'change_files',
+                'change_properties', 'scheduler_changes', 'schedulers',
+                'sourcestamps', 'sourcestamp_changes', 'patches' ])
 
         def finish_setup(_):
             self.db.changes = changes.ChangesConnectorComponent(self.db)
         d.addCallback(finish_setup)
-
-        # add the change-related tables now, to save time below
-        d.addCallback(lambda _ :
-            self.createTestTables([ 'changes', 'change_links', 'change_files',
-                                    'change_properties' ]))
 
         return d
 
@@ -271,10 +269,7 @@ class TestChangesConnectorComponent(
 
         # prune_changes prunes from a lot of tables
         # TODO: add data to them to check!
-        d = self.insertTestData(self.change13_rows + self.change14_rows,
-                tables=[ 'changes', 'scheduler_changes', 'schedulers',
-                    'sourcestamps', 'sourcestamp_changes', 'patches' ])
-
+        d = self.insertTestData(self.change13_rows + self.change14_rows)
         d.addCallback(lambda _ : self.db.changes._prune_changes(14))
         def check(_):
             def thd(conn):

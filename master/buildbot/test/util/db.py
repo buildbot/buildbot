@@ -54,7 +54,16 @@ class RealDatabaseMixin(object):
         meta.reflect()
         meta.drop_all()
 
-    def setUpRealDatabase(self, basedir='basedir', want_pool=True):
+    def __thd_create_tables(self, conn, table_names):
+        all_table_names = set(table_names)
+        ordered_tables = [ t for t in model.Model.metadata.sorted_tables
+                        if t.name in all_table_names ]
+
+        for tbl in ordered_tables:
+            tbl.create(bind=conn, checkfirst=True)
+
+    def setUpRealDatabase(self, table_names=[], basedir='basedir',
+                          want_pool=True):
         """
 
         Set up a database.  Ordinarily sets up an engine and a pool and takes
@@ -62,8 +71,9 @@ class RealDatabaseMixin(object):
         C{want_pool} is false, then no pool will be created, and the database
         will not be cleaned.
 
+        @param table_names: list of names of tables to instantiate
         @param basedir: (optional) basedir for the engine
-        @param want_pool: false to not create C{self.db_pool}
+        @param want_pool: (optional) false to not create C{self.db_pool}
         @returns: Deferred
         """
         self.__want_pool = want_pool
@@ -84,7 +94,10 @@ class RealDatabaseMixin(object):
         self.db_pool = pool.DBThreadPool(self.db_engine)
 
         log.msg("cleaning database %s" % self.db_url)
-        return self.db_pool.do_with_engine(self.__thd_clean_database)
+        d = self.db_pool.do_with_engine(self.__thd_clean_database)
+        d.addCallback(lambda _ :
+                self.db_pool.do(self.__thd_create_tables, table_names))
+        return d
 
     def tearDownRealDatabase(self):
         if self.__want_pool:
@@ -92,49 +105,27 @@ class RealDatabaseMixin(object):
         else:
             return defer.succeed(None)
 
-    def insertTestData(self, rows, tables=[]):
+    def insertTestData(self, rows):
         """Insert test data into the database for use during the test.
 
         @param rows: be a sequence of L{fakedb.Row} instances.  These will be
         sorted by table dependencies, so order does not matter.
 
-        @param tables: optional list of names of tables to create, but into
-        which no data is inserted.  This is equivalent ot calling
-        L{createTestTables}.
-
         @returns: Deferred
         """
         # sort the tables by dependency
-        all_table_names = set([ row.table for row in rows ] + tables)
+        all_table_names = set([ row.table for row in rows ])
         ordered_tables = [ t for t in model.Model.metadata.sorted_tables
                            if t.name in all_table_names ]
-        def thd(engine):
-            # create tables -- in order
+        def thd(conn):
+            # insert into tables -- in order
             for tbl in ordered_tables:
-                tbl.create(bind=engine, checkfirst=True)
-
-                # insert all rows for this table
                 for row in [ r for r in rows if r.table == tbl.name ]:
                     tbl = model.Model.metadata.tables[row.table]
                     try:
-                        tbl.insert(bind=engine).execute(row.values)
+                        tbl.insert(bind=conn).execute(row.values)
                     except:
                         log.msg("while inserting %s - %s" % (row, row.values))
                         raise
-        return self.db_pool.do_with_engine(thd)
+        return self.db_pool.do(thd)
 
-    def createTestTables(self, tables):
-        """Create a set of tables, but do not insert data into them.
-
-        @param tables: list of names of tables to create, but into which no
-        data is inserted.
-
-        @returns: Deferred
-        """
-        all_table_names = set(tables)
-        ordered_tables = [ t for t in model.Model.metadata.sorted_tables
-                           if t.name in all_table_names ]
-        def thd(engine):
-            for tbl in ordered_tables:
-                tbl.create(bind=engine, checkfirst=True)
-        return self.db_pool.do_with_engine(thd)

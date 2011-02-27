@@ -30,9 +30,9 @@ class ConnectorComponentMixin(db.RealDatabaseMixin):
     @ivar db.pool: DB thread pool
     @ivar db.model: DB model
     """
-    def setUpConnectorComponent(self, basedir='basedir'):
+    def setUpConnectorComponent(self, table_names=[], basedir='basedir'):
         """Set up C{self.db}, using the given db_url and basedir."""
-        d = self.setUpRealDatabase(basedir=basedir)
+        d = self.setUpRealDatabase(table_names=table_names, basedir=basedir)
         def finish_setup(_):
             self.db = FakeDBConnector()
             self.db.pool = self.db_pool

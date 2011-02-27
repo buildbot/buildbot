@@ -24,16 +24,14 @@ class TestSourceStampsConnectorComponent(
             unittest.TestCase):
 
     def setUp(self):
-        d = self.setUpConnectorComponent()
+        d = self.setUpConnectorComponent(
+            table_names=['changes', 'change_links', 'change_files', 'patches',
+                'sourcestamp_changes', 'sourcestamps' ])
 
         def finish_setup(_):
             self.db.sourcestamps = \
                     sourcestamps.SourceStampsConnectorComponent(self.db)
         d.addCallback(finish_setup)
-
-        d.addCallback(lambda _ :
-            self.createTestTables([ 'changes', 'change_links', 'change_files',
-                'patches', 'sourcestamp_changes', 'sourcestamps' ]))
 
         return d
 

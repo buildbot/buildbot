@@ -23,15 +23,13 @@ class TestStateConnectorComponent(
             unittest.TestCase):
 
     def setUp(self):
-        d = self.setUpConnectorComponent()
+        d = self.setUpConnectorComponent(
+            table_names=['objects', 'object_state' ])
 
         def finish_setup(_):
             self.db.state = \
                     state.StateConnectorComponent(self.db)
         d.addCallback(finish_setup)
-
-        d.addCallback(lambda _ :
-            self.createTestTables([ 'objects', 'object_state' ]))
 
         return d
 

@@ -26,7 +26,10 @@ class DBConnector_Basic(db.RealDatabaseMixin, unittest.TestCase):
     """
 
     def setUp(self):
-        d = self.setUpRealDatabase()
+        d = self.setUpRealDatabase(
+            table_names=['changes', 'change_properties', 'change_links',
+                    'change_files', 'patches', 'sourcestamps',
+                    'buildset_properties', 'buildsets' ])
         def make_dbc(_):
             self.dbc = connector.DBConnector(mock.Mock(), self.db_url,
                                         os.path.abspath('basedir'))
@@ -72,11 +75,7 @@ class DBConnector_Basic(db.RealDatabaseMixin, unittest.TestCase):
         return d
 
     def test_getPropertiesFromDb(self):
-        d = self.createTestTables(['changes', 'change_properties',
-            'change_links', 'change_files', 'patches', 'sourcestamps',
-            'buildset_properties', 'buildsets' ])
-        d.addCallback(lambda _ :
-            self.insertTestData([
+        d = self.insertTestData([
                 fakedb.Change(changeid=13),
                 fakedb.ChangeProperty(changeid=13, property_name='foo',
                                     property_value='"my prop"'),
@@ -85,7 +84,7 @@ class DBConnector_Basic(db.RealDatabaseMixin, unittest.TestCase):
                 fakedb.BuildsetProperty(buildsetid=33,
                                     property_name='bar',
                                     property_value='["other prop", "BS"]'),
-            ]))
+            ])
         def do_test(_):
             cprops = self.dbc.get_properties_from_db("change_properties",
                                                         "changeid", 13)

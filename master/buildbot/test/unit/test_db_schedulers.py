@@ -26,16 +26,13 @@ class TestSchedulersConnectorComponent(
             unittest.TestCase):
 
     def setUp(self):
-        d = self.setUpConnectorComponent()
+        d = self.setUpConnectorComponent(
+            table_names=['changes', 'schedulers', 'scheduler_changes' ])
 
         def finish_setup(_):
             self.db.schedulers = \
                     schedulers.SchedulersConnectorComponent(self.db)
         d.addCallback(finish_setup)
-
-        d.addCallback(lambda _ :
-            self.createTestTables([ 'changes', 'schedulers',
-                                    'scheduler_changes' ]))
 
         return d
 

@@ -26,20 +26,19 @@ class TestBuildsetsConnectorComponent(
             unittest.TestCase):
 
     def setUp(self):
-        d = self.setUpConnectorComponent()
+        d = self.setUpConnectorComponent(
+            table_names=[ 'patches', 'changes', 'sourcestamp_changes',
+                'buildsets', 'buildset_properties', 'schedulers',
+                'buildrequests', 'scheduler_upstream_buildsets',
+                'sourcestamps' ])
 
         def finish_setup(_):
             self.db.buildsets = buildsets.BuildsetsConnectorComponent(self.db)
         d.addCallback(finish_setup)
 
-        # set up a sourcestamp with id 234 for referential integrity, along
-        # with the tables we'll need
+        # set up a sourcestamp with id 234 for use below
         d.addCallback(lambda _ :
-            self.insertTestData([
-                fakedb.SourceStamp(id=234),
-            ], tables=[ 'patches', 'changes', 'sourcestamp_changes',
-                'buildsets', 'buildset_properties', 'schedulers',
-                'buildrequests', 'scheduler_upstream_buildsets' ]))
+            self.insertTestData([ fakedb.SourceStamp(id=234) ]))
 
         return d
 
