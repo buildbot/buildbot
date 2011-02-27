@@ -31,7 +31,7 @@ import buildbot
 import buildbot.pbmanager
 from buildbot.util import now, safeTranslate, eventual, subscription
 from buildbot.pbutil import NewCredPerspective
-from buildbot.process.builder import Builder, IDLE
+from buildbot.process.builder import Builder
 from buildbot.status.builder import Status
 from buildbot.changes.manager import ChangeManager
 from buildbot import interfaces, locks
@@ -170,43 +170,6 @@ class BotMaster(service.MultiService):
             log.err(Failure())
             # leave them in the original order
         return [b.run for b in builders]
-
-    # these four are convenience functions for testing
-
-    def waitUntilBuilderAttached(self, name):
-        b = self.builders[name]
-        #if b.slaves:
-        #    return defer.succeed(None)
-        d = defer.Deferred()
-        b.watchers['attach'].append(d)
-        return d
-
-    def waitUntilBuilderDetached(self, name):
-        b = self.builders.get(name)
-        if not b or not b.slaves:
-            return defer.succeed(None)
-        d = defer.Deferred()
-        b.watchers['detach'].append(d)
-        return d
-
-    def waitUntilBuilderFullyDetached(self, name):
-        b = self.builders.get(name)
-        # TODO: this looks too deeply inside the Builder object
-        if not b or not b.slaves:
-            return defer.succeed(None)
-        d = defer.Deferred()
-        b.watchers['detach_all'].append(d)
-        return d
-
-    def waitUntilBuilderIdle(self, name):
-        b = self.builders[name]
-        # TODO: this looks way too deeply inside the Builder object
-        for sb in b.slaves:
-            if sb.state != IDLE:
-                d = defer.Deferred()
-                b.watchers['idle'].append(d)
-                return d
-        return defer.succeed(None)
 
     def loadConfig_Slaves(self, new_slaves):
         new_portnum = (self.lastSlavePortnum is not None
