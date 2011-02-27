@@ -28,6 +28,7 @@ from buildbot.status.builder import RETRY
 from buildbot.status.builder import BuildSetStatus
 from buildbot.process.properties import Properties
 from buildbot.util.eventual import eventually
+from buildbot.process import buildrequest
 
 (ATTACHING, # slave attached, still checking hostinfo/etc
  IDLE, # idle, available for use
@@ -1033,7 +1034,7 @@ class BuilderControl:
         # return IBuildRequestControl objects
         retval = []
         for r in self.original.getBuildable():
-            retval.append(BuildRequestControl(self.original, r))
+            retval.append(buildrequest.BuildRequestControl(self.original, r))
 
         return retval
 
@@ -1057,19 +1058,3 @@ class BuilderControl:
                 return False
         return True
 
-class BuildRequestControl:
-    implements(interfaces.IBuildRequestControl)
-
-    def __init__(self, builder, request):
-        self.original_builder = builder
-        self.original_request = request
-        self.brid = request.id
-
-    def subscribe(self, observer):
-        raise NotImplementedError
-
-    def unsubscribe(self, observer):
-        raise NotImplementedError
-
-    def cancel(self):
-        self.original_builder.cancelBuildRequest(self.brid)

@@ -15,6 +15,7 @@
 
 from buildbot import interfaces
 from buildbot.process.properties import Properties
+from zope.interface import implements
 
 class BuildRequest:
     """I represent a request to a specific Builder to run a single build.
@@ -97,3 +98,19 @@ class BuildRequest:
     def getSubmitTime(self):
         return self.submittedAt
 
+class BuildRequestControl:
+    implements(interfaces.IBuildRequestControl)
+
+    def __init__(self, builder, request):
+        self.original_builder = builder
+        self.original_request = request
+        self.brid = request.id
+
+    def subscribe(self, observer):
+        raise NotImplementedError
+
+    def unsubscribe(self, observer):
+        raise NotImplementedError
+
+    def cancel(self):
+        self.original_builder.cancelBuildRequest(self.brid)
