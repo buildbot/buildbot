@@ -21,7 +21,7 @@ from twisted.cred import credentials
 from twisted.python import log
 from twisted.python.procutils import which
 
-from buildbot.sourcestamp import SourceStamp
+from buildbot.process.sourcestamp import SourceStamp
 from buildbot.util import now
 from buildbot.status import builder
 

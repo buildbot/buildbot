@@ -570,7 +570,7 @@ class BuildStep:
     C{self.progress}, by calling C{self.setProgress(metric, value)} as it
     runs.
 
-    @type build: L{buildbot.process.base.Build}
+    @type build: L{buildbot.process.build.Build}
     @ivar build: the parent Build which is executing this step
 
     @type progress: L{buildbot.status.progress.StepProgress}
@@ -831,7 +831,7 @@ class BuildStep:
           self.addCompleteLog('warnings', text)
 
         When the step is done, it should call self.finished(result). 'result'
-        will be provided to the L{buildbot.process.base.Build}, and should be
+        will be provided to the L{buildbot.process.build.Build}, and should be
         one of the constants defined above: SUCCESS, WARNINGS, FAILURE, or
         SKIPPED.
 

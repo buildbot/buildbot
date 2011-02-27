@@ -80,3 +80,16 @@ class OldImportPaths(unittest.TestCase):
         # this was the location of ChangeFilter until 0.8.4
         from buildbot.schedulers.filter import ChangeFilter
         assert ChangeFilter
+
+    def test_process_base_Build(self):
+        from buildbot.process.base import Build
+        assert Build
+
+    def test_buildrequest_BuildRequest(self):
+        from buildbot.buildrequest import BuildRequest
+        assert BuildRequest
+
+    def test_sourcestamp_SourceStamp(self):
+        from buildbot.sourcestamp import SourceStamp
+        assert SourceStamp
+

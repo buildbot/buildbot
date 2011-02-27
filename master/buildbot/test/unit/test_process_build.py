@@ -16,7 +16,7 @@
 from twisted.trial import unittest
 from twisted.internet import defer
 
-from buildbot.process.base import Build
+from buildbot.process.build import Build
 from buildbot.process.properties import Properties
 from buildbot.status.builder import FAILURE, SUCCESS, WARNINGS, RETRY, EXCEPTION
 from buildbot.locks import SlaveLock

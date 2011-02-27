@@ -29,7 +29,7 @@ from twisted.application import internet
 from buildbot import interfaces, util
 from buildbot import version
 from buildbot.interfaces import IStatusReceiver
-from buildbot.sourcestamp import SourceStamp
+from buildbot.process.sourcestamp import SourceStamp
 from buildbot.status import base
 from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE, EXCEPTION
 from buildbot.scripts.runner import ForceOptions

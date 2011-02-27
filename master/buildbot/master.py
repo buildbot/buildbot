@@ -502,7 +502,7 @@ class DebugPerspective(NewCredPerspective):
         pass
 
     def perspective_requestBuild(self, buildername, reason, branch, revision, properties={}):
-        from buildbot.sourcestamp import SourceStamp
+        from buildbot.process.sourcestamp import SourceStamp
         c = interfaces.IControl(self.master)
         bc = c.getBuilder(buildername)
         ss = SourceStamp(branch, revision)

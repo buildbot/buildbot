@@ -662,7 +662,7 @@ class SourceStampJsonResource(JsonResource):
     title = 'SourceStamp'
 
     def __init__(self, status, source_stamp):
-        # buildbot.sourcestamp.SourceStamp
+        # buildbot.process.sourcestamp.SourceStamp
         JsonResource.__init__(self, status)
         self.source_stamp = source_stamp
         self.putChild('changes',

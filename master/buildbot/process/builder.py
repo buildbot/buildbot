@@ -337,11 +337,11 @@ class Builder(pb.Referenceable, service.MultiService):
 
     One of these parameters is the L{buildbot.process.factory.BuildFactory}
     object that is associated with this Builder. The factory is responsible
-    for creating new L{Build<buildbot.process.base.Build>} objects. Each
+    for creating new L{Build<buildbot.process.build.Build>} objects. Each
     Build object defines when and how the build is performed, so a new
     Factory or Builder should be defined to control this behavior.
 
-    The Builder holds on to a number of L{base.BuildRequest} objects in a
+    The Builder holds on to a number of L{BuildRequest} objects in a
     list named C{.buildable}. Incoming BuildRequest objects will be added to
     this list, or (if possible) merged into an existing request. When a slave
     becomes available, I will use my C{BuildFactory} to turn the request into
@@ -357,11 +357,11 @@ class Builder(pb.Referenceable, service.MultiService):
     I also manage forced builds, progress expectation (ETA) management, and
     some status delivery chores.
 
-    @type buildable: list of L{buildbot.process.base.BuildRequest}
+    @type buildable: list of L{buildbot.process.buildrequest.BuildRequest}
     @ivar buildable: BuildRequests that are ready to build, but which are
                      waiting for a buildslave to be available.
 
-    @type building: list of L{buildbot.process.base.Build}
+    @type building: list of L{buildbot.process.build.Build}
     @ivar building: Builds that are actively running
 
     @type slaves: list of L{buildbot.buildslave.BuildSlave} objects

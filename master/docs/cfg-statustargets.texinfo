@@ -545,8 +545,8 @@ authz = Authz(auth=BasicAuth(users),
 
 The @code{forceBuild} and @code{pingBuilder} actions both supply a
 BuilderStatus object.  The @code{stopBuild} action supplies a BuildStatus
-object.  The @code{cancelPendingBuild} action supplies a BuildRequest.  The
-remainder do not supply any extra arguments.
+object.  The @code{cancelPendingBuild} action supplies a @code{BuildRequest}.
+The remainder do not supply any extra arguments.
 
 @heading Logging configuration
 

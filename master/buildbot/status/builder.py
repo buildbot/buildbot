@@ -30,7 +30,8 @@ from twisted.internet import reactor, defer, threads
 from buildbot.process.properties import Properties
 from buildbot.util import collections, netstrings
 from buildbot.util.eventual import eventually
-from buildbot import interfaces, util, sourcestamp
+from buildbot import interfaces, util
+from buildbot.process import sourcestamp
 
 SUCCESS, WARNINGS, FAILURE, SKIPPED, EXCEPTION, RETRY = range(6)
 Results = ["success", "warnings", "failure", "skipped", "exception", "retry"]
@@ -1581,7 +1582,7 @@ class BuildStatus(styles.Versioned):
 
 
 class BuilderStatus(styles.Versioned):
-    """I handle status information for a single process.base.Builder object.
+    """I handle status information for a single process.build.Builder object.
     That object sends status changes to me (frequently as Events), and I
     provide them on demand to the various status recipients, like the HTML
     waterfall display and the live status clients. It also sends build
@@ -1591,7 +1592,7 @@ class BuilderStatus(styles.Versioned):
     I am responsible for maintaining the list of historic Events and Builds,
     pruning old ones, and loading them from / saving them to disk.
 
-    I live in the buildbot.process.base.Builder object, in the
+    I live in the buildbot.process.build.Builder object, in the
     .builder_status attribute.
 
     @type  category: string
