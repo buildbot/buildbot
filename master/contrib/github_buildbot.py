@@ -94,7 +94,7 @@ class GitHubBuildBot(resource.Resource):
                             + " <" + commit['author']['email'] + ">",
                      'files': files,
                      'links': [commit['url']],
-                     'properties': {'repository': repo_url},
+                     'repository': repo_url,
                 }
                 changes.append(change)
         
