@@ -47,11 +47,9 @@ are available on github - @pxref{Contrib Scripts}.
 
 @itemize @bullet
 @item mail.CVSMaildirSource (watching mail sent by @code{contrib/buildbot_cvs_mail.py} script)
-@item pb.PBChangeSource (listening for connections from @code{buildbot
-sendchange} run in a loginfo script)
+@item pb.PBChangeSource (@pxref{PBChangeSource}) (listening for connections from @code{buildbot sendchange} run in a loginfo script)
 @item pb.PBChangeSource (listening for connections from a long-running
-@code{contrib/viewcvspoll.py} polling process which examines the ViewCVS
-database directly
+@code{contrib/viewcvspoll.py} polling process which examines the ViewCVS database directly
 @item change_hook in WebStatus (
 @code{status.web.change_hook})
 @end itemize
@@ -99,10 +97,10 @@ hook)
 
 @item Git
 @itemize @bullet
-@item pb.PBChangeSource (listening for connections from
-@code{contrib/git_buildbot.py} run in the post-receive hook)
-@item change_hook in WebStatus (
-@code{status.web.change_hook})
+@item pb.PBChangeSource (listening for connections from @code{contrib/git_buildbot.py} run in the post-receive hook)
+@item pb.PBChangeSource (listening for connections from @code{contrib/github_buildbot.py}, which listens for notifications from github)
+@item change_hook in WebStatus (@pxref{Change Hooks})
+@item github change hook (specifically designed for github notifications, but requiring a publicly-accessible WebStatus)
 @item @code{gitpoller.GitPoller} (polling a remote git repository)
 @end itemize
 

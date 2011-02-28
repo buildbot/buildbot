@@ -675,6 +675,10 @@ the root of the web status.  For example, if the grid URL is
 @code{http://builds.mycompany.com/bbot/grid}, then point Github to
 @code{http://builds.mycompany.com/bbot/change_hook/github}.
 
+Note that there is a standalone HTTP server available for receiving github
+notifications, as well: @code{contrib/github_buildbot.py}.  This script may be
+useful in cases where you cannot expose the WebStatus for public consumption.
+
 @node MailNotifier
 @subsection MailNotifier
 
