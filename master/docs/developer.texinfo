@@ -39,7 +39,7 @@ This is the top-level service.
 @itemize
 
 @item BotMaster
-@dvindex buildbot.master.BotMaster
+@dvindex buildbot.process.botmaster.BotMaster
 
 The BotMaster manages all of the slaves.  BuildSlave instances are added as
 child services of the BotMaster.

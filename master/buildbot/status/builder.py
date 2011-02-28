@@ -2288,7 +2288,7 @@ class Status:
 
     def __init__(self, botmaster, basedir):
         """
-        @type  botmaster: L{buildbot.master.BotMaster}
+        @type  botmaster: L{buildbot.process.botmaster.BotMaster}
         @param botmaster: the Status object uses C{.botmaster} to get at
                           both the L{buildbot.master.BuildMaster} (for
                           various buildbot-wide parameters) and the

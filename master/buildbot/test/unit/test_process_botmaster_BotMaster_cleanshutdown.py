@@ -17,7 +17,7 @@
 from mock import Mock
 from twisted.trial import unittest
 from twisted.internet import defer
-from buildbot.master import BotMaster
+from buildbot.process.botmaster import BotMaster
 
 class TestCleanShutdown(unittest.TestCase):
     def setUp(self):
