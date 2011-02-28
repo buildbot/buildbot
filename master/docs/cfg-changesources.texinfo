@@ -558,9 +558,6 @@ defaults), then your buildmaster is susceptible to injection of arbitrary
 changes, which (depending on the build factories) could lead to arbitrary code
 execution on buildslaves.
 
-Buildbot does not currently allow @code{PBChangeSource} to run on a different
-port than the slave port.  That will be fixed in bug #1708.
-
 The @code{PBChangeSource} is created with the following arguments.
 
 @table @samp
