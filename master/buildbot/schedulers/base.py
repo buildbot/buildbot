@@ -221,7 +221,7 @@ class BaseScheduler(service.MultiService, ComparableMixin):
     def gotChange(self, change, important):
         """
         Called when a change is received; returns a Deferred.  If the
-        C{fileIsImportant} parameter to @C{startConsumingChanges} was C{None},
+        C{fileIsImportant} parameter to C{startConsumingChanges} was C{None},
         then all changes are considered important.
 
         @param change: the new change object
