@@ -1053,6 +1053,11 @@ class LoggingBuildStep(BuildStep):
         self.addFactoryArguments(logfiles=logfiles,
                                  lazylogfiles=lazylogfiles,
                                  log_eval_func=log_eval_func)
+
+        if logfiles:
+            assert type(logfiles) is type({}), \
+                "the ShellCommand 'logfiles' parameter must be a dictionary"
+
         # merge a class-level 'logfiles' attribute with one passed in as an
         # argument
         self.logfiles = self.logfiles.copy()

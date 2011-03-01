@@ -1159,7 +1159,7 @@ their contents afterwards.
 
 The @code{logfiles=} argument allows you to collect data from these
 secondary logfiles in near-real-time, as the step is running. It
-accepts a dictionary which maps from a local Log name (which is how
+accepts a dictionary which maps from a local log name (which is how
 the log data is presented in the build results) to either a remote filename
 (interpreted relative to the build's working directory), or a dictionary
 of options. Each named file will be polled on a regular basis (every couple
@@ -1179,6 +1179,9 @@ f.addStep(ShellCommand(
               command=["make", "test"],
               logfiles=@{"triallog": "_trial_temp/test.log"@}))
 @end example
+
+The above example will add a log named 'triallog' on the master, based on
+@code{_trial_temp/test.log} on the slave.
 
 @example
 f.addStep(ShellCommand(
