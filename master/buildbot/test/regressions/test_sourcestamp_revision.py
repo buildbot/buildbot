@@ -15,7 +15,7 @@
 
 from twisted.trial import unittest
 
-from buildbot.process.sourcestamp import SourceStamp
+from buildbot.sourcestamp import SourceStamp
 from buildbot.changes.changes import Change
 
 class TestSourceStampRevision(unittest.TestCase):

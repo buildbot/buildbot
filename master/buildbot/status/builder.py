@@ -30,8 +30,7 @@ from twisted.internet import reactor, defer, threads
 from buildbot.process.properties import Properties
 from buildbot.util import collections, netstrings
 from buildbot.util.eventual import eventually
-from buildbot import interfaces, util
-from buildbot.process import sourcestamp
+from buildbot import interfaces, util, sourcestamp
 
 SUCCESS, WARNINGS, FAILURE, SKIPPED, EXCEPTION, RETRY = range(6)
 Results = ["success", "warnings", "failure", "skipped", "exception", "retry"]

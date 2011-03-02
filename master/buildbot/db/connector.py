@@ -20,7 +20,7 @@ from buildbot.db import enginestrategy
 
 from buildbot import util
 from buildbot.util import collections as bbcollections
-from buildbot.process.sourcestamp import SourceStamp
+from buildbot.sourcestamp import SourceStamp
 from buildbot.process.buildrequest import BuildRequest
 from buildbot.process.properties import Properties
 from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE

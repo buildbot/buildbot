@@ -90,6 +90,8 @@ class OldImportPaths(unittest.TestCase):
         assert BuildRequest
 
     def test_sourcestamp_SourceStamp(self):
+        # this must exist, and the class must be defined at this package path,
+        # in order for old build pickles to be loaded.
         from buildbot.sourcestamp import SourceStamp
         assert SourceStamp
 

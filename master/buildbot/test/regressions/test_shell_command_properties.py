@@ -19,7 +19,7 @@ from buildbot.steps.shell import ShellCommand, SetProperty
 from buildbot.process.properties import WithProperties, Properties
 from buildbot.process.factory import BuildFactory
 from buildbot.process.buildrequest import BuildRequest
-from buildbot.process.sourcestamp import SourceStamp
+from buildbot.sourcestamp import SourceStamp
 
 class FakeSlaveBuilder:
     slave = None
