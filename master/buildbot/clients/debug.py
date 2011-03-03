@@ -23,7 +23,7 @@ from twisted.cred import credentials
 import gtk.glade #@UnresolvedImport
 import re
 
-class DebugWidget:
+class DebugWidget(object):
     def __init__(self, master="localhost:8007", passwd="debugpw"):
         self.connected = 0
         try:

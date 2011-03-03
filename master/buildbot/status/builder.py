@@ -77,7 +77,7 @@ class LogFileScanner(netstrings.NetstringParser):
         if not self.channels or (channel in self.channels):
             self.chunk_cb((channel, line[1:]))
 
-class LogFileProducer:
+class LogFileProducer(object):
     """What's the plan?
 
     the LogFile has just one FD, used for both reading and writing.
@@ -226,7 +226,7 @@ def _tryremove(filename, timeout, retries):
             log.msg("giving up on removing %s after over %d seconds" %
                     (filename, timeout))
 
-class LogFile:
+class LogFile(object):
     """A LogFile keeps all of its contents on disk, in a non-pickle format to
     which new entries can easily be appended. The file on disk has a name
     like 12-log-compile-output, under the Builder's directory. The actual
@@ -607,7 +607,7 @@ class LogFile:
             self.finish() # releases self.openfile, which will be closed
         del self.entries
 
-class HTMLLogFile:
+class HTMLLogFile(object):
     implements(interfaces.IStatusLog)
 
     filename = None
@@ -654,7 +654,7 @@ class HTMLLogFile:
         pass
 
 
-class Event:
+class Event(object):
     implements(interfaces.IStatusEvent)
 
     started = None
@@ -672,7 +672,7 @@ class Event:
     def finish(self):
         self.finished = util.now()
 
-class TestResult:
+class TestResult(object):
     implements(interfaces.ITestResult)
 
     def __init__(self, name, results, text, logs):
@@ -695,7 +695,7 @@ class TestResult:
         return self.logs
 
 
-class BuildSetStatus:
+class BuildSetStatus(object):
     implements(interfaces.IBuildSetStatus)
 
     def __init__(self, bsid, status, db):
@@ -747,7 +747,7 @@ class BuildSetStatus:
     def waitUntilFinished(self):
         return self.status._buildset_waitUntilFinished(self.id)
 
-class BuildRequestStatus:
+class BuildRequestStatus(object):
     implements(interfaces.IBuildRequestStatus)
 
     def __init__(self, brid, status, db):
@@ -2186,7 +2186,7 @@ class BuilderStatus(styles.Versioned):
         return result
 
 
-class SlaveStatus:
+class SlaveStatus(object):
     implements(interfaces.ISlaveStatus)
 
     admin = None
@@ -2279,7 +2279,7 @@ class SlaveStatus:
         result['runningBuilds'] = [b.asDict() for b in self.getRunningBuilds()]
         return result
 
-class Status:
+class Status(object):
     """
     I represent the status of the buildmaster.
     """

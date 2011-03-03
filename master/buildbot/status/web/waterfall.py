@@ -201,7 +201,7 @@ class EventBox(components.Adapter):
 components.registerAdapter(EventBox, builder.Event, IBox)
         
 
-class Spacer:
+class Spacer(object):
     implements(interfaces.IStatusEvent)
 
     def __init__(self, start, finish):
@@ -741,4 +741,3 @@ class WaterfallStatusResource(HtmlResource):
                     strip[i] = strip[i].td()
 
         return dict(grid=grid, gridlen=gridlen, no_bubble=noBubble, time=lastDate)
-

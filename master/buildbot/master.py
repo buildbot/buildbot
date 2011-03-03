@@ -581,9 +581,9 @@ class DebugPerspective(NewCredPerspective):
 
 ########################################
 
-class _Unset: pass  # marker
+class _Unset(object): pass  # marker
 
-class LogRotation: 
+class LogRotation(object):
     '''holds log rotation parameters (for WebStatus)'''
     def __init__(self):
         self.rotateLength = 1 * 1000 * 1000 
@@ -1423,7 +1423,7 @@ class BuildMaster(service.MultiService):
         d.addCallback(set)
         return d
 
-class Control:
+class Control(object):
     implements(interfaces.IControl)
 
     def __init__(self, master):

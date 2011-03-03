@@ -387,7 +387,7 @@ class LoggedRemoteCommand(RemoteCommand):
         return maybeFailure
 
 
-class LogObserver:
+class LogObserver(object):
     implements(interfaces.ILogObserver)
 
     def setStep(self, step):
@@ -545,7 +545,7 @@ class RemoteShellCommand(LoggedRemoteCommand):
     def __repr__(self):
         return "<RemoteShellCommand '%s'>" % repr(self.command)
 
-class BuildStep:
+class BuildStep(object):
     """
     I represent a single step of the build process. This step may involve
     zero or more commands to be run in the build slave, as well as arbitrary
@@ -1266,4 +1266,3 @@ def regex_log_evaluator(cmd, step_status, regexes):
 from buildbot.process.properties import WithProperties
 _hush_pyflakes = [WithProperties]
 del _hush_pyflakes
-

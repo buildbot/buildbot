@@ -15,7 +15,7 @@
 
 import pprint
 
-class FakeSlaveBuilder:
+class FakeSlaveBuilder(object):
     """
     Simulates a SlaveBuilder, but just records the updates from sendUpdate
     in its updates attribute.  Call show() to get a pretty-printed string
@@ -34,4 +34,3 @@ class FakeSlaveBuilder:
 
     def show(self):
         return pprint.pformat(self.updates)
-

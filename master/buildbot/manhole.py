@@ -28,7 +28,7 @@ from zope.interface import implements # requires Twisted-2.0 or later
 
 # makeTelnetProtocol and _TelnetRealm are for the TelnetManhole
 
-class makeTelnetProtocol:
+class makeTelnetProtocol(object):
     # this curries the 'portal' argument into a later call to
     # TelnetTransport()
     def __init__(self, portal):
@@ -38,7 +38,7 @@ class makeTelnetProtocol:
         auth = telnet.AuthenticatingTelnetProtocol
         return telnet.TelnetTransport(auth, self.portal)
 
-class _TelnetRealm:
+class _TelnetRealm(object):
     implements(portal.IRealm)
 
     def __init__(self, namespace_maker):
@@ -54,7 +54,7 @@ class _TelnetRealm:
         raise NotImplementedError()
 
 
-class chainedProtocolFactory:
+class chainedProtocolFactory(object):
     # this curries the 'namespace' argument into a later call to
     # chainedProtocolFactory()
     def __init__(self, namespace):
@@ -276,5 +276,3 @@ class ArbitraryCheckerManhole(_BaseManhole, ComparableMixin):
         """
 
         _BaseManhole.__init__(self, port, checker)
-
-

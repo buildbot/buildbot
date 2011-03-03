@@ -98,7 +98,7 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
             conn.execute(q)
         return self.db.pool.do(thd)
 
-    class Thunk: pass
+    class Thunk(object): pass
     def getChangeClassifications(self, schedulerid, branch=Thunk):
         """
         Return the scheduler_changes rows for this scheduler, in the form of a

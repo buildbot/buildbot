@@ -28,7 +28,7 @@ from buildbot.status.builder import Results
 from buildbot.status.progress import BuildProgress
 
 
-class Build:
+class Build(object):
     """I represent a single build by a single slave. Specialized Builders can
     use subclasses of Build to hold status information unique to those build
     processes.
@@ -527,4 +527,3 @@ class Build:
         return self.build_status
 
     # stopBuild is defined earlier
-

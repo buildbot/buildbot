@@ -19,7 +19,7 @@ from twisted.spread import pb
 from twisted.python import log
 from buildbot import util
 
-class StepProgress:
+class StepProgress(object):
     """I keep track of how much progress a single BuildStep has made.
 
     Progress is measured along various axes. Time consumed is one that is
@@ -126,7 +126,7 @@ class StepProgress:
         return None # no idea
 
 
-class WatcherState:
+class WatcherState(object):
     def __init__(self, interval):
         self.interval = interval
         self.timer = None
@@ -256,7 +256,7 @@ class BuildProgress(pb.Referenceable):
             self.removeWatcher(remote)
 
         
-class Expectations:
+class Expectations(object):
     debug = False
     # decay=1.0 ignores all but the last build
     # 0.9 is short time constant. 0.1 is very long time constant

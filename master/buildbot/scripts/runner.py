@@ -196,7 +196,7 @@ log:
 	fi
 """
 
-class Maker:
+class Maker(object):
     def __init__(self, config):
         self.config = config
         self.basedir = config['basedir']
@@ -1226,4 +1226,3 @@ def run():
         if not doCheckConfig(so):
             sys.exit(1)
     sys.exit(0)
-

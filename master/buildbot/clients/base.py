@@ -75,7 +75,7 @@ class StatusClient(pb.Referenceable):
         ChunkTypes = ["STDOUT", "STDERR", "HEADER"]
         print "logChunk[%s]: %s" % (ChunkTypes[channel], text)
 
-class TextClient:
+class TextClient(object):
     def __init__(self, master, events="steps", username="statusClient", passwd="clientpw"):
         """
         @type  master: string

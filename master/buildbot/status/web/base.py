@@ -141,7 +141,7 @@ def path_to_change(request, change):
     return (path_to_root(request) +
             "changes/%s" % change.number)
 
-class Box:
+class Box(object):
     # a Box wraps an Event. The Box has HTML <td> parameters that Events
     # lack, and it has a base URL to which each File's name is relative.
     # Events don't know about HTML.
@@ -366,7 +366,7 @@ def abbreviate_age(age):
     return "a long time ago"
 
 
-class BuildLineMixin:
+class BuildLineMixin(object):
     LINE_TIME_FORMAT = "%b %d %H:%M"
 
     def get_line_values(self, req, build, include_builder=True):

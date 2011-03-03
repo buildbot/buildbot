@@ -25,7 +25,7 @@ from buildbot import interfaces
 from buildbot.status import builder
 from buildbot.status.web.base import IHTMLLog, HtmlResource, path_to_root
 
-class ChunkConsumer:
+class ChunkConsumer(object):
     implements(interfaces.IStatusLogConsumer)
 
     def __init__(self, original, textlog):

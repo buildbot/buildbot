@@ -230,7 +230,7 @@ class Nightly(Timed):
                'dayOfWeek', 'onlyIfChanged', 'fileIsImportant',
                'change_filter',))
 
-    class NoBranch: pass
+    class NoBranch(object): pass
     def __init__(self, name, builderNames, minute=0, hour='*',
                  dayOfMonth='*', month='*', dayOfWeek='*',
                  branch=NoBranch, fileIsImportant=None, onlyIfChanged=False,

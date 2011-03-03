@@ -82,7 +82,7 @@ class StateConnectorComponent(base.DBConnectorComponent):
 
         return self.db.pool.do(thd)
 
-    class Thunk: pass
+    class Thunk(object): pass
     def getState(self, objectid, name, default=Thunk):
         """
         Get the state value for C{name} for the object with id C{objectid}.
@@ -170,4 +170,3 @@ class StateConnectorComponent(base.DBConnectorComponent):
         # called so tests can simulate another process inserting a database row
         # at an inopportune moment
         pass
-

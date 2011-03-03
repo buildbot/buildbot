@@ -19,7 +19,7 @@ from twisted.python.failure import Failure
 from twisted.internet import defer, reactor, protocol, error
 from twisted.protocols.basic import LineOnlyReceiver
 
-class FakeTransport:
+class FakeTransport(object):
     disconnecting = False
 
 class BuildmasterTimeoutError(Exception):

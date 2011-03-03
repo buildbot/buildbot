@@ -36,7 +36,7 @@ def now(_reactor=None):
     else:
         return time.time()
 
-class Obfuscated:
+class Obfuscated(object):
     """An obfuscated string in a command"""
     def __init__(self, real, fake):
         self.real = real
@@ -83,4 +83,3 @@ class Obfuscated:
                 else:
                     rv.append(Obfuscated.to_text(elt))
         return rv
-

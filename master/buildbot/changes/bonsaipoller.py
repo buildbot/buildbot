@@ -37,7 +37,7 @@ class NoMoreCiNodes(Exception):
 class NoMoreFileNodes(Exception):
     pass
 
-class BonsaiResult:
+class BonsaiResult(object):
     """I hold a list of CiNodes"""
     def __init__(self, nodes=[]):
         self.nodes = nodes
@@ -61,7 +61,7 @@ class BonsaiResult:
 
         return 0
 
-class CiNode:
+class CiNode(object):
     """I hold information baout one <ci> node, including a list of files"""
     def __init__(self, log="", who="", date=0, files=[]):
         self.log = log
@@ -69,13 +69,13 @@ class CiNode:
         self.date = date
         self.files = files
 
-class FileNode:
+class FileNode(object):
     """I hold information about one <f> node"""
     def __init__(self, revision="", filename=""):
         self.revision = revision
         self.filename = filename
 
-class BonsaiParser:
+class BonsaiParser(object):
     """I parse the XML result from a bonsai cvsquery."""
 
     def __init__(self, data):

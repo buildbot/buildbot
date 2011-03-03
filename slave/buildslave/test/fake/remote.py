@@ -15,7 +15,7 @@
 
 from twisted.internet import defer
 
-class FakeRemote:
+class FakeRemote(object):
     """
     Wrap a local object to make it look like it's remote
     """

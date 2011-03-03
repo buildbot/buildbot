@@ -58,7 +58,7 @@ def shell_quote(cmd_list):
             return pipes.quote(e)
         return " ".join([ quote(e) for e in cmd_list ])
 
-class LogFileWatcher:
+class LogFileWatcher(object):
     POLL_INTERVAL = 2
 
     def __init__(self, command, name, logfile, follow=False):
@@ -201,7 +201,7 @@ class RunProcessPP(protocol.ProcessProtocol):
         self.command.finished(sig, rc)
 
 
-class RunProcess:
+class RunProcess(object):
     """
     This is a helper class, used by slave commands to run programs in a child
     shell.

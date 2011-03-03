@@ -21,10 +21,10 @@ from buildbot.process.factory import BuildFactory
 from buildbot.buildrequest import BuildRequest
 from buildbot.sourcestamp import SourceStamp
 
-class FakeSlaveBuilder:
+class FakeSlaveBuilder(object):
     slave = None
 
-class FakeBuildStatus:
+class FakeBuildStatus(object):
     def __init__(self):
         self.names = []
 
@@ -48,7 +48,7 @@ class FakeBuildStatus:
         self.progress = p
 
 
-class FakeStepStatus:
+class FakeStepStatus(object):
     txt = None
     def setText(self, txt):
         self.txt = txt

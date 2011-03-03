@@ -23,7 +23,7 @@ if False: # for debugging
 else:
     debuglog = lambda m: None
 
-class BaseLock:
+class BaseLock(object):
     """
     Class handling claiming and releasing of L{self}, and keeping track of
     current and waiting owners.
@@ -147,7 +147,7 @@ class RealMasterLock(BaseLock):
     def getLock(self, slave):
         return self
 
-class RealSlaveLock:
+class RealSlaveLock(object):
     def __init__(self, lockid):
         self.name = lockid.name
         self.maxCount = lockid.maxCount

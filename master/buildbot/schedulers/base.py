@@ -108,7 +108,7 @@ class BaseScheduler(service.MultiService, ComparableMixin):
 
     ## state management
 
-    class Thunk: pass
+    class Thunk(object): pass
     def getState(self, key, default=Thunk):
         """
         For use by subclasses; get a named state value from the scheduler's

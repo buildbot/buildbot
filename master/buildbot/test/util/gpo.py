@@ -15,7 +15,7 @@
 
 from twisted.internet import defer, utils
 
-class GetProcessOutputMixin:
+class GetProcessOutputMixin(object):
     """
 
     Mixin class to help with patching Twisted's getProcessOutput.

@@ -25,7 +25,7 @@ from buildbot.sourcestamp import SourceStamp
 from buildbot.util import now
 from buildbot.status import builder
 
-class SourceStampExtractor:
+class SourceStampExtractor(object):
 
     def __init__(self, treetop, branch):
         self.treetop = treetop # also is repository
@@ -355,7 +355,7 @@ class RemoteTryPP(protocol.ProcessProtocol):
             return
         self.d.callback((sig, rc))
 
-class BuildSetStatusGrabber:
+class BuildSetStatusGrabber(object):
     retryCount = 5 # how many times to we try to grab the BuildSetStatus?
     retryDelay = 3 # seconds to wait between attempts
 

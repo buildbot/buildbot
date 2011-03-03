@@ -20,20 +20,20 @@ from twisted.trial import unittest
 from buildbot.process.buildstep import LoggingBuildStep, regex_log_evaluator
 from buildbot.status.builder import FAILURE, SUCCESS, WARNINGS, EXCEPTION
 
-class FakeLogFile:
+class FakeLogFile(object):
     def __init__(self, text):
         self.text = text
 
     def getText(self):
         return self.text
 
-class FakeCmd:
+class FakeCmd(object):
     def __init__(self, stdout, stderr, rc=0):
         self.logs = {'stdout': FakeLogFile(stdout),
                      'stderr': FakeLogFile(stderr)}
         self.rc = rc
 
-class FakeStepStatus:
+class FakeStepStatus(object):
     pass
 
 class TestRegexLogEvaluator(unittest.TestCase):

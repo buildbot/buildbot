@@ -58,9 +58,9 @@ def getResultsClass(results, prevResults, inProgress):
     # Any other results? Like EXCEPTION?
     return "exception"
 
-class ANYBRANCH: pass # a flag value, used below
+class ANYBRANCH(object): pass # a flag value, used below
 
-class DevRevision:
+class DevRevision(object):
     """Helper class that contains all the information we need for a revision."""
 
     def __init__(self, change):
@@ -74,7 +74,7 @@ class DevRevision:
         self.project = change.project
 
 
-class DevBuild:
+class DevBuild(object):
     """Helper class that contains all the information we need for a build."""
 
     def __init__(self, revision, build, details):
@@ -728,4 +728,3 @@ class IntegerRevisionComparator(RevisionComparator):
 
     def getSortingKey(self):
         return operator.attrgetter('revision')
-

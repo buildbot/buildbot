@@ -61,7 +61,7 @@ command_version = "2.12"
 #  >= 2.11: Arch, Bazaar, and Monotone removed
 #  >= 2.12: SlaveShellCommand no longer accepts 'keep_stdin_open'
 
-class Command:
+class Command(object):
     implements(ISlaveCommand)
 
     """This class defines one command that can be invoked by the build master.
@@ -596,4 +596,3 @@ class SourceBaseCommand(Command):
 
         d.addCallback(self._abandonOnFailure)
         return d
-

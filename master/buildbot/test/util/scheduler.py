@@ -105,7 +105,7 @@ class SchedulerMixin(object):
         self.sched = scheduler
         return scheduler
 
-    class FakeChange: pass
+    class FakeChange(object): pass
     def makeFakeChange(self, **kwargs):
         """Utility method to make a fake Change object with the given
         attributes"""

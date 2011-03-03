@@ -16,7 +16,7 @@
 
 import os, sys, time
 
-class Follower:
+class Follower(object):
     def follow(self):
         from twisted.internet import reactor
         from buildslave.scripts.logwatcher import LogWatcher
@@ -125,4 +125,3 @@ def launch(config):
         from twisted.scripts import twistd
         run = twistd.run
     run()
-

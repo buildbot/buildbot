@@ -46,7 +46,7 @@ class UsageError(ValueError):
     def __init__(self, string = "Invalid usage", *more):
         ValueError.__init__(self, string, *more)
 
-class IrcBuildRequest:
+class IrcBuildRequest(object):
     hasStarted = False
     timer = None
 
@@ -966,4 +966,3 @@ class IRC(base.StatusReceiverMultiService):
 ## buildbot: status full-2.3
 ##  building, not, % complete, ETA
 ## buildbot: force build full-2.3 "reason"
-

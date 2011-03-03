@@ -27,7 +27,7 @@ class IAuth(Interface):
     def errmsg(self):
             """Get the reason authentication failed."""
 
-class AuthBase:
+class AuthBase(object):
     err = ""
 
     def errmsg(self):
@@ -104,4 +104,3 @@ class AuthFailResource(HtmlResource):
     def content(self, request, cxt):
         template = request.site.buildbot_service.templates.get_template("authfail.html")
         return template.render(**cxt)
-    

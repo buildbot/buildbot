@@ -20,7 +20,7 @@ from buildslave.test.fake import slavebuilder, runprocess
 from buildslave.commands import utils
 import buildslave.runprocess
 
-class CommandTestMixin:
+class CommandTestMixin(object):
     """
     Support for testing Command subclasses.
     """

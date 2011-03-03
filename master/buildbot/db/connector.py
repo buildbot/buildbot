@@ -39,7 +39,7 @@ def str_or_none(s):
         return None
     return str(s)
 
-class Token: # used for _start_operation/_end_operation
+class Token(object): # used for _start_operation/_end_operation
     pass
 
 from twisted.enterprise import adbapi

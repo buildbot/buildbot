@@ -23,7 +23,7 @@ from twisted.web import html
 from buildbot import interfaces, util
 from buildbot.process.properties import Properties
 
-class Change:
+class Change(object):
     """I represent a single change to the source tree. This may involve several
     files, but they are all changed by the same person, and there is a change
     comment for the group as a whole."""
@@ -169,7 +169,7 @@ class Change:
         return data
 
 
-class ChangeMaster: # pragma: no cover
+class ChangeMaster(object): # pragma: no cover
     # this is a stub, retained to allow the "buildbot upgrade-master" tool to
     # read old changes.pck pickle files and convert their contents into the
     # new database format. This is only instantiated by that tool, or by

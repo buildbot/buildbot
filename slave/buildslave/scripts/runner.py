@@ -33,7 +33,7 @@ def isBuildslaveDir(dir):
 # Note that the terms 'options' and 'config' are used intechangeably here - in
 # fact, they are intercanged several times.  Caveat legator.
 
-class Maker:
+class Maker(object):
     def __init__(self, config):
         self.config = config
         self.basedir = config['basedir']
@@ -434,4 +434,3 @@ def run():
     elif command == "restart":
         restart(so)
     sys.exit(0)
-

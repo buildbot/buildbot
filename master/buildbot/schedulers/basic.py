@@ -27,7 +27,7 @@ class BaseBasicScheduler(base.BaseScheduler):
 
     _reactor = reactor # for tests
 
-    class NotSet: pass
+    class NotSet(object): pass
     def __init__(self, name, shouldntBeSet=NotSet, treeStableTimer=None,
                 builderNames=None, branch=NotABranch, branches=NotABranch,
                 fileIsImportant=None, properties={}, categories=None,

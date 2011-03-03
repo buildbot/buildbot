@@ -223,7 +223,7 @@ class RemoteBuild(pb.Referenceable):
 components.registerAdapter(RemoteBuild,
                            interfaces.IBuildStatus, IRemote)    
 
-class BuildSubscriber:
+class BuildSubscriber(object):
     def __init__(self, observer):
         self.observer = observer
 
@@ -288,7 +288,7 @@ class RemoteBuildStep(pb.Referenceable):
 components.registerAdapter(RemoteBuildStep,
                            interfaces.IBuildStepStatus, IRemote)    
 
-class RemoteSlave:
+class RemoteSlave(object):
     def __init__(self, slave):
         self.s = slave
 
@@ -304,7 +304,7 @@ class RemoteSlave:
 components.registerAdapter(RemoteSlave,
                            interfaces.ISlaveStatus, IRemote)
 
-class RemoteEvent:
+class RemoteEvent(object):
     def __init__(self, event):
         self.e = event
 
@@ -341,7 +341,7 @@ class RemoteLog(pb.Referenceable):
 components.registerAdapter(RemoteLog, builder.LogFile, IRemote)
 # TODO: something similar for builder.HTMLLogfile ?
 
-class RemoteChange:
+class RemoteChange(object):
     def __init__(self, change):
         self.c = change
 
