@@ -138,11 +138,11 @@ class BuildSlavesResource(HtmlResource):
             
             if slave.isConnected():
                 info['admin'] = unicode(slave.getAdmin() or '', 'utf-8')
-                last = slave.lastMessageReceived()
-                if last:
-                    info['last_heard_from_age'] = abbreviate_age(time.time() - last)
-                    info['last_heard_from_time'] = time.strftime("%Y-%b-%d %H:%M:%S",
-                                                                time.localtime(last))
+            last = slave.lastMessageReceived()
+            if last:
+                info['last_heard_from_age'] = abbreviate_age(time.time() - last)
+                info['last_heard_from_time'] = time.strftime("%Y-%b-%d %H:%M:%S",
+                                                            time.localtime(last))
 
         template = request.site.buildbot_service.templates.get_template("buildslaves.html")
         data = template.render(**ctx)
