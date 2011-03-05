@@ -46,17 +46,16 @@
     {%- endif -%}
     </td>
     
+        
+  {% else %}
+    <td>-</td>
+  {% endif %}
+
     <td>
     {%- if s.last_heard_from_age -%}
       {{ s.last_heard_from_age }} <small>({{ s.last_heard_from_time }})</small>
     {%- endif -%}
     </td>
-        
-  {% else %}
-    <td>-</td>
-    <td>-</td>
-  {% endif %}
-
     <td>
     {{ s.connectCount }}
     </td>
