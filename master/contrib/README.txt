@@ -1,6 +1,9 @@
 Utility scripts, things contributed by users but not strictly a part of
 buildbot:
 
+buildbot_json.py: Utility classes and standalone script to process data from
+                  /json status.
+
 fakechange.py: connect to a running bb and submit a fake change to trigger
                builders
 
