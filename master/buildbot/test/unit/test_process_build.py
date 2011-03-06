@@ -108,6 +108,53 @@ class TestBuild(unittest.TestCase):
 
         self.assert_( ('interrupt', ('stop it',), {}) in step.method_calls)
 
+    def testAlwaysRunStepStopBuild(self):
+        """Test that steps marked with alwaysRun=True still get run even if
+        the build is stopped."""
+
+        # Create a build with 2 steps, the first one will get interrupted, and
+        # the second one is marked with alwaysRun=True
+        r = FakeRequest()
+
+        b = Build([r])
+        b.setBuilder(Mock())
+
+        step1 = Mock()
+        step1.return_value = step1
+        step1.alwaysRun = False
+        step2 = Mock()
+        step2.return_value = step2
+        step2.alwaysRun = True
+        b.setStepFactories([
+            (step1, {}),
+            (step2, {}),
+            ])
+
+        slavebuilder = Mock()
+        status = Mock()
+
+        def startStep1(*args, **kw):
+            # Now interrupt the build
+            b.stopBuild("stop it")
+            return defer.succeed( SUCCESS )
+        step1.startStep = startStep1
+        step1.stepDone.return_value = False
+
+        step2Started = [False]
+        def startStep2(*args, **kw):
+            step2Started[0] = True
+            return defer.succeed( SUCCESS )
+        step2.startStep = startStep2
+        step1.stepDone.return_value = False
+
+        d = b.startBuild(status, None, slavebuilder)
+        def check(ign):
+            self.assertEqual(b.result, EXCEPTION)
+            self.assert_( ('interrupt', ('stop it',), {}) in step1.method_calls)
+            self.assert_(step2Started[0])
+        d.addCallback(check)
+        return d
+
     def testBuildLocksAcquired(self):
         r = FakeRequest()
 
@@ -193,6 +240,7 @@ class TestBuild(unittest.TestCase):
         step = Mock()
         step.return_value = step
         step.startStep.return_value = SUCCESS
+        step.alwaysRun = False
         b.setStepFactories([(step, {})])
 
         real_lock.claim(Mock(), l.access('counting'))

@@ -348,13 +348,12 @@ class Build:
         """This method is called to obtain the next BuildStep for this build.
         When it returns None (or raises a StopIteration exception), the build
         is complete."""
-        if self.stopped:
-            return None
         if not self.steps:
             return None
         if not self.remote:
             return None
-        if self.terminate:
+        if self.terminate or self.stopped:
+            # Run any remaining alwaysRun steps, and skip over the others
             while True:
                 s = self.steps.pop(0)
                 if s.alwaysRun:
