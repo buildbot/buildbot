@@ -67,6 +67,15 @@ try:
 except ImportError:
     pass
 
+# In Mercurial post-1.7, some strings might be stored as a
+# encoding.localstr class. encoding.fromlocal will translate
+# those back to UTF-8 strings.
+try:
+  from mercurial.encoding import fromlocal
+except ImportError:
+  def fromlocal(s):
+    return s
+
 def hook(ui, repo, hooktype, node=None, source=None, **kwargs):
     # read config parameters
     master = ui.config('hgbuildbot', 'master')
@@ -145,11 +154,11 @@ def hook(ui, repo, hooktype, node=None, source=None, **kwargs):
             files = ["merge"]
         change = {
             'master': master,
-            'username': user,
+            'username': fromlocal(user),
             'revision': hex(node),
-            'comments': desc,
+            'comments': fromlocal(desc),
             'files': files,
-            'branch': branch
+            'branch': fromlocal(branch)
         }
         d.addCallback(_send, change)
 
