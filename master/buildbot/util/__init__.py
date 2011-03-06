@@ -92,7 +92,10 @@ class ComparableMixin:
         if result:
             return result
 
-        assert self.compare_attrs == them.compare_attrs
+        result = cmp(self.compare_attrs, them.compare_attrs)
+        if result:
+            return result
+
         self_list = [getattr(self, name, self._None)
                      for name in self.compare_attrs]
         them_list = [getattr(them, name, self._None)

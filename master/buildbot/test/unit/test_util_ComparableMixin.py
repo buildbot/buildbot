@@ -60,6 +60,11 @@ class ComparableMixin(unittest.TestCase):
     def test_inequality_differentClasses(self):
         self.assertNotEqual(self.f123, self.b123)
 
+    def test_inequality_sameClass_differentCompareAttrs(self):
+        another_f123 = self.Foo(1, 2, 3)
+        another_f123.compare_attrs = ["b", "a"]
+        self.assertNotEqual(self.f123, another_f123)
+
     def test_lt_importantDifferences(self):
         assert self.f123 < self.f134
 
