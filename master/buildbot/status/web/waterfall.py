@@ -109,8 +109,9 @@ class CurrentBox(components.Adapter):
         if pbs:
             text.append("%d pending" % len(pbs))
         for t in upcoming:
-            eta = t - util.now()
-            text.extend(self.formatETA("next in", eta))
+            if t is not None:
+                eta = t - util.now()
+                text.extend(self.formatETA("next in", eta))
         return Box(text, class_="Activity " + state)
 
 components.registerAdapter(CurrentBox, builder.BuilderStatus, ICurrentBox)
