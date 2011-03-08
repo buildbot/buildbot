@@ -418,6 +418,10 @@ class AbstractBuildSlave(pb.Avatar, service.MultiService):
         except KeyError:
             pass
 
+    def buildFinished(self, sb):
+        """This is called when a build on this slave is finished."""
+        raise NotImplementedError
+
     def canStartBuild(self):
         """
         I am called when a build is requested to see if this buildslave
