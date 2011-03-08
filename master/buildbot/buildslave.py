@@ -627,7 +627,8 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
                     self._substantiation_failed, defer.TimeoutError())
             self.substantiation_deferred = defer.Deferred()
             if self.slave is None:
-                self._substantiate() # start up instance
+                d = self._substantiate() # start up instance
+                d.addErrback(log.err, "while substantiating")
             # else: we're waiting for an old one to detach.  the _substantiate
             # will be done in ``detached`` below.
         return self.substantiation_deferred
@@ -669,7 +670,8 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
     def detached(self, mind):
         AbstractBuildSlave.detached(self, mind)
         if self.substantiation_deferred is not None:
-            self._substantiate()
+            d = self._substantiate()
+            d.addErrback(log.err, 'while re-substantiating')
 
     def _substantiation_failed(self, failure):
         self.missing_timer = None
