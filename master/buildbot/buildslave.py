@@ -18,7 +18,7 @@ import time
 from email.Message import Message
 from email.Utils import formatdate
 from zope.interface import implements
-from twisted.python import log
+from twisted.python import log, failure
 from twisted.internet import defer, reactor
 from twisted.application import service
 from twisted.spread import pb
@@ -604,9 +604,10 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
         self.build_wait_timeout = build_wait_timeout
 
     def start_instance(self):
-        # responsible for starting instance that will try to connect with
-        # this master.  Should return deferred.  Problems should use an
-        # errback.
+        # responsible for starting instance that will try to connect with this
+        # master.  Should return deferred with either True (instance started)
+        # or False (instance not started, so don't run a build here).  Problems
+        # should use an errback.
         raise NotImplementedError
 
     def stop_instance(self, fast=False):
@@ -640,8 +641,9 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
             # If we don't report success, then preparation failed.
             if not result:
                 log.msg("Slave '%s' doesn not want to substantiate at this time" % (self.slavename,))
-                self.substantiation_deferred.callback(False)
+                d = self.substantiation_deferred
                 self.substantiation_deferred = None
+                d.callback(False)
             return result
         def clean_up(failure):
             if self.missing_timer is not None:
@@ -748,8 +750,10 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
                 # unlike the previous block, we don't expect this situation when
                 # ``attached`` calls ``disconnect``, only when we get a simple
                 # request to "go away".
-                self.substantiation_deferred.errback()
+                d = self.substantiation_deferred
                 self.substantiation_deferred = None
+                d.errback(failure.Failure(
+                    RuntimeError("soft disconnect aborted substantiation")))
                 if self.missing_timer:
                     self.missing_timer.cancel()
                     self.missing_timer = None
@@ -802,8 +806,9 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
             # TODO: hang up on them?, without setBuilderList we can't use
             # them
             if self.substantiation_deferred:
-                self.substantiation_deferred.errback()
+                d = self.substantiation_deferred
                 self.substantiation_deferred = None
+                d.errback(why)
             if self.missing_timer:
                 self.missing_timer.cancel()
                 self.missing_timer = None
@@ -818,7 +823,7 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
             if self.substantiation_deferred:
                 log.msg("Firing %s substantiation deferred with success" % self.slavename)
                 d = self.substantiation_deferred
-                del self.substantiation_deferred
+                self.substantiation_deferred = None
                 d.callback(True)
             # note that the missing_timer is already handled within
             # ``attached``
