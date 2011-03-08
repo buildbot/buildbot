@@ -457,12 +457,7 @@ class Builder(pb.Referenceable, service.MultiService):
                 # for C.
                 #
                 # Therefore, when we see that we're already attached, we can
-                # just ignore it. TODO: build a diagram of the state
-                # transitions here, I'm concerned about sb.attached() failing
-                # and leaving sb.state stuck at 'ATTACHING', and about
-                # the detached() message arriving while there's some
-                # transition pending such that the response to the transition
-                # re-vivifies sb
+                # just ignore it.
                 return defer.succeed(self)
 
         sb = slavebuilder.SlaveBuilder()
@@ -474,7 +469,6 @@ class Builder(pb.Referenceable, service.MultiService):
         return d
 
     def _attached(self, sb):
-        # TODO: make this .addSlaveEvent(slave.slavename, ['connect']) ?
         self.builder_status.addPointEvent(['connect', sb.slave.slavename])
         self.attaching_slaves.remove(sb)
         self.slaves.append(sb)
@@ -484,10 +478,9 @@ class Builder(pb.Referenceable, service.MultiService):
 
     def _not_attached(self, why, slave):
         # already log.err'ed by SlaveBuilder._attachFailure
-        # TODO: make this .addSlaveEvent?
         # TODO: remove from self.slaves (except that detached() should get
         #       run first, right?)
-        print why
+        log.err(why, 'slave failed to attach')
         self.builder_status.addPointEvent(['failed', 'connect',
                                            slave.slavename])
         # TODO: add an HTMLLogFile of the exception
@@ -509,9 +502,6 @@ class Builder(pb.Referenceable, service.MultiService):
             # the Build's .lostRemote method (invoked by a notifyOnDisconnect
             # handler) will cause the Build to be stopped, probably right
             # after the notifyOnDisconnect that invoked us finishes running.
-
-            # TODO: should failover to a new Build
-            #self.retryBuild(sb.build)
             pass
 
         if sb in self.attaching_slaves:
@@ -519,7 +509,6 @@ class Builder(pb.Referenceable, service.MultiService):
         if sb in self.slaves:
             self.slaves.remove(sb)
 
-        # TODO: make this .addSlaveEvent?
         self.builder_status.addPointEvent(['disconnect', slave.slavename])
         sb.detached() # inform the SlaveBuilder that their slave went away
         self.updateBigStatus()
