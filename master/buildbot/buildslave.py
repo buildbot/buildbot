@@ -277,14 +277,15 @@ class AbstractBuildSlave(pb.Avatar, service.MultiService):
         d.addCallback(_get_info)
 
         def _get_version(res):
-            d1 = bot.callRemote("getVersion")
+            d = bot.callRemote("getVersion")
             def _got_version(version):
                 state["version"] = version
             def _version_unavailable(why):
                 why.trap(pb.NoSuchMethod)
                 # probably an old slave
                 state["version"] = '(unknown)'
-            d1.addCallbacks(_got_version, _version_unavailable)
+            d.addCallbacks(_got_version, _version_unavailable)
+            return d
         d.addCallback(_get_version)
 
         def _get_commands(res):
