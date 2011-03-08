@@ -672,10 +672,6 @@ class Builder(pb.Referenceable, service.MultiService):
         log.msg("new expectations: %s seconds" % \
                 self.expectations.expectedBuildTime())
 
-    def shutdownSlave(self):
-        if self.remote:
-            self.remote.callRemote("shutdown")
-
 
 class BuilderControl:
     implements(interfaces.IBuilderControl)
