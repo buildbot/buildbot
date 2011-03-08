@@ -71,10 +71,12 @@ except ImportError:
 # encoding.localstr class. encoding.fromlocal will translate
 # those back to UTF-8 strings.
 try:
-  from mercurial.encoding import fromlocal
+    from mercurial.encoding import fromlocal
+    _hush_pyflakes = [fromlocal]
+    del _hush_pyflakes
 except ImportError:
-  def fromlocal(s):
-    return s
+    def fromlocal(s):
+        return s
 
 def hook(ui, repo, hooktype, node=None, source=None, **kwargs):
     # read config parameters
