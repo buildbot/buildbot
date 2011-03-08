@@ -268,6 +268,7 @@ class AbstractBuildSlave(pb.Avatar, service.MultiService):
                 state["slave_basedir"] = info.get("basedir", None)
                 state["slave_system"] = info.get("system", None)
             def _info_unavailable(why):
+                why.trap(pb.NoSuchMethod)
                 # maybe an old slave, doesn't implement remote_getSlaveInfo
                 log.msg("BuildSlave.info_unavailable")
                 log.err(why)
