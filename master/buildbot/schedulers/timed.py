@@ -218,6 +218,14 @@ class Nightly(base.BaseScheduler, base.ClassifierMixin, TimedBuildMixin):
         if last_build is None:
             next = self._calculateNextRunTimeFrom(self._start_time)
         else:
+            if last_build > now:
+                # Something wrong happens. Probably some developer commits from future
+                # Or system time is not properly configured
+                log.msg("WARN: last_build is in future. Fixing")
+                # -1.0 to avoid skipping of current build
+                last_build = now - 1.0
+                s["last_build"] = last_build
+                self.set_state(t, s)
             next = self._calculateNextRunTimeFrom(last_build)
 
         # not ready to fire yet
