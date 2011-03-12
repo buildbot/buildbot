@@ -437,8 +437,11 @@ class Model(base.DBConnectorComponent):
                 # set up migrate at the same version
                 version_control(engine, old_version)
 
-                # drop the no-longer-required version table
-                engine.drop('version')
+                # drop the no-longer-required version table, using a dummy
+                # metadata entry
+                table = sa.Table('version', self.metadata,
+                                 sa.Column('x', sa.Integer))
+                table.drop(bind=engine)
 
                 # and, finally, upgrade using migrate
                 upgrade(engine)
