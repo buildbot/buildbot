@@ -80,6 +80,9 @@ class TestCommand(_SetupBuildCommand):
         """
         from twisted.scripts.trial import run
 
+        # remove the 'test' option from argv
+        sys.argv.remove('test')
+
         # Mimick the trial script by adding the path as the last arg
         sys.argv.append(test_loc)
 
