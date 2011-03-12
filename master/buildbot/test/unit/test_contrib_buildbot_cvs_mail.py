@@ -17,6 +17,7 @@ import sys
 import re
 import os
 
+from twisted.python import log
 from twisted.trial import unittest
 from twisted.internet import protocol, defer, utils, reactor
 
@@ -106,20 +107,27 @@ def getProcessOutputAndValueWithInput(executable, args, input):
 
 class TestBuildbotCvsMail(unittest.TestCase):
     buildbot_cvs_mail_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../contrib/buildbot_cvs_mail.py'))
+    if not os.path.exists(buildbot_cvs_mail_path):
+        skip = ("'%s' does not exist (normal unless run from git)"
+                % buildbot_cvs_mail_path)
 
     def assertOutputOk(self, (output, code), regexList):
         "assert that the output from getProcessOutputAndValueWithInput matches expectations"
-        self.failUnlessEqual(code, 0, "subprocess exited uncleanly")
-        lines = output.splitlines()
-        self.failUnlessEqual(len(lines), len(regexList),
-                    "got wrong number of lines of output")
+        try:
+            self.failUnlessEqual(code, 0, "subprocess exited uncleanly")
+            lines = output.splitlines()
+            self.failUnlessEqual(len(lines), len(regexList),
+                        "got wrong number of lines of output")
 
-        misses = []
-        for line, regex in zip(lines, regexList):
-            m = re.search(regex, line)
-            if not m:
-                misses.append((regex,line))
-        self.assertEqual(misses, [], "got non-matching lines")
+            misses = []
+            for line, regex in zip(lines, regexList):
+                m = re.search(regex, line)
+                if not m:
+                    misses.append((regex,line))
+            self.assertEqual(misses, [], "got non-matching lines")
+        except:
+            log.msg("got output:\n" + output)
+            raise
 
     def test_buildbot_cvs_mail_from_cvs1_11(self):
         # Simulate CVS 1.11 
