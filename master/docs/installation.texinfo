@@ -130,13 +130,17 @@ schema upgrades from version to version.
 @node Installing the code
 @section Installing the code
 
-@cindex The Distribution Packages
+@heading The Distribution Packages
+
+@cindex Packages
+@cindex Installation
+@cindex PyPI
 
 Buildbot comes in two parts: @code{buildbot} (the master) and
 @code{buildbot-slave} (the slave).  The two can be installed individually or
 together.
 
-@cindex Installation From PyPI
+@heading Installation From PyPI
 
 The easiest way to install Buildbot is using 'pip'.  For the master:
 @example
@@ -149,7 +153,7 @@ and for the slave:
 pip install buildbot-slave
 @end example
 
-@cindex Installation From Tarballs
+@heading Installation From Tarballs
 
 Buildbot and Buildslave can also be installed using the standard python
 @code{distutils} process. For either component (buildbot or buildbot-slave),
