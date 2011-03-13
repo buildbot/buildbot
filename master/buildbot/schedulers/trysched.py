@@ -253,3 +253,4 @@ class Try_Userpass(TryBase):
             return defer.gatherResults(
                 [ reg.unregister() for reg in self.registrations ])
         d.addCallback(unreg)
+        return d
