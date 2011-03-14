@@ -70,7 +70,8 @@ builder1B is blocked by the "sleep" step in builder1A.
 EXPECTED OUTCOME:
   - both builders: success
   - step 'blockB' succeeds with status text "upstream success after 3.0 sec"
-    (note: all times are approximate; don't panic if it says "3.1 sec")
+    (note: all times are approximate; depending on your hardware, this
+    might be as low as 2.5 sec due to overhead in BuildBot)
 
 
 Test 2: same, with more steps
@@ -82,6 +83,7 @@ builder2A and the blocked step in builder2B.
 EXPECTED OUTCOME:
   - both builders: success
   - step 'block' has status text "upstream success after 3.0 sec"
+    (again, this might be as low as 2.5 sec)
   - steps builder2A.date and builder2B.date both print the same time
     (possibly differing by tens of milliseconds)
 

@@ -109,7 +109,7 @@ class Blocker(BuildStep):
         # This isn't really *all* builds for this builder, but it's
         # everything that it has in memory.  Too bad BuilderStatus
         # doesn't expose its cache of old builds in a nice way.
-        all_builds = (builderStatus.buildCache +
+        all_builds = (builderStatus.buildCache.values() +
                       builderStatus.getCurrentBuilds())
 
         for buildStatus in all_builds:
