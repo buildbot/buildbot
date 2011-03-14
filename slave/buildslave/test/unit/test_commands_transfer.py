@@ -201,9 +201,7 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
         def check(_):
             self.assertEqual(self.get_updates(), [
                     {'header': 'sending %s' % self.datafile},
-                    'write(s)', 'close',
-                    {'rc': 1,
-                     'stderr': "Upload of '%s' interrupted" % self.datafile}
+                    'write(s)', 'close', {'rc': 1}
                 ])
         dl.addCallback(check)
         return dl
@@ -429,10 +427,7 @@ class TestDownloadFile(CommandTestMixin, unittest.TestCase):
         dl = defer.DeferredList([d, interrupt_d])
         def check(_):
             self.assertEqual(self.get_updates(), [
-                    'read(s)', 'close',
-                    {'rc': 1,
-                     'stderr': "Download of '%s' interrupted"
-                                % os.path.join(self.basedir, '.', 'data')}
+                    'read(s)', 'close', {'rc': 1}
                 ])
         dl.addCallback(check)
         return dl
