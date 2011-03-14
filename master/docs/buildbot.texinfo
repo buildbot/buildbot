@@ -33,6 +33,13 @@ provided the copyright notice and this notice are preserved.
 
 @end copying
 
+@ifinfo
+@dircategory Software development
+@direntry
+* Buildbot: (buildbot).        A system to automate the compile/test cycle
+@end direntry
+@end ifinfo
+
 @titlepage
 @title BuildBot
 @subtitle @value{VERSION}
