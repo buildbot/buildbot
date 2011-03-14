@@ -1,0 +1,37 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+<h1>Directory listing for {{ path }}</h1>
+
+{% set row_class = cycler('alt', '') %}
+
+<table>
+
+<tr class="{{ row_class.next() }}">
+<th style="min-width:18em">Name</th>
+<th style="min-width:8em">Size</th>
+<th style="min-width:10em">Type</th>
+<th style="min-width:10em">Encoding</th>
+</tr>
+
+{% for d in directories %}  
+  <tr class="directory {{ row_class.next() }}">
+    <td><a href="{{ d.href }}"><b>{{ d.text }}</b></a></td>
+    <td><b>{{ d.size }}</b></td>
+    <td><b>{{ d.type }}</b></td>
+    <td><b>{{ d.encoding }}</b></td>
+  </tr>
+{% endfor %}
+
+{% for f in files %}
+  <tr class="file {{ row_class.next() }}">
+    <td><a href="{{ f.href }}">{{ f.text }}</a></td>
+    <td>{{ f.size }}</td>
+    <td>{{ f.type }}</td>
+    <td>{{ f.encoding }}</td>
+  </tr>
+{% endfor %}
+</table>
+
+{% endblock %}

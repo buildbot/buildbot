@@ -1,0 +1,30 @@
+{% extends "layout.html" %}
+{% import 'grid_macros.html' as grid with context %}
+
+{% block content %}
+
+<h1>Transposed Grid View</h1>
+
+<table class="Grid" border="0" cellspacing="0">
+
+<tr>
+ <td class="title"><a href="{{ project_url }}">{{ project_name }}</a>
+  {{ grid.category_title() }}
+ </td>
+ {% for builder in builders %}
+  {{ grid.builder_td(builder) }}
+ {% endfor %}
+</tr>
+
+{% for i in range %}
+ <tr>
+ {{ grid.stamp_td(stamps[i]) }}
+ {% for b in builder_builds %}
+   {{ grid.build_td(b[i]) }}
+ {% endfor %}
+ </tr>
+{% endfor %}
+
+</table>
+
+{% endblock %}

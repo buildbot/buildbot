@@ -1,0 +1,199 @@
+{% extends "layout.html" %}
+{% import 'forms.html' as forms %}
+{% from "change_macros.html" import change with context %}
+
+{% block content %}
+
+<h1>
+Builder <a href="{{ path_to_builder }}">{{ b.getBuilder().getName() }}</a>
+Build #{{ b.getNumber() }}
+</h1>
+
+<div class="column">
+
+{% if not b.isFinished() %}
+  <h2>Build In Progress:</h2>
+
+  {% if when_time %}
+    <p>ETA: {{ when_time }} [{{ when }}]</p>
+  {% endif %}
+
+  {{ current_step }}
+  
+  {% if authz.advertiseAction('stopBuild') %}
+    <h2>Stop Build</h2>
+    {{ forms.stop_build(build_url+"/stop", authz, on_all=False, short=False, label='This Build') }}
+  {% endif %}
+{% else %}
+  <h2>Results:</h2>
+
+  <p class="{{ result_css }} result">   
+    {{ b.getText()|join(' ')|capitalize }}
+  </p>
+   
+  {% if b.getTestResults() %}
+    <h3><a href="{{ tests_link }}"/></h3>
+  {% endif %}
+{% endif %}
+
+<h2>SourceStamp:</h2>
+
+<table class="info" width="100%">
+{% set ss_class = cycler('alt','') %}
+
+{% if ss.project %}
+  <tr class="{{ ss_class.next() }}"><td class="left">Project</td><td>{{ ss.project|projectlink }}</td></tr>
+{% endif %}
+
+{% if ss.repository %}
+  <tr class="{{ ss_class.next() }}"><td class="left">Repository</td><td>{{ ss.repository|repolink }}</td></tr>
+{% endif %}
+
+{% if ss.branch %}
+  <tr class="{{ ss_class.next() }}"><td class="left">Branch</td><td>{{ ss.branch|e }}</td></tr>
+{% endif %}
+
+{% if ss.revision %}
+  <tr class="{{ ss_class.next() }}"><td class="left">Revision</td><td>{{ ss.revision|revlink(ss.repository) }}</td></tr>
+{% endif %}
+
+{% if got_revision %}
+  <tr class="{{ ss_class.next() }}"><td class="left">Got Revision</td><td>{{ got_revision|revlink(ss.repository) }}</td></tr>
+{% endif %}
+
+{% if ss.patch %}
+  <tr class="{{ ss_class.next() }}"><td class="left">Patch</td><td>YES</td></tr>
+{% endif %}
+
+{% if ss.changes %}
+  <tr class="{{ ss_class.next() }}"><td class="left">Changes</td><td>see below</td></tr>
+{% endif %}
+
+{% if most_recent_rev_build %}
+  <tr class="{{ ss_class.next() }}"><td class="left" colspan="2">Build of most recent revision</td></tr>
+{% endif %}
+
+</table>
+
+{#
+ # TODO: turn this into a table, or some other sort of definition-list
+ # that doesn't take up quite so much vertical space
+ #}
+   
+<h2>BuildSlave:</h2>
+  
+{% if slave_url %}  
+  <a href="{{ slave_url|e }}">{{ b.getSlavename()|e }}</a>
+{% else %}
+  {{ b.getSlavename()|e }} 
+{% endif %}
+
+<h2>Reason:</h2>
+<p>
+{{ b.getReason()|e }}
+</p>
+
+<h2>Steps and Logfiles:</h2>
+
+{#
+ # TODO:
+ #       urls = self.original.getURLs()
+ #       ex_url_class = "BuildStep external"
+ #       for name, target in urls.items():
+ #           text.append('[<a href="%s" class="%s">%s</a>]' %
+ #                       (target, ex_url_class, html.escape(name)))
+ #}
+
+<ol>
+{% for s in steps %}
+  <li>
+    <div class="{{ s.css_class }} result">
+      <a href="{{ s.link }}">{{ s.name }}</a> 
+      {{ s.text }}&nbsp;<span style="float:right">{{ '( ' + s.time_to_run + ' )' if s.time_to_run else '' }}</span>
+    </div>
+
+    <ol>
+      {% set item_class = cycler('alt', '') %}
+      {% for l in s.logs %}
+        <li class="{{ item_class.next() }}"><a href="{{ l.link }}">{{ l.name }}</a></li>
+      {% else %}
+        <li class="{{ item_class.next() }}">- no logs -</li>
+      {% endfor %}
+    
+      {% for u in s.urls %}
+        <li class="{{ item_class.next() }}"><a href="{{ u.url }}">{{ u.logname }}</a></li>
+      {% endfor %}
+    </ol>  
+  </li>
+{% endfor %}
+</ol>
+
+</div>
+<div class="column">
+
+<h2>Build Properties:</h2>
+
+<table class="info" width="100%">
+<tr><th>Name</th><th>Value</th><th>Source</th></tr>
+
+{% for p in properties %}
+  <tr class="{{ loop.cycle('alt', '') }}">
+    <td class="left">{{ p.name|e }}</td>
+  {% if p.short_value %}
+    <td>{{ p.short_value|e }} .. [property value too long]</td>
+  {% else %}
+    <td>{{ p.value|e }}</td>
+  {% endif %}
+    <td>{{ p.source|e }}</td>
+  </tr>
+{% endfor %}
+
+</table>
+
+<h2>Blamelist:</h2>
+
+{% if responsible_users %}
+  <ol>
+  {% for u in responsible_users %}
+     <li class="{{ loop.cycle('alt', '') }}">{{ u|user }}</li>
+  {% endfor %}
+  </ol>
+{% else %}
+  <p>no responsible users</p>
+{% endif %}
+
+
+<h2>Timing:</h2>
+<table class="info" width="100%">
+  <tr class="alt"><td class="left">Start</td><td>{{ start }}</td></tr>
+{% if end %}
+  <tr><td class="left">End</td><td>{{ end }}</td></tr>
+{% endif %}
+  <tr {{ 'class="alt"' if end else '' }}><td class="left">Elapsed</td><td>{{ elapsed }}</td></tr>
+</table>
+
+  {% if authz.advertiseAction('forceBuild') %}
+    <h3>Resubmit Build:</h3>
+    {{ forms.rebuild_build(build_url+"/rebuild", authz, exactly, ss) }}
+  {% endif %}
+
+</div>
+
+<br style="clear:both"/>
+  
+{% if ss.changes %}
+<div class="column">
+  <h2>All Changes:</h2>
+  <ol>
+  {% for c in ss.changes %}
+    <li><h3>Change #{{ c.number }}</h3>
+      {{ change(c.asDict()) }}
+    </li>
+  {% else %}
+    <li>no changes</li>
+  {% endfor %}  
+  </ol>
+</div> 
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,28 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<p>{{ text }}</p>
+<h2>More Help:</h2>
+
+{% if level != 1 %}
+<p><a href="../help">Parent's Help</a></p>
+{% endif %}
+
+{% if children %}
+<p>Child Nodes</p>
+<ul>
+{% for child in children %}
+    <li><a href="{{ child|e }}">{{ child|e }}</a>
+        (<a href="{{ child|e }}/help">{{ child|e }}/help</a>)
+    </li>
+{% endfor %}
+</ul>
+{% endif %}
+
+<h2>Flags:</h2>
+{{ flags }}
+
+<h2>Examples:</h2>
+{{ examples }}
+
+{% endblock %}

@@ -1,0 +1,592 @@
+.TH BUILDBOT "1" "August 2010" "Buildbot" "User Commands"
+.SH NAME
+buildbot \- a tool for managing buildbot master instances
+.SH SYNOPSIS
+.SS General Invocation
+.PP
+.B buildbot
+[
+.BR "global options"
+]
+.I command
+[
+.BR "command options"
+]
+.PP
+.B buildbot
+.I command
+.BR \-h | \-\-help
+.SS Command Options
+.PP
+.B buildbot
+create-master
+[
+.BR \-q | \-\-quiet
+]
+[
+.BR \-f | \-\-force
+]
+[
+.BR \-r | \-\-relocatable
+]
+[
+.BR \-n | \-\-no-logrotate
+]
+[
+.BR \-s | \-\-log-size
+.I SIZE
+]
+[
+.BR \-l | \-\-log-count
+.I COUNT
+]
+[
+.BR \-c | \-\-config
+.I CONFIG
+]
+[
+.BR \-\-db
+.I DATABASE
+]
+[
+.I PATH
+]
+.PP
+.B buildbot
+upgrade-master
+[
+.BR \-q | \-\-quiet
+]
+[
+.BR \-r | \-\-replace
+]
+[
+.BR \-\-db
+.I DATABASE
+]
+[
+.I PATH
+]
+.PP
+.B buildbot
+[
+.BR \-\-verbose
+]
+{
+.BR start | stop | restart | sighup | reconfig
+}
+[
+.I PATH
+]
+.PP
+.B buildbot
+sendchange
+[
+.BR \-m | \-\-master
+.I MASTER
+]
+[
+.BR \-u | \-\-username
+.I USERNAME
+]
+[
+.BR \-R | \-\-repository
+.I REPOSITORY
+]
+[
+.BR \-P | \-\-project
+.I PROJECT
+]
+[
+.BR \-b | \-\-branch
+.I BRANCH
+]
+[
+.BR \-C | \-\-category
+.I CATEGORY
+]
+[
+.BR \-r | \-\-revision
+.I REVISION
+]
+[
+.BR \-\-revision-file
+.I REVISIONFILE
+]
+[
+.BR \-p | \-\-property
+.I PROPERTY
+]
+[
+.BR \-c | \-\-comments
+.I MESSAGE
+]
+[
+.BR \-F | \-\-logfile
+.I LOGFILE
+]
+[
+.BR \-w | \-\-when
+.I TIMESTAMP
+]
+.IR FILES ...
+.PP
+.B buildbot
+debugclient
+[
+.BR \-m | \-\-master
+.I MASTER
+]
+[
+.BR \-p | \-\-passwd
+.I PASSWORD
+]
+.PP
+.B buildbot
+statuslog
+[
+.BR \-m | \-\-master
+.I MASTER
+]
+[
+.BR \-u | \-\-username
+.I USERNAME
+]
+[
+.BR \-p | \-\-passwd
+.I PASSWORD
+]
+.PP
+.B buildbot
+statusgui
+[
+.BR \-m | \-\-master
+.I MASTER
+]
+[
+.BR \-u | \-\-username
+.I USERNAME
+]
+[
+.BR \-p | \-\-passwd
+.I PASSWORD
+]
+.PP
+.B buildbot
+try
+[
+.BR \-\-wait
+]
+[
+.BR \-n | \-\-dry-run
+]
+[
+.BR \-\-get-builder-names
+]
+[
+.BR \-c | \-\-connect
+{ssh|pb}
+]
+[
+.BR \-\-tryhost
+.I HOSTNAME
+]
+[
+.BR \-\-trydir
+.I PATH
+]
+[
+.BR \-m | \-\-master
+.I MASTER
+]
+[
+.BR \-u | \-\-username
+.I USERNAME
+]
+[
+.BR \-\-passwd
+.I PASSWORD
+]
+[
+.BR \-\-diff
+.I DIFF
+]
+[
+.BR \-\-patchlevel
+.I PATCHLEVEL
+]
+[
+.BR \-\-baserev
+.I BASEREV
+]
+[
+.BR \-\-vc
+{cvs|svn|tla|baz|darcs|p4}
+]
+[
+.BR \-\-branch
+.I BRANCH
+]
+[
+.BR \-b | \-\-builder
+.I BUILDER
+]
+[
+.BR \-\-properties
+.I PROPERTIES
+]
+[
+.BR \-\-try-topfile
+.I FILE
+]
+[
+.BR \-\-try-topdir
+.I PATH
+]
+.PP
+.B buildbot
+tryserver
+[
+.BR \-\-jobdir
+.I PATH
+]
+.PP
+.B buildbot
+checkconfig
+[
+.I CONFIGFILE
+]
+.PP
+.B buildbot
+[
+.BR \-\-verbose
+]
+{
+.BR start | stop | restart | sighup | reconfig
+}
+[
+.I PATH
+]
+.PP
+.B buildbot
+[
+.BR \-\-verbose
+]
+{
+.BR \-\-help | \-\-version
+}
+
+.SH DESCRIPTION
+The `buildbot' command-line tool can be used to start or stop a
+buildmaster and to interact with a running buildmaster instance.
+Some of its subcommands are intended for buildmaster admins, while
+some are for developers who are editing the code that the buildbot is
+monitoring.
+
+.SH OPTIONS
+.SS Commands
+.TP
+.BR create-master
+Create and populate a directory for a new buildmaster
+.TP
+.BR upgrade-master
+Upgrade an existing buildmaster directory for the current version
+.TP
+.BR start
+Start a buildmaster
+.TP
+.BR stop
+Stop a buildmaster
+.TP
+.BR restart
+Restart a buildmaster
+.TP
+.BR sighup | reconfig
+Send SIGHUP signal to buildmaster to make it re-read the config file
+.TP
+.BR sendchange
+Send a change to the buildmaster
+.TP
+.BR debugclient
+Launch a small debug panel gui
+.TP
+.BR statuslog
+Emit current builder status to stdout
+.TP
+.BR statusgui
+Display a small window showing current builder status
+.TP
+.BR try
+Run a build with your local changes. This command requires in-advance
+configuration of the buildmaster to accept such build requests. Please
+see the documentation for details about this command.
+.TP
+.BR tryserver
+buildmaster-side \'try\' support function, not for users
+.TP
+.BR checkconfig
+Validate buildbot master config file.
+
+.SS Global options
+.TP
+.BR \-h | \-\-help
+Print the list of available commands and global options.
+All subsequent commands are ignored.
+.TP
+.BR --version
+Print twistd and buildslave version.
+All subsequent commands are ignored.
+.TP
+.BR --verbose
+Verbose output.
+
+.SS create-master command options
+.TP
+.BR \-q | \-\-quiet
+Do not emit the commands being run
+.TP
+.BR \-f | \-\-force
+Re-use an existing directory (will not overwrite master.cfg file)
+.TP
+.BR \-r | \-\-relocatable
+Create a relocatable buildbot.tac
+.TP
+.BR \-n | \-\-no-logrotate
+Do not permit buildmaster rotate logs by itself.
+.TP
+.BR \-c | \-\-config
+Set name of the buildbot master config file to
+.IR CONFIG .
+Default file name is master.cfg.
+.TP
+.BR \-s | \-\-log-size
+Set size at which twisted lof file is rotated to
+.I SIZE
+bytes.
+Default value is 1000000 bytes.
+.TP
+.BR \-l | \-\-log-count
+Limit the number of kept old twisted log files to
+.IR COUNT .
+All files are kept by default.
+.TP
+.BR \-\-db
+Set the database connection for storing scheduler/status state to
+.IR DATABASE .
+Default value is
+.BR "sqlite:///state.sqlite" .
+.TP
+.I PATH
+Directory where buildbot master files will be stored.
+
+.SS upgrade-master command options
+.TP
+.BR \-q | \-\-quiet
+Do not emit the commands being run.
+.TP
+.BR \-r | \-\-replace
+Replace any modified files without confirmation.
+.TP
+.BR \-\-db
+Set the database connection for storing scheduler/status state to
+.IR DATABASE .
+Default value is
+.BR "sqlite:///state.sqlite" .
+.TP
+.I PATH
+Directory where buildbot master files are stored.
+
+.SS sendchange command options
+.TP
+.B \-\-master
+Set the location of buildmaster's PBListener to attach to in form
+.IR HOST : PORT .
+.TP
+.BR \-u | \-\-username
+Set commiter's username to
+.IR USERNAME .
+.TP
+.BR \-R | \-\-repository
+Set repository URL to
+.IR REPOSITORY .
+.TP
+.BR \-P | \-\-project
+Set project specifier to
+.IR PROJECT .
+.TP
+.BR \-b | \-\-branch
+Set branch name to
+.IR BRANCH .
+.TP
+.BR \-c | \-\-category
+Set category of repository to
+.IR CATEGORY .
+.TP
+.BR \-r | \-\-revision
+Set revision being built to
+.IR REVISION .
+.TP
+.BR \-\-revision-file
+Use
+.I REVISIONFILE
+file to read revision spec data from.
+.TP
+.BR \-p | \-\-property
+Set property for the change to
+.IR PROPERTY .
+It should be in format
+.IR NAME : VALUE .
+.TP
+.BR \-m | \-\-comments
+Set log message to
+.IR MESSAGE .
+.TP
+.BR \-F | \-\-logfile
+Set logfile to
+.IR LOGFILE .
+.TP
+.BR \-w | \-\-when
+Set timestamp used as the change time to
+.IR TIMESTAMP .
+.TP
+.I FILES
+Lis of files have been changed.
+
+.SS debugclient command options
+.TP
+.BR \-m | \-\-master
+Set the location of buildmaster's PBListener to attach to in form
+.IR HOST : PORT .
+.TP
+.BR \-p | \-\-passwd
+Debug password to use.
+
+.SS statuslog command options
+.TP
+.BR \-m | \-\-master
+Set the location of buildmaster's PBListener to attach to in form
+.IR HOST : PORT .
+.TP
+.BR \-u | \-\-username
+Set username for PB authentication to
+.IR USERNAME .
+Default is
+.BR statusClient .
+.TP
+.BR \-p | \-\-passwd
+Set password for PB authentication to
+.IR PASSWORD .
+Default is
+.BR clientpw .
+
+.SS statusgui command options
+.TP
+.BR \-m | \-\-master
+Set the location of buildmaster's PBListener to attach to in form
+.IR HOST : PORT .
+.TP
+.BR \-u | \-\-username
+Set username for PB authentication to
+.IR USERNAME .
+Default is
+.BR statusClient .
+.TP
+.BR \-p | \-\-passwd
+Set password for PB authentication to
+.IR PASSWORD .
+Default is
+.BR clientpw .
+
+.SS try command options
+.TP
+.BR \-\-wait
+Wait until the builds have finished.
+.TP
+.BR \-n | \-\-dry-run
+Gather info, but don't actually submit.
+.TP
+.BR \-\-get-builder-names
+Get the names of available builders.
+Doesn't submit anything.
+Only supported for 'pb' connections.
+.TP
+.BR \-c | \-\-connect
+Connection type.
+Can be either \'ssh\' or \'pb\'.
+.TP
+.BR \-\-tryhost
+Set the hostname (used by ssh) for the buildmaster to
+.IR HOSTNAME .
+.TP
+.BR \-\-trydir
+Specify trydir (on the tryhost) where tryjobs are deposited.
+.TP
+.BR \-m | \-\-master
+Set the location of the buildmaster's PBListener in form
+.IR HOST : PORT
+.TP
+.BR \-u | \-\-username
+Set the username performing the trial build to
+.IR USERNAME .
+.TP
+.BR \-\-passwd
+Set password for PB authentication to
+.IR PASSWORD .
+.TP
+.BR \-\-diff
+Use
+.I DIFF
+file to use as a patch instead of scanning a local tree.
+Use \'-\' for stdin.
+.TP
+.BR \-\-patchlevel
+Specify the patchlevel to apply with.
+Defaults to 0.
+See
+.BR patch
+for details.
+.TP
+.BR \-\-baserev
+Use
+.I BASEREV
+revision instead of scanning a local tree.
+.TP
+.BR \-\-vc
+Specify version control system in use.
+Possible values: cvs, svn, tla, baz, darcs, p4.
+.TP
+.BR \-\-branch
+Specify the branch in use, for VC systems that can't figure it out themselves.
+.TP
+.BR \-b | \-\-builder
+Run the trial build on the specified Builder. Can be used multiple times.
+.TP
+.BR \-\-properties
+Specify the set of properties made available in the build environment in format
+.IR prop1 = value1 , prop2 = value2 ...
+.TP
+.BR \-\-try-topfile
+Specify name of a file at the top of the tree.
+This option is used to find the top.
+Only needed for SVN and CVS.
+.TP
+.BR \-\-try-topdir
+Specify the path to the top of the working copy.
+Only needed for SVN and CVS.
+
+.SS tryserver command options
+.TP
+.BR \-\-jobdir
+The jobdir (maildir) for submitting jobs
+.SH FILES
+.TP
+master.cfg
+Buildbot master configuration file
+.SH AUTHOR
+\fBAndriy Senkovych\fR <\&andriysenkovych@gmail.com\&>
+.SH "SEE ALSO"
+.BR buildslave (1),
+.BR patch (1)
+.PP
+The complete documentation is available in texinfo format. To use it, run
+.BR "info buildbot" .

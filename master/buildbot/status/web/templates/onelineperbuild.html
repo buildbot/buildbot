@@ -1,0 +1,36 @@
+{% extends "layout.html" %}
+{% from 'build_line.html' import build_table %}
+{% import 'forms.html' as forms %}
+
+{% block content %}
+<h1>Last {{ num_builds }} finished builds: {{ branches|join(', ')|e }}</h1>
+
+{% if builders %}
+  <p>of builders: {{ builders|join(", ")|e }}</p>
+{% endif %}
+ 
+<div class="column">
+
+{{ build_table(builds, True) }}
+
+</div>
+<div class="column">
+
+{% if num_building > 0 %}
+  {% if authz.advertiseAction('stopBuild') %}
+    <h2>Stop All Builds</h2>
+    {{ forms.stop_build("builders/_all/stopall", authz, on_all=True, label='All Builds') }}
+  {% endif %}
+{% endif %}
+  
+{% if num_online > 0 %}
+  {% if authz.advertiseAction('forceAllBuilds') %}
+    <h2>Force All Builds</h2>
+    {{ forms.force_build("builders/_all/forceall", authz, True) }}
+  {% endif %}
+{% endif %}
+
+
+</div>
+
+{% endblock %}

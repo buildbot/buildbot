@@ -1,0 +1,266 @@
+{% extends "layout.html" %}
+
+{% block head %}
+{{ super() }}
+<script type='text/javascript'>
+// <![CDATA[
+//
+
+//
+// Functions used to display the build status bubble on box click.
+//
+
+// show the build status box. This is called when the user clicks on a block.
+function showBuildBox(url, event) {
+    //  Find the current curson position.
+    var cursorPosTop = (window.event ? window.event.clientY : event.pageY)
+    var cursorPosLeft = (window.event ? window.event.clientX : event.pageX)
+
+    // Offset the position by 5, to make the window appears under the cursor.
+    cursorPosTop  = cursorPosTop  + document.body.scrollTop -5 ;    
+    cursorPosLeft = cursorPosLeft  + document.body.scrollLeft - 5;
+
+    // Move the div (hidden) under the cursor.
+    var divBox = document.getElementById('divBox');
+    divBox.style.top = parseInt(cursorPosTop) + 'px';
+    divBox.style.left = parseInt(cursorPosLeft) + 'px';
+
+    // Reload the hidden frame with the build page we want to show.
+    // The onload even on this frame will update the div and make it visible.
+    document.getElementById("frameBox").src = url
+    
+    // We don't want to reload the page.
+    return false;
+}
+
+// OnLoad handler for the iframe containing the build to show.
+function updateDiv(event) { 
+    // Get the frame innerHTML.
+    var iframeContent = document.getElementById("frameBox").contentWindow.document.body.innerHTML;
+
+    // If there is any content, update the div, and make it visible.
+    if (iframeContent) {
+        var divBox = document.getElementById('divBox'); 
+        divBox.innerHTML = iframeContent ;
+        divBox.style.display = "block";
+    }
+} 
+
+// Util functions to know if an element is contained inside another element.
+// We use this to know when we mouse out our build status div.
+function containsDOM (container, containee) {
+    var isParent = false;
+    do {
+        if ((isParent = container == containee))
+            break;
+        containee = containee.parentNode;
+    } while (containee != null);
+
+    return isParent;
+}
+
+// OnMouseOut handler. Returns true if the mouse moved out of the element.
+// It is false if the mouse is still in the element, but in a blank part of it,
+// like in an empty table cell.
+function checkMouseLeave(element, event) {
+  if (element.contains && event.toElement) {
+    return !element.contains(event.toElement);
+  }
+  else if (event.relatedTarget) {
+    return !containsDOM(element, event.relatedTarget);
+  }
+}
+
+// ]]> 
+</script>
+{% endblock %}
+
+{% block content %}
+
+<h1>Console View</h1> 
+
+<div align="center">
+  <table width="95%" class="Grid" border="0" cellspacing="0">
+    <tr>
+      <td width="33%" align="left" class="left_align">
+{% if categories|length > 1 %}
+        <br><b>Categories:</b> {% for c in categories %}{{ c.name|e }} {% endfor %}
+{% endif %}
+{% if repository %}
+        <br><b>Repository:</b> {{ repository|e }}
+{% endif %}
+{% if branch != ANYBRANCH %}
+        <br><b>Branch:</b> {{ branch|e }}
+{% endif %}
+      </td>
+      <td width="33%" align="center" class="center_align">
+        <div align="center">
+          <table class="info">
+            <tr>
+              <td>Legend:&nbsp;&nbsp;</td>
+              <td class='legend success' title='All tests passed'>Passed</td>
+              <td class='legend failure' title='There is a new failure. Take a look!'>Failed</td>
+              <td class='legend warnings' title='It was failing before, and it is still failing. Make sure you did not introduce new regressions'>Failed&nbsp;Again</td>
+              <td class='legend running' title='The tests are still running'>Running</td>
+              <td class='legend exception' title='Something went wrong with the test, there is no result'>Exception</td>
+              <td class='legend offline' title='The builder is offline, as there are no slaves connected to it'>Offline</td>
+              <td class='legend notstarted' title='No result yet.'>No&nbsp;data</td>
+            </tr>
+          </table>
+        </div>
+      </td>
+      <td width="33%" align="right" class="right_align">
+      <script type="text/javascript"> 
+// <![CDATA[
+          function reload_page() {
+            name_value = document.getElementById('namebox').value
+            if (document.location.href.lastIndexOf('?') == -1)
+              document.location.href = document.location.href+ '?name=' + name_value;
+            else
+              document.location.href = document.location.href+ '&name=' + name_value;
+          }
+// ]]> 
+        </script>
+        <input id='namebox' name='name' type='text' style='color:#999;'
+            onblur='this.value = this.value || this.defaultValue; this.style.color = "#999";'
+            onfocus='this.value=""; this.style.color = "#000";'
+            value='Personalized for...'/>      
+        <input type='submit' value='Go' onclick='reload_page()'/>
+      </td>
+     </tr>
+  </table>
+</div>
+
+<br/>
+
+{% set alt_class = cycler('', 'Alt') %}
+
+<div align="center">
+<table width="96%">
+  
+{% if categories|length > 1 %}
+  <tr>
+    <td width="1%">
+    </td>
+    <td width="1%">
+    </td>
+  {% for c in categories %}
+      <td class='DevStatus {{ alt_class.next() }} {{ "first" if loop.first else '' }} {{ "last" if loop.last else '' }}' width='{{ c.size }}%'>
+        {{ c.name|e }}
+      </td>
+  {% endfor %}
+  </tr>
+  <tr class='DevStatusSpacing'>
+  </tr>
+{% endif %}
+
+{% if slaves %}
+  <tr>
+    <td width="1%">
+    </td>
+    <td width="1%">
+    </td>
+  {% for c in categories %}
+    <td class='DevSlave {{ alt_class.next() }} {{ "last" if loop.last else '' }}'>
+      <table width="100%">
+        <tr>          
+    {% for s in slaves[c.name] %}          
+          <td class='DevSlaveBox'>
+            <a href='{{ s.url }}' title='{{ s.title }}' class='DevSlaveBox {{ s.color }}' target="_blank">
+            </a>
+          </td>
+    {% endfor %}            
+        </tr>
+      </table>
+    </td>
+  {% endfor %}
+  </tr>
+{% endif %}
+  
+{% for r in revisions %}
+  {% set alt = alt_class.next() %}
+  {% set last = "last" if loop.last else "" %}
+
+  <tr>
+    <td class='DevRev {{ alt }}' width="1%">
+      {{ r.id|shortrev(r.repository) }}
+    </td>
+    <td class='DevName {{ alt }}' width="1%">
+      {{ r.who|user }}
+    </td>
+
+  {% for c in categories %}
+    <td class='DevStatus {{ alt }} {{ last }}'>
+      <table width="100%">
+        <tr>    
+    {% for b in r.builds[c.name] %}
+          <td class='DevStatusBox'>
+            <a href='#' onclick='showBuildBox("{{ b.url }}", event); return false;'
+               title='{{ b.title|e }}' class='DevStatusBox {{ b.color }} {{ b.tag }}'
+               target="_blank"></a>
+          </td>
+    {% endfor %}    
+        </tr>
+      </table>
+    </td>
+  {% endfor %}
+  </tr>
+   
+  <tr>
+    <td colspan="{{ r.span }}" class='DevComment {{ alt }}'> 
+      {{ r.comments|changecomment(r.project or None)|replace('\n', '<br/>')|replace('  ','&nbsp; ') }}
+    </td>
+  </tr>
+ 
+  {% if r.details %}
+  <tr>
+    <td colspan="{{ r.span }}" class='DevDetails {{ alt }}'>
+      <ul style='margin: 0px; padding: 0 0 0 1.5em;'>
+    {% for d in r.details %}
+        <li>{{ d.buildername }}: {{ d.status }} - &nbsp;
+      {%- for l in d.logs -%}
+            <a href="{{ l.url }}">{{ l.name }}</a>
+      {%- endfor -%}
+        </li>
+    {% endfor %}
+      </ul>
+    </td>
+  </tr>    
+  {% endif %} 
+  
+  <tr class='DevStatusSpacing'>
+    <td>
+    </td>
+  </tr>  
+
+{% else %}
+ <tr><td>No revisions available</td></tr>
+{% endfor %}
+  
+</table>
+</div>
+
+
+<div id="divBox" onmouseout="if (checkMouseLeave(this, event)) this.style.display = 'None'" class="BuildWaterfall"> 
+</div>
+
+
+<iframe id="frameBox" style="display: none;"></iframe>
+  
+<script type="text/javascript">
+// replace 'onload="updateDiv(event);" with this, as iframe doesn't have onload event in xhtml
+window.onload = function() {
+  document.getElementById('frameBox').onload = function(event) {
+    updateDiv(event);
+  };
+}; 
+</script>
+
+{% endblock %}
+
+
+{% block footer %}
+
+{{ super() }}
+{# <p>Debug info: {{ debuginfo }}</p> #}
+{% endblock %}

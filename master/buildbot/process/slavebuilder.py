@@ -1,0 +1,319 @@
+# This file is part of Buildbot.  Buildbot is free software: you can
+# redistribute it and/or modify it under the terms of the GNU General Public
+# License as published by the Free Software Foundation, version 2.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, write to the Free Software Foundation, Inc., 51
+# Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Copyright Buildbot Team Members
+
+from twisted.spread import pb
+from twisted.internet import defer
+from twisted.python import log
+
+(ATTACHING, # slave attached, still checking hostinfo/etc
+ IDLE, # idle, available for use
+ PINGING, # build about to start, making sure it is still alive
+ BUILDING, # build is running
+ LATENT, # latent slave is not substantiated; similar to idle
+ SUBSTANTIATING,
+ ) = range(6)
+
+class AbstractSlaveBuilder(pb.Referenceable):
+    """I am the master-side representative for one of the
+    L{buildbot.slave.bot.SlaveBuilder} objects that lives in a remote
+    buildbot. When a remote builder connects, I query it for command versions
+    and then make it available to any Builds that are ready to run. """
+
+    def __init__(self):
+        self.ping_watchers = []
+        self.state = None # set in subclass
+        self.remote = None
+        self.slave = None
+        self.builder_name = None
+        self.locks = None
+
+    def __repr__(self):
+        r = ["<", self.__class__.__name__]
+        if self.builder_name:
+            r.extend([" builder=", repr(self.builder_name)])
+        if self.slave:
+            r.extend([" slave=", repr(self.slave.slavename)])
+        r.append(">")
+        return ''.join(r)
+
+    def setBuilder(self, b):
+        self.builder = b
+        self.builder_name = b.name
+
+    def getSlaveCommandVersion(self, command, oldversion=None):
+        if self.remoteCommands is None:
+            # the slave is 0.5.0 or earlier
+            return oldversion
+        return self.remoteCommands.get(command)
+
+    def isAvailable(self):
+        # if this SlaveBuilder is busy, then it's definitely not available
+        if self.isBusy():
+            return False
+
+        # otherwise, check in with the BuildSlave
+        if self.slave:
+            return self.slave.canStartBuild()
+
+        # no slave? not very available.
+        return False
+
+    def isBusy(self):
+        return self.state not in (IDLE, LATENT)
+
+    def buildStarted(self):
+        self.state = BUILDING
+
+    def buildFinished(self):
+        self.state = IDLE
+        self.builder.triggerNewBuildCheck()
+
+    def attached(self, slave, remote, commands):
+        """
+        @type  slave: L{buildbot.buildslave.BuildSlave}
+        @param slave: the BuildSlave that represents the buildslave as a
+                      whole
+        @type  remote: L{twisted.spread.pb.RemoteReference}
+        @param remote: a reference to the L{buildbot.slave.bot.SlaveBuilder}
+        @type  commands: dict: string -> string, or None
+        @param commands: provides the slave's version of each RemoteCommand
+        """
+        self.state = ATTACHING
+        self.remote = remote
+        self.remoteCommands = commands # maps command name to version
+        if self.slave is None:
+            self.slave = slave
+            self.slave.addSlaveBuilder(self)
+        else:
+            assert self.slave == slave
+        log.msg("Buildslave %s attached to %s" % (slave.slavename,
+                                                  self.builder_name))
+        def _attachFailure(why, where):
+            log.msg(where)
+            log.err(why)
+            return why
+
+        d = defer.succeed(None)
+        def doSetMaster(res):
+            d = self.remote.callRemote("setMaster", self)
+            #d.addErrback(_attachFailure, "Builder.setMaster")
+            return d
+        d.addCallback(doSetMaster)
+        def doPrint(res):
+            d = self.remote.callRemote("print", "attached")
+            #d.addErrback(_attachFailure, "Builder.print 'attached'")
+            return d
+        d.addCallback(doPrint)
+        def setIdle(res):
+            self.state = IDLE
+            return self
+        d.addCallback(setIdle)
+        return d
+
+    def prepare(self, builder_status):
+        if not self.slave.acquireLocks():
+            return defer.succeed(False)
+        return defer.succeed(True)
+
+    def ping(self, status=None):
+        """Ping the slave to make sure it is still there. Returns a Deferred
+        that fires with True if it is.
+
+        @param status: if you point this at a BuilderStatus, a 'pinging'
+                       event will be pushed.
+        """
+        oldstate = self.state
+        self.state = PINGING
+        newping = not self.ping_watchers
+        d = defer.Deferred()
+        self.ping_watchers.append(d)
+        if newping:
+            if status:
+                event = status.addEvent(["pinging"])
+                d2 = defer.Deferred()
+                d2.addCallback(self._pong_status, event)
+                self.ping_watchers.insert(0, d2)
+                # I think it will make the tests run smoother if the status
+                # is updated before the ping completes
+            Ping().ping(self.remote).addCallback(self._pong)
+
+        def reset_state(res):
+            if self.state == PINGING:
+                self.state = oldstate
+            return res
+        d.addCallback(reset_state)
+        return d
+
+    def _pong(self, res):
+        watchers, self.ping_watchers = self.ping_watchers, []
+        for d in watchers:
+            d.callback(res)
+
+    def _pong_status(self, res, event):
+        if res:
+            event.text = ["ping", "success"]
+        else:
+            event.text = ["ping", "failed"]
+        event.finish()
+
+    def detached(self):
+        log.msg("Buildslave %s detached from %s" % (self.slave.slavename,
+                                                    self.builder_name))
+        if self.slave:
+            self.slave.removeSlaveBuilder(self)
+        self.slave = None
+        self.remote = None
+        self.remoteCommands = None
+
+
+class Ping:
+    running = False
+
+    def ping(self, remote):
+        assert not self.running
+        if not remote:
+            # clearly the ping must fail
+            return defer.succeed(False)
+        self.running = True
+        log.msg("sending ping")
+        self.d = defer.Deferred()
+        # TODO: add a distinct 'ping' command on the slave.. using 'print'
+        # for this purpose is kind of silly.
+        remote.callRemote("print", "ping").addCallbacks(self._pong,
+                                                        self._ping_failed,
+                                                        errbackArgs=(remote,))
+        return self.d
+
+    def _pong(self, res):
+        log.msg("ping finished: success")
+        self.d.callback(True)
+
+    def _ping_failed(self, res, remote):
+        log.msg("ping finished: failure")
+        # the slave has some sort of internal error, disconnect them. If we
+        # don't, we'll requeue a build and ping them again right away,
+        # creating a nasty loop.
+        remote.broker.transport.loseConnection()
+        # TODO: except, if they actually did manage to get this far, they'll
+        # probably reconnect right away, and we'll do this game again. Maybe
+        # it would be better to leave them in the PINGING state.
+        self.d.callback(False)
+
+
+class SlaveBuilder(AbstractSlaveBuilder):
+
+    def __init__(self):
+        AbstractSlaveBuilder.__init__(self)
+        self.state = ATTACHING
+
+    def detached(self):
+        AbstractSlaveBuilder.detached(self)
+        if self.slave:
+            self.slave.removeSlaveBuilder(self)
+        self.slave = None
+        self.state = ATTACHING
+
+    def buildFinished(self):
+        # Call the slave's buildFinished if we can; the slave may be waiting
+        # to do a graceful shutdown and needs to know when it's idle.
+        # After, we check to see if we can start other builds.
+        self.state = IDLE
+        if self.slave:
+            d = self.slave.buildFinished(self)
+            d.addCallback(lambda x: self.builder.triggerNewBuildCheck())
+        else:
+            self.builder.triggerNewBuildCheck()
+
+
+class LatentSlaveBuilder(AbstractSlaveBuilder):
+    def __init__(self, slave, builder):
+        AbstractSlaveBuilder.__init__(self)
+        self.slave = slave
+        self.state = LATENT
+        self.setBuilder(builder)
+        self.slave.addSlaveBuilder(self)
+        log.msg("Latent buildslave %s attached to %s" % (slave.slavename,
+                                                         self.builder_name))
+
+    def prepare(self, builder_status):
+        # If we can't lock, then don't bother trying to substantiate
+        if not self.slave.acquireLocks():
+            return defer.succeed(False)
+
+        log.msg("substantiating slave %s" % (self,))
+        d = self.substantiate()
+        def substantiation_failed(f):
+            builder_status.addPointEvent(['removing', 'latent',
+                                          self.slave.slavename])
+            self.slave.disconnect()
+            # TODO: should failover to a new Build
+            return f
+        def substantiation_cancelled(res):
+            # if res is False, latent slave cancelled subtantiation
+            if not res:
+                self.state = LATENT
+            return res
+        d.addCallback(substantiation_cancelled)
+        d.addErrback(substantiation_failed)
+        return d
+
+    def substantiate(self):
+        self.state = SUBSTANTIATING
+        d = self.slave.substantiate(self)
+        if not self.slave.substantiated:
+            event = self.builder.builder_status.addEvent(
+                ["substantiating"])
+            def substantiated(res):
+                msg = ["substantiate", "success"]
+                if isinstance(res, basestring):
+                    msg.append(res)
+                elif isinstance(res, (tuple, list)):
+                    msg.extend(res)
+                event.text = msg
+                event.finish()
+                return res
+            def substantiation_failed(res):
+                event.text = ["substantiate", "failed"]
+                # TODO add log of traceback to event
+                event.finish()
+                return res
+            d.addCallbacks(substantiated, substantiation_failed)
+        return d
+
+    def detached(self):
+        AbstractSlaveBuilder.detached(self)
+        self.state = LATENT
+
+    def buildStarted(self):
+        AbstractSlaveBuilder.buildStarted(self)
+        self.slave.buildStarted(self)
+
+    def buildFinished(self):
+        AbstractSlaveBuilder.buildFinished(self)
+        self.slave.buildFinished(self)
+
+    def _attachFailure(self, why, where):
+        self.state = LATENT
+        return AbstractSlaveBuilder._attachFailure(self, why, where)
+
+    def ping(self, status=None):
+        if not self.slave.substantiated:
+            if status:
+                status.addEvent(["ping", "latent"]).finish()
+            return defer.succeed(True)
+        return AbstractSlaveBuilder.ping(self, status)
+
+
+

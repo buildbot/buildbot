@@ -1,0 +1,53 @@
+Major User visible changes in Buildslave.             -*- outline -*-
+   see the git log for a detailed list of changes:
+   http://github.com/buildbot/buildbot/commits/master
+
+
+* Next Version
+
+** Buildslave now places all spawned commands into process groups on POSIX
+systems.  This means that in most cases child processes are cleaned up
+properly, and removes the most common use for usePTY.  As of this version,
+usePTY should be set to False for almost all users of Buildbot.
+
+
+* Buildbot-Slave 0.8.3 (December 19, 2010)
+
+** Slave-initiated Graceful Shutdown
+
+If the allow_shutdown parameter in buildbot.tac is set, then the slave can be
+gracefully shut down locally by the slave admin.  The shutdown operates by the
+slave informing the master that it would like to shut down; the master then
+finishes any active builds on the slave, and instructs the slave to shut down.
+See the documentation for more information.
+
+
+* Buildbot-Slave 0.8.2 (October 29, 2010)
+
+** Log Rotation
+
+The default 'create-slave' output now rotates ten twistd.log files, each of
+about 10MiB.  This is a change from older versions, which would rotate an
+unbounded number of 1MiB files.
+
+** twistd.hostname
+
+On startup, the buildslave writes its hostname to twistd.hostname.  This is
+intended to contextualize twistd.pid, which does not specify the host on which
+the buildslave is running.
+
+
+* Buildbot-Slave 0.8.1
+
+** First release of buildslave as a separate package
+
+** Fixes
+
+*** Command-line options changed
+
+Added new `-n|--no-logrotate` flag to create-slave command which disables
+internal logging and log rotation mechanism in buildbot.tac (ticket #973)
+
+*** Delete srcdir before retrying git clone (ticket #884)
+
+*** Fix setup.py to install a launcher script properly in all cases.

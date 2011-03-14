@@ -1,0 +1,23 @@
+<hr />
+<div class="footer">
+
+<a href="{{ welcomeurl }}">Welcome Page</a>
+<br />
+
+<a href="http://buildbot.net/">Buildbot</a>-{{ version }}
+
+{% if project_name %}
+  working for
+  {% if project_url %}
+    <a href="{{ project_url }}">{{ project_name }}</a>
+  {% else %}
+    {{ project_name }}
+  {% endif %}
+  project
+{% endif %}
+
+<br />
+
+Page built: {{ time }} ({{ tz }})
+</div>
+

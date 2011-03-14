@@ -1,0 +1,32 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+<h1>About this Buildbot</h1>
+
+<div class="column">
+
+<h2>Version Information</h2>
+<ul>
+{% set item_class=cycler('alt', '') %}
+
+ <li class="{{ item_class.next() }}">Buildbot: {{ buildbot }}</li>
+ <li class="{{ item_class.next() }}">Twisted: {{ twisted }}</li>
+ <li class="{{ item_class.next() }}">Jinja: {{ jinja }}</li>
+ <li class="{{ item_class.next() }}">Python: {{ python }}</li>
+ <li class="{{ item_class.next() }}">Buildmaster platform: {{ platform }}</li>
+
+</ul>
+
+<h2>Source code</h2>
+
+<p>Buildbot is a free software project, released under the terms of the
+<a href="http://www.gnu.org/licenses/gpl.html">GNU GPL</a>.</p>
+
+<p>Please visit the <a href="http://buildbot.net/">Buildbot Home Page</a> for
+more information, including documentation, bug reports, and source
+downloads.</p>
+
+</div>
+
+{% endblock %}

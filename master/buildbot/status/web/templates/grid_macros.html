@@ -1,0 +1,52 @@
+{% macro category_title() -%}
+ {% if categories %}
+  <br>
+  {% trans categories=categories %}
+   <b>Category:</b></br>
+  {% pluralize categories %}
+   <b>Categories:</b><br/>
+  {% endtrans %}
+  {% for c in categories %}
+    {{ c|e }}<br/>
+  {% endfor %}
+ {% endif %}
+
+ {% if branch != ANYBRANCH %}
+  <br><b>Branch:</b> {{ branch|e or "trunk" }}
+ {% endif %}
+{%- endmacro %}
+
+
+{% macro stamp_td(ss) -%}
+  <td valign="bottom" class="sourcestamp">    
+    {%- if ss.revision -%}
+    {{ ss.revision|shortrev(ss.repository) }}
+    {%- else %}latest{% endif %}
+    {%- if ss.branch %} in {{ ss.branch|e }}{% endif %}
+    {%- if ss.hasPatch %} [patch]{% endif %}
+  </td>
+{%- endmacro %}
+
+{% macro builder_td(b) -%}
+  <td valign="middle" style="text-align: center" class="builder {{ b.state }}">
+    <a href="{{ b.url }}">{{ b.name }}</a>
+    {%- if b.state != 'idle' or b.n_pending > 0 -%}
+      <br/>({{ b.state }}
+      {%- if b.n_pending > 0 -%}
+        , plus {{ b.n_pending }}
+      {%- endif -%}      
+      )
+    {%- endif -%}
+  </td>
+{%- endmacro %}
+
+{% macro build_td(build) -%}
+{% if build %}
+  <td class="build {{ build.class }}">
+    <a href="{{ build.url }}">{{ build.text|join('<br/>') }}</a>
+  </td>
+{% else %}
+  <td class="build">&nbsp;</td>
+{% endif %}
+{%- endmacro %}
+

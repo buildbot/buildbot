@@ -1,0 +1,147 @@
+#! /usr/bin/env python
+
+"""
+This script can be used to generate an Ubuntu VM that is suitable for use by the libvirt backend of buildbot.
+
+It creates a buildbot slave and then changes the buildbot.tac to get its username from the hostname. The hostname is set by
+changing the DHCP script.
+
+See network.xml for how to map a MAC address to an IP address and a hostname. You can load that configuration on to your master by running::
+
+    virsh net-define network.xml
+
+Note that the VM's also need their MAC address set, and configuring to use the new network, or this won't work..
+"""
+
+import os, platform, tempfile
+
+if platform.machine() == "x86_64":
+    arch = "amd64"
+else:
+    arch = "i386"
+
+postboot = """\
+#!/bin/sh
+chroot $1 update-rc.d -f buildbot remove
+
+chroot $1 addgroup --system minion
+chroot $1 adduser --system --home /var/local/buildbot --shell /bin/bash --ingroup zope --disabled-password --disabled-login minion
+
+mkdir -p $1/var/local/buildbot
+chroot $1 chown minion: /var/local/buildbot
+
+chroot $1 sudo -u minion /usr/bin/buildbot create-slave /var/local/buildbot %(master_host)s:%(master_port)s %(slave)s %(slave_password)s
+
+cat > $1/etc/default/buildbot << HERE
+BB_NUMBER[0]=0
+BB_NAME[0]="minion"
+BB_USER[0]="minion"
+BB_BASEDIR[0]="/var/local/buildbot"
+BB_OPTIONS[0]=""
+BB_PREFIXCMD[0]=""
+HERE
+
+cat > $1/var/local/buildbot/buildbot.tac << HERE
+from twisted.application import service
+from buildbot.slave.bot import BuildSlave
+import socket
+
+basedir = r'/var/local/buildbot'
+buildmaster_host = '%(master_host)s'
+port = %(master_port)s
+slavename = socket.gethostname()
+passwd = "%(slave_password)s"
+keepalive = 600
+usepty = 0
+umask = None
+maxdelay = 300
+rotateLength = 1000000
+maxRotatedFiles = None
+
+application = service.Application('buildslave')
+s = BuildSlave(buildmaster_host, port, slavename, passwd, basedir,
+               keepalive, usepty, umask=umask, maxdelay=maxdelay)
+s.setServiceParent(application)
+HERE
+
+cat > $1/etc/dhcp3/dhclient-exit-hooks.d/update-hostname << HERE
+if [ x\$reason != xBOUND ] && [ x\$reason != xREBIND ] && [ x\$reason != xREBOOT ]; then exit; fi
+echo Updating hostname: \$new_host_name
+hostname \$new_host_name
+echo Starting buildbot
+/etc/init.d/buildbot stop || true
+/etc/init.d/buildbot start
+HERE
+
+cat > $1/etc/udev/rules.d/virtio.rules << HERE
+KERNEL=="vda*", SYMLINK+="sda%%n"
+HERE
+"""
+
+class VMBuilder:
+
+    """ Class that executes ubuntu-vm-builder with appropriate options """
+
+    postboot = postboot
+
+    defaults = {
+        "rootsize": 8192,
+        "mem": 1024,
+        "domain": 'yourdomain.com',
+        "hostname": "ubuntu",
+        "arch": arch,
+        "variant": "minbase",
+        "components": "main,universe,multiverse,restricted",
+        "lang": "en_GB.UTF-8",
+        "timezone": "Europe/London",
+        "execscript": os.path.realpath(os.path.join(os.curdir, "postboot.sh")),
+        "addpkg": [
+            "standard^", "server^", "gpgv", "openssh-server", "buildbot", "subversion",
+            ],
+    }
+
+    def __init__(self, hypervisor="kvm", suite="karmic", destdir="ubuntu", **kw):
+        self.hypervisor = hypervisor
+        self.suite = suite
+        self.destdir = destdir
+        self.options = self.defaults.copy()
+        self.options.update(**kw)
+        f = tempfile.NamedTemporaryFile(delete=False, prefix="/var/tmp/")
+        print >>f, self.postboot % {
+            'master_host': '192.168.201.1',
+            'master_port': '8081',
+            'slave': 'slave',
+            'slave_password': 'password',
+        }
+        f.close()
+        os.chmod(f.name, 0755)
+        self.options['execscript'] = f.name
+
+    def build(self):
+        optstring = []
+        for k, v in self.options.items():
+            if type(v) == type([]):
+                for i in v:
+                    if i:
+                        optstring.append("--%s=%s" % (k, i))
+            else:
+                if v:
+                    optstring.append("--%s=%s" % (k, v))
+        execute=("ubuntu-vm-builder %s %s -d%s %s" % (
+                    self.hypervisor,
+                    self.suite,
+                    self.destdir,
+                    " ".join(optstring)))
+        print execute
+        os.system(execute)
+
+if __name__ == "__main__":
+    import sys, socket, optparse
+
+    parser = optparse.OptionParser(usage="%prog [options] project")
+    parser.add_option("-p", "--proxy", help="http proxy URL")
+    (options, args) = parser.parse_args()
+    builder = VMBuilder(proxy=options.proxy)
+    builder.build()
+
+

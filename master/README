@@ -1,0 +1,177 @@
+
+BuildBot: build/test automation
+  http://buildbot.net
+  Brian Warner <warner-buildbot @ lothar . com>
+  Dustin J. Mitchell <dustin@v.igoro.us>
+
+
+Abstract:
+
+The BuildBot is a system to automate the compile/test cycle required by most
+software projects to validate code changes. By automatically rebuilding and
+testing the tree each time something has changed, build problems are
+pinpointed quickly, before other developers are inconvenienced by the
+failure. The guilty developer can be identified and harassed without human
+intervention. By running the builds on a variety of platforms, developers
+who do not have the facilities to test their changes everywhere before
+checkin will at least know shortly afterwards whether they have broken the
+build or not. Warning counts, lint checks, image size, compile time, and
+other build parameters can be tracked over time, are more visible, and
+are therefore easier to improve.
+
+The overall goal is to reduce tree breakage and provide a platform to run
+tests or code-quality checks that are too annoying or pedantic for any human
+to waste their time with. Developers get immediate (and potentially public)
+feedback about their changes, encouraging them to be more careful about
+testing before checkin.
+
+
+Features:
+
+ * run builds on a variety of slave platforms
+ * arbitrary build process: handles projects using C, Python, whatever
+ * minimal host requirements: python and Twisted
+ * slaves can be behind a firewall if they can still do checkout
+ * status delivery through web page, email, IRC, other protocols
+ * track builds in progress, provide estimated completion time
+ * flexible configuration by subclassing generic build process classes
+ * debug tools to force a new build, submit fake Changes, query slave status
+ * released under the GPL
+
+
+DOCUMENTATION:
+
+The PyCon paper has a good description of the overall architecture. It is
+available in HTML form in docs/PyCon-2003/buildbot.html, or on the web page.
+
+The User's Manual is in docs/buildbot.info, and the Installation chapter is
+the best guide to use for setup instructions. The .texinfo source can also be
+turned into printed documentation. An HTML representation is available on the
+Buildbot home page.
+
+REQUIREMENTS:
+
+  Briefly: python, Twisted, Jinja, simplejson, and SQLite.  Simplejson and
+  SQLite are included with recent versions of Python.
+
+  See http://djmitche.github.com/buildbot/docs/current/Requirements.html for
+  details.
+
+INSTALLATION:
+
+Please read the User's Manual in docs/buildbot.info or docs/buildbot.html for
+complete instructions. This file only contains a brief summary.
+
+ INSTALLING THE LIBRARIES:
+
+The first step is to install the python libraries. This package uses the
+standard 'distutils' module, so installing them is usually a matter of
+doing something like:
+
+ python ./setup.py install
+
+To test this, shift to a different directory (like /tmp), and run:
+
+ buildbot --version
+
+If it announces the versions of Buildbot and Twisted, the install went ok.
+
+
+ SETTING UP A BUILD SLAVE:
+
+If you want to run a build slave, you need to obtain the following pieces of
+information from the administrator of the buildmaster you intend to connect
+to:
+
+ your buildslave's name
+ the password assigned to your buildslave
+ the hostname and port number of the buildmaster, i.e. example.com:8007
+
+You also need to pick a working directory for the buildslave. All commands
+will be run inside this directory.
+
+Now run the 'buildslave' command as follows:
+
+ buildslave create-slave WORKDIR MASTERHOST:PORT SLAVENAME PASSWORD
+
+This will create a file called "buildbot.tac", which bundles up all the state
+needed by the build slave application. Twisted has a tool called "twistd"
+which knows how to load these saved applications and start running them.
+twistd takes care of logging and daemonization (running the program in the
+background). /usr/bin/buildbot is a front end which runs twistd for you.
+
+Once you've set up the directory with the .tac file, you start it running
+like this:
+
+ buildslave start WORKDIR
+
+This will start the build slave in the background and finish, so you don't
+need to put it in the background yourself with "&". The process ID of the
+background task is written to a file called "twistd.pid", and all output from
+the program is written to a log file named "twistd.log". Look in twistd.log
+to make sure the buildslave has started.
+
+To shut down the build slave, use:
+
+ buildslave stop WORKDIR
+
+
+ RUNNING BEHIND A NAT BOX:
+
+Some network environments will not properly maintain a TCP connection that
+appears to be idle. NAT boxes which do some form of connection tracking may
+drop the port mapping if it looks like the TCP session has been idle for too
+long. The buildslave attempts to turn on TCP "keepalives" (supported by
+Twisted 1.0.6 and later), and if these cannot be activated, it uses
+application level keepalives (which send a dummy message to the build master
+on a periodic basis). The TCP keepalive is typically sent at intervals of
+about 2 hours, and is configurable through the kernel. The application-level
+keepalive defaults to running once every 10 minutes.
+
+To manually turn on application-level keepalives, or to set them to use some
+other interval, add "--keepalive NNN" to the 'buildbot slave' command line.
+NNN is the number of seconds between keepalives. Use as large a value as your
+NAT box allows to reduce the amount of unnecessary traffic on the wire. 600
+seconds (10 minutes) is a reasonable value.
+
+
+ SETTING UP A BUILD MASTER:
+
+Please read the user's manual for instructions. The short form is that you
+use 'buildbot create-master MASTERDIR' to create the base directory, then you
+edit the 'master.cfg' file to configure the buildmaster. Once this is ready,
+you use 'buildbot start MASTERDIR' to launch it.
+
+A sample configuration file will be created for you in WORKDIR/master.cfg .
+There are more examples in docs/examples/, and plenty of documentation in the
+user's manual. Everything is controlled by the config file.
+
+
+SUPPORT:
+
+ Please send questions, bugs, patches, etc, to the buildbot-devel mailing
+ list reachable through http://buildbot.net/, so that everyone can see them.
+
+
+CONTRIBUTE:
+
+ If you are considering contributing to Buildbot please look at
+ http://buildbot.net/trac/wiki/Development to understand the workflow.
+
+
+COPYING:
+
+    Buildbot is free software: you can redistribute it and/or modify it under
+    the terms of the GNU General Public License as published by the Free
+    Software Foundation, version 2.
+
+    This program is distributed in the hope that it will be useful, but
+    WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
+    Public License for more details.
+
+    For full details, please see the file named COPYING in the top directory
+    of the source tree. You should have received a copy of the GNU General
+    Public License along with this program. If not, see
+    <http://www.gnu.org/licenses/>.
+
