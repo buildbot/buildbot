@@ -224,6 +224,7 @@ setup_args = {
               "buildbot.schedulers",
               "buildbot.scripts",
               "buildbot.db",
+              "buildbot.db.migrate.versions",
               "buildbot.util",
               "buildbot.test",
               "buildbot.test.fake",
