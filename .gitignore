@@ -37,3 +37,4 @@ coverage-html
 apidocs/reference
 apidocs/reference.tgz
 common/googlecode_upload.py
+master/docs/tutorial/_build
