@@ -14,7 +14,7 @@ include buildbot/status/web/templates/*.html buildbot/status/web/templates/*.xml
 include buildbot/clients/debug.glade
 include buildbot/buildbot.png
 
-include buildbot/db/migrate/README
+include buildbot/db/migrate/README buildbot/db/migrate/migrate.cfg
 
 include contrib/* contrib/windows/* contrib/os-x/* contrib/css/*
 include contrib/trac/* contrib/trac/bbwatcher/* contrib/trac/bbwatcher/templates/*
