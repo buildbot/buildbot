@@ -169,7 +169,6 @@ class AbstractBuildSlave(pb.Avatar, service.MultiService):
         self.botmaster = botmaster
         self.updateLocks()
         self.startMissingTimer()
-        self.startKeepaliveTimer()
 
     def stopMissingTimer(self):
         if self.missing_timer:
@@ -196,7 +195,6 @@ class AbstractBuildSlave(pb.Avatar, service.MultiService):
 
     def startKeepaliveTimer(self):
         assert self.keepalive_interval
-        assert not self.keepalive_timer
         log.msg("Starting botslave keepalive timer for '%s'" % \
                                         (self.slavename, ))
         self.doKeepalive()
@@ -297,6 +295,7 @@ class AbstractBuildSlave(pb.Avatar, service.MultiService):
             d1.addCallbacks(_got_info, _info_unavailable)
             return d1
         d.addCallback(_get_info)
+        self.startKeepaliveTimer()
 
         def _get_version(res):
             d = bot.callRemote("getVersion")
@@ -360,6 +359,7 @@ class AbstractBuildSlave(pb.Avatar, service.MultiService):
         self.slave_status.setConnected(False)
         log.msg("BuildSlave.detached(%s)" % self.slavename)
         self.botmaster.parent.status.slaveDisconnected(self.slavename)
+        self.stopKeepaliveTimer()
 
     def disconnect(self):
         """Forcibly disconnect the slave.
