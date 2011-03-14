@@ -84,8 +84,9 @@ Open a new terminal, and first enter the same sandbox you created before::
   cd tmp/buildbot
   source sandbox/bin/activate
 
-Install buildslave command:
- easy_install buildbot-slave
+Install buildslave command::
+ 
+   easy_install buildbot-slave
 
 Now, create the slave::
 
