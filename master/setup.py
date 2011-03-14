@@ -86,10 +86,6 @@ class TestCommand(_SetupBuildCommand):
         # Mimick the trial script by adding the path as the last arg
         sys.argv.append(test_loc)
 
-        # No superuser should execute tests
-        if hasattr(os, "getuid") and os.getuid() == 0:
-            raise SystemExit('Do not test as a superuser! Exiting ...')
-
         # Add the current dir to path and pull it all together
         sys.path.insert(0, os.path.curdir)
         sys.path[:] = map(os.path.abspath, sys.path)
