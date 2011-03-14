@@ -41,6 +41,8 @@ class AbstractBuildSlave(pb.Avatar, service.MultiService):
     subclassed to add extra functionality."""
 
     implements(IBuildSlave)
+    keepalive_timer = None
+    keepalive_interval = 30
 
     def __init__(self, name, password, max_builds=None,
                  notify_on_missing=[], missing_timeout=3600,
@@ -167,6 +169,7 @@ class AbstractBuildSlave(pb.Avatar, service.MultiService):
         self.botmaster = botmaster
         self.updateLocks()
         self.startMissingTimer()
+        self.startKeepaliveTimer()
 
     def stopMissingTimer(self):
         if self.missing_timer:
@@ -177,7 +180,26 @@ class AbstractBuildSlave(pb.Avatar, service.MultiService):
         if self.notify_on_missing and self.missing_timeout and self.parent:
             self.stopMissingTimer() # in case it's already running
             self.missing_timer = reactor.callLater(self.missing_timeout,
-                                                   self._missing_timer_fired)
+                                                self._missing_timer_fired)
+
+    def doKeepalive(self):
+        self.keepalive_timer = reactor.callLater(self.keepalive_interval,
+                                                self.doKeepalive)
+        if not self.slave:
+            return
+        d = self.slave.callRemote("print", "Received keepalive from master")
+        d.addErrback(log.msg, "Keepalive failed for '%s'" % (self.slavename, ))
+
+    def stopKeepaliveTimer(self):
+        if self.keepalive_timer:
+            self.keepalive_timer.cancel()
+
+    def startKeepaliveTimer(self):
+        assert self.keepalive_interval
+        assert not self.keepalive_timer
+        log.msg("Starting botslave keepalive timer for '%s'" % \
+                                        (self.slavename, ))
+        self.doKeepalive()
 
     def recordConnectTime(self):
         if self.slave_status:
