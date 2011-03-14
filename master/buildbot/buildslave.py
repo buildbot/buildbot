@@ -42,11 +42,11 @@ class AbstractBuildSlave(pb.Avatar, service.MultiService):
 
     implements(IBuildSlave)
     keepalive_timer = None
-    keepalive_interval = 30
+    keepalive_interval = None
 
     def __init__(self, name, password, max_builds=None,
                  notify_on_missing=[], missing_timeout=3600,
-                 properties={}, locks=None):
+                 properties={}, locks=None, keepalive_interval=30):
         """
         @param name: botname this machine will supply when it connects
         @param password: password this machine will supply when
@@ -86,6 +86,7 @@ class AbstractBuildSlave(pb.Avatar, service.MultiService):
             assert isinstance(i, str)
         self.missing_timeout = missing_timeout
         self.missing_timer = None
+        self.keepalive_interval = keepalive_interval
 
     def update(self, new):
         """
