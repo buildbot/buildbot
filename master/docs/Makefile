@@ -35,3 +35,5 @@ images-png:
 	#$(MAKE) -C images images-png
 images-eps:
 	$(MAKE) -C images images-eps
+tutorial:
+	cd tutorial; $(MAKE) html
