@@ -27,6 +27,16 @@ making the tests portable when I make them automatic.
 
 Here's how it works:
 
+  - create a virtualenv with BuildBot master and slave both installed:
+      virtualenv --no-site-packages /usr/local/buildbot
+      source /usr/local/buildbot/bin/activate
+      (cd master && python setup.py develop)
+      (cd slave && python setup.py develop)
+
+    (If you choose to put the virtual env in a different directory,
+    make sure to override VIRTUALENV on the make command line in
+    the following steps.)
+
   - run "make setup" to create the master and slave directories:
     master, slaveA, and slaveB
 

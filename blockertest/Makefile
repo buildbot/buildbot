@@ -1,8 +1,6 @@
-pwd := $(shell pwd)
-export PYTHONPATH := $(pwd)/..
-
-PYTHON   := /usr/bin/python
-BUILDBOT := $(PYTHON) ../bin/buildbot
+VIRTUALENV = /usr/local/buildbot
+BUILDBOT := $(VIRTUALENV)/bin/buildbot
+BUILDSLAVE := $(VIRTUALENV)/bin/buildslave
 
 .PHONY: default start stop wipelogs hard-stop hard-restart
 .PHONY: setup master slaves clean
@@ -12,13 +10,13 @@ default:
 
 start: master slaves
 	$(BUILDBOT) start master
-	$(BUILDBOT) start -q slaveA
-	$(BUILDBOT) start -q slaveB
+	$(BUILDSLAVE) start -q slaveA
+	$(BUILDSLAVE) start -q slaveB
 
 stop:
 	-$(BUILDBOT) stop -q master
-	-$(BUILDBOT) stop -q slaveA
-	-$(BUILDBOT) stop -q slaveB
+	-$(BUILDSLAVE) stop -q slaveA
+	-$(BUILDSLAVE) stop -q slaveB
 
 wipelogs:
 	rm -rf master/builder[0-9][AB]
@@ -46,13 +44,11 @@ master/.stamp:
 slaves: slaveA/.stamp slaveB/.stamp
 
 slaveA/.stamp:
-	$(BUILDBOT) create-slave slaveA localhost:9989 slaveA slaveA
-	rm slaveA/*.sample
+	$(BUILDSLAVE) create-slave slaveA localhost:9989 slaveA slaveA
 	touch $@
 
 slaveB/.stamp:
-	$(BUILDBOT) create-slave slaveB localhost:9989 slaveB slaveB
-	rm slaveB/*.sample
+	$(BUILDSLAVE) create-slave slaveB localhost:9989 slaveB slaveB
 	touch $@
 
 clean: check-stopped force-clean
