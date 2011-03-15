@@ -129,6 +129,12 @@ class Repo(SourceBaseCommand):
         command = ['sync']
         self.sendStatus({"header": "synching manifest %s from branch %s from %s\n"
                                    % (self.manifest_file, self.manifest_branch, self.manifest_url)})
+        return self._repoCmd(command, self._doSync2,  abandonOnFailure=False)
+
+    def _doSync2(self, dummy):
+        command = ['sync']
+        self.sendStatus({"header": "synching manifest %s from branch %s from %s\n"
+                                   % (self.manifest_file, self.manifest_branch, self.manifest_url)})
         return self._repoCmd(command, self._didSync)
 
     def _didSync(self, dummy):
