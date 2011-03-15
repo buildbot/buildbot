@@ -9,7 +9,8 @@ apidocs:
 	$(MAKE) -C apidocs
 
 tutorial:
-	cd master/docs/tutorial; $(MAKE) html
+	$(MAKE) -C master/docs tutorial
+
 pylint:
 	cd master; $(MAKE) pylint
 	cd slave; $(MAKE) pylint

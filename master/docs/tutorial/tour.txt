@@ -138,7 +138,7 @@ If you come across this, just do start & stop for now to get your buildbot insta
   buildbot stop master && buildbot start master
 
 Your First Build
----------------
+----------------
 
 By now you're probably thinking: "All this time spent and still not done a
 single build ? What was the name of this project again ?"
@@ -240,10 +240,12 @@ You can also see the new builds in the web interface.
    :alt: a successful test run from IRC happened.
 
 Debugging with Manhole
---------------------------
-You can do some debugging by using manhole, an interactive Python shell. 
-It exposes full access to the buildmaster's account (including the ability to modify and delete files), so it should 
-not be enabled with a weak or easily guessable password. 
+----------------------
+
+You can do some debugging by using manhole, an interactive Python shell.  It
+exposes full access to the buildmaster's account (including the ability to
+modify and delete files), so it should not be enabled with a weak or easily
+guessable password. 
 
 To use this you will need to install an additional package to your virtualenv::
 
@@ -271,4 +273,5 @@ If you wanted to check which slaves are connected and what builders those slaves
   >>> master.botmaster.slaves
   {'example-slave': <BuildSlave 'example-slave', current builders: runtests>}
 
-The master can be explored in more depther using dir().
+Objects can be explored in more depth using `dir(x)` or the helper function
+`show(x)`.
