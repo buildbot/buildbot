@@ -26,7 +26,15 @@ def upgrade(migrate_engine):
         sa.Column('schedulerid', sa.Integer, autoincrement=False, primary_key=True),
         sa.Column('name', sa.String(128), nullable=False),
         sa.Column('state', sa.String(1024), nullable=False),
-        sa.Column('class_name', sa.Text, nullable=False, server_default=sa.DefaultClause(''))
+        sa.Column('class_name', sa.Text, nullable=False),
+    )
+
+    sa.Table('builds', metadata,
+        sa.Column('id', sa.Integer,  primary_key=True),
+        sa.Column('number', sa.Integer, nullable=False),
+        sa.Column('brid', sa.Integer, nullable=False),
+        sa.Column('start_time', sa.Integer, nullable=False),
+        sa.Column('finish_time', sa.Integer),
     )
 
     sa.Table('changes', metadata,
@@ -39,17 +47,49 @@ def upgrade(migrate_engine):
         sa.Column('revlink', sa.String(256)),
         sa.Column('when_timestamp', sa.Integer, nullable=False),
         sa.Column('category', sa.String(256)),
-        sa.Column('repository', sa.Text, nullable=False, server_default=sa.DefaultClause('')),
-        sa.Column('project', sa.Text, nullable=False, server_default=sa.DefaultClause('')),
+        sa.Column('repository', sa.Text, nullable=False),
+        sa.Column('project', sa.Text, nullable=False),
+    )
+
+    sa.Table('buildrequests', metadata,
+        sa.Column('id', sa.Integer,  primary_key=True),
+        sa.Column('buildsetid', sa.Integer, nullable=False),
+        sa.Column('buildername', sa.String(length=None), nullable=False),
+        sa.Column('priority', sa.Integer, nullable=False),
+        sa.Column('claimed_at', sa.Integer),
+        sa.Column('claimed_by_name', sa.String(length=None)),
+        sa.Column('claimed_by_incarnation', sa.String(length=None)),
+        sa.Column('complete', sa.Integer),
+        sa.Column('results', sa.SmallInteger),
+        sa.Column('submitted_at', sa.Integer, nullable=False),
+        sa.Column('complete_at', sa.Integer),
+    )
+
+    sa.Table('buildsets', metadata,
+        sa.Column('id', sa.Integer,  primary_key=True),
+        sa.Column('external_idstring', sa.String(256)),
+        sa.Column('reason', sa.String(256)),
+        sa.Column('sourcestampid', sa.Integer, nullable=False),
+        sa.Column('submitted_at', sa.Integer, nullable=False),
+        sa.Column('complete', sa.SmallInteger, nullable=False),
+        sa.Column('complete_at', sa.Integer),
+        sa.Column('results', sa.SmallInteger),
+    )
+
+    sa.Table('patches', metadata,
+        sa.Column('id', sa.Integer,  primary_key=True),
+        sa.Column('patchlevel', sa.Integer, nullable=False),
+        sa.Column('patch_base64', sa.Text, nullable=False),
+        sa.Column('subdir', sa.Text),
     )
 
     sa.Table('sourcestamps', metadata,
         sa.Column('id', sa.Integer, autoincrement=False, primary_key=True),
         sa.Column('branch', sa.String(256)),
         sa.Column('revision', sa.String(256)),
-        sa.Column('patchid', sa.Integer, sa.ForeignKey('patches.id')),
-        sa.Column('repository', sa.Text, nullable=False, server_default=''),
-        sa.Column('project', sa.Text, nullable=False, server_default=''),
+        sa.Column('patchid', sa.Integer),
+        sa.Column('repository', sa.Text, nullable=False),
+        sa.Column('project', sa.Text, nullable=False),
     )
 
     to_autoinc = [ s.split(".") for s in
@@ -75,7 +115,7 @@ def upgrade(migrate_engine):
                                    % (table_name, col_name, table_name, col_name))
     else:
         for table_name, col_name in to_autoinc:
-            table = sa.Table(table_name, metadata, autoload=True)
+            table = metadata.tables[table_name]
             col = table.c[col_name]
             col.alter(autoincrement=True)
 
