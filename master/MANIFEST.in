@@ -1,6 +1,8 @@
 include MANIFEST.in README NEWS CREDITS COPYING UPGRADING
 
 include docs/examples/*.cfg
+include docs/tutorial/*.txt docs/tutorial/Makefile docs/tutorial/conf.py.in
+include docs/tutorial/_images/*.png
 include docs/*.texinfo
 include docs/*.png docs/images/*.png docs/images/*.svg docs/images/*.txt docs/images/*.ai
 include docs/images/icon.blend docs/images/Makefile
