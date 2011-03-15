@@ -597,7 +597,7 @@ class BuildMaster(service.MultiService):
         def reg(_):
             if debugPassword:
                 self.debugClientRegistration = debug.registerDebugClient(
-                        self, self.slavePortnum, debugPassword, self.pmanager)
+                        self, self.slavePortnum, debugPassword, self.pbmanager)
         d.addCallback(reg)
         return d
 
