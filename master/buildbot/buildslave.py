@@ -46,7 +46,7 @@ class AbstractBuildSlave(pb.Avatar, service.MultiService):
 
     def __init__(self, name, password, max_builds=None,
                  notify_on_missing=[], missing_timeout=3600,
-                 properties={}, locks=None, keepalive_interval=360):
+                 properties={}, locks=None, keepalive_interval=3600):
         """
         @param name: botname this machine will supply when it connects
         @param password: password this machine will supply when
