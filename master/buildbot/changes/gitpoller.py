@@ -34,7 +34,8 @@ class GitPoller(base.PollingChangeSource):
                  workdir=None, pollInterval=10*60, 
                  gitbin='git', usetimestamps=True,
                  category=None, project=None,
-                 pollinterval=-2, fetch_refspec=None):
+                 pollinterval=-2, fetch_refspec=None,
+                 encoding='utf-8'):
         # for backward compatibility; the parameter used to be spelled with 'i'
         if pollinterval != -2:
             pollInterval = pollinterval
@@ -44,6 +45,7 @@ class GitPoller(base.PollingChangeSource):
         self.branch = branch
         self.pollInterval = pollInterval
         self.fetch_refspec = fetch_refspec
+        self.encoding = encoding
         self.lastChange = time.time()
         self.lastPoll = time.time()
         self.gitbin = gitbin
@@ -166,7 +168,7 @@ class GitPoller(base.PollingChangeSource):
         args = ['log', rev, '--no-walk', r'--format=%s%n%b']
         d = utils.getProcessOutput(self.gitbin, args, path=self.workdir, env=dict(PATH=os.environ['PATH']), errortoo=False )
         def process(git_output):
-            stripped_output = git_output.strip()
+            stripped_output = git_output.strip().decode(self.encoding)
             if len(stripped_output) == 0:
                 raise EnvironmentError('could not get commit comment for rev')
             return stripped_output
@@ -204,7 +206,7 @@ class GitPoller(base.PollingChangeSource):
         args = ['log', rev, '--no-walk', r'--format=%aE']
         d = utils.getProcessOutput(self.gitbin, args, path=self.workdir, env=dict(PATH=os.environ['PATH']), errortoo=False )
         def process(git_output):
-            stripped_output = git_output.strip()
+            stripped_output = git_output.strip().decode(self.encoding)
             if len(stripped_output) == 0:
                 raise EnvironmentError('could not get commit name for rev')
             return stripped_output
@@ -240,7 +242,7 @@ class GitPoller(base.PollingChangeSource):
         wfd = defer.waitForDeferred(d)
         yield wfd
         results = wfd.getResult()
-        
+
         # process oldest change first
         revList = results.split()
         if not revList:
