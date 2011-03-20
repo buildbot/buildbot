@@ -242,7 +242,7 @@ class Try_Jobdir(scheduler.SchedulerMixin, unittest.TestCase):
                         external_idstring='extid',
                         properties=[('scheduler', ('tsched', 'Scheduler'))]),
                     dict(branch='trunk', repository='repo',
-                        project='proj', revision='1234', changeids=set([]),
+                        project='proj', revision='1234',
                         patch_body='this is my diff, -- ++, etc.',
                         patch_level=1, patch_subdir=''))
         d.addCallback(check)
@@ -278,7 +278,7 @@ class Try_Jobdir(scheduler.SchedulerMixin, unittest.TestCase):
                         external_idstring='extid',
                         properties=[('scheduler', ('tsched', 'Scheduler'))]),
                     dict(branch='trunk', repository='repo',
-                        project='proj', revision='1234', changeids=set([]),
+                        project='proj', revision='1234',
                         patch_body='this is my diff, -- ++, etc.',
                         patch_level=1, patch_subdir=''))
         d.addCallback(check)
@@ -327,7 +327,7 @@ class Try_Userpass_Perspective(scheduler.SchedulerMixin, unittest.TestCase):
                             ('scheduler', ('tsched', 'Scheduler')),
                         ]),
                     dict(branch='default', repository='repo',
-                        changeids=set([]), project='proj', revision='abcdef',
+                        project='proj', revision='abcdef',
                         patch_body='-- ++', patch_level=1, patch_subdir=''))
         d.addCallback(check)
         return d

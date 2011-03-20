@@ -123,8 +123,8 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
                         external_idstring=None,
                         properties=[ ('a', ('b', 'Scheduler')),
                                      ('scheduler', ('testy', 'Scheduler')), ]),
-                    dict(branch=None, revision=None, repository='', project='',
-                         changeids=set([])))
+                    dict(branch=None, revision=None, repository='',
+                         project=''))
         d.addCallback(check)
         return d
 
@@ -218,7 +218,7 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
                         external_idstring='try_1234',
                         properties=[('scheduler', ('xyz', 'Scheduler'))]),
                     dict(branch='default', revision=None, repository='hgmo',
-                         project='myp', changeids=set([])))
+                         project='myp'))
         d.addCallback(check)
         return d
 
@@ -237,7 +237,7 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
                             ('xxx', ('yyy', 'TEST')),
                         ]),
                     dict(branch='default', revision=None, repository='hgmo',
-                         project='myp', changeids=set([])))
+                         project='myp'))
         d.addCallback(check)
         return d
 
@@ -251,7 +251,7 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
                         external_idstring=None,
                         properties=[('scheduler', ('xyz', 'Scheduler'))]),
                     dict(branch='default', revision=None, repository='',
-                         project='', changeids=set([])))
+                         project=''))
         d.addCallback(check)
         return d
 

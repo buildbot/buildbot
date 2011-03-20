@@ -429,7 +429,8 @@ class FakeSourceStampsComponent(FakeDBComponent):
 
         for row in rows:
             if isinstance(row, SourceStamp):
-                self.sourcestamps[row.id] = row.values.copy()
+                ss = self.sourcestamps[row.id] = row.values.copy()
+                ss['changeids'] = set()
 
         for row in rows:
             if isinstance(row, SourceStampChange):
@@ -463,6 +464,23 @@ class FakeSourceStampsComponent(FakeDBComponent):
                 patchid=patchid, repository=repository, project=project,
                 changeids=changeids)
         return defer.succeed(id)
+
+    def getSourceStamp(self, ssid):
+        if ssid in self.sourcestamps:
+            ssdict = self.sourcestamps[ssid].copy()
+            del ssdict['id']
+            ssdict['ssid'] = ssid
+            patchid = ssdict['patchid']
+            if patchid:
+                ssdict.update(self.patches[patchid])
+            else:
+                ssdict['patch_body'] = None
+                ssdict['patch_level'] = None
+                ssdict['patch_subdir'] = None
+            del ssdict['patchid']
+            return defer.succeed(ssdict)
+        else:
+            return defer.succeed(None)
 
 
 class FakeBuildsetsComponent(FakeDBComponent):
@@ -563,8 +581,8 @@ class FakeBuildsetsComponent(FakeDBComponent):
         expected; the ssid parameter of the buildset is omitted.  Properties
         are converted with asList and sorted.  Sourcestamp patches are inlined
         (patch_body, patch_level, patch_subdir), and changeids are represented
-        as a set.  If bsid is '?', then assert there is only one new buildset,
-        and use that."""
+        as a set, but omitted if empty.  If bsid is '?', then assert there is
+        only one new buildset, and use that."""
         if bsid == '?':
             self.assertBuildsets(1)
             bsid = self.buildsets.keys()[0]
@@ -578,11 +596,13 @@ class FakeBuildsetsComponent(FakeDBComponent):
         if 'id' in buildset:
             del buildset['id']
 
-        if 'id' in ss:
-            del ss['id']
-
         if buildset['properties']:
             buildset['properties'] = sorted(buildset['properties'].items())
+
+        if 'id' in ss:
+            del ss['id']
+        if not ss['changeids']:
+            del ss['changeids']
 
         # incorporate patch info if we have it
         if 'patchid' in ss and ss['patchid']:
