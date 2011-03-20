@@ -38,6 +38,22 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
        step check out the latest revision indicated by the given Changes.
        CHANGES is a tuple of L{buildbot.changes.changes.Change} instances,
        and all must be on the same branch.
+
+    @ivar ssid: sourcestamp ID, or None if this sourcestamp has not yet been
+    added to the database
+
+    @ivar branch: branch name or None
+
+    @ivar revision: revision string or None
+
+    @ivar patch: tuple (patch body, patch level) or None
+
+    @ivar changes: tuple of changes that went into this source stamp, sorted by
+    number
+
+    @ivar project: project name
+
+    @ivar repository: repository URL
     """
 
     persistenceVersion = 2
@@ -56,8 +72,47 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
 
     implements(interfaces.ISourceStamp)
 
+    @classmethod
+    def fromSsdict(cls, master, ssdict):
+        """
+        Class method to create a L{SourceStamp} from a dictionary as returned
+        by L{SourceStampConnectorComponent.getSourceStamp}.
+
+        @param master: build master instance
+        @param ssdict: source stamp dictionary
+
+        @returns: L{SourceStamp} via Deferred
+        """
+        sourcestamp = cls(fromSsdict=True)
+        sourcestamp.ssid = ssdict['ssid']
+        sourcestamp.branch = ssdict['branch']
+        sourcestamp.revision = ssdict['revision']
+        sourcestamp.project = ssdict['project']
+        sourcestamp.repository = ssdict['repository']
+
+        sourcestamp.patch = None
+        if ssdict['patch_body']:
+            # note that this class does not store the patch_subdir
+            sourcestamp.patch = (ssdict['patch_body'], ssdict['patch_level'])
+
+        if ssdict['changeids']:
+            getChangeInstance = master.db.changes.getChangeInstance
+            d = defer.gatherResults([ getChangeInstance(id)
+                                for id in ssdict['changeids'] ])
+        else:
+            d = defer.succeed([])
+        def got_changes(changes):
+            sourcestamp.changes = tuple(changes)
+            return sourcestamp
+        d.addCallback(got_changes)
+        return d
+
     def __init__(self, branch=None, revision=None, patch=None,
-                 changes=None, project='', repository=''):
+                 changes=None, project='', repository='', fromSsdict=False):
+        # skip all this madness if we're being built from the database
+        if fromSsdict:
+            return
+
         if patch is not None:
             assert len(patch) == 2
             assert int(patch[0]) != -1
@@ -83,6 +138,9 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
         self._getSourceStampId_lock = defer.DeferredLock();
 
     def canBeMergedWith(self, other):
+        # this algorithm implements the "compatible" mergeRequests defined in
+        # detail in cfg-buidlers.texinfo; change that documentation if the
+        # algorithm changes!
         if other.repository != self.repository:
             return False
         if other.branch != self.branch:
@@ -91,9 +149,6 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
             return False
 
         if self.changes and other.changes:
-            # TODO: consider not merging these. It's a tradeoff between
-            # minimizing the number of builds and obtaining finer-grained
-            # results.
             return True
         elif self.changes and not other.changes:
             return False # we're using changes, they aren't
