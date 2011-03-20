@@ -20,6 +20,7 @@ the real connector components.
 """
 
 from twisted.internet import defer
+import base64
 from buildbot.util import json
 
 # Fake DB Rows
@@ -117,6 +118,30 @@ class ChangeProperty(Row):
     )
 
     required_columns = ('changeid',)
+
+
+class Patch(Row):
+    table = "patches"
+
+    defaults = dict(
+        id = None,
+        patchlevel = 0,
+        patch_base64 = 'aGVsbG8sIHdvcmxk', # 'hello, world'
+        subdir = None,
+    )
+
+    id_column = 'id'
+
+
+class SourceStampChange(Row):
+    table = "sourcestamp_changes"
+
+    defaults = dict(
+        sourcestampid = None,
+        changeid = None,
+    )
+
+    required_columns = ('sourcestampid', 'changeid')
 
 
 class SourceStamp(Row):
@@ -369,30 +394,52 @@ class FakeSourceStampsComponent(FakeDBComponent):
 
     def setUp(self):
         self.sourcestamps = {}
+        self.patches = {}
 
     def insertTestData(self, rows):
+        for row in rows:
+            if isinstance(row, Patch):
+                self.patches[row.id] = dict(
+                    patch_level=row.patchlevel,
+                    patch_body=base64.b64decode(row.patch_base64),
+                    patch_subdir=row.subdir)
+
         for row in rows:
             if isinstance(row, SourceStamp):
                 self.sourcestamps[row.id] = row.values.copy()
 
+        for row in rows:
+            if isinstance(row, SourceStampChange):
+                ss = self.sourcestamps[row.sourcestampid]
+                ss['changeids'].add(row.changeid)
+
     # component methods
 
-    def _sync_create(self, **kwargs):
+    def createSourceStamp(self, branch, revision, repository, project,
+                          patch_body=None, patch_level=0, patch_subdir=None,
+                          changeids=[]):
         id = len(self.sourcestamps) + 100
         while id in self.sourcestamps:
             id += 1
-        kwargs['id'] = id
-        self.sourcestamps[id] = kwargs
-        return id
 
-    def createSourceStamp(self, **kwargs):
-        return defer.succeed(self._sync_create(**kwargs))
+        changeids = set(changeids)
 
-    # fake methods
+        if patch_body:
+            patchid = len(self.patches) + 100
+            while patchid in self.patches:
+                patchid += 1
+            self.patches[patchid] = dict(
+                patch_level=patch_level,
+                patch_body=patch_body,
+                patch_subdir=patch_subdir,
+            )
+        else:
+            patchid = None
 
-    def fakeSourceStamp(self, **kwargs):
-        """Add a sourcestamp, returning the ssid"""
-        return self._sync_create(**kwargs)
+        self.sourcestamps[id] = dict(id=id, branch=branch, revision=revision,
+                patchid=patchid, repository=repository, project=project,
+                changeids=changeids)
+        return defer.succeed(id)
 
 
 class FakeBuildsetsComponent(FakeDBComponent):
@@ -471,8 +518,10 @@ class FakeBuildsetsComponent(FakeDBComponent):
     def assertBuildset(self, bsid, expected_buildset, expected_sourcestamp):
         """Assert that the buildset and its attached sourcestamp look as
         expected; the ssid parameter of the buildset is omitted.  Properties
-        are converted with asList and sorted.  If bsid is '?', then assert
-        there is only one new buildset, and use that"""
+        are converted with asList and sorted.  Sourcestamp patches are inlined
+        (patch_body, patch_level, patch_subdir), and changeids are represented
+        as a set.  If bsid is '?', then assert there is only one new buildset,
+        and use that."""
         if bsid == '?':
             self.assertBuildsets(1)
             bsid = self.buildsets.keys()[0]
@@ -492,11 +541,10 @@ class FakeBuildsetsComponent(FakeDBComponent):
         if buildset['properties']:
             buildset['properties'] = sorted(buildset['properties'].items())
 
-        if 'changeids' in ss:
-            ss['changeids'].sort()
-
-        if 'patchid' in ss and not ss['patchid']:
-            del ss['patchid']
+        # incorporate patch info if we have it
+        if 'patchid' in ss and ss['patchid']:
+            ss.update(self.db.sourcestamps.patches[ss['patchid']])
+        del ss['patchid']
 
         self.t.assertEqual(
             dict(buildset=buildset, sourcestamp=ss),
