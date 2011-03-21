@@ -19,9 +19,9 @@ using a database.  These classes should pass the same tests as are applied to
 the real connector components.
 """
 
-from twisted.internet import defer
 import base64
-from buildbot.util import json
+from twisted.internet import defer
+from buildbot.util import json, epoch2datetime
 
 # Fake DB Rows
 
@@ -462,7 +462,7 @@ class FakeBuildsetsComponent(FakeDBComponent):
                 assert row.buildsetid in self.buildsets
                 n = row.property_name
                 v, src = tuple(json.loads(row.property_value))
-                self.buildsets[row.id]['properties'][n] = (v, src)
+                self.buildsets[row.buildsetid]['properties'][n] = (v, src)
 
     # component methods
 
@@ -493,6 +493,26 @@ class FakeBuildsetsComponent(FakeDBComponent):
                 self.buildsets[bsid].get('results', -1))
                 for bsid in bsids ]
         return defer.succeed(rv)
+
+    def getBuildset(self, bsid):
+        if bsid not in self.buildsets:
+            return defer.succeed(None)
+        rv = self.buildsets[bsid]
+        if rv['complete_at']:
+            rv['complete_at'] = epoch2datetime(rv['complete_at'])
+        else:
+            rv['complete_at'] = None
+        rv['submitted_at'] = epoch2datetime(rv['submitted_at'])
+        rv['complete'] = bool(rv['complete'])
+        del rv['id']
+        return defer.succeed(rv)
+
+    def getBuildsetProperties(self, buildsetid):
+        if buildsetid in self.buildsets:
+            return defer.succeed(
+                    self.buildsets[buildsetid]['properties'])
+        else:
+            return defer.succeed({})
 
     # fake methods
 
