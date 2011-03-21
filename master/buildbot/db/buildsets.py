@@ -63,9 +63,8 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
 
             # insert the buildset itself
             r = conn.execute(self.db.model.buildsets.insert(), dict(
-                sourcestampid=ssid,
-                submitted_at=submitted_at_epoch,
-                reason=reason,
+                sourcestampid=ssid, submitted_at=submitted_at_epoch,
+                reason=reason, complete=0, complete_at=None, results=-1,
                 external_idstring=external_idstring))
             bsid = r.inserted_primary_key[0]
 
@@ -79,7 +78,10 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
             # and finish with a build request for each builder
             conn.execute(self.db.model.buildrequests.insert(), [
                 dict(buildsetid=bsid, buildername=buildername,
-                     submitted_at=submitted_at_epoch)
+                     priority=0, claimed_at=0, claimed_by_name=None,
+                     claimed_by_incarnation=None, complete=0,
+                     results=-1, submitted_at=submitted_at_epoch,
+                     complete_at=None)
                 for buildername in builderNames ])
 
             transaction.commit()

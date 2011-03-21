@@ -64,7 +64,7 @@ class TestBuildsetsConnectorComponent(
                 self.assertTrue(started <= bs_submitted_at <= time.time(),
                         "now: %s; db: %s" % (time.time(), row.submitted_at))
                 self.assertEqual(rows,
-                    [ ( bsid, 'extid', 'because', 234, 0, None, None) ])
+                    [ ( bsid, 'extid', 'because', 234, 0, None, -1) ])
 
                 # and one buildrequests row
                 r = conn.execute(self.db.model.buildrequests.select())
@@ -75,7 +75,7 @@ class TestBuildsetsConnectorComponent(
                           for row in r.fetchall() ]
                 self.assertEqual(rows,
                     [ ( bsid, 'bldr', 0, 0, None, None, 0,
-                        None, bs_submitted_at, None) ])
+                        -1, bs_submitted_at, None) ])
             return self.db.pool.do(thd)
         d.addCallback(check)
         return d
@@ -95,7 +95,7 @@ class TestBuildsetsConnectorComponent(
                           row.complete_at, row.results)
                           for row in r.fetchall() ]
                 self.assertEqual(rows,
-                    [ ( bsid, None, u'because', 234, 0, None, None) ])
+                    [ ( bsid, None, u'because', 234, 0, None, -1) ])
 
                 # one property row
                 r = conn.execute(self.db.model.buildset_properties.select())
