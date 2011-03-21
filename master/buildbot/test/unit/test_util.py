@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+import datetime
+
 from twisted.trial import unittest
 
 from buildbot import util
@@ -171,3 +173,23 @@ class none_or_str(unittest.TestCase):
     def test_int(self):
         self.assertEqual(util.none_or_str(199), "199")
 
+class TimeFunctions(unittest.TestCase):
+
+    def test_UTC(self):
+        self.assertEqual(util.UTC.utcoffset(datetime.datetime.now()),
+                         datetime.timedelta(0))
+        self.assertEqual(util.UTC.dst(datetime.datetime.now()),
+                         datetime.timedelta(0))
+        self.assertEqual(util.UTC.tzname(), "UTC")
+
+    def test_epoch2datetime(self):
+        self.assertEqual(util.epoch2datetime(0),
+                datetime.datetime(1970, 1, 1, 0, 0, 0, tzinfo=util.UTC))
+        self.assertEqual(util.epoch2datetime(1300000000),
+                datetime.datetime(2011, 3, 13, 7, 6, 40, tzinfo=util.UTC))
+
+    def test_datetime2epoch(self):
+        dt = datetime.datetime(1970, 1, 1, 0, 0, 0, tzinfo=util.UTC)
+        self.assertEqual(util.datetime2epoch(dt), 0)
+        dt = datetime.datetime(2011, 3, 13, 7, 6, 40, tzinfo=util.UTC)
+        self.assertEqual(util.datetime2epoch(dt), 1300000000)

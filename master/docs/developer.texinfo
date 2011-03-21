@@ -148,6 +148,27 @@ specific instance at runtime:
         return d
 @end example
 
+@item epoch2datetime
+
+Convert a UNIX epoch timestamp (an integer) to a Python datetime object, in the
+UTC timezone.  Note that timestamps specify UTC time (modulo leap seconds and a
+few other minor details).
+
+@item datetime2epoch
+
+Convert an arbitrary Python datetime object into a UNIX epoch timestamp.
+
+@item UTC
+
+A @code{datetime.tzinfo} subclass representing UTC time.  A similar class has
+finally been added to Python in version 3.2, but the implementation is simple
+enough to include here.  This is mostly used in tests to create timezeon-aware
+datetime objects in UTC:
+
+@example
+dt = datetime.datetime(1978, 6, 15, 12, 31, 15, tzinfo=UTC)
+@end example
+
 @end table
 
 @node buildbot.util.collections
