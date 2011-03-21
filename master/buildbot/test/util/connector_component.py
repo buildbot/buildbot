@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
+import mock
 from buildbot.db import model
 from buildbot.test.util import db
 
@@ -37,6 +38,7 @@ class ConnectorComponentMixin(db.RealDatabaseMixin):
             self.db = FakeDBConnector()
             self.db.pool = self.db_pool
             self.db.model = model.Model(self.db)
+            self.db.master = mock.Mock()
         d.addCallback(finish_setup)
         return d
 

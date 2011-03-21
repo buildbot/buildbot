@@ -20,8 +20,10 @@ the real connector components.
 """
 
 import base64
-from twisted.internet import defer
 from buildbot.util import json, epoch2datetime
+from twisted.python import failure
+from twisted.internet import defer, reactor
+from buildbot.db import buildrequests
 
 # Fake DB Rows
 
@@ -64,6 +66,27 @@ class Row(object):
         else:
             self.__class__._next_id += 1
         return self.__class__._next_id
+
+
+class BuildRequest(Row):
+    table = "buildrequests"
+
+    defaults = dict(
+        id = None,
+        buildsetid = None,
+        buildername = "bldr",
+        priority = 0,
+        claimed_at = 0,
+        claimed_by_name = None,
+        claimed_by_incarnation = None,
+        complete = 0,
+        results = -1,
+        submitted_at = 0,
+        complete_at = 0,
+    )
+
+    id_column = 'id'
+    required_columns = ('buildsetid',)
 
 
 class Change(Row):
@@ -645,6 +668,152 @@ class FakeStateComponent(FakeDBComponent):
                     "state is %r" % (state,))
 
 
+class FakeBuildRequestsComponent(FakeDBComponent):
+
+    # for use in determining "my" requests
+    MASTER_NAME = "this-master"
+    MASTER_INCARNATION = "this-lifetime"
+
+    # override this to set reactor.seconds
+    _reactor = reactor
+
+    def setUp(self):
+        self.reqs = {}
+
+    def insertTestData(self, rows):
+        for row in rows:
+            if isinstance(row, BuildRequest):
+                self.reqs[row.id] = row
+
+    # component methods
+
+    def getBuildRequest(self, brid):
+        try:
+            return defer.succeed(self._brdictFromRow(self.reqs[brid]))
+        except:
+            return defer.succeed(None)
+
+    def getBuildRequests(self, buildername=None, complete=None, claimed=None):
+        rv = []
+        for br in self.reqs.itervalues():
+            if buildername and br.buildername != buildername:
+                continue
+            if complete is not None:
+                if complete and not br.complete:
+                    continue
+                if not complete and br.complete:
+                    continue
+            if claimed is not None:
+                if claimed == "mine":
+                    if br.claimed_by_name != self.MASTER_NAME:
+                        continue
+                    if br.claimed_by_incarnation != self.MASTER_INCARNATION:
+                        continue
+                elif claimed:
+                    if not br.claimed_at:
+                        continue
+                else:
+                    if br.claimed_at:
+                        continue
+            rv.append(self._brdictFromRow(br))
+        return defer.succeed(rv)
+
+    def claimBuildRequests(self, brids):
+        for brid in brids:
+            if brid not in self.reqs:
+                return defer.fail(
+                        failure.Failure(buildrequests.AlreadyClaimedError))
+            br = self.reqs[brid]
+            if br.claimed_at and (
+                    br.claimed_by_name != self.MASTER_NAME or
+                    br.claimed_by_incarnation != self.MASTER_INCARNATION):
+                return defer.fail(
+                        failure.Failure(buildrequests.AlreadyClaimedError))
+        # now that we've thrown any necessary exceptions, get started
+        for brid in brids:
+            br = self.reqs[brid]
+            br.claimed_at = self._reactor.seconds()
+            br.claimed_by_name = self.MASTER_NAME
+            br.claimed_by_incarnation = self.MASTER_INCARNATION
+        return defer.succeed(None)
+
+    def unclaimOldIncarnationRequests(self):
+        for br in self.reqs.itervalues():
+            if (not br.complete and br.claimed_at and
+                    br.claimed_by_name == self.MASTER_NAME and
+                    br.claimed_by_incarnation != self.MASTER_INCARNATION):
+                br.claimed_at = 0
+                br.claimed_by_name = None
+                br.claimed_by_incarnation = None
+        return defer.succeed(None)
+
+    def unclaimExpiredRequests(self, old):
+        old_time = self._reactor.seconds() - old
+        for br in self.reqs.itervalues():
+            if not br.complete and br.claimed_at and br.claimed_at < old_time:
+                br.claimed_at = 0
+                br.claimed_by_name = None
+                br.claimed_by_incarnation = None
+        return defer.succeed(None)
+
+    # Code copied from buildrequests.BuildRequestConnectorComponent
+    def _brdictFromRow(self, row):
+        claimed = mine = False
+        if (row.claimed_at
+                and row.claimed_by_name is not None
+                and row.claimed_by_incarnation is not None):
+            claimed = True
+            master_name = self.db.master.master_name
+            master_incarnation = self.db.master.master_incarnation
+            if (row.claimed_by_name == master_name and
+                row.claimed_by_incarnation == master_incarnation):
+               mine = True
+
+        def mkdt(epoch):
+            if epoch:
+                return epoch2datetime(epoch)
+        submitted_at = mkdt(row.submitted_at)
+        claimed_at = mkdt(row.claimed_at)
+        complete_at = mkdt(row.complete_at)
+
+        return dict(brid=row.id, buildsetid=row.buildsetid,
+                buildername=row.buildername, priority=row.priority,
+                claimed=claimed, claimed_at=claimed_at, mine=mine,
+                complete=bool(row.complete), results=row.results,
+                submitted_at=submitted_at, complete_at=complete_at)
+
+    # fake methods
+
+    def fakeClaimBuildRequest(self, brid, claimed_at=None, master_name=None,
+                                          master_incarnation=None):
+        br = self.reqs[brid]
+        br.claimed_at = claimed_at or self._reactor.seconds()
+        br.claimed_by_name = master_name or self.MASTER_NAME
+        br.claimed_by_incarnation = \
+                master_incarnation or self.MASTER_INCARNATION
+
+    # assertions
+
+    def assertClaimed(self, brid, master_name=None, master_incarnation=None):
+        self.t.assertTrue(self.reqs[brid].claimed_at)
+        if master_name and master_incarnation:
+            br = self.reqs[brid]
+            self.t.assertEqual(
+                [ br.claimed_by_name, br.claimed_by_incarnation ]
+                [ master_name, master_incarnation ])
+
+    def assertClaimedMine(self, brid):
+        return self.t.assertClaimed(brid, master_name=self.MASTER_NAME,
+                master_incarnation=self.MASTER_INCARNATION)
+
+    def assertMyClaims(self, claimed_brids):
+        self.t.assertEqual(
+                [ id for (id, br) in self.reqs.iteritems()
+                  if br.claimed_by_name == self.MASTER_NAME and
+                     br.claimed_by_incarnation == self.MASTER_INCARNATION ],
+                claimed_brids)
+
+
 class FakeDBConnector(object):
     """
     A stand-in for C{master.db} that operates without an actual database
@@ -666,6 +835,8 @@ class FakeDBConnector(object):
         self.buildsets = comp = FakeBuildsetsComponent(self, testcase)
         self._components.append(comp)
         self.state = comp = FakeStateComponent(self, testcase)
+        self._components.append(comp)
+        self.buildrequests = comp = FakeBuildRequestsComponent(self, testcase)
         self._components.append(comp)
 
     def insertTestData(self, rows):
