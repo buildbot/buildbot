@@ -765,7 +765,7 @@ class BuildRequestStatus:
         return br.source
     def getBuilderName(self):
         br = self.db.getBuildRequestWithNumber(self.brid)
-        return br.builderName
+        return br.buildername
     def getBuilds(self):
         builder = self.status.getBuilder(self.getBuilderName())
         builds = []

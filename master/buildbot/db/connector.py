@@ -358,7 +358,7 @@ class DBConnector(object):
         ss = self.getSourceStampNumberedNow(ssid, t)
         properties = self.get_properties_from_db("buildset_properties",
                                                  "buildsetid", bsid, t)
-        br = BuildRequest(reason, ss, builder_name, properties)
+        br = BuildRequest.oldConstructor(reason, ss, builder_name, properties)
         br.submittedAt = submitted_at
         br.priority = priority
         br.id = brid
