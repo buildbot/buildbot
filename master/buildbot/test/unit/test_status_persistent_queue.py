@@ -18,8 +18,8 @@ import os
 from twisted.trial import unittest
 from buildbot.test.util import dirs
 
-from buildbot.status.persistent_queue import DequeMemoryQueue, DiskQueue, \
-    IQueue, ListMemoryQueue, MemoryQueue, PersistentQueue, WriteFile
+from buildbot.status.persistent_queue import MemoryQueue, DiskQueue, \
+    IQueue, PersistentQueue, WriteFile
 
 class test_Queues(dirs.DirsMixin, unittest.TestCase):
 
@@ -134,12 +134,8 @@ class test_Queues(dirs.DirsMixin, unittest.TestCase):
             self.assertEqual([], q.primaryQueue.items())
             self.assertEqual([], q.secondaryQueue.items())
 
-    def testListMemoryQueue(self):
-        self._test_helper(ListMemoryQueue(maxItems=8))
-
-    def testDequeMemoryQueue(self):
-        # Will fail on python 2.3.
-        self._test_helper(DequeMemoryQueue(maxItems=8))
+    def testMemoryQueue(self):
+        self._test_helper(MemoryQueue(maxItems=8))
 
     def testDiskQueue(self):
         self._test_helper(DiskQueue('fake_dir', maxItems=8))
