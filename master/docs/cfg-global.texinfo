@@ -6,7 +6,7 @@ The keys in this section affect the operations of the buildmaster globally.
 * Project Definitions::
 * Log Handling::
 * Data Lifetime::
-* Merging BuildRequests::
+* Merging Build Requests (global option)::
 * Prioritizing Builders::
 * Setting the PB Port for Slaves::
 * Defining Global Properties::
@@ -268,52 +268,13 @@ changes from the database every time they run.  For distributed version control
 systems, like git or hg, several thousand changes may arrive at once, so
 setting @code{changeCacheSize} to something like 10,000 isn't unreasonable.
 
-@node Merging BuildRequests
-@subsection Merging BuildRequests
-
+@node Merging Build Requests (global option)
+@subsection Merging Build Requests (global option)
 @bcindex c['mergeRequests']
 
-By default, buildbot merges BuildRequests that have compatible
-SourceStamps.
-
-This can be disabled for any particular Builder by passing
-@code{mergeRequests=False} to the BuilderConfig definition (@pxref{Builders}).
-For example:
-
-@example
-c['builders'] = [
-  BuilderConfig(name='test-i386', slavename='bot-i386', builddir='test-i386',
-                factory=f, mergeRequests=False),
- ]
-@end example
-
-For more precise control, this behaviour can be customized with the
-buildmaster's @code{c['mergeRequests']} configuration key. This key
-specifies a function which is called with three arguments: a
-@code{Builder} and two @code{BuildRequest} objects. It should return
-true if the requests can be merged. For example:
-
-@example
-def mergeRequests(builder, req1, req2):
-    """Don't merge buildrequest at all"""
-    return False
-c['mergeRequests'] = mergeRequests
-@end example
-
-In many cases, the details of the SourceStamps and BuildRequests are important.
-In this example, only BuildRequests with the same "reason" are merged; thus
-developers forcing builds for different reasons will see distinct builds.
-
-@example
-def mergeRequests(builder, req1, req2):
-    if req1.source.canBeMergedWith(req2.source) and  req1.reason == req2.reason:
-       return True
-    return False
-c['mergeRequests'] = mergeRequests
-@end example
-
-If desired, request merging can be disabled globally by setting
-@code{c['mergeRequests'] = False} instead of a callable function.
+This is a global default value for builders' @code{mergeRequests} parameter,
+and controls the merging of build requests.  See @ref{Merging Build Requests}
+for more details.
 
 @node Prioritizing Builders
 @subsection Prioritizing Builders

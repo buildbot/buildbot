@@ -219,7 +219,7 @@ should be used for the build. The Build is then randomly assigned to a
 free SlaveBuilder and the build begins.
 
 The behaviour when BuildRequests are merged can be customized, @pxref{Merging
-BuildRequests}.
+Build Requests}.
 
 @node Status Delivery Architecture
 @subsection Status Delivery Architecture

@@ -1,5 +1,6 @@
 @menu
 * Builder Configuration::
+* Merging Build Requests::
 * Prioritizing Builds::
 @end menu
 
@@ -78,18 +79,20 @@ move them over to the active category.
 @item nextSlave
 If provided, this is a function that controls which slave will be assigned
 future jobs. The function is passed two arguments, the @code{Builder}
-object which is assigning a new job, and a list of @code{BuildSlave}
-objects. The function should return one of the @code{BuildSlave}
+object which is assigning a new job, and a list of @code{SlaveBuilder}
+objects. The function should return one of the @code{SlaveBuilder}
 objects, or @code{None} if none of the available slaves should be
-used.
+used.  This function can optionally return a Deferred which should
+fire with the same results.
 
 @item nextBuild
 If provided, this is a function that controls which build request will be
-handled next. The function is passed two arguments, the @code{Builder}
-object which is assigning a new job, and a list of @code{BuildRequest}
-objects of pending builds. The function should return one of the
-@code{BuildRequest} objects, or @code{None} if none of the pending
-builds should be started.
+handled next. The function is passed two arguments, the @code{Builder} object
+which is assigning a new job, and a list of @code{BuildRequest} objects
+representing pending build requests, sorted by increasing submission time.  .
+The function should return one of the @code{BuildRequest} objects, or
+@code{None} if none of the pending builds should be started.  This function can
+optionally return a Deferred which should fire with the same results.
 
 @item locks
 This argument specifies a list of locks that apply to this builder; @xref{Interlocks}.
@@ -119,26 +122,77 @@ c['builders'] = [
 @end example
 
 @item mergeRequests
-This boolean defaults to True, which means that the Builder might
-attempt to merge @code{BuildRequest}s into a single build. If False,
-the Builder will never attempt to merge requests.
-
-Merging requests helps to reduce the total number of builds, but loses
-information about which exact change might have caused a build
-problem. Requests can only be merged for compatible SourceStamps, for
-example two Changes that occur on the same branch, or two requests to
-build 'HEAD' (i.e. the latest checkin) on the same branch.
-
-The buildmaster's @code{c['mergeRequests']} hook function is evaluated
-only if the Builder's @code{mergeRequests} key is True, so merging
-only takes place if both allow it. @pxref{Merging BuildRequests}.
+Specifies how build requests for this builder should be merged, overriding the
+global option (@pxref{Merging Build Requests (global option)}).  See
+@ref{Merging Build Requests} for details.
 
 @item properties
-A builder may be given a dictionary of @pxref{Build Properties}
+A builder may be given a dictionary of @ref{Build Properties}
 specific for this builder in this parameter. Those values can be used
 later on like other properties. @pxref{WithProperties}.
 
 @end table
+
+@node Merging Build Requests
+@subsection Merging Build Requests
+
+When more than one build request is available for a builder, Buildbot can
+"merge" the requests into a single build.  This is desirable when build
+requests arrive more quickly than the available slaves can satisfy them, but
+has the drawback that separate results for each build are not available.
+
+This behavior can be controlled globally, using the @code{c['mergeRequests']}
+parameter, and on a per-builder basis, using the @code{mergeRequests} argument
+to the builder configuration.  If @code{mergeRequests} is given, it completely
+overrides the global configuration.
+
+For either configuration parameter, a value of @code{True} (the default) causes
+buildbot to merge BuildRequests that have "compatible" source stamps.  Source
+stamps are compatible if:
+
+@itemize
+@item their branch, project, and repository attributes match exactly;
+@item neither source stamp has a patch (e.g., from a try scheduler); and
+@item either both source stamps are associated with changes, or neither ar
+associated with changes but they have matching revisions.
+@end itemize
+
+This algorithm is implemented by the SourceStamp method @code{canBeMergedWith}.
+
+A configuration value of @code{False} indicates that requests should never be
+merged.
+
+If the configuration value is a callable, that callable will be invoked with
+three positional arguments: a @code{Builder} object and two @code{BuildRequest}
+objects. It should return true if the requests can be merged, and False
+otherwise. For example:
+
+@example
+def mergeRequests(builder, req1, req2):
+    "any requests with the same branch can be merged"
+    return req1.branch == req2.branch
+c['mergeRequests'] = mergeRequests
+@end example
+
+In many cases, the details of the SourceStamps and BuildRequests are important.
+In this example, only BuildRequests with the same "reason" are merged; thus
+developers forcing builds for different reasons will see distinct builds.  Note
+the use of the @code{canBeMergedWith} method to access the source stamp
+compatibility algorithm.
+
+@example
+def mergeRequests(builder, req1, req2):
+    if req1.source.canBeMergedWith(req2.source) and  req1.reason == req2.reason:
+       return True
+    return False
+c['mergeRequests'] = mergeRequests
+@end example
+
+If it's necessary to perform some blocking operation to determine whether two
+requests can be merged, then the @code{mergeRequests} callable may return its
+result via Deferred.  Note, however, that the number of invocations of the
+callable is proportional to the square of the request queue length, so a
+long-running callable may cause undesirable delays when the queue length grows.
 
 @node Prioritizing Builds
 @subsection Prioritizing Builds

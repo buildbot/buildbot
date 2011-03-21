@@ -538,12 +538,13 @@ class FakeBuildsetsComponent(FakeDBComponent):
     def getBuildset(self, bsid):
         if bsid not in self.buildsets:
             return defer.succeed(None)
-        rv = self.buildsets[bsid]
+        rv = self.buildsets[bsid].copy()
         if rv['complete_at']:
             rv['complete_at'] = epoch2datetime(rv['complete_at'])
         else:
             rv['complete_at'] = None
-        rv['submitted_at'] = epoch2datetime(rv['submitted_at'])
+        rv['submitted_at'] = rv['submitted_at'] and \
+                             epoch2datetime(rv['submitted_at'])
         rv['complete'] = bool(rv['complete'])
         del rv['id']
         return defer.succeed(rv)
