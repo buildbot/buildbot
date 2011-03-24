@@ -133,9 +133,12 @@ Build #{{ b.getNumber() }}
 
 <h2>Build Properties:</h2>
 
+  {% if properties_text!="" %}
+     <p> gerrit change list: </p>
+     <textarea cols=100 rows=30 readonly=1>{{ properties_text }}</textarea>
+  {% endif %}
 <table class="info" width="100%">
 <tr><th>Name</th><th>Value</th><th>Source</th></tr>
-
 {% for p in properties %}
   <tr class="{{ loop.cycle('alt', '') }}">
     <td class="left">{{ p.name|e }}</td>

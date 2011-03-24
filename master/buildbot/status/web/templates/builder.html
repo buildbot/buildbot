@@ -35,7 +35,7 @@
   <h2>Pending Build Requests:</h2>
   <ul>
   {% for b in pending %}
-    <li><small>({{ b.when }}, waiting {{ b.delay }})</small> 
+    <li>{{ b.id }} <small>({{ b.when }}, waiting {{ b.delay }})</small> 
     
     {% if authz.advertiseAction('cancelPendingBuild') %}
       {{ forms.cancel_pending_build(builder_url+"/cancelbuild", authz, short=True, id=b.id) }}
@@ -47,7 +47,13 @@
         {% endfor %}
     {% else %}
         ({{ b.num_changes }} changes)
-    {% endif %}    
+    {% endif %}   
+      {% if 'owner' in b.properties %}
+        <b>Forced build</b>
+	by {{b.properties['owner'][0]}}<small>
+	changes:{{b.properties['force_build_changeids'][0]}}
+	reason:{{b.properties['reason'][0]}}</small>
+      {% endif %}    
 
     </li>
   {% endfor %}
@@ -100,7 +106,7 @@
 
 {% if authz.advertiseAction('forceBuild') %}
   <h2>Force build</h2>
-  {{ forms.force_build(builder_url+"/force", authz, False) }}
+  {{ forms.force_build(builder_url+"/force", authz,build_candidates=build_candidates,user=user,comments=comments) }}
 {% endif %}
 
 </div>
