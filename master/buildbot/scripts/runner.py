@@ -980,6 +980,7 @@ class TryOptions(OptionsWithOptionsFile):
         ["wait", None, "wait until the builds have finished"],
         ["dryrun", 'n', "Gather info, but don't actually submit."],
         ["get-builder-names", None, "Get the names of available builders. Doesn't submit anything. Only supported for 'pb' connections."],
+        ["quiet", "q", "Don't print status of current builds while waiting."],
         ]
 
     # here it is, the definitive, quirky mapping of .buildbot/options names to
@@ -1030,6 +1031,8 @@ class TryOptions(OptionsWithOptionsFile):
             self['builders'] = opts.get('try_builders', [])
         if opts.get('try_wait', False):
             self['wait'] = True
+        if opts.get('try_quiet', False):
+            self['quiet'] = True
 
 def doTry(config):
     from buildbot.clients import tryclient

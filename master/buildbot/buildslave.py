@@ -22,6 +22,7 @@ from twisted.python import log, failure
 from twisted.internet import defer, reactor
 from twisted.application import service
 from twisted.spread import pb
+from twisted.python.reflect import namedModule
 
 from buildbot.status.builder import SlaveStatus
 from buildbot.status.mail import MailNotifier
@@ -335,6 +336,12 @@ class AbstractBuildSlave(pb.Avatar, service.MultiService):
             self.slave_basedir = state.get("slave_basedir")
             self.slave_system = state.get("slave_system")
             self.slave = bot
+            if self.slave_system == "win32":
+                self.path_module = namedModule("win32path")
+            else:
+                # most eveything accepts / as separator, so posix should be a
+                # reasonable fallback
+                self.path_module = namedModule("posixpath")
             log.msg("bot attached")
             self.messageReceivedFromSlave()
             self.stopMissingTimer()

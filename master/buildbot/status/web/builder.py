@@ -162,7 +162,7 @@ class StatusResourceBuilder(HtmlResource, BuildLineMixin):
                  % (html.escape(name), html.escape(reason)))
             return master.addBuildset(
                     builderNames=[self.builder_status.getName()],
-                    ssid=ssid, reason=r, properties=None)
+                    ssid=ssid, reason=r, properties=properties.asDict())
         d.addCallback(make_buildset)
         d.addErrback(log.err, "(ignored) while trying to force build")
         # send the user back to the builder page

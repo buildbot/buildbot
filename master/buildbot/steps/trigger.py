@@ -27,7 +27,7 @@ class Trigger(LoggingBuildStep):
 
     flunkOnFailure = True
 
-    def __init__(self, schedulerNames=[], updateSourceStamp=True,
+    def __init__(self, schedulerNames=[], updateSourceStamp=True, alwaysUseLatest=False,
                  waitForFinish=False, set_properties={}, copy_properties=[], **kwargs):
         """
         Trigger the given schedulers when this step is executed.
@@ -43,6 +43,13 @@ class Trigger(LoggingBuildStep):
                                   occurred since my build's update step was
                                   run. If False, I will use the original
                                   SourceStamp unmodified.
+
+        @param alwaysUseLatest: If False (the default), I will give the
+                                SourceStamp of the current build to the
+                                schedulers (as controled by updateSourceStamp).
+                                If True, I will give the schedulers  an empty
+                                SourceStamp, corresponding to the latest
+                                revision.
 
         @param waitForFinish: If False (the default), this step will finish
                               as soon as I've started the triggered
@@ -62,6 +69,7 @@ class Trigger(LoggingBuildStep):
         assert schedulerNames, "You must specify a scheduler to trigger"
         self.schedulerNames = schedulerNames
         self.updateSourceStamp = updateSourceStamp
+        self.alwaysUseLatest = alwaysUseLatest
         self.waitForFinish = waitForFinish
         self.set_properties = set_properties
         self.copy_properties = copy_properties
@@ -70,6 +78,7 @@ class Trigger(LoggingBuildStep):
         LoggingBuildStep.__init__(self, **kwargs)
         self.addFactoryArguments(schedulerNames=schedulerNames,
                                  updateSourceStamp=updateSourceStamp,
+                                 alwaysUseLatest=alwaysUseLatest,
                                  waitForFinish=waitForFinish,
                                  set_properties=set_properties,
                                  copy_properties=copy_properties)
@@ -127,7 +136,10 @@ class Trigger(LoggingBuildStep):
             return self.end(FAILURE)
 
         master = self.build.builder.botmaster.parent # seriously?!
-        d = ss.getSourceStampId(master)
+        if self.alwaysUseLatest:
+            d = defer.succeed(None)
+        else:
+            d = ss.getSourceStampId(master)
         def start_builds(ssid):
             dl = []
             for scheduler in triggered_schedulers:

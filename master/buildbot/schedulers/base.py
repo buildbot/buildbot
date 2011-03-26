@@ -341,7 +341,7 @@ class BaseScheduler(service.MultiService, ComparableMixin):
 
         # translate properties object into a dict as required by the
         # addBuildset method
-        properties_dict = dict((k, (v,s)) for (k,v,s) in properties.asList())
+        properties_dict = properties.asDict()
 
         # add the buildset
         return self.master.addBuildset(

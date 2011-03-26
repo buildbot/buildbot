@@ -53,8 +53,10 @@ class SourceStampExtractor:
         d.addCallback(self.getPatch)
         d.addCallback(self.done)
         return d
-    def readPatch(self, res, patchlevel):
-        self.patch = (patchlevel, res)
+    def readPatch(self, diff, patchlevel):
+        if not diff:
+            diff = None
+        self.patch = (patchlevel, diff)
     def done(self, res):
         # TODO: figure out the branch and project too
         ss = SourceStamp(self.branch, self.baserev, self.patch, 
@@ -223,6 +225,17 @@ class GitExtractor(SourceStampExtractor):
     vcexe = "git"
 
     def getBaseRevision(self):
+        # If a branch is specified, parse out the rev it points to
+        # and extract the local name (assuming it has a slash).
+        # This may break if someone specifies the name of a local
+        # branch that has a slash in it and has no corresponding
+        # remote branch (or something similarly contrived).
+        if self.branch:
+            d = self.dovc(["rev-parse", self.branch])
+            if '/' in self.branch:
+                self.branch = self.branch.split('/', 1)[1]
+            d.addCallback(self.override_baserev)
+            return d
         d = self.dovc(["branch", "--no-color", "-v", "--no-abbrev"])
         d.addCallback(self.parseStatus)
         return d
@@ -259,20 +272,8 @@ class GitExtractor(SourceStampExtractor):
         m = re.search(r'^\* (\S+)\s+([0-9a-f]{40})', res, re.MULTILINE)
         if m:
             self.baserev = m.group(2)
-            # If a branch is specified, parse out the rev it points to
-            # and extract the local name (assuming it has a slash).
-            # This may break if someone specifies the name of a local
-            # branch that has a slash in it and has no corresponding
-            # remote branch (or something similarly contrived).
-            if self.branch:
-                d = self.dovc(["rev-parse", self.branch])
-                if '/' in self.branch:
-                    self.branch = self.branch.split('/', 1)[1]
-                d.addCallback(self.override_baserev)
-                return d
-            else:
-                self.branch = m.group(1)
-                return self.readConfig()
+            self.branch = m.group(1)
+            return self.readConfig()
         raise IndexError("Could not find current GIT branch: %s" % res)
 
     def getPatch(self, res):
@@ -393,6 +394,7 @@ class BuildSetStatusGrabber:
 class Try(pb.Referenceable):
     buildsetStatus = None
     quiet = False
+    printloop = False
 
     def __init__(self, config):
         self.config = config
@@ -426,6 +428,8 @@ class Try(pb.Referenceable):
                 diff = sys.stdin.read()
             else:
                 diff = open(difffile,"r").read()
+            if not diff:
+                diff = None
             patch = (self.config['patchlevel'], diff)
             ss = SourceStamp(branch, baserev, patch)
             d = defer.succeed(ss)
@@ -598,9 +602,9 @@ class Try(pb.Referenceable):
 
         # now that those queries are in transit, we can start the
         # display-status-every-30-seconds loop
-        self.printloop = task.LoopingCall(self.printStatus)
-        self.printloop.start(3, now=False)
-
+        if not self.getopt("quiet"):
+            self.printloop = task.LoopingCall(self.printStatus)
+            self.printloop.start(3, now=False)
 
     # these methods are invoked by the status objects we've subscribed to
 
@@ -664,7 +668,8 @@ class Try(pb.Referenceable):
         self.announce("")
 
     def statusDone(self):
-        self.printloop.stop()
+        if self.printloop:
+            self.printloop.stop()
         print "All Builds Complete"
         # TODO: include a URL for all failing builds
         names = self.buildRequests.keys()
