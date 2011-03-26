@@ -34,6 +34,7 @@ def write_pidfile(pidfile):
     os.rename(pidfile_tmp, pidfile)
 
 def sleep_forever():
+    signal.alarm(110) # die after 110 seconds
     while True:
         time.sleep(10)
 
@@ -95,6 +96,12 @@ def assert_stdin_closed():
         if r == [0]: return # succcess!
         if time.time() > bail_at:
             assert False # failure :(
+
+# make sure this process dies if necessary
+
+if not hasattr(signal, 'alarm'):
+    signal.alarm = lambda t : None
+signal.alarm(110) # die after 110 seconds
 
 # dispatcher
 
