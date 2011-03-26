@@ -166,3 +166,13 @@ Same as test 8, except here the "prep" step fails.
 EXPECTED OUTCOME:
   - both builders: failure
   - 'blockB' failure with status test "upstream failure after 1.0 sec"
+
+
+TEST 10: blocker with timeout
+-----------------------------
+
+Build takes 3 sec, so Blocker fails after 1 sec timeout.
+
+EXPECTED OUTCOME:
+  - build A: success
+  - block B': failure with status text "timed out (1.0 sec)"

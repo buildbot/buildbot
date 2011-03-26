@@ -65,6 +65,7 @@ class Blocker(BuildStep):
         self._overall_text = []
 
         self._timer = None              # object returned by reactor.callLater()
+        self._timed_out = False
 
     def __str__(self):
         return self.name
@@ -249,6 +250,7 @@ class Blocker(BuildStep):
         self.step_status.setColor("red")
         self.step_status.setText(self._getTimeoutStatusText())
         self.finished(builder.FAILURE)
+        self._timed_out = True
 
     def _upstreamStepFinished(self, stepStatus):
         assert isinstance(stepStatus, builder.BuildStepStatus)
@@ -256,6 +258,11 @@ class Blocker(BuildStep):
                   stepStatus.getBuild().builder.getName(),
                   stepStatus.getName(),
                   stepStatus.getResults())
+
+        if self._timed_out:
+            # don't care about upstream steps: just clean up and get out
+            self._blocking_steps.remove(stepStatus)
+            return
 
         (code, text) = stepStatus.getResults()
         if code != builder.SUCCESS and self._overall_code == builder.SUCCESS:
