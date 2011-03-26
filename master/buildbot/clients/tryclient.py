@@ -283,22 +283,22 @@ class GitExtractor(SourceStampExtractor):
 
 def getSourceStamp(vctype, treetop, branch=None):
     if vctype == "cvs":
-        e = CVSExtractor(treetop, branch)
+        cls = CVSExtractor
     elif vctype == "svn":
-        e = SVNExtractor(treetop, branch)
+        cls = SVNExtractor
     elif vctype == "bzr":
-        e = BzrExtractor(treetop, branch)
+        cls = BzrExtractor
     elif vctype == "hg":
-        e = MercurialExtractor(treetop, branch)
+        cls = MercurialExtractor
     elif vctype == "p4":
-        e = PerforceExtractor(treetop, branch)
+        cls = PerforceExtractor
     elif vctype == "darcs":
-        e = DarcsExtractor(treetop, branch)
+        cls = DarcsExtractor
     elif vctype == "git":
-        e = GitExtractor(treetop, branch)
+        cls = GitExtractor
     else:
         raise KeyError("unknown vctype '%s'" % vctype)
-    return e.get()
+    return cls(treetop, branch).get()
 
 
 def ns(s):
