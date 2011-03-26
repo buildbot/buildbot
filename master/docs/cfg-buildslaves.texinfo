@@ -49,9 +49,30 @@ c['slaves'] = [BuildSlave("bot-linux", "linuxpassword", max_builds=2)]
 @end example
 
 @menu
+* Master-slave TCP Keepalive::
 * When Buildslaves Go Missing::
 * Latent Buildslaves::
 @end menu
+
+@node Master-slave TCP Keepalive
+@subsection Mater-slave TCP keepalive
+
+By default, the buildmaster sends a simple, non-blocking message to each slave
+every hour.  These keepalives ensure that traffic is flowing over the
+underlying TCP connection, allowing the system's network stack to detect any
+problems before a build is started.
+
+The interval can be modified by specifying the interval in seconds using the
+keepalive_interval parameter of BuildSlave:
+
+@example
+c['slaves'] = [ BuildSlave('bot-linux', 'linuxpasswd',
+                          keepalive_interval=3600),
+              ]
+@end example
+
+The interval can be set to @code{None} to disable this functionality
+altogether.
 
 @node When Buildslaves Go Missing
 @subsection When Buildslaves Go Missing

@@ -123,3 +123,71 @@ class TestSourceStampsConnectorComponent(
             return self.db.pool.do(thd)
         d.addCallback(check)
         return d
+
+    def test_getSourceStamp_simple(self):
+        d = self.insertTestData([
+            fakedb.SourceStamp(id=234, branch='br', revision='rv',
+                repository='rep', project='prj'),
+        ])
+        d.addCallback(lambda _ :
+                self.db.sourcestamps.getSourceStamp(234))
+        def check(ssdict):
+            self.assertEqual(ssdict, dict(ssid=234, branch='br', revision='rv',
+                repository='rep', project='prj', patch_body=None,
+                patch_level=None, patch_subdir=None, changeids=set([])))
+        d.addCallback(check)
+        return d
+
+    def test_getSourceStamp_simple_None(self):
+        "check that NULL branch and revision are handled correctly"
+        d = self.insertTestData([
+            fakedb.SourceStamp(id=234, branch=None, revision=None,
+                repository='rep', project='prj'),
+        ])
+        d.addCallback(lambda _ :
+                self.db.sourcestamps.getSourceStamp(234))
+        def check(ssdict):
+            self.assertEqual((ssdict['branch'], ssdict['revision']),
+                             (None, None))
+        d.addCallback(check)
+        return d
+
+    def test_getSourceStamp_changes(self):
+        d = self.insertTestData([
+            fakedb.Change(changeid=16),
+            fakedb.Change(changeid=19),
+            fakedb.Change(changeid=20),
+            fakedb.SourceStamp(id=234),
+            fakedb.SourceStampChange(sourcestampid=234, changeid=16),
+            fakedb.SourceStampChange(sourcestampid=234, changeid=20),
+        ])
+        d.addCallback(lambda _ :
+                self.db.sourcestamps.getSourceStamp(234))
+        def check(ssdict):
+            self.assertEqual(ssdict['changeids'], set([16,20]))
+        d.addCallback(check)
+        return d
+
+    def test_getSourceStamp_patch(self):
+        d = self.insertTestData([
+            fakedb.Patch(id=99, patch_base64='aGVsbG8sIHdvcmxk',
+                subdir='/foo', patchlevel=3),
+            fakedb.SourceStamp(id=234, patchid=99),
+        ])
+        d.addCallback(lambda _ :
+                self.db.sourcestamps.getSourceStamp(234))
+        def check(ssdict):
+            self.assertEqual(dict((k,v) for k,v in ssdict.iteritems()
+                                  if k.startswith('patch_')),
+                             dict(patch_body='hello, world',
+                                  patch_level=3,
+                                  patch_subdir='/foo'))
+        d.addCallback(check)
+        return d
+
+    def test_getSourceStamp_nosuch(self):
+        d = self.db.sourcestamps.getSourceStamp(234)
+        def check(ssdict):
+            self.assertEqual(ssdict, None)
+        d.addCallback(check)
+        return d

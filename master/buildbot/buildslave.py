@@ -41,10 +41,12 @@ class AbstractBuildSlave(pb.Avatar, service.MultiService):
     subclassed to add extra functionality."""
 
     implements(IBuildSlave)
+    keepalive_timer = None
+    keepalive_interval = None
 
     def __init__(self, name, password, max_builds=None,
                  notify_on_missing=[], missing_timeout=3600,
-                 properties={}, locks=None):
+                 properties={}, locks=None, keepalive_interval=3600):
         """
         @param name: botname this machine will supply when it connects
         @param password: password this machine will supply when
@@ -84,6 +86,7 @@ class AbstractBuildSlave(pb.Avatar, service.MultiService):
             assert isinstance(i, str)
         self.missing_timeout = missing_timeout
         self.missing_timer = None
+        self.keepalive_interval = keepalive_interval
 
     def update(self, new):
         """
@@ -177,7 +180,25 @@ class AbstractBuildSlave(pb.Avatar, service.MultiService):
         if self.notify_on_missing and self.missing_timeout and self.parent:
             self.stopMissingTimer() # in case it's already running
             self.missing_timer = reactor.callLater(self.missing_timeout,
-                                                   self._missing_timer_fired)
+                                                self._missing_timer_fired)
+
+    def doKeepalive(self):
+        self.keepalive_timer = reactor.callLater(self.keepalive_interval,
+                                                self.doKeepalive)
+        if not self.slave:
+            return
+        d = self.slave.callRemote("print", "Received keepalive from master")
+        d.addErrback(log.msg, "Keepalive failed for '%s'" % (self.slavename, ))
+
+    def stopKeepaliveTimer(self):
+        if self.keepalive_timer:
+            self.keepalive_timer.cancel()
+
+    def startKeepaliveTimer(self):
+        assert self.keepalive_interval
+        log.msg("Starting buildslave keepalive timer for '%s'" % \
+                                        (self.slavename, ))
+        self.doKeepalive()
 
     def recordConnectTime(self):
         if self.slave_status:
@@ -275,6 +296,7 @@ class AbstractBuildSlave(pb.Avatar, service.MultiService):
             d1.addCallbacks(_got_info, _info_unavailable)
             return d1
         d.addCallback(_get_info)
+        self.startKeepaliveTimer()
 
         def _get_version(res):
             d = bot.callRemote("getVersion")
@@ -338,6 +360,7 @@ class AbstractBuildSlave(pb.Avatar, service.MultiService):
         self.slave_status.setConnected(False)
         log.msg("BuildSlave.detached(%s)" % self.slavename)
         self.botmaster.parent.status.slaveDisconnected(self.slavename)
+        self.stopKeepaliveTimer()
 
     def disconnect(self):
         """Forcibly disconnect the slave.

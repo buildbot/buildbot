@@ -27,7 +27,7 @@ from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE
 from buildbot.util.eventual import eventually
 from buildbot.util import json
 from buildbot.db import pool, model, changes, schedulers, sourcestamps
-from buildbot.db import state, buildsets
+from buildbot.db import state, buildsets, buildrequests
 
 def _one_or_else(res, default=None, process_f=lambda x: x):
     if not res:
@@ -101,6 +101,9 @@ class DBConnector(object):
 
         self.buildsets = buildsets.BuildsetsConnectorComponent(self)
         "L{buildbot.db.sourcestamps.BuildsetsConnectorComponent} instance"
+
+        self.buildrequests = buildrequests.BuildRequestsConnectorComponent(self)
+        "L{buildbot.db.sourcestamps.BuildRequestsConnectorComponent} instance"
 
         self.state = state.StateConnectorComponent(self)
         "L{buildbot.db.state.StateConnectorComponent} instance"
@@ -355,7 +358,7 @@ class DBConnector(object):
         ss = self.getSourceStampNumberedNow(ssid, t)
         properties = self.get_properties_from_db("buildset_properties",
                                                  "buildsetid", bsid, t)
-        br = BuildRequest(reason, ss, builder_name, properties)
+        br = BuildRequest.oldConstructor(reason, ss, builder_name, properties)
         br.submittedAt = submitted_at
         br.priority = priority
         br.id = brid

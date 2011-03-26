@@ -17,11 +17,11 @@
 Support for buildsets in the database
 """
 
-import time
 import sqlalchemy as sa
-from datetime import datetime
+from twisted.internet import reactor
 from buildbot.util import json
 from buildbot.db import base
+from buildbot.util import epoch2datetime
 
 class BuildsetsConnectorComponent(base.DBConnectorComponent):
     """
@@ -30,7 +30,7 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
     """
 
     def addBuildset(self, ssid, reason, properties, builderNames,
-                   external_idstring=None):
+                   external_idstring=None, _reactor=reactor):
         """
         Add a new Buildset to the database, along with the buildrequests for
         each named builder, returning the resulting bsid via a Deferred.
@@ -53,19 +53,19 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
         defaults to None
         @type external_idstring: unicode string
 
+        @param _reactor: for testing
+
         @returns: buildset ID via a Deferred
         """
         def thd(conn):
-            submitted_at = datetime.now()
-            submitted_at_epoch = time.mktime(submitted_at.timetuple())
+            submitted_at = _reactor.seconds()
 
             transaction = conn.begin()
 
             # insert the buildset itself
             r = conn.execute(self.db.model.buildsets.insert(), dict(
-                sourcestampid=ssid,
-                submitted_at=submitted_at_epoch,
-                reason=reason,
+                sourcestampid=ssid, submitted_at=submitted_at,
+                reason=reason, complete=0, complete_at=None, results=-1,
                 external_idstring=external_idstring))
             bsid = r.inserted_primary_key[0]
 
@@ -79,12 +79,69 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
             # and finish with a build request for each builder
             conn.execute(self.db.model.buildrequests.insert(), [
                 dict(buildsetid=bsid, buildername=buildername,
-                     submitted_at=submitted_at_epoch)
+                     priority=0, claimed_at=0, claimed_by_name=None,
+                     claimed_by_incarnation=None, complete=0,
+                     results=-1, submitted_at=submitted_at,
+                     complete_at=None)
                 for buildername in builderNames ])
 
             transaction.commit()
 
             return bsid
+        return self.db.pool.do(thd)
+
+    def getBuildset(self, bsid):
+        """
+        Get a dictionary representing the given buildset, or None
+        if no such buildset exists.
+
+        The dictionary has keys C{external_idstring}, C{reason},
+        C{sourcestampid}, C{submitted_at}, C{complete}, C{complete_at}, and
+        C{results}.  The C{*_at} keys point to datetime objects.  Use
+        L{getBuildsetProperties} to fetch the properties for a buildset.
+
+        @param bsid: buildset ID
+
+        @returns: dictionary as above, or None, via Deferred
+        """
+        def thd(conn):
+            bs_tbl = self.db.model.buildsets
+            q = bs_tbl.select(whereclause=(bs_tbl.c.id == bsid))
+            res = conn.execute(q)
+            row = res.fetchone()
+            if not row:
+                return None
+            def mkdt(epoch):
+                if epoch:
+                    return epoch2datetime(epoch)
+            return dict(external_idstring=row.external_idstring,
+                    reason=row.reason, sourcestampid=row.sourcestampid,
+                    submitted_at=mkdt(row.submitted_at),
+                    complete=bool(row.complete),
+                    complete_at=mkdt(row.complete_at), results=row.results)
+        return self.db.pool.do(thd)
+
+    def getBuildsetProperties(self, buildsetid):
+        """
+        Return the properties for a buildset, in the same format they were
+        given to L{addBuildset}.
+
+        Note that this method does not distinguish a nonexistent buildset from
+        a buildset with no properties, and returns C{{}} in either case.
+
+        @param buildsetid: buildset ID
+
+        @returns: dictionary mapping property name to (value, source), via
+        Deferred
+        """
+        def thd(conn):
+            bsp_tbl = self.db.model.buildset_properties
+            q = sa.select(
+                [ bsp_tbl.c.property_name, bsp_tbl.c.property_value ],
+                whereclause=(bsp_tbl.c.buildsetid == buildsetid))
+            return dict([ (row.property_name,
+                           tuple(json.loads(row.property_value)))
+                          for row in conn.execute(q) ])
         return self.db.pool.do(thd)
 
     def subscribeToBuildset(self, schedulerid, buildsetid):

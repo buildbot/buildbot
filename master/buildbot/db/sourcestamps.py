@@ -18,6 +18,7 @@ Support for creating and reading source stamps
 """
 
 import base64
+from twisted.python import log
 from buildbot.db import base
 
 class SourceStampsConnectorComponent(base.DBConnectorComponent):
@@ -62,4 +63,62 @@ class SourceStampsConnectorComponent(base.DBConnectorComponent):
 
             # and return the new ssid
             return ssid
+        return self.db.pool.do(thd)
+
+    def getSourceStamp(self, ssid):
+        """
+
+        Get a dictionary representing the given source stamp, or None if no
+        such source stamp exists.
+
+        The dictionary has keys C{ssid}, C{branch}, C{revision}, C{patch_body},
+        C{patch_level}, C{patch_subdir}, C{repository}, C{project}, and
+        C{changeids}.  Most are simple strings.  The C{patch_*} arguments will
+        be C{None} if no patch is attached.  The last is a set of changeids for
+        this source stamp.
+
+        @param bsid: buildset ID
+
+        @returns: dictionary as above, or None, via Deferred
+        """
+        def thd(conn):
+            tbl = self.db.model.sourcestamps
+            q = tbl.select(whereclause=(tbl.c.id == ssid))
+            res = conn.execute(q)
+            row = res.fetchone()
+            if not row:
+                return None
+            ssdict = dict(ssid=ssid, branch=row.branch, revision=row.revision,
+                    patch_body=None, patch_level=None, patch_subdir=None,
+                    repository=row.repository, project=row.project,
+                    changeids=set([]))
+            patchid = row.patchid
+            res.close()
+
+            # fetch the patch, if necessary
+            if patchid is not None:
+                tbl = self.db.model.patches
+                q = tbl.select(whereclause=(tbl.c.id == patchid))
+                res = conn.execute(q)
+                row = res.fetchone()
+                if row:
+                    # note the subtle renaming here
+                    ssdict['patch_level'] = row.patchlevel
+                    ssdict['patch_subdir'] = row.subdir
+                    body = base64.b64decode(row.patch_base64)
+                    ssdict['patch_body'] = body
+                else:
+                    log.msg('patchid %d, referenced from ssid %d, not found'
+                            % (patchid, ssid))
+                res.close()
+
+            # fetch change ids
+            tbl = self.db.model.sourcestamp_changes
+            q = tbl.select(whereclause=(tbl.c.sourcestampid == ssid))
+            res = conn.execute(q)
+            for row in res:
+                ssdict['changeids'].add(row.changeid)
+            res.close()
+
+            return ssdict
         return self.db.pool.do(thd)

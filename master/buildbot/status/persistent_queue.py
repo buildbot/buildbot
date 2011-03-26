@@ -14,12 +14,7 @@
 # Copyright Buildbot Team Members
 
 
-try:
-    # Python 2.4+
-    from collections import deque
-    assert deque
-except ImportError:
-    deque = None
+from collections import deque
 import os
 import pickle
 
@@ -75,21 +70,28 @@ class IQueue(Interface):
         """Returns the maximum number of items this queue can hold."""
 
 
-# Available for python 2.3 and earlier.
-class ListMemoryQueue(object):
-    """Simple length bounded queue using list."""
+class MemoryQueue(object):
+    """Simple length bounded queue using deque.
+
+    list.pop(0) operation is O(n) so for a 10000 items list, it can start to
+    be real slow. On the contrary, deque.popleft() is O(1) most of the time.
+    See http://docs.python.org/library/collections.html for more
+    information.
+    """
     implements(IQueue)
 
     def __init__(self, maxItems=None):
         self._maxItems = maxItems
         if self._maxItems is None:
             self._maxItems = 10000
-        self._items = []
+        self._items = deque()
 
     def pushItem(self, item):
+        ret = None
+        if len(self._items) == self._maxItems:
+            ret = self._items.popleft()
         self._items.append(item)
-        if len(self._items) > self._maxItems:
-            return self._items.pop(0)
+        return ret
 
     def insertBackChunk(self, chunk):
         ret = None
@@ -97,92 +99,32 @@ class ListMemoryQueue(object):
         if excess > 0:
             ret = chunk[0:excess]
             chunk = chunk[excess:]
-        self._items = chunk + self._items
+        self._items.extendleft(reversed(chunk))
         return ret
 
     def popChunk(self, nbItems=None):
         if nbItems is None:
             nbItems = self._maxItems
         if nbItems > len(self._items):
-            items = self._items
-            self._items = []
+            items = list(self._items)
+            self._items = deque()
         else:
-            items = self._items[0:nbItems]
-            del self._items[0:nbItems]
+            items = []
+            for i in range(nbItems):
+                items.append(self._items.popleft())
         return items
 
     def save(self):
         pass
 
     def items(self):
-        return self._items
+        return list(self._items)
 
     def nbItems(self):
         return len(self._items)
 
     def maxItems(self):
         return self._maxItems
-
-if deque:
-    class DequeMemoryQueue(object):
-        """Simple length bounded queue using deque.
-
-        list.pop(0) operation is O(n) so for a 10000 items list, it can start to
-        be real slow. On the contrary, deque.popleft() is O(1) most of the time.
-        See http://docs.python.org/library/collections.html for more
-        information.
-        """
-        implements(IQueue)
-
-        def __init__(self, maxItems=None):
-            self._maxItems = maxItems
-            if self._maxItems is None:
-               self._maxItems = 10000
-            self._items = deque()
-
-        def pushItem(self, item):
-            ret = None
-            if len(self._items) == self._maxItems:
-                ret = self._items.popleft()
-            self._items.append(item)
-            return ret
-
-        def insertBackChunk(self, chunk):
-            ret = None
-            excess = len(self._items) + len(chunk) - self._maxItems
-            if excess > 0:
-                ret = chunk[0:excess]
-                chunk = chunk[excess:]
-            self._items.extendleft(reversed(chunk))
-            return ret
-
-        def popChunk(self, nbItems=None):
-            if nbItems is None:
-                nbItems = self._maxItems
-            if nbItems > len(self._items):
-                items = list(self._items)
-                self._items = deque()
-            else:
-                items = []
-                for i in range(nbItems):
-                    items.append(self._items.popleft())
-            return items
-
-        def save(self):
-            pass
-
-        def items(self):
-            return list(self._items)
-
-        def nbItems(self):
-            return len(self._items)
-
-        def maxItems(self):
-            return self._maxItems
-
-    MemoryQueue = DequeMemoryQueue
-else:
-    MemoryQueue = ListMemoryQueue
 
 
 class DiskQueue(object):

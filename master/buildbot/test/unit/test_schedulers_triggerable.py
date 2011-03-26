@@ -17,6 +17,7 @@ from twisted.trial import unittest
 from buildbot.schedulers import triggerable
 from buildbot.process import properties
 from buildbot.test.util import scheduler
+from buildbot.test.fake import fakedb
 
 class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
 
@@ -45,16 +46,19 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
 
     def test_trigger(self):
         sched = self.makeScheduler()
+        self.db.insertTestData([
+            fakedb.SourceStamp(id=91, revision='myrev', branch='br',
+                project='p', repository='r'),
+        ])
 
         # no subscription should be in place yet
         callbacks = self.master.getSubscriptionCallbacks()
         self.assertEqual(callbacks['buildset_completion'], None)
 
         # trigger the scheduler, exercising properties while we're at it
-        ssid = self.db.sourcestamps.fakeSourceStamp(rev='myrev')
         set_props = properties.Properties()
         set_props.setProperty('pr', 'op', 'test')
-        d = sched.trigger(ssid, set_props=set_props)
+        d = sched.trigger(91, set_props=set_props)
 
         # set up a boolean so that we can know when the deferred fires
         self.fired = False
@@ -71,7 +75,8 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
                          ('scheduler', ('n', 'Scheduler')),
                      ],
                      reason='Triggerable(n)'),
-                dict(rev='myrev'))
+                dict(branch='br', project='p', repository='r',
+                     revision='myrev'))
 
         # check that the scheduler has subscribed to buildset changes, but
         # not fired yet
@@ -97,32 +102,38 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
 
     def test_trigger_overlapping(self):
         sched = self.makeScheduler()
+        self.db.insertTestData([
+            fakedb.SourceStamp(id=91, revision='myrev1', branch='br',
+                project='p', repository='r'),
+            fakedb.SourceStamp(id=92, revision='myrev2', branch='br',
+                project='p', repository='r'),
+        ])
 
         # no subscription should be in place yet
         callbacks = self.master.getSubscriptionCallbacks()
         self.assertEqual(callbacks['buildset_completion'], None)
 
         # trigger the scheduler the first time
-        ssid1 = self.db.sourcestamps.fakeSourceStamp(rev='trig1')
-        d = sched.trigger(ssid1)
+        d = sched.trigger(91)
         d.addCallback(lambda res : self.assertEqual(res, 11))
         bsid1 = self.db.buildsets.assertBuildset('?',
                 dict(builderNames=['b'],
                      external_idstring=None,
                      properties=[('scheduler', ('n', 'Scheduler'))],
                      reason='Triggerable(n)'),
-                dict(rev='trig1'))
+                dict(branch='br', project='p', repository='r',
+                     revision='myrev1'))
 
         # and the second time
-        ssid2 = self.db.sourcestamps.fakeSourceStamp(rev='trig2')
-        d = sched.trigger(ssid2)
+        d = sched.trigger(92)
         d.addCallback(lambda res : self.assertEqual(res, 22))
         bsid2 = self.db.buildsets.assertBuildset(bsid1+1, # assumes bsid's are sequential
                 dict(builderNames=['b'],
                      external_idstring=None,
                      properties=[('scheduler', ('n', 'Scheduler'))],
                      reason='Triggerable(n)'),
-                dict(rev='trig2'))
+                dict(branch='br', project='p', repository='r',
+                     revision='myrev2'))
 
         # check that the scheduler has subscribed to buildset changes
         callbacks = self.master.getSubscriptionCallbacks()

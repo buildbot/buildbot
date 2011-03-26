@@ -328,8 +328,7 @@ class Try_Userpass_Perspective(scheduler.SchedulerMixin, unittest.TestCase):
                         ]),
                     dict(branch='default', repository='repo',
                         project='proj', revision='abcdef',
-                        patch_body='-- ++',
-                        patch_level=1, patch_subdir=''))
+                        patch_body='-- ++', patch_level=1, patch_subdir=''))
         d.addCallback(check)
         return d
 

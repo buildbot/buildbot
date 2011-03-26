@@ -200,6 +200,12 @@ class _TransferBuildStep(BuildStep):
             workdir = self.workdir
         return properties.render(workdir)
 
+    def interrupt(self, reason):
+        self.addCompleteLog('interrupt', str(reason))
+        if self.cmd:
+            d = self.cmd.interrupt(reason)
+            return d
+
     def finished(self, result):
         # Subclasses may choose to skip a transfer. In those cases, self.cmd
         # will be None, and we should just let BuildStep.finished() handle

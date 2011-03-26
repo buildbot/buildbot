@@ -13,10 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+from twisted.python import log
 from buildbot.pbutil import NewCredPerspective
 from buildbot import interfaces
 from buildbot.process.properties import Properties
-from buildbot.util import now
 
 class DebugPerspective(NewCredPerspective):
     def attached(self, mind):
@@ -38,22 +38,12 @@ class DebugPerspective(NewCredPerspective):
         bc = c.getBuilder(buildername)
         bc.ping()
 
-    def perspective_setCurrentState(self, buildername, state):
-        builder = self.botmaster.builders.get(buildername)
-        if not builder: return
-        if state == "offline":
-            builder.statusbag.currentlyOffline()
-        if state == "idle":
-            builder.statusbag.currentlyIdle()
-        if state == "waiting":
-            builder.statusbag.currentlyWaiting(now()+10)
-        if state == "building":
-            builder.statusbag.currentlyBuilding(None)
     def perspective_reload(self):
-        print "doing reload of the config file"
+        log.msg("doing reload of the config file")
         self.master.loadTheConfigFile()
+
     def perspective_pokeIRC(self):
-        print "saying something on IRC"
+        log.msg("saying something on IRC")
         from buildbot.status import words
         for s in self.master:
             if isinstance(s, words.IRC):
@@ -63,11 +53,14 @@ class DebugPerspective(NewCredPerspective):
                     bot.p.msg(channel, "Ow, quit it")
 
     def perspective_print(self, msg):
-        print "debug", msg
+        log.msg("debug %s" % msg)
 
-def makeDebugPerspective(master):
-    persp = DebugPerspective()
-    persp.master = master
-    persp.botmaster = master
-    return persp
-
+def registerDebugClient(master, slavePortnum, debugPassword, pbmanager):
+    def perspFactory(master, mind, username):
+        persp = DebugPerspective()
+        persp.master = master
+        persp.botmaster = master
+        return persp
+    return pbmanager.register(
+        slavePortnum, "debug", debugPassword,
+        lambda mind, username : perspFactory(master, mind, username))

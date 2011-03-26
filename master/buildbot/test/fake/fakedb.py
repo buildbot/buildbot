@@ -19,8 +19,11 @@ using a database.  These classes should pass the same tests as are applied to
 the real connector components.
 """
 
-from twisted.internet import defer
-from buildbot.util import json
+import base64
+from buildbot.util import json, epoch2datetime
+from twisted.python import failure
+from twisted.internet import defer, reactor
+from buildbot.db import buildrequests
 
 # Fake DB Rows
 
@@ -63,6 +66,27 @@ class Row(object):
         else:
             self.__class__._next_id += 1
         return self.__class__._next_id
+
+
+class BuildRequest(Row):
+    table = "buildrequests"
+
+    defaults = dict(
+        id = None,
+        buildsetid = None,
+        buildername = "bldr",
+        priority = 0,
+        claimed_at = 0,
+        claimed_by_name = None,
+        claimed_by_incarnation = None,
+        complete = 0,
+        results = -1,
+        submitted_at = 0,
+        complete_at = 0,
+    )
+
+    id_column = 'id'
+    required_columns = ('buildsetid',)
 
 
 class Change(Row):
@@ -117,6 +141,30 @@ class ChangeProperty(Row):
     )
 
     required_columns = ('changeid',)
+
+
+class Patch(Row):
+    table = "patches"
+
+    defaults = dict(
+        id = None,
+        patchlevel = 0,
+        patch_base64 = 'aGVsbG8sIHdvcmxk', # 'hello, world'
+        subdir = None,
+    )
+
+    id_column = 'id'
+
+
+class SourceStampChange(Row):
+    table = "sourcestamp_changes"
+
+    defaults = dict(
+        sourcestampid = None,
+        changeid = None,
+    )
+
+    required_columns = ('sourcestampid', 'changeid')
 
 
 class SourceStamp(Row):
@@ -369,30 +417,70 @@ class FakeSourceStampsComponent(FakeDBComponent):
 
     def setUp(self):
         self.sourcestamps = {}
+        self.patches = {}
 
     def insertTestData(self, rows):
         for row in rows:
+            if isinstance(row, Patch):
+                self.patches[row.id] = dict(
+                    patch_level=row.patchlevel,
+                    patch_body=base64.b64decode(row.patch_base64),
+                    patch_subdir=row.subdir)
+
+        for row in rows:
             if isinstance(row, SourceStamp):
-                self.sourcestamps[row.id] = row.values.copy()
+                ss = self.sourcestamps[row.id] = row.values.copy()
+                ss['changeids'] = set()
+
+        for row in rows:
+            if isinstance(row, SourceStampChange):
+                ss = self.sourcestamps[row.sourcestampid]
+                ss['changeids'].add(row.changeid)
 
     # component methods
 
-    def _sync_create(self, **kwargs):
+    def createSourceStamp(self, branch, revision, repository, project,
+                          patch_body=None, patch_level=0, patch_subdir=None,
+                          changeids=[]):
         id = len(self.sourcestamps) + 100
         while id in self.sourcestamps:
             id += 1
-        kwargs['id'] = id
-        self.sourcestamps[id] = kwargs
-        return id
 
-    def createSourceStamp(self, **kwargs):
-        return defer.succeed(self._sync_create(**kwargs))
+        changeids = set(changeids)
 
-    # fake methods
+        if patch_body:
+            patchid = len(self.patches) + 100
+            while patchid in self.patches:
+                patchid += 1
+            self.patches[patchid] = dict(
+                patch_level=patch_level,
+                patch_body=patch_body,
+                patch_subdir=patch_subdir,
+            )
+        else:
+            patchid = None
 
-    def fakeSourceStamp(self, **kwargs):
-        """Add a sourcestamp, returning the ssid"""
-        return self._sync_create(**kwargs)
+        self.sourcestamps[id] = dict(id=id, branch=branch, revision=revision,
+                patchid=patchid, repository=repository, project=project,
+                changeids=changeids)
+        return defer.succeed(id)
+
+    def getSourceStamp(self, ssid):
+        if ssid in self.sourcestamps:
+            ssdict = self.sourcestamps[ssid].copy()
+            del ssdict['id']
+            ssdict['ssid'] = ssid
+            patchid = ssdict['patchid']
+            if patchid:
+                ssdict.update(self.patches[patchid])
+            else:
+                ssdict['patch_body'] = None
+                ssdict['patch_level'] = None
+                ssdict['patch_subdir'] = None
+            del ssdict['patchid']
+            return defer.succeed(ssdict)
+        else:
+            return defer.succeed(None)
 
 
 class FakeBuildsetsComponent(FakeDBComponent):
@@ -415,7 +503,7 @@ class FakeBuildsetsComponent(FakeDBComponent):
                 assert row.buildsetid in self.buildsets
                 n = row.property_name
                 v, src = tuple(json.loads(row.property_value))
-                self.buildsets[row.id]['properties'][n] = (v, src)
+                self.buildsets[row.buildsetid]['properties'][n] = (v, src)
 
     # component methods
 
@@ -447,6 +535,26 @@ class FakeBuildsetsComponent(FakeDBComponent):
                 for bsid in bsids ]
         return defer.succeed(rv)
 
+    def getBuildset(self, bsid):
+        if bsid not in self.buildsets:
+            return defer.succeed(None)
+        rv = self.buildsets[bsid]
+        if rv['complete_at']:
+            rv['complete_at'] = epoch2datetime(rv['complete_at'])
+        else:
+            rv['complete_at'] = None
+        rv['submitted_at'] = epoch2datetime(rv['submitted_at'])
+        rv['complete'] = bool(rv['complete'])
+        del rv['id']
+        return defer.succeed(rv)
+
+    def getBuildsetProperties(self, buildsetid):
+        if buildsetid in self.buildsets:
+            return defer.succeed(
+                    self.buildsets[buildsetid]['properties'])
+        else:
+            return defer.succeed({})
+
     # fake methods
 
     def fakeBuildsetCompletion(self, bsid, result):
@@ -471,8 +579,10 @@ class FakeBuildsetsComponent(FakeDBComponent):
     def assertBuildset(self, bsid, expected_buildset, expected_sourcestamp):
         """Assert that the buildset and its attached sourcestamp look as
         expected; the ssid parameter of the buildset is omitted.  Properties
-        are converted with asList and sorted.  If bsid is '?', then assert
-        there is only one new buildset, and use that"""
+        are converted with asList and sorted.  Sourcestamp patches are inlined
+        (patch_body, patch_level, patch_subdir), and changeids are represented
+        as a set, but omitted if empty.  If bsid is '?', then assert there is
+        only one new buildset, and use that."""
         if bsid == '?':
             self.assertBuildsets(1)
             bsid = self.buildsets.keys()[0]
@@ -486,17 +596,18 @@ class FakeBuildsetsComponent(FakeDBComponent):
         if 'id' in buildset:
             del buildset['id']
 
-        if 'id' in ss:
-            del ss['id']
-
         if buildset['properties']:
             buildset['properties'] = sorted(buildset['properties'].items())
 
-        if 'changeids' in ss:
-            ss['changeids'].sort()
+        if 'id' in ss:
+            del ss['id']
+        if not ss['changeids']:
+            del ss['changeids']
 
-        if 'patchid' in ss and not ss['patchid']:
-            del ss['patchid']
+        # incorporate patch info if we have it
+        if 'patchid' in ss and ss['patchid']:
+            ss.update(self.db.sourcestamps.patches[ss['patchid']])
+        del ss['patchid']
 
         self.t.assertEqual(
             dict(buildset=buildset, sourcestamp=ss),
@@ -577,6 +688,152 @@ class FakeStateComponent(FakeDBComponent):
                     "state is %r" % (state,))
 
 
+class FakeBuildRequestsComponent(FakeDBComponent):
+
+    # for use in determining "my" requests
+    MASTER_NAME = "this-master"
+    MASTER_INCARNATION = "this-lifetime"
+
+    # override this to set reactor.seconds
+    _reactor = reactor
+
+    def setUp(self):
+        self.reqs = {}
+
+    def insertTestData(self, rows):
+        for row in rows:
+            if isinstance(row, BuildRequest):
+                self.reqs[row.id] = row
+
+    # component methods
+
+    def getBuildRequest(self, brid):
+        try:
+            return defer.succeed(self._brdictFromRow(self.reqs[brid]))
+        except:
+            return defer.succeed(None)
+
+    def getBuildRequests(self, buildername=None, complete=None, claimed=None):
+        rv = []
+        for br in self.reqs.itervalues():
+            if buildername and br.buildername != buildername:
+                continue
+            if complete is not None:
+                if complete and not br.complete:
+                    continue
+                if not complete and br.complete:
+                    continue
+            if claimed is not None:
+                if claimed == "mine":
+                    if br.claimed_by_name != self.MASTER_NAME:
+                        continue
+                    if br.claimed_by_incarnation != self.MASTER_INCARNATION:
+                        continue
+                elif claimed:
+                    if not br.claimed_at:
+                        continue
+                else:
+                    if br.claimed_at:
+                        continue
+            rv.append(self._brdictFromRow(br))
+        return defer.succeed(rv)
+
+    def claimBuildRequests(self, brids):
+        for brid in brids:
+            if brid not in self.reqs:
+                return defer.fail(
+                        failure.Failure(buildrequests.AlreadyClaimedError))
+            br = self.reqs[brid]
+            if br.claimed_at and (
+                    br.claimed_by_name != self.MASTER_NAME or
+                    br.claimed_by_incarnation != self.MASTER_INCARNATION):
+                return defer.fail(
+                        failure.Failure(buildrequests.AlreadyClaimedError))
+        # now that we've thrown any necessary exceptions, get started
+        for brid in brids:
+            br = self.reqs[brid]
+            br.claimed_at = self._reactor.seconds()
+            br.claimed_by_name = self.MASTER_NAME
+            br.claimed_by_incarnation = self.MASTER_INCARNATION
+        return defer.succeed(None)
+
+    def unclaimOldIncarnationRequests(self):
+        for br in self.reqs.itervalues():
+            if (not br.complete and br.claimed_at and
+                    br.claimed_by_name == self.MASTER_NAME and
+                    br.claimed_by_incarnation != self.MASTER_INCARNATION):
+                br.claimed_at = 0
+                br.claimed_by_name = None
+                br.claimed_by_incarnation = None
+        return defer.succeed(None)
+
+    def unclaimExpiredRequests(self, old):
+        old_time = self._reactor.seconds() - old
+        for br in self.reqs.itervalues():
+            if not br.complete and br.claimed_at and br.claimed_at < old_time:
+                br.claimed_at = 0
+                br.claimed_by_name = None
+                br.claimed_by_incarnation = None
+        return defer.succeed(None)
+
+    # Code copied from buildrequests.BuildRequestConnectorComponent
+    def _brdictFromRow(self, row):
+        claimed = mine = False
+        if (row.claimed_at
+                and row.claimed_by_name is not None
+                and row.claimed_by_incarnation is not None):
+            claimed = True
+            master_name = self.db.master.master_name
+            master_incarnation = self.db.master.master_incarnation
+            if (row.claimed_by_name == master_name and
+                row.claimed_by_incarnation == master_incarnation):
+               mine = True
+
+        def mkdt(epoch):
+            if epoch:
+                return epoch2datetime(epoch)
+        submitted_at = mkdt(row.submitted_at)
+        claimed_at = mkdt(row.claimed_at)
+        complete_at = mkdt(row.complete_at)
+
+        return dict(brid=row.id, buildsetid=row.buildsetid,
+                buildername=row.buildername, priority=row.priority,
+                claimed=claimed, claimed_at=claimed_at, mine=mine,
+                complete=bool(row.complete), results=row.results,
+                submitted_at=submitted_at, complete_at=complete_at)
+
+    # fake methods
+
+    def fakeClaimBuildRequest(self, brid, claimed_at=None, master_name=None,
+                                          master_incarnation=None):
+        br = self.reqs[brid]
+        br.claimed_at = claimed_at or self._reactor.seconds()
+        br.claimed_by_name = master_name or self.MASTER_NAME
+        br.claimed_by_incarnation = \
+                master_incarnation or self.MASTER_INCARNATION
+
+    # assertions
+
+    def assertClaimed(self, brid, master_name=None, master_incarnation=None):
+        self.t.assertTrue(self.reqs[brid].claimed_at)
+        if master_name and master_incarnation:
+            br = self.reqs[brid]
+            self.t.assertEqual(
+                [ br.claimed_by_name, br.claimed_by_incarnation ]
+                [ master_name, master_incarnation ])
+
+    def assertClaimedMine(self, brid):
+        return self.t.assertClaimed(brid, master_name=self.MASTER_NAME,
+                master_incarnation=self.MASTER_INCARNATION)
+
+    def assertMyClaims(self, claimed_brids):
+        self.t.assertEqual(
+                [ id for (id, br) in self.reqs.iteritems()
+                  if br.claimed_by_name == self.MASTER_NAME and
+                     br.claimed_by_incarnation == self.MASTER_INCARNATION ],
+                claimed_brids)
+
+
 class FakeDBConnector(object):
     """
     A stand-in for C{master.db} that operates without an actual database
@@ -598,6 +855,8 @@ class FakeDBConnector(object):
         self.buildsets = comp = FakeBuildsetsComponent(self, testcase)
         self._components.append(comp)
         self.state = comp = FakeStateComponent(self, testcase)
+        self._components.append(comp)
+        self.buildrequests = comp = FakeBuildRequestsComponent(self, testcase)
         self._components.append(comp)
 
     def insertTestData(self, rows):

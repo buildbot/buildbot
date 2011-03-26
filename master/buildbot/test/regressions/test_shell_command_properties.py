@@ -18,11 +18,11 @@ from twisted.trial import unittest
 from buildbot.steps.shell import ShellCommand, SetProperty
 from buildbot.process.properties import WithProperties, Properties
 from buildbot.process.factory import BuildFactory
-from buildbot.process.buildrequest import BuildRequest
 from buildbot.sourcestamp import SourceStamp
 
 class FakeSlaveBuilder:
     slave = None
+
 
 class FakeBuildStatus:
     def __init__(self):
@@ -57,6 +57,21 @@ class FakeStepStatus:
         pass
 
 
+class FakeBuildRequest:
+    def __init__(self, reason, source, buildername):
+        self.reason = reason
+        self.source = source
+        self.buildername = buildername
+        self.changes = []
+        self.properties = Properties()
+
+    def mergeWith(self, others):
+        return self
+
+    def mergeReasons(self, others):
+        return self.reason
+
+
 class TestShellCommandProperties(unittest.TestCase):
     def testCommand(self):
         f = BuildFactory()
@@ -65,7 +80,7 @@ class TestShellCommandProperties(unittest.TestCase):
 
         ss = SourceStamp()
 
-        req = BuildRequest("Testing", ss, None)
+        req = FakeBuildRequest("Testing", ss, None)
 
         b = f.newBuild([req])
         b.build_status = FakeBuildStatus()
@@ -74,6 +89,7 @@ class TestShellCommandProperties(unittest.TestCase):
         # This shouldn't raise an exception
         b.setupBuild(None)
 
+
 class TestSetProperty(unittest.TestCase):
     def testGoodStep(self):
         f = BuildFactory()
@@ -81,7 +97,7 @@ class TestSetProperty(unittest.TestCase):
 
         ss = SourceStamp()
 
-        req = BuildRequest("Testing", ss, None)
+        req = FakeBuildRequest("Testing", ss, None)
 
         b = f.newBuild([req])
         b.build_status = FakeBuildStatus()

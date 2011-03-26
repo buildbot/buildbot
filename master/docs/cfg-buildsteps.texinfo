@@ -435,7 +435,7 @@ value from its default of 1200 (20 minutes).
 
 @end table
 
-Use of WithProperites with string, dict and callable is supported.
+Use of WithProperties with string, dict and callable is supported.
 
 Note that this is quite similar to the mechanism used by the WebStatus
 for the @code{changecommentlink}, @code{projects} or @code{repositories} parameter.
@@ -1980,7 +1980,7 @@ master on connect.  These can be copied into Buildbot properties with the
 step.
 
 @example
-from buildbot.steps.slave import SetProperiesFromEnv
+from buildbot.steps.slave import SetPropertiesFromEnv
 from buildbot.steps.shell import Compile
 
 f.addStep(SetPropertiesFromEnv(variables=["SOME_JAVA_LIB_HOME", "JAVAC"]))

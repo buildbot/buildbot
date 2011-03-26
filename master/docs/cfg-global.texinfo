@@ -417,7 +417,6 @@ the buildmaster's base directory.
 This one accepts SSH connections but asks for a username and password
 when authenticating. It accepts only one such pair.
 
-
 @item manhole.TelnetManhole
 This accepts regular unencrypted telnet connections, and asks for a
 username/password pair before providing access. Because this
@@ -470,4 +469,38 @@ Host remotehost-buildbot
  # use 'user' if you use PasswordManhole and your name is not 'admin'.
  # if you use AuthorizedKeysManhole, this probably doesn't matter.
  User admin
+@end example
+
+@heading Using Manhole
+
+After you have connected to a manhole instance, you will find yourself at a
+Python prompt.  You have access to two objects: @code{master} (the BuildMaster)
+and @code{status} (the master's Status object).  Most interesting objects on
+the master can be reached from these two objects.
+
+To aid in navigation, the @code{show} method is defined.  It displays the
+non-method attributes of an object.
+
+A manhole session might look like:
+
+@example
+>>> show(master)
+data attributes of <buildbot.master.BuildMaster instance at 0x7f7a4ab7df38>
+                       basedir : '/home/dustin/code/buildbot/t/buildbot/'...
+                     botmaster : <type 'instance'>
+                buildCacheSize : None
+                  buildHorizon : None
+                   buildbotURL : http://localhost:8010/
+               changeCacheSize : None
+                    change_svc : <type 'instance'>
+                configFileName : master.cfg
+                            db : <class 'buildbot.db.connector.DBConnector'>
+              db_poll_interval : None
+                        db_url : sqlite:///state.sqlite
+                              ...
+>>> show(master.botmaster.builders['win32'])
+data attributes of <Builder ''builder'' at 48963528>
+                              ...
+>>> win32 = _
+>>> win32.category = 'w32'
 @end example

@@ -71,7 +71,7 @@ class Model(base.DBConnectorComponent):
         # it is responsible for running the build: this will be updated
         # periodically to maintain the claim.  Note that 0 and NULL mean the
         # same thing here (and not 1969!)
-        sa.Column('claimed_at', sa.Integer, server_default=sa.DefaultClause("0")), # TODO: timestamp
+        sa.Column('claimed_at', sa.Integer, server_default=sa.DefaultClause("0")),
 
         # claimed_by indicates which buildmaster has claimed this request. The
         # 'name' contains hostname/basedir, and will be the same for subsequent
@@ -90,10 +90,10 @@ class Model(base.DBConnectorComponent):
         sa.Column('results', sa.SmallInteger),
 
         # time the buildrequest was created
-        sa.Column('submitted_at', sa.Integer, nullable=False), # TODO: timestamp
+        sa.Column('submitted_at', sa.Integer, nullable=False),
 
         # time the buildrequest was completed, or NULL
-        sa.Column('complete_at', sa.Integer), # TODO: timestamp
+        sa.Column('complete_at', sa.Integer),
     )
     """A BuildRequest is a request for a particular build to be performed.
     Each BuildRequest is a part of a BuildSet.  BuildRequests are claimed by
@@ -135,11 +135,11 @@ class Model(base.DBConnectorComponent):
         # a short string giving the reason the buildset was created
         sa.Column('reason', sa.String(256)), # TODO: sa.Text
         sa.Column('sourcestampid', sa.Integer, sa.ForeignKey('sourcestamps.id'), nullable=False),
-        sa.Column('submitted_at', sa.Integer, nullable=False), # TODO: timestamp (or redundant?)
+        sa.Column('submitted_at', sa.Integer, nullable=False), # TODO: redundant
 
         # if this is zero, then the build set is still pending
         sa.Column('complete', sa.SmallInteger, nullable=False, server_default=sa.DefaultClause("0")), # TODO: redundant
-        sa.Column('complete_at', sa.Integer), # TODO: timestamp (or redundant?)
+        sa.Column('complete_at', sa.Integer), # TODO: redundant
 
         # results is only valid when complete == 1; 0 = SUCCESS, 1 = WARNINGS,
         # etc - see master/buildbot/status/builder.py

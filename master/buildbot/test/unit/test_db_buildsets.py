@@ -13,11 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
-import time
+import datetime
 from twisted.trial import unittest
-from twisted.internet import defer
+from twisted.internet import defer, task
 from buildbot.db import buildsets
-from buildbot.util import json
+from buildbot.util import json, UTC
 from buildbot.test.util import connector_component
 from buildbot.test.fake import fakedb
 
@@ -48,23 +48,24 @@ class TestBuildsetsConnectorComponent(
     # tests
 
     def test_addBuildset_simple(self):
-        started = int(time.time())
+        now = 9272359
+        clock = task.Clock()
+        clock.advance(now)
+
         d = defer.succeed(None)
         d.addCallback(lambda _ :
             self.db.buildsets.addBuildset(ssid=234, reason='because',
-                properties={}, builderNames=['bldr'], external_idstring='extid'))
+                properties={}, builderNames=['bldr'], external_idstring='extid',
+                _reactor=clock))
         def check(bsid):
             def thd(conn):
                 # should see one buildset row
                 r = conn.execute(self.db.model.buildsets.select())
                 rows = [ (row.id, row.external_idstring, row.reason,
                           row.sourcestampid, row.complete, row.complete_at,
-                          row.results) for row in r.fetchall() ]
-                bs_submitted_at = row.submitted_at
-                self.assertTrue(started <= bs_submitted_at <= time.time(),
-                        "now: %s; db: %s" % (time.time(), row.submitted_at))
+                          row.submitted_at, row.results) for row in r.fetchall() ]
                 self.assertEqual(rows,
-                    [ ( bsid, 'extid', 'because', 234, 0, None, None) ])
+                    [ ( bsid, 'extid', 'because', 234, 0, None, now, -1) ])
 
                 # and one buildrequests row
                 r = conn.execute(self.db.model.buildrequests.select())
@@ -75,7 +76,7 @@ class TestBuildsetsConnectorComponent(
                           for row in r.fetchall() ]
                 self.assertEqual(rows,
                     [ ( bsid, 'bldr', 0, 0, None, None, 0,
-                        None, bs_submitted_at, None) ])
+                        -1, now, None) ])
             return self.db.pool.do(thd)
         d.addCallback(check)
         return d
@@ -95,7 +96,7 @@ class TestBuildsetsConnectorComponent(
                           row.complete_at, row.results)
                           for row in r.fetchall() ]
                 self.assertEqual(rows,
-                    [ ( bsid, None, u'because', 234, 0, None, None) ])
+                    [ ( bsid, None, u'because', 234, 0, None, -1) ])
 
                 # one property row
                 r = conn.execute(self.db.model.buildset_properties.select())
@@ -220,5 +221,95 @@ class TestBuildsetsConnectorComponent(
                     (13, 130, 0, -1),
                     (14, 140, 1, 5),
                 ]))
+        d.addCallback(check)
+        return d
+
+    def do_test_getBuildsetProperties(self, buildsetid, rows, expected):
+        d = self.insertTestData(rows)
+        d.addCallback(lambda _ :
+                self.db.buildsets.getBuildsetProperties(buildsetid))
+        def check(props):
+            self.assertEqual(props, expected)
+        d.addCallback(check)
+        return d
+
+    def test_getBuildsetProperties_multiple(self):
+        return self.do_test_getBuildsetProperties(91, [
+            fakedb.Buildset(id=91, sourcestampid=234, complete=0,
+                    results=-1, submitted_at=0),
+            fakedb.BuildsetProperty(buildsetid=91, property_name='prop1',
+                    property_value='["one", "fake1"]'),
+            fakedb.BuildsetProperty(buildsetid=91, property_name='prop2',
+                    property_value='["two", "fake2"]'),
+        ], dict(prop1=("one", "fake1"), prop2=("two", "fake2")))
+
+    def test_getBuildsetProperties_empty(self):
+        return self.do_test_getBuildsetProperties(91, [
+            fakedb.Buildset(id=91, sourcestampid=234, complete=0,
+                    results=-1, submitted_at=0),
+        ], dict())
+
+    def test_getBuildsetProperties_nosuch(self):
+        "returns an empty dict even if no such buildset exists"
+        return self.do_test_getBuildsetProperties(91, [], dict())
+
+    def test_getBuildset_incomplete_None(self):
+        d = self.insertTestData([
+            fakedb.Buildset(id=91, sourcestampid=234, complete=0,
+                    complete_at=None, results=-1, submitted_at=266761875,
+                    external_idstring='extid', reason='rsn'),
+        ])
+        d.addCallback(lambda _ :
+                self.db.buildsets.getBuildset(91))
+        def check(bsdict):
+            self.assertEqual(bsdict, dict(external_idstring='extid',
+                reason='rsn', sourcestampid=234,
+                submitted_at=datetime.datetime(1978, 6, 15, 12, 31, 15,
+                                               tzinfo=UTC),
+                complete=False, complete_at=None, results=-1))
+        d.addCallback(check)
+        return d
+
+    def test_getBuildset_incomplete_zero(self):
+        d = self.insertTestData([
+            fakedb.Buildset(id=91, sourcestampid=234, complete=0,
+                    complete_at=0, results=-1, submitted_at=266761875,
+                    external_idstring='extid', reason='rsn'),
+        ])
+        d.addCallback(lambda _ :
+                self.db.buildsets.getBuildset(91))
+        def check(bsdict):
+            self.assertEqual(bsdict, dict(external_idstring='extid',
+                reason='rsn', sourcestampid=234,
+                submitted_at=datetime.datetime(1978, 6, 15, 12, 31, 15,
+                                               tzinfo=UTC),
+                complete=False, complete_at=None, results=-1))
+        d.addCallback(check)
+        return d
+
+    def test_getBuildset_complete(self):
+        d = self.insertTestData([
+            fakedb.Buildset(id=91, sourcestampid=234, complete=1,
+                    complete_at=298297875, results=-1, submitted_at=266761875,
+                    external_idstring='extid', reason='rsn'),
+        ])
+        d.addCallback(lambda _ :
+                self.db.buildsets.getBuildset(91))
+        def check(bsdict):
+            self.assertEqual(bsdict, dict(external_idstring='extid',
+                reason='rsn', sourcestampid=234,
+                submitted_at=datetime.datetime(1978, 6, 15, 12, 31, 15,
+                                               tzinfo=UTC),
+                complete=True,
+                complete_at=datetime.datetime(1979, 6, 15, 12, 31, 15,
+                                               tzinfo=UTC),
+                results=-1))
+        d.addCallback(check)
+        return d
+
+    def test_getBuildset_nosuch(self):
+        d = self.db.buildsets.getBuildset(91)
+        def check(bsdict):
+            self.assertEqual(bsdict, None)
         d.addCallback(check)
         return d

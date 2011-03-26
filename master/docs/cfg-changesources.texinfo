@@ -1260,6 +1260,12 @@ and can be used in a Change Filter for triggering particular builders.
 
 @item usetimestamps
 parse each revision's commit timestamp (default is @code{True}), or ignore it in favor of the current time (so recently processed commits appear together in the waterfall page)
+
+@item encoding
+Set encoding will be used to parse author's name and commit message. Default
+encoding is @code{'utf-8'}. This will not be applied to file names since git
+will translate non-ascii file names to unreadable escape sequences.
+
 @end table
 
 @heading Example

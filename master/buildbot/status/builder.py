@@ -765,7 +765,7 @@ class BuildRequestStatus:
         return br.source
     def getBuilderName(self):
         br = self.db.getBuildRequestWithNumber(self.brid)
-        return br.builderName
+        return br.buildername
     def getBuilds(self):
         builder = self.status.getBuilder(self.getBuilderName())
         builds = []
@@ -2096,24 +2096,6 @@ class BuilderStatus(styles.Versioned):
     # pushed to the clients.
 
     # publish to clients
-    def sendLastBuildStatus(self, client):
-        #client.newLastBuildStatus(self.lastBuildStatus)
-        pass
-    def sendCurrentActivityBigToEveryone(self):
-        for s in self.subscribers:
-            self.sendCurrentActivityBig(s)
-    def sendCurrentActivityBig(self, client):
-        state = self.currentBigState
-        if state == "offline":
-            client.currentlyOffline()
-        elif state == "idle":
-            client.currentlyIdle()
-        elif state == "building":
-            client.currentlyBuilding()
-        else:
-            log.msg("Hey, self.currentBigState is weird:", state)
-            
-    
     ## HTML display interface
 
     def getEventNumbered(self, num):
@@ -2156,7 +2138,6 @@ class BuilderStatus(styles.Versioned):
     def addClient(self, client):
         if client not in self.subscribers:
             self.subscribers.append(client)
-            self.sendLastBuildStatus(client)
             self.sendCurrentActivityBig(client)
             client.newEvent(self.currentSmall)
     def removeClient(self, client):

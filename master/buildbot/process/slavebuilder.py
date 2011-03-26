@@ -100,26 +100,19 @@ class AbstractSlaveBuilder(pb.Referenceable):
             assert self.slave == slave
         log.msg("Buildslave %s attached to %s" % (slave.slavename,
                                                   self.builder_name))
-        def _attachFailure(why, where):
-            log.msg(where)
-            log.err(why)
-            return why
-
         d = defer.succeed(None)
-        def doSetMaster(res):
-            d = self.remote.callRemote("setMaster", self)
-            #d.addErrback(_attachFailure, "Builder.setMaster")
-            return d
-        d.addCallback(doSetMaster)
-        def doPrint(res):
-            d = self.remote.callRemote("print", "attached")
-            #d.addErrback(_attachFailure, "Builder.print 'attached'")
-            return d
-        d.addCallback(doPrint)
+
+        d.addCallback(lambda _:
+            self.remote.callRemote("setMaster", self))
+
+        d.addCallback(lambda _:
+            self.remote.callRemote("print", "attached"))
+
         def setIdle(res):
             self.state = IDLE
             return self
         d.addCallback(setIdle)
+
         return d
 
     def prepare(self, builder_status):

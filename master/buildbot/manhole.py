@@ -14,8 +14,10 @@
 # Copyright Buildbot Team Members
 
 
-import os.path
-import binascii, base64
+import os
+import types
+import binascii
+import base64
 from twisted.python import log
 from twisted.application import service, strports
 from twisted.cred import checkers, portal
@@ -141,6 +143,7 @@ class _BaseManhole(service.MultiService):
             namespace = {
                 'master': master,
                 'status': master.getStatus(),
+                'show': show,
                 }
             return namespace
 
@@ -277,4 +280,26 @@ class ArbitraryCheckerManhole(_BaseManhole, ComparableMixin):
 
         _BaseManhole.__init__(self, port, checker)
 
+## utility functions for the manhole
 
+def show(x):
+    """Display the data attributes of an object in a readable format"""
+    print "data attributes of %r" % (x,)
+    names = dir(x)
+    maxlen = max([0] + [len(n) for n in names])
+    for k in names:
+        v = getattr(x,k)
+        t = type(v)
+        if t == types.MethodType: continue
+        if k[:2] == '__' and k[-2:] == '__': continue
+        if t is types.StringType or t is types.UnicodeType:
+            if len(v) > 80 - maxlen - 5:
+                v = `v[:80 - maxlen - 5]` + "..."
+        elif t in (types.IntType, types.NoneType):
+            v = str(v)
+        elif v in (types.ListType, types.TupleType, types.DictType):
+            v = "%s (%d elements)" % (v, len(v))
+        else:
+            v = str(t)
+        print "%*s : %s" % (maxlen, k, v)
+    return x
