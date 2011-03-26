@@ -2029,6 +2029,11 @@ useful to ensure that all of the builds use exactly the same
 SourceStamp, even if other Changes have occurred while the build was
 running.
 
+If @code{alwaysUseLatest} is False (the default), then the step uses the source
+stamp as detail for @code{updateSourceStamp}. If this argument is True, then
+no SourceStamp is given. This is useful if the triggered builds use to a different
+source repository.
+
 Two parameters allow control of the properties that are passed to the triggered
 scheduler.  To simply copy properties verbatim, list them in the
 @code{copy_properties} parameter.  To set properties explicitly, use the more
