@@ -394,6 +394,7 @@ class BuildSetStatusGrabber:
 class Try(pb.Referenceable):
     buildsetStatus = None
     quiet = False
+    printloop = False
 
     def __init__(self, config):
         self.config = config
@@ -601,9 +602,9 @@ class Try(pb.Referenceable):
 
         # now that those queries are in transit, we can start the
         # display-status-every-30-seconds loop
-        self.printloop = task.LoopingCall(self.printStatus)
-        self.printloop.start(3, now=False)
-
+        if not self.getopt("quiet"):
+            self.printloop = task.LoopingCall(self.printStatus)
+            self.printloop.start(3, now=False)
 
     # these methods are invoked by the status objects we've subscribed to
 
@@ -667,7 +668,8 @@ class Try(pb.Referenceable):
         self.announce("")
 
     def statusDone(self):
-        self.printloop.stop()
+        if self.printloop:
+            self.printloop.stop()
         print "All Builds Complete"
         # TODO: include a URL for all failing builds
         names = self.buildRequests.keys()
