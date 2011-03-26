@@ -118,8 +118,8 @@ class SourceStamp(util.ComparableMixin, styles.Versioned):
             assert int(patch[0]) != -1
         self.branch = branch
         self.patch = patch
-        self.project = project
-        self.repository = repository
+        self.project = project or ''
+        self.repository = repository or ''
         if changes:
             self.changes = tuple(changes)
             # set branch and revision to most recent change
