@@ -77,15 +77,20 @@ class Blocker(BuildStep):
 
     def buildsMatch(self, buildStatus1, buildStatus2):
         """
-        Return true if a Blocker step running in buildStatus2 should be
-        blocked by an upstream step in buildStatus1, or false if those
-        two BuildStatus objects are from unrelated Builds.
+        Return true if buildStatus1 and buildStatus2 are from related
+        builds, i.e. a Blocker step running in buildStatus2 should be
+        blocked by an upstream step in buildStatus1.  Return false if
+        they are unrelated.
 
-        Default implementation simply compares build numbers; you should
-        override this method to implement custom logic (e.g. by
-        comparing source stamps or some build property).
+        Default implementation simply raises NotImplementedError: you
+        *must* subclass Blocker and implement this method, because
+        BuildBot currently provides no way to relate different builders.
+        This might change if ticket #875 (\"build flocks\") is
+        implemented.
         """
-        return buildStatus1.getNumber() == buildStatus2.getNumber()
+        raise NotImplementedError(
+            "abstract method: you must subclass Blocker "
+            "and implement buildsMatch()")
 
     def _getBuildStatus(self, botmaster, builderName):
         try:
