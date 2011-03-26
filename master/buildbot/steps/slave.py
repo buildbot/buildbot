@@ -77,6 +77,7 @@ class FileExists(BuildStep):
         if cmd.rc != 0:
             self.step_status.setText(["File not found."])
             self.finished(FAILURE)
+            return
         s = cmd.updates["stat"][-1]
         if stat.S_ISREG(s[stat.ST_MODE]):
             self.step_status.setText(["File found."])
