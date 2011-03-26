@@ -27,8 +27,9 @@ from buildbot.status import builder
 
 class SourceStampExtractor:
 
-    def __init__(self, treetop, branch):
-        self.treetop = treetop # also is repository
+    def __init__(self, treetop, branch, repository):
+        self.treetop = treetop
+        self.repository = repository
         self.branch = branch
         self.exe = which(self.vcexe)[0]
 
@@ -58,9 +59,11 @@ class SourceStampExtractor:
             diff = None
         self.patch = (patchlevel, diff)
     def done(self, res):
+        if not self.repository:
+            self.repository = self.treetop
         # TODO: figure out the branch and project too
         ss = SourceStamp(self.branch, self.baserev, self.patch, 
-                         repository=self.treetop)
+                         repository=self.repository)
         return ss
 
 class CVSExtractor(SourceStampExtractor):
@@ -281,7 +284,7 @@ class GitExtractor(SourceStampExtractor):
         d.addCallback(self.readPatch, self.patchlevel)
         return d
 
-def getSourceStamp(vctype, treetop, branch=None):
+def getSourceStamp(vctype, treetop, branch=None, repository=None):
     if vctype == "cvs":
         cls = CVSExtractor
     elif vctype == "svn":
@@ -298,7 +301,7 @@ def getSourceStamp(vctype, treetop, branch=None):
         cls = GitExtractor
     else:
         raise KeyError("unknown vctype '%s'" % vctype)
-    return cls(treetop, branch).get()
+    return cls(treetop, branch, repository).get()
 
 
 def ns(s):
@@ -431,7 +434,7 @@ class Try(pb.Referenceable):
             if not diff:
                 diff = None
             patch = (self.config['patchlevel'], diff)
-            ss = SourceStamp(branch, baserev, patch)
+            ss = SourceStamp(branch, baserev, patch, repository = self.getopt("repository"))
             d = defer.succeed(ss)
         else:
             vc = self.getopt("vc")
@@ -445,7 +448,7 @@ class Try(pb.Referenceable):
                     treedir = getTopdir(topfile)
             else:
                 treedir = os.getcwd()
-            d = getSourceStamp(vc, treedir, branch)
+            d = getSourceStamp(vc, treedir, branch, self.getopt("repository"))
         d.addCallback(self._createJob_1)
         return d
 
