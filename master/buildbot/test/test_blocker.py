@@ -1,10 +1,6 @@
 from twisted.trial import unittest
-from twisted.internet import reactor, defer
 
-from buildbot.test.runutils import RunMixin
-from buildbot.process.base import BuildRequest
 from buildbot.status import builder
-from buildbot.sourcestamp import SourceStamp
 from buildbot.steps import blocker
 
 class TestBlockerTrivial(unittest.TestCase):
