@@ -306,6 +306,11 @@ The repository of the sourcestamp for this build
 
 The project of the sourcestamp for this build
 
+@item workdir
+
+The absolute path of the base working directory on the slave, of the current
+builder.
+
 @end table
 
 @node Source Checkout

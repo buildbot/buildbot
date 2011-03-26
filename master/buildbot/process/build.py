@@ -183,6 +183,8 @@ class Build:
         # object that came from the config, and get its properties
         buildslave_properties = slavebuilder.slave.properties
         self.getProperties().updateFromProperties(buildslave_properties)
+        if slavebuilder.slave.slave_basedir:
+            self.setProperty("workdir", slavebuilder.slave.path_module.join(slavebuilder.slave.slave_basedir, self.builder.slavebuilddir), "slave")
 
         self.slavename = slavebuilder.slave.slavename
         self.build_status.setSlavename(self.slavename)
