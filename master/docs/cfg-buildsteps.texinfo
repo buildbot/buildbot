@@ -1989,6 +1989,14 @@ master on connect.  These can be copied into Buildbot properties with the
 @code{variables} parameter, then simply use the values as properties in a later
 step.
 
+Note that on Windows, environment variables are case-insensitive, but Buildbot
+property names are case sensitive.  The property will be capitalized based on
+the variable name you specify, not on the capitalization of the environment
+variable name on the slave.  If, for example, you use
+@code{variables=['PROGRAMFILES']}, the result will be a property named
+@code{PROGRAMFILES}, even though the environment variable is displayed as
+@code{ProgramFiles} in the Windows GUI.
+
 @example
 from buildbot.steps.slave import SetPropertiesFromEnv
 from buildbot.steps.shell import Compile

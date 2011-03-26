@@ -36,14 +36,26 @@ class SetPropertiesFromEnv(BuildStep):
         self.source = source
 
     def start(self):
+        # on Windows, environment variables are case-insensitive, but we have
+        # a case-sensitive dictionary in slave_environ.  Fortunately, that
+        # dictionary is also folded to uppercase, so we can simply fold the
+        # variable names to uppercase to duplicate the case-insensitivity.
+        fold_to_uppercase = (self.buildslave.slave_system == 'win32')
+
         properties = self.build.getProperties()
         environ = self.buildslave.slave_environ
-        if isinstance(self.variables, str):
-            self.variables = [self.variables]
-        for variable in self.variables:
-            value = environ.get(variable, None)
+        variables = self.variables
+        if isinstance(variables, str):
+            variables = [self.variables]
+        for variable in variables:
+            key = variable
+            if fold_to_uppercase:
+                key = variable.upper()
+            value = environ.get(key, None)
             if value:
-                properties.setProperty(variable, value, self.source, runtime=True)
+                # note that the property is not uppercased
+                properties.setProperty(variable, value, self.source,
+                                       runtime=True)
         self.finished(SUCCESS)
 
 class FileExists(BuildStep):
