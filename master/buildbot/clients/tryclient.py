@@ -223,6 +223,17 @@ class GitExtractor(SourceStampExtractor):
     vcexe = "git"
 
     def getBaseRevision(self):
+        # If a branch is specified, parse out the rev it points to
+        # and extract the local name (assuming it has a slash).
+        # This may break if someone specifies the name of a local
+        # branch that has a slash in it and has no corresponding
+        # remote branch (or something similarly contrived).
+        if self.branch:
+            d = self.dovc(["rev-parse", self.branch])
+            if '/' in self.branch:
+                self.branch = self.branch.split('/', 1)[1]
+            d.addCallback(self.override_baserev)
+            return d
         d = self.dovc(["branch", "--no-color", "-v", "--no-abbrev"])
         d.addCallback(self.parseStatus)
         return d
@@ -259,20 +270,8 @@ class GitExtractor(SourceStampExtractor):
         m = re.search(r'^\* (\S+)\s+([0-9a-f]{40})', res, re.MULTILINE)
         if m:
             self.baserev = m.group(2)
-            # If a branch is specified, parse out the rev it points to
-            # and extract the local name (assuming it has a slash).
-            # This may break if someone specifies the name of a local
-            # branch that has a slash in it and has no corresponding
-            # remote branch (or something similarly contrived).
-            if self.branch:
-                d = self.dovc(["rev-parse", self.branch])
-                if '/' in self.branch:
-                    self.branch = self.branch.split('/', 1)[1]
-                d.addCallback(self.override_baserev)
-                return d
-            else:
-                self.branch = m.group(1)
-                return self.readConfig()
+            self.branch = m.group(1)
+            return self.readConfig()
         raise IndexError("Could not find current GIT branch: %s" % res)
 
     def getPatch(self, res):
