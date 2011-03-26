@@ -53,8 +53,10 @@ class SourceStampExtractor:
         d.addCallback(self.getPatch)
         d.addCallback(self.done)
         return d
-    def readPatch(self, res, patchlevel):
-        self.patch = (patchlevel, res)
+    def readPatch(self, diff, patchlevel):
+        if not diff:
+            diff = None
+        self.patch = (patchlevel, diff)
     def done(self, res):
         # TODO: figure out the branch and project too
         ss = SourceStamp(self.branch, self.baserev, self.patch, 
@@ -425,6 +427,8 @@ class Try(pb.Referenceable):
                 diff = sys.stdin.read()
             else:
                 diff = open(difffile,"r").read()
+            if not diff:
+                diff = None
             patch = (self.config['patchlevel'], diff)
             ss = SourceStamp(branch, baserev, patch)
             d = defer.succeed(ss)
