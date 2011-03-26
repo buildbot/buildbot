@@ -111,9 +111,15 @@ class Blocker(BuildStep):
         matchingBuild = None
 
         # Get a list of all builds in this builder, past and present.
-        # This isn't really *all* builds for this builder, but it's
-        # everything that it has in memory.  Too bad BuilderStatus
-        # doesn't expose its cache of old builds in a nice way.
+        # This is subtly broken because BuilderStatus does not expose
+        # the information we need; in fact, it doesn't even necessarily
+        # *have* that information. The contents of the build cache can
+        # change unpredictably if someone happens to view the waterfall
+        # at an inopportune moment: yikes! The right fix is to keep old
+        # builds in the database and for BuilderStatus to expose the
+        # needed information. When that is implemented, then Blocker
+        # needs to be adapted to use it, and *then* Blocker should be
+        # safe to use.
         all_builds = (builderStatus.buildCache.values() +
                       builderStatus.getCurrentBuilds())
 
