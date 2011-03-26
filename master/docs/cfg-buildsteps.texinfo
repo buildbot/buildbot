@@ -1427,6 +1427,11 @@ libraries. Then comes the default path defined in the compiler options.
 @item arch
 That one is only available with the class VS2005 (VC8). It gives the
 target architecture of the built artifact. It defaults to @code{"x86''}.
+
+@item project
+This one is only available with the class VC6. It gives the project to build
+from within a workspace. It defaults to buulding all projects. This is useful
+for building cmake generate projects.
 @end table
 
 Here is an example on how to use this step:

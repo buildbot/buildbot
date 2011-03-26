@@ -200,10 +200,13 @@ class VC6(VisualStudio):
 
     default_installdir = 'C:\\Program Files\\Microsoft Visual Studio'
 
-    def __init__(self, **kwargs):  
-
+    def __init__(self,
+                project = "ALL",
+                 **kwargs):
+        self.project = project
         # always upcall !
         VisualStudio.__init__(self, **kwargs)
+        self.addFactoryArguments(project = project)
 
     def setupEnvironment(self, cmd):
         VisualStudio.setupEnvironment(self, cmd)
@@ -229,7 +232,7 @@ class VC6(VisualStudio):
         command = ["msdev"]
         command.append(self.projectfile)
         command.append("/MAKE")
-        command.append("ALL - " + self.config)
+        command.append(self.project + " - " + self.config)
         if self.mode == "rebuild":
             command.append("/REBUILD")
         else:
