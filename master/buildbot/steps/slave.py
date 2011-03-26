@@ -68,7 +68,8 @@ class FileExists(BuildStep):
         if not slavever:
             raise BuildSlaveTooOldError("slave is too old, does not know "
                                         "about stat")
-        cmd = LoggedRemoteCommand('stat', {'file': self.file })
+        properties = self.build.getProperties()
+        cmd = LoggedRemoteCommand('stat', {'file': properties.render(self.file) })
         d = self.runCommand(cmd)
         d.addCallback(lambda res: self.commandComplete(cmd))
         d.addErrback(self.failed)
