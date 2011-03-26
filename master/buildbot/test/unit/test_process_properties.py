@@ -344,7 +344,7 @@ class TestProperties(unittest.TestCase):
         self.props.setProperty("dmg_filename", "product.dmg", 'packager')
 
         self.assertEqual(self.props.asDict(),
-                dict(msi_filename='product.msi', dmg_filename='product.dmg'))
+                dict(msi_filename=('product.msi', 'packager'), dmg_filename=('product.dmg', 'packager')))
 
     def testUpdate(self):
         self.props.setProperty("x", 24, "old")
