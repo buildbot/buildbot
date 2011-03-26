@@ -343,11 +343,15 @@ In general, Buildbot slaves and masters can be upgraded independently, although
 some new features will not be available, depending on the master and slave
 versions.
 
+Beyond this general information, read all of the sections below that apply to
+versions through which you are upgrading.
+
 @heading Version-specific Notes
 
 @menu
 * Upgrading a Buildmaster to Buildbot-0.7.6::
 * Upgrading a Buildmaster to Buildbot-0.8.0::
+* Upgrading a Buildmaster to Later Versions::
 @end menu
 
 @node Upgrading a Buildmaster to Buildbot-0.7.6
@@ -398,6 +402,12 @@ backing up changes.pck to changes.pck.old
 
 If your Changes pickle uses multiple encodings, you're on your own, but the
 script in contrib may provide a good starting point for the fix.
+
+@node Upgrading a Buildmaster to Later Versions
+@subsection Upgrading a Buildmaster to Later Versions
+
+Up to Buildbot version @value{VERSION}, no further steps beyond those described
+above are required.
 
 @node Creating a buildslave
 @section Creating a buildslave
