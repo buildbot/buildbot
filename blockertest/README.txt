@@ -143,7 +143,7 @@ A Blocker in B depends on a step in A that fails.
 
 EXPECTED OUTCOME:
   - both builders: failure
-  - 'blockB' fails with status text "upstream failure in 1.0 sec"
+  - 'blockB' fails with status text "upstream failure after 1.0 sec"
 
 
 TEST 8: multiple upstream steps
@@ -155,7 +155,7 @@ using a Blocker as a guard against continuing a failed build.)
 
 EXPECTED OUTCOME:
   - both builders: success
-  - 'blockB' success with status test "upstream success in 1.0 sec"
+  - 'blockB' success with status test "upstream success after 1.0 sec"
 
 
 TEST 9: multiple upstream steps with failure
@@ -165,4 +165,4 @@ Same as test 8, except here the "prep" step fails.
 
 EXPECTED OUTCOME:
   - both builders: failure
-  - 'blockB' failure with status test "upstream failure in 1.0 sec"
+  - 'blockB' failure with status test "upstream failure after 1.0 sec"
