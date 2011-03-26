@@ -226,6 +226,7 @@ class DarcsExtractor(SourceStampExtractor):
 class GitExtractor(SourceStampExtractor):
     patchlevel = 1
     vcexe = "git"
+    config = None
 
     def getBaseRevision(self):
         # If a branch is specified, parse out the rev it points to
@@ -244,20 +245,24 @@ class GitExtractor(SourceStampExtractor):
         return d
 
     def readConfig(self):
+        if self.config:
+            return defer.succeed(config)
         d = self.dovc(["config", "-l"])
         d.addCallback(self.parseConfig)
         return d
 
     def parseConfig(self, res):
-        git_config = {}
+        self.config = {}
         for l in res.split("\n"):
             if l.strip():
                 parts = l.strip().split("=", 2)
-                git_config[parts[0]] = parts[1]
+                self.config[parts[0]] = parts[1]
+        return self.config
 
+    def parseTrackingBranch(self, res):
         # If we're tracking a remote, consider that the base.
-        remote = git_config.get("branch." + self.branch + ".remote")
-        ref = git_config.get("branch." + self.branch + ".merge")
+        remote = self.config.get("branch." + self.branch + ".remote")
+        ref = self.config.get("branch." + self.branch + ".merge")
         if remote and ref:
             remote_branch = ref.split("/", 3)[-1]
             d = self.dovc(["rev-parse", remote + "/" + remote_branch])
@@ -276,7 +281,9 @@ class GitExtractor(SourceStampExtractor):
         if m:
             self.baserev = m.group(2)
             self.branch = m.group(1)
-            return self.readConfig()
+            d = self.readConfig()
+            d.addCallback(self.parseTrackingBranch)
+            return d
         raise IndexError("Could not find current GIT branch: %s" % res)
 
     def getPatch(self, res):
