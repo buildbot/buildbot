@@ -142,13 +142,13 @@ class DBConnector(object):
         # PostgreSQL:
         # * doesn't return last row id, so we must append "RETURNING x"
         #   to queries where we want it and we must fetch it later,
-        # * doesn't accept "?" in queries.
+        # PostgreSQL and MySQL:
+        # * don't accept "?" in queries.
+        if self._engine.dialect.name in ('postgres', 'postgresql', 'mysql'):
+            query = query.replace("?", "%s")
         if self._engine.dialect.name in ('postgres', 'postgresql'):
             if returning:
                 query += " RETURNING %s" % returning
-            return query.replace("?", "%s")
-
-        # default
         return query
 
     def lastrowid(self, t): # TODO: remove
@@ -320,7 +320,7 @@ class DBConnector(object):
         # call this with a weird-looking tablename.
         q = self.quoteq("SELECT property_name,property_value FROM %s WHERE %s=?"
                         % (tablename, idname))
-        t.execute(q, (id,))
+        t.execute(self.quoteq(q), (id,))
         retval = Properties()
         for key, value_json in t.fetchall():
             value = json.loads(value_json)
