@@ -125,7 +125,7 @@ class Native(unittest.TestCase, db.RealDatabaseMixin):
     def test_ddl_and_queries(self):
         meta = sa.MetaData()
         native_tests = sa.Table("native_tests", meta,
-                sa.Column('name', sa.String()))
+                sa.Column('name', sa.String(length=200)))
 
         # perform a DDL operation and immediately try to access that table;
         # this has caused problems in the past, so this is basically a

@@ -21,7 +21,7 @@ def upgrade(migrate_engine):
 
     # add an empty class_name to the schedulers table
     schedulers = sa.Table('schedulers', metadata, autoload=True)
-    class_name = sa.Column('class_name', sa.Text, nullable=False, server_default=sa.DefaultClause(''))
+    class_name = sa.Column('class_name', sa.String(length=128), nullable=False, server_default=sa.DefaultClause(''))
     class_name.create(schedulers, populate_default=True)
 
     # and an index since we'll be selecting with (name= AND class=)

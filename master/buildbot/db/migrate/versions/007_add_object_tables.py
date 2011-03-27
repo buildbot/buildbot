@@ -30,7 +30,7 @@ def upgrade(migrate_engine):
     object_state = sa.Table("object_state", metadata,
         sa.Column("objectid", sa.Integer, sa.ForeignKey('objects.id'),
                               nullable=False),
-        sa.Column("name", sa.String(length=None), nullable=False),
+        sa.Column("name", sa.String(length=256), nullable=False),
         sa.Column("value_json", sa.Text, nullable=False),
         sa.UniqueConstraint('objectid', 'name', name='name_per_object'),
     )

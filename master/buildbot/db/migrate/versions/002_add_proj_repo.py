@@ -21,9 +21,9 @@ def upgrade(migrate_engine):
 
     # add project and repository columns to 'changes' an 'sourcestamps'
     def add_cols(table):
-        repository = sa.Column('repository', sa.Text, nullable=False, server_default=sa.DefaultClause(''))
+        repository = sa.Column('repository', sa.String(512), nullable=False, server_default=sa.DefaultClause(''))
         repository.create(table, populate_default=True)
-        project = sa.Column('project', sa.Text, nullable=False, server_default=sa.DefaultClause(''))
+        project = sa.Column('project', sa.String(512), nullable=False, server_default=sa.DefaultClause(''))
         project.create(table, populate_default=True)
 
     add_cols(sa.Table('changes', metadata, autoload=True))
