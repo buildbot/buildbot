@@ -14,7 +14,7 @@
 # Copyright Buildbot Team Members
 
 from twisted.python import log, failure
-from twisted.internet import defer, reactor
+from twisted.internet import reactor
 
 from buildbot.process.buildstep import BuildStep
 from buildbot.status import builder
@@ -203,7 +203,6 @@ class Blocker(BuildStep):
 
         self._log("searching for upstream build steps")
         botmaster = self.build.slavebuilder.slave.parent
-        stepStatuses = []               # list of BuildStepStatus objects
         errors = []                     # list of strings
         for (builderName, stepName) in self.upstreamSteps:
             buildStatus = stepStatus = None
@@ -311,7 +310,7 @@ class Blocker(BuildStep):
             if builderName == builderStatus.getName():
                 try:
                     stepStatus = self._getStepStatus(buildStatus, stepName)
-                except BadStepError, err:
+                except BadStepError:
                     self.failed(failure.Failure())
                     #log.err()
                     #self._overall_code = builder.EXCEPTION

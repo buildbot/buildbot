@@ -58,7 +58,7 @@ class TestBlockerTrivial(unittest.TestCase):
                           blocker.Blocker, upstreamSteps=[])
 
         # builder name and step name do not matter to constructor
-        bstep = blocker.Blocker(upstreamSteps=[("b1", "s1"), ("b1", "s3")])
+        blocker.Blocker(upstreamSteps=[("b1", "s1"), ("b1", "s3")])
 
         # test validation of idlePolicy arg
         self.assertRaises(ValueError, blocker.Blocker, idlePolicy="foo")
