@@ -116,7 +116,7 @@ class BuildbotEngineStrategy(strategies.ThreadLocalEngineStrategy):
         if u.drivername.startswith('sqlite'):
             u, kwargs, max_conns = self.special_case_sqlite(u, kwargs)
         elif u.drivername.startswith('mysql'):
-            u, kwargs, max_conns = self.special_case_sqlite(u, kwargs)
+            u, kwargs, max_conns = self.special_case_mysql(u, kwargs)
 
         # remove the basedir as it may confuse sqlalchemy
         basedir = kwargs.pop('basedir')
