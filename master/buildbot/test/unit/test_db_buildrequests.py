@@ -156,7 +156,8 @@ class TestBuildsetsConnectorComponent(
         d.addCallback(lambda _ :
                 self.db.buildrequests.getBuildRequests(**kwargs))
         def check(brlist):
-            self.assertEqual([ br['brid'] for br in brlist ], expected)
+            self.assertEqual(sorted([ br['brid'] for br in brlist ]),
+                             sorted(expected))
         d.addCallback(check)
         return d
 
@@ -196,7 +197,8 @@ class TestBuildsetsConnectorComponent(
         d.addCallback(lambda _ :
                 self.db.buildrequests.getBuildRequests(**kwargs))
         def check(brlist):
-            self.assertEqual([ br['brid'] for br in brlist ], expected)
+            self.assertEqual(sorted([ br['brid'] for br in brlist ]),
+                             sorted(expected))
         d.addCallback(check)
         return d
 
@@ -518,7 +520,8 @@ class TestBuildsetsConnectorComponent(
                             (tbl.c.claimed_by_name == None) &
                             (tbl.c.claimed_by_incarnation == None)))
                 results = conn.execute(q).fetchall()
-                self.assertEqual([ r.id for r in results ], expected)
+                self.assertEqual(sorted([ r.id for r in results ]),
+                                 sorted(expected))
             return self.db.pool.do(thd)
         d.addCallback(check)
         return d
