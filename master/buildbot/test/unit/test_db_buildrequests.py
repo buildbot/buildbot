@@ -119,7 +119,8 @@ class TestBuildsetsConnectorComponent(
         d.addCallback(lambda _ :
                 self.db.buildrequests.getBuildRequests(**kwargs))
         def check(brlist):
-            self.assertEqual([ br['brid'] for br in brlist ], expected)
+            self.assertEqual(sorted([ br['brid'] for br in brlist ]),
+                             sorted(expected))
         d.addCallback(check)
         return d
 
