@@ -128,7 +128,7 @@ class BuildRequest(object):
         buildrequest = cls()
         buildrequest.reason = reason
         buildrequest.source = source
-        buildrequest.builderName = builderName
+        buildrequest.buildername = builderName
         buildrequest.properties = properties.Properties()
         if props:
             buildrequest.properties.updateFromProperties(props)
