@@ -34,6 +34,11 @@ us greater inter-database compatibility and a more stable and reliable basis
 for this core component of the framework.  SQLAlchemy-Migrate is used to manage
 changes to the database schema from version to version.
 
+*** Postgres support
+
+Buildbot should now work with a Postgres backend just as well as it does with
+MySQL or SQLite.  Buildbot is actively tested against all three backends.
+
 ** Less garish color scheme
 
 The default color scheme for Buildbot has been modified to make it slightly
