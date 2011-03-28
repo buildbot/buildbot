@@ -100,11 +100,12 @@ class SerializedInvocation(unittest.TestCase):
 
         # run three times - the first starts testfn, the second
         # requires a second run, and the third is folded.
-        si()
-        si()
-        si()
+        d1 = si()
+        d2 = si()
+        d3 = si()
 
-        d = self.waitForQuiet(si)
+        dq = self.waitForQuiet(si)
+        d = defer.gatherResults([d1, d2, d3, dq])
         def check(_):
             self.assertEqual(events, [ 'TM', 'TM' ])
         d.addCallback(check)
@@ -119,9 +120,8 @@ class SerializedInvocation(unittest.TestCase):
             return d
         si = misc.SerializedInvocation(testfn)
 
-        si()
+        d = si()
 
-        d = self.waitForQuiet(si)
         def check(_):
             self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
         d.addCallback(check)

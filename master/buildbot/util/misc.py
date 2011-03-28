@@ -19,6 +19,7 @@ directly from this module.
 """
 
 from twisted.python import log
+from twisted.internet import defer
 
 def deferredLocked(lock_or_attr):
     """
@@ -53,36 +54,41 @@ class SerializedInvocation(object):
     least once after every call to the wrapper.
 
     Note that this cannot be used as a decorator on a method, as it will
-    serialize invocations across all class instances.  Also note that while the
-    underlying method must return a Deferred, the resulting wrapper does not.
-    Tests can monkey-patch the C{_quiet} method to be notified when all planned
-    invocations are complete.
+    serialize invocations across all class instances.  Tests can monkey-patch
+    the C{_quiet} method to be notified when all planned invocations are
+    complete.
     """
     def __init__(self, method):
         self.method = method
         self.running = False
-        self.need_run = False
+        self.pending_deferreds = []
 
     def __call__(self):
-        self.need_run = True
-        if self.running:
-            return
+        d = defer.Deferred()
+        self.pending_deferreds.append(d)
+        if not self.running:
+            self.start()
+        return d
 
-        # not running, so start a run
-        self.run_method()
-
-    def run_method(self):
+    def start(self):
         self.running = True
-        self.need_run = False
+        invocation_deferreds = self.pending_deferreds
+        self.pending_deferreds = []
         d = self.method()
-        d.addErrback(log.err)
-        def update_state(x):
+        d.addErrback(log.err, 'in invocation of %r' % (self.method,))
+
+        def notify_callers(_):
+            for d in invocation_deferreds:
+                d.callback(None)
+        d.addCallback(notify_callers)
+
+        def next(_):
             self.running = False
-            if self.need_run:
-                self.run_method()
+            if self.pending_deferreds:
+                self.start()
             else:
                 self._quiet()
-        d.addBoth(update_state)
+        d.addBoth(next)
 
     def _quiet(self): # hook for tests
         pass
