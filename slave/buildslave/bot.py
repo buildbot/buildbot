@@ -453,8 +453,6 @@ class BuildSlave(service.MultiService):
     def __init__(self, buildmaster_host, port, name, passwd, basedir,
                  keepalive, usePTY, keepaliveTimeout=30, umask=None,
                  maxdelay=300, unicode_encoding=None, allow_shutdown=None):
-        log.msg("Creating BuildSlave -- version: %s" % buildslave.version)
-        self.recordHostname(basedir)
         service.MultiService.__init__(self)
         bot = Bot(basedir, usePTY, unicode_encoding=unicode_encoding)
         bot.setServiceParent(self)
@@ -462,6 +460,9 @@ class BuildSlave(service.MultiService):
         if keepalive == 0:
             keepalive = None
         self.umask = umask
+        self.basedir = basedir
+
+        self.shutdown_loop = None
 
         if allow_shutdown == 'signal':
             if not hasattr(signal, 'SIGHUP'):
@@ -476,18 +477,13 @@ class BuildSlave(service.MultiService):
         self.connection = c = internet.TCPClient(buildmaster_host, port, bf)
         c.setServiceParent(self)
 
-    def recordHostname(self, basedir):
-        "Record my hostname in twistd.hostname, for user convenience"
-        log.msg("recording hostname in twistd.hostname")
-        filename = os.path.join(basedir, "twistd.hostname")
-        try:
-            open(filename, "w").write("%s\n" % socket.getfqdn())
-        except:
-            log.msg("failed - ignoring")
-
     def startService(self):
+        log.msg("Starting BuildSlave -- version: %s" % buildslave.version)
+
+        self.recordHostname(self.basedir)
         if self.umask is not None:
             os.umask(self.umask)
+
         service.MultiService.startService(self)
 
         if self.allow_shutdown == 'signal':
@@ -497,13 +493,25 @@ class BuildSlave(service.MultiService):
             log.msg("Watching %s's mtime to initiate shutdown" % self.shutdown_file)
             if os.path.exists(self.shutdown_file):
                 self.shutdown_mtime = os.path.getmtime(self.shutdown_file)
-            l = task.LoopingCall(self._checkShutdownFile)
+            self.shutdown_loop = l = task.LoopingCall(self._checkShutdownFile)
             l.start(interval=10)
 
     def stopService(self):
         self.bf.continueTrying = 0
         self.bf.stopTrying()
-        service.MultiService.stopService(self)
+        if self.shutdown_loop:
+            self.shutdown_loop.stop()
+            self.shutdown_loop = None
+        return service.MultiService.stopService(self)
+
+    def recordHostname(self, basedir):
+        "Record my hostname in twistd.hostname, for user convenience"
+        log.msg("recording hostname in twistd.hostname")
+        filename = os.path.join(basedir, "twistd.hostname")
+        try:
+            open(filename, "w").write("%s\n" % socket.getfqdn())
+        except:
+            log.msg("failed - ignoring")
 
     def _handleSIGHUP(self, *args):
         log.msg("Initiating shutdown because we got SIGHUP")

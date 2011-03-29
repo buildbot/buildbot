@@ -137,10 +137,11 @@ class TestBuildSlave(unittest.TestCase):
         # and wait for the result of the print
         return d
 
-    def test_hostname_file(self):
+    def test_recordHostname(self):
         self.buildslave = bot.BuildSlave("127.0.0.1", 9999,
                 "testy", "westy", self.basedir,
                 keepalive=0, usePTY=False, umask=022)
+        self.buildslave.recordHostname(self.basedir)
         self.assertEqual(open(os.path.join(self.basedir, "twistd.hostname")).read().strip(),
                          'test-hostname.domain.com')
 
