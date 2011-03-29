@@ -81,6 +81,7 @@ setup_args = {
         "buildslave",
         "buildslave.commands",
         "buildslave.scripts",
+        "buildslave.monkeypatches",
         "buildslave.test",
         "buildslave.test.fake",
         "buildslave.test.util",
