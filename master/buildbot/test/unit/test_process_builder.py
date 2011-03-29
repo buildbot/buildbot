@@ -66,7 +66,7 @@ class TestBuilderBuildCreation(unittest.TestCase):
         builds_started = [
                 (sl.name, [ br['brid'] for br in buildreqs ])
                 for (sl, buildreqs) in self.builds_started ]
-        self.assertEqual(builds_started, exp)
+        self.assertEqual(sorted(builds_started), sorted(exp))
 
     def setSlaveBuilders(self, slavebuilders):
         """C{slaves} maps name : available"""
