@@ -54,7 +54,10 @@ class TestBuilderBuildCreation(unittest.TestCase):
         self.bldr._startBuildFor = _startBuildFor
 
         if patch_random:
-            self.patch(random, "choice", lambda lst : sorted(lst)[-1])
+            # patch 'random.choice' to always take the slave that sorts
+            # last, based on its name
+            self.patch(random, "choice",
+                    lambda lst : sorted(lst, key=lambda m : m.name)[-1])
 
         # we don't want the reclaim service running during tests..
         self.bldr.reclaim_svc.disownServiceParent()
