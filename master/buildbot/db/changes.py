@@ -19,10 +19,8 @@ Support for changes in the database
 
 from buildbot.util import json
 import sqlalchemy as sa
-from twisted.python import log
 from buildbot.changes.changes import Change
 from buildbot.db import base
-from buildbot import util
 
 class ChangesConnectorComponent(base.DBConnectorComponent):
     """
@@ -139,10 +137,6 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
 
             return change
         d = self.db.pool.do(thd)
-        # prune changes, if necessary
-        d.addCallback(lambda _ : self._prune_changes(change.number))
-        # return the change
-        d.addCallback(lambda _ : change)
         return d
 
     def getChangeInstance(self, changeid):
@@ -231,16 +225,6 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
         pass # TODO
 
     # utility methods
-
-    _last_prune = 0
-    def _prune_changes(self, last_added_changeid):
-        # this is an expensive operation, so only do it once per minute, in case
-        # addChange is called frequently
-        if not self.changeHorizon or self._last_prune > util.now() - 60:
-            return
-        self._last_prune = util.now()
-        log.msg("pruning changes")
-        self.pruneChanges(self.changeHorizon)
 
     def pruneChanges(self, changeHorizon):
         def thd(conn):

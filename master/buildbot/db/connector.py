@@ -15,7 +15,8 @@
 
 import base64
 
-from twisted.python import threadable
+from twisted.python import threadable, log
+from twisted.application import internet, service
 from buildbot.db import enginestrategy
 
 from buildbot import util
@@ -55,7 +56,7 @@ class TempAdbapiPool(adbapi.ConnectionPool):
     def stop(self):
         pass
 
-class DBConnector(object):
+class DBConnector(service.MultiService):
     """
     The connection between Buildbot and its backend database.  This is
     generally accessible as master.db, but is also used during upgrades.
@@ -68,7 +69,12 @@ class DBConnector(object):
     synchronized = ["notify", "_end_operation"] # TODO: remove
     MAX_QUERY_TIMES = 1000
 
+    # Period, in seconds, of the cleanup task.  This master will perform
+    # periodic cleanup actions on this schedule.
+    CLEANUP_PERIOD = 3600
+
     def __init__(self, master, db_url, basedir):
+        service.MultiService.__init__(self)
         self.master = master
         self.basedir = basedir
         "basedir for this master - used for upgrades"
@@ -108,6 +114,10 @@ class DBConnector(object):
         self.state = state.StateConnectorComponent(self)
         "L{buildbot.db.state.StateConnectorComponent} instance"
 
+        self.cleanup_timer = internet.TimerService(self.CLEANUP_PERIOD, self.doCleanup)
+        self.cleanup_timer.setServiceParent(self)
+
+        self.changeHorizon = None # default value; set by master
 
     def _getCurrentTime(self): # TODO: remove
         # this is a seam for use in testing
@@ -678,5 +688,14 @@ class DBConnector(object):
         c.number = changeid
         return c
 
+    def doCleanup(self):
+        """
+        Perform any periodic database cleanup tasks.
+
+        @returns: Deferred
+        """
+        d = self.changes.pruneChanges(self.changeHorizon)
+        d.addErrback(log.err, 'while pruning changes')
+        return d
 
 threadable.synchronize(DBConnector)

@@ -15,12 +15,13 @@
 
 import os
 import mock
+from twisted.internet import defer, reactor
 from twisted.trial import unittest
 from buildbot.db import connector
 from buildbot.test.util import db
 from buildbot.test.fake import fakedb
 
-class DBConnector_Basic(db.RealDatabaseMixin, unittest.TestCase):
+class DBConnector(db.RealDatabaseMixin, unittest.TestCase):
     """
     Basic tests of the DBConnector class - all start with an empty DB
     """
@@ -94,4 +95,29 @@ class DBConnector_Basic(db.RealDatabaseMixin, unittest.TestCase):
                     [ ('foo', 'my prop', 'Change'),
                       ('bar', 'other prop', 'BS')])
         d.addCallback(do_test)
+        return d
+
+    def test_doCleanup(self):
+        # patch out all of the cleanup tasks; note that we can't patch dbc.doCleanup
+        # directly, since it's already been incorporated into the TimerService
+        cleanups = set([])
+        def pruneChanges(*args):
+            cleanups.add('pruneChanges')
+            return defer.succeed(None)
+        self.dbc.changes.pruneChanges = pruneChanges
+
+        self.dbc.startService()
+
+        d = defer.Deferred()
+        def check(_):
+            self.assertEqual(cleanups, set(['pruneChanges']))
+        d.addCallback(check)
+
+        # shut down the service lest we leave an unclean reactor
+        d.addCallback(lambda _ : self.dbc.stopService())
+
+        # take advantage of the fact that TimerService runs immediately; otherwise, we'd need to find
+        # a way to inject task.Clock into it
+        reactor.callLater(0.001, d.callback, None)
+
         return d

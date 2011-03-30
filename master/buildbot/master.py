@@ -288,7 +288,9 @@ class BuildMaster(service.MultiService):
                 raise KeyError("must have a 'slaves' key")
 
             if changeHorizon is not None:
-                self.change_svc.changeHorizon = changeHorizon
+                self.change_svc.changeHorizon = changeHorizon # TODO: remove
+                # TODO: get this from master.config.changeHorizon
+                self.db.changeHorizon = changeHorizon
 
             change_source = config.get('change_source', [])
             if isinstance(change_source, (list, tuple)):
@@ -516,6 +518,7 @@ class BuildMaster(service.MultiService):
             return
 
         self.db = connector.DBConnector(self, db_url, self.basedir)
+        self.db.setServiceParent(self)
         if self.changeCacheSize:
             pass # TODO: set this in self.db.changes, or in self.config?
         self.db.start()
