@@ -58,7 +58,7 @@ Bazaar, or a labeled tag used in CVS)@footnote{many VC
 systems provide more complexity than this: in particular the local
 views that P4 and ClearCase can assemble out of various source
 directories are more complex than we're prepared to take advantage of
-here}. The SHA1 revision ID used by Mercurial and Git is
+here}. The SHA1 revision ID used by Mercurial, Git and Monotone is
 also a kind of revision stamp, in that it specifies a unique copy of
 the source tree, as does a Darcs ``context'' file.
 
@@ -243,6 +243,15 @@ hash as returned by e.g. @command{git rev-parse}. No attempt is made
 to ensure that the specified revision is actually a subset of the
 specified branch.
 
+@uref{http://www.monotone.ca/, Monotone} is another that follows a
+decentralized model where each repository can have several branches and
+tags. The source Step is configured with static @code{repourl} and
+@code{branch} parameters, which specifies the location of the
+repository and the branch to use.  The ``revision'' is specified as a
+SHA1 hash as returned by e.g. @command{git rev-parse}. No attempt is
+made to ensure that the specified revision is actually a subset of the
+specified branch.
+
 
 @node Attributes of Changes
 @subsection Attributes of Changes
@@ -331,6 +340,9 @@ consumed by the @code{computeSourceRevision} method in the appropriate
 @item Git
 @code{revision} is a short string (a SHA1 hash), the output of e.g.
 @code{git rev-parse}
+@item Monotone
+@code{revision} is a short string (a SHA1 hash), the output of e.g.
+@code{mtn automate select w:}
 @end table
 
 @heading Branches
@@ -339,7 +351,7 @@ The Change might also have a @code{branch} attribute. This indicates
 that all of the Change's files are in the same named branch. The
 Schedulers get to decide whether the branch should be built or not.
 
-For VC systems like CVS, and Git, the @code{branch}
+For VC systems like CVS, Git, and Monotone, the @code{branch}
 name is unrelated to the filename. (that is, the branch name and the
 filename inhabit unrelated namespaces). For SVN, branches are
 expressed as subdirectories of the repository, so the file's
@@ -359,6 +371,8 @@ branch='warner-newfeature', files=['src/foo.c']
 @item Mercurial
 branch='warner-newfeature', files=['src/foo.c']
 @item Git
+branch='warner-newfeature', files=['src/foo.c']
+@item Monotone
 branch='warner-newfeature', files=['src/foo.c']
 @end table
 
