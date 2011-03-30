@@ -248,9 +248,9 @@ decentralized model where each repository can have several branches and
 tags. The source Step is configured with static @code{repourl} and
 @code{branch} parameters, which specifies the location of the
 repository and the branch to use.  The ``revision'' is specified as a
-SHA1 hash as returned by e.g. @command{git rev-parse}. No attempt is
-made to ensure that the specified revision is actually a subset of the
-specified branch.
+SHA1 hash as returned by e.g. @command{mtn automate select w:}. No
+attempt is made to ensure that the specified revision is actually a
+subset of the specified branch.
 
 
 @node Attributes of Changes

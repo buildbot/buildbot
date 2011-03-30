@@ -109,7 +109,7 @@ hook)
 @item @code{gerritchangesource.GerritChangeSource} connects to Gerrit via SSH to get a live stream of changes
 @end itemize
 
-@item Mercurial
+@item Monotone
 @itemize @bullet
 @item pb.PBChangeSource (listening for connections from
 @code{monotone-buildbot.lua}, which is available with monotone)
