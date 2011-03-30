@@ -13,12 +13,12 @@
 #
 # Copyright Buildbot Team Members
 
-import os, re
+import os
 
-from twisted.python import log, runtime
+from twisted.python import log
 from twisted.internet import defer
 
-from buildslave.commands.base import SourceBaseCommand, AbandonChain
+from buildslave.commands.base import SourceBaseCommand
 from buildslave import runprocess
 #from buildslave.util import remove_userpassword
 
