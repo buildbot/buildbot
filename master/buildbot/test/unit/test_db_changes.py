@@ -264,18 +264,49 @@ class TestChangesConnectorComponent(
         d.addCallback(check_change_properties)
         return d
 
-    def test_prune_changes(self):
-        self.db.changes.changeHorizon = 1
+    def test_pruneChanges(self):
+        d = self.insertTestData([
+            fakedb.Scheduler(schedulerid=29),
+            fakedb.SourceStamp(id=234),
 
-        # prune_changes prunes from a lot of tables
-        # TODO: add data to them to check!
-        d = self.insertTestData(self.change13_rows + self.change14_rows)
-        d.addCallback(lambda _ : self.db.changes._prune_changes(14))
+            fakedb.Change(changeid=11),
+
+            fakedb.Change(changeid=12),
+            fakedb.SchedulerChange(schedulerid=29, changeid=12),
+            fakedb.SourceStampChange(sourcestampid=234, changeid=12),
+            ] +
+
+            self.change13_rows + [
+            fakedb.SchedulerChange(schedulerid=29, changeid=13),
+            ] +
+
+            self.change14_rows + [
+            fakedb.SchedulerChange(schedulerid=29, changeid=14),
+
+            fakedb.Change(changeid=15),
+            fakedb.SourceStampChange(sourcestampid=234, changeid=15),
+            ]
+        )
+
+        # pruning with a horizon of 2 should delete changes 11, 12 and 13
+        d.addCallback(lambda _ : self.db.changes.pruneChanges(2))
         def check(_):
             def thd(conn):
-                changes_tbl = self.db.model.changes
-                r = conn.execute(sa.select([changes_tbl.c.changeid]))
-                self.assertEqual([ r.changeid for r in r.fetchall() ], [ 14 ])
+                results = {}
+                for tbl_name in ('scheduler_changes', 'sourcestamp_changes',
+                                 'change_files', 'change_links',
+                                 'change_properties', 'changes'):
+                    tbl = self.db.model.metadata.tables[tbl_name]
+                    r = conn.execute(sa.select([tbl.c.changeid]))
+                    results[tbl_name] = sorted([ r[0] for r in r.fetchall() ])
+                self.assertEqual(results, {
+                    'scheduler_changes': [14],
+                    'sourcestamp_changes': [15],
+                    'change_files': [14],
+                    'change_links': [],
+                    'change_properties': [],
+                    'changes': [14, 15],
+                })
             return self.db.pool.do(thd)
         d.addCallback(check)
         return d

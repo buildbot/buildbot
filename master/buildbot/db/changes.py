@@ -240,10 +240,11 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
             return
         self._last_prune = util.now()
         log.msg("pruning changes")
+        self.pruneChanges(self.changeHorizon)
 
+    def pruneChanges(self, changeHorizon):
         def thd(conn):
             changes_tbl = self.db.model.changes
-            current_horizon = last_added_changeid - self.changeHorizon
 
             # First, get the list of changes to delete.  This could be written
             # as a subquery but then that subquery would be run for every
@@ -251,7 +252,8 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
             # leaves much to be desired, and doesn't support this particular
             # form.
             q = sa.select([changes_tbl.c.changeid],
-                          changes_tbl.c.changeid <= current_horizon)
+                          order_by=[sa.desc(changes_tbl.c.changeid)],
+                          offset=changeHorizon)
             res = conn.execute(q)
             ids_to_delete = [ r.changeid for r in res ]
 
