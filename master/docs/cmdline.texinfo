@@ -276,7 +276,7 @@ This can also be provided as @code{try_vc} in
 @c The order of this list comes from the end of scripts/tryclient.py
 
 The following names are recognized: @code{cvs} @code{svn}
-@code{bzr} @code{hg} @code{darcs} @code{git} @code{p4}
+@code{bzr} @code{hg} @code{darcs} @code{git} @code{p4} @code{mtn}
 
 
 @heading finding the top of the tree
@@ -303,7 +303,7 @@ for each tree you use, so it may be more convenient to use the
 @code{try_topfile} approach instead.
 
 Other VC systems which work on full projects instead of individual
-directories (darcs, mercurial, git) do not require
+directories (darcs, mercurial, git, monotone) do not require
 @command{try} to know the top directory, so the @option{--try-topfile}
 and @option{--try-topdir} arguments will be ignored.
 @c is this true? I think I currently require topdirs all the time.
@@ -391,6 +391,15 @@ the base revision.
 @c since the extracted base revision might not actually exist in the
 @c upstream repository. Perhaps we need to add a --remote option to
 @c specify the remote tracking branch to generate a diff against.
+
+@item Monotone
+@code{mtn automate get_base_revision_id} emits the full revision id
+which is a SHA1 hash of the current revision's contents. This is used as
+the base revision.
+@code{mtn diff} then provides the patch relative to that revision.  For
+@command{try} to work, your working directory must only have patches
+that are available from the same remotely-available repository that the
+build process' @code{source.Monotone} will use.
 
 @end table
 
