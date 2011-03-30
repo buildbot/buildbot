@@ -61,6 +61,19 @@ class BuildMaster(service.MultiService):
     change_svc = None
     properties = Properties()
 
+    # frequency with which to reclaim running builds; this should be set to
+    # something fairly long, to avoid undue database load
+    RECLAIM_BUILD_INTERVAL = 10*60
+
+    # multiplier on RECLAIM_BUILD_INTERVAL at which a build is considered
+    # unclaimed; this should be at least 2 to avoid false positives
+    UNCLAIMED_BUILD_FACTOR = 6
+
+    # if this quantity of unclaimed build requests are present in the table,
+    # then something is probably wrong!  The master will log a WARNING on every
+    # database poll operation.
+    WARNING_UNCLAIMED_COUNT = 10000
+
     def __init__(self, basedir, configFileName="master.cfg"):
         service.MultiService.__init__(self)
         self.setName("buildmaster")
@@ -86,7 +99,6 @@ class BuildMaster(service.MultiService):
 
         self.botmaster = BotMaster(self)
         self.botmaster.setName("botmaster")
-        self.botmaster.setMasterName(self.master_name, self.master_incarnation)
         self.botmaster.setServiceParent(self)
 
         self.scheduler_manager = SchedulerManager(self)
@@ -113,6 +125,8 @@ class BuildMaster(service.MultiService):
         # subscription points
         self._change_subs = \
                 subscription.SubscriptionPoint("changes")
+        self._new_buildrequest_subs = \
+                subscription.SubscriptionPoint("buildrequest_additions")
         self._new_buildset_subs = \
                 subscription.SubscriptionPoint("buildset_additions")
         self._complete_buildset_subs = \
@@ -508,8 +522,6 @@ class BuildMaster(service.MultiService):
         # the remainder is only done if we are really loading the config
         if not checkOnly:
             d.addCallback(_done)
-            # trigger the bostmaster to try to start builds
-            d.addCallback(lambda _: self.botmaster.loop.trigger())
             d.addErrback(log.err)
         return d
 
@@ -541,14 +553,11 @@ class BuildMaster(service.MultiService):
 
         # set up the stuff that depends on the db
         def set_up_db_dependents(r):
-            # TODO: these need to go
-            self.botmaster.db = self.db
+            # TODO: this needs to go
             self.status.setDB(self.db)
 
             # subscribe the various parts of the system to changes
             self._change_subs.subscribe(self.status.changeAdded)
-            self._new_buildset_subs.subscribe(
-                    lambda **kwargs : self.botmaster.loop.trigger())
 
             # Set db_poll_interval (perhaps to 30 seconds) if you are using
             # multiple buildmasters that share a common database, such that the
@@ -557,8 +566,6 @@ class BuildMaster(service.MultiService):
             if db_poll_interval:
                 t1 = TimerService(db_poll_interval, self.pollDatabase)
                 t1.setServiceParent(self)
-                t2 = TimerService(db_poll_interval, self.botmaster.loop.trigger)
-                t2.setServiceParent(self)
             # adding schedulers (like when loadConfig happens) will trigger the
             # scheduler loop at least once, which we need to jump-start things
             # like Periodic.
@@ -750,6 +757,10 @@ class BuildMaster(service.MultiService):
             log.msg("added buildset %d to database" % bsid)
             # note that buildset additions are only reported on this master
             self._new_buildset_subs.deliver(bsid=bsid, **kwargs)
+            # only deliver messages immediately if we're not polling
+            if not self.db_poll_interval:
+                for bn in kwargs.get('builderNames', []):
+                    self.buildRequestAdded(bsid=bsid, buildername=bn)
             return bsid
         d.addCallback(notify)
         return d
@@ -761,6 +772,8 @@ class BuildMaster(service.MultiService):
         external_idstring=external_idstring)} be called whenever a buildset is
         added.  Properties is a dictionary as expected for
         L{BuildsetsConnectorComponent.addBuildset}.
+
+        Note that this only works for buildsets added on this master.
 
         Note: this method will go away in 0.9.x
         """
@@ -783,17 +796,46 @@ class BuildMaster(service.MultiService):
         """
         return self._complete_buildset_subs.subscribe(callback)
 
+    def buildRequestAdded(self, bsid, buildername):
+        """
+        Notifies the master that a build request is available to be claimed;
+        this may be a brand new build request, or a build request that was
+        previously claimed and unclaimed through a timeout or other calamity.
+
+        @param bsid: containing buildset id
+        @param buildername: builder named by the build request
+        """
+        self._new_buildrequest_subs.deliver(bsid=bsid,
+                                            buildername=buildername)
+
+    def subscribeToBuildRequests(self, callback):
+        """
+        Request that C{callback} be invoked with keyword parameters C{bsid}
+        (buildset id) and C{buildername} whenever a new build request is added
+        to the database.  Note that, due to the delayed nature of
+        subscriptions, the build request may already be claimed by the time
+        C{callback} is invoked.
+
+        Note: this method will go away in 0.9.x
+        """
+        return self._new_buildrequest_subs.subscribe(callback)
+
+
     ## database polling
 
     def pollDatabase(self):
         # poll each of the tables that can indicate new, actionable stuff for
         # this buildmaster to do.  This is used in a TimerService, so returning
         # a Deferred means that we won't run two polling operations
-        # simultaneously.  Each particular poll method handles errors itself.
-        return defer.gatherResults([
-            # only changes at the moment
+        # simultaneously.  Each particular poll method handles errors itself,
+        # although catastrophic errors are handled here
+        d = defer.gatherResults([
             self.pollDatabaseChanges(),
+            self.pollDatabaseBuildRequests(),
+            # also unclaim
         ])
+        d.addErrback(log.err, 'while polling database')
+        return d
 
     _last_processed_change = None
     @defer.deferredGenerator
@@ -857,6 +899,64 @@ class BuildMaster(service.MultiService):
                                self._last_processed_change))
             yield wfd
             wfd.getResult()
+
+    _last_unclaimed_brids_set = None
+    _last_claim_cleanup = None
+    @defer.deferredGenerator
+    def pollDatabaseBuildRequests(self):
+        # deal with cleaning up unclaimed requests, and (if necessary)
+        # requests from a previous instance of this master
+        if self._last_claim_cleanup is None:
+            self._last_claim_cleanup = 0
+
+            # first time through - clean up any builds belonging to a previous
+            # instance
+            wfd = defer.waitForDeferred(
+                    self.db.buildrequests.unclaimOldIncarnationRequests())
+            yield wfd
+            wfd.getResult()
+
+        # cleanup unclaimed builds
+        since_last_cleanup = reactor.seconds() - self._last_claim_cleanup 
+        if since_last_cleanup < self.RECLAIM_BUILD_INTERVAL:
+            unclaimed_age = (self.RECLAIM_BUILD_INTERVAL
+                           * self.UNCLAIMED_BUILD_FACTOR)
+            wfd = defer.waitForDeferred(
+                self.db.buildrequests.unclaimExpiredRequests(unclaimed_age))
+            yield wfd
+            wfd.getResult()
+
+            self._last_claim_cleanup = reactor.seconds()
+
+        # _last_unclaimed_brids_set tracks the state of unclaimed build
+        # requests; whenever it sees a build request which was not claimed on
+        # the last poll, it notifies the subscribers.  It only tracks that
+        # state within the master instance, though; on startup, it notifies for
+        # all unclaimed requests in the database.
+
+        last_unclaimed = self._last_unclaimed_brids_set or set()
+        if len(last_unclaimed) > self.WARNING_UNCLAIMED_COUNT:
+            log.msg("WARNING: %d unclaimed buildrequests - is a scheduler "
+                    "producing builds for which no builder is running?"
+                    % len(last_unclaimed))
+
+        # get the current set of unclaimed buildrequests
+        wfd = defer.waitForDeferred(
+            self.db.buildrequests.getBuildRequests(claimed=False))
+        yield wfd
+        now_unclaimed_brdicts = wfd.getResult()
+        now_unclaimed = set([ brd['brid'] for brd in now_unclaimed_brdicts ])
+
+        # and store that for next time
+        self._last_unclaimed_brids_set = now_unclaimed
+
+        # see what's new, and notify if anything is
+        new_unclaimed = now_unclaimed - last_unclaimed
+        if new_unclaimed:
+            brdicts = dict((brd['brid'], brd) for brd in now_unclaimed_brdicts)
+            for brid in new_unclaimed:
+                brd = brdicts[brid]
+                self.buildRequestAdded(brd['buildsetid'], brd['buildername'])
 
     ## state maintenance (private)
 

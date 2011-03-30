@@ -17,7 +17,6 @@
 import random, weakref
 from zope.interface import implements
 from twisted.python import log
-from twisted.python.failure import Failure
 from twisted.spread import pb
 from twisted.application import service, internet
 from twisted.internet import defer
@@ -27,7 +26,6 @@ from buildbot.status.progress import Expectations
 from buildbot.status.builder import RETRY
 from buildbot.status.builder import BuildSetStatus
 from buildbot.process.properties import Properties
-from buildbot.util.eventual import eventually
 from buildbot.process import buildrequest, slavebuilder
 from buildbot.process.slavebuilder import BUILDING
 from buildbot.db import buildrequests
@@ -137,9 +135,6 @@ class Builder(pb.Referenceable, service.MultiService):
         # for testing, to help synchronize tests
         self.run_count = 0
 
-        # add serialized-invocation behavior to maybeStartBuild
-        self.maybeStartBuild = util.SerializedInvocation(self.doMaybeStartBuild)
-
     def stopService(self):
         d = defer.maybeDeferred(lambda :
                 service.MultiService.stopService(self))
@@ -153,9 +148,10 @@ class Builder(pb.Referenceable, service.MultiService):
 
     def setBotmaster(self, botmaster):
         self.botmaster = botmaster
-        self.db = botmaster.db
-        self.master_name = botmaster.master_name
-        self.master_incarnation = botmaster.master_incarnation
+        self.master = botmaster.master
+        self.db = self.master.db
+        self.master_name = self.master.master_name
+        self.master_incarnation = self.master.master_incarnation
 
     def compareToSetup(self, setup):
         diffs = []
@@ -195,117 +191,6 @@ class Builder(pb.Referenceable, service.MultiService):
 
     def __repr__(self):
         return "<Builder '%r' at %d>" % (self.name, id(self))
-
-    def triggerNewBuildCheck(self):
-        self.botmaster.triggerNewBuildCheck()
-
-    def run(self):
-        """Check for work to be done. This should be called any time I might
-        be able to start a job:
-
-         - when the Builder is first created
-         - when a new job has been added to the [buildrequests] DB table
-         - when a slave has connected
-
-        If I have both an available slave and the database contains a
-        BuildRequest that I can handle, I will claim the BuildRequest and
-        start the build. When the build finishes, I will retire the
-        BuildRequest.
-        """
-        # overall plan:
-        #  move .expectations to DB
-
-        # if we're not running, we may still be called from leftovers from
-        # a run of the loop, so just ignore the call.
-        if not self.running:
-            return
-
-        self.run_count += 1
-
-        available_slaves = [sb for sb in self.slaves if sb.isAvailable()]
-        if not available_slaves:
-            self.updateBigStatus()
-            return
-        d = self.db.runInteraction(self._claim_buildreqs, available_slaves)
-        d.addCallback(self._start_builds)
-        return d
-
-    # slave-managers must refresh their claim on a build at least once an
-    # hour, less any inter-manager clock skew
-    RECLAIM_INTERVAL = 1*3600
-
-    def _claim_buildreqs(self, t, available_slaves):
-        # return a dict mapping slave -> (brid,ssid)
-        now = util.now()
-        old = now - self.RECLAIM_INTERVAL
-        requests = self.db.get_unclaimed_buildrequests(self.name, old,
-                                                       self.master_name,
-                                                       self.master_incarnation,
-                                                       t)
-
-        assignments = {}
-        while requests and available_slaves:
-            sb = self._choose_slave(available_slaves)
-            if not sb:
-                log.msg("%s: want to start build, but we don't have a remote"
-                        % self)
-                break
-            available_slaves.remove(sb)
-            breq = self._choose_build(requests)
-            if not breq:
-                log.msg("%s: went to start build, but nextBuild said not to"
-                        % self)
-                break
-            requests.remove(breq)
-            merged_requests = [breq]
-            for other_breq in requests[:]:
-                if (self.mergeRequests and
-                    self.botmaster.shouldMergeRequests(self, breq, other_breq)
-                    ):
-                    requests.remove(other_breq)
-                    merged_requests.append(other_breq)
-            assignments[sb] = merged_requests
-            brids = [br.id for br in merged_requests]
-            self.db.claim_buildrequests(now, self.master_name,
-                                        self.master_incarnation, brids, t)
-        return assignments
-
-    def _choose_slave(self, available_slaves):
-        # note: this might return None if the nextSlave() function decided to
-        # not give us anything
-        if self.nextSlave:
-            try:
-                return self.nextSlave(self, available_slaves)
-            except:
-                log.msg("Exception choosing next slave")
-                log.err(Failure())
-            return None
-        return random.choice(available_slaves)
-
-    def _choose_build(self, buildable):
-        if self.nextBuild:
-            try:
-                return self.nextBuild(self, buildable)
-            except:
-                log.msg("Exception choosing next build")
-                log.err(Failure())
-            return None
-        return buildable[0]
-
-    def _start_builds(self, assignments):
-        # because _claim_buildreqs runs in a separate thread, we might have
-        # lost a slave by this point. We treat that case the same as if we
-        # lose the slave right after the build starts: the initial ping
-        # fails.
-        for (sb, requests) in assignments.items():
-            build = self.buildFactory.newBuild(requests)
-            build.setBuilder(self)
-            build.setLocks(self.locks)
-            if len(self.env) > 0:
-                build.setSlaveEnvironment(self.env)
-            self.startBuild(build, sb)
-        self.updateBigStatus()
-
 
     def getBuildable(self, limit=None):
         return self.db.runInteractionNow(self._getBuildable, limit)
@@ -399,18 +284,18 @@ class Builder(pb.Referenceable, service.MultiService):
         return # all done
 
     def reclaimAllBuilds(self):
-        try:
-            now = util.now()
-            brids = set()
-            for b in self.building:
-                brids.update([br.id for br in b.requests])
-            for b in self.old_building:
-                brids.update([br.id for br in b.requests])
-            self.db.claim_buildrequests(now, self.master_name,
-                                        self.master_incarnation, brids)
-        except:
-            log.msg("Error in reclaimAllBuilds")
-            log.err()
+        brids = set()
+        for b in self.building:
+            brids.update([br.id for br in b.requests])
+        for b in self.old_building:
+            brids.update([br.id for br in b.requests])
+
+        if not brids:
+            return defer.succeed(None)
+
+        d = self.master.db.buildrequests.claimBuildRequests(brids)
+        d.addErrback(log.err, 'while re-claiming running BuildRequests')
+        return d
 
     def getBuild(self, number):
         for b in self.building:
@@ -431,7 +316,7 @@ class Builder(pb.Referenceable, service.MultiService):
             self.builder_status.addPointEvent(
                 ['added', 'latent', slave.slavename])
             self.slaves.append(sb)
-            self.triggerNewBuildCheck()
+            self.botmaster.maybeStartBuildsForBuilder(self.name)
 
     def attached(self, slave, remote, commands):
         """This is invoked by the BuildSlave when the self.slavename bot
@@ -522,7 +407,16 @@ class Builder(pb.Referenceable, service.MultiService):
         else:
             self.builder_status.setBigState("idle")
 
-    def startBuild(self, build, sb):
+    def _startBuildFor(self, slavebuilder, buildrequests):
+        build = self.buildFactory.newBuild(buildrequests)
+        build.setBuilder(self)
+        build.setLocks(self.locks)
+        if len(self.env) > 0:
+            build.setSlaveEnvironment(self.env)
+        self._startBuildFor_0(build, slavebuilder)
+        self.updateBigStatus()
+
+    def _startBuildFor_0(self, build, sb):
         """Start a build on the given slave.
         @param build: the L{base.Build} to start
         @param sb: the L{SlaveBuilder} which will host this build
@@ -543,21 +437,13 @@ class Builder(pb.Referenceable, service.MultiService):
             d = defer.succeed(ready)
 
             if not ready:
-                #FIXME: We should perhaps trigger a check to see if there is
-                # any other way to schedule the work
-                log.msg("slave %s can't build %s after all" % (build, sb))
+                log.msg("slave %s can't build %s after all; re-queueing the request" % (build, sb))
 
-                # release the slave. This will queue a call to maybeStartBuild, which
-                # will fire after other notifyOnDisconnect handlers have marked the
-                # slave as disconnected (so we don't try to use it again).
-                # sb.buildFinished()
-
-                log.msg("re-queueing the BuildRequest %s" % build)
                 self.building.remove(build)
                 self._resubmit_buildreqs(build).addErrback(log.err)
 
                 sb.slave.releaseLocks()
-                self.triggerNewBuildCheck()
+                self.maybeStartBuildsForBuilder(self.name)
 
                 return d
 
@@ -573,14 +459,14 @@ class Builder(pb.Referenceable, service.MultiService):
                 log.msg("starting build %s.. pinging the slave %s" % (build, sb))
                 return sb.ping()
             d.addCallback(_ping)
-            d.addCallback(self._startBuild_1, build, sb)
+            d.addCallback(self._startBuildFor_1, build, sb)
 
             return d
 
         d.addCallback(_prepared)
         return d
 
-    def _startBuild_1(self, res, build, sb):
+    def _startBuildFor_1(self, res, build, sb):
         if not res:
             return self._startBuildFailed("slave ping failed", build, sb)
         # The buildslave is ready to go. sb.buildStarted() sets its state to
@@ -588,11 +474,11 @@ class Builder(pb.Referenceable, service.MultiService):
         # gets set back to IDLE by the Build itself when it finishes.
         sb.buildStarted()
         d = sb.remote.callRemote("startBuild")
-        d.addCallbacks(self._startBuild_2, self._startBuildFailed,
+        d.addCallbacks(self._startBuildFor_2, self._startBuildFailed,
                        callbackArgs=(build,sb), errbackArgs=(build,sb))
         return d
 
-    def _startBuild_2(self, res, build, sb):
+    def _startBuildFor_2(self, res, build, sb):
         # create the BuildStatus object that goes with the Build
         bs = self.builder_status.newBuild()
 
@@ -631,8 +517,9 @@ class Builder(pb.Referenceable, service.MultiService):
         failure). Any exceptions during the build are reported with
         results=FAILURE, not with an errback."""
 
-        # by the time we get here, the Build has already released the slave
-        # (which queues a call to maybeStartBuild)
+        # by the time we get here, the Build has already released the slave,
+        # which will trigger a check for any now-possible build requests
+        # (maybeStartBuilds)
 
         self.db.builds_finished(bids)
 
@@ -646,8 +533,6 @@ class Builder(pb.Referenceable, service.MultiService):
 
         if sb.slave:
             sb.slave.releaseLocks()
-
-        self.triggerNewBuildCheck()
 
     def _resubmit_buildreqs(self, build):
         brids = [br.id for br in build.requests]
@@ -671,18 +556,15 @@ class Builder(pb.Referenceable, service.MultiService):
 
     # Build Creation
 
-    # maybeStartBuild is called by the botmaster whenever this builder should
-    # check for and potentially start new builds.  As an optimization,
-    # invocations of this function are collapsed as much as possible while
-    # maintaining the invariant that at least one execution of the entire
-    # algorithm will occur between the invocation of the method and the firing
-    # of its Deferred.  This is done with util.SerializedInvocation; see
-    # Builder.__init__, above.
-
     @defer.deferredGenerator
-    def doMaybeStartBuild(self):
+    def maybeStartBuild(self):
+        # This method is called by the botmaster whenever this builder should
+        # check for and potentially start new builds.  Do not call this method
+        # directly - use master.botmaster.maybeStartBuildsForBuilder, or one
+        # of the other similar methods if more appropriate
+
         # first, if we're not running, then don't start builds; stopService
-        # uses this to ensure that any ongoing doMaybeStartBuild invocations
+        # uses this to ensure that any ongoing maybeStartBuild invocations
         # are complete before it stops.
         if not self.running:
             return
@@ -728,12 +610,12 @@ class Builder(pb.Referenceable, service.MultiService):
             wfd = defer.waitForDeferred(
                 self._chooseBuild(unclaimed_requests))
             yield wfd
-            breq = wfd.getResult()
+            brdict = wfd.getResult()
 
-            if not breq:
+            if not brdict:
                 break
 
-            if breq not in unclaimed_requests:
+            if brdict not in unclaimed_requests:
                 log.msg(("nextBuild chose a nonexistent request for builder "
                          "'%s'; cannot start build") % self.name)
                 break
@@ -741,16 +623,16 @@ class Builder(pb.Referenceable, service.MultiService):
             # merge the chosen request with any compatible requests in the
             # queue
             wfd = defer.waitForDeferred(
-                self._mergeRequests(breq, unclaimed_requests,
+                self._mergeRequests(brdict, unclaimed_requests,
                                     mergeRequests_fn))
             yield wfd
-            breqs = wfd.getResult()
+            brdicts = wfd.getResult()
 
             # try to claim the build requests
             try:
                 wfd = defer.waitForDeferred(
                         self.master.db.buildrequests.claimBuildRequests(
-                            [ brdict['brid'] for brdict in breqs ]))
+                            [ brdict['brid'] for brdict in brdicts ]))
                 yield wfd
                 wfd.getResult()
             except buildrequests.AlreadyClaimedError:
@@ -771,16 +653,20 @@ class Builder(pb.Referenceable, service.MultiService):
             # requests.  Note that if the build fails from here on out (e.g.,
             # because a slave has failed), it will be handled outside of this
             # loop. TODO: test that!
+
+            # _startBuildFor expects BuildRequest objects, so cook some up
             wfd = defer.waitForDeferred(
-                    self._startBuildFor(slavebuilder, breqs))
+                    defer.gatherResults([ self._brdictToBuildRequest(brdict)
+                                          for brdict in brdicts ]))
             yield wfd
-            wfd.getResult()
+            breqs = wfd.getResult()
+            self._startBuildFor(slavebuilder, breqs)
 
             # and finally remove the buildrequests and slavebuilder from the
             # respective queues
-            self._breakBrdictRefloops(breqs)
-            for breq in breqs:
-                unclaimed_requests.remove(breq)
+            self._breakBrdictRefloops(brdicts)
+            for brdict in brdicts:
+                unclaimed_requests.remove(brdict)
             available_slavebuilders.remove(slavebuilder)
 
         self._breakBrdictRefloops(unclaimed_requests)

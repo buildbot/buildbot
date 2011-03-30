@@ -351,11 +351,12 @@ class AbstractBuildSlave(pb.Avatar, service.MultiService):
 
             return self.updateSlave()
         d.addCallback(_accept_slave)
-        d.addCallback(lambda res: self.botmaster.triggerNewBuildCheck())
+        d.addCallback(lambda _:
+                self.botmaster.maybeStartBuildsForSlave(self.slavename))
 
         # Finally, the slave gets a reference to this BuildSlave. They
         # receive this later, after we've started using them.
-        d.addCallback(lambda res: self)
+        d.addCallback(lambda _: self)
         return d
 
     def messageReceivedFromSlave(self):
@@ -432,9 +433,9 @@ class AbstractBuildSlave(pb.Avatar, service.MultiService):
     def sendBuilderList(self):
         our_builders = self.botmaster.getBuildersForSlave(self.slavename)
         blist = [(b.name, b.slavebuilddir) for b in our_builders]
-        if blist == self._old_builder_list:
-            log.msg("Builder list is unchanged; not calling setBuilderList")
-            return defer.succeed(None)
+#        if blist == self._old_builder_list:
+#            log.msg("Builder list is unchanged; not calling setBuilderList")
+#            return defer.succeed(None)
 
         d = self.slave.callRemote("setBuilderList", blist)
         def sentBuilderList(ign):
@@ -461,7 +462,7 @@ class AbstractBuildSlave(pb.Avatar, service.MultiService):
 
     def buildFinished(self, sb):
         """This is called when a build on this slave is finished."""
-        raise NotImplementedError
+        self.botmaster.maybeStartBuildsForSlave(self.slavename)
 
     def canStartBuild(self):
         """
@@ -616,10 +617,11 @@ class BuildSlave(AbstractBuildSlave):
 
     def buildFinished(self, sb):
         """This is called when a build on this slave is finished."""
+        AbstractBuildSlave.buildFinished(self, sb)
+
         # If we're gracefully shutting down, and we have no more active
         # builders, then it's safe to disconnect
         self.maybeShutdown()
-        return defer.succeed(None)
 
 class AbstractLatentBuildSlave(AbstractBuildSlave):
     """A build slave that will start up a slave instance when needed.
@@ -750,6 +752,8 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
         self.building.add(sb.builder_name)
 
     def buildFinished(self, sb):
+        AbstractBuildSlave.buildFinished(self, sb)
+
         self.building.remove(sb.builder_name)
         if not self.building:
             self._setBuildWaitTimer()

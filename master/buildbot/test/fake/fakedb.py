@@ -813,6 +813,12 @@ class FakeBuildRequestsComponent(FakeDBComponent):
         br.claimed_by_incarnation = \
                 master_incarnation or self.MASTER_INCARNATION
 
+    def fakeUnclaimBuildRequest(self, brid):
+        br = self.reqs[brid]
+        br.claimed_at = 0
+        br.claimed_by_name = None
+        br.claimed_by_incarnation = None
+
     # assertions
 
     def assertClaimed(self, brid, master_name=None, master_incarnation=None):

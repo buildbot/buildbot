@@ -63,6 +63,7 @@ class Build:
     def __init__(self, requests):
         self.requests = requests
         self.locks = []
+
         # build a source stamp
         self.source = requests[0].mergeWith(requests[1:])
         self.reason = requests[0].mergeReasons(requests[1:])
@@ -220,6 +221,7 @@ class Build:
                        for l, la in self.locks]
         self.remote = slavebuilder.remote
         self.remote.notifyOnDisconnect(self.lostRemote)
+
         d = self.deferred = defer.Deferred()
         def _release_slave(res, slave, bs):
             self.slavebuilder.buildFinished()

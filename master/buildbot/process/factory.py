@@ -59,13 +59,13 @@ class BuildFactory(util.ComparableMixin):
             return step_or_factory.getStepFactory()
         return step_or_factory
 
-    def newBuild(self, request):
+    def newBuild(self, requests):
         """Create a new Build instance.
 
-        @param request: a L{buildbot.process.buildrequest.BuildRequest}
-        describing what is to be built
+        @param requests: a list of buildrequest dictionaries describing what is
+        to be built
         """
-        b = self.buildClass(request)
+        b = self.buildClass(requests)
         b.useProgress = self.useProgress
         b.workdir = self.workdir
         b.setStepFactories(self.steps)
