@@ -524,7 +524,7 @@ class Try(pb.Referenceable):
     def getStatus(self):
         # returns a Deferred that fires when the builds have finished, and
         # may emit status messages while we wait
-        wait = bool(self.getopt("wait", "try_wait"))
+        wait = bool(self.getopt("wait"))
         if not wait:
             # TODO: emit the URL where they can follow the builds. This
             # requires contacting the Status server over PB and doing
@@ -695,9 +695,9 @@ class Try(pb.Referenceable):
         # get the names of the configured builders that can
         # be used for the --builder argument
         if self.connect == "pb":
-            user = self.getopt("username", "try_username")
-            passwd = self.getopt("passwd", "try_password")
-            master = self.getopt("master", "try_master")
+            user = self.getopt("username")
+            passwd = self.getopt("passwd")
+            master = self.getopt("master")
             tryhost, tryport = master.split(":")
             tryport = int(tryport)
             f = pb.PBClientFactory()
