@@ -61,7 +61,7 @@ class StatusResourceBuildStep(HtmlResource):
                         build_link = path_to_build(req, b),
                         b = b,
                         s = s,
-                        result_css = css_classes[b.getResults()]))
+                        result_css = css_classes[s.getResults()[0]]))
         
         template = req.site.buildbot_service.templates.get_template("buildstep.html");        
         return template.render(**cxt)
