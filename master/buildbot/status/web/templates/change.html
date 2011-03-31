@@ -1,0 +1,20 @@
+{% extends "layout.html" %}
+{% from "change_macros.html" import change with context %}
+{% import 'forms.html' as forms %}
+
+{% block content %}
+
+<h1>{{ title }}</h1>
+
+<div class="column">
+
+{{ change(c) }}
+
+{% if authz.advertiseAction('stopChange') %}
+  <h3>Cancel Builds For Change:</h3>
+  {{ forms.stop_change_builds("/builders/_all/stopchangeall", c.number, authz) }}
+{% endif %}
+
+</div>
+
+{% endblock %}

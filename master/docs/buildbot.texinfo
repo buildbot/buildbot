@@ -1,0 +1,109 @@
+\input texinfo @c -*-texinfo-*-
+@c %**start of header
+@setfilename buildbot.info
+@include version.texinfo
+@settitle BuildBot Manual - @value{VERSION}
+@defcodeindex cs
+@defcodeindex sl
+@defcodeindex bf
+@defcodeindex bs
+@defcodeindex st
+@defcodeindex bc
+@defcodeindex dv
+@c %**end of header
+
+@c these indices are for classes useful in a master.cfg config file
+@c @csindex : Change Sources
+@c @slindex : Schedulers and Locks
+@c @bfindex : Build Factories
+@c @bsindex : Build Steps
+@c @stindex : Status Targets
+@c @dvindex : Developer Reference
+
+@c @bcindex : keys that make up BuildmasterConfig
+
+@copying
+This is the BuildBot manual for Buildbot version @value{VERSION}.
+
+Copyright (C) 2005, 2006, 2009, 2010 Brian Warner
+
+Copying and distribution of this file, with or without
+modification, are permitted in any medium without royalty
+provided the copyright notice and this notice are preserved.
+
+@end copying
+
+@ifinfo
+@dircategory Software development
+@direntry
+* Buildbot: (buildbot).        A system to automate the compile/test cycle
+@end direntry
+@end ifinfo
+
+@titlepage
+@title BuildBot
+@subtitle @value{VERSION}
+@page
+@vskip 0pt plus 1filll
+@insertcopying
+@end titlepage
+
+@c Output the table of the contents at the beginning.
+@contents
+
+@ifnottex
+@node Top, Introduction, (dir), (dir)
+@top BuildBot
+
+@insertcopying
+@end ifnottex
+
+@menu
+* Introduction::                What the BuildBot does.
+* Installation::                Installing and setting up a Builbot system
+* Concepts::                    What goes on in the buildbot's little mind.
+* Configuration::               Controlling the buildbot.
+* Customization::               Customizing Buildbot with subclasses
+* Command-line Tools::          The 'buildbot' and 'buildslave' utilities
+* Resources::                   Getting help
+* Developer Information::       Stuff Buildbot hackers should know
+* Index::                       Concept Index
+@end menu
+
+@node Introduction
+@chapter Introduction
+@include introduction.texinfo
+
+@node Installation
+@chapter Installation
+@include installation.texinfo
+
+@node Concepts
+@chapter Concepts
+@include concepts.texinfo
+
+@node Configuration
+@chapter Configuration
+@include configuration.texinfo
+
+@node Customization
+@chapter Customization
+@include customization.texinfo
+
+@node Command-line Tools
+@chapter Command-line Tools
+@include cmdline.texinfo
+
+@node Resources
+@chapter Resources
+@include resources.texinfo
+
+@node Developer Information
+@chapter Developer Information
+@include developer.texinfo
+
+@node Index
+@unnumbered Index
+@printindex cp
+
+@bye

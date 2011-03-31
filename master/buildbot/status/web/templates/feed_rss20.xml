@@ -1,0 +1,39 @@
+{% from 'feed_description.html' import item_desc %}
+
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>{{ title|e }}</title>
+    <link>{{ project_url }}</link>
+    <atom:link href="{{ project_url }}rss" rel="self" type="application/rss+xml"/>
+    {% if language -%}
+    <language>{{ language }}</language>
+    {% endif %}
+    {%- if description -%}
+    <description>{{ description }}</description>
+    {% endif %}
+    {%- if rfc822_pubdate -%}
+    <pubDate>{{ rfc822_pubdate }}</pubDate>
+    {% endif %}
+
+    {% for b in builds -%}
+    <item>
+      <title>{{ b.title }}</title>
+      <link>{{ b.link }}</link>
+      <description>
+        <![CDATA[
+          {{ item_desc(b, project_url, project_name)|indent(8) }}
+          <pre>{{ b.log_lines|join('\n')|e }}</pre>
+        ]]>
+      </description>
+      {% if b.rfc822_pubdate -%}
+      <pubDate>{{ b.rfc822_pubdate }}</pubDate>
+      <guid isPermaLink="false">{{ b.guid }}</guid>
+      {%- endif %}
+
+    </item>
+
+    {% endfor %}
+
+  </channel>
+</rss>

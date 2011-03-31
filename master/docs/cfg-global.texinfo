@@ -1,0 +1,493 @@
+The keys in this section affect the operations of the buildmaster globally.
+
+@menu
+* Database Specification::
+* Multi-master mode::
+* Project Definitions::
+* Log Handling::
+* Data Lifetime::
+* Merging Build Requests (global option)::
+* Prioritizing Builders::
+* Setting the PB Port for Slaves::
+* Defining Global Properties::
+* Debug Options::
+@end menu
+
+@node Database Specification
+@subsection Database Specification
+
+Buildbot requires a connection to a database to maintain certain state
+information, such as tracking pending build requests.  By default this is
+stored in a sqlite file called 'state.sqlite' in the base directory of your
+master.  This can be overridden with the @code{db_url} parameter.
+
+The format of this parameter is completely documetned at
+@url{http://www.sqlalchemy.org/docs/dialects/}, but is generally of the form:
+
+@example
+driver://[username:password@@]host:port/database[?args]
+@end example
+
+For sqlite databases, since there is no host and port, relative paths are
+specified with @code{sqlite:///} and absolute paths with @code{sqlite:////}.
+Examples:
+
+Notes for particular database backends:
+
+@heading SQLite
+
+@example
+c['db_url'] = "sqlite:///state.sqlite"
+@end example
+
+No special configuration is required to use SQLite.
+
+@heading MySQL
+
+@example
+c['db_url'] = "mysql://user:pass@@somehost.com/database_name?max_idle=300"
+@end example
+
+The @code{max_idle} argument for MySQL connections is unique to Buildbot, and
+should be set to something less than the wait_timeout configured for your
+server.  This controls the SQLAlchemy @code{pool_recycle} parameter, which
+defaults to no timeout.  Setting this parameter ensures that connections are
+closed and re-opened after the configured amount of idle time.  If you see
+errors such as @code{_mysql_exceptions.OperationalError: (2006, 'MySQL server
+has gone away')}, this means your @code{max_idle} setting is probably too high.
+@code{show global variables like 'wait_timeout';} will show what the currently
+configured @code{wait_timeout} is on your MySQL server.
+
+Buildbot requires @code{use_unique=True} and @code{charset=utf8}, and will add
+them automatically, so they do not need to be specified in @code{db_url}.
+
+@heading Postgres
+
+@example
+c['db_url'] = "postgresql://username@@hostname/dbname"
+@end example
+
+No special configuration is required to use Postgres.
+
+@node Multi-master mode
+@subsection Multi-master mode
+
+Normally buildbot operates using a single master process that uses the
+configured database to save state.
+
+It is possible to configure buildbot to have multiple master processes that
+share state in the same database.  This has been well tested using a MySQL
+database.  There are several benefits of Multi-master mode:
+@itemize @bullet
+
+@item
+You can have large numbers of build slaves handling the same queue of build
+requests.  A single master can only handle so many slaves (the number is based
+on a number of factors including type of builds, number of builds, and master
+and slave IO and CPU capacity - there is no fixed formula).  By adding another
+master which shares the queue of build requests, you can attach more slaves to
+this additional master, and increase your build throughput.
+
+@item
+You can shut one master down to do maintenance, and other masters will continue
+to do builds.
+
+@end itemize
+
+State that is shared in the database includes:
+@itemize @bullet
+@item List of changes
+@item Scheduler names and internal state
+@item Build requests, including the builder name
+@end itemize
+
+Because of this shared state, you are strongly encouraged to:
+@itemize @bullet
+
+@item
+
+Ensure that each named scheduler runs on only one master.  If the same
+scheduler runs on multiple masters, it will trigger duplicate builds and may
+produce other undesirable behaviors.
+
+@item
+
+Ensure builder names are unique for a given build factory implementation.  You
+can have the same builder name configured on many masters, but if the build
+factories differ, you will get different results depending on which master
+claims the build.
+
+@end itemize
+
+One suggested configuration is to have one buildbot master configured with
+just the scheduler and change sources; and then other masters configured
+with just the builders.
+
+To enable multi-master mode in this configuration, you will need to set the
+@code{multiMaster} option so that buildbot doesn't warn about missing
+schedulers or builders.  You will also need to set @code{db_poll_interval}
+to the masters with only builders check the database for new build requests
+at the configured interval.
+
+@example
+# Enable multiMaster mode; disables warnings about unknown builders and
+# schedulers
+c['multiMaster'] = True
+# Check for new build requests every 60 seconds
+c['db_poll_interval'] = 60
+@end example
+
+@node Project Definitions
+@subsection Project Definitions
+
+There are a couple of basic settings that you use to tell the buildbot what it
+is working on. This information is used by status reporters to let users find
+out more about the codebase being exercised by this particular Buildbot
+installation.
+
+Note that these parameters were added long before Buildbot became able to build
+multiple projects in a single buildmaster, and thus assume that there is only
+one project.  While the configuration parameter names may be confusing, a
+suitable choice of name and URL should help users avoid any confusion.
+
+@example
+c['projectName'] = "Buildbot"
+c['projectURL'] = "http://buildbot.sourceforge.net/"
+c['buildbotURL'] = "http://localhost:8010/"
+@end example
+
+@bcindex c['projectName']
+@code{projectName} is a short string that will be used to describe the
+project that this buildbot is working on. For example, it is used as
+the title of the waterfall HTML page.
+
+@bcindex c['projectURL']
+@code{projectURL} is a string that gives a URL for the project as a whole. This
+URL must end with a slash (@code{/}).  HTML status displays will show
+@code{projectName} as a link to @code{projectURL}, to provide a link from
+buildbot HTML pages to your project's home page.
+
+@bcindex c['buildbotURL']
+The @code{buildbotURL} string should point to the location where the buildbot's
+internal web server is visible. This URL must end with a slash (@code{/}).
+This typically uses the port number set for the web status (@pxref{WebStatus}):
+the buildbot needs your help to figure out a suitable externally-visible host
+URL.
+
+When status notices are sent to users (either by email or over IRC),
+@code{buildbotURL} will be used to create a URL to the specific build
+or problem that they are being notified about. It will also be made
+available to queriers (over IRC) who want to find out where to get
+more information about this buildbot.
+
+@node Log Handling
+@subsection Log Handling
+
+@example
+c['logCompressionLimit'] = 16384
+c['logCompressionMethod'] = 'gz'
+c['logMaxSize'] = 1024*1024 # 1M
+c['logMaxTailSize'] = 32768
+@end example
+
+@bcindex c['logCompressionLimit']
+The @code{logCompressionLimit} enables compression of build logs on
+disk for logs that are bigger than the given size, or disables that
+completely if set to @code{False}. The default value is 4k, which should
+be a reasonable default on most file systems. This setting has no impact
+on status plugins, and merely affects the required disk space on the
+master for build logs.
+
+@bcindex c['logCompressionMethod']
+The @code{logCompressionMethod} controls what type of compression is used for
+build logs.  The default is 'bz2', the other valid option is 'gz'.  'bz2'
+offers better compression at the expense of more CPU time.
+
+@bcindex c['logMaxSize']
+The @code{logMaxSize} parameter sets an upper limit (in bytes) to how large
+logs from an individual build step can be.  The default value is None, meaning
+no upper limit to the log size.  Any output exceeding @code{logMaxSize} will be
+truncated, and a message to this effect will be added to the log's HEADER
+channel.
+
+@bcindex c['logMaxTailSize']
+If @code{logMaxSize} is set, and the output from a step exceeds the maximum,
+the @code{logMaxTailSize} parameter controls how much of the end of the build
+log will be kept.  The effect of setting this parameter is that the log will
+contain the first @code{logMaxSize} bytes and the last @code{logMaxTailSize}
+bytes of output.  Don't set this value too high, as the the tail of the log is
+kept in memory.
+
+@node Data Lifetime
+@subsection Data Lifetime
+
+@example
+c['changeHorizon'] = 200
+c['buildHorizon'] = 100
+c['eventHorizon'] = 50
+c['logHorizon'] = 40
+c['buildCacheSize'] = 15
+c['changeCacheSize'] = 10000
+@end example
+
+@bcindex c['logHorizon']
+@bcindex c['buildCacheSize']
+@bcindex c['changeHorizon']
+@bcindex c['buildHorizon']
+@bcindex c['eventHorizon']
+@bcindex c['changeCacheSize']
+
+Buildbot stores historical information on disk in the form of "Pickle" files
+and compressed logfiles.  In a large installation, these can quickly consume
+disk space, yet in many cases developers never consult this historical
+information.  
+
+The @code{c['changeHorizon']} key determines how many changes the master will
+keep a record of. One place these changes are displayed is on the waterfall
+page.  This parameter defaults to 0, which means keep all changes indefinitely.
+
+The @code{buildHorizon} specifies the minimum number of builds for each builder
+which should be kept on disk.  The @code{eventHorizon} specifies the minumum
+number of events to keep -- events mostly describe connections and
+disconnections of slaves, and are seldom helpful to developers.  The
+@code{logHorizon} gives the minimum number of builds for which logs should be
+maintained; this parameter must be less than @code{buildHorizon}. Builds older
+than @code{logHorizon} but not older than @code{buildHorizon} will maintain
+their overall status and the status of each step, but the logfiles will be
+deleted.
+
+The @code{buildCacheSize} gives the number of builds for each builder
+which are cached in memory.  This number should be larger than the number of
+builds required for commonly-used status displays (the waterfall or grid
+views), so that those displays do not miss the cache on a refresh.
+
+Finally, the @code{changeCacheSize} gives the number of changes to cache in
+memory.  This should be larger than the number of changes that typically arrive
+in the span of a few minutes, otherwise your schedulers will be reloading
+changes from the database every time they run.  For distributed version control
+systems, like git or hg, several thousand changes may arrive at once, so
+setting @code{changeCacheSize} to something like 10,000 isn't unreasonable.
+
+@node Merging Build Requests (global option)
+@subsection Merging Build Requests (global option)
+@bcindex c['mergeRequests']
+
+This is a global default value for builders' @code{mergeRequests} parameter,
+and controls the merging of build requests.  See @ref{Merging Build Requests}
+for more details.
+
+@node Prioritizing Builders
+@subsection Prioritizing Builders
+
+@bcindex c['prioritizeBuilders']
+
+By default, buildbot will attempt to start builds on builders in order from the
+builder with the oldest pending request to the newest. This behaviour can be
+customized with the @code{c['prioritizeBuilders']} configuration key.
+This key specifies a function which is called with two arguments: a
+@code{BuildMaster} and a list of @code{Builder} objects. It
+should return a list of @code{Builder} objects in the desired order.
+It may also remove items from the list if builds should not be started
+on those builders.
+
+This parameter controls the order in which builders are activated.  It does not
+affect the order in which a builder processes the build requests in its queue.
+For that purpose, see @pxref{Prioritizing Builds}.
+
+@example
+def prioritizeBuilders(buildmaster, builders):
+    """Prioritize builders.  'finalRelease' builds have the highest
+    priority, so they should be built before running tests, or
+    creating builds."""
+    builderPriorities = @{
+        "finalRelease": 0,
+        "test": 1,
+        "build": 2,
+    @}
+    builders.sort(key=lambda b: builderPriorities.get(b.name, 0))
+    return builders
+
+c['prioritizeBuilders'] = prioritizeBuilders
+@end example
+
+@node Setting the PB Port for Slaves
+@subsection Setting the PB Port for Slaves
+
+@bcindex c['slavePortnum']
+
+@example
+c['slavePortnum'] = 10000
+@end example
+
+The buildmaster will listen on a TCP port of your choosing for
+connections from buildslaves. It can also use this port for
+connections from remote Change Sources, status clients, and debug
+tools. This port should be visible to the outside world, and you'll
+need to tell your buildslave admins about your choice.
+
+It does not matter which port you pick, as long it is externally
+visible, however you should probably use something larger than 1024,
+since most operating systems don't allow non-root processes to bind to
+low-numbered ports. If your buildmaster is behind a firewall or a NAT
+box of some sort, you may have to configure your firewall to permit
+inbound connections to this port.
+
+@code{c['slavePortnum']} is a @emph{strports} specification string,
+defined in the @code{twisted.application.strports} module (try
+@command{pydoc twisted.application.strports} to get documentation on
+the format). This means that you can have the buildmaster listen on a
+localhost-only port by doing:
+
+@example
+c['slavePortnum'] = "tcp:10000:interface=127.0.0.1"
+@end example
+
+This might be useful if you only run buildslaves on the same machine,
+and they are all configured to contact the buildmaster at
+@code{localhost:10000}.
+
+@node Defining Global Properties
+@subsection Defining Global Properties
+@bcindex c['properties']
+@cindex Properties
+
+The @code{'properties'} configuration key defines a dictionary
+of properties that will be available to all builds started by the
+buildmaster:
+
+@example
+c['properties'] = @{
+    'Widget-version' : '1.2',
+    'release-stage' : 'alpha'
+@}
+@end example
+
+@node Debug Options
+@subsection Debug Options
+
+@bcindex c['debugPassword']
+If you set @code{c['debugPassword']}, then you can connect to the
+buildmaster with the diagnostic tool launched by @code{buildbot
+debugclient MASTER:PORT}. From this tool, you can reload the config
+file, manually force builds, and inject changes, which may be useful
+for testing your buildmaster without actually commiting changes to
+your repository (or before you have the Change Sources set up). The
+debug tool uses the same port number as the slaves do:
+@code{c['slavePortnum']}, and is authenticated with this password.
+
+@example
+c['debugPassword'] = "debugpassword"
+@end example
+
+@bcindex c['manhole']
+If you set @code{c['manhole']} to an instance of one of the classes in
+@code{buildbot.manhole}, you can telnet or ssh into the buildmaster
+and get an interactive Python shell, which may be useful for debugging
+buildbot internals. It is probably only useful for buildbot
+developers. It exposes full access to the buildmaster's account
+(including the ability to modify and delete files), so it should not
+be enabled with a weak or easily guessable password.
+
+There are three separate @code{Manhole} classes. Two of them use SSH,
+one uses unencrypted telnet. Two of them use a username+password
+combination to grant access, one of them uses an SSH-style
+@file{authorized_keys} file which contains a list of ssh public keys.
+
+@table @code
+@item manhole.AuthorizedKeysManhole
+You construct this with the name of a file that contains one SSH
+public key per line, just like @file{~/.ssh/authorized_keys}. If you
+provide a non-absolute filename, it will be interpreted relative to
+the buildmaster's base directory.
+
+@item manhole.PasswordManhole
+This one accepts SSH connections but asks for a username and password
+when authenticating. It accepts only one such pair.
+
+@item manhole.TelnetManhole
+This accepts regular unencrypted telnet connections, and asks for a
+username/password pair before providing access. Because this
+username/password is transmitted in the clear, and because Manhole
+access to the buildmaster is equivalent to granting full shell
+privileges to both the buildmaster and all the buildslaves (and to all
+accounts which then run code produced by the buildslaves), it is
+highly recommended that you use one of the SSH manholes instead.
+
+@end table
+
+@example
+# some examples:
+from buildbot import manhole
+c['manhole'] = manhole.AuthorizedKeysManhole(1234, "authorized_keys")
+c['manhole'] = manhole.PasswordManhole(1234, "alice", "mysecretpassword")
+c['manhole'] = manhole.TelnetManhole(1234, "bob", "snoop_my_password_please")
+@end example
+
+The @code{Manhole} instance can be configured to listen on a specific
+port. You may wish to have this listening port bind to the loopback
+interface (sometimes known as ``lo0'', ``localhost'', or 127.0.0.1) to
+restrict access to clients which are running on the same host.
+
+@example
+from buildbot.manhole import PasswordManhole
+c['manhole'] = PasswordManhole("tcp:9999:interface=127.0.0.1","admin","passwd")
+@end example
+
+To have the @code{Manhole} listen on all interfaces, use
+@code{"tcp:9999"} or simply 9999. This port specification uses
+@code{twisted.application.strports}, so you can make it listen on SSL
+or even UNIX-domain sockets if you want.
+
+Note that using any Manhole requires that the TwistedConch package be
+installed, and that you be using Twisted version 2.0 or later.
+
+The buildmaster's SSH server will use a different host key than the
+normal sshd running on a typical unix host. This will cause the ssh
+client to complain about a ``host key mismatch'', because it does not
+realize there are two separate servers running on the same host. To
+avoid this, use a clause like the following in your @file{.ssh/config}
+file:
+
+@example
+Host remotehost-buildbot
+ HostName remotehost
+ HostKeyAlias remotehost-buildbot
+ Port 9999
+ # use 'user' if you use PasswordManhole and your name is not 'admin'.
+ # if you use AuthorizedKeysManhole, this probably doesn't matter.
+ User admin
+@end example
+
+@heading Using Manhole
+
+After you have connected to a manhole instance, you will find yourself at a
+Python prompt.  You have access to two objects: @code{master} (the BuildMaster)
+and @code{status} (the master's Status object).  Most interesting objects on
+the master can be reached from these two objects.
+
+To aid in navigation, the @code{show} method is defined.  It displays the
+non-method attributes of an object.
+
+A manhole session might look like:
+
+@example
+>>> show(master)
+data attributes of <buildbot.master.BuildMaster instance at 0x7f7a4ab7df38>
+                       basedir : '/home/dustin/code/buildbot/t/buildbot/'...
+                     botmaster : <type 'instance'>
+                buildCacheSize : None
+                  buildHorizon : None
+                   buildbotURL : http://localhost:8010/
+               changeCacheSize : None
+                    change_svc : <type 'instance'>
+                configFileName : master.cfg
+                            db : <class 'buildbot.db.connector.DBConnector'>
+              db_poll_interval : None
+                        db_url : sqlite:///state.sqlite
+                              ...
+>>> show(master.botmaster.builders['win32'])
+data attributes of <Builder ''builder'' at 48963528>
+                              ...
+>>> win32 = _
+>>> win32.category = 'w32'
+@end example

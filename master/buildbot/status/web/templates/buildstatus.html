@@ -1,0 +1,19 @@
+{% extends "layout.html" %}
+{% from "box_macros.html" import box %}
+
+{% block header %}
+{% endblock %}
+
+{% block barecontent %}
+<table>
+  {% for r in rows %}
+    <tr>{{ box(**r) }}</tr>
+  {% endfor %}
+
+  <tr>{{ box(**build) }}</tr>
+</table>
+{% endblock %}
+
+{% block footer %}
+{% endblock %}
+

@@ -1,0 +1,150 @@
+# This file is part of Buildbot.  Buildbot is free software: you can
+# redistribute it and/or modify it under the terms of the GNU General Public
+# License as published by the Free Software Foundation, version 2.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, write to the Free Software Foundation, Inc., 51
+# Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Copyright Buildbot Team Members
+
+from twisted.trial import unittest
+from twisted.python import runtime
+from sqlalchemy.engine import url
+from buildbot.db import enginestrategy
+
+class BuildbotEngineStrategy_special_cases(unittest.TestCase):
+    "Test the special case methods, without actually creating a db"
+
+    # used several times below
+    mysql_kwargs = dict(basedir='my-base-dir', listeners=['ReconnectingListener'], pool_recycle=3600)
+
+    def setUp(self):
+        self.strat = enginestrategy.BuildbotEngineStrategy()
+
+    # utility
+
+    def filter_kwargs(self, kwargs):
+        # filter out the listeners list to just include the class name
+        if 'listeners' in kwargs:
+            kwargs['listeners'] = [ lstnr.__class__.__name__
+                            for lstnr in kwargs['listeners'] ]
+        return kwargs
+
+    # tests
+
+    def test_sqlite_pct_sub(self):
+        u = url.make_url("sqlite:///%(basedir)s/x/state.sqlite")
+        kwargs = dict(basedir='/my-base-dir')
+        u, kwargs, max_conns = self.strat.special_case_sqlite(u, kwargs)
+        self.assertEqual([ str(u), max_conns, self.filter_kwargs(kwargs) ],
+            [ "sqlite:////my-base-dir/x/state.sqlite", None,
+              dict(basedir='/my-base-dir') ])
+
+    def test_sqlite_relpath(self):
+        url_src = "sqlite:///x/state.sqlite"
+        basedir = "/my-base-dir"
+        expected_url = "sqlite:////my-base-dir/x/state.sqlite"
+
+        # this looks a whole lot different on windows
+        if runtime.platformType == 'win32':
+            url_src = r'sqlite:///X\STATE.SQLITE'
+            basedir = r'C:\MYBASE~1'
+            expected_url = r'sqlite:///C:\MYBASE~1\X\STATE.SQLITE'
+
+        u = url.make_url(url_src)
+        kwargs = dict(basedir=basedir)
+        u, kwargs, max_conns = self.strat.special_case_sqlite(u, kwargs)
+        self.assertEqual([ str(u), max_conns, self.filter_kwargs(kwargs) ],
+            [ expected_url, None, dict(basedir=basedir) ])
+
+    def test_sqlite_abspath(self):
+        u = url.make_url("sqlite:////x/state.sqlite")
+        kwargs = dict(basedir='/my-base-dir')
+        u, kwargs, max_conns = self.strat.special_case_sqlite(u, kwargs)
+        self.assertEqual([ str(u), max_conns, self.filter_kwargs(kwargs) ],
+            [ "sqlite:////x/state.sqlite", None,
+              dict(basedir='/my-base-dir') ])
+
+    def test_sqlite_memory(self):
+        u = url.make_url("sqlite://")
+        kwargs = dict(basedir='my-base-dir')
+        u, kwargs, max_conns = self.strat.special_case_sqlite(u, kwargs)
+        self.assertEqual([ str(u), max_conns, self.filter_kwargs(kwargs) ],
+            [ "sqlite://", 1, # only one conn at a time
+              dict(basedir='my-base-dir',
+                   pool_size=1) ]) # extra in-memory args
+
+    def test_mysql_simple(self):
+        u = url.make_url("mysql://host/dbname")
+        kwargs = dict(basedir='my-base-dir')
+        u, kwargs, max_conns = self.strat.special_case_mysql(u, kwargs)
+        self.assertEqual([ str(u), max_conns, self.filter_kwargs(kwargs) ],
+                [ "mysql://host/dbname?charset=utf8&use_unicode=True", None, self.mysql_kwargs ])
+
+    def test_mysql_userport(self):
+        u = url.make_url("mysql://user:pass@host:1234/dbname")
+        kwargs = dict(basedir='my-base-dir')
+        u, kwargs, max_conns = self.strat.special_case_mysql(u, kwargs)
+        self.assertEqual([ str(u), max_conns, self.filter_kwargs(kwargs) ],
+                [ "mysql://user:pass@host:1234/dbname?charset=utf8&use_unicode=True", None, self.mysql_kwargs ])
+
+    def test_mysql_local(self):
+        u = url.make_url("mysql:///dbname")
+        kwargs = dict(basedir='my-base-dir')
+        u, kwargs, max_conns = self.strat.special_case_mysql(u, kwargs)
+        self.assertEqual([ str(u), max_conns, self.filter_kwargs(kwargs) ],
+                [ "mysql:///dbname?charset=utf8&use_unicode=True", None, self.mysql_kwargs ])
+
+    def test_mysql_args(self):
+        u = url.make_url("mysql:///dbname?foo=bar")
+        kwargs = dict(basedir='my-base-dir')
+        u, kwargs, max_conns = self.strat.special_case_mysql(u, kwargs)
+        self.assertEqual([ str(u), max_conns, self.filter_kwargs(kwargs) ],
+                [ "mysql:///dbname?charset=utf8&foo=bar&use_unicode=True", None, self.mysql_kwargs ])
+
+    def test_mysql_max_idle(self):
+        u = url.make_url("mysql:///dbname?max_idle=1234")
+        kwargs = dict(basedir='my-base-dir')
+        u, kwargs, max_conns = self.strat.special_case_mysql(u, kwargs)
+        self.assertEqual([ str(u), max_conns, self.filter_kwargs(kwargs) ],
+                [ "mysql:///dbname?charset=utf8&use_unicode=True", None,
+                dict(basedir='my-base-dir',
+                     listeners=['ReconnectingListener'],
+                     pool_recycle=1234) ])
+
+    def test_mysql_good_charset(self):
+        u = url.make_url("mysql:///dbname?charset=utf8")
+        kwargs = dict(basedir='my-base-dir')
+        u, kwargs, max_conns = self.strat.special_case_mysql(u, kwargs)
+        self.assertEqual([ str(u), max_conns, self.filter_kwargs(kwargs) ],
+                [ "mysql:///dbname?charset=utf8&use_unicode=True", None, self.mysql_kwargs ])
+
+    def test_mysql_bad_charset(self):
+        u = url.make_url("mysql:///dbname?charset=ebcdic")
+        kwargs = dict(basedir='my-base-dir')
+        self.assertRaises(TypeError, lambda : self.strat.special_case_mysql(u, kwargs))
+
+    def test_mysql_good_use_unicode(self):
+        u = url.make_url("mysql:///dbname?use_unicode=True")
+        kwargs = dict(basedir='my-base-dir')
+        u, kwargs, max_conns = self.strat.special_case_mysql(u, kwargs)
+        self.assertEqual([ str(u), max_conns, self.filter_kwargs(kwargs) ],
+                [ "mysql:///dbname?charset=utf8&use_unicode=True", None, self.mysql_kwargs ])
+
+    def test_mysql_bad_use_unicode(self):
+        u = url.make_url("mysql:///dbname?use_unicode=maybe")
+        kwargs = dict(basedir='my-base-dir')
+        self.assertRaises(TypeError, lambda : self.strat.special_case_mysql(u, kwargs))
+
+class BuildbotEngineStrategy(unittest.TestCase):
+    "Test create_engine by creating a sqlite in-memory db"
+
+    def test_create_engine(self):
+        engine = enginestrategy.create_engine('sqlite://', basedir="/base")
+        self.assertEqual(engine.scalar("SELECT 13 + 14"), 27)

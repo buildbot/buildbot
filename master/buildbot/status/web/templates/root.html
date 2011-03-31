@@ -1,0 +1,61 @@
+{% extends 'layout.html' %}
+{% import 'forms.html' as forms %}
+
+{% block content %}
+
+<h1>Welcome to the Buildbot
+{%- if project_name -%}
+  &nbsp;for the&nbsp;
+  {%- if project_url -%}
+    <a href="{{ project_url }}">{{ project_name }}</a>
+  {%- else -%}
+    {{ project_name }}
+  {%- endif -%}
+&nbsp;project
+{%- endif -%}
+!
+</h1>
+
+<div class="column">
+
+<ul>
+  {% set item_class=cycler('alt', '') %}
+  
+  <li class="{{ item_class.next() }}">The <a href="waterfall">Waterfall Display</a> will give you a
+  time-oriented summary of recent buildbot activity.</li>
+
+  <li class="{{ item_class.next() }}">The <a href="grid">Grid Display</a> will give you a
+  developer-oriented summary of recent buildbot activity.</li>
+
+  <li class="{{ item_class.next() }}">The <a href="tgrid">Transposed Grid Display</a> presents
+  the same information as the grid, but lists the revisions down the side.</li>
+
+  <li class="{{ item_class.next() }}">The <a href="console">Console</a> presents 
+  a user-oriented status page.</li>
+
+  <li class="{{ item_class.next() }}">The <a href="builders">Builders</a> and their most recent builds are
+  here.</li>
+
+  <li class="{{ item_class.next() }}"><a href="one_line_per_build">Recent Builds</a> are summarized here, one
+  per line.</li>
+
+  <li class="{{ item_class.next() }}"><a href="buildslaves">Buildslave</a> information</li>
+  <li class="{{ item_class.next() }}"><a href="changes">Changesource</a> information.</li>
+
+  <li class="{{ item_class.next() }}"><a href="about">About</a> this Buildbot</li>
+</ul>
+
+{%- if authz.advertiseAction('cleanShutdown') -%}
+{%- if shutting_down -%}
+Master is shutting down<br/>
+{{ forms.cancel_clean_shutdown(cancel_shutdown_url, authz) }}
+{%- else -%}
+{{ forms.clean_shutdown(shutdown_url, authz) }}
+{%- endif -%}
+{%- endif -%}
+
+<p><i>This and other pages can be overridden and customized.</i></p>
+
+</div>
+
+{% endblock %}

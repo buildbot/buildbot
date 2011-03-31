@@ -1,0 +1,23 @@
+include MANIFEST.in README NEWS CREDITS COPYING UPGRADING
+
+include docs/examples/*.cfg
+include docs/tutorial/*.txt docs/tutorial/Makefile docs/tutorial/conf.py.in
+include docs/tutorial/_images/*.png
+include docs/*.texinfo
+include docs/*.png docs/images/*.png docs/images/*.svg docs/images/*.txt docs/images/*.ai
+include docs/images/icon.blend docs/images/Makefile
+include docs/Makefile
+include docs/version.py
+include docs/buildbot.1
+
+include buildbot/scripts/sample.cfg
+include buildbot/status/web/files/*
+include buildbot/status/web/templates/*.html buildbot/status/web/templates/*.xml
+include buildbot/clients/debug.glade
+include buildbot/buildbot.png
+
+include buildbot/db/migrate/README buildbot/db/migrate/migrate.cfg
+
+include contrib/* contrib/windows/* contrib/os-x/* contrib/css/*
+include contrib/trac/* contrib/trac/bbwatcher/* contrib/trac/bbwatcher/templates/*
+include contrib/init-scripts/*

@@ -1,0 +1,34 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+<h1>
+  Builder <a href="{{ builder_link }}">{{ b.getBuilder().getName() }}</a> 
+  build <a href="{{ build_link }}">#{{ b.getNumber() }}</a> 
+  test <a href="">{{ '.'.join(tr.getName()) }}</a> 
+</h1>
+
+<div class="column">
+
+  <h2>Result</h2>
+  <p class="{{ result_css }} result">
+    {{ result_word }}
+    {%- set text = tr.getText() -%}
+    {%- if text is string %}{{ text|e }}
+    {%- else %}{{ text|join(" ")|e }}{% endif -%}
+  </p>
+  
+<h2>Logs</h2>
+<ul>
+{% for l in logs %}
+  <h3>Log: {{ l.name|e }}</h3>
+    <samp><pre>{{ l.log|e }}</pre></samp>
+  </br>
+{% else %}
+  <li class="alt">- No logs -</li> 
+{% endfor %}
+</ul>
+
+</div>
+
+{% endblock %}
