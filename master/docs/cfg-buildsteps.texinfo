@@ -2065,7 +2065,6 @@ A number of steps do not fall into any particular category.
 
 @menu
 * HLint::
-* Proce
 @end menu
 
 @node HLint
