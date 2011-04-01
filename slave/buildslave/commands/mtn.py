@@ -167,7 +167,7 @@ class Monotone(SourceBaseCommand):
         return d
 
     def parseGotRevision(self):
-        def _parse(res, c):
+        def _parse(res):
             hash = self.command.stdout.strip()
             if len(hash) != 40:
                 return None
