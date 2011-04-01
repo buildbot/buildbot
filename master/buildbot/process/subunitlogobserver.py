@@ -18,7 +18,8 @@ from unittest import TestResult
 from StringIO import StringIO
 
 from buildbot.process import buildstep
-from buildbot.status.builder import TestResult as aTestResult, SUCCESS, FAILURE, SKIPPED #nosetests does not support unexpected success yet, so no need for WARNINGS
+from buildbot.status.builder import TestResult as aTestResult
+from buildbot.status.builder import SUCCESS, FAILURE, SKIPPED
 
 class SubunitLogObserver(buildstep.LogLineObserver, TestResult):
     """Observe a log that may contain subunit output.
@@ -31,7 +32,8 @@ class SubunitLogObserver(buildstep.LogLineObserver, TestResult):
         buildstep.LogLineObserver.__init__(self)
         TestResult.__init__(self)
         try:
-            from subunit import TestProtocolServer, PROGRESS_CUR, PROGRESS_SET, PROGRESS_PUSH, PROGRESS_POP
+            from subunit import TestProtocolServer, PROGRESS_CUR, PROGRESS_SET
+            from subunit import PROGRESS_PUSH, PROGRESS_POP
         except ImportError:
             raise ImportError("subunit is not importable, but is required for "
                 "SubunitLogObserver support.")
@@ -78,11 +80,11 @@ class SubunitLogObserver(buildstep.LogLineObserver, TestResult):
 
     def addAResult(self, test, result, text, log=""):
         tr = aTestResult(tuple(test.id().split('.')), result, text, log)
-	self.step.build.build_status.addTestResult(tr)
+        self.step.build.build_status.addTestResult(tr)
 
     def issue(self, test, err):
         """An issue - failing, erroring etc test."""
-	self.addAResult(test, FAILURE, 'FAILURE', err)
+        self.addAResult(test, FAILURE, 'FAILURE', err)
         self.step.setProgress('tests failed', len(self.failures) + 
             len(self.errors))
 
