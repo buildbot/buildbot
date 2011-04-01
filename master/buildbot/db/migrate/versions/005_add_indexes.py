@@ -80,10 +80,10 @@ def upgrade(migrate_engine):
 
     sa.Table('changes', metadata,
         sa.Column('changeid', sa.Integer,  primary_key=True),
-        sa.Column('author', sa.String(1024), nullable=False),
+        sa.Column('author', sa.String(256), nullable=False),
         sa.Column('comments', sa.String(1024), nullable=False),
         sa.Column('is_dir', sa.SmallInteger, nullable=False),
-        sa.Column('branch', sa.String(1024)),
+        sa.Column('branch', sa.String(256)),
         sa.Column('revision', sa.String(256)),
         sa.Column('revlink', sa.String(256)),
         sa.Column('when_timestamp', sa.Integer, nullable=False),
