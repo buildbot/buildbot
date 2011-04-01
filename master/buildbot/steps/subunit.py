@@ -21,7 +21,7 @@ class SubunitShellCommand(ShellCommand):
     """A ShellCommand that sniffs subunit output.
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, failureOnNoTests=False, *args, **kwargs):
         ShellCommand.__init__(self, *args, **kwargs)
         # importing here gets around an import loop
         from buildbot.process import subunitlogobserver
@@ -48,10 +48,14 @@ class SubunitShellCommand(ShellCommand):
                           (total,
                           total == 1 and "test" or "tests"),
                           "passed"]
+            elif self.failureOnNoTests:
+                results = FAILURE
+                text += ["no test is found"]
             else:
                 text += ["no tests", "run"]
         else:
             results = FAILURE
+            text.append("Total % test(s)" % total)
             if failures:
                 text.append("%d %s" % \
                             (failures,
