@@ -5,7 +5,7 @@ body.interface {
 	margin-bottom: 50px;
 	padding: 0;
 	background: url(bg_gradient.jpg) repeat-x;
-	font-family: Verdana, Cursor;
+	font-family: Verdana, Cursor, sans-serif;
 	font-size: 10px;
 	background-color: #fff;
 	color: #333;
