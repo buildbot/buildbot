@@ -89,7 +89,7 @@ class AbstractBuildSlave(pb.Avatar, service.MultiService):
         self.missing_timer = None
         self.keepalive_interval = keepalive_interval
 
-        self._old_builder_list = []
+        self._old_builder_list = None
 
     def update(self, new):
         """
