@@ -182,4 +182,4 @@ class Monotone(SourceBaseCommand):
         d = c.start()
         d.addCallback(self._abandonOnFailure)
         d.addCallback(_parse)
-
+        return d
