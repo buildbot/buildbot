@@ -31,6 +31,7 @@ commandRegistry = {
     "hg" : "buildslave.commands.hg.Mercurial",
     "p4" : "buildslave.commands.p4.P4",
     "p4sync" : "buildslave.commands.p4.P4Sync",
+    "mtn" : "buildslave.commands.mtn.Monotone",
     "mkdir" : "buildslave.commands.fs.MakeDirectory",
     "rmdir" : "buildslave.commands.fs.RemoveDirectory",
     "cpdir" : "buildslave.commands.fs.CopyDirectory",

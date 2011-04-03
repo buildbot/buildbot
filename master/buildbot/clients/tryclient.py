@@ -281,6 +281,24 @@ class GitExtractor(SourceStampExtractor):
         d.addCallback(self.readPatch, self.patchlevel)
         return d
 
+class MonotoneExtractor(SourceStampExtractor):
+    patchlevel = 0
+    vcexe = "mtn"
+    def getBaseRevision(self):
+        d = self.dovc(["automate", "get_base_revision_id"])
+        d.addCallback(self.parseStatus)
+        return d
+    def parseStatus(self, output):
+        hash = output.strip()
+        if len(hash) != 40:
+            self.baserev = None
+        self.baserev = hash
+    def getPatch(self, res):
+        d = self.dovc(["diff"])
+        d.addCallback(self.readPatch, self.patchlevel)
+        return d
+
+
 def getSourceStamp(vctype, treetop, branch=None):
     if vctype == "cvs":
         e = CVSExtractor(treetop, branch)
@@ -296,6 +314,8 @@ def getSourceStamp(vctype, treetop, branch=None):
         e = DarcsExtractor(treetop, branch)
     elif vctype == "git":
         e = GitExtractor(treetop, branch)
+    elif vctype == "mtn":
+        e = MonotoneExtractor(treetop, branch)
     else:
         raise KeyError("unknown vctype '%s'" % vctype)
     return e.get()

@@ -74,6 +74,11 @@ Repo VC
     M: Pierre Tardy <tardyp@gmail.com> - Hacker
     U: http://trac.buildbot.net/wiki/repovc
 
+Monotone VC
+    S: Maintained
+    M: Richard Levitte <richard@levitte.org> - Hacker
+    U: http://trac.buildbot.net/wiki/mtn
+
 
 == Change Sources ==
 
