@@ -365,6 +365,12 @@ class SourceBaseCommand(Command):
         return None
 
     def readSourcedata(self):
+        """
+        Read the sourcedata file and return its contents
+
+        @returns: source data
+        @raises: IOError if the file does not exist
+        """
         return open(self.sourcedatafile, "r").read()
 
     def writeSourcedata(self, res):
@@ -388,6 +394,12 @@ class SourceBaseCommand(Command):
             return rc
         if self.interrupted:
             raise AbandonChain(1)
+
+        # allow AssertionErrors to fall through, for benefit of the tests; for
+        # all other errors, carry on to try the fallback
+        if isinstance(rc, failure.Failure) and rc.check(AssertionError):
+            return rc
+
         # Let VCS subclasses have an opportunity to handle
         # unrecoverable errors without having to clobber the repo
         self.maybeNotDoVCFallback(rc)
