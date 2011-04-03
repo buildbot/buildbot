@@ -609,3 +609,11 @@ class SourceBaseCommand(Command):
         d.addCallback(self._abandonOnFailure)
         return d
 
+    def setFileContents(self, filename, contents):
+        """Put the given C{contents} in C{filename}; this is a bit more
+        succinct than opening, writing, and closing, and has the advantage of
+        being patchable in tests.  Note that the enclosing directory is
+        not automatically created, nor is this an "atomic" overwrite."""
+        f = open(filename, 'w')
+        f.write(contents)
+        f.close()
