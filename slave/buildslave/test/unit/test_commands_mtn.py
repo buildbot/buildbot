@@ -33,7 +33,12 @@ class TestMonotone(SourceCommandTestMixin, unittest.TestCase):
     def tearDown(self):
         self.tearDownCommand()
 
-    def test_simple(self):
+    def patch_sourcedirIsUpdateable(self, result):
+        self.cmd.sourcedirIsUpdateable = lambda : result
+
+
+    def test_no_db(self):
+        "Test a basic invocation with mode=copy and no existing sourcedir"
         self.patch_getCommand('mtn', 'path/to/mtn')
         self.clean_environ()
         self.make_command(mtn.Monotone, dict(
@@ -42,7 +47,158 @@ class TestMonotone(SourceCommandTestMixin, unittest.TestCase):
             revision=None,
             repourl=self.repourl,
             branch=self.branch
-        ))
+        ),
+            # no sourcedata -> will do fresh checkout
+            initial_sourcedata = None,
+        )
+        exp_environ = dict(PWD='.', LC_MESSAGES='C')
+        expects = [
+            Expect(['path/to/mtn', 'db', 'info',
+                    '--db', self.basedir + '/db.mtn'],
+                   self.basedir,
+                   keepStdout=True, sendRC=False, sendStderr=False,
+                   usePTY=False, environ=exp_environ) + 1,
+            Expect(['path/to/mtn', 'db', 'init',
+                    '--db', self.basedir + '/db.mtn'],
+                   self.basedir,
+                   sendRC=False, usePTY=False,
+                   environ=exp_environ) + 1,
+            Expect([ 'clobber', 'workdir' ],
+                   self.basedir) + 0,
+            Expect([ 'clobber', 'source' ],
+                   self.basedir) + 0,
+            Expect(['path/to/mtn', 'pull', self.repourl+"?"+self.branch,
+                     '--db', os.path.join(self.basedir, 'db.mtn'),
+                     '--ticker=none'],
+                   self.basedir,
+                   keepStdout=True, sendRC=False, timeout=120, usePTY=False,
+                   environ=exp_environ) + 0,
+            Expect(['path/to/mtn', 'checkout', self.basedir_source,
+                    '--db', self.basedir + '/db.mtn',
+                    '--branch', 'ca.monotone.sandbox.buildbot'],
+                   self.basedir,
+                   keepStdout=True, sendRC=False, timeout=120, usePTY=False,
+                   environ=exp_environ) + 0,
+            Expect(['path/to/mtn', 'automate', 'select', 'w:'],
+                   self.basedir_source,
+                   keepStdout=True, sendRC=False, timeout=120, usePTY=False)
+                   + 0,
+            Expect([ 'copy', 'source', 'workdir'],
+                   self.basedir)
+                   + 0,
+            ]
+
+        self.patch_runprocess(*expects)
+
+        d = self.run_command()
+        d.addCallback(self.check_sourcedata, self.repourl+"?"+self.branch)
+        return d
+
+    def test_db_needs_migrating(self):
+        "Test a basic invocation with mode=copy and no existing sourcedir"
+        self.patch_getCommand('mtn', 'path/to/mtn')
+        self.clean_environ()
+        self.make_command(mtn.Monotone, dict(
+            workdir='workdir',
+            mode='copy',
+            revision=None,
+            repourl=self.repourl,
+            branch=self.branch
+        ),
+            # no sourcedata -> will do fresh checkout
+            initial_sourcedata = None,
+        )
+        exp_environ = dict(PWD='.', LC_MESSAGES='C')
+        expects = [
+            Expect([ 'path/to/mtn', 'db', 'info',
+                     '--db', self.basedir + '/db.mtn' ],
+                   self.basedir,
+                   keepStdout=True, sendRC=False, sendStderr=False,
+                   usePTY=False, environ=exp_environ)
+            + { 'stdout' : 'blah blah (migration needed)\n' }
+            + 0,
+            Expect([ 'path/to/mtn', 'db', 'migrate',
+                     '--db', os.path.join(self.basedir, 'db.mtn') ],
+                   self.basedir,
+                   sendRC=False, usePTY=False,
+                   environ=exp_environ) + 0,
+            Expect([ 'clobber', 'workdir' ],
+                   self.basedir) + 0,
+            Expect([ 'clobber', 'source' ],
+                   self.basedir) + 0,
+            Expect(['path/to/mtn', 'pull', self.repourl+"?"+self.branch,
+                     '--db', os.path.join(self.basedir, 'db.mtn'),
+                     '--ticker=none'],
+                   self.basedir,
+                   keepStdout=True, sendRC=False, timeout=120, usePTY=False,
+                   environ=exp_environ) + 0,
+            Expect(['path/to/mtn', 'checkout', self.basedir_source,
+                    '--db', self.basedir + '/db.mtn',
+                    '--branch', 'ca.monotone.sandbox.buildbot'],
+                   self.basedir,
+                   keepStdout=True, sendRC=False, timeout=120, usePTY=False,
+                   environ=exp_environ) + 0,
+            Expect(['path/to/mtn', 'automate', 'select', 'w:'],
+                   self.basedir_source,
+                   keepStdout=True, sendRC=False, timeout=120, usePTY=False)
+                   + 0,
+            Expect([ 'copy', 'source', 'workdir'],
+                   self.basedir)
+                   + 0,
+            ]
+
+        self.patch_runprocess(*expects)
+
+        d = self.run_command()
+        d.addCallback(self.check_sourcedata, self.repourl+"?"+self.branch)
+        return d
+
+# TODO: figure out how to catch a raised exception
+#    def test_db_too_new(self):
+#        "Test a basic invocation with mode=copy and no existing sourcedir"
+#        self.patch_getCommand('mtn', 'path/to/mtn')
+#        self.clean_environ()
+#        self.make_command(mtn.Monotone, dict(
+#            workdir='workdir',
+#            mode='copy',
+#            revision=None,
+#            repourl=self.repourl,
+#            branch=self.branch
+#        ),
+#            # no sourcedata -> will do fresh checkout
+#            initial_sourcedata = None,
+#        )
+#        exp_environ = dict(PWD='.', LC_MESSAGES='C')
+#        expects = [
+#            Expect([ 'path/to/mtn', 'db', 'info',
+#                     '--db', self.basedir + '/db.mtn' ],
+#                   self.basedir,
+#                   keepStdout=True, sendRC=False, sendStderr=False,
+#                   usePTY=False, environ=exp_environ)
+#            + { 'stdout' : 'blah blah (too new, cannot use)\n' },
+#            + 0,
+#            ]
+#
+#        self.patch_runprocess(*expects)
+#
+#        d = self.run_command()
+#        d.addCallback(self.check_sourcedata, self.repourl+"?"+self.branch)
+#        return d
+
+    def test_run_mode_copy_fresh_sourcedir(self):
+        "Test a basic invocation with mode=copy and no existing sourcedir"
+        self.patch_getCommand('mtn', 'path/to/mtn')
+        self.clean_environ()
+        self.make_command(mtn.Monotone, dict(
+            workdir='workdir',
+            mode='copy',
+            revision=None,
+            repourl=self.repourl,
+            branch=self.branch
+        ),
+            # no sourcedata -> will do fresh checkout
+            initial_sourcedata = None,
+        )
 
         exp_environ = dict(PWD='.', LC_MESSAGES='C')
         expects = [
@@ -76,6 +232,259 @@ class TestMonotone(SourceCommandTestMixin, unittest.TestCase):
                    + 0,
             ]
 
+        self.patch_runprocess(*expects)
+
+        d = self.run_command()
+        d.addCallback(self.check_sourcedata, self.repourl+"?"+self.branch)
+        return d
+
+    def test_run_mode_copy_update_sourcedir(self):
+        """test a copy where the sourcedata indicates that the source directory
+        can be updated"""
+        self.patch_getCommand('mtn', 'path/to/mtn')
+        self.clean_environ()
+        self.make_command(mtn.Monotone, dict(
+            workdir='workdir',
+            mode='copy',
+            revision=None,
+            repourl=self.repourl,
+            branch=self.branch,
+            progress=True, # added here for better coverage
+        ),
+            initial_sourcedata = self.repourl+"?"+self.branch
+        )
+        self.patch_sourcedirIsUpdateable(True)
+
+        exp_environ = dict(PWD='.', LC_MESSAGES='C')
+        expects = [
+            Expect([ 'path/to/mtn', 'db', 'info',
+                     '--db', self.basedir + '/db.mtn'],
+                   self.basedir,
+                   keepStdout=True, sendRC=False, sendStderr=False,
+                   usePTY=False, environ=exp_environ) + 0,
+            Expect([ 'clobber', 'workdir' ],
+                   self.basedir) + 0,
+            Expect([ 'path/to/mtn', 'pull', self.repourl+"?"+self.branch,
+                     '--db', os.path.join(self.basedir, 'db.mtn'),
+                     '--ticker=dot'],
+                   self.basedir,
+                   keepStdout=True, sendRC=False, timeout=120, usePTY=False,
+                   environ=exp_environ) + 0,
+            Expect([ 'path/to/mtn', 'update',
+                     '--db', self.basedir + '/db.mtn',
+                     '-r', 'h:ca.monotone.sandbox.buildbot',
+                     '-b', 'ca.monotone.sandbox.buildbot'],
+                   self.basedir_source,
+                   keepStdout=True, sendRC=False, timeout=120, usePTY=False,
+                   environ=exp_environ) + 0,
+            Expect(['path/to/mtn', 'automate', 'select', 'w:'],
+                   self.basedir_source,
+                   keepStdout=True, sendRC=False, timeout=120, usePTY=False)
+                   + 0,
+            Expect([ 'copy', 'source', 'workdir'],
+                   self.basedir)
+                   + 0,
+        ]
+        self.patch_runprocess(*expects)
+
+        d = self.run_command()
+        d.addCallback(self.check_sourcedata, self.repourl+"?"+self.branch)
+        return d
+
+    def test_run_mode_update_fresh(self):
+        self.patch_getCommand('mtn', 'path/to/mtn')
+        self.clean_environ()
+        self.make_command(mtn.Monotone, dict(
+            workdir='workdir',
+            mode='update',
+            revision=None,
+            repourl=self.repourl,
+            branch=self.branch,
+            progress=True, # added here for better coverage
+        ),
+            initial_sourcedata = self.repourl+"?"+self.branch
+        )
+        self.patch_sourcedirIsUpdateable(False)
+
+        exp_environ = dict(PWD='.', LC_MESSAGES='C')
+        expects = [
+            Expect([ 'path/to/mtn', 'db', 'info',
+                     '--db', self.basedir + '/db.mtn'],
+                   self.basedir,
+                   keepStdout=True, sendRC=False, sendStderr=False,
+                   usePTY=False, environ=exp_environ) + 0,
+            Expect([ 'clobber', 'workdir' ],
+                   self.basedir) + 0,
+            Expect([ 'path/to/mtn', 'pull', self.repourl+"?"+self.branch,
+                     '--db', os.path.join(self.basedir, 'db.mtn'),
+                     '--ticker=dot'],
+                   self.basedir,
+                   keepStdout=True, sendRC=False, timeout=120, usePTY=False,
+                   environ=exp_environ) + 0,
+            Expect(['path/to/mtn', 'checkout', self.basedir_workdir,
+                    '--db', self.basedir + '/db.mtn',
+                    '--branch', 'ca.monotone.sandbox.buildbot'],
+                   self.basedir,
+                   keepStdout=True, sendRC=False, timeout=120, usePTY=False,
+                   environ=exp_environ) + 0,
+            Expect(['path/to/mtn', 'automate', 'select', 'w:'],
+                   self.basedir_workdir,
+                   keepStdout=True, sendRC=False, timeout=120, usePTY=False)
+                   + 0,
+        ]
+        self.patch_runprocess(*expects)
+
+        d = self.run_command()
+        d.addCallback(self.check_sourcedata, self.repourl+"?"+self.branch)
+        return d
+
+    def test_run_mode_update_existing(self):
+        self.patch_getCommand('mtn', 'path/to/mtn')
+        self.clean_environ()
+        self.make_command(mtn.Monotone, dict(
+            workdir='workdir',
+            mode='update',
+            revision=None,
+            repourl=self.repourl,
+            branch=self.branch,
+            progress=True, # added here for better coverage
+        ),
+            initial_sourcedata = self.repourl+"?"+self.branch
+        )
+        self.patch_sourcedirIsUpdateable(True)
+
+        exp_environ = dict(PWD='.', LC_MESSAGES='C')
+        expects = [
+            Expect([ 'path/to/mtn', 'db', 'info',
+                     '--db', self.basedir + '/db.mtn'],
+                   self.basedir,
+                   keepStdout=True, sendRC=False, sendStderr=False,
+                   usePTY=False, environ=exp_environ) + 0,
+            Expect([ 'path/to/mtn', 'pull', self.repourl+"?"+self.branch,
+                     '--db', os.path.join(self.basedir, 'db.mtn'),
+                     '--ticker=dot'],
+                   self.basedir,
+                   keepStdout=True, sendRC=False, timeout=120, usePTY=False,
+                   environ=exp_environ) + 0,
+            Expect([ 'path/to/mtn', 'update',
+                     '--db', self.basedir + '/db.mtn',
+                     '-r', 'h:ca.monotone.sandbox.buildbot',
+                     '-b', 'ca.monotone.sandbox.buildbot'],
+                   self.basedir_workdir,
+                   keepStdout=True, sendRC=False, timeout=120, usePTY=False,
+                   environ=exp_environ) + 0,
+            Expect(['path/to/mtn', 'automate', 'select', 'w:'],
+                   self.basedir_workdir,
+                   keepStdout=True, sendRC=False, timeout=120, usePTY=False)
+                   + 0,
+        ]
+        self.patch_runprocess(*expects)
+
+        d = self.run_command()
+        d.addCallback(self.check_sourcedata, self.repourl+"?"+self.branch)
+        return d
+
+    def test_run_mode_update_existing_known_rev(self):
+        self.patch_getCommand('mtn', 'path/to/mtn')
+        self.clean_environ()
+        self.make_command(mtn.Monotone, dict(
+            workdir='workdir',
+            mode='update',
+            revision='abcdef01',
+            repourl=self.repourl,
+            branch=self.branch,
+            progress=True, # added here for better coverage
+        ),
+            initial_sourcedata = self.repourl+"?"+self.branch
+        )
+        self.patch_sourcedirIsUpdateable(True)
+
+        exp_environ = dict(PWD='.', LC_MESSAGES='C')
+        expects = [
+            Expect([ 'path/to/mtn', 'db', 'info',
+                     '--db', self.basedir + '/db.mtn'],
+                   self.basedir,
+                   keepStdout=True, sendRC=False, sendStderr=False,
+                   usePTY=False, environ=exp_environ) + 0,
+            Expect([ 'path/to/mtn', 'pull', self.repourl+"?"+self.branch,
+                     '--db', os.path.join(self.basedir, 'db.mtn'),
+                     '--ticker=dot'],
+                   self.basedir,
+                   keepStdout=True, sendRC=False, timeout=120, usePTY=False,
+                   environ=exp_environ) + 0,
+            Expect([ 'path/to/mtn', 'update',
+                     '--db', self.basedir + '/db.mtn',
+                     '--revision', 'abcdef01',
+                     '-b', 'ca.monotone.sandbox.buildbot'],
+                   self.basedir_workdir,
+                   keepStdout=True, sendRC=False, timeout=120, usePTY=False,
+                   environ=exp_environ) + 0,
+            Expect(['path/to/mtn', 'automate', 'select', 'w:'],
+                   self.basedir_workdir,
+                   keepStdout=True, sendRC=False, timeout=120, usePTY=False)
+                   + 0,
+        ]
+        self.patch_runprocess(*expects)
+
+        d = self.run_command()
+        d.addCallback(self.check_sourcedata, self.repourl+"?"+self.branch)
+        return d
+
+    def test_run_mode_update_existing_unknown_rev(self):
+        self.patch_getCommand('mtn', 'path/to/mtn')
+        self.clean_environ()
+        self.make_command(mtn.Monotone, dict(
+            workdir='workdir',
+            mode='update',
+            revision='abcdef01',
+            repourl=self.repourl,
+            branch=self.branch,
+            progress=True, # added here for better coverage
+        ),
+            initial_sourcedata = self.repourl+"?"+self.branch
+        )
+        self.patch_sourcedirIsUpdateable(True)
+
+        exp_environ = dict(PWD='.', LC_MESSAGES='C')
+        expects = [
+            Expect([ 'path/to/mtn', 'db', 'info',
+                     '--db', self.basedir + '/db.mtn'],
+                   self.basedir,
+                   keepStdout=True, sendRC=False, sendStderr=False,
+                   usePTY=False, environ=exp_environ) + 0,
+            Expect([ 'path/to/mtn', 'pull', self.repourl+"?"+self.branch,
+                     '--db', os.path.join(self.basedir, 'db.mtn'),
+                     '--ticker=dot'],
+                   self.basedir,
+                   keepStdout=True, sendRC=False, timeout=120, usePTY=False,
+                   environ=exp_environ) + 0,
+            Expect([ 'path/to/mtn', 'update',
+                     '--db', self.basedir + '/db.mtn',
+                     '--revision', 'abcdef01',
+                     '-b', 'ca.monotone.sandbox.buildbot'],
+                   self.basedir_workdir,
+                   keepStdout=True, sendRC=False, timeout=120, usePTY=False,
+                   environ=exp_environ) + 1,
+            Expect([ 'clobber', 'workdir' ],
+                   self.basedir) + 0,
+            Expect([ 'path/to/mtn', 'pull', self.repourl+"?"+self.branch,
+                     '--db', os.path.join(self.basedir, 'db.mtn'),
+                     '--ticker=dot'],
+                   self.basedir,
+                   keepStdout=True, sendRC=False, timeout=120, usePTY=False,
+                   environ=exp_environ) + 0,
+            Expect(['path/to/mtn', 'checkout', self.basedir_workdir,
+                    '--db', self.basedir + '/db.mtn',
+                    '--revision', 'abcdef01',
+                    '--branch', 'ca.monotone.sandbox.buildbot'],
+                   self.basedir,
+                   keepStdout=True, sendRC=False, timeout=120, usePTY=False,
+                   environ=exp_environ) + 0,
+            Expect(['path/to/mtn', 'automate', 'select', 'w:'],
+                   self.basedir_workdir,
+                   keepStdout=True, sendRC=False, timeout=120, usePTY=False)
+                   + 0,
+        ]
         self.patch_runprocess(*expects)
 
         d = self.run_command()
