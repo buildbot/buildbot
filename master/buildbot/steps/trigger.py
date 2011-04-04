@@ -154,6 +154,7 @@ class Trigger(LoggingBuildStep):
                 # do something to handle errors
                 d.addErrback(log.err,
                         '(ignored) while invoking Triggerable schedulers:')
+                self.end(SUCCESS)
                 return None
         d.addCallback(start_builds)
 
