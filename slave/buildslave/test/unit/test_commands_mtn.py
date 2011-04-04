@@ -493,6 +493,7 @@ class TestMonotone(SourceCommandTestMixin, unittest.TestCase):
 
 # Testing parseGotRevision
     def do_test_parseGotRevision(self, stdout, exp):
+        self.patch_getCommand('mtn', 'path/to/mtn')
         self.make_command(mtn.Monotone, dict(
             workdir='workdir',
             repourl=self.repourl,
