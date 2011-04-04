@@ -65,10 +65,10 @@ class Monotone(SourceBaseCommand):
         return d
 
     def doVCUpdate(self):
-        return self._dovccmd(self._update)
+        return self._dovccmd(self._update, True)
 
     def doVCFull(self):
-        return self._dovccmd(self._checkout)
+        return self._dovccmd(self._checkout, True)
 
     def _fullSrcdir(self):
         return os.path.join(self.builder.basedir, self.srcdir)
@@ -76,21 +76,28 @@ class Monotone(SourceBaseCommand):
     def sourcedirIsUpdateable(self):
         return os.path.isdir(os.path.join(self._fullSrcdir(), "_MTN"))
 
-    def _dovccmd(self, cb=None, **kwargs):
-        command = [self.mtn, 'pull', self.sourcedata,
-                   '--db', self.database]
-        if self.progress:
-            command.extend(['--ticker=dot'])
+    def _dovccmd(self, fn, dopull, cb=None, **kwargs):
+        if dopull:
+            command = [self.mtn, 'pull', self.sourcedata,
+                       '--db', self.database]
+            if self.progress:
+                command.extend(['--ticker=dot'])
+            else:
+                command.extend(['--ticker=none'])
+            c = runprocess.RunProcess(self.builder, command,
+                                      self.builder.basedir,
+                                      environ=self.env, sendRC=False,
+                                      timeout=self.timeout,
+                                      maxTime=self.maxTime,
+                                      keepStdout=True, usePTY=False)
+            self.sendStatus({"header": "pulling %s from %s\n"
+                             % (self.branch, self.sourcedata)})
+            self.command = c
+            d = c.start()
+            d.addCallback(self._abandonOnFailure)
+            d.addCallback(fn)
         else:
-            command.extend(['--ticker=none'])
-        c = runprocess.RunProcess(self.builder, command, self.builder.basedir,
-                                  environ=self.env, sendRC=False,
-                                  timeout=self.timeout, maxTime=self.maxTime,
-                                  keepStdout=True, usePTY=False)
-        self.sendStatus({"header": "pulling %s from %s\n"
-                         % (self.branch, self.sourcedata)})
-        self.command = c
-        d = c.start()
+            d = fn(None)
         if cb:
             d.addCallback(cb)
         return d
@@ -172,14 +179,15 @@ class Monotone(SourceBaseCommand):
             if len(hash) != 40:
                 return None
             return hash
+        return self._dovccmd(self._get_base_revision, False, _parse)
+
+    def _get_base_revision(self, res):
         c = runprocess.RunProcess(self.builder,
                                   [self.mtn, 'automate', 'select', 'w:'],
                                   self._fullSrcdir(),
                                   sendRC=False,
                                   timeout=self.timeout, maxTime=self.maxTime,
                                   keepStdout=True, usePTY=False)
-        self.command = c
         d = c.start()
         d.addCallback(self._abandonOnFailure)
-        d.addCallback(_parse)
         return d

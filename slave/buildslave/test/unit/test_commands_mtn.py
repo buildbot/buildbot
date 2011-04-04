@@ -14,14 +14,18 @@
 # Copyright Buildbot Team Members
 
 import os
+import mock
 
 from twisted.trial import unittest
+from twisted.internet import defer
 
 from buildslave.test.fake.runprocess import Expect
 from buildslave.test.util.sourcecommand import SourceCommandTestMixin
 from buildslave.commands import mtn
 
 class TestMonotone(SourceCommandTestMixin, unittest.TestCase):
+    repourl='mtn://code.monotone.ca/sandbox'
+    branch='ca.monotone.sandbox.buildbot'
 
     def setUp(self):
         self.setUpCommand()
@@ -30,17 +34,14 @@ class TestMonotone(SourceCommandTestMixin, unittest.TestCase):
         self.tearDownCommand()
 
     def test_simple(self):
-        repourl='mtn://code.monotone.ca/sandbox'
-        branch='ca.monotone.sandbox.buildbot'
-        
         self.patch_getCommand('mtn', 'path/to/mtn')
         self.clean_environ()
         self.make_command(mtn.Monotone, dict(
             workdir='workdir',
             mode='copy',
             revision=None,
-            repourl=repourl,
-            branch=branch
+            repourl=self.repourl,
+            branch=self.branch
         ))
 
         exp_environ = dict(PWD='.', LC_MESSAGES='C')
@@ -54,7 +55,7 @@ class TestMonotone(SourceCommandTestMixin, unittest.TestCase):
                    self.basedir) + 0,
             Expect([ 'clobber', 'source' ],
                    self.basedir) + 0,
-            Expect(['path/to/mtn', 'pull', repourl+"?"+branch,
+            Expect(['path/to/mtn', 'pull', self.repourl+"?"+self.branch,
                      '--db', os.path.join(self.basedir, 'db.mtn'),
                      '--ticker=none'],
                    self.basedir,
@@ -78,6 +79,40 @@ class TestMonotone(SourceCommandTestMixin, unittest.TestCase):
         self.patch_runprocess(*expects)
 
         d = self.run_command()
-        d.addCallback(self.check_sourcedata, repourl+"?"+branch)
+        d.addCallback(self.check_sourcedata, self.repourl+"?"+self.branch)
         return d
+
+# Testing parseGotRevision
+    def do_test_parseGotRevision(self, stdout, exp):
+        self.make_command(mtn.Monotone, dict(
+            workdir='workdir',
+            repourl=self.repourl,
+            branch=self.branch
+        ))
+        def _dovccmd(fn, dopull, callback=None, keepStdout=False):
+            #self.assertTrue(keepStdout)
+            self.cmd.command = mock.Mock()
+            self.cmd.command.stdout = stdout
+            d = defer.succeed(None)
+            d.addCallback(callback)
+            return d
+        self.cmd._dovccmd = _dovccmd
+        self.cmd.srcdir = self.cmd.workdir
+
+        d = self.cmd.parseGotRevision()
+        def check(res):
+            self.assertEqual(res, exp)
+        d.addCallback(check)
+        return d
+
+    def test_parseGotRevision_bogus(self):
+        return self.do_test_parseGotRevision("mtn: misuse: no match for selection '1234'\n", None)
+
+    def test_parseGotRevision_wrong_length(self):
+        return self.do_test_parseGotRevision("\n1234abcd\n", None)
+
+    def test_parseGotRevision_ok(self):
+        return self.do_test_parseGotRevision(
+                "\n4026d33b0532b11f36b0875f63699adfa8ee8662\n",
+                  "4026d33b0532b11f36b0875f63699adfa8ee8662")
 
