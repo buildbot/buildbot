@@ -23,6 +23,7 @@ class SubunitShellCommand(ShellCommand):
 
     def __init__(self, failureOnNoTests=False, *args, **kwargs):
         ShellCommand.__init__(self, *args, **kwargs)
+        self.failureOnNoTests = failureOnNoTests
         # importing here gets around an import loop
         from buildbot.process import subunitlogobserver
         self.ioObverser = subunitlogobserver.SubunitLogObserver()
@@ -55,7 +56,7 @@ class SubunitShellCommand(ShellCommand):
                 text += ["no tests", "run"]
         else:
             results = FAILURE
-            text.append("Total % test(s)" % total)
+            text.append("Total %d test(s)" % total)
             if failures:
                 text.append("%d %s" % \
                             (failures,

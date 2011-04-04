@@ -864,7 +864,7 @@ def html_message_formatter(mode, name, build, results, master_status):
         text.append(u'<br>')
         text.append(u'<h4>Last %d lines of "%s"</h4>' % (limit_lines, name))
         unilist = list()
-        for line in content[len(content)-limit_lines:]:
+        for line in content[-limit_lines:]:
             unilist.append(cgi.escape(unicode(line,'utf-8')))
         text.append(u'<pre>'.join([uniline for uniline in unilist]))
         text.append(u'</pre>')

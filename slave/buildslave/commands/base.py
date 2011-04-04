@@ -365,6 +365,12 @@ class SourceBaseCommand(Command):
         return None
 
     def readSourcedata(self):
+        """
+        Read the sourcedata file and return its contents
+
+        @returns: source data
+        @raises: IOError if the file does not exist
+        """
         return open(self.sourcedatafile, "r").read()
 
     def writeSourcedata(self, res):
@@ -388,6 +394,12 @@ class SourceBaseCommand(Command):
             return rc
         if self.interrupted:
             raise AbandonChain(1)
+
+        # allow AssertionErrors to fall through, for benefit of the tests; for
+        # all other errors, carry on to try the fallback
+        if isinstance(rc, failure.Failure) and rc.check(AssertionError):
+            return rc
+
         # Let VCS subclasses have an opportunity to handle
         # unrecoverable errors without having to clobber the repo
         self.maybeNotDoVCFallback(rc)
@@ -597,3 +609,11 @@ class SourceBaseCommand(Command):
         d.addCallback(self._abandonOnFailure)
         return d
 
+    def setFileContents(self, filename, contents):
+        """Put the given C{contents} in C{filename}; this is a bit more
+        succinct than opening, writing, and closing, and has the advantage of
+        being patchable in tests.  Note that the enclosing directory is
+        not automatically created, nor is this an "atomic" overwrite."""
+        f = open(filename, 'w')
+        f.write(contents)
+        f.close()

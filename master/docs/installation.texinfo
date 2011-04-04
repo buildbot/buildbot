@@ -374,6 +374,19 @@ database with the changes the buildmaster has seen.  Note that, as of this
 release, build history is @i{not} contained in the database, and is thus not
 migrated.
 
+You will need to add an entry into your @file{master.cfg} to reflect the 
+database version you are using. The upgrade process does @i{not} edit your
+@file{master.cfg} for you. So something like:
+
+@example
+# for the default sqlite you need:
+c['db_url'] = "sqlite:///state.sqlite"
+# or for using mysql:
+c['db_url'] = 'mysql://bbuser:<password>@@localhost/buildbot'
+@end example
+
+See @pxref{Database Specification} for more options.
+
 The upgrade process renames the Changes pickle (@code{$basedir/changes.pck}) to
 @code{changes.pck.old} once the upgrade is complete.  To reverse the upgrade,
 simply downgrade Buildbot and move this file back to its original name.  You

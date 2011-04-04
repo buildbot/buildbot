@@ -52,6 +52,15 @@ class Expect:
             raise ValueError("invalid expectation '%r'" % (other,))
         return self
 
+    def __str__(self):
+        other_kwargs = self.kwargs.copy()
+        del other_kwargs['command']
+        del other_kwargs['workdir']
+        return "Command: %s\n  workdir: %s\n  kwargs: %s\n  result: %s\n" % (
+                self.kwargs['command'], self.kwargs['workdir'],
+                other_kwargs, self.result)
+
+
 class FakeRunProcess:
     """
     A fake version of L{buildslave.runprocess.RunProcess} which will

@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+import os
+
 from twisted.trial import unittest
 
 from buildslave.test.fake.runprocess import Expect
@@ -53,7 +55,8 @@ class TestMonotone(SourceCommandTestMixin, unittest.TestCase):
             Expect([ 'clobber', 'source' ],
                    self.basedir) + 0,
             Expect(['path/to/mtn', 'pull', repourl+"?"+branch,
-                     '--db', self.basedir + '/db.mtn', '--ticker=none'],
+                     '--db', os.path.join(self.basedir, 'db.mtn'),
+                     '--ticker=none'],
                    self.basedir,
                    keepStdout=True, sendRC=False, timeout=120, usePTY=False,
                    environ=exp_environ) + 0,

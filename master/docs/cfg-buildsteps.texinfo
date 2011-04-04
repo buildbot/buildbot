@@ -1654,14 +1654,14 @@ through a subunit filter to extract test and failure counts.
 
 @example
 from buildbot.steps.subunit import SubunitShellCommand
-f.addStep(SubunitShellCommand(command="make test", failureOnNoError=False))
+f.addStep(SubunitShellCommand(command="make test", failureOnNoTests=False))
 @end example
 
 This runs @code{make test} and filters it through subunit. The 'tests' and
 'test failed' progress metrics will now accumulate test data from the test run.
 
-If @code{failureOnNoError} is True, this step will fail if no test is run. By
-default @code{failureOnNoError} is False.
+If @code{failureOnNoTests} is True, this step will fail if no test is run. By
+default @code{failureOnNoTests} is False.
 
 @node Python BuildSteps
 @subsection Python BuildSteps
