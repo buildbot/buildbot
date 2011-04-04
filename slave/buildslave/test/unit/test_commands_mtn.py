@@ -54,12 +54,12 @@ class TestMonotone(SourceCommandTestMixin, unittest.TestCase):
         exp_environ = dict(PWD='.', LC_MESSAGES='C')
         expects = [
             Expect(['path/to/mtn', 'db', 'info',
-                    '--db', self.basedir + '/db.mtn'],
+                    '--db', os.path.join(self.basedir, 'db.mtn')],
                    self.basedir,
                    keepStdout=True, sendRC=False, sendStderr=False,
                    usePTY=False, environ=exp_environ) + 1,
             Expect(['path/to/mtn', 'db', 'init',
-                    '--db', self.basedir + '/db.mtn'],
+                    '--db', os.path.join(self.basedir, 'db.mtn')],
                    self.basedir,
                    sendRC=False, usePTY=False,
                    environ=exp_environ) + 1,
@@ -74,7 +74,7 @@ class TestMonotone(SourceCommandTestMixin, unittest.TestCase):
                    keepStdout=True, sendRC=False, timeout=120, usePTY=False,
                    environ=exp_environ) + 0,
             Expect(['path/to/mtn', 'checkout', self.basedir_source,
-                    '--db', self.basedir + '/db.mtn',
+                    '--db', os.path.join(self.basedir, 'db.mtn'),
                     '--branch', 'ca.monotone.sandbox.buildbot'],
                    self.basedir,
                    keepStdout=True, sendRC=False, timeout=120, usePTY=False,
@@ -111,7 +111,7 @@ class TestMonotone(SourceCommandTestMixin, unittest.TestCase):
         exp_environ = dict(PWD='.', LC_MESSAGES='C')
         expects = [
             Expect([ 'path/to/mtn', 'db', 'info',
-                     '--db', self.basedir + '/db.mtn' ],
+                     '--db', os.path.join(self.basedir, 'db.mtn') ],
                    self.basedir,
                    keepStdout=True, sendRC=False, sendStderr=False,
                    usePTY=False, environ=exp_environ)
@@ -133,7 +133,7 @@ class TestMonotone(SourceCommandTestMixin, unittest.TestCase):
                    keepStdout=True, sendRC=False, timeout=120, usePTY=False,
                    environ=exp_environ) + 0,
             Expect(['path/to/mtn', 'checkout', self.basedir_source,
-                    '--db', self.basedir + '/db.mtn',
+                    '--db', os.path.join(self.basedir, 'db.mtn'),
                     '--branch', 'ca.monotone.sandbox.buildbot'],
                    self.basedir,
                    keepStdout=True, sendRC=False, timeout=120, usePTY=False,
@@ -171,7 +171,7 @@ class TestMonotone(SourceCommandTestMixin, unittest.TestCase):
 #        exp_environ = dict(PWD='.', LC_MESSAGES='C')
 #        expects = [
 #            Expect([ 'path/to/mtn', 'db', 'info',
-#                     '--db', self.basedir + '/db.mtn' ],
+#                     '--db', os.path.join(self.basedir, 'db.mtn') ],
 #                   self.basedir,
 #                   keepStdout=True, sendRC=False, sendStderr=False,
 #                   usePTY=False, environ=exp_environ)
@@ -203,7 +203,7 @@ class TestMonotone(SourceCommandTestMixin, unittest.TestCase):
         exp_environ = dict(PWD='.', LC_MESSAGES='C')
         expects = [
             Expect(['path/to/mtn', 'db', 'info',
-                    '--db', self.basedir + '/db.mtn'],
+                    '--db', os.path.join(self.basedir, 'db.mtn')],
                    self.basedir,
                    keepStdout=True, sendRC=False, sendStderr=False,
                    usePTY=False, environ=exp_environ) + 0,
@@ -218,7 +218,7 @@ class TestMonotone(SourceCommandTestMixin, unittest.TestCase):
                    keepStdout=True, sendRC=False, timeout=120, usePTY=False,
                    environ=exp_environ) + 0,
             Expect(['path/to/mtn', 'checkout', self.basedir_source,
-                    '--db', self.basedir + '/db.mtn',
+                    '--db', os.path.join(self.basedir, 'db.mtn'),
                     '--branch', 'ca.monotone.sandbox.buildbot'],
                    self.basedir,
                    keepStdout=True, sendRC=False, timeout=120, usePTY=False,
@@ -258,7 +258,7 @@ class TestMonotone(SourceCommandTestMixin, unittest.TestCase):
         exp_environ = dict(PWD='.', LC_MESSAGES='C')
         expects = [
             Expect([ 'path/to/mtn', 'db', 'info',
-                     '--db', self.basedir + '/db.mtn'],
+                     '--db', os.path.join(self.basedir, 'db.mtn')],
                    self.basedir,
                    keepStdout=True, sendRC=False, sendStderr=False,
                    usePTY=False, environ=exp_environ) + 0,
@@ -271,7 +271,7 @@ class TestMonotone(SourceCommandTestMixin, unittest.TestCase):
                    keepStdout=True, sendRC=False, timeout=120, usePTY=False,
                    environ=exp_environ) + 0,
             Expect([ 'path/to/mtn', 'update',
-                     '--db', self.basedir + '/db.mtn',
+                     '--db', os.path.join(self.basedir, 'db.mtn'),
                      '-r', 'h:ca.monotone.sandbox.buildbot',
                      '-b', 'ca.monotone.sandbox.buildbot'],
                    self.basedir_source,
@@ -309,7 +309,7 @@ class TestMonotone(SourceCommandTestMixin, unittest.TestCase):
         exp_environ = dict(PWD='.', LC_MESSAGES='C')
         expects = [
             Expect([ 'path/to/mtn', 'db', 'info',
-                     '--db', self.basedir + '/db.mtn'],
+                     '--db', os.path.join(self.basedir, 'db.mtn')],
                    self.basedir,
                    keepStdout=True, sendRC=False, sendStderr=False,
                    usePTY=False, environ=exp_environ) + 0,
@@ -322,7 +322,7 @@ class TestMonotone(SourceCommandTestMixin, unittest.TestCase):
                    keepStdout=True, sendRC=False, timeout=120, usePTY=False,
                    environ=exp_environ) + 0,
             Expect(['path/to/mtn', 'checkout', self.basedir_workdir,
-                    '--db', self.basedir + '/db.mtn',
+                    '--db', os.path.join(self.basedir, 'db.mtn'),
                     '--branch', 'ca.monotone.sandbox.buildbot'],
                    self.basedir,
                    keepStdout=True, sendRC=False, timeout=120, usePTY=False,
@@ -356,7 +356,7 @@ class TestMonotone(SourceCommandTestMixin, unittest.TestCase):
         exp_environ = dict(PWD='.', LC_MESSAGES='C')
         expects = [
             Expect([ 'path/to/mtn', 'db', 'info',
-                     '--db', self.basedir + '/db.mtn'],
+                     '--db', os.path.join(self.basedir, 'db.mtn')],
                    self.basedir,
                    keepStdout=True, sendRC=False, sendStderr=False,
                    usePTY=False, environ=exp_environ) + 0,
@@ -367,7 +367,7 @@ class TestMonotone(SourceCommandTestMixin, unittest.TestCase):
                    keepStdout=True, sendRC=False, timeout=120, usePTY=False,
                    environ=exp_environ) + 0,
             Expect([ 'path/to/mtn', 'update',
-                     '--db', self.basedir + '/db.mtn',
+                     '--db', os.path.join(self.basedir, 'db.mtn'),
                      '-r', 'h:ca.monotone.sandbox.buildbot',
                      '-b', 'ca.monotone.sandbox.buildbot'],
                    self.basedir_workdir,
@@ -402,7 +402,7 @@ class TestMonotone(SourceCommandTestMixin, unittest.TestCase):
         exp_environ = dict(PWD='.', LC_MESSAGES='C')
         expects = [
             Expect([ 'path/to/mtn', 'db', 'info',
-                     '--db', self.basedir + '/db.mtn'],
+                     '--db', os.path.join(self.basedir, 'db.mtn')],
                    self.basedir,
                    keepStdout=True, sendRC=False, sendStderr=False,
                    usePTY=False, environ=exp_environ) + 0,
@@ -413,7 +413,7 @@ class TestMonotone(SourceCommandTestMixin, unittest.TestCase):
                    keepStdout=True, sendRC=False, timeout=120, usePTY=False,
                    environ=exp_environ) + 0,
             Expect([ 'path/to/mtn', 'update',
-                     '--db', self.basedir + '/db.mtn',
+                     '--db', os.path.join(self.basedir, 'db.mtn'),
                      '--revision', 'abcdef01',
                      '-b', 'ca.monotone.sandbox.buildbot'],
                    self.basedir_workdir,
@@ -448,7 +448,7 @@ class TestMonotone(SourceCommandTestMixin, unittest.TestCase):
         exp_environ = dict(PWD='.', LC_MESSAGES='C')
         expects = [
             Expect([ 'path/to/mtn', 'db', 'info',
-                     '--db', self.basedir + '/db.mtn'],
+                     '--db', os.path.join(self.basedir, 'db.mtn')],
                    self.basedir,
                    keepStdout=True, sendRC=False, sendStderr=False,
                    usePTY=False, environ=exp_environ) + 0,
@@ -459,7 +459,7 @@ class TestMonotone(SourceCommandTestMixin, unittest.TestCase):
                    keepStdout=True, sendRC=False, timeout=120, usePTY=False,
                    environ=exp_environ) + 0,
             Expect([ 'path/to/mtn', 'update',
-                     '--db', self.basedir + '/db.mtn',
+                     '--db', os.path.join(self.basedir, 'db.mtn'),
                      '--revision', 'abcdef01',
                      '-b', 'ca.monotone.sandbox.buildbot'],
                    self.basedir_workdir,
@@ -474,7 +474,7 @@ class TestMonotone(SourceCommandTestMixin, unittest.TestCase):
                    keepStdout=True, sendRC=False, timeout=120, usePTY=False,
                    environ=exp_environ) + 0,
             Expect(['path/to/mtn', 'checkout', self.basedir_workdir,
-                    '--db', self.basedir + '/db.mtn',
+                    '--db', os.path.join(self.basedir, 'db.mtn'),
                     '--revision', 'abcdef01',
                     '--branch', 'ca.monotone.sandbox.buildbot'],
                    self.basedir,
@@ -493,6 +493,7 @@ class TestMonotone(SourceCommandTestMixin, unittest.TestCase):
 
 # Testing parseGotRevision
     def do_test_parseGotRevision(self, stdout, exp):
+        self.patch_getCommand('mtn', 'path/to/mtn')
         self.make_command(mtn.Monotone, dict(
             workdir='workdir',
             repourl=self.repourl,
