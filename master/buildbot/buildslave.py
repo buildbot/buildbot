@@ -89,6 +89,8 @@ class AbstractBuildSlave(pb.Avatar, service.MultiService):
         self.missing_timer = None
         self.keepalive_interval = keepalive_interval
 
+        self._old_builder_list = None
+
     def update(self, new):
         """
         Given a new BuildSlave, configure this one identically.  Because
@@ -429,7 +431,15 @@ class AbstractBuildSlave(pb.Avatar, service.MultiService):
     def sendBuilderList(self):
         our_builders = self.botmaster.getBuildersForSlave(self.slavename)
         blist = [(b.name, b.slavebuilddir) for b in our_builders]
+        if blist == self._old_builder_list:
+            log.msg("Builder list is unchanged; not calling setBuilderList")
+            return defer.succeed(None)
+
         d = self.slave.callRemote("setBuilderList", blist)
+        def sentBuilderList(ign):
+            self._old_builder_list = blist
+            return ign
+        d.addCallback(sentBuilderList)
         return d
 
     def perspective_keepalive(self):
@@ -579,6 +589,9 @@ class BuildSlave(AbstractBuildSlave):
     def sendBuilderList(self):
         d = AbstractBuildSlave.sendBuilderList(self)
         def _sent(slist):
+            # Nothing has changed, so don't need to re-attach to everything
+            if not slist:
+                return
             dl = []
             for name, remote in slist.items():
                 # use get() since we might have changed our mind since then
@@ -821,6 +834,8 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
     def sendBuilderList(self):
         d = AbstractBuildSlave.sendBuilderList(self)
         def _sent(slist):
+            if not slist:
+                return
             dl = []
             for name, remote in slist.items():
                 # use get() since we might have changed our mind since then.

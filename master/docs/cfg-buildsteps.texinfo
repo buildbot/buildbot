@@ -478,6 +478,7 @@ arguments are described on the following pages.
 * Git::
 * BitKeeper::
 * Repo::
+* Monotone::
 @end menu
 
 @node CVS
@@ -1008,6 +1009,34 @@ All of these properties will be translated into a @code{repo download}.
 This feature allows integrators to build with several pending interdependent changes,
 which at the moment cannot be described properly in Gerrit, and can only be described
 by humans.
+
+
+@node Monotone
+@subsubsection Monotone
+
+@cindex Monotone Checkout
+@bsindex buildbot.steps.source.Monotone
+
+
+The @code{Monotone} build step performs a
+@uref{http://www.monotone.ca, Monotone} (aka ``mtn'') checkout
+or update.
+
+The Monotone step takes the following arguments:
+
+@table @code
+@item repourl
+the URL at which the Monotone source repository is available.
+
+@item branch
+this specifies the name of the branch to use when a Build does not
+provide one of its own.
+
+@item progress
+this is a boolean that has a pull from the repository use
+``--ticker=dot'' instead of the default ``--ticker=none''.
+
+@end table
 
 
 @node ShellCommand
@@ -1625,11 +1654,14 @@ through a subunit filter to extract test and failure counts.
 
 @example
 from buildbot.steps.subunit import SubunitShellCommand
-f.addStep(SubunitShellCommand(command="make test"))
+f.addStep(SubunitShellCommand(command="make test", failureOnNoTests=False))
 @end example
 
 This runs @code{make test} and filters it through subunit. The 'tests' and
 'test failed' progress metrics will now accumulate test data from the test run.
+
+If @code{failureOnNoTests} is True, this step will fail if no test is run. By
+default @code{failureOnNoTests} is False.
 
 @node Python BuildSteps
 @subsection Python BuildSteps
@@ -2065,7 +2097,6 @@ A number of steps do not fall into any particular category.
 
 @menu
 * HLint::
-* Proce
 @end menu
 
 @node HLint

@@ -281,6 +281,24 @@ class GitExtractor(SourceStampExtractor):
         d.addCallback(self.readPatch, self.patchlevel)
         return d
 
+class MonotoneExtractor(SourceStampExtractor):
+    patchlevel = 0
+    vcexe = "mtn"
+    def getBaseRevision(self):
+        d = self.dovc(["automate", "get_base_revision_id"])
+        d.addCallback(self.parseStatus)
+        return d
+    def parseStatus(self, output):
+        hash = output.strip()
+        if len(hash) != 40:
+            self.baserev = None
+        self.baserev = hash
+    def getPatch(self, res):
+        d = self.dovc(["diff"])
+        d.addCallback(self.readPatch, self.patchlevel)
+        return d
+
+
 def getSourceStamp(vctype, treetop, branch=None):
     if vctype == "cvs":
         e = CVSExtractor(treetop, branch)
@@ -296,6 +314,8 @@ def getSourceStamp(vctype, treetop, branch=None):
         e = DarcsExtractor(treetop, branch)
     elif vctype == "git":
         e = GitExtractor(treetop, branch)
+    elif vctype == "mtn":
+        e = MonotoneExtractor(treetop, branch)
     else:
         raise KeyError("unknown vctype '%s'" % vctype)
     return e.get()
@@ -524,7 +544,7 @@ class Try(pb.Referenceable):
     def getStatus(self):
         # returns a Deferred that fires when the builds have finished, and
         # may emit status messages while we wait
-        wait = bool(self.getopt("wait", "try_wait"))
+        wait = bool(self.getopt("wait"))
         if not wait:
             # TODO: emit the URL where they can follow the builds. This
             # requires contacting the Status server over PB and doing
@@ -695,9 +715,9 @@ class Try(pb.Referenceable):
         # get the names of the configured builders that can
         # be used for the --builder argument
         if self.connect == "pb":
-            user = self.getopt("username", "try_username")
-            passwd = self.getopt("passwd", "try_password")
-            master = self.getopt("master", "try_master")
+            user = self.getopt("username")
+            passwd = self.getopt("passwd")
+            master = self.getopt("master")
             tryhost, tryport = master.split(":")
             tryport = int(tryport)
             f = pb.PBClientFactory()
