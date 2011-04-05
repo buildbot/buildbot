@@ -18,6 +18,7 @@ import mock
 
 from twisted.trial import unittest
 from twisted.internet import defer
+from twisted.python import failure
 
 from buildslave.test.fake.runprocess import Expect
 from buildslave.test.util.sourcecommand import SourceCommandTestMixin
@@ -153,37 +154,36 @@ class TestMonotone(SourceCommandTestMixin, unittest.TestCase):
         d.addCallback(self.check_sourcedata, self.repourl+"?"+self.branch)
         return d
 
-# TODO: figure out how to catch a raised exception
-#    def test_db_too_new(self):
-#        "Test a basic invocation with mode=copy and no existing sourcedir"
-#        self.patch_getCommand('mtn', 'path/to/mtn')
-#        self.clean_environ()
-#        self.make_command(mtn.Monotone, dict(
-#            workdir='workdir',
-#            mode='copy',
-#            revision=None,
-#            repourl=self.repourl,
-#            branch=self.branch
-#        ),
-#            # no sourcedata -> will do fresh checkout
-#            initial_sourcedata = None,
-#        )
-#        exp_environ = dict(PWD='.', LC_MESSAGES='C')
-#        expects = [
-#            Expect([ 'path/to/mtn', 'db', 'info',
-#                     '--db', os.path.join(self.basedir, 'db.mtn') ],
-#                   self.basedir,
-#                   keepStdout=True, sendRC=False, sendStderr=False,
-#                   usePTY=False, environ=exp_environ)
-#            + { 'stdout' : 'blah blah (too new, cannot use)\n' },
-#            + 0,
-#            ]
-#
-#        self.patch_runprocess(*expects)
-#
-#        d = self.run_command()
-#        d.addCallback(self.check_sourcedata, self.repourl+"?"+self.branch)
-#        return d
+    def test_db_too_new(self):
+        "Test a basic invocation with mode=copy and no existing sourcedir"
+        self.patch_getCommand('mtn', 'path/to/mtn')
+        self.clean_environ()
+        self.make_command(mtn.Monotone, dict(
+            workdir='workdir',
+            mode='copy',
+            revision=None,
+            repourl=self.repourl,
+            branch=self.branch
+        ),
+            # no sourcedata -> will do fresh checkout
+            initial_sourcedata = None,
+        )
+
+        exp_environ = dict(PWD='.', LC_MESSAGES='C')
+        expects = [
+            Expect([ 'path/to/mtn', 'db', 'info',
+                     '--db', os.path.join(self.basedir, 'db.mtn') ],
+                   self.basedir,
+                   keepStdout=True, sendRC=False, sendStderr=False,
+                   usePTY=False, environ=exp_environ)
+            + { 'stdout' : 'blah blah (too new, cannot use)\n' }
+            + 0
+            ]
+
+        self.patch_runprocess(*expects)
+
+        d = self.run_command()
+        return self.assertFailure(d, mtn.MonotoneError)
 
     def test_run_mode_copy_fresh_sourcedir(self):
         "Test a basic invocation with mode=copy and no existing sourcedir"

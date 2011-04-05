@@ -22,6 +22,9 @@ from buildslave.commands.base import SourceBaseCommand
 from buildslave import runprocess
 #from buildslave.util import remove_userpassword
 
+class MonotoneError(Exception):
+    """Error class for this module."""
+
 
 class Monotone(SourceBaseCommand):
     """Monotone specific VC operation. In addition to the arguments
@@ -167,7 +170,7 @@ class Monotone(SourceBaseCommand):
                 self.command = c
                 return c.start()
             elif cdi.stdout.find("(too new, cannot use)") > 0:
-                raise Exception, "The database is of a newer format than mtn can handle...  Abort!"
+                raise MonotoneError, "The database is of a newer format than mtn can handle...  Abort!"
             else:
                 return defer.succeed(res)
         d.addCallback(afterCheckRepo, c)
