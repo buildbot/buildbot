@@ -18,7 +18,6 @@ import mock
 
 from twisted.trial import unittest
 from twisted.internet import defer
-from twisted.python import failure
 
 from buildslave.test.fake.runprocess import Expect
 from buildslave.test.util.sourcecommand import SourceCommandTestMixin
