@@ -50,14 +50,17 @@ class GitHubBuildBot(resource.Resource):
             repo = payload['repository']['name']
             repo_url = payload['repository']['url']
             self.private = payload['repository']['private']
+            project = request.args.get('project', None)
+            if project:
+                project = project[0]
             logging.debug("Payload: " + str(payload))
-            self.process_change(payload, user, repo, repo_url)
+            self.process_change(payload, user, repo, repo_url, project)
         except Exception:
             logging.error("Encountered an exception:")
             for msg in traceback.format_exception(*sys.exc_info()):
                 logging.error(msg.strip())
 
-    def process_change(self, payload, user, repo, repo_url):
+    def process_change(self, payload, user, repo, repo_url, project):
         """
         Consumes the JSON as a python object and actually starts the build.
         
@@ -95,6 +98,7 @@ class GitHubBuildBot(resource.Resource):
                      'files': files,
                      'links': [commit['url']],
                      'repository': repo_url,
+                     'project': project,
                 }
                 changes.append(change)
         
