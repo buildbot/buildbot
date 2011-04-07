@@ -832,7 +832,7 @@ class BuildStepStatus(styles.Versioned):
     finished = None
     progress = None
     text = []
-    results = (None, [])
+    results = None
     text2 = []
     watchers = []
     updates = {}
