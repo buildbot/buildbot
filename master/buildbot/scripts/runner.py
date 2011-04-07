@@ -963,6 +963,8 @@ class TryOptions(OptionsWithOptionsFile):
         ["branch", None, None,
          "The branch in use, for VC systems that can't figure it out"
          " themselves"],
+        ["repository", None, None,
+         "Repository to use, instead of path to working directory."],
 
         ["builder", "b", None,
          "Run the trial build on this Builder. Can be used multiple times."],
@@ -990,6 +992,7 @@ class TryOptions(OptionsWithOptionsFile):
         #[ 'try_builders', 'builders' ], <-- handled in postOptions
         [ 'try_vc', 'vc' ],
         [ 'try_branch', 'branch' ],
+        [ 'try_repository', 'repository' ],
         [ 'try_topdir', 'try-topdir' ],
         [ 'try_topfile', 'try-topfile' ],
         [ 'try_host', 'tryhost' ],
