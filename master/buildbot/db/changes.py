@@ -19,6 +19,7 @@ Support for changes in the database
 
 from buildbot.util import json
 import sqlalchemy as sa
+from twisted.internet import defer
 from buildbot.changes.changes import Change
 from buildbot.db import base
 
@@ -227,6 +228,8 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
     # utility methods
 
     def pruneChanges(self, changeHorizon):
+        if not changeHorizon:
+            return defer.succeed(None)
         def thd(conn):
             changes_tbl = self.db.model.changes
 
