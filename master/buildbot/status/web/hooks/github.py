@@ -90,9 +90,12 @@ def getChanges(request, options = None):
             user = payload['repository']['owner']['name']
             repo = payload['repository']['name']
             repo_url = payload['repository']['url']
+            project = request.args.get('project', None)
+            if project:
+                project = project[0]
             # This field is unused:
             #private = payload['repository']['private']
-            changes = process_change(payload, user, repo, repo_url)
+            changes = process_change(payload, user, repo, repo_url, project)
             log.msg("Received %s changes from github" % len(changes))
             return changes
         except Exception:
@@ -100,7 +103,7 @@ def getChanges(request, options = None):
             for msg in traceback.format_exception(*sys.exc_info()):
                 logging.error(msg.strip())
 
-def process_change(payload, user, repo, repo_url):
+def process_change(payload, user, repo, repo_url, project):
         """
         Consumes the JSON as a python object and actually starts the build.
         
@@ -143,7 +146,8 @@ def process_change(payload, user, repo, repo_url):
                     when     = when,
                     branch   = branch,
                     revlink  = commit['url'], 
-                    repository = repo_url)  
+                    repository = repo_url,
+                    project  = project)
                 changes.append(chdict) 
             return changes
         
