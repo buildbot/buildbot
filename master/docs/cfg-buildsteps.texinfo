@@ -84,10 +84,10 @@ with @code{haltOnFailure=True} has failed.
 @item doStepIf
 A step can be configured to only run under certain conditions.  To do this, set
 the step's @code{doStepIf} to a boolean value, or to a function that returns a
-boolean value.  If the value or function result is false, then the step will
-return SKIPPED without doing anything.  Oherwise, the step will be executed
-normally.  If you set @code{doStepIf} to a function, that function should
-accept one parameter, which will be the @code{Step} object itself.
+boolean value or Deferred.  If the value or function result is false, then the
+step will return SKIPPED without doing anything.  Oherwise, the step will be
+executed normally.  If you set @code{doStepIf} to a function, that function
+should accept one parameter, which will be the @code{Step} object itself.
 
 @item locks
 a list of Locks (instances of @code{buildbot.locks.SlaveLock} or
