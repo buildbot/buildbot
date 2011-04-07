@@ -785,7 +785,7 @@ class BuildStep:
         try:
             if doStep:
                 if self.start() == SKIPPED:
-                    doStep = false
+                    doStep = False
         except:
             log.msg("BuildStep.startStep exception in .start")
             self.failed(Failure())
