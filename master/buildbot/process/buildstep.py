@@ -740,6 +740,7 @@ class BuildStep:
 
         d = self.acquireLocks()
         d.addCallback(self._startStep_2)
+        d.addErrback(self.failed)
         return self.deferred
 
     def acquireLocks(self, res=None):
