@@ -311,6 +311,20 @@ class TestChangesConnectorComponent(
         d.addCallback(check)
         return d
 
+    def test_pruneChanges_None(self):
+        d = self.insertTestData(self.change13_rows)
+
+        d.addCallback(lambda _ : self.db.changes.pruneChanges(None))
+        def check(_):
+            def thd(conn):
+                tbl = self.db.model.changes
+                r = conn.execute(tbl.select())
+                self.assertEqual([ row.changeid for row in r.fetchall() ],
+                                 [ 13 ])
+            return self.db.pool.do(thd)
+        d.addCallback(check)
+        return d
+
     def test_getRecentChangeInstances_subset(self):
         d = self.insertTestData([
             fakedb.Change(changeid=8),
