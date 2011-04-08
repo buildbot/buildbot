@@ -443,7 +443,7 @@ class AbstractBuildSlave(pb.Avatar, service.MultiService):
         return d
 
     def perspective_keepalive(self):
-        pass
+        self.messageReceivedFromSlave()
 
     def perspective_shutdown(self):
         log.msg("slave %s wants to shut down" % self.slavename)
