@@ -161,7 +161,7 @@ You will now see:
 Enabling the IRC Bot
 --------------------
 
-Buildbot includes and IRC bot that you can tell to join a channel and control
+Buildbot includes an IRC bot that you can tell to join a channel and control
 to report on the status of buildbot.
 
 First, start an IRC client of your choice, connect to irc.freenode.org and
@@ -247,11 +247,11 @@ exposes full access to the buildmaster's account (including the ability to
 modify and delete files), so it should not be enabled with a weak or easily
 guessable password. 
 
-To use this you will need to install an additional package to your virtualenv::
+To use this you will need to install an additional package or two to your virtualenv::
 
   # make sure your sandbox is activated so this is installed in your virtualenv
   pip install pycrypto
-  pip install pyans1
+  pip install pyasn1
 
 In your master.cfg find::
 
