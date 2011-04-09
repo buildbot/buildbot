@@ -18,10 +18,10 @@ import shutil
 import mock
 
 from twisted.trial import unittest
-from twisted.internet import defer, reactor
+from twisted.internet import defer, reactor, task
 from twisted.python import failure, log
 
-from buildslave.test.util import command
+from buildslave.test.util import command, compat
 from buildslave.test.fake.remote import FakeRemote
 from buildslave.test.fake.runprocess import Expect
 import buildslave
@@ -327,3 +327,61 @@ class TestSlaveBuilder(command.CommandTestMixin, unittest.TestCase):
             self.assertTrue(isinstance(st.actions[0][1], failure.Failure))
         d.addCallback(check)
         return d
+
+class TestBuildSlave(unittest.TestCase):
+
+    def test_constructor_minimal(self):
+        # only required arguments
+        bot.BuildSlave('mstr', 9010, 'me', 'pwd', '/s', 10, False)
+
+    def test_constructor_083_tac(self):
+        # invocation as made from default 083 tac files
+        bot.BuildSlave('mstr', 9010, 'me', 'pwd', '/s', 10, False,
+                umask=0123, maxdelay=10)
+
+    def test_constructor_full(self):
+        # invocation with all args
+        bot.BuildSlave('mstr', 9010, 'me', 'pwd', '/s', 10, False,
+                umask=0123, maxdelay=10, keepaliveTimeout=10,
+                unicode_encoding='utf8', allow_shutdown=True)
+
+
+class TestBotFactory(unittest.TestCase):
+
+    def setUp(self):
+        self.bf = bot.BotFactory('mstr', 9010, 35, 200)
+
+    # tests
+
+    def test_timers(self):
+        clock = self.bf._reactor = task.Clock()
+
+        calls = []
+        def callRemote(method):
+            calls.append(clock.seconds())
+            self.assertEqual(method, 'keepalive')
+            # simulate the response taking a few seconds
+            d = defer.Deferred()
+            clock.callLater(5, d.callback, None)
+            return d
+        self.bf.perspective = mock.Mock()
+        self.bf.perspective.callRemote = callRemote
+
+        self.bf.startTimers()
+        clock.callLater(100, self.bf.stopTimers)
+
+        clock.pump(( 1 for _ in xrange(150)))
+        self.assertEqual(calls, [ 35, 70 ])
+
+    @compat.usesFlushLoggedErrors
+    def test_timers_exception(self):
+        clock = self.bf._reactor = task.Clock()
+
+        self.bf.perspective = mock.Mock()
+        def callRemote(method):
+            return defer.fail(RuntimeError("oh noes"))
+        self.bf.perspective.callRemote = callRemote
+
+        self.bf.startTimers()
+        clock.advance(35)
+        self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
