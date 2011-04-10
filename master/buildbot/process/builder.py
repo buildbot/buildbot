@@ -551,7 +551,7 @@ class Builder(pb.Referenceable, service.MultiService):
         self.building.append(build)
         self.updateBigStatus()
         log.msg("starting build %s using slave %s" % (build, sb))
-        d = sb.prepare(self.builder_status)
+        d = sb.prepare(self.builder_status, build)
 
         def _prepared(ready):
             # If prepare returns True then it is ready and we start a build

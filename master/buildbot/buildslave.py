@@ -646,7 +646,7 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
         self.building = set()
         self.build_wait_timeout = build_wait_timeout
 
-    def start_instance(self):
+    def start_instance(self, build):
         # responsible for starting instance that will try to connect with this
         # master.  Should return deferred with either True (instance started)
         # or False (instance not started, so don't run a build here).  Problems
@@ -657,7 +657,7 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
         # responsible for shutting down instance.
         raise NotImplementedError
 
-    def substantiate(self, sb):
+    def substantiate(self, sb, build):
         if self.substantiated:
             self._clearBuildWaitTimer()
             self._setBuildWaitTimer()
@@ -670,15 +670,15 @@ class AbstractLatentBuildSlave(AbstractBuildSlave):
                     self._substantiation_failed, defer.TimeoutError())
             self.substantiation_deferred = defer.Deferred()
             if self.slave is None:
-                d = self._substantiate() # start up instance
+                d = self._substantiate(build) # start up instance
                 d.addErrback(log.err, "while substantiating")
             # else: we're waiting for an old one to detach.  the _substantiate
             # will be done in ``detached`` below.
         return self.substantiation_deferred
 
-    def _substantiate(self):
+    def _substantiate(self, build):
         # register event trigger
-        d = self.start_instance()
+        d = self.start_instance(build)
         self._shutdown_callback_handle = reactor.addSystemEventTrigger(
             'before', 'shutdown', self._soft_disconnect, fast=True)
         def start_instance_result(result):

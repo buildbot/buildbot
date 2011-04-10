@@ -214,7 +214,7 @@ class EC2LatentBuildSlave(AbstractLatentBuildSlave):
         return self.instance.public_dns_name
     dns = property(dns)
 
-    def start_instance(self):
+    def start_instance(self, build):
         if self.instance is not None:
             raise ValueError('instance active')
         return threads.deferToThread(self._start_instance)

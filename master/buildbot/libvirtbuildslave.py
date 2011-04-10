@@ -178,7 +178,7 @@ class LibVirtSlave(AbstractLatentBuildSlave):
         d.addBoth(_log_result)
         return d
 
-    def start_instance(self):
+    def start_instance(self, build):
         """
         I start a new instance of a VM.
 
