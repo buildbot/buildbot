@@ -328,24 +328,6 @@ class TestSlaveBuilder(command.CommandTestMixin, unittest.TestCase):
         d.addCallback(check)
         return d
 
-class TestBuildSlave(unittest.TestCase):
-
-    def test_constructor_minimal(self):
-        # only required arguments
-        bot.BuildSlave('mstr', 9010, 'me', 'pwd', '/s', 10, False)
-
-    def test_constructor_083_tac(self):
-        # invocation as made from default 083 tac files
-        bot.BuildSlave('mstr', 9010, 'me', 'pwd', '/s', 10, False,
-                umask=0123, maxdelay=10)
-
-    def test_constructor_full(self):
-        # invocation with all args
-        bot.BuildSlave('mstr', 9010, 'me', 'pwd', '/s', 10, False,
-                umask=0123, maxdelay=10, keepaliveTimeout=10,
-                unicode_encoding='utf8', allow_shutdown=True)
-
-
 class TestBotFactory(unittest.TestCase):
 
     def setUp(self):
@@ -385,3 +367,5 @@ class TestBotFactory(unittest.TestCase):
         self.bf.startTimers()
         clock.advance(35)
         self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
+
+# note that the BuildSlave class is tested in test_bot_BuildSlave
