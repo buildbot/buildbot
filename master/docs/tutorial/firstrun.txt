@@ -32,7 +32,7 @@ systems.  (The preferred method would be to install buildbot from packages
 of your distribution.)
 
 To make this work, you will need the following installed:
- * python_
+ * python_ and the development packages for it
  * virtualenv_
  * git_
 
