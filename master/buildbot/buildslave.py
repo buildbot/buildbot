@@ -44,6 +44,7 @@ class AbstractBuildSlave(pb.Avatar, service.MultiService):
     implements(IBuildSlave)
     keepalive_timer = None
     keepalive_interval = None
+    paused = False
 
     def __init__(self, name, password, max_builds=None,
                  notify_on_missing=[], missing_timeout=3600,
@@ -481,6 +482,10 @@ class AbstractBuildSlave(pb.Avatar, service.MultiService):
         can start a build.  This function can be used to limit overall
         concurrency on the buildslave.
         """
+
+        if self.paused:
+            return False
+
         # If we're waiting to shutdown gracefully, then we shouldn't
         # accept any new jobs.
         if self.slave_status.getGraceful():
@@ -596,6 +601,13 @@ class AbstractBuildSlave(pb.Avatar, service.MultiService):
             return
         d = self.shutdown()
         d.addErrback(log.err, 'error while shutting down slave')
+
+    def pause(self):
+        """Stop running new builds on the slave."""
+        self.paused = True
+    def unpause(self):
+        """Restart running new builds on the slave."""
+        self.paused = False
 
 class BuildSlave(AbstractBuildSlave):
 
