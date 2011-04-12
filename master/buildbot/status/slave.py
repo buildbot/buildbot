@@ -27,6 +27,7 @@ class SlaveStatus:
     version = None
     connected = False
     graceful_shutdown = False
+    paused = False
 
     def __init__(self, name):
         self.name = name
@@ -47,6 +48,8 @@ class SlaveStatus:
         return self.version
     def isConnected(self):
         return self.connected
+    def isPaused(self):
+        return self.paused
     def lastMessageReceived(self):
         return self._lastMessageReceived
     def getRunningBuilds(self):
@@ -67,6 +70,8 @@ class SlaveStatus:
         self.connected = isConnected
     def setLastMessageReceived(self, when):
         self._lastMessageReceived = when
+    def setPaused(self, isPaused):
+        self.paused = isPaused
 
     def recordConnectTime(self):
         # record this connnect, and keep data for the last hour

@@ -163,6 +163,29 @@
  </form>
 {% endmacro %}
 
+{% macro pause_slave(pause_url, authz, paused) %}
+  <form method="post" action="{{ pause_url }}" class='command pause_slave'>
+
+  {% if paused %}
+    <p>To cause this slave to start running new builds again,
+      push the 'Unpause Slave' button</p>
+  {% else %}
+    <p>To cause this slave to stop running new builds,
+      push the 'Pause Slave' button</p>
+  {% endif %}
+
+  {% if authz.needAuthForm('pauseSlave') %}
+    {{ auth() }}
+  {% endif %}
+
+  {% if paused %}
+      <input type="submit" value="Unpause Slave" />
+  {% else %}
+      <input type="submit" value="Pause Slave" />
+  {% endif %}
+ </form>
+{% endmacro %}
+
 {% macro clean_shutdown(shutdown_url, authz) %}
   <form method="post" action="{{ shutdown_url }}" class='command clean_shutdown'>
   <p>To cause this master to shut down cleanly, push the 'Clean Shutdown' button.</p>

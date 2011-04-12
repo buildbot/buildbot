@@ -41,6 +41,11 @@ class OneBuildSlaveResource(HtmlResource, BuildLineMixin):
                 slave.setGraceful(True)
             else:
                 return Redirect(path_to_authfail(req))
+        if path == "pause" or path == "unpause":
+            if self.getAuthz(req).actionAllowed("pauseSlave", req, slave):
+                slave.setPaused(path == "pause")
+            else:
+                return Redirect(path_to_authfail(req))
         return Redirect(path_to_slave(req, slave))
 
     def content(self, request, ctx):        
@@ -79,11 +84,17 @@ class OneBuildSlaveResource(HtmlResource, BuildLineMixin):
         slave = s.getSlave(self.slavename)
         connect_count = slave.getConnectCount()
 
+        if slave.isPaused():
+            pause_url = request.childLink("unpause")
+        else:
+            pause_url = request.childLink("pause")
+
         ctx.update(dict(slave=slave,
                         slavename = self.slavename,  
                         current = current_builds, 
                         recent = recent_builds, 
                         shutdown_url = request.childLink("shutdown"),
+                        pause_url = pause_url,
                         authz = self.getAuthz(request),
                         this_url = "../../../" + path_to_slave(request, slave),
                         access_uri = slave.getAccessURI()),
@@ -135,6 +146,7 @@ class BuildSlavesResource(HtmlResource):
             info['version'] = slave.getVersion()
             info['connected'] = slave.isConnected()
             info['connectCount'] = slave.getConnectCount()
+            info['paused'] = slave.isPaused()
             
             info['admin'] = unicode(slave.getAdmin() or '', 'utf-8')
             last = slave.lastMessageReceived()

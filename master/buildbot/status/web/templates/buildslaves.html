@@ -57,6 +57,8 @@
   {% if s.connected %}
     {% if s.running_builds %}
       <td class="building">Running {{ s.running_builds }} build(s)</td>
+    {% elif s.paused %}
+      <td class="paused">Paused</td>
     {% else %}
       <td class="idle">Idle</td>
     {% endif %}

@@ -461,6 +461,10 @@ force @i{all} builders to start building
 
 gracefully shut down a slave when it is finished with its current build
 
+@item pauseSlave
+
+temporarily stop running new builds on a slave
+
 @item stopBuild
 
 stop a running build
