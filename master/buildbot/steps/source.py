@@ -227,7 +227,7 @@ class Source(LoggingBuildStep):
         # what source stamp would this build like to use?
         s = self.build.getSourceStamp()
         # if branch is None, then use the Step's "default" branch
-        branch = s.branch or self.branch
+        branch = s.branch or properties.render(self.branch)
         # if revision is None, use the latest sources (-rHEAD)
         revision = s.revision
         if not revision and not self.alwaysUseLatest:
