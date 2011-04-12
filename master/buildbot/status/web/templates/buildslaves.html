@@ -39,17 +39,11 @@
 
   <td>{{ (s.version or '-')|e }}</td>
  
-  {% if s.connected %}
-    <td>
-    {%- if s.admin -%}
-      {{ s.admin|email }}
-    {%- endif -%}
-    </td>
-    
-        
-  {% else %}
+  {%- if s.admin -%}
+    <td>{{ s.admin|email }}</td>
+  {%- else -%}
     <td>-</td>
-  {% endif %}
+  {%- endif -%}
 
     <td>
     {%- if s.last_heard_from_age -%}
